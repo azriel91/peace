@@ -1,0 +1,15 @@
+[package]
+name = "zzzz"
+version = "0.1.0"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+edition = "2021"
+description = "Automate with your eyes closed."
+repository = "https://github.com/azriel91/zzzz"
+documentation = "https://docs.rs/zzzz/"
+readme = "README.md"
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = true
+test = false
