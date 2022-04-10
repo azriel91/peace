@@ -1,0 +1,58 @@
+#! /bin/bash
+set -euo pipefail
+
+self_dir="$(dirname "$(readlink -f "${BASH_SOURCE}")")"
+repo_dir="$(dirname "${self_dir}")"
+
+coverage_dir="${repo_dir}/target/coverage"
+coverage_data_path="${coverage_dir}/zzzz.profdata"
+coverage_html_file="${coverage_dir}/index.html"
+coverage_report_file="${coverage_dir}/coverage.lcov"
+
+# Clear previous coverage data
+rm -rf "${coverage_dir}"
+
+RUSTFLAGS="-C instrument-coverage" \
+LLVM_PROFILE_FILE="$(pwd)/target/coverage/cov-%m.profraw" \
+cargo test --workspace
+
+function test_binaries_args {
+  for file in $(
+      RUSTFLAGS="-C instrument-coverage" \
+        cargo test --workspace --tests --no-run --message-format=json \
+          | jq -r "select(.profile.test == true) | .filenames[]" \
+          | grep -v dSYM
+    )
+  do printf "%s %s " '--object' $file
+  done
+}
+
+$(rustc --print target-libdir)/../bin/llvm-profdata merge \
+  -sparse \
+  "${coverage_dir}/"cov-*.profraw \
+  -o "${coverage_data_path}"
+
+$(rustc --print target-libdir)/../bin/llvm-cov report \
+  --use-color \
+  --ignore-filename-regex='/.cargo/registry' \
+  --instr-profile="${coverage_data_path}" \
+  $(test_binaries_args)
+
+$(rustc --print target-libdir)/../bin/llvm-cov show \
+  --use-color \
+  --ignore-filename-regex='/.cargo/registry' \
+  --instr-profile="${coverage_data_path}" \
+  $(test_binaries_args) \
+  --show-instantiations \
+  --show-line-counts-or-regions \
+  --Xdemangler=rustfilt \
+  --format=html \
+  > "${coverage_html_file}"
+
+$(rustc --print target-libdir)/../bin/llvm-cov export \
+  --ignore-filename-regex='/.cargo/registry' \
+  --instr-profile="${coverage_data_path}" \
+  $(test_binaries_args) \
+  --Xdemangler=rustfilt \
+  --format=lcov \
+  > "${coverage_report_file}"
