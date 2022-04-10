@@ -1,0 +1,18 @@
+[package]
+name = "zzzz_rt_logic"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.1.0"
+edition = "2021"
+description = "Runtime logic for the zzzz automation library."
+repository = "https://github.com/azriel91/zzzz"
+documentation = "https://docs.rs/zzzz_rt_logic/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
