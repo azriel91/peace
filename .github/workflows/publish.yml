@@ -70,11 +70,6 @@ jobs:
           toolchain: stable
           override: true
 
-      # Need to do this to read the git tag.
-      - name: Set git tag variable
-        id: vars
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
-
       - name: workspaces Cache
         id: workspaces_cache
         uses: actions/cache@v2
@@ -98,10 +93,8 @@ jobs:
         with:
           command: workspaces
           args: >
-            publish \
-            --from-git \
-            --allow-branch main \
-            --force '*' \
-            --no-git-tag \
-            --no-individual-tags \
-            --tag-prefix '' custom ${{ steps.vars.outputs.tag }}
+            publish
+            --from-git
+            --allow-branch main
+            --force '*'
+            --no-git-tag
