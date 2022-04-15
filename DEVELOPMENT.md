@@ -28,6 +28,8 @@ cargo llvm-cov --workspace --open --output-dir ./target/coverage
 
 # With `nextest`:
 # https://github.com/taiki-e/cargo-llvm-cov/issues/151
+cargo coverage
+# This is an alias defined in `.cargo/config.toml` to:
 cargo llvm-cov --workspace nextest --open --output-dir ./target/coverage --workspace
 ```
 
