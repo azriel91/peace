@@ -1,0 +1,2 @@
+[alias]
+coverage = 'llvm-cov --workspace nextest --open --output-dir ./target/coverage --workspace'

@@ -1,22 +1,20 @@
 [package]
-name = "zzzz"
-version = "0.0.0"
+name = "workspace_tests"
+version = "0.1.0"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
-description = "Automate with your eyes closed."
+description = "Tests for the zzzz automation library."
 repository = "https://github.com/azriel91/zzzz"
 documentation = "https://docs.rs/zzzz/"
-readme = "README.md"
+readme = "../README.md"
 categories = ["asynchronous", "config"]
 keywords = ["automation"]
 license = "MIT OR Apache-2.0"
+publish = false
 
 [lib]
-doctest = true
-test = false
+doctest = false
+test = true
 
 [dependencies]
-zzzz_rt_logic = { path = "crate/rt_logic", version = "0.0.0" }
-
-[workspace]
-members = ["crate/*", "workspace_tests"]
+zzzz = { path = "..", version = "0.0.0" }

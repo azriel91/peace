@@ -1,0 +1,107 @@
+on:
+  push:
+    tags:
+      - '*'
+
+name: Publish
+
+jobs:
+  audit:
+    name: Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  build_and_test_linux:
+    name: Build and Test (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --release
+
+  build_and_test_windows:
+    name: Build and Test (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Prepare symlink configuration
+        run: git config --global core.symlinks true
+
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --release
+
+  crates_io_publish:
+    name: Publish (crates.io)
+    needs:
+      - audit
+      - build_and_test_linux
+      - build_and_test_windows
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      # Need to do this to read the git tag.
+      - name: Set git tag variable
+        id: vars
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+      - name: workspaces Cache
+        id: workspaces_cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/bin/cargo-workspaces
+          key: ${{ runner.os }}-cargo-workspaces
+
+      - uses: actions-rs/cargo@v1
+        if: steps.workspaces_cache.outputs.cache-hit != 'true'
+        with:
+          command: install
+          args: cargo-workspaces
+
+      - name: cargo login
+        uses: actions-rs/cargo@v1
+        with:
+          command: login
+          args: ${{ secrets.CRATES_IO_API_TOKEN }}
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: workspaces
+          args: >
+            publish \
+            --from-git \
+            --allow-branch main \
+            --force '*' \
+            --no-git-tag \
+            --no-individual-tags \
+            --tag-prefix '' custom ${{ steps.vars.outputs.tag }}
