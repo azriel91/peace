@@ -1,7 +1,7 @@
 [package]
 name = "zzzz_rt_logic"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
-version = "0.1.0"
+version = "0.0.0"
 edition = "2021"
 description = "Runtime logic for the zzzz automation library."
 repository = "https://github.com/azriel91/zzzz"

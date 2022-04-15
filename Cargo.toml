@@ -1,6 +1,6 @@
 [package]
 name = "zzzz"
-version = "0.1.0"
+version = "0.0.0"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
 description = "Automate with your eyes closed."
@@ -16,7 +16,7 @@ doctest = true
 test = false
 
 [dependencies]
-zzzz_rt_logic = { path = "crate/rt_logic", version = "0.1.0" }
+zzzz_rt_logic = { path = "crate/rt_logic", version = "0.0.0" }
 
 [workspace]
 members = ["crate/*", "workspace_tests"]

@@ -17,4 +17,4 @@ doctest = false
 test = true
 
 [dependencies]
-zzzz = { path = "..", version = "0.1.0" }
+zzzz = { path = "..", version = "0.0.0" }
