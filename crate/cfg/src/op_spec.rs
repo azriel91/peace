@@ -1,0 +1,73 @@
+use async_trait::async_trait;
+
+/// Defines the logic and data of an operation.
+///
+/// This includes:
+///
+/// * Data that the operation reads from, or writes to.
+/// * Logic to initialize that data.
+/// * Logic to check if the operation is already done.
+/// * Logic to do the operation.
+/// * Return type of the operation, depending on its purpose.
+#[async_trait]
+pub trait OpSpec {
+    /// State of data or resources that the [`WorkSpec`] manages.
+    ///
+    /// This is the type returned by the [`StatusSpec`], and is used by
+    /// [`EnsureOpSpec`] and [`CleanOpSpec`] to determine if their [`exec`]
+    /// function needs to be run.
+    ///
+    /// [`WorkSpec`]: crate::WorkSpec
+    /// [`StatusSpec`]: crate::WorkSpec::StatusSpec
+    /// [`EnsureOpSpec`]: crate::WorkSpec::EnsureOpSpec
+    /// [`CleanOpSpec`]: crate::WorkSpec::CleanOpSpec
+    /// [`exec`]: crate::OpSpec::exec
+    type State;
+
+    /// Return type of the operation.
+    ///
+    /// This varies depending on the type of the operation:
+    ///
+    /// * For an [ensure operation], these are the [resource IDs] produced by
+    ///   the operation.
+    /// * For a [clean operation], these are the [resource IDs] cleaned by the
+    ///   operation.
+    ///
+    /// [ensure operation]: crate::WorkSpec::EnsureOpSpec
+    /// [resource IDs]: crate::WorkSpec::ResIds
+    type Output;
+
+    /// Data that the operation reads from, or writes to.
+    ///
+    /// These may be parameters to the function, or information calculated from
+    /// previous operations.
+    type Params;
+
+    /// Error returned when any of the functions of this operation err.
+    type Error: std::error::Error;
+
+    /// Initializes data for the operation's check and `exec` functions.
+    async fn setup() -> Result<(), Self::Error>;
+
+    /// Checks if the operation needs to be executed.
+    ///
+    /// If the current state is already the desired state, then the operation
+    /// does not have to be executed.
+    ///
+    /// For example, for a file download operation, if the file is already
+    /// downloaded, then it does not need to be downloaded again.
+    ///
+    /// # Implementors
+    ///
+    /// This function call is intended to be cheap and fast.
+    async fn check(state: &Self::State) -> Result<(), Self::Error>;
+
+    /// Dry run execution that does not actually alter state.
+    ///
+    /// This is a safe operation to show what would happen if the operation is
+    /// executed.
+    async fn exec_dry() -> Result<Self::Output, Self::Error>;
+
+    /// Actual execution to do the work.
+    async fn exec() -> Result<Self::Output, Self::Error>;
+}

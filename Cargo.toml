@@ -16,6 +16,7 @@ doctest = true
 test = false
 
 [dependencies]
+zzzz_cfg = { path = "crate/cfg", version = "0.0.0" }
 zzzz_rt_logic = { path = "crate/rt_logic", version = "0.0.0" }
 
 [workspace]

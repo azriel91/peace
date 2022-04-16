@@ -1,0 +1,21 @@
+[package]
+name = "zzzz_cfg"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.0"
+edition = "2021"
+description = "Configuration model for the zzzz automation library."
+repository = "https://github.com/azriel91/zzzz"
+documentation = "https://docs.rs/zzzz_cfg/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+async-trait = "0.1.53"
+fn_graph = "0.2.0"
+serde = "1.0.137"
