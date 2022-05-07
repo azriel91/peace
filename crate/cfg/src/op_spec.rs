@@ -62,12 +62,6 @@ pub trait OpSpec {
     /// This function call is intended to be cheap and fast.
     async fn check(state: &Self::State) -> Result<(), Self::Error>;
 
-    /// Dry run execution that does not actually alter state.
-    ///
-    /// This is a safe operation to show what would happen if the operation is
-    /// executed.
-    async fn exec_dry() -> Result<Self::Output, Self::Error>;
-
     /// Actual execution to do the work.
     async fn exec() -> Result<Self::Output, Self::Error>;
 }

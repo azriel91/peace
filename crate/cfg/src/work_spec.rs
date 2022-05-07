@@ -1,6 +1,6 @@
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::OpSpec;
+use crate::{OpSpec, OpSpecDry};
 
 /// Encapsulates all the operations of a work item.
 ///
@@ -14,10 +14,13 @@ use crate::OpSpec;
 /// The lifecycle operations are defined as:
 ///
 /// 1. Status discovery.
-/// 2. Execution -- dry run and actual.
+/// 2. Execution.
 /// 3. Backup.
 /// 4. Restoration.
 /// 5. Clean up / deletion.
+///
+/// Since the latter four operations are write-operations, their specification
+/// includes a dry run function.
 pub trait WorkSpec {
     /// IDs of resources produced by the operation.
     ///
@@ -125,10 +128,10 @@ pub trait WorkSpec {
     /// Specification of the ensure operation.
     ///
     /// The output is the IDs of resources produced by the operation.
-    type EnsureOpSpec: OpSpec<State = Self::State, Output = Self::ResIds>;
+    type EnsureOpSpec: OpSpecDry<State = Self::State, Output = Self::ResIds>;
 
     /// Specification of the clean operation.
     ///
     /// The output is the IDs of resources cleaned by the operation.
-    type CleanOpSpec: OpSpec<State = Self::State, Output = Self::ResIds>;
+    type CleanOpSpec: OpSpecDry<State = Self::State, Output = Self::ResIds>;
 }
