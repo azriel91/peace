@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 
-use crate::OpCheckStatus;
+use crate::{OpCheckStatus, ProgressLimit};
 
 /// Defines the logic and data of an operation.
 ///
@@ -49,7 +49,7 @@ pub trait OpSpec {
     type Error: std::error::Error;
 
     /// Initializes data for the operation's check and `exec` functions.
-    async fn setup() -> Result<(), Self::Error>;
+    async fn setup() -> Result<ProgressLimit, Self::Error>;
 
     /// Checks if the operation needs to be executed.
     ///
