@@ -1,5 +1,7 @@
 use async_trait::async_trait;
 
+use crate::OpCheckStatus;
+
 /// Defines the logic and data of an operation.
 ///
 /// This includes:
@@ -60,7 +62,7 @@ pub trait OpSpec {
     /// # Implementors
     ///
     /// This function call is intended to be cheap and fast.
-    async fn check(state: &Self::State) -> Result<(), Self::Error>;
+    async fn check(state: &Self::State) -> Result<OpCheckStatus, Self::Error>;
 
     /// Actual execution to do the work.
     async fn exec() -> Result<Self::Output, Self::Error>;
