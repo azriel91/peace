@@ -1,3 +1,4 @@
+use diff::Diff;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{OpSpec, OpSpecDry};
@@ -110,7 +111,7 @@ pub trait WorkSpec {
     /// [`EnsureOpSpec`]: Self::EnsureOpSpec
     /// [`CleanOpSpec`]: Self::CleanOpSpec
     /// [`exec`]: crate::OpSpec::exec
-    type State: Serialize + DeserializeOwned;
+    type State: Diff + Serialize + DeserializeOwned;
 
     /// Specification of the status function.
     ///

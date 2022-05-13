@@ -17,5 +17,6 @@ test = false
 
 [dependencies]
 async-trait = "0.1.53"
+diff-struct = "0.4.1"
 fn_graph = "0.2.0"
 serde = "1.0.137"
