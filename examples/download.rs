@@ -65,7 +65,7 @@ impl OpSpec for DownloadStatusSpec {
     type Output = Option<FileState>;
     type State = ();
 
-    async fn setup(download_params: &DownloadParams) -> Result<ProgressLimit, DownloadError> {
+    async fn setup(_download_params: &DownloadParams) -> Result<ProgressLimit, DownloadError> {
         // Need to make one request.
         Ok(ProgressLimit::Steps(1))
     }
@@ -81,7 +81,7 @@ impl OpSpec for DownloadStatusSpec {
         }
 
         // Check file length
-        let file = File::open(&download_params.dest)
+        let mut file = File::open(&download_params.dest)
             .await
             .map_err(DownloadError::DestFileOpen)?;
         let metadata = file
@@ -204,7 +204,7 @@ impl OpSpec for DownloadEnsureSpec {
     type Output = PathBuf;
     type State = Option<FileState>;
 
-    async fn setup(download_params: &DownloadParams) -> Result<ProgressLimit, DownloadError> {
+    async fn setup(_download_params: &DownloadParams) -> Result<ProgressLimit, DownloadError> {
         // TODO: pass through desired State,
         Ok(ProgressLimit::Bytes(1024))
     }
@@ -242,8 +242,52 @@ impl OpSpecDry for DownloadEnsureSpec {
     }
 }
 
+#[derive(Debug)]
+pub struct DownloadCleanSpec;
+
+#[async_trait]
+impl OpSpec for DownloadCleanSpec {
+    type Data = DownloadParams;
+    type Error = DownloadError;
+    type Output = PathBuf;
+    type State = Option<FileState>;
+
+    async fn setup(_download_params: &DownloadParams) -> Result<ProgressLimit, DownloadError> {
+        // TODO: pass through desired State,
+
+        // Bytes to delete
+        Ok(ProgressLimit::Bytes(1024))
+    }
+
+    async fn check(
+        _download_params: &DownloadParams,
+        file_state: &Option<FileState>,
+    ) -> Result<OpCheckStatus, DownloadError> {
+        let op_check_status = if file_state.is_some() {
+            OpCheckStatus::ExecRequired
+        } else {
+            OpCheckStatus::ExecNotRequired
+        };
+        Ok(op_check_status)
+    }
+
+    async fn exec(download_params: &DownloadParams) -> Result<PathBuf, DownloadError> {
+        tokio::fs::remove_file(&download_params.dest)
+            .await
+            .map_err(DownloadError::DestFileRemove)?;
+        Ok(download_params.dest.clone())
+    }
+}
+
+#[async_trait]
+impl OpSpecDry for DownloadCleanSpec {
+    async fn exec_dry() -> Result<Self::Output, Self::Error> {
+        todo!("should this be inferred from the Diff instead")
+    }
+}
+
 impl WorkSpec for Download {
-    type CleanOpSpec = Type;
+    type CleanOpSpec = DownloadCleanSpec;
     type EnsureOpSpec = DownloadEnsureSpec;
     type ResIds = PathBuf;
     type State = Option<FileState>;
@@ -260,6 +304,8 @@ pub enum DownloadError {
     DestFileRead(std::io::Error),
     #[error("Failed to open destination file for writing.")]
     DestFileCreate(std::io::Error),
+    #[error("Failed to delete destination file.")]
+    DestFileRemove(std::io::Error),
     #[error("Failed to parse source URL.")]
     SrcUrlParse(url::ParseError),
     #[error("Failed to parse source URL.")]
