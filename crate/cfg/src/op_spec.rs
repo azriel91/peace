@@ -43,13 +43,13 @@ pub trait OpSpec {
     ///
     /// These may be parameters to the function, or information calculated from
     /// previous operations.
-    type Params;
+    type Data;
 
     /// Error returned when any of the functions of this operation err.
     type Error: std::error::Error;
 
     /// Initializes data for the operation's check and `exec` functions.
-    async fn setup() -> Result<ProgressLimit, Self::Error>;
+    async fn setup(data: &Self::Data) -> Result<ProgressLimit, Self::Error>;
 
     /// Checks if the operation needs to be executed.
     ///
@@ -62,8 +62,8 @@ pub trait OpSpec {
     /// # Implementors
     ///
     /// This function call is intended to be cheap and fast.
-    async fn check(state: &Self::State) -> Result<OpCheckStatus, Self::Error>;
+    async fn check(data: &Self::Data, state: &Self::State) -> Result<OpCheckStatus, Self::Error>;
 
     /// Actual execution to do the work.
-    async fn exec() -> Result<Self::Output, Self::Error>;
+    async fn exec(data: &Self::Data) -> Result<Self::Output, Self::Error>;
 }

@@ -115,16 +115,19 @@ pub trait WorkSpec {
 
     /// Specification of the status function.
     ///
-    /// The `state` used by the Status function should include:
+    /// # Future Development
+    ///
+    /// The `StatusSpec` may decide to not check for status if it caches status.
+    /// For that use case, the `state` used by the StatusSpec should include:
     ///
     /// * Execution ID
     /// * Last status query time
     ///
-    /// This allows the check function to tell: if the status has been queried
+    /// This allows the check function to tell if the status has been queried
     /// within the past day, don't query it again.
     ///
     /// The output is the state that this `WorkSpec` manages.
-    type StatusSpec: OpSpec<State = Self::State, Output = Self::State>;
+    type StatusSpec: OpSpec<State = (), Output = Self::State>;
 
     /// Specification of the ensure operation.
     ///

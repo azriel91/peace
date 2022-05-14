@@ -3,6 +3,10 @@
 //! This crate defines the API for logic and data to be used in the `zzzz`
 //! framework.
 
+// Re-exports
+pub use async_trait;
+pub use diff;
+
 pub use crate::{
     op_check_status::OpCheckStatus, op_spec::OpSpec, op_spec_dry::OpSpecDry,
     progress_limit::ProgressLimit, work_spec::WorkSpec,
