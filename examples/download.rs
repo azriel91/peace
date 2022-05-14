@@ -297,25 +297,25 @@ impl WorkSpec for Download {
 #[derive(Debug, thiserror::Error)]
 pub enum DownloadError {
     #[error("Failed to open destination file.")]
-    DestFileOpen(std::io::Error),
+    DestFileOpen(#[source] std::io::Error),
     #[error("Failed to read destination file metadata.")]
-    DestMetadataRead(std::io::Error),
+    DestMetadataRead(#[source] std::io::Error),
     #[error("Failed to read destination file contents.")]
-    DestFileRead(std::io::Error),
+    DestFileRead(#[source] std::io::Error),
     #[error("Failed to open destination file for writing.")]
-    DestFileCreate(std::io::Error),
+    DestFileCreate(#[source] std::io::Error),
     #[error("Failed to delete destination file.")]
-    DestFileRemove(std::io::Error),
+    DestFileRemove(#[source] std::io::Error),
     #[error("Failed to parse source URL.")]
     SrcUrlParse(url::ParseError),
     #[error("Failed to parse source URL.")]
-    SrcGet(reqwest::Error),
+    SrcGet(#[source] reqwest::Error),
     #[error("Failed to fetch source file metadata. Response status code: {status_code}")]
     SrcFileUndetermined { status_code: reqwest::StatusCode },
     #[error("Failed to read source file content.")]
-    SrcFileRead(reqwest::Error),
+    SrcFileRead(#[source] reqwest::Error),
     #[error("Failed to stream source file content.")]
-    ResponseBytesStream(reqwest::Error),
+    ResponseBytesStream(#[source] reqwest::Error),
     #[error("Failed to transfer source file content.")]
-    ResponseFileWrite(std::io::Error),
+    ResponseFileWrite(#[source] std::io::Error),
 }
