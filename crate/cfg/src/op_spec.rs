@@ -13,7 +13,7 @@ use crate::{OpCheckStatus, ProgressLimit};
 /// * Return type of the operation, depending on its purpose.
 #[async_trait]
 pub trait OpSpec {
-    /// State of data or resources that the [`WorkSpec`] manages.
+    /// State that the [`WorkSpec`] manages.
     ///
     /// This is the type returned by the [`StatusSpec`], and is used by
     /// [`EnsureOpSpec`] and [`CleanOpSpec`] to determine if their [`exec`]
@@ -36,6 +36,7 @@ pub trait OpSpec {
     ///   operation.
     ///
     /// [ensure operation]: crate::WorkSpec::EnsureOpSpec
+    /// [clean operation]: crate::WorkSpec::CleanOpSpec
     /// [resource IDs]: crate::WorkSpec::ResIds
     type Output;
 
