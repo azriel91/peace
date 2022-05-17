@@ -1,6 +1,6 @@
 [package]
 name = "peace"
-version = "0.0.0"
+version = "0.0.1"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
 description = "zero stress automation"
@@ -16,8 +16,8 @@ doctest = true
 test = false
 
 [dependencies]
-peace_cfg = { path = "crate/cfg", version = "0.0.0" }
-peace_rt_logic = { path = "crate/rt_logic", version = "0.0.0" }
+peace_cfg = { path = "crate/cfg", version = "0.0.1" }
+peace_rt_logic = { path = "crate/rt_logic", version = "0.0.1" }
 
 [dev-dependencies]
 bytes = "1.1.0"

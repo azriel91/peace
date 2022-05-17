@@ -17,4 +17,4 @@ doctest = false
 test = true
 
 [dependencies]
-peace = { path = "..", version = "0.0.0" }
+peace = { path = "..", version = "0.0.1" }
