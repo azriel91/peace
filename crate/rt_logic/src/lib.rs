@@ -1,4 +1,4 @@
-//! Runtime logic for the zzzz automation library.
+//! Runtime logic for the peace automation library.
 
 pub use crate::job_runner::JobRunner;
 

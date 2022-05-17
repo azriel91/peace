@@ -16,7 +16,7 @@ We can apply the concepts of a programming language compiler -- if the desired a
 
 Instead of restarting the build and deployment process from scratch, we can reuse most of the previous deployment, and replace only the parts that need replacing.
 
-`zzzz` is an attempt to bring the simplicity of a modern build tool to all parts of the software lifecycle.
+`peace` is an attempt to bring the simplicity of a modern build tool to all parts of the software lifecycle.
 
 ## Perspectives
 

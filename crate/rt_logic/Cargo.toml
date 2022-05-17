@@ -1,11 +1,11 @@
 [package]
-name = "zzzz_rt_logic"
+name = "peace_rt_logic"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 version = "0.0.0"
 edition = "2021"
-description = "Runtime logic for the zzzz automation library."
-repository = "https://github.com/azriel91/zzzz"
-documentation = "https://docs.rs/zzzz_rt_logic/"
+description = "Runtime logic for the peace automation library."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_rt_logic/"
 readme = "../../README.md"
 categories = ["asynchronous", "config"]
 keywords = ["automation"]

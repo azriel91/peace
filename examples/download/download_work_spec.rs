@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use zzzz_cfg::WorkSpec;
+use peace::cfg::WorkSpec;
 
 use crate::{DownloadCleanSpec, DownloadEnsureSpec, DownloadStatusSpec, FileState};
 

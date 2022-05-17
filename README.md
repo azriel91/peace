@@ -1,16 +1,16 @@
-# 💤 zzzz &ndash; automate with your eyes closed
+# 🕊️ peace &ndash; zero stress automation
 
-[![Crates.io](https://img.shields.io/crates/v/zzzz.svg)](https://crates.io/crates/zzzz)
-[![docs.rs](https://img.shields.io/docsrs/zzzz)](https://docs.rs/zzzz)
-[![CI](https://github.com/azriel91/zzzz/workflows/CI/badge.svg)](https://github.com/azriel91/zzzz/actions/workflows/ci.yml)
-[![Coverage Status](https://codecov.io/gh/azriel91/zzzz/branch/main/graph/badge.svg)](https://codecov.io/gh/azriel91/zzzz)
+[![Crates.io](https://img.shields.io/crates/v/peace.svg)](https://crates.io/crates/peace)
+[![docs.rs](https://img.shields.io/docsrs/peace)](https://docs.rs/peace)
+[![CI](https://github.com/azriel91/peace/workflows/CI/badge.svg)](https://github.com/azriel91/peace/actions/workflows/ci.yml)
+[![Coverage Status](https://codecov.io/gh/azriel91/peace/branch/main/graph/badge.svg)](https://codecov.io/gh/azriel91/peace)
 
-`zzzz` is a framework to build user friendly software automation.
+`peace` is a framework to build user friendly software automation.
 
 See:
 
 * [`MOTIVATION.md`](MOTIVATION.md) for the motivation to create this framework.
-* [Operations UX](https://azriel.im/ops_ux/) for a book about the dimensions considered during `zzzz`'s design and development.
+* [Operations UX](https://azriel.im/ops_ux/) for a book about the dimensions considered during `peace`'s design and development.
 
 
 ## Guiding Principles
@@ -37,10 +37,10 @@ See:
 * ⚫ Namespaced working directory
 * ⚫ Resource clean up
 * ⚫ Dry run
-* ⚫ `zzzz` binary for configuration based workflows
+* ⚫ `peace` binary for configuration based workflows
 * ⚫ Off-the-shelf support for common tasks
 * ⚫ Web based UI
-* ⚫ Agent mode to run `zzzz` on servers (Web API invocation)
+* ⚫ Agent mode to run `peace` on servers (Web API invocation)
 
 Ideas which may be considered:
 

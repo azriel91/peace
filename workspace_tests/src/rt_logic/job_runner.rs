@@ -1,4 +1,4 @@
-use zzzz::rt_logic::JobRunner;
+use peace::rt_logic::JobRunner;
 
 #[test]
 fn returns_ok_when_job_is_successful() {

@@ -1,11 +1,11 @@
 [package]
-name = "zzzz_cfg"
+name = "peace_cfg"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 version = "0.0.0"
 edition = "2021"
-description = "Configuration model for the zzzz automation library."
-repository = "https://github.com/azriel91/zzzz"
-documentation = "https://docs.rs/zzzz_cfg/"
+description = "Configuration model for the peace automation framework."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_cfg/"
 readme = "../../README.md"
 categories = ["asynchronous", "config"]
 keywords = ["automation"]

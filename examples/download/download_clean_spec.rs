@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use zzzz::cfg::{async_trait::async_trait, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit};
+use peace::cfg::{async_trait::async_trait, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit};
 
 use crate::{DownloadError, DownloadParams, FileState};
 
