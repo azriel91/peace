@@ -16,7 +16,17 @@ doctest = true
 test = false
 
 [dependencies]
+zzzz_cfg = { path = "crate/cfg", version = "0.0.0" }
 zzzz_rt_logic = { path = "crate/rt_logic", version = "0.0.0" }
+
+[dev-dependencies]
+bytes = "1.1.0"
+futures = "0.3.21"
+reqwest = { version = "0.11.10", features = ["stream"] }
+serde = { version = "1.0.137", features = ["derive"] }
+thiserror = "1.0.31"
+tokio = { version = "1.18.2", features = ["fs", "io-util"] }
+url = "2.2.2"
 
 [workspace]
 members = ["crate/*", "workspace_tests"]

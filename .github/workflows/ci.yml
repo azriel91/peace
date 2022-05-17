@@ -37,6 +37,17 @@ jobs:
           command: fmt
           args: --all -- --check
 
+  spell_check:
+    name: Spell Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+    - name: Checkout Actions Repository
+      uses: actions/checkout@v2
+
+    - name: Check spelling
+      uses: crate-ci/typos@master
+
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
