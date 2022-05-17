@@ -1,5 +1,5 @@
-use tokio::{fs::File, io::AsyncReadExt};
 use peace::cfg::{async_trait::async_trait, OpCheckStatus, OpSpec, ProgressLimit};
+use tokio::{fs::File, io::AsyncReadExt};
 
 use crate::{DownloadError, DownloadParams, FileState};
 

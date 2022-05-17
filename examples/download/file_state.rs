@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use peace::cfg::diff::Diff;
+use serde::{Deserialize, Serialize};
 
 /// State of the file to download.
 ///
