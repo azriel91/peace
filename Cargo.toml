@@ -1,11 +1,11 @@
 [package]
-name = "zzzz"
+name = "peace"
 version = "0.0.0"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
-description = "Automate with your eyes closed."
-repository = "https://github.com/azriel91/zzzz"
-documentation = "https://docs.rs/zzzz/"
+description = "zero stress automation"
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace/"
 readme = "README.md"
 categories = ["asynchronous", "config"]
 keywords = ["automation"]
@@ -16,8 +16,8 @@ doctest = true
 test = false
 
 [dependencies]
-zzzz_cfg = { path = "crate/cfg", version = "0.0.0" }
-zzzz_rt_logic = { path = "crate/rt_logic", version = "0.0.0" }
+peace_cfg = { path = "crate/cfg", version = "0.0.0" }
+peace_rt_logic = { path = "crate/rt_logic", version = "0.0.0" }
 
 [dev-dependencies]
 bytes = "1.1.0"

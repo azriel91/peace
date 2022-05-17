@@ -1,6 +1,6 @@
-//! Configuration model for the zzzz automation library.
+//! Configuration model for the peace automation library.
 //!
-//! This crate defines the API for logic and data to be used in the `zzzz`
+//! This crate defines the API for logic and data to be used in the `peace`
 //! framework.
 
 // Re-exports

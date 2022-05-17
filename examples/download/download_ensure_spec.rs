@@ -1,12 +1,12 @@
 use bytes::Bytes;
 use futures::{Stream, StreamExt, TryStreamExt};
+use peace::cfg::{
+    async_trait::async_trait, diff::Diff, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit,
+};
 use std::path::Path;
 use tokio::{
     fs::File,
     io::{AsyncWriteExt, BufWriter},
-};
-use zzzz::cfg::{
-    async_trait::async_trait, diff::Diff, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit,
 };
 
 use crate::{DownloadError, DownloadParams, FileState, FileStateDiff, PathBuf};

@@ -3,9 +3,9 @@ name = "workspace_tests"
 version = "0.1.0"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
-description = "Tests for the zzzz automation library."
-repository = "https://github.com/azriel91/zzzz"
-documentation = "https://docs.rs/zzzz/"
+description = "Tests for the peace automation library."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace/"
 readme = "../README.md"
 categories = ["asynchronous", "config"]
 keywords = ["automation"]
@@ -17,4 +17,4 @@ doctest = false
 test = true
 
 [dependencies]
-zzzz = { path = "..", version = "0.0.0" }
+peace = { path = "..", version = "0.0.0" }
