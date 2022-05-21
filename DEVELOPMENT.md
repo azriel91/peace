@@ -42,3 +42,11 @@ cargo llvm-cov --workspace --lcov --output-path ./target/coverage/lcov.info
 # https://github.com/taiki-e/cargo-llvm-cov/issues/151
 cargo llvm-cov --workspace nextest --workspace --lcov --output-path ./target/coverage/lcov.info
 ```
+
+
+## Releasing
+
+Update crate versions, then push a tag to the repository. The [`publish`] GitHub workflow will automatically publish the crates to [`crates.io`].
+
+[`publish`]: https://github.com/azriel91/peace/actions/workflows/publish.yml
+[`crates.io`]:https://crates.io/
