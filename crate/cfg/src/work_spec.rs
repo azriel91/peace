@@ -22,7 +22,7 @@ use crate::{OpSpec, OpSpecDry};
 ///
 /// Since the latter four operations are write-operations, their specification
 /// includes a dry run function.
-pub trait WorkSpec {
+pub trait WorkSpec<'op> {
     /// IDs of resources produced by the operation.
     ///
     /// This is provided to the clean up logic to determine what to clean up.
@@ -127,15 +127,15 @@ pub trait WorkSpec {
     /// within the past day, don't query it again.
     ///
     /// The output is the state that this `WorkSpec` manages.
-    type StatusSpec: OpSpec<State = (), Output = Self::State>;
+    type StatusSpec: OpSpec<'op, State = (), Output = Self::State>;
 
     /// Specification of the ensure operation.
     ///
     /// The output is the IDs of resources produced by the operation.
-    type EnsureOpSpec: OpSpecDry<State = Self::State, Output = Self::ResIds>;
+    type EnsureOpSpec: OpSpecDry<'op, State = Self::State, Output = Self::ResIds>;
 
     /// Specification of the clean operation.
     ///
     /// The output is the IDs of resources cleaned by the operation.
-    type CleanOpSpec: OpSpecDry<State = Self::State, Output = Self::ResIds>;
+    type CleanOpSpec: OpSpecDry<'op, State = Self::State, Output = Self::ResIds>;
 }

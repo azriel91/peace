@@ -2,7 +2,7 @@
 mod tests {
     use std::any::TypeId;
 
-    use peace::data::{Data, DataAccess, DataAccessDyn, DataInit, Resources, TypeIds, R, W};
+    use peace::data::{Data, DataAccess, DataInit, Resources, TypeIds, R, W};
 
     #[test]
     fn data_named_fields_init() {

@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use fn_graph::Resources;
 
 /// Defines the logic to instantiate runtime data.
@@ -14,4 +16,13 @@ pub trait DataInit {
     ///
     /// * `resources`: `Any` map to insert the instance of each field into.
     fn init(resources: &mut Resources);
+}
+
+impl<T> DataInit for Option<T>
+where
+    T: Debug + Send + Sync + 'static,
+{
+    fn init(resources: &mut Resources) {
+        resources.insert::<Option<T>>(None);
+    }
 }

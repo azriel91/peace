@@ -8,7 +8,7 @@ use crate::{DownloadCleanSpec, DownloadEnsureSpec, DownloadStatusSpec, FileState
 #[derive(Debug)]
 pub struct DownloadWorkSpec;
 
-impl WorkSpec for DownloadWorkSpec {
+impl<'op> WorkSpec<'op> for DownloadWorkSpec {
     type CleanOpSpec = DownloadCleanSpec;
     type EnsureOpSpec = DownloadEnsureSpec;
     type ResIds = PathBuf;

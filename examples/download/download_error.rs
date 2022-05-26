@@ -1,6 +1,11 @@
 /// Error while managing a file download.
 #[derive(Debug, thiserror::Error)]
 pub enum DownloadError {
+    #[error("Source URL not initialized.")]
+    SrcUrlInit,
+    #[error("Destination file not initialized.")]
+    DestFileInit,
+
     #[error("Failed to open destination file.")]
     DestFileOpen(#[source] std::io::Error),
     #[error("Failed to read destination file metadata.")]

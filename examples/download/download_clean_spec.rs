@@ -9,8 +9,8 @@ use crate::{DownloadError, DownloadParams, FileState};
 pub struct DownloadCleanSpec;
 
 #[async_trait]
-impl OpSpec for DownloadCleanSpec {
-    type Data = DownloadParams;
+impl<'op> OpSpec<'op> for DownloadCleanSpec {
+    type Data = DownloadParams<'op>;
     type Error = DownloadError;
     type Output = PathBuf;
     type State = Option<FileState>;
@@ -35,15 +35,16 @@ impl OpSpec for DownloadCleanSpec {
     }
 
     async fn exec(download_params: &DownloadParams) -> Result<PathBuf, DownloadError> {
-        tokio::fs::remove_file(&download_params.dest())
+        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
+        tokio::fs::remove_file(dest)
             .await
             .map_err(DownloadError::DestFileRemove)?;
-        Ok(download_params.dest().to_path_buf())
+        Ok(dest.to_path_buf())
     }
 }
 
 #[async_trait]
-impl OpSpecDry for DownloadCleanSpec {
+impl<'op> OpSpecDry<'op> for DownloadCleanSpec {
     async fn exec_dry() -> Result<Self::Output, Self::Error> {
         todo!("should this be inferred from the Diff instead")
     }

@@ -17,7 +17,7 @@ pub struct DownloadEnsureSpec;
 
 impl DownloadEnsureSpec {
     async fn file_contents_check(
-        download_params: &DownloadParams,
+        download_params: &DownloadParams<'_>,
         client: &reqwest::Client,
         file_state_current: &FileState,
     ) -> Result<OpCheckStatus, DownloadError> {
@@ -33,11 +33,12 @@ impl DownloadEnsureSpec {
     }
 
     async fn file_state_desired(
-        download_params: &DownloadParams,
+        download_params: &DownloadParams<'_>,
         client: &reqwest::Client,
     ) -> Result<FileState, DownloadError> {
+        let src_url = download_params.src().ok_or(DownloadError::SrcUrlInit)?;
         let response = client
-            .get(download_params.src().clone())
+            .get(src_url.clone())
             .send()
             .await
             .map_err(DownloadError::SrcGet)?;
@@ -63,16 +64,18 @@ impl DownloadEnsureSpec {
     }
 
     async fn file_download(
-        download_params: &DownloadParams,
+        download_params: &DownloadParams<'_>,
         client: &reqwest::Client,
     ) -> Result<(), DownloadError> {
+        let src_url = download_params.src().ok_or(DownloadError::SrcUrlInit)?;
+        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
         let response = client
-            .get(download_params.src().clone())
+            .get(src_url.clone())
             .send()
             .await
             .map_err(DownloadError::SrcGet)?;
 
-        Self::stream_write(&download_params.dest(), response.bytes_stream()).await
+        Self::stream_write(dest, response.bytes_stream()).await
     }
 
     /// Streams the content to disk.
@@ -106,8 +109,8 @@ impl DownloadEnsureSpec {
 }
 
 #[async_trait]
-impl OpSpec for DownloadEnsureSpec {
-    type Data = DownloadParams;
+impl<'op> OpSpec<'op> for DownloadEnsureSpec {
+    type Data = DownloadParams<'op>;
     type Error = DownloadError;
     type Output = PathBuf;
     type State = Option<FileState>;
@@ -139,12 +142,13 @@ impl OpSpec for DownloadEnsureSpec {
         let client = &client;
 
         Self::file_download(download_params, client).await?;
-        Ok(download_params.dest().to_path_buf())
+        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
+        Ok(dest.to_path_buf())
     }
 }
 
 #[async_trait]
-impl OpSpecDry for DownloadEnsureSpec {
+impl<'op> OpSpecDry<'op> for DownloadEnsureSpec {
     async fn exec_dry() -> Result<Self::Output, Self::Error> {
         todo!("should this be inferred from the Diff instead")
     }

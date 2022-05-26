@@ -1,28 +1,29 @@
 use std::path::{Path, PathBuf};
 
+use peace::data::{Data, R};
 use url::Url;
 
 /// Download parameters from the user.
-#[derive(Debug)]
-pub struct DownloadParams {
+#[derive(Data, Debug)]
+pub struct DownloadParams<'op> {
     /// Url of the file to download.
-    src: Url,
+    src: R<'op, Option<Url>>,
     /// Path of the destination.
     ///
     /// Must be a file path, and not a directory.
-    dest: PathBuf,
+    dest: R<'op, Option<PathBuf>>,
 }
 
-impl DownloadParams {
-    pub fn new(src: Url, dest: PathBuf) -> Self {
+impl<'op> DownloadParams<'op> {
+    pub fn new(src: R<'op, Option<Url>>, dest: R<'op, Option<PathBuf>>) -> Self {
         Self { src, dest }
     }
 
-    pub fn src(&self) -> &Url {
-        &self.src
+    pub fn src(&self) -> Option<&Url> {
+        self.src.as_ref()
     }
 
-    pub fn dest(&self) -> &Path {
-        &self.dest
+    pub fn dest(&self) -> Option<&Path> {
+        self.dest.as_deref()
     }
 }

@@ -8,8 +8,8 @@ use crate::{DownloadError, DownloadParams, FileState};
 pub struct DownloadStatusSpec;
 
 #[async_trait]
-impl OpSpec for DownloadStatusSpec {
-    type Data = DownloadParams;
+impl<'op> OpSpec<'op> for DownloadStatusSpec {
+    type Data = DownloadParams<'op>;
     type Error = DownloadError;
     type Output = Option<FileState>;
     type State = ();
@@ -25,12 +25,13 @@ impl OpSpec for DownloadStatusSpec {
 
     async fn exec(download_params: &DownloadParams) -> Result<Option<FileState>, DownloadError> {
         // Destination file doesn't exist.
-        if !download_params.dest().exists() {
+        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
+        if !dest.exists() {
             return Ok(None);
         }
 
         // Check file length
-        let mut file = File::open(&download_params.dest())
+        let mut file = File::open(dest)
             .await
             .map_err(DownloadError::DestFileOpen)?;
         let metadata = file

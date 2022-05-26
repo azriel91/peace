@@ -10,20 +10,17 @@ extern crate syn;
 use proc_macro::TokenStream;
 use proc_macro2::Literal;
 use syn::{
-    punctuated::Punctuated, token::Comma, DataStruct, DeriveInput, Field, Fields, FieldsNamed,
-    FieldsUnnamed, Ident, Lifetime, Type, WhereClause, WherePredicate,
+    punctuated::Punctuated, token::Comma, Attribute, DataStruct, DeriveInput, Field, Fields,
+    FieldsNamed, FieldsUnnamed, Ident, Lifetime, Type, WhereClause, WherePredicate,
 };
 
 /// Used to `#[derive]` the `Data` trait.
 ///
-/// The following types must be in scope:
+/// For regular usage, use `#[derive(Data)]`
 ///
-/// * `peace_data::Data`
-/// * `peace_data::DataAccess`
-/// * `peace_data::DataAccessDyn`
-/// * `peace_data::Resources`
-/// * `peace_data::TypeIds`
-#[proc_macro_derive(Data)]
+/// For peace crates, also add the `#[peace_internal]` attribute, which
+/// references the `peace_data` crate instead of the `peace::data` re-export.
+#[proc_macro_derive(Data, attributes(peace_internal))]
 pub fn data_access(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input).expect("Data derive: Code failed to be parsed.");
 
@@ -34,6 +31,14 @@ pub fn data_access(input: TokenStream) -> TokenStream {
 
 fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
     let name = &ast.ident;
+
+    let module_pfx = ast
+        .attrs
+        .iter()
+        .find(peace_internal)
+        .map(|_| quote!(peace_data))
+        .unwrap_or_else(|| quote!(peace::data));
+
     let mut generics = ast.generics.clone();
 
     let (tys, field_names, borrow_return) = gen_from_body(&ast.data, name);
@@ -54,26 +59,26 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     quote! {
-        impl #impl_generics DataAccess
+        impl #impl_generics #module_pfx::DataAccess
             for #name #ty_generics
             #where_clause
         {
-            fn borrows() -> TypeIds {
-                let mut r = TypeIds::new();
+            fn borrows() -> #module_pfx::TypeIds {
+                let mut r = #module_pfx::TypeIds::new();
 
                 #( {
-                        let mut borrows = <#tys as DataAccess> :: borrows();
+                        let mut borrows = <#tys as #module_pfx::DataAccess>::borrows();
                         r.append(&mut borrows);
                     } )*
 
                 r
             }
 
-            fn borrow_muts() -> TypeIds {
-                let mut r = TypeIds::new();
+            fn borrow_muts() -> #module_pfx::TypeIds {
+                let mut r = #module_pfx::TypeIds::new();
 
                 #( {
-                        let mut borrow_muts = <#tys as DataAccess> :: borrow_muts();
+                        let mut borrow_muts = <#tys as #module_pfx::DataAccess>::borrow_muts();
                         r.append(&mut borrow_muts);
                     } )*
 
@@ -81,26 +86,26 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
             }
         }
 
-        impl #impl_generics DataAccessDyn
+        impl #impl_generics #module_pfx::DataAccessDyn
             for #name #ty_generics
             #where_clause
         {
-            fn borrows(&self) -> TypeIds {
-                let mut r = TypeIds::new();
+            fn borrows(&self) -> #module_pfx::TypeIds {
+                let mut r = #module_pfx::TypeIds::new();
 
                 #( {
-                        let mut borrows = <#tys as DataAccessDyn> :: borrows(&self.#field_names);
+                        let mut borrows = <#tys as #module_pfx::DataAccessDyn>::borrows(&self.#field_names);
                         r.append(&mut borrows);
                     } )*
 
                 r
             }
 
-            fn borrow_muts(&self) -> TypeIds {
-                let mut r = TypeIds::new();
+            fn borrow_muts(&self) -> #module_pfx::TypeIds {
+                let mut r = #module_pfx::TypeIds::new();
 
                 #( {
-                        let mut borrow_muts = <#tys as DataAccessDyn> :: borrow_muts(&self.#field_names);
+                        let mut borrow_muts = <#tys as #module_pfx::DataAccessDyn>::borrow_muts(&self.#field_names);
                         r.append(&mut borrow_muts);
                     } )*
 
@@ -108,21 +113,25 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
             }
         }
 
-        impl #impl_generics Data< #impl_borrow_lt >
+        impl #impl_generics #module_pfx::Data< #impl_borrow_lt >
             for #name #ty_generics
             #where_clause
         {
-            fn init(resources: &mut Resources) {
+            fn init(resources: &mut #module_pfx::Resources) {
                 #(
-                    <#tys as Data> :: init(resources);
+                    <#tys as #module_pfx::Data>::init(resources);
                 )*
             }
 
-            fn borrow(resources: & #impl_borrow_lt Resources) -> Self {
+            fn borrow(resources: & #impl_borrow_lt #module_pfx::Resources) -> Self {
                 #borrow_return
             }
         }
     }
+}
+
+fn peace_internal(attr: &&Attribute) -> bool {
+    attr.path.is_ident("peace_internal")
 }
 
 fn collect_field_types(fields: &Punctuated<Field, Comma>) -> Vec<Type> {
