@@ -4,9 +4,9 @@ pub use crate::{
     download_clean_spec::DownloadCleanSpec,
     download_ensure_spec::DownloadEnsureSpec,
     download_error::DownloadError,
+    download_full_spec::DownloadFullSpec,
     download_params::DownloadParams,
     download_status_spec::DownloadStatusSpec,
-    download_work_spec::DownloadWorkSpec,
     file_state::{FileState, FileStateDiff},
 };
 
@@ -16,12 +16,12 @@ mod download_clean_spec;
 mod download_ensure_spec;
 #[path = "download/download_error.rs"]
 mod download_error;
+#[path = "download/download_full_spec.rs"]
+mod download_full_spec;
 #[path = "download/download_params.rs"]
 mod download_params;
 #[path = "download/download_status_spec.rs"]
 mod download_status_spec;
-#[path = "download/download_work_spec.rs"]
-mod download_work_spec;
 #[path = "download/file_state.rs"]
 mod file_state;
 

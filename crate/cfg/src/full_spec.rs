@@ -3,16 +3,16 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{OpSpec, OpSpecDry};
 
-/// Encapsulates all the operations of a work item.
+/// Defines all of the data and logic to manage a user defined thing.
 ///
-/// A work item encapsulates the data and logic needed to manage the lifecycle
-/// operations of *something* that is user defined. The *something* may be:
+/// The user defined thing may be simple or complex, ranging from:
 ///
-/// * Downloading a file.
-/// * Installing an application.
-/// * Launching some servers.
+/// * File download.
+/// * Application installation.
+/// * Server launching / initialization.
+/// * Multiple cloud resource management.
 ///
-/// The lifecycle operations are defined as:
+/// The lifecycle operations include:
 ///
 /// 1. Status discovery.
 /// 2. Execution.
@@ -22,7 +22,7 @@ use crate::{OpSpec, OpSpecDry};
 ///
 /// Since the latter four operations are write-operations, their specification
 /// includes a dry run function.
-pub trait WorkSpec<'op> {
+pub trait FullSpec<'op> {
     /// IDs of resources produced by the operation.
     ///
     /// This is provided to the clean up logic to determine what to clean up.
@@ -79,10 +79,10 @@ pub trait WorkSpec<'op> {
     /// * The clean operation's check function should be able to use this to
     ///   determine if the configuration needs to be undone.
     ///
-    /// * The backup operation's work function should produce this as a record
+    /// * The backup operation's exec function should produce this as a record
     ///   of the current state.
     ///
-    /// * The restore operation's work function should be able to read this and
+    /// * The restore operation's exec function should be able to read this and
     ///   determine how to alter the system to match this state. If this were a
     ///   commit hash, then restoring would be applying the configuration at
     ///   that commit hash.
@@ -101,10 +101,10 @@ pub trait WorkSpec<'op> {
     /// * The clean operation's check function should be able to use this to
     ///   determine if the servers that need to be removed.
     ///
-    /// * The backup operation's work function should produce this as a record
+    /// * The backup operation's exec function should produce this as a record
     ///   of the current state.
     ///
-    /// * The restore operation's work function should be able to read this and
+    /// * The restore operation's exec function should be able to read this and
     ///   launch servers using the recorded image and hardware capacity.
     ///
     /// [`StatusSpec`]: Self::StatusSpec

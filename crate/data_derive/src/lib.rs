@@ -117,12 +117,6 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
             for #name #ty_generics
             #where_clause
         {
-            fn init(resources: &mut #module_pfx::Resources) {
-                #(
-                    <#tys as #module_pfx::Data>::init(resources);
-                )*
-            }
-
             fn borrow(resources: & #impl_borrow_lt #module_pfx::Resources) -> Self {
                 #borrow_return
             }

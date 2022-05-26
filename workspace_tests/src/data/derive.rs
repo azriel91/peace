@@ -2,55 +2,7 @@
 mod tests {
     use std::any::TypeId;
 
-    use peace::data::{Data, DataAccess, DataInit, Resources, TypeIds, R, W};
-
-    #[test]
-    fn data_named_fields_init() {
-        let mut resources = Resources::new();
-
-        DataNamedFields::init(&mut resources);
-
-        assert_eq!(A(1), *resources.borrow::<A>());
-        assert_eq!(B(2), *resources.borrow::<B>());
-    }
-
-    #[test]
-    fn data_unnamed_fields_init() {
-        let mut resources = Resources::new();
-
-        DataUnnamedFields::init(&mut resources);
-
-        assert_eq!(A(1), *resources.borrow::<A>());
-        assert_eq!(B(2), *resources.borrow::<B>());
-    }
-
-    #[test]
-    fn data_mut_fields_init() {
-        let mut resources = Resources::new();
-
-        DataMutFields::init(&mut resources);
-
-        assert_eq!(A(1), *resources.borrow::<A>());
-        assert_eq!(B(2), *resources.borrow::<B>());
-    }
-
-    #[test]
-    fn r_init() {
-        let mut resources = Resources::new();
-
-        R::<'_, A>::init(&mut resources);
-
-        assert_eq!(A(1), *resources.borrow::<A>());
-    }
-
-    #[test]
-    fn w_init() {
-        let mut resources = Resources::new();
-
-        W::<'_, A>::init(&mut resources);
-
-        assert_eq!(A(1), *resources.borrow::<A>());
-    }
+    use peace::data::{Data, DataAccess, TypeIds, R, W};
 
     #[test]
     fn data_named_fields_borrows() {
@@ -174,18 +126,6 @@ mod tests {
     #[derive(Clone, Copy, Debug, PartialEq)]
     struct A(u32);
 
-    impl DataInit for A {
-        fn init(resources: &mut Resources) {
-            resources.insert(A(1));
-        }
-    }
-
     #[derive(Clone, Copy, Debug, PartialEq)]
     struct B(u32);
-
-    impl DataInit for B {
-        fn init(resources: &mut Resources) {
-            resources.insert(B(2));
-        }
-    }
 }
