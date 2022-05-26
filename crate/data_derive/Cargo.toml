@@ -1,0 +1,20 @@
+[package]
+name = "peace_data_derive"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.1"
+edition = "2021"
+description = "Data proc macro for for the peace automation framework."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_data_derive/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+syn = "1.0.95"
+quote = "1.0.18"
+proc-macro2 = "1.0.39"
+
+[lib]
+proc-macro = true

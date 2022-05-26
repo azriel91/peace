@@ -1,11 +1,11 @@
 [package]
-name = "peace_cfg"
+name = "peace_data"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 version = "0.0.1"
 edition = "2021"
-description = "Configuration model for the peace automation framework."
+description = "Data model for the peace automation framework."
 repository = "https://github.com/azriel91/peace"
-documentation = "https://docs.rs/peace_cfg/"
+documentation = "https://docs.rs/peace_data/"
 readme = "../../README.md"
 categories = ["asynchronous", "config"]
 keywords = ["automation"]
@@ -16,7 +16,5 @@ doctest = false
 test = false
 
 [dependencies]
-async-trait = "0.1.53"
-diff-struct = "0.4.1"
 fn_graph = { version = "0.5.0", features = ["resman"] }
-serde = "1.0.137"
+peace_data_derive = { path = "../data_derive", version = "0.0.1" }
