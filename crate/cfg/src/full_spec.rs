@@ -57,7 +57,7 @@ pub trait FullSpec<'op> {
     /// This is intended as a serializable summary of the state, so it should be
     /// relatively lightweight.
     ///
-    /// This is the type returned by the [`StatusSpec`], and is used by
+    /// This is the type returned by the [`StatusOpSpec`], and is used by
     /// [`EnsureOpSpec`] and [`CleanOpSpec`] to determine if their [`exec`]
     /// function needs to be run.
     ///
@@ -107,7 +107,7 @@ pub trait FullSpec<'op> {
     /// * The restore operation's exec function should be able to read this and
     ///   launch servers using the recorded image and hardware capacity.
     ///
-    /// [`StatusSpec`]: Self::StatusSpec
+    /// [`StatusOpSpec`]: Self::StatusOpSpec
     /// [`EnsureOpSpec`]: Self::EnsureOpSpec
     /// [`CleanOpSpec`]: Self::CleanOpSpec
     /// [`exec`]: crate::OpSpec::exec
@@ -117,8 +117,8 @@ pub trait FullSpec<'op> {
     ///
     /// # Future Development
     ///
-    /// The `StatusSpec` may decide to not check for status if it caches status.
-    /// For that use case, the `state` used by the StatusSpec should include:
+    /// The `StatusOpSpec` may decide to not check for status if it caches status.
+    /// For that use case, the `state` used by the StatusOpSpec should include:
     ///
     /// * Execution ID
     /// * Last status query time
@@ -127,7 +127,7 @@ pub trait FullSpec<'op> {
     /// within the past day, don't query it again.
     ///
     /// The output is the state that this `WorkSpec` manages.
-    type StatusSpec: OpSpec<'op, State = (), Output = Self::State>;
+    type StatusOpSpec: OpSpec<'op, State = (), Output = Self::State>;
 
     /// Specification of the ensure operation.
     ///
@@ -138,4 +138,13 @@ pub trait FullSpec<'op> {
     ///
     /// The output is the IDs of resources cleaned by the operation.
     type CleanOpSpec: OpSpecDry<'op, State = Self::State, Output = Self::ResIds>;
+
+    /// Returns the `StatusOpSpec` for this `FullSpec`.
+    fn status_op_spec(&self) -> &Self::StatusOpSpec;
+
+    /// Returns the `EnsureOpSpec` for this `FullSpec`.
+    fn ensure_op_spec(&self) -> &Self::EnsureOpSpec;
+
+    /// Returns the `CleanOpSpec` for this `FullSpec`.
+    fn clean_op_spec(&self) -> &Self::CleanOpSpec;
 }

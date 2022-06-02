@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use fn_graph::{DataAccessDyn, DataBorrow, Resources, R, W};
+use fn_graph::{DataAccess, DataAccessDyn, DataBorrow, Resources, R, W};
 
 /// Defines the logic to instantiate and retrieve runtime data.
 ///
@@ -9,7 +9,7 @@ use fn_graph::{DataAccessDyn, DataBorrow, Resources, R, W};
 /// This trait is implemented by using the [`Data` derive].
 ///
 /// [`Data` derive]: peace_data_derive::Data
-pub trait Data<'borrow>: DataAccessDyn {
+pub trait Data<'borrow>: DataAccess + DataAccessDyn {
     /// Borrows each of `Self`'s fields from the provided [`Resources`].
     ///
     /// # Parameters

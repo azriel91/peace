@@ -1,21 +1,22 @@
+use std::path::{Path, PathBuf};
+
 use bytes::Bytes;
 use futures::{Stream, StreamExt, TryStreamExt};
 use peace::cfg::{
     async_trait::async_trait, diff::Diff, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit,
 };
-use std::path::Path;
 use tokio::{
     fs::File,
     io::{AsyncWriteExt, BufWriter},
 };
 
-use crate::{DownloadError, DownloadParams, FileState, FileStateDiff, PathBuf};
+use crate::{DownloadError, DownloadParams, FileState, FileStateDiff};
 
 /// Ensure OpSpec for the file to download.
 #[derive(Debug)]
-pub struct DownloadEnsureSpec;
+pub struct DownloadEnsureOpSpec;
 
-impl DownloadEnsureSpec {
+impl DownloadEnsureOpSpec {
     async fn file_contents_check(
         download_params: &DownloadParams<'_>,
         client: &reqwest::Client,
@@ -109,7 +110,7 @@ impl DownloadEnsureSpec {
 }
 
 #[async_trait]
-impl<'op> OpSpec<'op> for DownloadEnsureSpec {
+impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
     type Data = DownloadParams<'op>;
     type Error = DownloadError;
     type Output = PathBuf;
@@ -148,7 +149,7 @@ impl<'op> OpSpec<'op> for DownloadEnsureSpec {
 }
 
 #[async_trait]
-impl<'op> OpSpecDry<'op> for DownloadEnsureSpec {
+impl<'op> OpSpecDry<'op> for DownloadEnsureOpSpec {
     async fn exec_dry() -> Result<Self::Output, Self::Error> {
         todo!("should this be inferred from the Diff instead")
     }

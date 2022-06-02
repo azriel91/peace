@@ -6,10 +6,10 @@ use crate::{DownloadError, DownloadParams, FileState};
 
 /// Clean OpSpec for the file to download.
 #[derive(Debug)]
-pub struct DownloadCleanSpec;
+pub struct DownloadCleanOpSpec;
 
 #[async_trait]
-impl<'op> OpSpec<'op> for DownloadCleanSpec {
+impl<'op> OpSpec<'op> for DownloadCleanOpSpec {
     type Data = DownloadParams<'op>;
     type Error = DownloadError;
     type Output = PathBuf;
@@ -44,7 +44,7 @@ impl<'op> OpSpec<'op> for DownloadCleanSpec {
 }
 
 #[async_trait]
-impl<'op> OpSpecDry<'op> for DownloadCleanSpec {
+impl<'op> OpSpecDry<'op> for DownloadCleanOpSpec {
     async fn exec_dry() -> Result<Self::Output, Self::Error> {
         todo!("should this be inferred from the Diff instead")
     }

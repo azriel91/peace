@@ -5,10 +5,10 @@ use crate::{DownloadError, DownloadParams, FileState};
 
 /// Status OpSpec for the file to download.
 #[derive(Debug)]
-pub struct DownloadStatusSpec;
+pub struct DownloadStatusOpSpec;
 
 #[async_trait]
-impl<'op> OpSpec<'op> for DownloadStatusSpec {
+impl<'op> OpSpec<'op> for DownloadStatusOpSpec {
     type Data = DownloadParams<'op>;
     type Error = DownloadError;
     type Output = Option<FileState>;

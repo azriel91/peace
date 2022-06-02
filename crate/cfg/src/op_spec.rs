@@ -17,12 +17,12 @@ use crate::{OpCheckStatus, ProgressLimit};
 pub trait OpSpec<'op> {
     /// State that the [`WorkSpec`] manages.
     ///
-    /// This is the type returned by the [`StatusSpec`], and is used by
+    /// This is the type returned by the [`StatusOpSpec`], and is used by
     /// [`EnsureOpSpec`] and [`CleanOpSpec`] to determine if their [`exec`]
     /// function needs to be run.
     ///
     /// [`WorkSpec`]: crate::WorkSpec
-    /// [`StatusSpec`]: crate::WorkSpec::StatusSpec
+    /// [`StatusOpSpec`]: crate::WorkSpec::StatusOpSpec
     /// [`EnsureOpSpec`]: crate::WorkSpec::EnsureOpSpec
     /// [`CleanOpSpec`]: crate::WorkSpec::CleanOpSpec
     /// [`exec`]: crate::OpSpec::exec

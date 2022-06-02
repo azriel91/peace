@@ -1,0 +1,23 @@
+[package]
+name = "peace_rt_model"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.1"
+edition = "2021"
+description = "Runtime data types for the peace automation framework."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_rt_model/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+diff-struct = "0.4.1"
+fn_graph = { version = "0.5.0", features = ["resman"] }
+peace_cfg = { path = "../cfg", version = "0.0.1" }
+peace_data = { path = "../data", version = "0.0.1" }
+serde = "1.0.137"
