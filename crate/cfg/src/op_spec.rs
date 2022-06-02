@@ -52,6 +52,10 @@ pub trait OpSpec<'op> {
     type Error: std::error::Error;
 
     /// Initializes data for the operation's check and `exec` functions.
+    ///
+    /// # Implementors
+    ///
+    /// This function call is intended to be cheap and fast.
     async fn setup(data: &Self::Data) -> Result<ProgressLimit, Self::Error>;
 
     /// Checks if the operation needs to be executed.
@@ -67,6 +71,11 @@ pub trait OpSpec<'op> {
     /// This function call is intended to be cheap and fast.
     async fn check(data: &Self::Data, state: &Self::State) -> Result<OpCheckStatus, Self::Error>;
 
-    /// Actual execution to do the work.
+    /// Transforms the current state to the desired state.
+    ///
+    /// This will only be called if [`check`] returns [`ExecRequired`].
+    ///
+    /// [`check`]: crate::OpSpec::check
+    /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec(data: &Self::Data) -> Result<Self::Output, Self::Error>;
 }

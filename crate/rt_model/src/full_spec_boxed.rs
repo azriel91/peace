@@ -3,9 +3,15 @@ use fn_graph::{DataAccessDyn, TypeIds};
 use peace_cfg::{FullSpec, OpSpec, OpSpecDry};
 use serde::{de::DeserializeOwned, Serialize};
 
-use self::full_spec_rt::FullSpecRt;
+pub use self::{
+    clean_op_spec_rt::CleanOpSpecRt, ensure_op_spec_rt::EnsureOpSpecRt, full_spec_rt::FullSpecRt,
+    status_op_spec_rt::StatusOpSpecRt,
+};
 
+mod clean_op_spec_rt;
+mod ensure_op_spec_rt;
 mod full_spec_rt;
+mod status_op_spec_rt;
 
 /// Defines all of the data and logic to manage a user defined item.
 ///

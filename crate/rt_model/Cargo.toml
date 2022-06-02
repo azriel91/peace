@@ -21,3 +21,4 @@ fn_graph = { version = "0.5.0", features = ["resman"] }
 peace_cfg = { path = "../cfg", version = "0.0.1" }
 peace_data = { path = "../data", version = "0.0.1" }
 serde = "1.0.137"
+thiserror = "1.0.31"

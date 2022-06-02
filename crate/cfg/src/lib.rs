@@ -4,7 +4,7 @@
 //! framework.
 
 // Re-exports
-pub use async_trait;
+pub use async_trait::async_trait;
 pub use diff;
 
 pub use crate::{

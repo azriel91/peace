@@ -2,9 +2,7 @@ use std::path::{Path, PathBuf};
 
 use bytes::Bytes;
 use futures::{Stream, StreamExt, TryStreamExt};
-use peace::cfg::{
-    async_trait::async_trait, diff::Diff, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit,
-};
+use peace::cfg::{async_trait, diff::Diff, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit};
 use tokio::{
     fs::File,
     io::{AsyncWriteExt, BufWriter},
