@@ -3,7 +3,9 @@ use fn_graph::{DataAccessDyn, TypeIds};
 use peace_cfg::{FullSpec, OpSpec, OpSpecDry};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::FullSpecRt;
+use self::full_spec_rt::FullSpecRt;
+
+mod full_spec_rt;
 
 /// Defines all of the data and logic to manage a user defined item.
 ///
