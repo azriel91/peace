@@ -8,7 +8,7 @@ use peace::{
 use crate::{DownloadError, DownloadParams, FileState};
 
 /// Clean OpSpec for the file to download.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct DownloadCleanOpSpec;
 
 #[async_trait]

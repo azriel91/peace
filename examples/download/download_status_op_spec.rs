@@ -7,7 +7,7 @@ use tokio::{fs::File, io::AsyncReadExt};
 use crate::{DownloadError, DownloadParams, FileState};
 
 /// Status OpSpec for the file to download.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct DownloadStatusOpSpec;
 
 #[async_trait]

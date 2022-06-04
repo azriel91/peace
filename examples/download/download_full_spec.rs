@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// Full spec for downloading a file.
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct DownloadFullSpec {
     status_op_spec: DownloadStatusOpSpec,
     ensure_op_spec: DownloadEnsureOpSpec,
