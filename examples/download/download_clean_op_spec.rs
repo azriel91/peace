@@ -1,6 +1,9 @@
 use std::path::PathBuf;
 
-use peace::cfg::{async_trait, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit};
+use peace::{
+    cfg::{async_trait, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit},
+    data::Resources,
+};
 
 use crate::{DownloadError, DownloadParams, FileState};
 
@@ -15,7 +18,7 @@ impl<'op> OpSpec<'op> for DownloadCleanOpSpec {
     type Output = PathBuf;
     type State = Option<FileState>;
 
-    async fn setup(_download_params: &DownloadParams) -> Result<ProgressLimit, DownloadError> {
+    async fn setup(_resources: &mut Resources) -> Result<ProgressLimit, DownloadError> {
         // TODO: pass through desired State,
 
         // Bytes to delete

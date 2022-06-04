@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 
+use fn_graph::Resources;
 use peace_data::Data;
 
 use crate::{OpCheckStatus, ProgressLimit};
@@ -56,7 +57,7 @@ pub trait OpSpec<'op> {
     /// # Implementors
     ///
     /// This function call is intended to be cheap and fast.
-    async fn setup(data: &Self::Data) -> Result<ProgressLimit, Self::Error>;
+    async fn setup(data: &mut Resources) -> Result<ProgressLimit, Self::Error>;
 
     /// Checks if the operation needs to be executed.
     ///

@@ -1,4 +1,7 @@
-use peace::rt_model::FullSpecGraphBuilder;
+use peace::{
+    data::fn_graph::FnGraphBuilder,
+    rt_model::{FullSpecBoxed, FullSpecGraphBuilder},
+};
 
 pub use crate::{
     download_clean_op_spec::DownloadCleanOpSpec,
@@ -26,7 +29,7 @@ mod download_status_op_spec;
 mod file_state;
 
 fn main() {
-    let _graph_builder = FullSpecGraphBuilder::new();
+    let _graph_builder: FnGraphBuilder<FullSpecBoxed<DownloadError>> = FullSpecGraphBuilder::new();
 }
 
 /// Read up to 1 kB in memory.

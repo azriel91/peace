@@ -10,7 +10,11 @@ use crate::full_spec_boxed::{CleanOpSpecRt, EnsureOpSpecRt, StatusOpSpecRt};
 /// under the same boxed trait.
 ///
 /// [`FullSpec`]: peace_cfg::FullSpec
-pub trait FullSpecRt<'op>:
-    Debug + DataAccessDyn + CleanOpSpecRt<'op> + EnsureOpSpecRt<'op> + StatusOpSpecRt<'op>
+pub trait FullSpecRt<'op, E>:
+    Debug
+    + DataAccessDyn
+    + CleanOpSpecRt<'op, Error = E>
+    + EnsureOpSpecRt<'op, Error = E>
+    + StatusOpSpecRt<'op, Error = E>
 {
 }

@@ -1,8 +1,6 @@
 use fn_graph::Resources;
 use peace_cfg::async_trait;
 
-use crate::Error;
-
 /// Type-erased trait corresponding to [`FullSpec::StatusOpSpec`].
 ///
 /// Implementation of this will fetch Data from [`Resources`], then call the
@@ -16,10 +14,13 @@ use crate::Error;
 /// [`OpSpec`]: peace_cfg::OpSpec
 #[async_trait]
 pub trait StatusOpSpecRt<'op> {
+    /// Error returned when any of the functions of this operation err.
+    type Error: std::error::Error;
+
     /// Initializes data for the operation's check and `exec` functions.
-    async fn setup(&self, resources: &Resources) -> Result<(), Error>;
+    async fn setup(&self, resources: &mut Resources) -> Result<(), Self::Error>;
     /// Checks if the operation needs to be executed.
-    async fn check(&self, resources: &Resources) -> Result<(), Error>;
+    async fn check(&self, resources: &Resources) -> Result<(), Self::Error>;
     /// Transforms the current state to the desired state.
-    async fn exec(&self, resources: &Resources) -> Result<(), Error>;
+    async fn exec(&self, resources: &Resources) -> Result<(), Self::Error>;
 }

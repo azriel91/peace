@@ -23,35 +23,6 @@ use crate::{OpSpec, OpSpecDry};
 /// Since the latter four operations are write-operations, their specification
 /// includes a dry run function.
 pub trait FullSpec<'op> {
-    /// IDs of resources produced by the operation.
-    ///
-    /// This is provided to the clean up logic to determine what to clean up.
-    ///
-    /// These should be physical IDs, not logical IDs. A logical resource ID is
-    /// defined by code, and does not change. A physical resource ID is one
-    /// generated during execution, which generally is random or computed.
-    ///
-    /// # Examples
-    ///
-    /// The following are examples of logical IDs and corresponding physical
-    /// IDs:
-    ///
-    /// * If the operation creates a file, the ID *may* be the full file path,
-    ///   or it may be the file name, assuming the file path may be deduced by
-    ///   the clean up logic from [`Params`].
-    ///
-    /// * If the operation instantiates a virtual machine on a cloud platform,
-    ///   this may be the ID of the instance so that it may be terminated.
-    ///
-    /// | Logical ID               | Physical ID                            |
-    /// | ------------------------ | -------------------------------------- |
-    /// | `app.file_path`          | `/mnt/data/app.zip`                    |
-    /// | `app_server_instance_id` | `ef34a9a4-0c02-45a6-96ec-a4db06d4980c` |
-    /// | `app_server.address`     | `10.0.0.1`                             |
-    ///
-    /// [`Params`]: crate::OpSpec::Params
-    type ResIds: Serialize + DeserializeOwned;
-
     /// State of the data or resources that this `WorkSpec` manages.
     ///
     /// This is intended as a serializable summary of the state, so it should be
@@ -113,12 +84,45 @@ pub trait FullSpec<'op> {
     /// [`exec`]: crate::OpSpec::exec
     type State: Diff + Serialize + DeserializeOwned;
 
+    /// Consumer provided error type.
+    type Error: std::error::Error;
+
+    /// IDs of resources produced by the operation.
+    ///
+    /// This is provided to the clean up logic to determine what to clean up.
+    ///
+    /// These should be physical IDs, not logical IDs. A logical resource ID is
+    /// defined by code, and does not change. A physical resource ID is one
+    /// generated during execution, which generally is random or computed.
+    ///
+    /// # Examples
+    ///
+    /// The following are examples of logical IDs and corresponding physical
+    /// IDs:
+    ///
+    /// * If the operation creates a file, the ID *may* be the full file path,
+    ///   or it may be the file name, assuming the file path may be deduced by
+    ///   the clean up logic from [`Params`].
+    ///
+    /// * If the operation instantiates a virtual machine on a cloud platform,
+    ///   this may be the ID of the instance so that it may be terminated.
+    ///
+    /// | Logical ID               | Physical ID                            |
+    /// | ------------------------ | -------------------------------------- |
+    /// | `app.file_path`          | `/mnt/data/app.zip`                    |
+    /// | `app_server_instance_id` | `ef34a9a4-0c02-45a6-96ec-a4db06d4980c` |
+    /// | `app_server.address`     | `10.0.0.1`                             |
+    ///
+    /// [`Params`]: crate::OpSpec::Params
+    type ResIds: Serialize + DeserializeOwned;
+
     /// Specification of the status function.
     ///
     /// # Future Development
     ///
-    /// The `StatusOpSpec` may decide to not check for status if it caches status.
-    /// For that use case, the `state` used by the StatusOpSpec should include:
+    /// The `StatusOpSpec` may decide to not check for status if it caches
+    /// status. For that use case, the `state` used by the StatusOpSpec
+    /// should include:
     ///
     /// * Execution ID
     /// * Last status query time
@@ -127,17 +131,27 @@ pub trait FullSpec<'op> {
     /// within the past day, don't query it again.
     ///
     /// The output is the state that this `WorkSpec` manages.
-    type StatusOpSpec: OpSpec<'op, State = (), Output = Self::State>;
+    type StatusOpSpec: OpSpec<'op, State = (), Error = Self::Error, Output = Self::State>;
 
     /// Specification of the ensure operation.
     ///
     /// The output is the IDs of resources produced by the operation.
-    type EnsureOpSpec: OpSpecDry<'op, State = Self::State, Output = Self::ResIds>;
+    type EnsureOpSpec: OpSpecDry<
+        'op,
+        State = Self::State,
+        Error = Self::Error,
+        Output = Self::ResIds,
+    >;
 
     /// Specification of the clean operation.
     ///
     /// The output is the IDs of resources cleaned by the operation.
-    type CleanOpSpec: OpSpecDry<'op, State = Self::State, Output = Self::ResIds>;
+    type CleanOpSpec: OpSpecDry<
+        'op,
+        State = Self::State,
+        Error = Self::Error,
+        Output = Self::ResIds,
+    >;
 
     /// Returns the `StatusOpSpec` for this `FullSpec`.
     fn status_op_spec(&self) -> &Self::StatusOpSpec;

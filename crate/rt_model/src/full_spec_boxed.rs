@@ -5,7 +5,7 @@ use fn_graph::{DataAccessDyn, TypeIds};
 use peace_cfg::{FullSpec, OpSpec, OpSpecDry};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::FullSpecWrapper;
+use crate::{Error, FullSpecWrapper};
 
 pub use self::{
     clean_op_spec_rt::CleanOpSpecRt, ensure_op_spec_rt::EnsureOpSpecRt, full_spec_rt::FullSpecRt,
@@ -23,34 +23,43 @@ mod status_op_spec_rt;
 ///
 /// * `FS`: The [`FullSpec`]
 #[derive(Debug)]
-pub struct FullSpecBoxed<'op>(Box<dyn FullSpecRt<'op> + 'op>);
+pub struct FullSpecBoxed<'op, E>(Box<dyn FullSpecRt<'op, Error<E>> + 'op>)
+where
+    E: std::error::Error;
 
-impl<'op, FS, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> From<FS>
-    for FullSpecBoxed<'op>
+impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> From<FS>
+    for FullSpecBoxed<'op, E>
 where
     FS: Debug
         + FullSpec<
             'op,
-            ResIds = ResIds,
             State = State,
+            Error = E,
+            ResIds = ResIds,
             StatusOpSpec = StatusOpSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync
         + 'op,
+    E: Debug + Send + Sync + std::error::Error + 'op,
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync + 'op,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'op,
-    StatusOpSpec: Debug + OpSpec<'op, State = (), Output = State> + Send + Sync + 'op,
-    EnsureOpSpec: Debug + OpSpecDry<'op, State = State, Output = ResIds> + Send + Sync + 'op,
-    CleanOpSpec: Debug + OpSpecDry<'op, State = State, Output = ResIds> + Send + Sync + 'op,
+    StatusOpSpec: Debug + OpSpec<'op, State = (), Error = E, Output = State> + Send + Sync + 'op,
+    EnsureOpSpec:
+        Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync + 'op,
+    CleanOpSpec:
+        Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync + 'op,
 {
     fn from(full_spec: FS) -> Self {
         Self(Box::new(FullSpecWrapper::from(full_spec)))
     }
 }
 
-impl<'op> DataAccessDyn for FullSpecBoxed<'op> {
+impl<'op, E> DataAccessDyn for FullSpecBoxed<'op, E>
+where
+    E: std::error::Error,
+{
     fn borrows(&self) -> TypeIds {
         DataAccessDyn::borrows(self.0.as_ref())
     }

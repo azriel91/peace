@@ -2,7 +2,9 @@ use std::path::PathBuf;
 
 use peace::cfg::FullSpec;
 
-use crate::{DownloadCleanOpSpec, DownloadEnsureOpSpec, DownloadStatusOpSpec, FileState};
+use crate::{
+    DownloadCleanOpSpec, DownloadEnsureOpSpec, DownloadError, DownloadStatusOpSpec, FileState,
+};
 
 /// Full spec for downloading a file.
 #[derive(Debug)]
@@ -15,6 +17,7 @@ pub struct DownloadFullSpec {
 impl<'op> FullSpec<'op> for DownloadFullSpec {
     type CleanOpSpec = DownloadCleanOpSpec;
     type EnsureOpSpec = DownloadEnsureOpSpec;
+    type Error = DownloadError;
     type ResIds = PathBuf;
     type State = Option<FileState>;
     type StatusOpSpec = DownloadStatusOpSpec;
