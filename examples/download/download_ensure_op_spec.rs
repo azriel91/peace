@@ -123,7 +123,7 @@ impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
     }
 
     async fn check(
-        download_params: &DownloadParams,
+        download_params: DownloadParams<'op>,
         file_state: &Option<FileState>,
     ) -> Result<OpCheckStatus, DownloadError> {
         let op_check_status = match file_state.as_ref() {
@@ -131,19 +131,19 @@ impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
                 // TODO: the client should be part of Data.
                 let client = reqwest::Client::new();
                 let client = &client;
-                Self::file_contents_check(download_params, client, file_state).await?
+                Self::file_contents_check(&download_params, client, file_state).await?
             }
             None => OpCheckStatus::ExecRequired,
         };
         Ok(op_check_status)
     }
 
-    async fn exec(download_params: &DownloadParams) -> Result<PathBuf, DownloadError> {
+    async fn exec(download_params: DownloadParams<'op>) -> Result<PathBuf, DownloadError> {
         // TODO: the client should be part of Data.
         let client = reqwest::Client::new();
         let client = &client;
 
-        Self::file_download(download_params, client).await?;
+        Self::file_download(&download_params, client).await?;
         let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
         Ok(dest.to_path_buf())
     }

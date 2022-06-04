@@ -26,7 +26,7 @@ impl<'op> OpSpec<'op> for DownloadCleanOpSpec {
     }
 
     async fn check(
-        _download_params: &DownloadParams,
+        _download_params: DownloadParams<'op>,
         file_state: &Option<FileState>,
     ) -> Result<OpCheckStatus, DownloadError> {
         let op_check_status = if file_state.is_some() {
@@ -37,7 +37,7 @@ impl<'op> OpSpec<'op> for DownloadCleanOpSpec {
         Ok(op_check_status)
     }
 
-    async fn exec(download_params: &DownloadParams) -> Result<PathBuf, DownloadError> {
+    async fn exec(download_params: DownloadParams<'op>) -> Result<PathBuf, DownloadError> {
         let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
         tokio::fs::remove_file(dest)
             .await

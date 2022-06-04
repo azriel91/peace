@@ -70,7 +70,11 @@ pub trait OpSpec<'op> {
     /// # Implementors
     ///
     /// This function call is intended to be cheap and fast.
-    async fn check(data: &Self::Data, state: &Self::State) -> Result<OpCheckStatus, Self::Error>;
+    async fn check(data: Self::Data, state: &Self::State) -> Result<OpCheckStatus, Self::Error>
+    // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
+    // impl has stricter requirements than trait
+    where
+        'op: 'async_trait;
 
     /// Transforms the current state to the desired state.
     ///
@@ -78,5 +82,9 @@ pub trait OpSpec<'op> {
     ///
     /// [`check`]: crate::OpSpec::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
-    async fn exec(data: &Self::Data) -> Result<Self::Output, Self::Error>;
+    async fn exec(data: Self::Data) -> Result<Self::Output, Self::Error>
+    // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
+    // impl has stricter requirements than trait
+    where
+        'op: 'async_trait;
 }

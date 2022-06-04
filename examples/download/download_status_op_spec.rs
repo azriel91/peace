@@ -22,11 +22,13 @@ impl<'op> OpSpec<'op> for DownloadStatusOpSpec {
         Ok(ProgressLimit::Steps(1))
     }
 
-    async fn check(_: &DownloadParams, _: &()) -> Result<OpCheckStatus, DownloadError> {
+    async fn check(_: DownloadParams<'op>, _: &()) -> Result<OpCheckStatus, DownloadError> {
         Ok(OpCheckStatus::ExecRequired)
     }
 
-    async fn exec(download_params: &DownloadParams) -> Result<Option<FileState>, DownloadError> {
+    async fn exec(
+        download_params: DownloadParams<'op>,
+    ) -> Result<Option<FileState>, DownloadError> {
         // Destination file doesn't exist.
         let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
         if !dest.exists() {

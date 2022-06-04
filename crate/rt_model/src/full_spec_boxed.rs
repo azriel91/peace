@@ -1,4 +1,7 @@
-use std::fmt::Debug;
+use std::{
+    fmt::Debug,
+    ops::{Deref, DerefMut},
+};
 
 use diff::Diff;
 use fn_graph::{DataAccessDyn, TypeIds};
@@ -21,11 +24,31 @@ mod status_op_spec_rt;
 ///
 /// # Type Parameters
 ///
-/// * `FS`: The [`FullSpec`]
+/// * `E`: Application specific error type.
 #[derive(Debug)]
 pub struct FullSpecBoxed<'op, E>(Box<dyn FullSpecRt<'op, Error<E>> + 'op>)
 where
     E: std::error::Error;
+
+impl<'op, E> Deref for FullSpecBoxed<'op, E>
+where
+    E: std::error::Error,
+{
+    type Target = dyn FullSpecRt<'op, Error<E>> + 'op;
+
+    fn deref(&self) -> &Self::Target {
+        &*self.0
+    }
+}
+
+impl<'op, E> DerefMut for FullSpecBoxed<'op, E>
+where
+    E: std::error::Error,
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut *self.0
+    }
+}
 
 impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> From<FS>
     for FullSpecBoxed<'op, E>
