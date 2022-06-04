@@ -1,5 +1,5 @@
 /// Unit of measurement and limit to indicate progress.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ProgressLimit {
     /// There is no meaningful way to measure progress.
     Unknown,
