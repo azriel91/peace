@@ -6,6 +6,8 @@ use url::Url;
 /// Download parameters from the user.
 #[derive(Data, Debug)]
 pub struct DownloadParams<'op> {
+    /// Client to make web requests.
+    client: R<'op, reqwest::Client>,
     /// Url of the file to download.
     src: R<'op, Option<Url>>,
     /// Path of the destination.
@@ -15,8 +17,16 @@ pub struct DownloadParams<'op> {
 }
 
 impl<'op> DownloadParams<'op> {
-    pub fn new(src: R<'op, Option<Url>>, dest: R<'op, Option<PathBuf>>) -> Self {
-        Self { src, dest }
+    pub fn new(
+        client: R<'op, reqwest::Client>,
+        src: R<'op, Option<Url>>,
+        dest: R<'op, Option<PathBuf>>,
+    ) -> Self {
+        Self { client, src, dest }
+    }
+
+    pub fn client(&self) -> &reqwest::Client {
+        &self.client
     }
 
     pub fn src(&self) -> Option<&Url> {

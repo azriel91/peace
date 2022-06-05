@@ -17,10 +17,9 @@ pub struct DownloadEnsureOpSpec;
 impl DownloadEnsureOpSpec {
     async fn file_contents_check(
         download_params: &DownloadParams<'_>,
-        client: &reqwest::Client,
         file_state_current: &FileState,
     ) -> Result<OpCheckStatus, DownloadError> {
-        let file_state_desired = Self::file_state_desired(download_params, client).await?;
+        let file_state_desired = Self::file_state_desired(download_params).await?;
 
         let file_state_diff = file_state_current.diff(&file_state_desired);
         match file_state_diff {
@@ -35,8 +34,8 @@ impl DownloadEnsureOpSpec {
 
     async fn file_state_desired(
         download_params: &DownloadParams<'_>,
-        client: &reqwest::Client,
     ) -> Result<FileState, DownloadError> {
+        let client = download_params.client();
         let src_url = download_params.src().ok_or(DownloadError::SrcUrlInit)?;
         let response = client
             .get(src_url.clone())
@@ -64,10 +63,8 @@ impl DownloadEnsureOpSpec {
         }
     }
 
-    async fn file_download(
-        download_params: &DownloadParams<'_>,
-        client: &reqwest::Client,
-    ) -> Result<(), DownloadError> {
+    async fn file_download(download_params: &DownloadParams<'_>) -> Result<(), DownloadError> {
+        let client = download_params.client();
         let src_url = download_params.src().ok_or(DownloadError::SrcUrlInit)?;
         let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
         let response = client
@@ -119,11 +116,7 @@ impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
     async fn desired(
         download_params: DownloadParams<'op>,
     ) -> Result<Option<FileState>, DownloadError> {
-        // TODO: the client should be part of Data.
-        let client = reqwest::Client::new();
-        let client = &client;
-
-        let file_state_desired = Self::file_state_desired(&download_params, client).await?;
+        let file_state_desired = Self::file_state_desired(&download_params).await?;
 
         Ok(Some(file_state_desired))
     }
@@ -133,12 +126,7 @@ impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
         file_state: &Option<FileState>,
     ) -> Result<OpCheckStatus, DownloadError> {
         let op_check_status = match file_state.as_ref() {
-            Some(file_state) => {
-                // TODO: the client should be part of Data.
-                let client = reqwest::Client::new();
-                let client = &client;
-                Self::file_contents_check(&download_params, client, file_state).await?
-            }
+            Some(file_state) => Self::file_contents_check(&download_params, file_state).await?,
             None => OpCheckStatus::ExecRequired {
                 progress_limit: ProgressLimit::Bytes(1024),
             },
@@ -147,11 +135,7 @@ impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
     }
 
     async fn exec(download_params: DownloadParams<'op>) -> Result<PathBuf, DownloadError> {
-        // TODO: the client should be part of Data.
-        let client = reqwest::Client::new();
-        let client = &client;
-
-        Self::file_download(&download_params, client).await?;
+        Self::file_download(&download_params).await?;
         let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
         Ok(dest.to_path_buf())
     }

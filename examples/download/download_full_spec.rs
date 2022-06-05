@@ -40,6 +40,7 @@ impl<'op> FullSpec<'op> for DownloadFullSpec {
     }
 
     async fn setup(resources: &mut Resources) -> Result<(), DownloadError> {
+        resources.insert::<reqwest::Client>(reqwest::Client::new());
         resources.insert::<Option<Url>>(None);
         resources.insert::<Option<PathBuf>>(None);
 
