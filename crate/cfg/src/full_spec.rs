@@ -23,7 +23,7 @@ use crate::{OpSpec, OpSpecDry};
 /// Since the latter four operations are write-operations, their specification
 /// includes a dry run function.
 pub trait FullSpec<'op> {
-    /// State of the data or resources that this `WorkSpec` manages.
+    /// State of the data or resources that this `FullSpec` manages.
     ///
     /// This is intended as a serializable summary of the state, so it should be
     /// relatively lightweight.
@@ -34,7 +34,7 @@ pub trait FullSpec<'op> {
     ///
     /// # Examples
     ///
-    /// ## `WorkSpec` that manages application configuration:
+    /// ## `FullSpec` that manages application configuration:
     ///
     /// The state is not necessarily the configuration itself, but may be a
     /// content hash, commit hash or version of the configuration. If the
@@ -58,7 +58,7 @@ pub trait FullSpec<'op> {
     ///   commit hash, then restoring would be applying the configuration at
     ///   that commit hash.
     ///
-    /// ## `WorkSpec` that manages servers:
+    /// ## `FullSpec` that manages servers:
     ///
     /// The state may be the number of server instances, the boot image, and
     /// their hardware capacity.
@@ -130,7 +130,7 @@ pub trait FullSpec<'op> {
     /// This allows the check function to tell if the status has been queried
     /// within the past day, don't query it again.
     ///
-    /// The output is the state that this `WorkSpec` manages.
+    /// The output is the state that this `FullSpec` manages.
     type StatusOpSpec: OpSpec<'op, State = (), Error = Self::Error, Output = Self::State>;
 
     /// Specification of the ensure operation.

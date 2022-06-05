@@ -16,16 +16,16 @@ use crate::{OpCheckStatus, ProgressLimit};
 /// * Return type of the operation, depending on its purpose.
 #[async_trait]
 pub trait OpSpec<'op> {
-    /// State that the [`WorkSpec`] manages.
+    /// State that the [`FullSpec`] manages.
     ///
     /// This is the type returned by the [`StatusOpSpec`], and is used by
     /// [`EnsureOpSpec`] and [`CleanOpSpec`] to determine if their [`exec`]
     /// function needs to be run.
     ///
-    /// [`WorkSpec`]: crate::WorkSpec
-    /// [`StatusOpSpec`]: crate::WorkSpec::StatusOpSpec
-    /// [`EnsureOpSpec`]: crate::WorkSpec::EnsureOpSpec
-    /// [`CleanOpSpec`]: crate::WorkSpec::CleanOpSpec
+    /// [`FullSpec`]: crate::FullSpec
+    /// [`StatusOpSpec`]: crate::FullSpec::StatusOpSpec
+    /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
+    /// [`CleanOpSpec`]: crate::FullSpec::CleanOpSpec
     /// [`exec`]: crate::OpSpec::exec
     type State;
 
@@ -38,9 +38,9 @@ pub trait OpSpec<'op> {
     /// * For a [clean operation], these are the [resource IDs] cleaned by the
     ///   operation.
     ///
-    /// [ensure operation]: crate::WorkSpec::EnsureOpSpec
-    /// [clean operation]: crate::WorkSpec::CleanOpSpec
-    /// [resource IDs]: crate::WorkSpec::ResIds
+    /// [ensure operation]: crate::FullSpec::EnsureOpSpec
+    /// [clean operation]: crate::FullSpec::CleanOpSpec
+    /// [resource IDs]: crate::FullSpec::ResIds
     type Output;
 
     /// Data that the operation reads from, or writes to.
