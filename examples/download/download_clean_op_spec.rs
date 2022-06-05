@@ -15,6 +15,12 @@ impl<'op> OpSpec<'op> for DownloadCleanOpSpec {
     type Output = PathBuf;
     type State = Option<FileState>;
 
+    async fn desired(
+        _download_params: DownloadParams<'op>,
+    ) -> Result<Option<FileState>, DownloadError> {
+        Ok(None)
+    }
+
     async fn check(
         _download_params: DownloadParams<'op>,
         file_state: &Option<FileState>,

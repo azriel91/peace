@@ -116,6 +116,18 @@ impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
     type Output = PathBuf;
     type State = Option<FileState>;
 
+    async fn desired(
+        download_params: DownloadParams<'op>,
+    ) -> Result<Option<FileState>, DownloadError> {
+        // TODO: the client should be part of Data.
+        let client = reqwest::Client::new();
+        let client = &client;
+
+        let file_state_desired = Self::file_state_desired(&download_params, client).await?;
+
+        Ok(Some(file_state_desired))
+    }
+
     async fn check(
         download_params: DownloadParams<'op>,
         file_state: &Option<FileState>,

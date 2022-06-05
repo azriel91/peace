@@ -50,13 +50,38 @@ pub trait OpSpec<'op> {
     /// Error returned when any of the functions of this operation err.
     type Error: std::error::Error;
 
+    /// Returns the desired state of the managed item.
+    ///
+    /// # Examples
+    ///
+    /// * For a file download operation, the desired state could be the
+    ///   destination path and a content hash.
+    ///
+    /// * For a web application service operation, the desired state could be
+    ///   the web service is running on the latest version.
+    ///
+    /// # Implementors
+    ///
+    /// This function call is intended to be cheap and fast.
+    async fn desired(data: Self::Data) -> Result<Self::State, Self::Error>
+    // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
+    // impl has stricter requirements than trait
+    where
+        'op: 'async_trait;
+
     /// Checks if the operation needs to be executed.
     ///
     /// If the current state is already the desired state, then the operation
     /// does not have to be executed.
     ///
-    /// For example, for a file download operation, if the file is already
-    /// downloaded, then it does not need to be downloaded again.
+    /// # Examples
+    ///
+    /// * For a file download operation, if the destination file differs from
+    ///   the file on the server, then the file needs to be downloaded.
+    ///
+    /// * For a web application service operation, if the web service is
+    ///   running, but reports a previous version, then the service may need to
+    ///   be restarted.
     ///
     /// # Implementors
     ///

@@ -50,6 +50,10 @@ impl<'op> OpSpec<'op> for VecCopyCleanOpSpec {
     type Output = ();
     type State = Vec<u8>;
 
+    async fn desired(_vec_b: W<'op, VecB>) -> Result<Vec<u8>, VecCopyError> {
+        Ok(Vec::new())
+    }
+
     async fn check(vec_b: W<'op, VecB>, state: &Vec<u8>) -> Result<OpCheckStatus, VecCopyError> {
         let op_check_status = if *vec_b.0 == *state {
             let progress_limit = TryInto::<u64>::try_into(state.len())
@@ -86,6 +90,10 @@ impl<'op> OpSpec<'op> for VecCopyEnsureOpSpec {
     type Error = VecCopyError;
     type Output = ();
     type State = Vec<u8>;
+
+    async fn desired(vec_copy_params: VecCopyParamsMut<'op>) -> Result<Vec<u8>, VecCopyError> {
+        Ok(vec_copy_params.src().0.clone())
+    }
 
     async fn check(
         vec_copy_params: VecCopyParamsMut<'op>,
@@ -133,6 +141,10 @@ pub struct VecCopyParamsMut<'op> {
 }
 
 impl<'op> VecCopyParamsMut<'op> {
+    pub fn src(&self) -> &VecA {
+        &self.src
+    }
+
     pub fn dest(&self) -> &VecB {
         &self.dest
     }

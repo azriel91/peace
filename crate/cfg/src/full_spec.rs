@@ -31,7 +31,7 @@ pub trait FullSpec<'op> {
     /// This is intended as a serializable summary of the state, so it should be
     /// relatively lightweight.
     ///
-    /// This is the type returned by the [`StatusFnSpec`], and is used by
+    /// This is the type returned by [`StatusFnSpec`], and is used by
     /// [`EnsureOpSpec`] and [`CleanOpSpec`] to determine if their [`exec`]
     /// function needs to be run.
     ///
@@ -119,7 +119,7 @@ pub trait FullSpec<'op> {
     /// [`Params`]: crate::OpSpec::Params
     type ResIds: Serialize + DeserializeOwned;
 
-    /// Specification of the status function.
+    /// Function that returns the current status of the managed item.
     ///
     /// # Future Development
     ///
@@ -132,9 +132,14 @@ pub trait FullSpec<'op> {
     ///
     /// This allows the check function to tell if the status has been queried
     /// within the past day, don't query it again.
-    ///
-    /// The output is the state that this `FullSpec` manages.
     type StatusFnSpec: FnSpec<'op, Error = Self::Error, Output = Self::State>;
+
+    // TODO: DiffFnSpec:
+    //
+    // Shows the [`Diff`] between the [`State`] returned from [`StatusFnSpec`] and
+    // [`EnsureOpSpec`].
+    //
+    // Conceptually we can do a diff between the current state and any `OpSpec`.
 
     /// Specification of the ensure operation.
     ///
