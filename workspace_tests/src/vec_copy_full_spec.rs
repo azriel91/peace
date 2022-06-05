@@ -50,7 +50,9 @@ impl<'op> OpSpec<'op> for VecCopyCleanOpSpec {
 
     async fn check(vec_b: W<'op, VecB>, state: &Vec<u8>) -> Result<OpCheckStatus, VecCopyError> {
         let op_check_status = if *vec_b.0 == *state {
-            OpCheckStatus::ExecRequired
+            OpCheckStatus::ExecRequired {
+                progress_limit: ProgressLimit::Bytes(1024),
+            }
         } else {
             OpCheckStatus::ExecNotRequired
         };
@@ -90,7 +92,9 @@ impl<'op> OpSpec<'op> for VecCopyEnsureOpSpec {
         state: &Vec<u8>,
     ) -> Result<OpCheckStatus, VecCopyError> {
         let op_check_status = if *vec_copy_params.dest().0 == *state {
-            OpCheckStatus::ExecRequired
+            OpCheckStatus::ExecRequired {
+                progress_limit: ProgressLimit::Bytes(1024),
+            }
         } else {
             OpCheckStatus::ExecNotRequired
         };
@@ -149,7 +153,9 @@ impl<'op> OpSpec<'op> for VecCopyStatusOpSpec {
 
     async fn check(_: R<'op, VecA>, _: &()) -> Result<OpCheckStatus, VecCopyError> {
         // Always fetch status
-        Ok(OpCheckStatus::ExecRequired)
+        Ok(OpCheckStatus::ExecRequired {
+            progress_limit: ProgressLimit::Steps(1),
+        })
     }
 
     async fn exec(vec_a: R<'op, VecA>) -> Result<Vec<u8>, VecCopyError> {

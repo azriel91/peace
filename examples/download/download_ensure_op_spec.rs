@@ -30,7 +30,9 @@ impl DownloadEnsureOpSpec {
             FileStateDiff::NoChange => Ok(OpCheckStatus::ExecNotRequired),
             FileStateDiff::StringContents(_)
             | FileStateDiff::Length(_)
-            | FileStateDiff::Unknown => Ok(OpCheckStatus::ExecRequired),
+            | FileStateDiff::Unknown => Ok(OpCheckStatus::ExecRequired {
+                progress_limit: ProgressLimit::Bytes(1024),
+            }),
         }
     }
 
@@ -133,7 +135,9 @@ impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
                 let client = &client;
                 Self::file_contents_check(&download_params, client, file_state).await?
             }
-            None => OpCheckStatus::ExecRequired,
+            None => OpCheckStatus::ExecRequired {
+                progress_limit: ProgressLimit::Bytes(1024),
+            },
         };
         Ok(op_check_status)
     }

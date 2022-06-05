@@ -30,7 +30,9 @@ impl<'op> OpSpec<'op> for DownloadCleanOpSpec {
         file_state: &Option<FileState>,
     ) -> Result<OpCheckStatus, DownloadError> {
         let op_check_status = if file_state.is_some() {
-            OpCheckStatus::ExecRequired
+            OpCheckStatus::ExecRequired {
+                progress_limit: ProgressLimit::Bytes(1024),
+            }
         } else {
             OpCheckStatus::ExecNotRequired
         };

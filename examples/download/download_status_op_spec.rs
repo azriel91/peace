@@ -18,12 +18,14 @@ impl<'op> OpSpec<'op> for DownloadStatusOpSpec {
     type State = ();
 
     async fn setup(_resources: &mut Resources) -> Result<ProgressLimit, DownloadError> {
-        // Need to make one request.
         Ok(ProgressLimit::Steps(1))
     }
 
     async fn check(_: DownloadParams<'op>, _: &()) -> Result<OpCheckStatus, DownloadError> {
-        Ok(OpCheckStatus::ExecRequired)
+        Ok(OpCheckStatus::ExecRequired {
+            // Need to make one request.
+            progress_limit: ProgressLimit::Steps(1),
+        })
     }
 
     async fn exec(
