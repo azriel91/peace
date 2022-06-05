@@ -1,4 +1,6 @@
+use async_trait::async_trait;
 use diff::Diff;
+use fn_graph::Resources;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{OpSpec, OpSpecDry};
@@ -22,6 +24,7 @@ use crate::{OpSpec, OpSpecDry};
 ///
 /// Since the latter four operations are write-operations, their specification
 /// includes a dry run function.
+#[async_trait]
 pub trait FullSpec<'op> {
     /// State of the data or resources that this `FullSpec` manages.
     ///
@@ -161,4 +164,16 @@ pub trait FullSpec<'op> {
 
     /// Returns the `CleanOpSpec` for this `FullSpec`.
     fn clean_op_spec(&self) -> &Self::CleanOpSpec;
+
+    /// Inserts an instance of each data type in [`Resources`].
+    ///
+    /// # Implementors
+    ///
+    /// [`Resources`] is the map of any type, and an instance of each data type
+    /// must be inserted into the map so that the [`check`] and [`exec`]
+    /// functions of each operation can borrow the instance of that type.
+    ///
+    /// [`check`]: crate::OpSpec::check
+    /// [`exec`]: crate::OpSpec::exec
+    async fn setup(data: &mut Resources) -> Result<(), Self::Error>;
 }

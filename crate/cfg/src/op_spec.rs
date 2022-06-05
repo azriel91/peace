@@ -1,9 +1,7 @@
 use async_trait::async_trait;
-
-use fn_graph::Resources;
 use peace_data::Data;
 
-use crate::{OpCheckStatus, ProgressLimit};
+use crate::OpCheckStatus;
 
 /// Defines the logic and data of an operation.
 ///
@@ -51,13 +49,6 @@ pub trait OpSpec<'op> {
 
     /// Error returned when any of the functions of this operation err.
     type Error: std::error::Error;
-
-    /// Initializes data for the operation's check and `exec` functions.
-    ///
-    /// # Implementors
-    ///
-    /// This function call is intended to be cheap and fast.
-    async fn setup(data: &mut Resources) -> Result<ProgressLimit, Self::Error>;
 
     /// Checks if the operation needs to be executed.
     ///

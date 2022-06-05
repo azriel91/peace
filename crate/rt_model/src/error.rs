@@ -7,9 +7,5 @@ where
     E: std::error::Error,
 {
     #[error(transparent)]
-    CleanSetup(E),
-    #[error(transparent)]
-    EnsureSetup(E),
-    #[error(transparent)]
-    StatusSetup(E),
+    FullSpecSetup(E),
 }

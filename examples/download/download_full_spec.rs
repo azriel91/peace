@@ -1,6 +1,10 @@
 use std::path::PathBuf;
 
-use peace::cfg::FullSpec;
+use peace::{
+    cfg::{async_trait, FullSpec},
+    data::Resources,
+};
+use url::Url;
 
 use crate::{
     DownloadCleanOpSpec, DownloadEnsureOpSpec, DownloadError, DownloadStatusOpSpec, FileState,
@@ -14,6 +18,7 @@ pub struct DownloadFullSpec {
     clean_op_spec: DownloadCleanOpSpec,
 }
 
+#[async_trait]
 impl<'op> FullSpec<'op> for DownloadFullSpec {
     type CleanOpSpec = DownloadCleanOpSpec;
     type EnsureOpSpec = DownloadEnsureOpSpec;
@@ -32,5 +37,12 @@ impl<'op> FullSpec<'op> for DownloadFullSpec {
 
     fn clean_op_spec(&self) -> &Self::CleanOpSpec {
         &self.clean_op_spec
+    }
+
+    async fn setup(resources: &mut Resources) -> Result<(), DownloadError> {
+        resources.insert::<Option<Url>>(None);
+        resources.insert::<Option<PathBuf>>(None);
+
+        Ok(())
     }
 }

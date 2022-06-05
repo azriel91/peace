@@ -135,6 +135,7 @@ where
     }
 }
 
+#[async_trait]
 impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> FullSpecRt<'op, Error<E>>
     for FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>
 where
@@ -156,6 +157,11 @@ where
     EnsureOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
     CleanOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
 {
+    async fn setup(&self, resources: &mut Resources) -> Result<(), Error<E>> {
+        <FS as FullSpec>::setup(resources)
+            .await
+            .map_err(Error::FullSpecSetup)
+    }
 }
 
 #[async_trait]
@@ -181,13 +187,6 @@ where
     CleanOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
 {
     type Error = Error<E>;
-
-    async fn setup(&self, resources: &mut Resources) -> Result<(), Self::Error> {
-        let _progress_limit = <CleanOpSpec as OpSpec>::setup(resources)
-            .await
-            .map_err(Error::CleanSetup)?;
-        Ok(())
-    }
 
     async fn check(&self, _resources: &Resources) -> Result<(), Self::Error> {
         Ok(())
@@ -222,13 +221,6 @@ where
 {
     type Error = Error<E>;
 
-    async fn setup(&self, resources: &mut Resources) -> Result<(), Self::Error> {
-        let _progress_limit = <EnsureOpSpec as OpSpec>::setup(resources)
-            .await
-            .map_err(Error::EnsureSetup)?;
-        Ok(())
-    }
-
     async fn check(&self, _resources: &Resources) -> Result<(), Self::Error> {
         Ok(())
     }
@@ -261,13 +253,6 @@ where
     CleanOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
 {
     type Error = Error<E>;
-
-    async fn setup(&self, resources: &mut Resources) -> Result<(), Self::Error> {
-        let _progress_limit = <StatusOpSpec as OpSpec>::setup(resources)
-            .await
-            .map_err(Error::StatusSetup)?;
-        Ok(())
-    }
 
     async fn check(&self, _resources: &Resources) -> Result<(), Self::Error> {
         Ok(())

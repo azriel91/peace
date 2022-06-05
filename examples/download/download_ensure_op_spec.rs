@@ -2,10 +2,7 @@ use std::path::{Path, PathBuf};
 
 use bytes::Bytes;
 use futures::{Stream, StreamExt, TryStreamExt};
-use peace::{
-    cfg::{async_trait, diff::Diff, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit},
-    data::Resources,
-};
+use peace::cfg::{async_trait, diff::Diff, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit};
 use tokio::{
     fs::File,
     io::{AsyncWriteExt, BufWriter},
@@ -118,11 +115,6 @@ impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
     type Error = DownloadError;
     type Output = PathBuf;
     type State = Option<FileState>;
-
-    async fn setup(_resources: &mut Resources) -> Result<ProgressLimit, DownloadError> {
-        // TODO: pass through desired State,
-        Ok(ProgressLimit::Bytes(1024))
-    }
 
     async fn check(
         download_params: DownloadParams<'op>,

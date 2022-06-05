@@ -12,6 +12,7 @@ pub struct VecCopyFullSpec {
     clean_op_spec: VecCopyCleanOpSpec,
 }
 
+#[async_trait]
 impl<'op> FullSpec<'op> for VecCopyFullSpec {
     type CleanOpSpec = VecCopyCleanOpSpec;
     type EnsureOpSpec = VecCopyEnsureOpSpec;
@@ -31,6 +32,11 @@ impl<'op> FullSpec<'op> for VecCopyFullSpec {
     fn clean_op_spec(&self) -> &Self::CleanOpSpec {
         &self.clean_op_spec
     }
+
+    async fn setup(resources: &mut Resources) -> Result<(), VecCopyError> {
+        resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
+        Ok(())
+    }
 }
 
 /// Clean OpSpec for the file to download.
@@ -43,10 +49,6 @@ impl<'op> OpSpec<'op> for VecCopyCleanOpSpec {
     type Error = VecCopyError;
     type Output = ();
     type State = Vec<u8>;
-
-    async fn setup(_resources: &mut Resources) -> Result<ProgressLimit, VecCopyError> {
-        Ok(ProgressLimit::Bytes(1024))
-    }
 
     async fn check(vec_b: W<'op, VecB>, state: &Vec<u8>) -> Result<OpCheckStatus, VecCopyError> {
         let op_check_status = if *vec_b.0 == *state {
@@ -82,10 +84,6 @@ impl<'op> OpSpec<'op> for VecCopyEnsureOpSpec {
     type Error = VecCopyError;
     type Output = ();
     type State = Vec<u8>;
-
-    async fn setup(_resources: &mut Resources) -> Result<ProgressLimit, VecCopyError> {
-        Ok(ProgressLimit::Bytes(1024))
-    }
 
     async fn check(
         vec_copy_params: VecCopyParamsMut<'op>,
@@ -146,10 +144,6 @@ impl<'op> OpSpec<'op> for VecCopyStatusOpSpec {
     type Error = VecCopyError;
     type Output = Vec<u8>;
     type State = ();
-
-    async fn setup(_resources: &mut Resources) -> Result<ProgressLimit, VecCopyError> {
-        Ok(ProgressLimit::Steps(1))
-    }
 
     async fn check(_: R<'op, VecA>, _: &()) -> Result<OpCheckStatus, VecCopyError> {
         // Always fetch status

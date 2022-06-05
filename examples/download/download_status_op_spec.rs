@@ -1,7 +1,4 @@
-use peace::{
-    cfg::{async_trait, OpCheckStatus, OpSpec, ProgressLimit},
-    data::Resources,
-};
+use peace::cfg::{async_trait, OpCheckStatus, OpSpec, ProgressLimit};
 use tokio::{fs::File, io::AsyncReadExt};
 
 use crate::{DownloadError, DownloadParams, FileState};
@@ -16,10 +13,6 @@ impl<'op> OpSpec<'op> for DownloadStatusOpSpec {
     type Error = DownloadError;
     type Output = Option<FileState>;
     type State = ();
-
-    async fn setup(_resources: &mut Resources) -> Result<ProgressLimit, DownloadError> {
-        Ok(ProgressLimit::Steps(1))
-    }
 
     async fn check(_: DownloadParams<'op>, _: &()) -> Result<OpCheckStatus, DownloadError> {
         Ok(OpCheckStatus::ExecRequired {

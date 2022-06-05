@@ -17,8 +17,6 @@ pub trait EnsureOpSpecRt<'op> {
     /// Error returned when any of the functions of this operation err.
     type Error: std::error::Error;
 
-    /// Initializes data for the operation's check and `exec` functions.
-    async fn setup(&self, resources: &mut Resources) -> Result<(), Self::Error>;
     /// Checks if the operation needs to be executed.
     async fn check(&self, resources: &Resources) -> Result<(), Self::Error>;
     /// Transforms the current state to the desired state.
