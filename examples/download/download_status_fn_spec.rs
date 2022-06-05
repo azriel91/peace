@@ -1,25 +1,17 @@
-use peace::cfg::{async_trait, OpCheckStatus, OpSpec, ProgressLimit};
+use peace::cfg::{async_trait, FnSpec};
 use tokio::{fs::File, io::AsyncReadExt};
 
 use crate::{DownloadError, DownloadParams, FileState};
 
-/// Status OpSpec for the file to download.
+/// Status `FnSpec` for the file to download.
 #[derive(Debug, Default)]
-pub struct DownloadStatusOpSpec;
+pub struct DownloadStatusFnSpec;
 
 #[async_trait]
-impl<'op> OpSpec<'op> for DownloadStatusOpSpec {
+impl<'op> FnSpec<'op> for DownloadStatusFnSpec {
     type Data = DownloadParams<'op>;
     type Error = DownloadError;
     type Output = Option<FileState>;
-    type State = ();
-
-    async fn check(_: DownloadParams<'op>, _: &()) -> Result<OpCheckStatus, DownloadError> {
-        Ok(OpCheckStatus::ExecRequired {
-            // Need to make one request.
-            progress_limit: ProgressLimit::Steps(1),
-        })
-    }
 
     async fn exec(
         download_params: DownloadParams<'op>,

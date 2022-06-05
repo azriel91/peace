@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{async_trait, FullSpec, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit},
+    cfg::{async_trait, FnSpec, FullSpec, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit},
     data::{Data, Resources, R, W},
 };
 use serde::{Deserialize, Serialize};
@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 /// Copies bytes from one `Vec` to another.
 #[derive(Debug, Default)]
 pub struct VecCopyFullSpec {
-    status_op_spec: VecCopyStatusOpSpec,
+    status_fn_spec: VecCopyStatusFnSpec,
     ensure_op_spec: VecCopyEnsureOpSpec,
     clean_op_spec: VecCopyCleanOpSpec,
 }
@@ -19,10 +19,10 @@ impl<'op> FullSpec<'op> for VecCopyFullSpec {
     type Error = VecCopyError;
     type ResIds = ();
     type State = Vec<u8>;
-    type StatusOpSpec = VecCopyStatusOpSpec;
+    type StatusFnSpec = VecCopyStatusFnSpec;
 
-    fn status_op_spec(&self) -> &Self::StatusOpSpec {
-        &self.status_op_spec
+    fn status_fn_spec(&self) -> &Self::StatusFnSpec {
+        &self.status_fn_spec
     }
 
     fn ensure_op_spec(&self) -> &Self::EnsureOpSpec {
@@ -140,21 +140,13 @@ impl<'op> VecCopyParamsMut<'op> {
 
 /// Status OpSpec for the file to download.
 #[derive(Debug, Default)]
-pub struct VecCopyStatusOpSpec;
+pub struct VecCopyStatusFnSpec;
 
 #[async_trait]
-impl<'op> OpSpec<'op> for VecCopyStatusOpSpec {
+impl<'op> FnSpec<'op> for VecCopyStatusFnSpec {
     type Data = R<'op, VecA>;
     type Error = VecCopyError;
     type Output = Vec<u8>;
-    type State = ();
-
-    async fn check(_: R<'op, VecA>, _: &()) -> Result<OpCheckStatus, VecCopyError> {
-        // Always fetch status
-        Ok(OpCheckStatus::ExecRequired {
-            progress_limit: ProgressLimit::Steps(1),
-        })
-    }
 
     async fn exec(vec_a: R<'op, VecA>) -> Result<Vec<u8>, VecCopyError> {
         Ok(vec_a.0.clone())

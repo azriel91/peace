@@ -5,20 +5,20 @@ use std::{
 
 use diff::Diff;
 use fn_graph::{DataAccessDyn, TypeIds};
-use peace_cfg::{FullSpec, OpSpec, OpSpecDry};
+use peace_cfg::{FnSpec, FullSpec, OpSpecDry};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{Error, FullSpecWrapper};
 
 pub use self::{
     clean_op_spec_rt::CleanOpSpecRt, ensure_op_spec_rt::EnsureOpSpecRt, full_spec_rt::FullSpecRt,
-    status_op_spec_rt::StatusOpSpecRt,
+    status_fn_spec_rt::StatusFnSpecRt,
 };
 
 mod clean_op_spec_rt;
 mod ensure_op_spec_rt;
 mod full_spec_rt;
-mod status_op_spec_rt;
+mod status_fn_spec_rt;
 
 /// Defines all of the data and logic to manage a user defined item.
 ///
@@ -50,7 +50,7 @@ where
     }
 }
 
-impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> From<FS>
+impl<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
     for FullSpecBoxed<'op, E>
 where
     FS: Debug
@@ -59,7 +59,7 @@ where
             State = State,
             Error = E,
             ResIds = ResIds,
-            StatusOpSpec = StatusOpSpec,
+            StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
@@ -68,7 +68,7 @@ where
     E: Debug + Send + Sync + std::error::Error + 'op,
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync + 'op,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'op,
-    StatusOpSpec: Debug + OpSpec<'op, State = (), Error = E, Output = State> + Send + Sync + 'op,
+    StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync + 'op,
     EnsureOpSpec:
         Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync + 'op,
     CleanOpSpec:

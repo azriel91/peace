@@ -3,11 +3,11 @@ use diff::Diff;
 use fn_graph::Resources;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{OpSpec, OpSpecDry};
+use crate::{FnSpec, OpSpecDry};
 
-/// Defines all of the data and logic to manage a user defined thing.
+/// Defines all of the data and logic to manage an item.
 ///
-/// The user defined thing may be simple or complex, ranging from:
+/// The item may be simple or complex, ranging from:
 ///
 /// * File download.
 /// * Application installation.
@@ -31,7 +31,7 @@ pub trait FullSpec<'op> {
     /// This is intended as a serializable summary of the state, so it should be
     /// relatively lightweight.
     ///
-    /// This is the type returned by the [`StatusOpSpec`], and is used by
+    /// This is the type returned by the [`StatusFnSpec`], and is used by
     /// [`EnsureOpSpec`] and [`CleanOpSpec`] to determine if their [`exec`]
     /// function needs to be run.
     ///
@@ -81,7 +81,7 @@ pub trait FullSpec<'op> {
     /// * The restore operation's exec function should be able to read this and
     ///   launch servers using the recorded image and hardware capacity.
     ///
-    /// [`StatusOpSpec`]: Self::StatusOpSpec
+    /// [`StatusFnSpec`]: Self::StatusFnSpec
     /// [`EnsureOpSpec`]: Self::EnsureOpSpec
     /// [`CleanOpSpec`]: Self::CleanOpSpec
     /// [`exec`]: crate::OpSpec::exec
@@ -123,8 +123,8 @@ pub trait FullSpec<'op> {
     ///
     /// # Future Development
     ///
-    /// The `StatusOpSpec` may decide to not check for status if it caches
-    /// status. For that use case, the `state` used by the StatusOpSpec
+    /// The `StatusFnSpec` may decide to not check for status if it caches
+    /// status. For that use case, the `state` used by the StatusFnSpec
     /// should include:
     ///
     /// * Execution ID
@@ -134,7 +134,7 @@ pub trait FullSpec<'op> {
     /// within the past day, don't query it again.
     ///
     /// The output is the state that this `FullSpec` manages.
-    type StatusOpSpec: OpSpec<'op, State = (), Error = Self::Error, Output = Self::State>;
+    type StatusFnSpec: FnSpec<'op, Error = Self::Error, Output = Self::State>;
 
     /// Specification of the ensure operation.
     ///
@@ -156,8 +156,8 @@ pub trait FullSpec<'op> {
         Output = Self::ResIds,
     >;
 
-    /// Returns the `StatusOpSpec` for this `FullSpec`.
-    fn status_op_spec(&self) -> &Self::StatusOpSpec;
+    /// Returns the `StatusFnSpec` for this `FullSpec`.
+    fn status_fn_spec(&self) -> &Self::StatusFnSpec;
 
     /// Returns the `EnsureOpSpec` for this `FullSpec`.
     fn ensure_op_spec(&self) -> &Self::EnsureOpSpec;

@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use fn_graph::{DataAccess, DataAccessDyn, Resources};
 use peace_cfg::async_trait;
 
-use crate::full_spec_boxed::{CleanOpSpecRt, EnsureOpSpecRt, StatusOpSpecRt};
+use crate::full_spec_boxed::{CleanOpSpecRt, EnsureOpSpecRt, StatusFnSpecRt};
 
 /// Internal trait that erases the types from [`FullSpec`]
 ///
@@ -18,7 +18,7 @@ pub trait FullSpecRt<'op, E>:
     + DataAccessDyn
     + CleanOpSpecRt<'op, Error = E>
     + EnsureOpSpecRt<'op, Error = E>
-    + StatusOpSpecRt<'op, Error = E>
+    + StatusFnSpecRt<'op, Error = E>
 where
     E: Debug + std::error::Error,
 {

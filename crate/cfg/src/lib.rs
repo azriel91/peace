@@ -8,10 +8,11 @@ pub use async_trait::async_trait;
 pub use diff;
 
 pub use crate::{
-    full_spec::FullSpec, op_check_status::OpCheckStatus, op_spec::OpSpec, op_spec_dry::OpSpecDry,
-    progress_limit::ProgressLimit,
+    fn_spec::FnSpec, full_spec::FullSpec, op_check_status::OpCheckStatus, op_spec::OpSpec,
+    op_spec_dry::OpSpecDry, progress_limit::ProgressLimit,
 };
 
+mod fn_spec;
 mod full_spec;
 mod op_check_status;
 mod op_spec;

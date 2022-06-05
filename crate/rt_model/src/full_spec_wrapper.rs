@@ -6,23 +6,23 @@ use std::{
 
 use diff::Diff;
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
-use peace_cfg::{async_trait, FullSpec, OpSpec, OpSpecDry};
+use peace_cfg::{async_trait, FnSpec, FullSpec, OpSpecDry};
 use peace_data::Resources;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    full_spec_boxed::{CleanOpSpecRt, EnsureOpSpecRt, FullSpecRt, StatusOpSpecRt},
+    full_spec_boxed::{CleanOpSpecRt, EnsureOpSpecRt, FullSpecRt, StatusFnSpecRt},
     Error,
 };
 
 /// Wraps a type implementing [`FullSpec`].
-pub struct FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>(
+pub struct FullSpecWrapper<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec>(
     FS,
-    PhantomData<&'op (E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec)>,
+    PhantomData<&'op (E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec)>,
 );
 
-impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> Debug
-    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> Debug
+    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
 where
     FS: Debug,
 {
@@ -31,8 +31,8 @@ where
     }
 }
 
-impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> Deref
-    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> Deref
+    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
 {
     type Target = FS;
 
@@ -41,16 +41,16 @@ impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> Deref
     }
 }
 
-impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> DerefMut
-    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> DerefMut
+    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> From<FS>
-    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
+    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
 where
     FS: Debug
         + FullSpec<
@@ -58,7 +58,7 @@ where
             State = State,
             Error = E,
             ResIds = ResIds,
-            StatusOpSpec = StatusOpSpec,
+            StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
@@ -66,7 +66,7 @@ where
     E: Debug + Send + Sync + std::error::Error,
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatusOpSpec: Debug + OpSpec<'op, State = (), Output = State> + Send + Sync,
+    StatusFnSpec: Debug + FnSpec<'op, Output = State> + Send + Sync,
     EnsureOpSpec: Debug + OpSpecDry<'op, State = State, Output = ResIds> + Send + Sync,
     CleanOpSpec: Debug + OpSpecDry<'op, State = State, Output = ResIds> + Send + Sync,
 {
@@ -75,8 +75,8 @@ where
     }
 }
 
-impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> DataAccess
-    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> DataAccess
+    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
 where
     FS: Debug
         + FullSpec<
@@ -84,7 +84,7 @@ where
             State = State,
             Error = E,
             ResIds = ResIds,
-            StatusOpSpec = StatusOpSpec,
+            StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
@@ -92,7 +92,7 @@ where
     E: Debug + Send + Sync + std::error::Error,
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatusOpSpec: Debug + OpSpec<'op, State = (), Output = State> + Send + Sync,
+    StatusFnSpec: Debug + FnSpec<'op, Output = State> + Send + Sync,
     EnsureOpSpec: Debug + OpSpecDry<'op, State = State, Output = ResIds> + Send + Sync,
     CleanOpSpec: Debug + OpSpecDry<'op, State = State, Output = ResIds> + Send + Sync,
 {
@@ -105,8 +105,8 @@ where
     }
 }
 
-impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> DataAccessDyn
-    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> DataAccessDyn
+    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
 where
     FS: Debug
         + FullSpec<
@@ -114,7 +114,7 @@ where
             State = State,
             Error = E,
             ResIds = ResIds,
-            StatusOpSpec = StatusOpSpec,
+            StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
@@ -122,7 +122,7 @@ where
     E: Debug + Send + Sync + std::error::Error,
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatusOpSpec: Debug + OpSpec<'op, State = (), Output = State> + Send + Sync,
+    StatusFnSpec: Debug + FnSpec<'op, Output = State> + Send + Sync,
     EnsureOpSpec: Debug + OpSpecDry<'op, State = State, Output = ResIds> + Send + Sync,
     CleanOpSpec: Debug + OpSpecDry<'op, State = State, Output = ResIds> + Send + Sync,
 {
@@ -136,8 +136,8 @@ where
 }
 
 #[async_trait]
-impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> FullSpecRt<'op, Error<E>>
-    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> FullSpecRt<'op, Error<E>>
+    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
 where
     FS: Debug
         + FullSpec<
@@ -145,7 +145,7 @@ where
             State = State,
             Error = E,
             ResIds = ResIds,
-            StatusOpSpec = StatusOpSpec,
+            StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
@@ -153,7 +153,7 @@ where
     E: Debug + Send + Sync + std::error::Error,
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatusOpSpec: Debug + OpSpec<'op, State = (), Error = E, Output = State> + Send + Sync,
+    StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync,
     EnsureOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
     CleanOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
 {
@@ -165,8 +165,8 @@ where
 }
 
 #[async_trait]
-impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> StatusOpSpecRt<'op>
-    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> StatusFnSpecRt<'op>
+    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
 where
     FS: Debug
         + FullSpec<
@@ -174,7 +174,7 @@ where
             State = State,
             Error = E,
             ResIds = ResIds,
-            StatusOpSpec = StatusOpSpec,
+            StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
@@ -182,7 +182,36 @@ where
     E: Debug + Send + Sync + std::error::Error,
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatusOpSpec: Debug + OpSpec<'op, State = (), Error = E, Output = State> + Send + Sync,
+    StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync,
+    EnsureOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
+    CleanOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
+{
+    type Error = Error<E>;
+
+    async fn exec(&self, _resources: &Resources) -> Result<(), Self::Error> {
+        Ok(())
+    }
+}
+
+#[async_trait]
+impl<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> EnsureOpSpecRt<'op>
+    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+where
+    FS: Debug
+        + FullSpec<
+            'op,
+            State = State,
+            Error = E,
+            ResIds = ResIds,
+            StatusFnSpec = StatusFnSpec,
+            EnsureOpSpec = EnsureOpSpec,
+            CleanOpSpec = CleanOpSpec,
+        > + Send
+        + Sync,
+    E: Debug + Send + Sync + std::error::Error,
+    ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
+    State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
+    StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync,
     EnsureOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
     CleanOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
 {
@@ -198,8 +227,8 @@ where
 }
 
 #[async_trait]
-impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> EnsureOpSpecRt<'op>
-    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> CleanOpSpecRt<'op>
+    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
 where
     FS: Debug
         + FullSpec<
@@ -207,7 +236,7 @@ where
             State = State,
             Error = E,
             ResIds = ResIds,
-            StatusOpSpec = StatusOpSpec,
+            StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
@@ -215,40 +244,7 @@ where
     E: Debug + Send + Sync + std::error::Error,
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatusOpSpec: Debug + OpSpec<'op, State = (), Error = E, Output = State> + Send + Sync,
-    EnsureOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
-    CleanOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
-{
-    type Error = Error<E>;
-
-    async fn check(&self, _resources: &Resources) -> Result<(), Self::Error> {
-        Ok(())
-    }
-
-    async fn exec(&self, _resources: &Resources) -> Result<(), Self::Error> {
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> CleanOpSpecRt<'op>
-    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>
-where
-    FS: Debug
-        + FullSpec<
-            'op,
-            State = State,
-            Error = E,
-            ResIds = ResIds,
-            StatusOpSpec = StatusOpSpec,
-            EnsureOpSpec = EnsureOpSpec,
-            CleanOpSpec = CleanOpSpec,
-        > + Send
-        + Sync,
-    E: Debug + Send + Sync + std::error::Error,
-    ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
-    State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatusOpSpec: Debug + OpSpec<'op, State = (), Error = E, Output = State> + Send + Sync,
+    StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync,
     EnsureOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
     CleanOpSpec: Debug + OpSpecDry<'op, State = State, Error = E, Output = ResIds> + Send + Sync,
 {

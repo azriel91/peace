@@ -16,12 +16,12 @@ use crate::OpCheckStatus;
 pub trait OpSpec<'op> {
     /// State that the [`FullSpec`] manages.
     ///
-    /// This is the type returned by the [`StatusOpSpec`], and is used by
+    /// This is the type returned by the [`StatusFnSpec`], and is used by
     /// [`EnsureOpSpec`] and [`CleanOpSpec`] to determine if their [`exec`]
     /// function needs to be run.
     ///
     /// [`FullSpec`]: crate::FullSpec
-    /// [`StatusOpSpec`]: crate::FullSpec::StatusOpSpec
+    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
     /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
     /// [`CleanOpSpec`]: crate::FullSpec::CleanOpSpec
     /// [`exec`]: crate::OpSpec::exec

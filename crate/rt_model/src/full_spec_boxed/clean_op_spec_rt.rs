@@ -8,7 +8,7 @@ use peace_cfg::async_trait;
 ///
 /// The exec method returns different output values, but per Clean / Ensure /
 /// Status, it should be the same type, so we should know what to do with it.
-/// e.g. for Status, `StatusOpSpec::exec` should store it in a status resource.
+/// e.g. for Status, `StatusFnSpec::exec` should store it in a status resource.
 ///
 /// [`FullSpec::CleanOpSpec`]: peace_cfg::FullSpec::CleanOpSpec
 /// [`OpSpec`]: peace_cfg::OpSpec
