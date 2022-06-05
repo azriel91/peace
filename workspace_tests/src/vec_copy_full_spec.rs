@@ -52,9 +52,11 @@ impl<'op> OpSpec<'op> for VecCopyCleanOpSpec {
 
     async fn check(vec_b: W<'op, VecB>, state: &Vec<u8>) -> Result<OpCheckStatus, VecCopyError> {
         let op_check_status = if *vec_b.0 == *state {
-            OpCheckStatus::ExecRequired {
-                progress_limit: ProgressLimit::Bytes(1024),
-            }
+            let progress_limit = TryInto::<u64>::try_into(state.len())
+                .map(ProgressLimit::Bytes)
+                .unwrap_or(ProgressLimit::Unknown);
+
+            OpCheckStatus::ExecRequired { progress_limit }
         } else {
             OpCheckStatus::ExecNotRequired
         };
@@ -90,9 +92,11 @@ impl<'op> OpSpec<'op> for VecCopyEnsureOpSpec {
         state: &Vec<u8>,
     ) -> Result<OpCheckStatus, VecCopyError> {
         let op_check_status = if *vec_copy_params.dest().0 == *state {
-            OpCheckStatus::ExecRequired {
-                progress_limit: ProgressLimit::Bytes(1024),
-            }
+            let progress_limit = TryInto::<u64>::try_into(state.len())
+                .map(ProgressLimit::Bytes)
+                .unwrap_or(ProgressLimit::Unknown);
+
+            OpCheckStatus::ExecRequired { progress_limit }
         } else {
             OpCheckStatus::ExecNotRequired
         };
