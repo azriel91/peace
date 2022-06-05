@@ -17,7 +17,7 @@ test = false
 
 [dependencies]
 diff-struct = "0.4.1"
-fn_graph = { version = "0.5.0", features = ["resman"] }
+fn_graph = { version = "0.5.1", features = ["resman"] }
 miette = "4.7.1"
 peace_cfg = { path = "../cfg", version = "0.0.1" }
 peace_data = { path = "../data", version = "0.0.1" }
