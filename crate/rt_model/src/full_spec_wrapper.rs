@@ -75,6 +75,36 @@ where
     }
 }
 
+impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> DataAccess
+    for FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>
+where
+    FS: Debug
+        + FullSpec<
+            'op,
+            State = State,
+            Error = E,
+            ResIds = ResIds,
+            StatusOpSpec = StatusOpSpec,
+            EnsureOpSpec = EnsureOpSpec,
+            CleanOpSpec = CleanOpSpec,
+        > + Send
+        + Sync,
+    E: Debug + Send + Sync + std::error::Error,
+    ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
+    State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
+    StatusOpSpec: Debug + OpSpec<'op, State = (), Output = State> + Send + Sync,
+    EnsureOpSpec: Debug + OpSpecDry<'op, State = State, Output = ResIds> + Send + Sync,
+    CleanOpSpec: Debug + OpSpecDry<'op, State = State, Output = ResIds> + Send + Sync,
+{
+    fn borrows() -> TypeIds {
+        <EnsureOpSpec::Data as DataAccess>::borrows()
+    }
+
+    fn borrow_muts() -> TypeIds {
+        <EnsureOpSpec::Data as DataAccess>::borrow_muts()
+    }
+}
+
 impl<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec> DataAccessDyn
     for FullSpecWrapper<'op, FS, E, ResIds, State, StatusOpSpec, EnsureOpSpec, CleanOpSpec>
 where

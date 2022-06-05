@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use fn_graph::DataAccessDyn;
+use fn_graph::{DataAccess, DataAccessDyn};
 
 use crate::full_spec_boxed::{CleanOpSpecRt, EnsureOpSpecRt, StatusOpSpecRt};
 
@@ -12,6 +12,7 @@ use crate::full_spec_boxed::{CleanOpSpecRt, EnsureOpSpecRt, StatusOpSpecRt};
 /// [`FullSpec`]: peace_cfg::FullSpec
 pub trait FullSpecRt<'op, E>:
     Debug
+    + DataAccess
     + DataAccessDyn
     + CleanOpSpecRt<'op, Error = E>
     + EnsureOpSpecRt<'op, Error = E>
