@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use bytes::Bytes;
 use futures::{Stream, StreamExt, TryStreamExt};
@@ -109,7 +109,6 @@ impl DownloadEnsureOpSpec {
 impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
     type Data = DownloadParams<'op>;
     type Error = DownloadError;
-    type ResIds = PathBuf;
     type State = Option<FileState>;
 
     async fn desired(
@@ -151,21 +150,19 @@ impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
     }
 
     async fn exec_dry(
-        download_params: DownloadParams<'op>,
+        _download_params: DownloadParams<'op>,
         _file_state_current: &Option<FileState>,
         _file_state_desired: &Option<FileState>,
-    ) -> Result<PathBuf, DownloadError> {
-        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
-        Ok(dest.to_path_buf())
+    ) -> Result<(), DownloadError> {
+        Ok(())
     }
 
     async fn exec(
         download_params: DownloadParams<'op>,
         _file_state_current: &Option<FileState>,
         _file_state_desired: &Option<FileState>,
-    ) -> Result<PathBuf, DownloadError> {
+    ) -> Result<(), DownloadError> {
         Self::file_download(&download_params).await?;
-        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
-        Ok(dest.to_path_buf())
+        Ok(())
     }
 }

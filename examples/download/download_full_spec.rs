@@ -23,7 +23,6 @@ impl<'op> FullSpec<'op> for DownloadFullSpec {
     type CleanOpSpec = DownloadCleanOpSpec;
     type EnsureOpSpec = DownloadEnsureOpSpec;
     type Error = DownloadError;
-    type ResIds = PathBuf;
     type State = Option<FileState>;
     type StatusFnSpec = DownloadStatusFnSpec;
 

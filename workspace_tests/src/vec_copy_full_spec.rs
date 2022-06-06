@@ -17,7 +17,6 @@ impl<'op> FullSpec<'op> for VecCopyFullSpec {
     type CleanOpSpec = VecCopyCleanOpSpec;
     type EnsureOpSpec = VecCopyEnsureOpSpec;
     type Error = VecCopyError;
-    type ResIds = ();
     type State = Vec<u8>;
     type StatusFnSpec = VecCopyStatusFnSpec;
 
@@ -47,7 +46,6 @@ pub struct VecCopyCleanOpSpec;
 impl<'op> OpSpec<'op> for VecCopyCleanOpSpec {
     type Data = W<'op, VecB>;
     type Error = VecCopyError;
-    type ResIds = ();
     type State = Vec<u8>;
 
     async fn desired(_vec_b: W<'op, VecB>) -> Result<Vec<u8>, VecCopyError> {
@@ -75,7 +73,7 @@ impl<'op> OpSpec<'op> for VecCopyCleanOpSpec {
         _vec_b: W<'op, VecB>,
         _state_current: &Vec<u8>,
         _state_desired: &Vec<u8>,
-    ) -> Result<Self::ResIds, VecCopyError> {
+    ) -> Result<(), VecCopyError> {
         // Would erase vec_b
         Ok(())
     }
@@ -84,7 +82,7 @@ impl<'op> OpSpec<'op> for VecCopyCleanOpSpec {
         mut vec_b: W<'op, VecB>,
         _state_current: &Vec<u8>,
         _state_desired: &Vec<u8>,
-    ) -> Result<Self::ResIds, VecCopyError> {
+    ) -> Result<(), VecCopyError> {
         vec_b.0.clear();
         Ok(())
     }
@@ -98,7 +96,6 @@ pub struct VecCopyEnsureOpSpec;
 impl<'op> OpSpec<'op> for VecCopyEnsureOpSpec {
     type Data = VecCopyParamsMut<'op>;
     type Error = VecCopyError;
-    type ResIds = ();
     type State = Vec<u8>;
 
     async fn desired(vec_copy_params: VecCopyParamsMut<'op>) -> Result<Vec<u8>, VecCopyError> {
@@ -126,7 +123,7 @@ impl<'op> OpSpec<'op> for VecCopyEnsureOpSpec {
         _vec_copy_params: VecCopyParamsMut<'op>,
         _state_current: &Vec<u8>,
         _state_desired: &Vec<u8>,
-    ) -> Result<Self::ResIds, Self::Error> {
+    ) -> Result<(), Self::Error> {
         // Would replace vec_b's contents with vec_a's
         Ok(())
     }
@@ -135,7 +132,7 @@ impl<'op> OpSpec<'op> for VecCopyEnsureOpSpec {
         mut vec_copy_params: VecCopyParamsMut<'op>,
         _state_current: &Vec<u8>,
         state_desired: &Vec<u8>,
-    ) -> Result<Self::ResIds, VecCopyError> {
+    ) -> Result<(), VecCopyError> {
         let dest = vec_copy_params.dest_mut();
         dest.0.clear();
         dest.0.extend_from_slice(state_desired.as_slice());

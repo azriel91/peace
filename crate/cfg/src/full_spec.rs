@@ -37,68 +37,69 @@ pub trait FullSpec<'op> {
     ///
     /// # Examples
     ///
+    /// ## `FullSpec` that manages servers:
+    ///
+    /// The `State` may be the number of server instances, the boot image, their
+    /// hardware capacity, and their physical IDs. The desired `State` may not
+    /// be able to provide the physical IDs, so it should use a placeholder such
+    /// as `PhysicalId::ToBeGenerated`.
+    ///
+    /// * The [`StatusFnSpec`] returns this, and it should be renderable in a
+    ///   human readable format.
+    ///
+    /// * The ensure operation's [`check`] function should be able to use this
+    ///   to determine if there are enough servers using the desired image. The
+    ///   [`exec`] function returns the physical IDs of any launched servers.
+    ///
+    /// * The clean operation's [`check`] function should be able to use this to
+    ///   determine if the servers that need to be removed. The [`exec`]
+    ///   function should be able to remove the servers.
+    ///
+    /// * The backup operation's [`exec`] function should produce this as a
+    ///   record of the current state.
+    ///
+    /// * The restore operation's [`exec`] function should be able to read this
+    ///   and launch servers using the recorded image and hardware capacity.
+    ///
     /// ## `FullSpec` that manages application configuration:
     ///
-    /// The state is not necessarily the configuration itself, but may be a
+    /// The `State` is not necessarily the configuration itself, but may be a
     /// content hash, commit hash or version of the configuration. If the
     /// configuration is small, then one may consider making that the state.
     ///
-    /// * This status operation should return this, and it should be renderable
-    ///   in a human readable format.
+    /// * The [`StatusFnSpec`] returns this, and it should be renderable in a
+    ///   human readable format.
     ///
-    /// * The ensure operation's check function should be able to compare the
-    ///   desired configuration with this to determine if the configuration is
-    ///   already in the correct state or needs to be altered.
+    /// * The ensure operation's [`check`] function should be able to compare
+    ///   the desired configuration with this to determine if the configuration
+    ///   is already in the correct state or needs to be altered.
     ///
-    /// * The clean operation's check function should be able to use this to
-    ///   determine if the configuration needs to be undone.
+    /// * The clean operation's [`check`] function should be able to use this to
+    ///   determine if the configuration needs to be undone. The [`exec`]
+    ///   function should be able to remove the configuration.
     ///
-    /// * The backup operation's exec function should produce this as a record
-    ///   of the current state.
+    /// * The backup operation's [`exec`] function should produce this as a
+    ///   record of the current state.
     ///
-    /// * The restore operation's exec function should be able to read this and
-    ///   determine how to alter the system to match this state. If this were a
-    ///   commit hash, then restoring would be applying the configuration at
-    ///   that commit hash.
+    /// * The restore operation's [`exec`] function should be able to read this
+    ///   and determine how to alter the system to match this state. If this
+    ///   were a commit hash, then restoring would be applying the configuration
+    ///   at that commit hash.
     ///
-    /// ## `FullSpec` that manages servers:
+    /// # Resource IDs
     ///
-    /// The state may be the number of server instances, the boot image, and
-    /// their hardware capacity.
-    ///
-    /// * This status operation should return this, and it should be renderable
-    ///   in a human readable format.
-    ///
-    /// * The ensure operation's check function should be able to use this to
-    ///   determine if there are enough servers using the desired image.
-    ///
-    /// * The clean operation's check function should be able to use this to
-    ///   determine if the servers that need to be removed.
-    ///
-    /// * The backup operation's exec function should produce this as a record
-    ///   of the current state.
-    ///
-    /// * The restore operation's exec function should be able to read this and
-    ///   launch servers using the recorded image and hardware capacity.
-    ///
-    /// [`StatusFnSpec`]: Self::StatusFnSpec
-    /// [`EnsureOpSpec`]: Self::EnsureOpSpec
-    /// [`CleanOpSpec`]: Self::CleanOpSpec
-    /// [`exec`]: crate::OpSpec::exec
-    type State: Diff + Serialize + DeserializeOwned;
-
-    /// Consumer provided error type.
-    type Error: std::error::Error;
-
-    /// IDs of resources produced by the operation.
+    /// `State` should be used to store physical IDs of resources produced by
+    /// the operation.
     ///
     /// This is provided to the clean up logic to determine what to clean up.
     ///
-    /// These should be physical IDs, not logical IDs. A logical resource ID is
-    /// defined by code, and does not change. A physical resource ID is one
-    /// generated during execution, which generally is random or computed.
+    /// ## Logical IDs vs Physical IDs
     ///
-    /// # Examples
+    /// A logical resource ID is defined by code, and does not change. A
+    /// physical resource ID is one generated during execution, which
+    /// generally is random or computed.
+    ///
+    /// ## Examples
     ///
     /// The following are examples of logical IDs and corresponding physical
     /// IDs:
@@ -116,16 +117,18 @@ pub trait FullSpec<'op> {
     /// | `app_server_instance_id` | `ef34a9a4-0c02-45a6-96ec-a4db06d4980c` |
     /// | `app_server.address`     | `10.0.0.1`                             |
     ///
-    /// # Notes
-    ///
-    /// `ResIds` is separate from [`State`] because when computing the [`State`]
-    /// in [`OpSpec::desired`], it may be impossible to know the physical ID
-    /// of resources produced, such as virtual machine instance IDs.
-    ///
+    /// [`CleanOpSpec`]: Self::CleanOpSpec
     /// [`Data`]: crate::OpSpec::Data
-    /// [`State`]: Self::State
+    /// [`EnsureOpSpec`]: Self::EnsureOpSpec
+    /// [`check`]: crate::OpSpec::check
+    /// [`exec`]: crate::OpSpec::exec
     /// [`OpSpec::desired`]: crate::OpSpec::desired
-    type ResIds: Serialize + DeserializeOwned;
+    /// [`State`]: Self::State
+    /// [`StatusFnSpec`]: Self::StatusFnSpec
+    type State: Diff + Serialize + DeserializeOwned;
+
+    /// Consumer provided error type.
+    type Error: std::error::Error;
 
     /// Function that returns the current status of the managed item.
     ///
@@ -152,12 +155,12 @@ pub trait FullSpec<'op> {
     /// Specification of the ensure operation.
     ///
     /// The output is the IDs of resources produced by the operation.
-    type EnsureOpSpec: OpSpec<'op, State = Self::State, Error = Self::Error, ResIds = Self::ResIds>;
+    type EnsureOpSpec: OpSpec<'op, State = Self::State, Error = Self::Error>;
 
     /// Specification of the clean operation.
     ///
     /// The output is the IDs of resources cleaned by the operation.
-    type CleanOpSpec: OpSpec<'op, State = Self::State, Error = Self::Error, ResIds = Self::ResIds>;
+    type CleanOpSpec: OpSpec<'op, State = Self::State, Error = Self::Error>;
 
     /// Returns the `StatusFnSpec` for this `FullSpec`.
     fn status_fn_spec(&self) -> &Self::StatusFnSpec;

@@ -50,15 +50,13 @@ where
     }
 }
 
-impl<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
-    for FullSpecBoxed<'op, E>
+impl<'op, FS, E, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS> for FullSpecBoxed<'op, E>
 where
     FS: Debug
         + FullSpec<
             'op,
             State = State,
             Error = E,
-            ResIds = ResIds,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
@@ -66,12 +64,10 @@ where
         + Sync
         + 'op,
     E: Debug + Send + Sync + std::error::Error + 'op,
-    ResIds: Debug + Serialize + DeserializeOwned + Send + Sync + 'op,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'op,
     StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync + 'op,
-    EnsureOpSpec:
-        Debug + OpSpec<'op, State = State, Error = E, ResIds = ResIds> + Send + Sync + 'op,
-    CleanOpSpec: Debug + OpSpec<'op, State = State, Error = E, ResIds = ResIds> + Send + Sync + 'op,
+    EnsureOpSpec: Debug + OpSpec<'op, State = State, Error = E> + Send + Sync + 'op,
+    CleanOpSpec: Debug + OpSpec<'op, State = State, Error = E> + Send + Sync + 'op,
 {
     fn from(full_spec: FS) -> Self {
         Self(Box::new(FullSpecWrapper::from(full_spec)))
