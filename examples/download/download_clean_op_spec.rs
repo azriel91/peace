@@ -12,7 +12,7 @@ pub struct DownloadCleanOpSpec;
 impl<'op> OpSpec<'op> for DownloadCleanOpSpec {
     type Data = DownloadParams<'op>;
     type Error = DownloadError;
-    type Output = PathBuf;
+    type ResIds = PathBuf;
     type State = Option<FileState>;
 
     async fn desired(

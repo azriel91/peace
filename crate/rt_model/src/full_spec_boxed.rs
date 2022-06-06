@@ -70,8 +70,8 @@ where
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'op,
     StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync + 'op,
     EnsureOpSpec:
-        Debug + OpSpec<'op, State = State, Error = E, Output = ResIds> + Send + Sync + 'op,
-    CleanOpSpec: Debug + OpSpec<'op, State = State, Error = E, Output = ResIds> + Send + Sync + 'op,
+        Debug + OpSpec<'op, State = State, Error = E, ResIds = ResIds> + Send + Sync + 'op,
+    CleanOpSpec: Debug + OpSpec<'op, State = State, Error = E, ResIds = ResIds> + Send + Sync + 'op,
 {
     fn from(full_spec: FS) -> Self {
         Self(Box::new(FullSpecWrapper::from(full_spec)))

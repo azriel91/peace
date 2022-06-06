@@ -152,12 +152,12 @@ pub trait FullSpec<'op> {
     /// Specification of the ensure operation.
     ///
     /// The output is the IDs of resources produced by the operation.
-    type EnsureOpSpec: OpSpec<'op, State = Self::State, Error = Self::Error, Output = Self::ResIds>;
+    type EnsureOpSpec: OpSpec<'op, State = Self::State, Error = Self::Error, ResIds = Self::ResIds>;
 
     /// Specification of the clean operation.
     ///
     /// The output is the IDs of resources cleaned by the operation.
-    type CleanOpSpec: OpSpec<'op, State = Self::State, Error = Self::Error, Output = Self::ResIds>;
+    type CleanOpSpec: OpSpec<'op, State = Self::State, Error = Self::Error, ResIds = Self::ResIds>;
 
     /// Returns the `StatusFnSpec` for this `FullSpec`.
     fn status_fn_spec(&self) -> &Self::StatusFnSpec;

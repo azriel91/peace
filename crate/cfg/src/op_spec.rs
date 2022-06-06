@@ -27,19 +27,42 @@ pub trait OpSpec<'op> {
     /// [`exec`]: crate::OpSpec::exec
     type State;
 
-    /// Return type of the operation.
+    /// IDs of resources produced by the operation.
     ///
-    /// This varies depending on the type of the operation:
+    /// This is provided to the clean up logic to determine what to clean up.
     ///
-    /// * For an [ensure operation], these are the [resource IDs] produced by
-    ///   the operation.
-    /// * For a [clean operation], these are the [resource IDs] cleaned by the
-    ///   operation.
+    /// These should be physical IDs, not logical IDs. A logical resource ID is
+    /// defined by code, and does not change. A physical resource ID is one
+    /// generated during execution, which generally is random or computed.
     ///
-    /// [ensure operation]: crate::FullSpec::EnsureOpSpec
-    /// [clean operation]: crate::FullSpec::CleanOpSpec
-    /// [resource IDs]: crate::FullSpec::ResIds
-    type Output;
+    /// # Examples
+    ///
+    /// The following are examples of logical IDs and corresponding physical
+    /// IDs:
+    ///
+    /// * If the operation creates a file, the ID *may* be the full file path,
+    ///   or it may be the file name, assuming the file path may be deduced by
+    ///   the clean up logic from [`Data`].
+    ///
+    /// * If the operation instantiates a virtual machine on a cloud platform,
+    ///   this may be the ID of the instance so that it may be terminated.
+    ///
+    /// | Logical ID               | Physical ID                            |
+    /// | ------------------------ | -------------------------------------- |
+    /// | `app.file_path`          | `/mnt/data/app.zip`                    |
+    /// | `app_server_instance_id` | `ef34a9a4-0c02-45a6-96ec-a4db06d4980c` |
+    /// | `app_server.address`     | `10.0.0.1`                             |
+    ///
+    /// # Notes
+    ///
+    /// `ResIds` is separate from [`State`] because when computing the [`State`]
+    /// in [`OpSpec::desired`], it may be impossible to know the physical ID
+    /// of resources produced, such as virtual machine instance IDs.
+    ///
+    /// [`Data`]: crate::OpSpec::Data
+    /// [`State`]: Self::State
+    /// [`OpSpec::desired`]: crate::OpSpec::desired
+    type ResIds;
 
     /// Data that the operation reads from, or writes to.
     ///
@@ -135,7 +158,7 @@ pub trait OpSpec<'op> {
         data: Self::Data,
         state_current: &Self::State,
         state_desired: &Self::State,
-    ) -> Result<Self::Output, Self::Error>
+    ) -> Result<Self::ResIds, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait
     where
@@ -151,7 +174,7 @@ pub trait OpSpec<'op> {
         data: Self::Data,
         state_current: &Self::State,
         state_desired: &Self::State,
-    ) -> Result<Self::Output, Self::Error>
+    ) -> Result<Self::ResIds, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait
     where
