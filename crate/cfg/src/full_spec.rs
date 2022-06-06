@@ -37,54 +37,59 @@ pub trait FullSpec<'op> {
     ///
     /// # Examples
     ///
+    /// ## `FullSpec` that manages servers:
+    ///
+    /// The `State` may be the number of server instances, the boot image, and
+    /// their hardware capacity.
+    ///
+    /// * The [`StatusFnSpec`] returns this, and it should be renderable in a
+    ///   human readable format.
+    ///
+    /// * The ensure [`OpSpec::check`] function should be able to use this to
+    ///   determine if there are enough servers using the desired image. The
+    ///   [`OpSpec::exec`] function returns the physical IDs of any launched
+    ///   servers.
+    ///
+    /// * The clean [`OpSpec::check`] function should be able to use this to
+    ///   determine if the servers that need to be removed. The [`OpSpec::exec`]
+    ///   function should be able to remove the servers.
+    ///
+    /// * The backup [`OpSpec::exec`] function should produce this as a record
+    ///   of the current state.
+    ///
+    /// * The restore [`OpSpec::exec`] function should be able to read this and
+    ///   launch servers using the recorded image and hardware capacity.
+    ///
     /// ## `FullSpec` that manages application configuration:
     ///
-    /// The state is not necessarily the configuration itself, but may be a
+    /// The `State` is not necessarily the configuration itself, but may be a
     /// content hash, commit hash or version of the configuration. If the
     /// configuration is small, then one may consider making that the state.
     ///
-    /// * This status operation should return this, and it should be renderable
-    ///   in a human readable format.
+    /// * The [`StatusFnSpec`] returns this, and it should be renderable in a
+    ///   human readable format.
     ///
-    /// * The ensure operation's check function should be able to compare the
+    /// * The ensure [`OpSpec::check`] function should be able to compare the
     ///   desired configuration with this to determine if the configuration is
     ///   already in the correct state or needs to be altered.
     ///
-    /// * The clean operation's check function should be able to use this to
-    ///   determine if the configuration needs to be undone.
+    /// * The clean [`OpSpec::check`] function should be able to use this to
+    ///   determine if the configuration needs to be undone. The
+    ///   [`OpSpec::exec`] function should be able to remove the configuration.
     ///
-    /// * The backup operation's exec function should produce this as a record
+    /// * The backup [`OpSpec::exec`] function should produce this as a record
     ///   of the current state.
     ///
-    /// * The restore operation's exec function should be able to read this and
+    /// * The restore [`OpSpec::exec`] function should be able to read this and
     ///   determine how to alter the system to match this state. If this were a
     ///   commit hash, then restoring would be applying the configuration at
     ///   that commit hash.
     ///
-    /// ## `FullSpec` that manages servers:
-    ///
-    /// The state may be the number of server instances, the boot image, and
-    /// their hardware capacity.
-    ///
-    /// * This status operation should return this, and it should be renderable
-    ///   in a human readable format.
-    ///
-    /// * The ensure operation's check function should be able to use this to
-    ///   determine if there are enough servers using the desired image.
-    ///
-    /// * The clean operation's check function should be able to use this to
-    ///   determine if the servers that need to be removed.
-    ///
-    /// * The backup operation's exec function should produce this as a record
-    ///   of the current state.
-    ///
-    /// * The restore operation's exec function should be able to read this and
-    ///   launch servers using the recorded image and hardware capacity.
-    ///
-    /// [`StatusFnSpec`]: Self::StatusFnSpec
-    /// [`EnsureOpSpec`]: Self::EnsureOpSpec
     /// [`CleanOpSpec`]: Self::CleanOpSpec
-    /// [`exec`]: crate::OpSpec::exec
+    /// [`EnsureOpSpec`]: Self::EnsureOpSpec
+    /// [`StatusFnSpec`]: Self::StatusFnSpec
+    /// [`OpSpec::check`]: crate::OpSpec::check
+    /// [`OpSpec::exec`]: crate::OpSpec::exec
     type State: Diff + Serialize + DeserializeOwned;
 
     /// Consumer provided error type.
