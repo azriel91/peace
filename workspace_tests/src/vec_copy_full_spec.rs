@@ -54,9 +54,13 @@ impl<'op> OpSpec<'op> for VecCopyCleanOpSpec {
         Ok(Vec::new())
     }
 
-    async fn check(vec_b: W<'op, VecB>, state: &Vec<u8>) -> Result<OpCheckStatus, VecCopyError> {
-        let op_check_status = if *vec_b.0 == *state {
-            let progress_limit = TryInto::<u64>::try_into(state.len())
+    async fn check(
+        _vec_b: W<'op, VecB>,
+        state_current: &Vec<u8>,
+        state_desired: &Vec<u8>,
+    ) -> Result<OpCheckStatus, VecCopyError> {
+        let op_check_status = if state_current != state_desired {
+            let progress_limit = TryInto::<u64>::try_into(state_current.len())
                 .map(ProgressLimit::Bytes)
                 .unwrap_or(ProgressLimit::Unknown);
 
@@ -67,7 +71,11 @@ impl<'op> OpSpec<'op> for VecCopyCleanOpSpec {
         Ok(op_check_status)
     }
 
-    async fn exec(mut vec_b: W<'op, VecB>) -> Result<Self::Output, VecCopyError> {
+    async fn exec(
+        mut vec_b: W<'op, VecB>,
+        _state_current: &Vec<u8>,
+        _state_desired: &Vec<u8>,
+    ) -> Result<Self::Output, VecCopyError> {
         vec_b.0.clear();
         Ok(())
     }
@@ -96,11 +104,12 @@ impl<'op> OpSpec<'op> for VecCopyEnsureOpSpec {
     }
 
     async fn check(
-        vec_copy_params: VecCopyParamsMut<'op>,
-        state: &Vec<u8>,
+        _vec_copy_params: VecCopyParamsMut<'op>,
+        state_current: &Vec<u8>,
+        state_desired: &Vec<u8>,
     ) -> Result<OpCheckStatus, VecCopyError> {
-        let op_check_status = if *vec_copy_params.dest().0 == *state {
-            let progress_limit = TryInto::<u64>::try_into(state.len())
+        let op_check_status = if state_current != state_desired {
+            let progress_limit = TryInto::<u64>::try_into(state_desired.len())
                 .map(ProgressLimit::Bytes)
                 .unwrap_or(ProgressLimit::Unknown);
 
@@ -113,10 +122,12 @@ impl<'op> OpSpec<'op> for VecCopyEnsureOpSpec {
 
     async fn exec(
         mut vec_copy_params: VecCopyParamsMut<'op>,
+        _state_current: &Vec<u8>,
+        state_desired: &Vec<u8>,
     ) -> Result<Self::Output, VecCopyError> {
-        let VecCopyParamsMut { src, dest } = &mut vec_copy_params;
+        let dest = vec_copy_params.dest_mut();
         dest.0.clear();
-        dest.0.extend_from_slice(src.0.as_slice());
+        dest.0.extend_from_slice(state_desired.as_slice());
         Ok(())
     }
 }
@@ -145,8 +156,8 @@ impl<'op> VecCopyParamsMut<'op> {
         &self.src
     }
 
-    pub fn dest(&self) -> &VecB {
-        &self.dest
+    pub fn dest_mut(&mut self) -> &mut VecB {
+        &mut *self.dest
     }
 }
 

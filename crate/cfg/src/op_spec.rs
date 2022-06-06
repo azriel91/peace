@@ -43,8 +43,16 @@ pub trait OpSpec<'op> {
 
     /// Data that the operation reads from, or writes to.
     ///
-    /// These may be parameters to the function, or information calculated from
-    /// previous operations.
+    /// This may include:
+    ///
+    /// * Information calculated from previous operations.
+    /// * Information written for subsequent operations.
+    ///
+    /// This differs from [`State`] whereby `State` is the state of the managed
+    /// item, whereas `Data` is information computed at runtime to manage that
+    /// state.
+    ///
+    /// [`State`]: Self::State
     type Data: Data<'op>;
 
     /// Error returned when any of the functions of this operation err.
@@ -86,7 +94,17 @@ pub trait OpSpec<'op> {
     /// # Implementors
     ///
     /// This function call is intended to be cheap and fast.
-    async fn check(data: Self::Data, state: &Self::State) -> Result<OpCheckStatus, Self::Error>
+    ///
+    /// # Parameters
+    ///
+    /// * `data`:
+    /// * `state_current`:
+    /// * `state_desired`:
+    async fn check(
+        data: Self::Data,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<OpCheckStatus, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait
     where
@@ -98,7 +116,11 @@ pub trait OpSpec<'op> {
     ///
     /// [`check`]: crate::OpSpec::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
-    async fn exec(data: Self::Data) -> Result<Self::Output, Self::Error>
+    async fn exec(
+        data: Self::Data,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::Output, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait
     where

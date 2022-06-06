@@ -15,23 +15,6 @@ use crate::{DownloadError, DownloadParams, FileState, FileStateDiff};
 pub struct DownloadEnsureOpSpec;
 
 impl DownloadEnsureOpSpec {
-    async fn file_contents_check(
-        download_params: &DownloadParams<'_>,
-        file_state_current: &FileState,
-    ) -> Result<OpCheckStatus, DownloadError> {
-        let file_state_desired = Self::file_state_desired(download_params).await?;
-
-        let file_state_diff = file_state_current.diff(&file_state_desired);
-        match file_state_diff {
-            FileStateDiff::NoChange => Ok(OpCheckStatus::ExecNotRequired),
-            FileStateDiff::StringContents(_)
-            | FileStateDiff::Length(_)
-            | FileStateDiff::Unknown => Ok(OpCheckStatus::ExecRequired {
-                progress_limit: ProgressLimit::Bytes(1024),
-            }),
-        }
-    }
-
     async fn file_state_desired(
         download_params: &DownloadParams<'_>,
     ) -> Result<FileState, DownloadError> {
@@ -60,6 +43,22 @@ impl DownloadEnsureOpSpec {
             }
         } else {
             Err(DownloadError::SrcFileUndetermined { status_code })
+        }
+    }
+
+    async fn file_contents_check(
+        _download_params: &DownloadParams<'_>,
+        file_state_current: &FileState,
+        file_state_desired: &FileState,
+    ) -> Result<OpCheckStatus, DownloadError> {
+        let file_state_diff = file_state_current.diff(&file_state_desired);
+        match file_state_diff {
+            FileStateDiff::NoChange => Ok(OpCheckStatus::ExecNotRequired),
+            FileStateDiff::StringContents(_)
+            | FileStateDiff::Length(_)
+            | FileStateDiff::Unknown => Ok(OpCheckStatus::ExecRequired {
+                progress_limit: ProgressLimit::Bytes(1024),
+            }),
         }
     }
 
@@ -123,18 +122,39 @@ impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
 
     async fn check(
         download_params: DownloadParams<'op>,
-        file_state: &Option<FileState>,
+        file_state_current: &Option<FileState>,
+        file_state_desired: &Option<FileState>,
     ) -> Result<OpCheckStatus, DownloadError> {
-        let op_check_status = match file_state.as_ref() {
-            Some(file_state) => Self::file_contents_check(&download_params, file_state).await?,
-            None => OpCheckStatus::ExecRequired {
-                progress_limit: ProgressLimit::Bytes(1024),
-            },
+        let op_check_status = match (file_state_current.as_ref(), file_state_desired.as_ref()) {
+            (Some(file_state_current), Some(file_state_desired)) => {
+                Self::file_contents_check(&download_params, file_state_current, file_state_desired)
+                    .await?
+            }
+            (Some(_file_state_current), None) => {
+                // Should we delete the file?
+                OpCheckStatus::ExecNotRequired
+            }
+            (None, Some(file_state_desired)) => {
+                let progress_limit = match file_state_desired {
+                    FileState::StringContents(s) => TryInto::<u64>::try_into(s.bytes().len())
+                        .map(ProgressLimit::Bytes)
+                        .unwrap_or(ProgressLimit::Unknown),
+                    FileState::Length(len) => ProgressLimit::Bytes(*len),
+                    FileState::Unknown => ProgressLimit::Unknown,
+                };
+
+                OpCheckStatus::ExecRequired { progress_limit }
+            }
+            (None, None) => OpCheckStatus::ExecNotRequired,
         };
         Ok(op_check_status)
     }
 
-    async fn exec(download_params: DownloadParams<'op>) -> Result<PathBuf, DownloadError> {
+    async fn exec(
+        download_params: DownloadParams<'op>,
+        _file_state_current: &Option<FileState>,
+        _file_state_desired: &Option<FileState>,
+    ) -> Result<PathBuf, DownloadError> {
         Self::file_download(&download_params).await?;
         let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
         Ok(dest.to_path_buf())
