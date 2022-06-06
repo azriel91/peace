@@ -14,17 +14,17 @@ use crate::OpCheckStatus;
 /// * Return type of the operation, depending on its purpose.
 #[async_trait]
 pub trait OpSpec<'op> {
-    /// State that the [`FullSpec`] manages.
+    /// State of the managed item.
     ///
     /// This is the type returned by the [`StatusFnSpec`], and is used by
-    /// [`EnsureOpSpec`] and [`CleanOpSpec`] to determine if their [`exec`]
-    /// function needs to be run.
+    /// [`EnsureOpSpec`] to determine if [`OpSpec::exec`] needs to be run.
     ///
-    /// [`FullSpec`]: crate::FullSpec
+    /// See [`FullSpec::State`] for more detail.
+    ///
     /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
     /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
-    /// [`CleanOpSpec`]: crate::FullSpec::CleanOpSpec
-    /// [`exec`]: crate::OpSpec::exec
+    /// [`OpSpec::exec`]: crate::OpSpec::exec
+    /// [`FullSpec::State`]: crate::FullSpec::State
     type State;
 
     /// IDs of resources produced by the operation.
@@ -120,9 +120,14 @@ pub trait OpSpec<'op> {
     ///
     /// # Parameters
     ///
-    /// * `data`:
-    /// * `state_current`:
-    /// * `state_desired`:
+    /// * `data`: Runtime data that the operation reads from, or writes to.
+    /// * `state_current`: Current [`State`] of the managed item, returned from
+    ///   [`StatusFnSpec`].
+    /// * `state_desired`: Desired [`State`] of the managed item, returned from
+    ///   [`Self::desired`].
+    ///
+    /// [`State`]: Self::State
+    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
     async fn check(
         data: Self::Data,
         state_current: &Self::State,
