@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use peace::cfg::{async_trait, OpCheckStatus, OpSpec, ProgressLimit};
 
 use crate::{DownloadError, DownloadParams, FileState};
@@ -10,6 +12,7 @@ pub struct DownloadCleanOpSpec;
 impl<'op> OpSpec<'op> for DownloadCleanOpSpec {
     type Data = DownloadParams<'op>;
     type Error = DownloadError;
+    type ResIds = PathBuf;
     type State = Option<FileState>;
 
     async fn desired(
@@ -34,22 +37,23 @@ impl<'op> OpSpec<'op> for DownloadCleanOpSpec {
     }
 
     async fn exec_dry(
-        _download_params: DownloadParams<'op>,
+        download_params: DownloadParams<'op>,
         _file_state_current: &Option<FileState>,
         _file_state_desired: &Option<FileState>,
-    ) -> Result<(), DownloadError> {
-        Ok(())
+    ) -> Result<PathBuf, DownloadError> {
+        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
+        Ok(dest.to_path_buf())
     }
 
     async fn exec(
         download_params: DownloadParams<'op>,
         _file_state_current: &Option<FileState>,
         _file_state_desired: &Option<FileState>,
-    ) -> Result<(), DownloadError> {
+    ) -> Result<PathBuf, DownloadError> {
         let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
         tokio::fs::remove_file(dest)
             .await
             .map_err(DownloadError::DestFileRemove)?;
-        Ok(())
+        Ok(dest.to_path_buf())
     }
 }
