@@ -110,6 +110,37 @@ pub trait OpSpec<'op> {
     where
         'op: 'async_trait;
 
+    /// Dry-run transform of the current state to the desired state.
+    ///
+    /// This will only be called if [`check`] returns [`ExecRequired`].
+    ///
+    /// This should mirror the logic in [`exec`], with the following
+    /// differences:
+    ///
+    /// * When state will actually be altered, this would skip the logic.
+    ///
+    /// * Where there would be IDs received from an external system, a
+    ///   placeholder ID should still be inserted into the runtime data. This
+    ///   should allow subsequent `FullSpec`s that rely on this one to use those
+    ///   placeholders in their logic.
+    ///
+    /// # Implementors
+    ///
+    /// This function call is intended to be cheap.
+    ///
+    /// [`check`]: crate::OpSpec::check
+    /// [`exec`]: crate::OpSpec::exec
+    /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
+    async fn exec_dry(
+        data: Self::Data,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::Output, Self::Error>
+    // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
+    // impl has stricter requirements than trait
+    where
+        'op: 'async_trait;
+
     /// Transforms the current state to the desired state.
     ///
     /// This will only be called if [`check`] returns [`ExecRequired`].

@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use bytes::Bytes;
 use futures::{Stream, StreamExt, TryStreamExt};
-use peace::cfg::{async_trait, diff::Diff, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit};
+use peace::cfg::{async_trait, diff::Diff, OpCheckStatus, OpSpec, ProgressLimit};
 use tokio::{
     fs::File,
     io::{AsyncWriteExt, BufWriter},
@@ -150,6 +150,15 @@ impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
         Ok(op_check_status)
     }
 
+    async fn exec_dry(
+        download_params: DownloadParams<'op>,
+        _file_state_current: &Option<FileState>,
+        _file_state_desired: &Option<FileState>,
+    ) -> Result<PathBuf, DownloadError> {
+        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
+        Ok(dest.to_path_buf())
+    }
+
     async fn exec(
         download_params: DownloadParams<'op>,
         _file_state_current: &Option<FileState>,
@@ -158,12 +167,5 @@ impl<'op> OpSpec<'op> for DownloadEnsureOpSpec {
         Self::file_download(&download_params).await?;
         let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
         Ok(dest.to_path_buf())
-    }
-}
-
-#[async_trait]
-impl<'op> OpSpecDry<'op> for DownloadEnsureOpSpec {
-    async fn exec_dry() -> Result<Self::Output, Self::Error> {
-        todo!("should this be inferred from the Diff instead")
     }
 }

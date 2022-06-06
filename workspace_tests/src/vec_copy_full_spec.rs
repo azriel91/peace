@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{async_trait, FnSpec, FullSpec, OpCheckStatus, OpSpec, OpSpecDry, ProgressLimit},
+    cfg::{async_trait, FnSpec, FullSpec, OpCheckStatus, OpSpec, ProgressLimit},
     data::{Data, Resources, R, W},
 };
 use serde::{Deserialize, Serialize};
@@ -71,6 +71,15 @@ impl<'op> OpSpec<'op> for VecCopyCleanOpSpec {
         Ok(op_check_status)
     }
 
+    async fn exec_dry(
+        _vec_b: W<'op, VecB>,
+        _state_current: &Vec<u8>,
+        _state_desired: &Vec<u8>,
+    ) -> Result<Self::Output, VecCopyError> {
+        // Would erase vec_b
+        Ok(())
+    }
+
     async fn exec(
         mut vec_b: W<'op, VecB>,
         _state_current: &Vec<u8>,
@@ -78,13 +87,6 @@ impl<'op> OpSpec<'op> for VecCopyCleanOpSpec {
     ) -> Result<Self::Output, VecCopyError> {
         vec_b.0.clear();
         Ok(())
-    }
-}
-
-#[async_trait]
-impl<'op> OpSpecDry<'op> for VecCopyCleanOpSpec {
-    async fn exec_dry() -> Result<Self::Output, Self::Error> {
-        todo!("should this be inferred from the Diff instead?")
     }
 }
 
@@ -120,6 +122,15 @@ impl<'op> OpSpec<'op> for VecCopyEnsureOpSpec {
         Ok(op_check_status)
     }
 
+    async fn exec_dry(
+        _vec_copy_params: VecCopyParamsMut<'op>,
+        _state_current: &Vec<u8>,
+        _state_desired: &Vec<u8>,
+    ) -> Result<Self::Output, Self::Error> {
+        // Would replace vec_b's contents with vec_a's
+        Ok(())
+    }
+
     async fn exec(
         mut vec_copy_params: VecCopyParamsMut<'op>,
         _state_current: &Vec<u8>,
@@ -129,13 +140,6 @@ impl<'op> OpSpec<'op> for VecCopyEnsureOpSpec {
         dest.0.clear();
         dest.0.extend_from_slice(state_desired.as_slice());
         Ok(())
-    }
-}
-
-#[async_trait]
-impl<'op> OpSpecDry<'op> for VecCopyEnsureOpSpec {
-    async fn exec_dry() -> Result<Self::Output, Self::Error> {
-        todo!("should this be inferred from the Diff instead?")
     }
 }
 

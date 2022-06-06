@@ -3,7 +3,7 @@ use diff::Diff;
 use fn_graph::Resources;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{FnSpec, OpSpecDry};
+use crate::{FnSpec, OpSpec};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -105,7 +105,7 @@ pub trait FullSpec<'op> {
     ///
     /// * If the operation creates a file, the ID *may* be the full file path,
     ///   or it may be the file name, assuming the file path may be deduced by
-    ///   the clean up logic from [`Params`].
+    ///   the clean up logic from [`Data`].
     ///
     /// * If the operation instantiates a virtual machine on a cloud platform,
     ///   this may be the ID of the instance so that it may be terminated.
@@ -116,7 +116,15 @@ pub trait FullSpec<'op> {
     /// | `app_server_instance_id` | `ef34a9a4-0c02-45a6-96ec-a4db06d4980c` |
     /// | `app_server.address`     | `10.0.0.1`                             |
     ///
-    /// [`Params`]: crate::OpSpec::Params
+    /// # Notes
+    ///
+    /// `ResIds` is separate from [`State`] because when computing the [`State`]
+    /// in [`OpSpec::desired`], it may be impossible to know the physical ID
+    /// of resources produced, such as virtual machine instance IDs.
+    ///
+    /// [`Data`]: crate::OpSpec::Data
+    /// [`State`]: Self::State
+    /// [`OpSpec::desired`]: crate::OpSpec::desired
     type ResIds: Serialize + DeserializeOwned;
 
     /// Function that returns the current status of the managed item.
@@ -144,22 +152,12 @@ pub trait FullSpec<'op> {
     /// Specification of the ensure operation.
     ///
     /// The output is the IDs of resources produced by the operation.
-    type EnsureOpSpec: OpSpecDry<
-        'op,
-        State = Self::State,
-        Error = Self::Error,
-        Output = Self::ResIds,
-    >;
+    type EnsureOpSpec: OpSpec<'op, State = Self::State, Error = Self::Error, Output = Self::ResIds>;
 
     /// Specification of the clean operation.
     ///
     /// The output is the IDs of resources cleaned by the operation.
-    type CleanOpSpec: OpSpecDry<
-        'op,
-        State = Self::State,
-        Error = Self::Error,
-        Output = Self::ResIds,
-    >;
+    type CleanOpSpec: OpSpec<'op, State = Self::State, Error = Self::Error, Output = Self::ResIds>;
 
     /// Returns the `StatusFnSpec` for this `FullSpec`.
     fn status_fn_spec(&self) -> &Self::StatusFnSpec;
