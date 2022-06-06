@@ -3,7 +3,7 @@ use diff::Diff;
 use fn_graph::Resources;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{FnSpec, OpSpec};
+use crate::{CleanOpSpec, FnSpec, OpSpec};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -162,7 +162,7 @@ pub trait FullSpec<'op> {
     /// Specification of the clean operation.
     ///
     /// The output is the IDs of resources cleaned by the operation.
-    type CleanOpSpec: OpSpec<'op, State = Self::State, Error = Self::Error, ResIds = Self::ResIds>;
+    type CleanOpSpec: CleanOpSpec<'op, Error = Self::Error, ResIds = Self::ResIds>;
 
     /// Returns the `StatusFnSpec` for this `FullSpec`.
     fn status_fn_spec(&self) -> &Self::StatusFnSpec;

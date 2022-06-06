@@ -71,7 +71,8 @@ where
     StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync + 'op,
     EnsureOpSpec:
         Debug + OpSpec<'op, State = State, Error = E, ResIds = ResIds> + Send + Sync + 'op,
-    CleanOpSpec: Debug + OpSpec<'op, State = State, Error = E, ResIds = ResIds> + Send + Sync + 'op,
+    CleanOpSpec:
+        Debug + peace_cfg::CleanOpSpec<'op, Error = E, ResIds = ResIds> + Send + Sync + 'op,
 {
     fn from(full_spec: FS) -> Self {
         Self(Box::new(FullSpecWrapper::from(full_spec)))

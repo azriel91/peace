@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{async_trait, FnSpec, FullSpec, OpCheckStatus, OpSpec, ProgressLimit},
+    cfg::{async_trait, CleanOpSpec, FnSpec, FullSpec, OpCheckStatus, OpSpec, ProgressLimit},
     data::{Data, Resources, R, W},
 };
 use serde::{Deserialize, Serialize};
@@ -44,47 +44,30 @@ impl<'op> FullSpec<'op> for VecCopyFullSpec {
 pub struct VecCopyCleanOpSpec;
 
 #[async_trait]
-impl<'op> OpSpec<'op> for VecCopyCleanOpSpec {
+impl<'op> CleanOpSpec<'op> for VecCopyCleanOpSpec {
     type Data = W<'op, VecB>;
     type Error = VecCopyError;
     type ResIds = ();
-    type State = Vec<u8>;
 
-    async fn desired(_vec_b: W<'op, VecB>) -> Result<Vec<u8>, VecCopyError> {
-        Ok(Vec::new())
-    }
-
-    async fn check(
-        _vec_b: W<'op, VecB>,
-        state_current: &Vec<u8>,
-        state_desired: &Vec<u8>,
-    ) -> Result<OpCheckStatus, VecCopyError> {
-        let op_check_status = if state_current != state_desired {
-            let progress_limit = TryInto::<u64>::try_into(state_current.len())
+    async fn check(vec_b: W<'op, VecB>, _res_ids: &()) -> Result<OpCheckStatus, VecCopyError> {
+        let op_check_status = if vec_b.0.is_empty() {
+            OpCheckStatus::ExecNotRequired
+        } else {
+            let progress_limit = TryInto::<u64>::try_into(vec_b.0.len())
                 .map(ProgressLimit::Bytes)
                 .unwrap_or(ProgressLimit::Unknown);
 
             OpCheckStatus::ExecRequired { progress_limit }
-        } else {
-            OpCheckStatus::ExecNotRequired
         };
         Ok(op_check_status)
     }
 
-    async fn exec_dry(
-        _vec_b: W<'op, VecB>,
-        _state_current: &Vec<u8>,
-        _state_desired: &Vec<u8>,
-    ) -> Result<Self::ResIds, VecCopyError> {
+    async fn exec_dry(_vec_b: W<'op, VecB>, _res_ids: &()) -> Result<(), VecCopyError> {
         // Would erase vec_b
         Ok(())
     }
 
-    async fn exec(
-        mut vec_b: W<'op, VecB>,
-        _state_current: &Vec<u8>,
-        _state_desired: &Vec<u8>,
-    ) -> Result<Self::ResIds, VecCopyError> {
+    async fn exec(mut vec_b: W<'op, VecB>, _res_ids: &()) -> Result<(), VecCopyError> {
         vec_b.0.clear();
         Ok(())
     }

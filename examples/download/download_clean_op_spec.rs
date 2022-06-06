@@ -1,32 +1,25 @@
 use std::path::PathBuf;
 
-use peace::cfg::{async_trait, OpCheckStatus, OpSpec, ProgressLimit};
+use peace::cfg::{async_trait, CleanOpSpec, OpCheckStatus, ProgressLimit};
 
-use crate::{DownloadError, DownloadParams, FileState};
+use crate::{DownloadError, DownloadParams};
 
-/// Clean OpSpec for the file to download.
+/// `CleanOpSpec` for the file to download.
 #[derive(Debug, Default)]
 pub struct DownloadCleanOpSpec;
 
 #[async_trait]
-impl<'op> OpSpec<'op> for DownloadCleanOpSpec {
+impl<'op> CleanOpSpec<'op> for DownloadCleanOpSpec {
     type Data = DownloadParams<'op>;
     type Error = DownloadError;
     type ResIds = PathBuf;
-    type State = Option<FileState>;
-
-    async fn desired(
-        _download_params: DownloadParams<'op>,
-    ) -> Result<Option<FileState>, DownloadError> {
-        Ok(None)
-    }
 
     async fn check(
         _download_params: DownloadParams<'op>,
-        file_state_current: &Option<FileState>,
-        file_state_desired: &Option<FileState>,
+        dest_path: &PathBuf,
     ) -> Result<OpCheckStatus, DownloadError> {
-        let op_check_status = if file_state_current != file_state_desired {
+        let op_check_status = if dest_path.exists() {
+            // TODO: read file size
             OpCheckStatus::ExecRequired {
                 progress_limit: ProgressLimit::Bytes(1024),
             }
@@ -37,23 +30,19 @@ impl<'op> OpSpec<'op> for DownloadCleanOpSpec {
     }
 
     async fn exec_dry(
-        download_params: DownloadParams<'op>,
-        _file_state_current: &Option<FileState>,
-        _file_state_desired: &Option<FileState>,
-    ) -> Result<PathBuf, DownloadError> {
-        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
-        Ok(dest.to_path_buf())
+        _download_params: DownloadParams<'op>,
+        _dest_path: &PathBuf,
+    ) -> Result<(), DownloadError> {
+        Ok(())
     }
 
     async fn exec(
-        download_params: DownloadParams<'op>,
-        _file_state_current: &Option<FileState>,
-        _file_state_desired: &Option<FileState>,
-    ) -> Result<PathBuf, DownloadError> {
-        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
-        tokio::fs::remove_file(dest)
+        _download_params: DownloadParams<'op>,
+        dest_path: &PathBuf,
+    ) -> Result<(), DownloadError> {
+        tokio::fs::remove_file(&*dest_path)
             .await
             .map_err(DownloadError::DestFileRemove)?;
-        Ok(dest.to_path_buf())
+        Ok(())
     }
 }
