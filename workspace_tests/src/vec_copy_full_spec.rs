@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{async_trait, CleanOpSpec, FnSpec, FullSpec, OpCheckStatus, OpSpec, ProgressLimit},
+    cfg::{async_trait, CleanOpSpec, EnsureOpSpec, FnSpec, FullSpec, OpCheckStatus, ProgressLimit},
     data::{Data, Resources, R, W},
 };
 use serde::{Deserialize, Serialize};
@@ -78,7 +78,7 @@ impl<'op> CleanOpSpec<'op> for VecCopyCleanOpSpec {
 pub struct VecCopyEnsureOpSpec;
 
 #[async_trait]
-impl<'op> OpSpec<'op> for VecCopyEnsureOpSpec {
+impl<'op> EnsureOpSpec<'op> for VecCopyEnsureOpSpec {
     type Data = VecCopyParamsMut<'op>;
     type Error = VecCopyError;
     type ResIds = ();

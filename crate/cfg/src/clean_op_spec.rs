@@ -59,10 +59,9 @@ pub trait CleanOpSpec<'op> {
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `res_ids`: Resource IDs of the managed item, returned from the
-    ///   [`EnsureOpSpec`]'s [`OpSpec::exec`] function.
+    ///   [`EnsureOpSpec::exec`] function.
     ///
-    /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
-    /// [`OpSpec::exec`]: crate::OpSpec::exec
+    /// [`EnsureOpSpec::exec`]: crate::EnsureOpSpec::exec
     async fn check(data: Self::Data, res_ids: &Self::ResIds) -> Result<OpCheckStatus, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait
@@ -86,12 +85,11 @@ pub trait CleanOpSpec<'op> {
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `res_ids`: Resource IDs of the managed item, returned from the
-    ///   [`EnsureOpSpec`]'s [`OpSpec::exec`] function.
+    ///   [`EnsureOpSpec::exec`] function.
     ///
     /// [`check`]: Self::check
     /// [`exec`]: Self::exec
-    /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
-    /// [`OpSpec::exec`]: crate::OpSpec::exec
+    /// [`EnsureOpSpec::exec`]: crate::EnsureOpSpec::exec
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec_dry(data: Self::Data, res_ids: &Self::ResIds) -> Result<(), Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
@@ -107,11 +105,10 @@ pub trait CleanOpSpec<'op> {
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `res_ids`: Resource IDs of the managed item, returned from the
-    ///   [`EnsureOpSpec`]'s [`OpSpec::exec`] function.
+    ///   [`EnsureOpSpec::exec`] function.
     ///
     /// [`check`]: Self::check
-    /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
-    /// [`OpSpec::exec`]: crate::OpSpec::exec
+    /// [`EnsureOpSpec::exec`]: crate::EnsureOpSpec::exec
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec(data: Self::Data, res_ids: &Self::ResIds) -> Result<(), Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47

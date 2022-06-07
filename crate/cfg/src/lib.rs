@@ -8,13 +8,13 @@ pub use async_trait::async_trait;
 pub use diff;
 
 pub use crate::{
-    clean_op_spec::CleanOpSpec, fn_spec::FnSpec, full_spec::FullSpec,
-    op_check_status::OpCheckStatus, op_spec::OpSpec, progress_limit::ProgressLimit,
+    clean_op_spec::CleanOpSpec, ensure_op_spec::EnsureOpSpec, fn_spec::FnSpec, full_spec::FullSpec,
+    op_check_status::OpCheckStatus, progress_limit::ProgressLimit,
 };
 
 mod clean_op_spec;
+mod ensure_op_spec;
 mod fn_spec;
 mod full_spec;
 mod op_check_status;
-mod op_spec;
 mod progress_limit;

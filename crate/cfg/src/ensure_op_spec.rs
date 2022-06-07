@@ -3,7 +3,7 @@ use peace_data::Data;
 
 use crate::OpCheckStatus;
 
-/// Defines the logic and data of an operation.
+/// Defines the logic and data of an ensure operation.
 ///
 /// This includes:
 ///
@@ -11,57 +11,27 @@ use crate::OpCheckStatus;
 /// * Logic to initialize that data.
 /// * Logic to check if the operation is already done.
 /// * Logic to do the operation.
-/// * Return type of the operation, depending on its purpose.
+/// * Physical resource IDs returned by the ensure operation.
 #[async_trait]
-pub trait OpSpec<'op> {
+pub trait EnsureOpSpec<'op> {
     /// State of the managed item.
     ///
     /// This is the type returned by the [`StatusFnSpec`], and is used by
-    /// [`EnsureOpSpec`] to determine if [`OpSpec::exec`] needs to be run.
+    /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
     ///
     /// See [`FullSpec::State`] for more detail.
     ///
     /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
     /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
-    /// [`OpSpec::exec`]: crate::OpSpec::exec
+    /// [`exec`]: Self::exec
     /// [`FullSpec::State`]: crate::FullSpec::State
     type State;
 
-    /// IDs of resources produced by the operation.
+    /// Physical IDs of resources produced by the operation.
     ///
-    /// This is provided to the clean up logic to determine what to clean up.
+    /// See [`FullSpec::ResIds`] for more detail.
     ///
-    /// These should be physical IDs, not logical IDs. A logical resource ID is
-    /// defined by code, and does not change. A physical resource ID is one
-    /// generated during execution, which generally is random or computed.
-    ///
-    /// # Examples
-    ///
-    /// The following are examples of logical IDs and corresponding physical
-    /// IDs:
-    ///
-    /// * If the operation creates a file, the ID *may* be the full file path,
-    ///   or it may be the file name, assuming the file path may be deduced by
-    ///   the clean up logic from [`Data`].
-    ///
-    /// * If the operation instantiates a virtual machine on a cloud platform,
-    ///   this may be the ID of the instance so that it may be terminated.
-    ///
-    /// | Logical ID               | Physical ID                            |
-    /// | ------------------------ | -------------------------------------- |
-    /// | `app.file_path`          | `/mnt/data/app.zip`                    |
-    /// | `app_server_instance_id` | `ef34a9a4-0c02-45a6-96ec-a4db06d4980c` |
-    /// | `app_server.address`     | `10.0.0.1`                             |
-    ///
-    /// # Notes
-    ///
-    /// `ResIds` is separate from [`State`] because when computing the [`State`]
-    /// in [`OpSpec::desired`], it may be impossible to know the physical ID
-    /// of resources produced, such as virtual machine instance IDs.
-    ///
-    /// [`Data`]: crate::OpSpec::Data
-    /// [`State`]: Self::State
-    /// [`OpSpec::desired`]: crate::OpSpec::desired
+    /// [`FullSpec::ResIds`]: crate::FullSpec::ResIds
     type ResIds;
 
     /// Data that the operation reads from, or writes to.
@@ -156,8 +126,8 @@ pub trait OpSpec<'op> {
     ///
     /// This function call is intended to be cheap.
     ///
-    /// [`check`]: crate::OpSpec::check
-    /// [`exec`]: crate::OpSpec::exec
+    /// [`check`]: crate::EnsureOpSpec::check
+    /// [`exec`]: crate::EnsureOpSpec::exec
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec_dry(
         data: Self::Data,
@@ -173,7 +143,7 @@ pub trait OpSpec<'op> {
     ///
     /// This will only be called if [`check`] returns [`ExecRequired`].
     ///
-    /// [`check`]: crate::OpSpec::check
+    /// [`check`]: crate::EnsureOpSpec::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec(
         data: Self::Data,

@@ -3,7 +3,7 @@ use diff::Diff;
 use fn_graph::Resources;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{CleanOpSpec, FnSpec, OpSpec};
+use crate::{CleanOpSpec, EnsureOpSpec, FnSpec};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -47,18 +47,19 @@ pub trait FullSpec<'op> {
     ///
     /// * The ensure [`OpSpec::check`] function should be able to use this to
     ///   determine if there are enough servers using the desired image. The
-    ///   [`OpSpec::exec`] function returns the physical IDs of any launched
-    ///   servers.
+    ///   [`EnsureOpSpec::exec`] function returns the physical IDs of any
+    ///   launched servers.
     ///
     /// * The clean [`OpSpec::check`] function should be able to use this to
-    ///   determine if the servers that need to be removed. The [`OpSpec::exec`]
-    ///   function should be able to remove the servers.
+    ///   determine if the servers that need to be removed. The
+    ///   [`EnsureOpSpec::exec`] function should be able to remove the servers.
     ///
-    /// * The backup [`OpSpec::exec`] function should produce this as a record
-    ///   of the current state.
+    /// * The backup [`EnsureOpSpec::exec`] function should produce this as a
+    ///   record of the current state.
     ///
-    /// * The restore [`OpSpec::exec`] function should be able to read this and
-    ///   launch servers using the recorded image and hardware capacity.
+    /// * The restore [`EnsureOpSpec::exec`] function should be able to read
+    ///   this and launch servers using the recorded image and hardware
+    ///   capacity.
     ///
     /// ## `FullSpec` that manages application configuration:
     ///
@@ -75,27 +76,28 @@ pub trait FullSpec<'op> {
     ///
     /// * The clean [`OpSpec::check`] function should be able to use this to
     ///   determine if the configuration needs to be undone. The
-    ///   [`OpSpec::exec`] function should be able to remove the configuration.
+    ///   [`EnsureOpSpec::exec`] function should be able to remove the
+    ///   configuration.
     ///
-    /// * The backup [`OpSpec::exec`] function should produce this as a record
-    ///   of the current state.
+    /// * The backup [`EnsureOpSpec::exec`] function should produce this as a
+    ///   record of the current state.
     ///
-    /// * The restore [`OpSpec::exec`] function should be able to read this and
-    ///   determine how to alter the system to match this state. If this were a
-    ///   commit hash, then restoring would be applying the configuration at
-    ///   that commit hash.
+    /// * The restore [`EnsureOpSpec::exec`] function should be able to read
+    ///   this and determine how to alter the system to match this state. If
+    ///   this were a commit hash, then restoring would be applying the
+    ///   configuration at that commit hash.
     ///
     /// [`CleanOpSpec`]: Self::CleanOpSpec
     /// [`EnsureOpSpec`]: Self::EnsureOpSpec
     /// [`StatusFnSpec`]: Self::StatusFnSpec
-    /// [`OpSpec::check`]: crate::OpSpec::check
-    /// [`OpSpec::exec`]: crate::OpSpec::exec
+    /// [`OpSpec::check`]: crate::EnsureOpSpec::check
+    /// [`EnsureOpSpec::exec`]: crate::EnsureOpSpec::exec
     type State: Diff + Serialize + DeserializeOwned;
 
     /// Consumer provided error type.
     type Error: std::error::Error;
 
-    /// IDs of resources produced by the operation.
+    /// Physical IDs of resources produced by the operation.
     ///
     /// This is provided to the clean up logic to determine what to clean up.
     ///
@@ -124,12 +126,12 @@ pub trait FullSpec<'op> {
     /// # Notes
     ///
     /// `ResIds` is separate from [`State`] because when computing the [`State`]
-    /// in [`OpSpec::desired`], it may be impossible to know the physical ID
-    /// of resources produced, such as virtual machine instance IDs.
+    /// in [`EnsureOpSpec::desired`], it may be impossible to know the physical
+    /// ID of resources produced, such as virtual machine instance IDs.
     ///
-    /// [`Data`]: crate::OpSpec::Data
+    /// [`Data`]: crate::EnsureOpSpec::Data
     /// [`State`]: Self::State
-    /// [`OpSpec::desired`]: crate::OpSpec::desired
+    /// [`EnsureOpSpec::desired`]: crate::EnsureOpSpec::desired
     type ResIds: Serialize + DeserializeOwned;
 
     /// Function that returns the current status of the managed item.
@@ -157,7 +159,12 @@ pub trait FullSpec<'op> {
     /// Specification of the ensure operation.
     ///
     /// The output is the IDs of resources produced by the operation.
-    type EnsureOpSpec: OpSpec<'op, State = Self::State, Error = Self::Error, ResIds = Self::ResIds>;
+    type EnsureOpSpec: EnsureOpSpec<
+        'op,
+        State = Self::State,
+        Error = Self::Error,
+        ResIds = Self::ResIds,
+    >;
 
     /// Specification of the clean operation.
     ///
@@ -181,7 +188,7 @@ pub trait FullSpec<'op> {
     /// must be inserted into the map so that the [`check`] and [`exec`]
     /// functions of each operation can borrow the instance of that type.
     ///
-    /// [`check`]: crate::OpSpec::check
-    /// [`exec`]: crate::OpSpec::exec
+    /// [`check`]: crate::EnsureOpSpec::check
+    /// [`exec`]: crate::EnsureOpSpec::exec
     async fn setup(data: &mut Resources) -> Result<(), Self::Error>;
 }

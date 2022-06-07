@@ -6,7 +6,7 @@ use std::{
 
 use diff::Diff;
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
-use peace_cfg::{async_trait, FnSpec, FullSpec, OpSpec};
+use peace_cfg::{async_trait, FnSpec, FullSpec};
 use peace_data::Resources;
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -67,7 +67,8 @@ where
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Output = State> + Send + Sync,
-    EnsureOpSpec: Debug + OpSpec<'op, State = State, ResIds = ResIds> + Send + Sync,
+    EnsureOpSpec:
+        Debug + peace_cfg::EnsureOpSpec<'op, State = State, ResIds = ResIds> + Send + Sync,
     CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, ResIds = ResIds> + Send + Sync,
 {
     fn from(full_spec: FS) -> Self {
@@ -93,7 +94,8 @@ where
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Output = State> + Send + Sync,
-    EnsureOpSpec: Debug + OpSpec<'op, State = State, ResIds = ResIds> + Send + Sync,
+    EnsureOpSpec:
+        Debug + peace_cfg::EnsureOpSpec<'op, State = State, ResIds = ResIds> + Send + Sync,
     CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, ResIds = ResIds> + Send + Sync,
 {
     fn borrows() -> TypeIds {
@@ -123,7 +125,8 @@ where
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Output = State> + Send + Sync,
-    EnsureOpSpec: Debug + OpSpec<'op, State = State, ResIds = ResIds> + Send + Sync,
+    EnsureOpSpec:
+        Debug + peace_cfg::EnsureOpSpec<'op, State = State, ResIds = ResIds> + Send + Sync,
     CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, ResIds = ResIds> + Send + Sync,
 {
     fn borrows(&self) -> TypeIds {
@@ -154,7 +157,10 @@ where
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync,
-    EnsureOpSpec: Debug + OpSpec<'op, State = State, Error = E, ResIds = ResIds> + Send + Sync,
+    EnsureOpSpec: Debug
+        + peace_cfg::EnsureOpSpec<'op, State = State, Error = E, ResIds = ResIds>
+        + Send
+        + Sync,
     CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, Error = E, ResIds = ResIds> + Send + Sync,
 {
     async fn setup(&self, resources: &mut Resources) -> Result<(), Error<E>> {
@@ -183,7 +189,10 @@ where
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync,
-    EnsureOpSpec: Debug + OpSpec<'op, State = State, Error = E, ResIds = ResIds> + Send + Sync,
+    EnsureOpSpec: Debug
+        + peace_cfg::EnsureOpSpec<'op, State = State, Error = E, ResIds = ResIds>
+        + Send
+        + Sync,
     CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, Error = E, ResIds = ResIds> + Send + Sync,
 {
     type Error = Error<E>;
@@ -212,7 +221,10 @@ where
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync,
-    EnsureOpSpec: Debug + OpSpec<'op, State = State, Error = E, ResIds = ResIds> + Send + Sync,
+    EnsureOpSpec: Debug
+        + peace_cfg::EnsureOpSpec<'op, State = State, Error = E, ResIds = ResIds>
+        + Send
+        + Sync,
     CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, Error = E, ResIds = ResIds> + Send + Sync,
 {
     type Error = Error<E>;
@@ -245,7 +257,10 @@ where
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync,
-    EnsureOpSpec: Debug + OpSpec<'op, State = State, Error = E, ResIds = ResIds> + Send + Sync,
+    EnsureOpSpec: Debug
+        + peace_cfg::EnsureOpSpec<'op, State = State, Error = E, ResIds = ResIds>
+        + Send
+        + Sync,
     CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, Error = E, ResIds = ResIds> + Send + Sync,
 {
     type Error = Error<E>;

@@ -5,7 +5,7 @@ use std::{
 
 use diff::Diff;
 use fn_graph::{DataAccessDyn, TypeIds};
-use peace_cfg::{FnSpec, FullSpec, OpSpec};
+use peace_cfg::{FnSpec, FullSpec};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{Error, FullSpecWrapper};
@@ -69,8 +69,11 @@ where
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync + 'op,
     State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'op,
     StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync + 'op,
-    EnsureOpSpec:
-        Debug + OpSpec<'op, State = State, Error = E, ResIds = ResIds> + Send + Sync + 'op,
+    EnsureOpSpec: Debug
+        + peace_cfg::EnsureOpSpec<'op, State = State, Error = E, ResIds = ResIds>
+        + Send
+        + Sync
+        + 'op,
     CleanOpSpec:
         Debug + peace_cfg::CleanOpSpec<'op, Error = E, ResIds = ResIds> + Send + Sync + 'op,
 {
