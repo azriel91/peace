@@ -109,8 +109,8 @@ impl DownloadEnsureOpSpec {
 impl<'op> EnsureOpSpec<'op> for DownloadEnsureOpSpec {
     type Data = DownloadParams<'op>;
     type Error = DownloadError;
-    type ResIds = PathBuf;
     type StateLogical = Option<FileState>;
+    type StatePhysical = PathBuf;
 
     async fn desired(
         download_params: DownloadParams<'op>,

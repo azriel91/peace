@@ -15,10 +15,10 @@ use crate::OpCheckStatus;
 pub trait CleanOpSpec<'op> {
     /// IDs of resources produced by the operation.
     ///
-    /// See [`FullSpec::ResIds`] for more detail.
+    /// See [`FullSpec::StatePhysical`] for more detail.
     ///
-    /// [`FullSpec::ResIds`]: crate::FullSpec::ResIds
-    type ResIds;
+    /// [`FullSpec::StatePhysical`]: crate::FullSpec::StatePhysical
+    type StatePhysical;
 
     /// Data that the operation reads from, or writes to.
     ///
@@ -27,11 +27,11 @@ pub trait CleanOpSpec<'op> {
     /// * Information calculated from previous operations.
     /// * Information written for subsequent operations.
     ///
-    /// This differs from [`State`] whereby `State` is the state of the managed
-    /// item, whereas `Data` is information computed at runtime to manage that
-    /// state.
+    /// This differs from [`StateLogical`] whereby `StateLogical` is the state
+    /// of the managed item, whereas `Data` is information computed at
+    /// runtime to manage that state.
     ///
-    /// [`State`]: Self::State
+    /// [`StateLogical`]: Self::State
     type Data: Data<'op>;
 
     /// Error returned when any of the functions of this operation err.
@@ -39,8 +39,8 @@ pub trait CleanOpSpec<'op> {
 
     /// Checks if the clean operation needs to be executed.
     ///
-    /// If the resources referred to by [`ResIds`] have already been cleaned up,
-    /// then the operation does not have to be executed.
+    /// If the resources referred to by [`StatePhysical`] have already been
+    /// cleaned up, then the operation does not have to be executed.
     ///
     /// # Examples
     ///
@@ -58,17 +58,20 @@ pub trait CleanOpSpec<'op> {
     /// # Parameters
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
-    /// * `res_ids`: Resource IDs of the managed item, returned from the
-    ///   [`EnsureOpSpec::exec`] function.
+    /// * `state_physical`: Physical state of the managed item, returned from
+    ///   the [`EnsureOpSpec::exec`] function.
     ///
     /// [`EnsureOpSpec::exec`]: crate::EnsureOpSpec::exec
-    async fn check(data: Self::Data, res_ids: &Self::ResIds) -> Result<OpCheckStatus, Self::Error>
+    async fn check(
+        data: Self::Data,
+        state_physical: &Self::StatePhysical,
+    ) -> Result<OpCheckStatus, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait
     where
         'op: 'async_trait;
 
-    /// Dry-run clean up of resources referenced by `ResIds`.
+    /// Dry-run clean up of resources referenced by `StatePhysical`.
     ///
     /// This will only be called if [`check`] returns [`ExecRequired`].
     ///
@@ -84,33 +87,39 @@ pub trait CleanOpSpec<'op> {
     /// # Parameters
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
-    /// * `res_ids`: Resource IDs of the managed item, returned from the
-    ///   [`EnsureOpSpec::exec`] function.
+    /// * `state_physical`: Physical state of the managed item, returned from
+    ///   the [`EnsureOpSpec::exec`] function.
     ///
     /// [`check`]: Self::check
     /// [`exec`]: Self::exec
     /// [`EnsureOpSpec::exec`]: crate::EnsureOpSpec::exec
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
-    async fn exec_dry(data: Self::Data, res_ids: &Self::ResIds) -> Result<(), Self::Error>
+    async fn exec_dry(
+        data: Self::Data,
+        state_physical: &Self::StatePhysical,
+    ) -> Result<(), Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait
     where
         'op: 'async_trait;
 
-    /// Cleans up resources referenced by `ResIds`
+    /// Cleans up resources referenced by `StatePhysical`
     ///
     /// This will only be called if [`check`] returns [`ExecRequired`].
     ///
     /// # Parameters
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
-    /// * `res_ids`: Resource IDs of the managed item, returned from the
-    ///   [`EnsureOpSpec::exec`] function.
+    /// * `state_physical`: Physical state of the managed item, returned from
+    ///   the [`EnsureOpSpec::exec`] function.
     ///
     /// [`check`]: Self::check
     /// [`EnsureOpSpec::exec`]: crate::EnsureOpSpec::exec
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
-    async fn exec(data: Self::Data, res_ids: &Self::ResIds) -> Result<(), Self::Error>
+    async fn exec(
+        data: Self::Data,
+        state_physical: &Self::StatePhysical,
+    ) -> Result<(), Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait
     where

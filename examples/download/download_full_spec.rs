@@ -23,8 +23,8 @@ impl<'op> FullSpec<'op> for DownloadFullSpec {
     type CleanOpSpec = DownloadCleanOpSpec;
     type EnsureOpSpec = DownloadEnsureOpSpec;
     type Error = DownloadError;
-    type ResIds = PathBuf;
     type StateLogical = Option<FileState>;
+    type StatePhysical = PathBuf;
     type StatusFnSpec = DownloadStatusFnSpec;
 
     fn status_fn_spec(&self) -> &Self::StatusFnSpec {

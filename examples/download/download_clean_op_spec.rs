@@ -12,7 +12,7 @@ pub struct DownloadCleanOpSpec;
 impl<'op> CleanOpSpec<'op> for DownloadCleanOpSpec {
     type Data = DownloadParams<'op>;
     type Error = DownloadError;
-    type ResIds = PathBuf;
+    type StatePhysical = PathBuf;
 
     async fn check(
         _download_params: DownloadParams<'op>,

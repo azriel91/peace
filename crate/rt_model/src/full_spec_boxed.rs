@@ -50,7 +50,7 @@ where
     }
 }
 
-impl<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
+impl<'op, FS, E, StatePhysical, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
     for FullSpecBoxed<'op, E>
 where
     FS: Debug
@@ -58,7 +58,7 @@ where
             'op,
             StateLogical = StateLogical,
             Error = E,
-            ResIds = ResIds,
+            StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
@@ -66,16 +66,23 @@ where
         + Sync
         + 'op,
     E: Debug + Send + Sync + std::error::Error + 'op,
-    ResIds: Debug + Serialize + DeserializeOwned + Send + Sync + 'op,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'op,
     StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'op,
     StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = StateLogical> + Send + Sync + 'op,
     EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, Error = E, ResIds = ResIds>
+        + peace_cfg::EnsureOpSpec<
+            'op,
+            StateLogical = StateLogical,
+            Error = E,
+            StatePhysical = StatePhysical,
+        > + Send
+        + Sync
+        + 'op,
+    CleanOpSpec: Debug
+        + peace_cfg::CleanOpSpec<'op, Error = E, StatePhysical = StatePhysical>
         + Send
         + Sync
         + 'op,
-    CleanOpSpec:
-        Debug + peace_cfg::CleanOpSpec<'op, Error = E, ResIds = ResIds> + Send + Sync + 'op,
 {
     fn from(full_spec: FS) -> Self {
         Self(Box::new(FullSpecWrapper::from(full_spec)))

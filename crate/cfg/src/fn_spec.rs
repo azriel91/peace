@@ -6,11 +6,11 @@ use peace_data::Data;
 pub trait FnSpec<'op> {
     /// Return type of the function.
     ///
-    /// * For the [`status`] function, this is the current [`State`] of the
-    ///   managed item.
+    /// * For the [`status`] function, this is the current [`StateLogical`] of
+    ///   the managed item.
     ///
     /// [`status`]: crate::FullSpec::StatusFnSpec
-    /// [`State`]: crate::FullSpec::State
+    /// [`StateLogical`]: crate::FullSpec::State
     type Output;
 
     /// Data that the function reads from, or writes to.

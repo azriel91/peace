@@ -11,7 +11,7 @@ use crate::OpCheckStatus;
 /// * Logic to initialize that data.
 /// * Logic to check if the operation is already done.
 /// * Logic to do the operation.
-/// * Physical resource IDs returned by the ensure operation.
+/// * Physical state returned by the `exec` function.
 #[async_trait]
 pub trait EnsureOpSpec<'op> {
     /// Logical state of the managed item.
@@ -27,12 +27,12 @@ pub trait EnsureOpSpec<'op> {
     /// [`FullSpec::State`]: crate::FullSpec::State
     type StateLogical;
 
-    /// Physical IDs of resources produced by the operation.
+    /// Physical state produced by the operation.
     ///
-    /// See [`FullSpec::ResIds`] for more detail.
+    /// See [`FullSpec::StatePhysical`] for more detail.
     ///
-    /// [`FullSpec::ResIds`]: crate::FullSpec::ResIds
-    type ResIds;
+    /// [`FullSpec::StatePhysical`]: crate::FullSpec::StatePhysical
+    type StatePhysical;
 
     /// Data that the operation reads from, or writes to.
     ///
@@ -41,11 +41,11 @@ pub trait EnsureOpSpec<'op> {
     /// * Information calculated from previous operations.
     /// * Information written for subsequent operations.
     ///
-    /// This differs from [`State`] whereby `State` is the state of the managed
-    /// item, whereas `Data` is information computed at runtime to manage that
-    /// state.
+    /// This differs from [`StateLogical`] whereby `StateLogical` is the state
+    /// of the managed item, whereas `Data` is information computed at
+    /// runtime to manage that state.
     ///
-    /// [`State`]: Self::State
+    /// [`StateLogical`]: Self::State
     type Data: Data<'op>;
 
     /// Error returned when any of the functions of this operation err.
@@ -91,12 +91,12 @@ pub trait EnsureOpSpec<'op> {
     /// # Parameters
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
-    /// * `state_current`: Current [`State`] of the managed item, returned from
-    ///   [`StatusFnSpec`].
-    /// * `state_desired`: Desired [`State`] of the managed item, returned from
-    ///   [`Self::desired`].
+    /// * `state_current`: Current [`StateLogical`] of the managed item,
+    ///   returned from [`StatusFnSpec`].
+    /// * `state_desired`: Desired [`StateLogical`] of the managed item,
+    ///   returned from [`Self::desired`].
     ///
-    /// [`State`]: Self::State
+    /// [`StateLogical`]: Self::State
     /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
     async fn check(
         data: Self::Data,
@@ -133,7 +133,7 @@ pub trait EnsureOpSpec<'op> {
         data: Self::Data,
         state_current: &Self::StateLogical,
         state_desired: &Self::StateLogical,
-    ) -> Result<Self::ResIds, Self::Error>
+    ) -> Result<Self::StatePhysical, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait
     where
@@ -149,7 +149,7 @@ pub trait EnsureOpSpec<'op> {
         data: Self::Data,
         state_current: &Self::StateLogical,
         state_desired: &Self::StateLogical,
-    ) -> Result<Self::ResIds, Self::Error>
+    ) -> Result<Self::StatePhysical, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait
     where

@@ -17,8 +17,8 @@ impl<'op> FullSpec<'op> for VecCopyFullSpec {
     type CleanOpSpec = VecCopyCleanOpSpec;
     type EnsureOpSpec = VecCopyEnsureOpSpec;
     type Error = VecCopyError;
-    type ResIds = ();
     type StateLogical = Vec<u8>;
+    type StatePhysical = ();
     type StatusFnSpec = VecCopyStatusFnSpec;
 
     fn status_fn_spec(&self) -> &Self::StatusFnSpec {
@@ -47,7 +47,7 @@ pub struct VecCopyCleanOpSpec;
 impl<'op> CleanOpSpec<'op> for VecCopyCleanOpSpec {
     type Data = W<'op, VecB>;
     type Error = VecCopyError;
-    type ResIds = ();
+    type StatePhysical = ();
 
     async fn check(vec_b: W<'op, VecB>, _res_ids: &()) -> Result<OpCheckStatus, VecCopyError> {
         let op_check_status = if vec_b.0.is_empty() {
@@ -81,8 +81,8 @@ pub struct VecCopyEnsureOpSpec;
 impl<'op> EnsureOpSpec<'op> for VecCopyEnsureOpSpec {
     type Data = VecCopyParamsMut<'op>;
     type Error = VecCopyError;
-    type ResIds = ();
     type StateLogical = Vec<u8>;
+    type StatePhysical = ();
 
     async fn desired(vec_copy_params: VecCopyParamsMut<'op>) -> Result<Vec<u8>, VecCopyError> {
         Ok(vec_copy_params.src().0.clone())
@@ -109,7 +109,7 @@ impl<'op> EnsureOpSpec<'op> for VecCopyEnsureOpSpec {
         _vec_copy_params: VecCopyParamsMut<'op>,
         _state_current: &Vec<u8>,
         _state_desired: &Vec<u8>,
-    ) -> Result<Self::ResIds, Self::Error> {
+    ) -> Result<Self::StatePhysical, Self::Error> {
         // Would replace vec_b's contents with vec_a's
         Ok(())
     }
@@ -118,7 +118,7 @@ impl<'op> EnsureOpSpec<'op> for VecCopyEnsureOpSpec {
         mut vec_copy_params: VecCopyParamsMut<'op>,
         _state_current: &Vec<u8>,
         state_desired: &Vec<u8>,
-    ) -> Result<Self::ResIds, VecCopyError> {
+    ) -> Result<Self::StatePhysical, VecCopyError> {
         let dest = vec_copy_params.dest_mut();
         dest.0.clear();
         dest.0.extend_from_slice(state_desired.as_slice());

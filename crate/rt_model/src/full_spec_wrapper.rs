@@ -20,7 +20,7 @@ pub struct FullSpecWrapper<
     'op,
     FS,
     E,
-    ResIds,
+    StatePhysical,
     StateLogical,
     StatusFnSpec,
     EnsureOpSpec,
@@ -29,7 +29,7 @@ pub struct FullSpecWrapper<
     FS,
     PhantomData<&'op (
         E,
-        ResIds,
+        StatePhysical,
         StateLogical,
         StatusFnSpec,
         EnsureOpSpec,
@@ -37,8 +37,17 @@ pub struct FullSpecWrapper<
     )>,
 );
 
-impl<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> Debug
-    for FullSpecWrapper<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, StatePhysical, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> Debug
+    for FullSpecWrapper<
+        'op,
+        FS,
+        E,
+        StatePhysical,
+        StateLogical,
+        StatusFnSpec,
+        EnsureOpSpec,
+        CleanOpSpec,
+    >
 where
     FS: Debug,
 {
@@ -47,8 +56,17 @@ where
     }
 }
 
-impl<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> Deref
-    for FullSpecWrapper<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, StatePhysical, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> Deref
+    for FullSpecWrapper<
+        'op,
+        FS,
+        E,
+        StatePhysical,
+        StateLogical,
+        StatusFnSpec,
+        EnsureOpSpec,
+        CleanOpSpec,
+    >
 {
     type Target = FS;
 
@@ -57,66 +75,93 @@ impl<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> 
     }
 }
 
-impl<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> DerefMut
-    for FullSpecWrapper<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, StatePhysical, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> DerefMut
+    for FullSpecWrapper<
+        'op,
+        FS,
+        E,
+        StatePhysical,
+        StateLogical,
+        StatusFnSpec,
+        EnsureOpSpec,
+        CleanOpSpec,
+    >
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
-    for FullSpecWrapper<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, StatePhysical, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
+    for FullSpecWrapper<
+        'op,
+        FS,
+        E,
+        StatePhysical,
+        StateLogical,
+        StatusFnSpec,
+        EnsureOpSpec,
+        CleanOpSpec,
+    >
 where
     FS: Debug
         + FullSpec<
             'op,
             StateLogical = StateLogical,
             Error = E,
-            ResIds = ResIds,
+            StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error,
-    ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
     StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Output = StateLogical> + Send + Sync,
     EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, ResIds = ResIds>
+        + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, StatePhysical = StatePhysical>
         + Send
         + Sync,
-    CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, ResIds = ResIds> + Send + Sync,
+    CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, StatePhysical = StatePhysical> + Send + Sync,
 {
     fn from(full_spec: FS) -> Self {
         Self(full_spec, PhantomData)
     }
 }
 
-impl<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> DataAccess
-    for FullSpecWrapper<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, StatePhysical, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> DataAccess
+    for FullSpecWrapper<
+        'op,
+        FS,
+        E,
+        StatePhysical,
+        StateLogical,
+        StatusFnSpec,
+        EnsureOpSpec,
+        CleanOpSpec,
+    >
 where
     FS: Debug
         + FullSpec<
             'op,
             StateLogical = StateLogical,
             Error = E,
-            ResIds = ResIds,
+            StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error,
-    ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
     StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Output = StateLogical> + Send + Sync,
     EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, ResIds = ResIds>
+        + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, StatePhysical = StatePhysical>
         + Send
         + Sync,
-    CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, ResIds = ResIds> + Send + Sync,
+    CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, StatePhysical = StatePhysical> + Send + Sync,
 {
     fn borrows() -> TypeIds {
         <EnsureOpSpec::Data as DataAccess>::borrows()
@@ -127,29 +172,38 @@ where
     }
 }
 
-impl<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> DataAccessDyn
-    for FullSpecWrapper<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, StatePhysical, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> DataAccessDyn
+    for FullSpecWrapper<
+        'op,
+        FS,
+        E,
+        StatePhysical,
+        StateLogical,
+        StatusFnSpec,
+        EnsureOpSpec,
+        CleanOpSpec,
+    >
 where
     FS: Debug
         + FullSpec<
             'op,
             StateLogical = StateLogical,
             Error = E,
-            ResIds = ResIds,
+            StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error,
-    ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
     StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Output = StateLogical> + Send + Sync,
     EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, ResIds = ResIds>
+        + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, StatePhysical = StatePhysical>
         + Send
         + Sync,
-    CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, ResIds = ResIds> + Send + Sync,
+    CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, StatePhysical = StatePhysical> + Send + Sync,
 {
     fn borrows(&self) -> TypeIds {
         <EnsureOpSpec::Data as DataAccess>::borrows()
@@ -161,30 +215,44 @@ where
 }
 
 #[async_trait]
-impl<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, StatePhysical, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
     FullSpecRt<'op, Error<E>>
-    for FullSpecWrapper<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+    for FullSpecWrapper<
+        'op,
+        FS,
+        E,
+        StatePhysical,
+        StateLogical,
+        StatusFnSpec,
+        EnsureOpSpec,
+        CleanOpSpec,
+    >
 where
     FS: Debug
         + FullSpec<
             'op,
             StateLogical = StateLogical,
             Error = E,
-            ResIds = ResIds,
+            StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error,
-    ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
     StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = StateLogical> + Send + Sync,
     EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, Error = E, ResIds = ResIds>
-        + Send
+        + peace_cfg::EnsureOpSpec<
+            'op,
+            StateLogical = StateLogical,
+            Error = E,
+            StatePhysical = StatePhysical,
+        > + Send
         + Sync,
-    CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, Error = E, ResIds = ResIds> + Send + Sync,
+    CleanOpSpec:
+        Debug + peace_cfg::CleanOpSpec<'op, Error = E, StatePhysical = StatePhysical> + Send + Sync,
 {
     async fn setup(&self, resources: &mut Resources) -> Result<(), Error<E>> {
         <FS as FullSpec>::setup(resources)
@@ -194,29 +262,44 @@ where
 }
 
 #[async_trait]
-impl<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> StatusFnSpecRt<'op>
-    for FullSpecWrapper<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, StatePhysical, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+    StatusFnSpecRt<'op>
+    for FullSpecWrapper<
+        'op,
+        FS,
+        E,
+        StatePhysical,
+        StateLogical,
+        StatusFnSpec,
+        EnsureOpSpec,
+        CleanOpSpec,
+    >
 where
     FS: Debug
         + FullSpec<
             'op,
             StateLogical = StateLogical,
             Error = E,
-            ResIds = ResIds,
+            StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error,
-    ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
     StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = StateLogical> + Send + Sync,
     EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, Error = E, ResIds = ResIds>
-        + Send
+        + peace_cfg::EnsureOpSpec<
+            'op,
+            StateLogical = StateLogical,
+            Error = E,
+            StatePhysical = StatePhysical,
+        > + Send
         + Sync,
-    CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, Error = E, ResIds = ResIds> + Send + Sync,
+    CleanOpSpec:
+        Debug + peace_cfg::CleanOpSpec<'op, Error = E, StatePhysical = StatePhysical> + Send + Sync,
 {
     type Error = Error<E>;
 
@@ -226,29 +309,44 @@ where
 }
 
 #[async_trait]
-impl<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> EnsureOpSpecRt<'op>
-    for FullSpecWrapper<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, StatePhysical, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+    EnsureOpSpecRt<'op>
+    for FullSpecWrapper<
+        'op,
+        FS,
+        E,
+        StatePhysical,
+        StateLogical,
+        StatusFnSpec,
+        EnsureOpSpec,
+        CleanOpSpec,
+    >
 where
     FS: Debug
         + FullSpec<
             'op,
             StateLogical = StateLogical,
             Error = E,
-            ResIds = ResIds,
+            StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error,
-    ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
     StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = StateLogical> + Send + Sync,
     EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, Error = E, ResIds = ResIds>
-        + Send
+        + peace_cfg::EnsureOpSpec<
+            'op,
+            StateLogical = StateLogical,
+            Error = E,
+            StatePhysical = StatePhysical,
+        > + Send
         + Sync,
-    CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, Error = E, ResIds = ResIds> + Send + Sync,
+    CleanOpSpec:
+        Debug + peace_cfg::CleanOpSpec<'op, Error = E, StatePhysical = StatePhysical> + Send + Sync,
 {
     type Error = Error<E>;
 
@@ -262,29 +360,44 @@ where
 }
 
 #[async_trait]
-impl<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> CleanOpSpecRt<'op>
-    for FullSpecWrapper<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+impl<'op, FS, E, StatePhysical, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
+    CleanOpSpecRt<'op>
+    for FullSpecWrapper<
+        'op,
+        FS,
+        E,
+        StatePhysical,
+        StateLogical,
+        StatusFnSpec,
+        EnsureOpSpec,
+        CleanOpSpec,
+    >
 where
     FS: Debug
         + FullSpec<
             'op,
             StateLogical = StateLogical,
             Error = E,
-            ResIds = ResIds,
+            StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error,
-    ResIds: Debug + Serialize + DeserializeOwned + Send + Sync,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
     StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
     StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = StateLogical> + Send + Sync,
     EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, Error = E, ResIds = ResIds>
-        + Send
+        + peace_cfg::EnsureOpSpec<
+            'op,
+            StateLogical = StateLogical,
+            Error = E,
+            StatePhysical = StatePhysical,
+        > + Send
         + Sync,
-    CleanOpSpec: Debug + peace_cfg::CleanOpSpec<'op, Error = E, ResIds = ResIds> + Send + Sync,
+    CleanOpSpec:
+        Debug + peace_cfg::CleanOpSpec<'op, Error = E, StatePhysical = StatePhysical> + Send + Sync,
 {
     type Error = Error<E>;
 
