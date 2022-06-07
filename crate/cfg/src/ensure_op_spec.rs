@@ -14,7 +14,7 @@ use crate::OpCheckStatus;
 /// * Physical resource IDs returned by the ensure operation.
 #[async_trait]
 pub trait EnsureOpSpec<'op> {
-    /// State of the managed item.
+    /// Logical state of the managed item.
     ///
     /// This is the type returned by the [`StatusFnSpec`], and is used by
     /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
@@ -25,7 +25,7 @@ pub trait EnsureOpSpec<'op> {
     /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
     /// [`FullSpec::State`]: crate::FullSpec::State
-    type State;
+    type StateLogical;
 
     /// Physical IDs of resources produced by the operation.
     ///
@@ -64,7 +64,7 @@ pub trait EnsureOpSpec<'op> {
     /// # Implementors
     ///
     /// This function call is intended to be cheap and fast.
-    async fn desired(data: Self::Data) -> Result<Self::State, Self::Error>
+    async fn desired(data: Self::Data) -> Result<Self::StateLogical, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait
     where
@@ -100,8 +100,8 @@ pub trait EnsureOpSpec<'op> {
     /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
     async fn check(
         data: Self::Data,
-        state_current: &Self::State,
-        state_desired: &Self::State,
+        state_current: &Self::StateLogical,
+        state_desired: &Self::StateLogical,
     ) -> Result<OpCheckStatus, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait
@@ -131,8 +131,8 @@ pub trait EnsureOpSpec<'op> {
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec_dry(
         data: Self::Data,
-        state_current: &Self::State,
-        state_desired: &Self::State,
+        state_current: &Self::StateLogical,
+        state_desired: &Self::StateLogical,
     ) -> Result<Self::ResIds, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait
@@ -147,8 +147,8 @@ pub trait EnsureOpSpec<'op> {
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec(
         data: Self::Data,
-        state_current: &Self::State,
-        state_desired: &Self::State,
+        state_current: &Self::StateLogical,
+        state_desired: &Self::StateLogical,
     ) -> Result<Self::ResIds, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
     // impl has stricter requirements than trait

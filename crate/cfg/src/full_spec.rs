@@ -92,7 +92,7 @@ pub trait FullSpec<'op> {
     /// [`StatusFnSpec`]: Self::StatusFnSpec
     /// [`OpSpec::check`]: crate::EnsureOpSpec::check
     /// [`EnsureOpSpec::exec`]: crate::EnsureOpSpec::exec
-    type State: Diff + Serialize + DeserializeOwned;
+    type StateLogical: Diff + Serialize + DeserializeOwned;
 
     /// Consumer provided error type.
     type Error: std::error::Error;
@@ -147,7 +147,7 @@ pub trait FullSpec<'op> {
     ///
     /// This allows the check function to tell if the status has been queried
     /// within the past day, don't query it again.
-    type StatusFnSpec: FnSpec<'op, Error = Self::Error, Output = Self::State>;
+    type StatusFnSpec: FnSpec<'op, Error = Self::Error, Output = Self::StateLogical>;
 
     // TODO: DiffFnSpec:
     //
@@ -161,7 +161,7 @@ pub trait FullSpec<'op> {
     /// The output is the IDs of resources produced by the operation.
     type EnsureOpSpec: EnsureOpSpec<
         'op,
-        State = Self::State,
+        StateLogical = Self::StateLogical,
         Error = Self::Error,
         ResIds = Self::ResIds,
     >;

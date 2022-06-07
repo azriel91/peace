@@ -50,13 +50,13 @@ where
     }
 }
 
-impl<'op, FS, E, ResIds, State, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
+impl<'op, FS, E, ResIds, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
     for FullSpecBoxed<'op, E>
 where
     FS: Debug
         + FullSpec<
             'op,
-            State = State,
+            StateLogical = StateLogical,
             Error = E,
             ResIds = ResIds,
             StatusFnSpec = StatusFnSpec,
@@ -67,10 +67,10 @@ where
         + 'op,
     E: Debug + Send + Sync + std::error::Error + 'op,
     ResIds: Debug + Serialize + DeserializeOwned + Send + Sync + 'op,
-    State: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'op,
-    StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = State> + Send + Sync + 'op,
+    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'op,
+    StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = StateLogical> + Send + Sync + 'op,
     EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<'op, State = State, Error = E, ResIds = ResIds>
+        + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, Error = E, ResIds = ResIds>
         + Send
         + Sync
         + 'op,

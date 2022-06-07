@@ -24,7 +24,7 @@ impl<'op> FullSpec<'op> for DownloadFullSpec {
     type EnsureOpSpec = DownloadEnsureOpSpec;
     type Error = DownloadError;
     type ResIds = PathBuf;
-    type State = Option<FileState>;
+    type StateLogical = Option<FileState>;
     type StatusFnSpec = DownloadStatusFnSpec;
 
     fn status_fn_spec(&self) -> &Self::StatusFnSpec {

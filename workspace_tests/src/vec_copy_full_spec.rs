@@ -18,7 +18,7 @@ impl<'op> FullSpec<'op> for VecCopyFullSpec {
     type EnsureOpSpec = VecCopyEnsureOpSpec;
     type Error = VecCopyError;
     type ResIds = ();
-    type State = Vec<u8>;
+    type StateLogical = Vec<u8>;
     type StatusFnSpec = VecCopyStatusFnSpec;
 
     fn status_fn_spec(&self) -> &Self::StatusFnSpec {
@@ -82,7 +82,7 @@ impl<'op> EnsureOpSpec<'op> for VecCopyEnsureOpSpec {
     type Data = VecCopyParamsMut<'op>;
     type Error = VecCopyError;
     type ResIds = ();
-    type State = Vec<u8>;
+    type StateLogical = Vec<u8>;
 
     async fn desired(vec_copy_params: VecCopyParamsMut<'op>) -> Result<Vec<u8>, VecCopyError> {
         Ok(vec_copy_params.src().0.clone())
