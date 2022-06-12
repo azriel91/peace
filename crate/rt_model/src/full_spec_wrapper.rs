@@ -107,8 +107,8 @@ where
     FS: Debug
         + FullSpec<
             'op,
-            StateLogical = StateLogical,
             Error = E,
+            StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
@@ -145,8 +145,8 @@ where
     FS: Debug
         + FullSpec<
             'op,
-            StateLogical = StateLogical,
             Error = E,
+            StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
@@ -187,8 +187,8 @@ where
     FS: Debug
         + FullSpec<
             'op,
-            StateLogical = StateLogical,
             Error = E,
+            StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
@@ -231,8 +231,8 @@ where
     FS: Debug
         + FullSpec<
             'op,
-            StateLogical = StateLogical,
             Error = E,
+            StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
@@ -246,8 +246,8 @@ where
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
             'op,
-            StateLogical = StateLogical,
             Error = E,
+            StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
         + Sync,
@@ -278,8 +278,8 @@ where
     FS: Debug
         + FullSpec<
             'op,
-            StateLogical = StateLogical,
             Error = E,
+            StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
@@ -293,8 +293,8 @@ where
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
             'op,
-            StateLogical = StateLogical,
             Error = E,
+            StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
         + Sync,
@@ -325,8 +325,8 @@ where
     FS: Debug
         + FullSpec<
             'op,
-            StateLogical = StateLogical,
             Error = E,
+            StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
@@ -340,8 +340,8 @@ where
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
             'op,
-            StateLogical = StateLogical,
             Error = E,
+            StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
         + Sync,
@@ -376,8 +376,8 @@ where
     FS: Debug
         + FullSpec<
             'op,
-            StateLogical = StateLogical,
             Error = E,
+            StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
@@ -391,8 +391,8 @@ where
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
             'op,
-            StateLogical = StateLogical,
             Error = E,
+            StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
         + Sync,

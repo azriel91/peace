@@ -14,6 +14,9 @@ use crate::OpCheckStatus;
 /// * Physical state returned by the `exec` function.
 #[async_trait]
 pub trait EnsureOpSpec<'op> {
+    /// Error returned when any of the functions of this operation err.
+    type Error: std::error::Error;
+
     /// Logical state of the managed item.
     ///
     /// This is the type returned by the [`StatusFnSpec`], and is used by
@@ -47,9 +50,6 @@ pub trait EnsureOpSpec<'op> {
     ///
     /// [`StateLogical`]: Self::State
     type Data: Data<'op>;
-
-    /// Error returned when any of the functions of this operation err.
-    type Error: std::error::Error;
 
     /// Returns the desired state of the managed item.
     ///

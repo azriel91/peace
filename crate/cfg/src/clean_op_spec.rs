@@ -13,6 +13,9 @@ use crate::OpCheckStatus;
 /// * Logic to do the cleaning.
 #[async_trait]
 pub trait CleanOpSpec<'op> {
+    /// Error returned when any of the functions of this operation err.
+    type Error: std::error::Error;
+
     /// IDs of resources produced by the operation.
     ///
     /// See [`FullSpec::StatePhysical`] for more detail.
@@ -33,9 +36,6 @@ pub trait CleanOpSpec<'op> {
     ///
     /// [`StateLogical`]: Self::State
     type Data: Data<'op>;
-
-    /// Error returned when any of the functions of this operation err.
-    type Error: std::error::Error;
 
     /// Checks if the clean operation needs to be executed.
     ///

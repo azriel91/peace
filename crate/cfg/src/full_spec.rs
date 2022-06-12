@@ -49,6 +49,9 @@ use crate::{CleanOpSpec, EnsureOpSpec, FnSpec};
 /// | `app_server.address`     | `10.0.0.1`                             |
 #[async_trait]
 pub trait FullSpec<'op> {
+    /// Consumer provided error type.
+    type Error: std::error::Error;
+
     /// State of the managed item that is controlled.
     ///
     /// Examples are a server boot image, or application configuration version,
@@ -135,9 +138,6 @@ pub trait FullSpec<'op> {
     /// [`EnsureOpSpec::desired`]: crate::EnsureOpSpec::desired
     type StatePhysical: Serialize + DeserializeOwned;
 
-    /// Consumer provided error type.
-    type Error: std::error::Error;
-
     /// Function that returns the current status of the managed item.
     ///
     /// # Future Development
@@ -163,8 +163,8 @@ pub trait FullSpec<'op> {
     /// The output is the IDs of resources produced by the operation.
     type EnsureOpSpec: EnsureOpSpec<
         'op,
-        StateLogical = Self::StateLogical,
         Error = Self::Error,
+        StateLogical = Self::StateLogical,
         StatePhysical = Self::StatePhysical,
     >;
 
