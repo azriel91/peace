@@ -16,10 +16,10 @@ doctest = false
 test = false
 
 [dependencies]
-diff-struct = "0.4.1"
 fn_graph = { version = "0.5.1", features = ["resman"] }
 miette = "4.7.1"
 peace_cfg = { path = "../cfg", version = "0.0.1" }
 peace_data = { path = "../data", version = "0.0.1" }
+peace_diff = { path = "../diff", version = "0.0.1" }
 serde = "1.0.137"
 thiserror = "1.0.31"

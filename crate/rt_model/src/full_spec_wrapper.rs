@@ -4,10 +4,10 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use diff::Diff;
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{async_trait, FnSpec, FullSpec};
 use peace_data::Resources;
+use peace_diff::Diff;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{

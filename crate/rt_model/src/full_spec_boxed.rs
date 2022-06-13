@@ -3,9 +3,9 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use diff::Diff;
 use fn_graph::{DataAccessDyn, TypeIds};
 use peace_cfg::{FnSpec, FullSpec};
+use peace_diff::Diff;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{Error, FullSpecWrapper};

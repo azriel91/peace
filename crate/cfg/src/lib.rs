@@ -5,11 +5,10 @@
 
 // Re-exports
 pub use async_trait::async_trait;
-pub use diff;
 
 pub use crate::{
     clean_op_spec::CleanOpSpec, ensure_op_spec::EnsureOpSpec, fn_spec::FnSpec, full_spec::FullSpec,
-    op_check_status::OpCheckStatus, progress_limit::ProgressLimit,
+    op_check_status::OpCheckStatus, progress_limit::ProgressLimit, state::State,
 };
 
 mod clean_op_spec;
@@ -18,3 +17,4 @@ mod fn_spec;
 mod full_spec;
 mod op_check_status;
 mod progress_limit;
+mod state;

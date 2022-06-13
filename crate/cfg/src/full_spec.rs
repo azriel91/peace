@@ -1,6 +1,6 @@
 use async_trait::async_trait;
-use diff::Diff;
 use fn_graph::Resources;
+use peace_diff::Diff;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{CleanOpSpec, EnsureOpSpec, FnSpec};
