@@ -125,10 +125,12 @@ impl<'op> EnsureOpSpec<'op> for DownloadEnsureOpSpec {
 
     async fn check(
         download_params: DownloadParams<'op>,
-        state: &State<Option<FileState>, PathBuf>,
+        State {
+            logical: file_state_current,
+            ..
+        }: &State<Option<FileState>, PathBuf>,
         file_state_desired: &Option<FileState>,
     ) -> Result<OpCheckStatus, DownloadError> {
-        let file_state_current = state.logical();
         let op_check_status = match (file_state_current.as_ref(), file_state_desired.as_ref()) {
             (Some(file_state_current), Some(file_state_desired)) => {
                 Self::file_contents_check(&download_params, file_state_current, file_state_desired)

@@ -17,9 +17,11 @@ impl<'op> CleanOpSpec<'op> for DownloadCleanOpSpec {
 
     async fn check(
         _download_params: DownloadParams<'op>,
-        state: &State<Option<FileState>, PathBuf>,
+        State {
+            physical: dest_path,
+            ..
+        }: &State<Option<FileState>, PathBuf>,
     ) -> Result<OpCheckStatus, DownloadError> {
-        let dest_path = state.physical();
         let op_check_status = if dest_path.exists() {
             // TODO: read file size
             OpCheckStatus::ExecRequired {
@@ -40,9 +42,11 @@ impl<'op> CleanOpSpec<'op> for DownloadCleanOpSpec {
 
     async fn exec(
         _download_params: DownloadParams<'op>,
-        state: &State<Option<FileState>, PathBuf>,
+        State {
+            physical: dest_path,
+            ..
+        }: &State<Option<FileState>, PathBuf>,
     ) -> Result<(), DownloadError> {
-        let dest_path = state.physical();
         tokio::fs::remove_file(dest_path)
             .await
             .map_err(DownloadError::DestFileRemove)?;
