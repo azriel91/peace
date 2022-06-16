@@ -4,7 +4,7 @@ use std::{
 };
 
 use fn_graph::{DataAccessDyn, TypeIds};
-use peace_cfg::{FnSpec, FullSpec};
+use peace_cfg::{FnSpec, FullSpec, State};
 use peace_diff::Diff;
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -50,14 +50,14 @@ where
     }
 }
 
-impl<'op, FS, E, StatePhysical, StateLogical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
+impl<'op, FS, E, StateLogical, StatePhysical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
     for FullSpecBoxed<'op, E>
 where
     FS: Debug
         + FullSpec<
             'op,
-            StateLogical = StateLogical,
             Error = E,
+            StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
             EnsureOpSpec = EnsureOpSpec,
@@ -66,21 +66,29 @@ where
         + Sync
         + 'op,
     E: Debug + Send + Sync + std::error::Error + 'op,
-    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'op,
     StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'op,
-    StatusFnSpec: Debug + FnSpec<'op, Error = E, Output = StateLogical> + Send + Sync + 'op,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'op,
+    StatusFnSpec: Debug
+        + FnSpec<'op, Error = E, Output = State<StateLogical, StatePhysical>>
+        + Send
+        + Sync
+        + 'op,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
             'op,
-            StateLogical = StateLogical,
             Error = E,
+            StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
         + Sync
         + 'op,
     CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<'op, Error = E, StatePhysical = StatePhysical>
-        + Send
+        + peace_cfg::CleanOpSpec<
+            'op,
+            Error = E,
+            StateLogical = StateLogical,
+            StatePhysical = StatePhysical,
+        > + Send
         + Sync
         + 'op,
 {

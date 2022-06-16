@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
-use peace::cfg::{async_trait, CleanOpSpec, OpCheckStatus, ProgressLimit};
+use peace::cfg::{async_trait, CleanOpSpec, OpCheckStatus, ProgressLimit, State};
 
-use crate::{DownloadError, DownloadParams};
+use crate::{DownloadError, DownloadParams, FileState};
 
 /// `CleanOpSpec` for the file to download.
 #[derive(Debug, Default)]
@@ -12,12 +12,14 @@ pub struct DownloadCleanOpSpec;
 impl<'op> CleanOpSpec<'op> for DownloadCleanOpSpec {
     type Data = DownloadParams<'op>;
     type Error = DownloadError;
+    type StateLogical = Option<FileState>;
     type StatePhysical = PathBuf;
 
     async fn check(
         _download_params: DownloadParams<'op>,
-        dest_path: &PathBuf,
+        state: &State<Option<FileState>, PathBuf>,
     ) -> Result<OpCheckStatus, DownloadError> {
+        let dest_path = state.physical();
         let op_check_status = if dest_path.exists() {
             // TODO: read file size
             OpCheckStatus::ExecRequired {
@@ -31,16 +33,17 @@ impl<'op> CleanOpSpec<'op> for DownloadCleanOpSpec {
 
     async fn exec_dry(
         _download_params: DownloadParams<'op>,
-        _dest_path: &PathBuf,
+        _state: &State<Option<FileState>, PathBuf>,
     ) -> Result<(), DownloadError> {
         Ok(())
     }
 
     async fn exec(
         _download_params: DownloadParams<'op>,
-        dest_path: &PathBuf,
+        state: &State<Option<FileState>, PathBuf>,
     ) -> Result<(), DownloadError> {
-        tokio::fs::remove_file(&*dest_path)
+        let dest_path = state.physical();
+        tokio::fs::remove_file(dest_path)
             .await
             .map_err(DownloadError::DestFileRemove)?;
         Ok(())

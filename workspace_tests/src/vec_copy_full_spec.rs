@@ -1,5 +1,8 @@
 use peace::{
-    cfg::{async_trait, CleanOpSpec, EnsureOpSpec, FnSpec, FullSpec, OpCheckStatus, ProgressLimit},
+    cfg::{
+        async_trait, CleanOpSpec, EnsureOpSpec, FnSpec, FullSpec, OpCheckStatus, ProgressLimit,
+        State,
+    },
     data::{Data, Resources, R, W},
 };
 use serde::{Deserialize, Serialize};
@@ -47,9 +50,13 @@ pub struct VecCopyCleanOpSpec;
 impl<'op> CleanOpSpec<'op> for VecCopyCleanOpSpec {
     type Data = W<'op, VecB>;
     type Error = VecCopyError;
+    type StateLogical = Vec<u8>;
     type StatePhysical = ();
 
-    async fn check(vec_b: W<'op, VecB>, _res_ids: &()) -> Result<OpCheckStatus, VecCopyError> {
+    async fn check(
+        vec_b: W<'op, VecB>,
+        _state: &State<Self::StateLogical, Self::StatePhysical>,
+    ) -> Result<OpCheckStatus, VecCopyError> {
         let op_check_status = if vec_b.0.is_empty() {
             OpCheckStatus::ExecNotRequired
         } else {
@@ -62,12 +69,18 @@ impl<'op> CleanOpSpec<'op> for VecCopyCleanOpSpec {
         Ok(op_check_status)
     }
 
-    async fn exec_dry(_vec_b: W<'op, VecB>, _res_ids: &()) -> Result<(), VecCopyError> {
+    async fn exec_dry(
+        _vec_b: W<'op, VecB>,
+        _state: &State<Self::StateLogical, Self::StatePhysical>,
+    ) -> Result<(), VecCopyError> {
         // Would erase vec_b
         Ok(())
     }
 
-    async fn exec(mut vec_b: W<'op, VecB>, _res_ids: &()) -> Result<(), VecCopyError> {
+    async fn exec(
+        mut vec_b: W<'op, VecB>,
+        _state: &State<Self::StateLogical, Self::StatePhysical>,
+    ) -> Result<(), VecCopyError> {
         vec_b.0.clear();
         Ok(())
     }
@@ -90,10 +103,10 @@ impl<'op> EnsureOpSpec<'op> for VecCopyEnsureOpSpec {
 
     async fn check(
         _vec_copy_params: VecCopyParamsMut<'op>,
-        state_current: &Vec<u8>,
+        state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Vec<u8>,
     ) -> Result<OpCheckStatus, VecCopyError> {
-        let op_check_status = if state_current != state_desired {
+        let op_check_status = if state_current.logical() != state_desired {
             let progress_limit = TryInto::<u64>::try_into(state_desired.len())
                 .map(ProgressLimit::Bytes)
                 .unwrap_or(ProgressLimit::Unknown);
@@ -107,7 +120,7 @@ impl<'op> EnsureOpSpec<'op> for VecCopyEnsureOpSpec {
 
     async fn exec_dry(
         _vec_copy_params: VecCopyParamsMut<'op>,
-        _state_current: &Vec<u8>,
+        _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         _state_desired: &Vec<u8>,
     ) -> Result<Self::StatePhysical, Self::Error> {
         // Would replace vec_b's contents with vec_a's
@@ -116,7 +129,7 @@ impl<'op> EnsureOpSpec<'op> for VecCopyEnsureOpSpec {
 
     async fn exec(
         mut vec_copy_params: VecCopyParamsMut<'op>,
-        _state_current: &Vec<u8>,
+        _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Vec<u8>,
     ) -> Result<Self::StatePhysical, VecCopyError> {
         let dest = vec_copy_params.dest_mut();
@@ -156,10 +169,10 @@ pub struct VecCopyStatusFnSpec;
 impl<'op> FnSpec<'op> for VecCopyStatusFnSpec {
     type Data = R<'op, VecA>;
     type Error = VecCopyError;
-    type Output = Vec<u8>;
+    type Output = State<Vec<u8>, ()>;
 
-    async fn exec(vec_a: R<'op, VecA>) -> Result<Vec<u8>, VecCopyError> {
-        Ok(vec_a.0.clone())
+    async fn exec(vec_a: R<'op, VecA>) -> Result<Self::Output, VecCopyError> {
+        Ok(State::new(vec_a.0.clone(), ()))
     }
 }
 

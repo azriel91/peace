@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use peace_data::Data;
 
-use crate::OpCheckStatus;
+use crate::{OpCheckStatus, State};
 
 /// Defines the logic and data of an ensure operation.
 ///
@@ -12,6 +12,20 @@ use crate::OpCheckStatus;
 /// * Logic to check if the operation is already done.
 /// * Logic to do the operation.
 /// * Physical state returned by the `exec` function.
+///
+/// Note that for the [`check`], [`exec_dry`], and [`exec`] functions, the
+/// current state passed in includes both logical and physical state, as a
+/// previous execution may have generated physical resources.
+///
+/// The desired state that is passed in is only the logical state, as this is
+/// the part that can be managed.
+///
+/// This design is chosen so that multiple executions can be written to be
+/// idempotent, which is the intended way this trait is to be implemented.
+///
+/// [`check`]: Self::check
+/// [`exec_dry`]: Self::exec_dry
+/// [`exec`]: Self::exec
 #[async_trait]
 pub trait EnsureOpSpec<'op> {
     /// Error returned when any of the functions of this operation err.
@@ -44,11 +58,9 @@ pub trait EnsureOpSpec<'op> {
     /// * Information calculated from previous operations.
     /// * Information written for subsequent operations.
     ///
-    /// This differs from [`StateLogical`] whereby `StateLogical` is the state
-    /// of the managed item, whereas `Data` is information computed at
-    /// runtime to manage that state.
-    ///
-    /// [`StateLogical`]: Self::State
+    /// This differs from [`State`] (both physical and logical) whereby `State`
+    /// is the state of the managed item, whereas `Data` is information
+    /// computed at runtime to manage that state.
     type Data: Data<'op>;
 
     /// Returns the desired state of the managed item.
@@ -91,8 +103,8 @@ pub trait EnsureOpSpec<'op> {
     /// # Parameters
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
-    /// * `state_current`: Current [`StateLogical`] of the managed item,
-    ///   returned from [`StatusFnSpec`].
+    /// * `state_current`: Current [`State`] of the managed item, returned from
+    ///   [`StatusFnSpec`].
     /// * `state_desired`: Desired [`StateLogical`] of the managed item,
     ///   returned from [`Self::desired`].
     ///
@@ -100,7 +112,7 @@ pub trait EnsureOpSpec<'op> {
     /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
     async fn check(
         data: Self::Data,
-        state_current: &Self::StateLogical,
+        state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
     ) -> Result<OpCheckStatus, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
@@ -126,12 +138,12 @@ pub trait EnsureOpSpec<'op> {
     ///
     /// This function call is intended to be cheap.
     ///
-    /// [`check`]: crate::EnsureOpSpec::check
-    /// [`exec`]: crate::EnsureOpSpec::exec
+    /// [`check`]: Self::check
+    /// [`exec`]: Self::exec
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec_dry(
         data: Self::Data,
-        state_current: &Self::StateLogical,
+        state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
     ) -> Result<Self::StatePhysical, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
@@ -143,11 +155,11 @@ pub trait EnsureOpSpec<'op> {
     ///
     /// This will only be called if [`check`] returns [`ExecRequired`].
     ///
-    /// [`check`]: crate::EnsureOpSpec::check
+    /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec(
         data: Self::Data,
-        state_current: &Self::StateLogical,
+        state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
     ) -> Result<Self::StatePhysical, Self::Error>
     // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47

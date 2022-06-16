@@ -3,7 +3,7 @@ use fn_graph::Resources;
 use peace_diff::Diff;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{CleanOpSpec, EnsureOpSpec, FnSpec};
+use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -151,7 +151,11 @@ pub trait FullSpec<'op> {
     ///
     /// This allows the check function to tell if the status has been queried
     /// within the past day, don't query it again.
-    type StatusFnSpec: FnSpec<'op, Error = Self::Error, Output = Self::StateLogical>;
+    type StatusFnSpec: FnSpec<
+        'op,
+        Error = Self::Error,
+        Output = State<Self::StateLogical, Self::StatePhysical>,
+    >;
 
     // TODO: DiffFnSpec:
     //
@@ -171,7 +175,12 @@ pub trait FullSpec<'op> {
     /// Specification of the clean operation.
     ///
     /// The output is the IDs of resources cleaned by the operation.
-    type CleanOpSpec: CleanOpSpec<'op, Error = Self::Error, StatePhysical = Self::StatePhysical>;
+    type CleanOpSpec: CleanOpSpec<
+        'op,
+        Error = Self::Error,
+        StateLogical = Self::StateLogical,
+        StatePhysical = Self::StatePhysical,
+    >;
 
     /// Returns the `StatusFnSpec` for this `FullSpec`.
     fn status_fn_spec(&self) -> &Self::StatusFnSpec;

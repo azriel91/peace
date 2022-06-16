@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use bytes::Bytes;
 use futures::{Stream, StreamExt, TryStreamExt};
 use peace::{
-    cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit},
+    cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, State},
     diff::Diff,
 };
 use tokio::{
@@ -125,9 +125,10 @@ impl<'op> EnsureOpSpec<'op> for DownloadEnsureOpSpec {
 
     async fn check(
         download_params: DownloadParams<'op>,
-        file_state_current: &Option<FileState>,
+        state: &State<Option<FileState>, PathBuf>,
         file_state_desired: &Option<FileState>,
     ) -> Result<OpCheckStatus, DownloadError> {
+        let file_state_current = state.logical();
         let op_check_status = match (file_state_current.as_ref(), file_state_desired.as_ref()) {
             (Some(file_state_current), Some(file_state_desired)) => {
                 Self::file_contents_check(&download_params, file_state_current, file_state_desired)
@@ -155,7 +156,7 @@ impl<'op> EnsureOpSpec<'op> for DownloadEnsureOpSpec {
 
     async fn exec_dry(
         download_params: DownloadParams<'op>,
-        _file_state_current: &Option<FileState>,
+        _state: &State<Option<FileState>, PathBuf>,
         _file_state_desired: &Option<FileState>,
     ) -> Result<PathBuf, DownloadError> {
         let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
@@ -164,7 +165,7 @@ impl<'op> EnsureOpSpec<'op> for DownloadEnsureOpSpec {
 
     async fn exec(
         download_params: DownloadParams<'op>,
-        _file_state_current: &Option<FileState>,
+        _state: &State<Option<FileState>, PathBuf>,
         _file_state_desired: &Option<FileState>,
     ) -> Result<PathBuf, DownloadError> {
         Self::file_download(&download_params).await?;
