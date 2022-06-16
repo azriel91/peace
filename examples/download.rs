@@ -27,7 +27,7 @@ mod file_state;
 
 fn main() {
     let mut graph_builder = FullSpecGraphBuilder::<DownloadError>::new();
-    graph_builder.add_fn(DownloadFullSpec::default().into());
+    graph_builder.add_fn(DownloadFullSpec.into());
 
     let _graph = graph_builder.build();
 }

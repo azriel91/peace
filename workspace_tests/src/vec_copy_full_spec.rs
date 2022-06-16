@@ -8,12 +8,8 @@ use peace::{
 use serde::{Deserialize, Serialize};
 
 /// Copies bytes from one `Vec` to another.
-#[derive(Debug, Default)]
-pub struct VecCopyFullSpec {
-    status_fn_spec: VecCopyStatusFnSpec,
-    ensure_op_spec: VecCopyEnsureOpSpec,
-    clean_op_spec: VecCopyCleanOpSpec,
-}
+#[derive(Debug)]
+pub struct VecCopyFullSpec;
 
 #[async_trait]
 impl<'op> FullSpec<'op> for VecCopyFullSpec {
@@ -24,18 +20,6 @@ impl<'op> FullSpec<'op> for VecCopyFullSpec {
     type StatePhysical = ();
     type StatusFnSpec = VecCopyStatusFnSpec;
 
-    fn status_fn_spec(&self) -> &Self::StatusFnSpec {
-        &self.status_fn_spec
-    }
-
-    fn ensure_op_spec(&self) -> &Self::EnsureOpSpec {
-        &self.ensure_op_spec
-    }
-
-    fn clean_op_spec(&self) -> &Self::CleanOpSpec {
-        &self.clean_op_spec
-    }
-
     async fn setup(resources: &mut Resources) -> Result<(), VecCopyError> {
         resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
         Ok(())
@@ -43,7 +27,7 @@ impl<'op> FullSpec<'op> for VecCopyFullSpec {
 }
 
 /// Clean OpSpec for the file to download.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct VecCopyCleanOpSpec;
 
 #[async_trait]
@@ -87,7 +71,7 @@ impl<'op> CleanOpSpec<'op> for VecCopyCleanOpSpec {
 }
 
 /// Ensure OpSpec for the file to download.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct VecCopyEnsureOpSpec;
 
 #[async_trait]
@@ -165,7 +149,7 @@ impl<'op> VecCopyParamsMut<'op> {
 }
 
 /// Status OpSpec for the file to download.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct VecCopyStatusFnSpec;
 
 #[async_trait]

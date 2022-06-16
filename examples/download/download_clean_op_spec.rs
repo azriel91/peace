@@ -5,7 +5,7 @@ use peace::cfg::{async_trait, CleanOpSpec, OpCheckStatus, ProgressLimit, State};
 use crate::{DownloadError, DownloadParams, FileState};
 
 /// `CleanOpSpec` for the file to download.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct DownloadCleanOpSpec;
 
 #[async_trait]

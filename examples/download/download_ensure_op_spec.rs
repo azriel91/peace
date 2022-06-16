@@ -14,7 +14,7 @@ use tokio::{
 use crate::{DownloadError, DownloadParams, FileState, FileStateDiff};
 
 /// Ensure OpSpec for the file to download.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct DownloadEnsureOpSpec;
 
 impl DownloadEnsureOpSpec {

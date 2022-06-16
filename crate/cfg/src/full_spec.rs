@@ -182,15 +182,6 @@ pub trait FullSpec<'op> {
         StatePhysical = Self::StatePhysical,
     >;
 
-    /// Returns the `StatusFnSpec` for this `FullSpec`.
-    fn status_fn_spec(&self) -> &Self::StatusFnSpec;
-
-    /// Returns the `EnsureOpSpec` for this `FullSpec`.
-    fn ensure_op_spec(&self) -> &Self::EnsureOpSpec;
-
-    /// Returns the `CleanOpSpec` for this `FullSpec`.
-    fn clean_op_spec(&self) -> &Self::CleanOpSpec;
-
     /// Inserts an instance of each data type in [`Resources`].
     ///
     /// # Implementors
