@@ -6,7 +6,7 @@ use std::{
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{async_trait, FnSpec, FullSpec, State};
-use peace_data::Resources;
+use peace_data::{Data, Resources};
 use peace_diff::Diff;
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -270,10 +270,22 @@ where
         > + Send
         + Sync,
 {
-    async fn setup(&self, resources: &mut Resources) -> Result<(), Error<E>> {
+    async fn setup(&self, resources: &'op mut Resources) -> Result<(), Error<E>> {
         <FS as FullSpec>::setup(resources)
             .await
             .map_err(Error::FullSpecSetup)
+    }
+
+    async fn status_fn_exec(&self, resources: &'op Resources) -> Result<(), Error<E>> {
+        let _state = {
+            let data = StatusFnSpec::Data::borrow(resources);
+            <StatusFnSpec as FnSpec>::exec(data).await
+        };
+
+        // TODO: store `state` somewhere so that we can pass it to subsequent
+        // operations.
+
+        Ok(())
     }
 }
 

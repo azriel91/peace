@@ -23,5 +23,15 @@ where
     E: Debug + std::error::Error,
 {
     /// Initializes data for the operation's check and `exec` functions.
-    async fn setup(&self, resources: &mut Resources) -> Result<(), E>;
+    async fn setup(&self, resources: &'op mut Resources) -> Result<(), E>
+    where
+        'op: 'async_trait;
+
+    /// Runs [`FullSpec::StatusFnSpec`]`::`[`exec`].
+    ///
+    /// [`FullSpec::StatusFnSpec`]: peace_cfg::FullSpec::StatusFnSpec
+    /// [`exec`]: peace_cfg::FnSpec::exec
+    async fn status_fn_exec(&self, resources: &'op Resources) -> Result<(), E>
+    where
+        'op: 'async_trait;
 }
