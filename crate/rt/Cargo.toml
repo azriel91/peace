@@ -1,11 +1,11 @@
 [package]
-name = "peace_rt_logic"
+name = "peace_rt"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 version = "0.0.1"
 edition = "2021"
 description = "Runtime logic for the peace automation library."
 repository = "https://github.com/azriel91/peace"
-documentation = "https://docs.rs/peace_rt_logic/"
+documentation = "https://docs.rs/peace_rt/"
 readme = "../../README.md"
 categories = ["asynchronous", "config"]
 keywords = ["automation"]

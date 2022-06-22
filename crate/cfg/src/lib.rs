@@ -4,16 +4,17 @@
 //! framework.
 
 // Re-exports
-pub use async_trait;
-pub use diff;
+pub use async_trait::async_trait;
 
 pub use crate::{
-    op_check_status::OpCheckStatus, op_spec::OpSpec, op_spec_dry::OpSpecDry,
-    progress_limit::ProgressLimit, work_spec::WorkSpec,
+    clean_op_spec::CleanOpSpec, ensure_op_spec::EnsureOpSpec, fn_spec::FnSpec, full_spec::FullSpec,
+    op_check_status::OpCheckStatus, progress_limit::ProgressLimit, state::State,
 };
 
+mod clean_op_spec;
+mod ensure_op_spec;
+mod fn_spec;
+mod full_spec;
 mod op_check_status;
-mod op_spec;
-mod op_spec_dry;
 mod progress_limit;
-mod work_spec;
+mod state;

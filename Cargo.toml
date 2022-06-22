@@ -17,7 +17,10 @@ test = false
 
 [dependencies]
 peace_cfg = { path = "crate/cfg", version = "0.0.1" }
-peace_rt_logic = { path = "crate/rt_logic", version = "0.0.1" }
+peace_data = { path = "crate/data", version = "0.0.1" }
+peace_diff = { path = "crate/diff", version = "0.0.1" }
+peace_rt = { path = "crate/rt", version = "0.0.1" }
+peace_rt_model = { path = "crate/rt_model", version = "0.0.1" }
 
 [dev-dependencies]
 bytes = "1.1.0"
@@ -25,7 +28,7 @@ futures = "0.3.21"
 reqwest = { version = "0.11.10", features = ["stream"] }
 serde = { version = "1.0.137", features = ["derive"] }
 thiserror = "1.0.31"
-tokio = { version = "1.18.2", features = ["fs", "io-util"] }
+tokio = { version = "1.19.0", features = ["fs", "io-util"] }
 url = "2.2.2"
 
 [workspace]

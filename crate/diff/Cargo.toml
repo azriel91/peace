@@ -1,0 +1,20 @@
+[package]
+name = "peace_diff"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.1"
+edition = "2021"
+description = "Diff trait for the peace automation framework."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_diff/"
+readme = "../../README.md"
+categories = ["data-structures"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+peace_diff_derive = { path = "../diff_derive", version = "0.0.1" }
+serde = { version = "1.0.137", features = ["derive"] }
