@@ -3,7 +3,7 @@ use fn_graph::Resources;
 use peace_diff::Diff;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State};
+use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, FullSpecId, State};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -181,6 +181,35 @@ pub trait FullSpec<'op> {
         StateLogical = Self::StateLogical,
         StatePhysical = Self::StatePhysical,
     >;
+
+    /// Returns the ID of this full spec.
+    ///
+    /// # Implementors
+    ///
+    /// The ID should be a unique value that does not change over the lifetime
+    /// of the managed item.
+    ///
+    /// [`FullSpecId`]s must begin with a letter or underscore, and contain only
+    /// letters, numbers, and underscores.  The [`full_spec_id!`] macro provides
+    /// a compile time check to ensure that these conditions are upheld.
+    ///
+    /// ```rust
+    /// # use peace_cfg::{full_spec_id, FullSpecId};
+    /// const fn id() -> FullSpecId {
+    ///     full_spec_id!("my_full_spec")
+    /// }
+    /// # fn main() { let _id = id(); }
+    /// ```
+    ///
+    /// # Design Note
+    ///
+    /// This is an instance method as logic for a `FullSpec` may be used for
+    /// multiple tasks. For example, a `FullSpec` implemented to download a
+    /// file may be instantiated with different files to download, and each
+    /// instance of the `FullSpec` should have its own ID.
+    ///
+    /// [`full_spec_id!`]: peace_full_spec_id_macro::full_spec_id
+    fn id(&self) -> FullSpecId;
 
     /// Inserts an instance of each data type in [`Resources`].
     ///

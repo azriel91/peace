@@ -1,11 +1,11 @@
 [package]
-name = "peace_diff_derive"
+name = "peace_full_spec_id_macro"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 version = "0.0.1"
 edition = "2021"
-description = "Diff derive for the peace automation framework."
+description = "Macro to validate `FullSpecId`s at compile time for the peace automation framework."
 repository = "https://github.com/azriel91/peace"
-documentation = "https://docs.rs/peace_diff_derive/"
+documentation = "https://docs.rs/peace_full_spec_id_macro/"
 readme = "../../README.md"
 categories = ["data-structures"]
 keywords = ["automation"]
@@ -18,5 +18,4 @@ test = false
 
 [dependencies]
 syn = { version = "1.0.96" }
-proc-macro2 = "1.0.39"
 quote = "1.0.18"

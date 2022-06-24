@@ -1,7 +1,7 @@
 use peace::{
     cfg::{
-        async_trait, CleanOpSpec, EnsureOpSpec, FnSpec, FullSpec, OpCheckStatus, ProgressLimit,
-        State,
+        async_trait, full_spec_id, CleanOpSpec, EnsureOpSpec, FnSpec, FullSpec, FullSpecId,
+        OpCheckStatus, ProgressLimit, State,
     },
     data::{Data, Resources, R, W},
 };
@@ -19,6 +19,10 @@ impl<'op> FullSpec<'op> for VecCopyFullSpec {
     type StateLogical = Vec<u8>;
     type StatePhysical = ();
     type StatusFnSpec = VecCopyStatusFnSpec;
+
+    fn id(&self) -> FullSpecId {
+        full_spec_id!("vec_copy_full_spec")
+    }
 
     async fn setup(resources: &mut Resources) -> Result<(), VecCopyError> {
         resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));

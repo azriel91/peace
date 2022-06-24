@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use peace::{
-    cfg::{async_trait, FullSpec},
+    cfg::{async_trait, full_spec_id, FullSpec, FullSpecId},
     data::Resources,
 };
 use url::Url;
@@ -22,6 +22,10 @@ impl<'op> FullSpec<'op> for DownloadFullSpec {
     type StateLogical = Option<FileState>;
     type StatePhysical = PathBuf;
     type StatusFnSpec = DownloadStatusFnSpec;
+
+    fn id(&self) -> FullSpecId {
+        full_spec_id!("download_full_spec")
+    }
 
     async fn setup(resources: &mut Resources) -> Result<(), DownloadError> {
         resources.insert::<reqwest::Client>(reqwest::Client::new());
