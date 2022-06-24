@@ -47,6 +47,8 @@ use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, FullSpecId, State};
 /// | `app.file_path`          | `/mnt/data/app.zip`                    |
 /// | `app_server_instance_id` | `ef34a9a4-0c02-45a6-96ec-a4db06d4980c` |
 /// | `app_server.address`     | `10.0.0.1`                             |
+///
+/// [`Data`]: crate::CleanOpSpec::Data
 #[async_trait]
 pub trait FullSpec<'op> {
     /// Consumer provided error type.
@@ -62,7 +64,7 @@ pub trait FullSpec<'op> {
     /// relatively lightweight.
     ///
     /// This is returned by [`StatusFnSpec`], and is used by [`EnsureOpSpec`]
-    /// and [`CleanOpSpec`] to determine if their [`exec`] function needs to
+    /// and [`CleanOpSpec`] to determine if their `exec` functions need to
     /// be run.
     ///
     /// # Examples

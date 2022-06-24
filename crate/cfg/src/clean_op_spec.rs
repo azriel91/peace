@@ -21,12 +21,12 @@ pub trait CleanOpSpec<'op> {
     /// This is the type returned by the [`StatusFnSpec`], and is used by
     /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
     ///
-    /// See [`FullSpec::State`] for more detail.
+    /// See [`FullSpec::StateLogical`] for more detail.
     ///
     /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
     /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
-    /// [`FullSpec::State`]: crate::FullSpec::State
+    /// [`FullSpec::StateLogical`]: crate::FullSpec::StateLogical
     type StateLogical;
 
     /// Physical state produced by the operation.
@@ -72,6 +72,7 @@ pub trait CleanOpSpec<'op> {
     /// * `state`: State of the managed item, returned from [`StatusFnSpec`].
     ///
     /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
+    /// [`StatePhysical`]: Self::StatePhysical
     async fn check(
         data: Self::Data,
         state: &State<Self::StateLogical, Self::StatePhysical>,

@@ -10,7 +10,7 @@ pub trait FnSpec<'op> {
     ///   the managed item.
     ///
     /// [`status`]: crate::FullSpec::StatusFnSpec
-    /// [`StateLogical`]: crate::FullSpec::State
+    /// [`StateLogical`]: crate::FullSpec::StateLogical
     type Output;
 
     /// Data that the function reads from, or writes to.
