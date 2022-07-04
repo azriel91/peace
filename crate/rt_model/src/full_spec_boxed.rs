@@ -1,3 +1,15 @@
+//! Contains type-erased `FullSpec` types and traits.
+//!
+//! Types and traits in this module don't reference any associated types from
+//! the `FullSpec`, allowing them to be passed around as common types at compile
+//! time.
+//!
+//! For the logic that is aware of the type parameters, see the
+//! [`full_spec_wrapper`] module and [`FullSpecWrapper`] type.
+//!
+//! [`full_spec_wrapper`]: crate::full_spec_wrapper
+//! [`FullSpecWrapper`]: crate::FullSpecWrapper
+
 use std::{
     fmt::Debug,
     ops::{Deref, DerefMut},
@@ -20,7 +32,7 @@ mod ensure_op_spec_rt;
 mod full_spec_rt;
 mod status_fn_spec_rt;
 
-/// Defines all of the data and logic to manage a user defined item.
+/// Holds a type-erased `FullSpecWrapper` in a `Box`.
 ///
 /// # Type Parameters
 ///
@@ -65,9 +77,9 @@ where
         > + Send
         + Sync
         + 'op,
-    E: Debug + Send + Sync + std::error::Error + 'op,
-    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'op,
-    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'op,
+    E: Debug + Send + Sync + std::error::Error + 'static,
+    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatusFnSpec: Debug
         + FnSpec<'op, Error = E, Output = State<StateLogical, StatePhysical>>
         + Send

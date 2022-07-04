@@ -21,5 +21,6 @@ miette = "4.7.1"
 peace_cfg = { path = "../cfg", version = "0.0.1" }
 peace_data = { path = "../data", version = "0.0.1" }
 peace_diff = { path = "../diff", version = "0.0.1" }
+rt_vec = "0.1.0"
 serde = "1.0.137"
 thiserror = "1.0.31"

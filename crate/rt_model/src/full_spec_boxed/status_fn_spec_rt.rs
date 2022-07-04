@@ -14,5 +14,7 @@ pub trait StatusFnSpecRt<'op> {
     type Error: std::error::Error;
 
     /// Transforms the current state to the desired state.
-    async fn exec(&self, resources: &Resources) -> Result<(), Self::Error>;
+    async fn exec(&self, resources: &'op Resources) -> Result<(), Self::Error>
+    where
+        'op: 'async_trait;
 }

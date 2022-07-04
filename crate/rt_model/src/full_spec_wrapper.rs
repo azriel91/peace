@@ -12,7 +12,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     full_spec_boxed::{CleanOpSpecRt, EnsureOpSpecRt, FullSpecRt, StatusFnSpecRt},
-    Error,
+    Error, FullSpecResourceses, FullSpecRtId,
 };
 
 /// Wraps a type implementing [`FullSpec`].
@@ -115,9 +115,9 @@ where
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
-    E: Debug + Send + Sync + std::error::Error,
-    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
+    E: Debug + Send + Sync + std::error::Error + 'static,
+    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatusFnSpec: Debug + FnSpec<'op, Output = State<StateLogical, StatePhysical>> + Send + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, StatePhysical = StatePhysical>
@@ -156,9 +156,9 @@ where
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
-    E: Debug + Send + Sync + std::error::Error,
-    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
+    E: Debug + Send + Sync + std::error::Error + 'static,
+    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatusFnSpec: Debug + FnSpec<'op, Output = State<StateLogical, StatePhysical>> + Send + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, StatePhysical = StatePhysical>
@@ -201,9 +201,9 @@ where
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
-    E: Debug + Send + Sync + std::error::Error,
-    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
+    E: Debug + Send + Sync + std::error::Error + 'static,
+    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatusFnSpec: Debug + FnSpec<'op, Output = State<StateLogical, StatePhysical>> + Send + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<'op, StateLogical = StateLogical, StatePhysical = StatePhysical>
@@ -248,9 +248,9 @@ where
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
-    E: Debug + Send + Sync + std::error::Error,
-    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
+    E: Debug + Send + Sync + std::error::Error + 'static,
+    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatusFnSpec:
         Debug + FnSpec<'op, Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
     EnsureOpSpec: Debug
@@ -277,15 +277,7 @@ where
     }
 
     async fn status_fn_exec(&self, resources: &'op Resources) -> Result<(), Error<E>> {
-        let _state = {
-            let data = StatusFnSpec::Data::borrow(resources);
-            <StatusFnSpec as FnSpec>::exec(data).await
-        };
-
-        // TODO: store `state` somewhere so that we can pass it to subsequent
-        // operations.
-
-        Ok(())
+        <Self as StatusFnSpecRt>::exec(self, resources).await
     }
 }
 
@@ -314,9 +306,9 @@ where
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
-    E: Debug + Send + Sync + std::error::Error,
-    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
+    E: Debug + Send + Sync + std::error::Error + 'static,
+    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatusFnSpec:
         Debug + FnSpec<'op, Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
     EnsureOpSpec: Debug
@@ -338,7 +330,18 @@ where
 {
     type Error = Error<E>;
 
-    async fn exec(&self, _resources: &Resources) -> Result<(), Self::Error> {
+    async fn exec(&self, resources: &'op Resources) -> Result<(), Self::Error> {
+        let state = {
+            let data = StatusFnSpec::Data::borrow(resources);
+            <StatusFnSpec as FnSpec>::exec(data).await
+        };
+
+        // Store `state` so that we can use it in subsequent operations.
+        let full_spec_rt_id = FullSpecRtId::new(fn_graph::FnId::new(0)); // Pass this into the `exec` function of each trait
+        let full_spec_resourceses = resources.borrow::<FullSpecResourceses>();
+        let mut full_spec_resources = full_spec_resourceses.borrow_mut(full_spec_rt_id);
+        full_spec_resources.insert(state);
+
         Ok(())
     }
 }
@@ -368,9 +371,9 @@ where
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
-    E: Debug + Send + Sync + std::error::Error,
-    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
+    E: Debug + Send + Sync + std::error::Error + 'static,
+    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatusFnSpec:
         Debug + FnSpec<'op, Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
     EnsureOpSpec: Debug
@@ -426,9 +429,9 @@ where
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
-    E: Debug + Send + Sync + std::error::Error,
-    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync,
-    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync,
+    E: Debug + Send + Sync + std::error::Error + 'static,
+    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatusFnSpec:
         Debug + FnSpec<'op, Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
     EnsureOpSpec: Debug
