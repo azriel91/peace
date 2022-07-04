@@ -1,4 +1,5 @@
 use peace_diff::Diff;
+use serde::{Deserialize, Serialize};
 
 /// Controlled and uncontrolled state of the managed item.
 ///
@@ -15,7 +16,7 @@ use peace_diff::Diff;
 /// This type can be used to represent the current state of the managed item, or
 /// the desired state. The `Diff` between the current and desired state
 /// indicates whether an operation should be executed.
-#[derive(Debug, Diff)]
+#[derive(Debug, Diff, Deserialize, Serialize)]
 pub struct State<Logical, Physical> {
     /// Logical state
     pub logical: Logical,

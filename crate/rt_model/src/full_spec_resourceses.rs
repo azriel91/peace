@@ -1,4 +1,4 @@
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut, Index, IndexMut};
 
 use peace_data::Resources;
 use rt_vec::{BorrowFail, Cell, Ref, RefMut, RtVec};
@@ -116,10 +116,16 @@ impl From<RtVec<Resources>> for FullSpecResourceses {
     }
 }
 
-impl std::ops::Index<FullSpecRtId> for FullSpecResourceses {
+impl Index<FullSpecRtId> for FullSpecResourceses {
     type Output = Cell<Resources>;
 
     fn index(&self, full_spec_rt_id: FullSpecRtId) -> &Self::Output {
         &self.0[full_spec_rt_id.index()]
+    }
+}
+
+impl IndexMut<FullSpecRtId> for FullSpecResourceses {
+    fn index_mut(&mut self, full_spec_rt_id: FullSpecRtId) -> &mut Self::Output {
+        &mut self.0[full_spec_rt_id.index()]
     }
 }
