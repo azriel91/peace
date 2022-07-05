@@ -1,5 +1,8 @@
 //! Runtime data types for the peace automation framework.
 
+// Re-exports
+pub use rt_vec;
+
 pub use crate::{
     error::Error,
     full_spec_boxed::{FullSpecBoxed, FullSpecRt},

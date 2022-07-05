@@ -1,7 +1,7 @@
-use std::ops::{Deref, DerefMut, Index, IndexMut};
+use std::ops::{Deref, DerefMut};
 
 use peace_data::Resources;
-use rt_vec::{BorrowFail, Cell, Ref, RefMut, RtVec};
+use rt_vec::{BorrowFail, Ref, RefMut, RtVec};
 
 use crate::FullSpecRtId;
 
@@ -9,13 +9,22 @@ use crate::FullSpecRtId;
 ///
 /// Pronounced as full spec *resoursees*, this is a double plural -- each
 /// `Resources` map stores the resources for a `FullSpec`, and
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct FullSpecResourceses(RtVec<Resources>);
 
 impl FullSpecResourceses {
     /// Returns a new `FullSpecResourceses`.
-    pub fn new(resourceses: RtVec<Resources>) -> Self {
-        Self(resourceses)
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Creates an empty `FullSpecResourceses` with the specified capacity.
+    ///
+    /// The `FullSpecResourceses` will be able to hold at least capacity
+    /// elements without reallocating. If capacity is 0, the vec will not
+    /// allocate.
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self(RtVec::with_capacity(capacity))
     }
 
     /// Returns the inner map.
@@ -113,19 +122,5 @@ impl DerefMut for FullSpecResourceses {
 impl From<RtVec<Resources>> for FullSpecResourceses {
     fn from(resourceses: RtVec<Resources>) -> Self {
         Self(resourceses)
-    }
-}
-
-impl Index<FullSpecRtId> for FullSpecResourceses {
-    type Output = Cell<Resources>;
-
-    fn index(&self, full_spec_rt_id: FullSpecRtId) -> &Self::Output {
-        &self.0[full_spec_rt_id.index()]
-    }
-}
-
-impl IndexMut<FullSpecRtId> for FullSpecResourceses {
-    fn index_mut(&mut self, full_spec_rt_id: FullSpecRtId) -> &mut Self::Output {
-        &mut self.0[full_spec_rt_id.index()]
     }
 }

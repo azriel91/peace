@@ -37,6 +37,12 @@ impl DerefMut for FullSpecRtId {
     }
 }
 
+impl From<usize> for FullSpecRtId {
+    fn from(index: usize) -> Self {
+        Self(FnId::new(index))
+    }
+}
+
 impl From<FnId> for FullSpecRtId {
     fn from(fn_id: FnId) -> Self {
         Self(fn_id)
