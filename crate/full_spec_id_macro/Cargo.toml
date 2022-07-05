@@ -17,5 +17,5 @@ doctest = false
 test = false
 
 [dependencies]
-syn = { version = "1.0.96" }
-quote = "1.0.18"
+syn = "1.0.98"
+quote = "1.0.20"

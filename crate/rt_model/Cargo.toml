@@ -16,11 +16,11 @@ doctest = false
 test = false
 
 [dependencies]
-fn_graph = { version = "0.5.1", features = ["resman"] }
-miette = "4.7.1"
+fn_graph = { version = "0.5.2", features = ["resman"] }
+miette = "5.1.0"
 peace_cfg = { path = "../cfg", version = "0.0.1" }
 peace_data = { path = "../data", version = "0.0.1" }
 peace_diff = { path = "../diff", version = "0.0.1" }
 rt_vec = "0.1.0"
-serde = "1.0.137"
+serde = "1.0.138"
 thiserror = "1.0.31"
