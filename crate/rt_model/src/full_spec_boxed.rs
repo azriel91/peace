@@ -48,6 +48,8 @@ where
 {
     type Target = dyn FullSpecRt<'op, Error<E>> + 'op;
 
+    // https://github.com/rust-lang/rust-clippy/issues/9101
+    #[allow(clippy::explicit_auto_deref)]
     fn deref(&self) -> &Self::Target {
         &*self.0
     }
@@ -57,6 +59,8 @@ impl<'op, E> DerefMut for FullSpecBoxed<'op, E>
 where
     E: std::error::Error,
 {
+    // https://github.com/rust-lang/rust-clippy/issues/9101
+    #[allow(clippy::explicit_auto_deref)]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut *self.0
     }
