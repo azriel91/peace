@@ -12,26 +12,22 @@ use crate::full_spec_boxed::{CleanOpSpecRt, EnsureOpSpecRt, StatusFnSpecRt};
 ///
 /// [`FullSpec`]: peace_cfg::FullSpec
 #[async_trait]
-pub trait FullSpecRt<'op, E>:
+pub trait FullSpecRt<E>:
     Debug
     + DataAccess
     + DataAccessDyn
-    + CleanOpSpecRt<'op, Error = E>
-    + EnsureOpSpecRt<'op, Error = E>
-    + StatusFnSpecRt<'op, Error = E>
+    + CleanOpSpecRt<Error = E>
+    + EnsureOpSpecRt<Error = E>
+    + StatusFnSpecRt<Error = E>
 where
     E: Debug + std::error::Error,
 {
     /// Initializes data for the operation's check and `exec` functions.
-    async fn setup(&self, resources: &'op mut Resources) -> Result<(), E>
-    where
-        'op: 'async_trait;
+    async fn setup(&self, resources: &mut Resources) -> Result<(), E>;
 
     /// Runs [`FullSpec::StatusFnSpec`]`::`[`exec`].
     ///
     /// [`FullSpec::StatusFnSpec`]: peace_cfg::FullSpec::StatusFnSpec
     /// [`exec`]: peace_cfg::FnSpec::exec
-    async fn status_fn_exec(&self, resources: &'op Resources) -> Result<(), E>
-    where
-        'op: 'async_trait;
+    async fn status_fn_exec(&self, resources: &Resources) -> Result<(), E>;
 }

@@ -11,9 +11,9 @@ impl<E> StatusCommand<E>
 where
     E: std::error::Error,
 {
-    pub async fn exec<'graph, 'res: 'graph>(
-        full_spec_graph: FullSpecGraph<'graph, E>,
-        resources: &'res Resources,
+    pub async fn exec(
+        full_spec_graph: &FullSpecGraph<E>,
+        resources: &Resources,
     ) -> Result<(), Error<E>> {
         full_spec_graph
             .stream()

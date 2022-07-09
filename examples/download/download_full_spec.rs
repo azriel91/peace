@@ -15,7 +15,7 @@ use crate::{
 pub struct DownloadFullSpec;
 
 #[async_trait]
-impl<'op> FullSpec<'op> for DownloadFullSpec {
+impl FullSpec for DownloadFullSpec {
     type CleanOpSpec = DownloadCleanOpSpec;
     type EnsureOpSpec = DownloadEnsureOpSpec;
     type Error = DownloadError;
@@ -27,7 +27,7 @@ impl<'op> FullSpec<'op> for DownloadFullSpec {
         full_spec_id!("download_full_spec")
     }
 
-    async fn setup(resources: &mut Resources) -> Result<(), DownloadError> {
+    async fn setup(&self, resources: &mut Resources) -> Result<(), DownloadError> {
         resources.insert::<reqwest::Client>(reqwest::Client::new());
         resources.insert::<Option<Url>>(None);
         resources.insert::<Option<PathBuf>>(None);

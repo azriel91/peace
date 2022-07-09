@@ -5,12 +5,19 @@
 
 // Re-exports
 pub use async_trait::async_trait;
+pub use nougat;
 pub use peace_full_spec_id_macro::full_spec_id;
 
 pub use crate::{
-    clean_op_spec::CleanOpSpec, ensure_op_spec::EnsureOpSpec, fn_spec::FnSpec, full_spec::FullSpec,
-    full_spec_id::FullSpecId, full_spec_id_invalid_fmt::FullSpecIdInvalidFmt,
-    op_check_status::OpCheckStatus, progress_limit::ProgressLimit, state::State,
+    clean_op_spec::{CleanOpSpec, CleanOpSpecඞData},
+    ensure_op_spec::{EnsureOpSpec, EnsureOpSpecඞData},
+    fn_spec::{FnSpec, FnSpecඞData},
+    full_spec::FullSpec,
+    full_spec_id::FullSpecId,
+    full_spec_id_invalid_fmt::FullSpecIdInvalidFmt,
+    op_check_status::OpCheckStatus,
+    progress_limit::ProgressLimit,
+    state::State,
 };
 
 mod clean_op_spec;

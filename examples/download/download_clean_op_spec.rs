@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
-use peace::cfg::{async_trait, CleanOpSpec, OpCheckStatus, ProgressLimit, State};
+use peace::cfg::{
+    async_trait, nougat, CleanOpSpec, CleanOpSpecඞData, OpCheckStatus, ProgressLimit, State,
+};
 
 use crate::{DownloadError, DownloadParams, FileState};
 
@@ -9,14 +11,16 @@ use crate::{DownloadError, DownloadParams, FileState};
 pub struct DownloadCleanOpSpec;
 
 #[async_trait]
-impl<'op> CleanOpSpec<'op> for DownloadCleanOpSpec {
-    type Data = DownloadParams<'op>;
+#[nougat::gat]
+impl CleanOpSpec for DownloadCleanOpSpec {
+    type Data<'op> = DownloadParams<'op>
+        where Self: 'op;
     type Error = DownloadError;
     type StateLogical = Option<FileState>;
     type StatePhysical = PathBuf;
 
     async fn check(
-        _download_params: DownloadParams<'op>,
+        _download_params: DownloadParams<'_>,
         State {
             physical: dest_path,
             ..
@@ -34,14 +38,14 @@ impl<'op> CleanOpSpec<'op> for DownloadCleanOpSpec {
     }
 
     async fn exec_dry(
-        _download_params: DownloadParams<'op>,
+        _download_params: DownloadParams<'_>,
         _state: &State<Option<FileState>, PathBuf>,
     ) -> Result<(), DownloadError> {
         Ok(())
     }
 
     async fn exec(
-        _download_params: DownloadParams<'op>,
+        _download_params: DownloadParams<'_>,
         State {
             physical: dest_path,
             ..

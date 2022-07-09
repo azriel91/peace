@@ -38,15 +38,15 @@ mod status_fn_spec_rt;
 ///
 /// * `E`: Application specific error type.
 #[derive(Debug)]
-pub struct FullSpecBoxed<'op, E>(Box<dyn FullSpecRt<'op, Error<E>> + 'op>)
+pub struct FullSpecBoxed<E>(Box<dyn FullSpecRt<Error<E>>>)
 where
     E: std::error::Error;
 
-impl<'op, E> Deref for FullSpecBoxed<'op, E>
+impl<E> Deref for FullSpecBoxed<E>
 where
     E: std::error::Error,
 {
-    type Target = dyn FullSpecRt<'op, Error<E>> + 'op;
+    type Target = dyn FullSpecRt<Error<E>>;
 
     // https://github.com/rust-lang/rust-clippy/issues/9101
     #[allow(clippy::explicit_auto_deref)]
@@ -55,7 +55,7 @@ where
     }
 }
 
-impl<'op, E> DerefMut for FullSpecBoxed<'op, E>
+impl<E> DerefMut for FullSpecBoxed<E>
 where
     E: std::error::Error,
 {
@@ -66,12 +66,11 @@ where
     }
 }
 
-impl<'op, FS, E, StateLogical, StatePhysical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
-    for FullSpecBoxed<'op, E>
+impl<FS, E, StateLogical, StatePhysical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
+    for FullSpecBoxed<E>
 where
     FS: Debug
         + FullSpec<
-            'op,
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
@@ -80,40 +79,38 @@ where
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync
-        + 'op,
+        + 'static,
     E: Debug + Send + Sync + std::error::Error + 'static,
     StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatusFnSpec: Debug
-        + FnSpec<'op, Error = E, Output = State<StateLogical, StatePhysical>>
+        + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync
-        + 'op,
+        + 'static,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
-            'op,
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
         + Sync
-        + 'op,
+        + 'static,
     CleanOpSpec: Debug
         + peace_cfg::CleanOpSpec<
-            'op,
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
         + Sync
-        + 'op,
+        + 'static,
 {
     fn from(full_spec: FS) -> Self {
         Self(Box::new(FullSpecWrapper::from(full_spec)))
     }
 }
 
-impl<'op, E> DataAccessDyn for FullSpecBoxed<'op, E>
+impl<E> DataAccessDyn for FullSpecBoxed<E>
 where
     E: std::error::Error,
 {

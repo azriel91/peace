@@ -3,7 +3,9 @@ use std::path::{Path, PathBuf};
 use bytes::Bytes;
 use futures::{Stream, StreamExt, TryStreamExt};
 use peace::{
-    cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, State},
+    cfg::{
+        async_trait, nougat, EnsureOpSpec, EnsureOpSpecඞData, OpCheckStatus, ProgressLimit, State,
+    },
     diff::Diff,
 };
 use tokio::{
@@ -109,14 +111,16 @@ impl DownloadEnsureOpSpec {
 }
 
 #[async_trait]
-impl<'op> EnsureOpSpec<'op> for DownloadEnsureOpSpec {
-    type Data = DownloadParams<'op>;
+#[nougat::gat]
+impl EnsureOpSpec for DownloadEnsureOpSpec {
+    type Data<'op> = DownloadParams<'op>
+        where Self: 'op;
     type Error = DownloadError;
     type StateLogical = Option<FileState>;
     type StatePhysical = PathBuf;
 
     async fn desired(
-        download_params: DownloadParams<'op>,
+        download_params: DownloadParams<'_>,
     ) -> Result<Option<FileState>, DownloadError> {
         let file_state_desired = Self::file_state_desired(&download_params).await?;
 
@@ -124,7 +128,7 @@ impl<'op> EnsureOpSpec<'op> for DownloadEnsureOpSpec {
     }
 
     async fn check(
-        download_params: DownloadParams<'op>,
+        download_params: DownloadParams<'_>,
         State {
             logical: file_state_current,
             ..
@@ -157,7 +161,7 @@ impl<'op> EnsureOpSpec<'op> for DownloadEnsureOpSpec {
     }
 
     async fn exec_dry(
-        download_params: DownloadParams<'op>,
+        download_params: DownloadParams<'_>,
         _state: &State<Option<FileState>, PathBuf>,
         _file_state_desired: &Option<FileState>,
     ) -> Result<PathBuf, DownloadError> {
@@ -166,7 +170,7 @@ impl<'op> EnsureOpSpec<'op> for DownloadEnsureOpSpec {
     }
 
     async fn exec(
-        download_params: DownloadParams<'op>,
+        download_params: DownloadParams<'_>,
         _state: &State<Option<FileState>, PathBuf>,
         _file_state_desired: &Option<FileState>,
     ) -> Result<PathBuf, DownloadError> {

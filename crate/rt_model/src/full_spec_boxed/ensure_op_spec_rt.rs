@@ -13,7 +13,7 @@ use peace_cfg::async_trait;
 /// [`FullSpec::EnsureOpSpec`]: peace_cfg::FullSpec::EnsureOpSpec
 /// [`OpSpec`]: peace_cfg::OpSpec
 #[async_trait]
-pub trait EnsureOpSpecRt<'op> {
+pub trait EnsureOpSpecRt {
     /// Error returned when any of the functions of this operation err.
     type Error: std::error::Error;
 

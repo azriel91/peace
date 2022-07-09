@@ -27,7 +27,8 @@ use crate::{OpCheckStatus, State};
 /// [`exec_dry`]: Self::exec_dry
 /// [`exec`]: Self::exec
 #[async_trait]
-pub trait EnsureOpSpec<'op> {
+#[nougat::gat]
+pub trait EnsureOpSpec {
     /// Error returned when any of the functions of this operation err.
     type Error: std::error::Error;
 
@@ -61,7 +62,9 @@ pub trait EnsureOpSpec<'op> {
     /// This differs from [`State`] (both physical and logical) whereby `State`
     /// is the state of the managed item, whereas `Data` is information
     /// computed at runtime to manage that state.
-    type Data: Data<'op>;
+    type Data<'op>: Data<'op>
+    where
+        Self: 'op;
 
     /// Returns the desired state of the managed item.
     ///
@@ -76,11 +79,7 @@ pub trait EnsureOpSpec<'op> {
     /// # Implementors
     ///
     /// This function call is intended to be cheap and fast.
-    async fn desired(data: Self::Data) -> Result<Self::StateLogical, Self::Error>
-    // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
-    // impl has stricter requirements than trait
-    where
-        'op: 'async_trait;
+    async fn desired(data: Self::Data<'_>) -> Result<Self::StateLogical, Self::Error>;
 
     /// Checks if the operation needs to be executed.
     ///
@@ -112,14 +111,10 @@ pub trait EnsureOpSpec<'op> {
     /// [`StateLogical`]: Self::StateLogical
     /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
     async fn check(
-        data: Self::Data,
+        data: Self::Data<'_>,
         state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
-    ) -> Result<OpCheckStatus, Self::Error>
-    // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
-    // impl has stricter requirements than trait
-    where
-        'op: 'async_trait;
+    ) -> Result<OpCheckStatus, Self::Error>;
 
     /// Dry-run transform of the current state to the desired state.
     ///
@@ -143,14 +138,10 @@ pub trait EnsureOpSpec<'op> {
     /// [`exec`]: Self::exec
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec_dry(
-        data: Self::Data,
+        data: Self::Data<'_>,
         state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
-    ) -> Result<Self::StatePhysical, Self::Error>
-    // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
-    // impl has stricter requirements than trait
-    where
-        'op: 'async_trait;
+    ) -> Result<Self::StatePhysical, Self::Error>;
 
     /// Transforms the current state to the desired state.
     ///
@@ -159,12 +150,8 @@ pub trait EnsureOpSpec<'op> {
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec(
-        data: Self::Data,
+        data: Self::Data<'_>,
         state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
-    ) -> Result<Self::StatePhysical, Self::Error>
-    // Without this, we hit a similar issue to: https://github.com/dtolnay/async-trait/issues/47
-    // impl has stricter requirements than trait
-    where
-        'op: 'async_trait;
+    ) -> Result<Self::StatePhysical, Self::Error>;
 }

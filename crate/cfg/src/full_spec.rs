@@ -50,7 +50,8 @@ use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, FullSpecId, State};
 ///
 /// [`Data`]: crate::CleanOpSpec::Data
 #[async_trait]
-pub trait FullSpec<'op> {
+#[nougat::gat]
+pub trait FullSpec {
     /// Consumer provided error type.
     type Error: std::error::Error;
 
@@ -154,7 +155,6 @@ pub trait FullSpec<'op> {
     /// This allows the check function to tell if the status has been queried
     /// within the past day, don't query it again.
     type StatusFnSpec: FnSpec<
-        'op,
         Error = Self::Error,
         Output = State<Self::StateLogical, Self::StatePhysical>,
     >;
@@ -168,7 +168,6 @@ pub trait FullSpec<'op> {
     ///
     /// The output is the IDs of resources produced by the operation.
     type EnsureOpSpec: EnsureOpSpec<
-        'op,
         Error = Self::Error,
         StateLogical = Self::StateLogical,
         StatePhysical = Self::StatePhysical,
@@ -178,7 +177,6 @@ pub trait FullSpec<'op> {
     ///
     /// The output is the IDs of resources cleaned by the operation.
     type CleanOpSpec: CleanOpSpec<
-        'op,
         Error = Self::Error,
         StateLogical = Self::StateLogical,
         StatePhysical = Self::StatePhysical,
@@ -223,5 +221,5 @@ pub trait FullSpec<'op> {
     ///
     /// [`check`]: crate::EnsureOpSpec::check
     /// [`exec`]: crate::EnsureOpSpec::exec
-    async fn setup(data: &mut Resources) -> Result<(), Self::Error>;
+    async fn setup(&self, data: &mut Resources) -> Result<(), Self::Error>;
 }

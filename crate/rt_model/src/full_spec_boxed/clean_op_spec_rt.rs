@@ -13,12 +13,13 @@ use peace_cfg::async_trait;
 /// [`FullSpec::CleanOpSpec`]: peace_cfg::FullSpec::CleanOpSpec
 /// [`CleanOpSpec`]: peace_cfg::CleanOpSpec
 #[async_trait]
-pub trait CleanOpSpecRt<'op> {
+pub trait CleanOpSpecRt {
     /// Error returned when any of the functions of this operation err.
     type Error: std::error::Error;
 
     /// Checks if the operation needs to be executed.
     async fn check(&self, resources: &Resources) -> Result<(), Self::Error>;
+
     /// Transforms the current state to the desired state.
     async fn exec(&self, resources: &Resources) -> Result<(), Self::Error>;
 }

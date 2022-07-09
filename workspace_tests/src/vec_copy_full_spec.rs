@@ -1,7 +1,8 @@
 use peace::{
     cfg::{
-        async_trait, full_spec_id, CleanOpSpec, EnsureOpSpec, FnSpec, FullSpec, FullSpecId,
-        OpCheckStatus, ProgressLimit, State,
+        async_trait, full_spec_id, nougat, CleanOpSpec, CleanOpSpecඞData, EnsureOpSpec,
+        EnsureOpSpecඞData, FnSpec, FnSpecඞData, FullSpec, FullSpecId, OpCheckStatus, ProgressLimit,
+        State,
     },
     data::{Data, Resources, R, W},
 };
@@ -12,7 +13,7 @@ use serde::{Deserialize, Serialize};
 pub struct VecCopyFullSpec;
 
 #[async_trait]
-impl<'op> FullSpec<'op> for VecCopyFullSpec {
+impl FullSpec for VecCopyFullSpec {
     type CleanOpSpec = VecCopyCleanOpSpec;
     type EnsureOpSpec = VecCopyEnsureOpSpec;
     type Error = VecCopyError;
@@ -24,7 +25,7 @@ impl<'op> FullSpec<'op> for VecCopyFullSpec {
         full_spec_id!("vec_copy_full_spec")
     }
 
-    async fn setup(resources: &mut Resources) -> Result<(), VecCopyError> {
+    async fn setup(&self, resources: &mut Resources) -> Result<(), VecCopyError> {
         resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
         Ok(())
     }
@@ -35,14 +36,16 @@ impl<'op> FullSpec<'op> for VecCopyFullSpec {
 pub struct VecCopyCleanOpSpec;
 
 #[async_trait]
-impl<'op> CleanOpSpec<'op> for VecCopyCleanOpSpec {
-    type Data = W<'op, VecB>;
+#[nougat::gat]
+impl CleanOpSpec for VecCopyCleanOpSpec {
+    type Data<'op> = W<'op, VecB>
+        where Self: 'op;
     type Error = VecCopyError;
     type StateLogical = Vec<u8>;
     type StatePhysical = ();
 
     async fn check(
-        vec_b: W<'op, VecB>,
+        vec_b: W<'_, VecB>,
         _state: &State<Self::StateLogical, Self::StatePhysical>,
     ) -> Result<OpCheckStatus, VecCopyError> {
         let op_check_status = if vec_b.0.is_empty() {
@@ -58,7 +61,7 @@ impl<'op> CleanOpSpec<'op> for VecCopyCleanOpSpec {
     }
 
     async fn exec_dry(
-        _vec_b: W<'op, VecB>,
+        _vec_b: W<'_, VecB>,
         _state: &State<Self::StateLogical, Self::StatePhysical>,
     ) -> Result<(), VecCopyError> {
         // Would erase vec_b
@@ -66,7 +69,7 @@ impl<'op> CleanOpSpec<'op> for VecCopyCleanOpSpec {
     }
 
     async fn exec(
-        mut vec_b: W<'op, VecB>,
+        mut vec_b: W<'_, VecB>,
         _state: &State<Self::StateLogical, Self::StatePhysical>,
     ) -> Result<(), VecCopyError> {
         vec_b.0.clear();
@@ -79,18 +82,20 @@ impl<'op> CleanOpSpec<'op> for VecCopyCleanOpSpec {
 pub struct VecCopyEnsureOpSpec;
 
 #[async_trait]
-impl<'op> EnsureOpSpec<'op> for VecCopyEnsureOpSpec {
-    type Data = VecCopyParamsMut<'op>;
+#[nougat::gat]
+impl EnsureOpSpec for VecCopyEnsureOpSpec {
+    type Data<'op> = VecCopyParamsMut<'op>
+        where Self: 'op;
     type Error = VecCopyError;
     type StateLogical = Vec<u8>;
     type StatePhysical = ();
 
-    async fn desired(vec_copy_params: VecCopyParamsMut<'op>) -> Result<Vec<u8>, VecCopyError> {
+    async fn desired(vec_copy_params: VecCopyParamsMut<'_>) -> Result<Vec<u8>, VecCopyError> {
         Ok(vec_copy_params.src().0.clone())
     }
 
     async fn check(
-        _vec_copy_params: VecCopyParamsMut<'op>,
+        _vec_copy_params: VecCopyParamsMut<'_>,
         State {
             logical: file_state_current,
             ..
@@ -110,7 +115,7 @@ impl<'op> EnsureOpSpec<'op> for VecCopyEnsureOpSpec {
     }
 
     async fn exec_dry(
-        _vec_copy_params: VecCopyParamsMut<'op>,
+        _vec_copy_params: VecCopyParamsMut<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         _state_desired: &Vec<u8>,
     ) -> Result<Self::StatePhysical, Self::Error> {
@@ -119,7 +124,7 @@ impl<'op> EnsureOpSpec<'op> for VecCopyEnsureOpSpec {
     }
 
     async fn exec(
-        mut vec_copy_params: VecCopyParamsMut<'op>,
+        mut vec_copy_params: VecCopyParamsMut<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Vec<u8>,
     ) -> Result<Self::StatePhysical, VecCopyError> {
@@ -157,12 +162,14 @@ impl<'op> VecCopyParamsMut<'op> {
 pub struct VecCopyStatusFnSpec;
 
 #[async_trait]
-impl<'op> FnSpec<'op> for VecCopyStatusFnSpec {
-    type Data = R<'op, VecA>;
+#[nougat::gat]
+impl FnSpec for VecCopyStatusFnSpec {
+    type Data<'op> = R<'op, VecA>
+        where Self: 'op;
     type Error = VecCopyError;
     type Output = State<Vec<u8>, ()>;
 
-    async fn exec(vec_a: R<'op, VecA>) -> Result<Self::Output, VecCopyError> {
+    async fn exec(vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
         Ok(State::new(vec_a.0.clone(), ()))
     }
 }
