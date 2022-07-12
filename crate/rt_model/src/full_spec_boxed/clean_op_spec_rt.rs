@@ -1,5 +1,5 @@
-use fn_graph::Resources;
 use peace_cfg::async_trait;
+use peace_resources::{resources_type_state::SetUp, Resources};
 
 /// Type-erased trait corresponding to [`FullSpec::CleanOpSpec`].
 ///
@@ -18,8 +18,8 @@ pub trait CleanOpSpecRt {
     type Error: std::error::Error;
 
     /// Checks if the operation needs to be executed.
-    async fn check(&self, resources: &Resources) -> Result<(), Self::Error>;
+    async fn check(&self, resources: &Resources<SetUp>) -> Result<(), Self::Error>;
 
     /// Transforms the current state to the desired state.
-    async fn exec(&self, resources: &Resources) -> Result<(), Self::Error>;
+    async fn exec(&self, resources: &Resources<SetUp>) -> Result<(), Self::Error>;
 }

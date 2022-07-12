@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use fn_graph::FnId;
+use peace_data::fn_graph::FnId;
 
 /// Runtime identifier for a [`FullSpec`]. [`FnId`] newtype.
 ///

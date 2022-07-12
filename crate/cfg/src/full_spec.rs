@@ -1,6 +1,6 @@
 use async_trait::async_trait;
-use fn_graph::Resources;
 use peace_diff::Diff;
+use peace_resources::{resources_type_state::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, FullSpecId, State};
@@ -221,5 +221,5 @@ pub trait FullSpec {
     ///
     /// [`check`]: crate::EnsureOpSpec::check
     /// [`exec`]: crate::EnsureOpSpec::exec
-    async fn setup(&self, data: &mut Resources) -> Result<(), Self::Error>;
+    async fn setup(&self, data: &mut Resources<Empty>) -> Result<(), Self::Error>;
 }

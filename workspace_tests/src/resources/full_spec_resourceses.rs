@@ -1,6 +1,6 @@
 use peace::{
     data::Resources,
-    rt_model::{rt_vec::RtVec, FullSpecResourceses, FullSpecRtId},
+    resources::{rt_vec::RtVec, FullSpecResourceses, FullSpecRtId},
 };
 
 #[derive(Debug, Default, PartialEq)]

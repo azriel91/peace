@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use futures::stream::{StreamExt, TryStreamExt};
-use peace_data::Resources;
+use peace_resources::{resources_type_state::SetUp, Resources};
 use peace_rt_model::{Error, FullSpecGraph};
 
 #[derive(Debug)]
@@ -13,7 +13,7 @@ where
 {
     pub async fn exec(
         full_spec_graph: &FullSpecGraph<E>,
-        resources: &Resources,
+        resources: &Resources<SetUp>,
     ) -> Result<(), Error<E>> {
         full_spec_graph
             .stream()

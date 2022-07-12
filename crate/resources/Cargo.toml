@@ -1,0 +1,22 @@
+[package]
+name = "peace_resources"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.1"
+edition = "2021"
+description = "Runtime resources for the peace automation framework."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_resources/"
+readme = "../../README.md"
+categories = ["configuration"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+fn_graph = { version = "0.5.2", features = ["resman"] }
+peace_data = { version = "0.0.1", path = "../data" }
+resman = { version = "0.15.0", features = ["debug"] }
+rt_vec = "0.1.0"

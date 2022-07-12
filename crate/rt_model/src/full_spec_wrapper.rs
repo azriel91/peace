@@ -6,13 +6,17 @@ use std::{
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{async_trait, nougat::Gat, FnSpec, FullSpec, State};
-use peace_data::{Data, Resources};
+use peace_data::Data;
 use peace_diff::Diff;
+use peace_resources::{
+    resources_type_state::{Empty, SetUp},
+    FullSpecResourceses, FullSpecRtId, Resources,
+};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     full_spec_boxed::{CleanOpSpecRt, EnsureOpSpecRt, FullSpecRt, StatusFnSpecRt},
-    Error, FullSpecResourceses, FullSpecRtId,
+    Error,
 };
 
 /// Wraps a type implementing [`FullSpec`].
@@ -200,13 +204,13 @@ where
         > + Send
         + Sync,
 {
-    async fn setup(&self, resources: &mut Resources) -> Result<(), Error<E>> {
+    async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), Error<E>> {
         <FS as FullSpec>::setup(self, resources)
             .await
             .map_err(Error::FullSpecSetup)
     }
 
-    async fn status_fn_exec(&self, resources: &Resources) -> Result<(), Error<E>> {
+    async fn status_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), Error<E>> {
         <Self as StatusFnSpecRt>::exec(self, resources).await
     }
 }
@@ -247,7 +251,7 @@ where
 {
     type Error = Error<E>;
 
-    async fn exec(&self, resources: &Resources) -> Result<(), Self::Error> {
+    async fn exec(&self, resources: &Resources<SetUp>) -> Result<(), Self::Error> {
         let state = {
             let data =
                 <Gat!(<StatusFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(resources);
@@ -300,11 +304,11 @@ where
 {
     type Error = Error<E>;
 
-    async fn check(&self, _resources: &Resources) -> Result<(), Self::Error> {
+    async fn check(&self, _resources: &Resources<SetUp>) -> Result<(), Self::Error> {
         Ok(())
     }
 
-    async fn exec(&self, _resources: &Resources) -> Result<(), Self::Error> {
+    async fn exec(&self, _resources: &Resources<SetUp>) -> Result<(), Self::Error> {
         Ok(())
     }
 }
@@ -345,11 +349,11 @@ where
 {
     type Error = Error<E>;
 
-    async fn check(&self, _resources: &Resources) -> Result<(), Self::Error> {
+    async fn check(&self, _resources: &Resources<SetUp>) -> Result<(), Self::Error> {
         Ok(())
     }
 
-    async fn exec(&self, _resources: &Resources) -> Result<(), Self::Error> {
+    async fn exec(&self, _resources: &Resources<SetUp>) -> Result<(), Self::Error> {
         Ok(())
     }
 }

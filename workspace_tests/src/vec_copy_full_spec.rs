@@ -4,7 +4,8 @@ use peace::{
         EnsureOpSpecඞData, FnSpec, FnSpecඞData, FullSpec, FullSpecId, OpCheckStatus, ProgressLimit,
         State,
     },
-    data::{Data, Resources, R, W},
+    data::{Data, R, W},
+    resources::{resources_type_state::Empty, Resources},
 };
 use serde::{Deserialize, Serialize};
 
@@ -25,7 +26,7 @@ impl FullSpec for VecCopyFullSpec {
         full_spec_id!("vec_copy_full_spec")
     }
 
-    async fn setup(&self, resources: &mut Resources) -> Result<(), VecCopyError> {
+    async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {
         resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
         Ok(())
     }
