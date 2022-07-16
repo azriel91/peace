@@ -18,8 +18,7 @@ impl FnSpec for DownloadStatusFnSpec {
     type Output = State<Option<FileState>, PathBuf>;
 
     async fn exec(download_params: DownloadParams<'_>) -> Result<Self::Output, DownloadError> {
-        // Destination file doesn't exist.
-        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
+        let dest = download_params.dest();
         if !dest.exists() {
             return Ok(State::new(None, dest.to_path_buf()));
         }

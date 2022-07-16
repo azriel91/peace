@@ -24,7 +24,7 @@ impl DownloadEnsureOpSpec {
         download_params: &DownloadParams<'_>,
     ) -> Result<FileState, DownloadError> {
         let client = download_params.client();
-        let src_url = download_params.src().ok_or(DownloadError::SrcUrlInit)?;
+        let src_url = download_params.src();
         let response = client
             .get(src_url.clone())
             .send()
@@ -69,8 +69,8 @@ impl DownloadEnsureOpSpec {
 
     async fn file_download(download_params: &DownloadParams<'_>) -> Result<(), DownloadError> {
         let client = download_params.client();
-        let src_url = download_params.src().ok_or(DownloadError::SrcUrlInit)?;
-        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
+        let src_url = download_params.src();
+        let dest = download_params.dest();
         let response = client
             .get(src_url.clone())
             .send()
@@ -165,7 +165,7 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
         _state: &State<Option<FileState>, PathBuf>,
         _file_state_desired: &Option<FileState>,
     ) -> Result<PathBuf, DownloadError> {
-        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
+        let dest = download_params.dest();
         Ok(dest.to_path_buf())
     }
 
@@ -175,7 +175,7 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
         _file_state_desired: &Option<FileState>,
     ) -> Result<PathBuf, DownloadError> {
         Self::file_download(&download_params).await?;
-        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
+        let dest = download_params.dest();
         Ok(dest.to_path_buf())
     }
 }

@@ -1,7 +1,8 @@
-use std::io;
+use std::{io, path::Path};
 
 use peace::{resources::Resources, rt::StatusCommand, rt_model::FullSpecGraphBuilder};
 use tokio::runtime::Builder;
+use url::Url;
 
 pub use crate::{
     download_clean_op_spec::DownloadCleanOpSpec,
@@ -35,8 +36,12 @@ fn main() -> io::Result<()> {
         .build()?;
 
     runtime.block_on(async {
+        let url =
+            Url::parse("https://ifconfig.me/all.json").expect("Expected download URL to be valid.");
+        let dest = Path::new("all.json").to_path_buf();
+
         let mut graph_builder = FullSpecGraphBuilder::<DownloadError>::new();
-        graph_builder.add_fn(DownloadFullSpec.into());
+        graph_builder.add_fn(DownloadFullSpec::new(url, dest).into());
 
         let graph = graph_builder.build();
 
@@ -45,7 +50,7 @@ fn main() -> io::Result<()> {
         StatusCommand::exec(&graph, &resources).await.unwrap();
 
         resources.iter().for_each(|resource| {
-            println!("{resource:?}");
+            println!("{resource:#?}");
         });
     });
 
