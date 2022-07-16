@@ -147,12 +147,16 @@ fn from_rt_vec() {
 fn debug() {
     let resourceses = test_resourceses();
 
-    // TODO: in `rt_ref`, manually impl `Debug` for `Cell`, so that we don't just
-    // get the non-exhaustive `".."` from `std::cell::UnsafeCell`
+    #[cfg(not(feature = "unsafe_debug"))]
     assert_eq!(
         r#"FullSpecResourceses(RtVec([Cell { flag: 0, inner: UnsafeCell { .. } }, Cell { flag: 0, inner: UnsafeCell { .. } }]))"#,
         format!("{resourceses:?}")
-    )
+    );
+    #[cfg(feature = "unsafe_debug")]
+    assert_eq!(
+        r#"FullSpecResourceses(RtVec([Cell { flag: 0, inner: {} }, Cell { flag: 0, inner: {u32: 1} }]))"#,
+        format!("{resourceses:?}")
+    );
 }
 
 fn test_resourceses() -> FullSpecResourceses {

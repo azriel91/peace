@@ -32,5 +32,8 @@ thiserror = "1.0.31"
 tokio = { version = "1.20.0", features = ["fs", "io-util", "rt"] }
 url = "2.2.2"
 
+[features]
+unsafe_debug = ["peace_resources/unsafe_debug"]
+
 [workspace]
 members = ["crate/*", "workspace_tests"]

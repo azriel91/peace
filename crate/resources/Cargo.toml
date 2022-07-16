@@ -20,3 +20,6 @@ fn_graph = { version = "0.5.2", features = ["resman"] }
 peace_data = { version = "0.0.1", path = "../data" }
 resman = { version = "0.15.0", features = ["debug"] }
 rt_vec = "0.1.1"
+
+[features]
+unsafe_debug = ["rt_vec/unsafe_debug"]
