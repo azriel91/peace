@@ -252,10 +252,12 @@ where
     type Error = Error<E>;
 
     async fn exec(&self, resources: &Resources<SetUp>) -> Result<(), Self::Error> {
-        let state = {
+        let state: State<StateLogical, StatePhysical> = {
             let data =
                 <Gat!(<StatusFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(resources);
-            <StatusFnSpec as FnSpec>::exec(data).await
+            <StatusFnSpec as FnSpec>::exec(data)
+                .await
+                .map_err(Error::StatusExec)?
         };
 
         // Store `state` so that we can use it in subsequent operations.

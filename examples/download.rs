@@ -49,9 +49,8 @@ fn main() -> io::Result<()> {
 
         StatusCommand::exec(&graph, &resources).await.unwrap();
 
-        resources.iter().for_each(|resource| {
-            println!("{resource:#?}");
-        });
+        let resources = &*resources;
+        println!("{resources:#?}");
     });
 
     Ok(())
