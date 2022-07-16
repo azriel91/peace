@@ -101,10 +101,7 @@ jobs:
         run: mkdir -p ./target/coverage
 
       - name: 'Collect coverage'
-        uses: actions-rs/cargo@v1
-        with:
-          command: llvm-cov
-          args: --workspace nextest --workspace --lcov --output-path ./target/coverage/lcov.info
+        run: ./coverage.sh
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1
