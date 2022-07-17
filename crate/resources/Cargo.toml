@@ -12,14 +12,13 @@ keywords = ["automation"]
 license = "MIT OR Apache-2.0"
 
 [lib]
-doctest = false
+doctest = true
 test = false
 
 [dependencies]
-fn_graph = { version = "0.5.2", features = ["resman"] }
+peace_core = { version = "0.0.1", path = "../core" }
 peace_data = { version = "0.0.1", path = "../data" }
 resman = { version = "0.15.0", features = ["debug"] }
-rt_vec = "0.1.1"
-
-[features]
-unsafe_debug = ["rt_vec/unsafe_debug"]
+serde = { version = "1.0.139", features = ["derive"] }
+tokio = { version = "1.20.0", features = ["sync"] }
+type_reg = { version = "0.3.0", features = ["debug", "untagged", "ordered"] }

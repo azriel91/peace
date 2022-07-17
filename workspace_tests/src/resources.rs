@@ -1,1 +1,1 @@
-mod full_spec_resourceses;
+mod full_spec_states;

@@ -1,6 +1,10 @@
 use std::{io, path::Path};
 
-use peace::{resources::Resources, rt::StatusCommand, rt_model::FullSpecGraphBuilder};
+use peace::{
+    resources::{FullSpecStatesRw, Resources},
+    rt::StatusCommand,
+    rt_model::FullSpecGraphBuilder,
+};
 use tokio::runtime::Builder;
 use url::Url;
 
@@ -49,8 +53,10 @@ fn main() -> io::Result<()> {
 
         StatusCommand::exec(&graph, &resources).await.unwrap();
 
-        let resources = &*resources;
-        println!("{resources:#?}");
+        let full_spec_states_rw = resources.borrow::<FullSpecStatesRw>();
+        let full_spec_states = full_spec_states_rw.read().await;
+        let states_serialized = serde_yaml::to_string(&*full_spec_states).unwrap();
+        println!("{states_serialized}");
     });
 
     Ok(())

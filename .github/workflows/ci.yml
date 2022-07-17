@@ -101,7 +101,9 @@ jobs:
         run: mkdir -p ./target/coverage
 
       - name: 'Collect coverage'
-        run: ./coverage.sh
+        uses: actions-rs/cargo@v1
+        with:
+          command: coverage
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1

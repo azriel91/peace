@@ -1,4 +1,3 @@
 [alias]
-coverage_0 = ["llvm-cov", "--workspace", "nextest", "--no-report", "--output-dir", "./target/coverage", "--features", ""]
-coverage_1 = ["llvm-cov", "--workspace", "nextest", "--no-report", "--output-dir", "./target/coverage", "--features", "unsafe_debug"]
+coverage = ["llvm-cov", "--workspace", "nextest", "--no-report", "--output-dir", "./target/coverage"]
 coverage_open = 'llvm-cov --no-run --open --output-dir ./target/coverage'

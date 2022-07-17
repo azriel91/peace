@@ -13,22 +13,21 @@ cargo install cargo-nextest
 
 ```bash
 cargo nextest run --workspace
-cargo nextest run --workspace --features "unsafe_debug"
 ```
 
 
 ## Coverage
 
-Collect coverage and output as `html`.
-
-```bash
-./coverage.sh && cargo coverage_open
-```
-
 Collect coverage and output as `lcov`.
 
 ```bash
-./coverage.sh
+cargo coverage
+```
+
+Collect coverage and open `html` report.
+
+```bash
+cargo coverage && cargo coverage_open
 ```
 
 

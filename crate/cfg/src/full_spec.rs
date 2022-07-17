@@ -1,9 +1,10 @@
 use async_trait::async_trait;
+use peace_core::FullSpecId;
 use peace_diff::Diff;
 use peace_resources::{resources_type_state::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, FullSpecId, State};
+use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -123,7 +124,7 @@ pub trait FullSpec {
     ///
     /// [`StatusFnSpec`]: Self::StatusFnSpec
     /// [`StatePhysical`]: Self::StatePhysical
-    type StateLogical: Diff + Serialize + DeserializeOwned;
+    type StateLogical: Clone + Diff + Serialize + DeserializeOwned;
 
     /// State of the managed item that is not controlled.
     ///
@@ -139,7 +140,7 @@ pub trait FullSpec {
     /// [`Data`]: crate::EnsureOpSpec::Data
     /// [`StateLogical`]: Self::State
     /// [`EnsureOpSpec::desired`]: crate::EnsureOpSpec::desired
-    type StatePhysical: Serialize + DeserializeOwned;
+    type StatePhysical: Clone + Serialize + DeserializeOwned;
 
     /// Function that returns the current status of the managed item.
     ///

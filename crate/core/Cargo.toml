@@ -1,22 +1,19 @@
 [package]
-name = "workspace_tests"
-version = "0.1.0"
+name = "peace_core"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.1"
 edition = "2021"
-description = "Tests for the peace automation library."
+description = "Low level data types for the peace automation framework."
 repository = "https://github.com/azriel91/peace"
-documentation = "https://docs.rs/peace/"
-readme = "../README.md"
+documentation = "https://docs.rs/peace_core/"
+readme = "../../README.md"
 categories = ["asynchronous", "config"]
 keywords = ["automation"]
 license = "MIT OR Apache-2.0"
-publish = false
 
 [lib]
 doctest = false
-test = true
+test = false
 
 [dependencies]
-peace = { path = "..", version = "0.0.1" }
 serde = { version = "1.0.139", features = ["derive"] }
-thiserror = "1.0.31"

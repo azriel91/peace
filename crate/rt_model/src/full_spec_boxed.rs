@@ -81,8 +81,8 @@ where
         + Sync
         + 'static,
     E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateLogical: Clone + Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatusFnSpec: Debug
         + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>>
         + Send

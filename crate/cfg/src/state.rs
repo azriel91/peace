@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 /// This type can be used to represent the current state of the managed item, or
 /// the desired state. The `Diff` between the current and desired state
 /// indicates whether an operation should be executed.
-#[derive(Debug, Diff, Deserialize, Serialize)]
+#[derive(Clone, Debug, Diff, Deserialize, Serialize)]
 pub struct State<Logical, Physical> {
     /// Logical state
     pub logical: Logical,

@@ -4,7 +4,7 @@ use fn_graph::FnGraph;
 use futures::{StreamExt, TryStreamExt};
 use peace_resources::{
     resources_type_state::{Empty, SetUp},
-    FullSpecResourceses, Resources,
+    FullSpecStatesRw, Resources,
 };
 
 use crate::{Error, FullSpecBoxed};
@@ -34,11 +34,7 @@ where
         &self,
         mut resources: Resources<Empty>,
     ) -> Result<Resources<SetUp>, Error<E>> {
-        // let mut resources = Resources::new();
-        let mut full_spec_resourceses = FullSpecResourceses::new();
-        (0..self.node_count())
-            .for_each(|_| full_spec_resourceses.push(peace_data::Resources::new()));
-        resources.insert(full_spec_resourceses);
+        resources.insert(FullSpecStatesRw::new());
 
         let resources = self
             .stream()
