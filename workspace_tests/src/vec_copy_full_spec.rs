@@ -1,7 +1,12 @@
+#[nougat::gat(Data)]
+use peace::cfg::CleanOpSpec;
+#[nougat::gat(Data)]
+use peace::cfg::EnsureOpSpec;
+#[nougat::gat(Data)]
+use peace::cfg::FnSpec;
 use peace::{
     cfg::{
-        async_trait, full_spec_id, nougat, CleanOpSpec, CleanOpSpecඞData, EnsureOpSpec,
-        EnsureOpSpecඞData, FnSpec, FnSpecඞData, FullSpec, FullSpecId, OpCheckStatus, ProgressLimit,
+        async_trait, full_spec_id, nougat, FullSpec, FullSpecId, OpCheckStatus, ProgressLimit,
         State,
     },
     data::{Data, R, W},

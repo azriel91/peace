@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
-use peace::cfg::{
-    async_trait, nougat, CleanOpSpec, CleanOpSpecඞData, OpCheckStatus, ProgressLimit, State,
-};
+#[nougat::gat(Data)]
+use peace::cfg::CleanOpSpec;
+use peace::cfg::{async_trait, nougat, OpCheckStatus, ProgressLimit, State};
 
 use crate::{DownloadError, DownloadParams, FileState};
 

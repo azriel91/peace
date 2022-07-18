@@ -17,7 +17,7 @@ test = false
 
 [dependencies]
 async-trait = "0.1.56"
-nougat = "0.2.0"
+nougat = "0.2.1"
 peace_core = { path = "../core", version = "0.0.1" }
 peace_data = { path = "../data", version = "0.0.1" }
 peace_diff = { path = "../diff", version = "0.0.1" }

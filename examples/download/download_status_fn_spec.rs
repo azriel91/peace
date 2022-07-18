@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
-use peace::cfg::{async_trait, nougat, FnSpec, FnSpecඞData, State};
+#[nougat::gat(Data)]
+use peace::cfg::FnSpec;
+use peace::cfg::{async_trait, nougat, State};
 use tokio::{fs::File, io::AsyncReadExt};
 
 use crate::{DownloadError, DownloadParams, FileState};

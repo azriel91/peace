@@ -2,10 +2,10 @@ use std::path::{Path, PathBuf};
 
 use bytes::Bytes;
 use futures::{Stream, StreamExt, TryStreamExt};
+#[nougat::gat(Data)]
+use peace::cfg::EnsureOpSpec;
 use peace::{
-    cfg::{
-        async_trait, nougat, EnsureOpSpec, EnsureOpSpecඞData, OpCheckStatus, ProgressLimit, State,
-    },
+    cfg::{async_trait, nougat, OpCheckStatus, ProgressLimit, State},
     diff::Diff,
 };
 use tokio::{
