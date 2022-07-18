@@ -2,8 +2,10 @@ use std::path::{Path, PathBuf};
 
 use bytes::Bytes;
 use futures::{Stream, StreamExt, TryStreamExt};
+#[nougat::gat(Data)]
+use peace::cfg::EnsureOpSpec;
 use peace::{
-    cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, State},
+    cfg::{async_trait, nougat, OpCheckStatus, ProgressLimit, State},
     diff::Diff,
 };
 use tokio::{
@@ -22,7 +24,7 @@ impl DownloadEnsureOpSpec {
         download_params: &DownloadParams<'_>,
     ) -> Result<FileState, DownloadError> {
         let client = download_params.client();
-        let src_url = download_params.src().ok_or(DownloadError::SrcUrlInit)?;
+        let src_url = download_params.src();
         let response = client
             .get(src_url.clone())
             .send()
@@ -67,8 +69,8 @@ impl DownloadEnsureOpSpec {
 
     async fn file_download(download_params: &DownloadParams<'_>) -> Result<(), DownloadError> {
         let client = download_params.client();
-        let src_url = download_params.src().ok_or(DownloadError::SrcUrlInit)?;
-        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
+        let src_url = download_params.src();
+        let dest = download_params.dest();
         let response = client
             .get(src_url.clone())
             .send()
@@ -109,14 +111,16 @@ impl DownloadEnsureOpSpec {
 }
 
 #[async_trait]
-impl<'op> EnsureOpSpec<'op> for DownloadEnsureOpSpec {
-    type Data = DownloadParams<'op>;
+#[nougat::gat]
+impl EnsureOpSpec for DownloadEnsureOpSpec {
+    type Data<'op> = DownloadParams<'op>
+        where Self: 'op;
     type Error = DownloadError;
     type StateLogical = Option<FileState>;
     type StatePhysical = PathBuf;
 
     async fn desired(
-        download_params: DownloadParams<'op>,
+        download_params: DownloadParams<'_>,
     ) -> Result<Option<FileState>, DownloadError> {
         let file_state_desired = Self::file_state_desired(&download_params).await?;
 
@@ -124,7 +128,7 @@ impl<'op> EnsureOpSpec<'op> for DownloadEnsureOpSpec {
     }
 
     async fn check(
-        download_params: DownloadParams<'op>,
+        download_params: DownloadParams<'_>,
         State {
             logical: file_state_current,
             ..
@@ -157,21 +161,21 @@ impl<'op> EnsureOpSpec<'op> for DownloadEnsureOpSpec {
     }
 
     async fn exec_dry(
-        download_params: DownloadParams<'op>,
+        download_params: DownloadParams<'_>,
         _state: &State<Option<FileState>, PathBuf>,
         _file_state_desired: &Option<FileState>,
     ) -> Result<PathBuf, DownloadError> {
-        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
+        let dest = download_params.dest();
         Ok(dest.to_path_buf())
     }
 
     async fn exec(
-        download_params: DownloadParams<'op>,
+        download_params: DownloadParams<'_>,
         _state: &State<Option<FileState>, PathBuf>,
         _file_state_desired: &Option<FileState>,
     ) -> Result<PathBuf, DownloadError> {
         Self::file_download(&download_params).await?;
-        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
+        let dest = download_params.dest();
         Ok(dest.to_path_buf())
     }
 }

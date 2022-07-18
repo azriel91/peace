@@ -17,7 +17,10 @@ test = false
 
 [dependencies]
 async-trait = "0.1.56"
-fn_graph = { version = "0.5.1", features = ["resman"] }
+nougat = "0.2.1"
+peace_core = { path = "../core", version = "0.0.1" }
 peace_data = { path = "../data", version = "0.0.1" }
 peace_diff = { path = "../diff", version = "0.0.1" }
-serde = "1.0.137"
+peace_full_spec_id_macro = { path = "../full_spec_id_macro", version = "0.0.1" }
+peace_resources = { path = "../resources", version = "0.0.1" }
+serde = { version = "1.0.139", features = ["derive"] }

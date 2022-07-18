@@ -1,6 +1,7 @@
 use async_trait::async_trait;
-use fn_graph::Resources;
+use peace_core::FullSpecId;
 use peace_diff::Diff;
+use peace_resources::{resources_type_state::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State};
@@ -47,8 +48,11 @@ use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State};
 /// | `app.file_path`          | `/mnt/data/app.zip`                    |
 /// | `app_server_instance_id` | `ef34a9a4-0c02-45a6-96ec-a4db06d4980c` |
 /// | `app_server.address`     | `10.0.0.1`                             |
+///
+/// [`Data`]: crate::CleanOpSpec::Data
 #[async_trait]
-pub trait FullSpec<'op> {
+#[nougat::gat]
+pub trait FullSpec {
     /// Consumer provided error type.
     type Error: std::error::Error;
 
@@ -62,7 +66,7 @@ pub trait FullSpec<'op> {
     /// relatively lightweight.
     ///
     /// This is returned by [`StatusFnSpec`], and is used by [`EnsureOpSpec`]
-    /// and [`CleanOpSpec`] to determine if their [`exec`] function needs to
+    /// and [`CleanOpSpec`] to determine if their `exec` functions need to
     /// be run.
     ///
     /// # Examples
@@ -120,7 +124,7 @@ pub trait FullSpec<'op> {
     ///
     /// [`StatusFnSpec`]: Self::StatusFnSpec
     /// [`StatePhysical`]: Self::StatePhysical
-    type StateLogical: Diff + Serialize + DeserializeOwned;
+    type StateLogical: Clone + Diff + Serialize + DeserializeOwned;
 
     /// State of the managed item that is not controlled.
     ///
@@ -136,7 +140,7 @@ pub trait FullSpec<'op> {
     /// [`Data`]: crate::EnsureOpSpec::Data
     /// [`StateLogical`]: Self::State
     /// [`EnsureOpSpec::desired`]: crate::EnsureOpSpec::desired
-    type StatePhysical: Serialize + DeserializeOwned;
+    type StatePhysical: Clone + Serialize + DeserializeOwned;
 
     /// Function that returns the current status of the managed item.
     ///
@@ -152,7 +156,6 @@ pub trait FullSpec<'op> {
     /// This allows the check function to tell if the status has been queried
     /// within the past day, don't query it again.
     type StatusFnSpec: FnSpec<
-        'op,
         Error = Self::Error,
         Output = State<Self::StateLogical, Self::StatePhysical>,
     >;
@@ -166,7 +169,6 @@ pub trait FullSpec<'op> {
     ///
     /// The output is the IDs of resources produced by the operation.
     type EnsureOpSpec: EnsureOpSpec<
-        'op,
         Error = Self::Error,
         StateLogical = Self::StateLogical,
         StatePhysical = Self::StatePhysical,
@@ -176,11 +178,39 @@ pub trait FullSpec<'op> {
     ///
     /// The output is the IDs of resources cleaned by the operation.
     type CleanOpSpec: CleanOpSpec<
-        'op,
         Error = Self::Error,
         StateLogical = Self::StateLogical,
         StatePhysical = Self::StatePhysical,
     >;
+
+    /// Returns the ID of this full spec.
+    ///
+    /// # Implementors
+    ///
+    /// The ID should be a unique value that does not change over the lifetime
+    /// of the managed item.
+    ///
+    /// [`FullSpecId`]s must begin with a letter or underscore, and contain only
+    /// letters, numbers, and underscores.  The [`full_spec_id!`] macro provides
+    /// a compile time check to ensure that these conditions are upheld.
+    ///
+    /// ```rust
+    /// # use peace_cfg::{full_spec_id, FullSpecId};
+    /// const fn id() -> FullSpecId {
+    ///     full_spec_id!("my_full_spec")
+    /// }
+    /// # fn main() { let _id = id(); }
+    /// ```
+    ///
+    /// # Design Note
+    ///
+    /// This is an instance method as logic for a `FullSpec` may be used for
+    /// multiple tasks. For example, a `FullSpec` implemented to download a
+    /// file may be instantiated with different files to download, and each
+    /// instance of the `FullSpec` should have its own ID.
+    ///
+    /// [`full_spec_id!`]: peace_full_spec_id_macro::full_spec_id
+    fn id(&self) -> FullSpecId;
 
     /// Inserts an instance of each data type in [`Resources`].
     ///
@@ -192,5 +222,5 @@ pub trait FullSpec<'op> {
     ///
     /// [`check`]: crate::EnsureOpSpec::check
     /// [`exec`]: crate::EnsureOpSpec::exec
-    async fn setup(data: &mut Resources) -> Result<(), Self::Error>;
+    async fn setup(&self, data: &mut Resources<Empty>) -> Result<(), Self::Error>;
 }

@@ -1,4 +1,12 @@
-use peace::rt_model::FullSpecGraphBuilder;
+use std::{io, path::Path};
+
+use peace::{
+    resources::{FullSpecStatesRw, Resources},
+    rt::StatusCommand,
+    rt_model::FullSpecGraphBuilder,
+};
+use tokio::runtime::Builder;
+use url::Url;
 
 pub use crate::{
     download_clean_op_spec::DownloadCleanOpSpec,
@@ -25,11 +33,33 @@ mod download_status_fn_spec;
 #[path = "download/file_state.rs"]
 mod file_state;
 
-fn main() {
-    let mut graph_builder = FullSpecGraphBuilder::<DownloadError>::new();
-    graph_builder.add_fn(DownloadFullSpec.into());
+fn main() -> io::Result<()> {
+    let runtime = Builder::new_current_thread()
+        .thread_name("main")
+        .thread_stack_size(3 * 1024 * 1024)
+        .build()?;
 
-    let _graph = graph_builder.build();
+    runtime.block_on(async {
+        let url =
+            Url::parse("https://ifconfig.me/all.json").expect("Expected download URL to be valid.");
+        let dest = Path::new("all.json").to_path_buf();
+
+        let mut graph_builder = FullSpecGraphBuilder::<DownloadError>::new();
+        graph_builder.add_fn(DownloadFullSpec::new(url, dest).into());
+
+        let graph = graph_builder.build();
+
+        let resources = graph.setup(Resources::new()).await.unwrap();
+
+        StatusCommand::exec(&graph, &resources).await.unwrap();
+
+        let full_spec_states_rw = resources.borrow::<FullSpecStatesRw>();
+        let full_spec_states = full_spec_states_rw.read().await;
+        let states_serialized = serde_yaml::to_string(&*full_spec_states).unwrap();
+        println!("{states_serialized}");
+    });
+
+    Ok(())
 }
 
 /// Read up to 1 kB in memory.

@@ -9,7 +9,7 @@ use fn_graph::{DataAccess, DataAccessDyn, DataBorrow, Resources, R, W};
 /// This trait is implemented by using the [`Data` derive].
 ///
 /// [`Data` derive]: peace_data_derive::Data
-pub trait Data<'borrow>: DataAccess + DataAccessDyn {
+pub trait Data<'borrow>: DataAccess + DataAccessDyn + Send {
     /// Borrows each of `Self`'s fields from the provided [`Resources`].
     ///
     /// # Parameters

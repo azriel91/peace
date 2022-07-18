@@ -32,7 +32,7 @@ fn derive_or_error(input: TokenStream) -> SynResult<TokenStream> {
 
     let (impl_generics, type_generics, where_clause) = input.generics.split_for_impl();
 
-    // Create a `T: Diff + PartialEq` predicate for each type param, and add it to
+    // Create a `T: Diff` predicate for each type param, and add it to
     // the where clause
     let where_clause_owned = type_where_clause(&input.generics, where_clause);
     let where_clause_with_diff_predicates = where_clause_owned.as_ref().or(where_clause);

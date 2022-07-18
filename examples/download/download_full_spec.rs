@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
 use peace::{
-    cfg::{async_trait, FullSpec},
-    data::Resources,
+    cfg::{async_trait, full_spec_id, FullSpec, FullSpecId},
+    resources::{resources_type_state::Empty, Resources},
 };
 use url::Url;
 
@@ -12,10 +12,24 @@ use crate::{
 
 /// Full spec for downloading a file.
 #[derive(Debug)]
-pub struct DownloadFullSpec;
+pub struct DownloadFullSpec {
+    /// Url of the file to download.
+    src: Url,
+    /// Path of the destination.
+    ///
+    /// Must be a file path, and not a directory.
+    dest: PathBuf,
+}
+
+impl DownloadFullSpec {
+    /// Returns a new FullSpec
+    pub fn new(src: Url, dest: PathBuf) -> Self {
+        Self { src, dest }
+    }
+}
 
 #[async_trait]
-impl<'op> FullSpec<'op> for DownloadFullSpec {
+impl FullSpec for DownloadFullSpec {
     type CleanOpSpec = DownloadCleanOpSpec;
     type EnsureOpSpec = DownloadEnsureOpSpec;
     type Error = DownloadError;
@@ -23,10 +37,14 @@ impl<'op> FullSpec<'op> for DownloadFullSpec {
     type StatePhysical = PathBuf;
     type StatusFnSpec = DownloadStatusFnSpec;
 
-    async fn setup(resources: &mut Resources) -> Result<(), DownloadError> {
+    fn id(&self) -> FullSpecId {
+        full_spec_id!("download_full_spec")
+    }
+
+    async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), DownloadError> {
         resources.insert::<reqwest::Client>(reqwest::Client::new());
-        resources.insert::<Option<Url>>(None);
-        resources.insert::<Option<PathBuf>>(None);
+        resources.insert::<Url>(self.src.clone());
+        resources.insert::<PathBuf>(self.dest.clone());
 
         Ok(())
     }

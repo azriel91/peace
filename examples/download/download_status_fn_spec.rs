@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
-use peace::cfg::{async_trait, FnSpec, State};
+#[nougat::gat(Data)]
+use peace::cfg::FnSpec;
+use peace::cfg::{async_trait, nougat, State};
 use tokio::{fs::File, io::AsyncReadExt};
 
 use crate::{DownloadError, DownloadParams, FileState};
@@ -10,14 +12,15 @@ use crate::{DownloadError, DownloadParams, FileState};
 pub struct DownloadStatusFnSpec;
 
 #[async_trait]
-impl<'op> FnSpec<'op> for DownloadStatusFnSpec {
-    type Data = DownloadParams<'op>;
+#[nougat::gat]
+impl FnSpec for DownloadStatusFnSpec {
+    type Data<'op> = DownloadParams<'op>
+        where Self: 'op;
     type Error = DownloadError;
     type Output = State<Option<FileState>, PathBuf>;
 
-    async fn exec(download_params: DownloadParams<'op>) -> Result<Self::Output, DownloadError> {
-        // Destination file doesn't exist.
-        let dest = download_params.dest().ok_or(DownloadError::DestFileInit)?;
+    async fn exec(download_params: DownloadParams<'_>) -> Result<Self::Output, DownloadError> {
+        let dest = download_params.dest();
         if !dest.exists() {
             return Ok(State::new(None, dest.to_path_buf()));
         }

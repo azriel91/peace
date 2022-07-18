@@ -1,3 +1,15 @@
+//! Contains type-erased `FullSpec` types and traits.
+//!
+//! Types and traits in this module don't reference any associated types from
+//! the `FullSpec`, allowing them to be passed around as common types at compile
+//! time.
+//!
+//! For the logic that is aware of the type parameters, see the
+//! [`full_spec_wrapper`] module and [`FullSpecWrapper`] type.
+//!
+//! [`full_spec_wrapper`]: crate::full_spec_wrapper
+//! [`FullSpecWrapper`]: crate::FullSpecWrapper
+
 use std::{
     fmt::Debug,
     ops::{Deref, DerefMut},
@@ -20,42 +32,45 @@ mod ensure_op_spec_rt;
 mod full_spec_rt;
 mod status_fn_spec_rt;
 
-/// Defines all of the data and logic to manage a user defined item.
+/// Holds a type-erased `FullSpecWrapper` in a `Box`.
 ///
 /// # Type Parameters
 ///
 /// * `E`: Application specific error type.
 #[derive(Debug)]
-pub struct FullSpecBoxed<'op, E>(Box<dyn FullSpecRt<'op, Error<E>> + 'op>)
+pub struct FullSpecBoxed<E>(Box<dyn FullSpecRt<Error<E>>>)
 where
     E: std::error::Error;
 
-impl<'op, E> Deref for FullSpecBoxed<'op, E>
+impl<E> Deref for FullSpecBoxed<E>
 where
     E: std::error::Error,
 {
-    type Target = dyn FullSpecRt<'op, Error<E>> + 'op;
+    type Target = dyn FullSpecRt<Error<E>>;
 
+    // https://github.com/rust-lang/rust-clippy/issues/9101
+    #[allow(clippy::explicit_auto_deref)]
     fn deref(&self) -> &Self::Target {
         &*self.0
     }
 }
 
-impl<'op, E> DerefMut for FullSpecBoxed<'op, E>
+impl<E> DerefMut for FullSpecBoxed<E>
 where
     E: std::error::Error,
 {
+    // https://github.com/rust-lang/rust-clippy/issues/9101
+    #[allow(clippy::explicit_auto_deref)]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut *self.0
     }
 }
 
-impl<'op, FS, E, StateLogical, StatePhysical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
-    for FullSpecBoxed<'op, E>
+impl<FS, E, StateLogical, StatePhysical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
+    for FullSpecBoxed<E>
 where
     FS: Debug
         + FullSpec<
-            'op,
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
@@ -64,40 +79,38 @@ where
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync
-        + 'op,
-    E: Debug + Send + Sync + std::error::Error + 'op,
-    StateLogical: Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'op,
-    StatePhysical: Debug + Serialize + DeserializeOwned + Send + Sync + 'op,
+        + 'static,
+    E: Debug + Send + Sync + std::error::Error + 'static,
+    StateLogical: Clone + Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatusFnSpec: Debug
-        + FnSpec<'op, Error = E, Output = State<StateLogical, StatePhysical>>
+        + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync
-        + 'op,
+        + 'static,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
-            'op,
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
         + Sync
-        + 'op,
+        + 'static,
     CleanOpSpec: Debug
         + peace_cfg::CleanOpSpec<
-            'op,
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
         + Sync
-        + 'op,
+        + 'static,
 {
     fn from(full_spec: FS) -> Self {
         Self(Box::new(FullSpecWrapper::from(full_spec)))
     }
 }
 
-impl<'op, E> DataAccessDyn for FullSpecBoxed<'op, E>
+impl<E> DataAccessDyn for FullSpecBoxed<E>
 where
     E: std::error::Error,
 {

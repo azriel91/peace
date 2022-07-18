@@ -8,4 +8,6 @@ where
 {
     #[error(transparent)]
     FullSpecSetup(E),
+    #[error(transparent)]
+    StatusExec(E),
 }

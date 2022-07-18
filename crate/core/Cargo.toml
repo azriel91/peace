@@ -1,0 +1,19 @@
+[package]
+name = "peace_core"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.1"
+edition = "2021"
+description = "Low level data types for the peace automation framework."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_core/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+serde = { version = "1.0.139", features = ["derive"] }
