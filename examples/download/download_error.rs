@@ -23,4 +23,10 @@ pub enum DownloadError {
     ResponseBytesStream(#[source] reqwest::Error),
     #[error("Failed to transfer source file content.")]
     ResponseFileWrite(#[source] std::io::Error),
+
+    // Framework / scaffolding errors
+    #[error("Failed to initialize tokio runtime.")]
+    TokioRuntimeInit(#[source] std::io::Error),
+    #[error("Failed to serialize status.")]
+    StatusSerialize(#[source] serde_yaml::Error),
 }
