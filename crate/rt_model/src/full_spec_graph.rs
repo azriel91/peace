@@ -7,7 +7,7 @@ use peace_resources::{
     FullSpecStatesRw, Resources,
 };
 
-use crate::{Error, FullSpecBoxed};
+use crate::FullSpecBoxed;
 
 /// Graph of all [`FullSpec`]s, `FnGraph<FullSpecBoxed<E>>` newtype.
 ///
@@ -30,15 +30,12 @@ where
     /// # Parameters
     ///
     /// * `resources`: The resources to set up.
-    pub async fn setup(
-        &self,
-        mut resources: Resources<Empty>,
-    ) -> Result<Resources<SetUp>, Error<E>> {
+    pub async fn setup(&self, mut resources: Resources<Empty>) -> Result<Resources<SetUp>, E> {
         resources.insert(FullSpecStatesRw::new());
 
         let resources = self
             .stream()
-            .map(Ok::<_, Error<E>>)
+            .map(Ok::<_, E>)
             .try_fold(resources, |mut resources, full_spec| async move {
                 full_spec.setup(&mut resources).await?;
                 Ok(resources)

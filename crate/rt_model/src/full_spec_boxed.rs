@@ -20,7 +20,7 @@ use peace_cfg::{FnSpec, FullSpec, State};
 use peace_diff::Diff;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{Error, FullSpecWrapper};
+use crate::FullSpecWrapper;
 
 pub use self::{
     clean_op_spec_rt::CleanOpSpecRt, ensure_op_spec_rt::EnsureOpSpecRt, full_spec_rt::FullSpecRt,
@@ -38,7 +38,7 @@ mod status_fn_spec_rt;
 ///
 /// * `E`: Application specific error type.
 #[derive(Debug)]
-pub struct FullSpecBoxed<E>(Box<dyn FullSpecRt<Error<E>>>)
+pub struct FullSpecBoxed<E>(Box<dyn FullSpecRt<E>>)
 where
     E: std::error::Error;
 
@@ -46,7 +46,7 @@ impl<E> Deref for FullSpecBoxed<E>
 where
     E: std::error::Error,
 {
-    type Target = dyn FullSpecRt<Error<E>>;
+    type Target = dyn FullSpecRt<E>;
 
     // https://github.com/rust-lang/rust-clippy/issues/9101
     #[allow(clippy::explicit_auto_deref)]

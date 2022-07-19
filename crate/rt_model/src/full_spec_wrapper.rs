@@ -14,10 +14,7 @@ use peace_resources::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{
-    full_spec_boxed::{CleanOpSpecRt, EnsureOpSpecRt, FullSpecRt, StatusFnSpecRt},
-    Error,
-};
+use crate::full_spec_boxed::{CleanOpSpecRt, EnsureOpSpecRt, FullSpecRt, StatusFnSpecRt};
 
 /// Wraps a type implementing [`FullSpec`].
 pub struct FullSpecWrapper<
@@ -170,8 +167,7 @@ where
 }
 
 #[async_trait]
-impl<FS, E, StateLogical, StatePhysical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
-    FullSpecRt<Error<E>>
+impl<FS, E, StateLogical, StatePhysical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> FullSpecRt<E>
     for FullSpecWrapper<FS, E, StateLogical, StatePhysical, StatusFnSpec, EnsureOpSpec, CleanOpSpec>
 where
     FS: Debug
@@ -204,13 +200,11 @@ where
         > + Send
         + Sync,
 {
-    async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), Error<E>> {
-        <FS as FullSpec>::setup(self, resources)
-            .await
-            .map_err(Error::FullSpecSetup)
+    async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E> {
+        <FS as FullSpec>::setup(self, resources).await
     }
 
-    async fn status_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), Error<E>> {
+    async fn status_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E> {
         <Self as StatusFnSpecRt>::exec(self, resources).await
     }
 }
@@ -249,15 +243,13 @@ where
         > + Send
         + Sync,
 {
-    type Error = Error<E>;
+    type Error = E;
 
     async fn exec(&self, resources: &Resources<SetUp>) -> Result<(), Self::Error> {
         let state: State<StateLogical, StatePhysical> = {
             let data =
                 <Gat!(<StatusFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(resources);
-            <StatusFnSpec as FnSpec>::exec(data)
-                .await
-                .map_err(Error::StatusExec)?
+            <StatusFnSpec as FnSpec>::exec(data).await?
         };
 
         // Store `state` so that we can use it in subsequent operations.
@@ -303,7 +295,7 @@ where
         > + Send
         + Sync,
 {
-    type Error = Error<E>;
+    type Error = E;
 
     async fn check(&self, _resources: &Resources<SetUp>) -> Result<(), Self::Error> {
         Ok(())
@@ -348,7 +340,7 @@ where
         > + Send
         + Sync,
 {
-    type Error = Error<E>;
+    type Error = E;
 
     async fn check(&self, _resources: &Resources<SetUp>) -> Result<(), Self::Error> {
         Ok(())
