@@ -1,4 +1,4 @@
-use std::{io, path::Path};
+use std::path::Path;
 
 use peace::{
     resources::{FullSpecStatesRw, Resources},
@@ -33,11 +33,12 @@ mod download_status_fn_spec;
 #[path = "download/file_state.rs"]
 mod file_state;
 
-fn main() -> io::Result<()> {
+fn main() -> Result<(), DownloadError> {
     let runtime = Builder::new_current_thread()
         .thread_name("main")
         .thread_stack_size(3 * 1024 * 1024)
-        .build()?;
+        .build()
+        .map_err(DownloadError::TokioRuntimeInit)?;
 
     runtime.block_on(async {
         let url =
@@ -49,17 +50,18 @@ fn main() -> io::Result<()> {
 
         let graph = graph_builder.build();
 
-        let resources = graph.setup(Resources::new()).await.unwrap();
+        let resources = graph.setup(Resources::new()).await?;
 
-        StatusCommand::exec(&graph, &resources).await.unwrap();
+        StatusCommand::exec(&graph, &resources).await?;
 
         let full_spec_states_rw = resources.borrow::<FullSpecStatesRw>();
         let full_spec_states = full_spec_states_rw.read().await;
-        let states_serialized = serde_yaml::to_string(&*full_spec_states).unwrap();
+        let states_serialized =
+            serde_yaml::to_string(&*full_spec_states).map_err(DownloadError::StatusSerialize)?;
         println!("{states_serialized}");
-    });
 
-    Ok(())
+        Ok::<_, DownloadError>(())
+    })
 }
 
 /// Read up to 1 kB in memory.
