@@ -6,25 +6,40 @@ use type_reg::untagged::TypeMap;
 
 /// `State`s for all `FullSpec`s. `TypeMap<FullSpecId>` newtype.
 ///
-/// # Note
+/// # Consumer Note
 ///
-/// `Resources` stores [`FullSpecStatesRw`], so you should use that in `FnSpec`
-/// or `OpSpec` [`Data`]:
+/// For `StatusFnSpec`, [`Resources`] stores [`FullSpecStatesRw`], so *if* a
+/// `FullSpec` depends on the `State` of a previous `FullSpec`, then you should
+/// reference [`FullSpecStatesRw`] in the subsequent `FnSpec`'s [`Data`]:
 ///
 /// ```rust
 /// use peace_data::{Data, R};
 /// use peace_resources::FullSpecStatesRw;
 ///
-/// /// Parameters for a `FnSpec` or an `OpSpec`.
+/// /// Parameters for the `StatusFnSpec`.
 /// #[derive(Data, Debug)]
 /// pub struct StatusFnParams<'op> {
 ///     /// Client to make web requests.
 ///     states: R<'op, FullSpecStatesRw>,
 /// }
+///
+/// // later
+/// // let states = status_fn_params.states.read().await;
+/// // let predecessor_state = states.get(full_spec_id!("predecessor_id"));
 /// ```
+///
+/// For `EnsureOpSpec`, you may reference [`FullSpecStates`] in
+/// `EnsureOpSpec::Data` for reading -- mutating `State` is not intended after
+/// it has been read.
+///
+/// ## Rationale
+///
+/// [`FullSpecStates`] needs to be written to during `StatusFnSpec::exec`, and a
+/// `RwLock` is needed at that stage to allow for concurrent execution.
 ///
 /// [`Data`]: peace_data::Data
 /// [`FullSpecStatesRw`]: crate::FullSpecStatesRw
+/// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]
 pub struct FullSpecStates(TypeMap<FullSpecId>);
 
