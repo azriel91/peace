@@ -9,7 +9,7 @@ use peace_cfg::{async_trait, nougat::Gat, FnSpec, FullSpec, State};
 use peace_data::Data;
 use peace_diff::Diff;
 use peace_resources::{
-    resources_type_state::{Empty, SetUp},
+    resources_type_state::{Empty, SetUp, WithStates},
     FullSpecStatesRw, Resources,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -207,6 +207,10 @@ where
     async fn status_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E> {
         <Self as StatusFnSpecRt>::exec(self, resources).await
     }
+
+    async fn ensure_op_desired(&self, resources: &Resources<SetUp>) -> Result<(), E> {
+        <Self as EnsureOpSpecRt>::desired(self, resources).await
+    }
 }
 
 #[async_trait]
@@ -297,12 +301,27 @@ where
 {
     type Error = E;
 
-    async fn check(&self, _resources: &Resources<SetUp>) -> Result<(), Self::Error> {
+    async fn desired(&self, resources: &Resources<SetUp>) -> Result<(), Self::Error> {
+        let _state_logical = {
+            let data = <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as Data>::borrow(
+                resources,
+            );
+            <EnsureOpSpec as peace_cfg::EnsureOpSpec>::desired(data).await?
+        };
+
         Ok(())
     }
 
-    async fn exec(&self, _resources: &Resources<SetUp>) -> Result<(), Self::Error> {
-        Ok(())
+    async fn check(&self, _resources: &Resources<SetUp>) -> Result<(), Self::Error> {
+        todo!()
+    }
+
+    async fn exec_dry(&self, _resources: &Resources<WithStates>) -> Result<(), Self::Error> {
+        todo!()
+    }
+
+    async fn exec(&self, _resources: &Resources<WithStates>) -> Result<(), Self::Error> {
+        todo!()
     }
 }
 
@@ -343,10 +362,14 @@ where
     type Error = E;
 
     async fn check(&self, _resources: &Resources<SetUp>) -> Result<(), Self::Error> {
-        Ok(())
+        todo!()
     }
 
-    async fn exec(&self, _resources: &Resources<SetUp>) -> Result<(), Self::Error> {
-        Ok(())
+    async fn exec_dry(&self, _resources: &Resources<WithStates>) -> Result<(), Self::Error> {
+        todo!()
+    }
+
+    async fn exec(&self, _resources: &Resources<WithStates>) -> Result<(), Self::Error> {
+        todo!()
     }
 }

@@ -34,4 +34,10 @@ where
     /// [`FullSpec::StatusFnSpec`]: peace_cfg::FullSpec::StatusFnSpec
     /// [`exec`]: peace_cfg::FnSpec::exec
     async fn status_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E>;
+
+    /// Runs [`FullSpec::EnsureOpSpec`]`::`[`desired`].
+    ///
+    /// [`FullSpec::EnsureOpSpec`]: peace_cfg::FullSpec::EnsureOpSpec
+    /// [`desired`]: peace_cfg::EnsureOpSpec::desired
+    async fn ensure_op_desired(&self, resources: &Resources<SetUp>) -> Result<(), E>;
 }
