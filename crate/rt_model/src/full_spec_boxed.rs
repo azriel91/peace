@@ -66,8 +66,16 @@ where
     }
 }
 
-impl<FS, E, StateLogical, StatePhysical, StatusFnSpec, EnsureOpSpec, CleanOpSpec> From<FS>
-    for FullSpecBoxed<E>
+impl<
+    FS,
+    E,
+    StateLogical,
+    StatePhysical,
+    StatusFnSpec,
+    StatusDesiredFnSpec,
+    EnsureOpSpec,
+    CleanOpSpec,
+> From<FS> for FullSpecBoxed<E>
 where
     FS: Debug
         + FullSpec<
@@ -75,6 +83,7 @@ where
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StatusFnSpec = StatusFnSpec,
+            StatusDesiredFnSpec = StatusDesiredFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
@@ -88,6 +97,7 @@ where
         + Send
         + Sync
         + 'static,
+    StatusDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync + 'static,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
             Error = E,

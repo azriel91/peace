@@ -25,6 +25,7 @@ impl FullSpec for VecCopyFullSpec {
     type Error = VecCopyError;
     type StateLogical = Vec<u8>;
     type StatePhysical = ();
+    type StatusDesiredFnSpec = VecCopyStatusDesiredFnSpec;
     type StatusFnSpec = VecCopyStatusFnSpec;
 
     fn id(&self) -> FullSpecId {
@@ -90,18 +91,14 @@ pub struct VecCopyEnsureOpSpec;
 #[async_trait]
 #[nougat::gat]
 impl EnsureOpSpec for VecCopyEnsureOpSpec {
-    type Data<'op> = VecCopyParamsMut<'op>
+    type Data<'op> = VecCopyParams<'op>
         where Self: 'op;
     type Error = VecCopyError;
     type StateLogical = Vec<u8>;
     type StatePhysical = ();
 
-    async fn desired(vec_copy_params: VecCopyParamsMut<'_>) -> Result<Vec<u8>, VecCopyError> {
-        Ok(vec_copy_params.src().0.clone())
-    }
-
     async fn check(
-        _vec_copy_params: VecCopyParamsMut<'_>,
+        _vec_copy_params: VecCopyParams<'_>,
         State {
             logical: file_state_current,
             ..
@@ -121,7 +118,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     }
 
     async fn exec_dry(
-        _vec_copy_params: VecCopyParamsMut<'_>,
+        _vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         _state_desired: &Vec<u8>,
     ) -> Result<Self::StatePhysical, Self::Error> {
@@ -130,7 +127,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     }
 
     async fn exec(
-        mut vec_copy_params: VecCopyParamsMut<'_>,
+        mut vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Vec<u8>,
     ) -> Result<Self::StatePhysical, VecCopyError> {
@@ -146,24 +143,18 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
 pub enum VecCopyError {}
 
 #[derive(Data, Debug)]
-pub struct VecCopyParamsMut<'op> {
-    /// Source `Vec` to read from.
-    src: R<'op, VecA>,
+pub struct VecCopyParams<'op> {
     /// Destination `Vec` to write to.
     dest: W<'op, VecB>,
 }
 
-impl<'op> VecCopyParamsMut<'op> {
-    pub fn src(&self) -> &VecA {
-        &self.src
-    }
-
+impl<'op> VecCopyParams<'op> {
     pub fn dest_mut(&mut self) -> &mut VecB {
         &mut *self.dest
     }
 }
 
-/// Status OpSpec for the file to download.
+/// `StatusFnSpec` for the vector to copy.
 #[derive(Debug)]
 pub struct VecCopyStatusFnSpec;
 
@@ -177,6 +168,23 @@ impl FnSpec for VecCopyStatusFnSpec {
 
     async fn exec(vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
         Ok(State::new(vec_a.0.clone(), ()))
+    }
+}
+
+/// `StatusFnSpec` for the vector to copy.
+#[derive(Debug)]
+pub struct VecCopyStatusDesiredFnSpec;
+
+#[async_trait]
+#[nougat::gat]
+impl FnSpec for VecCopyStatusDesiredFnSpec {
+    type Data<'op> = R<'op, VecA>
+        where Self: 'op;
+    type Error = VecCopyError;
+    type Output = Vec<u8>;
+
+    async fn exec(vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
+        Ok(vec_a.0.clone())
     }
 }
 

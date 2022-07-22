@@ -14,6 +14,7 @@ pub use crate::{
     download_error::DownloadError,
     download_full_spec::DownloadFullSpec,
     download_params::DownloadParams,
+    download_status_desired_fn_spec::DownloadStatusDesiredFnSpec,
     download_status_fn_spec::DownloadStatusFnSpec,
     file_state::{FileState, FileStateDiff},
 };
@@ -28,6 +29,8 @@ mod download_error;
 mod download_full_spec;
 #[path = "download/download_params.rs"]
 mod download_params;
+#[path = "download/download_status_desired_fn_spec.rs"]
+mod download_status_desired_fn_spec;
 #[path = "download/download_status_fn_spec.rs"]
 mod download_status_fn_spec;
 #[path = "download/file_state.rs"]

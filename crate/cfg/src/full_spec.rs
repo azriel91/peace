@@ -160,6 +160,21 @@ pub trait FullSpec {
         Output = State<Self::StateLogical, Self::StatePhysical>,
     >;
 
+    /// Function that returns the desired status of the managed item.
+    ///
+    /// # Examples
+    ///
+    /// * For a file download operation, the desired state could be the
+    ///   destination path and a content hash.
+    ///
+    /// * For a web application service operation, the desired state could be
+    ///   the web service is running on the latest version.
+    ///
+    /// # Implementors
+    ///
+    /// This function call is intended to be cheap and fast.
+    type StatusDesiredFnSpec: FnSpec<Error = Self::Error, Output = Self::StateLogical>;
+
     // TODO: DiffFnSpec:
     //
     // Shows the [`Diff`] between the [`StateLogical`] returned from
