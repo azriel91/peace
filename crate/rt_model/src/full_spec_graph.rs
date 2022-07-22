@@ -4,7 +4,7 @@ use fn_graph::FnGraph;
 use futures::{StreamExt, TryStreamExt};
 use peace_resources::{
     resources_type_state::{Empty, SetUp},
-    FullSpecStatesDesiredRw, FullSpecStatesRw, Resources,
+    Resources, StatesDesiredRw, StatesRw,
 };
 
 use crate::FullSpecBoxed;
@@ -31,8 +31,8 @@ where
     ///
     /// * `resources`: The resources to set up.
     pub async fn setup(&self, mut resources: Resources<Empty>) -> Result<Resources<SetUp>, E> {
-        resources.insert(FullSpecStatesRw::new());
-        resources.insert(FullSpecStatesDesiredRw::new());
+        resources.insert(StatesRw::new());
+        resources.insert(StatesDesiredRw::new());
 
         let resources = self
             .stream()

@@ -14,17 +14,17 @@ where
     /// Runs [`FullSpec`]`::`[`StatusFnSpec`]`::`[`exec`] for each full spec.
     ///
     /// At the end of this function, [`Resources`] will be populated with
-    /// [`FullSpecStates`].
+    /// [`States`].
     ///
     /// If any `StatusFnSpec` needs to read the `State` from a previous
-    /// `FullSpec`, the [`FullSpecStatesRw`] type should be used in
+    /// `FullSpec`, the [`StatesRw`] type should be used in
     /// [`FnSpec::Data`].
     ///
     /// [`exec`]: peace_cfg::FnSpec::exec
     /// [`FnSpec::Data`]: peace_cfg::FnSpec::Data
     /// [`FullSpec`]: peace_cfg::FullSpec
-    /// [`FullSpecStates`]: peace_resources::FullSpecStates
-    /// [`FullSpecStatesRw`]: peace_resources::FullSpecStatesRw
+    /// [`States`]: peace_resources::States
+    /// [`StatesRw`]: peace_resources::StatesRw
     /// [`StatusFnSpec`]: peace_cfg::FullSpec::StatusFnSpec
     pub async fn exec(
         full_spec_graph: &FullSpecGraph<E>,

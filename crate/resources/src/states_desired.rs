@@ -8,19 +8,19 @@ use type_reg::untagged::TypeMap;
 ///
 /// # Consumer Note
 ///
-/// For `StatusFnSpec`, [`Resources`] stores [`FullSpecStatesRw`], so *if* a
-/// `FullSpec` depends on the `State` of a previous `FullSpec`, then you should
-/// reference [`FullSpecStatesRw`] in the subsequent `FnSpec`'s [`Data`]:
+/// For `StatusDesiredFnSpec`, [`Resources`] stores [`StatesDesiredRw`], so *if*
+/// a `FullSpec` depends on the `State` of a previous `FullSpec`, then you
+/// should reference [`StatesDesiredRw`] in the subsequent `FnSpec`'s [`Data`]:
 ///
 /// ```rust
 /// use peace_data::{Data, R};
-/// use peace_resources::FullSpecStatesRw;
+/// use peace_resources::StatesDesiredRw;
 ///
-/// /// Parameters for the `StatusFnSpec`.
+/// /// Parameters for the `StatusDesiredFnSpec`.
 /// #[derive(Data, Debug)]
-/// pub struct StatusFnParams<'op> {
+/// pub struct EnsureOpSpecParams<'op> {
 ///     /// Client to make web requests.
-///     states: R<'op, FullSpecStatesRw>,
+///     states: R<'op, StatesDesiredRw>,
 /// }
 ///
 /// // later
@@ -28,30 +28,30 @@ use type_reg::untagged::TypeMap;
 /// // let predecessor_state = states.get(full_spec_id!("predecessor_id"));
 /// ```
 ///
-/// For `EnsureOpSpec`, you may reference [`FullSpecStates`] in
-/// `EnsureOpSpec::Data` for reading -- mutating `State` is not intended after
-/// it has been read.
+/// For `EnsureOpSpec`, you may reference [`StatesDesired`] in
+/// `EnsureOpSpec::Data` for reading -- mutating desired `State` is not intended
+/// after it has been determined.
 ///
 /// ## Rationale
 ///
-/// [`FullSpecStates`] needs to be written to during `StatusFnSpec::exec`, and a
-/// `RwLock` is needed at that stage to allow for concurrent execution.
+/// [`StatesDesired`] needs to be written to during `StatusDesiredFnSpec::exec`,
+/// and a `RwLock` is needed at that stage to allow for concurrent execution.
 ///
 /// [`Data`]: peace_data::Data
-/// [`FullSpecStatesRw`]: crate::FullSpecStatesRw
+/// [`StatesDesiredRw`]: crate::StatesDesiredRw
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]
-pub struct FullSpecStates(TypeMap<FullSpecId>);
+pub struct StatesDesired(TypeMap<FullSpecId>);
 
-impl FullSpecStates {
-    /// Returns a new `FullSpecStates`.
+impl StatesDesired {
+    /// Returns a new `StatesDesired`.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates an empty `FullSpecStates` with the specified capacity.
+    /// Creates an empty `StatesDesired` with the specified capacity.
     ///
-    /// The `FullSpecStates` will be able to hold at least capacity elements
+    /// The `StatesDesired` will be able to hold at least capacity elements
     /// without reallocating. If capacity is 0, the map will not allocate.
     pub fn with_capacity(capacity: usize) -> Self {
         Self(TypeMap::with_capacity(capacity))
@@ -63,7 +63,7 @@ impl FullSpecStates {
     }
 }
 
-impl Deref for FullSpecStates {
+impl Deref for StatesDesired {
     type Target = TypeMap<FullSpecId>;
 
     fn deref(&self) -> &Self::Target {
@@ -71,13 +71,13 @@ impl Deref for FullSpecStates {
     }
 }
 
-impl DerefMut for FullSpecStates {
+impl DerefMut for StatesDesired {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl From<TypeMap<FullSpecId>> for FullSpecStates {
+impl From<TypeMap<FullSpecId>> for StatesDesired {
     fn from(type_map: TypeMap<FullSpecId>) -> Self {
         Self(type_map)
     }

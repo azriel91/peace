@@ -15,12 +15,12 @@ where
     /// spec.
     ///
     /// At the end of this function, [`Resources`] will be populated with
-    /// [`FullSpecStatesDesired`].
+    /// [`StatesDesired`].
     ///
     /// [`exec`]: peace_cfg::StatusDesiredFnSpec::exec
     /// [`StatusDesiredFnSpec::Data`]: peace_cfg::StatusDesiredFnSpec::Data
     /// [`FullSpec`]: peace_cfg::FullSpec
-    /// [`FullSpecStatesDesired`]: peace_resources::FullSpecStatesDesired
+    /// [`StatesDesired`]: peace_resources::StatesDesired
     /// [`StatusDesiredFnSpec`]: peace_cfg::FullSpec::StatusDesiredFnSpec
     pub async fn exec(
         full_spec_graph: &FullSpecGraph<E>,

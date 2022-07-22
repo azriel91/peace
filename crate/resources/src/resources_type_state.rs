@@ -11,9 +11,9 @@ pub struct Empty;
 /// `FullSpec::setup` has been run over [`Resources`].
 pub struct SetUp;
 
-/// [`Resources`] contains [`FullSpecStates`].
+/// [`Resources`] contains [`States`].
 ///
 /// Implies [`SetUp`].
 ///
-/// [`FullSpecStates`]: crate::FullSpecStates
+/// [`States`]: crate::States
 pub struct WithStates;

@@ -10,7 +10,7 @@ use peace_data::Data;
 use peace_diff::Diff;
 use peace_resources::{
     resources_type_state::{Empty, SetUp, WithStates},
-    FullSpecStatesDesiredRw, FullSpecStatesRw, Resources,
+    Resources, StatesDesiredRw, StatesRw,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -413,9 +413,9 @@ where
         };
 
         // Store `state` so that we can use it in subsequent operations.
-        let full_spec_states_rw = resources.borrow::<FullSpecStatesRw>();
-        let mut full_spec_states = full_spec_states_rw.write().await;
-        full_spec_states.insert(self.id(), state);
+        let states_rw = resources.borrow::<StatesRw>();
+        let mut states = states_rw.write().await;
+        states.insert(self.id(), state);
 
         Ok(())
     }
@@ -485,9 +485,9 @@ where
             <StatusDesiredFnSpec as peace_cfg::FnSpec>::exec(data).await?
         };
 
-        let full_spec_states_desired_rw = resources.borrow::<FullSpecStatesDesiredRw>();
-        let mut full_spec_states_desired = full_spec_states_desired_rw.write().await;
-        full_spec_states_desired.insert(self.id(), state_logical);
+        let states_desired_rw = resources.borrow::<StatesDesiredRw>();
+        let mut states_desired = states_desired_rw.write().await;
+        states_desired.insert(self.id(), state_logical);
 
         Ok(())
     }

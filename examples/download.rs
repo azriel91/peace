@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use peace::{
-    resources::{FullSpecStatesDesiredRw, FullSpecStatesRw, Resources},
+    resources::{Resources, StatesDesiredRw, StatesRw},
     rt::{StatusCommand, StatusDesiredCommand},
     rt_model::FullSpecGraphBuilder,
 };
@@ -63,14 +63,14 @@ fn main() -> Result<(), DownloadError> {
         StatusCommand::exec(&graph, &resources).await?;
         StatusDesiredCommand::exec(&graph, &resources).await?;
 
-        let full_spec_states_rw = resources.borrow::<FullSpecStatesRw>();
-        let full_spec_states = full_spec_states_rw.read().await;
+        let states_rw = resources.borrow::<StatesRw>();
+        let states = states_rw.read().await;
         let states_serialized =
-            serde_yaml::to_string(&*full_spec_states).map_err(DownloadError::StatesSerialize)?;
+            serde_yaml::to_string(&*states).map_err(DownloadError::StatesSerialize)?;
 
-        let full_spec_states_desired_rw = resources.borrow::<FullSpecStatesDesiredRw>();
-        let full_spec_states_desired = full_spec_states_desired_rw.read().await;
-        let states_desired_serialized = serde_yaml::to_string(&*full_spec_states_desired)
+        let states_desired_rw = resources.borrow::<StatesDesiredRw>();
+        let states_desired = states_desired_rw.read().await;
+        let states_desired_serialized = serde_yaml::to_string(&*states_desired)
             .map_err(DownloadError::StatesDesiredSerialize)?;
 
         let mut stdout = io::stdout();
