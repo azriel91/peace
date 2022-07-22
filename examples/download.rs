@@ -1,11 +1,14 @@
 use std::path::Path;
 
 use peace::{
-    resources::{FullSpecStatesRw, Resources},
-    rt::StatusCommand,
+    resources::{FullSpecStatesDesiredRw, FullSpecStatesRw, Resources},
+    rt::{StatusCommand, StatusDesiredCommand},
     rt_model::FullSpecGraphBuilder,
 };
-use tokio::runtime::Builder;
+use tokio::{
+    io::{self, AsyncWriteExt, Stdout},
+    runtime::Builder,
+};
 use url::Url;
 
 pub use crate::{
@@ -40,6 +43,8 @@ fn main() -> Result<(), DownloadError> {
     let runtime = Builder::new_current_thread()
         .thread_name("main")
         .thread_stack_size(3 * 1024 * 1024)
+        .enable_io()
+        .enable_time()
         .build()
         .map_err(DownloadError::TokioRuntimeInit)?;
 
@@ -56,15 +61,34 @@ fn main() -> Result<(), DownloadError> {
         let resources = graph.setup(Resources::new()).await?;
 
         StatusCommand::exec(&graph, &resources).await?;
+        StatusDesiredCommand::exec(&graph, &resources).await?;
 
         let full_spec_states_rw = resources.borrow::<FullSpecStatesRw>();
         let full_spec_states = full_spec_states_rw.read().await;
         let states_serialized =
-            serde_yaml::to_string(&*full_spec_states).map_err(DownloadError::StatusSerialize)?;
-        println!("{states_serialized}");
+            serde_yaml::to_string(&*full_spec_states).map_err(DownloadError::StatesSerialize)?;
+
+        let full_spec_states_desired_rw = resources.borrow::<FullSpecStatesDesiredRw>();
+        let full_spec_states_desired = full_spec_states_desired_rw.read().await;
+        let states_desired_serialized = serde_yaml::to_string(&*full_spec_states_desired)
+            .map_err(DownloadError::StatesDesiredSerialize)?;
+
+        let mut stdout = io::stdout();
+        stdout_write(&mut stdout, b"\nCurrent status:\n").await?;
+        stdout_write(&mut stdout, states_serialized.as_bytes()).await?;
+        stdout_write(&mut stdout, b"\nDesired status:\n").await?;
+        stdout_write(&mut stdout, states_desired_serialized.as_bytes()).await?;
 
         Ok::<_, DownloadError>(())
     })
+}
+
+async fn stdout_write(stdout: &mut Stdout, bytes: &[u8]) -> Result<(), DownloadError> {
+    stdout
+        .write_all(bytes)
+        .await
+        .map_err(DownloadError::StdoutWrite)?;
+    Ok(())
 }
 
 /// Read up to 1 kB in memory.

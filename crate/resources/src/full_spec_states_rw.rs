@@ -9,7 +9,7 @@ use crate::FullSpecStates;
 pub struct FullSpecStatesRw(RwLock<FullSpecStates>);
 
 impl FullSpecStatesRw {
-    /// Returns new [`FullSpecStatesRw`].
+    /// Returns a new [`FullSpecStatesRw`].
     pub fn new() -> Self {
         Self::default()
     }

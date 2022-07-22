@@ -10,7 +10,7 @@ use peace_data::Data;
 use peace_diff::Diff;
 use peace_resources::{
     resources_type_state::{Empty, SetUp, WithStates},
-    FullSpecStatesRw, Resources,
+    FullSpecStatesDesiredRw, FullSpecStatesRw, Resources,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -344,7 +344,7 @@ where
         <Self as StatusFnSpecRt>::exec(self, resources).await
     }
 
-    async fn ensure_op_desired(&self, resources: &Resources<SetUp>) -> Result<(), E> {
+    async fn status_desired_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E> {
         <Self as EnsureOpSpecRt>::desired(self, resources).await
     }
 }
@@ -478,14 +478,16 @@ where
     type Error = E;
 
     async fn desired(&self, resources: &Resources<SetUp>) -> Result<(), Self::Error> {
-        let _state_logical = {
+        let state_logical = {
             let data = <Gat!(<StatusDesiredFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
                 resources,
             );
             <StatusDesiredFnSpec as peace_cfg::FnSpec>::exec(data).await?
         };
 
-        // TODO: write to FullSpecStatesDesired
+        let full_spec_states_desired_rw = resources.borrow::<FullSpecStatesDesiredRw>();
+        let mut full_spec_states_desired = full_spec_states_desired_rw.write().await;
+        full_spec_states_desired.insert(self.id(), state_logical);
 
         Ok(())
     }
