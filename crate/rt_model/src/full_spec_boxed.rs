@@ -20,17 +20,7 @@ use peace_cfg::{FnSpec, FullSpec, State};
 use peace_diff::Diff;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::FullSpecWrapper;
-
-pub use self::{
-    clean_op_spec_rt::CleanOpSpecRt, ensure_op_spec_rt::EnsureOpSpecRt, full_spec_rt::FullSpecRt,
-    status_fn_spec_rt::StatusFnSpecRt,
-};
-
-mod clean_op_spec_rt;
-mod ensure_op_spec_rt;
-mod full_spec_rt;
-mod status_fn_spec_rt;
+use crate::{FullSpecRt, FullSpecWrapper};
 
 /// Holds a type-erased `FullSpecWrapper` in a `Box`.
 ///
