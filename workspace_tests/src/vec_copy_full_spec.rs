@@ -38,7 +38,7 @@ impl FullSpec for VecCopyFullSpec {
     }
 }
 
-/// Clean OpSpec for the file to download.
+/// `CleanOpSpec` for the vec to copy.
 #[derive(Debug)]
 pub struct VecCopyCleanOpSpec;
 
@@ -84,7 +84,7 @@ impl CleanOpSpec for VecCopyCleanOpSpec {
     }
 }
 
-/// Ensure OpSpec for the file to download.
+/// `EnsureOpSpec` for the vec to copy.
 #[derive(Debug)]
 pub struct VecCopyEnsureOpSpec;
 

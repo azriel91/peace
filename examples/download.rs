@@ -5,10 +5,7 @@ use peace::{
     rt::{StatusCommand, StatusDesiredCommand},
     rt_model::FullSpecGraphBuilder,
 };
-use tokio::{
-    io::{self, AsyncWriteExt, Stdout},
-    runtime::Builder,
-};
+use tokio::io::{self, AsyncWriteExt, Stdout};
 use url::Url;
 
 pub use crate::{
@@ -40,7 +37,7 @@ mod download_status_fn_spec;
 mod file_state;
 
 fn main() -> Result<(), DownloadError> {
-    let runtime = Builder::new_current_thread()
+    let runtime = tokio::runtime::Builder::new_current_thread()
         .thread_name("main")
         .thread_stack_size(3 * 1024 * 1024)
         .enable_io()
@@ -50,7 +47,7 @@ fn main() -> Result<(), DownloadError> {
 
     runtime.block_on(async {
         let url =
-            Url::parse("https://ifconfig.me/all.json").expect("Expected download URL to be valid.");
+            Url::parse("https://api.my-ip.io/ip.json").expect("Expected download URL to be valid.");
         let dest = Path::new("all.json").to_path_buf();
 
         let mut graph_builder = FullSpecGraphBuilder::<DownloadError>::new();
