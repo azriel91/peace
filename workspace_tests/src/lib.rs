@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-pub(crate) use vec_copy_full_spec::{VecCopyError, VecCopyFullSpec};
+pub(crate) use vec_copy_full_spec::{VecA, VecCopyError, VecCopyFullSpec};
 
 mod cfg;
 mod data;

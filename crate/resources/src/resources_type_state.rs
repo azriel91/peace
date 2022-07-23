@@ -5,8 +5,15 @@
 //!
 //! [`Resources`]: crate::Resources
 
-/// `Resources` is created but not setup.
+/// [`Resources`] is created but not setup.
 pub struct Empty;
 
-/// `FullSpec::setup` has been run over the resources.
+/// `FullSpec::setup` has been run over [`Resources`].
 pub struct SetUp;
+
+/// [`Resources`] contains [`States`].
+///
+/// Implies [`SetUp`].
+///
+/// [`States`]: crate::States
+pub struct WithStates;

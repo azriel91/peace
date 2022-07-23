@@ -27,6 +27,10 @@ pub enum DownloadError {
     // Framework / scaffolding errors
     #[error("Failed to initialize tokio runtime.")]
     TokioRuntimeInit(#[source] std::io::Error),
-    #[error("Failed to serialize status.")]
-    StatusSerialize(#[source] serde_yaml::Error),
+    #[error("Failed to serialize states.")]
+    StatesSerialize(#[source] serde_yaml::Error),
+    #[error("Failed to serialize desired states.")]
+    StatesDesiredSerialize(#[source] serde_yaml::Error),
+    #[error("Failed to initialize tokio runtime.")]
+    StdoutWrite(#[source] std::io::Error),
 }

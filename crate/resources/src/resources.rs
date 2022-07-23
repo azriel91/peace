@@ -3,7 +3,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crate::resources_type_state::Empty;
+use crate::{resources_type_state::Empty, StatesDesiredRw, StatesRw};
 
 /// Map of all types at runtime. [`resman::Resources`] newtype.
 ///
@@ -29,8 +29,12 @@ pub struct Resources<TS> {
 impl Resources<Empty> {
     /// Returns a new `Resources`.
     pub fn new() -> Self {
+        let mut inner = resman::Resources::new();
+        inner.insert(StatesRw::new());
+        inner.insert(StatesDesiredRw::new());
+
         Self {
-            inner: resman::Resources::new(),
+            inner,
             marker: PhantomData,
         }
     }

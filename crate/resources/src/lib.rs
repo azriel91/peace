@@ -7,13 +7,15 @@
 pub use type_reg;
 
 pub use crate::{
-    full_spec_rt_id::FullSpecRtId, full_spec_states::FullSpecStates,
-    full_spec_states_rw::FullSpecStatesRw, resources::Resources,
+    full_spec_rt_id::FullSpecRtId, resources::Resources, states::States,
+    states_desired::StatesDesired, states_desired_rw::StatesDesiredRw, states_rw::StatesRw,
 };
 
 pub mod resources_type_state;
 
 mod full_spec_rt_id;
-mod full_spec_states;
-mod full_spec_states_rw;
 mod resources;
+mod states;
+mod states_desired;
+mod states_desired_rw;
+mod states_rw;

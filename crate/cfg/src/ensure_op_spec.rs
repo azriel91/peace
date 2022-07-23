@@ -66,21 +66,6 @@ pub trait EnsureOpSpec {
     where
         Self: 'op;
 
-    /// Returns the desired state of the managed item.
-    ///
-    /// # Examples
-    ///
-    /// * For a file download operation, the desired state could be the
-    ///   destination path and a content hash.
-    ///
-    /// * For a web application service operation, the desired state could be
-    ///   the web service is running on the latest version.
-    ///
-    /// # Implementors
-    ///
-    /// This function call is intended to be cheap and fast.
-    async fn desired(data: Self::Data<'_>) -> Result<Self::StateLogical, Self::Error>;
-
     /// Checks if the operation needs to be executed.
     ///
     /// If the current state is already the desired state, then the operation

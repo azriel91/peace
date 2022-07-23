@@ -1,11 +1,11 @@
 use std::path::Path;
 
 use peace::{
-    resources::{FullSpecStatesRw, Resources},
-    rt::StatusCommand,
+    resources::{Resources, StatesDesiredRw, StatesRw},
+    rt::{StatusCommand, StatusDesiredCommand},
     rt_model::FullSpecGraphBuilder,
 };
-use tokio::runtime::Builder;
+use tokio::io::{self, AsyncWriteExt, Stdout};
 use url::Url;
 
 pub use crate::{
@@ -14,6 +14,7 @@ pub use crate::{
     download_error::DownloadError,
     download_full_spec::DownloadFullSpec,
     download_params::DownloadParams,
+    download_status_desired_fn_spec::DownloadStatusDesiredFnSpec,
     download_status_fn_spec::DownloadStatusFnSpec,
     file_state::{FileState, FileStateDiff},
 };
@@ -28,21 +29,25 @@ mod download_error;
 mod download_full_spec;
 #[path = "download/download_params.rs"]
 mod download_params;
+#[path = "download/download_status_desired_fn_spec.rs"]
+mod download_status_desired_fn_spec;
 #[path = "download/download_status_fn_spec.rs"]
 mod download_status_fn_spec;
 #[path = "download/file_state.rs"]
 mod file_state;
 
 fn main() -> Result<(), DownloadError> {
-    let runtime = Builder::new_current_thread()
+    let runtime = tokio::runtime::Builder::new_current_thread()
         .thread_name("main")
         .thread_stack_size(3 * 1024 * 1024)
+        .enable_io()
+        .enable_time()
         .build()
         .map_err(DownloadError::TokioRuntimeInit)?;
 
     runtime.block_on(async {
         let url =
-            Url::parse("https://ifconfig.me/all.json").expect("Expected download URL to be valid.");
+            Url::parse("https://api.my-ip.io/ip.json").expect("Expected download URL to be valid.");
         let dest = Path::new("all.json").to_path_buf();
 
         let mut graph_builder = FullSpecGraphBuilder::<DownloadError>::new();
@@ -53,15 +58,34 @@ fn main() -> Result<(), DownloadError> {
         let resources = graph.setup(Resources::new()).await?;
 
         StatusCommand::exec(&graph, &resources).await?;
+        StatusDesiredCommand::exec(&graph, &resources).await?;
 
-        let full_spec_states_rw = resources.borrow::<FullSpecStatesRw>();
-        let full_spec_states = full_spec_states_rw.read().await;
+        let states_rw = resources.borrow::<StatesRw>();
+        let states = states_rw.read().await;
         let states_serialized =
-            serde_yaml::to_string(&*full_spec_states).map_err(DownloadError::StatusSerialize)?;
-        println!("{states_serialized}");
+            serde_yaml::to_string(&*states).map_err(DownloadError::StatesSerialize)?;
+
+        let states_desired_rw = resources.borrow::<StatesDesiredRw>();
+        let states_desired = states_desired_rw.read().await;
+        let states_desired_serialized = serde_yaml::to_string(&*states_desired)
+            .map_err(DownloadError::StatesDesiredSerialize)?;
+
+        let mut stdout = io::stdout();
+        stdout_write(&mut stdout, b"\nCurrent status:\n").await?;
+        stdout_write(&mut stdout, states_serialized.as_bytes()).await?;
+        stdout_write(&mut stdout, b"\nDesired status:\n").await?;
+        stdout_write(&mut stdout, states_desired_serialized.as_bytes()).await?;
 
         Ok::<_, DownloadError>(())
     })
+}
+
+async fn stdout_write(stdout: &mut Stdout, bytes: &[u8]) -> Result<(), DownloadError> {
+    stdout
+        .write_all(bytes)
+        .await
+        .map_err(DownloadError::StdoutWrite)?;
+    Ok(())
 }
 
 /// Read up to 1 kB in memory.
