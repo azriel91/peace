@@ -2,7 +2,7 @@ use std::path::Path;
 
 use peace::{
     resources::{Resources, StatesDesiredRw, StatesRw},
-    rt::{StatusCommand, StatusDesiredCommand},
+    rt::{StateDesiredCommand, StateNowCommand},
     rt_model::FullSpecGraphBuilder,
 };
 use tokio::io::{self, AsyncWriteExt, Stdout};
@@ -14,8 +14,8 @@ pub use crate::{
     download_error::DownloadError,
     download_full_spec::DownloadFullSpec,
     download_params::DownloadParams,
-    download_status_desired_fn_spec::DownloadStatusDesiredFnSpec,
-    download_status_fn_spec::DownloadStatusFnSpec,
+    download_state_desired_fn_spec::DownloadStateDesiredFnSpec,
+    download_state_now_fn_spec::DownloadStateNowFnSpec,
     file_state::{FileState, FileStateDiff},
 };
 
@@ -29,10 +29,10 @@ mod download_error;
 mod download_full_spec;
 #[path = "download/download_params.rs"]
 mod download_params;
-#[path = "download/download_status_desired_fn_spec.rs"]
-mod download_status_desired_fn_spec;
-#[path = "download/download_status_fn_spec.rs"]
-mod download_status_fn_spec;
+#[path = "download/download_state_desired_fn_spec.rs"]
+mod download_state_desired_fn_spec;
+#[path = "download/download_state_now_fn_spec.rs"]
+mod download_state_now_fn_spec;
 #[path = "download/file_state.rs"]
 mod file_state;
 
@@ -57,8 +57,8 @@ fn main() -> Result<(), DownloadError> {
 
         let resources = graph.setup(Resources::new()).await?;
 
-        StatusCommand::exec(&graph, &resources).await?;
-        StatusDesiredCommand::exec(&graph, &resources).await?;
+        StateNowCommand::exec(&graph, &resources).await?;
+        StateDesiredCommand::exec(&graph, &resources).await?;
 
         let states_rw = resources.borrow::<StatesRw>();
         let states = states_rw.read().await;
@@ -71,9 +71,9 @@ fn main() -> Result<(), DownloadError> {
             .map_err(DownloadError::StatesDesiredSerialize)?;
 
         let mut stdout = io::stdout();
-        stdout_write(&mut stdout, b"\nCurrent status:\n").await?;
+        stdout_write(&mut stdout, b"\nCurrent state:\n").await?;
         stdout_write(&mut stdout, states_serialized.as_bytes()).await?;
-        stdout_write(&mut stdout, b"\nDesired status:\n").await?;
+        stdout_write(&mut stdout, b"\nDesired state:\n").await?;
         stdout_write(&mut stdout, states_desired_serialized.as_bytes()).await?;
 
         Ok::<_, DownloadError>(())

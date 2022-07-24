@@ -8,7 +8,7 @@ use type_reg::untagged::TypeMap;
 ///
 /// # Consumer Note
 ///
-/// For `StatusFnSpec`, [`Resources`] stores [`StatesRw`], so *if* a
+/// For `StateNowFnSpec`, [`Resources`] stores [`StatesRw`], so *if* a
 /// `FullSpec` depends on the `State` of a previous `FullSpec`, then you should
 /// reference [`StatesRw`] in the subsequent `FnSpec`'s [`Data`]:
 ///
@@ -16,7 +16,7 @@ use type_reg::untagged::TypeMap;
 /// use peace_data::{Data, R};
 /// use peace_resources::StatesRw;
 ///
-/// /// Parameters for the `StatusFnSpec`.
+/// /// Parameters for the `StateNowFnSpec`.
 /// #[derive(Data, Debug)]
 /// pub struct StatusFnParams<'op> {
 ///     /// Client to make web requests.
@@ -24,7 +24,7 @@ use type_reg::untagged::TypeMap;
 /// }
 ///
 /// // later
-/// // let states = status_fn_params.states.read().await;
+/// // let states = state_now_fn_params.states.read().await;
 /// // let predecessor_state = states.get(full_spec_id!("predecessor_id"));
 /// ```
 ///
@@ -34,7 +34,7 @@ use type_reg::untagged::TypeMap;
 ///
 /// ## Rationale
 ///
-/// [`States`] needs to be written to during `StatusFnSpec::exec`, and a
+/// [`States`] needs to be written to during `StateNowFnSpec::exec`, and a
 /// `RwLock` is needed at that stage to allow for concurrent execution.
 ///
 /// [`Data`]: peace_data::Data

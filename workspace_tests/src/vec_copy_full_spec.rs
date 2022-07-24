@@ -23,10 +23,10 @@ impl FullSpec for VecCopyFullSpec {
     type CleanOpSpec = VecCopyCleanOpSpec;
     type EnsureOpSpec = VecCopyEnsureOpSpec;
     type Error = VecCopyError;
+    type StateDesiredFnSpec = VecCopyStateDesiredFnSpec;
     type StateLogical = Vec<u8>;
+    type StateNowFnSpec = VecCopyStateNowFnSpec;
     type StatePhysical = ();
-    type StatusDesiredFnSpec = VecCopyStatusDesiredFnSpec;
-    type StatusFnSpec = VecCopyStatusFnSpec;
 
     fn id(&self) -> FullSpecId {
         full_spec_id!("vec_copy_full_spec")
@@ -154,13 +154,13 @@ impl<'op> VecCopyParams<'op> {
     }
 }
 
-/// `StatusFnSpec` for the vector to copy.
+/// `StateNowFnSpec` for the vector to copy.
 #[derive(Debug)]
-pub struct VecCopyStatusFnSpec;
+pub struct VecCopyStateNowFnSpec;
 
 #[async_trait]
 #[nougat::gat]
-impl FnSpec for VecCopyStatusFnSpec {
+impl FnSpec for VecCopyStateNowFnSpec {
     type Data<'op> = R<'op, VecA>
         where Self: 'op;
     type Error = VecCopyError;
@@ -171,13 +171,13 @@ impl FnSpec for VecCopyStatusFnSpec {
     }
 }
 
-/// `StatusFnSpec` for the vector to copy.
+/// `StateNowFnSpec` for the vector to copy.
 #[derive(Debug)]
-pub struct VecCopyStatusDesiredFnSpec;
+pub struct VecCopyStateDesiredFnSpec;
 
 #[async_trait]
 #[nougat::gat]
-impl FnSpec for VecCopyStatusDesiredFnSpec {
+impl FnSpec for VecCopyStateDesiredFnSpec {
     type Data<'op> = R<'op, VecA>
         where Self: 'op;
     type Error = VecCopyError;

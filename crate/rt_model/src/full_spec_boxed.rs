@@ -61,8 +61,8 @@ impl<
     E,
     StateLogical,
     StatePhysical,
-    StatusFnSpec,
-    StatusDesiredFnSpec,
+    StateNowFnSpec,
+    StateDesiredFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
 > From<FS> for FullSpecBoxed<E>
@@ -72,8 +72,8 @@ where
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
-            StatusFnSpec = StatusFnSpec,
-            StatusDesiredFnSpec = StatusDesiredFnSpec,
+            StateNowFnSpec = StateNowFnSpec,
+            StateDesiredFnSpec = StateDesiredFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
@@ -82,12 +82,12 @@ where
     E: Debug + Send + Sync + std::error::Error + 'static,
     StateLogical: Clone + Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatusFnSpec: Debug
+    StateNowFnSpec: Debug
         + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync
         + 'static,
-    StatusDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync + 'static,
+    StateDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync + 'static,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
             Error = E,

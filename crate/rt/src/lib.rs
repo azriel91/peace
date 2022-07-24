@@ -1,7 +1,7 @@
 //! Runtime logic for the peace automation library.
 
 pub use crate::{
-    commands::{StatusCommand, StatusDesiredCommand},
+    commands::{StateNowCommand, StateDesiredCommand},
     job_runner::JobRunner,
 };
 

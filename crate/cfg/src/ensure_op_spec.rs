@@ -34,12 +34,12 @@ pub trait EnsureOpSpec {
 
     /// Logical state of the managed item.
     ///
-    /// This is the type returned by the [`StatusFnSpec`], and is used by
+    /// This is the type returned by the [`StateNowFnSpec`], and is used by
     /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
     ///
     /// See [`FullSpec::StateLogical`] for more detail.
     ///
-    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
+    /// [`StateNowFnSpec`]: crate::FullSpec::StateNowFnSpec
     /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
     /// [`FullSpec::StateLogical`]: crate::FullSpec::StateLogical
@@ -88,13 +88,13 @@ pub trait EnsureOpSpec {
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
-    ///   [`StatusFnSpec`].
+    ///   [`StateNowFnSpec`].
     /// * `state_desired`: Desired [`StateLogical`] of the managed item,
     ///   returned from [`Self::desired`].
     ///
     /// [`State`]: crate::State
     /// [`StateLogical`]: Self::StateLogical
-    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
+    /// [`StateNowFnSpec`]: crate::FullSpec::StateNowFnSpec
     async fn check(
         data: Self::Data<'_>,
         state_current: &State<Self::StateLogical, Self::StatePhysical>,

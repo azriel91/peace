@@ -5,18 +5,18 @@ use peace_resources::{resources_type_state::SetUp, Resources};
 use peace_rt_model::FullSpecGraph;
 
 #[derive(Debug)]
-pub struct StatusCommand<E>(PhantomData<E>);
+pub struct StateNowCommand<E>(PhantomData<E>);
 
-impl<E> StatusCommand<E>
+impl<E> StateNowCommand<E>
 where
     E: std::error::Error,
 {
-    /// Runs [`FullSpec`]`::`[`StatusFnSpec`]`::`[`exec`] for each full spec.
+    /// Runs [`FullSpec`]`::`[`StateNowFnSpec`]`::`[`exec`] for each full spec.
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`States`].
     ///
-    /// If any `StatusFnSpec` needs to read the `State` from a previous
+    /// If any `StateNowFnSpec` needs to read the `State` from a previous
     /// `FullSpec`, the [`StatesRw`] type should be used in
     /// [`FnSpec::Data`].
     ///
@@ -25,7 +25,7 @@ where
     /// [`FullSpec`]: peace_cfg::FullSpec
     /// [`States`]: peace_resources::States
     /// [`StatesRw`]: peace_resources::StatesRw
-    /// [`StatusFnSpec`]: peace_cfg::FullSpec::StatusFnSpec
+    /// [`StateNowFnSpec`]: peace_cfg::FullSpec::StateNowFnSpec
     pub async fn exec(
         full_spec_graph: &FullSpecGraph<E>,
         resources: &Resources<SetUp>,
@@ -34,7 +34,7 @@ where
             .stream()
             .map(Result::<_, E>::Ok)
             .try_for_each_concurrent(None, |full_spec| async move {
-                full_spec.status_fn_exec(resources).await
+                full_spec.state_now_fn_exec(resources).await
             })
             .await
     }

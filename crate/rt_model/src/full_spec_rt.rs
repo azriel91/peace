@@ -21,17 +21,17 @@ where
     /// Initializes data for the operation's check and `exec` functions.
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E>;
 
-    /// Runs [`FullSpec::StatusFnSpec`]`::`[`exec`].
+    /// Runs [`FullSpec::StateNowFnSpec`]`::`[`exec`].
     ///
-    /// [`FullSpec::StatusFnSpec`]: peace_cfg::FullSpec::StatusFnSpec
+    /// [`FullSpec::StateNowFnSpec`]: peace_cfg::FullSpec::StateNowFnSpec
     /// [`exec`]: peace_cfg::FnSpec::exec
-    async fn status_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E>;
+    async fn state_now_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E>;
 
-    /// Runs [`FullSpec::StatusDesiredFnSpec`]`::`[`desired`].
+    /// Runs [`FullSpec::StateDesiredFnSpec`]`::`[`desired`].
     ///
-    /// [`FullSpec::StatusDesiredFnSpec`]: peace_cfg::FullSpec::StatusDesiredFnSpec
+    /// [`FullSpec::StateDesiredFnSpec`]: peace_cfg::FullSpec::StateDesiredFnSpec
     /// [`desired`]: peace_cfg::FnSpec::desired
-    async fn status_desired_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E>;
+    async fn state_desired_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E>;
 
     /// Runs [`FullSpec::EnsureOpSpec`]`::`[`check`].
     ///

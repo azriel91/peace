@@ -65,7 +65,7 @@ pub trait FullSpec {
     /// This is intended as a serializable summary of the state, so it should be
     /// relatively lightweight.
     ///
-    /// This is returned by [`StatusFnSpec`], and is used by [`EnsureOpSpec`]
+    /// This is returned by [`StateNowFnSpec`], and is used by [`EnsureOpSpec`]
     /// and [`CleanOpSpec`] to determine if their `exec` functions need to
     /// be run.
     ///
@@ -76,7 +76,7 @@ pub trait FullSpec {
     /// The `StateLogical` may be the number of server instances, the boot
     /// image, and their hardware capacity.
     ///
-    /// * The [`StatusFnSpec`] returns this, and it should be renderable in a
+    /// * The [`StateNowFnSpec`] returns this, and it should be renderable in a
     ///   human readable format.
     ///
     /// * The [`EnsureOpSpec::check`] function should be able to use this to
@@ -102,7 +102,7 @@ pub trait FullSpec {
     /// the configuration is small, then one may consider making that the
     /// state.
     ///
-    /// * The [`StatusFnSpec`] returns this, and it should be renderable in a
+    /// * The [`StateNowFnSpec`] returns this, and it should be renderable in a
     ///   human readable format.
     ///
     /// * The [`EnsureOpSpec::check`] function should be able to compare the
@@ -122,7 +122,7 @@ pub trait FullSpec {
     ///   this were a commit hash, then restoring would be applying the
     ///   configuration at that commit hash.
     ///
-    /// [`StatusFnSpec`]: Self::StatusFnSpec
+    /// [`StateNowFnSpec`]: Self::StateNowFnSpec
     /// [`StatePhysical`]: Self::StatePhysical
     type StateLogical: Clone + Diff + Serialize + DeserializeOwned;
 
@@ -142,25 +142,25 @@ pub trait FullSpec {
     /// [`EnsureOpSpec::desired`]: crate::EnsureOpSpec::desired
     type StatePhysical: Clone + Serialize + DeserializeOwned;
 
-    /// Function that returns the current status of the managed item.
+    /// Function that returns the current state of the managed item.
     ///
     /// # Future Development
     ///
-    /// The `StatusFnSpec` may decide to not check for status if it caches
-    /// status. For that use case, the `state` used by the StatusFnSpec
+    /// The `StateNowFnSpec` may decide to not check for state if it caches
+    /// state. For that use case, the `state` used by the StateNowFnSpec
     /// should include:
     ///
     /// * Execution ID
-    /// * Last status query time
+    /// * Last state query time
     ///
-    /// This allows the check function to tell if the status has been queried
+    /// This allows the check function to tell if the state has been queried
     /// within the past day, don't query it again.
-    type StatusFnSpec: FnSpec<
+    type StateNowFnSpec: FnSpec<
         Error = Self::Error,
         Output = State<Self::StateLogical, Self::StatePhysical>,
     >;
 
-    /// Function that returns the desired status of the managed item.
+    /// Function that returns the desired state of the managed item.
     ///
     /// # Examples
     ///
@@ -173,12 +173,12 @@ pub trait FullSpec {
     /// # Implementors
     ///
     /// This function call is intended to be cheap and fast.
-    type StatusDesiredFnSpec: FnSpec<Error = Self::Error, Output = Self::StateLogical>;
+    type StateDesiredFnSpec: FnSpec<Error = Self::Error, Output = Self::StateLogical>;
 
     // TODO: DiffFnSpec:
     //
     // Shows the [`Diff`] between the [`StateLogical`] returned from
-    // [`StatusFnSpec`].
+    // [`StateNowFnSpec`].
 
     /// Specification of the ensure operation.
     ///

@@ -44,14 +44,14 @@ fn setup() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn status_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
+fn state_now_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
     async_test(async {
         let full_spec_wrapper = FullSpecWrapper::from(VecCopyFullSpec);
         let mut resources = Resources::new();
         full_spec_wrapper.setup(&mut resources).await?;
 
         let resources = Resources::<SetUp>::from(resources.into_inner());
-        full_spec_wrapper.status_fn_exec(&resources).await?;
+        full_spec_wrapper.state_now_fn_exec(&resources).await?;
 
         let states_rw = resources.borrow::<StatesRw>();
         let states = states_rw.read().await;
@@ -66,14 +66,14 @@ fn status_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-fn status_desired_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
+fn state_desired_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
     async_test(async {
         let full_spec_wrapper = FullSpecWrapper::from(VecCopyFullSpec);
         let mut resources = Resources::new();
         full_spec_wrapper.setup(&mut resources).await?;
 
         let resources = Resources::<SetUp>::from(resources.into_inner());
-        full_spec_wrapper.status_desired_fn_exec(&resources).await?;
+        full_spec_wrapper.state_desired_fn_exec(&resources).await?;
 
         let states_desired_rw = resources.borrow::<StatesDesiredRw>();
         let states_desired = states_desired_rw.read().await;

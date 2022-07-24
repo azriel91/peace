@@ -19,12 +19,12 @@ pub trait CleanOpSpec {
 
     /// Logical state of the managed item.
     ///
-    /// This is the type returned by the [`StatusFnSpec`], and is used by
+    /// This is the type returned by the [`StateNowFnSpec`], and is used by
     /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
     ///
     /// See [`FullSpec::StateLogical`] for more detail.
     ///
-    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
+    /// [`StateNowFnSpec`]: crate::FullSpec::StateNowFnSpec
     /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
     /// [`FullSpec::StateLogical`]: crate::FullSpec::StateLogical
@@ -72,9 +72,9 @@ pub trait CleanOpSpec {
     /// # Parameters
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
-    /// * `state`: State of the managed item, returned from [`StatusFnSpec`].
+    /// * `state`: State of the managed item, returned from [`StateNowFnSpec`].
     ///
-    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
+    /// [`StateNowFnSpec`]: crate::FullSpec::StateNowFnSpec
     /// [`StatePhysical`]: Self::StatePhysical
     async fn check(
         data: Self::Data<'_>,
@@ -97,12 +97,12 @@ pub trait CleanOpSpec {
     /// # Parameters
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
-    /// * `state`: State of the managed item, returned from [`StatusFnSpec`].
+    /// * `state`: State of the managed item, returned from [`StateNowFnSpec`].
     ///
     /// [`check`]: Self::check
     /// [`exec`]: Self::exec
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
-    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
+    /// [`StateNowFnSpec`]: crate::FullSpec::StateNowFnSpec
     async fn exec_dry(
         data: Self::Data<'_>,
         state: &State<Self::StateLogical, Self::StatePhysical>,
@@ -115,11 +115,11 @@ pub trait CleanOpSpec {
     /// # Parameters
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
-    /// * `state`: State of the managed item, returned from [`StatusFnSpec`].
+    /// * `state`: State of the managed item, returned from [`StateNowFnSpec`].
     ///
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
-    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
+    /// [`StateNowFnSpec`]: crate::FullSpec::StateNowFnSpec
     async fn exec(
         data: Self::Data<'_>,
         state: &State<Self::StateLogical, Self::StatePhysical>,
