@@ -2,11 +2,11 @@ use std::ops::{Deref, DerefMut};
 
 use tokio::sync::RwLock;
 
-use crate::StatesDesired;
+use crate::StatesDesiredMut;
 
-/// Atomic RW access to `StatesDesired`, `RwLock<StatesDesired>` newtype.
+/// Atomic RW access to `StatesDesiredMut`, `RwLock<StatesDesiredMut>` newtype.
 #[derive(Debug, Default)]
-pub struct StatesDesiredRw(RwLock<StatesDesired>);
+pub struct StatesDesiredRw(RwLock<StatesDesiredMut>);
 
 impl StatesDesiredRw {
     /// Returns a new [`StatesDesiredRw`].
@@ -14,14 +14,14 @@ impl StatesDesiredRw {
         Self::default()
     }
 
-    /// Returns the inner `StatesDesired`.
-    pub fn into_inner(self) -> StatesDesired {
+    /// Returns the inner `StatesDesiredMut`.
+    pub fn into_inner(self) -> StatesDesiredMut {
         self.0.into_inner()
     }
 }
 
 impl Deref for StatesDesiredRw {
-    type Target = RwLock<StatesDesired>;
+    type Target = RwLock<StatesDesiredMut>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

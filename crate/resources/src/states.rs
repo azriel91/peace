@@ -1,12 +1,14 @@
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
 
 use peace_core::FullSpecId;
 use serde::Serialize;
 use type_reg::untagged::TypeMap;
 
+use crate::StatesMut;
+
 /// `State`s for all `FullSpec`s. `TypeMap<FullSpecId>` newtype.
 ///
-/// # Consumer Note
+/// # Implementors
 ///
 /// For `StateNowFnSpec`, [`Resources`] stores [`StatesRw`], so *if* a
 /// `FullSpec` depends on the `State` of a previous `FullSpec`, then you should
@@ -28,9 +30,9 @@ use type_reg::untagged::TypeMap;
 /// // let predecessor_state = states.get(full_spec_id!("predecessor_id"));
 /// ```
 ///
-/// For `EnsureOpSpec`, you may reference [`States`] in
-/// `EnsureOpSpec::Data` for reading -- mutating `State` is not intended after
-/// it has been read.
+/// You may reference [`States`] in `EnsureOpSpec::Data` for reading. It is not
+/// mutable as `States` must remain unchanged so that all `FullSpec`s operate
+/// over consistent data.
 ///
 /// ## Rationale
 ///
@@ -44,12 +46,12 @@ use type_reg::untagged::TypeMap;
 pub struct States(TypeMap<FullSpecId>);
 
 impl States {
-    /// Returns a new `States`.
+    /// Returns a new `States` map.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates an empty `States` with the specified capacity.
+    /// Creates an empty `States` map with the specified capacity.
     ///
     /// The `States` will be able to hold at least capacity elements
     /// without reallocating. If capacity is 0, the map will not allocate.
@@ -71,14 +73,14 @@ impl Deref for States {
     }
 }
 
-impl DerefMut for States {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
 impl From<TypeMap<FullSpecId>> for States {
     fn from(type_map: TypeMap<FullSpecId>) -> Self {
         Self(type_map)
+    }
+}
+
+impl From<StatesMut> for States {
+    fn from(states_mut: StatesMut) -> Self {
+        Self(states_mut.into_inner())
     }
 }

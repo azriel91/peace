@@ -1,12 +1,14 @@
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
 
 use peace_core::FullSpecId;
 use serde::Serialize;
 use type_reg::untagged::TypeMap;
 
-/// `State`s for all `FullSpec`s. `TypeMap<FullSpecId>` newtype.
+use crate::StatesDesiredMut;
+
+/// Desired `State`s for all `FullSpec`s. `TypeMap<FullSpecId>` newtype.
 ///
-/// # Consumer Note
+/// # Implementors
 ///
 /// For `StateDesiredFnSpec`, [`Resources`] stores [`StatesDesiredRw`], so *if*
 /// a `FullSpec` depends on the `State` of a previous `FullSpec`, then you
@@ -28,9 +30,9 @@ use type_reg::untagged::TypeMap;
 /// // let predecessor_state = states.get(full_spec_id!("predecessor_id"));
 /// ```
 ///
-/// For `EnsureOpSpec`, you may reference [`StatesDesired`] in
-/// `EnsureOpSpec::Data` for reading -- mutating desired `State` is not intended
-/// after it has been determined.
+/// You may reference [`StatesDesired`] in `EnsureOpSpec::Data` for reading. It
+/// is not mutable as `StatesDesired` must remain unchanged so that all
+/// `FullSpec`s operate over consistent data.
 ///
 /// ## Rationale
 ///
@@ -71,14 +73,14 @@ impl Deref for StatesDesired {
     }
 }
 
-impl DerefMut for StatesDesired {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
 impl From<TypeMap<FullSpecId>> for StatesDesired {
     fn from(type_map: TypeMap<FullSpecId>) -> Self {
         Self(type_map)
+    }
+}
+
+impl From<StatesDesiredMut> for StatesDesired {
+    fn from(states_desired_mut: StatesDesiredMut) -> Self {
+        Self(states_desired_mut.into_inner())
     }
 }

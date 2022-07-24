@@ -3,7 +3,10 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crate::{resources_type_state::Empty, StatesDesiredRw, StatesRw};
+use crate::{
+    resources_type_state::{Empty, SetUp, WithStates},
+    States, StatesDesiredRw, StatesRw,
+};
 
 /// Map of all types at runtime. [`resman::Resources`] newtype.
 ///
@@ -40,7 +43,6 @@ impl Resources<Empty> {
     }
 }
 
-// Common impl for all type states.
 impl<TS> Resources<TS> {
     /// Returns the inner [`resman::Resources`].
     pub fn into_inner(self) -> resman::Resources {
@@ -68,10 +70,30 @@ impl<TS> DerefMut for Resources<TS> {
     }
 }
 
-impl<TS> From<resman::Resources> for Resources<TS> {
-    fn from(inner: resman::Resources) -> Self {
+// For `FullSpecGraph` after resources have been set up.
+impl From<Resources<Empty>> for Resources<SetUp> {
+    fn from(resources: Resources<Empty>) -> Self {
         Self {
-            inner,
+            inner: resources.into_inner(),
+            marker: PhantomData,
+        }
+    }
+}
+
+// For `StateNowCmd` after `States` have been discovered.
+impl From<Resources<SetUp>> for Resources<WithStates> {
+    fn from(mut resources: Resources<SetUp>) -> Self {
+        // Replace `StatesRw` with `States` in `Resources`.
+        let states: States = resources
+            .remove::<StatesRw>()
+            .map(StatesRw::into_inner)
+            .map(States::from)
+            .unwrap_or_else(|| unreachable!("Expected `StatesRw` to be in resources."));
+
+        resources.insert(states);
+
+        Self {
+            inner: resources.into_inner(),
             marker: PhantomData,
         }
     }

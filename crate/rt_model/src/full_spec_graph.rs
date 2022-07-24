@@ -40,7 +40,7 @@ where
             })
             .await?;
 
-        Ok(Resources::<SetUp>::from(resources.into_inner()))
+        Ok(Resources::<SetUp>::from(resources))
     }
 }
 

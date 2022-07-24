@@ -1,6 +1,6 @@
 use peace::{
     cfg::{full_spec_id, FullSpecId},
-    resources::{type_reg::untagged::TypeMap, StatesDesired},
+    resources::{type_reg::untagged::TypeMap, StatesDesired, StatesDesiredMut},
 };
 
 #[derive(Debug, Default, PartialEq)]
@@ -26,18 +26,20 @@ fn into_inner() {
 
 #[test]
 fn deref_and_deref_mut() {
-    let mut states_desired = StatesDesired::new();
-
-    // deref_mut
-    states_desired.insert(full_spec_id!("key"), 123);
+    let states_desired = StatesDesired::new();
 
     // deref
-    assert_eq!(1, states_desired.len())
+    assert_eq!(0, states_desired.len())
 }
 
 #[test]
 fn from_type_map() {
     let _states_desired = StatesDesired::from(TypeMap::new());
+}
+
+#[test]
+fn from_states_desired_mut() {
+    let _states_desired = StatesDesired::from(StatesDesiredMut::new());
 }
 
 #[test]
@@ -51,8 +53,8 @@ fn debug() {
 }
 
 fn test_states_desired() -> StatesDesired {
-    let mut states_desired = StatesDesired::new();
+    let mut states_desired = StatesDesiredMut::new();
     states_desired.insert(full_spec_id!("key"), 123);
 
-    states_desired
+    StatesDesired::from(states_desired)
 }

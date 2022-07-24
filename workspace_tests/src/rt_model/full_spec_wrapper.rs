@@ -50,7 +50,7 @@ fn state_now_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
         let mut resources = Resources::new();
         full_spec_wrapper.setup(&mut resources).await?;
 
-        let resources = Resources::<SetUp>::from(resources.into_inner());
+        let resources = Resources::<SetUp>::from(resources);
         full_spec_wrapper.state_now_fn_exec(&resources).await?;
 
         let states_rw = resources.borrow::<StatesRw>();
@@ -72,7 +72,7 @@ fn state_desired_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
         let mut resources = Resources::new();
         full_spec_wrapper.setup(&mut resources).await?;
 
-        let resources = Resources::<SetUp>::from(resources.into_inner());
+        let resources = Resources::<SetUp>::from(resources);
         full_spec_wrapper.state_desired_fn_exec(&resources).await?;
 
         let states_desired_rw = resources.borrow::<StatesDesiredRw>();

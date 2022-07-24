@@ -1,7 +1,10 @@
 use std::marker::PhantomData;
 
 use futures::stream::{StreamExt, TryStreamExt};
-use peace_resources::{resources_type_state::SetUp, Resources};
+use peace_resources::{
+    resources_type_state::{SetUp, WithStates},
+    Resources,
+};
 use peace_rt_model::FullSpecGraph;
 
 #[derive(Debug)]
@@ -28,14 +31,22 @@ where
     /// [`StateNowFnSpec`]: peace_cfg::FullSpec::StateNowFnSpec
     pub async fn exec(
         full_spec_graph: &FullSpecGraph<E>,
-        resources: &Resources<SetUp>,
-    ) -> Result<(), E> {
+        resources: Resources<SetUp>,
+    ) -> Result<Resources<WithStates>, E> {
+        let resources_ref = &resources;
         full_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
             .try_for_each_concurrent(None, |full_spec| async move {
-                full_spec.state_now_fn_exec(resources).await
+                full_spec.state_now_fn_exec(resources_ref).await
             })
-            .await
+            .await?;
+
+        // TODO:
+        // write tests
+        // update download example
+        let resources = Resources::<WithStates>::from(resources);
+
+        Ok(resources)
     }
 }
