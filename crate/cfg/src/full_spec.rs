@@ -175,11 +175,6 @@ pub trait FullSpec {
     /// This function call is intended to be cheap and fast.
     type StateDesiredFnSpec: FnSpec<Error = Self::Error, Output = Self::StateLogical>;
 
-    // TODO: DiffFnSpec:
-    //
-    // Shows the [`Diff`] between the [`StateLogical`] returned from
-    // [`StateNowFnSpec`].
-
     /// Specification of the ensure operation.
     ///
     /// The output is the IDs of resources produced by the operation.

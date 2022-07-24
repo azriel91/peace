@@ -2,7 +2,7 @@ use std::path::Path;
 
 use peace::{
     resources::{Resources, StatesDesiredRw, StatesRw},
-    rt::{StateDesiredCommand, StateNowCommand},
+    rt::{StateDesiredCmd, StateNowCmd},
     rt_model::FullSpecGraphBuilder,
 };
 use tokio::io::{self, AsyncWriteExt, Stdout};
@@ -57,8 +57,8 @@ fn main() -> Result<(), DownloadError> {
 
         let resources = graph.setup(Resources::new()).await?;
 
-        StateNowCommand::exec(&graph, &resources).await?;
-        StateDesiredCommand::exec(&graph, &resources).await?;
+        StateNowCmd::exec(&graph, &resources).await?;
+        StateDesiredCmd::exec(&graph, &resources).await?;
 
         let states_rw = resources.borrow::<StatesRw>();
         let states = states_rw.read().await;

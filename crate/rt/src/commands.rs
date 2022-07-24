@@ -1,4 +1,4 @@
-pub use self::{state_now_command::StateNowCommand, state_desired_command::StateDesiredCommand};
+pub use self::{state_desired_cmd::StateDesiredCmd, state_now_cmd::StateNowCmd};
 
-mod state_now_command;
-mod state_desired_command;
+mod state_desired_cmd;
+mod state_now_cmd;

@@ -5,9 +5,9 @@ use peace_resources::{resources_type_state::SetUp, Resources};
 use peace_rt_model::FullSpecGraph;
 
 #[derive(Debug)]
-pub struct StateNowCommand<E>(PhantomData<E>);
+pub struct StateNowCmd<E>(PhantomData<E>);
 
-impl<E> StateNowCommand<E>
+impl<E> StateNowCmd<E>
 where
     E: std::error::Error,
 {
