@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use peace::{
-    resources::{Resources, StatesDesiredRw, StatesRw},
-    rt::{StateDesiredCmd, StateNowCmd},
+    resources::{Resources, States, StatesDesired},
+    rt::DiffCmd,
     rt_model::FullSpecGraphBuilder,
 };
 use tokio::io::{self, AsyncWriteExt, Stdout};
@@ -56,19 +56,13 @@ fn main() -> Result<(), DownloadError> {
         let graph = graph_builder.build();
 
         let resources = graph.setup(Resources::new()).await?;
-        let resources = StateNowCmd::exec(&graph, resources).await?;
+        let resources = DiffCmd::exec(&graph, resources).await?;
 
-        // TODO: use trait bounds for type state constraints
-        let resources_2 = graph.setup(Resources::new()).await?;
-        StateDesiredCmd::exec(&graph, &resources_2).await?;
-
-        let states_rw = resources.borrow::<StatesRw>();
-        let states = states_rw.read().await;
+        let states = resources.borrow::<States>();
         let states_serialized =
             serde_yaml::to_string(&*states).map_err(DownloadError::StatesSerialize)?;
 
-        let states_desired_rw = resources_2.borrow::<StatesDesiredRw>();
-        let states_desired = states_desired_rw.read().await;
+        let states_desired = resources.borrow::<StatesDesired>();
         let states_desired_serialized = serde_yaml::to_string(&*states_desired)
             .map_err(DownloadError::StatesDesiredSerialize)?;
 

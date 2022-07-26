@@ -41,38 +41,3 @@ pub struct WithStatesDesired;
 /// [`StatesDesired`]: crate::StatesDesired
 #[derive(Debug)]
 pub struct WithStatesNowAndDesired;
-
-/// Sealed marker trait indicating [`Resources`] has been set up for a
-/// `FullSpecGraph`.
-///
-/// [`Resources`]: crate::Resources
-pub trait HasBeenSetUp: private::Sealed {}
-impl HasBeenSetUp for SetUp {}
-impl HasBeenSetUp for WithStates {}
-impl HasBeenSetUp for WithStatesDesired {}
-impl HasBeenSetUp for WithStatesNowAndDesired {}
-
-/// Sealed marker trait indicating [`Resources`] contains [`States`].
-///
-/// [`Resources`]: crate::Resources
-/// [`States`]: crate::States
-pub trait HasStates: private::Sealed + HasBeenSetUp {}
-impl HasStates for WithStates {}
-impl HasStates for WithStatesNowAndDesired {}
-
-/// Sealed marker trait indicating [`Resources`] contains [`StatesDesired`].
-///
-/// [`Resources`]: crate::Resources
-/// [`StatesDesired`]: crate::StatesDesired
-pub trait HasStatesDesired: private::Sealed + HasBeenSetUp {}
-impl HasStatesDesired for WithStatesDesired {}
-impl HasStatesDesired for WithStatesNowAndDesired {}
-
-mod private {
-    pub trait Sealed {}
-
-    impl Sealed for super::SetUp {}
-    impl Sealed for super::WithStates {}
-    impl Sealed for super::WithStatesDesired {}
-    impl Sealed for super::WithStatesNowAndDesired {}
-}

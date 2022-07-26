@@ -122,8 +122,19 @@ impl From<Resources<SetUp>> for Resources<WithStatesDesired> {
     }
 }
 
-impl From<Resources<WithStates>> for Resources<WithStatesNowAndDesired> {
-    fn from(mut resources: Resources<WithStates>) -> Self {
+impl From<Resources<SetUp>> for Resources<WithStatesNowAndDesired> {
+    fn from(mut resources: Resources<SetUp>) -> Self {
+        // Replace `StatesRw` with `States` in `Resources`.
+        let states: States = resources
+            .remove::<StatesRw>()
+            .map(StatesRw::into_inner)
+            .map(States::from)
+            .unwrap_or_else(|| {
+                unreachable!("`StatesRw` is inserted in resources on instantiation.")
+            });
+
+        resources.insert(states);
+
         // Replace `StatesDesiredRw` with `StatesDesired` in `Resources`.
         let states_desired: StatesDesired = resources
             .remove::<StatesDesiredRw>()
@@ -134,26 +145,6 @@ impl From<Resources<WithStates>> for Resources<WithStatesNowAndDesired> {
             });
 
         resources.insert(states_desired);
-
-        Self {
-            inner: resources.into_inner(),
-            marker: PhantomData,
-        }
-    }
-}
-
-impl From<Resources<WithStatesDesired>> for Resources<WithStatesNowAndDesired> {
-    fn from(mut resources: Resources<WithStatesDesired>) -> Self {
-        // Replace `StatesDesiredRw` with `StatesDesired` in `Resources`.
-        let states: States = resources
-            .remove::<StatesRw>()
-            .map(StatesRw::into_inner)
-            .map(States::from)
-            .unwrap_or_else(|| {
-                unreachable!("`StatesRw` is inserted in resources on instantiation.")
-            });
-
-        resources.insert(states);
 
         Self {
             inner: resources.into_inner(),
