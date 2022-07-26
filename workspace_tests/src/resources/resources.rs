@@ -1,6 +1,6 @@
 use peace::resources::{
-    resources_type_state::{SetUp, WithStates},
-    Resources, States, StatesDesiredRw, StatesRw,
+    resources_type_state::{SetUp, WithStates, WithStatesDesired, WithStatesNowAndDesired},
+    Resources, States, StatesDesired, StatesDesiredRw, StatesRw,
 };
 
 #[test]
@@ -24,6 +24,42 @@ fn resources_with_states_from_resources_set_up() {
 
     assert!(!resources_with_states.contains::<StatesRw>());
     assert!(resources_with_states.contains::<States>());
+}
 
-    // TODO: similar for `StatesDesiredRw`
+#[test]
+fn resources_with_states_desired_from_resources_set_up() {
+    let resources_empty = Resources::new();
+    let resources_set_up = Resources::<SetUp>::from(resources_empty);
+    let resources_with_states_desired = Resources::<WithStatesDesired>::from(resources_set_up);
+
+    assert!(!resources_with_states_desired.contains::<StatesDesiredRw>());
+    assert!(resources_with_states_desired.contains::<StatesDesired>());
+}
+
+#[test]
+fn resources_with_states_now_and_desired_from_resources_with_states() {
+    let resources_empty = Resources::new();
+    let resources_set_up = Resources::<SetUp>::from(resources_empty);
+    let resources_with_states = Resources::<WithStates>::from(resources_set_up);
+    let resources_with_states_now_and_desired =
+        Resources::<WithStatesNowAndDesired>::from(resources_with_states);
+
+    assert!(!resources_with_states_now_and_desired.contains::<StatesRw>());
+    assert!(!resources_with_states_now_and_desired.contains::<StatesDesiredRw>());
+    assert!(resources_with_states_now_and_desired.contains::<States>());
+    assert!(resources_with_states_now_and_desired.contains::<StatesDesired>());
+}
+
+#[test]
+fn resources_with_states_now_and_desired_from_resources_with_states_desired() {
+    let resources_empty = Resources::new();
+    let resources_set_up = Resources::<SetUp>::from(resources_empty);
+    let resources_with_states_desired = Resources::<WithStatesDesired>::from(resources_set_up);
+    let resources_with_states_now_and_desired =
+        Resources::<WithStatesNowAndDesired>::from(resources_with_states_desired);
+
+    assert!(!resources_with_states_now_and_desired.contains::<StatesRw>());
+    assert!(!resources_with_states_now_and_desired.contains::<StatesDesiredRw>());
+    assert!(resources_with_states_now_and_desired.contains::<States>());
+    assert!(resources_with_states_now_and_desired.contains::<StatesDesired>());
 }
