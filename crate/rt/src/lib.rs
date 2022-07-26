@@ -1,9 +1,5 @@
 //! Runtime logic for the peace automation library.
 
-pub use crate::{
-    commands::{DiffCmd, StateDesiredCmd, StateNowCmd},
-    job_runner::JobRunner,
-};
+pub use crate::commands::{DiffCmd, StateDesiredCmd, StateNowCmd};
 
 mod commands;
-mod job_runner;
