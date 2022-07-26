@@ -33,15 +33,30 @@ where
         full_spec_graph: &FullSpecGraph<E>,
         resources: Resources<SetUp>,
     ) -> Result<Resources<WithStates>, E> {
-        let resources_ref = &resources;
+        Self::exec_internal(full_spec_graph, &resources).await?;
+
+        Ok(Resources::<WithStates>::from(resources))
+    }
+
+    /// Runs [`FullSpec`]`::`[`StateNowFnSpec`]`::`[`exec`] for each full spec.
+    ///
+    /// Same as [`Self::exec`], but does not change the type state.
+    ///
+    /// [`exec`]: peace_cfg::FnSpec::exec
+    /// [`FullSpec`]: peace_cfg::FullSpec
+    /// [`StateNowFnSpec`]: peace_cfg::FullSpec::StateNowFnSpec
+    pub(crate) async fn exec_internal(
+        full_spec_graph: &FullSpecGraph<E>,
+        resources: &Resources<SetUp>,
+    ) -> Result<(), E> {
         full_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
             .try_for_each_concurrent(None, |full_spec| async move {
-                full_spec.state_now_fn_exec(resources_ref).await
+                full_spec.state_now_fn_exec(resources).await
             })
             .await?;
 
-        Ok(Resources::<WithStates>::from(resources))
+        Ok(())
     }
 }

@@ -1,11 +1,12 @@
 use std::marker::PhantomData;
 
-use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     resources_type_state::{SetUp, WithStatesNowAndDesired},
     Resources,
 };
 use peace_rt_model::FullSpecGraph;
+
+use crate::{StateDesiredCmd, StateNowCmd};
 
 #[derive(Debug)]
 pub struct DiffCmd<E>(PhantomData<E>);
@@ -39,22 +40,8 @@ where
         full_spec_graph: &FullSpecGraph<E>,
         resources: Resources<SetUp>,
     ) -> Result<Resources<WithStatesNowAndDesired>, E> {
-        let resources_ref = &resources;
-        full_spec_graph
-            .stream()
-            .map(Result::<_, E>::Ok)
-            .try_for_each_concurrent(None, |full_spec| async move {
-                full_spec.state_now_fn_exec(resources_ref).await
-            })
-            .await?;
-
-        full_spec_graph
-            .stream()
-            .map(Result::<_, E>::Ok)
-            .try_for_each_concurrent(None, |full_spec| async move {
-                full_spec.state_desired_fn_exec(resources_ref).await
-            })
-            .await?;
+        StateNowCmd::exec_internal(full_spec_graph, &resources).await?;
+        StateDesiredCmd::exec_internal(full_spec_graph, &resources).await?;
 
         Ok(Resources::<WithStatesNowAndDesired>::from(resources))
     }
