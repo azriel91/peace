@@ -34,6 +34,7 @@ impl FullSpec for VecCopyFullSpec {
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {
         resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
+        resources.insert(VecB(vec![]));
         Ok(())
     }
 }
@@ -161,13 +162,13 @@ pub struct VecCopyStateNowFnSpec;
 #[async_trait]
 #[nougat::gat]
 impl FnSpec for VecCopyStateNowFnSpec {
-    type Data<'op> = R<'op, VecA>
+    type Data<'op> = R<'op, VecB>
         where Self: 'op;
     type Error = VecCopyError;
     type Output = State<Vec<u8>, ()>;
 
-    async fn exec(vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
-        Ok(State::new(vec_a.0.clone(), ()))
+    async fn exec(vec_b: R<'_, VecB>) -> Result<Self::Output, VecCopyError> {
+        Ok(State::new(vec_b.0.clone(), ()))
     }
 }
 
@@ -189,7 +190,7 @@ impl FnSpec for VecCopyStateDesiredFnSpec {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VecA(Vec<u8>);
+pub struct VecA(pub Vec<u8>);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VecB(Vec<u8>);
+pub struct VecB(pub Vec<u8>);
