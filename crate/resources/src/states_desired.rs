@@ -46,12 +46,12 @@ use crate::StatesDesiredMut;
 pub struct StatesDesired(TypeMap<FullSpecId>);
 
 impl StatesDesired {
-    /// Returns a new `StatesDesired`.
+    /// Returns a new `StatesDesired` map.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates an empty `StatesDesired` with the specified capacity.
+    /// Creates an empty `StatesDesired` map with the specified capacity.
     ///
     /// The `StatesDesired` will be able to hold at least capacity elements
     /// without reallocating. If capacity is 0, the map will not allocate.

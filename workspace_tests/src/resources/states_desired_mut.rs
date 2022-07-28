@@ -11,48 +11,48 @@ struct Value(u32);
 
 #[test]
 fn with_capacity_reserves_enough_capacity() {
-    let states = StatesDesiredMut::with_capacity(100);
-    assert!(states.capacity() >= 100);
+    let states_desired_mut = StatesDesiredMut::with_capacity(100);
+    assert!(states_desired_mut.capacity() >= 100);
 }
 
 #[test]
 fn into_inner() {
-    let states = test_states();
+    let states_desired_mut = test_states_desired_mut();
 
-    let type_map = states.into_inner();
+    let type_map = states_desired_mut.into_inner();
 
     assert_eq!(1, type_map.len())
 }
 
 #[test]
 fn deref_and_deref_mut() {
-    let mut states = StatesDesiredMut::new();
+    let mut states_desired_mut = StatesDesiredMut::new();
 
     // deref_mut
-    states.insert(full_spec_id!("key"), 123);
+    states_desired_mut.insert(full_spec_id!("key"), 123);
 
     // deref
-    assert_eq!(1, states.len())
+    assert_eq!(1, states_desired_mut.len())
 }
 
 #[test]
 fn from_type_map() {
-    let _states = StatesDesiredMut::from(TypeMap::new());
+    let _states_desired_mut = StatesDesiredMut::from(TypeMap::new());
 }
 
 #[test]
 fn debug() {
-    let states = test_states();
+    let states_desired_mut = test_states_desired_mut();
 
     assert_eq!(
         r#"StatesDesiredMut({FullSpecId("key"): TypedValue { type: "i32", value: 123 }})"#,
-        format!("{states:?}")
+        format!("{states_desired_mut:?}")
     );
 }
 
-fn test_states() -> StatesDesiredMut {
-    let mut states = StatesDesiredMut::new();
-    states.insert(full_spec_id!("key"), 123);
+fn test_states_desired_mut() -> StatesDesiredMut {
+    let mut states_desired_mut = StatesDesiredMut::new();
+    states_desired_mut.insert(full_spec_id!("key"), 123);
 
-    states
+    states_desired_mut
 }
