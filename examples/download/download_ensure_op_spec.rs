@@ -22,10 +22,10 @@ pub struct DownloadEnsureOpSpec;
 impl DownloadEnsureOpSpec {
     async fn file_contents_check(
         _download_params: &DownloadParams<'_>,
-        file_state_current: &FileState,
+        file_state_now: &FileState,
         file_state_desired: &FileState,
     ) -> Result<OpCheckStatus, DownloadError> {
-        let file_state_diff = file_state_current.diff(&file_state_desired);
+        let file_state_diff = file_state_now.diff(&file_state_desired);
         match file_state_diff {
             FileStateDiff::NoChange => Ok(OpCheckStatus::ExecNotRequired),
             FileStateDiff::StringContents(_)
@@ -91,17 +91,17 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
     async fn check(
         download_params: DownloadParams<'_>,
         State {
-            logical: file_state_current,
+            logical: file_state_now,
             ..
         }: &State<Option<FileState>, PathBuf>,
         file_state_desired: &Option<FileState>,
     ) -> Result<OpCheckStatus, DownloadError> {
-        let op_check_status = match (file_state_current.as_ref(), file_state_desired.as_ref()) {
-            (Some(file_state_current), Some(file_state_desired)) => {
-                Self::file_contents_check(&download_params, file_state_current, file_state_desired)
+        let op_check_status = match (file_state_now.as_ref(), file_state_desired.as_ref()) {
+            (Some(file_state_now), Some(file_state_desired)) => {
+                Self::file_contents_check(&download_params, file_state_now, file_state_desired)
                     .await?
             }
-            (Some(_file_state_current), None) => {
+            (Some(_file_state_now), None) => {
                 // Should we delete the file?
                 OpCheckStatus::ExecNotRequired
             }

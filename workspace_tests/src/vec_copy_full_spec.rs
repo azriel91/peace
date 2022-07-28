@@ -101,12 +101,12 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     async fn check(
         _vec_copy_params: VecCopyParams<'_>,
         State {
-            logical: file_state_current,
+            logical: file_state_now,
             ..
         }: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Vec<u8>,
     ) -> Result<OpCheckStatus, VecCopyError> {
-        let op_check_status = if file_state_current != state_desired {
+        let op_check_status = if file_state_now != state_desired {
             let progress_limit = TryInto::<u64>::try_into(state_desired.len())
                 .map(ProgressLimit::Bytes)
                 .unwrap_or(ProgressLimit::Unknown);
@@ -120,7 +120,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
 
     async fn exec_dry(
         _vec_copy_params: VecCopyParams<'_>,
-        _state_current: &State<Self::StateLogical, Self::StatePhysical>,
+        _state_now: &State<Self::StateLogical, Self::StatePhysical>,
         _state_desired: &Vec<u8>,
     ) -> Result<Self::StatePhysical, Self::Error> {
         // Would replace vec_b's contents with vec_a's
@@ -129,7 +129,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
 
     async fn exec(
         mut vec_copy_params: VecCopyParams<'_>,
-        _state_current: &State<Self::StateLogical, Self::StatePhysical>,
+        _state_now: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Vec<u8>,
     ) -> Result<Self::StatePhysical, VecCopyError> {
         let dest = vec_copy_params.dest_mut();

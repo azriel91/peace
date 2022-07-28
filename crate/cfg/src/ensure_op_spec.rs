@@ -87,7 +87,7 @@ pub trait EnsureOpSpec {
     /// # Parameters
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
-    /// * `state_current`: Current [`State`] of the managed item, returned from
+    /// * `state_now`: Current [`State`] of the managed item, returned from
     ///   [`StateNowFnSpec`].
     /// * `state_desired`: Desired [`StateLogical`] of the managed item,
     ///   returned from [`Self::desired`].
@@ -97,7 +97,7 @@ pub trait EnsureOpSpec {
     /// [`StateNowFnSpec`]: crate::FullSpec::StateNowFnSpec
     async fn check(
         data: Self::Data<'_>,
-        state_current: &State<Self::StateLogical, Self::StatePhysical>,
+        state_now: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
     ) -> Result<OpCheckStatus, Self::Error>;
 
@@ -124,7 +124,7 @@ pub trait EnsureOpSpec {
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec_dry(
         data: Self::Data<'_>,
-        state_current: &State<Self::StateLogical, Self::StatePhysical>,
+        state_now: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
     ) -> Result<Self::StatePhysical, Self::Error>;
 
@@ -136,7 +136,7 @@ pub trait EnsureOpSpec {
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec(
         data: Self::Data<'_>,
-        state_current: &State<Self::StateLogical, Self::StatePhysical>,
+        state_now: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
     ) -> Result<Self::StatePhysical, Self::Error>;
 }
