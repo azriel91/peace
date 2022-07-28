@@ -10,6 +10,7 @@ use peace::{
         State,
     },
     data::{Data, R, W},
+    diff::Diff,
     resources::{resources_type_state::Empty, Resources},
 };
 use serde::{Deserialize, Serialize};
@@ -100,20 +101,18 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
 
     async fn check(
         _vec_copy_params: VecCopyParams<'_>,
-        State {
-            logical: file_state_now,
-            ..
-        }: &State<Self::StateLogical, Self::StatePhysical>,
+        _state_now: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Vec<u8>,
+        diff: &<Vec<u8> as Diff>::Repr,
     ) -> Result<OpCheckStatus, VecCopyError> {
-        let op_check_status = if file_state_now != state_desired {
+        let op_check_status = if diff.0.is_empty() {
+            OpCheckStatus::ExecNotRequired
+        } else {
             let progress_limit = TryInto::<u64>::try_into(state_desired.len())
                 .map(ProgressLimit::Bytes)
                 .unwrap_or(ProgressLimit::Unknown);
 
             OpCheckStatus::ExecRequired { progress_limit }
-        } else {
-            OpCheckStatus::ExecNotRequired
         };
         Ok(op_check_status)
     }

@@ -6,36 +6,20 @@ use futures::{Stream, StreamExt, TryStreamExt};
 use peace::cfg::EnsureOpSpec;
 use peace::{
     cfg::{async_trait, nougat, OpCheckStatus, ProgressLimit, State},
-    diff::Diff,
+    diff::OptionDiff,
 };
 use tokio::{
     fs::File,
     io::{AsyncWriteExt, BufWriter},
 };
 
-use crate::{DownloadError, DownloadParams, FileState, FileStateDiff};
+use crate::{DownloadError, DownloadParams, FileState};
 
 /// Ensure OpSpec for the file to download.
 #[derive(Debug)]
 pub struct DownloadEnsureOpSpec;
 
 impl DownloadEnsureOpSpec {
-    async fn file_contents_check(
-        _download_params: &DownloadParams<'_>,
-        file_state_now: &FileState,
-        file_state_desired: &FileState,
-    ) -> Result<OpCheckStatus, DownloadError> {
-        let file_state_diff = file_state_now.diff(&file_state_desired);
-        match file_state_diff {
-            FileStateDiff::NoChange => Ok(OpCheckStatus::ExecNotRequired),
-            FileStateDiff::StringContents(_)
-            | FileStateDiff::Length(_)
-            | FileStateDiff::Unknown => Ok(OpCheckStatus::ExecRequired {
-                progress_limit: ProgressLimit::Bytes(1024),
-            }),
-        }
-    }
-
     async fn file_download(download_params: &DownloadParams<'_>) -> Result<(), DownloadError> {
         let client = download_params.client();
         let src_url = download_params.src();
@@ -89,24 +73,17 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
     type StatePhysical = PathBuf;
 
     async fn check(
-        download_params: DownloadParams<'_>,
-        State {
-            logical: file_state_now,
-            ..
-        }: &State<Option<FileState>, PathBuf>,
+        _download_params: DownloadParams<'_>,
+        _file_state_now: &State<Option<FileState>, PathBuf>,
         file_state_desired: &Option<FileState>,
+        diff: &OptionDiff<FileState>,
     ) -> Result<OpCheckStatus, DownloadError> {
-        let op_check_status = match (file_state_now.as_ref(), file_state_desired.as_ref()) {
-            (Some(file_state_now), Some(file_state_desired)) => {
-                Self::file_contents_check(&download_params, file_state_now, file_state_desired)
-                    .await?
-            }
-            (Some(_file_state_now), None) => {
-                // Should we delete the file?
-                OpCheckStatus::ExecNotRequired
-            }
-            (None, Some(file_state_desired)) => {
-                let progress_limit = match file_state_desired {
+        let op_check_status = match diff {
+            OptionDiff::Some(_file_state_diff) => {
+                let progress_limit = match file_state_desired
+                    .as_ref()
+                    .expect("Implied to exist by `OptionDiff`.")
+                {
                     FileState::StringContents(s) => TryInto::<u64>::try_into(s.bytes().len())
                         .map(ProgressLimit::Bytes)
                         .unwrap_or(ProgressLimit::Unknown),
@@ -116,7 +93,8 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
 
                 OpCheckStatus::ExecRequired { progress_limit }
             }
-            (None, None) => OpCheckStatus::ExecNotRequired,
+            OptionDiff::None => OpCheckStatus::ExecNotRequired, // Don't delete existing file
+            OptionDiff::NoChange => OpCheckStatus::ExecNotRequired,
         };
         Ok(op_check_status)
     }

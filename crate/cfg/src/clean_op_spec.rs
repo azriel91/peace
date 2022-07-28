@@ -1,5 +1,7 @@
 use async_trait::async_trait;
 use peace_data::Data;
+use peace_diff::Diff;
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{OpCheckStatus, State};
 
@@ -28,7 +30,7 @@ pub trait CleanOpSpec {
     /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
     /// [`FullSpec::StateLogical`]: crate::FullSpec::StateLogical
-    type StateLogical;
+    type StateLogical: Clone + Diff + Serialize + DeserializeOwned;
 
     /// Physical state produced by the operation.
     ///
