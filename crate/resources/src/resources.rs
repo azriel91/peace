@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    resources_type_state::{Empty, SetUp, WithStates, WithStatesDesired, WithStatesNowAndDesired},
+    resources_type_state::{Empty, SetUp, WithStateDiffs, WithStates, WithStatesDesired},
     States, StatesDesired, StatesDesiredRw, StatesRw,
 };
 
@@ -122,7 +122,7 @@ impl From<Resources<SetUp>> for Resources<WithStatesDesired> {
     }
 }
 
-impl From<Resources<SetUp>> for Resources<WithStatesNowAndDesired> {
+impl From<Resources<SetUp>> for Resources<WithStateDiffs> {
     fn from(mut resources: Resources<SetUp>) -> Self {
         // Replace `StatesRw` with `States` in `Resources`.
         let states: States = resources

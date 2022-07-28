@@ -1,5 +1,5 @@
 use peace::resources::{
-    resources_type_state::{SetUp, WithStates, WithStatesDesired, WithStatesNowAndDesired},
+    resources_type_state::{SetUp, WithStateDiffs, WithStates, WithStatesDesired},
     Resources, States, StatesDesired, StatesDesiredRw, StatesRw,
 };
 
@@ -40,8 +40,7 @@ fn resources_with_states_desired_from_resources_set_up() {
 fn resources_with_states_now_and_desired_from_resources_set_up() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_now_and_desired =
-        Resources::<WithStatesNowAndDesired>::from(resources_set_up);
+    let resources_with_states_now_and_desired = Resources::<WithStateDiffs>::from(resources_set_up);
 
     assert!(!resources_with_states_now_and_desired.contains::<StatesRw>());
     assert!(!resources_with_states_now_and_desired.contains::<StatesDesiredRw>());
