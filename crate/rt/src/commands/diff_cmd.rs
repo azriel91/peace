@@ -46,13 +46,13 @@ where
 
         let state_diffs = {
             let states_rw = resources.borrow::<StatesRw>();
-            let states = states_rw.read().await;
+            let states = &states_rw.read().await;
             let states_desired_rw = resources.borrow::<StatesDesiredRw>();
-            let states_desired = states_desired_rw.read().await;
+            let states_desired = &states_desired_rw.read().await;
 
             let state_diffs_mut = full_spec_graph
                 .stream()
-                .map(|full_spec| (full_spec.id(), full_spec.diff(&*states, &*states_desired)))
+                .map(|full_spec| (full_spec.id(), full_spec.diff(states, states_desired)))
                 .fold(
                     StateDiffsMut::new(),
                     |mut state_diffs_mut, (full_spec_id, state_diff)| async move {
