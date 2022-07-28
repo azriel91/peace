@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use peace::{
-    resources::{Resources, States, StatesDesired},
+    resources::{Resources, StateDiffs, States, StatesDesired},
     rt::DiffCmd,
     rt_model::FullSpecGraphBuilder,
 };
@@ -66,11 +66,17 @@ fn main() -> Result<(), DownloadError> {
         let states_desired_serialized = serde_yaml::to_string(&*states_desired)
             .map_err(DownloadError::StatesDesiredSerialize)?;
 
+        let state_diffs = resources.borrow::<StateDiffs>();
+        let state_diffs_serialized =
+            serde_yaml::to_string(&*state_diffs).map_err(DownloadError::StateDiffsSerialize)?;
+
         let mut stdout = io::stdout();
-        stdout_write(&mut stdout, b"\nCurrent state:\n").await?;
+        stdout_write(&mut stdout, b"\n# state now:\n").await?;
         stdout_write(&mut stdout, states_serialized.as_bytes()).await?;
-        stdout_write(&mut stdout, b"\nDesired state:\n").await?;
+        stdout_write(&mut stdout, b"\n\n# state desired:\n").await?;
         stdout_write(&mut stdout, states_desired_serialized.as_bytes()).await?;
+        stdout_write(&mut stdout, b"\n\n# state diffs:\n").await?;
+        stdout_write(&mut stdout, state_diffs_serialized.as_bytes()).await?;
 
         Ok::<_, DownloadError>(())
     })

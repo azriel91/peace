@@ -5,12 +5,13 @@ use std::{
 };
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
-use peace_cfg::{async_trait, nougat::Gat, FnSpec, FullSpec, State};
+use peace_cfg::{async_trait, nougat::Gat, FnSpec, FullSpec, FullSpecId, State};
 use peace_data::Data;
 use peace_diff::Diff;
 use peace_resources::{
     resources_type_state::{Empty, SetUp, WithStates},
-    Resources, StatesDesiredRw, StatesRw,
+    type_reg::untagged::DataType,
+    Resources, StatesDesiredMut, StatesDesiredRw, StatesMut, StatesRw,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -317,6 +318,7 @@ where
         + Sync,
     E: Debug + Send + Sync + std::error::Error + 'static,
     StateLogical: Clone + Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    <StateLogical as Diff>::Repr: Debug + Send + Sync + Clone + Serialize,
     StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateNowFnSpec:
         Debug + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
@@ -336,6 +338,10 @@ where
         > + Send
         + Sync,
 {
+    fn id(&self) -> FullSpecId {
+        <FS as FullSpec>::id(self)
+    }
+
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E> {
         <FS as FullSpec>::setup(self, resources).await
     }
@@ -368,6 +374,21 @@ where
         states_desired.insert(self.id(), state_logical);
 
         Ok(())
+    }
+
+    fn diff(&self, states: &StatesMut, states_desired: &StatesDesiredMut) -> Box<dyn DataType> {
+        let full_spec_id = <FS as FullSpec>::id(self);
+        let state = states.get::<State<StateLogical, StatePhysical>, _>(&full_spec_id);
+        let state_desired = states_desired.get::<StateLogical, _>(&full_spec_id);
+
+        if let (Some(state), Some(state_desired)) = (state, state_desired) {
+            Box::new(state.logical.diff(state_desired))
+        } else {
+            panic!(
+                "`FullSpecWrapper::diff` must only be called with `States` and `StatesDesired` \
+                populated using `StateNowCmd` and `StateDesiredCmd`."
+            );
+        }
     }
 
     async fn ensure_op_check(&self, _resources: &Resources<WithStates>) -> Result<(), E> {

@@ -1,10 +1,11 @@
 use std::fmt::Debug;
 
 use fn_graph::{DataAccess, DataAccessDyn};
-use peace_cfg::async_trait;
+use peace_cfg::{async_trait, FullSpecId};
 use peace_resources::{
     resources_type_state::{Empty, SetUp, WithStates},
-    Resources,
+    type_reg::untagged::DataType,
+    Resources, StatesDesiredMut, StatesMut,
 };
 
 /// Internal trait that erases the types from [`FullSpec`]
@@ -18,6 +19,13 @@ pub trait FullSpecRt<E>: Debug + DataAccess + DataAccessDyn
 where
     E: Debug + std::error::Error,
 {
+    /// Returns the ID of this full spec.
+    ///
+    /// See [`FullSpec::id`];
+    ///
+    /// [`FullSpec::id`]: peace_cfg::FullSpec::id
+    fn id(&self) -> FullSpecId;
+
     /// Initializes data for the operation's check and `exec` functions.
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E>;
 
@@ -32,6 +40,11 @@ where
     /// [`FullSpec::StateDesiredFnSpec`]: peace_cfg::FullSpec::StateDesiredFnSpec
     /// [`desired`]: peace_cfg::FnSpec::desired
     async fn state_desired_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E>;
+
+    /// Returns the diff between the current and desired [`State`]s.
+    ///
+    /// [`State`]: peace_cfg::State
+    fn diff(&self, states: &StatesMut, states_desired: &StatesDesiredMut) -> Box<dyn DataType>;
 
     /// Runs [`FullSpec::EnsureOpSpec`]`::`[`check`].
     ///
