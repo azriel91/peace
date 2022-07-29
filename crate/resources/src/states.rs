@@ -10,37 +10,37 @@ use crate::StatesMut;
 ///
 /// # Implementors
 ///
-/// For `StateNowFnSpec`, [`Resources`] stores [`StatesRw`], so *if* a
-/// `FullSpec` depends on the `State` of a previous `FullSpec`, then you should
-/// reference [`StatesRw`] in the subsequent `FnSpec`'s [`Data`]:
+/// If a `FullSpec`'s state discovery depends on the `State` of a previous
+/// `FullSpec`, then you should insert the predecessor's state into
+/// [`Resources`], and reference that in the subsequent `FnSpec`'s [`Data`]:
 ///
 /// ```rust
-/// use peace_data::{Data, R};
-/// use peace_resources::StatesRw;
-///
-/// /// Parameters for the `StateNowFnSpec`.
+/// # use std::path::PathBuf;
+/// #
+/// # use peace_data::{Data, R};
+/// #
+/// /// Predecessor `FnSpec::Data`.
 /// #[derive(Data, Debug)]
-/// pub struct StatusFnParams<'op> {
-///     /// Client to make web requests.
-///     states: R<'op, StatesRw>,
+/// pub struct AppUploadParams<'op> {
+///     /// Path to the application directory.
+///     app_dir: W<'op, PathBuf>,
 /// }
 ///
-/// // later
-/// // let states = state_now_fn_params.states.read().await;
-/// // let predecessor_state = states.get(full_spec_id!("predecessor_id"));
+/// /// Successor `FnSpec::Data`.
+/// #[derive(Data, Debug)]
+/// pub struct AppInstallParams<'op> {
+///     /// Path to the application directory.
+///     app_dir: R<'op, PathBuf>,
+///     /// Configuration to use.
+///     config: W<'op, String>,
+/// }
 /// ```
 ///
 /// You may reference [`States`] in `EnsureOpSpec::Data` for reading. It is not
 /// mutable as `States` must remain unchanged so that all `FullSpec`s operate
 /// over consistent data.
 ///
-/// ## Rationale
-///
-/// [`States`] needs to be written to during `StateNowFnSpec::exec`, and a
-/// `RwLock` is needed at that stage to allow for concurrent execution.
-///
 /// [`Data`]: peace_data::Data
-/// [`StatesRw`]: crate::StatesRw
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]
 pub struct States(TypeMap<FullSpecId>);

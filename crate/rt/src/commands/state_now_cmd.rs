@@ -3,9 +3,11 @@ use std::marker::PhantomData;
 use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     resources_type_state::{SetUp, WithStates},
-    Resources,
+    Resources, States, StatesMut,
 };
 use peace_rt_model::FullSpecGraph;
+
+use crate::BUFFERED_FUTURES_MAX;
 
 #[derive(Debug)]
 pub struct StateNowCmd<E>(PhantomData<E>);
@@ -20,27 +22,27 @@ where
     /// [`States`].
     ///
     /// If any `StateNowFnSpec` needs to read the `State` from a previous
-    /// `FullSpec`, the [`StatesRw`] type should be used in
+    /// `FullSpec`, the predecessor should insert a copy / clone of their state
+    /// into `Resources`, and the successor should references it in their
     /// [`FnSpec::Data`].
     ///
     /// [`exec`]: peace_cfg::FnSpec::exec
     /// [`FnSpec::Data`]: peace_cfg::FnSpec::Data
     /// [`FullSpec`]: peace_cfg::FullSpec
-    /// [`States`]: peace_resources::States
-    /// [`StatesRw`]: peace_resources::StatesRw
     /// [`StateNowFnSpec`]: peace_cfg::FullSpec::StateNowFnSpec
     pub async fn exec(
         full_spec_graph: &FullSpecGraph<E>,
         resources: Resources<SetUp>,
     ) -> Result<Resources<WithStates>, E> {
-        Self::exec_internal(full_spec_graph, &resources).await?;
+        let states = Self::exec_internal(full_spec_graph, &resources).await?;
 
-        Ok(Resources::<WithStates>::from(resources))
+        Ok(Resources::<WithStates>::from((resources, states)))
     }
 
     /// Runs [`FullSpec`]`::`[`StateNowFnSpec`]`::`[`exec`] for each full spec.
     ///
-    /// Same as [`Self::exec`], but does not change the type state.
+    /// Same as [`Self::exec`], but does not change the type state, and returns
+    /// [`States`].
     ///
     /// [`exec`]: peace_cfg::FnSpec::exec
     /// [`FullSpec`]: peace_cfg::FullSpec
@@ -48,15 +50,18 @@ where
     pub(crate) async fn exec_internal(
         full_spec_graph: &FullSpecGraph<E>,
         resources: &Resources<SetUp>,
-    ) -> Result<(), E> {
-        full_spec_graph
+    ) -> Result<States, E> {
+        let states_mut = full_spec_graph
             .stream()
-            .map(Result::<_, E>::Ok)
-            .try_for_each_concurrent(None, |full_spec| async move {
-                full_spec.state_now_fn_exec(resources).await
+            .map(Result::Ok)
+            .map_ok(|full_spec| async move {
+                let state = full_spec.state_now_fn_exec(resources).await?;
+                Ok((full_spec.id(), state))
             })
+            .try_buffer_unordered(BUFFERED_FUTURES_MAX)
+            .try_collect::<StatesMut>()
             .await?;
 
-        Ok(())
+        Ok(States::from(states_mut))
     }
 }

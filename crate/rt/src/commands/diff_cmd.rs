@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use futures::StreamExt;
 use peace_resources::{
     resources_type_state::{SetUp, WithStateDiffs},
-    Resources, StateDiffs, StateDiffsMut, StatesDesiredRw, StatesRw,
+    Resources, StateDiffs, StateDiffsMut,
 };
 use peace_rt_model::FullSpecGraph;
 
@@ -39,34 +39,33 @@ where
     /// [`StateDesiredFnSpec`]: peace_cfg::FullSpec::StateDesiredFnSpec
     pub async fn exec(
         full_spec_graph: &FullSpecGraph<E>,
-        mut resources: Resources<SetUp>,
+        resources: Resources<SetUp>,
     ) -> Result<Resources<WithStateDiffs>, E> {
-        StateNowCmd::exec_internal(full_spec_graph, &resources).await?;
-        StateDesiredCmd::exec_internal(full_spec_graph, &resources).await?;
+        let states = StateNowCmd::exec_internal(full_spec_graph, &resources).await?;
+        let states_desired = StateDesiredCmd::exec_internal(full_spec_graph, &resources).await?;
 
+        let states_ref = &states;
+        let states_desired_ref = &states_desired;
         let state_diffs = {
-            let states_rw = resources.borrow::<StatesRw>();
-            let states = &states_rw.read().await;
-            let states_desired_rw = resources.borrow::<StatesDesiredRw>();
-            let states_desired = &states_desired_rw.read().await;
-
             let state_diffs_mut = full_spec_graph
                 .stream()
-                .map(|full_spec| (full_spec.id(), full_spec.diff(states, states_desired)))
-                .fold(
-                    StateDiffsMut::new(),
-                    |mut state_diffs_mut, (full_spec_id, state_diff)| async move {
-                        state_diffs_mut.insert_raw(full_spec_id.clone(), state_diff);
-                        state_diffs_mut
-                    },
-                )
+                .map(|full_spec| {
+                    (
+                        full_spec.id(),
+                        full_spec.diff(states_ref, states_desired_ref),
+                    )
+                })
+                .collect::<StateDiffsMut>()
                 .await;
 
             StateDiffs::from(state_diffs_mut)
         };
 
-        resources.insert(state_diffs);
-
-        Ok(Resources::<WithStateDiffs>::from(resources))
+        Ok(Resources::<WithStateDiffs>::from((
+            resources,
+            states,
+            states_desired,
+            state_diffs,
+        )))
     }
 }

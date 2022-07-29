@@ -11,7 +11,7 @@ use peace_diff::Diff;
 use peace_resources::{
     resources_type_state::{Empty, SetUp, WithStates},
     type_reg::untagged::DataType,
-    Resources, StatesDesiredMut, StatesDesiredRw, StatesMut, StatesRw,
+    Resources, States, StatesDesired,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -346,37 +346,34 @@ where
         <FS as FullSpec>::setup(self, resources).await
     }
 
-    async fn state_now_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E> {
+    async fn state_now_fn_exec(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<Box<dyn DataType>, E> {
         let state: State<StateLogical, StatePhysical> = {
             let data =
                 <Gat!(<StateNowFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(resources);
             <StateNowFnSpec as FnSpec>::exec(data).await?
         };
 
-        // Store `state` so that we can use it in subsequent operations.
-        let states_rw = resources.borrow::<StatesRw>();
-        let mut states = states_rw.write().await;
-        states.insert(self.id(), state);
-
-        Ok(())
+        Ok(Box::new(state))
     }
 
-    async fn state_desired_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E> {
-        let state_logical = {
+    async fn state_desired_fn_exec(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<Box<dyn DataType>, E> {
+        let state_desired = {
             let data = <Gat!(<StateDesiredFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
                 resources,
             );
             <StateDesiredFnSpec as peace_cfg::FnSpec>::exec(data).await?
         };
 
-        let states_desired_rw = resources.borrow::<StatesDesiredRw>();
-        let mut states_desired = states_desired_rw.write().await;
-        states_desired.insert(self.id(), state_logical);
-
-        Ok(())
+        Ok(Box::new(state_desired))
     }
 
-    fn diff(&self, states: &StatesMut, states_desired: &StatesDesiredMut) -> Box<dyn DataType> {
+    fn diff(&self, states: &States, states_desired: &StatesDesired) -> Box<dyn DataType> {
         let full_spec_id = <FS as FullSpec>::id(self);
         let state = states.get::<State<StateLogical, StatePhysical>, _>(&full_spec_id);
         let state_desired = states_desired.get::<StateLogical, _>(&full_spec_id);

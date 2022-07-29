@@ -5,7 +5,7 @@ use peace_cfg::{async_trait, FullSpecId};
 use peace_resources::{
     resources_type_state::{Empty, SetUp, WithStates},
     type_reg::untagged::DataType,
-    Resources, StatesDesiredMut, StatesMut,
+    Resources, States, StatesDesired,
 };
 
 /// Internal trait that erases the types from [`FullSpec`]
@@ -33,18 +33,22 @@ where
     ///
     /// [`FullSpec::StateNowFnSpec`]: peace_cfg::FullSpec::StateNowFnSpec
     /// [`exec`]: peace_cfg::FnSpec::exec
-    async fn state_now_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E>;
+    async fn state_now_fn_exec(&self, resources: &Resources<SetUp>)
+    -> Result<Box<dyn DataType>, E>;
 
     /// Runs [`FullSpec::StateDesiredFnSpec`]`::`[`desired`].
     ///
     /// [`FullSpec::StateDesiredFnSpec`]: peace_cfg::FullSpec::StateDesiredFnSpec
     /// [`desired`]: peace_cfg::FnSpec::desired
-    async fn state_desired_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E>;
+    async fn state_desired_fn_exec(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<Box<dyn DataType>, E>;
 
     /// Returns the diff between the current and desired [`State`]s.
     ///
     /// [`State`]: peace_cfg::State
-    fn diff(&self, states: &StatesMut, states_desired: &StatesDesiredMut) -> Box<dyn DataType>;
+    fn diff(&self, states: &States, states_desired: &StatesDesired) -> Box<dyn DataType>;
 
     /// Runs [`FullSpec::EnsureOpSpec`]`::`[`check`].
     ///

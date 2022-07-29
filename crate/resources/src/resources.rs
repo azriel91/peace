@@ -5,7 +5,7 @@ use std::{
 
 use crate::{
     resources_type_state::{Empty, SetUp, WithStateDiffs, WithStates, WithStatesDesired},
-    States, StatesDesired, StatesDesiredRw, StatesRw,
+    StateDiffs, States, StatesDesired,
 };
 
 /// Map of all types at runtime. [`resman::Resources`] newtype.
@@ -32,12 +32,8 @@ pub struct Resources<TS> {
 impl Resources<Empty> {
     /// Returns a new `Resources`.
     pub fn new() -> Self {
-        let mut inner = resman::Resources::new();
-        inner.insert(StatesRw::new());
-        inner.insert(StatesDesiredRw::new());
-
         Self {
-            inner,
+            inner: resman::Resources::new(),
             marker: PhantomData,
         }
     }
@@ -81,17 +77,8 @@ impl From<Resources<Empty>> for Resources<SetUp> {
 }
 
 // For `StateNowCmd` after `States` have been discovered.
-impl From<Resources<SetUp>> for Resources<WithStates> {
-    fn from(mut resources: Resources<SetUp>) -> Self {
-        // Replace `StatesRw` with `States` in `Resources`.
-        let states: States = resources
-            .remove::<StatesRw>()
-            .map(StatesRw::into_inner)
-            .map(States::from)
-            .unwrap_or_else(|| {
-                unreachable!("`StatesRw` is inserted in resources on instantiation.")
-            });
-
+impl From<(Resources<SetUp>, States)> for Resources<WithStates> {
+    fn from((mut resources, states): (Resources<SetUp>, States)) -> Self {
         resources.insert(states);
 
         Self {
@@ -101,18 +88,9 @@ impl From<Resources<SetUp>> for Resources<WithStates> {
     }
 }
 
-// For `StateNowCmd` after `States` have been discovered.
-impl From<Resources<SetUp>> for Resources<WithStatesDesired> {
-    fn from(mut resources: Resources<SetUp>) -> Self {
-        // Replace `StatesDesiredRw` with `StatesDesired` in `Resources`.
-        let states_desired: StatesDesired = resources
-            .remove::<StatesDesiredRw>()
-            .map(StatesDesiredRw::into_inner)
-            .map(StatesDesired::from)
-            .unwrap_or_else(|| {
-                unreachable!("`StatesDesiredRw` is inserted in resources on instantiation.")
-            });
-
+// For `StateDesiredCmd` after `StatesDesired` have been discovered.
+impl From<(Resources<SetUp>, StatesDesired)> for Resources<WithStatesDesired> {
+    fn from((mut resources, states_desired): (Resources<SetUp>, StatesDesired)) -> Self {
         resources.insert(states_desired);
 
         Self {
@@ -122,29 +100,18 @@ impl From<Resources<SetUp>> for Resources<WithStatesDesired> {
     }
 }
 
-impl From<Resources<SetUp>> for Resources<WithStateDiffs> {
-    fn from(mut resources: Resources<SetUp>) -> Self {
-        // Replace `StatesRw` with `States` in `Resources`.
-        let states: States = resources
-            .remove::<StatesRw>()
-            .map(StatesRw::into_inner)
-            .map(States::from)
-            .unwrap_or_else(|| {
-                unreachable!("`StatesRw` is inserted in resources on instantiation.")
-            });
-
+impl From<(Resources<SetUp>, States, StatesDesired, StateDiffs)> for Resources<WithStateDiffs> {
+    fn from(
+        (mut resources, states, states_desired, state_diffs): (
+            Resources<SetUp>,
+            States,
+            StatesDesired,
+            StateDiffs,
+        ),
+    ) -> Self {
         resources.insert(states);
-
-        // Replace `StatesDesiredRw` with `StatesDesired` in `Resources`.
-        let states_desired: StatesDesired = resources
-            .remove::<StatesDesiredRw>()
-            .map(StatesDesiredRw::into_inner)
-            .map(StatesDesired::from)
-            .unwrap_or_else(|| {
-                unreachable!("`StatesDesiredRw` is inserted in resources on instantiation.")
-            });
-
         resources.insert(states_desired);
+        resources.insert(state_diffs);
 
         Self {
             inner: resources.into_inner(),

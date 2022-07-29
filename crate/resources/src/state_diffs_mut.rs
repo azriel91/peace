@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use peace_core::FullSpecId;
 use serde::Serialize;
-use type_reg::untagged::TypeMap;
+use type_reg::untagged::{DataType, TypeMap};
 
 /// Diffs of `StateLogical`s for each `FullSpec`s. `TypeMap<FullSpecId>`
 /// newtype.
@@ -54,5 +54,13 @@ impl DerefMut for StateDiffsMut {
 impl From<TypeMap<FullSpecId>> for StateDiffsMut {
     fn from(type_map: TypeMap<FullSpecId>) -> Self {
         Self(type_map)
+    }
+}
+
+impl Extend<(FullSpecId, Box<dyn DataType>)> for StateDiffsMut {
+    fn extend<T: IntoIterator<Item = (FullSpecId, Box<dyn DataType>)>>(&mut self, iter: T) {
+        iter.into_iter().for_each(|(full_spec_id, state_diff)| {
+            self.insert_raw(full_spec_id, state_diff);
+        });
     }
 }

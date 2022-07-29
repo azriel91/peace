@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use peace_core::FullSpecId;
 use serde::Serialize;
-use type_reg::untagged::TypeMap;
+use type_reg::untagged::{DataType, TypeMap};
 
 /// Desired `State`s for all `FullSpec`s. `TypeMap<FullSpecId>` newtype.
 ///
@@ -62,5 +62,13 @@ impl DerefMut for StatesDesiredMut {
 impl From<TypeMap<FullSpecId>> for StatesDesiredMut {
     fn from(type_map: TypeMap<FullSpecId>) -> Self {
         Self(type_map)
+    }
+}
+
+impl Extend<(FullSpecId, Box<dyn DataType>)> for StatesDesiredMut {
+    fn extend<T: IntoIterator<Item = (FullSpecId, Box<dyn DataType>)>>(&mut self, iter: T) {
+        iter.into_iter().for_each(|(full_spec_id, state_desired)| {
+            self.insert_raw(full_spec_id, state_desired);
+        });
     }
 }
