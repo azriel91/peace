@@ -1,16 +1,18 @@
+use diff::Diff;
 #[nougat::gat(Data)]
 use peace::cfg::CleanOpSpec;
 #[nougat::gat(Data)]
 use peace::cfg::EnsureOpSpec;
 #[nougat::gat(Data)]
 use peace::cfg::FnSpec;
+#[nougat::gat(Data)]
+use peace::cfg::StateDiffFnSpec;
 use peace::{
     cfg::{
         async_trait, full_spec_id, nougat, FullSpec, FullSpecId, OpCheckStatus, ProgressLimit,
         State,
     },
     data::{Data, R, W},
-    diff::Diff,
     resources::{resources_type_state::Empty, Resources},
 };
 use serde::{Deserialize, Serialize};
@@ -25,6 +27,8 @@ impl FullSpec for VecCopyFullSpec {
     type EnsureOpSpec = VecCopyEnsureOpSpec;
     type Error = VecCopyError;
     type StateDesiredFnSpec = VecCopyStateDesiredFnSpec;
+    type StateDiff = <Vec<u8> as Diff>::Repr;
+    type StateDiffFnSpec = VecCopyStateDiffFnSpec;
     type StateLogical = Vec<u8>;
     type StateNowFnSpec = VecCopyStateNowFnSpec;
     type StatePhysical = ();
@@ -96,6 +100,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     type Data<'op> = VecCopyParams<'op>
         where Self: 'op;
     type Error = VecCopyError;
+    type StateDiff = <Vec<u8> as Diff>::Repr;
     type StateLogical = Vec<u8>;
     type StatePhysical = ();
 
@@ -185,6 +190,29 @@ impl FnSpec for VecCopyStateDesiredFnSpec {
 
     async fn exec(vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
         Ok(vec_a.0.clone())
+    }
+}
+
+/// `StateDiffFnSpec` to compute the diff between two vectors.
+#[derive(Debug)]
+pub struct VecCopyStateDiffFnSpec;
+
+#[async_trait]
+#[nougat::gat]
+impl StateDiffFnSpec for VecCopyStateDiffFnSpec {
+    type Data<'op> = &'op ()
+        where Self: 'op;
+    type Error = VecCopyError;
+    type StateDiff = <Vec<u8> as Diff>::Repr;
+    type StateLogical = Vec<u8>;
+    type StatePhysical = ();
+
+    async fn exec(
+        _: &(),
+        state_now: &State<Vec<u8>, ()>,
+        state_desired: &Vec<u8>,
+    ) -> Result<Self::StateDiff, VecCopyError> {
+        Ok(state_now.logical.diff(state_desired))
     }
 }
 

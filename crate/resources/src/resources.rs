@@ -4,7 +4,9 @@ use std::{
 };
 
 use crate::{
-    resources_type_state::{Empty, SetUp, WithStateDiffs, WithStates, WithStatesDesired},
+    resources_type_state::{
+        Empty, SetUp, WithStateDiffs, WithStates, WithStatesDesired, WithStatesNowAndDesired,
+    },
     StateDiffs, States, StatesDesired,
 };
 
@@ -100,17 +102,24 @@ impl From<(Resources<SetUp>, StatesDesired)> for Resources<WithStatesDesired> {
     }
 }
 
-impl From<(Resources<SetUp>, States, StatesDesired, StateDiffs)> for Resources<WithStateDiffs> {
+impl From<(Resources<SetUp>, States, StatesDesired)> for Resources<WithStatesNowAndDesired> {
     fn from(
-        (mut resources, states, states_desired, state_diffs): (
-            Resources<SetUp>,
-            States,
-            StatesDesired,
-            StateDiffs,
-        ),
+        (mut resources, states, states_desired): (Resources<SetUp>, States, StatesDesired),
     ) -> Self {
         resources.insert(states);
         resources.insert(states_desired);
+
+        Self {
+            inner: resources.into_inner(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl From<(Resources<WithStatesNowAndDesired>, StateDiffs)> for Resources<WithStateDiffs> {
+    fn from(
+        (mut resources, state_diffs): (Resources<WithStatesNowAndDesired>, StateDiffs),
+    ) -> Self {
         resources.insert(state_diffs);
 
         Self {

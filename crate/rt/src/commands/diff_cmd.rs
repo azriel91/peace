@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-use futures::StreamExt;
+use futures::{StreamExt, TryStreamExt};
 use peace_resources::{
-    resources_type_state::{SetUp, WithStateDiffs},
+    resources_type_state::{SetUp, WithStateDiffs, WithStatesNowAndDesired},
     Resources, StateDiffs, StateDiffsMut,
 };
 use peace_rt_model::FullSpecGraph;
@@ -44,28 +44,25 @@ where
         let states = StateNowCmd::exec_internal(full_spec_graph, &resources).await?;
         let states_desired = StateDesiredCmd::exec_internal(full_spec_graph, &resources).await?;
 
-        let states_ref = &states;
-        let states_desired_ref = &states_desired;
+        let resources =
+            Resources::<WithStatesNowAndDesired>::from((resources, states, states_desired));
+        let resources_ref = &resources;
         let state_diffs = {
             let state_diffs_mut = full_spec_graph
                 .stream()
-                .map(|full_spec| {
-                    (
+                .map(Result::<_, E>::Ok)
+                .and_then(|full_spec| async move {
+                    Ok((
                         full_spec.id(),
-                        full_spec.diff(states_ref, states_desired_ref),
-                    )
+                        full_spec.state_diff_fn_exec(resources_ref).await?,
+                    ))
                 })
-                .collect::<StateDiffsMut>()
-                .await;
+                .try_collect::<StateDiffsMut>()
+                .await?;
 
             StateDiffs::from(state_diffs_mut)
         };
 
-        Ok(Resources::<WithStateDiffs>::from((
-            resources,
-            states,
-            states_desired,
-            state_diffs,
-        )))
+        Ok(Resources::<WithStateDiffs>::from((resources, state_diffs)))
     }
 }

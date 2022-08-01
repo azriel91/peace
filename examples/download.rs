@@ -15,6 +15,7 @@ pub use crate::{
     download_full_spec::DownloadFullSpec,
     download_params::DownloadParams,
     download_state_desired_fn_spec::DownloadStateDesiredFnSpec,
+    download_state_diff_fn_spec::DownloadStateDiffFnSpec,
     download_state_now_fn_spec::DownloadStateNowFnSpec,
     file_state::{FileState, FileStateDiff},
 };
@@ -31,6 +32,8 @@ mod download_full_spec;
 mod download_params;
 #[path = "download/download_state_desired_fn_spec.rs"]
 mod download_state_desired_fn_spec;
+#[path = "download/download_state_diff_fn_spec.rs"]
+mod download_state_diff_fn_spec;
 #[path = "download/download_state_now_fn_spec.rs"]
 mod download_state_now_fn_spec;
 #[path = "download/file_state.rs"]

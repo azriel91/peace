@@ -1,13 +1,11 @@
 use std::path::{Path, PathBuf};
 
 use bytes::Bytes;
+use diff::OptionDiff;
 use futures::{Stream, StreamExt, TryStreamExt};
 #[nougat::gat(Data)]
 use peace::cfg::EnsureOpSpec;
-use peace::{
-    cfg::{async_trait, nougat, OpCheckStatus, ProgressLimit, State},
-    diff::OptionDiff,
-};
+use peace::cfg::{async_trait, nougat, OpCheckStatus, ProgressLimit, State};
 use tokio::{
     fs::File,
     io::{AsyncWriteExt, BufWriter},
@@ -69,6 +67,7 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
     type Data<'op> = DownloadParams<'op>
         where Self: 'op;
     type Error = DownloadError;
+    type StateDiff = OptionDiff<FileState>;
     type StateLogical = Option<FileState>;
     type StatePhysical = PathBuf;
 

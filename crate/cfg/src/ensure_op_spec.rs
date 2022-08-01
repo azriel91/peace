@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use peace_data::Data;
-use peace_diff::Diff;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{OpCheckStatus, State};
@@ -45,14 +44,22 @@ pub trait EnsureOpSpec {
     /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
     /// [`FullSpec::StateLogical`]: crate::FullSpec::StateLogical
-    type StateLogical: Clone + Diff + Serialize + DeserializeOwned;
+    type StateLogical: Clone + Serialize + DeserializeOwned;
 
     /// Physical state produced by the operation.
     ///
     /// See [`FullSpec::StatePhysical`] for more detail.
     ///
     /// [`FullSpec::StatePhysical`]: crate::FullSpec::StatePhysical
-    type StatePhysical;
+    type StatePhysical: Clone + Serialize + DeserializeOwned;
+
+    /// State difference produced by [`StateDiffFnSpec`].
+    ///
+    /// See [`FullSpec::StateDiff`] for more detail.
+    ///
+    /// [`StateDiffFnSpec`]: crate::FullSpec::StateDiffFnSpec
+    /// [`FullSpec::StateDiff`]: crate::FullSpec::StateDiff
+    type StateDiff: Clone + Serialize + DeserializeOwned;
 
     /// Data that the operation reads from, or writes to.
     ///
@@ -101,7 +108,7 @@ pub trait EnsureOpSpec {
         data: Self::Data<'_>,
         state_now: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
-        diff: &<Self::StateLogical as Diff>::Repr,
+        diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error>;
 
     /// Dry-run transform of the current state to the desired state.

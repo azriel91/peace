@@ -3,9 +3,9 @@ use std::fmt::Debug;
 use fn_graph::{DataAccess, DataAccessDyn};
 use peace_cfg::{async_trait, FullSpecId};
 use peace_resources::{
-    resources_type_state::{Empty, SetUp, WithStates},
+    resources_type_state::{Empty, SetUp, WithStates, WithStatesNowAndDesired},
     type_reg::untagged::DataType,
-    Resources, States, StatesDesired,
+    Resources,
 };
 
 /// Internal trait that erases the types from [`FullSpec`]
@@ -48,7 +48,10 @@ where
     /// Returns the diff between the current and desired [`State`]s.
     ///
     /// [`State`]: peace_cfg::State
-    fn diff(&self, states: &States, states_desired: &StatesDesired) -> Box<dyn DataType>;
+    async fn state_diff_fn_exec(
+        &self,
+        resources: &Resources<WithStatesNowAndDesired>,
+    ) -> Result<Box<dyn DataType>, E>;
 
     /// Runs [`FullSpec::EnsureOpSpec`]`::`[`check`].
     ///

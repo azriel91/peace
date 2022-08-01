@@ -1,6 +1,6 @@
+use diff::{Diff, VecDiff, VecDiffType};
 use peace::{
     cfg::{FullSpec, State},
-    diff::{Diff, VecDiff, VecDiffType},
     resources::{Resources, StateDiffs, States, StatesDesired},
     rt::DiffCmd,
     rt_model::FullSpecGraphBuilder,

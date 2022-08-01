@@ -32,9 +32,19 @@ pub struct WithStates;
 #[derive(Debug)]
 pub struct WithStatesDesired;
 
-/// [`Resources`] contains [`States`], [`StatesDesired`], and [`StateDiffs`].
+/// [`Resources`] contains [`States`] and [`StatesDesired`].
 ///
 /// Implies [`SetUp`], [`WithStates`], and [`WithStatesDesired`].
+///
+/// [`Resources`]: crate::Resources
+/// [`States`]: crate::States
+/// [`StatesDesired`]: crate::StatesDesired
+#[derive(Debug)]
+pub struct WithStatesNowAndDesired;
+
+/// [`Resources`] contains [`States`], [`StatesDesired`], and [`StateDiffs`].
+///
+/// Implies [`SetUp`] and [`WithStatesNowAndDesired`].
 ///
 /// [`Resources`]: crate::Resources
 /// [`States`]: crate::States

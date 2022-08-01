@@ -17,7 +17,6 @@ use std::{
 
 use fn_graph::{DataAccessDyn, TypeIds};
 use peace_cfg::{FnSpec, FullSpec, State};
-use peace_diff::Diff;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{FullSpecRt, FullSpecWrapper};
@@ -61,8 +60,10 @@ impl<
     E,
     StateLogical,
     StatePhysical,
+    StateDiff,
     StateNowFnSpec,
     StateDesiredFnSpec,
+    StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
 > From<FS> for FullSpecBoxed<E>
@@ -72,23 +73,34 @@ where
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
+            StateDiff = StateDiff,
             StateNowFnSpec = StateNowFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
+            StateDiffFnSpec = StateDiffFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync
         + 'static,
     E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
-    <StateLogical as Diff>::Repr: Debug + Send + Sync + Clone + Serialize,
+    StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateNowFnSpec: Debug
         + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync
         + 'static,
     StateDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync + 'static,
+    StateDiffFnSpec: Debug
+        + peace_cfg::StateDiffFnSpec<
+            Error = E,
+            StateLogical = StateLogical,
+            StatePhysical = StatePhysical,
+            StateDiff = StateDiff,
+        > + Send
+        + Sync
+        + 'static,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
             Error = E,

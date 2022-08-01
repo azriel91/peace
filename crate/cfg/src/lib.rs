@@ -15,6 +15,8 @@ pub use crate::clean_op_spec::CleanOpSpec;
 pub use crate::ensure_op_spec::EnsureOpSpec;
 #[nougat::gat(Data)]
 pub use crate::fn_spec::FnSpec;
+#[nougat::gat(Data)]
+pub use crate::state_diff_fn_spec::StateDiffFnSpec;
 pub use crate::{
     full_spec::FullSpec, op_check_status::OpCheckStatus, progress_limit::ProgressLimit,
     state::State,
@@ -27,3 +29,4 @@ mod full_spec;
 mod op_check_status;
 mod progress_limit;
 mod state;
+mod state_diff_fn_spec;

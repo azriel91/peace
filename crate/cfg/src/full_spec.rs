@@ -1,10 +1,9 @@
 use async_trait::async_trait;
 use peace_core::FullSpecId;
-use peace_diff::Diff;
 use peace_resources::{resources_type_state::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State};
+use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State, StateDiffFnSpec};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -124,7 +123,7 @@ pub trait FullSpec {
     ///
     /// [`StateNowFnSpec`]: Self::StateNowFnSpec
     /// [`StatePhysical`]: Self::StatePhysical
-    type StateLogical: Clone + Diff + Serialize + DeserializeOwned;
+    type StateLogical: Clone + Serialize + DeserializeOwned;
 
     /// State of the managed item that is not controlled.
     ///
@@ -138,9 +137,30 @@ pub trait FullSpec {
     /// * Cleaning up resources: VMs, reserved tokens etcetera.
     ///
     /// [`Data`]: crate::EnsureOpSpec::Data
-    /// [`StateLogical`]: Self::State
+    /// [`StateLogical`]: Self::StateLogical
     /// [`EnsureOpSpec::desired`]: crate::EnsureOpSpec::desired
     type StatePhysical: Clone + Serialize + DeserializeOwned;
+
+    /// Diff between the current [`State`] and the desired [`State`].
+    ///
+    /// This may be the difference between two [`StateLogical`]s, since it may
+    /// be impossible to compute / control what [`StatePhysical`] will be.
+    /// However, the type may include whether [`StatePhysical`] will be
+    /// replaced, even if it cannot tell what it will be replaced with.
+    ///
+    /// # Design Note
+    ///
+    /// Initially I thought the field-wise diff between two [`StateLogical`]s is
+    /// suitable, but:
+    ///
+    /// * It does not capture that `StatePhysical` may change.
+    /// * It isn't easy or necessarily desired to compare every single field.
+    /// * `state.logical.apply(diff) = state_desired` may not be meaningful for
+    ///   a field level diff, and the `apply` may be a complex process.
+    ///
+    /// [`StateLogical`]: Self::StateLogical
+    /// [`StatePhysical`]: Self::StatePhysical
+    type StateDiff: Clone + Serialize + DeserializeOwned;
 
     /// Function that returns the current state of the managed item.
     ///
@@ -162,6 +182,10 @@ pub trait FullSpec {
 
     /// Function that returns the desired state of the managed item.
     ///
+    /// # Implementors
+    ///
+    /// This function call is intended to be cheap and fast.
+    ///
     /// # Examples
     ///
     /// * For a file download operation, the desired state could be the
@@ -169,11 +193,32 @@ pub trait FullSpec {
     ///
     /// * For a web application service operation, the desired state could be
     ///   the web service is running on the latest version.
+    type StateDesiredFnSpec: FnSpec<Error = Self::Error, Output = Self::StateLogical>;
+
+    /// Returns the difference between the current state and desired state.
     ///
     /// # Implementors
     ///
+    /// When this type is serialized, it should provide "just enough" /
+    /// meaningful information to the user on what has changed. So instead of
+    /// including the complete [`State`] and [`StateDesired`], it should include
+    /// the parts that matter.
+    ///
+    /// # Examples
+    ///
+    /// * For a file download operation, the difference could be the content
+    ///   hash changes from `abcd` to `efgh`.
+    ///
+    /// * For a web application service operation, the desired state could be
+    ///   the application version changing from 1 to 2.
+    ///
     /// This function call is intended to be cheap and fast.
-    type StateDesiredFnSpec: FnSpec<Error = Self::Error, Output = Self::StateLogical>;
+    type StateDiffFnSpec: StateDiffFnSpec<
+        Error = Self::Error,
+        StateLogical = Self::StateLogical,
+        StatePhysical = Self::StatePhysical,
+        StateDiff = Self::StateDiff,
+    >;
 
     /// Specification of the ensure operation.
     ///
@@ -182,6 +227,7 @@ pub trait FullSpec {
         Error = Self::Error,
         StateLogical = Self::StateLogical,
         StatePhysical = Self::StatePhysical,
+        StateDiff = Self::StateDiff,
     >;
 
     /// Specification of the clean operation.

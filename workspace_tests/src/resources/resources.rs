@@ -1,5 +1,7 @@
 use peace::resources::{
-    resources_type_state::{SetUp, WithStateDiffs, WithStates, WithStatesDesired},
+    resources_type_state::{
+        SetUp, WithStateDiffs, WithStates, WithStatesDesired, WithStatesNowAndDesired,
+    },
     Resources, StateDiffs, States, StatesDesired,
 };
 
@@ -37,14 +39,31 @@ fn resources_with_states_desired_from_resources_set_up() {
 fn resources_with_states_now_and_desired_from_resources_set_up() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_now_and_desired = Resources::<WithStateDiffs>::from((
+    let resources_with_states_now_and_desired = Resources::<WithStatesNowAndDesired>::from((
         resources_set_up,
         States::new(),
         StatesDesired::new(),
-        StateDiffs::new(),
     ));
 
     assert!(resources_with_states_now_and_desired.contains::<States>());
     assert!(resources_with_states_now_and_desired.contains::<StatesDesired>());
-    assert!(resources_with_states_now_and_desired.contains::<StateDiffs>());
+}
+
+#[test]
+fn resources_with_state_diffs_from_resources_with_states_now_and_desired() {
+    let resources_empty = Resources::new();
+    let resources_set_up = Resources::<SetUp>::from(resources_empty);
+    let resources_with_states_now_and_desired = Resources::<WithStatesNowAndDesired>::from((
+        resources_set_up,
+        States::new(),
+        StatesDesired::new(),
+    ));
+    let resources_with_state_diffs = Resources::<WithStateDiffs>::from((
+        resources_with_states_now_and_desired,
+        StateDiffs::new(),
+    ));
+
+    assert!(resources_with_state_diffs.contains::<States>());
+    assert!(resources_with_state_diffs.contains::<StatesDesired>());
+    assert!(resources_with_state_diffs.contains::<StateDiffs>());
 }
