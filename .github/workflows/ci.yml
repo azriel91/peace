@@ -105,6 +105,11 @@ jobs:
         with:
           command: coverage
 
+      - name: 'Merge coverage'
+        uses: actions-rs/cargo@v1
+        with:
+          command: coverage_merge
+
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1
         with:

@@ -1,16 +1,8 @@
-//! Diff trait for the peace automation framework.
-//!
-//! This is taken from <https://github.com/BenHall-7/diff-struct>.
+//! Types to represent changed values.
 
-// Re-export derive macro.
-pub use peace_diff_derive::Diff;
+pub use crate::{changeable::Changeable, equality::Equality, maybe_eq::MaybeEq, tracked::Tracked};
 
-pub use crate::{
-    diff::Diff,
-    differ::Differ,
-    impls::{BTreeMapDiff, HashMapDiff, OptionDiff, VecDiff, VecDiffType},
-};
-
-mod diff;
-mod differ;
-mod impls;
+mod changeable;
+mod equality;
+mod maybe_eq;
+mod tracked;
