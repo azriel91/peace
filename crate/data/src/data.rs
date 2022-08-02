@@ -19,9 +19,7 @@ pub trait Data<'borrow>: DataAccess + DataAccessDyn + Send {
 }
 
 impl<'borrow> Data<'borrow> for () {
-    fn borrow(_resources: &'borrow Resources) -> Self {
-        ()
-    }
+    fn borrow(_resources: &'borrow Resources) -> Self {}
 }
 
 impl<'borrow> Data<'borrow> for &'borrow () {

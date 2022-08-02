@@ -17,6 +17,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use crate::FullSpecRt;
 
 /// Wraps a type implementing [`FullSpec`].
+#[allow(clippy::type_complexity)]
 pub struct FullSpecWrapper<
     FS,
     E,
