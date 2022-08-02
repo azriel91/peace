@@ -18,6 +18,16 @@ pub trait Data<'borrow>: DataAccess + DataAccessDyn + Send {
     fn borrow(resources: &'borrow Resources) -> Self;
 }
 
+impl<'borrow> Data<'borrow> for () {
+    fn borrow(_resources: &'borrow Resources) -> Self {}
+}
+
+impl<'borrow> Data<'borrow> for &'borrow () {
+    fn borrow(_resources: &'borrow Resources) -> Self {
+        &()
+    }
+}
+
 impl<'borrow, T> Data<'borrow> for R<'borrow, T>
 where
     T: Debug + Send + Sync + 'static,

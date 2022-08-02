@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+use diff::OptionDiff;
 use peace::{
     cfg::{async_trait, full_spec_id, FullSpec, FullSpecId},
     resources::{resources_type_state::Empty, Resources},
@@ -7,8 +8,8 @@ use peace::{
 use url::Url;
 
 use crate::{
-    DownloadCleanOpSpec, DownloadEnsureOpSpec, DownloadError, DownloadStatusDesiredFnSpec,
-    DownloadStatusFnSpec, FileState,
+    DownloadCleanOpSpec, DownloadEnsureOpSpec, DownloadError, DownloadStateCurrentFnSpec,
+    DownloadStateDesiredFnSpec, DownloadStateDiffFnSpec, FileState,
 };
 
 /// Full spec for downloading a file.
@@ -34,10 +35,12 @@ impl FullSpec for DownloadFullSpec {
     type CleanOpSpec = DownloadCleanOpSpec;
     type EnsureOpSpec = DownloadEnsureOpSpec;
     type Error = DownloadError;
+    type StateCurrentFnSpec = DownloadStateCurrentFnSpec;
+    type StateDesiredFnSpec = DownloadStateDesiredFnSpec;
+    type StateDiff = OptionDiff<FileState>;
+    type StateDiffFnSpec = DownloadStateDiffFnSpec;
     type StateLogical = Option<FileState>;
     type StatePhysical = PathBuf;
-    type StatusDesiredFnSpec = DownloadStatusDesiredFnSpec;
-    type StatusFnSpec = DownloadStatusFnSpec;
 
     fn id(&self) -> FullSpecId {
         full_spec_id!("download_full_spec")

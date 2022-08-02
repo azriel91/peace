@@ -9,11 +9,11 @@ use crate::{DownloadError, DownloadParams, FileState};
 
 /// Status `FnSpec` for the file to download.
 #[derive(Debug)]
-pub struct DownloadStatusFnSpec;
+pub struct DownloadStateCurrentFnSpec;
 
 #[async_trait]
 #[nougat::gat]
-impl FnSpec for DownloadStatusFnSpec {
+impl FnSpec for DownloadStateCurrentFnSpec {
     type Data<'op> = DownloadParams<'op>
         where Self: 'op;
     type Error = DownloadError;

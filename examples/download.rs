@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use peace::{
-    resources::{Resources, StatesDesiredRw, StatesRw},
-    rt::{StatusCommand, StatusDesiredCommand},
+    resources::{Resources, StateDiffs, States, StatesDesired},
+    rt::DiffCmd,
     rt_model::FullSpecGraphBuilder,
 };
 use tokio::io::{self, AsyncWriteExt, Stdout};
@@ -14,8 +14,9 @@ pub use crate::{
     download_error::DownloadError,
     download_full_spec::DownloadFullSpec,
     download_params::DownloadParams,
-    download_status_desired_fn_spec::DownloadStatusDesiredFnSpec,
-    download_status_fn_spec::DownloadStatusFnSpec,
+    download_state_current_fn_spec::DownloadStateCurrentFnSpec,
+    download_state_desired_fn_spec::DownloadStateDesiredFnSpec,
+    download_state_diff_fn_spec::DownloadStateDiffFnSpec,
     file_state::{FileState, FileStateDiff},
 };
 
@@ -29,10 +30,12 @@ mod download_error;
 mod download_full_spec;
 #[path = "download/download_params.rs"]
 mod download_params;
-#[path = "download/download_status_desired_fn_spec.rs"]
-mod download_status_desired_fn_spec;
-#[path = "download/download_status_fn_spec.rs"]
-mod download_status_fn_spec;
+#[path = "download/download_state_current_fn_spec.rs"]
+mod download_state_current_fn_spec;
+#[path = "download/download_state_desired_fn_spec.rs"]
+mod download_state_desired_fn_spec;
+#[path = "download/download_state_diff_fn_spec.rs"]
+mod download_state_diff_fn_spec;
 #[path = "download/file_state.rs"]
 mod file_state;
 
@@ -56,25 +59,27 @@ fn main() -> Result<(), DownloadError> {
         let graph = graph_builder.build();
 
         let resources = graph.setup(Resources::new()).await?;
+        let resources = DiffCmd::exec(&graph, resources).await?;
 
-        StatusCommand::exec(&graph, &resources).await?;
-        StatusDesiredCommand::exec(&graph, &resources).await?;
-
-        let states_rw = resources.borrow::<StatesRw>();
-        let states = states_rw.read().await;
+        let states = resources.borrow::<States>();
         let states_serialized =
             serde_yaml::to_string(&*states).map_err(DownloadError::StatesSerialize)?;
 
-        let states_desired_rw = resources.borrow::<StatesDesiredRw>();
-        let states_desired = states_desired_rw.read().await;
+        let states_desired = resources.borrow::<StatesDesired>();
         let states_desired_serialized = serde_yaml::to_string(&*states_desired)
             .map_err(DownloadError::StatesDesiredSerialize)?;
 
+        let state_diffs = resources.borrow::<StateDiffs>();
+        let state_diffs_serialized =
+            serde_yaml::to_string(&*state_diffs).map_err(DownloadError::StateDiffsSerialize)?;
+
         let mut stdout = io::stdout();
-        stdout_write(&mut stdout, b"\nCurrent status:\n").await?;
+        stdout_write(&mut stdout, b"\n# state current:\n").await?;
         stdout_write(&mut stdout, states_serialized.as_bytes()).await?;
-        stdout_write(&mut stdout, b"\nDesired status:\n").await?;
+        stdout_write(&mut stdout, b"\n\n# state desired:\n").await?;
         stdout_write(&mut stdout, states_desired_serialized.as_bytes()).await?;
+        stdout_write(&mut stdout, b"\n\n# state diffs:\n").await?;
+        stdout_write(&mut stdout, state_diffs_serialized.as_bytes()).await?;
 
         Ok::<_, DownloadError>(())
     })

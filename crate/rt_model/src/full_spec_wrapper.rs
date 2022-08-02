@@ -5,25 +5,28 @@ use std::{
 };
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
-use peace_cfg::{async_trait, nougat::Gat, FnSpec, FullSpec, State};
+use peace_cfg::{async_trait, nougat::Gat, FnSpec, FullSpec, FullSpecId, State};
 use peace_data::Data;
-use peace_diff::Diff;
 use peace_resources::{
-    resources_type_state::{Empty, SetUp, WithStates},
-    Resources, StatesDesiredRw, StatesRw,
+    resources_type_state::{Empty, SetUp, WithStates, WithStatesNowAndDesired},
+    type_reg::untagged::DataType,
+    Resources, States, StatesDesired,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::full_spec_boxed::{CleanOpSpecRt, EnsureOpSpecRt, FullSpecRt, StatusFnSpecRt};
+use crate::FullSpecRt;
 
 /// Wraps a type implementing [`FullSpec`].
+#[allow(clippy::type_complexity)]
 pub struct FullSpecWrapper<
     FS,
     E,
     StateLogical,
     StatePhysical,
-    StatusFnSpec,
-    StatusDesiredFnSpec,
+    StateDiff,
+    StateCurrentFnSpec,
+    StateDesiredFnSpec,
+    StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
 >(
@@ -32,8 +35,10 @@ pub struct FullSpecWrapper<
         E,
         StateLogical,
         StatePhysical,
-        StatusFnSpec,
-        StatusDesiredFnSpec,
+        StateDiff,
+        StateCurrentFnSpec,
+        StateDesiredFnSpec,
+        StateDiffFnSpec,
         EnsureOpSpec,
         CleanOpSpec,
     )>,
@@ -44,8 +49,10 @@ impl<
     E,
     StateLogical,
     StatePhysical,
-    StatusFnSpec,
-    StatusDesiredFnSpec,
+    StateDiff,
+    StateCurrentFnSpec,
+    StateDesiredFnSpec,
+    StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
 > Debug
@@ -54,8 +61,10 @@ impl<
         E,
         StateLogical,
         StatePhysical,
-        StatusFnSpec,
-        StatusDesiredFnSpec,
+        StateDiff,
+        StateCurrentFnSpec,
+        StateDesiredFnSpec,
+        StateDiffFnSpec,
         EnsureOpSpec,
         CleanOpSpec,
     >
@@ -72,8 +81,10 @@ impl<
     E,
     StateLogical,
     StatePhysical,
-    StatusFnSpec,
-    StatusDesiredFnSpec,
+    StateDiff,
+    StateCurrentFnSpec,
+    StateDesiredFnSpec,
+    StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
 > Deref
@@ -82,8 +93,10 @@ impl<
         E,
         StateLogical,
         StatePhysical,
-        StatusFnSpec,
-        StatusDesiredFnSpec,
+        StateDiff,
+        StateCurrentFnSpec,
+        StateDesiredFnSpec,
+        StateDiffFnSpec,
         EnsureOpSpec,
         CleanOpSpec,
     >
@@ -100,8 +113,10 @@ impl<
     E,
     StateLogical,
     StatePhysical,
-    StatusFnSpec,
-    StatusDesiredFnSpec,
+    StateDiff,
+    StateCurrentFnSpec,
+    StateDesiredFnSpec,
+    StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
 > DerefMut
@@ -110,8 +125,10 @@ impl<
         E,
         StateLogical,
         StatePhysical,
-        StatusFnSpec,
-        StatusDesiredFnSpec,
+        StateDiff,
+        StateCurrentFnSpec,
+        StateDesiredFnSpec,
+        StateDiffFnSpec,
         EnsureOpSpec,
         CleanOpSpec,
     >
@@ -126,8 +143,10 @@ impl<
     E,
     StateLogical,
     StatePhysical,
-    StatusFnSpec,
-    StatusDesiredFnSpec,
+    StateDiff,
+    StateCurrentFnSpec,
+    StateDesiredFnSpec,
+    StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
 > From<FS>
@@ -136,8 +155,10 @@ impl<
         E,
         StateLogical,
         StatePhysical,
-        StatusFnSpec,
-        StatusDesiredFnSpec,
+        StateDiff,
+        StateCurrentFnSpec,
+        StateDesiredFnSpec,
+        StateDiffFnSpec,
         EnsureOpSpec,
         CleanOpSpec,
     >
@@ -147,17 +168,28 @@ where
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
-            StatusFnSpec = StatusFnSpec,
-            StatusDesiredFnSpec = StatusDesiredFnSpec,
+            StateDiff = StateDiff,
+            StateCurrentFnSpec = StateCurrentFnSpec,
+            StateDesiredFnSpec = StateDesiredFnSpec,
+            StateDiffFnSpec = StateDiffFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatusFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StatusDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
+    StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateCurrentFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
+    StateDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
+    StateDiffFnSpec: Debug
+        + peace_cfg::StateDiffFnSpec<
+            Error = E,
+            StatePhysical = StatePhysical,
+            StateLogical = StateLogical,
+            StateDiff = StateDiff,
+        > + Send
+        + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<StateLogical = StateLogical, StatePhysical = StatePhysical>
         + Send
@@ -177,8 +209,10 @@ impl<
     E,
     StateLogical,
     StatePhysical,
-    StatusFnSpec,
-    StatusDesiredFnSpec,
+    StateDiff,
+    StateCurrentFnSpec,
+    StateDesiredFnSpec,
+    StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
 > DataAccess
@@ -187,8 +221,10 @@ impl<
         E,
         StateLogical,
         StatePhysical,
-        StatusFnSpec,
-        StatusDesiredFnSpec,
+        StateDiff,
+        StateCurrentFnSpec,
+        StateDesiredFnSpec,
+        StateDiffFnSpec,
         EnsureOpSpec,
         CleanOpSpec,
     >
@@ -198,17 +234,28 @@ where
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
-            StatusFnSpec = StatusFnSpec,
-            StatusDesiredFnSpec = StatusDesiredFnSpec,
+            StateDiff = StateDiff,
+            StateCurrentFnSpec = StateCurrentFnSpec,
+            StateDesiredFnSpec = StateDesiredFnSpec,
+            StateDiffFnSpec = StateDiffFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatusFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StatusDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
+    StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateCurrentFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
+    StateDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
+    StateDiffFnSpec: Debug
+        + peace_cfg::StateDiffFnSpec<
+            Error = E,
+            StatePhysical = StatePhysical,
+            StateLogical = StateLogical,
+            StateDiff = StateDiff,
+        > + Send
+        + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<StateLogical = StateLogical, StatePhysical = StatePhysical>
         + Send
@@ -232,8 +279,10 @@ impl<
     E,
     StateLogical,
     StatePhysical,
-    StatusFnSpec,
-    StatusDesiredFnSpec,
+    StateDiff,
+    StateCurrentFnSpec,
+    StateDesiredFnSpec,
+    StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
 > DataAccessDyn
@@ -242,8 +291,10 @@ impl<
         E,
         StateLogical,
         StatePhysical,
-        StatusFnSpec,
-        StatusDesiredFnSpec,
+        StateDiff,
+        StateCurrentFnSpec,
+        StateDesiredFnSpec,
+        StateDiffFnSpec,
         EnsureOpSpec,
         CleanOpSpec,
     >
@@ -253,17 +304,28 @@ where
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
-            StatusFnSpec = StatusFnSpec,
-            StatusDesiredFnSpec = StatusDesiredFnSpec,
+            StateDiff = StateDiff,
+            StateCurrentFnSpec = StateCurrentFnSpec,
+            StateDesiredFnSpec = StateDesiredFnSpec,
+            StateDiffFnSpec = StateDiffFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatusFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StatusDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
+    StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateCurrentFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
+    StateDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
+    StateDiffFnSpec: Debug
+        + peace_cfg::StateDiffFnSpec<
+            Error = E,
+            StatePhysical = StatePhysical,
+            StateLogical = StateLogical,
+            StateDiff = StateDiff,
+        > + Send
+        + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<StateLogical = StateLogical, StatePhysical = StatePhysical>
         + Send
@@ -288,8 +350,10 @@ impl<
     E,
     StateLogical,
     StatePhysical,
-    StatusFnSpec,
-    StatusDesiredFnSpec,
+    StateDiff,
+    StateCurrentFnSpec,
+    StateDesiredFnSpec,
+    StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
 > FullSpecRt<E>
@@ -298,8 +362,10 @@ impl<
         E,
         StateLogical,
         StatePhysical,
-        StatusFnSpec,
-        StatusDesiredFnSpec,
+        StateDiff,
+        StateCurrentFnSpec,
+        StateDesiredFnSpec,
+        StateDiffFnSpec,
         EnsureOpSpec,
         CleanOpSpec,
     >
@@ -309,18 +375,29 @@ where
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
-            StatusFnSpec = StatusFnSpec,
-            StatusDesiredFnSpec = StatusDesiredFnSpec,
+            StateDiff = StateDiff,
+            StateCurrentFnSpec = StateCurrentFnSpec,
+            StateDesiredFnSpec = StateDesiredFnSpec,
+            StateDiffFnSpec = StateDiffFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatusFnSpec:
+    StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateCurrentFnSpec:
         Debug + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StatusDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync,
+    StateDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync,
+    StateDiffFnSpec: Debug
+        + peace_cfg::StateDiffFnSpec<
+            Error = E,
+            StateLogical = StateLogical,
+            StatePhysical = StatePhysical,
+            StateDiff = StateDiff,
+        > + Send
+        + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
             Error = E,
@@ -336,240 +413,80 @@ where
         > + Send
         + Sync,
 {
+    fn id(&self) -> FullSpecId {
+        <FS as FullSpec>::id(self)
+    }
+
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E> {
         <FS as FullSpec>::setup(self, resources).await
     }
 
-    async fn status_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E> {
-        <Self as StatusFnSpecRt>::exec(self, resources).await
-    }
-
-    async fn status_desired_fn_exec(&self, resources: &Resources<SetUp>) -> Result<(), E> {
-        <Self as EnsureOpSpecRt>::desired(self, resources).await
-    }
-}
-
-#[async_trait]
-impl<
-    FS,
-    E,
-    StateLogical,
-    StatePhysical,
-    StatusFnSpec,
-    StatusDesiredFnSpec,
-    EnsureOpSpec,
-    CleanOpSpec,
-> StatusFnSpecRt
-    for FullSpecWrapper<
-        FS,
-        E,
-        StateLogical,
-        StatePhysical,
-        StatusFnSpec,
-        StatusDesiredFnSpec,
-        EnsureOpSpec,
-        CleanOpSpec,
-    >
-where
-    FS: Debug
-        + FullSpec<
-            Error = E,
-            StateLogical = StateLogical,
-            StatePhysical = StatePhysical,
-            StatusFnSpec = StatusFnSpec,
-            StatusDesiredFnSpec = StatusDesiredFnSpec,
-            EnsureOpSpec = EnsureOpSpec,
-            CleanOpSpec = CleanOpSpec,
-        > + Send
-        + Sync,
-    E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatusFnSpec:
-        Debug + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StatusDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync,
-    EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<
-            Error = E,
-            StateLogical = StateLogical,
-            StatePhysical = StatePhysical,
-        > + Send
-        + Sync,
-    CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<
-            Error = E,
-            StateLogical = StateLogical,
-            StatePhysical = StatePhysical,
-        > + Send
-        + Sync,
-{
-    type Error = E;
-
-    async fn exec(&self, resources: &Resources<SetUp>) -> Result<(), Self::Error> {
+    async fn state_current_fn_exec(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<Box<dyn DataType>, E> {
         let state: State<StateLogical, StatePhysical> = {
-            let data =
-                <Gat!(<StatusFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(resources);
-            <StatusFnSpec as FnSpec>::exec(data).await?
-        };
-
-        // Store `state` so that we can use it in subsequent operations.
-        let states_rw = resources.borrow::<StatesRw>();
-        let mut states = states_rw.write().await;
-        states.insert(self.id(), state);
-
-        Ok(())
-    }
-}
-
-#[async_trait]
-impl<
-    FS,
-    E,
-    StateLogical,
-    StatePhysical,
-    StatusFnSpec,
-    StatusDesiredFnSpec,
-    EnsureOpSpec,
-    CleanOpSpec,
-> EnsureOpSpecRt
-    for FullSpecWrapper<
-        FS,
-        E,
-        StateLogical,
-        StatePhysical,
-        StatusFnSpec,
-        StatusDesiredFnSpec,
-        EnsureOpSpec,
-        CleanOpSpec,
-    >
-where
-    FS: Debug
-        + FullSpec<
-            Error = E,
-            StateLogical = StateLogical,
-            StatePhysical = StatePhysical,
-            StatusFnSpec = StatusFnSpec,
-            StatusDesiredFnSpec = StatusDesiredFnSpec,
-            EnsureOpSpec = EnsureOpSpec,
-            CleanOpSpec = CleanOpSpec,
-        > + Send
-        + Sync,
-    E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatusFnSpec:
-        Debug + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StatusDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync,
-    EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<
-            Error = E,
-            StateLogical = StateLogical,
-            StatePhysical = StatePhysical,
-        > + Send
-        + Sync,
-    CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<
-            Error = E,
-            StateLogical = StateLogical,
-            StatePhysical = StatePhysical,
-        > + Send
-        + Sync,
-{
-    type Error = E;
-
-    async fn desired(&self, resources: &Resources<SetUp>) -> Result<(), Self::Error> {
-        let state_logical = {
-            let data = <Gat!(<StatusDesiredFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
+            let data = <Gat!(<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
                 resources,
             );
-            <StatusDesiredFnSpec as peace_cfg::FnSpec>::exec(data).await?
+            <StateCurrentFnSpec as FnSpec>::exec(data).await?
         };
 
-        let states_desired_rw = resources.borrow::<StatesDesiredRw>();
-        let mut states_desired = states_desired_rw.write().await;
-        states_desired.insert(self.id(), state_logical);
-
-        Ok(())
+        Ok(Box::new(state))
     }
 
-    async fn check(&self, _resources: &Resources<SetUp>) -> Result<(), Self::Error> {
+    async fn state_desired_fn_exec(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<Box<dyn DataType>, E> {
+        let state_desired = {
+            let data = <Gat!(<StateDesiredFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
+                resources,
+            );
+            <StateDesiredFnSpec as peace_cfg::FnSpec>::exec(data).await?
+        };
+
+        Ok(Box::new(state_desired))
+    }
+
+    async fn state_diff_fn_exec(
+        &self,
+        resources: &Resources<WithStatesNowAndDesired>,
+    ) -> Result<Box<dyn DataType>, E> {
+        let state_diff: StateDiff = {
+            let data =
+                <Gat!(<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_>) as Data>::borrow(
+                    resources,
+                );
+            let full_spec_id = <FS as FullSpec>::id(self);
+            let states = resources.borrow::<States>();
+            let state = states.get::<State<StateLogical, StatePhysical>, _>(&full_spec_id);
+            let states_desired = resources.borrow::<StatesDesired>();
+            let state_desired = states_desired.get::<StateLogical, _>(&full_spec_id);
+
+            if let (Some(state), Some(state_desired)) = (state, state_desired) {
+                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(data, state, state_desired)
+                    .await?
+            } else {
+                panic!(
+                    "`FullSpecWrapper::diff` must only be called with `States` and `StatesDesired` \
+                    populated using `StateCurrentCmd` and `StateDesiredCmd`."
+                );
+            }
+        };
+
+        Ok(Box::new(state_diff))
+    }
+
+    async fn ensure_op_check(&self, _resources: &Resources<WithStates>) -> Result<(), E> {
         todo!()
     }
 
-    async fn exec_dry(&self, _resources: &Resources<WithStates>) -> Result<(), Self::Error> {
+    async fn ensure_op_exec_dry(&self, _resources: &Resources<WithStates>) -> Result<(), E> {
         todo!()
     }
 
-    async fn exec(&self, _resources: &Resources<WithStates>) -> Result<(), Self::Error> {
-        todo!()
-    }
-}
-
-#[async_trait]
-impl<
-    FS,
-    E,
-    StateLogical,
-    StatePhysical,
-    StatusFnSpec,
-    StatusDesiredFnSpec,
-    EnsureOpSpec,
-    CleanOpSpec,
-> CleanOpSpecRt
-    for FullSpecWrapper<
-        FS,
-        E,
-        StateLogical,
-        StatePhysical,
-        StatusFnSpec,
-        StatusDesiredFnSpec,
-        EnsureOpSpec,
-        CleanOpSpec,
-    >
-where
-    FS: Debug
-        + FullSpec<
-            Error = E,
-            StateLogical = StateLogical,
-            StatePhysical = StatePhysical,
-            StatusFnSpec = StatusFnSpec,
-            StatusDesiredFnSpec = StatusDesiredFnSpec,
-            EnsureOpSpec = EnsureOpSpec,
-            CleanOpSpec = CleanOpSpec,
-        > + Send
-        + Sync,
-    E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatusFnSpec:
-        Debug + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StatusDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync,
-    EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<
-            Error = E,
-            StateLogical = StateLogical,
-            StatePhysical = StatePhysical,
-        > + Send
-        + Sync,
-    CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<
-            Error = E,
-            StateLogical = StateLogical,
-            StatePhysical = StatePhysical,
-        > + Send
-        + Sync,
-{
-    type Error = E;
-
-    async fn check(&self, _resources: &Resources<SetUp>) -> Result<(), Self::Error> {
-        todo!()
-    }
-
-    async fn exec_dry(&self, _resources: &Resources<WithStates>) -> Result<(), Self::Error> {
-        todo!()
-    }
-
-    async fn exec(&self, _resources: &Resources<WithStates>) -> Result<(), Self::Error> {
+    async fn ensure_op_exec(&self, _resources: &Resources<WithStates>) -> Result<(), E> {
         todo!()
     }
 }

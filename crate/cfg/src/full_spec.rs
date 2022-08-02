@@ -1,10 +1,9 @@
 use async_trait::async_trait;
 use peace_core::FullSpecId;
-use peace_diff::Diff;
 use peace_resources::{resources_type_state::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State};
+use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State, StateDiffFnSpec};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -65,9 +64,9 @@ pub trait FullSpec {
     /// This is intended as a serializable summary of the state, so it should be
     /// relatively lightweight.
     ///
-    /// This is returned by [`StatusFnSpec`], and is used by [`EnsureOpSpec`]
-    /// and [`CleanOpSpec`] to determine if their `exec` functions need to
-    /// be run.
+    /// This is returned by [`StateCurrentFnSpec`], and is used by
+    /// [`EnsureOpSpec`] and [`CleanOpSpec`] to determine if their `exec`
+    /// functions need to be run.
     ///
     /// # Examples
     ///
@@ -76,8 +75,8 @@ pub trait FullSpec {
     /// The `StateLogical` may be the number of server instances, the boot
     /// image, and their hardware capacity.
     ///
-    /// * The [`StatusFnSpec`] returns this, and it should be renderable in a
-    ///   human readable format.
+    /// * The [`StateCurrentFnSpec`] returns this, and it should be renderable
+    ///   in a human readable format.
     ///
     /// * The [`EnsureOpSpec::check`] function should be able to use this to
     ///   determine if there are enough servers using the desired image. The
@@ -102,8 +101,8 @@ pub trait FullSpec {
     /// the configuration is small, then one may consider making that the
     /// state.
     ///
-    /// * The [`StatusFnSpec`] returns this, and it should be renderable in a
-    ///   human readable format.
+    /// * The [`StateCurrentFnSpec`] returns this, and it should be renderable
+    ///   in a human readable format.
     ///
     /// * The [`EnsureOpSpec::check`] function should be able to compare the
     ///   desired configuration with this to determine if the configuration is
@@ -122,9 +121,9 @@ pub trait FullSpec {
     ///   this were a commit hash, then restoring would be applying the
     ///   configuration at that commit hash.
     ///
-    /// [`StatusFnSpec`]: Self::StatusFnSpec
+    /// [`StateCurrentFnSpec`]: Self::StateCurrentFnSpec
     /// [`StatePhysical`]: Self::StatePhysical
-    type StateLogical: Clone + Diff + Serialize + DeserializeOwned;
+    type StateLogical: Clone + Serialize + DeserializeOwned;
 
     /// State of the managed item that is not controlled.
     ///
@@ -138,29 +137,54 @@ pub trait FullSpec {
     /// * Cleaning up resources: VMs, reserved tokens etcetera.
     ///
     /// [`Data`]: crate::EnsureOpSpec::Data
-    /// [`StateLogical`]: Self::State
+    /// [`StateLogical`]: Self::StateLogical
     /// [`EnsureOpSpec::desired`]: crate::EnsureOpSpec::desired
     type StatePhysical: Clone + Serialize + DeserializeOwned;
 
-    /// Function that returns the current status of the managed item.
+    /// Diff between the current [`State`] and the desired [`State`].
+    ///
+    /// This may be the difference between two [`StateLogical`]s, since it may
+    /// be impossible to compute / control what [`StatePhysical`] will be.
+    /// However, the type may include whether [`StatePhysical`] will be
+    /// replaced, even if it cannot tell what it will be replaced with.
+    ///
+    /// # Design Note
+    ///
+    /// Initially I thought the field-wise diff between two [`StateLogical`]s is
+    /// suitable, but:
+    ///
+    /// * It does not capture that `StatePhysical` may change.
+    /// * It isn't easy or necessarily desired to compare every single field.
+    /// * `state.logical.apply(diff) = state_desired` may not be meaningful for
+    ///   a field level diff, and the `apply` may be a complex process.
+    ///
+    /// [`StateLogical`]: Self::StateLogical
+    /// [`StatePhysical`]: Self::StatePhysical
+    type StateDiff: Clone + Serialize + DeserializeOwned;
+
+    /// Function that returns the current state of the managed item.
     ///
     /// # Future Development
     ///
-    /// The `StatusFnSpec` may decide to not check for status if it caches
-    /// status. For that use case, the `state` used by the StatusFnSpec
+    /// The `StateCurrentFnSpec` may decide to not check for state if it caches
+    /// state. For that use case, the `state` used by the StateCurrentFnSpec
     /// should include:
     ///
     /// * Execution ID
-    /// * Last status query time
+    /// * Last state query time
     ///
-    /// This allows the check function to tell if the status has been queried
+    /// This allows the check function to tell if the state has been queried
     /// within the past day, don't query it again.
-    type StatusFnSpec: FnSpec<
+    type StateCurrentFnSpec: FnSpec<
         Error = Self::Error,
         Output = State<Self::StateLogical, Self::StatePhysical>,
     >;
 
-    /// Function that returns the desired status of the managed item.
+    /// Function that returns the desired state of the managed item.
+    ///
+    /// # Implementors
+    ///
+    /// This function call is intended to be cheap and fast.
     ///
     /// # Examples
     ///
@@ -169,16 +193,32 @@ pub trait FullSpec {
     ///
     /// * For a web application service operation, the desired state could be
     ///   the web service is running on the latest version.
+    type StateDesiredFnSpec: FnSpec<Error = Self::Error, Output = Self::StateLogical>;
+
+    /// Returns the difference between the current state and desired state.
     ///
     /// # Implementors
     ///
+    /// When this type is serialized, it should provide "just enough" /
+    /// meaningful information to the user on what has changed. So instead of
+    /// including the complete [`State`] and [`StateDesired`], it should include
+    /// the parts that matter.
+    ///
+    /// # Examples
+    ///
+    /// * For a file download operation, the difference could be the content
+    ///   hash changes from `abcd` to `efgh`.
+    ///
+    /// * For a web application service operation, the desired state could be
+    ///   the application version changing from 1 to 2.
+    ///
     /// This function call is intended to be cheap and fast.
-    type StatusDesiredFnSpec: FnSpec<Error = Self::Error, Output = Self::StateLogical>;
-
-    // TODO: DiffFnSpec:
-    //
-    // Shows the [`Diff`] between the [`StateLogical`] returned from
-    // [`StatusFnSpec`].
+    type StateDiffFnSpec: StateDiffFnSpec<
+        Error = Self::Error,
+        StateLogical = Self::StateLogical,
+        StatePhysical = Self::StatePhysical,
+        StateDiff = Self::StateDiff,
+    >;
 
     /// Specification of the ensure operation.
     ///
@@ -187,6 +227,7 @@ pub trait FullSpec {
         Error = Self::Error,
         StateLogical = Self::StateLogical,
         StatePhysical = Self::StatePhysical,
+        StateDiff = Self::StateDiff,
     >;
 
     /// Specification of the clean operation.

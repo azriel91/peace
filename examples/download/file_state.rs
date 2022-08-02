@@ -1,4 +1,4 @@
-use peace::diff::Diff;
+use diff::Diff;
 use serde::{Deserialize, Serialize};
 
 /// State of the file to download.
@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 /// This is used to represent the state of the source file, as well as the
 /// destination file.
 #[derive(Clone, Debug, Diff, Serialize, Deserialize, PartialEq)]
+#[diff(attr(#[derive(Clone, Debug, Serialize, Deserialize)]))]
 pub enum FileState {
     /// String contents of the file.
     ///

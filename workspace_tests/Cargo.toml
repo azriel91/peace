@@ -20,4 +20,5 @@ test = true
 peace = { path = "..", version = "0.0.1" }
 serde = { version = "1.0.139", features = ["derive"] }
 thiserror = "1.0.31"
-tokio = { version = "1.20.0", features = ["rt"] }
+tokio = { version = "1.20.0", features = ["rt", "macros"] }
+diff-struct = "0.4.2"

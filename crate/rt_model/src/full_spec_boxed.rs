@@ -17,20 +17,9 @@ use std::{
 
 use fn_graph::{DataAccessDyn, TypeIds};
 use peace_cfg::{FnSpec, FullSpec, State};
-use peace_diff::Diff;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::FullSpecWrapper;
-
-pub use self::{
-    clean_op_spec_rt::CleanOpSpecRt, ensure_op_spec_rt::EnsureOpSpecRt, full_spec_rt::FullSpecRt,
-    status_fn_spec_rt::StatusFnSpecRt,
-};
-
-mod clean_op_spec_rt;
-mod ensure_op_spec_rt;
-mod full_spec_rt;
-mod status_fn_spec_rt;
+use crate::{FullSpecRt, FullSpecWrapper};
 
 /// Holds a type-erased `FullSpecWrapper` in a `Box`.
 ///
@@ -71,8 +60,10 @@ impl<
     E,
     StateLogical,
     StatePhysical,
-    StatusFnSpec,
-    StatusDesiredFnSpec,
+    StateDiff,
+    StateCurrentFnSpec,
+    StateDesiredFnSpec,
+    StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
 > From<FS> for FullSpecBoxed<E>
@@ -82,22 +73,34 @@ where
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
-            StatusFnSpec = StatusFnSpec,
-            StatusDesiredFnSpec = StatusDesiredFnSpec,
+            StateDiff = StateDiff,
+            StateCurrentFnSpec = StateCurrentFnSpec,
+            StateDesiredFnSpec = StateDesiredFnSpec,
+            StateDiffFnSpec = StateDiffFnSpec,
             EnsureOpSpec = EnsureOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync
         + 'static,
     E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Diff + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatusFnSpec: Debug
+    StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateCurrentFnSpec: Debug
         + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync
         + 'static,
-    StatusDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync + 'static,
+    StateDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync + 'static,
+    StateDiffFnSpec: Debug
+        + peace_cfg::StateDiffFnSpec<
+            Error = E,
+            StateLogical = StateLogical,
+            StatePhysical = StatePhysical,
+            StateDiff = StateDiff,
+        > + Send
+        + Sync
+        + 'static,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
             Error = E,

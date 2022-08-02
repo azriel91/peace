@@ -3,7 +3,12 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crate::{resources_type_state::Empty, StatesDesiredRw, StatesRw};
+use crate::{
+    resources_type_state::{
+        Empty, SetUp, WithStateDiffs, WithStates, WithStatesDesired, WithStatesNowAndDesired,
+    },
+    StateDiffs, States, StatesDesired,
+};
 
 /// Map of all types at runtime. [`resman::Resources`] newtype.
 ///
@@ -29,18 +34,13 @@ pub struct Resources<TS> {
 impl Resources<Empty> {
     /// Returns a new `Resources`.
     pub fn new() -> Self {
-        let mut inner = resman::Resources::new();
-        inner.insert(StatesRw::new());
-        inner.insert(StatesDesiredRw::new());
-
         Self {
-            inner,
+            inner: resman::Resources::new(),
             marker: PhantomData,
         }
     }
 }
 
-// Common impl for all type states.
 impl<TS> Resources<TS> {
     /// Returns the inner [`resman::Resources`].
     pub fn into_inner(self) -> resman::Resources {
@@ -68,10 +68,62 @@ impl<TS> DerefMut for Resources<TS> {
     }
 }
 
-impl<TS> From<resman::Resources> for Resources<TS> {
-    fn from(inner: resman::Resources) -> Self {
+// For `FullSpecGraph` after resources have been set up.
+impl From<Resources<Empty>> for Resources<SetUp> {
+    fn from(resources: Resources<Empty>) -> Self {
         Self {
-            inner,
+            inner: resources.into_inner(),
+            marker: PhantomData,
+        }
+    }
+}
+
+// For `StateCurrentCmd` after `States` have been discovered.
+impl From<(Resources<SetUp>, States)> for Resources<WithStates> {
+    fn from((mut resources, states): (Resources<SetUp>, States)) -> Self {
+        resources.insert(states);
+
+        Self {
+            inner: resources.into_inner(),
+            marker: PhantomData,
+        }
+    }
+}
+
+// For `StateDesiredCmd` after `StatesDesired` have been discovered.
+impl From<(Resources<SetUp>, StatesDesired)> for Resources<WithStatesDesired> {
+    fn from((mut resources, states_desired): (Resources<SetUp>, StatesDesired)) -> Self {
+        resources.insert(states_desired);
+
+        Self {
+            inner: resources.into_inner(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl From<(Resources<SetUp>, States, StatesDesired)> for Resources<WithStatesNowAndDesired> {
+    fn from(
+        (mut resources, states, states_desired): (Resources<SetUp>, States, StatesDesired),
+    ) -> Self {
+        resources.insert(states);
+        resources.insert(states_desired);
+
+        Self {
+            inner: resources.into_inner(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl From<(Resources<WithStatesNowAndDesired>, StateDiffs)> for Resources<WithStateDiffs> {
+    fn from(
+        (mut resources, state_diffs): (Resources<WithStatesNowAndDesired>, StateDiffs),
+    ) -> Self {
+        resources.insert(state_diffs);
+
+        Self {
+            inner: resources.into_inner(),
             marker: PhantomData,
         }
     }

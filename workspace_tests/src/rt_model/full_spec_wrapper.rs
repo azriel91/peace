@@ -1,15 +1,13 @@
-use std::future::Future;
-
 use peace::{
-    cfg::{FullSpec, State},
-    resources::{resources_type_state::SetUp, Resources, StatesDesiredRw, StatesRw},
+    cfg::State,
+    resources::{resources_type_state::SetUp, Resources},
     rt_model::{FullSpecRt, FullSpecWrapper},
 };
 
-use crate::{VecA, VecCopyFullSpec};
+use crate::{VecA, VecCopyError, VecCopyFullSpec};
 
-#[test]
-fn deref_to_dyn_full_spec_rt() {
+#[tokio::test]
+async fn deref_to_dyn_full_spec_rt() {
     let full_spec_wrapper = FullSpecWrapper::from(VecCopyFullSpec);
     let full_spec_rt: &dyn FullSpecRt<_> = &full_spec_wrapper;
 
@@ -19,8 +17,8 @@ fn deref_to_dyn_full_spec_rt() {
     );
 }
 
-#[test]
-fn deref_mut_to_dyn_full_spec_rt() {
+#[tokio::test]
+async fn deref_mut_to_dyn_full_spec_rt() {
     let full_spec_wrapper = FullSpecWrapper::from(VecCopyFullSpec);
     let full_spec_rt: &dyn FullSpecRt<_> = &full_spec_wrapper;
 
@@ -30,70 +28,47 @@ fn deref_mut_to_dyn_full_spec_rt() {
     );
 }
 
-#[test]
-fn setup() -> Result<(), Box<dyn std::error::Error>> {
-    async_test(async {
-        let full_spec_wrapper = FullSpecWrapper::from(VecCopyFullSpec);
-        let mut resources = Resources::new();
-        full_spec_wrapper.setup(&mut resources).await?;
+#[tokio::test]
+async fn setup() -> Result<(), Box<dyn std::error::Error>> {
+    let full_spec_wrapper = FullSpecWrapper::from(VecCopyFullSpec);
+    let mut resources = Resources::new();
+    full_spec_wrapper.setup(&mut resources).await?;
 
-        assert!(resources.try_borrow::<VecA>().is_ok());
+    assert!(resources.try_borrow::<VecA>().is_ok());
 
-        Ok(())
-    })
+    Ok(())
 }
 
-#[test]
-fn status_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
-    async_test(async {
-        let full_spec_wrapper = FullSpecWrapper::from(VecCopyFullSpec);
-        let mut resources = Resources::new();
-        full_spec_wrapper.setup(&mut resources).await?;
+#[tokio::test]
+async fn state_current_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
+    let full_spec_wrapper = FullSpecWrapper::from(VecCopyFullSpec);
+    let mut resources = Resources::new();
+    full_spec_wrapper.setup(&mut resources).await?;
 
-        let resources = Resources::<SetUp>::from(resources.into_inner());
-        full_spec_wrapper.status_fn_exec(&resources).await?;
+    let resources = Resources::<SetUp>::from(resources);
+    let state = full_spec_wrapper.state_current_fn_exec(&resources).await?;
 
-        let states_rw = resources.borrow::<StatesRw>();
-        let states = states_rw.read().await;
+    assert_eq!(
+        Some(State::new(vec![], ())).as_ref(),
+        state.downcast_ref::<State<Vec<u8>, ()>>()
+    );
 
-        assert_eq!(
-            Some(State::new(vec![0, 1, 2, 3, 4, 5, 6, 7], ())).as_ref(),
-            states.get::<State<Vec<u8>, ()>, _>(&VecCopyFullSpec.id())
-        );
-
-        Ok(())
-    })
+    Ok(())
 }
 
-#[test]
-fn status_desired_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
-    async_test(async {
-        let full_spec_wrapper = FullSpecWrapper::from(VecCopyFullSpec);
-        let mut resources = Resources::new();
-        full_spec_wrapper.setup(&mut resources).await?;
+#[tokio::test]
+async fn state_desired_fn_exec() -> Result<(), VecCopyError> {
+    let full_spec_wrapper = FullSpecWrapper::from(VecCopyFullSpec);
+    let mut resources = Resources::new();
+    full_spec_wrapper.setup(&mut resources).await?;
 
-        let resources = Resources::<SetUp>::from(resources.into_inner());
-        full_spec_wrapper.status_desired_fn_exec(&resources).await?;
+    let resources = Resources::<SetUp>::from(resources);
+    let state_desired = full_spec_wrapper.state_desired_fn_exec(&resources).await?;
 
-        let states_desired_rw = resources.borrow::<StatesDesiredRw>();
-        let states_desired = states_desired_rw.read().await;
+    assert_eq!(
+        Some(vec![0u8, 1, 2, 3, 4, 5, 6, 7]).as_ref(),
+        state_desired.downcast_ref::<Vec<u8>>()
+    );
 
-        assert_eq!(
-            Some(vec![0u8, 1, 2, 3, 4, 5, 6, 7]).as_ref(),
-            states_desired.get::<Vec<u8>, _>(&VecCopyFullSpec.id())
-        );
-
-        Ok(())
-    })
-}
-
-fn async_test<F>(f: F) -> Result<(), Box<dyn std::error::Error>>
-where
-    F: Future<Output = Result<(), Box<dyn std::error::Error>>>,
-{
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .thread_name(file!())
-        .build()?;
-
-    runtime.block_on(f)
+    Ok(())
 }

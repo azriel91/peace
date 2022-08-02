@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use peace_data::Data;
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{OpCheckStatus, State};
 
@@ -19,23 +20,23 @@ pub trait CleanOpSpec {
 
     /// Logical state of the managed item.
     ///
-    /// This is the type returned by the [`StatusFnSpec`], and is used by
+    /// This is the type returned by the [`StateCurrentFnSpec`], and is used by
     /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
     ///
     /// See [`FullSpec::StateLogical`] for more detail.
     ///
-    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
+    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
     /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
     /// [`FullSpec::StateLogical`]: crate::FullSpec::StateLogical
-    type StateLogical;
+    type StateLogical: Clone + Serialize + DeserializeOwned;
 
     /// Physical state produced by the operation.
     ///
     /// See [`FullSpec::StatePhysical`] for more detail.
     ///
     /// [`FullSpec::StatePhysical`]: crate::FullSpec::StatePhysical
-    type StatePhysical;
+    type StatePhysical: Clone + Serialize + DeserializeOwned;
 
     /// Data that the operation reads from, or writes to.
     ///
@@ -72,9 +73,10 @@ pub trait CleanOpSpec {
     /// # Parameters
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
-    /// * `state`: State of the managed item, returned from [`StatusFnSpec`].
+    /// * `state`: State of the managed item, returned from
+    ///   [`StateCurrentFnSpec`].
     ///
-    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
+    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
     /// [`StatePhysical`]: Self::StatePhysical
     async fn check(
         data: Self::Data<'_>,
@@ -97,12 +99,13 @@ pub trait CleanOpSpec {
     /// # Parameters
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
-    /// * `state`: State of the managed item, returned from [`StatusFnSpec`].
+    /// * `state`: State of the managed item, returned from
+    ///   [`StateCurrentFnSpec`].
     ///
     /// [`check`]: Self::check
     /// [`exec`]: Self::exec
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
-    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
+    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
     async fn exec_dry(
         data: Self::Data<'_>,
         state: &State<Self::StateLogical, Self::StatePhysical>,
@@ -115,11 +118,12 @@ pub trait CleanOpSpec {
     /// # Parameters
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
-    /// * `state`: State of the managed item, returned from [`StatusFnSpec`].
+    /// * `state`: State of the managed item, returned from
+    ///   [`StateCurrentFnSpec`].
     ///
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
-    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
+    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
     async fn exec(
         data: Self::Data<'_>,
         state: &State<Self::StateLogical, Self::StatePhysical>,

@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use peace_data::Data;
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{OpCheckStatus, State};
 
@@ -34,23 +35,31 @@ pub trait EnsureOpSpec {
 
     /// Logical state of the managed item.
     ///
-    /// This is the type returned by the [`StatusFnSpec`], and is used by
+    /// This is the type returned by the [`StateCurrentFnSpec`], and is used by
     /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
     ///
     /// See [`FullSpec::StateLogical`] for more detail.
     ///
-    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
+    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
     /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
     /// [`FullSpec::StateLogical`]: crate::FullSpec::StateLogical
-    type StateLogical;
+    type StateLogical: Clone + Serialize + DeserializeOwned;
 
     /// Physical state produced by the operation.
     ///
     /// See [`FullSpec::StatePhysical`] for more detail.
     ///
     /// [`FullSpec::StatePhysical`]: crate::FullSpec::StatePhysical
-    type StatePhysical;
+    type StatePhysical: Clone + Serialize + DeserializeOwned;
+
+    /// State difference produced by [`StateDiffFnSpec`].
+    ///
+    /// See [`FullSpec::StateDiff`] for more detail.
+    ///
+    /// [`StateDiffFnSpec`]: crate::FullSpec::StateDiffFnSpec
+    /// [`FullSpec::StateDiff`]: crate::FullSpec::StateDiff
+    type StateDiff: Clone + Serialize + DeserializeOwned;
 
     /// Data that the operation reads from, or writes to.
     ///
@@ -88,17 +97,18 @@ pub trait EnsureOpSpec {
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
-    ///   [`StatusFnSpec`].
+    ///   [`StateCurrentFnSpec`].
     /// * `state_desired`: Desired [`StateLogical`] of the managed item,
     ///   returned from [`Self::desired`].
     ///
     /// [`State`]: crate::State
     /// [`StateLogical`]: Self::StateLogical
-    /// [`StatusFnSpec`]: crate::FullSpec::StatusFnSpec
+    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
     async fn check(
         data: Self::Data<'_>,
         state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
+        diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error>;
 
     /// Dry-run transform of the current state to the desired state.

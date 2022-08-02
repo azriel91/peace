@@ -97,13 +97,8 @@ jobs:
       - uses: taiki-e/install-action@cargo-llvm-cov
       - uses: taiki-e/install-action@nextest
 
-      - name: 'Create coverage directory'
-        run: mkdir -p ./target/coverage
-
       - name: 'Collect coverage'
-        uses: actions-rs/cargo@v1
-        with:
-          command: coverage
+        run: ./coverage.sh
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1

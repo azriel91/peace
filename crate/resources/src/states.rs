@@ -1,55 +1,57 @@
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
 
 use peace_core::FullSpecId;
 use serde::Serialize;
 use type_reg::untagged::TypeMap;
 
+use crate::StatesMut;
+
 /// `State`s for all `FullSpec`s. `TypeMap<FullSpecId>` newtype.
 ///
-/// # Consumer Note
+/// # Implementors
 ///
-/// For `StatusFnSpec`, [`Resources`] stores [`StatesRw`], so *if* a
-/// `FullSpec` depends on the `State` of a previous `FullSpec`, then you should
-/// reference [`StatesRw`] in the subsequent `FnSpec`'s [`Data`]:
+/// If a `FullSpec`'s state discovery depends on the `State` of a previous
+/// `FullSpec`, then you should insert the predecessor's state into
+/// [`Resources`], and reference that in the subsequent `FnSpec`'s [`Data`]:
 ///
 /// ```rust
-/// use peace_data::{Data, R};
-/// use peace_resources::StatesRw;
-///
-/// /// Parameters for the `StatusFnSpec`.
+/// # use std::path::PathBuf;
+/// #
+/// # use peace_data::{Data, R};
+/// #
+/// /// Predecessor `FnSpec::Data`.
 /// #[derive(Data, Debug)]
-/// pub struct StatusFnParams<'op> {
-///     /// Client to make web requests.
-///     states: R<'op, StatesRw>,
+/// pub struct AppUploadParams<'op> {
+///     /// Path to the application directory.
+///     app_dir: W<'op, PathBuf>,
 /// }
 ///
-/// // later
-/// // let states = status_fn_params.states.read().await;
-/// // let predecessor_state = states.get(full_spec_id!("predecessor_id"));
+/// /// Successor `FnSpec::Data`.
+/// #[derive(Data, Debug)]
+/// pub struct AppInstallParams<'op> {
+///     /// Path to the application directory.
+///     app_dir: R<'op, PathBuf>,
+///     /// Configuration to use.
+///     config: W<'op, String>,
+/// }
 /// ```
 ///
-/// For `EnsureOpSpec`, you may reference [`States`] in
-/// `EnsureOpSpec::Data` for reading -- mutating `State` is not intended after
-/// it has been read.
-///
-/// ## Rationale
-///
-/// [`States`] needs to be written to during `StatusFnSpec::exec`, and a
-/// `RwLock` is needed at that stage to allow for concurrent execution.
+/// You may reference [`States`] in `EnsureOpSpec::Data` for reading. It is not
+/// mutable as `States` must remain unchanged so that all `FullSpec`s operate
+/// over consistent data.
 ///
 /// [`Data`]: peace_data::Data
-/// [`StatesRw`]: crate::StatesRw
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]
 pub struct States(TypeMap<FullSpecId>);
 
 impl States {
-    /// Returns a new `States`.
+    /// Returns a new `States` map.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates an empty `States` with the specified capacity.
+    /// Creates an empty `States` map with the specified capacity.
     ///
     /// The `States` will be able to hold at least capacity elements
     /// without reallocating. If capacity is 0, the map will not allocate.
@@ -71,14 +73,14 @@ impl Deref for States {
     }
 }
 
-impl DerefMut for States {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
-    }
-}
-
 impl From<TypeMap<FullSpecId>> for States {
     fn from(type_map: TypeMap<FullSpecId>) -> Self {
         Self(type_map)
+    }
+}
+
+impl From<StatesMut> for States {
+    fn from(states_mut: StatesMut) -> Self {
+        Self(states_mut.into_inner())
     }
 }
