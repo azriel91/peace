@@ -35,12 +35,12 @@ use crate::State;
 pub trait StateDiffFnSpec {
     /// Logical state of the managed item.
     ///
-    /// This is the type returned by the [`StateNowFnSpec`], and is used by
+    /// This is the type returned by the [`StateCurrentFnSpec`], and is used by
     /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
     ///
     /// See [`FullSpec::StateLogical`] for more detail.
     ///
-    /// [`StateNowFnSpec`]: crate::FullSpec::StateNowFnSpec
+    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
     /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
     /// [`FullSpec::StateLogical`]: crate::FullSpec::StateLogical
@@ -75,7 +75,7 @@ pub trait StateDiffFnSpec {
     /// Executes this function.
     async fn exec(
         data: Self::Data<'_>,
-        state_now: &State<Self::StateLogical, Self::StatePhysical>,
+        state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
     ) -> Result<Self::StateDiff, Self::Error>;
 }

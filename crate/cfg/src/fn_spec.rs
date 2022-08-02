@@ -7,12 +7,12 @@ use peace_data::Data;
 pub trait FnSpec {
     /// Return type of the function.
     ///
-    /// * For [`StateNowFnSpec`], this is the current [`State`] of the managed
-    ///   item.
+    /// * For [`StateCurrentFnSpec`], this is the current [`State`] of the
+    ///   managed item.
     /// * For [`StateDesiredFnSpec`], this is the desired [`StateLogical`] of
     ///   the managed item.
     ///
-    /// [`StateNowFnSpec`]: crate::FullSpec::StateNowFnSpec
+    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: crate::FullSpec::StateDesiredFnSpec
     /// [`State`]: crate::State
     /// [`StateLogical`]: crate::StateLogical

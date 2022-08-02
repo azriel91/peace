@@ -14,9 +14,9 @@ pub use crate::{
     download_error::DownloadError,
     download_full_spec::DownloadFullSpec,
     download_params::DownloadParams,
+    download_state_current_fn_spec::DownloadStateCurrentFnSpec,
     download_state_desired_fn_spec::DownloadStateDesiredFnSpec,
     download_state_diff_fn_spec::DownloadStateDiffFnSpec,
-    download_state_now_fn_spec::DownloadStateNowFnSpec,
     file_state::{FileState, FileStateDiff},
 };
 
@@ -30,12 +30,12 @@ mod download_error;
 mod download_full_spec;
 #[path = "download/download_params.rs"]
 mod download_params;
+#[path = "download/download_state_current_fn_spec.rs"]
+mod download_state_current_fn_spec;
 #[path = "download/download_state_desired_fn_spec.rs"]
 mod download_state_desired_fn_spec;
 #[path = "download/download_state_diff_fn_spec.rs"]
 mod download_state_diff_fn_spec;
-#[path = "download/download_state_now_fn_spec.rs"]
-mod download_state_now_fn_spec;
 #[path = "download/file_state.rs"]
 mod file_state;
 
@@ -74,7 +74,7 @@ fn main() -> Result<(), DownloadError> {
             serde_yaml::to_string(&*state_diffs).map_err(DownloadError::StateDiffsSerialize)?;
 
         let mut stdout = io::stdout();
-        stdout_write(&mut stdout, b"\n# state now:\n").await?;
+        stdout_write(&mut stdout, b"\n# state current:\n").await?;
         stdout_write(&mut stdout, states_serialized.as_bytes()).await?;
         stdout_write(&mut stdout, b"\n\n# state desired:\n").await?;
         stdout_write(&mut stdout, states_desired_serialized.as_bytes()).await?;

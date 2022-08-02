@@ -8,7 +8,7 @@ use type_reg::untagged::{DataType, TypeMap};
 ///
 /// # Implementors
 ///
-/// * In `StateNowFnSpec`, you should reference [`StatesDesiredRw`], which
+/// * In `StateCurrentFnSpec`, you should reference [`StatesDesiredRw`], which
 ///   allows mutable access to the underlying desired states.
 /// * In `EnsureOpSpec`, you should reference [`StatesDesired`].
 /// * [`StatesDesiredMut`] is not intended to be referenced in [`Data`]

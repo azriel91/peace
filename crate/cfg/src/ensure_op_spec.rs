@@ -35,12 +35,12 @@ pub trait EnsureOpSpec {
 
     /// Logical state of the managed item.
     ///
-    /// This is the type returned by the [`StateNowFnSpec`], and is used by
+    /// This is the type returned by the [`StateCurrentFnSpec`], and is used by
     /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
     ///
     /// See [`FullSpec::StateLogical`] for more detail.
     ///
-    /// [`StateNowFnSpec`]: crate::FullSpec::StateNowFnSpec
+    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
     /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
     /// [`FullSpec::StateLogical`]: crate::FullSpec::StateLogical
@@ -96,17 +96,17 @@ pub trait EnsureOpSpec {
     /// # Parameters
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
-    /// * `state_now`: Current [`State`] of the managed item, returned from
-    ///   [`StateNowFnSpec`].
+    /// * `state_current`: Current [`State`] of the managed item, returned from
+    ///   [`StateCurrentFnSpec`].
     /// * `state_desired`: Desired [`StateLogical`] of the managed item,
     ///   returned from [`Self::desired`].
     ///
     /// [`State`]: crate::State
     /// [`StateLogical`]: Self::StateLogical
-    /// [`StateNowFnSpec`]: crate::FullSpec::StateNowFnSpec
+    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
     async fn check(
         data: Self::Data<'_>,
-        state_now: &State<Self::StateLogical, Self::StatePhysical>,
+        state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
         diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error>;
@@ -134,7 +134,7 @@ pub trait EnsureOpSpec {
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec_dry(
         data: Self::Data<'_>,
-        state_now: &State<Self::StateLogical, Self::StatePhysical>,
+        state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
     ) -> Result<Self::StatePhysical, Self::Error>;
 
@@ -146,7 +146,7 @@ pub trait EnsureOpSpec {
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn exec(
         data: Self::Data<'_>,
-        state_now: &State<Self::StateLogical, Self::StatePhysical>,
+        state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
     ) -> Result<Self::StatePhysical, Self::Error>;
 }

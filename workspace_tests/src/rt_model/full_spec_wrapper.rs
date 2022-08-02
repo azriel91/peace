@@ -40,13 +40,13 @@ async fn setup() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn state_now_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
+async fn state_current_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
     let full_spec_wrapper = FullSpecWrapper::from(VecCopyFullSpec);
     let mut resources = Resources::new();
     full_spec_wrapper.setup(&mut resources).await?;
 
     let resources = Resources::<SetUp>::from(resources);
-    let state = full_spec_wrapper.state_now_fn_exec(&resources).await?;
+    let state = full_spec_wrapper.state_current_fn_exec(&resources).await?;
 
     assert_eq!(
         Some(State::new(vec![], ())).as_ref(),

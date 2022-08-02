@@ -78,7 +78,7 @@ impl From<Resources<Empty>> for Resources<SetUp> {
     }
 }
 
-// For `StateNowCmd` after `States` have been discovered.
+// For `StateCurrentCmd` after `States` have been discovered.
 impl From<(Resources<SetUp>, States)> for Resources<WithStates> {
     fn from((mut resources, states): (Resources<SetUp>, States)) -> Self {
         resources.insert(states);

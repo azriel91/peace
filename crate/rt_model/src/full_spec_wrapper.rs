@@ -24,7 +24,7 @@ pub struct FullSpecWrapper<
     StateLogical,
     StatePhysical,
     StateDiff,
-    StateNowFnSpec,
+    StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
     EnsureOpSpec,
@@ -36,7 +36,7 @@ pub struct FullSpecWrapper<
         StateLogical,
         StatePhysical,
         StateDiff,
-        StateNowFnSpec,
+        StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
         EnsureOpSpec,
@@ -50,7 +50,7 @@ impl<
     StateLogical,
     StatePhysical,
     StateDiff,
-    StateNowFnSpec,
+    StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
     EnsureOpSpec,
@@ -62,7 +62,7 @@ impl<
         StateLogical,
         StatePhysical,
         StateDiff,
-        StateNowFnSpec,
+        StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
         EnsureOpSpec,
@@ -82,7 +82,7 @@ impl<
     StateLogical,
     StatePhysical,
     StateDiff,
-    StateNowFnSpec,
+    StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
     EnsureOpSpec,
@@ -94,7 +94,7 @@ impl<
         StateLogical,
         StatePhysical,
         StateDiff,
-        StateNowFnSpec,
+        StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
         EnsureOpSpec,
@@ -114,7 +114,7 @@ impl<
     StateLogical,
     StatePhysical,
     StateDiff,
-    StateNowFnSpec,
+    StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
     EnsureOpSpec,
@@ -126,7 +126,7 @@ impl<
         StateLogical,
         StatePhysical,
         StateDiff,
-        StateNowFnSpec,
+        StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
         EnsureOpSpec,
@@ -144,7 +144,7 @@ impl<
     StateLogical,
     StatePhysical,
     StateDiff,
-    StateNowFnSpec,
+    StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
     EnsureOpSpec,
@@ -156,7 +156,7 @@ impl<
         StateLogical,
         StatePhysical,
         StateDiff,
-        StateNowFnSpec,
+        StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
         EnsureOpSpec,
@@ -169,7 +169,7 @@ where
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
-            StateNowFnSpec = StateNowFnSpec,
+            StateCurrentFnSpec = StateCurrentFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             EnsureOpSpec = EnsureOpSpec,
@@ -180,7 +180,7 @@ where
     StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateNowFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
+    StateCurrentFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
     StateDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
@@ -210,7 +210,7 @@ impl<
     StateLogical,
     StatePhysical,
     StateDiff,
-    StateNowFnSpec,
+    StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
     EnsureOpSpec,
@@ -222,7 +222,7 @@ impl<
         StateLogical,
         StatePhysical,
         StateDiff,
-        StateNowFnSpec,
+        StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
         EnsureOpSpec,
@@ -235,7 +235,7 @@ where
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
-            StateNowFnSpec = StateNowFnSpec,
+            StateCurrentFnSpec = StateCurrentFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             EnsureOpSpec = EnsureOpSpec,
@@ -246,7 +246,7 @@ where
     StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateNowFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
+    StateCurrentFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
     StateDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
@@ -280,7 +280,7 @@ impl<
     StateLogical,
     StatePhysical,
     StateDiff,
-    StateNowFnSpec,
+    StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
     EnsureOpSpec,
@@ -292,7 +292,7 @@ impl<
         StateLogical,
         StatePhysical,
         StateDiff,
-        StateNowFnSpec,
+        StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
         EnsureOpSpec,
@@ -305,7 +305,7 @@ where
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
-            StateNowFnSpec = StateNowFnSpec,
+            StateCurrentFnSpec = StateCurrentFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             EnsureOpSpec = EnsureOpSpec,
@@ -316,7 +316,7 @@ where
     StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateNowFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
+    StateCurrentFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
     StateDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
@@ -351,7 +351,7 @@ impl<
     StateLogical,
     StatePhysical,
     StateDiff,
-    StateNowFnSpec,
+    StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
     EnsureOpSpec,
@@ -363,7 +363,7 @@ impl<
         StateLogical,
         StatePhysical,
         StateDiff,
-        StateNowFnSpec,
+        StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
         EnsureOpSpec,
@@ -376,7 +376,7 @@ where
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
-            StateNowFnSpec = StateNowFnSpec,
+            StateCurrentFnSpec = StateCurrentFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             EnsureOpSpec = EnsureOpSpec,
@@ -387,7 +387,7 @@ where
     StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateNowFnSpec:
+    StateCurrentFnSpec:
         Debug + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
     StateDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
@@ -421,14 +421,15 @@ where
         <FS as FullSpec>::setup(self, resources).await
     }
 
-    async fn state_now_fn_exec(
+    async fn state_current_fn_exec(
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<Box<dyn DataType>, E> {
         let state: State<StateLogical, StatePhysical> = {
-            let data =
-                <Gat!(<StateNowFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(resources);
-            <StateNowFnSpec as FnSpec>::exec(data).await?
+            let data = <Gat!(<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
+                resources,
+            );
+            <StateCurrentFnSpec as FnSpec>::exec(data).await?
         };
 
         Ok(Box::new(state))
@@ -469,7 +470,7 @@ where
             } else {
                 panic!(
                     "`FullSpecWrapper::diff` must only be called with `States` and `StatesDesired` \
-                    populated using `StateNowCmd` and `StateDesiredCmd`."
+                    populated using `StateCurrentCmd` and `StateDesiredCmd`."
                 );
             }
         };

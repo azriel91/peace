@@ -8,8 +8,8 @@ use peace::{
 use url::Url;
 
 use crate::{
-    DownloadCleanOpSpec, DownloadEnsureOpSpec, DownloadError, DownloadStateDesiredFnSpec,
-    DownloadStateDiffFnSpec, DownloadStateNowFnSpec, FileState,
+    DownloadCleanOpSpec, DownloadEnsureOpSpec, DownloadError, DownloadStateCurrentFnSpec,
+    DownloadStateDesiredFnSpec, DownloadStateDiffFnSpec, FileState,
 };
 
 /// Full spec for downloading a file.
@@ -35,11 +35,11 @@ impl FullSpec for DownloadFullSpec {
     type CleanOpSpec = DownloadCleanOpSpec;
     type EnsureOpSpec = DownloadEnsureOpSpec;
     type Error = DownloadError;
+    type StateCurrentFnSpec = DownloadStateCurrentFnSpec;
     type StateDesiredFnSpec = DownloadStateDesiredFnSpec;
     type StateDiff = OptionDiff<FileState>;
     type StateDiffFnSpec = DownloadStateDiffFnSpec;
     type StateLogical = Option<FileState>;
-    type StateNowFnSpec = DownloadStateNowFnSpec;
     type StatePhysical = PathBuf;
 
     fn id(&self) -> FullSpecId {

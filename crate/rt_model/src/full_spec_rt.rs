@@ -29,12 +29,14 @@ where
     /// Initializes data for the operation's check and `exec` functions.
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E>;
 
-    /// Runs [`FullSpec::StateNowFnSpec`]`::`[`exec`].
+    /// Runs [`FullSpec::StateCurrentFnSpec`]`::`[`exec`].
     ///
-    /// [`FullSpec::StateNowFnSpec`]: peace_cfg::FullSpec::StateNowFnSpec
+    /// [`FullSpec::StateCurrentFnSpec`]: peace_cfg::FullSpec::StateCurrentFnSpec
     /// [`exec`]: peace_cfg::FnSpec::exec
-    async fn state_now_fn_exec(&self, resources: &Resources<SetUp>)
-    -> Result<Box<dyn DataType>, E>;
+    async fn state_current_fn_exec(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<Box<dyn DataType>, E>;
 
     /// Runs [`FullSpec::StateDesiredFnSpec`]`::`[`desired`].
     ///

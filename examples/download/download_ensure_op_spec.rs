@@ -73,7 +73,7 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
 
     async fn check(
         _download_params: DownloadParams<'_>,
-        _file_state_now: &State<Option<FileState>, PathBuf>,
+        _file_state_current: &State<Option<FileState>, PathBuf>,
         file_state_desired: &Option<FileState>,
         diff: &OptionDiff<FileState>,
     ) -> Result<OpCheckStatus, DownloadError> {

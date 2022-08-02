@@ -61,7 +61,7 @@ impl<
     StateLogical,
     StatePhysical,
     StateDiff,
-    StateNowFnSpec,
+    StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
     EnsureOpSpec,
@@ -74,7 +74,7 @@ where
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
-            StateNowFnSpec = StateNowFnSpec,
+            StateCurrentFnSpec = StateCurrentFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             EnsureOpSpec = EnsureOpSpec,
@@ -86,7 +86,7 @@ where
     StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateNowFnSpec: Debug
+    StateCurrentFnSpec: Debug
         + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync

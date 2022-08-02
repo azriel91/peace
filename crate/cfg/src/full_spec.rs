@@ -64,9 +64,9 @@ pub trait FullSpec {
     /// This is intended as a serializable summary of the state, so it should be
     /// relatively lightweight.
     ///
-    /// This is returned by [`StateNowFnSpec`], and is used by [`EnsureOpSpec`]
-    /// and [`CleanOpSpec`] to determine if their `exec` functions need to
-    /// be run.
+    /// This is returned by [`StateCurrentFnSpec`], and is used by
+    /// [`EnsureOpSpec`] and [`CleanOpSpec`] to determine if their `exec`
+    /// functions need to be run.
     ///
     /// # Examples
     ///
@@ -75,8 +75,8 @@ pub trait FullSpec {
     /// The `StateLogical` may be the number of server instances, the boot
     /// image, and their hardware capacity.
     ///
-    /// * The [`StateNowFnSpec`] returns this, and it should be renderable in a
-    ///   human readable format.
+    /// * The [`StateCurrentFnSpec`] returns this, and it should be renderable
+    ///   in a human readable format.
     ///
     /// * The [`EnsureOpSpec::check`] function should be able to use this to
     ///   determine if there are enough servers using the desired image. The
@@ -101,8 +101,8 @@ pub trait FullSpec {
     /// the configuration is small, then one may consider making that the
     /// state.
     ///
-    /// * The [`StateNowFnSpec`] returns this, and it should be renderable in a
-    ///   human readable format.
+    /// * The [`StateCurrentFnSpec`] returns this, and it should be renderable
+    ///   in a human readable format.
     ///
     /// * The [`EnsureOpSpec::check`] function should be able to compare the
     ///   desired configuration with this to determine if the configuration is
@@ -121,7 +121,7 @@ pub trait FullSpec {
     ///   this were a commit hash, then restoring would be applying the
     ///   configuration at that commit hash.
     ///
-    /// [`StateNowFnSpec`]: Self::StateNowFnSpec
+    /// [`StateCurrentFnSpec`]: Self::StateCurrentFnSpec
     /// [`StatePhysical`]: Self::StatePhysical
     type StateLogical: Clone + Serialize + DeserializeOwned;
 
@@ -166,8 +166,8 @@ pub trait FullSpec {
     ///
     /// # Future Development
     ///
-    /// The `StateNowFnSpec` may decide to not check for state if it caches
-    /// state. For that use case, the `state` used by the StateNowFnSpec
+    /// The `StateCurrentFnSpec` may decide to not check for state if it caches
+    /// state. For that use case, the `state` used by the StateCurrentFnSpec
     /// should include:
     ///
     /// * Execution ID
@@ -175,7 +175,7 @@ pub trait FullSpec {
     ///
     /// This allows the check function to tell if the state has been queried
     /// within the past day, don't query it again.
-    type StateNowFnSpec: FnSpec<
+    type StateCurrentFnSpec: FnSpec<
         Error = Self::Error,
         Output = State<Self::StateLogical, Self::StatePhysical>,
     >;

@@ -26,11 +26,11 @@ impl FullSpec for VecCopyFullSpec {
     type CleanOpSpec = VecCopyCleanOpSpec;
     type EnsureOpSpec = VecCopyEnsureOpSpec;
     type Error = VecCopyError;
+    type StateCurrentFnSpec = VecCopyStateCurrentFnSpec;
     type StateDesiredFnSpec = VecCopyStateDesiredFnSpec;
     type StateDiff = <Vec<u8> as Diff>::Repr;
     type StateDiffFnSpec = VecCopyStateDiffFnSpec;
     type StateLogical = Vec<u8>;
-    type StateNowFnSpec = VecCopyStateNowFnSpec;
     type StatePhysical = ();
 
     fn id(&self) -> FullSpecId {
@@ -106,7 +106,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
 
     async fn check(
         _vec_copy_params: VecCopyParams<'_>,
-        _state_now: &State<Self::StateLogical, Self::StatePhysical>,
+        _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Vec<u8>,
         diff: &<Vec<u8> as Diff>::Repr,
     ) -> Result<OpCheckStatus, VecCopyError> {
@@ -124,7 +124,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
 
     async fn exec_dry(
         _vec_copy_params: VecCopyParams<'_>,
-        _state_now: &State<Self::StateLogical, Self::StatePhysical>,
+        _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         _state_desired: &Vec<u8>,
     ) -> Result<Self::StatePhysical, Self::Error> {
         // Would replace vec_b's contents with vec_a's
@@ -133,7 +133,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
 
     async fn exec(
         mut vec_copy_params: VecCopyParams<'_>,
-        _state_now: &State<Self::StateLogical, Self::StatePhysical>,
+        _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Vec<u8>,
     ) -> Result<Self::StatePhysical, VecCopyError> {
         let dest = vec_copy_params.dest_mut();
@@ -159,13 +159,13 @@ impl<'op> VecCopyParams<'op> {
     }
 }
 
-/// `StateNowFnSpec` for the vector to copy.
+/// `StateCurrentFnSpec` for the vector to copy.
 #[derive(Debug)]
-pub struct VecCopyStateNowFnSpec;
+pub struct VecCopyStateCurrentFnSpec;
 
 #[async_trait]
 #[nougat::gat]
-impl FnSpec for VecCopyStateNowFnSpec {
+impl FnSpec for VecCopyStateCurrentFnSpec {
     type Data<'op> = R<'op, VecB>
         where Self: 'op;
     type Error = VecCopyError;
@@ -176,7 +176,7 @@ impl FnSpec for VecCopyStateNowFnSpec {
     }
 }
 
-/// `StateNowFnSpec` for the vector to copy.
+/// `StateCurrentFnSpec` for the vector to copy.
 #[derive(Debug)]
 pub struct VecCopyStateDesiredFnSpec;
 
@@ -209,10 +209,10 @@ impl StateDiffFnSpec for VecCopyStateDiffFnSpec {
 
     async fn exec(
         _: &(),
-        state_now: &State<Vec<u8>, ()>,
+        state_current: &State<Vec<u8>, ()>,
         state_desired: &Vec<u8>,
     ) -> Result<Self::StateDiff, VecCopyError> {
-        Ok(state_now.logical.diff(state_desired))
+        Ok(state_current.logical.diff(state_desired))
     }
 }
 

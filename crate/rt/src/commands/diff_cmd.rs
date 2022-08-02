@@ -7,7 +7,7 @@ use peace_resources::{
 };
 use peace_rt_model::FullSpecGraph;
 
-use crate::{StateDesiredCmd, StateNowCmd};
+use crate::{StateCurrentCmd, StateDesiredCmd};
 
 #[derive(Debug)]
 pub struct DiffCmd<E>(PhantomData<E>);
@@ -16,13 +16,13 @@ impl<E> DiffCmd<E>
 where
     E: std::error::Error,
 {
-    /// Runs [`StateNowFnSpec`]` and `[`StateDesiredFnSpec`]`::`[`exec`] for
+    /// Runs [`StateCurrentFnSpec`]` and `[`StateDesiredFnSpec`]`::`[`exec`] for
     /// each [`FullSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`States`] and [`StatesDesired`].
     ///
-    /// If any `StateNowFnSpec` needs to read the `State` from a previous
+    /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
     /// `FullSpec`, the [`StatesRw`] type should be used in
     /// [`FnSpec::Data`].
     ///
@@ -35,13 +35,13 @@ where
     /// [`FullSpec`]: peace_cfg::FullSpec
     /// [`States`]: peace_resources::States
     /// [`StatesRw`]: peace_resources::StatesRw
-    /// [`StateNowFnSpec`]: peace_cfg::FullSpec::StateNowFnSpec
+    /// [`StateCurrentFnSpec`]: peace_cfg::FullSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::FullSpec::StateDesiredFnSpec
     pub async fn exec(
         full_spec_graph: &FullSpecGraph<E>,
         resources: Resources<SetUp>,
     ) -> Result<Resources<WithStateDiffs>, E> {
-        let states = StateNowCmd::exec_internal(full_spec_graph, &resources).await?;
+        let states = StateCurrentCmd::exec_internal(full_spec_graph, &resources).await?;
         let states_desired = StateDesiredCmd::exec_internal(full_spec_graph, &resources).await?;
 
         let resources =

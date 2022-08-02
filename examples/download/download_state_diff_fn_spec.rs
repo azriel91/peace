@@ -23,9 +23,9 @@ impl StateDiffFnSpec for DownloadStateDiffFnSpec {
 
     async fn exec(
         _: &(),
-        state_now: &State<Option<FileState>, PathBuf>,
+        state_current: &State<Option<FileState>, PathBuf>,
         state_desired: &Option<FileState>,
     ) -> Result<Self::StateDiff, DownloadError> {
-        Ok(state_now.logical.diff(&state_desired))
+        Ok(state_current.logical.diff(&state_desired))
     }
 }
