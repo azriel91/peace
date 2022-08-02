@@ -1,19 +1,9 @@
+use std::{
+    collections::hash_map::DefaultHasher,
+    hash::{Hash, Hasher},
+};
+
 use peace::diff::{Equality, MaybeEq, Tracked};
-
-// for coverage
-#[test]
-fn clone() {
-    assert_eq!(
-        Tracked::<Value>::Known(Value(0)),
-        Tracked::<Value>::Known(Value(0)).clone()
-    )
-}
-
-#[test]
-fn debug() {
-    let tracked = Tracked::<Value>::Known(Value(0));
-    assert_eq!("Known(Value(0))", format!("{tracked:?}"))
-}
 
 mod maybe_eq {
     use peace::diff::{Equality, MaybeEq, Tracked};
@@ -99,7 +89,49 @@ mod partial_eq {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[test]
+fn hash() {
+    assert_eq!(hash_code(Tracked::None), hash_code(Tracked::None));
+    assert_ne!(hash_code(Tracked::None), hash_code(Tracked::Unknown));
+    assert_ne!(
+        hash_code(Tracked::None),
+        hash_code(Tracked::Known(Value(0)))
+    );
+
+    assert_eq!(hash_code(Tracked::Unknown), hash_code(Tracked::Unknown));
+    assert_ne!(
+        hash_code(Tracked::Unknown),
+        hash_code(Tracked::Known(Value(0)))
+    );
+
+    assert_eq!(
+        hash_code(Tracked::Known(Value(0))),
+        hash_code(Tracked::Known(Value(0)))
+    );
+}
+
+fn hash_code(tracked: Tracked<Value>) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    tracked.hash(&mut hasher);
+    hasher.finish()
+}
+
+// for coverage
+#[test]
+fn clone() {
+    assert_eq!(
+        Tracked::<Value>::Known(Value(0)),
+        Tracked::<Value>::Known(Value(0)).clone()
+    )
+}
+
+#[test]
+fn debug() {
+    let tracked = Tracked::<Value>::Known(Value(0));
+    assert_eq!("Known(Value(0))", format!("{tracked:?}"))
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Value(u8);
 
 impl MaybeEq for Value {

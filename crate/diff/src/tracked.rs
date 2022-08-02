@@ -1,11 +1,14 @@
-use std::cmp::PartialEq;
+use std::{
+    cmp::PartialEq,
+    hash::{Hash, Hasher},
+};
 
 use serde::{Deserialize, Serialize};
 
 use crate::{Equality, MaybeEq};
 
 /// Tracks the known state of a value.
-#[derive(Clone, Debug, Deserialize, Serialize, Eq, Hash)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq)]
 pub enum Tracked<T> {
     /// Value does not exist.
     None,
@@ -33,6 +36,19 @@ where
             | (Self::None, Self::Known(_))
             | (_, Self::Unknown)
             | (Self::Unknown, _) => false,
+        }
+    }
+}
+
+impl<T> Hash for Tracked<T>
+where
+    T: Hash,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        match self {
+            Self::None => 0.hash(state),
+            Self::Known(t) => t.hash(state),
+            Self::Unknown => 2.hash(state),
         }
     }
 }
