@@ -9,15 +9,12 @@ use tokio::io::{self, AsyncWriteExt, Stdout};
 use url::Url;
 
 pub use crate::{
-    download_clean_op_spec::DownloadCleanOpSpec,
-    download_ensure_op_spec::DownloadEnsureOpSpec,
-    download_error::DownloadError,
-    download_full_spec::DownloadFullSpec,
-    download_params::DownloadParams,
-    download_state_current_fn_spec::DownloadStateCurrentFnSpec,
+    download_clean_op_spec::DownloadCleanOpSpec, download_ensure_op_spec::DownloadEnsureOpSpec,
+    download_error::DownloadError, download_full_spec::DownloadFullSpec,
+    download_params::DownloadParams, download_state_current_fn_spec::DownloadStateCurrentFnSpec,
     download_state_desired_fn_spec::DownloadStateDesiredFnSpec,
-    download_state_diff_fn_spec::DownloadStateDiffFnSpec,
-    file_state::{FileState, FileStateDiff},
+    download_state_diff_fn_spec::DownloadStateDiffFnSpec, file_state::FileState,
+    file_state_diff::FileStateDiff,
 };
 
 #[path = "download/download_clean_op_spec.rs"]
@@ -38,6 +35,8 @@ mod download_state_desired_fn_spec;
 mod download_state_diff_fn_spec;
 #[path = "download/file_state.rs"]
 mod file_state;
+#[path = "download/file_state_diff.rs"]
+mod file_state_diff;
 
 fn main() -> Result<(), DownloadError> {
     let runtime = tokio::runtime::Builder::new_current_thread()
