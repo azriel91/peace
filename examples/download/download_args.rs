@@ -48,6 +48,15 @@ pub enum DownloadCommand {
         #[clap(value_parser)]
         dest: PathBuf,
     },
+    /// Dry-run to execute the download if necessary.
+    EnsureDry {
+        /// URL to download from.
+        #[clap(value_hint(ValueHint::Url))]
+        url: Url,
+        /// File path to write to.
+        #[clap(value_parser)]
+        dest: PathBuf,
+    },
     /// Executes the download if necessary.
     Ensure {
         /// URL to download from.

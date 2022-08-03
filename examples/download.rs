@@ -6,7 +6,7 @@ use peace::{
     rt::{DiffCmd, StateCurrentCmd, StateDesiredCmd},
     rt_model::{FullSpecGraph, FullSpecGraphBuilder},
 };
-use peace_resources::StatesEnsured;
+use peace_resources::{StatesEnsured, StatesEnsuredDry};
 use peace_rt::EnsureCmd;
 use tokio::io::{self, AsyncWriteExt, Stdout};
 use url::Url;
@@ -72,6 +72,10 @@ fn main() -> Result<(), DownloadError> {
                 let (graph, resources) = setup_graph(url, dest).await?;
                 diff(&graph, resources).await
             }
+            DownloadCommand::EnsureDry { url, dest } => {
+                let (graph, resources) = setup_graph(url, dest).await?;
+                ensure_dry(&graph, resources).await
+            }
             DownloadCommand::Ensure { url, dest } => {
                 let (graph, resources) = setup_graph(url, dest).await?;
                 ensure(&graph, resources).await
@@ -130,6 +134,19 @@ async fn diff(
 
     let mut stdout = io::stdout();
     stdout_write(&mut stdout, state_diffs_serialized.as_bytes()).await
+}
+
+async fn ensure_dry(
+    graph: &FullSpecGraph<DownloadError>,
+    resources: Resources<SetUp>,
+) -> Result<(), DownloadError> {
+    let resources = EnsureCmd::exec_dry(graph, resources).await?;
+    let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
+    let states_ensured_dry_serialized =
+        serde_yaml::to_string(&*states_ensured_dry).map_err(DownloadError::StateDiffsSerialize)?;
+
+    let mut stdout = io::stdout();
+    stdout_write(&mut stdout, states_ensured_dry_serialized.as_bytes()).await
 }
 
 async fn ensure(

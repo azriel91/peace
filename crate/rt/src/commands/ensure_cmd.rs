@@ -74,6 +74,8 @@ where
         let op_check_statuses = Self::ensure_op_spec_check(full_spec_graph, resources).await?;
         Self::ensure_op_spec_exec_dry(full_spec_graph, resources, &op_check_statuses).await?;
 
+        // TODO: This fetches the real state, whereas for a dry run, it would be useful
+        // to show the imagined altered state.
         let states = StateCurrentCmd::exec_internal_for_ensure(full_spec_graph, resources).await?;
 
         Ok(StatesEnsuredDry::from((states, resources)))
