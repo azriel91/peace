@@ -539,8 +539,35 @@ where
         Ok(op_check_status)
     }
 
-    async fn ensure_op_exec_dry(&self, _resources: &Resources<WithStateDiffs>) -> Result<(), E> {
-        todo!()
+    async fn ensure_op_exec_dry(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E> {
+        let data =
+            <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as Data>::borrow(resources);
+        let full_spec_id = <FS as FullSpec>::id(self);
+        let states = resources.borrow::<States>();
+        let state = states.get::<State<StateLogical, StatePhysical>, _>(&full_spec_id);
+        let states_desired = resources.borrow::<StatesDesired>();
+        let state_desired = states_desired.get::<StateLogical, _>(&full_spec_id);
+        let state_diffs = resources.borrow::<StateDiffs>();
+        let state_diff = state_diffs.get::<StateDiff, _>(&full_spec_id);
+
+        if let (Some(state), Some(state_desired), Some(state_diff)) =
+            (state, state_desired, state_diff)
+        {
+            <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec_dry(
+                data,
+                state,
+                state_desired,
+                state_diff,
+            )
+            .await?;
+        } else {
+            panic!(
+                "`FullSpecWrapper::ensure_op_exec_dry` must only be called with `States`, `StatesDesired`, and \
+                `StateDiffs` populated using `DiffCmd`."
+            );
+        }
+
+        Ok(())
     }
 
     async fn ensure_op_exec(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E> {

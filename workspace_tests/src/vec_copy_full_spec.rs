@@ -14,8 +14,23 @@ use peace::{
     },
     data::{Data, R, W},
     resources::{resources_type_state::Empty, Resources},
+    rt_model::FullSpecWrapper,
 };
 use serde::{Deserialize, Serialize};
+
+/// Type alias for `FullSpecWrapper` with all of VecCopyFullSpec's parameters.
+pub type VecCopyFullSpecWrapper = FullSpecWrapper<
+    VecCopyFullSpec,
+    VecCopyError,
+    Vec<u8>,
+    (),
+    VecDiff<u8>,
+    VecCopyStateCurrentFnSpec,
+    VecCopyStateDesiredFnSpec,
+    VecCopyStateDiffFnSpec,
+    VecCopyEnsureOpSpec,
+    VecCopyCleanOpSpec,
+>;
 
 /// Copies bytes from one `Vec` to another.
 #[derive(Debug)]
