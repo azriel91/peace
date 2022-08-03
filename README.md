@@ -28,21 +28,25 @@ See:
 |   🟡   | Work in progress |
 |   ⚫   | Planned          |
 
-* ⚫ Workflow graph with task dependencies
-* ⚫ Concurrent task execution
+* 🟢 Fetch current state.
+* 🟢 Fetch desired state.
+* 🟢 Workflow graph with task dependencies
+* 🟢 Concurrent task execution
+* 🟢 Dry run
+* 🟢 Skip unnecessary work
 * ⚫ Understandable error reporting
-* ⚫ Skip unnecessary work
+* ⚫ Feature-gated incremental functionality
+* ⚫ Built-in application execution methods -- CLI, web service
 * ⚫ Understandable progress
 * ⚫ Actionable error messages
 * ⚫ Namespaced working directory
 * ⚫ Resource clean up
-* ⚫ Dry run
 * ⚫ `peace` binary for configuration based workflows
 * ⚫ Off-the-shelf support for common tasks
 * ⚫ Web based UI
 * ⚫ Agent mode to run `peace` on servers (Web API invocation)
 
-Ideas which may be considered:
+Further ideas:
 
 * Back up current state
 * Restore previous state
