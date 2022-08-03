@@ -9,7 +9,8 @@ pub use type_reg;
 pub use crate::{
     full_spec_rt_id::FullSpecRtId, resources::Resources, state_diffs::StateDiffs,
     state_diffs_mut::StateDiffsMut, states::States, states_desired::StatesDesired,
-    states_desired_mut::StatesDesiredMut, states_ensured::StatesEnsured, states_mut::StatesMut,
+    states_desired_mut::StatesDesiredMut, states_ensured::StatesEnsured,
+    states_ensured_dry::StatesEnsuredDry, states_mut::StatesMut,
 };
 
 pub mod internal;
@@ -23,4 +24,5 @@ mod states;
 mod states_desired;
 mod states_desired_mut;
 mod states_ensured;
+mod states_ensured_dry;
 mod states_mut;

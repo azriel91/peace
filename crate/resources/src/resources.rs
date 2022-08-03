@@ -5,10 +5,10 @@ use std::{
 
 use crate::{
     resources_type_state::{
-        Empty, Ensured, SetUp, WithStateDiffs, WithStates, WithStatesDesired,
+        Empty, Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesDesired,
         WithStatesNowAndDesired,
     },
-    StateDiffs, States, StatesDesired, StatesEnsured,
+    StateDiffs, States, StatesDesired, StatesEnsured, StatesEnsuredDry,
 };
 
 /// Map of all types at runtime. [`resman::Resources`] newtype.
@@ -122,6 +122,19 @@ impl From<(Resources<WithStatesNowAndDesired>, StateDiffs)> for Resources<WithSt
         (mut resources, state_diffs): (Resources<WithStatesNowAndDesired>, StateDiffs),
     ) -> Self {
         resources.insert(state_diffs);
+
+        Self {
+            inner: resources.into_inner(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl From<(Resources<WithStateDiffs>, StatesEnsuredDry)> for Resources<EnsuredDry> {
+    fn from(
+        (mut resources, states_ensured_dry): (Resources<WithStateDiffs>, StatesEnsuredDry),
+    ) -> Self {
+        resources.insert(states_ensured_dry);
 
         Self {
             inner: resources.into_inner(),

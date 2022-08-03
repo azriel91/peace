@@ -53,21 +53,28 @@ pub struct WithStatesNowAndDesired;
 #[derive(Debug)]
 pub struct WithStateDiffs;
 
-/// [`Resources`] have been used in `EnsureCmd`.
-///
-/// This means `States` has become obsolete, and a subsequent `StateCurrentCmd`
-/// should be run to re-fetch the states.
+/// [`Resources`] have been run through `EnsureCmd::exec_dry`.
 ///
 /// Implies [`SetUp`], [`WithStatesNowAndDesired`], and [`WithStateDiffs`].
-///
-/// # Development Note
-///
-/// Maybe change the semantics of this to mean, `States` is changed to
-/// `StatesPrevious`, and insert a new type called `StatesEnsured`.
 ///
 /// [`Resources`]: crate::Resources
 /// [`States`]: crate::States
 /// [`StatesDesired`]: crate::StatesDesired
+/// [`StateDiffs`]: crate::StateDiffs
+#[derive(Debug)]
+pub struct EnsuredDry;
+
+/// [`Resources`] have been run through `EnsureCmd::exec`.
+///
+/// This means `States` is now stale, and [`StatesEnsured`] holds the up to date
+/// states.
+///
+/// Implies [`SetUp`], [`WithStatesNowAndDesired`], and [`WithStateDiffs`].
+///
+/// [`Resources`]: crate::Resources
+/// [`States`]: crate::States
+/// [`StatesDesired`]: crate::StatesDesired
+/// [`StatesEnsured`]: crate::StatesEnsured
 /// [`StateDiffs`]: crate::StateDiffs
 #[derive(Debug)]
 pub struct Ensured;
