@@ -4,12 +4,12 @@ use futures::stream::{StreamExt, TryStreamExt};
 use peace_cfg::OpCheckStatus;
 use peace_resources::{
     internal::OpCheckStatuses,
-    resources_type_state::{Ensured, WithStateDiffs},
+    resources_type_state::{Ensured, SetUp, WithStateDiffs},
     Resources, StatesEnsured,
 };
 use peace_rt_model::FullSpecGraph;
 
-use crate::StateCurrentCmd;
+use crate::{DiffCmd, StateCurrentCmd};
 
 #[derive(Debug)]
 pub struct EnsureCmd<E>(PhantomData<E>);
@@ -46,8 +46,9 @@ where
     /// [`EnsureOpSpec`]: peace_cfg::FullSpec::EnsureOpSpec
     pub async fn exec(
         full_spec_graph: &FullSpecGraph<E>,
-        resources: Resources<WithStateDiffs>,
+        resources: Resources<SetUp>,
     ) -> Result<Resources<Ensured>, E> {
+        let resources = DiffCmd::exec(full_spec_graph, resources).await?;
         let states_ensured = Self::exec_internal(full_spec_graph, &resources).await?;
 
         Ok(Resources::<Ensured>::from((resources, states_ensured)))

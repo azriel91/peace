@@ -107,6 +107,7 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
         download_params: DownloadParams<'_>,
         _state: &State<Option<FileState>, PathBuf>,
         _file_state_desired: &Option<FileState>,
+        _diff: &FileStateDiff,
     ) -> Result<PathBuf, DownloadError> {
         let dest = download_params.dest();
         Ok(dest.to_path_buf())
@@ -116,6 +117,7 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
         download_params: DownloadParams<'_>,
         _state: &State<Option<FileState>, PathBuf>,
         _file_state_desired: &Option<FileState>,
+        _diff: &FileStateDiff,
     ) -> Result<PathBuf, DownloadError> {
         Self::file_download(&download_params).await?;
         let dest = download_params.dest();

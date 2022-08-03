@@ -16,7 +16,7 @@ publish = false
 doctest = false
 test = true
 
-[dependencies]
+[dev-dependencies]
 peace = { path = "..", version = "0.0.1" }
 serde = { version = "1.0.139", features = ["derive"] }
 thiserror = "1.0.31"
