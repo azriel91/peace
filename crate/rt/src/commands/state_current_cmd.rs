@@ -16,8 +16,7 @@ impl<E> StateCurrentCmd<E>
 where
     E: std::error::Error,
 {
-    /// Runs [`FullSpec`]`::`[`StateCurrentFnSpec`]`::`[`exec`] for each full
-    /// spec.
+    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`FullSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`States`].
@@ -40,8 +39,7 @@ where
         Ok(Resources::<WithStates>::from((resources, states)))
     }
 
-    /// Runs [`FullSpec`]`::`[`StateCurrentFnSpec`]`::`[`exec`] for each full
-    /// spec.
+    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`FullSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`States`].
