@@ -5,7 +5,8 @@ use std::{
 
 use crate::{
     resources_type_state::{
-        Empty, SetUp, WithStateDiffs, WithStates, WithStatesDesired, WithStatesNowAndDesired,
+        Empty, Ensured, SetUp, WithStateDiffs, WithStates, WithStatesDesired,
+        WithStatesNowAndDesired,
     },
     StateDiffs, States, StatesDesired,
 };
@@ -121,6 +122,17 @@ impl From<(Resources<WithStatesNowAndDesired>, StateDiffs)> for Resources<WithSt
         (mut resources, state_diffs): (Resources<WithStatesNowAndDesired>, StateDiffs),
     ) -> Self {
         resources.insert(state_diffs);
+
+        Self {
+            inner: resources.into_inner(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl From<(Resources<WithStateDiffs>, ())> for Resources<Ensured> {
+    fn from((mut resources, states_ensured): (Resources<WithStateDiffs>, ())) -> Self {
+        resources.insert(states_ensured);
 
         Self {
             inner: resources.into_inner(),

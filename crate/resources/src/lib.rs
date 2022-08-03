@@ -12,6 +12,7 @@ pub use crate::{
     states_desired_mut::StatesDesiredMut, states_mut::StatesMut,
 };
 
+pub mod internal;
 pub mod resources_type_state;
 
 mod full_spec_rt_id;

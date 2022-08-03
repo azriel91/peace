@@ -106,6 +106,7 @@ where
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
+            StateDiff = StateDiff,
         > + Send
         + Sync
         + 'static,
