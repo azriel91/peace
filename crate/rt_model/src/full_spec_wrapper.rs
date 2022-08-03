@@ -5,12 +5,12 @@ use std::{
 };
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
-use peace_cfg::{async_trait, nougat::Gat, FnSpec, FullSpec, FullSpecId, State};
+use peace_cfg::{async_trait, nougat::Gat, FnSpec, FullSpec, FullSpecId, OpCheckStatus, State};
 use peace_data::Data;
 use peace_resources::{
-    resources_type_state::{Empty, SetUp, WithStates, WithStatesNowAndDesired},
+    resources_type_state::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     type_reg::untagged::DataType,
-    Resources, States, StatesDesired,
+    Resources, StateDiffs, States, StatesDesired,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -191,8 +191,11 @@ where
         > + Send
         + Sync,
     EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<StateLogical = StateLogical, StatePhysical = StatePhysical>
-        + Send
+        + peace_cfg::EnsureOpSpec<
+            StateLogical = StateLogical,
+            StatePhysical = StatePhysical,
+            StateDiff = StateDiff,
+        > + Send
         + Sync,
     CleanOpSpec: Debug
         + peace_cfg::CleanOpSpec<StateLogical = StateLogical, StatePhysical = StatePhysical>
@@ -257,8 +260,11 @@ where
         > + Send
         + Sync,
     EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<StateLogical = StateLogical, StatePhysical = StatePhysical>
-        + Send
+        + peace_cfg::EnsureOpSpec<
+            StateLogical = StateLogical,
+            StatePhysical = StatePhysical,
+            StateDiff = StateDiff,
+        > + Send
         + Sync,
     CleanOpSpec: Debug
         + peace_cfg::CleanOpSpec<StateLogical = StateLogical, StatePhysical = StatePhysical>
@@ -327,8 +333,11 @@ where
         > + Send
         + Sync,
     EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<StateLogical = StateLogical, StatePhysical = StatePhysical>
-        + Send
+        + peace_cfg::EnsureOpSpec<
+            StateLogical = StateLogical,
+            StatePhysical = StatePhysical,
+            StateDiff = StateDiff,
+        > + Send
         + Sync,
     CleanOpSpec: Debug
         + peace_cfg::CleanOpSpec<StateLogical = StateLogical, StatePhysical = StatePhysical>
@@ -403,6 +412,7 @@ where
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
+            StateDiff = StateDiff,
         > + Send
         + Sync,
     CleanOpSpec: Debug
@@ -435,6 +445,20 @@ where
         Ok(Box::new(state))
     }
 
+    async fn state_ensured_fn_exec(
+        &self,
+        resources: &Resources<WithStateDiffs>,
+    ) -> Result<Box<dyn DataType>, E> {
+        let state: State<StateLogical, StatePhysical> = {
+            let data = <Gat!(<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
+                resources,
+            );
+            <StateCurrentFnSpec as FnSpec>::exec(data).await?
+        };
+
+        Ok(Box::new(state))
+    }
+
     async fn state_desired_fn_exec(
         &self,
         resources: &Resources<SetUp>,
@@ -451,7 +475,7 @@ where
 
     async fn state_diff_fn_exec(
         &self,
-        resources: &Resources<WithStatesNowAndDesired>,
+        resources: &Resources<WithStatesCurrentAndDesired>,
     ) -> Result<Box<dyn DataType>, E> {
         let state_diff: StateDiff = {
             let data =
@@ -478,15 +502,97 @@ where
         Ok(Box::new(state_diff))
     }
 
-    async fn ensure_op_check(&self, _resources: &Resources<WithStates>) -> Result<(), E> {
-        todo!()
+    async fn ensure_op_check(
+        &self,
+        resources: &Resources<WithStateDiffs>,
+    ) -> Result<OpCheckStatus, E> {
+        let op_check_status = {
+            let data = <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as Data>::borrow(
+                resources,
+            );
+            let full_spec_id = <FS as FullSpec>::id(self);
+            let states = resources.borrow::<States>();
+            let state = states.get::<State<StateLogical, StatePhysical>, _>(&full_spec_id);
+            let states_desired = resources.borrow::<StatesDesired>();
+            let state_desired = states_desired.get::<StateLogical, _>(&full_spec_id);
+            let state_diffs = resources.borrow::<StateDiffs>();
+            let state_diff = state_diffs.get::<StateDiff, _>(&full_spec_id);
+
+            if let (Some(state), Some(state_desired), Some(state_diff)) =
+                (state, state_desired, state_diff)
+            {
+                <EnsureOpSpec as peace_cfg::EnsureOpSpec>::check(
+                    data,
+                    state,
+                    state_desired,
+                    state_diff,
+                )
+                .await?
+            } else {
+                panic!(
+                    "`FullSpecWrapper::ensure_op_check` must only be called with `States`, `StatesDesired`, and \
+                    `StateDiffs` populated using `DiffCmd`."
+                );
+            }
+        };
+
+        Ok(op_check_status)
     }
 
-    async fn ensure_op_exec_dry(&self, _resources: &Resources<WithStates>) -> Result<(), E> {
-        todo!()
+    async fn ensure_op_exec_dry(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E> {
+        let data =
+            <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as Data>::borrow(resources);
+        let full_spec_id = <FS as FullSpec>::id(self);
+        let states = resources.borrow::<States>();
+        let state = states.get::<State<StateLogical, StatePhysical>, _>(&full_spec_id);
+        let states_desired = resources.borrow::<StatesDesired>();
+        let state_desired = states_desired.get::<StateLogical, _>(&full_spec_id);
+        let state_diffs = resources.borrow::<StateDiffs>();
+        let state_diff = state_diffs.get::<StateDiff, _>(&full_spec_id);
+
+        if let (Some(state), Some(state_desired), Some(state_diff)) =
+            (state, state_desired, state_diff)
+        {
+            <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec_dry(
+                data,
+                state,
+                state_desired,
+                state_diff,
+            )
+            .await?;
+        } else {
+            panic!(
+                "`FullSpecWrapper::ensure_op_exec_dry` must only be called with `States`, `StatesDesired`, and \
+                `StateDiffs` populated using `DiffCmd`."
+            );
+        }
+
+        Ok(())
     }
 
-    async fn ensure_op_exec(&self, _resources: &Resources<WithStates>) -> Result<(), E> {
-        todo!()
+    async fn ensure_op_exec(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E> {
+        let data =
+            <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as Data>::borrow(resources);
+        let full_spec_id = <FS as FullSpec>::id(self);
+        let states = resources.borrow::<States>();
+        let state = states.get::<State<StateLogical, StatePhysical>, _>(&full_spec_id);
+        let states_desired = resources.borrow::<StatesDesired>();
+        let state_desired = states_desired.get::<StateLogical, _>(&full_spec_id);
+        let state_diffs = resources.borrow::<StateDiffs>();
+        let state_diff = state_diffs.get::<StateDiff, _>(&full_spec_id);
+
+        if let (Some(state), Some(state_desired), Some(state_diff)) =
+            (state, state_desired, state_diff)
+        {
+            <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec(data, state, state_desired, state_diff)
+                .await?;
+        } else {
+            panic!(
+                "`FullSpecWrapper::ensure_op_exec` must only be called with `States`, `StatesDesired`, and \
+                `StateDiffs` populated using `DiffCmd`."
+            );
+        }
+
+        Ok(())
     }
 }

@@ -16,8 +16,7 @@ impl<E> StateDesiredCmd<E>
 where
     E: std::error::Error,
 {
-    /// Runs [`FullSpec`]`::`[`StateDesiredFnSpec`]`::`[`exec`] for each full
-    /// spec.
+    /// Runs [`StateDesiredFnSpec`]`::`[`exec`] for each [`FullSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesDesired`].
@@ -44,8 +43,7 @@ where
         )))
     }
 
-    /// Runs [`FullSpec`]`::`[`StateDesiredFnSpec`]`::`[`exec`] for each full
-    /// spec.
+    /// Runs [`StateDesiredFnSpec`]`::`[`exec`] for each [`FullSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state.
     ///

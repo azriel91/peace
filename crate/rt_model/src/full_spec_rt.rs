@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 
 use fn_graph::{DataAccess, DataAccessDyn};
-use peace_cfg::{async_trait, FullSpecId};
+use peace_cfg::{async_trait, FullSpecId, OpCheckStatus};
 use peace_resources::{
-    resources_type_state::{Empty, SetUp, WithStates, WithStatesNowAndDesired},
+    resources_type_state::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     type_reg::untagged::DataType,
     Resources,
 };
@@ -38,6 +38,15 @@ where
         resources: &Resources<SetUp>,
     ) -> Result<Box<dyn DataType>, E>;
 
+    /// Runs [`FullSpec::StateCurrentFnSpec`]`::`[`exec`].
+    ///
+    /// [`FullSpec::StateCurrentFnSpec`]: peace_cfg::FullSpec::StateCurrentFnSpec
+    /// [`exec`]: peace_cfg::FnSpec::exec
+    async fn state_ensured_fn_exec(
+        &self,
+        resources: &Resources<WithStateDiffs>,
+    ) -> Result<Box<dyn DataType>, E>;
+
     /// Runs [`FullSpec::StateDesiredFnSpec`]`::`[`desired`].
     ///
     /// [`FullSpec::StateDesiredFnSpec`]: peace_cfg::FullSpec::StateDesiredFnSpec
@@ -52,24 +61,27 @@ where
     /// [`State`]: peace_cfg::State
     async fn state_diff_fn_exec(
         &self,
-        resources: &Resources<WithStatesNowAndDesired>,
+        resources: &Resources<WithStatesCurrentAndDesired>,
     ) -> Result<Box<dyn DataType>, E>;
 
     /// Runs [`FullSpec::EnsureOpSpec`]`::`[`check`].
     ///
     /// [`FullSpec::EnsureOpSpec`]: peace_cfg::FullSpec::EnsureOpSpec
     /// [`check`]: peace_cfg::OpSpec::check
-    async fn ensure_op_check(&self, resources: &Resources<WithStates>) -> Result<(), E>;
+    async fn ensure_op_check(
+        &self,
+        resources: &Resources<WithStateDiffs>,
+    ) -> Result<OpCheckStatus, E>;
 
     /// Runs [`FullSpec::EnsureOpSpec`]`::`[`exec_dry`].
     ///
     /// [`FullSpec::EnsureOpSpec`]: peace_cfg::FullSpec::EnsureOpSpec
     /// [`exec_dry`]: peace_cfg::OpSpec::exec_dry
-    async fn ensure_op_exec_dry(&self, resources: &Resources<WithStates>) -> Result<(), E>;
+    async fn ensure_op_exec_dry(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E>;
 
     /// Runs [`FullSpec::EnsureOpSpec`]`::`[`exec`].
     ///
     /// [`FullSpec::EnsureOpSpec`]: peace_cfg::FullSpec::EnsureOpSpec
     /// [`exec`]: peace_cfg::OpSpec::exec
-    async fn ensure_op_exec(&self, resources: &Resources<WithStates>) -> Result<(), E>;
+    async fn ensure_op_exec(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E>;
 }

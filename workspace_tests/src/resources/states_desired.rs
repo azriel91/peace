@@ -25,7 +25,7 @@ fn into_inner() {
 }
 
 #[test]
-fn deref_and_deref_mut() {
+fn deref() {
     let states_desired = StatesDesired::new();
 
     // deref

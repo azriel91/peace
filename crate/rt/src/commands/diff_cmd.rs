@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use futures::{StreamExt, TryStreamExt};
 use peace_resources::{
-    resources_type_state::{SetUp, WithStateDiffs, WithStatesNowAndDesired},
+    resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     Resources, StateDiffs, StateDiffsMut,
 };
 use peace_rt_model::FullSpecGraph;
@@ -45,7 +45,7 @@ where
         let states_desired = StateDesiredCmd::exec_internal(full_spec_graph, &resources).await?;
 
         let resources =
-            Resources::<WithStatesNowAndDesired>::from((resources, states, states_desired));
+            Resources::<WithStatesCurrentAndDesired>::from((resources, states, states_desired));
         let resources_ref = &resources;
         let state_diffs = {
             let state_diffs_mut = full_spec_graph

@@ -40,7 +40,7 @@ pub struct WithStatesDesired;
 /// [`States`]: crate::States
 /// [`StatesDesired`]: crate::StatesDesired
 #[derive(Debug)]
-pub struct WithStatesNowAndDesired;
+pub struct WithStatesCurrentAndDesired;
 
 /// [`Resources`] contains [`States`], [`StatesDesired`], and [`StateDiffs`].
 ///
@@ -52,3 +52,29 @@ pub struct WithStatesNowAndDesired;
 /// [`StateDiffs`]: crate::StateDiffs
 #[derive(Debug)]
 pub struct WithStateDiffs;
+
+/// [`Resources`] have been run through `EnsureCmd::exec_dry`.
+///
+/// Implies [`SetUp`], [`WithStatesNowAndDesired`], and [`WithStateDiffs`].
+///
+/// [`Resources`]: crate::Resources
+/// [`States`]: crate::States
+/// [`StatesDesired`]: crate::StatesDesired
+/// [`StateDiffs`]: crate::StateDiffs
+#[derive(Debug)]
+pub struct EnsuredDry;
+
+/// [`Resources`] have been run through `EnsureCmd::exec`.
+///
+/// This means `States` is now stale, and [`StatesEnsured`] holds the up to date
+/// states.
+///
+/// Implies [`SetUp`], [`WithStatesNowAndDesired`], and [`WithStateDiffs`].
+///
+/// [`Resources`]: crate::Resources
+/// [`States`]: crate::States
+/// [`StatesDesired`]: crate::StatesDesired
+/// [`StatesEnsured`]: crate::StatesEnsured
+/// [`StateDiffs`]: crate::StateDiffs
+#[derive(Debug)]
+pub struct Ensured;

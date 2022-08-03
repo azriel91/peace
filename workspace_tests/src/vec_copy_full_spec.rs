@@ -1,4 +1,4 @@
-use diff::Diff;
+use diff::{Diff, VecDiff};
 #[nougat::gat(Data)]
 use peace::cfg::CleanOpSpec;
 #[nougat::gat(Data)]
@@ -14,8 +14,23 @@ use peace::{
     },
     data::{Data, R, W},
     resources::{resources_type_state::Empty, Resources},
+    rt_model::FullSpecWrapper,
 };
 use serde::{Deserialize, Serialize};
+
+/// Type alias for `FullSpecWrapper` with all of VecCopyFullSpec's parameters.
+pub type VecCopyFullSpecWrapper = FullSpecWrapper<
+    VecCopyFullSpec,
+    VecCopyError,
+    Vec<u8>,
+    (),
+    VecDiff<u8>,
+    VecCopyStateCurrentFnSpec,
+    VecCopyStateDesiredFnSpec,
+    VecCopyStateDiffFnSpec,
+    VecCopyEnsureOpSpec,
+    VecCopyCleanOpSpec,
+>;
 
 /// Copies bytes from one `Vec` to another.
 #[derive(Debug)]
@@ -28,7 +43,7 @@ impl FullSpec for VecCopyFullSpec {
     type Error = VecCopyError;
     type StateCurrentFnSpec = VecCopyStateCurrentFnSpec;
     type StateDesiredFnSpec = VecCopyStateDesiredFnSpec;
-    type StateDiff = <Vec<u8> as Diff>::Repr;
+    type StateDiff = VecDiff<u8>;
     type StateDiffFnSpec = VecCopyStateDiffFnSpec;
     type StateLogical = Vec<u8>;
     type StatePhysical = ();
@@ -100,7 +115,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     type Data<'op> = VecCopyParams<'op>
         where Self: 'op;
     type Error = VecCopyError;
-    type StateDiff = <Vec<u8> as Diff>::Repr;
+    type StateDiff = VecDiff<u8>;
     type StateLogical = Vec<u8>;
     type StatePhysical = ();
 
@@ -108,7 +123,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
         _vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Vec<u8>,
-        diff: &<Vec<u8> as Diff>::Repr,
+        diff: &VecDiff<u8>,
     ) -> Result<OpCheckStatus, VecCopyError> {
         let op_check_status = if diff.0.is_empty() {
             OpCheckStatus::ExecNotRequired
@@ -126,6 +141,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
         _vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         _state_desired: &Vec<u8>,
+        _diff: &VecDiff<u8>,
     ) -> Result<Self::StatePhysical, Self::Error> {
         // Would replace vec_b's contents with vec_a's
         Ok(())
@@ -135,6 +151,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
         mut vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Vec<u8>,
+        _diff: &VecDiff<u8>,
     ) -> Result<Self::StatePhysical, VecCopyError> {
         let dest = vec_copy_params.dest_mut();
         dest.0.clear();
@@ -203,7 +220,7 @@ impl StateDiffFnSpec for VecCopyStateDiffFnSpec {
     type Data<'op> = &'op ()
         where Self: 'op;
     type Error = VecCopyError;
-    type StateDiff = <Vec<u8> as Diff>::Repr;
+    type StateDiff = VecDiff<u8>;
     type StateLogical = Vec<u8>;
     type StatePhysical = ();
 

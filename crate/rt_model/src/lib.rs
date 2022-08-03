@@ -1,5 +1,8 @@
 //! Runtime data types for the peace automation framework.
 
+// Re-exports
+pub use fn_graph::{self, FnRef, FnRefMut};
+
 pub use crate::{
     full_spec_boxed::FullSpecBoxed, full_spec_graph::FullSpecGraph,
     full_spec_graph_builder::FullSpecGraphBuilder, full_spec_rt::FullSpecRt,

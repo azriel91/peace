@@ -6,7 +6,7 @@
 // Re-exports
 pub use async_trait::async_trait;
 pub use nougat;
-pub use peace_core::{FullSpecId, FullSpecIdInvalidFmt};
+pub use peace_core::{FullSpecId, FullSpecIdInvalidFmt, OpCheckStatus, ProgressLimit};
 pub use peace_full_spec_id_macro::full_spec_id;
 
 #[nougat::gat(Data)]
@@ -17,16 +17,11 @@ pub use crate::ensure_op_spec::EnsureOpSpec;
 pub use crate::fn_spec::FnSpec;
 #[nougat::gat(Data)]
 pub use crate::state_diff_fn_spec::StateDiffFnSpec;
-pub use crate::{
-    full_spec::FullSpec, op_check_status::OpCheckStatus, progress_limit::ProgressLimit,
-    state::State,
-};
+pub use crate::{full_spec::FullSpec, state::State};
 
 mod clean_op_spec;
 mod ensure_op_spec;
 mod fn_spec;
 mod full_spec;
-mod op_check_status;
-mod progress_limit;
 mod state;
 mod state_diff_fn_spec;

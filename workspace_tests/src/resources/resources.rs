@@ -1,8 +1,8 @@
 use peace::resources::{
     resources_type_state::{
-        SetUp, WithStateDiffs, WithStates, WithStatesDesired, WithStatesNowAndDesired,
+        Ensured, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired, WithStatesDesired,
     },
-    Resources, StateDiffs, States, StatesDesired,
+    Resources, StateDiffs, States, StatesDesired, StatesEnsured,
 };
 
 #[test]
@@ -39,7 +39,7 @@ fn resources_with_states_desired_from_resources_set_up() {
 fn resources_with_states_now_and_desired_from_resources_set_up() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_now_and_desired = Resources::<WithStatesNowAndDesired>::from((
+    let resources_with_states_now_and_desired = Resources::<WithStatesCurrentAndDesired>::from((
         resources_set_up,
         States::new(),
         StatesDesired::new(),
@@ -53,7 +53,7 @@ fn resources_with_states_now_and_desired_from_resources_set_up() {
 fn resources_with_state_diffs_from_resources_with_states_now_and_desired() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_now_and_desired = Resources::<WithStatesNowAndDesired>::from((
+    let resources_with_states_now_and_desired = Resources::<WithStatesCurrentAndDesired>::from((
         resources_set_up,
         States::new(),
         StatesDesired::new(),
@@ -66,4 +66,26 @@ fn resources_with_state_diffs_from_resources_with_states_now_and_desired() {
     assert!(resources_with_state_diffs.contains::<States>());
     assert!(resources_with_state_diffs.contains::<StatesDesired>());
     assert!(resources_with_state_diffs.contains::<StateDiffs>());
+}
+
+#[test]
+fn resources_ensured_from_resources_with_state_diffs() {
+    let resources_empty = Resources::new();
+    let resources_set_up = Resources::<SetUp>::from(resources_empty);
+    let resources_with_states_now_and_desired = Resources::<WithStatesCurrentAndDesired>::from((
+        resources_set_up,
+        States::new(),
+        StatesDesired::new(),
+    ));
+    let resources_with_state_diffs = Resources::<WithStateDiffs>::from((
+        resources_with_states_now_and_desired,
+        StateDiffs::new(),
+    ));
+    let resources_ensured =
+        Resources::<Ensured>::from((resources_with_state_diffs, StatesEnsured::new()));
+
+    assert!(resources_ensured.contains::<States>());
+    assert!(resources_ensured.contains::<StatesDesired>());
+    assert!(resources_ensured.contains::<StateDiffs>());
+    assert!(resources_ensured.contains::<StatesEnsured>());
 }
