@@ -1,7 +1,7 @@
 [package]
 name = "peace_cfg"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 description = "Configuration model for the peace automation framework."
 repository = "https://github.com/azriel91/peace"
@@ -18,8 +18,8 @@ test = false
 [dependencies]
 async-trait = "0.1.56"
 nougat = "0.2.1"
-peace_core = { path = "../core", version = "0.0.1" }
-peace_data = { path = "../data", version = "0.0.1" }
-peace_full_spec_id_macro = { path = "../full_spec_id_macro", version = "0.0.1" }
-peace_resources = { path = "../resources", version = "0.0.1" }
+peace_core = { path = "../core", version = "0.0.2" }
+peace_data = { path = "../data", version = "0.0.2" }
+peace_full_spec_id_macro = { path = "../full_spec_id_macro", version = "0.0.2" }
+peace_resources = { path = "../resources", version = "0.0.2" }
 serde = { version = "1.0.139", features = ["derive"] }
