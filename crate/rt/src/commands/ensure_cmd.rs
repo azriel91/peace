@@ -5,9 +5,11 @@ use peace_cfg::OpCheckStatus;
 use peace_resources::{
     internal::OpCheckStatuses,
     resources_type_state::{Ensured, WithStateDiffs},
-    Resources,
+    Resources, StatesEnsured,
 };
 use peace_rt_model::FullSpecGraph;
+
+use crate::StateCurrentCmd;
 
 #[derive(Debug)]
 pub struct EnsureCmd<E>(PhantomData<E>);
@@ -51,10 +53,10 @@ where
         Ok(Resources::<Ensured>::from((resources, states_ensured)))
     }
 
-    /// Runs [`EnsureOpSpec`]`::`[`exec`] for each [`FullSpec`].
+    /// Conditionally runs [`EnsureOpSpec`]`::`[`exec`] for each [`FullSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
-    /// [`States`].
+    /// [`StatesEnsured`].
     ///
     /// [`exec`]: peace_cfg::EnsureOpSpec::exec
     /// [`FullSpec`]: peace_cfg::FullSpec
@@ -62,12 +64,13 @@ where
     pub(crate) async fn exec_internal(
         full_spec_graph: &FullSpecGraph<E>,
         resources: &Resources<WithStateDiffs>,
-    ) -> Result<(), E> {
+    ) -> Result<StatesEnsured, E> {
         let op_check_statuses = Self::ensure_op_spec_check(full_spec_graph, resources).await?;
         Self::ensure_op_spec_exec(full_spec_graph, resources, &op_check_statuses).await?;
 
-        // TODO: re-fetch states and pass in.
-        Ok(())
+        let states = StateCurrentCmd::exec_internal_for_ensure(full_spec_graph, resources).await?;
+
+        Ok(StatesEnsured::from((states, resources)))
     }
 
     async fn ensure_op_spec_check(

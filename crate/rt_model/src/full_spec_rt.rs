@@ -38,6 +38,15 @@ where
         resources: &Resources<SetUp>,
     ) -> Result<Box<dyn DataType>, E>;
 
+    /// Runs [`FullSpec::StateCurrentFnSpec`]`::`[`exec`].
+    ///
+    /// [`FullSpec::StateCurrentFnSpec`]: peace_cfg::FullSpec::StateCurrentFnSpec
+    /// [`exec`]: peace_cfg::FnSpec::exec
+    async fn state_ensured_fn_exec(
+        &self,
+        resources: &Resources<WithStateDiffs>,
+    ) -> Result<Box<dyn DataType>, E>;
+
     /// Runs [`FullSpec::StateDesiredFnSpec`]`::`[`desired`].
     ///
     /// [`FullSpec::StateDesiredFnSpec`]: peace_cfg::FullSpec::StateDesiredFnSpec

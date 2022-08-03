@@ -8,7 +8,7 @@ use crate::{
         Empty, Ensured, SetUp, WithStateDiffs, WithStates, WithStatesDesired,
         WithStatesNowAndDesired,
     },
-    StateDiffs, States, StatesDesired,
+    StateDiffs, States, StatesDesired, StatesEnsured,
 };
 
 /// Map of all types at runtime. [`resman::Resources`] newtype.
@@ -130,8 +130,8 @@ impl From<(Resources<WithStatesNowAndDesired>, StateDiffs)> for Resources<WithSt
     }
 }
 
-impl From<(Resources<WithStateDiffs>, ())> for Resources<Ensured> {
-    fn from((mut resources, states_ensured): (Resources<WithStateDiffs>, ())) -> Self {
+impl From<(Resources<WithStateDiffs>, StatesEnsured)> for Resources<Ensured> {
+    fn from((mut resources, states_ensured): (Resources<WithStateDiffs>, StatesEnsured)) -> Self {
         resources.insert(states_ensured);
 
         Self {

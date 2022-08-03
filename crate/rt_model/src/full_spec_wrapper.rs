@@ -445,6 +445,20 @@ where
         Ok(Box::new(state))
     }
 
+    async fn state_ensured_fn_exec(
+        &self,
+        resources: &Resources<WithStateDiffs>,
+    ) -> Result<Box<dyn DataType>, E> {
+        let state: State<StateLogical, StatePhysical> = {
+            let data = <Gat!(<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
+                resources,
+            );
+            <StateCurrentFnSpec as FnSpec>::exec(data).await?
+        };
+
+        Ok(Box::new(state))
+    }
+
     async fn state_desired_fn_exec(
         &self,
         resources: &Resources<SetUp>,
