@@ -30,7 +30,7 @@ where
     /// # Note
     ///
     /// To only make changes when they are *all* likely to work, we execute the
-    /// functions as homogenous groups instead of interleaving the functions
+    /// functions as homogeneous groups instead of interleaving the functions
     /// together per `FullSpec`:
     ///
     /// 1. Run [`EnsureOpSpec::check`] for all `FullSpec`s.
@@ -103,7 +103,7 @@ where
     /// # Note
     ///
     /// To only make changes when they are *all* likely to work, we execute the
-    /// functions as homogenous groups instead of interleaving the functions
+    /// functions as homogeneous groups instead of interleaving the functions
     /// together per `FullSpec`:
     ///
     /// 1. Run [`EnsureOpSpec::check`] for all `FullSpec`s.
