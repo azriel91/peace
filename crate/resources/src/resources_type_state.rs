@@ -40,7 +40,7 @@ pub struct WithStatesDesired;
 /// [`States`]: crate::States
 /// [`StatesDesired`]: crate::StatesDesired
 #[derive(Debug)]
-pub struct WithStatesNowAndDesired;
+pub struct WithStatesCurrentAndDesired;
 
 /// [`Resources`] contains [`States`], [`StatesDesired`], and [`StateDiffs`].
 ///

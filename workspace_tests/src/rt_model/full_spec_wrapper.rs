@@ -2,7 +2,7 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{OpCheckStatus, ProgressLimit, State},
     resources::{
-        resources_type_state::{SetUp, WithStateDiffs, WithStatesNowAndDesired},
+        resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
         Resources, StateDiffs, StateDiffsMut, States, StatesDesired, StatesDesiredMut, StatesMut,
     },
     rt_model::{FullSpecRt, FullSpecWrapper},
@@ -148,7 +148,7 @@ async fn resources_set_up(
 
 async fn resources_with_states_now_and_desired(
     full_spec_wrapper: &VecCopyFullSpecWrapper,
-) -> Result<Resources<WithStatesNowAndDesired>, VecCopyError> {
+) -> Result<Resources<WithStatesCurrentAndDesired>, VecCopyError> {
     let resources = resources_set_up(full_spec_wrapper).await?;
 
     let states_current = {
@@ -166,7 +166,7 @@ async fn resources_with_states_now_and_desired(
         StatesDesired::from(states_desired_mut)
     };
     let resources =
-        Resources::<WithStatesNowAndDesired>::from((resources, states_current, states_desired));
+        Resources::<WithStatesCurrentAndDesired>::from((resources, states_current, states_desired));
     Ok(resources)
 }
 

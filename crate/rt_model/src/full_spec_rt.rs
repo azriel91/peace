@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use fn_graph::{DataAccess, DataAccessDyn};
 use peace_cfg::{async_trait, FullSpecId, OpCheckStatus};
 use peace_resources::{
-    resources_type_state::{Empty, SetUp, WithStateDiffs, WithStatesNowAndDesired},
+    resources_type_state::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     type_reg::untagged::DataType,
     Resources,
 };
@@ -61,7 +61,7 @@ where
     /// [`State`]: peace_cfg::State
     async fn state_diff_fn_exec(
         &self,
-        resources: &Resources<WithStatesNowAndDesired>,
+        resources: &Resources<WithStatesCurrentAndDesired>,
     ) -> Result<Box<dyn DataType>, E>;
 
     /// Runs [`FullSpec::EnsureOpSpec`]`::`[`check`].

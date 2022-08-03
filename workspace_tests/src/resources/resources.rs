@@ -1,6 +1,6 @@
 use peace::resources::{
     resources_type_state::{
-        Ensured, SetUp, WithStateDiffs, WithStates, WithStatesDesired, WithStatesNowAndDesired,
+        Ensured, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired, WithStatesDesired,
     },
     Resources, StateDiffs, States, StatesDesired, StatesEnsured,
 };
@@ -39,7 +39,7 @@ fn resources_with_states_desired_from_resources_set_up() {
 fn resources_with_states_now_and_desired_from_resources_set_up() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_now_and_desired = Resources::<WithStatesNowAndDesired>::from((
+    let resources_with_states_now_and_desired = Resources::<WithStatesCurrentAndDesired>::from((
         resources_set_up,
         States::new(),
         StatesDesired::new(),
@@ -53,7 +53,7 @@ fn resources_with_states_now_and_desired_from_resources_set_up() {
 fn resources_with_state_diffs_from_resources_with_states_now_and_desired() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_now_and_desired = Resources::<WithStatesNowAndDesired>::from((
+    let resources_with_states_now_and_desired = Resources::<WithStatesCurrentAndDesired>::from((
         resources_set_up,
         States::new(),
         StatesDesired::new(),
@@ -72,7 +72,7 @@ fn resources_with_state_diffs_from_resources_with_states_now_and_desired() {
 fn resources_ensured_from_resources_with_state_diffs() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_now_and_desired = Resources::<WithStatesNowAndDesired>::from((
+    let resources_with_states_now_and_desired = Resources::<WithStatesCurrentAndDesired>::from((
         resources_set_up,
         States::new(),
         StatesDesired::new(),

@@ -1,7 +1,7 @@
 use peace::{
     cfg::{full_spec_id, FullSpecId},
     resources::{
-        resources_type_state::{SetUp, WithStateDiffs, WithStatesNowAndDesired},
+        resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
         type_reg::untagged::TypeMap,
         Resources, StateDiffs, States, StatesDesired, StatesEnsuredDry, StatesMut,
     },
@@ -45,7 +45,7 @@ fn from_type_map() {
 fn from_states_and_resources_with_state_diffs() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_now_and_desired = Resources::<WithStatesNowAndDesired>::from((
+    let resources_with_states_now_and_desired = Resources::<WithStatesCurrentAndDesired>::from((
         resources_set_up,
         States::new(),
         StatesDesired::new(),
@@ -71,7 +71,7 @@ fn debug() {
 fn test_states_ensured_dry() -> StatesEnsuredDry {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_now_and_desired = Resources::<WithStatesNowAndDesired>::from((
+    let resources_with_states_now_and_desired = Resources::<WithStatesCurrentAndDesired>::from((
         resources_set_up,
         States::new(),
         StatesDesired::new(),

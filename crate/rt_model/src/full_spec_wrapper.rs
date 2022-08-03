@@ -8,7 +8,7 @@ use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{async_trait, nougat::Gat, FnSpec, FullSpec, FullSpecId, OpCheckStatus, State};
 use peace_data::Data;
 use peace_resources::{
-    resources_type_state::{Empty, SetUp, WithStateDiffs, WithStatesNowAndDesired},
+    resources_type_state::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     type_reg::untagged::DataType,
     Resources, StateDiffs, States, StatesDesired,
 };
@@ -475,7 +475,7 @@ where
 
     async fn state_diff_fn_exec(
         &self,
-        resources: &Resources<WithStatesNowAndDesired>,
+        resources: &Resources<WithStatesCurrentAndDesired>,
     ) -> Result<Box<dyn DataType>, E> {
         let state_diff: StateDiff = {
             let data =
