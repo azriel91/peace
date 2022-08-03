@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::PathBuf;
 
 use clap::Parser;
 use peace::{
@@ -57,28 +57,40 @@ fn main() -> Result<(), DownloadError> {
         .build()
         .map_err(DownloadError::TokioRuntimeInit)?;
 
-    let download_args = DownloadArgs::parse();
+    let DownloadArgs { command } = DownloadArgs::parse();
     runtime.block_on(async {
-        let url =
-            Url::parse("https://api.my-ip.io/ip.json").expect("Expected download URL to be valid.");
-        let dest = Path::new("all.json").to_path_buf();
-
-        let mut graph_builder = FullSpecGraphBuilder::<DownloadError>::new();
-        graph_builder.add_fn(DownloadFullSpec::new(url, dest).into());
-
-        let graph = graph_builder.build();
-
-        let resources = graph.setup(Resources::new()).await?;
-
-        match download_args.command {
-            DownloadCommand::Status => status(&graph, resources).await,
-            DownloadCommand::Desired => desired(&graph, resources).await,
-            DownloadCommand::Diff => diff(&graph, resources).await,
-            DownloadCommand::Ensure => ensure(&graph, resources).await,
+        match command {
+            DownloadCommand::Status { url, dest } => {
+                let (graph, resources) = setup_graph(url, dest).await?;
+                status(&graph, resources).await
+            }
+            DownloadCommand::Desired { url, dest } => {
+                let (graph, resources) = setup_graph(url, dest).await?;
+                desired(&graph, resources).await
+            }
+            DownloadCommand::Diff { url, dest } => {
+                let (graph, resources) = setup_graph(url, dest).await?;
+                diff(&graph, resources).await
+            }
+            DownloadCommand::Ensure { url, dest } => {
+                let (graph, resources) = setup_graph(url, dest).await?;
+                ensure(&graph, resources).await
+            }
         }?;
 
         Ok::<_, DownloadError>(())
     })
+}
+
+async fn setup_graph(
+    url: Url,
+    dest: PathBuf,
+) -> Result<(FullSpecGraph<DownloadError>, Resources<SetUp>), DownloadError> {
+    let mut graph_builder = FullSpecGraphBuilder::<DownloadError>::new();
+    graph_builder.add_fn(DownloadFullSpec::new(url, dest).into());
+    let graph = graph_builder.build();
+    let resources = graph.setup(Resources::new()).await?;
+    Ok((graph, resources))
 }
 
 async fn status(

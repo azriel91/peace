@@ -43,9 +43,12 @@ impl StateDiffFnSpec for DownloadStateDiffFnSpec {
                         .map(to_file_state_diff)
                         .unwrap_or((Tracked::None, Tracked::None));
 
-                    FileStateDiff::Change {
-                        byte_len: Changeable::new(from_bytes, to_bytes),
-                        contents: Changeable::new(from_content, to_content),
+                    match (from_bytes == to_bytes, from_content == to_content) {
+                        (false, false) | (false, true) | (true, false) => FileStateDiff::Change {
+                            byte_len: Changeable::new(from_bytes, to_bytes),
+                            contents: Changeable::new(from_content, to_content),
+                        },
+                        (true, true) => FileStateDiff::NoChangeSync,
                     }
                 }
                 (None, None) => FileStateDiff::NoChangeNonExistent,
