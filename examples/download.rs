@@ -49,13 +49,16 @@ mod file_state;
 mod file_state_diff;
 
 fn main() -> Result<(), DownloadError> {
-    let runtime = tokio::runtime::Builder::new_current_thread()
+    let mut builder = tokio::runtime::Builder::new_current_thread();
+
+    builder
         .thread_name("main")
-        .thread_stack_size(3 * 1024 * 1024)
-        .enable_io()
-        .enable_time()
-        .build()
-        .map_err(DownloadError::TokioRuntimeInit)?;
+        .thread_stack_size(3 * 1024 * 1024);
+
+    #[cfg(not(target_arch = "wasm32"))]
+    builder.enable_io().enable_time();
+
+    let runtime = builder.build().map_err(DownloadError::TokioRuntimeInit)?;
 
     let DownloadArgs { command } = DownloadArgs::parse();
     runtime.block_on(async {

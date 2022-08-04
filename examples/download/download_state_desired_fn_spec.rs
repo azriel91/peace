@@ -22,11 +22,15 @@ impl DownloadStateDesiredFnSpec {
 
         let status_code = response.status();
         if status_code.is_success() {
-            if let Some(remote_file_length) = response.content_length() {
+            let content_length = response.content_length();
+            if let Some(remote_file_length) = content_length {
                 if remote_file_length <= crate::IN_MEMORY_CONTENTS_MAX {
                     // Download it now.
-                    let remote_contents =
-                        response.text().await.map_err(DownloadError::SrcFileRead)?;
+                    let remote_contents = async move {
+                        let response_text = response.text();
+                        response_text.await.map_err(DownloadError::SrcFileRead)
+                    }
+                    .await?;
                     Ok(FileState::StringContents(remote_contents))
                 } else {
                     // Stream it later.
