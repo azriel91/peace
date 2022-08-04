@@ -34,5 +34,10 @@ thiserror = "1.0.31"
 tokio = { version = "1.20.0", features = ["fs", "io-std", "io-util", "rt"] }
 url = "2.2.2"
 
+[target.'cfg(target_arch = "wasm32")'.dev-dependencies]
+wasm-bindgen = "0.2"
+js-sys = "0.3"
+web-sys = "0.3"
+
 [workspace]
 members = ["crate/*", "workspace_tests"]
