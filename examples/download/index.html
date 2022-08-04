@@ -1,0 +1,15 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+  </head>
+  <body>
+    <script type="module">
+      import init, * as exports from './pkg/download.js';
+
+      window.onload = async function() {
+        await init();
+        exports.wasm_status();
+      };
+    </script>
+  </body>
+</html>

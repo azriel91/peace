@@ -98,7 +98,7 @@ impl DownloadEnsureOpSpec {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 #[nougat::gat]
 impl EnsureOpSpec for DownloadEnsureOpSpec {
     type Data<'op> = DownloadParams<'op>

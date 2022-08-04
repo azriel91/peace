@@ -10,7 +10,7 @@ use crate::{DownloadError, DownloadParams, FileState};
 #[derive(Debug)]
 pub struct DownloadCleanOpSpec;
 
-#[async_trait]
+#[async_trait(?Send)]
 #[nougat::gat]
 impl CleanOpSpec for DownloadCleanOpSpec {
     type Data<'op> = DownloadParams<'op>
@@ -44,6 +44,7 @@ impl CleanOpSpec for DownloadCleanOpSpec {
         Ok(())
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     async fn exec(
         _download_params: DownloadParams<'_>,
         State {
@@ -54,6 +55,19 @@ impl CleanOpSpec for DownloadCleanOpSpec {
         tokio::fs::remove_file(dest_path)
             .await
             .map_err(DownloadError::DestFileRemove)?;
+        Ok(())
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    async fn exec(
+        mut download_params: DownloadParams<'_>,
+        State {
+            physical: dest_path,
+            ..
+        }: &State<Option<FileState>, PathBuf>,
+    ) -> Result<(), DownloadError> {
+        download_params.in_memory_contents_mut().remove(dest_path);
+
         Ok(())
     }
 }

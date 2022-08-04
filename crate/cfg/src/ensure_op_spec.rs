@@ -27,7 +27,7 @@ use crate::{OpCheckStatus, State};
 /// [`check`]: Self::check
 /// [`exec_dry`]: Self::exec_dry
 /// [`exec`]: Self::exec
-#[async_trait]
+#[async_trait(?Send)]
 #[nougat::gat]
 pub trait EnsureOpSpec {
     /// Error returned when any of the functions of this operation err.

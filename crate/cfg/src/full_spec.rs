@@ -49,7 +49,7 @@ use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State, StateDiffFnSpec};
 /// | `app_server.address`     | `10.0.0.1`                             |
 ///
 /// [`Data`]: crate::CleanOpSpec::Data
-#[async_trait]
+#[async_trait(?Send)]
 #[nougat::gat]
 pub trait FullSpec {
     /// Consumer provided error type.

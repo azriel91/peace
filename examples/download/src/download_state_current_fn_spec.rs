@@ -61,7 +61,7 @@ impl DownloadStateCurrentFnSpec {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 #[nougat::gat]
 impl FnSpec for DownloadStateCurrentFnSpec {
     type Data<'op> = DownloadParams<'op>

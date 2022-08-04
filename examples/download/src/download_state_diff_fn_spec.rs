@@ -13,7 +13,7 @@ use crate::{DownloadError, FileState, FileStateDiff};
 #[derive(Debug)]
 pub struct DownloadStateDiffFnSpec;
 
-#[async_trait]
+#[async_trait(?Send)]
 #[nougat::gat]
 impl StateDiffFnSpec for DownloadStateDiffFnSpec {
     type Data<'op> = &'op()

@@ -14,7 +14,7 @@ use peace_resources::{
 /// under the same boxed trait.
 ///
 /// [`FullSpec`]: peace_cfg::FullSpec
-#[async_trait]
+#[async_trait(?Send)]
 pub trait FullSpecRt<E>: Debug + DataAccess + DataAccessDyn
 where
     E: Debug + std::error::Error,

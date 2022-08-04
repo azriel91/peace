@@ -36,7 +36,7 @@ pub type VecCopyFullSpecWrapper = FullSpecWrapper<
 #[derive(Debug)]
 pub struct VecCopyFullSpec;
 
-#[async_trait]
+#[async_trait(?Send)]
 impl FullSpec for VecCopyFullSpec {
     type CleanOpSpec = VecCopyCleanOpSpec;
     type EnsureOpSpec = VecCopyEnsureOpSpec;
@@ -63,7 +63,7 @@ impl FullSpec for VecCopyFullSpec {
 #[derive(Debug)]
 pub struct VecCopyCleanOpSpec;
 
-#[async_trait]
+#[async_trait(?Send)]
 #[nougat::gat]
 impl CleanOpSpec for VecCopyCleanOpSpec {
     type Data<'op> = W<'op, VecB>
@@ -109,7 +109,7 @@ impl CleanOpSpec for VecCopyCleanOpSpec {
 #[derive(Debug)]
 pub struct VecCopyEnsureOpSpec;
 
-#[async_trait]
+#[async_trait(?Send)]
 #[nougat::gat]
 impl EnsureOpSpec for VecCopyEnsureOpSpec {
     type Data<'op> = VecCopyParams<'op>
@@ -180,7 +180,7 @@ impl<'op> VecCopyParams<'op> {
 #[derive(Debug)]
 pub struct VecCopyStateCurrentFnSpec;
 
-#[async_trait]
+#[async_trait(?Send)]
 #[nougat::gat]
 impl FnSpec for VecCopyStateCurrentFnSpec {
     type Data<'op> = R<'op, VecB>
@@ -197,7 +197,7 @@ impl FnSpec for VecCopyStateCurrentFnSpec {
 #[derive(Debug)]
 pub struct VecCopyStateDesiredFnSpec;
 
-#[async_trait]
+#[async_trait(?Send)]
 #[nougat::gat]
 impl FnSpec for VecCopyStateDesiredFnSpec {
     type Data<'op> = R<'op, VecA>
@@ -214,7 +214,7 @@ impl FnSpec for VecCopyStateDesiredFnSpec {
 #[derive(Debug)]
 pub struct VecCopyStateDiffFnSpec;
 
-#[async_trait]
+#[async_trait(?Send)]
 #[nougat::gat]
 impl StateDiffFnSpec for VecCopyStateDiffFnSpec {
     type Data<'op> = &'op ()

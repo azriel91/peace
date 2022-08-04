@@ -2,13 +2,15 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use peace::{
-    resources::{resources_type_state::SetUp, Resources, StateDiffs, States, StatesDesired},
-    rt::{DiffCmd, StateCurrentCmd, StateDesiredCmd},
+    resources::{
+        resources_type_state::SetUp, Resources, StateDiffs, States, StatesDesired, StatesEnsured,
+        StatesEnsuredDry,
+    },
+    rt::{DiffCmd, EnsureCmd, StateCurrentCmd, StateDesiredCmd},
     rt_model::{FullSpecGraph, FullSpecGraphBuilder},
 };
-use peace_resources::{StatesEnsured, StatesEnsuredDry};
-use peace_rt::EnsureCmd;
-use tokio::io::{self, AsyncWriteExt, Stdout};
+#[cfg(not(target_arch = "wasm32"))]
+use tokio::io::{self, AsyncWriteExt};
 use url::Url;
 
 pub use crate::{
@@ -25,30 +27,20 @@ pub use crate::{
     file_state_diff::FileStateDiff,
 };
 
-#[path = "download/download_args.rs"]
 mod download_args;
-#[path = "download/download_clean_op_spec.rs"]
 mod download_clean_op_spec;
-#[path = "download/download_ensure_op_spec.rs"]
 mod download_ensure_op_spec;
-#[path = "download/download_error.rs"]
 mod download_error;
-#[path = "download/download_full_spec.rs"]
 mod download_full_spec;
-#[path = "download/download_params.rs"]
 mod download_params;
-#[path = "download/download_state_current_fn_spec.rs"]
 mod download_state_current_fn_spec;
-#[path = "download/download_state_desired_fn_spec.rs"]
 mod download_state_desired_fn_spec;
-#[path = "download/download_state_diff_fn_spec.rs"]
 mod download_state_diff_fn_spec;
-#[path = "download/file_state.rs"]
 mod file_state;
-#[path = "download/file_state_diff.rs"]
 mod file_state_diff;
 
-fn main() -> Result<(), DownloadError> {
+#[cfg(not(target_arch = "wasm32"))]
+pub fn run() -> Result<(), DownloadError> {
     let mut builder = tokio::runtime::Builder::new_current_thread();
 
     builder
@@ -89,6 +81,44 @@ fn main() -> Result<(), DownloadError> {
     })
 }
 
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::*;
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub fn wasm_status() {
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .thread_name("main")
+        .thread_stack_size(3 * 1024 * 1024)
+        .build()
+        .map_err(DownloadError::TokioRuntimeInit)
+        .expect("Failed to initialize tokio runtime.");
+
+    let result = runtime.block_on(async move {
+        let (graph, resources) = setup_graph(
+            Url::parse("https://ifconfig.me").expect("Failed to parse URL."),
+            std::path::Path::new("ip.json").to_path_buf(),
+        )
+        .await?;
+        status(&graph, resources).await?;
+
+        Result::<(), DownloadError>::Ok(())
+    });
+
+    if let Err(e) = result {
+        log(&format!("{e}"));
+    }
+}
+
 async fn setup_graph(
     url: Url,
     dest: PathBuf,
@@ -109,8 +139,7 @@ async fn status(
     let states_serialized =
         serde_yaml::to_string(&*states).map_err(DownloadError::StatesSerialize)?;
 
-    let mut stdout = io::stdout();
-    stdout_write(&mut stdout, states_serialized.as_bytes()).await
+    stdout_write(&states_serialized).await
 }
 
 async fn desired(
@@ -122,8 +151,7 @@ async fn desired(
     let states_desired_serialized =
         serde_yaml::to_string(&*states_desired).map_err(DownloadError::StatesDesiredSerialize)?;
 
-    let mut stdout = io::stdout();
-    stdout_write(&mut stdout, states_desired_serialized.as_bytes()).await
+    stdout_write(&states_desired_serialized).await
 }
 
 async fn diff(
@@ -135,8 +163,7 @@ async fn diff(
     let state_diffs_serialized =
         serde_yaml::to_string(&*state_diffs).map_err(DownloadError::StateDiffsSerialize)?;
 
-    let mut stdout = io::stdout();
-    stdout_write(&mut stdout, state_diffs_serialized.as_bytes()).await
+    stdout_write(&state_diffs_serialized).await
 }
 
 async fn ensure_dry(
@@ -148,8 +175,7 @@ async fn ensure_dry(
     let states_ensured_dry_serialized =
         serde_yaml::to_string(&*states_ensured_dry).map_err(DownloadError::StateDiffsSerialize)?;
 
-    let mut stdout = io::stdout();
-    stdout_write(&mut stdout, states_ensured_dry_serialized.as_bytes()).await
+    stdout_write(&states_ensured_dry_serialized).await
 }
 
 async fn ensure(
@@ -161,15 +187,22 @@ async fn ensure(
     let states_ensured_serialized =
         serde_yaml::to_string(&*states_ensured).map_err(DownloadError::StateDiffsSerialize)?;
 
-    let mut stdout = io::stdout();
-    stdout_write(&mut stdout, states_ensured_serialized.as_bytes()).await
+    stdout_write(&states_ensured_serialized).await
 }
 
-async fn stdout_write(stdout: &mut Stdout, bytes: &[u8]) -> Result<(), DownloadError> {
+#[cfg(not(target_arch = "wasm32"))]
+async fn stdout_write(s: &str) -> Result<(), DownloadError> {
+    let mut stdout = io::stdout();
     stdout
-        .write_all(bytes)
+        .write_all(s.as_bytes())
         .await
         .map_err(DownloadError::StdoutWrite)
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn stdout_write(s: &str) -> Result<(), DownloadError> {
+    log(s);
+    Ok(())
 }
 
 /// Read up to 1 kB in memory.

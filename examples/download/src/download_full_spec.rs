@@ -29,7 +29,7 @@ impl DownloadFullSpec {
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl FullSpec for DownloadFullSpec {
     type CleanOpSpec = DownloadCleanOpSpec;
     type EnsureOpSpec = DownloadEnsureOpSpec;
@@ -49,6 +49,9 @@ impl FullSpec for DownloadFullSpec {
         resources.insert::<reqwest::Client>(reqwest::Client::new());
         resources.insert::<Url>(self.src.clone());
         resources.insert::<PathBuf>(self.dest.clone());
+
+        #[cfg(target_arch = "wasm32")]
+        resources.insert(std::collections::HashMap::<PathBuf, String>::new());
 
         Ok(())
     }
