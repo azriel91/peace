@@ -12,6 +12,7 @@ use crate::FullSpecBoxed;
 /// Graph of all [`FullSpec`]s, `FnGraph<FullSpecBoxed<E>>` newtype.
 ///
 /// [`FullSpec`]: peace_cfg::FullSpec
+#[derive(Debug)]
 pub struct FullSpecGraph<E>(FnGraph<FullSpecBoxed<E>>)
 where
     E: std::error::Error;
