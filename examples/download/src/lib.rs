@@ -56,23 +56,28 @@ pub fn run() -> Result<(), DownloadError> {
     runtime.block_on(async {
         match command {
             DownloadCommand::Status { url, dest } => {
-                let (graph, resources) = setup_graph(url, dest).await?;
+                let graph = setup_graph(url, dest).await?;
+                let resources = graph.setup(Resources::new()).await?;
                 status(&graph, resources).await?;
             }
             DownloadCommand::Desired { url, dest } => {
-                let (graph, resources) = setup_graph(url, dest).await?;
+                let graph = setup_graph(url, dest).await?;
+                let resources = graph.setup(Resources::new()).await?;
                 desired(&graph, resources).await?;
             }
             DownloadCommand::Diff { url, dest } => {
-                let (graph, resources) = setup_graph(url, dest).await?;
+                let graph = setup_graph(url, dest).await?;
+                let resources = graph.setup(Resources::new()).await?;
                 diff(&graph, resources).await?;
             }
             DownloadCommand::EnsureDry { url, dest } => {
-                let (graph, resources) = setup_graph(url, dest).await?;
+                let graph = setup_graph(url, dest).await?;
+                let resources = graph.setup(Resources::new()).await?;
                 ensure_dry(&graph, resources).await?;
             }
             DownloadCommand::Ensure { url, dest } => {
-                let (graph, resources) = setup_graph(url, dest).await?;
+                let graph = setup_graph(url, dest).await?;
+                let resources = graph.setup(Resources::new()).await?;
                 ensure(&graph, resources).await?;
             }
         }
@@ -93,14 +98,14 @@ extern "C" {
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(getter_with_clone)]
-pub struct GraphAndResources(
+pub struct GraphAndContent(
     peace::rt_model::FullSpecGraph<DownloadError>,
-    peace::rt_model::fn_graph::resman::Resources,
+    std::collections::HashMap<PathBuf, String>,
 );
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
-pub async fn wasm_setup(url: String, name: String) -> Result<GraphAndResources, JsValue> {
+pub async fn wasm_setup(url: String, name: String) -> Result<GraphAndContent, JsValue> {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
     setup_graph(
@@ -108,109 +113,142 @@ pub async fn wasm_setup(url: String, name: String) -> Result<GraphAndResources, 
         std::path::PathBuf::from(name),
     )
     .await
-    .map(|(graph, resources)| GraphAndResources(graph, resources.into_inner()))
-    .map_err(|e| JsValue::from_str(&format!("{e}")))
+    .map(|graph| async move {
+        let mut resources = graph
+            .setup(Resources::new())
+            .await
+            .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        let content = resources
+            .remove::<std::collections::HashMap<PathBuf, String>>()
+            .ok_or(JsValue::from_str(
+                "Resources did not contain content HashMap.",
+            ))?;
+        Ok(GraphAndContent(graph, content))
+    })
+    .map_err(|e| JsValue::from_str(&format!("{e}")))?
+    .await
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
-pub async fn wasm_status(url: String, name: String) -> Result<(), JsValue> {
-    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+pub async fn wasm_status(graph_and_content: GraphAndContent) -> Result<GraphAndContent, JsValue> {
+    let GraphAndContent(graph, content) = graph_and_content;
+    let mut resources = graph
+        .setup(Resources::new())
+        .await
+        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+    resources.insert(content);
 
-    let (graph, resources) = setup_graph(
-        Url::parse(&url).expect("Failed to parse URL."),
-        std::path::PathBuf::from(name),
-    )
-    .await
-    .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-    status(&graph, resources)
+    let mut resources = status(&graph, resources.into())
         .await
         .map_err(|e| JsValue::from_str(&format!("{e}")))?;
 
-    Ok(())
+    let content = resources
+        .remove::<std::collections::HashMap<PathBuf, String>>()
+        .ok_or(JsValue::from_str(
+            "Resources did not contain content HashMap.",
+        ))?;
+    Ok(GraphAndContent(graph, content))
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
-pub async fn wasm_desired(url: String, name: String) -> Result<(), JsValue> {
-    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+pub async fn wasm_desired(graph_and_content: GraphAndContent) -> Result<GraphAndContent, JsValue> {
+    let GraphAndContent(graph, content) = graph_and_content;
+    let mut resources = graph
+        .setup(Resources::new())
+        .await
+        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+    resources.insert(content);
 
-    let (graph, resources) = setup_graph(
-        Url::parse(&url).expect("Failed to parse URL."),
-        std::path::PathBuf::from(name),
-    )
-    .await
-    .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-    desired(&graph, resources)
+    let mut resources = desired(&graph, resources.into())
         .await
         .map_err(|e| JsValue::from_str(&format!("{e}")))?;
 
-    Ok(())
+    let content = resources
+        .remove::<std::collections::HashMap<PathBuf, String>>()
+        .ok_or(JsValue::from_str(
+            "Resources did not contain content HashMap.",
+        ))?;
+    Ok(GraphAndContent(graph, content))
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
-pub async fn wasm_diff(url: String, name: String) -> Result<(), JsValue> {
-    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+pub async fn wasm_diff(graph_and_content: GraphAndContent) -> Result<GraphAndContent, JsValue> {
+    let GraphAndContent(graph, content) = graph_and_content;
+    let mut resources = graph
+        .setup(Resources::new())
+        .await
+        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+    resources.insert(content);
 
-    let (graph, resources) = setup_graph(
-        Url::parse(&url).expect("Failed to parse URL."),
-        std::path::PathBuf::from(name),
-    )
-    .await
-    .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-    diff(&graph, resources)
+    let mut resources = diff(&graph, resources.into())
         .await
         .map_err(|e| JsValue::from_str(&format!("{e}")))?;
 
-    Ok(())
+    let content = resources
+        .remove::<std::collections::HashMap<PathBuf, String>>()
+        .ok_or(JsValue::from_str(
+            "Resources did not contain content HashMap.",
+        ))?;
+    Ok(GraphAndContent(graph, content))
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
-pub async fn wasm_ensure_dry(url: String, name: String) -> Result<(), JsValue> {
-    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+pub async fn wasm_ensure_dry(
+    graph_and_content: GraphAndContent,
+) -> Result<GraphAndContent, JsValue> {
+    let GraphAndContent(graph, content) = graph_and_content;
+    let mut resources = graph
+        .setup(Resources::new())
+        .await
+        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+    resources.insert(content);
 
-    let (graph, resources) = setup_graph(
-        Url::parse(&url).expect("Failed to parse URL."),
-        std::path::PathBuf::from(name),
-    )
-    .await
-    .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-    ensure_dry(&graph, resources)
+    let mut resources = ensure_dry(&graph, resources.into())
         .await
         .map_err(|e| JsValue::from_str(&format!("{e}")))?;
 
-    Ok(())
+    let content = resources
+        .remove::<std::collections::HashMap<PathBuf, String>>()
+        .ok_or(JsValue::from_str(
+            "Resources did not contain content HashMap.",
+        ))?;
+    Ok(GraphAndContent(graph, content))
 }
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
-pub async fn wasm_ensure(url: String, name: String) -> Result<(), JsValue> {
-    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+pub async fn wasm_ensure(graph_and_content: GraphAndContent) -> Result<GraphAndContent, JsValue> {
+    let GraphAndContent(graph, content) = graph_and_content;
+    let mut resources = graph
+        .setup(Resources::new())
+        .await
+        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+    resources.insert(content);
 
-    let (graph, resources) = setup_graph(
-        Url::parse(&url).expect("Failed to parse URL."),
-        std::path::PathBuf::from(name),
-    )
-    .await
-    .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-    ensure(&graph, resources)
+    let mut resources = ensure(&graph, resources.into())
         .await
         .map_err(|e| JsValue::from_str(&format!("{e}")))?;
 
-    Ok(())
+    let content = resources
+        .remove::<std::collections::HashMap<PathBuf, String>>()
+        .ok_or(JsValue::from_str(
+            "Resources did not contain content HashMap.",
+        ))?;
+    Ok(GraphAndContent(graph, content))
 }
 
 async fn setup_graph(
     url: Url,
     dest: PathBuf,
-) -> Result<(FullSpecGraph<DownloadError>, Resources<SetUp>), DownloadError> {
+) -> Result<FullSpecGraph<DownloadError>, DownloadError> {
     let mut graph_builder = FullSpecGraphBuilder::<DownloadError>::new();
     graph_builder.add_fn(DownloadFullSpec::new(url, dest).into());
     let graph = graph_builder.build();
-    let resources = graph.setup(Resources::new()).await?;
-    Ok((graph, resources))
+    Ok(graph)
 }
 
 async fn status(

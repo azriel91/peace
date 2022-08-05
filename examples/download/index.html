@@ -9,38 +9,37 @@
       window.onload = async function() {
         await init();
 
-        document.querySelector("#status").addEventListener('click', () => {
-          const name = document.querySelector("#name").value;
-          const url = document.querySelector("#url").value;
+        let graph_and_content_global;
 
-          exports.wasm_status(url, name);
+        // TODO: separate init button.
+        // const name = document.querySelector("#name").value;
+        // const url = document.querySelector("#url").value;
+
+        exports.wasm_setup("https://ifconfig.me", "ip.json")
+          .then(graph_and_content => graph_and_content_global = graph_and_content);
+
+        document.querySelector("#status").addEventListener('click', () => {
+          exports.wasm_status(graph_and_content_global)
+            .then(graph_and_content => graph_and_content_global = graph_and_content);
         });
 
         document.querySelector("#desired").addEventListener('click', () => {
-          const name = document.querySelector("#name").value;
-          const url = document.querySelector("#url").value;
-
-          exports.wasm_desired(url, name);
+          exports.wasm_desired(graph_and_content_global)
+            .then(graph_and_content => graph_and_content_global = graph_and_content);
         });
 
         document.querySelector("#diff").addEventListener('click', () => {
-          const name = document.querySelector("#name").value;
-          const url = document.querySelector("#url").value;
-
-          exports.wasm_diff(url, name);
+          exports.wasm_diff(graph_and_content_global)
+            .then(graph_and_content => graph_and_content_global = graph_and_content);
         });
 
         document.querySelector("#ensure_dry").addEventListener('click', () => {
-          const name = document.querySelector("#name").value;
-          const url = document.querySelector("#url").value;
-
-          exports.wasm_ensure_dry(url, name);
+          exports.wasm_ensure_dry(graph_and_content_global)
+            .then(graph_and_content => graph_and_content_global = graph_and_content);
         });
         document.querySelector("#ensure").addEventListener('click', () => {
-          const name = document.querySelector("#name").value;
-          const url = document.querySelector("#url").value;
-
-          exports.wasm_ensure(url, name);
+          exports.wasm_ensure(graph_and_content_global)
+            .then(graph_and_content => graph_and_content_global = graph_and_content);
         });
       };
     </script>

@@ -92,6 +92,12 @@ impl DownloadEnsureOpSpec {
         let contents = response_text
             .await
             .map_err(DownloadError::ResponseTextRead)?;
+
+        crate::log(&format!(
+            "Inserting {}: {}",
+            dest_path.display(),
+            contents.len()
+        ));
         in_memory_contents.insert(dest_path, contents);
 
         Ok(())
