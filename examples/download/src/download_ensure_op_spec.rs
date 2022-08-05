@@ -25,10 +25,9 @@ use crate::{DownloadError, DownloadParams, FileState, FileStateDiff};
 pub struct DownloadEnsureOpSpec;
 
 impl DownloadEnsureOpSpec {
-    async fn file_download(mut download_params: DownloadParams<'_>) -> Result<(), DownloadError> {
+    async fn file_download(download_params: DownloadParams<'_>) -> Result<(), DownloadError> {
         let client = download_params.client();
         let src_url = download_params.src();
-        let dest = download_params.dest();
         let response = client
             .get(src_url.clone())
             .send()
@@ -36,17 +35,18 @@ impl DownloadEnsureOpSpec {
             .map_err(DownloadError::SrcGet)?;
 
         #[cfg(not(target_arch = "wasm32"))]
-        Self::stream_write(dest, response.bytes_stream()).await?;
+        {
+            Self::stream_write(download_params.dest(), response.bytes_stream()).await?;
+        }
 
         // reqwest in wasm doesn't support streams
         // https://github.com/seanmonstar/reqwest/issues/1424
         #[cfg(target_arch = "wasm32")]
-        Self::stream_write(
-            dest.to_path_buf(),
-            download_params.in_memory_contents_mut(),
-            response,
-        )
-        .await?;
+        {
+            let mut download_params = download_params;
+            let dest = download_params.dest().to_path_buf();
+            Self::stream_write(dest, download_params.in_memory_contents_mut(), response).await?;
+        }
 
         Ok(())
     }

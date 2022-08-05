@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+#[cfg(not(target_arch = "wasm32"))]
 use clap::Parser;
 use peace::{
     resources::{
@@ -142,6 +143,7 @@ async fn status(
     stdout_write(&states_serialized).await
 }
 
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 async fn desired(
     graph: &FullSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
@@ -154,6 +156,7 @@ async fn desired(
     stdout_write(&states_desired_serialized).await
 }
 
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 async fn diff(
     graph: &FullSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
@@ -166,6 +169,7 @@ async fn diff(
     stdout_write(&state_diffs_serialized).await
 }
 
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 async fn ensure_dry(
     graph: &FullSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
@@ -178,6 +182,7 @@ async fn ensure_dry(
     stdout_write(&states_ensured_dry_serialized).await
 }
 
+#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 async fn ensure(
     graph: &FullSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
