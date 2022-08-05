@@ -54,7 +54,7 @@ impl DownloadStateCurrentFnSpec {
                         FileState::StringContents(contents.clone())
                     }
                 })
-                .unwrap_or(FileState::Unknown)
+                .unwrap_or_else(|_| FileState::StringContents(contents.clone()))
         });
 
         Ok(file_state)
@@ -71,7 +71,12 @@ impl FnSpec for DownloadStateCurrentFnSpec {
 
     async fn exec(download_params: DownloadParams<'_>) -> Result<Self::Output, DownloadError> {
         let dest = download_params.dest();
-        if !dest.exists() {
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let file_exists = dest.exists();
+        #[cfg(target_arch = "wasm32")]
+        let file_exists = download_params.in_memory_contents().get(dest).is_some();
+        if !file_exists {
             return Ok(State::new(None, dest.to_path_buf()));
         }
 
