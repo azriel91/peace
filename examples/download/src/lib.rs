@@ -94,30 +94,92 @@ extern "C" {
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
-pub fn wasm_status() {
+pub async fn wasm_status(url: String, name: String) -> Result<(), JsValue> {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .thread_name("main")
-        .thread_stack_size(3 * 1024 * 1024)
-        .build()
-        .map_err(DownloadError::TokioRuntimeInit)
-        .expect("Failed to initialize tokio runtime.");
+    let (graph, resources) = setup_graph(
+        Url::parse(&url).expect("Failed to parse URL."),
+        std::path::PathBuf::from(name),
+    )
+    .await
+    .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+    status(&graph, resources)
+        .await
+        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
 
-    let result = runtime.block_on(async move {
-        let (graph, resources) = setup_graph(
-            Url::parse("https://ifconfig.me").expect("Failed to parse URL."),
-            std::path::Path::new("ip.json").to_path_buf(),
-        )
-        .await?;
-        status(&graph, resources).await?;
+    Ok(())
+}
 
-        Result::<(), DownloadError>::Ok(())
-    });
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub async fn wasm_desired(url: String, name: String) -> Result<(), JsValue> {
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    if let Err(e) = result {
-        log(&format!("{e}"));
-    }
+    let (graph, resources) = setup_graph(
+        Url::parse(&url).expect("Failed to parse URL."),
+        std::path::PathBuf::from(name),
+    )
+    .await
+    .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+    desired(&graph, resources)
+        .await
+        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+
+    Ok(())
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub async fn wasm_diff(url: String, name: String) -> Result<(), JsValue> {
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+
+    let (graph, resources) = setup_graph(
+        Url::parse(&url).expect("Failed to parse URL."),
+        std::path::PathBuf::from(name),
+    )
+    .await
+    .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+    diff(&graph, resources)
+        .await
+        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+
+    Ok(())
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub async fn wasm_ensure_dry(url: String, name: String) -> Result<(), JsValue> {
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+
+    let (graph, resources) = setup_graph(
+        Url::parse(&url).expect("Failed to parse URL."),
+        std::path::PathBuf::from(name),
+    )
+    .await
+    .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+    ensure_dry(&graph, resources)
+        .await
+        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+
+    Ok(())
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
+pub async fn wasm_ensure(url: String, name: String) -> Result<(), JsValue> {
+    std::panic::set_hook(Box::new(console_error_panic_hook::hook));
+
+    let (graph, resources) = setup_graph(
+        Url::parse(&url).expect("Failed to parse URL."),
+        std::path::PathBuf::from(name),
+    )
+    .await
+    .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+    ensure(&graph, resources)
+        .await
+        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+
+    Ok(())
 }
 
 async fn setup_graph(
@@ -143,7 +205,6 @@ async fn status(
     stdout_write(&states_serialized).await
 }
 
-#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 async fn desired(
     graph: &FullSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
@@ -156,7 +217,6 @@ async fn desired(
     stdout_write(&states_desired_serialized).await
 }
 
-#[cfg_attr(target_arch = "wasm32", allow(dead_code))]
 async fn diff(
     graph: &FullSpecGraph<DownloadError>,
     resources: Resources<SetUp>,

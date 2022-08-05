@@ -8,8 +8,49 @@
 
       window.onload = async function() {
         await init();
-        exports.wasm_status();
+
+        document.querySelector("#status").addEventListener('click', () => {
+          const name = document.querySelector("#name").value;
+          const url = document.querySelector("#url").value;
+
+          exports.wasm_status(url, name);
+        });
+
+        document.querySelector("#desired").addEventListener('click', () => {
+          const name = document.querySelector("#name").value;
+          const url = document.querySelector("#url").value;
+
+          exports.wasm_desired(url, name);
+        });
+
+        document.querySelector("#diff").addEventListener('click', () => {
+          const name = document.querySelector("#name").value;
+          const url = document.querySelector("#url").value;
+
+          exports.wasm_diff(url, name);
+        });
+
+        document.querySelector("#ensure_dry").addEventListener('click', () => {
+          const name = document.querySelector("#name").value;
+          const url = document.querySelector("#url").value;
+
+          exports.wasm_ensure_dry(url, name);
+        });
+        document.querySelector("#ensure").addEventListener('click', () => {
+          const name = document.querySelector("#name").value;
+          const url = document.querySelector("#url").value;
+
+          exports.wasm_ensure(url, name);
+        });
       };
     </script>
+
+    <label for="url">URL:</label><input id="url" value="https://ifconfig.me" /><br/>
+    <label for="name">Name:</label><input id="name" value="ip.json" /><br/>
+    <button id="status">Status</button>
+    <button id="desired">Desired</button>
+    <button id="diff">Diff</button>
+    <button id="ensure_dry">Ensure (dry run)</button>
+    <button id="ensure">Ensure</button>
   </body>
 </html>
