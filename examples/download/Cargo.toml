@@ -29,7 +29,7 @@ url = "2.2.2"
 tokio = { version = "1.20.0", features = ["fs", "io-std", "io-util", "rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "0.2.82"
+wasm-bindgen = { version = "0.2.82", features = ["serde-serialize"] }
 wasm-bindgen-futures = "0.4.32"
 js-sys = "0.3.59"
 web-sys = "0.3.59"

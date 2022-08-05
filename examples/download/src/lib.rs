@@ -105,6 +105,16 @@ pub struct GraphAndContent(
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
+impl GraphAndContent {
+    /// Returns the content of the hashmap.
+    #[wasm_bindgen]
+    pub fn contents(&self) -> Result<JsValue, JsValue> {
+        JsValue::from_serde(&self.1).map_err(|e| JsValue::from_str(&format!("{e}")))
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen]
 pub async fn wasm_setup(url: String, name: String) -> Result<GraphAndContent, JsValue> {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 

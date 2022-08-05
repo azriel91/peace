@@ -1,6 +1,11 @@
 <html>
   <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+    <style type="text/css">
+      table, th, td {
+        border: 1px solid;
+      }
+    </style>
   </head>
   <body>
     <script type="module">
@@ -18,32 +23,56 @@
           exports.wasm_setup(url, name)
             .then(graph_and_content => {
               graph_and_content_global = graph_and_content;
+              update_state(graph_and_content_global);
+
               document.querySelectorAll(".init_required").forEach(element => element.removeAttribute("disabled"));
             });
         });
 
+        function update_state(graph_and_content) {
+          graph_and_content_global = graph_and_content;
+          const in_memory_contents = document.querySelector("#in_memory_contents");
+
+          try {
+            const contents = graph_and_content_global.contents();
+            let innerHtml = "<table><thead><tr><th>key</th><th>value</th></tr></thead><tbody>";
+            if (contents != null && Object.entries(contents).length > 0) {
+              Object.entries(contents)
+                .forEach(([key, value]) => {1
+                  innerHtml += `<tr><td>${key}</td><td>${value}</td></tr>`;
+                });
+            } else {
+              innerHtml += "<tr><td>empty</td><td></td></tr>";
+            }
+            innerHtml += "</tbody></table>";
+            in_memory_contents.innerHTML = innerHtml;
+          } catch (e) {
+            in_memory_contents.innerHTML = `error: ${e}`;
+          }
+        }
+
         document.querySelector("#status").addEventListener('click', () => {
           exports.wasm_status(graph_and_content_global)
-            .then(graph_and_content => graph_and_content_global = graph_and_content);
+            .then(update_state);
         });
 
         document.querySelector("#desired").addEventListener('click', () => {
           exports.wasm_desired(graph_and_content_global)
-            .then(graph_and_content => graph_and_content_global = graph_and_content);
+            .then(update_state);
         });
 
         document.querySelector("#diff").addEventListener('click', () => {
           exports.wasm_diff(graph_and_content_global)
-            .then(graph_and_content => graph_and_content_global = graph_and_content);
+            .then(update_state);
         });
 
         document.querySelector("#ensure_dry").addEventListener('click', () => {
           exports.wasm_ensure_dry(graph_and_content_global)
-            .then(graph_and_content => graph_and_content_global = graph_and_content);
+            .then(update_state);
         });
         document.querySelector("#ensure").addEventListener('click', () => {
           exports.wasm_ensure(graph_and_content_global)
-            .then(graph_and_content => graph_and_content_global = graph_and_content);
+            .then(update_state);
         });
       };
     </script>
@@ -51,10 +80,13 @@
     <label for="url">URL:</label><input id="url" value="http://ipecho.net/plain" /><br/>
     <label for="name">Name:</label><input id="name" value="ip.json" /><br/>
     <button id="init">Init</button>
-    <button id="status" class="init_required" disabled>Status</button>
-    <button id="desired" class="init_required" disabled>Desired</button>
-    <button id="diff" class="init_required" disabled>Diff</button>
-    <button id="ensure_dry" class="init_required" disabled>Ensure (dry run)</button>
-    <button id="ensure" class="init_required" disabled>Ensure</button>
+    <button id="status" class="init_required" disabled autocomplete="off">Status</button>
+    <button id="desired" class="init_required" disabled autocomplete="off">Desired</button>
+    <button id="diff" class="init_required" disabled autocomplete="off">Diff</button>
+    <button id="ensure_dry" class="init_required" disabled autocomplete="off">Ensure (dry run)</button>
+    <button id="ensure" class="init_required" disabled autocomplete="off">Ensure</button>
+
+    <div id="in_memory_contents">
+    </div>
   </body>
 </html>
