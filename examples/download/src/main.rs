@@ -1,5 +1,6 @@
 use clap::Parser;
 use peace::resources::Resources;
+use tokio::io;
 
 pub use download::{
     desired, diff, ensure, ensure_dry, setup_graph, status, DownloadArgs, DownloadCleanOpSpec,
@@ -23,27 +24,27 @@ pub fn main() -> Result<(), DownloadError> {
             DownloadCommand::Status { url, dest } => {
                 let graph = setup_graph(url, dest).await?;
                 let resources = graph.setup(Resources::new()).await?;
-                status(&graph, resources).await?;
+                status(io::stdout(), &graph, resources).await?;
             }
             DownloadCommand::Desired { url, dest } => {
                 let graph = setup_graph(url, dest).await?;
                 let resources = graph.setup(Resources::new()).await?;
-                desired(&graph, resources).await?;
+                desired(io::stdout(), &graph, resources).await?;
             }
             DownloadCommand::Diff { url, dest } => {
                 let graph = setup_graph(url, dest).await?;
                 let resources = graph.setup(Resources::new()).await?;
-                diff(&graph, resources).await?;
+                diff(io::stdout(), &graph, resources).await?;
             }
             DownloadCommand::EnsureDry { url, dest } => {
                 let graph = setup_graph(url, dest).await?;
                 let resources = graph.setup(Resources::new()).await?;
-                ensure_dry(&graph, resources).await?;
+                ensure_dry(io::stdout(), &graph, resources).await?;
             }
             DownloadCommand::Ensure { url, dest } => {
                 let graph = setup_graph(url, dest).await?;
                 let resources = graph.setup(Resources::new()).await?;
-                ensure(&graph, resources).await?;
+                ensure(io::stdout(), &graph, resources).await?;
             }
         }
 

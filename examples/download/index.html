@@ -31,7 +31,9 @@
 
         function update_state(graph_and_content) {
           graph_and_content_global = graph_and_content;
-          const in_memory_contents = document.querySelector("#in_memory_contents");
+          const in_memory_contents = document.querySelector("#in_memory_contents_value");
+
+          document.querySelector("#output_value").innerHTML = `<pre>${graph_and_content_global.output}</pre>`;
 
           try {
             const contents = graph_and_content_global.contents();
@@ -86,7 +88,14 @@
     <button id="ensure_dry" class="init_required" disabled autocomplete="off">Ensure (dry run)</button>
     <button id="ensure" class="init_required" disabled autocomplete="off">Ensure</button>
 
+    <div id="output">
+      Output:
+      <div id="output_value" />
+    </div>
+
     <div id="in_memory_contents">
+      In-memory contents:
+      <div id="in_memory_contents_value" />
     </div>
   </body>
 </html>

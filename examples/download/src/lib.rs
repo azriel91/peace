@@ -10,8 +10,7 @@ use peace::{
     rt::{DiffCmd, EnsureCmd, StateCurrentCmd, StateDesiredCmd},
     rt_model::{FullSpecGraph, FullSpecGraphBuilder},
 };
-#[cfg(not(target_arch = "wasm32"))]
-use tokio::io::{self, AsyncWriteExt};
+use tokio::io::{AsyncWrite, AsyncWriteExt};
 use url::Url;
 
 pub use crate::{
@@ -42,8 +41,6 @@ mod file_state_diff;
 
 #[cfg(target_arch = "wasm32")]
 mod wasm;
-#[cfg(target_arch = "wasm32")]
-use wasm::stdout_write;
 
 pub async fn setup_graph(
     url: Url,
@@ -55,80 +52,101 @@ pub async fn setup_graph(
     Ok(graph)
 }
 
-pub async fn status(
+pub async fn status<W>(
+    output: W,
     graph: &FullSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
-) -> Result<Resources<WithStates>, DownloadError> {
+) -> Result<Resources<WithStates>, DownloadError>
+where
+    W: AsyncWrite + Unpin,
+{
     let resources = StateCurrentCmd::exec(graph, resources).await?;
     let states_serialized = {
         let states = resources.borrow::<States>();
         serde_yaml::to_string(&*states).map_err(DownloadError::StatesSerialize)?
     };
 
-    stdout_write(&states_serialized).await?;
+    output_write(output, &states_serialized).await?;
     Ok(resources)
 }
 
-pub async fn desired(
+pub async fn desired<W>(
+    output: W,
     graph: &FullSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
-) -> Result<Resources<WithStatesDesired>, DownloadError> {
+) -> Result<Resources<WithStatesDesired>, DownloadError>
+where
+    W: AsyncWrite + Unpin,
+{
     let resources = StateDesiredCmd::exec(graph, resources).await?;
     let states_desired_serialized = {
         let states_desired = resources.borrow::<StatesDesired>();
         serde_yaml::to_string(&*states_desired).map_err(DownloadError::StatesDesiredSerialize)?
     };
 
-    stdout_write(&states_desired_serialized).await?;
+    output_write(output, &states_desired_serialized).await?;
     Ok(resources)
 }
 
-pub async fn diff(
+pub async fn diff<W>(
+    output: W,
     graph: &FullSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
-) -> Result<Resources<WithStateDiffs>, DownloadError> {
+) -> Result<Resources<WithStateDiffs>, DownloadError>
+where
+    W: AsyncWrite + Unpin,
+{
     let resources = DiffCmd::exec(graph, resources).await?;
     let state_diffs_serialized = {
         let state_diffs = resources.borrow::<StateDiffs>();
         serde_yaml::to_string(&*state_diffs).map_err(DownloadError::StateDiffsSerialize)?
     };
 
-    stdout_write(&state_diffs_serialized).await?;
+    output_write(output, &state_diffs_serialized).await?;
     Ok(resources)
 }
 
-pub async fn ensure_dry(
+pub async fn ensure_dry<W>(
+    output: W,
     graph: &FullSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
-) -> Result<Resources<EnsuredDry>, DownloadError> {
+) -> Result<Resources<EnsuredDry>, DownloadError>
+where
+    W: AsyncWrite + Unpin,
+{
     let resources = EnsureCmd::exec_dry(graph, resources).await?;
     let states_ensured_dry_serialized = {
         let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
         serde_yaml::to_string(&*states_ensured_dry).map_err(DownloadError::StateDiffsSerialize)?
     };
 
-    stdout_write(&states_ensured_dry_serialized).await?;
+    output_write(output, &states_ensured_dry_serialized).await?;
     Ok(resources)
 }
 
-pub async fn ensure(
+pub async fn ensure<W>(
+    output: W,
     graph: &FullSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
-) -> Result<Resources<Ensured>, DownloadError> {
+) -> Result<Resources<Ensured>, DownloadError>
+where
+    W: AsyncWrite + Unpin,
+{
     let resources = EnsureCmd::exec(graph, resources).await?;
     let states_ensured_serialized = {
         let states_ensured = resources.borrow::<StatesEnsured>();
         serde_yaml::to_string(&*states_ensured).map_err(DownloadError::StateDiffsSerialize)?
     };
 
-    stdout_write(&states_ensured_serialized).await?;
+    output_write(output, &states_ensured_serialized).await?;
     Ok(resources)
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-pub async fn stdout_write(s: &str) -> Result<(), DownloadError> {
-    let mut stdout = io::stdout();
-    stdout
+pub async fn output_write<W>(mut output: W, s: &str) -> Result<(), DownloadError>
+where
+    W: AsyncWrite + Unpin,
+{
+    output
         .write_all(s.as_bytes())
         .await
         .map_err(DownloadError::StdoutWrite)
