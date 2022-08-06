@@ -27,6 +27,74 @@
       .section {
         padding: 10px;
       }
+
+      /* spinner */
+      #spinner {
+        display: inline-block;
+        width: 30px;
+        height: 15px;
+        vertical-align: top;
+        visibility: hidden;
+      }
+      .loader,
+      .loader:before,
+      .loader:after {
+        background: #99aacc;
+        -webkit-animation: load1 1s infinite ease-in-out;
+        animation: load1 1s infinite ease-in-out;
+        width: 1.5em;
+        height: 1em;
+      }
+      .loader {
+        color: #99aacc;
+        text-indent: -9999em;
+        margin: 5px auto;
+        position: relative;
+        font-size: 3px;
+        -webkit-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        transform: translateZ(0);
+        -webkit-animation-delay: -0.16s;
+        animation-delay: -0.16s;
+      }
+      .loader:before,
+      .loader:after {
+        position: absolute;
+        top: 0;
+        content: '';
+      }
+      .loader:before {
+        left: -2.2em;
+        -webkit-animation-delay: -0.32s;
+        animation-delay: -0.32s;
+      }
+      .loader:after {
+        left: 2.2em;
+      }
+      @-webkit-keyframes load1 {
+        0%,
+        80%,
+        100% {
+          box-shadow: 0 0;
+          height: 4em;
+        }
+        40% {
+          box-shadow: 0 -2em;
+          height: 5em;
+        }
+      }
+      @keyframes load1 {
+        0%,
+        80%,
+        100% {
+          box-shadow: 0 0;
+          height: 4em;
+        }
+        40% {
+          box-shadow: 0 -2em;
+          height: 5em;
+        }
+      }
     </style>
   </head>
   <body>
@@ -37,7 +105,7 @@
         await init();
 
         let graph_and_content_global;
-
+        const spinner = document.querySelector("#spinner");
 
         document.querySelector("#init").addEventListener('click', () => {
           const path = document.querySelector("#path").value;
@@ -50,6 +118,14 @@
               document.querySelectorAll(".init_required").forEach(element => element.removeAttribute("disabled"));
             });
         });
+
+        function spinner_hide() {
+          spinner.style.visibility = "hidden";
+        }
+
+        function spinner_show() {
+          spinner.style.visibility = "visible";
+        }
 
         function update_state(graph_and_content) {
           graph_and_content_global = graph_and_content;
@@ -75,28 +151,42 @@
           }
         }
 
+        function exec_disabling_buttons(fn_ref) {
+          // Disable user interaction
+          document.querySelectorAll("button").forEach(element => element.setAttribute("disabled", "disabled"));
+          spinner_show();
+
+          fn_ref(graph_and_content_global)
+            .then(update_state_and_enable_buttons);
+        }
+
+        function update_state_and_enable_buttons(graph_and_content) {
+          update_state(graph_and_content);
+
+          spinner_hide();
+
+          // Enable user interaction
+          document.querySelectorAll("button").forEach(element => element.removeAttribute("disabled"));
+        }
+
         document.querySelector("#status").addEventListener('click', () => {
           exports.wasm_status(graph_and_content_global)
             .then(update_state);
         });
 
         document.querySelector("#desired").addEventListener('click', () => {
-          exports.wasm_desired(graph_and_content_global)
-            .then(update_state);
+          exec_disabling_buttons(exports.wasm_desired);
         });
 
         document.querySelector("#diff").addEventListener('click', () => {
-          exports.wasm_diff(graph_and_content_global)
-            .then(update_state);
+          exec_disabling_buttons(exports.wasm_diff);
         });
 
         document.querySelector("#ensure_dry").addEventListener('click', () => {
-          exports.wasm_ensure_dry(graph_and_content_global)
-            .then(update_state);
+          exec_disabling_buttons(exports.wasm_ensure_dry);
         });
         document.querySelector("#ensure").addEventListener('click', () => {
-          exports.wasm_ensure(graph_and_content_global)
-            .then(update_state);
+          exec_disabling_buttons(exports.wasm_ensure);
         });
       };
     </script>
@@ -108,7 +198,8 @@
       </fieldset>
     </div>
     <div class="section">
-      <button id="init">init</button>
+      <div id="spinner"><div class="loader">Loading...</div></div>
+      <button id="init" autocomplete="off">init</button>
       <button id="status"     class="init_required" disabled autocomplete="off">status</button>
       <button id="desired"    class="init_required" disabled autocomplete="off">desired</button>
       <button id="diff"       class="init_required" disabled autocomplete="off">diff</button>
