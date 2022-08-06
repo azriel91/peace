@@ -353,7 +353,7 @@ where
     }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 impl<
     FS,
     E,

@@ -1,16 +1,21 @@
-use std::path::{Path, PathBuf};
+#[cfg(not(target_arch = "wasm32"))]
+use std::path::Path;
+use std::path::PathBuf;
 
+#[cfg(not(target_arch = "wasm32"))]
 use bytes::Bytes;
+#[cfg(not(target_arch = "wasm32"))]
 use futures::{Stream, StreamExt, TryStreamExt};
+#[cfg(not(target_arch = "wasm32"))]
+use tokio::io::AsyncWriteExt;
+#[cfg(not(target_arch = "wasm32"))]
+use tokio::{fs::File, io::BufWriter};
+
 #[nougat::gat(Data)]
 use peace::cfg::EnsureOpSpec;
 use peace::{
     cfg::{async_trait, nougat, OpCheckStatus, ProgressLimit, State},
     diff::Tracked,
-};
-use tokio::{
-    fs::File,
-    io::{AsyncWriteExt, BufWriter},
 };
 
 use crate::{DownloadError, DownloadParams, FileState, FileStateDiff};
@@ -20,20 +25,34 @@ use crate::{DownloadError, DownloadParams, FileState, FileStateDiff};
 pub struct DownloadEnsureOpSpec;
 
 impl DownloadEnsureOpSpec {
-    async fn file_download(download_params: &DownloadParams<'_>) -> Result<(), DownloadError> {
+    async fn file_download(download_params: DownloadParams<'_>) -> Result<(), DownloadError> {
         let client = download_params.client();
         let src_url = download_params.src();
-        let dest = download_params.dest();
         let response = client
             .get(src_url.clone())
             .send()
             .await
             .map_err(DownloadError::SrcGet)?;
 
-        Self::stream_write(dest, response.bytes_stream()).await
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            Self::stream_write(download_params.dest(), response.bytes_stream()).await?;
+        }
+
+        // reqwest in wasm doesn't support streams
+        // https://github.com/seanmonstar/reqwest/issues/1424
+        #[cfg(target_arch = "wasm32")]
+        {
+            let mut download_params = download_params;
+            let dest = download_params.dest().to_path_buf();
+            Self::stream_write(dest, download_params.in_memory_contents_mut(), response).await?;
+        }
+
+        Ok(())
     }
 
     /// Streams the content to disk.
+    #[cfg(not(target_arch = "wasm32"))]
     async fn stream_write(
         dest_path: &Path,
         byte_stream: impl Stream<Item = reqwest::Result<Bytes>>,
@@ -61,9 +80,26 @@ impl DownloadEnsureOpSpec {
             .map_err(DownloadError::ResponseFileWrite)?;
         Ok(())
     }
+
+    /// Streams the content to disk.
+    #[cfg(target_arch = "wasm32")]
+    async fn stream_write(
+        dest_path: PathBuf,
+        in_memory_contents: &mut std::collections::HashMap<PathBuf, String>,
+        response: reqwest::Response,
+    ) -> Result<(), DownloadError> {
+        let response_text = response.text();
+        let contents = response_text
+            .await
+            .map_err(DownloadError::ResponseTextRead)?;
+
+        in_memory_contents.insert(dest_path, contents);
+
+        Ok(())
+    }
 }
 
-#[async_trait]
+#[async_trait(?Send)]
 #[nougat::gat]
 impl EnsureOpSpec for DownloadEnsureOpSpec {
     type Data<'op> = DownloadParams<'op>
@@ -119,8 +155,8 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
         _file_state_desired: &Option<FileState>,
         _diff: &FileStateDiff,
     ) -> Result<PathBuf, DownloadError> {
-        Self::file_download(&download_params).await?;
-        let dest = download_params.dest();
-        Ok(dest.to_path_buf())
+        let dest = download_params.dest().to_path_buf();
+        Self::file_download(download_params).await?;
+        Ok(dest)
     }
 }

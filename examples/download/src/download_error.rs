@@ -35,4 +35,9 @@ pub enum DownloadError {
     StateDiffsSerialize(#[source] serde_yaml::Error),
     #[error("Failed to initialize tokio runtime.")]
     StdoutWrite(#[source] std::io::Error),
+
+    // WASM errors.
+    #[cfg(target_arch = "wasm32")]
+    #[error("Failed to read text from contents.")]
+    ResponseTextRead(#[source] reqwest::Error),
 }
