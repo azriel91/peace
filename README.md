@@ -54,6 +54,34 @@ Further ideas:
 * Metrics collection for analysis
 
 
+## Examples
+
+Examples are run using `--package` instead of `--example`, as each example is organized as its own crate.
+
+```bash
+cargo run --package $example_name
+
+# e.g.
+cargo run --package download -- status https://ifconfig.me ip.json
+```
+
+### WASM
+
+The `download` example can be built as a web assembly application using [`wasm-pack`]:
+
+```bash
+cd examples/download
+wasm-pack build --target web
+```
+
+In the `examples/download` directory, start an [HTTP server], and open <http://localhost:8000/>:
+
+```bash
+python3 -m http.server 8000 # or
+simple-http-server --nocache --port 8000 -i
+```
+
+
 ## License
 
 Licensed under either of
@@ -67,3 +95,7 @@ at your option.
 ### Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
+
+
+[`wasm-pack`]: https://rustwasm.github.io/
+[HTTP server]: https://crates.io/crates/simple-http-server
