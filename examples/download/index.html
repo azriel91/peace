@@ -2,8 +2,30 @@
   <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
     <style type="text/css">
+      body {
+        font-family: Verdana, sans-serif;
+      }
+      fieldset {
+        display: inline-block;
+        padding: 10px;
+      }
+      label {
+        display: inline-block;
+        width: 80px;
+      }
       table, th, td {
         border: 1px solid;
+      }
+      #cmd_output {
+        display: inline-block;
+        width: 300px;
+      }
+      #in_memory_contents {
+        vertical-align: top;
+        display: inline-block;
+      }
+      .section {
+        padding: 10px;
       }
     </style>
   </head>
@@ -18,9 +40,9 @@
 
 
         document.querySelector("#init").addEventListener('click', () => {
-          const name = document.querySelector("#name").value;
+          const path = document.querySelector("#path").value;
           const url = document.querySelector("#url").value;
-          exports.wasm_setup(url, name)
+          exports.wasm_setup(url, path)
             .then(graph_and_content => {
               graph_and_content_global = graph_and_content;
               update_state(graph_and_content_global);
@@ -33,7 +55,7 @@
           graph_and_content_global = graph_and_content;
           const in_memory_contents = document.querySelector("#in_memory_contents_value");
 
-          document.querySelector("#output_value").innerHTML = `<pre>${graph_and_content_global.output}</pre>`;
+          document.querySelector("#cmd_output_value").innerHTML = `<pre>${graph_and_content_global.output}</pre>`;
 
           try {
             const contents = graph_and_content_global.contents();
@@ -79,23 +101,31 @@
       };
     </script>
 
-    <label for="url">URL:</label><input id="url" value="http://ipecho.net/plain" /><br/>
-    <label for="name">Name:</label><input id="name" value="ip.json" /><br/>
-    <button id="init">Init</button>
-    <button id="status" class="init_required" disabled autocomplete="off">Status</button>
-    <button id="desired" class="init_required" disabled autocomplete="off">Desired</button>
-    <button id="diff" class="init_required" disabled autocomplete="off">Diff</button>
-    <button id="ensure_dry" class="init_required" disabled autocomplete="off">Ensure (dry run)</button>
-    <button id="ensure" class="init_required" disabled autocomplete="off">Ensure</button>
-
-    <div id="output">
-      Output:
-      <div id="output_value" />
+    <div class="section">
+      <fieldset>
+        <label for="path">file name:</label><input id="path" value="ip.json" /><br/>
+        <label for="url">url:</label><input id="url" value="http://ipecho.net/plain" /><br/>
+      </fieldset>
+    </div>
+    <div class="section">
+      <button id="init">init</button>
+      <button id="status"     class="init_required" disabled autocomplete="off">status</button>
+      <button id="desired"    class="init_required" disabled autocomplete="off">desired</button>
+      <button id="diff"       class="init_required" disabled autocomplete="off">diff</button>
+      <button id="ensure_dry" class="init_required" disabled autocomplete="off">ensure (dry run)</button>
+      <button id="ensure"     class="init_required" disabled autocomplete="off">ensure</button>
     </div>
 
-    <div id="in_memory_contents">
-      In-memory contents:
-      <div id="in_memory_contents_value" />
+    <div id="information" class="section">
+      <div id="cmd_output">
+        Command output:
+        <div id="cmd_output_value"></div>
+      </div>
+
+      <div id="in_memory_contents">
+        In-memory contents:
+        <div id="in_memory_contents_value"></div>
+      </div>
     </div>
   </body>
 </html>
