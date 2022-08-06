@@ -1,0 +1,6 @@
+[book]
+authors = ["Azriel Hoh"]
+language = "en"
+multilingual = false
+src = "src"
+title = "The Peace Framework"
