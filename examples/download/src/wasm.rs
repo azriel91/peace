@@ -5,9 +5,9 @@ use url::Url;
 
 pub use crate::{
     desired, diff, ensure, ensure_dry, setup_graph, status, DownloadArgs, DownloadCleanOpSpec,
-    DownloadCommand, DownloadEnsureOpSpec, DownloadError, DownloadFullSpec, DownloadParams,
-    DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec, DownloadStateDiffFnSpec, FileState,
-    FileStateDiff,
+    DownloadCommand, DownloadEnsureOpSpec, DownloadError, DownloadFullSpec, DownloadFullSpecGraph,
+    DownloadParams, DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec,
+    DownloadStateDiffFnSpec, FileState, FileStateDiff,
 };
 
 use wasm_bindgen::prelude::*;
@@ -20,7 +20,7 @@ extern "C" {
 
 #[wasm_bindgen(getter_with_clone)]
 pub struct GraphAndContent {
-    graph: peace::rt_model::FullSpecGraph<DownloadError>,
+    graph: DownloadFullSpecGraph,
     content: std::collections::HashMap<PathBuf, String>,
     pub output: String,
 }
@@ -44,6 +44,7 @@ pub async fn wasm_setup(url: String, name: String) -> Result<GraphAndContent, Js
     )
     .await
     .map(|graph| async move {
+        let graph = DownloadFullSpecGraph::from(graph);
         let mut resources = graph
             .setup(Resources::new())
             .await

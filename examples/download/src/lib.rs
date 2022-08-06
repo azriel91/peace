@@ -40,6 +40,11 @@ mod file_state;
 mod file_state_diff;
 
 #[cfg(target_arch = "wasm32")]
+pub use download_full_spec_graph::DownloadFullSpecGraph;
+
+#[cfg(target_arch = "wasm32")]
+mod download_full_spec_graph;
+#[cfg(target_arch = "wasm32")]
 mod wasm;
 
 pub async fn setup_graph(
