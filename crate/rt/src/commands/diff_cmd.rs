@@ -5,7 +5,7 @@ use peace_resources::{
     resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     Resources, StateDiffs, StateDiffsMut,
 };
-use peace_rt_model::FullSpecGraph;
+use peace_rt_model::ItemSpecGraph;
 
 use crate::{StateCurrentCmd, StateDesiredCmd};
 
@@ -17,44 +17,44 @@ where
     E: std::error::Error,
 {
     /// Runs [`StateCurrentFnSpec`]` and `[`StateDesiredFnSpec`]`::`[`exec`] for
-    /// each [`FullSpec`].
+    /// each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`States`] and [`StatesDesired`].
     ///
     /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
-    /// `FullSpec`, the [`StatesRw`] type should be used in
+    /// `ItemSpec`, the [`StatesRw`] type should be used in
     /// [`FnSpec::Data`].
     ///
     /// Likewise, if any `StateDesiredFnSpec` needs to read the desired `State`
-    /// from a previous `FullSpec`, the [`StatesDesiredRw`] type should be
+    /// from a previous `ItemSpec`, the [`StatesDesiredRw`] type should be
     /// used in [`FnSpec::Data`].
     ///
     /// [`exec`]: peace_cfg::FnSpec::exec
     /// [`FnSpec::Data`]: peace_cfg::FnSpec::Data
-    /// [`FullSpec`]: peace_cfg::FullSpec
+    /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`States`]: peace_resources::States
     /// [`StatesRw`]: peace_resources::StatesRw
-    /// [`StateCurrentFnSpec`]: peace_cfg::FullSpec::StateCurrentFnSpec
-    /// [`StateDesiredFnSpec`]: peace_cfg::FullSpec::StateDesiredFnSpec
+    /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        full_spec_graph: &FullSpecGraph<E>,
+        item_spec_graph: &ItemSpecGraph<E>,
         resources: Resources<SetUp>,
     ) -> Result<Resources<WithStateDiffs>, E> {
-        let states = StateCurrentCmd::exec_internal(full_spec_graph, &resources).await?;
-        let states_desired = StateDesiredCmd::exec_internal(full_spec_graph, &resources).await?;
+        let states = StateCurrentCmd::exec_internal(item_spec_graph, &resources).await?;
+        let states_desired = StateDesiredCmd::exec_internal(item_spec_graph, &resources).await?;
 
         let resources =
             Resources::<WithStatesCurrentAndDesired>::from((resources, states, states_desired));
         let resources_ref = &resources;
         let state_diffs = {
-            let state_diffs_mut = full_spec_graph
+            let state_diffs_mut = item_spec_graph
                 .stream()
                 .map(Result::<_, E>::Ok)
-                .and_then(|full_spec| async move {
+                .and_then(|item_spec| async move {
                     Ok((
-                        full_spec.id(),
-                        full_spec.state_diff_fn_exec(resources_ref).await?,
+                        item_spec.id(),
+                        item_spec.state_diff_fn_exec(resources_ref).await?,
                     ))
                 })
                 .try_collect::<StateDiffsMut>()

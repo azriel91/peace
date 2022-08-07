@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use peace_core::FullSpecId;
+use peace_core::ItemSpecId;
 use peace_resources::{resources_type_state::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -51,7 +51,7 @@ use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State, StateDiffFnSpec};
 /// [`Data`]: crate::CleanOpSpec::Data
 #[async_trait(?Send)]
 #[nougat::gat]
-pub trait FullSpec {
+pub trait ItemSpec {
     /// Consumer provided error type.
     type Error: std::error::Error;
 
@@ -70,7 +70,7 @@ pub trait FullSpec {
     ///
     /// # Examples
     ///
-    /// ## `FullSpec` that manages servers:
+    /// ## `ItemSpec` that manages servers:
     ///
     /// The `StateLogical` may be the number of server instances, the boot
     /// image, and their hardware capacity.
@@ -94,7 +94,7 @@ pub trait FullSpec {
     ///   this and launch servers using the recorded image and hardware
     ///   capacity.
     ///
-    /// ## `FullSpec` that manages application configuration:
+    /// ## `ItemSpec` that manages application configuration:
     ///
     /// The `StateLogical` is not necessarily the configuration itself, but may
     /// be a content hash, commit hash or version of the configuration. If
@@ -246,27 +246,27 @@ pub trait FullSpec {
     /// The ID should be a unique value that does not change over the lifetime
     /// of the managed item.
     ///
-    /// [`FullSpecId`]s must begin with a letter or underscore, and contain only
-    /// letters, numbers, and underscores.  The [`full_spec_id!`] macro provides
+    /// [`ItemSpecId`]s must begin with a letter or underscore, and contain only
+    /// letters, numbers, and underscores.  The [`item_spec_id!`] macro provides
     /// a compile time check to ensure that these conditions are upheld.
     ///
     /// ```rust
-    /// # use peace_cfg::{full_spec_id, FullSpecId};
-    /// const fn id() -> FullSpecId {
-    ///     full_spec_id!("my_full_spec")
+    /// # use peace_cfg::{item_spec_id, ItemSpecId};
+    /// const fn id() -> ItemSpecId {
+    ///     item_spec_id!("my_item_spec")
     /// }
     /// # fn main() { let _id = id(); }
     /// ```
     ///
     /// # Design Note
     ///
-    /// This is an instance method as logic for a `FullSpec` may be used for
-    /// multiple tasks. For example, a `FullSpec` implemented to download a
+    /// This is an instance method as logic for an `ItemSpec` may be used for
+    /// multiple tasks. For example, an `ItemSpec` implemented to download a
     /// file may be instantiated with different files to download, and each
-    /// instance of the `FullSpec` should have its own ID.
+    /// instance of the `ItemSpec` should have its own ID.
     ///
-    /// [`full_spec_id!`]: peace_full_spec_id_macro::full_spec_id
-    fn id(&self) -> FullSpecId;
+    /// [`item_spec_id!`]: peace_item_spec_id_macro::item_spec_id
+    fn id(&self) -> ItemSpecId;
 
     /// Inserts an instance of each data type in [`Resources`].
     ///

@@ -1,16 +1,16 @@
 use peace::{
-    cfg::{FullSpec, State},
+    cfg::{ItemSpec, State},
     resources::{Resources, States},
     rt::StateCurrentCmd,
-    rt_model::FullSpecGraphBuilder,
+    rt_model::ItemSpecGraphBuilder,
 };
 
-use crate::{VecCopyError, VecCopyFullSpec};
+use crate::{VecCopyError, VecCopyItemSpec};
 
 #[tokio::test]
-async fn runs_state_current_for_each_full_spec() -> Result<(), VecCopyError> {
-    let mut graph_builder = FullSpecGraphBuilder::<VecCopyError>::new();
-    graph_builder.add_fn(VecCopyFullSpec.into());
+async fn runs_state_current_for_each_item_spec() -> Result<(), VecCopyError> {
+    let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+    graph_builder.add_fn(VecCopyItemSpec.into());
 
     let graph = graph_builder.build();
 
@@ -20,7 +20,7 @@ async fn runs_state_current_for_each_full_spec() -> Result<(), VecCopyError> {
     let states = resources.borrow::<States>();
     assert_eq!(
         Some(State::new(Vec::<u8>::new(), ())).as_ref(),
-        states.get::<State<Vec<u8>, ()>, _>(&VecCopyFullSpec.id())
+        states.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id())
     );
 
     Ok(())

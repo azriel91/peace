@@ -5,7 +5,7 @@ use std::{
 };
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
-use peace_cfg::{async_trait, nougat::Gat, FnSpec, FullSpec, FullSpecId, OpCheckStatus, State};
+use peace_cfg::{async_trait, nougat::Gat, FnSpec, ItemSpec, ItemSpecId, OpCheckStatus, State};
 use peace_data::Data;
 use peace_resources::{
     resources_type_state::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
@@ -14,12 +14,12 @@ use peace_resources::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::FullSpecRt;
+use crate::ItemSpecRt;
 
-/// Wraps a type implementing [`FullSpec`].
+/// Wraps a type implementing [`ItemSpec`].
 #[allow(clippy::type_complexity)]
-pub struct FullSpecWrapper<
-    FS,
+pub struct ItemSpecWrapper<
+    IS,
     E,
     StateLogical,
     StatePhysical,
@@ -30,7 +30,7 @@ pub struct FullSpecWrapper<
     EnsureOpSpec,
     CleanOpSpec,
 >(
-    FS,
+    IS,
     PhantomData<(
         E,
         StateLogical,
@@ -45,7 +45,7 @@ pub struct FullSpecWrapper<
 );
 
 impl<
-    FS,
+    IS,
     E,
     StateLogical,
     StatePhysical,
@@ -56,8 +56,8 @@ impl<
     EnsureOpSpec,
     CleanOpSpec,
 > Debug
-    for FullSpecWrapper<
-        FS,
+    for ItemSpecWrapper<
+        IS,
         E,
         StateLogical,
         StatePhysical,
@@ -69,7 +69,7 @@ impl<
         CleanOpSpec,
     >
 where
-    FS: Debug,
+    IS: Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.0.fmt(f)
@@ -77,7 +77,7 @@ where
 }
 
 impl<
-    FS,
+    IS,
     E,
     StateLogical,
     StatePhysical,
@@ -88,8 +88,8 @@ impl<
     EnsureOpSpec,
     CleanOpSpec,
 > Deref
-    for FullSpecWrapper<
-        FS,
+    for ItemSpecWrapper<
+        IS,
         E,
         StateLogical,
         StatePhysical,
@@ -101,7 +101,7 @@ impl<
         CleanOpSpec,
     >
 {
-    type Target = FS;
+    type Target = IS;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -109,7 +109,7 @@ impl<
 }
 
 impl<
-    FS,
+    IS,
     E,
     StateLogical,
     StatePhysical,
@@ -120,8 +120,8 @@ impl<
     EnsureOpSpec,
     CleanOpSpec,
 > DerefMut
-    for FullSpecWrapper<
-        FS,
+    for ItemSpecWrapper<
+        IS,
         E,
         StateLogical,
         StatePhysical,
@@ -139,7 +139,7 @@ impl<
 }
 
 impl<
-    FS,
+    IS,
     E,
     StateLogical,
     StatePhysical,
@@ -149,9 +149,9 @@ impl<
     StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
-> From<FS>
-    for FullSpecWrapper<
-        FS,
+> From<IS>
+    for ItemSpecWrapper<
+        IS,
         E,
         StateLogical,
         StatePhysical,
@@ -163,8 +163,8 @@ impl<
         CleanOpSpec,
     >
 where
-    FS: Debug
-        + FullSpec<
+    IS: Debug
+        + ItemSpec<
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
@@ -202,13 +202,13 @@ where
         + Send
         + Sync,
 {
-    fn from(full_spec: FS) -> Self {
-        Self(full_spec, PhantomData)
+    fn from(item_spec: IS) -> Self {
+        Self(item_spec, PhantomData)
     }
 }
 
 impl<
-    FS,
+    IS,
     E,
     StateLogical,
     StatePhysical,
@@ -219,8 +219,8 @@ impl<
     EnsureOpSpec,
     CleanOpSpec,
 > DataAccess
-    for FullSpecWrapper<
-        FS,
+    for ItemSpecWrapper<
+        IS,
         E,
         StateLogical,
         StatePhysical,
@@ -232,8 +232,8 @@ impl<
         CleanOpSpec,
     >
 where
-    FS: Debug
-        + FullSpec<
+    IS: Debug
+        + ItemSpec<
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
@@ -281,7 +281,7 @@ where
 }
 
 impl<
-    FS,
+    IS,
     E,
     StateLogical,
     StatePhysical,
@@ -292,8 +292,8 @@ impl<
     EnsureOpSpec,
     CleanOpSpec,
 > DataAccessDyn
-    for FullSpecWrapper<
-        FS,
+    for ItemSpecWrapper<
+        IS,
         E,
         StateLogical,
         StatePhysical,
@@ -305,8 +305,8 @@ impl<
         CleanOpSpec,
     >
 where
-    FS: Debug
-        + FullSpec<
+    IS: Debug
+        + ItemSpec<
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
@@ -355,7 +355,7 @@ where
 
 #[async_trait(?Send)]
 impl<
-    FS,
+    IS,
     E,
     StateLogical,
     StatePhysical,
@@ -365,9 +365,9 @@ impl<
     StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
-> FullSpecRt<E>
-    for FullSpecWrapper<
-        FS,
+> ItemSpecRt<E>
+    for ItemSpecWrapper<
+        IS,
         E,
         StateLogical,
         StatePhysical,
@@ -379,8 +379,8 @@ impl<
         CleanOpSpec,
     >
 where
-    FS: Debug
-        + FullSpec<
+    IS: Debug
+        + ItemSpec<
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
@@ -423,12 +423,12 @@ where
         > + Send
         + Sync,
 {
-    fn id(&self) -> FullSpecId {
-        <FS as FullSpec>::id(self)
+    fn id(&self) -> ItemSpecId {
+        <IS as ItemSpec>::id(self)
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E> {
-        <FS as FullSpec>::setup(self, resources).await
+        <IS as ItemSpec>::setup(self, resources).await
     }
 
     async fn state_current_fn_exec(
@@ -482,18 +482,18 @@ where
                 <Gat!(<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_>) as Data>::borrow(
                     resources,
                 );
-            let full_spec_id = <FS as FullSpec>::id(self);
+            let item_spec_id = <IS as ItemSpec>::id(self);
             let states = resources.borrow::<States>();
-            let state = states.get::<State<StateLogical, StatePhysical>, _>(&full_spec_id);
+            let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
             let states_desired = resources.borrow::<StatesDesired>();
-            let state_desired = states_desired.get::<StateLogical, _>(&full_spec_id);
+            let state_desired = states_desired.get::<StateLogical, _>(&item_spec_id);
 
             if let (Some(state), Some(state_desired)) = (state, state_desired) {
                 <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(data, state, state_desired)
                     .await?
             } else {
                 panic!(
-                    "`FullSpecWrapper::diff` must only be called with `States` and `StatesDesired` \
+                    "`ItemSpecWrapper::diff` must only be called with `States` and `StatesDesired` \
                     populated using `StateCurrentCmd` and `StateDesiredCmd`."
                 );
             }
@@ -510,13 +510,13 @@ where
             let data = <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as Data>::borrow(
                 resources,
             );
-            let full_spec_id = <FS as FullSpec>::id(self);
+            let item_spec_id = <IS as ItemSpec>::id(self);
             let states = resources.borrow::<States>();
-            let state = states.get::<State<StateLogical, StatePhysical>, _>(&full_spec_id);
+            let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
             let states_desired = resources.borrow::<StatesDesired>();
-            let state_desired = states_desired.get::<StateLogical, _>(&full_spec_id);
+            let state_desired = states_desired.get::<StateLogical, _>(&item_spec_id);
             let state_diffs = resources.borrow::<StateDiffs>();
-            let state_diff = state_diffs.get::<StateDiff, _>(&full_spec_id);
+            let state_diff = state_diffs.get::<StateDiff, _>(&item_spec_id);
 
             if let (Some(state), Some(state_desired), Some(state_diff)) =
                 (state, state_desired, state_diff)
@@ -530,7 +530,7 @@ where
                 .await?
             } else {
                 panic!(
-                    "`FullSpecWrapper::ensure_op_check` must only be called with `States`, `StatesDesired`, and \
+                    "`ItemSpecWrapper::ensure_op_check` must only be called with `States`, `StatesDesired`, and \
                     `StateDiffs` populated using `DiffCmd`."
                 );
             }
@@ -542,13 +542,13 @@ where
     async fn ensure_op_exec_dry(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E> {
         let data =
             <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as Data>::borrow(resources);
-        let full_spec_id = <FS as FullSpec>::id(self);
+        let item_spec_id = <IS as ItemSpec>::id(self);
         let states = resources.borrow::<States>();
-        let state = states.get::<State<StateLogical, StatePhysical>, _>(&full_spec_id);
+        let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
         let states_desired = resources.borrow::<StatesDesired>();
-        let state_desired = states_desired.get::<StateLogical, _>(&full_spec_id);
+        let state_desired = states_desired.get::<StateLogical, _>(&item_spec_id);
         let state_diffs = resources.borrow::<StateDiffs>();
-        let state_diff = state_diffs.get::<StateDiff, _>(&full_spec_id);
+        let state_diff = state_diffs.get::<StateDiff, _>(&item_spec_id);
 
         if let (Some(state), Some(state_desired), Some(state_diff)) =
             (state, state_desired, state_diff)
@@ -562,7 +562,7 @@ where
             .await?;
         } else {
             panic!(
-                "`FullSpecWrapper::ensure_op_exec_dry` must only be called with `States`, `StatesDesired`, and \
+                "`ItemSpecWrapper::ensure_op_exec_dry` must only be called with `States`, `StatesDesired`, and \
                 `StateDiffs` populated using `DiffCmd`."
             );
         }
@@ -573,13 +573,13 @@ where
     async fn ensure_op_exec(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E> {
         let data =
             <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as Data>::borrow(resources);
-        let full_spec_id = <FS as FullSpec>::id(self);
+        let item_spec_id = <IS as ItemSpec>::id(self);
         let states = resources.borrow::<States>();
-        let state = states.get::<State<StateLogical, StatePhysical>, _>(&full_spec_id);
+        let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
         let states_desired = resources.borrow::<StatesDesired>();
-        let state_desired = states_desired.get::<StateLogical, _>(&full_spec_id);
+        let state_desired = states_desired.get::<StateLogical, _>(&item_spec_id);
         let state_diffs = resources.borrow::<StateDiffs>();
-        let state_diff = state_diffs.get::<StateDiff, _>(&full_spec_id);
+        let state_diff = state_diffs.get::<StateDiff, _>(&item_spec_id);
 
         if let (Some(state), Some(state_desired), Some(state_diff)) =
             (state, state_desired, state_diff)
@@ -588,7 +588,7 @@ where
                 .await?;
         } else {
             panic!(
-                "`FullSpecWrapper::ensure_op_exec` must only be called with `States`, `StatesDesired`, and \
+                "`ItemSpecWrapper::ensure_op_exec` must only be called with `States`, `StatesDesired`, and \
                 `StateDiffs` populated using `DiffCmd`."
             );
         }

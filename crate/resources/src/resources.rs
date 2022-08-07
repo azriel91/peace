@@ -25,7 +25,7 @@ use crate::{
 ///
 /// * `TS`: The type state of the `Resources` map.
 ///
-/// [`FullSpecId`]: peace_cfg::FullSpecId
+/// [`ItemSpecId`]: peace_cfg::ItemSpecId
 #[derive(Debug)]
 pub struct Resources<TS> {
     inner: resman::Resources,
@@ -69,7 +69,7 @@ impl<TS> DerefMut for Resources<TS> {
     }
 }
 
-// For `FullSpecGraph` after resources have been set up.
+// For `ItemSpecGraph` after resources have been set up.
 impl From<Resources<Empty>> for Resources<SetUp> {
     fn from(resources: Resources<Empty>) -> Self {
         Self {

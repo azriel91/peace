@@ -1,14 +1,14 @@
-//! Contains type-erased `FullSpec` types and traits.
+//! Contains type-erased `ItemSpec` types and traits.
 //!
 //! Types and traits in this module don't reference any associated types from
-//! the `FullSpec`, allowing them to be passed around as common types at compile
+//! the `ItemSpec`, allowing them to be passed around as common types at compile
 //! time.
 //!
 //! For the logic that is aware of the type parameters, see the
-//! [`full_spec_wrapper`] module and [`FullSpecWrapper`] type.
+//! [`item_spec_wrapper`] module and [`ItemSpecWrapper`] type.
 //!
-//! [`full_spec_wrapper`]: crate::full_spec_wrapper
-//! [`FullSpecWrapper`]: crate::FullSpecWrapper
+//! [`item_spec_wrapper`]: crate::item_spec_wrapper
+//! [`ItemSpecWrapper`]: crate::ItemSpecWrapper
 
 use std::{
     fmt::Debug,
@@ -16,26 +16,26 @@ use std::{
 };
 
 use fn_graph::{DataAccessDyn, TypeIds};
-use peace_cfg::{FnSpec, FullSpec, State};
+use peace_cfg::{FnSpec, ItemSpec, State};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{FullSpecRt, FullSpecWrapper};
+use crate::{ItemSpecRt, ItemSpecWrapper};
 
-/// Holds a type-erased `FullSpecWrapper` in a `Box`.
+/// Holds a type-erased `ItemSpecWrapper` in a `Box`.
 ///
 /// # Type Parameters
 ///
 /// * `E`: Application specific error type.
 #[derive(Debug)]
-pub struct FullSpecBoxed<E>(Box<dyn FullSpecRt<E>>)
+pub struct ItemSpecBoxed<E>(Box<dyn ItemSpecRt<E>>)
 where
     E: std::error::Error;
 
-impl<E> Deref for FullSpecBoxed<E>
+impl<E> Deref for ItemSpecBoxed<E>
 where
     E: std::error::Error,
 {
-    type Target = dyn FullSpecRt<E>;
+    type Target = dyn ItemSpecRt<E>;
 
     // https://github.com/rust-lang/rust-clippy/issues/9101
     #[allow(clippy::explicit_auto_deref)]
@@ -44,7 +44,7 @@ where
     }
 }
 
-impl<E> DerefMut for FullSpecBoxed<E>
+impl<E> DerefMut for ItemSpecBoxed<E>
 where
     E: std::error::Error,
 {
@@ -56,7 +56,7 @@ where
 }
 
 impl<
-    FS,
+    IS,
     E,
     StateLogical,
     StatePhysical,
@@ -66,10 +66,10 @@ impl<
     StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
-> From<FS> for FullSpecBoxed<E>
+> From<IS> for ItemSpecBoxed<E>
 where
-    FS: Debug
-        + FullSpec<
+    IS: Debug
+        + ItemSpec<
             Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
@@ -119,12 +119,12 @@ where
         + Sync
         + 'static,
 {
-    fn from(full_spec: FS) -> Self {
-        Self(Box::new(FullSpecWrapper::from(full_spec)))
+    fn from(item_spec: IS) -> Self {
+        Self(Box::new(ItemSpecWrapper::from(item_spec)))
     }
 }
 
-impl<E> DataAccessDyn for FullSpecBoxed<E>
+impl<E> DataAccessDyn for ItemSpecBoxed<E>
 where
     E: std::error::Error,
 {

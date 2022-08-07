@@ -1,55 +1,55 @@
 use std::fmt::Debug;
 
 use fn_graph::{DataAccess, DataAccessDyn};
-use peace_cfg::{async_trait, FullSpecId, OpCheckStatus};
+use peace_cfg::{async_trait, ItemSpecId, OpCheckStatus};
 use peace_resources::{
     resources_type_state::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     type_reg::untagged::DataType,
     Resources,
 };
 
-/// Internal trait that erases the types from [`FullSpec`]
+/// Internal trait that erases the types from [`ItemSpec`]
 ///
-/// This exists so that different implementations of [`FullSpec`] can be held
+/// This exists so that different implementations of [`ItemSpec`] can be held
 /// under the same boxed trait.
 ///
-/// [`FullSpec`]: peace_cfg::FullSpec
+/// [`ItemSpec`]: peace_cfg::ItemSpec
 #[async_trait(?Send)]
-pub trait FullSpecRt<E>: Debug + DataAccess + DataAccessDyn
+pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn
 where
     E: Debug + std::error::Error,
 {
     /// Returns the ID of this full spec.
     ///
-    /// See [`FullSpec::id`];
+    /// See [`ItemSpec::id`];
     ///
-    /// [`FullSpec::id`]: peace_cfg::FullSpec::id
-    fn id(&self) -> FullSpecId;
+    /// [`ItemSpec::id`]: peace_cfg::ItemSpec::id
+    fn id(&self) -> ItemSpecId;
 
     /// Initializes data for the operation's check and `exec` functions.
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E>;
 
-    /// Runs [`FullSpec::StateCurrentFnSpec`]`::`[`exec`].
+    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`exec`].
     ///
-    /// [`FullSpec::StateCurrentFnSpec`]: peace_cfg::FullSpec::StateCurrentFnSpec
+    /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`exec`]: peace_cfg::FnSpec::exec
     async fn state_current_fn_exec(
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<Box<dyn DataType>, E>;
 
-    /// Runs [`FullSpec::StateCurrentFnSpec`]`::`[`exec`].
+    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`exec`].
     ///
-    /// [`FullSpec::StateCurrentFnSpec`]: peace_cfg::FullSpec::StateCurrentFnSpec
+    /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`exec`]: peace_cfg::FnSpec::exec
     async fn state_ensured_fn_exec(
         &self,
         resources: &Resources<WithStateDiffs>,
     ) -> Result<Box<dyn DataType>, E>;
 
-    /// Runs [`FullSpec::StateDesiredFnSpec`]`::`[`desired`].
+    /// Runs [`ItemSpec::StateDesiredFnSpec`]`::`[`desired`].
     ///
-    /// [`FullSpec::StateDesiredFnSpec`]: peace_cfg::FullSpec::StateDesiredFnSpec
+    /// [`ItemSpec::StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     /// [`desired`]: peace_cfg::FnSpec::desired
     async fn state_desired_fn_exec(
         &self,
@@ -64,24 +64,24 @@ where
         resources: &Resources<WithStatesCurrentAndDesired>,
     ) -> Result<Box<dyn DataType>, E>;
 
-    /// Runs [`FullSpec::EnsureOpSpec`]`::`[`check`].
+    /// Runs [`ItemSpec::EnsureOpSpec`]`::`[`check`].
     ///
-    /// [`FullSpec::EnsureOpSpec`]: peace_cfg::FullSpec::EnsureOpSpec
+    /// [`ItemSpec::EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     /// [`check`]: peace_cfg::OpSpec::check
     async fn ensure_op_check(
         &self,
         resources: &Resources<WithStateDiffs>,
     ) -> Result<OpCheckStatus, E>;
 
-    /// Runs [`FullSpec::EnsureOpSpec`]`::`[`exec_dry`].
+    /// Runs [`ItemSpec::EnsureOpSpec`]`::`[`exec_dry`].
     ///
-    /// [`FullSpec::EnsureOpSpec`]: peace_cfg::FullSpec::EnsureOpSpec
+    /// [`ItemSpec::EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     /// [`exec_dry`]: peace_cfg::OpSpec::exec_dry
     async fn ensure_op_exec_dry(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E>;
 
-    /// Runs [`FullSpec::EnsureOpSpec`]`::`[`exec`].
+    /// Runs [`ItemSpec::EnsureOpSpec`]`::`[`exec`].
     ///
-    /// [`FullSpec::EnsureOpSpec`]: peace_cfg::FullSpec::EnsureOpSpec
+    /// [`ItemSpec::EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     /// [`exec`]: peace_cfg::OpSpec::exec
     async fn ensure_op_exec(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E>;
 }

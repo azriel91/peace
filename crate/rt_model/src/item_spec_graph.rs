@@ -7,22 +7,22 @@ use peace_resources::{
     Resources,
 };
 
-use crate::FullSpecBoxed;
+use crate::ItemSpecBoxed;
 
-/// Graph of all [`FullSpec`]s, `FnGraph<FullSpecBoxed<E>>` newtype.
+/// Graph of all [`ItemSpec`]s, `FnGraph<ItemSpecBoxed<E>>` newtype.
 ///
-/// [`FullSpec`]: peace_cfg::FullSpec
+/// [`ItemSpec`]: peace_cfg::ItemSpec
 #[derive(Debug)]
-pub struct FullSpecGraph<E>(FnGraph<FullSpecBoxed<E>>)
+pub struct ItemSpecGraph<E>(FnGraph<ItemSpecBoxed<E>>)
 where
     E: std::error::Error;
 
-impl<E> FullSpecGraph<E>
+impl<E> ItemSpecGraph<E>
 where
     E: std::error::Error,
 {
     /// Returns the inner [`FnGraph`].
-    pub fn into_inner(self) -> FnGraph<FullSpecBoxed<E>> {
+    pub fn into_inner(self) -> FnGraph<ItemSpecBoxed<E>> {
         self.0
     }
 
@@ -35,8 +35,8 @@ where
         let resources = self
             .stream()
             .map(Ok::<_, E>)
-            .try_fold(resources, |mut resources, full_spec| async move {
-                full_spec.setup(&mut resources).await?;
+            .try_fold(resources, |mut resources, item_spec| async move {
+                item_spec.setup(&mut resources).await?;
                 Ok(resources)
             })
             .await?;
@@ -45,18 +45,18 @@ where
     }
 }
 
-impl<E> Deref for FullSpecGraph<E>
+impl<E> Deref for ItemSpecGraph<E>
 where
     E: std::error::Error,
 {
-    type Target = FnGraph<FullSpecBoxed<E>>;
+    type Target = FnGraph<ItemSpecBoxed<E>>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<E> DerefMut for FullSpecGraph<E>
+impl<E> DerefMut for ItemSpecGraph<E>
 where
     E: std::error::Error,
 {
@@ -65,11 +65,11 @@ where
     }
 }
 
-impl<E> From<FnGraph<FullSpecBoxed<E>>> for FullSpecGraph<E>
+impl<E> From<FnGraph<ItemSpecBoxed<E>>> for ItemSpecGraph<E>
 where
     E: std::error::Error,
 {
-    fn from(graph: FnGraph<FullSpecBoxed<E>>) -> Self {
+    fn from(graph: FnGraph<ItemSpecBoxed<E>>) -> Self {
         Self(graph)
     }
 }

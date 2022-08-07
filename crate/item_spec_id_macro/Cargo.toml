@@ -1,11 +1,11 @@
 [package]
-name = "peace_full_spec_id_macro"
+name = "peace_item_spec_id_macro"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 version = "0.0.2"
 edition = "2021"
-description = "Macro to validate `FullSpecId`s at compile time for the peace automation framework."
+description = "Macro to validate `ItemSpecId`s at compile time for the peace automation framework."
 repository = "https://github.com/azriel91/peace"
-documentation = "https://docs.rs/peace_full_spec_id_macro/"
+documentation = "https://docs.rs/peace_item_spec_id_macro/"
 readme = "../../README.md"
 categories = ["data-structures"]
 keywords = ["automation"]

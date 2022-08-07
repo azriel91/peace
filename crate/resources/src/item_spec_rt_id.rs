@@ -2,17 +2,17 @@ use std::ops::{Deref, DerefMut};
 
 use peace_data::fn_graph::FnId;
 
-/// Runtime identifier for a [`FullSpec`]. [`FnId`] newtype.
+/// Runtime identifier for an [`ItemSpec`]. [`FnId`] newtype.
 ///
 /// This is a cheap identifier to copy around, instead of cloning
-/// [`FullSpecId`].
+/// [`ItemSpecId`].
 ///
-/// [`FullSpecId`]: peace_cfg::FullSpecId
+/// [`ItemSpecId`]: peace_cfg::ItemSpecId
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct FullSpecRtId(FnId);
+pub struct ItemSpecRtId(FnId);
 
-impl FullSpecRtId {
-    /// Returns a new `FullSpecRtId`.
+impl ItemSpecRtId {
+    /// Returns a new `ItemSpecRtId`.
     pub fn new(fn_id: FnId) -> Self {
         Self(fn_id)
     }
@@ -23,7 +23,7 @@ impl FullSpecRtId {
     }
 }
 
-impl Deref for FullSpecRtId {
+impl Deref for ItemSpecRtId {
     type Target = FnId;
 
     fn deref(&self) -> &Self::Target {
@@ -31,19 +31,19 @@ impl Deref for FullSpecRtId {
     }
 }
 
-impl DerefMut for FullSpecRtId {
+impl DerefMut for ItemSpecRtId {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl From<usize> for FullSpecRtId {
+impl From<usize> for ItemSpecRtId {
     fn from(index: usize) -> Self {
         Self(FnId::new(index))
     }
 }
 
-impl From<FnId> for FullSpecRtId {
+impl From<FnId> for ItemSpecRtId {
     fn from(fn_id: FnId) -> Self {
         Self(fn_id)
     }

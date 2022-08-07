@@ -38,27 +38,27 @@ pub trait EnsureOpSpec {
     /// This is the type returned by the [`StateCurrentFnSpec`], and is used by
     /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
     ///
-    /// See [`FullSpec::StateLogical`] for more detail.
+    /// See [`ItemSpec::StateLogical`] for more detail.
     ///
-    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
-    /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
+    /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
+    /// [`EnsureOpSpec`]: crate::ItemSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
-    /// [`FullSpec::StateLogical`]: crate::FullSpec::StateLogical
+    /// [`ItemSpec::StateLogical`]: crate::ItemSpec::StateLogical
     type StateLogical: Clone + Serialize + DeserializeOwned;
 
     /// Physical state produced by the operation.
     ///
-    /// See [`FullSpec::StatePhysical`] for more detail.
+    /// See [`ItemSpec::StatePhysical`] for more detail.
     ///
-    /// [`FullSpec::StatePhysical`]: crate::FullSpec::StatePhysical
+    /// [`ItemSpec::StatePhysical`]: crate::ItemSpec::StatePhysical
     type StatePhysical: Clone + Serialize + DeserializeOwned;
 
     /// State difference produced by [`StateDiffFnSpec`].
     ///
-    /// See [`FullSpec::StateDiff`] for more detail.
+    /// See [`ItemSpec::StateDiff`] for more detail.
     ///
-    /// [`StateDiffFnSpec`]: crate::FullSpec::StateDiffFnSpec
-    /// [`FullSpec::StateDiff`]: crate::FullSpec::StateDiff
+    /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
+    /// [`ItemSpec::StateDiff`]: crate::ItemSpec::StateDiff
     type StateDiff: Clone + Serialize + DeserializeOwned;
 
     /// Data that the operation reads from, or writes to.
@@ -105,9 +105,9 @@ pub trait EnsureOpSpec {
     ///
     /// [`State`]: crate::State
     /// [`StateLogical`]: Self::StateLogical
-    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
-    /// [`StateDesiredFnSpec`]: crate::FullSpec::StateDesiredFnSpec
-    /// [`StateDiffFnSpec`]: crate::FullSpec::StateDiffFnSpec
+    /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
+    /// [`StateDesiredFnSpec`]: crate::ItemSpec::StateDesiredFnSpec
+    /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     async fn check(
         data: Self::Data<'_>,
         state_current: &State<Self::StateLogical, Self::StatePhysical>,
@@ -126,7 +126,7 @@ pub trait EnsureOpSpec {
     ///
     /// * Where there would be IDs received from an external system, a
     ///   placeholder ID should still be inserted into the runtime data. This
-    ///   should allow subsequent `FullSpec`s that rely on this one to use those
+    ///   should allow subsequent `ItemSpec`s that rely on this one to use those
     ///   placeholders in their logic.
     ///
     /// # Implementors
@@ -146,9 +146,9 @@ pub trait EnsureOpSpec {
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     /// [`State`]: crate::State
-    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
-    /// [`StateDesiredFnSpec`]: crate::FullSpec::StateDesiredFnSpec
-    /// [`StateDiffFnSpec`]: crate::FullSpec::StateDiffFnSpec
+    /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
+    /// [`StateDesiredFnSpec`]: crate::ItemSpec::StateDesiredFnSpec
+    /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     /// [`StateLogical`]: Self::StateLogical
     async fn exec_dry(
         data: Self::Data<'_>,
@@ -174,9 +174,9 @@ pub trait EnsureOpSpec {
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     /// [`State`]: crate::State
-    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
-    /// [`StateDesiredFnSpec`]: crate::FullSpec::StateDesiredFnSpec
-    /// [`StateDiffFnSpec`]: crate::FullSpec::StateDiffFnSpec
+    /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
+    /// [`StateDesiredFnSpec`]: crate::ItemSpec::StateDesiredFnSpec
+    /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     /// [`StateLogical`]: Self::StateLogical
     async fn exec(
         data: Self::Data<'_>,

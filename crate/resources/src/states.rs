@@ -1,17 +1,17 @@
 use std::ops::Deref;
 
-use peace_core::FullSpecId;
+use peace_core::ItemSpecId;
 use serde::Serialize;
 use type_reg::untagged::TypeMap;
 
 use crate::StatesMut;
 
-/// `State`s for all `FullSpec`s. `TypeMap<FullSpecId>` newtype.
+/// `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
 ///
 /// # Implementors
 ///
-/// If a `FullSpec`'s state discovery depends on the `State` of a previous
-/// `FullSpec`, then you should insert the predecessor's state into
+/// If an `ItemSpec`'s state discovery depends on the `State` of a previous
+/// `ItemSpec`, then you should insert the predecessor's state into
 /// [`Resources`], and reference that in the subsequent `FnSpec`'s [`Data`]:
 ///
 /// ```rust
@@ -37,13 +37,13 @@ use crate::StatesMut;
 /// ```
 ///
 /// You may reference [`States`] in `EnsureOpSpec::Data` for reading. It is not
-/// mutable as `States` must remain unchanged so that all `FullSpec`s operate
+/// mutable as `States` must remain unchanged so that all `ItemSpec`s operate
 /// over consistent data.
 ///
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]
-pub struct States(TypeMap<FullSpecId>);
+pub struct States(TypeMap<ItemSpecId>);
 
 impl States {
     /// Returns a new `States` map.
@@ -60,21 +60,21 @@ impl States {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<FullSpecId> {
+    pub fn into_inner(self) -> TypeMap<ItemSpecId> {
         self.0
     }
 }
 
 impl Deref for States {
-    type Target = TypeMap<FullSpecId>;
+    type Target = TypeMap<ItemSpecId>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<TypeMap<FullSpecId>> for States {
-    fn from(type_map: TypeMap<FullSpecId>) -> Self {
+impl From<TypeMap<ItemSpecId>> for States {
+    fn from(type_map: TypeMap<ItemSpecId>) -> Self {
         Self(type_map)
     }
 }

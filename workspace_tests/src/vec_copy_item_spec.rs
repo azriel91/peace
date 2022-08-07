@@ -9,18 +9,18 @@ use peace::cfg::FnSpec;
 use peace::cfg::StateDiffFnSpec;
 use peace::{
     cfg::{
-        async_trait, full_spec_id, nougat, FullSpec, FullSpecId, OpCheckStatus, ProgressLimit,
+        async_trait, item_spec_id, nougat, ItemSpec, ItemSpecId, OpCheckStatus, ProgressLimit,
         State,
     },
     data::{Data, R, W},
     resources::{resources_type_state::Empty, Resources},
-    rt_model::FullSpecWrapper,
+    rt_model::ItemSpecWrapper,
 };
 use serde::{Deserialize, Serialize};
 
-/// Type alias for `FullSpecWrapper` with all of VecCopyFullSpec's parameters.
-pub type VecCopyFullSpecWrapper = FullSpecWrapper<
-    VecCopyFullSpec,
+/// Type alias for `ItemSpecWrapper` with all of VecCopyItemSpec's parameters.
+pub type VecCopyItemSpecWrapper = ItemSpecWrapper<
+    VecCopyItemSpec,
     VecCopyError,
     Vec<u8>,
     (),
@@ -34,10 +34,10 @@ pub type VecCopyFullSpecWrapper = FullSpecWrapper<
 
 /// Copies bytes from one `Vec` to another.
 #[derive(Debug)]
-pub struct VecCopyFullSpec;
+pub struct VecCopyItemSpec;
 
 #[async_trait(?Send)]
-impl FullSpec for VecCopyFullSpec {
+impl ItemSpec for VecCopyItemSpec {
     type CleanOpSpec = VecCopyCleanOpSpec;
     type EnsureOpSpec = VecCopyEnsureOpSpec;
     type Error = VecCopyError;
@@ -48,8 +48,8 @@ impl FullSpec for VecCopyFullSpec {
     type StateLogical = Vec<u8>;
     type StatePhysical = ();
 
-    fn id(&self) -> FullSpecId {
-        full_spec_id!("vec_copy_full_spec")
+    fn id(&self) -> ItemSpecId {
+        item_spec_id!("vec_copy_item_spec")
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {

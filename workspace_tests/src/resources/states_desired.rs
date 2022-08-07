@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{full_spec_id, FullSpecId},
+    cfg::{item_spec_id, ItemSpecId},
     resources::{type_reg::untagged::TypeMap, StatesDesired, StatesDesiredMut},
 };
 
@@ -47,14 +47,14 @@ fn debug() {
     let states_desired = test_states_desired();
 
     assert_eq!(
-        r#"StatesDesired({FullSpecId("key"): TypedValue { type: "i32", value: 123 }})"#,
+        r#"StatesDesired({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }})"#,
         format!("{states_desired:?}")
     );
 }
 
 fn test_states_desired() -> StatesDesired {
     let mut states_desired = StatesDesiredMut::new();
-    states_desired.insert(full_spec_id!("key"), 123);
+    states_desired.insert(item_spec_id!("key"), 123);
 
     StatesDesired::from(states_desired)
 }

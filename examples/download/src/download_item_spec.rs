@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use peace::{
-    cfg::{async_trait, full_spec_id, FullSpec, FullSpecId},
+    cfg::{async_trait, item_spec_id, ItemSpec, ItemSpecId},
     resources::{resources_type_state::Empty, Resources},
 };
 use url::Url;
@@ -13,7 +13,7 @@ use crate::{
 
 /// Full spec for downloading a file.
 #[derive(Debug)]
-pub struct DownloadFullSpec {
+pub struct DownloadItemSpec {
     /// Url of the file to download.
     src: Url,
     /// Path of the destination.
@@ -22,15 +22,15 @@ pub struct DownloadFullSpec {
     dest: PathBuf,
 }
 
-impl DownloadFullSpec {
-    /// Returns a new FullSpec
+impl DownloadItemSpec {
+    /// Returns a new ItemSpec
     pub fn new(src: Url, dest: PathBuf) -> Self {
         Self { src, dest }
     }
 }
 
 #[async_trait(?Send)]
-impl FullSpec for DownloadFullSpec {
+impl ItemSpec for DownloadItemSpec {
     type CleanOpSpec = DownloadCleanOpSpec;
     type EnsureOpSpec = DownloadEnsureOpSpec;
     type Error = DownloadError;
@@ -41,8 +41,8 @@ impl FullSpec for DownloadFullSpec {
     type StateLogical = Option<FileState>;
     type StatePhysical = PathBuf;
 
-    fn id(&self) -> FullSpecId {
-        full_spec_id!("download_full_spec")
+    fn id(&self) -> ItemSpecId {
+        item_spec_id!("download_item_spec")
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), DownloadError> {

@@ -23,19 +23,19 @@ pub trait CleanOpSpec {
     /// This is the type returned by the [`StateCurrentFnSpec`], and is used by
     /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
     ///
-    /// See [`FullSpec::StateLogical`] for more detail.
+    /// See [`ItemSpec::StateLogical`] for more detail.
     ///
-    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
-    /// [`EnsureOpSpec`]: crate::FullSpec::EnsureOpSpec
+    /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
+    /// [`EnsureOpSpec`]: crate::ItemSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
-    /// [`FullSpec::StateLogical`]: crate::FullSpec::StateLogical
+    /// [`ItemSpec::StateLogical`]: crate::ItemSpec::StateLogical
     type StateLogical: Clone + Serialize + DeserializeOwned;
 
     /// Physical state produced by the operation.
     ///
-    /// See [`FullSpec::StatePhysical`] for more detail.
+    /// See [`ItemSpec::StatePhysical`] for more detail.
     ///
-    /// [`FullSpec::StatePhysical`]: crate::FullSpec::StatePhysical
+    /// [`ItemSpec::StatePhysical`]: crate::ItemSpec::StatePhysical
     type StatePhysical: Clone + Serialize + DeserializeOwned;
 
     /// Data that the operation reads from, or writes to.
@@ -76,7 +76,7 @@ pub trait CleanOpSpec {
     /// * `state`: State of the managed item, returned from
     ///   [`StateCurrentFnSpec`].
     ///
-    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
+    /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
     /// [`StatePhysical`]: Self::StatePhysical
     async fn check(
         data: Self::Data<'_>,
@@ -105,7 +105,7 @@ pub trait CleanOpSpec {
     /// [`check`]: Self::check
     /// [`exec`]: Self::exec
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
-    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
+    /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
     async fn exec_dry(
         data: Self::Data<'_>,
         state: &State<Self::StateLogical, Self::StatePhysical>,
@@ -123,7 +123,7 @@ pub trait CleanOpSpec {
     ///
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
-    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
+    /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
     async fn exec(
         data: Self::Data<'_>,
         state: &State<Self::StateLogical, Self::StatePhysical>,
