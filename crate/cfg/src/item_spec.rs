@@ -72,54 +72,52 @@ pub trait ItemSpec {
     ///
     /// ## `ItemSpec` that manages servers:
     ///
-    /// The `StateLogical` may be the number of server instances, the boot
+    /// `StateLogical` may be the number of server instances, the boot
     /// image, and their hardware capacity.
     ///
-    /// * The [`StateCurrentFnSpec`] returns this, and it should be renderable
-    ///   in a human readable format.
+    /// * [`StateCurrentFnSpec`] returns this, and it should be renderable in a
+    ///   human readable format.
     ///
-    /// * The [`EnsureOpSpec::check`] function should be able to use this to
-    ///   determine if there are enough servers using the desired image. The
-    ///   [`EnsureOpSpec::exec`] function returns the physical IDs of any
-    ///   launched servers.
+    /// * [`EnsureOpSpec::check`] should be able to use this to determine if
+    ///   there are enough servers using the desired image.
+    ///   [`EnsureOpSpec::exec`] returns the physical IDs of any launched
+    ///   servers.
     ///
-    /// * The [`CleanOpSpec::check`] function should be able to use this to
-    ///   determine if the servers that need to be removed. The
-    ///   [`EnsureOpSpec::exec`] function should be able to remove the servers.
+    /// * [`CleanOpSpec::check`] should be able to use this to determine if the
+    ///   servers that need to be removed. [`CleanOpSpec::exec`] should be able
+    ///   to remove the servers.
     ///
-    /// * The backup [`EnsureOpSpec::exec`] function should produce this as a
-    ///   record of the current state.
+    /// * 🚧 `BackupOpSpec::exec` should produce this as a record of the current
+    ///   state.
     ///
-    /// * The restore [`EnsureOpSpec::exec`] function should be able to read
-    ///   this and launch servers using the recorded image and hardware
-    ///   capacity.
+    /// * 🚧 `RestoreOpSpec::exec` should be able to read this and launch
+    ///   servers using the recorded image and hardware capacity.
     ///
     /// ## `ItemSpec` that manages application configuration:
     ///
-    /// The `StateLogical` is not necessarily the configuration itself, but may
+    /// `StateLogical` is not necessarily the configuration itself, but may
     /// be a content hash, commit hash or version of the configuration. If
     /// the configuration is small, then one may consider making that the
     /// state.
     ///
-    /// * The [`StateCurrentFnSpec`] returns this, and it should be renderable
-    ///   in a human readable format.
+    /// * [`StateCurrentFnSpec`] returns this, and it should be renderable in a
+    ///   human readable format.
     ///
-    /// * The [`EnsureOpSpec::check`] function should be able to compare the
-    ///   desired configuration with this to determine if the configuration is
-    ///   already in the correct state or needs to be altered.
+    /// * [`EnsureOpSpec::check`] should be able to compare the desired
+    ///   configuration with this to determine if the configuration is already
+    ///   in the correct state or needs to be altered.
     ///
-    /// * The [`CleanOpSpec::check`] function should be able to use this to
-    ///   determine if the configuration needs to be undone. The
-    ///   [`EnsureOpSpec::exec`] function should be able to remove the
-    ///   configuration.
+    /// * [`CleanOpSpec::check`] should be able to use this to determine if the
+    ///   configuration needs to be undone. [`CleanOpSpec::exec`] should be able
+    ///   to remove the configuration.
     ///
-    /// * The backup [`EnsureOpSpec::exec`] function should produce this as a
-    ///   record of the current state.
+    /// * 🚧 `BackupOpSpec::exec` should produce this as a record of the current
+    ///   state.
     ///
-    /// * The restore [`EnsureOpSpec::exec`] function should be able to read
-    ///   this and determine how to alter the system to match this state. If
-    ///   this were a commit hash, then restoring would be applying the
-    ///   configuration at that commit hash.
+    /// * 🚧 `RestoreOpSpec::exec` should be able to read this and determine how
+    ///   to alter the system to match this state. If this were a commit hash,
+    ///   then restoring would be applying the configuration at that commit
+    ///   hash.
     ///
     /// [`StateCurrentFnSpec`]: Self::StateCurrentFnSpec
     /// [`StatePhysical`]: Self::StatePhysical
@@ -163,28 +161,12 @@ pub trait ItemSpec {
     type StateDiff: Clone + Serialize + DeserializeOwned;
 
     /// Function that returns the current state of the managed item.
-    ///
-    /// # Future Development
-    ///
-    /// The `StateCurrentFnSpec` may decide to not check for state if it caches
-    /// state. For that use case, the `state` used by the StateCurrentFnSpec
-    /// should include:
-    ///
-    /// * Execution ID
-    /// * Last state query time
-    ///
-    /// This allows the check function to tell if the state has been queried
-    /// within the past day, don't query it again.
     type StateCurrentFnSpec: FnSpec<
         Error = Self::Error,
         Output = State<Self::StateLogical, Self::StatePhysical>,
     >;
 
     /// Function that returns the desired state of the managed item.
-    ///
-    /// # Implementors
-    ///
-    /// This function call is intended to be cheap and fast.
     ///
     /// # Examples
     ///
@@ -201,8 +183,10 @@ pub trait ItemSpec {
     ///
     /// When this type is serialized, it should provide "just enough" /
     /// meaningful information to the user on what has changed. So instead of
-    /// including the complete [`State`] and [`StateDesired`], it should include
-    /// the parts that matter.
+    /// including the complete [`State`] and [`StateDesired`], it should only
+    /// include the parts that matter.
+    ///
+    /// This function call is intended to be cheap and fast.
     ///
     /// # Examples
     ///
@@ -211,8 +195,6 @@ pub trait ItemSpec {
     ///
     /// * For a web application service operation, the desired state could be
     ///   the application version changing from 1 to 2.
-    ///
-    /// This function call is intended to be cheap and fast.
     type StateDiffFnSpec: StateDiffFnSpec<
         Error = Self::Error,
         StateLogical = Self::StateLogical,
