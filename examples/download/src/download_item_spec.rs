@@ -42,7 +42,7 @@ impl ItemSpec for DownloadItemSpec {
     type StatePhysical = PathBuf;
 
     fn id(&self) -> ItemSpecId {
-        item_spec_id!("download_item_spec")
+        item_spec_id!("download")
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), DownloadError> {
