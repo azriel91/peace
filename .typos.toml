@@ -1,0 +1,6 @@
+[files]
+extend-exclude = ["doc/book/*"]
+
+[default.extend-words]
+# HTML tag is incorrectly identified.
+thead = "thead"
