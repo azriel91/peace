@@ -5,5 +5,12 @@ multilingual = false
 src = "src"
 title = "The Peace Framework"
 
+[rust]
+edition = "2021"
+
 [preprocessor.graphviz]
 command = "mdbook-graphviz"
+
+[output.html]
+git-repository-url = "https://github.com/azriel91/peace"
+edit-url-template = "https://github.com/azriel/peace/edit/main/doc/{path}"

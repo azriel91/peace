@@ -150,10 +150,10 @@ Transforms the current state to the desired state.
 </details>
 
 <details>
-<summary>7. Clean up this item.</summary>
+<summary>7. Clean up the item.</summary>
 <div>
 
-Cleans up this item from existence.
+Cleans up the item from existence.
 
 1. `check`: Returns whether `exec` needs to be run to clean up the item.
 2. `exec`: Actual logic to clean up the item.

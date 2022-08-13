@@ -7,7 +7,7 @@ The following sections cover essential concepts to develop automation using the 
 3. **[Item Spec]**: Specification that defines information and logic to manage an *arbitrary item*.
 4. **[Item Spec graph]**: Like a function graph, where each node is not just a function, but an item spec.
 
-[Resources]: technical_concepts/resources.html
+[Function graph]: technical_concepts/function_graph.html
 [Item Spec graph]: technical_concepts/item_spec_graph.html
 [Item Spec]: technical_concepts/item_spec.html
-[Function graph]: technical_concepts/function_graph.html
+[Resources]: technical_concepts/resources.html

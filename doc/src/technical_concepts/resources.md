@@ -1,6 +1,6 @@
 # Resources
 
-In Peace, `Resources` refers to an *any-map* &ndash; a map that can store one value of different types &ndash;, whose borrowing rules are checked per value at runtime, instead of compile time.
+In Peace, [`Resources`][`Resources`] refers to an *any-map* &ndash; a map that can store one value of different types &ndash; whose borrowing rules are checked per entry at runtime, instead of compile time.
 
 Example of an any-map:
 
@@ -11,13 +11,10 @@ Example of an any-map:
 | `TypeId::of::<A>()`    | `A { value: 1u32 }` |
 
 
-Borrowing
-
 ```rust ,edition2021,ignore
 # use peace::resources::Resources;
 #
 let mut resources = Resources::new();
-
 resources.insert(1u32);
 resources.insert(2u64);
 
@@ -39,4 +36,25 @@ assert!(resources.try_borrow::<u32>().is_err())
 For more information about the underlying type, see [`resman`][`resman`].
 
 
+## Java Equivalent
+
+The conceptual Java equivalent looks like this:
+
+```java
+var resources = new MagicMap(); // new HashMap<Class<?>, Object>();
+resources.insert((Integer) 1);  // innerMap.put(Integer.class, 1);
+resources.insert((Long)    2);  // innerMap.put(Long.class,    2L);
+
+var anInt = (Integer) resources.get(Integer.class);
+var aLong = (Long)    resources.get(Long.class);
+
+// Can mutate both.
+anInt = 2;
+aLong = 3L;
+```
+
+Rust's does not allow access to multiple mutable entries at the same time with the built in `HashMap`, so `Resources` is an implementation to bypass the compilation strictness.
+
+
+[`Resources`]: https://docs.rs/peace_resources/latest/peace_resources/struct.Resources.html
 [`resman`]: https://github.com/azriel91/resman

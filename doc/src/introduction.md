@@ -2,24 +2,26 @@
 
 # Introduction
 
-This book describes the purpose of the *Peace* automation framework, and concepts used in its design, which is essential reading for framework consumers.
+This book describes the purpose of the *Peace* automation framework, and concepts used in its design.
 
 
 ## How To Read This Book
 
 Depending on your frame of mind:
 
-* Show me the framework in action:
+* **What** &ndash; Show me the framework in action:
 
     Have a play with the live [Examples].
 
-* Show me the rationale behind the decisions:
+* **Why** &ndash; Show me the rationale guiding the decisions:
 
-    Go on through to the [Background] section.
+    Head on through to the [Background] section.
 
-* Show me how it works:
+* **How** &ndash; Show me how it works:
 
     Jump to [Technical Concepts].
+
+    This is essential reading for framework consumers.
 
 [Background]: background.html
 [Examples]: examples.html
