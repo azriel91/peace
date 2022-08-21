@@ -12,5 +12,6 @@ edition = "2021"
 command = "mdbook-graphviz"
 
 [output.html]
+cname = "peace.mk"
 git-repository-url = "https://github.com/azriel91/peace"
 edit-url-template = "https://github.com/azriel91/peace/edit/main/doc/{path}"
