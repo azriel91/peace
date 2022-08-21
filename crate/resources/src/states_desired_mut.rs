@@ -1,10 +1,10 @@
 use std::ops::{Deref, DerefMut};
 
-use peace_core::FullSpecId;
+use peace_core::ItemSpecId;
 use serde::Serialize;
 use type_reg::untagged::{DataType, TypeMap};
 
-/// Desired `State`s for all `FullSpec`s. `TypeMap<FullSpecId>` newtype.
+/// Desired `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
 ///
 /// # Implementors
 ///
@@ -15,7 +15,7 @@ use type_reg::untagged::{DataType, TypeMap};
 ///   directly.
 ///
 /// You may reference [`StatesDesired`] in `EnsureOpSpec::Data` for reading. It
-/// is not mutable as `State` must remain unchanged so that all `FullSpec`s
+/// is not mutable as `State` must remain unchanged so that all `ItemSpec`s
 /// operate over consistent data.
 ///
 /// [`Data`]: peace_data::Data
@@ -23,7 +23,7 @@ use type_reg::untagged::{DataType, TypeMap};
 /// [`StatesDesiredRw`]: crate::StatesDesiredRw
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]
-pub struct StatesDesiredMut(TypeMap<FullSpecId>);
+pub struct StatesDesiredMut(TypeMap<ItemSpecId>);
 
 impl StatesDesiredMut {
     /// Returns a new `StatesDesiredMut` map.
@@ -40,13 +40,13 @@ impl StatesDesiredMut {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<FullSpecId> {
+    pub fn into_inner(self) -> TypeMap<ItemSpecId> {
         self.0
     }
 }
 
 impl Deref for StatesDesiredMut {
-    type Target = TypeMap<FullSpecId>;
+    type Target = TypeMap<ItemSpecId>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -59,16 +59,16 @@ impl DerefMut for StatesDesiredMut {
     }
 }
 
-impl From<TypeMap<FullSpecId>> for StatesDesiredMut {
-    fn from(type_map: TypeMap<FullSpecId>) -> Self {
+impl From<TypeMap<ItemSpecId>> for StatesDesiredMut {
+    fn from(type_map: TypeMap<ItemSpecId>) -> Self {
         Self(type_map)
     }
 }
 
-impl Extend<(FullSpecId, Box<dyn DataType>)> for StatesDesiredMut {
-    fn extend<T: IntoIterator<Item = (FullSpecId, Box<dyn DataType>)>>(&mut self, iter: T) {
-        iter.into_iter().for_each(|(full_spec_id, state_desired)| {
-            self.insert_raw(full_spec_id, state_desired);
+impl Extend<(ItemSpecId, Box<dyn DataType>)> for StatesDesiredMut {
+    fn extend<T: IntoIterator<Item = (ItemSpecId, Box<dyn DataType>)>>(&mut self, iter: T) {
+        iter.into_iter().for_each(|(item_spec_id, state_desired)| {
+            self.insert_raw(item_spec_id, state_desired);
         });
     }
 }

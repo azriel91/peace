@@ -1,7 +1,7 @@
 #![cfg(test)]
 
-pub(crate) use vec_copy_full_spec::{
-    VecA, VecB, VecCopyError, VecCopyFullSpec, VecCopyFullSpecWrapper,
+pub(crate) use vec_copy_item_spec::{
+    VecA, VecB, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper,
 };
 
 mod cfg;
@@ -11,4 +11,4 @@ mod resources;
 mod rt;
 mod rt_model;
 
-mod vec_copy_full_spec;
+mod vec_copy_item_spec;

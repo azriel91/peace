@@ -141,3 +141,30 @@ jobs:
         with:
           command: test
           args: --release
+
+  build_examples_wasm:
+    name: Build examples (WASM)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: 'Install `wasm-pack`'
+        uses: jetli/wasm-pack-action@v0.3.0
+        with:
+          version: 'latest'
+
+      - name: 'Build examples'
+        run: |
+          for example in $(ls examples)
+          do wasm-pack build \
+            --target web \
+            --out-dir "../../doc/src/examples/pkg" \
+             --release \
+            "examples/${example}"
+          done

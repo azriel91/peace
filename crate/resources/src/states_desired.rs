@@ -1,17 +1,17 @@
 use std::ops::Deref;
 
-use peace_core::FullSpecId;
+use peace_core::ItemSpecId;
 use serde::Serialize;
 use type_reg::untagged::TypeMap;
 
 use crate::StatesDesiredMut;
 
-/// Desired `State`s for all `FullSpec`s. `TypeMap<FullSpecId>` newtype.
+/// Desired `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
 ///
 /// # Implementors
 ///
-/// If a `FullSpec`'s desired state discovery depends on the desired `State` of
-/// a previous `FullSpec`, then you should insert the predecessor's desired
+/// If an `ItemSpec`'s desired state discovery depends on the desired `State` of
+/// a previous `ItemSpec`, then you should insert the predecessor's desired
 /// state into [`Resources`], and reference that in the subsequent `FnSpec`'s
 /// [`Data`]:
 ///
@@ -39,12 +39,12 @@ use crate::StatesDesiredMut;
 ///
 /// You may reference [`StatesDesired`] in `EnsureOpSpec::Data` for reading. It
 /// is not mutable as `StatesDesired` must remain unchanged so that all
-/// `FullSpec`s operate over consistent data.
+/// `ItemSpec`s operate over consistent data.
 ///
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]
-pub struct StatesDesired(TypeMap<FullSpecId>);
+pub struct StatesDesired(TypeMap<ItemSpecId>);
 
 impl StatesDesired {
     /// Returns a new `StatesDesired` map.
@@ -61,21 +61,21 @@ impl StatesDesired {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<FullSpecId> {
+    pub fn into_inner(self) -> TypeMap<ItemSpecId> {
         self.0
     }
 }
 
 impl Deref for StatesDesired {
-    type Target = TypeMap<FullSpecId>;
+    type Target = TypeMap<ItemSpecId>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<TypeMap<FullSpecId>> for StatesDesired {
-    fn from(type_map: TypeMap<FullSpecId>) -> Self {
+impl From<TypeMap<ItemSpecId>> for StatesDesired {
+    fn from(type_map: TypeMap<ItemSpecId>) -> Self {
         Self(type_map)
     }
 }

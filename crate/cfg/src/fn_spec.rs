@@ -12,8 +12,8 @@ pub trait FnSpec {
     /// * For [`StateDesiredFnSpec`], this is the desired [`StateLogical`] of
     ///   the managed item.
     ///
-    /// [`StateCurrentFnSpec`]: crate::FullSpec::StateCurrentFnSpec
-    /// [`StateDesiredFnSpec`]: crate::FullSpec::StateDesiredFnSpec
+    /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
+    /// [`StateDesiredFnSpec`]: crate::ItemSpec::StateDesiredFnSpec
     /// [`State`]: crate::State
     /// [`StateLogical`]: crate::StateLogical
     type Output;

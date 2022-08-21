@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{full_spec_id, FullSpecId},
+    cfg::{item_spec_id, ItemSpecId},
     resources::{type_reg::untagged::TypeMap, StatesMut},
 };
 
@@ -29,7 +29,7 @@ fn deref_and_deref_mut() {
     let mut states = StatesMut::new();
 
     // deref_mut
-    states.insert(full_spec_id!("key"), 123);
+    states.insert(item_spec_id!("key"), 123);
 
     // deref
     assert_eq!(1, states.len())
@@ -45,14 +45,14 @@ fn debug() {
     let states = test_states();
 
     assert_eq!(
-        r#"StatesMut({FullSpecId("key"): TypedValue { type: "i32", value: 123 }})"#,
+        r#"StatesMut({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }})"#,
         format!("{states:?}")
     );
 }
 
 fn test_states() -> StatesMut {
     let mut states = StatesMut::new();
-    states.insert(full_spec_id!("key"), 123);
+    states.insert(item_spec_id!("key"), 123);
 
     states
 }

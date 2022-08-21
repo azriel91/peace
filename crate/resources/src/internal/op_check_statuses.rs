@@ -3,12 +3,12 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use peace_core::{FullSpecId, OpCheckStatus};
+use peace_core::{ItemSpecId, OpCheckStatus};
 
-/// [`OpCheckStatus`]es for all `FullSpec`s. `HashMap<FullSpecId,
+/// [`OpCheckStatus`]es for all `ItemSpec`s. `HashMap<ItemSpecId,
 /// OpCheckStatus>` newtype.
 #[derive(Debug, Default)]
-pub struct OpCheckStatuses(HashMap<FullSpecId, OpCheckStatus>);
+pub struct OpCheckStatuses(HashMap<ItemSpecId, OpCheckStatus>);
 
 impl OpCheckStatuses {
     /// Returns a new `OpCheckStatuses` map.
@@ -25,13 +25,13 @@ impl OpCheckStatuses {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> HashMap<FullSpecId, OpCheckStatus> {
+    pub fn into_inner(self) -> HashMap<ItemSpecId, OpCheckStatus> {
         self.0
     }
 }
 
 impl Deref for OpCheckStatuses {
-    type Target = HashMap<FullSpecId, OpCheckStatus>;
+    type Target = HashMap<ItemSpecId, OpCheckStatus>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -44,16 +44,16 @@ impl DerefMut for OpCheckStatuses {
     }
 }
 
-impl From<HashMap<FullSpecId, OpCheckStatus>> for OpCheckStatuses {
-    fn from(type_map: HashMap<FullSpecId, OpCheckStatus>) -> Self {
+impl From<HashMap<ItemSpecId, OpCheckStatus>> for OpCheckStatuses {
+    fn from(type_map: HashMap<ItemSpecId, OpCheckStatus>) -> Self {
         Self(type_map)
     }
 }
 
-impl Extend<(FullSpecId, OpCheckStatus)> for OpCheckStatuses {
-    fn extend<T: IntoIterator<Item = (FullSpecId, OpCheckStatus)>>(&mut self, iter: T) {
-        iter.into_iter().for_each(|(full_spec_id, state)| {
-            self.insert(full_spec_id, state);
+impl Extend<(ItemSpecId, OpCheckStatus)> for OpCheckStatuses {
+    fn extend<T: IntoIterator<Item = (ItemSpecId, OpCheckStatus)>>(&mut self, iter: T) {
+        iter.into_iter().for_each(|(item_spec_id, state)| {
+            self.insert(item_spec_id, state);
         });
     }
 }

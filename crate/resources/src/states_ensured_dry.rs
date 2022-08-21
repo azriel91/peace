@@ -1,12 +1,12 @@
 use std::ops::Deref;
 
-use peace_core::FullSpecId;
+use peace_core::ItemSpecId;
 use serde::Serialize;
 use type_reg::untagged::TypeMap;
 
 use crate::{resources_type_state::WithStateDiffs, Resources, States};
 
-/// Dry-run ensured `State`s for all `FullSpec`s. `TypeMap<FullSpecId>` newtype.
+/// Dry-run ensured `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
 ///
 /// These are the `State`s collected after `EnsureOpSpec::exec_dry` has been
 /// run.
@@ -18,7 +18,7 @@ use crate::{resources_type_state::WithStateDiffs, Resources, States};
 ///
 /// [`Data`]: peace_data::Data
 #[derive(Debug, Default, Serialize)]
-pub struct StatesEnsuredDry(TypeMap<FullSpecId>);
+pub struct StatesEnsuredDry(TypeMap<ItemSpecId>);
 
 impl StatesEnsuredDry {
     /// Returns a new `StatesEnsuredDry` map.
@@ -35,21 +35,21 @@ impl StatesEnsuredDry {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<FullSpecId> {
+    pub fn into_inner(self) -> TypeMap<ItemSpecId> {
         self.0
     }
 }
 
 impl Deref for StatesEnsuredDry {
-    type Target = TypeMap<FullSpecId>;
+    type Target = TypeMap<ItemSpecId>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<TypeMap<FullSpecId>> for StatesEnsuredDry {
-    fn from(type_map: TypeMap<FullSpecId>) -> Self {
+impl From<TypeMap<ItemSpecId>> for StatesEnsuredDry {
+    fn from(type_map: TypeMap<ItemSpecId>) -> Self {
         Self(type_map)
     }
 }

@@ -11,7 +11,7 @@
 #[derive(Debug)]
 pub struct Empty;
 
-/// `FullSpec::setup` has been run over [`Resources`].
+/// `ItemSpec::setup` has been run over [`Resources`].
 #[derive(Debug)]
 pub struct SetUp;
 

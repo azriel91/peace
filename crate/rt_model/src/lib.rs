@@ -4,13 +4,13 @@
 pub use fn_graph::{self, FnRef, FnRefMut};
 
 pub use crate::{
-    full_spec_boxed::FullSpecBoxed, full_spec_graph::FullSpecGraph,
-    full_spec_graph_builder::FullSpecGraphBuilder, full_spec_rt::FullSpecRt,
-    full_spec_wrapper::FullSpecWrapper,
+    item_spec_boxed::ItemSpecBoxed, item_spec_graph::ItemSpecGraph,
+    item_spec_graph_builder::ItemSpecGraphBuilder, item_spec_rt::ItemSpecRt,
+    item_spec_wrapper::ItemSpecWrapper,
 };
 
-mod full_spec_boxed;
-mod full_spec_graph;
-mod full_spec_graph_builder;
-mod full_spec_rt;
-mod full_spec_wrapper;
+mod item_spec_boxed;
+mod item_spec_graph;
+mod item_spec_graph_builder;
+mod item_spec_rt;
+mod item_spec_wrapper;

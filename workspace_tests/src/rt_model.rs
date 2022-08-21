@@ -1,2 +1,2 @@
-mod full_spec_boxed;
-mod full_spec_wrapper;
+mod item_spec_boxed;
+mod item_spec_wrapper;

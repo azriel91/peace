@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{full_spec_id, FullSpecId},
+    cfg::{item_spec_id, ItemSpecId},
     resources::{type_reg::untagged::TypeMap, StateDiffs, StateDiffsMut},
 };
 
@@ -47,14 +47,14 @@ fn debug() {
     let state_diffs = test_state_diffs();
 
     assert_eq!(
-        r#"StateDiffs({FullSpecId("key"): TypedValue { type: "i32", value: 123 }})"#,
+        r#"StateDiffs({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }})"#,
         format!("{state_diffs:?}")
     );
 }
 
 fn test_state_diffs() -> StateDiffs {
     let mut state_diffs = StateDiffsMut::new();
-    state_diffs.insert(full_spec_id!("key"), 123);
+    state_diffs.insert(item_spec_id!("key"), 123);
 
     StateDiffs::from(state_diffs)
 }

@@ -1,6 +1,8 @@
 <html>
   <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+  </head>
+  <body>
     <style type="text/css">
       body {
         font-family: Verdana, sans-serif;
@@ -24,17 +26,15 @@
         vertical-align: top;
         display: inline-block;
       }
-      .section {
-        padding: 10px;
-      }
-
-      /* spinner */
       #spinner {
         display: inline-block;
         width: 30px;
         height: 15px;
         vertical-align: top;
         visibility: hidden;
+      }
+      .section {
+        padding: 10px;
       }
       .loader,
       .loader:before,
@@ -61,7 +61,7 @@
       .loader:after {
         position: absolute;
         top: 0;
-        content: '';
+        content: "";
       }
       .loader:before {
         left: -2.2em;
@@ -95,11 +95,11 @@
           height: 5em;
         }
       }
+      /* The next empty line is necessary for mdbook to correctly include this file. Possibly a bug. */
+
     </style>
-  </head>
-  <body>
     <script type="module">
-      import init, * as exports from './pkg/download.js';
+      import init, * as exports from "./pkg/download.js";
 
       window.onload = async function() {
         await init();
@@ -107,7 +107,7 @@
         let graph_and_content_global;
         const spinner = document.querySelector("#spinner");
 
-        document.querySelector("#init").addEventListener('click', () => {
+        document.querySelector("#init").addEventListener("click", () => {
           const path = document.querySelector("#path").value;
           const url = document.querySelector("#url").value;
           exports.wasm_setup(url, path)
@@ -169,28 +169,27 @@
           document.querySelectorAll("button").forEach(element => element.removeAttribute("disabled"));
         }
 
-        document.querySelector("#status").addEventListener('click', () => {
+        document.querySelector("#status").addEventListener("click", () => {
           exports.wasm_status(graph_and_content_global)
             .then(update_state);
         });
 
-        document.querySelector("#desired").addEventListener('click', () => {
+        document.querySelector("#desired").addEventListener("click", () => {
           exec_disabling_buttons(exports.wasm_desired);
         });
 
-        document.querySelector("#diff").addEventListener('click', () => {
+        document.querySelector("#diff").addEventListener("click", () => {
           exec_disabling_buttons(exports.wasm_diff);
         });
 
-        document.querySelector("#ensure_dry").addEventListener('click', () => {
+        document.querySelector("#ensure_dry").addEventListener("click", () => {
           exec_disabling_buttons(exports.wasm_ensure_dry);
         });
-        document.querySelector("#ensure").addEventListener('click', () => {
+        document.querySelector("#ensure").addEventListener("click", () => {
           exec_disabling_buttons(exports.wasm_ensure);
         });
       };
     </script>
-
     <div class="section">
       <fieldset>
         <label for="path">file name:</label><input id="path" value="ip.json" /><br/>

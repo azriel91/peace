@@ -8,7 +8,7 @@ use peace::{
         Resources, StateDiffs, States, StatesDesired, StatesEnsured, StatesEnsuredDry,
     },
     rt::{DiffCmd, EnsureCmd, StateCurrentCmd, StateDesiredCmd},
-    rt_model::{FullSpecGraph, FullSpecGraphBuilder},
+    rt_model::{ItemSpecGraph, ItemSpecGraphBuilder},
 };
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 use url::Url;
@@ -18,7 +18,7 @@ pub use crate::{
     download_clean_op_spec::DownloadCleanOpSpec,
     download_ensure_op_spec::DownloadEnsureOpSpec,
     download_error::DownloadError,
-    download_full_spec::DownloadFullSpec,
+    download_item_spec::DownloadItemSpec,
     download_params::DownloadParams,
     download_state_current_fn_spec::DownloadStateCurrentFnSpec,
     download_state_desired_fn_spec::DownloadStateDesiredFnSpec,
@@ -31,7 +31,7 @@ mod download_args;
 mod download_clean_op_spec;
 mod download_ensure_op_spec;
 mod download_error;
-mod download_full_spec;
+mod download_item_spec;
 mod download_params;
 mod download_state_current_fn_spec;
 mod download_state_desired_fn_spec;
@@ -40,21 +40,26 @@ mod file_state;
 mod file_state_diff;
 
 #[cfg(target_arch = "wasm32")]
+pub use download_item_spec_graph::DownloadItemSpecGraph;
+
+#[cfg(target_arch = "wasm32")]
+mod download_item_spec_graph;
+#[cfg(target_arch = "wasm32")]
 mod wasm;
 
 pub async fn setup_graph(
     url: Url,
     dest: PathBuf,
-) -> Result<FullSpecGraph<DownloadError>, DownloadError> {
-    let mut graph_builder = FullSpecGraphBuilder::<DownloadError>::new();
-    graph_builder.add_fn(DownloadFullSpec::new(url, dest).into());
+) -> Result<ItemSpecGraph<DownloadError>, DownloadError> {
+    let mut graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
+    graph_builder.add_fn(DownloadItemSpec::new(url, dest).into());
     let graph = graph_builder.build();
     Ok(graph)
 }
 
 pub async fn status<W>(
     output: W,
-    graph: &FullSpecGraph<DownloadError>,
+    graph: &ItemSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
 ) -> Result<Resources<WithStates>, DownloadError>
 where
@@ -72,7 +77,7 @@ where
 
 pub async fn desired<W>(
     output: W,
-    graph: &FullSpecGraph<DownloadError>,
+    graph: &ItemSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
 ) -> Result<Resources<WithStatesDesired>, DownloadError>
 where
@@ -90,7 +95,7 @@ where
 
 pub async fn diff<W>(
     output: W,
-    graph: &FullSpecGraph<DownloadError>,
+    graph: &ItemSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
 ) -> Result<Resources<WithStateDiffs>, DownloadError>
 where
@@ -108,7 +113,7 @@ where
 
 pub async fn ensure_dry<W>(
     output: W,
-    graph: &FullSpecGraph<DownloadError>,
+    graph: &ItemSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
 ) -> Result<Resources<EnsuredDry>, DownloadError>
 where
@@ -126,7 +131,7 @@ where
 
 pub async fn ensure<W>(
     output: W,
-    graph: &FullSpecGraph<DownloadError>,
+    graph: &ItemSpecGraph<DownloadError>,
     resources: Resources<SetUp>,
 ) -> Result<Resources<Ensured>, DownloadError>
 where
