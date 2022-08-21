@@ -1,6 +1,6 @@
 # Strategy <!-- what is targeted, what value is gained -->
 
-## Output Dimensions
+## Outcomes
 
 The main priority is to take care of people. This is correlated to the following measurable dimensions:
 
@@ -16,11 +16,11 @@ If these outputs trend in a favourable direction, then surveying people's well-b
 
 The following input dimensions are considered when designing the Peace framework:
 
-* **Correctness:** Take the best action, in success and in err.
+* **Approach:** Choose an optimal method.
+* **Correctness:** Take the right action, in success and in err.
 * **Visibility:** Show the user what will happen, is happening, and has happened.
 * **Understandability:** Show what is important. Don't overwhelm the user.
 * **Recoverability:** Continue where the work was stopped.
-* **Approach:** Choose the right method.
 * **Performance:** Use resources efficiently to execute the approach.
 * **Psychology:** Design for how people behave.
 
