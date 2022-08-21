@@ -9,6 +9,7 @@ for example in $(ls examples)
 do wasm-pack build \
   --target web \
   --out-dir "../../doc/src/examples/pkg" \
+  --release \
   "examples/${example}"
 done
 ```

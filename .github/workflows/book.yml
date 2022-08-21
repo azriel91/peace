@@ -1,0 +1,59 @@
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - '**'
+
+name: Book
+
+jobs:
+  publish_book:
+    name: Build examples (WASM)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: 'Install `wasm-pack`'
+        uses: jetli/wasm-pack-action@v0.3.0
+        with:
+          version: 'latest'
+
+      - name: 'Build examples'
+        run: |
+          for example in $(ls examples)
+          do wasm-pack build \
+            --target web \
+            --out-dir "../../doc/src/examples/pkg" \
+             --release \
+            "examples/${example}"
+          done
+
+      # Build and publish book
+      - name: Install `mdbook`
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: latest
+
+      - run: mdbook build doc
+
+      # Note: `test` doesn't work with the examples' inlined HTML.
+      # - run: mdbook test doc
+
+      # We *do* want to include the built wasm files.
+      - run: rm -f ./doc/book/pkg/.gitignore
+
+      - name: Publish to `gh-pages`
+        if: ${{ env.GITHUB_REF_NAME == 'main' }}
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./doc/book
+          force_orphan: true

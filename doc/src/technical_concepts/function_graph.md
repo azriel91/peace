@@ -58,7 +58,7 @@ fn5(&a, &b, &c);
 
 The following shows the complete logic implemented using [`fn_graph`][`fn_graph`]:
 
-```rust
+```rust ,ignore
 # // [dependencies]
 # // fn_graph = { version = "0.5.4", features = ["fn_meta", "resman"] }
 # // futures = "0.3.21"
