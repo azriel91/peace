@@ -10,7 +10,7 @@ name: Book
 
 jobs:
   publish_book:
-    name: Build examples (WASM)
+    name: Peace Book
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
