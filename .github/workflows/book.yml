@@ -26,6 +26,22 @@ jobs:
         with:
           version: 'latest'
 
+      - name: mdbook-graphviz Cache
+        id: mdbook_graphviz_cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/bin/mdbook-graphviz
+          key: ${{ runner.os }}-mdbook-graphviz
+
+      - name: Setup Graphviz
+        uses: ts-graphviz/setup-graphviz@v1
+
+      - uses: actions-rs/cargo@v1
+        if: steps.mdbook_graphviz_cache.outputs.cache-hit != 'true'
+        with:
+          command: install
+          args: mdbook-graphviz
+
       - name: 'Build examples'
         run: |
           for example in $(ls examples)
