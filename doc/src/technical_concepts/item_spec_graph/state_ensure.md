@@ -34,7 +34,7 @@ digraph {
         nodesep   = 0.25
         ranksep   = 0.3
         bgcolor   = "transparent"
-        fontcolor = "#333333"
+        fontcolor = "#555555"
         splines   = line
     ]
     node [
@@ -51,8 +51,8 @@ digraph {
     ]
     edge [
         arrowsize = 0.7
-        color     = "#333333"
-        fontcolor = "#333333"
+        color     = "#555555"
+        fontcolor = "#555555"
     ]
 
     fn1 [label = <<b>fn1</b>>, color = "#88bbff", fillcolor = "#bbddff"]
@@ -63,7 +63,7 @@ digraph {
     fn1 -> fn3
     fn2 -> fn3
     fn2 -> fn4 [weight = 2]
-    fn3 -> fn4 [style = "dashed", color = "#333333"]
+    fn3 -> fn4 [style = "dashed", color = "#555555"]
 }
 ```
 
@@ -99,7 +99,7 @@ digraph {
         nodesep   = 0.25
         ranksep   = 0.3
         bgcolor   = "transparent"
-        fontcolor = "#333333"
+        fontcolor = "#555555"
         splines   = line
     ]
     node [
@@ -116,8 +116,8 @@ digraph {
     ]
     edge [
         arrowsize = 0.7
-        color     = "#333333"
-        fontcolor = "#333333"
+        color     = "#555555"
+        fontcolor = "#555555"
     ]
 
     fn1 [label = <<b>fn1</b>>, color = "#88ffbb", fillcolor = "#bbffdd"]
@@ -128,7 +128,7 @@ digraph {
     fn1 -> fn3
     fn2 -> fn3
     fn2 -> fn4 [weight = 2]
-    fn3 -> fn4 [style = "dashed", color = "#333333"]
+    fn3 -> fn4 [style = "dashed", color = "#555555"]
 }
 ```
 

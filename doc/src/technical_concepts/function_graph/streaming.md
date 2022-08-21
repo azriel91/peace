@@ -19,7 +19,7 @@ To know when a function is available to be streamed, [`fn_graph`][`fn_graph`] us
             nodesep   = 0.25
             ranksep   = 0.3
             bgcolor   = "transparent"
-            fontcolor = "#333333"
+            fontcolor = "#555555"
             splines   = line
             rankdir   = LR
         ]
@@ -37,8 +37,8 @@ To know when a function is available to be streamed, [`fn_graph`][`fn_graph`] us
         ]
         edge [
             arrowsize = 0.7
-            color     = "#333333"
-            fontcolor = "#333333"
+            color     = "#555555"
+            fontcolor = "#555555"
         ]
 
         fn1 [label = <<b>fn1:</b>0>, color = "#88bbff", fillcolor = "#bbddff"]
@@ -54,7 +54,7 @@ To know when a function is available to be streamed, [`fn_graph`][`fn_graph`] us
         fn2 -> fn5
         fn3 -> fn5 [weight = 2]
 
-        fn2 -> fn3 [style = "dashed", color = "#333333"]
+        fn2 -> fn3 [style = "dashed", color = "#555555"]
     }
     ```
 
@@ -67,7 +67,7 @@ To know when a function is available to be streamed, [`fn_graph`][`fn_graph`] us
             nodesep   = 0.25
             ranksep   = 0.3
             bgcolor   = "transparent"
-            fontcolor = "#333333"
+            fontcolor = "#555555"
             splines   = line
             rankdir   = LR
         ]
@@ -85,8 +85,8 @@ To know when a function is available to be streamed, [`fn_graph`][`fn_graph`] us
         ]
         edge [
             arrowsize = 0.7
-            color     = "#333333"
-            fontcolor = "#333333"
+            color     = "#555555"
+            fontcolor = "#555555"
         ]
 
         fn1 [label = <<b>fn1:</b>0>, color = "#88ffbb", fillcolor = "#bbffdd"]
@@ -102,7 +102,7 @@ To know when a function is available to be streamed, [`fn_graph`][`fn_graph`] us
         fn2 -> fn5
         fn3 -> fn5 [weight = 2]
 
-        fn2 -> fn3 [style = "dashed", color = "#333333"]
+        fn2 -> fn3 [style = "dashed", color = "#555555"]
     }
     ```
 
@@ -115,7 +115,7 @@ To know when a function is available to be streamed, [`fn_graph`][`fn_graph`] us
             nodesep   = 0.25
             ranksep   = 0.3
             bgcolor   = "transparent"
-            fontcolor = "#333333"
+            fontcolor = "#555555"
             splines   = line
             rankdir   = LR
         ]
@@ -133,8 +133,8 @@ To know when a function is available to be streamed, [`fn_graph`][`fn_graph`] us
         ]
         edge [
             arrowsize = 0.7
-            color     = "#333333"
-            fontcolor = "#333333"
+            color     = "#555555"
+            fontcolor = "#555555"
         ]
 
         fn1 [label = <<b>fn1:</b>0>, color = "#88ffbb", fillcolor = "#bbffdd"]
@@ -163,7 +163,7 @@ To know when a function is available to be streamed, [`fn_graph`][`fn_graph`] us
             nodesep   = 0.25
             ranksep   = 0.3
             bgcolor   = "transparent"
-            fontcolor = "#333333"
+            fontcolor = "#555555"
             splines   = line
             rankdir   = LR
         ]
@@ -181,8 +181,8 @@ To know when a function is available to be streamed, [`fn_graph`][`fn_graph`] us
         ]
         edge [
             arrowsize = 0.7
-            color     = "#333333"
-            fontcolor = "#333333"
+            color     = "#555555"
+            fontcolor = "#555555"
         ]
 
         fn1 [label = <<b>fn1:</b>0>, color = "#88ffbb", fillcolor = "#bbffdd"]

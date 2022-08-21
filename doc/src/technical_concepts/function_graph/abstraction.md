@@ -20,7 +20,7 @@ digraph {
         nodesep   = 0.25
         ranksep   = 0.3
         bgcolor   = "transparent"
-        fontcolor = "#333333"
+        fontcolor = "#555555"
         splines   = line
     ]
     node [
@@ -37,8 +37,8 @@ digraph {
     ]
     edge [
         arrowsize = 0.7
-        color     = "#333333"
-        fontcolor = "#333333"
+        color     = "#555555"
+        fontcolor = "#555555"
     ]
 
     fn_res_trait [label = <<b><font color="#9d00ec">trait</font> <font color="#0030f2">FnRes</font>&nbsp;{}</b>>, shape = "rectangle", style = "rounded,filled", margin = "0.15,0.04"]
@@ -79,7 +79,7 @@ digraph {
         nodesep   = 0.25
         ranksep   = 0.3
         bgcolor   = "transparent"
-        fontcolor = "#333333"
+        fontcolor = "#555555"
         splines   = line
     ]
     node [
@@ -96,8 +96,8 @@ digraph {
     ]
     edge [
         arrowsize = 0.7
-        color     = "#333333"
-        fontcolor = "#333333"
+        color     = "#555555"
+        fontcolor = "#555555"
     ]
 
     fn_res_trait [label = <<b><font color="#9d00ec">trait</font> <font color="#0030f2">FnRes</font>&nbsp;{}</b>>, shape = "rectangle", style = "rounded,filled", margin = "0.15,0.04"]
