@@ -13,6 +13,7 @@ pub use crate::{
     states_ensured_dry::StatesEnsuredDry, states_mut::StatesMut,
 };
 
+pub mod dir;
 pub mod internal;
 pub mod resources_type_state;
 
