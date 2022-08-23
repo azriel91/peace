@@ -8,7 +8,7 @@ pub struct ItemSpecIdInvalidFmt<'s> {
 }
 
 impl<'s> ItemSpecIdInvalidFmt<'s> {
-    /// Returns a new `ItemSpecIdInvalidFmt`.
+    /// Returns a new `ItemSpecIdInvalidFmt` error.
     pub fn new(value: Cow<'s, str>) -> Self {
         Self { value }
     }

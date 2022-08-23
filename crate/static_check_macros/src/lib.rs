@@ -8,7 +8,7 @@ use syn::{parse_macro_input, LitStr};
 /// Instantiate a valid `ItemSpecId` at compile time:
 ///
 /// ```rust
-/// # use peace_item_spec_id_macro::item_spec_id;
+/// # use peace_static_check_macros::item_spec_id;
 /// // use peace::cfg::{item_spec_id, ItemSpecId};
 ///
 /// let _my_item_spec_id: ItemSpecId = item_spec_id!("valid_id"); // Ok!
@@ -22,7 +22,7 @@ use syn::{parse_macro_input, LitStr};
 /// If the ID is invalid, a compilation error is produced:
 ///
 /// ```rust,compile_fail
-/// # use peace_item_spec_id_macro::item_spec_id;
+/// # use peace_static_check_macros::item_spec_id;
 /// // use peace::cfg::{item_spec_id, ItemSpecId};
 ///
 /// let _my_item_spec_id: ItemSpecId = item_spec_id!("-invalid_id"); // Compile error
@@ -45,6 +45,58 @@ pub fn item_spec_id(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
         let message = format!(
             "\"{proposed_id}\" is not a valid `ItemSpecId`.\n\
             `ItemSpecId`s must begin with a letter or underscore, and contain only letters, numbers, or underscores."
+        );
+        quote! {
+            compile_error!(#message)
+        }
+        .into()
+    }
+}
+
+/// Returns a `const Profile` validated at compile time.
+///
+/// # Examples
+///
+/// Instantiate a valid `Profile` at compile time:
+///
+/// ```rust
+/// # use peace_static_check_macros::profile;
+/// // use peace::cfg::{profile, Profile};
+///
+/// let _my_profile: Profile = profile!("valid_id"); // Ok!
+///
+/// # struct Profile(&'static str);
+/// # impl Profile {
+/// #     fn new_unchecked(s: &'static str) -> Self { Self(s) }
+/// # }
+/// ```
+///
+/// If the ID is invalid, a compilation error is produced:
+///
+/// ```rust,compile_fail
+/// # use peace_static_check_macros::profile;
+/// // use peace::cfg::{profile, Profile};
+///
+/// let _my_profile: Profile = profile!("-invalid_id"); // Compile error
+/// //                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/// // error: "-invalid_id" is not a valid `Profile`.
+/// //        `Profile`s must begin with a letter or underscore, and contain only letters, numbers, or underscores.
+/// #
+/// # struct Profile(&'static str);
+/// # impl Profile {
+/// #     fn new_unchecked(s: &'static str) -> Self { Self(s) }
+/// # }
+/// ```
+#[proc_macro]
+pub fn profile(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let proposed_id = parse_macro_input!(input as LitStr).value();
+
+    if is_valid_id(&proposed_id) {
+        quote!( Profile::new_unchecked( #proposed_id )).into()
+    } else {
+        let message = format!(
+            "\"{proposed_id}\" is not a valid `Profile`.\n\
+            `Profile`s must begin with a letter or underscore, and contain only letters, numbers, or underscores."
         );
         quote! {
             compile_error!(#message)

@@ -247,7 +247,7 @@ pub trait ItemSpec {
     /// file may be instantiated with different files to download, and each
     /// instance of the `ItemSpec` should have its own ID.
     ///
-    /// [`item_spec_id!`]: peace_item_spec_id_macro::item_spec_id
+    /// [`item_spec_id!`]: peace_static_check_macros::item_spec_id
     fn id(&self) -> ItemSpecId;
 
     /// Inserts an instance of each data type in [`Resources`].

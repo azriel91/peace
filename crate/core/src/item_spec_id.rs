@@ -11,10 +11,10 @@ use crate::ItemSpecIdInvalidFmt;
 ///
 /// # Examples
 ///
-/// The following are all examples of valid `ItemSpecId`s
+/// The following are all examples of valid `ItemSpecId`s:
 ///
 /// ```rust
-/// # use peace_cfg::{item_spec_id, ItemSpecId};
+/// # use peace_core::{item_spec_id, ItemSpecId};
 /// #
 /// let _snake = item_spec_id!("snake_case");
 /// let _camel = item_spec_id!("camelCase");
@@ -29,7 +29,7 @@ impl ItemSpecId {
     /// Most users should use the [`item_spec_id!`] macro as this provides
     /// compile time checks and returns a `const` value.
     ///
-    /// [`item_spec_id!`]: peace_item_spec_id_macro::item_spec_id
+    /// [`item_spec_id!`]: peace_static_check_macros::item_spec_id
     pub fn new(s: &'static str) -> Result<Self, ItemSpecIdInvalidFmt> {
         Self::try_from(s)
     }
@@ -39,7 +39,7 @@ impl ItemSpecId {
     /// Most users should use the [`item_spec_id!`] macro as this provides
     /// compile time checks and returns a `const` value.
     ///
-    /// [`item_spec_id!`]: peace_item_spec_id_macro::item_spec_id
+    /// [`item_spec_id!`]: peace_static_check_macros::item_spec_id
     #[doc(hidden)]
     pub const fn new_unchecked(s: &'static str) -> Self {
         Self(Cow::Borrowed(s))
