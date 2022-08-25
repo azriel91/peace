@@ -89,3 +89,53 @@ pub use self::{peace_dir::PeaceDir, profile_dir::ProfileDir, workspace_dir::Work
 mod peace_dir;
 mod profile_dir;
 mod workspace_dir;
+
+/// Common impl logic for `PathBuf` newtypes.
+///
+/// This does not include declaring the type, as it may prevent IDEs from
+/// discovering the type declaration, making those types harder to discover.
+macro_rules! pathbuf_newtype {
+    ($ty_name:ident) => {
+        impl $ty_name {
+            #[doc = concat!("Returns a new [`", stringify!($ty_name), "`].")]
+            pub fn new(path: std::path::PathBuf) -> Self {
+                Self(path)
+            }
+
+            /// Returns the inner [`PathBuf`].
+            ///
+            /// [`PathBuf`]: std::path::PathBuf
+            pub fn into_inner(self) -> std::path::PathBuf {
+                self.0
+            }
+        }
+
+        impl From<std::path::PathBuf> for $ty_name {
+            fn from(path_buf: std::path::PathBuf) -> Self {
+                Self(path_buf)
+            }
+        }
+
+        impl AsRef<std::ffi::OsStr> for $ty_name {
+            fn as_ref(&self) -> &std::ffi::OsStr {
+                self.0.as_ref()
+            }
+        }
+
+        impl AsRef<std::path::Path> for $ty_name {
+            fn as_ref(&self) -> &std::path::Path {
+                &self.0
+            }
+        }
+
+        impl std::ops::Deref for $ty_name {
+            type Target = std::path::Path;
+
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+    };
+}
+
+pub(crate) use pathbuf_newtype;

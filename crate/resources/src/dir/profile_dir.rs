@@ -1,8 +1,4 @@
-use std::{
-    ffi::OsStr,
-    ops::Deref,
-    path::{Path, PathBuf},
-};
+use std::path::PathBuf;
 
 use peace_core::Profile;
 
@@ -16,23 +12,13 @@ use crate::dir::PeaceDir;
 /// a `peace` tool invocation. Exceptions include authentication information
 /// stored in their respective directories on the file system, such as
 /// application credentials stored in `~/${app}/credentials`.
+///
+/// See `ProfileDir::from<(&PeaceDir, &Profile)>` if you want to
+/// construct a `ProfileDir` with the default `$peace_dir/.peace` name.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ProfileDir(PathBuf);
 
-impl ProfileDir {
-    /// Returns a new [`ProfileDir`].
-    ///
-    /// See `ProfileDir::from<(&PeaceDir, &Profile)>` if you want to
-    /// construct a `ProfileDir` with the default `$peace_dir/.peace` name.
-    pub fn new(path: PathBuf) -> Self {
-        Self(path)
-    }
-
-    /// Returns the inner [`PathBuf`].
-    pub fn into_inner(self) -> PathBuf {
-        self.0
-    }
-}
+crate::dir::pathbuf_newtype!(ProfileDir);
 
 impl From<(&PeaceDir, &Profile)> for ProfileDir {
     fn from((peace_dir, profile): (&PeaceDir, &Profile)) -> Self {
@@ -40,31 +26,5 @@ impl From<(&PeaceDir, &Profile)> for ProfileDir {
         path.push(profile.as_ref());
 
         Self(path)
-    }
-}
-
-impl From<PathBuf> for ProfileDir {
-    fn from(path_buf: PathBuf) -> Self {
-        Self(path_buf)
-    }
-}
-
-impl AsRef<OsStr> for ProfileDir {
-    fn as_ref(&self) -> &OsStr {
-        self.0.as_ref()
-    }
-}
-
-impl AsRef<Path> for ProfileDir {
-    fn as_ref(&self) -> &Path {
-        &self.0
-    }
-}
-
-impl Deref for ProfileDir {
-    type Target = Path;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
     }
 }
