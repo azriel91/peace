@@ -1,11 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
 use fn_graph::FnGraph;
-use futures::{StreamExt, TryStreamExt};
-use peace_resources::{
-    resources_type_state::{Empty, SetUp},
-    Resources,
-};
 
 use crate::ItemSpecBoxed;
 
@@ -24,24 +19,6 @@ where
     /// Returns the inner [`FnGraph`].
     pub fn into_inner(self) -> FnGraph<ItemSpecBoxed<E>> {
         self.0
-    }
-
-    /// Sets up [`Resources`] for the graph.
-    ///
-    /// # Parameters
-    ///
-    /// * `resources`: The resources to set up.
-    pub async fn setup(&self, resources: Resources<Empty>) -> Result<Resources<SetUp>, E> {
-        let resources = self
-            .stream()
-            .map(Ok::<_, E>)
-            .try_fold(resources, |mut resources, item_spec| async move {
-                item_spec.setup(&mut resources).await?;
-                Ok(resources)
-            })
-            .await?;
-
-        Ok(Resources::<SetUp>::from(resources))
     }
 }
 

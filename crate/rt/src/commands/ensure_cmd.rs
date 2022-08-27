@@ -10,7 +10,7 @@ use peace_resources::{
     resources_type_state::{Ensured, EnsuredDry, SetUp, WithStateDiffs},
     Resources, StatesEnsured, StatesEnsuredDry,
 };
-use peace_rt_model::{FnRef, ItemSpecBoxed, ItemSpecGraph};
+use peace_rt_model::{FnRef, ItemSpecBoxed, ItemSpecGraph, Workspace};
 
 use crate::{DiffCmd, StateCurrentCmd};
 
@@ -45,17 +45,14 @@ where
     /// [`EnsureOpSpec::exec_dry`]: peace_cfg::EnsureOpSpec::exec_dry
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    pub async fn exec_dry(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: Resources<SetUp>,
-    ) -> Result<Resources<EnsuredDry>, E> {
-        let resources = DiffCmd::exec(item_spec_graph, resources).await?;
-        let states_ensured_dry = Self::exec_dry_internal(item_spec_graph, &resources).await?;
+    pub async fn exec_dry(workspace: Workspace<SetUp, E>) -> Result<Workspace<EnsuredDry, E>, E> {
+        let workspace = DiffCmd::exec(workspace).await?;
+        let (resources, item_spec_graph) = workspace.into_inner();
+        let states_ensured_dry = Self::exec_dry_internal(&item_spec_graph, &resources).await?;
 
-        Ok(Resources::<EnsuredDry>::from((
-            resources,
-            states_ensured_dry,
-        )))
+        let resources = Resources::<EnsuredDry>::from((resources, states_ensured_dry));
+        let workspace = Workspace::from((resources, item_spec_graph));
+        Ok(workspace)
     }
 
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
@@ -118,14 +115,14 @@ where
     /// [`EnsureOpSpec::exec`]: peace_cfg::EnsureOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    pub async fn exec(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: Resources<SetUp>,
-    ) -> Result<Resources<Ensured>, E> {
-        let resources = DiffCmd::exec(item_spec_graph, resources).await?;
-        let states_ensured = Self::exec_internal(item_spec_graph, &resources).await?;
+    pub async fn exec(workspace: Workspace<SetUp, E>) -> Result<Workspace<Ensured, E>, E> {
+        let workspace = DiffCmd::exec(workspace).await?;
+        let (resources, item_spec_graph) = workspace.into_inner();
+        let states_ensured = Self::exec_internal(&item_spec_graph, &resources).await?;
 
-        Ok(Resources::<Ensured>::from((resources, states_ensured)))
+        let resources = Resources::<Ensured>::from((resources, states_ensured));
+        let workspace = Workspace::from((resources, item_spec_graph));
+        Ok(workspace)
     }
 
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec`] for each [`ItemSpec`].

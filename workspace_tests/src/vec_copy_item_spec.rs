@@ -162,7 +162,11 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
 
 /// Error while managing a file download.
 #[derive(Debug, thiserror::Error)]
-pub enum VecCopyError {}
+pub enum VecCopyError {
+    /// A `peace` runtime error occurred.
+    #[error("A `peace` runtime error occurred.")]
+    PeaceRtError(#[from] peace::rt_model::Error),
+}
 
 #[derive(Data, Debug)]
 pub struct VecCopyParams<'op> {

@@ -5,7 +5,7 @@ use peace_resources::{
     resources_type_state::{SetUp, WithStateDiffs, WithStates},
     Resources, States, StatesMut,
 };
-use peace_rt_model::ItemSpecGraph;
+use peace_rt_model::{ItemSpecGraph, Workspace};
 
 use crate::BUFFERED_FUTURES_MAX;
 
@@ -30,13 +30,13 @@ where
     /// [`FnSpec::Data`]: peace_cfg::FnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    pub async fn exec(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: Resources<SetUp>,
-    ) -> Result<Resources<WithStates>, E> {
-        let states = Self::exec_internal(item_spec_graph, &resources).await?;
+    pub async fn exec(workspace: Workspace<SetUp, E>) -> Result<Workspace<WithStates, E>, E> {
+        let (resources, item_spec_graph) = workspace.into_inner();
+        let states = Self::exec_internal(&item_spec_graph, &resources).await?;
 
-        Ok(Resources::<WithStates>::from((resources, states)))
+        let resources = Resources::<WithStates>::from((resources, states));
+        let workspace = Workspace::from((resources, item_spec_graph));
+        Ok(workspace)
     }
 
     /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].

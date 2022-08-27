@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    ffi::OsStr,
+    path::{Path, PathBuf},
+};
 
 use peace_core::Profile;
 use peace_resources::dir::{PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
@@ -19,16 +22,17 @@ impl WorkspaceDirsBuilder {
             let working_dir = std::env::current_dir().map_err(Error::WorkingDirRead)?;
             let workspace_dir = match workspace_spec {
                 WorkspaceSpec::WorkingDir => working_dir,
+                WorkspaceSpec::Path(path) => path.clone(),
+                #[cfg(not(target_arch = "wasm32"))]
                 WorkspaceSpec::FirstDirWithFile(file_name) => {
                     Self::first_dir_with_file(&working_dir, file_name).ok_or_else(move || {
-                        let file_name = file_name.to_path_buf();
+                        let file_name = file_name.to_os_string();
                         Error::WorkspaceFileNotFound {
                             working_dir,
                             file_name,
                         }
                     })?
                 }
-                WorkspaceSpec::Path(path) => path.clone(),
             };
 
             WorkspaceDir::new(workspace_dir)
@@ -46,7 +50,8 @@ impl WorkspaceDirsBuilder {
         ))
     }
 
-    fn first_dir_with_file(working_dir: &Path, path: &Path) -> Option<PathBuf> {
+    #[cfg(not(target_arch = "wasm32"))]
+    fn first_dir_with_file(working_dir: &Path, path: &OsStr) -> Option<PathBuf> {
         let mut candidate_dir = working_dir.to_path_buf();
         loop {
             let candidate_marker = candidate_dir.join(path);

@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::{ffi::OsString, path::PathBuf};
 
 /// Describes how to discover the workspace directory.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -6,18 +6,27 @@ pub enum WorkspaceSpec {
     /// Use the exe working directory as the workspace directory.
     ///
     /// The working directory is the directory that the user ran the program in.
+    ///
+    /// # WASM
+    ///
+    /// When compiled to Web assembly (`target_arch = "wasm32"`), this variant
+    /// indicates no prefix to keys within local storage.
     WorkingDir,
+    /// Use a specified path.
+    ///
+    /// # WASM
+    ///
+    /// When compiled to Web assembly (`target_arch = "wasm32"`), this variant
+    /// indicates the prefix of keys within local storage.
+    Path(PathBuf),
     /// Traverse up from the working directory until the given file is found.
     ///
     /// The workspace directory is the parent directory that contains a file or
     /// directory with the provided name.
-    FirstDirWithFile(&'static Path),
-    /// Use a specified path.
-    Path(PathBuf),
-}
-
-impl Default for WorkspaceSpec {
-    fn default() -> Self {
-        Self::WorkingDir
-    }
+    ///
+    /// # WASM
+    ///
+    /// This variant is not available on `target_arch = "wasm32"`.
+    #[cfg(not(target_arch = "wasm32"))]
+    FirstDirWithFile(OsString),
 }

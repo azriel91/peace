@@ -5,7 +5,7 @@ use peace_resources::{
     resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     Resources, StateDiffs, StateDiffsMut,
 };
-use peace_rt_model::ItemSpecGraph;
+use peace_rt_model::Workspace;
 
 use crate::{StateCurrentCmd, StateDesiredCmd};
 
@@ -37,12 +37,10 @@ where
     /// [`StatesRw`]: peace_resources::StatesRw
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    pub async fn exec(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: Resources<SetUp>,
-    ) -> Result<Resources<WithStateDiffs>, E> {
-        let states = StateCurrentCmd::exec_internal(item_spec_graph, &resources).await?;
-        let states_desired = StateDesiredCmd::exec_internal(item_spec_graph, &resources).await?;
+    pub async fn exec(workspace: Workspace<SetUp, E>) -> Result<Workspace<WithStateDiffs, E>, E> {
+        let (resources, item_spec_graph) = workspace.into_inner();
+        let states = StateCurrentCmd::exec_internal(&item_spec_graph, &resources).await?;
+        let states_desired = StateDesiredCmd::exec_internal(&item_spec_graph, &resources).await?;
 
         let resources =
             Resources::<WithStatesCurrentAndDesired>::from((resources, states, states_desired));
@@ -63,6 +61,8 @@ where
             StateDiffs::from(state_diffs_mut)
         };
 
-        Ok(Resources::<WithStateDiffs>::from((resources, state_diffs)))
+        let resources = Resources::<WithStateDiffs>::from((resources, state_diffs));
+        let workspace = Workspace::from((resources, item_spec_graph));
+        Ok(workspace)
     }
 }

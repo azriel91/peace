@@ -1,24 +1,32 @@
 use peace::{
-    cfg::{ItemSpec, State},
-    resources::{Resources, States, StatesDesired, StatesEnsured},
+    cfg::{profile, ItemSpec, Profile, State},
+    resources::{States, StatesDesired, StatesEnsured},
     rt::EnsureCmd,
-    rt_model::ItemSpecGraphBuilder,
+    rt_model::{ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{VecCopyError, VecCopyItemSpec};
 
 #[tokio::test]
-async fn contains_state_ensured_for_each_item_spec() -> Result<(), VecCopyError> {
+async fn contains_state_ensured_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>> {
     // given
     let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
     graph_builder.add_fn(VecCopyItemSpec.into());
 
     let graph = graph_builder.build();
 
-    let resources = graph.setup(Resources::new()).await?;
+    let tempdir = tempfile::tempdir()?;
+    let profile = profile!("test_profile");
+    let workspace = Workspace::init(
+        &WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+        profile,
+        graph,
+    )
+    .await?;
 
     // when
-    let resources = EnsureCmd::exec(&graph, resources).await?;
+    let workspace = EnsureCmd::exec(workspace).await?;
+    let resources = workspace.resources();
 
     // then
     let states = resources.borrow::<States>();

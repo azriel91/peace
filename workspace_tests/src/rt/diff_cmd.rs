@@ -1,22 +1,31 @@
 use diff::{Diff, VecDiff, VecDiffType};
 use peace::{
-    cfg::{ItemSpec, State},
-    resources::{Resources, StateDiffs, States, StatesDesired},
+    cfg::{profile, ItemSpec, Profile, State},
+    resources::{StateDiffs, States, StatesDesired},
     rt::DiffCmd,
-    rt_model::ItemSpecGraphBuilder,
+    rt_model::{ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{VecA, VecB, VecCopyError, VecCopyItemSpec};
 
 #[tokio::test]
-async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), VecCopyError> {
+async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>>
+{
     let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
     graph_builder.add_fn(VecCopyItemSpec.into());
 
     let graph = graph_builder.build();
 
-    let resources = graph.setup(Resources::new()).await?;
-    let resources = DiffCmd::exec(&graph, resources).await?;
+    let tempdir = tempfile::tempdir()?;
+    let profile = profile!("test_profile");
+    let workspace = Workspace::init(
+        &WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+        profile,
+        graph,
+    )
+    .await?;
+    let workspace = DiffCmd::exec(workspace).await?;
+    let resources = workspace.resources();
 
     let states = resources.borrow::<States>();
     let states_desired = resources.borrow::<StatesDesired>();
@@ -43,18 +52,27 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), VecCopyE
 }
 
 #[tokio::test]
-async fn diff_with_multiple_changes() -> Result<(), VecCopyError> {
+async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> {
     let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
     graph_builder.add_fn(VecCopyItemSpec.into());
 
     let graph = graph_builder.build();
 
-    let mut resources = graph.setup(Resources::new()).await?;
+    let tempdir = tempfile::tempdir()?;
+    let profile = profile!("test_profile");
+    let mut workspace = Workspace::init(
+        &WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+        profile,
+        graph,
+    )
+    .await?;
     // overwrite initial state
+    let resources = workspace.resources_mut();
     #[rustfmt::skip]
     resources.insert(VecA(vec![0, 1, 2,    4, 5, 6, 8]));
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-    let resources = DiffCmd::exec(&graph, resources).await?;
+    let workspace = DiffCmd::exec(workspace).await?;
+    let resources = workspace.resources();
 
     let states = resources.borrow::<States>();
     let states_desired = resources.borrow::<StatesDesired>();

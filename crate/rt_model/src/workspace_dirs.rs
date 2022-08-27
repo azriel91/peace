@@ -35,6 +35,18 @@ impl WorkspaceDirs {
         }
     }
 
+    /// Returns the individual workspace directories.
+    pub fn into_inner(self) -> (WorkspaceDir, PeaceDir, ProfileDir, ProfileHistoryDir) {
+        let Self {
+            workspace_dir,
+            peace_dir,
+            profile_dir,
+            profile_history_dir,
+        } = self;
+
+        (workspace_dir, peace_dir, profile_dir, profile_history_dir)
+    }
+
     /// Returns a reference to the workspace dir.
     pub fn workspace_dir(&self) -> &WorkspaceDir {
         &self.workspace_dir

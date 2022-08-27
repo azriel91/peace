@@ -24,7 +24,7 @@ fn returns_workspace_dir_from_working_directory() -> Result<(), Box<dyn std::err
 
 #[test]
 fn returns_workspace_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::error::Error>> {
-    let workspace_spec = WorkspaceSpec::FirstDirWithFile(&Path::new("Cargo.lock"));
+    let workspace_spec = WorkspaceSpec::FirstDirWithFile("Cargo.lock".into());
     let profile = profile!("test_profile");
 
     let workspace_dirs = WorkspaceDirsBuilder::build(&workspace_spec, &profile)?;
@@ -42,7 +42,7 @@ fn returns_workspace_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::e
 #[test]
 fn returns_workspace_file_not_found_when_workspace_root_file_does_not_exist()
 -> Result<(), Box<dyn std::error::Error>> {
-    let workspace_spec = WorkspaceSpec::FirstDirWithFile(&Path::new("non_existent_file"));
+    let workspace_spec = WorkspaceSpec::FirstDirWithFile("non_existent_file".into());
     let profile = profile!("test_profile");
 
     let workspace_dirs_result = WorkspaceDirsBuilder::build(&workspace_spec, &profile);
@@ -74,7 +74,7 @@ fn returns_workspace_dir_from_path() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn returns_peace_dir_relative_to_workspace_dir() -> Result<(), Box<dyn std::error::Error>> {
-    let workspace_spec = WorkspaceSpec::FirstDirWithFile(&Path::new("Cargo.lock"));
+    let workspace_spec = WorkspaceSpec::FirstDirWithFile("Cargo.lock".into());
     let profile = profile!("test_profile");
 
     let workspace_dirs = WorkspaceDirsBuilder::build(&workspace_spec, &profile)?;
@@ -92,7 +92,7 @@ fn returns_peace_dir_relative_to_workspace_dir() -> Result<(), Box<dyn std::erro
 #[test]
 fn returns_profile_history_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::error::Error>>
 {
-    let workspace_spec = WorkspaceSpec::FirstDirWithFile(&Path::new("Cargo.lock"));
+    let workspace_spec = WorkspaceSpec::FirstDirWithFile("Cargo.lock".into());
     let profile = profile!("test_profile");
 
     let workspace_dirs = WorkspaceDirsBuilder::build(&workspace_spec, &profile)?;
@@ -126,7 +126,7 @@ fn returns_profile_dir_from_working_directory() -> Result<(), Box<dyn std::error
 
 #[test]
 fn returns_profile_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::error::Error>> {
-    let workspace_spec = WorkspaceSpec::FirstDirWithFile(&Path::new("Cargo.lock"));
+    let workspace_spec = WorkspaceSpec::FirstDirWithFile("Cargo.lock".into());
     let profile = profile!("test_profile");
 
     let workspace_dirs = WorkspaceDirsBuilder::build(&workspace_spec, &profile)?;
