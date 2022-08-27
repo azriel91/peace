@@ -17,8 +17,9 @@ doctest = false
 test = true
 
 [dev-dependencies]
+diff-struct = "0.4.2"
 peace = { path = "..", version = "0.0.2" }
 serde = { version = "1.0.139", features = ["derive"] }
+tempfile = "3.3.0"
 thiserror = "1.0.31"
 tokio = { version = "1.20.0", features = ["rt", "macros"] }
-diff-struct = "0.4.2"
