@@ -24,7 +24,12 @@ pub enum DownloadError {
     #[error("Failed to transfer source file content.")]
     ResponseFileWrite(#[source] std::io::Error),
 
-    // Framework / scaffolding errors
+    // Framework errors
+    /// A `peace` runtime error occurred.
+    #[error("A `peace` runtime error occurred.")]
+    PeaceRtError(#[from] peace::rt_model::Error),
+
+    // Scaffolding errors
     #[error("Failed to initialize tokio runtime.")]
     TokioRuntimeInit(#[source] std::io::Error),
     #[error("Failed to serialize states.")]

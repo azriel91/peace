@@ -1,14 +1,15 @@
 use std::path::PathBuf;
 
 use peace::{
+    cfg::Profile,
     resources::{
         resources_type_state::{
             Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesDesired,
         },
-        Resources, StateDiffs, States, StatesDesired, StatesEnsured, StatesEnsuredDry,
+        StateDiffs, States, StatesDesired, StatesEnsured, StatesEnsuredDry,
     },
     rt::{DiffCmd, EnsureCmd, StateCurrentCmd, StateDesiredCmd},
-    rt_model::{ItemSpecGraph, ItemSpecGraphBuilder},
+    rt_model::{ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 use url::Url;
@@ -47,104 +48,108 @@ mod download_item_spec_graph;
 #[cfg(target_arch = "wasm32")]
 mod wasm;
 
-pub async fn setup_graph(
+pub async fn setup_workspace(
+    workspace_spec: &WorkspaceSpec,
+    profile: Profile,
     url: Url,
     dest: PathBuf,
-) -> Result<ItemSpecGraph<DownloadError>, DownloadError> {
+) -> Result<Workspace<SetUp, DownloadError>, DownloadError> {
     let mut graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
     graph_builder.add_fn(DownloadItemSpec::new(url, dest).into());
     let graph = graph_builder.build();
-    Ok(graph)
+
+    let workspace = Workspace::init(workspace_spec, profile, graph).await?;
+    Ok(workspace)
 }
 
 pub async fn status<W>(
     output: W,
-    graph: &ItemSpecGraph<DownloadError>,
-    resources: Resources<SetUp>,
-) -> Result<Resources<WithStates>, DownloadError>
+    workspace: Workspace<SetUp, DownloadError>,
+) -> Result<Workspace<WithStates, DownloadError>, DownloadError>
 where
     W: AsyncWrite + Unpin,
 {
-    let resources = StateCurrentCmd::exec(graph, resources).await?;
+    let workspace = StateCurrentCmd::exec(workspace).await?;
+    let resources = workspace.resources();
     let states_serialized = {
         let states = resources.borrow::<States>();
         serde_yaml::to_string(&*states).map_err(DownloadError::StatesSerialize)?
     };
 
     output_write(output, &states_serialized).await?;
-    Ok(resources)
+    Ok(workspace)
 }
 
 pub async fn desired<W>(
     output: W,
-    graph: &ItemSpecGraph<DownloadError>,
-    resources: Resources<SetUp>,
-) -> Result<Resources<WithStatesDesired>, DownloadError>
+    workspace: Workspace<SetUp, DownloadError>,
+) -> Result<Workspace<WithStatesDesired, DownloadError>, DownloadError>
 where
     W: AsyncWrite + Unpin,
 {
-    let resources = StateDesiredCmd::exec(graph, resources).await?;
+    let workspace = StateDesiredCmd::exec(workspace).await?;
+    let resources = workspace.resources();
     let states_desired_serialized = {
         let states_desired = resources.borrow::<StatesDesired>();
         serde_yaml::to_string(&*states_desired).map_err(DownloadError::StatesDesiredSerialize)?
     };
 
     output_write(output, &states_desired_serialized).await?;
-    Ok(resources)
+    Ok(workspace)
 }
 
 pub async fn diff<W>(
     output: W,
-    graph: &ItemSpecGraph<DownloadError>,
-    resources: Resources<SetUp>,
-) -> Result<Resources<WithStateDiffs>, DownloadError>
+    workspace: Workspace<SetUp, DownloadError>,
+) -> Result<Workspace<WithStateDiffs, DownloadError>, DownloadError>
 where
     W: AsyncWrite + Unpin,
 {
-    let resources = DiffCmd::exec(graph, resources).await?;
+    let workspace = DiffCmd::exec(workspace).await?;
+    let resources = workspace.resources();
     let state_diffs_serialized = {
         let state_diffs = resources.borrow::<StateDiffs>();
         serde_yaml::to_string(&*state_diffs).map_err(DownloadError::StateDiffsSerialize)?
     };
 
     output_write(output, &state_diffs_serialized).await?;
-    Ok(resources)
+    Ok(workspace)
 }
 
 pub async fn ensure_dry<W>(
     output: W,
-    graph: &ItemSpecGraph<DownloadError>,
-    resources: Resources<SetUp>,
-) -> Result<Resources<EnsuredDry>, DownloadError>
+    workspace: Workspace<SetUp, DownloadError>,
+) -> Result<Workspace<EnsuredDry, DownloadError>, DownloadError>
 where
     W: AsyncWrite + Unpin,
 {
-    let resources = EnsureCmd::exec_dry(graph, resources).await?;
+    let workspace = EnsureCmd::exec_dry(workspace).await?;
+    let resources = workspace.resources();
     let states_ensured_dry_serialized = {
         let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
         serde_yaml::to_string(&*states_ensured_dry).map_err(DownloadError::StateDiffsSerialize)?
     };
 
     output_write(output, &states_ensured_dry_serialized).await?;
-    Ok(resources)
+    Ok(workspace)
 }
 
 pub async fn ensure<W>(
     output: W,
-    graph: &ItemSpecGraph<DownloadError>,
-    resources: Resources<SetUp>,
-) -> Result<Resources<Ensured>, DownloadError>
+    workspace: Workspace<SetUp, DownloadError>,
+) -> Result<Workspace<Ensured, DownloadError>, DownloadError>
 where
     W: AsyncWrite + Unpin,
 {
-    let resources = EnsureCmd::exec(graph, resources).await?;
+    let workspace = EnsureCmd::exec(workspace).await?;
+    let resources = workspace.resources();
     let states_ensured_serialized = {
         let states_ensured = resources.borrow::<StatesEnsured>();
         serde_yaml::to_string(&*states_ensured).map_err(DownloadError::StateDiffsSerialize)?
     };
 
     output_write(output, &states_ensured_serialized).await?;
-    Ok(resources)
+    Ok(workspace)
 }
 
 pub async fn output_write<W>(mut output: W, s: &str) -> Result<(), DownloadError>
