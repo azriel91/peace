@@ -55,10 +55,14 @@
 //!         |- states_desired.yaml
 //! ```
 
-pub use self::{peace_dir::PeaceDir, profile_dir::ProfileDir, workspace_dir::WorkspaceDir};
+pub use self::{
+    peace_dir::PeaceDir, profile_dir::ProfileDir, profile_history_dir::ProfileHistoryDir,
+    workspace_dir::WorkspaceDir,
+};
 
 mod peace_dir;
 mod profile_dir;
+mod profile_history_dir;
 mod workspace_dir;
 
 /// Common impl logic for `PathBuf` newtypes.
