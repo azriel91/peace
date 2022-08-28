@@ -4,12 +4,14 @@
 pub use fn_graph::{self, FnRef, FnRefMut};
 
 pub use crate::{
-    error::Error, item_spec_boxed::ItemSpecBoxed, item_spec_graph::ItemSpecGraph,
-    item_spec_graph_builder::ItemSpecGraphBuilder, item_spec_rt::ItemSpecRt,
-    item_spec_wrapper::ItemSpecWrapper, workspace::Workspace, workspace_dirs::WorkspaceDirs,
-    workspace_dirs_builder::WorkspaceDirsBuilder, workspace_spec::WorkspaceSpec,
+    cmd_context::CmdContext, error::Error, item_spec_boxed::ItemSpecBoxed,
+    item_spec_graph::ItemSpecGraph, item_spec_graph_builder::ItemSpecGraphBuilder,
+    item_spec_rt::ItemSpecRt, item_spec_wrapper::ItemSpecWrapper, workspace::Workspace,
+    workspace_dirs::WorkspaceDirs, workspace_dirs_builder::WorkspaceDirsBuilder,
+    workspace_spec::WorkspaceSpec,
 };
 
+mod cmd_context;
 mod error;
 mod item_spec_boxed;
 mod item_spec_graph;

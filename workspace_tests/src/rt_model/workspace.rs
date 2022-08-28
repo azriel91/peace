@@ -1,90 +1,30 @@
-use std::path::PathBuf;
+use std::path::Path;
 
 use peace::{
     cfg::{profile, Profile},
-    resources::dir::{PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
-    rt_model::{ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{Workspace, WorkspaceSpec},
 };
 
-use crate::{VecA, VecB, VecCopyError, VecCopyItemSpec};
-
 #[tokio::test]
-async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_dir()
--> Result<(), VecCopyError> {
-    let workspace_spec = &WorkspaceSpec::WorkingDir;
-    let profile = profile!("test_profile");
-    let item_spec_graph = {
-        let mut builder = ItemSpecGraphBuilder::new();
-        builder.add_fn(VecCopyItemSpec.into());
-        builder.build()
-    };
+async fn init_initializes_dirs_using_profile() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::try_new(
+        &WorkspaceSpec::Path(tempdir.path().into()),
+        profile!("test_profile"),
+    )
+    .await?;
+    let workspace_dirs = workspace.dirs();
 
-    let workspace = Workspace::init(workspace_spec, profile, item_spec_graph).await?;
-    let resources = workspace.resources();
-
-    assert!(resources.try_borrow::<PeaceDir>().is_ok());
-    assert!(resources.try_borrow::<ProfileDir>().is_ok());
-    assert!(resources.try_borrow::<ProfileHistoryDir>().is_ok());
-    assert!(resources.try_borrow::<WorkspaceDir>().is_ok());
-    Ok(())
-}
-
-#[tokio::test]
-async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
--> Result<(), VecCopyError> {
-    let workspace_spec = &WorkspaceSpec::Path(PathBuf::from("."));
-    let profile = profile!("test_profile");
-    let item_spec_graph = {
-        let mut builder = ItemSpecGraphBuilder::new();
-        builder.add_fn(VecCopyItemSpec.into());
-        builder.build()
-    };
-
-    let workspace = Workspace::init(workspace_spec, profile, item_spec_graph).await?;
-    let resources = workspace.resources();
-
-    assert!(resources.try_borrow::<PeaceDir>().is_ok());
-    assert!(resources.try_borrow::<ProfileDir>().is_ok());
-    assert!(resources.try_borrow::<ProfileHistoryDir>().is_ok());
-    assert!(resources.try_borrow::<WorkspaceDir>().is_ok());
-    Ok(())
-}
-
-#[tokio::test]
-async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir_with_file()
--> Result<(), VecCopyError> {
-    let workspace_spec = &WorkspaceSpec::FirstDirWithFile("Cargo.lock".into());
-    let profile = profile!("test_profile");
-    let item_spec_graph = {
-        let mut builder = ItemSpecGraphBuilder::new();
-        builder.add_fn(VecCopyItemSpec.into());
-        builder.build()
-    };
-
-    let workspace = Workspace::init(workspace_spec, profile, item_spec_graph).await?;
-    let resources = workspace.resources();
-
-    assert!(resources.try_borrow::<PeaceDir>().is_ok());
-    assert!(resources.try_borrow::<ProfileDir>().is_ok());
-    assert!(resources.try_borrow::<ProfileHistoryDir>().is_ok());
-    assert!(resources.try_borrow::<WorkspaceDir>().is_ok());
-    Ok(())
-}
-
-#[tokio::test]
-async fn init_runs_graph_setup() -> Result<(), VecCopyError> {
-    let workspace_spec = &WorkspaceSpec::WorkingDir;
-    let profile = profile!("test_profile");
-    let item_spec_graph = {
-        let mut builder = ItemSpecGraphBuilder::new();
-        builder.add_fn(VecCopyItemSpec.into());
-        builder.build()
-    };
-
-    let workspace = Workspace::init(workspace_spec, profile, item_spec_graph).await?;
-    let resources = workspace.resources();
-
-    assert!(resources.try_borrow::<VecA>().is_ok());
-    assert!(resources.try_borrow::<VecB>().is_ok());
+    assert_eq!(
+        tempdir.path(),
+        AsRef::<Path>::as_ref(workspace_dirs.workspace_dir())
+    );
+    assert_eq!(
+        tempdir
+            .path()
+            .join(workspace_dirs.peace_dir().file_name().unwrap())
+            .join("test_profile"),
+        AsRef::<Path>::as_ref(workspace_dirs.profile_dir())
+    );
     Ok(())
 }

@@ -5,7 +5,7 @@ use peace_resources::{
     resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     Resources, StateDiffs, StateDiffsMut,
 };
-use peace_rt_model::Workspace;
+use peace_rt_model::CmdContext;
 
 use crate::{StateCurrentCmd, StateDesiredCmd};
 
@@ -37,8 +37,10 @@ where
     /// [`StatesRw`]: peace_resources::StatesRw
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    pub async fn exec(workspace: Workspace<SetUp, E>) -> Result<Workspace<WithStateDiffs, E>, E> {
-        let (resources, item_spec_graph) = workspace.into_inner();
+    pub async fn exec(
+        cmd_context: CmdContext<'_, SetUp, E>,
+    ) -> Result<CmdContext<WithStateDiffs, E>, E> {
+        let (workspace, item_spec_graph, resources) = cmd_context.into_inner();
         let states = StateCurrentCmd::exec_internal(&item_spec_graph, &resources).await?;
         let states_desired = StateDesiredCmd::exec_internal(&item_spec_graph, &resources).await?;
 
@@ -62,7 +64,7 @@ where
         };
 
         let resources = Resources::<WithStateDiffs>::from((resources, state_diffs));
-        let workspace = Workspace::from((resources, item_spec_graph));
-        Ok(workspace)
+        let cmd_context = CmdContext::from((workspace, item_spec_graph, resources));
+        Ok(cmd_context)
     }
 }

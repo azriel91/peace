@@ -3,7 +3,7 @@ use peace::{
     cfg::{profile, ItemSpec, Profile, State},
     resources::{StateDiffs, States, StatesDesired},
     rt::DiffCmd,
-    rt_model::{ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{VecA, VecB, VecCopyError, VecCopyItemSpec};
@@ -11,21 +11,20 @@ use crate::{VecA, VecB, VecCopyError, VecCopyItemSpec};
 #[tokio::test]
 async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>>
 {
-    let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
-    graph_builder.add_fn(VecCopyItemSpec.into());
-
-    let graph = graph_builder.build();
-
     let tempdir = tempfile::tempdir()?;
-    let profile = profile!("test_profile");
-    let workspace = Workspace::init(
+    let workspace = Workspace::try_new(
         &WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile,
-        graph,
+        profile!("test_profile"),
     )
     .await?;
-    let workspace = DiffCmd::exec(workspace).await?;
-    let resources = workspace.resources();
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.build()
+    };
+    let cmd_context = { CmdContext::init(&workspace, &graph).await? };
+
+    let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<States>();
     let states_desired = resources.borrow::<StatesDesired>();
@@ -53,26 +52,25 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
 
 #[tokio::test]
 async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> {
-    let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
-    graph_builder.add_fn(VecCopyItemSpec.into());
-
-    let graph = graph_builder.build();
-
     let tempdir = tempfile::tempdir()?;
-    let profile = profile!("test_profile");
-    let mut workspace = Workspace::init(
+    let workspace = Workspace::try_new(
         &WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile,
-        graph,
+        profile!("test_profile"),
     )
     .await?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.build()
+    };
+    let mut cmd_context = { CmdContext::init(&workspace, &graph).await? };
     // overwrite initial state
-    let resources = workspace.resources_mut();
+    let resources = cmd_context.resources_mut();
     #[rustfmt::skip]
     resources.insert(VecA(vec![0, 1, 2,    4, 5, 6, 8]));
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-    let workspace = DiffCmd::exec(workspace).await?;
-    let resources = workspace.resources();
+
+    let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<States>();
     let states_desired = resources.borrow::<StatesDesired>();

@@ -53,19 +53,19 @@ pub async fn setup_workspace(
     profile: Profile,
     url: Url,
     dest: PathBuf,
-) -> Result<Workspace<SetUp, DownloadError>, DownloadError> {
+) -> Result<Resources<SetUp, DownloadError>, DownloadError> {
     let mut graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
     graph_builder.add_fn(DownloadItemSpec::new(url, dest).into());
     let graph = graph_builder.build();
 
-    let workspace = Workspace::init(workspace_spec, profile, graph).await?;
+    let workspace = Workspace::try_new(workspace_spec, profile, graph).await?;
     Ok(workspace)
 }
 
 pub async fn status<W>(
     output: W,
     workspace: Workspace<SetUp, DownloadError>,
-) -> Result<Workspace<WithStates, DownloadError>, DownloadError>
+) -> Result<Resources<WithStates, DownloadError>, DownloadError>
 where
     W: AsyncWrite + Unpin,
 {
@@ -83,7 +83,7 @@ where
 pub async fn desired<W>(
     output: W,
     workspace: Workspace<SetUp, DownloadError>,
-) -> Result<Workspace<WithStatesDesired, DownloadError>, DownloadError>
+) -> Result<Resources<WithStatesDesired, DownloadError>, DownloadError>
 where
     W: AsyncWrite + Unpin,
 {
@@ -101,7 +101,7 @@ where
 pub async fn diff<W>(
     output: W,
     workspace: Workspace<SetUp, DownloadError>,
-) -> Result<Workspace<WithStateDiffs, DownloadError>, DownloadError>
+) -> Result<Resources<WithStateDiffs, DownloadError>, DownloadError>
 where
     W: AsyncWrite + Unpin,
 {
@@ -119,7 +119,7 @@ where
 pub async fn ensure_dry<W>(
     output: W,
     workspace: Workspace<SetUp, DownloadError>,
-) -> Result<Workspace<EnsuredDry, DownloadError>, DownloadError>
+) -> Result<Resources<EnsuredDry, DownloadError>, DownloadError>
 where
     W: AsyncWrite + Unpin,
 {
@@ -137,7 +137,7 @@ where
 pub async fn ensure<W>(
     output: W,
     workspace: Workspace<SetUp, DownloadError>,
-) -> Result<Workspace<Ensured, DownloadError>, DownloadError>
+) -> Result<Resources<Ensured, DownloadError>, DownloadError>
 where
     W: AsyncWrite + Unpin,
 {
