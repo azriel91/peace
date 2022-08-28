@@ -34,7 +34,7 @@ where
         cmd_context: CmdContext<'_, SetUp, E>,
     ) -> Result<CmdContext<WithStates, E>, E> {
         let (workspace, item_spec_graph, resources) = cmd_context.into_inner();
-        let states = Self::exec_internal(&item_spec_graph, &resources).await?;
+        let states = Self::exec_internal(item_spec_graph, &resources).await?;
 
         let resources = Resources::<WithStates>::from((resources, states));
         let cmd_context = CmdContext::from((workspace, item_spec_graph, resources));

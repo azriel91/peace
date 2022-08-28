@@ -124,7 +124,7 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
                     Tracked::None => ProgressLimit::Unknown,
                     Tracked::Known(len) => len
                         .try_into()
-                        .map(|len| ProgressLimit::Bytes(len))
+                        .map(ProgressLimit::Bytes)
                         .unwrap_or(ProgressLimit::Unknown),
                     Tracked::Unknown => ProgressLimit::Unknown,
                 };

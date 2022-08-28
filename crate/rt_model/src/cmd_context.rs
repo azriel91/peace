@@ -72,7 +72,7 @@ where
         resources.insert(profile_dir);
         resources.insert(profile_history_dir);
 
-        let resources = Self::item_spec_graph_setup(&item_spec_graph, resources).await?;
+        let resources = Self::item_spec_graph_setup(item_spec_graph, resources).await?;
 
         Ok(CmdContext {
             workspace,
@@ -115,7 +115,7 @@ where
 
     /// Returns a reference to the workspace.
     pub fn workspace(&self) -> &Workspace {
-        &self.workspace
+        self.workspace
     }
 
     /// Returns a reference to the resources.
@@ -130,7 +130,7 @@ where
 
     /// Returns a reference to the item spec graph.
     pub fn item_spec_graph(&self) -> &ItemSpecGraph<E> {
-        &self.item_spec_graph
+        self.item_spec_graph
     }
 }
 

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// This is used to represent the state of the source file, as well as the
 /// destination file.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum FileState {
     /// String contents of the file.
     ///
