@@ -1,10 +1,11 @@
-use std::{
-    ffi::OsStr,
-    path::{Path, PathBuf},
-};
+use std::path::PathBuf;
+#[cfg(not(target_arch = "wasm32"))]
+use std::{ffi::OsStr, path::Path};
 
 use peace_core::Profile;
-use peace_resources::dir::{PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
+#[cfg(not(target_arch = "wasm32"))]
+use peace_resources::dir::WorkspaceDir;
+use peace_resources::dir::{PeaceDir, ProfileDir, ProfileHistoryDir};
 
 use crate::{Error, WorkspaceDirs, WorkspaceSpec};
 
@@ -18,12 +19,12 @@ impl WorkspaceDirsBuilder {
         workspace_spec: &WorkspaceSpec,
         profile: &Profile,
     ) -> Result<WorkspaceDirs, Error> {
+        #[cfg(not(target_arch = "wasm32"))]
         let workspace_dir = {
             let working_dir = std::env::current_dir().map_err(Error::WorkingDirRead)?;
             let workspace_dir = match workspace_spec {
                 WorkspaceSpec::WorkingDir => working_dir,
                 WorkspaceSpec::Path(path) => path.clone(),
-                #[cfg(not(target_arch = "wasm32"))]
                 WorkspaceSpec::FirstDirWithFile(file_name) => {
                     Self::first_dir_with_file(&working_dir, file_name).ok_or_else(move || {
                         let file_name = file_name.to_os_string();
@@ -36,6 +37,12 @@ impl WorkspaceDirsBuilder {
             };
 
             WorkspaceDir::new(workspace_dir)
+        };
+
+        #[cfg(target_arch = "wasm32")]
+        let workspace_dir = match workspace_spec {
+            WorkspaceSpec::WorkingDir => PathBuf::from("").into(),
+            WorkspaceSpec::Path(path) => path.clone().into(),
         };
 
         let peace_dir = PeaceDir::from(&workspace_dir);

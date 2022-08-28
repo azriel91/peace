@@ -1,4 +1,6 @@
-use std::{ffi::OsString, path::PathBuf};
+#[cfg(not(target_arch = "wasm32"))]
+use std::ffi::OsString;
+use std::path::PathBuf;
 
 /// Describes how to discover the workspace directory.
 #[derive(Clone, Debug, PartialEq, Eq)]

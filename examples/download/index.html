@@ -104,16 +104,16 @@
       window.onload = async function() {
         await init();
 
-        let graph_and_content_global;
+        let workspace_and_content_global;
         const spinner = document.querySelector("#spinner");
 
         document.querySelector("#init").addEventListener("click", () => {
           const path = document.querySelector("#path").value;
           const url = document.querySelector("#url").value;
           exports.wasm_setup(url, path)
-            .then(graph_and_content => {
-              graph_and_content_global = graph_and_content;
-              update_state(graph_and_content_global);
+            .then(workspace_and_content => {
+              workspace_and_content_global = workspace_and_content;
+              update_state(workspace_and_content_global);
 
               document.querySelectorAll(".init_required").forEach(element => element.removeAttribute("disabled"));
             });
@@ -127,14 +127,14 @@
           spinner.style.visibility = "visible";
         }
 
-        function update_state(graph_and_content) {
-          graph_and_content_global = graph_and_content;
+        function update_state(workspace_and_content) {
+          workspace_and_content_global = workspace_and_content;
           const in_memory_contents = document.querySelector("#in_memory_contents_value");
 
-          document.querySelector("#cmd_output_value").innerHTML = `<pre>${graph_and_content_global.output}</pre>`;
+          document.querySelector("#cmd_output_value").innerHTML = `<pre>${workspace_and_content_global.output}</pre>`;
 
           try {
-            const contents = graph_and_content_global.contents();
+            const contents = workspace_and_content_global.contents();
             let innerHtml = "<table><thead><tr><th>key</th><th>value</th></tr></thead><tbody>";
             if (contents != null && Object.entries(contents).length > 0) {
               Object.entries(contents)
@@ -156,12 +156,12 @@
           document.querySelectorAll("button").forEach(element => element.setAttribute("disabled", "disabled"));
           spinner_show();
 
-          fn_ref(graph_and_content_global)
+          fn_ref(workspace_and_content_global)
             .then(update_state_and_enable_buttons);
         }
 
-        function update_state_and_enable_buttons(graph_and_content) {
-          update_state(graph_and_content);
+        function update_state_and_enable_buttons(workspace_and_content) {
+          update_state(workspace_and_content);
 
           spinner_hide();
 
@@ -170,7 +170,7 @@
         }
 
         document.querySelector("#status").addEventListener("click", () => {
-          exports.wasm_status(graph_and_content_global)
+          exports.wasm_status(workspace_and_content_global)
             .then(update_state);
         });
 
