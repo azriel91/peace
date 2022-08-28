@@ -6,10 +6,10 @@ use peace::{
 use tokio::io;
 
 pub use download::{
-    desired, diff, ensure, ensure_dry, setup_workspace, status, DownloadArgs, DownloadCleanOpSpec,
-    DownloadCommand, DownloadEnsureOpSpec, DownloadError, DownloadItemSpec, DownloadParams,
-    DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec, DownloadStateDiffFnSpec, FileState,
-    FileStateDiff,
+    cmd_context, desired, diff, ensure, ensure_dry, setup_workspace_and_graph, status,
+    DownloadArgs, DownloadCleanOpSpec, DownloadCommand, DownloadEnsureOpSpec, DownloadError,
+    DownloadItemSpec, DownloadParams, DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec,
+    DownloadStateDiffFnSpec, FileState, FileStateDiff,
 };
 
 pub fn main() -> Result<(), DownloadError> {
@@ -28,24 +28,34 @@ pub fn main() -> Result<(), DownloadError> {
 
         match command {
             DownloadCommand::Status { url, dest } => {
-                let workspace = setup_workspace(workspace_spec, profile, url, dest).await?;
-                status(io::stdout(), workspace).await?;
+                let workspace_and_graph =
+                    setup_workspace_and_graph(workspace_spec, profile, url, dest).await?;
+                let cmd_context = cmd_context(&workspace_and_graph).await?;
+                status(io::stdout(), cmd_context).await?;
             }
             DownloadCommand::Desired { url, dest } => {
-                let workspace = setup_workspace(workspace_spec, profile, url, dest).await?;
-                desired(io::stdout(), workspace).await?;
+                let workspace_and_graph =
+                    setup_workspace_and_graph(workspace_spec, profile, url, dest).await?;
+                let cmd_context = cmd_context(&workspace_and_graph).await?;
+                desired(io::stdout(), cmd_context).await?;
             }
             DownloadCommand::Diff { url, dest } => {
-                let workspace = setup_workspace(workspace_spec, profile, url, dest).await?;
-                diff(io::stdout(), workspace).await?;
+                let workspace_and_graph =
+                    setup_workspace_and_graph(workspace_spec, profile, url, dest).await?;
+                let cmd_context = cmd_context(&workspace_and_graph).await?;
+                diff(io::stdout(), cmd_context).await?;
             }
             DownloadCommand::EnsureDry { url, dest } => {
-                let workspace = setup_workspace(workspace_spec, profile, url, dest).await?;
-                ensure_dry(io::stdout(), workspace).await?;
+                let workspace_and_graph =
+                    setup_workspace_and_graph(workspace_spec, profile, url, dest).await?;
+                let cmd_context = cmd_context(&workspace_and_graph).await?;
+                ensure_dry(io::stdout(), cmd_context).await?;
             }
             DownloadCommand::Ensure { url, dest } => {
-                let workspace = setup_workspace(workspace_spec, profile, url, dest).await?;
-                ensure(io::stdout(), workspace).await?;
+                let workspace_and_graph =
+                    setup_workspace_and_graph(workspace_spec, profile, url, dest).await?;
+                let cmd_context = cmd_context(&workspace_and_graph).await?;
+                ensure(io::stdout(), cmd_context).await?;
             }
         }
 
