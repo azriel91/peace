@@ -33,10 +33,7 @@ use crate::{Error, ItemSpecGraph, Workspace};
 /// [`ProfileDir`]: peace::resources::dir::ProfileDir
 /// [`ProfileHistoryDir`]: peace::resources::dir::ProfileHistoryDir
 #[derive(Debug)]
-pub struct CmdContext<'ctx, TS, E>
-where
-    E: std::error::Error,
-{
+pub struct CmdContext<'ctx, TS, E> {
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'ctx Workspace,
     /// Graph of item specs.
@@ -139,8 +136,6 @@ where
 
 impl<'ctx, TS, E> From<(&'ctx Workspace, &'ctx ItemSpecGraph<E>, Resources<TS>)>
     for CmdContext<'ctx, TS, E>
-where
-    E: std::error::Error,
 {
     fn from(
         (workspace, item_spec_graph, resources): (

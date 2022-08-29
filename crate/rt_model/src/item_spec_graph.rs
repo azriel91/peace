@@ -8,24 +8,16 @@ use crate::ItemSpecBoxed;
 ///
 /// [`ItemSpec`]: peace_cfg::ItemSpec
 #[derive(Debug)]
-pub struct ItemSpecGraph<E>(FnGraph<ItemSpecBoxed<E>>)
-where
-    E: std::error::Error;
+pub struct ItemSpecGraph<E>(FnGraph<ItemSpecBoxed<E>>);
 
-impl<E> ItemSpecGraph<E>
-where
-    E: std::error::Error,
-{
+impl<E> ItemSpecGraph<E> {
     /// Returns the inner [`FnGraph`].
     pub fn into_inner(self) -> FnGraph<ItemSpecBoxed<E>> {
         self.0
     }
 }
 
-impl<E> Deref for ItemSpecGraph<E>
-where
-    E: std::error::Error,
-{
+impl<E> Deref for ItemSpecGraph<E> {
     type Target = FnGraph<ItemSpecBoxed<E>>;
 
     fn deref(&self) -> &Self::Target {
@@ -33,19 +25,13 @@ where
     }
 }
 
-impl<E> DerefMut for ItemSpecGraph<E>
-where
-    E: std::error::Error,
-{
+impl<E> DerefMut for ItemSpecGraph<E> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl<E> From<FnGraph<ItemSpecBoxed<E>>> for ItemSpecGraph<E>
-where
-    E: std::error::Error,
-{
+impl<E> From<FnGraph<ItemSpecBoxed<E>>> for ItemSpecGraph<E> {
     fn from(graph: FnGraph<ItemSpecBoxed<E>>) -> Self {
         Self(graph)
     }

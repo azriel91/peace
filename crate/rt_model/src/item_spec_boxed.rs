@@ -27,14 +27,9 @@ use crate::{ItemSpecRt, ItemSpecWrapper};
 ///
 /// * `E`: Application specific error type.
 #[derive(Debug)]
-pub struct ItemSpecBoxed<E>(Box<dyn ItemSpecRt<E>>)
-where
-    E: std::error::Error;
+pub struct ItemSpecBoxed<E>(Box<dyn ItemSpecRt<E>>);
 
-impl<E> Deref for ItemSpecBoxed<E>
-where
-    E: std::error::Error,
-{
+impl<E> Deref for ItemSpecBoxed<E> {
     type Target = dyn ItemSpecRt<E>;
 
     // https://github.com/rust-lang/rust-clippy/issues/9101
@@ -44,10 +39,7 @@ where
     }
 }
 
-impl<E> DerefMut for ItemSpecBoxed<E>
-where
-    E: std::error::Error,
-{
+impl<E> DerefMut for ItemSpecBoxed<E> {
     // https://github.com/rust-lang/rust-clippy/issues/9101
     #[allow(clippy::explicit_auto_deref)]
     fn deref_mut(&mut self) -> &mut Self::Target {
@@ -124,10 +116,7 @@ where
     }
 }
 
-impl<E> DataAccessDyn for ItemSpecBoxed<E>
-where
-    E: std::error::Error,
-{
+impl<E> DataAccessDyn for ItemSpecBoxed<E> {
     fn borrows(&self) -> TypeIds {
         DataAccessDyn::borrows(self.0.as_ref())
     }
