@@ -25,6 +25,7 @@ peace_data = { path = "../data", version = "0.0.2" }
 peace_diff = { path = "../diff", version = "0.0.2" }
 peace_resources = { path = "../resources", version = "0.0.2" }
 serde = "1.0.139"
+serde_yaml = "0.8.26"
 thiserror = "1.0.31"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

@@ -5,7 +5,7 @@ use peace_resources::{
     resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     Resources, StateDiffs, StateDiffsMut,
 };
-use peace_rt_model::CmdContext;
+use peace_rt_model::{CmdContext, Error};
 
 use crate::{StateCurrentCmd, StateDesiredCmd};
 
@@ -14,7 +14,7 @@ pub struct DiffCmd<E>(PhantomData<E>);
 
 impl<E> DiffCmd<E>
 where
-    E: std::error::Error,
+    E: std::error::Error + From<Error> + Send,
 {
     /// Runs [`StateCurrentFnSpec`]` and `[`StateDesiredFnSpec`]`::`[`exec`] for
     /// each [`ItemSpec`].

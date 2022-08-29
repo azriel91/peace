@@ -19,7 +19,8 @@ where
     /// Runs [`StateDesiredFnSpec`]`::`[`exec`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
-    /// [`StatesDesired`].
+    /// [`StatesDesired`], and will be serialized to
+    /// `{profile_dir}/states_desired.yaml`.
     ///
     /// If any `StateDesiredFnSpec` needs to read the `State` from a previous
     /// `ItemSpec`, the predecessor should insert a copy / clone of their

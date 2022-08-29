@@ -10,7 +10,7 @@ use peace_resources::{
     resources_type_state::{Ensured, EnsuredDry, SetUp, WithStateDiffs},
     Resources, StatesEnsured, StatesEnsuredDry,
 };
-use peace_rt_model::{CmdContext, FnRef, ItemSpecBoxed, ItemSpecGraph};
+use peace_rt_model::{CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph};
 
 use crate::{DiffCmd, StateCurrentCmd};
 
@@ -19,7 +19,7 @@ pub struct EnsureCmd<E>(PhantomData<E>);
 
 impl<E> EnsureCmd<E>
 where
-    E: std::error::Error,
+    E: std::error::Error + From<Error> + Send,
 {
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
     /// [`ItemSpec`].
@@ -153,7 +153,7 @@ where
     ) -> Result<OpCheckStatuses, E> {
         let op_check_statuses = item_spec_graph
             .stream()
-            .map(Result::Ok)
+            .map(Result::<_, E>::Ok)
             .and_then(|item_spec| async move {
                 let op_check_status = item_spec.ensure_op_check(resources).await?;
                 Ok((item_spec.id(), op_check_status))
