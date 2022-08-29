@@ -12,7 +12,7 @@ use crate::{VecA, VecB, VecCopyError, VecCopyItemSpec};
 async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>>
 {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::try_new(
+    let workspace = Workspace::init(
         &WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
     )
@@ -53,7 +53,7 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
 #[tokio::test]
 async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::try_new(
+    let workspace = Workspace::init(
         &WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
     )

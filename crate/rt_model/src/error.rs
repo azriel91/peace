@@ -6,6 +6,15 @@ pub enum Error {
     /// Failed to read current directory to discover workspace directory.
     #[error("Failed to read current directory to discover workspace directory.")]
     WorkingDirRead(#[source] std::io::Error),
+    /// Failed to create a workspace directory.
+    #[error("Failed to create workspace directory: `{path}`.", path = path.display())]
+    WorkspaceDirCreate {
+        /// The directory that was attempted to be created.
+        path: PathBuf,
+        /// Underlying IO error.
+        #[source]
+        error: std::io::Error,
+    },
     /// Failed to determine workspace directory.
     #[error(
         "Failed to determine workspace directory as could not find `{file_name}` \

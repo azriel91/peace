@@ -59,19 +59,9 @@ where
         workspace: &'ctx Workspace,
         item_spec_graph: &'ctx ItemSpecGraph<E>,
     ) -> Result<CmdContext<'ctx, SetUp, E>, E> {
-        // TODO: ensure directories exist
-
-        let (workspace_dirs, profile) = workspace.clone().into_inner();
-        let (workspace_dir, peace_dir, profile_dir, profile_history_dir) =
-            workspace_dirs.into_inner();
-
         let mut resources = Resources::new();
-        resources.insert(profile);
-        resources.insert(workspace_dir);
-        resources.insert(peace_dir);
-        resources.insert(profile_dir);
-        resources.insert(profile_history_dir);
 
+        Self::insert_workspace_dirs(workspace, &mut resources);
         let resources = Self::item_spec_graph_setup(item_spec_graph, resources).await?;
 
         Ok(CmdContext {
@@ -79,6 +69,19 @@ where
             item_spec_graph,
             resources,
         })
+    }
+
+    /// Inserts workspace directory resources into the `Resources` map.
+    fn insert_workspace_dirs(workspace: &Workspace, resources: &mut Resources<Empty>) {
+        let (workspace_dirs, profile) = workspace.clone().into_inner();
+        let (workspace_dir, peace_dir, profile_dir, profile_history_dir) =
+            workspace_dirs.into_inner();
+
+        resources.insert(profile);
+        resources.insert(workspace_dir);
+        resources.insert(peace_dir);
+        resources.insert(profile_dir);
+        resources.insert(profile_history_dir);
     }
 }
 

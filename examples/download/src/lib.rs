@@ -61,7 +61,7 @@ pub async fn setup_workspace_and_graph(
     url: Url,
     dest: PathBuf,
 ) -> Result<WorkspaceAndGraph, DownloadError> {
-    let workspace = Workspace::try_new(workspace_spec, profile).await?;
+    let workspace = Workspace::init(workspace_spec, profile).await?;
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
         item_spec_graph_builder.add_fn(DownloadItemSpec::new(url, dest).into());

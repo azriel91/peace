@@ -11,8 +11,7 @@ use crate::{VecA, VecB, VecCopyError, VecCopyItemSpec};
 #[tokio::test]
 async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_dir()
 -> Result<(), VecCopyError> {
-    let workspace =
-        Workspace::try_new(&WorkspaceSpec::WorkingDir, profile!("test_profile")).await?;
+    let workspace = Workspace::init(&WorkspaceSpec::WorkingDir, profile!("test_profile")).await?;
     let item_spec_graph = {
         let mut builder = ItemSpecGraphBuilder::new();
         builder.add_fn(VecCopyItemSpec.into());
@@ -32,7 +31,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
 #[tokio::test]
 async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
 -> Result<(), VecCopyError> {
-    let workspace = Workspace::try_new(
+    let workspace = Workspace::init(
         &WorkspaceSpec::Path(PathBuf::from(".")),
         profile!("test_profile"),
     )
@@ -56,7 +55,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
 #[tokio::test]
 async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir_with_file()
 -> Result<(), VecCopyError> {
-    let workspace = Workspace::try_new(
+    let workspace = Workspace::init(
         &WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
         profile!("test_profile"),
     )
@@ -79,8 +78,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
 
 #[tokio::test]
 async fn init_runs_graph_setup() -> Result<(), VecCopyError> {
-    let workspace =
-        Workspace::try_new(&WorkspaceSpec::WorkingDir, profile!("test_profile")).await?;
+    let workspace = Workspace::init(&WorkspaceSpec::WorkingDir, profile!("test_profile")).await?;
     let item_spec_graph = {
         let mut builder = ItemSpecGraphBuilder::new();
         builder.add_fn(VecCopyItemSpec.into());
