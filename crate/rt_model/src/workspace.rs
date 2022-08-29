@@ -1,7 +1,10 @@
 use std::{iter, path::Path};
 
+#[cfg(not(target_arch = "wasm32"))]
 use futures::{stream, StreamExt, TryStreamExt};
 use peace_cfg::Profile;
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::JsValue;
 
 use crate::{Error, WorkspaceDirs, WorkspaceDirsBuilder, WorkspaceSpec};
 
@@ -12,6 +15,15 @@ pub struct Workspace {
     dirs: WorkspaceDirs,
     /// Workspace profile used.
     profile: Profile,
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen(module = "/js/workspace.js")]
+extern "C" {
+    /// Returns whether local storage is available.
+    fn localStorageAvailable() -> bool;
+    /// Returns whether session storage is available.
+    fn sessionStorageAvailable() -> bool;
 }
 
 impl Workspace {
@@ -27,7 +39,11 @@ impl Workspace {
     ) -> Result<Workspace, Error> {
         let dirs = WorkspaceDirsBuilder::build(workspace_spec, &profile)?;
 
+        #[cfg(not(target_arch = "wasm32"))]
         Self::initialize_directories(&dirs).await?;
+
+        #[cfg(target_arch = "wasm32")]
+        Self::initialize_storage(workspace_spec, &dirs).await?;
 
         Ok(Workspace { dirs, profile })
     }
@@ -67,5 +83,55 @@ impl Workspace {
                 })
             })
             .await
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    async fn initialize_storage(
+        workspace_spec: &WorkspaceSpec,
+        dirs: &WorkspaceDirs,
+    ) -> Result<(), Error> {
+        let window = web_sys::window().ok_or(Error::WindowNone)?;
+        let mut dirs = iter::once(AsRef::<Path>::as_ref(dirs.workspace_dir()))
+            .chain(iter::once(AsRef::<Path>::as_ref(dirs.peace_dir())))
+            .chain(iter::once(AsRef::<Path>::as_ref(dirs.profile_dir())))
+            .chain(iter::once(AsRef::<Path>::as_ref(
+                dirs.profile_history_dir(),
+            )));
+
+        let storage = match workspace_spec {
+            WorkspaceSpec::LocalStorage => {
+                if !localStorageAvailable() {
+                    return Err(Error::LocalStorageUnavailable);
+                }
+
+                window
+                    .local_storage()
+                    .map_err(Self::stringify_js_value)
+                    .map_err(Error::LocalStorageGet)?
+                    .ok_or(Error::LocalStorageNone)?
+            }
+            WorkspaceSpec::SessionStorage => {
+                if !sessionStorageAvailable() {
+                    return Err(Error::SessionStorageUnavailable);
+                }
+                window
+                    .session_storage()
+                    .map_err(Self::stringify_js_value)
+                    .map_err(Error::SessionStorageGet)?
+                    .ok_or(Error::SessionStorageNone)?
+            }
+        };
+
+        dirs.try_for_each(|dir| storage.set_item(&dir.to_string_lossy(), ""))
+            .map_err(Self::stringify_js_value)
+            .map_err(Error::StorageSetItem)
+    }
+
+    /// Converts the `JsValue` to a `String` to allow `Error` to be `Send`.
+    #[cfg(target_arch = "wasm32")]
+    fn stringify_js_value(js_value: JsValue) -> String {
+        js_value
+            .into_serde::<String>()
+            .unwrap_or_else(|_| String::from("<??>"))
     }
 }

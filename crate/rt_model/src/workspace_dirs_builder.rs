@@ -40,9 +40,11 @@ impl WorkspaceDirsBuilder {
         };
 
         #[cfg(target_arch = "wasm32")]
+        // Written this way so that if we want to add a prefix, this would compile error.
         let workspace_dir = match workspace_spec {
-            WorkspaceSpec::WorkingDir => PathBuf::from("").into(),
-            WorkspaceSpec::Path(path) => path.clone().into(),
+            WorkspaceSpec::LocalStorage | WorkspaceSpec::SessionStorage => {
+                PathBuf::from("/").into()
+            }
         };
 
         let peace_dir = PeaceDir::from(&workspace_dir);

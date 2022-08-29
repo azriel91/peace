@@ -5,6 +5,7 @@ use peace::{
     rt_model::WorkspaceSpec,
 };
 use url::Url;
+use wasm_bindgen::prelude::*;
 
 pub use crate::{
     cmd_context, desired, diff, ensure, ensure_dry, setup_workspace_and_graph, status,
@@ -12,8 +13,6 @@ pub use crate::{
     DownloadItemSpec, DownloadParams, DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec,
     DownloadStateDiffFnSpec, FileState, FileStateDiff, WorkspaceAndGraph,
 };
-
-use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
@@ -41,11 +40,9 @@ impl WorkspaceAndContent {
 pub async fn wasm_setup(url: String, name: String) -> Result<WorkspaceAndContent, JsValue> {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    let workspace_spec = &WorkspaceSpec::WorkingDir;
-    let profile = profile!("default");
     setup_workspace_and_graph(
-        workspace_spec,
-        profile,
+        &WorkspaceSpec::SessionStorage,
+        profile!("default"),
         Url::parse(&url).expect("Failed to parse URL."),
         std::path::PathBuf::from(name),
     )
