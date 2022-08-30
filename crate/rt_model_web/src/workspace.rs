@@ -1,10 +1,9 @@
 use std::{iter, path::Path};
 
-use futures::{stream, StreamExt, TryStreamExt};
-use peace_cfg::Profile;
+use peace_core::Profile;
 use peace_resources::internal::WorkspaceDirs;
 
-use crate::{Error, WorkspaceDirsBuilder, WorkspaceSpec};
+use crate::{Error, WebStorage, WorkspaceDirsBuilder, WorkspaceSpec};
 
 /// Workspace that the `peace` tool runs in.
 #[derive(Clone, Debug)]
@@ -13,6 +12,8 @@ pub struct Workspace {
     dirs: WorkspaceDirs,
     /// Workspace profile used.
     profile: Profile,
+    /// Wrapper to retrieve `web_sys::Storage` on demand.
+    storage: WebStorage,
 }
 
 impl Workspace {
@@ -24,15 +25,24 @@ impl Workspace {
     /// * `profile`: The profile that execution is .
     pub async fn init(workspace_spec: WorkspaceSpec, profile: Profile) -> Result<Workspace, Error> {
         let dirs = WorkspaceDirsBuilder::build(workspace_spec, &profile)?;
-        Self::initialize_directories(&dirs).await?;
-        Ok(Workspace { dirs, profile })
+        let storage = Self::initialize_storage(workspace_spec, &dirs).await?;
+
+        Ok(Workspace {
+            dirs,
+            profile,
+            storage,
+        })
     }
 
     /// Returns the inner data.
-    pub fn into_inner(self) -> (WorkspaceDirs, Profile) {
-        let Self { dirs, profile } = self;
+    pub fn into_inner(self) -> (WorkspaceDirs, Profile, WebStorage) {
+        let Self {
+            dirs,
+            profile,
+            storage,
+        } = self;
 
-        (dirs, profile)
+        (dirs, profile, storage)
     }
 
     /// Returns a reference to the workspace's directories.
@@ -45,7 +55,15 @@ impl Workspace {
         &self.profile
     }
 
-    async fn initialize_directories(dirs: &WorkspaceDirs) -> Result<(), Error> {
+    /// Returns the storage used for this workspace.
+    pub fn storage(&self) -> &WebStorage {
+        &self.storage
+    }
+
+    async fn initialize_storage(
+        workspace_spec: WorkspaceSpec,
+        dirs: &WorkspaceDirs,
+    ) -> Result<WebStorage, Error> {
         let dirs = iter::once(AsRef::<Path>::as_ref(dirs.workspace_dir()))
             .chain(iter::once(AsRef::<Path>::as_ref(dirs.peace_dir())))
             .chain(iter::once(AsRef::<Path>::as_ref(dirs.profile_dir())))
@@ -53,14 +71,15 @@ impl Workspace {
                 dirs.profile_history_dir(),
             )));
 
-        stream::iter(dirs)
-            .map(Result::<_, Error>::Ok)
-            .try_for_each(|dir| async move {
-                tokio::fs::create_dir_all(dir).await.map_err(|error| {
-                    let path = dir.to_path_buf();
-                    Error::WorkspaceDirCreate { path, error }
-                })
-            })
-            .await
+        let workspace_storage = WebStorage::new(workspace_spec);
+        workspace_storage.iter_with_storage(dirs, |storage, dir| {
+            let dir_str = dir.to_string_lossy();
+            let value = "";
+            storage
+                .set_item(dir_str.as_ref(), value)
+                .map_err(|js_value| (dir_str.to_string(), "".to_string(), js_value))
+        })?;
+
+        Ok(workspace_storage)
     }
 }

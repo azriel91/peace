@@ -1,5 +1,5 @@
 [package]
-name = "peace_web_support"
+name = "peace_rt_model_web"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 version = "0.0.2"
 edition = "2021"

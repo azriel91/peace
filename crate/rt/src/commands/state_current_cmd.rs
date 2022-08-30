@@ -142,7 +142,7 @@ where
 
     #[cfg(target_arch = "wasm32")]
     pub(crate) async fn serialize_internal(resources: &Resources<WithStates>) -> Result<(), E> {
-        use peace_web_support::WebStorage;
+        use peace_rt_model::WebStorage;
 
         let profile_dir = resources.borrow::<ProfileDir>();
         let states = resources.borrow::<States>();

@@ -6,7 +6,7 @@ use peace_resources::{
     internal::WorkspaceDirs,
 };
 
-use crate::{Error, WebStorageSpec};
+use crate::{Error, WorkspaceSpec};
 
 /// Computes paths of well-known directories for a workspace.
 #[derive(Debug)]
@@ -14,16 +14,11 @@ pub struct WorkspaceDirsBuilder;
 
 impl WorkspaceDirsBuilder {
     /// Computes [`WorkspaceDirs`] paths.
-    pub fn build(
-        web_storage_spec: WebStorageSpec,
-        profile: &Profile,
-    ) -> Result<WorkspaceDirs, Error> {
+    pub fn build(workspace_spec: WorkspaceSpec, profile: &Profile) -> Result<WorkspaceDirs, Error> {
         // Written this way so that if we want to add a prefix, this would compile
         // error.
-        let workspace_dir = match web_storage_spec {
-            WebStorageSpec::LocalStorage | WebStorageSpec::SessionStorage => {
-                PathBuf::from("").into()
-            }
+        let workspace_dir = match workspace_spec {
+            WorkspaceSpec::LocalStorage | WorkspaceSpec::SessionStorage => PathBuf::from("").into(),
         };
 
         let peace_dir = PeaceDir::from(&workspace_dir);

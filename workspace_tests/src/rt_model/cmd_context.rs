@@ -13,7 +13,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::init(
-        &WorkspaceSpec::Path(tempdir.path().into()),
+        WorkspaceSpec::Path(tempdir.path().into()),
         profile!("test_profile"),
     )
     .await?;
@@ -37,7 +37,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
 async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
 -> Result<(), Box<dyn std::error::Error>> {
     let workspace = Workspace::init(
-        &WorkspaceSpec::Path(PathBuf::from(".")),
+        WorkspaceSpec::Path(PathBuf::from(".")),
         profile!("test_profile"),
     )
     .await?;
@@ -67,7 +67,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
     tokio::fs::create_dir(&subdir).await?;
     std::env::set_current_dir(&subdir)?;
     let workspace = Workspace::init(
-        &WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
+        WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
         profile!("test_profile"),
     )
     .await?;
@@ -91,7 +91,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
 async fn init_runs_graph_setup() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::init(
-        &WorkspaceSpec::Path(tempdir.path().into()),
+        WorkspaceSpec::Path(tempdir.path().into()),
         profile!("test_profile"),
     )
     .await?;

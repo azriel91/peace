@@ -2,7 +2,7 @@
 ///
 /// See <https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API>.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum WebStorageSpec {
+pub enum WorkspaceSpec {
     /// Use browser local storage to store peace data.
     ///
     /// Persists even when the browser is closed and reopened.

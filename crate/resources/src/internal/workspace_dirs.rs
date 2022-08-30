@@ -5,7 +5,7 @@ use crate::dir::{PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
 /// This type itself is not inserted into `Resources`, but each of the member
 /// directories are individually inserted. This is created by
 /// `WorkspaceDirsBuilder` from either the `peace_rt_model` or
-/// `peace_web_support` crates.
+/// `peace_rt_model_web` crates.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WorkspaceDirs {
     /// Base directory of the workspace.

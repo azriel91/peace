@@ -32,5 +32,5 @@ thiserror = "1.0.31"
 tokio = { version = "1.20.0", features = ["fs"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-peace_web_support = { path = "../web_support", version = "0.0.2" }
+peace_rt_model_web = { path = "../rt_model_web", version = "0.0.2" }
 wasm-bindgen = { version = "0.2.82", features = ["serde-serialize"] }

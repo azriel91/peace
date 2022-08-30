@@ -11,7 +11,7 @@ use crate::{VecCopyError, VecCopyItemSpec};
 async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::init(
-        &WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
     )
     .await?;

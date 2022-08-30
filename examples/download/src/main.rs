@@ -23,7 +23,7 @@ pub fn main() -> Result<(), DownloadError> {
 
     let DownloadArgs { command } = DownloadArgs::parse();
     runtime.block_on(async {
-        let workspace_spec = &WorkspaceSpec::WorkingDir;
+        let workspace_spec = WorkspaceSpec::WorkingDir;
         let profile = profile!("default");
 
         match command {

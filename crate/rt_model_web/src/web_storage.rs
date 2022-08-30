@@ -1,12 +1,12 @@
 use wasm_bindgen::prelude::*;
 
-use crate::{Error, WebStorageSpec};
+use crate::{Error, WorkspaceSpec};
 
 /// Wrapper to retrieve `web_sys::Storage` on demand.
 #[derive(Clone, Debug)]
 pub struct WebStorage {
     /// Describes how to store peace automation data.
-    workspace_spec: WebStorageSpec,
+    workspace_spec: WorkspaceSpec,
 }
 
 #[wasm_bindgen(module = "/js/workspace.js")]
@@ -19,13 +19,13 @@ extern "C" {
 
 impl WebStorage {
     /// Returns a new `WebStorage`.
-    pub fn new(workspace_spec: WebStorageSpec) -> Self {
+    pub fn new(workspace_spec: WorkspaceSpec) -> Self {
         Self { workspace_spec }
     }
 
     /// Returns the browser storage used for the workspace.
     ///
-    /// This is the local or session storage depending on the `WebStorageSpec`
+    /// This is the local or session storage depending on the `WorkspaceSpec`
     /// passed into `Workspace::init`.
     ///
     /// `web_sys::Storage` is `!Send`, so cannot be inserted into `Resources`.
@@ -34,7 +34,7 @@ impl WebStorage {
     pub fn get(&self) -> Result<web_sys::Storage, Error> {
         let window = web_sys::window().ok_or(Error::WindowNone)?;
         let storage = match self.workspace_spec {
-            WebStorageSpec::LocalStorage => {
+            WorkspaceSpec::LocalStorage => {
                 if !localStorageAvailable() {
                     return Err(Error::LocalStorageUnavailable);
                 }
@@ -44,7 +44,7 @@ impl WebStorage {
                     .map_err(Error::LocalStorageGet)?
                     .ok_or(Error::LocalStorageNone)?
             }
-            WebStorageSpec::SessionStorage => {
+            WorkspaceSpec::SessionStorage => {
                 if !sessionStorageAvailable() {
                     return Err(Error::SessionStorageUnavailable);
                 }

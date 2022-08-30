@@ -10,7 +10,7 @@ async fn init_initializes_dirs_using_profile_and_physically_creates_dirs()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::init(
-        &WorkspaceSpec::Path(tempdir.path().into()),
+        WorkspaceSpec::Path(tempdir.path().into()),
         profile!("test_profile"),
     )
     .await?;
