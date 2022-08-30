@@ -1,0 +1,25 @@
+[package]
+name = "peace_rt_model_native"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.2"
+edition = "2021"
+description = "Runtime data types for the peace automation framework."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_rt_model_native/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+futures = "0.3.21"
+peace_core = { path = "../core", version = "0.0.2" }
+peace_resources = { path = "../resources", version = "0.0.2" }
+serde_yaml = "0.8.26"
+thiserror = "1.0.31"
+tokio = { version = "1.20.0", features = ["fs"] }
+tokio-util = { version = "0.7.3", features = ["io", "io-util"] }

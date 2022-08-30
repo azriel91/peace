@@ -1,10 +1,10 @@
 use std::{iter, path::Path};
 
 use futures::{stream, StreamExt, TryStreamExt};
-use peace_cfg::Profile;
+use peace_core::Profile;
 use peace_resources::internal::WorkspaceDirs;
 
-use crate::{Error, WorkspaceDirsBuilder, WorkspaceSpec};
+use crate::{Error, NativeStorage, WorkspaceDirsBuilder, WorkspaceSpec};
 
 /// Workspace that the `peace` tool runs in.
 #[derive(Clone, Debug)]
@@ -13,6 +13,8 @@ pub struct Workspace {
     dirs: WorkspaceDirs,
     /// Workspace profile used.
     profile: Profile,
+    /// File system storage access.
+    storage: NativeStorage,
 }
 
 impl Workspace {
@@ -25,14 +27,24 @@ impl Workspace {
     pub async fn init(workspace_spec: WorkspaceSpec, profile: Profile) -> Result<Workspace, Error> {
         let dirs = WorkspaceDirsBuilder::build(workspace_spec, &profile)?;
         Self::initialize_directories(&dirs).await?;
-        Ok(Workspace { dirs, profile })
+
+        let storage = NativeStorage;
+        Ok(Workspace {
+            dirs,
+            profile,
+            storage,
+        })
     }
 
     /// Returns the inner data.
-    pub fn into_inner(self) -> (WorkspaceDirs, Profile) {
-        let Self { dirs, profile } = self;
+    pub fn into_inner(self) -> (WorkspaceDirs, Profile, NativeStorage) {
+        let Self {
+            dirs,
+            profile,
+            storage,
+        } = self;
 
-        (dirs, profile)
+        (dirs, profile, storage)
     }
 
     /// Returns a reference to the workspace's directories.
@@ -43,6 +55,11 @@ impl Workspace {
     /// Returns a reference to the workspace's profile.
     pub fn profile(&self) -> &Profile {
         &self.profile
+    }
+
+    /// Returns a reference to the workspace's storage.
+    pub fn storage(&self) -> &NativeStorage {
+        &self.storage
     }
 
     async fn initialize_directories(dirs: &WorkspaceDirs) -> Result<(), Error> {

@@ -70,22 +70,16 @@ where
 
     /// Inserts workspace directory resources into the `Resources` map.
     fn insert_workspace_resources(workspace: &Workspace, resources: &mut Resources<Empty>) {
-        let workspace_dirs = workspace.dirs().clone();
-        let profile = workspace.profile().clone();
+        let (workspace_dirs, profile, storage) = workspace.clone().into_inner();
         let (workspace_dir, peace_dir, profile_dir, profile_history_dir) =
             workspace_dirs.into_inner();
 
-        resources.insert(profile);
         resources.insert(workspace_dir);
         resources.insert(peace_dir);
         resources.insert(profile_dir);
         resources.insert(profile_history_dir);
-
-        #[cfg(target_arch = "wasm32")]
-        {
-            let storage = workspace.storage().clone();
-            resources.insert(storage);
-        }
+        resources.insert(profile);
+        resources.insert(storage);
     }
 }
 

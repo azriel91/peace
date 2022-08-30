@@ -1,10 +1,10 @@
 // #![cfg(target_arch = "wasm32")]
 //! Web support for the peace automation framework.
 //!
-//! **This crate is intended to be used with `#[cfg(target_arch = "wasm32")]`.**
+//! Consumers should depend on the `peace_rt_model` crate, which re-exports
+//! same-named types, depending on whether a native or WASM target is used.
 //!
-//! Contains types and logic to make it easier to compile a peace tool to web
-//! assembly.
+//! **This crate is intended to be used with `#[cfg(target_arch = "wasm32")]`.**
 
 pub use crate::{
     error::Error, web_storage::WebStorage, workspace::Workspace,

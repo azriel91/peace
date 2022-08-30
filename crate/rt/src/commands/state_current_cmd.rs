@@ -6,7 +6,7 @@ use peace_resources::{
     resources_type_state::{SetUp, WithStateDiffs, WithStates},
     Resources, States, StatesMut,
 };
-use peace_rt_model::{CmdContext, Error, ItemSpecGraph};
+use peace_rt_model::{CmdContext, Error, ItemSpecGraph, Storage};
 
 use crate::BUFFERED_FUTURES_MAX;
 
@@ -101,57 +101,30 @@ where
 
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) async fn serialize_internal(resources: &Resources<WithStates>) -> Result<(), E> {
-        use std::{io::Write, sync::Mutex};
-
-        use tokio::{fs::File, io::BufWriter};
-        use tokio_util::io::SyncIoBridge;
-
         let profile_dir = resources.borrow::<ProfileDir>();
         let states = resources.borrow::<States>();
+        let storage = resources.borrow::<Storage>();
         let states_file_path = profile_dir.join(Self::STATES_CURRENT_FILE);
 
-        let mut states_file = SyncIoBridge::new(BufWriter::new(
-            File::create(&states_file_path).await.map_err(|error| {
-                let path = states_file_path.clone();
-                Error::StatesFileCreate { path, error }
-            })?,
-        ));
+        storage
+            .write_with_sync_api("states_file_write".to_string(), &states_file_path, |file| {
+                serde_yaml::to_writer(file, &*states).map_err(Error::StatesSerialize)
+            })
+            .await?;
 
-        // `tokio::task::spawn_blocking` doesn't work because it needs `states` to be
-        // `'static`
-        std::thread::scope(move |s| {
-            std::thread::Builder::new()
-                .name("states_file_write".to_string())
-                .spawn_scoped(s, move || {
-                    serde_yaml::to_writer(&mut states_file, &*states)
-                        .map_err(Error::StatesSerialize)?;
-                    states_file.flush().map_err(|error| {
-                        let path = states_file_path;
-                        Error::StatesFileWrite { path, error }
-                    })?;
-
-                    Ok(())
-                })
-                .map_err(Error::StatesFileWriteThreadSpawn)?
-                .join()
-                .map_err(Mutex::new)
-                .map_err(Error::StatesFileWriteThreadJoin)?
-        })?;
         Ok(())
     }
 
     #[cfg(target_arch = "wasm32")]
     pub(crate) async fn serialize_internal(resources: &Resources<WithStates>) -> Result<(), E> {
-        use peace_rt_model::WebStorage;
-
         let profile_dir = resources.borrow::<ProfileDir>();
         let states = resources.borrow::<States>();
-        let web_storage = resources.borrow::<WebStorage>();
+        let storage = resources.borrow::<Storage>();
         let states_file_path = profile_dir.join(Self::STATES_CURRENT_FILE);
 
         let states_serialized = serde_yaml::to_string(&*states).map_err(Error::StatesSerialize)?;
         let states_file_path = states_file_path.to_string_lossy();
-        web_storage.set_item(&states_file_path, &states_serialized)?;
+        storage.set_item(&states_file_path, &states_serialized)?;
 
         Ok(())
     }

@@ -1,3 +1,5 @@
+// Remember to add common variants to `rt_model_native/src/error.rs`.
+
 /// Peace web support errors.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {

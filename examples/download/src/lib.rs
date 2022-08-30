@@ -9,7 +9,7 @@ use peace::{
         Resources, StateDiffs, States, StatesDesired, StatesEnsured, StatesEnsuredDry,
     },
     rt::{DiffCmd, EnsureCmd, StateCurrentCmd, StateDesiredCmd},
-    rt_model::{CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, Workspace},
+    rt_model::{CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 use url::Url;
@@ -57,7 +57,7 @@ pub struct WorkspaceAndGraph {
 /// Returns a default workspace and the Download item spec graph.
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn setup_workspace_and_graph(
-    workspace_spec: peace::rt_model::WorkspaceSpec,
+    workspace_spec: WorkspaceSpec,
     profile: Profile,
     url: Url,
     dest: PathBuf,
@@ -79,7 +79,7 @@ pub async fn setup_workspace_and_graph(
 /// Returns a default workspace and the Download item spec graph.
 #[cfg(target_arch = "wasm32")]
 pub async fn setup_workspace_and_graph(
-    workspace_spec: peace::rt_model::WorkspaceSpec,
+    workspace_spec: WorkspaceSpec,
     profile: Profile,
     url: Url,
     dest: PathBuf,

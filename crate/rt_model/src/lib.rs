@@ -1,4 +1,7 @@
 //! Runtime data types for the peace automation framework.
+//!
+//! This crate re-exports types from `peace_rt_model_native` or
+//! `peace_rt_model_web` depending on the compilation target architecture.
 
 // Re-exports
 pub use fn_graph::{self, FnRef, FnRefMut};
@@ -10,22 +13,14 @@ pub use crate::{
 };
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use crate::{
-    error::Error, workspace::Workspace, workspace_dirs_builder::WorkspaceDirsBuilder,
-    workspace_spec::WorkspaceSpec,
+pub use peace_rt_model_native::{
+    Error, NativeStorage as Storage, SyncIoBridge, Workspace, WorkspaceDirsBuilder, WorkspaceSpec,
 };
 
 #[cfg(target_arch = "wasm32")]
-pub use peace_rt_model_web::{Error, WebStorage, Workspace, WorkspaceDirsBuilder, WorkspaceSpec};
-
-#[cfg(not(target_arch = "wasm32"))]
-mod error;
-#[cfg(not(target_arch = "wasm32"))]
-mod workspace;
-#[cfg(not(target_arch = "wasm32"))]
-mod workspace_dirs_builder;
-#[cfg(not(target_arch = "wasm32"))]
-mod workspace_spec;
+pub use peace_rt_model_web::{
+    Error, WebStorage as Storage, Workspace, WorkspaceDirsBuilder, WorkspaceSpec,
+};
 
 mod cmd_context;
 mod item_spec_boxed;
