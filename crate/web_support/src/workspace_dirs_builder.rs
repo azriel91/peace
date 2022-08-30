@@ -22,7 +22,7 @@ impl WorkspaceDirsBuilder {
         // error.
         let workspace_dir = match web_storage_spec {
             WebStorageSpec::LocalStorage | WebStorageSpec::SessionStorage => {
-                PathBuf::from("/").into()
+                PathBuf::from("").into()
             }
         };
 
