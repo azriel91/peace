@@ -36,6 +36,14 @@ pub enum Error {
     ///
     /// Note: The original `JsValue` error is converted to a `String` to allow
     /// this type to be `Send`.
+    ///
+    /// Instead of doing that, we could either:
+    ///
+    /// * Update `resman::Resource` to be `!Send` when compiling to WASM, or
+    /// * Use <https://docs.rs/send_wrapper/> to wrap the `JsValue`.
+    ///
+    /// This is because browsers are generally single threaded. The assumption
+    /// would no longer be true if multiple threads are used, e.g. web workers.
     #[error("Failed to set an item in browser storage: `{key}`: `{value}`. Error: `{error}`")]
     StorageSetItem {
         /// Key to set.
