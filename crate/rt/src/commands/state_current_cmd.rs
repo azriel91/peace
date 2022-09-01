@@ -41,7 +41,6 @@ where
         let states = Self::exec_internal(item_spec_graph, &resources).await?;
 
         let resources = Resources::<WithStates>::from((resources, states));
-        #[cfg(not(target_arch = "wasm32"))]
         Self::serialize_internal(&resources).await?;
 
         let cmd_context = CmdContext::from((workspace, item_spec_graph, resources));
@@ -118,12 +117,14 @@ where
             })?,
         ));
 
+        // `tokio::task::spawn_blocking` doesn't work because it needs `states` to be
+        // `'static`
         std::thread::scope(move |s| {
             std::thread::Builder::new()
                 .name("states_file_write".to_string())
                 .spawn_scoped(s, move || {
                     serde_yaml::to_writer(&mut states_file, &*states)
-                        .map_err(Error::StatesFileSerialize)?;
+                        .map_err(Error::StatesSerialize)?;
                     states_file.flush().map_err(|error| {
                         let path = states_file_path;
                         Error::StatesFileWrite { path, error }
@@ -136,6 +137,22 @@ where
                 .map_err(Mutex::new)
                 .map_err(Error::StatesFileWriteThreadJoin)?
         })?;
+        Ok(())
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) async fn serialize_internal(resources: &Resources<WithStates>) -> Result<(), E> {
+        use peace_web_support::WebStorage;
+
+        let profile_dir = resources.borrow::<ProfileDir>();
+        let states = resources.borrow::<States>();
+        let web_storage = resources.borrow::<WebStorage>();
+        let states_file_path = profile_dir.join(Self::STATES_CURRENT_FILE);
+
+        let states_serialized = serde_yaml::to_string(&*states).map_err(Error::StatesSerialize)?;
+        let states_file_path = states_file_path.to_string_lossy();
+        web_storage.set_item(&states_file_path, &states_serialized)?;
+
         Ok(())
     }
 }

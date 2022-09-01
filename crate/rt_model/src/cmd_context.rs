@@ -58,7 +58,7 @@ where
     ) -> Result<CmdContext<'ctx, SetUp, E>, E> {
         let mut resources = Resources::new();
 
-        Self::insert_workspace_dirs(workspace, &mut resources);
+        Self::insert_workspace_resources(workspace, &mut resources);
         let resources = Self::item_spec_graph_setup(item_spec_graph, resources).await?;
 
         Ok(CmdContext {
@@ -69,8 +69,9 @@ where
     }
 
     /// Inserts workspace directory resources into the `Resources` map.
-    fn insert_workspace_dirs(workspace: &Workspace, resources: &mut Resources<Empty>) {
-        let (workspace_dirs, profile) = workspace.clone().into_inner();
+    fn insert_workspace_resources(workspace: &Workspace, resources: &mut Resources<Empty>) {
+        let workspace_dirs = workspace.dirs().clone();
+        let profile = workspace.profile().clone();
         let (workspace_dir, peace_dir, profile_dir, profile_history_dir) =
             workspace_dirs.into_inner();
 
@@ -79,6 +80,12 @@ where
         resources.insert(peace_dir);
         resources.insert(profile_dir);
         resources.insert(profile_history_dir);
+
+        #[cfg(target_arch = "wasm32")]
+        {
+            let storage = workspace.storage().clone();
+            resources.insert(storage);
+        }
     }
 }
 

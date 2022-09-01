@@ -9,7 +9,7 @@ use peace::{
         Resources, StateDiffs, States, StatesDesired, StatesEnsured, StatesEnsuredDry,
     },
     rt::{DiffCmd, EnsureCmd, StateCurrentCmd, StateDesiredCmd},
-    rt_model::{CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, Workspace},
 };
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 use url::Url;
@@ -55,13 +55,36 @@ pub struct WorkspaceAndGraph {
 }
 
 /// Returns a default workspace and the Download item spec graph.
+#[cfg(not(target_arch = "wasm32"))]
 pub async fn setup_workspace_and_graph(
-    workspace_spec: &WorkspaceSpec,
+    workspace_spec: &peace::rt_model::WorkspaceSpec,
     profile: Profile,
     url: Url,
     dest: PathBuf,
 ) -> Result<WorkspaceAndGraph, DownloadError> {
     let workspace = Workspace::init(workspace_spec, profile).await?;
+    let item_spec_graph = {
+        let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
+        item_spec_graph_builder.add_fn(DownloadItemSpec::new(url, dest).into());
+        item_spec_graph_builder.build()
+    };
+
+    let workspace_and_graph = WorkspaceAndGraph {
+        workspace,
+        item_spec_graph,
+    };
+    Ok(workspace_and_graph)
+}
+
+/// Returns a default workspace and the Download item spec graph.
+#[cfg(target_arch = "wasm32")]
+pub async fn setup_workspace_and_graph(
+    web_storage_spec: peace::rt_model::WebStorageSpec,
+    profile: Profile,
+    url: Url,
+    dest: PathBuf,
+) -> Result<WorkspaceAndGraph, DownloadError> {
+    let workspace = Workspace::init(web_storage_spec, profile).await?;
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
         item_spec_graph_builder.add_fn(DownloadItemSpec::new(url, dest).into());

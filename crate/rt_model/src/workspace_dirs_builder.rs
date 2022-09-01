@@ -3,11 +3,12 @@ use std::path::PathBuf;
 use std::{ffi::OsStr, path::Path};
 
 use peace_core::Profile;
-#[cfg(not(target_arch = "wasm32"))]
-use peace_resources::dir::WorkspaceDir;
-use peace_resources::dir::{PeaceDir, ProfileDir, ProfileHistoryDir};
+use peace_resources::{
+    dir::{PeaceDir, ProfileDir, ProfileHistoryDir},
+    internal::WorkspaceDirs,
+};
 
-use crate::{Error, WorkspaceDirs, WorkspaceSpec};
+use crate::{Error, WorkspaceSpec};
 
 /// Computes paths of well-known directories for a workspace.
 #[derive(Debug)]
@@ -15,11 +16,13 @@ pub struct WorkspaceDirsBuilder;
 
 impl WorkspaceDirsBuilder {
     /// Computes [`WorkspaceDirs`] paths.
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn build(
         workspace_spec: &WorkspaceSpec,
         profile: &Profile,
     ) -> Result<WorkspaceDirs, Error> {
-        #[cfg(not(target_arch = "wasm32"))]
+        use peace_resources::dir::WorkspaceDir;
+
         let workspace_dir = {
             let working_dir = std::env::current_dir().map_err(Error::WorkingDirRead)?;
             let workspace_dir = match workspace_spec {
@@ -39,10 +42,30 @@ impl WorkspaceDirsBuilder {
             WorkspaceDir::new(workspace_dir)
         };
 
-        #[cfg(target_arch = "wasm32")]
-        // Written this way so that if we want to add a prefix, this would compile error.
-        let workspace_dir = match workspace_spec {
-            WorkspaceSpec::LocalStorage | WorkspaceSpec::SessionStorage => {
+        let peace_dir = PeaceDir::from(&workspace_dir);
+        let profile_dir = ProfileDir::from((&peace_dir, profile));
+        let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
+
+        Ok(WorkspaceDirs::new(
+            workspace_dir,
+            peace_dir,
+            profile_dir,
+            profile_history_dir,
+        ))
+    }
+
+    /// Computes [`WorkspaceDirs`] paths.
+    #[cfg(target_arch = "wasm32")]
+    pub fn build(
+        web_storage_spec: &peace_web_support::WebStorageSpec,
+        profile: &Profile,
+    ) -> Result<WorkspaceDirs, Error> {
+        use peace_web_support::WebStorageSpec;
+
+        // Written this way so that if we want to add a prefix, this would compile
+        // error.
+        let workspace_dir = match web_storage_spec {
+            WebStorageSpec::LocalStorage | WebStorageSpec::SessionStorage => {
                 PathBuf::from("/").into()
             }
         };

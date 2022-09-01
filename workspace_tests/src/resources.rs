@@ -1,4 +1,5 @@
 mod dir;
+mod internal;
 mod resources;
 mod state_diffs;
 mod state_diffs_mut;

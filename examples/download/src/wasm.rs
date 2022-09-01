@@ -2,7 +2,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use peace::{
     cfg::{profile, Profile},
-    rt_model::WorkspaceSpec,
+    rt_model::WebStorageSpec,
 };
 use url::Url;
 use wasm_bindgen::prelude::*;
@@ -41,7 +41,7 @@ pub async fn wasm_setup(url: String, name: String) -> Result<WorkspaceAndContent
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
     setup_workspace_and_graph(
-        &WorkspaceSpec::SessionStorage,
+        WebStorageSpec::SessionStorage,
         profile!("default"),
         Url::parse(&url).expect("Failed to parse URL."),
         std::path::PathBuf::from(name),

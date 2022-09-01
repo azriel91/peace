@@ -1,12 +1,11 @@
-use peace_resources::dir::{PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
+use crate::dir::{PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
 
 /// Directories used during `peace` execution.
 ///
-/// This is not part of the [`peace_resources`] crate as it is not a resource,
-/// but rather a grouping of directories where data is stored. This is created
-/// by [`WorkspaceDirsBuilder`].
-///
-/// [`WorkspaceDirsBuilder`]: crate::WorkspaceDirsBuilder
+/// This type itself is not inserted into `Resources`, but each of the member
+/// directories are individually inserted. This is created by
+/// `WorkspaceDirsBuilder` from either the `peace_rt_model` or
+/// `peace_web_support` crates.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WorkspaceDirs {
     /// Base directory of the workspace.

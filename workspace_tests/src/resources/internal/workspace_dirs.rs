@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
-use peace::{
-    resources::dir::{PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
-    rt_model::WorkspaceDirs,
+use peace::resources::{
+    dir::{PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
+    internal::WorkspaceDirs,
 };
 
 #[test]
