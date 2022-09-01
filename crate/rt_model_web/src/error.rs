@@ -6,6 +6,9 @@ pub enum Error {
     /// Failed to serialize states.
     #[error("Failed to serialize states.")]
     StatesSerialize(#[source] serde_yaml::Error),
+    /// Failed to serialize desired states.
+    #[error("Failed to serialize desired states.")]
+    StatesDesiredSerialize(#[source] serde_yaml::Error),
 
     // web_sys related errors
     /// Browser local storage unavailable.

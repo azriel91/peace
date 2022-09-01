@@ -2,10 +2,11 @@ use std::marker::PhantomData;
 
 use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
+    dir::FlowDir,
     resources_type_state::{SetUp, WithStatesDesired},
     Resources, StatesDesired, StatesDesiredMut,
 };
-use peace_rt_model::{CmdContext, ItemSpecGraph};
+use peace_rt_model::{CmdContext, Error, ItemSpecGraph, Storage};
 
 use crate::BUFFERED_FUTURES_MAX;
 
@@ -14,8 +15,11 @@ pub struct StateDesiredCmd<E>(PhantomData<E>);
 
 impl<E> StateDesiredCmd<E>
 where
-    E: std::error::Error,
+    E: std::error::Error + From<Error> + Send,
 {
+    /// File name of the states file.
+    pub const STATES_DESIRED_FILE: &'static str = "states_desired.yaml";
+
     /// Runs [`StateDesiredFnSpec`]`::`[`exec`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
@@ -39,6 +43,8 @@ where
         let states_desired = Self::exec_internal(item_spec_graph, &resources).await?;
 
         let resources = Resources::<WithStatesDesired>::from((resources, states_desired));
+        Self::serialize_internal(&resources).await?;
+
         let cmd_context = CmdContext::from((workspace, item_spec_graph, resources));
         Ok(cmd_context)
     }
@@ -56,7 +62,7 @@ where
     ) -> Result<StatesDesired, E> {
         let states_desired_mut = item_spec_graph
             .stream()
-            .map(Result::Ok)
+            .map(Result::<_, E>::Ok)
             .map_ok(|item_spec| async move {
                 let state_desired = item_spec.state_desired_fn_exec(resources).await?;
                 Ok((item_spec.id(), state_desired))
@@ -66,5 +72,45 @@ where
             .await?;
 
         Ok(StatesDesired::from(states_desired_mut))
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub(crate) async fn serialize_internal(
+        resources: &Resources<WithStatesDesired>,
+    ) -> Result<(), E> {
+        let flow_dir = resources.borrow::<FlowDir>();
+        let states_desired = resources.borrow::<StatesDesired>();
+        let storage = resources.borrow::<Storage>();
+        let states_desired_file_path = flow_dir.join(Self::STATES_DESIRED_FILE);
+
+        storage
+            .write_with_sync_api(
+                "states_desired_file_write".to_string(),
+                &states_desired_file_path,
+                |file| {
+                    serde_yaml::to_writer(file, &*states_desired)
+                        .map_err(Error::StatesDesiredSerialize)
+                },
+            )
+            .await?;
+
+        Ok(())
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub(crate) async fn serialize_internal(
+        resources: &Resources<WithStatesDesired>,
+    ) -> Result<(), E> {
+        let flow_dir = resources.borrow::<FlowDir>();
+        let states_desired = resources.borrow::<StatesDesired>();
+        let storage = resources.borrow::<Storage>();
+        let states_desired_file_path = flow_dir.join(Self::STATES_DESIRED_FILE);
+
+        let states_serialized =
+            serde_yaml::to_string(&*states_desired).map_err(Error::StatesDesiredSerialize)?;
+        let states_desired_file_path = states_desired_file_path.to_string_lossy();
+        storage.set_item(&states_desired_file_path, &states_serialized)?;
+
+        Ok(())
     }
 }

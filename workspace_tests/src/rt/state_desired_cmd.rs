@@ -1,6 +1,6 @@
 use peace::{
-    cfg::{flow_id, profile, FlowId, ItemSpec, Profile},
-    resources::StatesDesired,
+    cfg::{flow_id, profile, FlowId, ItemSpec, ItemSpecId, Profile},
+    resources::{dir::FlowDir, type_reg::untagged::TypeReg, StatesDesired},
     rt::StateDesiredCmd,
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -26,9 +26,25 @@ async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::erro
     let CmdContext { resources, .. } = StateDesiredCmd::exec(cmd_context).await?;
 
     let states_desired = resources.borrow::<StatesDesired>();
+    let vec_copy_desired_state = states_desired.get::<Vec<u8>, _>(&VecCopyItemSpec.id());
+    let states_desired_on_disk = {
+        let flow_dir = resources.borrow::<FlowDir>();
+        let states_file = flow_dir.join(StateDesiredCmd::<VecCopyError>::STATES_DESIRED_FILE);
+        let states_slice = std::fs::read(states_file)?;
+
+        let mut type_reg = TypeReg::<ItemSpecId>::new();
+        type_reg.register::<<VecCopyItemSpec as ItemSpec>::StateLogical>(VecCopyItemSpec.id());
+
+        let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
+        StatesDesired::from(type_reg.deserialize_map(deserializer)?)
+    };
     assert_eq!(
         Some(vec![0u8, 1, 2, 3, 4, 5, 6, 7]).as_ref(),
-        states_desired.get::<Vec<u8>, _>(&VecCopyItemSpec.id())
+        vec_copy_desired_state
+    );
+    assert_eq!(
+        states_desired.get::<Vec<u8>, _>(&VecCopyItemSpec.id()),
+        states_desired_on_disk.get::<Vec<u8>, _>(&VecCopyItemSpec.id())
     );
 
     Ok(())
