@@ -19,3 +19,4 @@ test = false
 [dependencies]
 syn = "1.0.98"
 quote = "1.0.20"
+proc-macro2 = "1.0.43"
