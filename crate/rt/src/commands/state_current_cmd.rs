@@ -41,7 +41,6 @@ where
         let states = Self::exec_internal(item_spec_graph, &resources).await?;
 
         let resources = Resources::<WithStates>::from((resources, states));
-        Self::serialize_internal(&resources).await?;
 
         let cmd_context = CmdContext::from((workspace, item_spec_graph, resources));
         Ok(cmd_context)
@@ -70,7 +69,10 @@ where
             .try_collect::<StatesMut>()
             .await?;
 
-        Ok(States::from(states_mut))
+        let states = States::from(states_mut);
+        Self::serialize_internal(resources, &states).await?;
+
+        Ok(states)
     }
 
     /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
@@ -100,15 +102,14 @@ where
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub(crate) async fn serialize_internal(resources: &Resources<WithStates>) -> Result<(), E> {
+    async fn serialize_internal(resources: &Resources<SetUp>, states: &States) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
-        let states = resources.borrow::<States>();
         let storage = resources.borrow::<Storage>();
         let states_file_path = flow_dir.join(Self::STATES_CURRENT_FILE);
 
         storage
             .write_with_sync_api("states_file_write".to_string(), &states_file_path, |file| {
-                serde_yaml::to_writer(file, &*states).map_err(Error::StatesSerialize)
+                serde_yaml::to_writer(file, states).map_err(Error::StatesSerialize)
             })
             .await?;
 
@@ -116,9 +117,8 @@ where
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub(crate) async fn serialize_internal(resources: &Resources<WithStates>) -> Result<(), E> {
+    async fn serialize_internal(resources: &Resources<SetUp>, states: &States) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
-        let states = resources.borrow::<States>();
         let storage = resources.borrow::<Storage>();
         let states_file_path = flow_dir.join(Self::STATES_CURRENT_FILE);
 

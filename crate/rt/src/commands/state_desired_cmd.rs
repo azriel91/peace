@@ -43,7 +43,6 @@ where
         let states_desired = Self::exec_internal(item_spec_graph, &resources).await?;
 
         let resources = Resources::<WithStatesDesired>::from((resources, states_desired));
-        Self::serialize_internal(&resources).await?;
 
         let cmd_context = CmdContext::from((workspace, item_spec_graph, resources));
         Ok(cmd_context)
@@ -71,15 +70,18 @@ where
             .try_collect::<StatesDesiredMut>()
             .await?;
 
-        Ok(StatesDesired::from(states_desired_mut))
+        let states_desired = StatesDesired::from(states_desired_mut);
+        Self::serialize_internal(resources, &states_desired).await?;
+
+        Ok(states_desired)
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) async fn serialize_internal(
-        resources: &Resources<WithStatesDesired>,
+        resources: &Resources<SetUp>,
+        states_desired: &StatesDesired,
     ) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
-        let states_desired = resources.borrow::<StatesDesired>();
         let storage = resources.borrow::<Storage>();
         let states_desired_file_path = flow_dir.join(Self::STATES_DESIRED_FILE);
 
@@ -88,7 +90,7 @@ where
                 "states_desired_file_write".to_string(),
                 &states_desired_file_path,
                 |file| {
-                    serde_yaml::to_writer(file, &*states_desired)
+                    serde_yaml::to_writer(file, states_desired)
                         .map_err(Error::StatesDesiredSerialize)
                 },
             )
@@ -99,15 +101,15 @@ where
 
     #[cfg(target_arch = "wasm32")]
     pub(crate) async fn serialize_internal(
-        resources: &Resources<WithStatesDesired>,
+        resources: &Resources<SetUp>,
+        states_desired: &StatesDesired,
     ) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
-        let states_desired = resources.borrow::<StatesDesired>();
         let storage = resources.borrow::<Storage>();
         let states_desired_file_path = flow_dir.join(Self::STATES_DESIRED_FILE);
 
         let states_serialized =
-            serde_yaml::to_string(&*states_desired).map_err(Error::StatesDesiredSerialize)?;
+            serde_yaml::to_string(states_desired).map_err(Error::StatesDesiredSerialize)?;
         let states_desired_file_path = states_desired_file_path.to_string_lossy();
         storage.set_item(&states_desired_file_path, &states_serialized)?;
 
