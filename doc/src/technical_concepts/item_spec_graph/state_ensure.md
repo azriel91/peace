@@ -167,7 +167,7 @@ Implementers must replace all *write* logic with mocks. These include:
 * File writes
 * Web requests
 
-It is also recommended that *read* requests to external services are minimized to decrease the time to return feedback to the user. If possible, move read request logic to `StateCurrentFnSpec` so that it is stored by the `FetchCmd`.
+It is also recommended that *read* requests to external services are minimized to decrease the time to return feedback to the user. If possible, move read request logic to `StateCurrentFnSpec` so that it is stored by the `StateDiscoverCmd`.
 
 
 ## Convergence / Non-Transactional Execution Recovery

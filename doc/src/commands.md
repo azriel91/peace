@@ -3,9 +3,9 @@
 Commands suitable to expose to users.
 
 1. `InitCmd`: Calls `setup` for each `ItemSpec`.
-2. `FetchCmd`: Fetches current and desired states.
+2. `StateDiscoverCmd`: Retrieves current and desired states.
 
-    *🚧 not yet implemented, states are fetched on each command invocation*
+    *🚧 not yet implemented, states are retrieved on each command invocation*
 
 3. `StateCurrentCmd`: Displays current state.
 4. `StateDesiredCmd`: Displays desired state.

@@ -1,7 +1,7 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, ItemSpecId, Profile, State},
     resources::{dir::FlowDir, type_reg::untagged::TypeReg, States, StatesDesired},
-    rt::{FetchCmd, StateCurrentCmd, StateDesiredCmd},
+    rt::{StateCurrentCmd, StateDesiredCmd, StateDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -23,7 +23,7 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
     };
     let cmd_context = CmdContext::init(&workspace, &graph).await?;
 
-    let CmdContext { resources, .. } = FetchCmd::exec(cmd_context).await?;
+    let CmdContext { resources, .. } = StateDiscoverCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<States>();
     let states_desired = resources.borrow::<StatesDesired>();
