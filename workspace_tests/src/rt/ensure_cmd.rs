@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{profile, ItemSpec, Profile, State},
+    cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
     resources::{States, StatesDesired, StatesEnsured},
     rt::EnsureCmd,
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
@@ -13,6 +13,7 @@ async fn contains_state_ensured_for_each_item_spec() -> Result<(), Box<dyn std::
     let workspace = Workspace::init(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
+        flow_id!("test_flow"),
     )
     .await?;
     let graph = {

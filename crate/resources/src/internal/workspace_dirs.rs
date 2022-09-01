@@ -1,4 +1,4 @@
-use crate::dir::{PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
+use crate::dir::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
 
 /// Directories used during `peace` execution.
 ///
@@ -16,6 +16,8 @@ pub struct WorkspaceDirs {
     profile_dir: ProfileDir,
     /// Directory to store profile executions' summaries.
     profile_history_dir: ProfileHistoryDir,
+    /// Directory to store data for the current flow.
+    flow_dir: FlowDir,
 }
 
 impl WorkspaceDirs {
@@ -25,44 +27,66 @@ impl WorkspaceDirs {
         peace_dir: PeaceDir,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
+        flow_dir: FlowDir,
     ) -> Self {
         Self {
             workspace_dir,
             peace_dir,
             profile_dir,
             profile_history_dir,
+            flow_dir,
         }
     }
 
     /// Returns the individual workspace directories.
-    pub fn into_inner(self) -> (WorkspaceDir, PeaceDir, ProfileDir, ProfileHistoryDir) {
+    pub fn into_inner(
+        self,
+    ) -> (
+        WorkspaceDir,
+        PeaceDir,
+        ProfileDir,
+        ProfileHistoryDir,
+        FlowDir,
+    ) {
         let Self {
             workspace_dir,
             peace_dir,
             profile_dir,
             profile_history_dir,
+            flow_dir,
         } = self;
 
-        (workspace_dir, peace_dir, profile_dir, profile_history_dir)
+        (
+            workspace_dir,
+            peace_dir,
+            profile_dir,
+            profile_history_dir,
+            flow_dir,
+        )
     }
 
-    /// Returns a reference to the workspace dir.
+    /// Returns a reference to the workspace directory.
     pub fn workspace_dir(&self) -> &WorkspaceDir {
         &self.workspace_dir
     }
 
-    /// Returns a reference to the `.peace` dir.
+    /// Returns a reference to the `.peace` directory.
     pub fn peace_dir(&self) -> &PeaceDir {
         &self.peace_dir
     }
 
-    /// Returns a reference to the profile dir.
+    /// Returns a reference to the profile directory.
     pub fn profile_dir(&self) -> &ProfileDir {
         &self.profile_dir
     }
 
-    /// Returns a reference to the profile history dir.
+    /// Returns a reference to the profile history directory.
     pub fn profile_history_dir(&self) -> &ProfileHistoryDir {
         &self.profile_history_dir
+    }
+
+    /// Returns a reference to the flow directory.
+    pub fn flow_dir(&self) -> &FlowDir {
+        &self.flow_dir
     }
 }

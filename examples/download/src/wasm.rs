@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::PathBuf};
 
 use peace::{
-    cfg::{profile, Profile},
+    cfg::{flow_id, profile, FlowId, Profile},
     rt_model::WorkspaceSpec,
 };
 use url::Url;
@@ -43,6 +43,7 @@ pub async fn wasm_setup(url: String, name: String) -> Result<WorkspaceAndContent
     setup_workspace_and_graph(
         WorkspaceSpec::SessionStorage,
         profile!("default"),
+        flow_id!("file"),
         Url::parse(&url).expect("Failed to parse URL."),
         std::path::PathBuf::from(name),
     )

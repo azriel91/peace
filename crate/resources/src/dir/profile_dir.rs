@@ -14,7 +14,7 @@ use crate::dir::PeaceDir;
 /// application credentials stored in `~/${app}/credentials`.
 ///
 /// See `ProfileDir::from<(&PeaceDir, &Profile)>` if you want to
-/// construct a `ProfileDir` with the default `$peace_dir/.peace` name.
+/// construct a `ProfileDir` with the default `$peace_dir/.peace/$profile` name.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ProfileDir(PathBuf);
 

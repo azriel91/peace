@@ -70,15 +70,18 @@ where
 
     /// Inserts workspace directory resources into the `Resources` map.
     fn insert_workspace_resources(workspace: &Workspace, resources: &mut Resources<Empty>) {
-        let (workspace_dirs, profile, storage) = workspace.clone().into_inner();
-        let (workspace_dir, peace_dir, profile_dir, profile_history_dir) =
+        let (workspace_dirs, profile, flow_id, storage) = workspace.clone().into_inner();
+        let (workspace_dir, peace_dir, profile_dir, profile_history_dir, flow_dir) =
             workspace_dirs.into_inner();
 
         resources.insert(workspace_dir);
         resources.insert(peace_dir);
         resources.insert(profile_dir);
         resources.insert(profile_history_dir);
+        resources.insert(flow_dir);
+
         resources.insert(profile);
+        resources.insert(flow_id);
         resources.insert(storage);
     }
 }

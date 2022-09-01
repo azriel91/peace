@@ -1,7 +1,7 @@
 use std::{iter, path::Path};
 
 use futures::{stream, StreamExt, TryStreamExt};
-use peace_core::Profile;
+use peace_core::{FlowId, Profile};
 use peace_resources::internal::WorkspaceDirs;
 
 use crate::{Error, NativeStorage, WorkspaceDirsBuilder, WorkspaceSpec};
@@ -13,6 +13,8 @@ pub struct Workspace {
     dirs: WorkspaceDirs,
     /// Workspace profile used.
     profile: Profile,
+    /// Workspace profile used.
+    flow_id: FlowId,
     /// File system storage access.
     storage: NativeStorage,
 }
@@ -23,28 +25,35 @@ impl Workspace {
     /// # Parameters
     ///
     /// * `workspace_spec`: Defines how to discover the workspace.
-    /// * `profile`: The profile that execution is .
-    pub async fn init(workspace_spec: WorkspaceSpec, profile: Profile) -> Result<Workspace, Error> {
-        let dirs = WorkspaceDirsBuilder::build(workspace_spec, &profile)?;
+    /// * `profile`: The profile / namespace that the execution is flow.
+    /// * `flow_id`: ID of the flow that is being executed.
+    pub async fn init(
+        workspace_spec: WorkspaceSpec,
+        profile: Profile,
+        flow_id: FlowId,
+    ) -> Result<Workspace, Error> {
+        let dirs = WorkspaceDirsBuilder::build(workspace_spec, &profile, &flow_id)?;
         Self::initialize_directories(&dirs).await?;
 
         let storage = NativeStorage;
         Ok(Workspace {
             dirs,
             profile,
+            flow_id,
             storage,
         })
     }
 
     /// Returns the inner data.
-    pub fn into_inner(self) -> (WorkspaceDirs, Profile, NativeStorage) {
+    pub fn into_inner(self) -> (WorkspaceDirs, Profile, FlowId, NativeStorage) {
         let Self {
             dirs,
             profile,
+            flow_id,
             storage,
         } = self;
 
-        (dirs, profile, storage)
+        (dirs, profile, flow_id, storage)
     }
 
     /// Returns a reference to the workspace's directories.
@@ -55,6 +64,11 @@ impl Workspace {
     /// Returns a reference to the workspace's profile.
     pub fn profile(&self) -> &Profile {
         &self.profile
+    }
+
+    /// Returns a reference to the workspace's flow_id.
+    pub fn flow_id(&self) -> &FlowId {
+        &self.flow_id
     }
 
     /// Returns a reference to the workspace's storage.
@@ -68,7 +82,8 @@ impl Workspace {
             .chain(iter::once(AsRef::<Path>::as_ref(dirs.profile_dir())))
             .chain(iter::once(AsRef::<Path>::as_ref(
                 dirs.profile_history_dir(),
-            )));
+            )))
+            .chain(iter::once(AsRef::<Path>::as_ref(dirs.flow_dir())));
 
         stream::iter(dirs)
             .map(Result::<_, Error>::Ok)

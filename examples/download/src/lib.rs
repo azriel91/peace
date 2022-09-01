@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use peace::{
-    cfg::Profile,
+    cfg::{FlowId, Profile},
     resources::{
         resources_type_state::{
             Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesDesired,
@@ -59,10 +59,11 @@ pub struct WorkspaceAndGraph {
 pub async fn setup_workspace_and_graph(
     workspace_spec: WorkspaceSpec,
     profile: Profile,
+    flow_id: FlowId,
     url: Url,
     dest: PathBuf,
 ) -> Result<WorkspaceAndGraph, DownloadError> {
-    let workspace = Workspace::init(workspace_spec, profile).await?;
+    let workspace = Workspace::init(workspace_spec, profile, flow_id).await?;
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
         item_spec_graph_builder.add_fn(DownloadItemSpec::new(url, dest).into());
@@ -81,10 +82,11 @@ pub async fn setup_workspace_and_graph(
 pub async fn setup_workspace_and_graph(
     workspace_spec: WorkspaceSpec,
     profile: Profile,
+    flow_id: FlowId,
     url: Url,
     dest: PathBuf,
 ) -> Result<WorkspaceAndGraph, DownloadError> {
-    let workspace = Workspace::init(workspace_spec, profile).await?;
+    let workspace = Workspace::init(workspace_spec, profile, flow_id).await?;
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
         item_spec_graph_builder.add_fn(DownloadItemSpec::new(url, dest).into());

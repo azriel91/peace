@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
 use peace::{
-    cfg::{profile, Profile},
-    resources::dir::{PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
-    rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    cfg::{flow_id, profile, FlowId, Profile},
+    resources::dir::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir},
+    rt_model::{CmdContext, ItemSpecGraphBuilder, Storage, Workspace, WorkspaceSpec},
 };
 
 use crate::{VecA, VecB, VecCopyItemSpec};
@@ -15,6 +15,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
     let workspace = Workspace::init(
         WorkspaceSpec::Path(tempdir.path().into()),
         profile!("test_profile"),
+        flow_id!("test_flow"),
     )
     .await?;
     let item_spec_graph = {
@@ -29,7 +30,16 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
     assert!(resources.try_borrow::<ProfileDir>().is_ok());
     assert!(resources.try_borrow::<ProfileHistoryDir>().is_ok());
-    assert!(resources.try_borrow::<WorkspaceDir>().is_ok());
+    assert!(resources.try_borrow::<FlowDir>().is_ok());
+    assert_eq!(
+        Ok(profile!("test_profile")).as_ref(),
+        resources.try_borrow::<Profile>().as_deref()
+    );
+    assert_eq!(
+        Ok(flow_id!("test_flow")).as_ref(),
+        resources.try_borrow::<FlowId>().as_deref()
+    );
+    assert!(resources.try_borrow::<Storage>().is_ok());
     Ok(())
 }
 
@@ -39,6 +49,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
     let workspace = Workspace::init(
         WorkspaceSpec::Path(PathBuf::from(".")),
         profile!("test_profile"),
+        flow_id!("test_flow"),
     )
     .await?;
     let item_spec_graph = {
@@ -53,7 +64,16 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
     assert!(resources.try_borrow::<ProfileDir>().is_ok());
     assert!(resources.try_borrow::<ProfileHistoryDir>().is_ok());
-    assert!(resources.try_borrow::<WorkspaceDir>().is_ok());
+    assert!(resources.try_borrow::<FlowDir>().is_ok());
+    assert_eq!(
+        Ok(profile!("test_profile")).as_ref(),
+        resources.try_borrow::<Profile>().as_deref()
+    );
+    assert_eq!(
+        Ok(flow_id!("test_flow")).as_ref(),
+        resources.try_borrow::<FlowId>().as_deref()
+    );
+    assert!(resources.try_borrow::<Storage>().is_ok());
     Ok(())
 }
 
@@ -69,6 +89,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
     let workspace = Workspace::init(
         WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
         profile!("test_profile"),
+        flow_id!("test_flow"),
     )
     .await?;
     let item_spec_graph = {
@@ -83,7 +104,16 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
     assert!(resources.try_borrow::<ProfileDir>().is_ok());
     assert!(resources.try_borrow::<ProfileHistoryDir>().is_ok());
-    assert!(resources.try_borrow::<WorkspaceDir>().is_ok());
+    assert!(resources.try_borrow::<FlowDir>().is_ok());
+    assert_eq!(
+        Ok(profile!("test_profile")).as_ref(),
+        resources.try_borrow::<Profile>().as_deref()
+    );
+    assert_eq!(
+        Ok(flow_id!("test_flow")).as_ref(),
+        resources.try_borrow::<FlowId>().as_deref()
+    );
+    assert!(resources.try_borrow::<Storage>().is_ok());
     Ok(())
 }
 
@@ -93,6 +123,7 @@ async fn init_runs_graph_setup() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = Workspace::init(
         WorkspaceSpec::Path(tempdir.path().into()),
         profile!("test_profile"),
+        flow_id!("test_flow"),
     )
     .await?;
     let item_spec_graph = {

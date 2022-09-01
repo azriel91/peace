@@ -7,16 +7,18 @@
 //! ```bash
 //! WorkspaceDir
 //! |- PeaceDir
-//!     |- ProfileDir # ("profile_name")
+//!     |- ProfileDir  # "profile_name", multiple
 //!         |- HistoryDir
 //!         |   |- CmdExecution0
 //!         |   |- ..
 //!         |   |- CmdExecutionN
 //!         |
-//!         |- StatesMeta
-//!         |- StatesCurrent
-//!         |- StatesDesired
 //!         |- ProfileInit
+//!         |
+//!         |- FlowDir  # "flow_name", multiple
+//!             |- StatesMeta
+//!             |- StatesCurrent
+//!             |- StatesDesired
 //! ```
 //!
 //! Concrete folder structure example:
@@ -27,13 +29,15 @@
 //!     |- profile1 / main / default
 //!     |   |- .history
 //!     |   |   |- 00000000_2022-08-21T20_48_02_init.yaml
-//!     |   |   |- 00000001_2022-08-21T20_48_07_fetch.yaml
-//!     |   |   |- 00000002_2022-08-21T20_50_32_ensure_dry.yaml
-//!     |   |   |- 00000003_2022-08-21T20_50_43_ensure.yaml
-//!     |   |   |- 00000004_2022-08-22T08_16_09_clean_dry.yaml
-//!     |   |   |- 00000005_2022-08-22T08_16_29_clean.yaml
+//!     |   |   |- 00000001_2022-08-21T20_48_07_dev_env_discover.yaml
+//!     |   |   |- 00000002_2022-08-21T20_50_32_dev_env_deploy.yaml  # dry
+//!     |   |   |- 00000003_2022-08-21T20_50_43_dev_env_deploy.yaml
+//!     |   |   |- 00000004_2022-08-22T08_16_09_dev_env_clean.yaml   # dry
+//!     |   |   |- 00000005_2022-08-22T08_16_29_dev_env_clean.yaml
+//!     |   |   |- 00000006_2022-08-23T13_02_14_artifact_discover.yaml
+//!     |   |   |- 00000007_2022-08-23T13_07_31_artifact_publish.yaml
 //!     |   |
-//!     |   |- .meta.yaml  # Store the last fetched time so we can inform the user.
+//!     |   |- .meta.yaml  # Store the last discovered time so we can inform the user.
 //!     |   |              # Should time be stored per item spec, or per invocation?
 //!     |   |
 //!     |   |- init.yaml  # Parameters used to initialize this profile
@@ -41,13 +45,18 @@
 //!     |   |             # if they version control it, they can rediscover the
 //!     |   |             # states from previous inits, and clean them up.
 //!     |   |
-//!     |   |- states.yaml
-//!     |   |- states_desired.yaml
+//!     |   |- dev_env  # flow name
+//!     |   |   |- states.yaml
+//!     |   |   |- states_desired.yaml
+//!     |   |
+//!     |   |- artifact
+//!     |       |- states.yaml
+//!     |       |- states_desired.yaml
 //!     |
 //!     |- profile2
 //!         |- .history
 //!         |   |- 00000000_2022-08-21T20_48_02_init.yaml
-//!         |   |- 00000001_2022-08-21T20_48_07_fetch.yaml
+//!         |   |- 00000001_2022-08-21T20_48_07_discover.yaml
 //!         |
 //!         |- .meta.yaml
 //!         |- init.yaml
@@ -56,10 +65,11 @@
 //! ```
 
 pub use self::{
-    peace_dir::PeaceDir, profile_dir::ProfileDir, profile_history_dir::ProfileHistoryDir,
-    workspace_dir::WorkspaceDir,
+    flow_dir::FlowDir, peace_dir::PeaceDir, profile_dir::ProfileDir,
+    profile_history_dir::ProfileHistoryDir, workspace_dir::WorkspaceDir,
 };
 
+mod flow_dir;
 mod peace_dir;
 mod profile_dir;
 mod profile_history_dir;

@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
-    dir::ProfileDir,
+    dir::FlowDir,
     resources_type_state::{SetUp, WithStateDiffs, WithStates},
     Resources, States, StatesMut,
 };
@@ -23,7 +23,7 @@ where
     /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
-    /// [`States`], and will be serialized to `{profile_dir}/states.yaml`.
+    /// [`States`], and will be serialized to `{flow_dir}/states.yaml`.
     ///
     /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
     /// `ItemSpec`, the predecessor should insert a copy / clone of their state
@@ -101,10 +101,10 @@ where
 
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) async fn serialize_internal(resources: &Resources<WithStates>) -> Result<(), E> {
-        let profile_dir = resources.borrow::<ProfileDir>();
+        let flow_dir = resources.borrow::<FlowDir>();
         let states = resources.borrow::<States>();
         let storage = resources.borrow::<Storage>();
-        let states_file_path = profile_dir.join(Self::STATES_CURRENT_FILE);
+        let states_file_path = flow_dir.join(Self::STATES_CURRENT_FILE);
 
         storage
             .write_with_sync_api("states_file_write".to_string(), &states_file_path, |file| {
@@ -117,10 +117,10 @@ where
 
     #[cfg(target_arch = "wasm32")]
     pub(crate) async fn serialize_internal(resources: &Resources<WithStates>) -> Result<(), E> {
-        let profile_dir = resources.borrow::<ProfileDir>();
+        let flow_dir = resources.borrow::<FlowDir>();
         let states = resources.borrow::<States>();
         let storage = resources.borrow::<Storage>();
-        let states_file_path = profile_dir.join(Self::STATES_CURRENT_FILE);
+        let states_file_path = flow_dir.join(Self::STATES_CURRENT_FILE);
 
         let states_serialized = serde_yaml::to_string(&*states).map_err(Error::StatesSerialize)?;
         let states_file_path = states_file_path.to_string_lossy();

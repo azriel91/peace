@@ -3,9 +3,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use peace_core::Profile;
+use peace_core::{FlowId, Profile};
 use peace_resources::{
-    dir::{PeaceDir, ProfileDir, ProfileHistoryDir},
+    dir::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir},
     internal::WorkspaceDirs,
 };
 
@@ -17,7 +17,11 @@ pub struct WorkspaceDirsBuilder;
 
 impl WorkspaceDirsBuilder {
     /// Computes [`WorkspaceDirs`] paths.
-    pub fn build(workspace_spec: WorkspaceSpec, profile: &Profile) -> Result<WorkspaceDirs, Error> {
+    pub fn build(
+        workspace_spec: WorkspaceSpec,
+        profile: &Profile,
+        flow_id: &FlowId,
+    ) -> Result<WorkspaceDirs, Error> {
         use peace_resources::dir::WorkspaceDir;
 
         let workspace_dir = {
@@ -41,12 +45,14 @@ impl WorkspaceDirsBuilder {
         let peace_dir = PeaceDir::from(&workspace_dir);
         let profile_dir = ProfileDir::from((&peace_dir, profile));
         let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
+        let flow_dir = FlowDir::from((&profile_dir, flow_id));
 
         Ok(WorkspaceDirs::new(
             workspace_dir,
             peace_dir,
             profile_dir,
             profile_history_dir,
+            flow_dir,
         ))
     }
 

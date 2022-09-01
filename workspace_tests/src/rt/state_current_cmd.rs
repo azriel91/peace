@@ -1,6 +1,6 @@
 use peace::{
-    cfg::{profile, ItemSpec, ItemSpecId, Profile, State},
-    resources::{dir::ProfileDir, type_reg::untagged::TypeReg, States},
+    cfg::{flow_id, profile, FlowId, ItemSpec, ItemSpecId, Profile, State},
+    resources::{dir::FlowDir, type_reg::untagged::TypeReg, States},
     rt::StateCurrentCmd,
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -13,6 +13,7 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
     let workspace = Workspace::init(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
+        flow_id!("test_flow"),
     )
     .await?;
     let graph = {
@@ -27,8 +28,8 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
     let states = resources.borrow::<States>();
     let vec_copy_state = states.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id());
     let states_on_disk = {
-        let profile_dir = resources.borrow::<ProfileDir>();
-        let states_file = profile_dir.join(StateCurrentCmd::<VecCopyError>::STATES_CURRENT_FILE);
+        let flow_dir = resources.borrow::<FlowDir>();
+        let states_file = flow_dir.join(StateCurrentCmd::<VecCopyError>::STATES_CURRENT_FILE);
         let states_slice = std::fs::read(states_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId>::new();

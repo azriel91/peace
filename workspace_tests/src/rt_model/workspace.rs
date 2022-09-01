@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use peace::{
-    cfg::{profile, Profile},
+    cfg::{flow_id, profile, FlowId, Profile},
     rt_model::{Workspace, WorkspaceSpec},
 };
 
@@ -12,6 +12,7 @@ async fn init_initializes_dirs_using_profile_and_physically_creates_dirs()
     let workspace = Workspace::init(
         WorkspaceSpec::Path(tempdir.path().into()),
         profile!("test_profile"),
+        flow_id!("test_flow"),
     )
     .await?;
     let workspace_dirs = workspace.dirs();

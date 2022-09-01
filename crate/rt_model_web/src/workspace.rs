@@ -1,6 +1,6 @@
 use std::{iter, path::Path};
 
-use peace_core::Profile;
+use peace_core::{FlowId, Profile};
 use peace_resources::internal::WorkspaceDirs;
 
 use crate::{Error, WebStorage, WorkspaceDirsBuilder, WorkspaceSpec};
@@ -12,6 +12,8 @@ pub struct Workspace {
     dirs: WorkspaceDirs,
     /// Workspace profile used.
     profile: Profile,
+    /// Workspace profile used.
+    flow_id: FlowId,
     /// Wrapper to retrieve `web_sys::Storage` on demand.
     storage: WebStorage,
 }
@@ -22,27 +24,34 @@ impl Workspace {
     /// # Parameters
     ///
     /// * `workspace_spec`: Defines how to discover the workspace.
-    /// * `profile`: The profile that execution is .
-    pub async fn init(workspace_spec: WorkspaceSpec, profile: Profile) -> Result<Workspace, Error> {
-        let dirs = WorkspaceDirsBuilder::build(workspace_spec, &profile)?;
+    /// * `profile`: The profile / namespace that the execution is flow.
+    /// * `flow_id`: ID of the flow that is being executed.
+    pub async fn init(
+        workspace_spec: WorkspaceSpec,
+        profile: Profile,
+        flow_id: FlowId,
+    ) -> Result<Workspace, Error> {
+        let dirs = WorkspaceDirsBuilder::build(workspace_spec, &profile, &flow_id)?;
         let storage = Self::initialize_storage(workspace_spec, &dirs).await?;
 
         Ok(Workspace {
             dirs,
             profile,
+            flow_id,
             storage,
         })
     }
 
     /// Returns the inner data.
-    pub fn into_inner(self) -> (WorkspaceDirs, Profile, WebStorage) {
+    pub fn into_inner(self) -> (WorkspaceDirs, Profile, FlowId, WebStorage) {
         let Self {
             dirs,
             profile,
+            flow_id,
             storage,
         } = self;
 
-        (dirs, profile, storage)
+        (dirs, profile, flow_id, storage)
     }
 
     /// Returns a reference to the workspace's directories.
@@ -53,6 +62,11 @@ impl Workspace {
     /// Returns a reference to the workspace's profile.
     pub fn profile(&self) -> &Profile {
         &self.profile
+    }
+
+    /// Returns a reference to the workspace's flow ID.
+    pub fn flow_id(&self) -> &FlowId {
+        &self.flow_id
     }
 
     /// Returns the storage used for this workspace.
@@ -69,7 +83,8 @@ impl Workspace {
             .chain(iter::once(AsRef::<Path>::as_ref(dirs.profile_dir())))
             .chain(iter::once(AsRef::<Path>::as_ref(
                 dirs.profile_history_dir(),
-            )));
+            )))
+            .chain(iter::once(AsRef::<Path>::as_ref(dirs.flow_dir())));
 
         let workspace_storage = WebStorage::new(workspace_spec);
         workspace_storage.iter_with_storage(dirs, |storage, dir| {
