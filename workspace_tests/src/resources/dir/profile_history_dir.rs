@@ -7,14 +7,17 @@ use peace::{
 
 #[test]
 pub fn debug() {
-    let profile_history_dir = ProfileDir::from(Path::new(".").to_path_buf());
+    let profile_history_dir = ProfileHistoryDir::from(Path::new(".").to_path_buf());
 
-    assert_eq!(r#"ProfileDir(".")"#, format!("{profile_history_dir:?}"));
+    assert_eq!(
+        r#"ProfileHistoryDir(".")"#,
+        format!("{profile_history_dir:?}")
+    );
 }
 
 #[test]
 pub fn partial_eq() {
-    let profile_history_dir_0 = ProfileDir::from(Path::new(".").to_path_buf());
+    let profile_history_dir_0 = ProfileHistoryDir::from(Path::new(".").to_path_buf());
     let profile_history_dir_1 = profile_history_dir_0.clone();
 
     assert_eq!(profile_history_dir_0, profile_history_dir_1);
@@ -22,7 +25,7 @@ pub fn partial_eq() {
 
 #[test]
 pub fn from_path_buf() {
-    let profile_history_dir = ProfileDir::from(Path::new(".").to_path_buf());
+    let profile_history_dir = ProfileHistoryDir::from(Path::new(".").to_path_buf());
 
     assert_eq!(Path::new("."), &*profile_history_dir);
 }
@@ -42,7 +45,7 @@ pub fn from_profile_dir_relative() {
 
 #[test]
 pub fn into_inner_returns_path_buf() {
-    let profile_history_dir = ProfileDir::new(Path::new(".").to_path_buf());
+    let profile_history_dir = ProfileHistoryDir::new(Path::new(".").to_path_buf());
 
     assert_eq!(
         Path::new(".").to_path_buf(),
@@ -52,20 +55,20 @@ pub fn into_inner_returns_path_buf() {
 
 #[test]
 pub fn as_ref_os_str() {
-    let profile_history_dir = ProfileDir::new(Path::new(".").to_path_buf());
+    let profile_history_dir = ProfileHistoryDir::new(Path::new(".").to_path_buf());
 
     assert_eq!(
         OsStr::new("."),
-        <ProfileDir as AsRef<OsStr>>::as_ref(&profile_history_dir)
+        <ProfileHistoryDir as AsRef<OsStr>>::as_ref(&profile_history_dir)
     );
 }
 
 #[test]
 pub fn as_ref_path() {
-    let profile_history_dir = ProfileDir::new(Path::new(".").to_path_buf());
+    let profile_history_dir = ProfileHistoryDir::new(Path::new(".").to_path_buf());
 
     assert_eq!(
         Path::new("."),
-        <ProfileDir as AsRef<Path>>::as_ref(&profile_history_dir)
+        <ProfileHistoryDir as AsRef<Path>>::as_ref(&profile_history_dir)
     );
 }

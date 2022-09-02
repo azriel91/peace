@@ -42,8 +42,8 @@ where
     pub async fn exec(
         cmd_context: CmdContext<'_, SetUp, E>,
     ) -> Result<CmdContext<WithStateDiffs, E>, E> {
-        let (workspace, item_spec_graph, resources) = cmd_context.into_inner();
-        let states = StateCurrentCmd::exec_internal(item_spec_graph, &resources).await?;
+        let (workspace, item_spec_graph, mut resources) = cmd_context.into_inner();
+        let states = StateCurrentCmd::exec_internal(item_spec_graph, &mut resources).await?;
         let states_desired = StateDesiredCmd::exec_internal(item_spec_graph, &resources).await?;
 
         let resources =

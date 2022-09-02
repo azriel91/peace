@@ -8,14 +8,11 @@ use crate::paths::ProfileDir;
 ///
 /// Typically `$workspace_dir/.peace/$profile/$flow_id`.
 ///
-/// This is the directory that contains all information produced and used during
-/// a `peace` tool invocation. Exceptions include authentication information
-/// stored in their respective directories on the file system, such as
-/// application credentials stored in `~/${app}/credentials`.
+/// This is the directory that contains the information produced and used during
+/// a `peace` tool invocation for a particular flow.
 ///
-/// See `FlowDir::from<(&ProfileDir, &FlowId)>` if you want to
-/// construct a `FlowDir` with the default `$peace_dir/.peace/$profile/$flow_id`
-/// name.
+/// See `FlowDir::from<(&ProfileDir, &FlowId)>` if you want to construct a
+/// `FlowDir` with the conventional `$profile_dir/$flow_id` path.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FlowDir(PathBuf);
 
@@ -23,8 +20,7 @@ crate::paths::pathbuf_newtype!(FlowDir);
 
 impl From<(&ProfileDir, &FlowId)> for FlowDir {
     fn from((peace_dir, flow_id): (&ProfileDir, &FlowId)) -> Self {
-        let mut path = peace_dir.to_path_buf();
-        path.push(flow_id.as_ref());
+        let path = peace_dir.join(flow_id.as_ref());
 
         Self(path)
     }

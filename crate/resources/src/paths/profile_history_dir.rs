@@ -8,9 +8,8 @@ use crate::paths::ProfileDir;
 ///
 /// This directory contains significant command execution summaries.
 ///
-/// See `ProfileHistoryDir::from<&ProfileDir>` if you want to
-/// construct a `ProfileHistoryDir` with the default
-/// `$peace_dir/.peace/$profile/.history` name.
+/// See `ProfileHistoryDir::from<&ProfileDir>` if you want to construct a
+/// `ProfileHistoryDir` with the conventional `$profile_dir/.history` path.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ProfileHistoryDir(PathBuf);
 
@@ -18,8 +17,7 @@ crate::paths::pathbuf_newtype!(ProfileHistoryDir);
 
 impl From<&ProfileDir> for ProfileHistoryDir {
     fn from(profile_dir: &ProfileDir) -> Self {
-        let mut path = profile_dir.to_path_buf();
-        path.push(".history");
+        let path = profile_dir.join(".history");
 
         Self(path)
     }

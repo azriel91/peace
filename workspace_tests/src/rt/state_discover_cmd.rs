@@ -1,11 +1,11 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, ItemSpecId, Profile, State},
     resources::{
-        paths::FlowDir,
+        paths::{FlowDir, StatesCurrentFile},
         states::{StatesCurrent, StatesDesired},
         type_reg::untagged::TypeReg,
     },
-    rt::{StateCurrentCmd, StateDesiredCmd, StateDiscoverCmd},
+    rt::{StateDesiredCmd, StateDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -33,9 +33,8 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
     let states_desired = resources.borrow::<StatesDesired>();
     let vec_copy_state = states.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id());
     let states_on_disk = {
-        let flow_dir = resources.borrow::<FlowDir>();
-        let states_file = flow_dir.join(StateCurrentCmd::<VecCopyError>::STATES_CURRENT_FILE);
-        let states_slice = std::fs::read(states_file)?;
+        let states_current_file = resources.borrow::<StatesCurrentFile>();
+        let states_slice = std::fs::read(&*states_current_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId>::new();
         type_reg.register::<State<Vec<u8>, ()>>(VecCopyItemSpec.id());
@@ -46,8 +45,9 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
     let vec_copy_desired_state = states_desired.get::<Vec<u8>, _>(&VecCopyItemSpec.id());
     let states_desired_on_disk = {
         let flow_dir = resources.borrow::<FlowDir>();
-        let states_file = flow_dir.join(StateDesiredCmd::<VecCopyError>::STATES_DESIRED_FILE);
-        let states_slice = std::fs::read(states_file)?;
+        let states_desired_file =
+            flow_dir.join(StateDesiredCmd::<VecCopyError>::STATES_DESIRED_FILE);
+        let states_slice = std::fs::read(states_desired_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId>::new();
         type_reg.register::<<VecCopyItemSpec as ItemSpec>::StateLogical>(VecCopyItemSpec.id());

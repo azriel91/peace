@@ -6,8 +6,8 @@ use crate::paths::WorkspaceDir;
 ///
 /// Typically `$workspace_dir/.peace`.
 ///
-/// See `PeaceDir::from<&WorkspaceDir>` if you want to construct a
-/// `PeaceDir` with the default `$workspace_dir/.peace` name.
+/// See `PeaceDir::from<&WorkspaceDir>` if you want to construct a `PeaceDir`
+/// with the conventional `$workspace_dir/.peace` path.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PeaceDir(PathBuf);
 
@@ -20,8 +20,7 @@ impl PeaceDir {
 
 impl From<&WorkspaceDir> for PeaceDir {
     fn from(workspace_dir: &WorkspaceDir) -> Self {
-        let mut path = workspace_dir.to_path_buf();
-        path.push(PeaceDir::NAME);
+        let path = workspace_dir.join(PeaceDir::NAME);
 
         Self(path)
     }
