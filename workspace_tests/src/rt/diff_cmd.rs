@@ -1,7 +1,7 @@
 use diff::{Diff, VecDiff, VecDiffType};
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
-    resources::{StateDiffs, States, StatesDesired},
+    resources::{StateDiffs, StatesCurrent, StatesDesired},
     rt::DiffCmd,
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -27,7 +27,7 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
 
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
-    let states = resources.borrow::<States>();
+    let states = resources.borrow::<StatesCurrent>();
     let states_desired = resources.borrow::<StatesDesired>();
     let state_diffs = resources.borrow::<StateDiffs>();
     let vec_diff = state_diffs.get::<<Vec<u8> as Diff>::Repr, _>(&VecCopyItemSpec.id());
@@ -74,7 +74,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
 
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
-    let states = resources.borrow::<States>();
+    let states = resources.borrow::<StatesCurrent>();
     let states_desired = resources.borrow::<StatesDesired>();
     let state_diffs = resources.borrow::<StateDiffs>();
     let vec_diff = state_diffs.get::<<Vec<u8> as Diff>::Repr, _>(&VecCopyItemSpec.id());

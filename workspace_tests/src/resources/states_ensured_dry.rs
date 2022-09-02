@@ -3,7 +3,7 @@ use peace::{
     resources::{
         resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
         type_reg::untagged::TypeMap,
-        Resources, StateDiffs, States, StatesDesired, StatesEnsuredDry, StatesMut,
+        Resources, StateDiffs, StatesCurrent, StatesDesired, StatesEnsuredDry, StatesMut,
     },
 };
 
@@ -47,7 +47,7 @@ fn from_states_and_resources_with_state_diffs() {
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
     let resources_with_states_now_and_desired = Resources::<WithStatesCurrentAndDesired>::from((
         resources_set_up,
-        States::new(),
+        StatesCurrent::new(),
         StatesDesired::new(),
     ));
     let resources_with_state_diffs = Resources::<WithStateDiffs>::from((
@@ -55,7 +55,8 @@ fn from_states_and_resources_with_state_diffs() {
         StateDiffs::new(),
     ));
 
-    let _states_ensured_dry = StatesEnsuredDry::from((States::new(), &resources_with_state_diffs));
+    let _states_ensured_dry =
+        StatesEnsuredDry::from((StatesCurrent::new(), &resources_with_state_diffs));
 }
 
 #[test]
@@ -73,7 +74,7 @@ fn test_states_ensured_dry() -> StatesEnsuredDry {
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
     let resources_with_states_now_and_desired = Resources::<WithStatesCurrentAndDesired>::from((
         resources_set_up,
-        States::new(),
+        StatesCurrent::new(),
         StatesDesired::new(),
     ));
     let resources_with_state_diffs = Resources::<WithStateDiffs>::from((
@@ -83,7 +84,7 @@ fn test_states_ensured_dry() -> StatesEnsuredDry {
 
     let mut states_mut = StatesMut::new();
     states_mut.insert(item_spec_id!("key"), 123);
-    let states = States::from(states_mut);
+    let states = StatesCurrent::from(states_mut);
 
     StatesEnsuredDry::from((states, &resources_with_state_diffs))
 }

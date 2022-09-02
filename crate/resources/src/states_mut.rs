@@ -10,15 +10,15 @@ use type_reg::untagged::{DataType, TypeMap};
 ///
 /// * In `StateCurrentFnSpec`, you should reference [`StatesRw`], which allows
 ///   mutable access to the underlying states.
-/// * In `EnsureOpSpec`, you should reference [`States`].
+/// * In `EnsureOpSpec`, you should reference [`StatesCurrent`].
 /// * [`StatesMut`] is not intended to be referenced in [`Data`] directly.
 ///
-/// You may reference [`States`] in `EnsureOpSpec::Data` for reading. It is not
-/// mutable as `State` must remain unchanged so that all `ItemSpec`s operate
-/// over consistent data.
+/// You may reference [`StatesCurrent`] in `EnsureOpSpec::Data` for reading. It
+/// is not mutable as `State` must remain unchanged so that all `ItemSpec`s
+/// operate over consistent data.
 ///
 /// [`Data`]: peace_data::Data
-/// [`States`]: crate::States
+/// [`StatesCurrent`]: crate::StatesCurrent
 /// [`StatesRw`]: crate::StatesRw
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]

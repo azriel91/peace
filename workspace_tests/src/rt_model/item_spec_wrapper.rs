@@ -3,7 +3,8 @@ use peace::{
     cfg::{OpCheckStatus, ProgressLimit, State},
     resources::{
         resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
-        Resources, StateDiffs, StateDiffsMut, States, StatesDesired, StatesDesiredMut, StatesMut,
+        Resources, StateDiffs, StateDiffsMut, StatesCurrent, StatesDesired, StatesDesiredMut,
+        StatesMut,
     },
     rt_model::{ItemSpecRt, ItemSpecWrapper},
 };
@@ -156,7 +157,7 @@ async fn resources_with_states_now_and_desired(
         let state = item_spec_wrapper.state_current_fn_exec(&resources).await?;
         states_mut.insert_raw(item_spec_wrapper.id(), state);
 
-        States::from(states_mut)
+        StatesCurrent::from(states_mut)
     };
     let states_desired = {
         let mut states_desired_mut = StatesDesiredMut::new();

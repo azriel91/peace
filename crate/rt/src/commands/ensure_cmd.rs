@@ -35,7 +35,7 @@ where
     ///
     /// 1. Run [`EnsureOpSpec::check`] for all `ItemSpec`s.
     /// 2. Run [`EnsureOpSpec::exec_dry`] for all `ItemSpec`s.
-    /// 3. Fetch `States` again, and compare.
+    /// 3. Fetch `StatesCurrent` again, and compare.
     ///
     /// State cannot be fetched interleaved with `exec_dry` as it may use
     /// different `Data`.
@@ -107,7 +107,7 @@ where
     ///
     /// 1. Run [`EnsureOpSpec::check`] for all `ItemSpec`s.
     /// 2. Run [`EnsureOpSpec::exec`] for all `ItemSpec`s.
-    /// 3. Fetch `States` again, and compare.
+    /// 3. Fetch `StatesCurrent` again, and compare.
     ///
     /// State cannot be fetched interleaved with `exec` as it may use different
     /// `Data`.

@@ -1,6 +1,6 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, ItemSpecId, Profile, State},
-    resources::{dir::FlowDir, type_reg::untagged::TypeReg, States, StatesDesired},
+    resources::{dir::FlowDir, type_reg::untagged::TypeReg, StatesCurrent, StatesDesired},
     rt::{StateCurrentCmd, StateDesiredCmd, StateDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -25,7 +25,7 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
 
     let CmdContext { resources, .. } = StateDiscoverCmd::exec(cmd_context).await?;
 
-    let states = resources.borrow::<States>();
+    let states = resources.borrow::<StatesCurrent>();
     let states_desired = resources.borrow::<StatesDesired>();
     let vec_copy_state = states.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id());
     let states_on_disk = {
@@ -37,7 +37,7 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
         type_reg.register::<State<Vec<u8>, ()>>(VecCopyItemSpec.id());
 
         let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
-        States::from(type_reg.deserialize_map(deserializer)?)
+        StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
     };
     let vec_copy_desired_state = states_desired.get::<Vec<u8>, _>(&VecCopyItemSpec.id());
     let states_desired_on_disk = {

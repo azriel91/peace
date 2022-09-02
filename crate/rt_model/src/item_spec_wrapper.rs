@@ -10,7 +10,7 @@ use peace_data::Data;
 use peace_resources::{
     resources_type_state::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     type_reg::untagged::DataType,
-    Resources, StateDiffs, States, StatesDesired,
+    Resources, StateDiffs, StatesCurrent, StatesDesired,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -483,7 +483,7 @@ where
                     resources,
                 );
             let item_spec_id = <IS as ItemSpec>::id(self);
-            let states = resources.borrow::<States>();
+            let states = resources.borrow::<StatesCurrent>();
             let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
             let states_desired = resources.borrow::<StatesDesired>();
             let state_desired = states_desired.get::<StateLogical, _>(&item_spec_id);
@@ -493,7 +493,7 @@ where
                     .await?
             } else {
                 panic!(
-                    "`ItemSpecWrapper::diff` must only be called with `States` and `StatesDesired` \
+                    "`ItemSpecWrapper::diff` must only be called with `StatesCurrent` and `StatesDesired` \
                     populated using `StateCurrentCmd` and `StateDesiredCmd`."
                 );
             }
@@ -511,7 +511,7 @@ where
                 resources,
             );
             let item_spec_id = <IS as ItemSpec>::id(self);
-            let states = resources.borrow::<States>();
+            let states = resources.borrow::<StatesCurrent>();
             let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
             let states_desired = resources.borrow::<StatesDesired>();
             let state_desired = states_desired.get::<StateLogical, _>(&item_spec_id);
@@ -530,7 +530,7 @@ where
                 .await?
             } else {
                 panic!(
-                    "`ItemSpecWrapper::ensure_op_check` must only be called with `States`, `StatesDesired`, and \
+                    "`ItemSpecWrapper::ensure_op_check` must only be called with `StatesCurrent`, `StatesDesired`, and \
                     `StateDiffs` populated using `DiffCmd`."
                 );
             }
@@ -543,7 +543,7 @@ where
         let data =
             <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as Data>::borrow(resources);
         let item_spec_id = <IS as ItemSpec>::id(self);
-        let states = resources.borrow::<States>();
+        let states = resources.borrow::<StatesCurrent>();
         let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
         let states_desired = resources.borrow::<StatesDesired>();
         let state_desired = states_desired.get::<StateLogical, _>(&item_spec_id);
@@ -562,7 +562,7 @@ where
             .await?;
         } else {
             panic!(
-                "`ItemSpecWrapper::ensure_op_exec_dry` must only be called with `States`, `StatesDesired`, and \
+                "`ItemSpecWrapper::ensure_op_exec_dry` must only be called with `StatesCurrent`, `StatesDesired`, and \
                 `StateDiffs` populated using `DiffCmd`."
             );
         }
@@ -574,7 +574,7 @@ where
         let data =
             <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as Data>::borrow(resources);
         let item_spec_id = <IS as ItemSpec>::id(self);
-        let states = resources.borrow::<States>();
+        let states = resources.borrow::<StatesCurrent>();
         let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
         let states_desired = resources.borrow::<StatesDesired>();
         let state_desired = states_desired.get::<StateLogical, _>(&item_spec_id);
@@ -588,7 +588,7 @@ where
                 .await?;
         } else {
             panic!(
-                "`ItemSpecWrapper::ensure_op_exec` must only be called with `States`, `StatesDesired`, and \
+                "`ItemSpecWrapper::ensure_op_exec` must only be called with `StatesCurrent`, `StatesDesired`, and \
                 `StateDiffs` populated using `DiffCmd`."
             );
         }

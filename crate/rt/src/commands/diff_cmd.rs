@@ -20,7 +20,7 @@ where
     /// each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
-    /// [`States`] and [`StatesDesired`].
+    /// [`StatesCurrent`] and [`StatesDesired`].
     ///
     /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
     /// `ItemSpec`, the [`StatesRw`] type should be used in
@@ -33,7 +33,7 @@ where
     /// [`exec`]: peace_cfg::FnSpec::exec
     /// [`FnSpec::Data`]: peace_cfg::FnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`States`]: peace_resources::States
+    /// [`StatesCurrent`]: peace_resources::StatesCurrent
     /// [`StatesRw`]: peace_resources::StatesRw
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec

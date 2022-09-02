@@ -6,7 +6,7 @@ use type_reg::untagged::TypeMap;
 
 use crate::StatesMut;
 
-/// `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
+/// Current `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
 ///
 /// # Implementors
 ///
@@ -36,24 +36,24 @@ use crate::StatesMut;
 /// }
 /// ```
 ///
-/// You may reference [`States`] in `EnsureOpSpec::Data` for reading. It is not
-/// mutable as `States` must remain unchanged so that all `ItemSpec`s operate
-/// over consistent data.
+/// You may reference [`StatesCurrent`] in `EnsureOpSpec::Data` for reading. It
+/// is not mutable as `StatesCurrent` must remain unchanged so that all
+/// `ItemSpec`s operate over consistent data.
 ///
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]
-pub struct States(TypeMap<ItemSpecId>);
+pub struct StatesCurrent(TypeMap<ItemSpecId>);
 
-impl States {
-    /// Returns a new `States` map.
+impl StatesCurrent {
+    /// Returns a new `StatesCurrent` map.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Creates an empty `States` map with the specified capacity.
+    /// Creates an empty `StatesCurrent` map with the specified capacity.
     ///
-    /// The `States` will be able to hold at least capacity elements
+    /// The `StatesCurrent` will be able to hold at least capacity elements
     /// without reallocating. If capacity is 0, the map will not allocate.
     pub fn with_capacity(capacity: usize) -> Self {
         Self(TypeMap::with_capacity(capacity))
@@ -65,7 +65,7 @@ impl States {
     }
 }
 
-impl Deref for States {
+impl Deref for StatesCurrent {
     type Target = TypeMap<ItemSpecId>;
 
     fn deref(&self) -> &Self::Target {
@@ -73,13 +73,13 @@ impl Deref for States {
     }
 }
 
-impl From<TypeMap<ItemSpecId>> for States {
+impl From<TypeMap<ItemSpecId>> for StatesCurrent {
     fn from(type_map: TypeMap<ItemSpecId>) -> Self {
         Self(type_map)
     }
 }
 
-impl From<StatesMut> for States {
+impl From<StatesMut> for StatesCurrent {
     fn from(states_mut: StatesMut) -> Self {
         Self(states_mut.into_inner())
     }

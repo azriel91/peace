@@ -20,12 +20,12 @@ where
     /// each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
-    /// [`States`] and [`StatesDesired`], and will be serialized to
+    /// [`StatesCurrent`] and [`StatesDesired`], and will be serialized to
     /// `{profile_dir}/states.yaml` and `{profile_dir}/states_desired.yaml`.
     ///
     /// [`exec`]: peace_cfg::FnSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`States`]: peace_resources::States
+    /// [`StatesCurrent`]: peace_resources::StatesCurrent
     /// [`StatesDesired`]: peace_resources::StatesDesired
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec

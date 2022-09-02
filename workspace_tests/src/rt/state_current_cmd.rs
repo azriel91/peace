@@ -1,6 +1,6 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, ItemSpecId, Profile, State},
-    resources::{dir::FlowDir, type_reg::untagged::TypeReg, States},
+    resources::{dir::FlowDir, type_reg::untagged::TypeReg, StatesCurrent},
     rt::StateCurrentCmd,
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -25,7 +25,7 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
 
     let CmdContext { resources, .. } = StateCurrentCmd::exec(cmd_context).await?;
 
-    let states = resources.borrow::<States>();
+    let states = resources.borrow::<StatesCurrent>();
     let vec_copy_state = states.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id());
     let states_on_disk = {
         let flow_dir = resources.borrow::<FlowDir>();
@@ -36,7 +36,7 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
         type_reg.register::<State<Vec<u8>, ()>>(VecCopyItemSpec.id());
 
         let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
-        States::from(type_reg.deserialize_map(deserializer)?)
+        StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
     };
     assert_eq!(
         Some(State::new(Vec::<u8>::new(), ())).as_ref(),

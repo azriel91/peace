@@ -6,7 +6,7 @@ use peace::{
         resources_type_state::{
             Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesDesired,
         },
-        Resources, StateDiffs, States, StatesDesired, StatesEnsured, StatesEnsuredDry,
+        Resources, StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry,
     },
     rt::{DiffCmd, EnsureCmd, StateCurrentCmd, StateDesiredCmd},
     rt_model::{CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
@@ -120,7 +120,7 @@ where
 {
     let CmdContext { resources, .. } = StateCurrentCmd::exec(cmd_context).await?;
     let states_serialized = {
-        let states = resources.borrow::<States>();
+        let states = resources.borrow::<StatesCurrent>();
         serde_yaml::to_string(&*states).map_err(DownloadError::StatesSerialize)?
     };
 

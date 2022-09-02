@@ -4,7 +4,7 @@ use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     dir::FlowDir,
     resources_type_state::{SetUp, WithStateDiffs, WithStates},
-    Resources, States, StatesMut,
+    Resources, StatesCurrent, StatesMut,
 };
 use peace_rt_model::{CmdContext, Error, ItemSpecGraph, Storage};
 
@@ -23,7 +23,7 @@ where
     /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
-    /// [`States`], and will be serialized to `{flow_dir}/states.yaml`.
+    /// [`StatesCurrent`], and will be serialized to `{flow_dir}/states.yaml`.
     ///
     /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
     /// `ItemSpec`, the predecessor should insert a copy / clone of their state
@@ -49,7 +49,7 @@ where
     /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
-    /// [`States`].
+    /// [`StatesCurrent`].
     ///
     /// [`exec`]: peace_cfg::FnSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
@@ -57,7 +57,7 @@ where
     pub(crate) async fn exec_internal(
         item_spec_graph: &ItemSpecGraph<E>,
         resources: &Resources<SetUp>,
-    ) -> Result<States, E> {
+    ) -> Result<StatesCurrent, E> {
         let states_mut = item_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
@@ -69,7 +69,7 @@ where
             .try_collect::<StatesMut>()
             .await?;
 
-        let states = States::from(states_mut);
+        let states = StatesCurrent::from(states_mut);
         Self::serialize_internal(resources, &states).await?;
 
         Ok(states)
@@ -78,7 +78,7 @@ where
     /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
-    /// [`States`].
+    /// [`StatesCurrent`].
     ///
     /// [`exec`]: peace_cfg::FnSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
@@ -86,7 +86,7 @@ where
     pub(crate) async fn exec_internal_for_ensure(
         item_spec_graph: &ItemSpecGraph<E>,
         resources: &Resources<WithStateDiffs>,
-    ) -> Result<States, E> {
+    ) -> Result<StatesCurrent, E> {
         let states_mut = item_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
@@ -98,11 +98,14 @@ where
             .try_collect::<StatesMut>()
             .await?;
 
-        Ok(States::from(states_mut))
+        Ok(StatesCurrent::from(states_mut))
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    async fn serialize_internal(resources: &Resources<SetUp>, states: &States) -> Result<(), E> {
+    async fn serialize_internal(
+        resources: &Resources<SetUp>,
+        states: &StatesCurrent,
+    ) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
         let states_file_path = flow_dir.join(Self::STATES_CURRENT_FILE);
@@ -117,7 +120,10 @@ where
     }
 
     #[cfg(target_arch = "wasm32")]
-    async fn serialize_internal(resources: &Resources<SetUp>, states: &States) -> Result<(), E> {
+    async fn serialize_internal(
+        resources: &Resources<SetUp>,
+        states: &StatesCurrent,
+    ) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
         let states_file_path = flow_dir.join(Self::STATES_CURRENT_FILE);

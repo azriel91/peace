@@ -1,6 +1,6 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
-    resources::{States, StatesDesired, StatesEnsured},
+    resources::{StatesCurrent, StatesDesired, StatesEnsured},
     rt::EnsureCmd,
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -25,7 +25,7 @@ async fn contains_state_ensured_for_each_item_spec() -> Result<(), Box<dyn std::
 
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
 
-    let states = resources.borrow::<States>();
+    let states = resources.borrow::<StatesCurrent>();
     let states_desired = resources.borrow::<StatesDesired>();
     let states_ensured = resources.borrow::<StatesEnsured>();
     assert_eq!(

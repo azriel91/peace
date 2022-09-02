@@ -4,7 +4,7 @@ use peace_core::ItemSpecId;
 use serde::Serialize;
 use type_reg::untagged::TypeMap;
 
-use crate::{resources_type_state::WithStateDiffs, Resources, States};
+use crate::{resources_type_state::WithStateDiffs, Resources, StatesCurrent};
 
 /// Ensured `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
 ///
@@ -54,8 +54,8 @@ impl From<TypeMap<ItemSpecId>> for StatesEnsured {
 
 /// `Resources` is not used at runtime, but is present to signal this type
 /// should only be constructed by `EnsureCmd`.
-impl From<(States, &Resources<WithStateDiffs>)> for StatesEnsured {
-    fn from((states, _resources): (States, &Resources<WithStateDiffs>)) -> Self {
+impl From<(StatesCurrent, &Resources<WithStateDiffs>)> for StatesEnsured {
+    fn from((states, _resources): (StatesCurrent, &Resources<WithStateDiffs>)) -> Self {
         Self(states.into_inner())
     }
 }
