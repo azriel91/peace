@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     internal::StatesMut,
-    paths::FlowDir,
+    paths::{FlowDir, StatesDesiredFile},
     resources_type_state::{SetUp, WithStatesDesired},
     states::{ts::Desired, StatesDesired},
     Resources,
@@ -19,9 +19,6 @@ impl<E> StateDesiredCmd<E>
 where
     E: std::error::Error + From<Error> + Send,
 {
-    /// File name of the states file.
-    pub const STATES_DESIRED_FILE: &'static str = "states_desired.yaml";
-
     /// Runs [`StateDesiredFnSpec`]`::`[`exec`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
@@ -41,8 +38,8 @@ where
     pub async fn exec(
         cmd_context: CmdContext<'_, SetUp, E>,
     ) -> Result<CmdContext<WithStatesDesired, E>, E> {
-        let (workspace, item_spec_graph, resources) = cmd_context.into_inner();
-        let states_desired = Self::exec_internal(item_spec_graph, &resources).await?;
+        let (workspace, item_spec_graph, mut resources) = cmd_context.into_inner();
+        let states_desired = Self::exec_internal(item_spec_graph, &mut resources).await?;
 
         let resources = Resources::<WithStatesDesired>::from((resources, states_desired));
 
@@ -59,13 +56,14 @@ where
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub(crate) async fn exec_internal(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<SetUp>,
+        resources: &mut Resources<SetUp>,
     ) -> Result<StatesDesired, E> {
+        let resources_ref = &*resources;
         let states_desired_mut = item_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
             .map_ok(|item_spec| async move {
-                let state_desired = item_spec.state_desired_fn_exec(resources).await?;
+                let state_desired = item_spec.state_desired_fn_exec(resources_ref).await?;
                 Ok((item_spec.id(), state_desired))
             })
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)
@@ -80,40 +78,48 @@ where
 
     #[cfg(not(target_arch = "wasm32"))]
     pub(crate) async fn serialize_internal(
-        resources: &Resources<SetUp>,
+        resources: &mut Resources<SetUp>,
         states_desired: &StatesDesired,
     ) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_desired_file_path = flow_dir.join(Self::STATES_DESIRED_FILE);
+        let states_desired_file = StatesDesiredFile::from(&*flow_dir);
 
         storage
             .write_with_sync_api(
                 "states_desired_file_write".to_string(),
-                &states_desired_file_path,
+                &states_desired_file,
                 |file| {
                     serde_yaml::to_writer(file, states_desired)
                         .map_err(Error::StatesDesiredSerialize)
                 },
             )
             .await?;
+        drop(flow_dir);
+        drop(storage);
+
+        resources.insert(states_desired_file);
 
         Ok(())
     }
 
     #[cfg(target_arch = "wasm32")]
     pub(crate) async fn serialize_internal(
-        resources: &Resources<SetUp>,
+        resources: &mut Resources<SetUp>,
         states_desired: &StatesDesired,
     ) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_desired_file_path = flow_dir.join(Self::STATES_DESIRED_FILE);
+        let states_desired_file = StatesDesiredFile::from(&*flow_dir);
 
         let states_serialized =
             serde_yaml::to_string(states_desired).map_err(Error::StatesDesiredSerialize)?;
-        let states_desired_file_path = states_desired_file_path.to_string_lossy();
-        storage.set_item(&states_desired_file_path, &states_serialized)?;
+        let states_desired_file_str = states_desired_file.to_string_lossy();
+        storage.set_item(&states_desired_file_str, &states_serialized)?;
+        drop(flow_dir);
+        drop(storage);
+
+        resources.insert(states_desired_file);
 
         Ok(())
     }

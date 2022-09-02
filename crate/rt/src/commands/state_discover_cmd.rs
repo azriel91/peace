@@ -34,7 +34,8 @@ where
     ) -> Result<CmdContext<WithStatesCurrentAndDesired, E>, E> {
         let (workspace, item_spec_graph, mut resources) = cmd_context.into_inner();
         let states = StateCurrentCmd::exec_internal(item_spec_graph, &mut resources).await?;
-        let states_desired = StateDesiredCmd::exec_internal(item_spec_graph, &resources).await?;
+        let states_desired =
+            StateDesiredCmd::exec_internal(item_spec_graph, &mut resources).await?;
 
         let resources =
             Resources::<WithStatesCurrentAndDesired>::from((resources, states, states_desired));

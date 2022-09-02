@@ -67,7 +67,7 @@
 pub use self::{
     flow_dir::FlowDir, peace_dir::PeaceDir, profile_dir::ProfileDir,
     profile_history_dir::ProfileHistoryDir, states_current_file::StatesCurrentFile,
-    workspace_dir::WorkspaceDir,
+    states_desired_file::StatesDesiredFile, workspace_dir::WorkspaceDir,
 };
 
 mod flow_dir;
@@ -75,6 +75,7 @@ mod peace_dir;
 mod profile_dir;
 mod profile_history_dir;
 mod states_current_file;
+mod states_desired_file;
 mod workspace_dir;
 
 /// Common impl logic for `PathBuf` newtypes.

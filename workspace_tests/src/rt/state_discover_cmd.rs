@@ -1,11 +1,11 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, ItemSpecId, Profile, State},
     resources::{
-        paths::{FlowDir, StatesCurrentFile},
+        paths::{StatesCurrentFile, StatesDesiredFile},
         states::{StatesCurrent, StatesDesired},
         type_reg::untagged::TypeReg,
     },
-    rt::{StateDesiredCmd, StateDiscoverCmd},
+    rt::StateDiscoverCmd,
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -44,10 +44,8 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
     };
     let vec_copy_desired_state = states_desired.get::<Vec<u8>, _>(&VecCopyItemSpec.id());
     let states_desired_on_disk = {
-        let flow_dir = resources.borrow::<FlowDir>();
-        let states_desired_file =
-            flow_dir.join(StateDesiredCmd::<VecCopyError>::STATES_DESIRED_FILE);
-        let states_slice = std::fs::read(states_desired_file)?;
+        let states_desired_file = resources.borrow::<StatesDesiredFile>();
+        let states_slice = std::fs::read(&*states_desired_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId>::new();
         type_reg.register::<<VecCopyItemSpec as ItemSpec>::StateLogical>(VecCopyItemSpec.id());
