@@ -1,6 +1,6 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, ItemSpecId, Profile},
-    resources::{dir::FlowDir, states::StatesDesired, type_reg::untagged::TypeReg},
+    resources::{paths::FlowDir, states::StatesDesired, type_reg::untagged::TypeReg},
     rt::StateDesiredCmd,
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };

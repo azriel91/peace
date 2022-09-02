@@ -28,10 +28,10 @@ use crate::{Error, ItemSpecGraph, Workspace};
 /// * `E`: Consumer provided error type.
 ///
 /// [`Profile`]: peace_cfg::Profile
-/// [`WorkspaceDir`]: peace::resources::dir::WorkspaceDir
-/// [`PeaceDir`]: peace::resources::dir::PeaceDir
-/// [`ProfileDir`]: peace::resources::dir::ProfileDir
-/// [`ProfileHistoryDir`]: peace::resources::dir::ProfileHistoryDir
+/// [`WorkspaceDir`]: peace::resources::paths::WorkspaceDir
+/// [`PeaceDir`]: peace::resources::paths::PeaceDir
+/// [`ProfileDir`]: peace::resources::paths::ProfileDir
+/// [`ProfileHistoryDir`]: peace::resources::paths::ProfileHistoryDir
 #[derive(Debug)]
 pub struct CmdContext<'ctx, TS, E> {
     /// Workspace that the `peace` tool runs in.

@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
 use peace::resources::{
-    dir::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
     internal::WorkspaceDirs,
+    paths::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
 };
 
 #[test]

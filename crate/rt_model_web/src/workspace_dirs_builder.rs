@@ -2,8 +2,8 @@ use std::path::PathBuf;
 
 use peace_core::{FlowId, Profile};
 use peace_resources::{
-    dir::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir},
     internal::WorkspaceDirs,
+    paths::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir},
 };
 
 use crate::{Error, WorkspaceSpec};

@@ -2,8 +2,8 @@ use std::marker::PhantomData;
 
 use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
-    dir::FlowDir,
     internal::StatesMut,
+    paths::FlowDir,
     resources_type_state::{SetUp, WithStateDiffs, WithStates},
     states::{ts::Current, StatesCurrent},
     Resources,

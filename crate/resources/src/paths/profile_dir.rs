@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use peace_core::Profile;
 
-use crate::dir::PeaceDir;
+use crate::paths::PeaceDir;
 
 /// Directory to store all data produced by the current profile's execution.
 ///
@@ -18,7 +18,7 @@ use crate::dir::PeaceDir;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ProfileDir(PathBuf);
 
-crate::dir::pathbuf_newtype!(ProfileDir);
+crate::paths::pathbuf_newtype!(ProfileDir);
 
 impl From<(&PeaceDir, &Profile)> for ProfileDir {
     fn from((peace_dir, profile): (&PeaceDir, &Profile)) -> Self {

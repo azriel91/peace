@@ -8,4 +8,4 @@ use std::path::PathBuf;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WorkspaceDir(PathBuf);
 
-crate::dir::pathbuf_newtype!(WorkspaceDir);
+crate::paths::pathbuf_newtype!(WorkspaceDir);

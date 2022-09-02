@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::dir::WorkspaceDir;
+use crate::paths::WorkspaceDir;
 
 /// Directory to store all data produced by `peace` tool execution.
 ///
@@ -11,7 +11,7 @@ use crate::dir::WorkspaceDir;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PeaceDir(PathBuf);
 
-crate::dir::pathbuf_newtype!(PeaceDir);
+crate::paths::pathbuf_newtype!(PeaceDir);
 
 impl PeaceDir {
     /// Default name of the `.peace` directory.

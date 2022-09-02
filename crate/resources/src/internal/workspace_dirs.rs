@@ -1,4 +1,4 @@
-use crate::dir::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
+use crate::paths::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
 
 /// Directories used during `peace` execution.
 ///

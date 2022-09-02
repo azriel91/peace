@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
-    resources::dir::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir},
+    resources::paths::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Storage, Workspace, WorkspaceSpec},
 };
 

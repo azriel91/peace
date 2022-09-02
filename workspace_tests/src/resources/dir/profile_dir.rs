@@ -2,7 +2,7 @@ use std::{ffi::OsStr, path::Path};
 
 use peace::{
     cfg::{profile, Profile},
-    resources::dir::{PeaceDir, ProfileDir},
+    resources::paths::{PeaceDir, ProfileDir},
 };
 
 #[test]

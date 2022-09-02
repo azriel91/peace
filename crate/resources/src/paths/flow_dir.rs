@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use peace_core::FlowId;
 
-use crate::dir::ProfileDir;
+use crate::paths::ProfileDir;
 
 /// Directory to store all data produced by the current flow's execution.
 ///
@@ -19,7 +19,7 @@ use crate::dir::ProfileDir;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FlowDir(PathBuf);
 
-crate::dir::pathbuf_newtype!(FlowDir);
+crate::paths::pathbuf_newtype!(FlowDir);
 
 impl From<(&ProfileDir, &FlowId)> for FlowDir {
     fn from((peace_dir, flow_id): (&ProfileDir, &FlowId)) -> Self {

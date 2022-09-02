@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::dir::ProfileDir;
+use crate::paths::ProfileDir;
 
 /// Directory to store all data produced by the current profile's execution.
 ///
@@ -14,7 +14,7 @@ use crate::dir::ProfileDir;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ProfileHistoryDir(PathBuf);
 
-crate::dir::pathbuf_newtype!(ProfileHistoryDir);
+crate::paths::pathbuf_newtype!(ProfileHistoryDir);
 
 impl From<&ProfileDir> for ProfileHistoryDir {
     fn from(profile_dir: &ProfileDir) -> Self {

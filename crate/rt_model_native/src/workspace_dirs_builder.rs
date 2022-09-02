@@ -5,8 +5,8 @@ use std::{
 
 use peace_core::{FlowId, Profile};
 use peace_resources::{
-    dir::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir},
     internal::WorkspaceDirs,
+    paths::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir},
 };
 
 use crate::{Error, WorkspaceSpec};
@@ -22,7 +22,7 @@ impl WorkspaceDirsBuilder {
         profile: &Profile,
         flow_id: &FlowId,
     ) -> Result<WorkspaceDirs, Error> {
-        use peace_resources::dir::WorkspaceDir;
+        use peace_resources::paths::WorkspaceDir;
 
         let workspace_dir = {
             let working_dir = std::env::current_dir().map_err(Error::WorkingDirRead)?;

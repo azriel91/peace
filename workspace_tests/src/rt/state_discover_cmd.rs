@@ -1,7 +1,7 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, ItemSpecId, Profile, State},
     resources::{
-        dir::FlowDir,
+        paths::FlowDir,
         states::{StatesCurrent, StatesDesired},
         type_reg::untagged::TypeReg,
     },
