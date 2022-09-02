@@ -1,3 +1,10 @@
+//! Resources that track current and desired states, and state diffs.
+
+pub use self::{
+    state_diffs::StateDiffs, states_current::StatesCurrent, states_desired::StatesDesired,
+    states_ensured::StatesEnsured, states_ensured_dry::StatesEnsuredDry,
+};
+
 pub mod ts;
 
 use std::{marker::PhantomData, ops::Deref};
@@ -7,6 +14,12 @@ use serde::Serialize;
 use type_reg::untagged::TypeMap;
 
 use crate::internal::StatesMut;
+
+mod state_diffs;
+mod states_current;
+mod states_desired;
+mod states_ensured;
+mod states_ensured_dry;
 
 /// Current `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
 ///

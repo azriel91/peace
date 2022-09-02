@@ -2,7 +2,8 @@ use peace::resources::{
     resources_type_state::{
         Ensured, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired, WithStatesDesired,
     },
-    Resources, StateDiffs, StatesCurrent, StatesDesired, StatesEnsured,
+    states::{StateDiffs, StatesCurrent, StatesDesired, StatesEnsured},
+    Resources,
 };
 
 #[test]

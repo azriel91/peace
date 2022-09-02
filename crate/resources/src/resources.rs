@@ -8,7 +8,7 @@ use crate::{
         Empty, Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired,
         WithStatesDesired,
     },
-    StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry,
+    states::{StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry},
 };
 
 /// Map of all types at runtime. [`resman::Resources`] newtype.

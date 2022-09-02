@@ -1,6 +1,6 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
-    resources::{StatesCurrent, StatesDesired, StatesEnsured},
+    resources::states::{StatesCurrent, StatesDesired, StatesEnsured},
     rt::EnsureCmd,
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };

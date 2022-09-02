@@ -6,7 +6,8 @@ use peace::{
         resources_type_state::{
             Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesDesired,
         },
-        Resources, StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry,
+        states::{StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry},
+        Resources,
     },
     rt::{DiffCmd, EnsureCmd, StateCurrentCmd, StateDesiredCmd},
     rt_model::{CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},

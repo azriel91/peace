@@ -5,8 +5,8 @@ use peace_resources::{
     dir::FlowDir,
     internal::StatesMut,
     resources_type_state::{SetUp, WithStatesDesired},
-    states::ts::Desired,
-    Resources, StatesDesired,
+    states::{ts::Desired, StatesDesired},
+    Resources,
 };
 use peace_rt_model::{CmdContext, Error, ItemSpecGraph, Storage};
 

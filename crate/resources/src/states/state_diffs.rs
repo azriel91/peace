@@ -4,7 +4,7 @@ use peace_core::ItemSpecId;
 use serde::Serialize;
 use type_reg::untagged::TypeMap;
 
-use crate::StateDiffsMut;
+use crate::internal::StateDiffsMut;
 
 /// Diffs of `StateLogical`s for each `ItemSpec`s. `TypeMap<ItemSpecId>`
 /// newtype.

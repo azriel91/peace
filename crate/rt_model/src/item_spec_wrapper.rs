@@ -9,8 +9,9 @@ use peace_cfg::{async_trait, nougat::Gat, FnSpec, ItemSpec, ItemSpecId, OpCheckS
 use peace_data::Data;
 use peace_resources::{
     resources_type_state::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
+    states::{StateDiffs, StatesCurrent, StatesDesired},
     type_reg::untagged::DataType,
-    Resources, StateDiffs, StatesCurrent, StatesDesired,
+    Resources,
 };
 use serde::{de::DeserializeOwned, Serialize};
 

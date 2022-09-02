@@ -2,24 +2,26 @@ use std::marker::PhantomData;
 
 use crate::{
     resources_type_state::WithStateDiffs,
-    states::{ts::Ensured, States},
-    Resources, StatesCurrent,
+    states::{ts::EnsuredDry, States, StatesCurrent},
+    Resources,
 };
 
-/// Ensured `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
+/// Dry-run ensured `State`s for all `ItemSpec`s.
 ///
-/// These are the `State`s collected after `EnsureOpSpec::exec` has been run.
+/// These are the `State`s collected after `EnsureOpSpec::exec_dry` has been
+/// run.
 ///
 /// # Implementors
 ///
-/// You may reference [`StatesEnsured`] after `EnsureCmd::exec` has been run.
+/// You may reference [`StatesEnsuredDry`] after `EnsureCmd::exec_dry` has been
+/// run.
 ///
 /// [`Data`]: peace_data::Data
-pub type StatesEnsured = States<Ensured>;
+pub type StatesEnsuredDry = States<EnsuredDry>;
 
 /// `Resources` is not used at runtime, but is present to signal this type
 /// should only be constructed by `EnsureCmd`.
-impl From<(StatesCurrent, &Resources<WithStateDiffs>)> for StatesEnsured {
+impl From<(StatesCurrent, &Resources<WithStateDiffs>)> for StatesEnsuredDry {
     fn from((states, _resources): (StatesCurrent, &Resources<WithStateDiffs>)) -> Self {
         Self(states.into_inner(), PhantomData)
     }

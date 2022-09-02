@@ -1,6 +1,7 @@
 use peace::resources::{
     resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
-    Resources, StateDiffs, StatesCurrent, StatesDesired, StatesEnsured,
+    states::{StateDiffs, StatesCurrent, StatesDesired, StatesEnsured},
+    Resources,
 };
 
 #[derive(Debug, Default, PartialEq)]

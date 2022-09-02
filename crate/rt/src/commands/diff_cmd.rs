@@ -2,8 +2,10 @@ use std::marker::PhantomData;
 
 use futures::{StreamExt, TryStreamExt};
 use peace_resources::{
+    internal::StateDiffsMut,
     resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
-    Resources, StateDiffs, StateDiffsMut,
+    states::StateDiffs,
+    Resources,
 };
 use peace_rt_model::{CmdContext, Error};
 

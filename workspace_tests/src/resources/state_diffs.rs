@@ -1,6 +1,6 @@
 use peace::{
     cfg::{item_spec_id, ItemSpecId},
-    resources::{type_reg::untagged::TypeMap, StateDiffs, StateDiffsMut},
+    resources::{internal::StateDiffsMut, states::StateDiffs, type_reg::untagged::TypeMap},
 };
 
 #[derive(Debug, Default, PartialEq)]

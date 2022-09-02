@@ -2,10 +2,10 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{OpCheckStatus, ProgressLimit, State},
     resources::{
-        internal::StatesMut,
+        internal::{StateDiffsMut, StatesMut},
         resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
-        states::ts::Desired,
-        Resources, StateDiffs, StateDiffsMut, StatesCurrent, StatesDesired,
+        states::{ts::Desired, StateDiffs, StatesCurrent, StatesDesired},
+        Resources,
     },
     rt_model::{ItemSpecRt, ItemSpecWrapper},
 };

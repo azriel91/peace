@@ -8,7 +8,8 @@ use peace_cfg::OpCheckStatus;
 use peace_resources::{
     internal::OpCheckStatuses,
     resources_type_state::{Ensured, EnsuredDry, SetUp, WithStateDiffs},
-    Resources, StatesEnsured, StatesEnsuredDry,
+    states::{StatesEnsured, StatesEnsuredDry},
+    Resources,
 };
 use peace_rt_model::{CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph};
 
