@@ -3,8 +3,10 @@ use std::marker::PhantomData;
 use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     dir::FlowDir,
+    internal::StatesMut,
     resources_type_state::{SetUp, WithStatesDesired},
-    Resources, StatesDesired, StatesDesiredMut,
+    states::ts::Desired,
+    Resources, StatesDesired,
 };
 use peace_rt_model::{CmdContext, Error, ItemSpecGraph, Storage};
 
@@ -67,7 +69,7 @@ where
                 Ok((item_spec.id(), state_desired))
             })
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)
-            .try_collect::<StatesDesiredMut>()
+            .try_collect::<StatesMut<Desired>>()
             .await?;
 
         let states_desired = StatesDesired::from(states_desired_mut);

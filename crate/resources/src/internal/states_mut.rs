@@ -1,4 +1,7 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+};
 
 use peace_core::ItemSpecId;
 use serde::Serialize;
@@ -17,14 +20,18 @@ use type_reg::untagged::{DataType, TypeMap};
 /// is not mutable as `State` must remain unchanged so that all `ItemSpec`s
 /// operate over consistent data.
 ///
+/// # Type Parameters
+///
+/// * `TS`: Type state to distinguish the purpose of the `States` map.
+///
 /// [`Data`]: peace_data::Data
 /// [`StatesCurrent`]: crate::StatesCurrent
 /// [`StatesRw`]: crate::StatesRw
 /// [`Resources`]: crate::Resources
-#[derive(Debug, Default, Serialize)]
-pub struct StatesMut(TypeMap<ItemSpecId>);
+#[derive(Debug, Serialize)]
+pub struct StatesMut<TS>(TypeMap<ItemSpecId>, PhantomData<TS>);
 
-impl StatesMut {
+impl<TS> StatesMut<TS> {
     /// Returns a new `StatesMut` map.
     pub fn new() -> Self {
         Self::default()
@@ -35,7 +42,7 @@ impl StatesMut {
     /// The `StatesMut` will be able to hold at least capacity elements
     /// without reallocating. If capacity is 0, the map will not allocate.
     pub fn with_capacity(capacity: usize) -> Self {
-        Self(TypeMap::with_capacity(capacity))
+        Self(TypeMap::with_capacity(capacity), PhantomData)
     }
 
     /// Returns the inner map.
@@ -44,7 +51,13 @@ impl StatesMut {
     }
 }
 
-impl Deref for StatesMut {
+impl<TS> Default for StatesMut<TS> {
+    fn default() -> Self {
+        Self(TypeMap::default(), PhantomData)
+    }
+}
+
+impl<TS> Deref for StatesMut<TS> {
     type Target = TypeMap<ItemSpecId>;
 
     fn deref(&self) -> &Self::Target {
@@ -52,19 +65,19 @@ impl Deref for StatesMut {
     }
 }
 
-impl DerefMut for StatesMut {
+impl<TS> DerefMut for StatesMut<TS> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl From<TypeMap<ItemSpecId>> for StatesMut {
+impl<TS> From<TypeMap<ItemSpecId>> for StatesMut<TS> {
     fn from(type_map: TypeMap<ItemSpecId>) -> Self {
-        Self(type_map)
+        Self(type_map, PhantomData)
     }
 }
 
-impl Extend<(ItemSpecId, Box<dyn DataType>)> for StatesMut {
+impl<TS> Extend<(ItemSpecId, Box<dyn DataType>)> for StatesMut<TS> {
     fn extend<T: IntoIterator<Item = (ItemSpecId, Box<dyn DataType>)>>(&mut self, iter: T) {
         iter.into_iter().for_each(|(item_spec_id, state)| {
             self.insert_raw(item_spec_id, state);

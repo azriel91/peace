@@ -1,6 +1,6 @@
 use peace::{
     cfg::{item_spec_id, ItemSpecId},
-    resources::{type_reg::untagged::TypeMap, StatesMut},
+    resources::{internal::StatesMut, states::ts::Current, type_reg::untagged::TypeMap},
 };
 
 #[derive(Debug, Default, PartialEq)]
@@ -11,7 +11,7 @@ struct Value(u32);
 
 #[test]
 fn with_capacity_reserves_enough_capacity() {
-    let states = StatesMut::with_capacity(100);
+    let states = StatesMut::<Current>::with_capacity(100);
     assert!(states.capacity() >= 100);
 }
 
@@ -26,7 +26,7 @@ fn into_inner() {
 
 #[test]
 fn deref_and_deref_mut() {
-    let mut states = StatesMut::new();
+    let mut states = StatesMut::<Current>::new();
 
     // deref_mut
     states.insert(item_spec_id!("key"), 123);
@@ -37,7 +37,7 @@ fn deref_and_deref_mut() {
 
 #[test]
 fn from_type_map() {
-    let _states = StatesMut::from(TypeMap::new());
+    let _states = StatesMut::<Current>::from(TypeMap::new());
 }
 
 #[test]
@@ -45,13 +45,13 @@ fn debug() {
     let states = test_states();
 
     assert_eq!(
-        r#"StatesMut({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }})"#,
+        r#"StatesMut({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData)"#,
         format!("{states:?}")
     );
 }
 
-fn test_states() -> StatesMut {
-    let mut states = StatesMut::new();
+fn test_states() -> StatesMut<Current> {
+    let mut states = StatesMut::<Current>::new();
     states.insert(item_spec_id!("key"), 123);
 
     states

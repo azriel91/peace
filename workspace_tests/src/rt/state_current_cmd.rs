@@ -30,7 +30,7 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
     let states_on_disk = {
         let flow_dir = resources.borrow::<FlowDir>();
         let states_file = flow_dir.join(StateCurrentCmd::<VecCopyError>::STATES_CURRENT_FILE);
-        let states_slice = std::fs::read(states_file)?;
+        let states_slice = std::fs::read(&states_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId>::new();
         type_reg.register::<State<Vec<u8>, ()>>(VecCopyItemSpec.id());

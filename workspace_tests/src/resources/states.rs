@@ -1,6 +1,6 @@
 use peace::{
     cfg::{item_spec_id, ItemSpecId},
-    resources::{type_reg::untagged::TypeMap, StatesCurrent, StatesMut},
+    resources::{internal::StatesMut, type_reg::untagged::TypeMap, StatesCurrent},
 };
 
 #[derive(Debug, Default, PartialEq)]
@@ -47,7 +47,7 @@ fn debug() {
     let states = test_states();
 
     assert_eq!(
-        r#"StatesCurrent({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }})"#,
+        r#"States({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData)"#,
         format!("{states:?}")
     );
 }
