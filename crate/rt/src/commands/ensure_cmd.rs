@@ -13,7 +13,7 @@ use peace_resources::{
 };
 use peace_rt_model::{CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph};
 
-use crate::{DiffCmd, StateCurrentCmd};
+use crate::{DiffCmd, StatesCurrentDiscoverCmd};
 
 #[derive(Debug)]
 pub struct EnsureCmd<E>(PhantomData<E>);
@@ -76,7 +76,8 @@ where
 
         // TODO: This fetches the real state, whereas for a dry run, it would be useful
         // to show the imagined altered state.
-        let states = StateCurrentCmd::exec_internal_for_ensure(item_spec_graph, resources).await?;
+        let states =
+            StatesCurrentDiscoverCmd::exec_internal_for_ensure(item_spec_graph, resources).await?;
 
         Ok(StatesEnsuredDry::from((states, resources)))
     }
@@ -143,7 +144,8 @@ where
         let op_check_statuses = Self::ensure_op_spec_check(item_spec_graph, resources).await?;
         Self::ensure_op_spec_exec(item_spec_graph, resources, &op_check_statuses).await?;
 
-        let states = StateCurrentCmd::exec_internal_for_ensure(item_spec_graph, resources).await?;
+        let states =
+            StatesCurrentDiscoverCmd::exec_internal_for_ensure(item_spec_graph, resources).await?;
 
         Ok(StatesEnsured::from((states, resources)))
     }

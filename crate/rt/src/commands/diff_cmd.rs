@@ -9,7 +9,7 @@ use peace_resources::{
 };
 use peace_rt_model::{CmdContext, Error};
 
-use crate::{StateCurrentCmd, StateDesiredDiscoverCmd};
+use crate::{StateDesiredDiscoverCmd, StatesCurrentDiscoverCmd};
 
 #[derive(Debug)]
 pub struct DiffCmd<E>(PhantomData<E>);
@@ -43,7 +43,8 @@ where
         cmd_context: CmdContext<'_, SetUp, E>,
     ) -> Result<CmdContext<WithStateDiffs, E>, E> {
         let (workspace, item_spec_graph, mut resources) = cmd_context.into_inner();
-        let states = StateCurrentCmd::exec_internal(item_spec_graph, &mut resources).await?;
+        let states =
+            StatesCurrentDiscoverCmd::exec_internal(item_spec_graph, &mut resources).await?;
         let states_desired =
             StateDesiredDiscoverCmd::exec_internal(item_spec_graph, &mut resources).await?;
 

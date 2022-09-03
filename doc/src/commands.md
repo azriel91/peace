@@ -7,7 +7,7 @@ Commands suitable to expose to users.
 
     *🚧 not yet implemented, states are retrieved on each command invocation*
 
-3. `StateCurrentCmd`: Discovers current states.
+3. `StatesCurrentDiscoverCmd`: Discovers current states.
 4. `StateDesiredDiscoverCmd`: Discovers desired states.
 5. `StateDiscoverCmd`: Discovers both current and desired states.
 6. `DiffCmd`: Displays state difference.
