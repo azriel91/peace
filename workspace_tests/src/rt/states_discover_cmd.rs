@@ -5,7 +5,7 @@ use peace::{
         states::{StatesCurrent, StatesDesired},
         type_reg::untagged::TypeReg,
     },
-    rt::StateDiscoverCmd,
+    rt::StatesDiscoverCmd,
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -27,7 +27,7 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
     };
     let cmd_context = CmdContext::init(&workspace, &graph).await?;
 
-    let CmdContext { resources, .. } = StateDiscoverCmd::exec(cmd_context).await?;
+    let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesCurrent>();
     let states_desired = resources.borrow::<StatesDesired>();

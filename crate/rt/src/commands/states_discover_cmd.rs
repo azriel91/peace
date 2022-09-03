@@ -10,9 +10,9 @@ use peace_rt_model::CmdContext;
 use crate::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd};
 
 #[derive(Debug)]
-pub struct StateDiscoverCmd<E>(PhantomData<E>);
+pub struct StatesDiscoverCmd<E>(PhantomData<E>);
 
-impl<E> StateDiscoverCmd<E>
+impl<E> StatesDiscoverCmd<E>
 where
     E: std::error::Error + From<Error> + Send,
 {

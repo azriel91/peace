@@ -3,13 +3,13 @@
 Commands suitable to expose to users.
 
 1. `InitCmd`: Calls `setup` for each `ItemSpec`.
-2. `StateDiscoverCmd`: Retrieves current and desired states.
+2. `StatesDiscoverCmd`: Retrieves current and desired states.
 
     *🚧 not yet implemented, states are retrieved on each command invocation*
 
 3. `StatesCurrentDiscoverCmd`: Discovers current states.
 4. `StatesDesiredDiscoverCmd`: Discovers desired states.
-5. `StateDiscoverCmd`: Discovers both current and desired states.
+5. `StatesDiscoverCmd`: Discovers both current and desired states.
 6. `DiffCmd`: Displays state difference.
 7. `EnsureCmd`: Transforms the current state into the desired state.
 
