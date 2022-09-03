@@ -495,7 +495,7 @@ where
             } else {
                 panic!(
                     "`ItemSpecWrapper::diff` must only be called with `StatesCurrent` and `StatesDesired` \
-                    populated using `StatesCurrentDiscoverCmd` and `StateDesiredDiscoverCmd`."
+                    populated using `StatesCurrentDiscoverCmd` and `StatesDesiredDiscoverCmd`."
                 );
             }
         };

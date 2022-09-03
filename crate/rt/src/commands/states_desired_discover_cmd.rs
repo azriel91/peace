@@ -13,9 +13,9 @@ use peace_rt_model::{CmdContext, Error, ItemSpecGraph, Storage};
 use crate::BUFFERED_FUTURES_MAX;
 
 #[derive(Debug)]
-pub struct StateDesiredDiscoverCmd<E>(PhantomData<E>);
+pub struct StatesDesiredDiscoverCmd<E>(PhantomData<E>);
 
-impl<E> StateDesiredDiscoverCmd<E>
+impl<E> StatesDesiredDiscoverCmd<E>
 where
     E: std::error::Error + From<Error> + Send,
 {
