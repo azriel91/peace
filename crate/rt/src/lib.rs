@@ -6,6 +6,8 @@
 /// suitable number is.
 pub const BUFFERED_FUTURES_MAX: usize = 64;
 
-pub use crate::commands::{DiffCmd, EnsureCmd, StateCurrentCmd, StateDesiredCmd, StateDiscoverCmd};
+pub use crate::commands::{
+    DiffCmd, EnsureCmd, StateCurrentCmd, StateDesiredDiscoverCmd, StateDiscoverCmd,
+};
 
 mod commands;

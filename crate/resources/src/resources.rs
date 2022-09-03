@@ -91,7 +91,7 @@ impl From<(Resources<SetUp>, StatesCurrent)> for Resources<WithStates> {
     }
 }
 
-// For `StateDesiredCmd` after `StatesDesired` have been discovered.
+// For `StateDesiredDiscoverCmd` after `StatesDesired` have been discovered.
 impl From<(Resources<SetUp>, StatesDesired)> for Resources<WithStatesDesired> {
     fn from((mut resources, states_desired): (Resources<SetUp>, StatesDesired)) -> Self {
         resources.insert(states_desired);

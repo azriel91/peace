@@ -7,7 +7,7 @@ use peace_resources::{
 };
 use peace_rt_model::CmdContext;
 
-use crate::{StateCurrentCmd, StateDesiredCmd};
+use crate::{StateCurrentCmd, StateDesiredDiscoverCmd};
 
 #[derive(Debug)]
 pub struct StateDiscoverCmd<E>(PhantomData<E>);
@@ -35,7 +35,7 @@ where
         let (workspace, item_spec_graph, mut resources) = cmd_context.into_inner();
         let states = StateCurrentCmd::exec_internal(item_spec_graph, &mut resources).await?;
         let states_desired =
-            StateDesiredCmd::exec_internal(item_spec_graph, &mut resources).await?;
+            StateDesiredDiscoverCmd::exec_internal(item_spec_graph, &mut resources).await?;
 
         let resources =
             Resources::<WithStatesCurrentAndDesired>::from((resources, states, states_desired));

@@ -1,7 +1,7 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, ItemSpecId, Profile},
     resources::{paths::StatesDesiredFile, states::StatesDesired, type_reg::untagged::TypeReg},
-    rt::StateDesiredCmd,
+    rt::StateDesiredDiscoverCmd,
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -23,7 +23,7 @@ async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::erro
     };
     let cmd_context = CmdContext::init(&workspace, &graph).await?;
 
-    let CmdContext { resources, .. } = StateDesiredCmd::exec(cmd_context).await?;
+    let CmdContext { resources, .. } = StateDesiredDiscoverCmd::exec(cmd_context).await?;
 
     let states_desired = resources.borrow::<StatesDesired>();
     let vec_copy_desired_state = states_desired.get::<Vec<u8>, _>(&VecCopyItemSpec.id());

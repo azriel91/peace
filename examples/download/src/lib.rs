@@ -9,7 +9,7 @@ use peace::{
         states::{StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry},
         Resources,
     },
-    rt::{DiffCmd, EnsureCmd, StateCurrentCmd, StateDesiredCmd},
+    rt::{DiffCmd, EnsureCmd, StateCurrentCmd, StateDesiredDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 use tokio::io::{AsyncWrite, AsyncWriteExt};
@@ -136,7 +136,7 @@ pub async fn desired<W>(
 where
     W: AsyncWrite + Unpin,
 {
-    let CmdContext { resources, .. } = StateDesiredCmd::exec(cmd_context).await?;
+    let CmdContext { resources, .. } = StateDesiredDiscoverCmd::exec(cmd_context).await?;
     let states_desired_serialized = {
         let states_desired = resources.borrow::<StatesDesired>();
         serde_yaml::to_string(&*states_desired).map_err(DownloadError::StatesDesiredSerialize)?
