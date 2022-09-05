@@ -9,16 +9,25 @@ pub enum Error {
     /// Failed to serialize current states.
     #[error("Failed to serialize current states.")]
     StatesCurrentSerialize(#[source] serde_yaml::Error),
+    /// Current states have not been written to disk.
+    ///
+    /// This is returned when `StatesCurrentFile` is attempted to be
+    /// deserialized but does not exist.
+    #[error("Current states have not been written to disk.")]
+    StatesCurrentDiscoverRequired,
+
+    /// Failed to deserialize desired states.
+    #[error("Failed to deserialize desired states.")]
+    StatesDesiredDeserialize(#[source] serde_yaml::Error),
     /// Failed to serialize desired states.
     #[error("Failed to serialize desired states.")]
     StatesDesiredSerialize(#[source] serde_yaml::Error),
-
-    /// Current states have not been written to storage.
+    /// Desired states have not been written to disk.
     ///
-    /// This is returned when `StatesCurrentFile` is attempted to be
-    /// deserialized but does not exist in web storage.
-    #[error("Current states have not been written to storage.")]
-    StatesCurrentDiscoverRequired,
+    /// This is returned when `StatesDesiredFile` is attempted to be
+    /// deserialized but does not exist.
+    #[error("Desired states have not been written to disk.")]
+    StatesDesiredDiscoverRequired,
 
     // web_sys related errors
     /// Browser local storage unavailable.
