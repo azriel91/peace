@@ -1,6 +1,9 @@
 use std::{io::Write, path::Path, sync::Mutex};
 
-use tokio::{fs::File, io::BufWriter};
+use tokio::{
+    fs::File,
+    io::{BufReader, BufWriter},
+};
 use tokio_util::io::SyncIoBridge;
 
 use crate::Error;
@@ -10,6 +13,46 @@ use crate::Error;
 pub struct NativeStorage;
 
 impl NativeStorage {
+    /// Reads from a file, bridging to libraries that take a synchronous `Write`
+    /// type.
+    ///
+    /// This method buffers the write, and calls flush on the buffer when the
+    /// passed in closure returns.
+    pub async fn read_with_sync_api<'f, F, T>(
+        &self,
+        thread_name: String,
+        file_path: &Path,
+        f: F,
+    ) -> Result<T, Error>
+    where
+        F: FnOnce(&mut SyncIoBridge<BufReader<File>>) -> Result<T, Error> + Send + 'f,
+        T: Send,
+    {
+        let file = File::open(file_path).await.map_err(|error| {
+            let path = file_path.to_path_buf();
+            Error::FileOpen { path, error }
+        })?;
+        let mut sync_io_bridge = SyncIoBridge::new(BufReader::new(file));
+
+        // `tokio::task::spawn_blocking` doesn't work because it needs the closure's
+        // environment to be `'static`
+        let t = std::thread::scope(move |s| {
+            std::thread::Builder::new()
+                .name(thread_name)
+                .spawn_scoped(s, move || {
+                    let t = f(&mut sync_io_bridge)?;
+
+                    Ok(t)
+                })
+                .map_err(Error::StorageSyncThreadSpawn)?
+                .join()
+                .map_err(Mutex::new)
+                .map_err(Error::StorageSyncThreadJoin)?
+        })?;
+
+        Ok(t)
+    }
+
     /// Writes to a file, bridging to libraries that take a synchronous `Write`
     /// type.
     ///
@@ -46,10 +89,10 @@ impl NativeStorage {
 
                     Ok(t)
                 })
-                .map_err(Error::FileWriteThreadSpawn)?
+                .map_err(Error::StorageSyncThreadSpawn)?
                 .join()
                 .map_err(Mutex::new)
-                .map_err(Error::FileWriteThreadJoin)?
+                .map_err(Error::StorageSyncThreadJoin)?
         })?;
 
         Ok(t)

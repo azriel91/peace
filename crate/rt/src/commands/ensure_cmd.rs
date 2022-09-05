@@ -50,11 +50,12 @@ where
         cmd_context: CmdContext<'_, SetUp, E>,
     ) -> Result<CmdContext<EnsuredDry, E>, E> {
         let cmd_context = DiffCmd::exec(cmd_context).await?;
-        let (workspace, item_spec_graph, resources) = cmd_context.into_inner();
+        let (workspace, item_spec_graph, resources, states_type_regs) = cmd_context.into_inner();
         let states_ensured_dry = Self::exec_dry_internal(item_spec_graph, &resources).await?;
 
         let resources = Resources::<EnsuredDry>::from((resources, states_ensured_dry));
-        let cmd_context = CmdContext::from((workspace, item_spec_graph, resources));
+        let cmd_context =
+            CmdContext::from((workspace, item_spec_graph, resources, states_type_regs));
         Ok(cmd_context)
     }
 
@@ -121,11 +122,12 @@ where
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec(cmd_context: CmdContext<'_, SetUp, E>) -> Result<CmdContext<Ensured, E>, E> {
         let cmd_context = DiffCmd::exec(cmd_context).await?;
-        let (workspace, item_spec_graph, resources) = cmd_context.into_inner();
+        let (workspace, item_spec_graph, resources, states_type_regs) = cmd_context.into_inner();
         let states_ensured = Self::exec_internal(item_spec_graph, &resources).await?;
 
         let resources = Resources::<Ensured>::from((resources, states_ensured));
-        let cmd_context = CmdContext::from((workspace, item_spec_graph, resources));
+        let cmd_context =
+            CmdContext::from((workspace, item_spec_graph, resources, states_type_regs));
         Ok(cmd_context)
     }
 

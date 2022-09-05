@@ -59,6 +59,48 @@ impl WebStorage {
         Ok(storage)
     }
 
+    /// Gets an item in the web storage.
+    ///
+    /// See [`get_items`] if you would like to get multiple items.
+    ///
+    /// [`get_items`]: Self::get_items
+    pub fn get_item(&self, key: &str) -> Result<Option<String>, Error> {
+        let storage = self.get()?;
+        storage
+            .get_item(key)
+            .map_err(|js_value| Error::StorageGetItem {
+                key: key.to_string(),
+                error: crate::stringify_js_value(js_value),
+            })
+    }
+
+    /// Gets multiple items in the web storage.
+    ///
+    /// See [`get_item`] if you would like to get a single item.
+    ///
+    /// [`get_item`]: Self::get_item
+    pub fn get_items<'f, I>(
+        &self,
+        iter: I,
+    ) -> Result<impl Iterator<Item = Result<(&'f str, Option<String>), Error>>, Error>
+    where
+        I: Iterator<Item = &'f str>,
+    {
+        let storage = self.get()?;
+
+        let iter = iter.map(move |key| {
+            storage
+                .get_item(key)
+                .map(|value| (key, value))
+                .map_err(|js_value| Error::StorageGetItem {
+                    key: key.to_string(),
+                    error: crate::stringify_js_value(js_value),
+                })
+        });
+
+        Ok(iter)
+    }
+
     /// Sets an item in the web storage.
     ///
     /// See [`set_items`] if you would like to set multiple items.
@@ -97,7 +139,8 @@ impl WebStorage {
         })
     }
 
-    /// Returns  web storage.
+    /// Runs the provided closure for each item produced by the iterator,
+    /// augmented with the web storage.
     pub fn iter_with_storage<F, I, T>(&self, mut iter: I, mut f: F) -> Result<(), Error>
     where
         F: for<'f> FnMut(&'f web_sys::Storage, T) -> Result<(), (String, String, JsValue)>,

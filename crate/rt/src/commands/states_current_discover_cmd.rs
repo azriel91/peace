@@ -36,12 +36,14 @@ where
     pub async fn exec(
         cmd_context: CmdContext<'_, SetUp, E>,
     ) -> Result<CmdContext<WithStates, E>, E> {
-        let (workspace, item_spec_graph, mut resources) = cmd_context.into_inner();
+        let (workspace, item_spec_graph, mut resources, states_type_regs) =
+            cmd_context.into_inner();
         let states = Self::exec_internal(item_spec_graph, &mut resources).await?;
 
         let resources = Resources::<WithStates>::from((resources, states));
 
-        let cmd_context = CmdContext::from((workspace, item_spec_graph, resources));
+        let cmd_context =
+            CmdContext::from((workspace, item_spec_graph, resources, states_type_regs));
         Ok(cmd_context)
     }
 
@@ -112,9 +114,9 @@ where
 
         storage
             .write_with_sync_api(
-                "states_file_write".to_string(),
+                "states_current_file_write".to_string(),
                 &states_current_file,
-                |file| serde_yaml::to_writer(file, states).map_err(Error::StatesSerialize),
+                |file| serde_yaml::to_writer(file, states).map_err(Error::StatesCurrentSerialize),
             )
             .await?;
         drop(flow_dir);
@@ -134,7 +136,8 @@ where
         let storage = resources.borrow::<Storage>();
         let states_current_file = StatesCurrentFile::from(&*flow_dir);
 
-        let states_serialized = serde_yaml::to_string(&*states).map_err(Error::StatesSerialize)?;
+        let states_serialized =
+            serde_yaml::to_string(&*states).map_err(Error::StatesCurrentSerialize)?;
         let states_current_file_str = states_current_file.to_string_lossy();
         storage.set_item(&states_current_file_str, &states_serialized)?;
         drop(flow_dir);

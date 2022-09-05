@@ -3,12 +3,22 @@
 /// Peace web support errors.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    /// Failed to serialize states.
-    #[error("Failed to serialize states.")]
-    StatesSerialize(#[source] serde_yaml::Error),
+    /// Failed to deserialize current states.
+    #[error("Failed to deserialize current states.")]
+    StatesCurrentDeserialize(#[source] serde_yaml::Error),
+    /// Failed to serialize current states.
+    #[error("Failed to serialize current states.")]
+    StatesCurrentSerialize(#[source] serde_yaml::Error),
     /// Failed to serialize desired states.
     #[error("Failed to serialize desired states.")]
     StatesDesiredSerialize(#[source] serde_yaml::Error),
+
+    /// Current states have not been written to storage.
+    ///
+    /// This is returned when `StatesCurrentFile` is attempted to be
+    /// deserialized but does not exist in web storage.
+    #[error("Current states have not been written to storage.")]
+    StatesCurrentDiscoverRequired,
 
     // web_sys related errors
     /// Browser local storage unavailable.
@@ -35,6 +45,25 @@ pub enum Error {
     /// Browser session storage is `None`.
     #[error("Browser session storage is none.")]
     SessionStorageNone,
+    /// Failed to get an item from browser storage.
+    ///
+    /// Note: The original `JsValue` error is converted to a `String` to allow
+    /// this type to be `Send`.
+    ///
+    /// Instead of doing that, we could either:
+    ///
+    /// * Update `resman::Resource` to be `!Send` when compiling to WASM, or
+    /// * Use <https://docs.rs/send_wrapper/> to wrap the `JsValue`.
+    ///
+    /// This is because browsers are generally single threaded. The assumption
+    /// would no longer be true if multiple threads are used, e.g. web workers.
+    #[error("Failed to get an item in browser storage: `{key}`. Error: `{error}`")]
+    StorageGetItem {
+        /// Key to get.
+        key: String,
+        /// Stringified JS error.
+        error: String,
+    },
     /// Failed to set an item in browser storage.
     ///
     /// Note: The original `JsValue` error is converted to a `String` to allow
@@ -53,7 +82,7 @@ pub enum Error {
         key: String,
         /// Value which failed to be set.
         value: String,
-        /// Value which failed to be set.
+        /// Stringified JS error.
         error: String,
     },
     /// Failed to fetch browser Window object.

@@ -42,7 +42,8 @@ where
     pub async fn exec(
         cmd_context: CmdContext<'_, SetUp, E>,
     ) -> Result<CmdContext<WithStateDiffs, E>, E> {
-        let (workspace, item_spec_graph, mut resources) = cmd_context.into_inner();
+        let (workspace, item_spec_graph, mut resources, states_type_regs) =
+            cmd_context.into_inner();
         let states =
             StatesCurrentDiscoverCmd::exec_internal(item_spec_graph, &mut resources).await?;
         let states_desired =
@@ -68,7 +69,8 @@ where
         };
 
         let resources = Resources::<WithStateDiffs>::from((resources, state_diffs));
-        let cmd_context = CmdContext::from((workspace, item_spec_graph, resources));
+        let cmd_context =
+            CmdContext::from((workspace, item_spec_graph, resources, states_type_regs));
         Ok(cmd_context)
     }
 }
