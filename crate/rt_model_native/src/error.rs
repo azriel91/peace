@@ -5,17 +5,45 @@ use std::{ffi::OsString, path::PathBuf, sync::Mutex};
 /// Peace runtime errors.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    /// Failed to serialize states.
-    #[error("Failed to serialize states.")]
-    StatesSerialize(#[source] serde_yaml::Error),
+    /// Failed to deserialize current states.
+    #[error("Failed to deserialize current states.")]
+    StatesCurrentDeserialize(#[source] serde_yaml::Error),
+    /// Failed to serialize current states.
+    #[error("Failed to serialize current states.")]
+    StatesCurrentSerialize(#[source] serde_yaml::Error),
     /// Failed to serialize desired states.
     #[error("Failed to serialize desired states.")]
     StatesDesiredSerialize(#[source] serde_yaml::Error),
 
+    /// Current states have not been written to disk.
+    ///
+    /// This is returned when `StatesCurrentFile` is attempted to be
+    /// deserialized but does not exist.
+    #[error("Current states have not been written to disk.")]
+    StatesCurrentDiscoverRequired,
+
     // Native FS errors.
-    /// Failed to open file for writing.
-    #[error("Failed to open file for writing: `{path}`")]
+    /// Failed to create file for writing.
+    #[error("Failed to create file for writing: `{path}`")]
     FileCreate {
+        /// Path to the file.
+        path: PathBuf,
+        /// Underlying IO error.
+        #[source]
+        error: std::io::Error,
+    },
+    /// Failed to open file for reading.
+    #[error("Failed to open file for reading: `{path}`")]
+    FileOpen {
+        /// Path to the file.
+        path: PathBuf,
+        /// Underlying IO error.
+        #[source]
+        error: std::io::Error,
+    },
+    /// Failed to read from file.
+    #[error("Failed to read from file: `{path}`")]
+    FileRead {
         /// Path to the file.
         path: PathBuf,
         /// Underlying IO error.
@@ -31,18 +59,24 @@ pub enum Error {
         #[source]
         error: std::io::Error,
     },
-    /// File write thread failed to be joined.
-    #[error("File write thread failed to be joined.")]
-    FileWriteThreadSpawn(#[source] std::io::Error),
-    /// File write thread failed to be joined.
+    /// Storage synchronous thread failed to be joined.
+    ///
+    /// This variant is used for thread spawning errors for both reads and
+    /// writes.
+    #[error("Storage synchronous thread failed to be joined.")]
+    StorageSyncThreadSpawn(#[source] std::io::Error),
+    /// Storage synchronous thread failed to be joined.
+    ///
+    /// This variant is used for thread spawning errors for both reads and
+    /// writes.
     ///
     /// Note: The underlying thread join error does not implement
     /// `std::error::Error`. See
     /// <https://doc.rust-lang.org/std/thread/type.Result.html>.
     ///
     /// The `Mutex` is needed to allow `Error` to be `Sync`.
-    #[error("File write thread failed to be joined.")]
-    FileWriteThreadJoin(Mutex<Box<dyn std::any::Any + Send + 'static>>),
+    #[error("Storage synchronous thread failed to be joined.")]
+    StorageSyncThreadJoin(Mutex<Box<dyn std::any::Any + Send + 'static>>),
     /// Failed to read current directory to discover workspace directory.
     #[error("Failed to read current directory to discover workspace directory.")]
     WorkingDirRead(#[source] std::io::Error),

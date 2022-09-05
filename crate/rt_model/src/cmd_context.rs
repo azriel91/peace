@@ -4,7 +4,7 @@ use peace_resources::{
     Resources,
 };
 
-use crate::{Error, ItemSpecGraph, Workspace};
+use crate::{Error, ItemSpecGraph, StatesTypeRegs, Workspace};
 
 /// Information needed to execute a command.
 ///
@@ -40,6 +40,9 @@ pub struct CmdContext<'ctx, TS, E> {
     pub item_spec_graph: &'ctx ItemSpecGraph<E>,
     /// `Resources` in this workspace.
     pub resources: Resources<TS>,
+    /// Type registers to deserialize `StatesCurrentFile` and
+    /// `StatesDesiredFile`.
+    pub states_type_regs: StatesTypeRegs,
 }
 
 impl<'ctx, E> CmdContext<'ctx, SetUp, E>
@@ -60,11 +63,13 @@ where
 
         Self::insert_workspace_resources(workspace, &mut resources);
         let resources = Self::item_spec_graph_setup(item_spec_graph, resources).await?;
+        let states_type_regs = Self::states_type_regs(item_spec_graph);
 
         Ok(CmdContext {
             workspace,
             item_spec_graph,
             resources,
+            states_type_regs,
         })
     }
 
@@ -90,6 +95,18 @@ impl<'ctx, TS, E> CmdContext<'ctx, TS, E>
 where
     E: std::error::Error,
 {
+    /// Registers each item spec's `State` and `StateLogical` for
+    /// deserialization.
+    fn states_type_regs(item_spec_graph: &ItemSpecGraph<E>) -> StatesTypeRegs {
+        item_spec_graph
+            .iter()
+            .fold(StatesTypeRegs::new(), |mut states_type_regs, item_spec| {
+                item_spec.state_register(&mut states_type_regs);
+
+                states_type_regs
+            })
+    }
+
     async fn item_spec_graph_setup(
         item_spec_graph: &ItemSpecGraph<E>,
         resources: Resources<Empty>,
@@ -106,15 +123,23 @@ where
         Ok(Resources::<SetUp>::from(resources))
     }
 
-    /// Returns the underlying workspace, item spec graph, and resources.
-    pub fn into_inner(self) -> (&'ctx Workspace, &'ctx ItemSpecGraph<E>, Resources<TS>) {
+    /// Returns the underlying data.
+    pub fn into_inner(
+        self,
+    ) -> (
+        &'ctx Workspace,
+        &'ctx ItemSpecGraph<E>,
+        Resources<TS>,
+        StatesTypeRegs,
+    ) {
         let Self {
             workspace,
             item_spec_graph,
+            states_type_regs,
             resources,
         } = self;
 
-        (workspace, item_spec_graph, resources)
+        (workspace, item_spec_graph, resources, states_type_regs)
     }
 
     /// Returns a reference to the workspace.
@@ -138,20 +163,27 @@ where
     }
 }
 
-impl<'ctx, TS, E> From<(&'ctx Workspace, &'ctx ItemSpecGraph<E>, Resources<TS>)>
-    for CmdContext<'ctx, TS, E>
+impl<'ctx, TS, E>
+    From<(
+        &'ctx Workspace,
+        &'ctx ItemSpecGraph<E>,
+        Resources<TS>,
+        StatesTypeRegs,
+    )> for CmdContext<'ctx, TS, E>
 {
     fn from(
-        (workspace, item_spec_graph, resources): (
+        (workspace, item_spec_graph, resources, states_type_regs): (
             &'ctx Workspace,
             &'ctx ItemSpecGraph<E>,
             Resources<TS>,
+            StatesTypeRegs,
         ),
     ) -> Self {
         Self {
             workspace,
             item_spec_graph,
             resources,
+            states_type_regs,
         }
     }
 }

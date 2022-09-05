@@ -8,6 +8,8 @@ use peace_resources::{
     Resources,
 };
 
+use crate::StatesTypeRegs;
+
 /// Internal trait that erases the types from [`ItemSpec`]
 ///
 /// This exists so that different implementations of [`ItemSpec`] can be held
@@ -27,6 +29,12 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E>
     where
         E: Debug + std::error::Error;
+
+    /// Registers state types with type registries for deserializing from disk.
+    ///
+    /// This is necessary to deserialize `StatesCurrentFile` and
+    /// `StatesDesiredFile`.
+    fn state_register(&self, states_type_regs: &mut StatesTypeRegs);
 
     /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`exec`].
     ///

@@ -15,7 +15,7 @@ use peace_resources::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::ItemSpecRt;
+use crate::{ItemSpecRt, StatesTypeRegs};
 
 /// Wraps a type implementing [`ItemSpec`].
 #[allow(clippy::type_complexity)]
@@ -430,6 +430,16 @@ where
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E> {
         <IS as ItemSpec>::setup(self, resources).await
+    }
+
+    fn state_register(&self, states_type_regs: &mut StatesTypeRegs) {
+        states_type_regs
+            .states_current_type_reg_mut()
+            .register::<State<StateLogical, StatePhysical>>(<IS as ItemSpec>::id(self));
+
+        states_type_regs
+            .states_desired_type_reg_mut()
+            .register::<StateLogical>(<IS as ItemSpec>::id(self));
     }
 
     async fn state_current_fn_exec(
