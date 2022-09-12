@@ -6,8 +6,10 @@
 // Re-exports
 pub use async_trait::async_trait;
 pub use nougat;
-pub use peace_core::{ItemSpecId, ItemSpecIdInvalidFmt, OpCheckStatus, ProgressLimit};
-pub use peace_item_spec_id_macro::item_spec_id;
+pub use peace_core::{
+    flow_id, item_spec_id, profile, FlowId, ItemSpecId, ItemSpecIdInvalidFmt, OpCheckStatus,
+    Profile, ProfileInvalidFmt, ProgressLimit,
+};
 
 #[nougat::gat(Data)]
 pub use crate::clean_op_spec::CleanOpSpec;

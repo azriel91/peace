@@ -8,6 +8,8 @@ use peace_resources::{
     Resources,
 };
 
+use crate::StatesTypeRegs;
+
 /// Internal trait that erases the types from [`ItemSpec`]
 ///
 /// This exists so that different implementations of [`ItemSpec`] can be held
@@ -15,10 +17,7 @@ use peace_resources::{
 ///
 /// [`ItemSpec`]: peace_cfg::ItemSpec
 #[async_trait(?Send)]
-pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn
-where
-    E: Debug + std::error::Error,
-{
+pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// Returns the ID of this full spec.
     ///
     /// See [`ItemSpec::id`];
@@ -27,7 +26,15 @@ where
     fn id(&self) -> ItemSpecId;
 
     /// Initializes data for the operation's check and `exec` functions.
-    async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E>;
+    async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E>
+    where
+        E: Debug + std::error::Error;
+
+    /// Registers state types with type registries for deserializing from disk.
+    ///
+    /// This is necessary to deserialize `StatesCurrentFile` and
+    /// `StatesDesiredFile`.
+    fn state_register(&self, states_type_regs: &mut StatesTypeRegs);
 
     /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`exec`].
     ///
@@ -36,7 +43,9 @@ where
     async fn state_current_fn_exec(
         &self,
         resources: &Resources<SetUp>,
-    ) -> Result<Box<dyn DataType>, E>;
+    ) -> Result<Box<dyn DataType>, E>
+    where
+        E: Debug + std::error::Error;
 
     /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`exec`].
     ///
@@ -45,7 +54,9 @@ where
     async fn state_ensured_fn_exec(
         &self,
         resources: &Resources<WithStateDiffs>,
-    ) -> Result<Box<dyn DataType>, E>;
+    ) -> Result<Box<dyn DataType>, E>
+    where
+        E: Debug + std::error::Error;
 
     /// Runs [`ItemSpec::StateDesiredFnSpec`]`::`[`desired`].
     ///
@@ -54,7 +65,9 @@ where
     async fn state_desired_fn_exec(
         &self,
         resources: &Resources<SetUp>,
-    ) -> Result<Box<dyn DataType>, E>;
+    ) -> Result<Box<dyn DataType>, E>
+    where
+        E: Debug + std::error::Error;
 
     /// Returns the diff between the current and desired [`State`]s.
     ///
@@ -62,7 +75,9 @@ where
     async fn state_diff_fn_exec(
         &self,
         resources: &Resources<WithStatesCurrentAndDesired>,
-    ) -> Result<Box<dyn DataType>, E>;
+    ) -> Result<Box<dyn DataType>, E>
+    where
+        E: Debug + std::error::Error;
 
     /// Runs [`ItemSpec::EnsureOpSpec`]`::`[`check`].
     ///
@@ -71,17 +86,23 @@ where
     async fn ensure_op_check(
         &self,
         resources: &Resources<WithStateDiffs>,
-    ) -> Result<OpCheckStatus, E>;
+    ) -> Result<OpCheckStatus, E>
+    where
+        E: Debug + std::error::Error;
 
     /// Runs [`ItemSpec::EnsureOpSpec`]`::`[`exec_dry`].
     ///
     /// [`ItemSpec::EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     /// [`exec_dry`]: peace_cfg::OpSpec::exec_dry
-    async fn ensure_op_exec_dry(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E>;
+    async fn ensure_op_exec_dry(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E>
+    where
+        E: Debug + std::error::Error;
 
     /// Runs [`ItemSpec::EnsureOpSpec`]`::`[`exec`].
     ///
     /// [`ItemSpec::EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     /// [`exec`]: peace_cfg::OpSpec::exec
-    async fn ensure_op_exec(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E>;
+    async fn ensure_op_exec(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E>
+    where
+        E: Debug + std::error::Error;
 }

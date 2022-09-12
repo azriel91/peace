@@ -104,7 +104,7 @@ This may not necessarily be a cheap operation, for example if it needs to make w
 
 * Item spec that manages a file download:
 
-	Desired state is file metadata fetched from a remote server.
+	Desired state is file metadata retrieved from a remote server.
 
 * Item spec that manages a server:
 
@@ -172,7 +172,7 @@ Readers may notice the function breakdown is `git`-like. The following table com
 | Item                   | Any consumer defined item.                               | A directory of files.                                                                    |
 | Project initialization | 🚧 `init` command takes in parameters to manage the item. | Uses the current directory or passed in directory.                                       |
 | State                  | Consumer defined information about the item.             | Current state is the latest commit, desired state is the working directory.              |
-| State retrieval        | 🚧 On request by user using the `fetch` command.          | Retrieved each time the `status` command is run, cheap since it is all local.            |
+| State retrieval        | 🚧 On request by user using the `StatesDiscover` command. | Retrieved each time the `status` command is run, cheap since it is all local.            |
 | State display          | On request using `state` and `desired` commands          | `show $revision:path` command shows the state at a particular `$revision`.               |
 | State difference       | On request using `diff` command                          | `status` command shows a summary, `show` and `diff` commands shows the state difference. |
 | State application      | On request through the `ensure` command.                 | On request through `commit` and `push` commands.                                         |

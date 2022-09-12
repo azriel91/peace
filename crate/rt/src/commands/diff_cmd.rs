@@ -2,25 +2,27 @@ use std::marker::PhantomData;
 
 use futures::{StreamExt, TryStreamExt};
 use peace_resources::{
+    internal::StateDiffsMut,
     resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
-    Resources, StateDiffs, StateDiffsMut,
+    states::StateDiffs,
+    Resources,
 };
-use peace_rt_model::ItemSpecGraph;
+use peace_rt_model::{CmdContext, Error};
 
-use crate::{StateCurrentCmd, StateDesiredCmd};
+use crate::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd};
 
 #[derive(Debug)]
 pub struct DiffCmd<E>(PhantomData<E>);
 
 impl<E> DiffCmd<E>
 where
-    E: std::error::Error,
+    E: std::error::Error + From<Error> + Send,
 {
     /// Runs [`StateCurrentFnSpec`]` and `[`StateDesiredFnSpec`]`::`[`exec`] for
     /// each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
-    /// [`States`] and [`StatesDesired`].
+    /// [`StatesCurrent`] and [`StatesDesired`].
     ///
     /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
     /// `ItemSpec`, the [`StatesRw`] type should be used in
@@ -33,16 +35,19 @@ where
     /// [`exec`]: peace_cfg::FnSpec::exec
     /// [`FnSpec::Data`]: peace_cfg::FnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`States`]: peace_resources::States
+    /// [`StatesCurrent`]: peace_resources::StatesCurrent
     /// [`StatesRw`]: peace_resources::StatesRw
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: Resources<SetUp>,
-    ) -> Result<Resources<WithStateDiffs>, E> {
-        let states = StateCurrentCmd::exec_internal(item_spec_graph, &resources).await?;
-        let states_desired = StateDesiredCmd::exec_internal(item_spec_graph, &resources).await?;
+        cmd_context: CmdContext<'_, SetUp, E>,
+    ) -> Result<CmdContext<WithStateDiffs, E>, E> {
+        let (workspace, item_spec_graph, mut resources, states_type_regs) =
+            cmd_context.into_inner();
+        let states =
+            StatesCurrentDiscoverCmd::exec_internal(item_spec_graph, &mut resources).await?;
+        let states_desired =
+            StatesDesiredDiscoverCmd::exec_internal(item_spec_graph, &mut resources).await?;
 
         let resources =
             Resources::<WithStatesCurrentAndDesired>::from((resources, states, states_desired));
@@ -63,6 +68,9 @@ where
             StateDiffs::from(state_diffs_mut)
         };
 
-        Ok(Resources::<WithStateDiffs>::from((resources, state_diffs)))
+        let resources = Resources::<WithStateDiffs>::from((resources, state_diffs));
+        let cmd_context =
+            CmdContext::from((workspace, item_spec_graph, resources, states_type_regs));
+        Ok(cmd_context)
     }
 }

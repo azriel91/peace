@@ -1,51 +1,39 @@
-use std::ops::Deref;
+//! Resources that track current and desired states, and state diffs.
+
+pub use self::{
+    state_diffs::StateDiffs, states_current::StatesCurrent, states_desired::StatesDesired,
+    states_ensured::StatesEnsured, states_ensured_dry::StatesEnsuredDry,
+};
+
+pub mod ts;
+
+use std::{marker::PhantomData, ops::Deref};
 
 use peace_core::ItemSpecId;
 use serde::Serialize;
 use type_reg::untagged::TypeMap;
 
-use crate::StatesMut;
+use crate::internal::StatesMut;
 
-/// `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
-///
-/// # Implementors
-///
-/// If an `ItemSpec`'s state discovery depends on the `State` of a previous
-/// `ItemSpec`, then you should insert the predecessor's state into
-/// [`Resources`], and reference that in the subsequent `FnSpec`'s [`Data`]:
-///
-/// ```rust
-/// # use std::path::PathBuf;
-/// #
-/// # use peace_data::{Data, R};
-/// #
-/// /// Predecessor `FnSpec::Data`.
-/// #[derive(Data, Debug)]
-/// pub struct AppUploadParams<'op> {
-///     /// Path to the application directory.
-///     app_dir: W<'op, PathBuf>,
-/// }
-///
-/// /// Successor `FnSpec::Data`.
-/// #[derive(Data, Debug)]
-/// pub struct AppInstallParams<'op> {
-///     /// Path to the application directory.
-///     app_dir: R<'op, PathBuf>,
-///     /// Configuration to use.
-///     config: W<'op, String>,
-/// }
-/// ```
-///
-/// You may reference [`States`] in `EnsureOpSpec::Data` for reading. It is not
-/// mutable as `States` must remain unchanged so that all `ItemSpec`s operate
-/// over consistent data.
-///
-/// [`Data`]: peace_data::Data
-/// [`Resources`]: crate::Resources
-#[derive(Debug, Default, Serialize)]
-pub struct States(TypeMap<ItemSpecId>);
+mod state_diffs;
+mod states_current;
+mod states_desired;
+mod states_ensured;
+mod states_ensured_dry;
 
-impl States {
+/// Current `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
+///
+/// Conceptually you can think of this as a `Map<ItemSpecId,
+/// ItemSpec::State<..>>`.
+///
+/// # Type Parameters
+///
+/// * `TS`: Type state to distinguish the purpose of the `States` map.
+#[derive(Debug, Serialize)]
+#[serde(transparent)] // Needed to serialize as a map instead of a list.
+pub struct States<TS>(pub(crate) TypeMap<ItemSpecId>, pub(crate) PhantomData<TS>);
+
+impl<TS> States<TS> {
     /// Returns a new `States` map.
     pub fn new() -> Self {
         Self::default()
@@ -56,7 +44,7 @@ impl States {
     /// The `States` will be able to hold at least capacity elements
     /// without reallocating. If capacity is 0, the map will not allocate.
     pub fn with_capacity(capacity: usize) -> Self {
-        Self(TypeMap::with_capacity(capacity))
+        Self(TypeMap::with_capacity(capacity), PhantomData)
     }
 
     /// Returns the inner map.
@@ -65,7 +53,13 @@ impl States {
     }
 }
 
-impl Deref for States {
+impl<TS> Default for States<TS> {
+    fn default() -> Self {
+        Self(TypeMap::default(), PhantomData)
+    }
+}
+
+impl<TS> Deref for States<TS> {
     type Target = TypeMap<ItemSpecId>;
 
     fn deref(&self) -> &Self::Target {
@@ -73,14 +67,14 @@ impl Deref for States {
     }
 }
 
-impl From<TypeMap<ItemSpecId>> for States {
+impl<TS> From<TypeMap<ItemSpecId>> for States<TS> {
     fn from(type_map: TypeMap<ItemSpecId>) -> Self {
-        Self(type_map)
+        Self(type_map, PhantomData)
     }
 }
 
-impl From<StatesMut> for States {
-    fn from(states_mut: StatesMut) -> Self {
-        Self(states_mut.into_inner())
+impl<TS> From<StatesMut<TS>> for States<TS> {
+    fn from(states_mut: StatesMut<TS>) -> Self {
+        Self(states_mut.into_inner(), PhantomData)
     }
 }

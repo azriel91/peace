@@ -1,24 +1,33 @@
 use diff::{Diff, VecDiff, VecDiffType};
 use peace::{
-    cfg::{ItemSpec, State},
-    resources::{Resources, StateDiffs, States, StatesDesired},
+    cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
+    resources::states::{StateDiffs, StatesCurrent, StatesDesired},
     rt::DiffCmd,
-    rt_model::ItemSpecGraphBuilder,
+    rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{VecA, VecB, VecCopyError, VecCopyItemSpec};
 
 #[tokio::test]
-async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), VecCopyError> {
-    let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
-    graph_builder.add_fn(VecCopyItemSpec.into());
+async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>>
+{
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::init(
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+        profile!("test_profile"),
+        flow_id!("test_flow"),
+    )
+    .await?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.build()
+    };
+    let cmd_context = { CmdContext::init(&workspace, &graph).await? };
 
-    let graph = graph_builder.build();
+    let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
-    let resources = graph.setup(Resources::new()).await?;
-    let resources = DiffCmd::exec(&graph, resources).await?;
-
-    let states = resources.borrow::<States>();
+    let states = resources.borrow::<StatesCurrent>();
     let states_desired = resources.borrow::<StatesDesired>();
     let state_diffs = resources.borrow::<StateDiffs>();
     let vec_diff = state_diffs.get::<<Vec<u8> as Diff>::Repr, _>(&VecCopyItemSpec.id());
@@ -43,20 +52,29 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), VecCopyE
 }
 
 #[tokio::test]
-async fn diff_with_multiple_changes() -> Result<(), VecCopyError> {
-    let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
-    graph_builder.add_fn(VecCopyItemSpec.into());
-
-    let graph = graph_builder.build();
-
-    let mut resources = graph.setup(Resources::new()).await?;
+async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::init(
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+        profile!("test_profile"),
+        flow_id!("test_flow"),
+    )
+    .await?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.build()
+    };
+    let mut cmd_context = { CmdContext::init(&workspace, &graph).await? };
     // overwrite initial state
+    let resources = cmd_context.resources_mut();
     #[rustfmt::skip]
     resources.insert(VecA(vec![0, 1, 2,    4, 5, 6, 8]));
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-    let resources = DiffCmd::exec(&graph, resources).await?;
 
-    let states = resources.borrow::<States>();
+    let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
+
+    let states = resources.borrow::<StatesCurrent>();
     let states_desired = resources.borrow::<StatesDesired>();
     let state_diffs = resources.borrow::<StateDiffs>();
     let vec_diff = state_diffs.get::<<Vec<u8> as Diff>::Repr, _>(&VecCopyItemSpec.id());

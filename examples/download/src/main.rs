@@ -1,12 +1,15 @@
 use clap::Parser;
-use peace::resources::Resources;
+use peace::{
+    cfg::{flow_id, profile, FlowId, Profile},
+    rt_model::WorkspaceSpec,
+};
 use tokio::io;
 
 pub use download::{
-    desired, diff, ensure, ensure_dry, setup_graph, status, DownloadArgs, DownloadCleanOpSpec,
-    DownloadCommand, DownloadEnsureOpSpec, DownloadError, DownloadItemSpec, DownloadParams,
-    DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec, DownloadStateDiffFnSpec, FileState,
-    FileStateDiff,
+    cmd_context, desired, diff, ensure, ensure_dry, setup_workspace_and_graph, status,
+    DownloadArgs, DownloadCleanOpSpec, DownloadCommand, DownloadEnsureOpSpec, DownloadError,
+    DownloadItemSpec, DownloadParams, DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec,
+    DownloadStateDiffFnSpec, FileState, FileStateDiff,
 };
 
 pub fn main() -> Result<(), DownloadError> {
@@ -20,31 +23,40 @@ pub fn main() -> Result<(), DownloadError> {
 
     let DownloadArgs { command } = DownloadArgs::parse();
     runtime.block_on(async {
+        let workspace_spec = WorkspaceSpec::WorkingDir;
+        let profile = profile!("default");
+        let flow_id = flow_id!("file");
+
         match command {
             DownloadCommand::Status { url, dest } => {
-                let graph = setup_graph(url, dest).await?;
-                let resources = graph.setup(Resources::new()).await?;
-                status(io::stdout(), &graph, resources).await?;
+                let workspace_and_graph =
+                    setup_workspace_and_graph(workspace_spec, profile, flow_id, url, dest).await?;
+                let cmd_context = cmd_context(&workspace_and_graph).await?;
+                status(io::stdout(), cmd_context).await?;
             }
             DownloadCommand::Desired { url, dest } => {
-                let graph = setup_graph(url, dest).await?;
-                let resources = graph.setup(Resources::new()).await?;
-                desired(io::stdout(), &graph, resources).await?;
+                let workspace_and_graph =
+                    setup_workspace_and_graph(workspace_spec, profile, flow_id, url, dest).await?;
+                let cmd_context = cmd_context(&workspace_and_graph).await?;
+                desired(io::stdout(), cmd_context).await?;
             }
             DownloadCommand::Diff { url, dest } => {
-                let graph = setup_graph(url, dest).await?;
-                let resources = graph.setup(Resources::new()).await?;
-                diff(io::stdout(), &graph, resources).await?;
+                let workspace_and_graph =
+                    setup_workspace_and_graph(workspace_spec, profile, flow_id, url, dest).await?;
+                let cmd_context = cmd_context(&workspace_and_graph).await?;
+                diff(io::stdout(), cmd_context).await?;
             }
             DownloadCommand::EnsureDry { url, dest } => {
-                let graph = setup_graph(url, dest).await?;
-                let resources = graph.setup(Resources::new()).await?;
-                ensure_dry(io::stdout(), &graph, resources).await?;
+                let workspace_and_graph =
+                    setup_workspace_and_graph(workspace_spec, profile, flow_id, url, dest).await?;
+                let cmd_context = cmd_context(&workspace_and_graph).await?;
+                ensure_dry(io::stdout(), cmd_context).await?;
             }
             DownloadCommand::Ensure { url, dest } => {
-                let graph = setup_graph(url, dest).await?;
-                let resources = graph.setup(Resources::new()).await?;
-                ensure(io::stdout(), &graph, resources).await?;
+                let workspace_and_graph =
+                    setup_workspace_and_graph(workspace_spec, profile, flow_id, url, dest).await?;
+                let cmd_context = cmd_context(&workspace_and_graph).await?;
+                ensure(io::stdout(), cmd_context).await?;
             }
         }
 

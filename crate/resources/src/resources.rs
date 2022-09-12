@@ -8,7 +8,7 @@ use crate::{
         Empty, Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired,
         WithStatesDesired,
     },
-    StateDiffs, States, StatesDesired, StatesEnsured, StatesEnsuredDry,
+    states::{StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry},
 };
 
 /// Map of all types at runtime. [`resman::Resources`] newtype.
@@ -79,9 +79,9 @@ impl From<Resources<Empty>> for Resources<SetUp> {
     }
 }
 
-// For `StateCurrentCmd` after `States` have been discovered.
-impl From<(Resources<SetUp>, States)> for Resources<WithStates> {
-    fn from((mut resources, states): (Resources<SetUp>, States)) -> Self {
+// For `StatesCurrentDiscoverCmd` after `StatesCurrent` have been discovered.
+impl From<(Resources<SetUp>, StatesCurrent)> for Resources<WithStates> {
+    fn from((mut resources, states): (Resources<SetUp>, StatesCurrent)) -> Self {
         resources.insert(states);
 
         Self {
@@ -91,7 +91,7 @@ impl From<(Resources<SetUp>, States)> for Resources<WithStates> {
     }
 }
 
-// For `StateDesiredCmd` after `StatesDesired` have been discovered.
+// For `StatesDesiredDiscoverCmd` after `StatesDesired` have been discovered.
 impl From<(Resources<SetUp>, StatesDesired)> for Resources<WithStatesDesired> {
     fn from((mut resources, states_desired): (Resources<SetUp>, StatesDesired)) -> Self {
         resources.insert(states_desired);
@@ -103,9 +103,11 @@ impl From<(Resources<SetUp>, StatesDesired)> for Resources<WithStatesDesired> {
     }
 }
 
-impl From<(Resources<SetUp>, States, StatesDesired)> for Resources<WithStatesCurrentAndDesired> {
+impl From<(Resources<SetUp>, StatesCurrent, StatesDesired)>
+    for Resources<WithStatesCurrentAndDesired>
+{
     fn from(
-        (mut resources, states, states_desired): (Resources<SetUp>, States, StatesDesired),
+        (mut resources, states, states_desired): (Resources<SetUp>, StatesCurrent, StatesDesired),
     ) -> Self {
         resources.insert(states);
         resources.insert(states_desired);

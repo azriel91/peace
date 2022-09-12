@@ -15,11 +15,11 @@ pub struct Empty;
 #[derive(Debug)]
 pub struct SetUp;
 
-/// [`Resources`] contains [`States`].
+/// [`Resources`] contains [`StatesCurrent`].
 ///
 /// Implies [`SetUp`].
 ///
-/// [`States`]: crate::States
+/// [`StatesCurrent`]: crate::StatesCurrent
 #[derive(Debug)]
 pub struct WithStates;
 
@@ -32,22 +32,23 @@ pub struct WithStates;
 #[derive(Debug)]
 pub struct WithStatesDesired;
 
-/// [`Resources`] contains [`States`] and [`StatesDesired`].
+/// [`Resources`] contains [`StatesCurrent`] and [`StatesDesired`].
 ///
 /// Implies [`SetUp`], [`WithStates`], and [`WithStatesDesired`].
 ///
 /// [`Resources`]: crate::Resources
-/// [`States`]: crate::States
+/// [`StatesCurrent`]: crate::StatesCurrent
 /// [`StatesDesired`]: crate::StatesDesired
 #[derive(Debug)]
 pub struct WithStatesCurrentAndDesired;
 
-/// [`Resources`] contains [`States`], [`StatesDesired`], and [`StateDiffs`].
+/// [`Resources`] contains [`StatesCurrent`], [`StatesDesired`], and
+/// [`StateDiffs`].
 ///
 /// Implies [`SetUp`] and [`WithStatesNowAndDesired`].
 ///
 /// [`Resources`]: crate::Resources
-/// [`States`]: crate::States
+/// [`StatesCurrent`]: crate::StatesCurrent
 /// [`StatesDesired`]: crate::StatesDesired
 /// [`StateDiffs`]: crate::StateDiffs
 #[derive(Debug)]
@@ -58,7 +59,7 @@ pub struct WithStateDiffs;
 /// Implies [`SetUp`], [`WithStatesNowAndDesired`], and [`WithStateDiffs`].
 ///
 /// [`Resources`]: crate::Resources
-/// [`States`]: crate::States
+/// [`StatesCurrent`]: crate::StatesCurrent
 /// [`StatesDesired`]: crate::StatesDesired
 /// [`StateDiffs`]: crate::StateDiffs
 #[derive(Debug)]
@@ -66,13 +67,13 @@ pub struct EnsuredDry;
 
 /// [`Resources`] have been run through `EnsureCmd::exec`.
 ///
-/// This means `States` is now stale, and [`StatesEnsured`] holds the up to date
-/// states.
+/// This means `StatesCurrent` is now stale, and [`StatesEnsured`] holds the up
+/// to date states.
 ///
 /// Implies [`SetUp`], [`WithStatesNowAndDesired`], and [`WithStateDiffs`].
 ///
 /// [`Resources`]: crate::Resources
-/// [`States`]: crate::States
+/// [`StatesCurrent`]: crate::StatesCurrent
 /// [`StatesDesired`]: crate::StatesDesired
 /// [`StatesEnsured`]: crate::StatesEnsured
 /// [`StateDiffs`]: crate::StateDiffs

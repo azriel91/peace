@@ -1,0 +1,22 @@
+[package]
+name = "peace_static_check_macros"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.2"
+edition = "2021"
+description = "Compile time validation macros for the peace automation framework."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_static_check_macros/"
+readme = "../../README.md"
+categories = ["data-structures"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+proc-macro = true
+doctest = true
+test = false
+
+[dependencies]
+syn = "1.0.98"
+quote = "1.0.20"
+proc-macro2 = "1.0.43"

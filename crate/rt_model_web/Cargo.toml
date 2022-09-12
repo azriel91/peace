@@ -1,0 +1,24 @@
+[package]
+name = "peace_rt_model_web"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.2"
+edition = "2021"
+description = "Web support for the peace automation framework."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_web_support/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+peace_core = { path = "../core", version = "0.0.2" }
+peace_resources = { path = "../resources", version = "0.0.2" }
+thiserror = "1.0.31"
+serde_yaml = "0.8.26"
+wasm-bindgen = { version = "0.2.82", features = ["serde-serialize"] }
+web-sys = { version = "0.3.59", features = ["Storage", "Window"] }

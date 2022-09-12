@@ -8,7 +8,7 @@ To discover the current state of all items, `StateCurrentFnSpec::exec` is run fo
 let graph = /* .. */;
 let resources = /* .. */;
 
-let resources = StateCurrentCmd::exec(graph, resources).await?;
+let resources = StatesCurrentDiscoverCmd::exec(graph, resources).await?;
 ```
 
 <div style="display: inline-block; padding: 0px 20px 0px 0px;">

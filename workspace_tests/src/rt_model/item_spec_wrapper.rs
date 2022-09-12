@@ -2,8 +2,10 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{OpCheckStatus, ProgressLimit, State},
     resources::{
+        internal::{StateDiffsMut, StatesMut},
         resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
-        Resources, StateDiffs, StateDiffsMut, States, StatesDesired, StatesDesiredMut, StatesMut,
+        states::{ts::Desired, StateDiffs, StatesCurrent, StatesDesired},
+        Resources,
     },
     rt_model::{ItemSpecRt, ItemSpecWrapper},
 };
@@ -156,10 +158,10 @@ async fn resources_with_states_now_and_desired(
         let state = item_spec_wrapper.state_current_fn_exec(&resources).await?;
         states_mut.insert_raw(item_spec_wrapper.id(), state);
 
-        States::from(states_mut)
+        StatesCurrent::from(states_mut)
     };
     let states_desired = {
-        let mut states_desired_mut = StatesDesiredMut::new();
+        let mut states_desired_mut = StatesMut::<Desired>::new();
         let state_desired = item_spec_wrapper.state_desired_fn_exec(&resources).await?;
         states_desired_mut.insert_raw(item_spec_wrapper.id(), state_desired);
 

@@ -1,27 +1,31 @@
 use peace::{
-    cfg::{ItemSpec, State},
-    resources::{Resources, States, StatesDesired, StatesEnsured},
+    cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
+    resources::states::{StatesCurrent, StatesDesired, StatesEnsured},
     rt::EnsureCmd,
-    rt_model::ItemSpecGraphBuilder,
+    rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{VecCopyError, VecCopyItemSpec};
 
 #[tokio::test]
-async fn contains_state_ensured_for_each_item_spec() -> Result<(), VecCopyError> {
-    // given
-    let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
-    graph_builder.add_fn(VecCopyItemSpec.into());
+async fn contains_state_ensured_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::init(
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+        profile!("test_profile"),
+        flow_id!("test_flow"),
+    )
+    .await?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.build()
+    };
+    let cmd_context = CmdContext::init(&workspace, &graph).await?;
 
-    let graph = graph_builder.build();
+    let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
 
-    let resources = graph.setup(Resources::new()).await?;
-
-    // when
-    let resources = EnsureCmd::exec(&graph, resources).await?;
-
-    // then
-    let states = resources.borrow::<States>();
+    let states = resources.borrow::<StatesCurrent>();
     let states_desired = resources.borrow::<StatesDesired>();
     let states_ensured = resources.borrow::<StatesEnsured>();
     assert_eq!(

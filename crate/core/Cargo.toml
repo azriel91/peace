@@ -12,8 +12,9 @@ keywords = ["automation"]
 license = "MIT OR Apache-2.0"
 
 [lib]
-doctest = false
+doctest = true
 test = false
 
 [dependencies]
+peace_static_check_macros = { path = "../static_check_macros", version = "0.0.2" }
 serde = { version = "1.0.139", features = ["derive"] }

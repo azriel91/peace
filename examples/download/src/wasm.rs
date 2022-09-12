@@ -1,16 +1,18 @@
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
 
-use peace::resources::Resources;
+use peace::{
+    cfg::{flow_id, profile, FlowId, Profile},
+    rt_model::WorkspaceSpec,
+};
 use url::Url;
+use wasm_bindgen::prelude::*;
 
 pub use crate::{
-    desired, diff, ensure, ensure_dry, setup_graph, status, DownloadArgs, DownloadCleanOpSpec,
-    DownloadCommand, DownloadEnsureOpSpec, DownloadError, DownloadItemSpec, DownloadItemSpecGraph,
-    DownloadParams, DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec,
-    DownloadStateDiffFnSpec, FileState, FileStateDiff,
+    cmd_context, desired, diff, ensure, ensure_dry, setup_workspace_and_graph, status,
+    DownloadArgs, DownloadCleanOpSpec, DownloadCommand, DownloadEnsureOpSpec, DownloadError,
+    DownloadItemSpec, DownloadParams, DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec,
+    DownloadStateDiffFnSpec, FileState, FileStateDiff, WorkspaceAndGraph,
 };
-
-use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 extern "C" {
@@ -19,141 +21,141 @@ extern "C" {
 }
 
 #[wasm_bindgen(getter_with_clone)]
-pub struct GraphAndContent {
-    graph: DownloadItemSpecGraph,
+pub struct WorkspaceAndContent {
+    workspace_and_graph: WorkspaceAndGraph,
     content: std::collections::HashMap<PathBuf, String>,
     pub output: String,
 }
 
 #[wasm_bindgen]
-impl GraphAndContent {
+impl WorkspaceAndContent {
     /// Returns the content of the hashmap.
     #[wasm_bindgen]
     pub fn contents(&self) -> Result<JsValue, JsValue> {
-        JsValue::from_serde(&self.content).map_err(|e| JsValue::from_str(&format!("{e}")))
+        JsValue::from_serde(&self.content).map_err(into_js_err_value)
     }
 }
 
 #[wasm_bindgen]
-pub async fn wasm_setup(url: String, name: String) -> Result<GraphAndContent, JsValue> {
+pub async fn wasm_setup(url: String, name: String) -> Result<WorkspaceAndContent, JsValue> {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    setup_graph(
+    setup_workspace_and_graph(
+        WorkspaceSpec::SessionStorage,
+        profile!("default"),
+        flow_id!("file"),
         Url::parse(&url).expect("Failed to parse URL."),
         std::path::PathBuf::from(name),
     )
     .await
-    .map(|graph| async move {
-        let graph = DownloadItemSpecGraph::from(graph);
-        let mut resources = graph
-            .setup(Resources::new())
-            .await
-            .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-        let content = resources
-            .remove::<std::collections::HashMap<PathBuf, String>>()
-            .ok_or(JsValue::from_str(
-                "Resources did not contain content HashMap.",
-            ))?;
-
+    .map(|workspace_and_graph| async move {
+        let content = HashMap::new();
         let output = String::new();
-        Ok(GraphAndContent {
-            graph,
+
+        Ok(WorkspaceAndContent {
+            workspace_and_graph,
             content,
             output,
         })
     })
-    .map_err(|e| JsValue::from_str(&format!("{e}")))?
+    .map_err(into_js_err_value)?
     .await
 }
 
 #[wasm_bindgen]
-pub async fn wasm_status(graph_and_content: GraphAndContent) -> Result<GraphAndContent, JsValue> {
-    let GraphAndContent {
-        graph,
+pub async fn wasm_status(
+    workspace_and_content: WorkspaceAndContent,
+) -> Result<WorkspaceAndContent, JsValue> {
+    let WorkspaceAndContent {
+        workspace_and_graph,
         content,
         output: _,
-    } = graph_and_content;
-    let mut resources = graph
-        .setup(Resources::new())
+    } = workspace_and_content;
+    let mut cmd_context = cmd_context(&workspace_and_graph)
         .await
-        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        .map_err(into_js_err_value)?;
+    let resources = cmd_context.resources_mut();
     resources.insert(content);
 
     let mut buffer = Vec::<u8>::with_capacity(256);
-    let mut resources = status(&mut buffer, &graph, resources.into())
+    let mut resources = status(&mut buffer, cmd_context)
         .await
-        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-    let output = String::from_utf8(buffer).map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        .map_err(into_js_err_value)?;
+    let output = String::from_utf8(buffer).map_err(into_js_err_value)?;
 
     let content = resources
         .remove::<std::collections::HashMap<PathBuf, String>>()
         .ok_or(JsValue::from_str(
             "Resources did not contain content HashMap.",
         ))?;
-    Ok(GraphAndContent {
-        graph,
+    Ok(WorkspaceAndContent {
+        workspace_and_graph,
         content,
         output,
     })
 }
 
 #[wasm_bindgen]
-pub async fn wasm_desired(graph_and_content: GraphAndContent) -> Result<GraphAndContent, JsValue> {
-    let GraphAndContent {
-        graph,
+pub async fn wasm_desired(
+    workspace_and_content: WorkspaceAndContent,
+) -> Result<WorkspaceAndContent, JsValue> {
+    let WorkspaceAndContent {
+        workspace_and_graph,
         content,
         output: _,
-    } = graph_and_content;
-    let mut resources = graph
-        .setup(Resources::new())
+    } = workspace_and_content;
+    let mut cmd_context = cmd_context(&workspace_and_graph)
         .await
-        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        .map_err(into_js_err_value)?;
+    let resources = cmd_context.resources_mut();
     resources.insert(content);
 
     let mut buffer = Vec::<u8>::with_capacity(256);
-    let mut resources = desired(&mut buffer, &graph, resources.into())
+    let mut resources = desired(&mut buffer, cmd_context)
         .await
-        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-    let output = String::from_utf8(buffer).map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        .map_err(into_js_err_value)?;
+    let output = String::from_utf8(buffer).map_err(into_js_err_value)?;
 
     let content = resources
         .remove::<std::collections::HashMap<PathBuf, String>>()
         .ok_or(JsValue::from_str(
             "Resources did not contain content HashMap.",
         ))?;
-    Ok(GraphAndContent {
-        graph,
+    Ok(WorkspaceAndContent {
+        workspace_and_graph,
         content,
         output,
     })
 }
 
 #[wasm_bindgen]
-pub async fn wasm_diff(graph_and_content: GraphAndContent) -> Result<GraphAndContent, JsValue> {
-    let GraphAndContent {
-        graph,
+pub async fn wasm_diff(
+    workspace_and_content: WorkspaceAndContent,
+) -> Result<WorkspaceAndContent, JsValue> {
+    let WorkspaceAndContent {
+        workspace_and_graph,
         content,
         output: _,
-    } = graph_and_content;
-    let mut resources = graph
-        .setup(Resources::new())
+    } = workspace_and_content;
+    let mut cmd_context = cmd_context(&workspace_and_graph)
         .await
-        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        .map_err(into_js_err_value)?;
+    let resources = cmd_context.resources_mut();
     resources.insert(content);
 
     let mut buffer = Vec::<u8>::with_capacity(256);
-    let mut resources = diff(&mut buffer, &graph, resources.into())
+    let mut resources = diff(&mut buffer, cmd_context)
         .await
-        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-    let output = String::from_utf8(buffer).map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        .map_err(into_js_err_value)?;
+    let output = String::from_utf8(buffer).map_err(into_js_err_value)?;
 
     let content = resources
         .remove::<std::collections::HashMap<PathBuf, String>>()
         .ok_or(JsValue::from_str(
             "Resources did not contain content HashMap.",
         ))?;
-    Ok(GraphAndContent {
-        graph,
+    Ok(WorkspaceAndContent {
+        workspace_and_graph,
         content,
         output,
     })
@@ -161,64 +163,85 @@ pub async fn wasm_diff(graph_and_content: GraphAndContent) -> Result<GraphAndCon
 
 #[wasm_bindgen]
 pub async fn wasm_ensure_dry(
-    graph_and_content: GraphAndContent,
-) -> Result<GraphAndContent, JsValue> {
-    let GraphAndContent {
-        graph,
+    workspace_and_content: WorkspaceAndContent,
+) -> Result<WorkspaceAndContent, JsValue> {
+    let WorkspaceAndContent {
+        workspace_and_graph,
         content,
         output: _,
-    } = graph_and_content;
-    let mut resources = graph
-        .setup(Resources::new())
+    } = workspace_and_content;
+    let mut cmd_context = cmd_context(&workspace_and_graph)
         .await
-        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        .map_err(into_js_err_value)?;
+    let resources = cmd_context.resources_mut();
     resources.insert(content);
 
     let mut buffer = Vec::<u8>::with_capacity(256);
-    let mut resources = ensure_dry(&mut buffer, &graph, resources.into())
+    let mut resources = ensure_dry(&mut buffer, cmd_context)
         .await
-        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-    let output = String::from_utf8(buffer).map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        .map_err(into_js_err_value)?;
+    let output = String::from_utf8(buffer).map_err(into_js_err_value)?;
 
     let content = resources
         .remove::<std::collections::HashMap<PathBuf, String>>()
         .ok_or(JsValue::from_str(
             "Resources did not contain content HashMap.",
         ))?;
-    Ok(GraphAndContent {
-        graph,
+    Ok(WorkspaceAndContent {
+        workspace_and_graph,
         content,
         output,
     })
 }
 
 #[wasm_bindgen]
-pub async fn wasm_ensure(graph_and_content: GraphAndContent) -> Result<GraphAndContent, JsValue> {
-    let GraphAndContent {
-        graph,
+pub async fn wasm_ensure(
+    workspace_and_content: WorkspaceAndContent,
+) -> Result<WorkspaceAndContent, JsValue> {
+    let WorkspaceAndContent {
+        workspace_and_graph,
         content,
         output: _,
-    } = graph_and_content;
-    let mut resources = graph
-        .setup(Resources::new())
+    } = workspace_and_content;
+    let mut cmd_context = cmd_context(&workspace_and_graph)
         .await
-        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        .map_err(into_js_err_value)?;
+    let resources = cmd_context.resources_mut();
     resources.insert(content);
 
     let mut buffer = Vec::<u8>::with_capacity(256);
-    let mut resources = ensure(&mut buffer, &graph, resources.into())
+    let mut resources = ensure(&mut buffer, cmd_context)
         .await
-        .map_err(|e| JsValue::from_str(&format!("{e}")))?;
-    let output = String::from_utf8(buffer).map_err(|e| JsValue::from_str(&format!("{e}")))?;
+        .map_err(into_js_err_value)?;
+    let output = String::from_utf8(buffer).map_err(into_js_err_value)?;
 
     let content = resources
         .remove::<std::collections::HashMap<PathBuf, String>>()
         .ok_or(JsValue::from_str(
             "Resources did not contain content HashMap.",
         ))?;
-    Ok(GraphAndContent {
-        graph,
+    Ok(WorkspaceAndContent {
+        workspace_and_graph,
         content,
         output,
     })
+}
+
+fn into_js_err_value<E>(e: E) -> JsValue
+where
+    E: std::error::Error,
+{
+    use std::{error::Error, fmt::Write};
+
+    let mut buffer = String::with_capacity(256);
+    writeln!(&mut buffer, "{e}").unwrap();
+
+    let mut source_opt: Option<&(dyn Error + 'static)> = e.source();
+    while let Some(source) = source_opt {
+        writeln!(&mut buffer, "Caused by:").unwrap();
+        writeln!(&mut buffer, "{source}").unwrap();
+        source_opt = source.source();
+    }
+
+    JsValue::from_str(&buffer)
 }

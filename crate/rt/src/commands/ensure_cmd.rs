@@ -8,18 +8,19 @@ use peace_cfg::OpCheckStatus;
 use peace_resources::{
     internal::OpCheckStatuses,
     resources_type_state::{Ensured, EnsuredDry, SetUp, WithStateDiffs},
-    Resources, StatesEnsured, StatesEnsuredDry,
+    states::{StatesEnsured, StatesEnsuredDry},
+    Resources,
 };
-use peace_rt_model::{FnRef, ItemSpecBoxed, ItemSpecGraph};
+use peace_rt_model::{CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph};
 
-use crate::{DiffCmd, StateCurrentCmd};
+use crate::{DiffCmd, StatesCurrentDiscoverCmd};
 
 #[derive(Debug)]
 pub struct EnsureCmd<E>(PhantomData<E>);
 
 impl<E> EnsureCmd<E>
 where
-    E: std::error::Error,
+    E: std::error::Error + From<Error> + Send,
 {
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
     /// [`ItemSpec`].
@@ -35,7 +36,7 @@ where
     ///
     /// 1. Run [`EnsureOpSpec::check`] for all `ItemSpec`s.
     /// 2. Run [`EnsureOpSpec::exec_dry`] for all `ItemSpec`s.
-    /// 3. Fetch `States` again, and compare.
+    /// 3. Fetch `StatesCurrent` again, and compare.
     ///
     /// State cannot be fetched interleaved with `exec_dry` as it may use
     /// different `Data`.
@@ -46,16 +47,16 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec_dry(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: Resources<SetUp>,
-    ) -> Result<Resources<EnsuredDry>, E> {
-        let resources = DiffCmd::exec(item_spec_graph, resources).await?;
+        cmd_context: CmdContext<'_, SetUp, E>,
+    ) -> Result<CmdContext<EnsuredDry, E>, E> {
+        let cmd_context = DiffCmd::exec(cmd_context).await?;
+        let (workspace, item_spec_graph, resources, states_type_regs) = cmd_context.into_inner();
         let states_ensured_dry = Self::exec_dry_internal(item_spec_graph, &resources).await?;
 
-        Ok(Resources::<EnsuredDry>::from((
-            resources,
-            states_ensured_dry,
-        )))
+        let resources = Resources::<EnsuredDry>::from((resources, states_ensured_dry));
+        let cmd_context =
+            CmdContext::from((workspace, item_spec_graph, resources, states_type_regs));
+        Ok(cmd_context)
     }
 
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
@@ -76,7 +77,8 @@ where
 
         // TODO: This fetches the real state, whereas for a dry run, it would be useful
         // to show the imagined altered state.
-        let states = StateCurrentCmd::exec_internal_for_ensure(item_spec_graph, resources).await?;
+        let states =
+            StatesCurrentDiscoverCmd::exec_internal_for_ensure(item_spec_graph, resources).await?;
 
         Ok(StatesEnsuredDry::from((states, resources)))
     }
@@ -108,7 +110,7 @@ where
     ///
     /// 1. Run [`EnsureOpSpec::check`] for all `ItemSpec`s.
     /// 2. Run [`EnsureOpSpec::exec`] for all `ItemSpec`s.
-    /// 3. Fetch `States` again, and compare.
+    /// 3. Fetch `StatesCurrent` again, and compare.
     ///
     /// State cannot be fetched interleaved with `exec` as it may use different
     /// `Data`.
@@ -118,14 +120,15 @@ where
     /// [`EnsureOpSpec::exec`]: peace_cfg::EnsureOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    pub async fn exec(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: Resources<SetUp>,
-    ) -> Result<Resources<Ensured>, E> {
-        let resources = DiffCmd::exec(item_spec_graph, resources).await?;
+    pub async fn exec(cmd_context: CmdContext<'_, SetUp, E>) -> Result<CmdContext<Ensured, E>, E> {
+        let cmd_context = DiffCmd::exec(cmd_context).await?;
+        let (workspace, item_spec_graph, resources, states_type_regs) = cmd_context.into_inner();
         let states_ensured = Self::exec_internal(item_spec_graph, &resources).await?;
 
-        Ok(Resources::<Ensured>::from((resources, states_ensured)))
+        let resources = Resources::<Ensured>::from((resources, states_ensured));
+        let cmd_context =
+            CmdContext::from((workspace, item_spec_graph, resources, states_type_regs));
+        Ok(cmd_context)
     }
 
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec`] for each [`ItemSpec`].
@@ -143,7 +146,8 @@ where
         let op_check_statuses = Self::ensure_op_spec_check(item_spec_graph, resources).await?;
         Self::ensure_op_spec_exec(item_spec_graph, resources, &op_check_statuses).await?;
 
-        let states = StateCurrentCmd::exec_internal_for_ensure(item_spec_graph, resources).await?;
+        let states =
+            StatesCurrentDiscoverCmd::exec_internal_for_ensure(item_spec_graph, resources).await?;
 
         Ok(StatesEnsured::from((states, resources)))
     }
@@ -154,7 +158,7 @@ where
     ) -> Result<OpCheckStatuses, E> {
         let op_check_statuses = item_spec_graph
             .stream()
-            .map(Result::Ok)
+            .map(Result::<_, E>::Ok)
             .and_then(|item_spec| async move {
                 let op_check_status = item_spec.ensure_op_check(resources).await?;
                 Ok((item_spec.id(), op_check_status))

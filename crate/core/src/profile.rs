@@ -1,0 +1,24 @@
+use std::borrow::Cow;
+
+use serde::{Deserialize, Serialize};
+
+/// Unique identifier for a `Profile`, `Cow<'static, str>` newtype.
+///
+/// Must begin with a letter or underscore, and contain only letters, numbers,
+/// and underscores.
+///
+/// # Examples
+///
+/// The following are all examples of valid `Profile`s:
+///
+/// ```rust
+/// # use peace_core::{profile, Profile};
+/// #
+/// let _snake = profile!("snake_case");
+/// let _camel = profile!("camelCase");
+/// let _pascal = profile!("PascalCase");
+/// ```
+#[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
+pub struct Profile(Cow<'static, str>);
+
+crate::id_newtype!(Profile, ProfileInvalidFmt, profile);

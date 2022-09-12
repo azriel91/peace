@@ -18,10 +18,13 @@ test = false
 [dependencies]
 fn_graph = { version = "0.5.2", features = ["resman"] }
 futures = "0.3.21"
-miette = "5.1.1"
 peace_cfg = { path = "../cfg", version = "0.0.2" }
 peace_data = { path = "../data", version = "0.0.2" }
-peace_diff = { path = "../diff", version = "0.0.2" }
 peace_resources = { path = "../resources", version = "0.0.2" }
 serde = "1.0.139"
-thiserror = "1.0.31"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+peace_rt_model_native = { path = "../rt_model_native", version = "0.0.2" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+peace_rt_model_web = { path = "../rt_model_web", version = "0.0.2" }
