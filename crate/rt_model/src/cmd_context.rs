@@ -40,7 +40,7 @@ pub struct CmdContext<'ctx, TS, E> {
     pub item_spec_graph: &'ctx ItemSpecGraph<E>,
     /// `Resources` in this workspace.
     pub resources: Resources<TS>,
-    /// Type registers to deserialize `StatesCurrentFile` and
+    /// Type registries to deserialize `StatesCurrentFile` and
     /// `StatesDesiredFile`.
     pub states_type_regs: StatesTypeRegs,
 }
