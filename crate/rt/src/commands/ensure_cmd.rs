@@ -16,9 +16,9 @@ use peace_rt_model::{CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph};
 use crate::{DiffCmd, StatesCurrentDiscoverCmd};
 
 #[derive(Debug)]
-pub struct EnsureCmd<E>(PhantomData<E>);
+pub struct EnsureCmd<E, O>(PhantomData<(E, O)>);
 
-impl<E> EnsureCmd<E>
+impl<E, O> EnsureCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
 {
@@ -47,15 +47,21 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec_dry(
-        cmd_context: CmdContext<'_, SetUp, E>,
-    ) -> Result<CmdContext<EnsuredDry, E>, E> {
+        cmd_context: CmdContext<'_, E, O, SetUp>,
+    ) -> Result<CmdContext<E, O, EnsuredDry>, E> {
         let cmd_context = DiffCmd::exec(cmd_context).await?;
-        let (workspace, item_spec_graph, resources, states_type_regs) = cmd_context.into_inner();
+        let (workspace, item_spec_graph, output, resources, states_type_regs) =
+            cmd_context.into_inner();
         let states_ensured_dry = Self::exec_dry_internal(item_spec_graph, &resources).await?;
 
         let resources = Resources::<EnsuredDry>::from((resources, states_ensured_dry));
-        let cmd_context =
-            CmdContext::from((workspace, item_spec_graph, resources, states_type_regs));
+        let cmd_context = CmdContext::from((
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+        ));
         Ok(cmd_context)
     }
 
@@ -78,7 +84,8 @@ where
         // TODO: This fetches the real state, whereas for a dry run, it would be useful
         // to show the imagined altered state.
         let states =
-            StatesCurrentDiscoverCmd::exec_internal_for_ensure(item_spec_graph, resources).await?;
+            StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure(item_spec_graph, resources)
+                .await?;
 
         Ok(StatesEnsuredDry::from((states, resources)))
     }
@@ -120,14 +127,22 @@ where
     /// [`EnsureOpSpec::exec`]: peace_cfg::EnsureOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    pub async fn exec(cmd_context: CmdContext<'_, SetUp, E>) -> Result<CmdContext<Ensured, E>, E> {
+    pub async fn exec(
+        cmd_context: CmdContext<'_, E, O, SetUp>,
+    ) -> Result<CmdContext<E, O, Ensured>, E> {
         let cmd_context = DiffCmd::exec(cmd_context).await?;
-        let (workspace, item_spec_graph, resources, states_type_regs) = cmd_context.into_inner();
+        let (workspace, item_spec_graph, output, resources, states_type_regs) =
+            cmd_context.into_inner();
         let states_ensured = Self::exec_internal(item_spec_graph, &resources).await?;
 
         let resources = Resources::<Ensured>::from((resources, states_ensured));
-        let cmd_context =
-            CmdContext::from((workspace, item_spec_graph, resources, states_type_regs));
+        let cmd_context = CmdContext::from((
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+        ));
         Ok(cmd_context)
     }
 
@@ -147,7 +162,8 @@ where
         Self::ensure_op_spec_exec(item_spec_graph, resources, &op_check_statuses).await?;
 
         let states =
-            StatesCurrentDiscoverCmd::exec_internal_for_ensure(item_spec_graph, resources).await?;
+            StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure(item_spec_graph, resources)
+                .await?;
 
         Ok(StatesEnsured::from((states, resources)))
     }

@@ -13,9 +13,9 @@ use peace_rt_model::{CmdContext, Error, ItemSpecGraph, Storage};
 use crate::BUFFERED_FUTURES_MAX;
 
 #[derive(Debug)]
-pub struct StatesCurrentDiscoverCmd<E>(PhantomData<E>);
+pub struct StatesCurrentDiscoverCmd<E, O>(PhantomData<(E, O)>);
 
-impl<E> StatesCurrentDiscoverCmd<E>
+impl<E, O> StatesCurrentDiscoverCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
 {
@@ -34,16 +34,21 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, SetUp, E>,
-    ) -> Result<CmdContext<WithStates, E>, E> {
-        let (workspace, item_spec_graph, mut resources, states_type_regs) =
+        cmd_context: CmdContext<'_, E, O, SetUp>,
+    ) -> Result<CmdContext<E, O, WithStates>, E> {
+        let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
             cmd_context.into_inner();
         let states = Self::exec_internal(item_spec_graph, &mut resources).await?;
 
         let resources = Resources::<WithStates>::from((resources, states));
 
-        let cmd_context =
-            CmdContext::from((workspace, item_spec_graph, resources, states_type_regs));
+        let cmd_context = CmdContext::from((
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+        ));
         Ok(cmd_context)
     }
 

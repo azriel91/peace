@@ -24,8 +24,9 @@ use crate::{Error, ItemSpecGraph, StatesTypeRegs, Workspace};
 ///
 /// # Type Parameters
 ///
-/// * `TS`: Type state of `Resources`.
 /// * `E`: Consumer provided error type.
+/// * `O`: `OutputWrite` to return values / errors to.
+/// * `TS`: Type state of `Resources`.
 ///
 /// [`Profile`]: peace_cfg::Profile
 /// [`WorkspaceDir`]: peace::resources::paths::WorkspaceDir
@@ -33,11 +34,13 @@ use crate::{Error, ItemSpecGraph, StatesTypeRegs, Workspace};
 /// [`ProfileDir`]: peace::resources::paths::ProfileDir
 /// [`ProfileHistoryDir`]: peace::resources::paths::ProfileHistoryDir
 #[derive(Debug)]
-pub struct CmdContext<'ctx, TS, E> {
+pub struct CmdContext<'ctx, E, O, TS> {
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'ctx Workspace,
     /// Graph of item specs.
     pub item_spec_graph: &'ctx ItemSpecGraph<E>,
+    /// `OutputWrite` to return values / errors to.
+    pub output: &'ctx O,
     /// `Resources` in this workspace.
     pub resources: Resources<TS>,
     /// Type registries to deserialize `StatesCurrentFile` and
@@ -45,7 +48,7 @@ pub struct CmdContext<'ctx, TS, E> {
     pub states_type_regs: StatesTypeRegs,
 }
 
-impl<'ctx, E> CmdContext<'ctx, SetUp, E>
+impl<'ctx, E, O> CmdContext<'ctx, E, O, SetUp>
 where
     E: std::error::Error + From<Error>,
 {
@@ -58,7 +61,8 @@ where
     pub async fn init(
         workspace: &'ctx Workspace,
         item_spec_graph: &'ctx ItemSpecGraph<E>,
-    ) -> Result<CmdContext<'ctx, SetUp, E>, E> {
+        output: &'ctx O,
+    ) -> Result<CmdContext<'ctx, E, O, SetUp>, E> {
         let mut resources = Resources::new();
 
         Self::insert_workspace_resources(workspace, &mut resources);
@@ -68,6 +72,7 @@ where
         Ok(CmdContext {
             workspace,
             item_spec_graph,
+            output,
             resources,
             states_type_regs,
         })
@@ -91,7 +96,7 @@ where
     }
 }
 
-impl<'ctx, TS, E> CmdContext<'ctx, TS, E>
+impl<'ctx, E, O, TS> CmdContext<'ctx, E, O, TS>
 where
     E: std::error::Error,
 {
@@ -129,22 +134,40 @@ where
     ) -> (
         &'ctx Workspace,
         &'ctx ItemSpecGraph<E>,
+        &'ctx O,
         Resources<TS>,
         StatesTypeRegs,
     ) {
         let Self {
             workspace,
             item_spec_graph,
+            output,
             states_type_regs,
             resources,
         } = self;
 
-        (workspace, item_spec_graph, resources, states_type_regs)
+        (
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+        )
     }
 
     /// Returns a reference to the workspace.
     pub fn workspace(&self) -> &Workspace {
         self.workspace
+    }
+
+    /// Returns a reference to the item spec graph.
+    pub fn item_spec_graph(&self) -> &ItemSpecGraph<E> {
+        self.item_spec_graph
+    }
+
+    /// Returns a reference to the output.
+    pub fn output(&self) -> &O {
+        self.output
     }
 
     /// Returns a reference to the resources.
@@ -156,25 +179,22 @@ where
     pub fn resources_mut(&mut self) -> &mut Resources<TS> {
         &mut self.resources
     }
-
-    /// Returns a reference to the item spec graph.
-    pub fn item_spec_graph(&self) -> &ItemSpecGraph<E> {
-        self.item_spec_graph
-    }
 }
 
-impl<'ctx, TS, E>
+impl<'ctx, E, O, TS>
     From<(
         &'ctx Workspace,
         &'ctx ItemSpecGraph<E>,
+        &'ctx O,
         Resources<TS>,
         StatesTypeRegs,
-    )> for CmdContext<'ctx, TS, E>
+    )> for CmdContext<'ctx, E, O, TS>
 {
     fn from(
-        (workspace, item_spec_graph, resources, states_type_regs): (
+        (workspace, item_spec_graph, output, resources, states_type_regs): (
             &'ctx Workspace,
             &'ctx ItemSpecGraph<E>,
+            &'ctx O,
             Resources<TS>,
             StatesTypeRegs,
         ),
@@ -182,6 +202,7 @@ impl<'ctx, TS, E>
         Self {
             workspace,
             item_spec_graph,
+            output,
             resources,
             states_type_regs,
         }

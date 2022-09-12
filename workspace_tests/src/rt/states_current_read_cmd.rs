@@ -5,7 +5,7 @@ use peace::{
     rt_model::{CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{VecCopyError, VecCopyItemSpec};
+use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec};
 
 #[tokio::test]
 async fn reads_states_current_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
@@ -23,14 +23,14 @@ async fn reads_states_current_from_disk_when_present() -> Result<(), Box<dyn std
     };
 
     // Write current states to disk.
-    let cmd_context = CmdContext::init(&workspace, &graph).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &NoOpOutput).await?;
     let CmdContext {
         resources: resources_from_discover,
         ..
     } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk in a new set of resources.
-    let cmd_context = CmdContext::init(&workspace, &graph).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &NoOpOutput).await?;
     let CmdContext {
         resources: resources_from_read,
         ..
@@ -62,7 +62,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     };
 
     // Try and read states from disk.
-    let cmd_context = CmdContext::init(&workspace, &graph).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &NoOpOutput).await?;
     let exec_result = StatesCurrentReadCmd::exec(cmd_context).await;
 
     assert!(matches!(

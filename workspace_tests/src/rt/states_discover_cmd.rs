@@ -9,7 +9,7 @@ use peace::{
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{VecCopyError, VecCopyItemSpec};
+use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec};
 
 #[tokio::test]
 async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error::Error>> {
@@ -25,7 +25,7 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let cmd_context = CmdContext::init(&workspace, &graph).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &NoOpOutput).await?;
 
     let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
 

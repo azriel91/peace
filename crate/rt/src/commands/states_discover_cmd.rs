@@ -10,9 +10,9 @@ use peace_rt_model::CmdContext;
 use crate::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd};
 
 #[derive(Debug)]
-pub struct StatesDiscoverCmd<E>(PhantomData<E>);
+pub struct StatesDiscoverCmd<E, O>(PhantomData<(E, O)>);
 
-impl<E> StatesDiscoverCmd<E>
+impl<E, O> StatesDiscoverCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
 {
@@ -30,20 +30,27 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, SetUp, E>,
-    ) -> Result<CmdContext<WithStatesCurrentAndDesired, E>, E> {
-        let (workspace, item_spec_graph, mut resources, states_type_regs) =
+        cmd_context: CmdContext<'_, E, O, SetUp>,
+    ) -> Result<CmdContext<E, O, WithStatesCurrentAndDesired>, E> {
+        let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
             cmd_context.into_inner();
         let states =
-            StatesCurrentDiscoverCmd::exec_internal(item_spec_graph, &mut resources).await?;
+            StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
+                .await?;
         let states_desired =
-            StatesDesiredDiscoverCmd::exec_internal(item_spec_graph, &mut resources).await?;
+            StatesDesiredDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
+                .await?;
 
         let resources =
             Resources::<WithStatesCurrentAndDesired>::from((resources, states, states_desired));
 
-        let cmd_context =
-            CmdContext::from((workspace, item_spec_graph, resources, states_type_regs));
+        let cmd_context = CmdContext::from((
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+        ));
         Ok(cmd_context)
     }
 }

@@ -6,7 +6,7 @@ use peace::{
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{VecA, VecB, VecCopyError, VecCopyItemSpec};
+use crate::{NoOpOutput, VecA, VecB, VecCopyError, VecCopyItemSpec};
 
 #[tokio::test]
 async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>>
@@ -23,7 +23,7 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let cmd_context = { CmdContext::init(&workspace, &graph).await? };
+    let cmd_context = { CmdContext::init(&workspace, &graph, &NoOpOutput).await? };
 
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
@@ -65,7 +65,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut cmd_context = { CmdContext::init(&workspace, &graph).await? };
+    let mut cmd_context = { CmdContext::init(&workspace, &graph, &NoOpOutput).await? };
     // overwrite initial state
     let resources = cmd_context.resources_mut();
     #[rustfmt::skip]

@@ -5,7 +5,7 @@ use peace::{
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{VecCopyError, VecCopyItemSpec};
+use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec};
 
 #[tokio::test]
 async fn contains_state_ensured_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>> {
@@ -21,7 +21,7 @@ async fn contains_state_ensured_for_each_item_spec() -> Result<(), Box<dyn std::
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let cmd_context = CmdContext::init(&workspace, &graph).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &NoOpOutput).await?;
 
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
 

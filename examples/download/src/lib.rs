@@ -104,17 +104,17 @@ pub async fn setup_workspace_and_graph(
 /// Returns a `CmdContext` initialized from the workspace and item spec graph
 pub async fn cmd_context(
     workspace_and_graph: &WorkspaceAndGraph,
-) -> Result<CmdContext<'_, SetUp, DownloadError>, DownloadError> {
+) -> Result<CmdContext<'_, DownloadError, (), SetUp>, DownloadError> {
     let WorkspaceAndGraph {
         workspace,
         item_spec_graph,
     } = workspace_and_graph;
-    CmdContext::init(workspace, item_spec_graph).await
+    CmdContext::init(workspace, item_spec_graph, &()).await
 }
 
 pub async fn status<W>(
     output: W,
-    cmd_context: CmdContext<'_, SetUp, DownloadError>,
+    cmd_context: CmdContext<'_, DownloadError, (), SetUp>,
 ) -> Result<Resources<WithStates>, DownloadError>
 where
     W: AsyncWrite + Unpin,
@@ -131,7 +131,7 @@ where
 
 pub async fn desired<W>(
     output: W,
-    cmd_context: CmdContext<'_, SetUp, DownloadError>,
+    cmd_context: CmdContext<'_, DownloadError, (), SetUp>,
 ) -> Result<Resources<WithStatesDesired>, DownloadError>
 where
     W: AsyncWrite + Unpin,
@@ -148,7 +148,7 @@ where
 
 pub async fn diff<W>(
     output: W,
-    cmd_context: CmdContext<'_, SetUp, DownloadError>,
+    cmd_context: CmdContext<'_, DownloadError, (), SetUp>,
 ) -> Result<Resources<WithStateDiffs>, DownloadError>
 where
     W: AsyncWrite + Unpin,
@@ -165,7 +165,7 @@ where
 
 pub async fn ensure_dry<W>(
     output: W,
-    cmd_context: CmdContext<'_, SetUp, DownloadError>,
+    cmd_context: CmdContext<'_, DownloadError, (), SetUp>,
 ) -> Result<Resources<EnsuredDry>, DownloadError>
 where
     W: AsyncWrite + Unpin,
@@ -182,7 +182,7 @@ where
 
 pub async fn ensure<W>(
     output: W,
-    cmd_context: CmdContext<'_, SetUp, DownloadError>,
+    cmd_context: CmdContext<'_, DownloadError, (), SetUp>,
 ) -> Result<Resources<Ensured>, DownloadError>
 where
     W: AsyncWrite + Unpin,

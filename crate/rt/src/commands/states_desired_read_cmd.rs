@@ -12,9 +12,9 @@ use peace_rt_model::{CmdContext, Error, Storage};
 
 /// Reads [`StatesDesired`]s from storage.
 #[derive(Debug)]
-pub struct StatesDesiredReadCmd<E>(PhantomData<E>);
+pub struct StatesDesiredReadCmd<E, O>(PhantomData<(E, O)>);
 
-impl<E> StatesDesiredReadCmd<E>
+impl<E, O> StatesDesiredReadCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
 {
@@ -26,17 +26,22 @@ where
     /// [`StatesDesiredDiscoverCmd`]: crate::StatesDesiredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        cmd_context: CmdContext<'_, SetUp, E>,
-    ) -> Result<CmdContext<WithStatesDesired, E>, E> {
-        let (workspace, item_spec_graph, mut resources, states_type_regs) =
+        cmd_context: CmdContext<'_, E, O, SetUp>,
+    ) -> Result<CmdContext<E, O, WithStatesDesired>, E> {
+        let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
             cmd_context.into_inner();
         let states_desired =
             Self::exec_internal(&mut resources, states_type_regs.states_desired_type_reg()).await?;
 
         let resources = Resources::<WithStatesDesired>::from((resources, states_desired));
 
-        let cmd_context =
-            CmdContext::from((workspace, item_spec_graph, resources, states_type_regs));
+        let cmd_context = CmdContext::from((
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+        ));
         Ok(cmd_context)
     }
 
