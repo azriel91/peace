@@ -1,5 +1,5 @@
 [alias]
 coverage_clean = ["llvm-cov", "clean", "--workspace"]
-coverage_0 = ["llvm-cov", "--workspace", "nextest", "--no-report", "--output-dir", "./target/coverage"]
-coverage_merge = 'llvm-cov --no-run --lcov --output-path ./target/coverage/lcov.info'
-coverage_open = 'llvm-cov --no-run --open --output-dir ./target/coverage'
+coverage_0 = ["llvm-cov", "--no-report", "--output-dir", "./target/coverage", "nextest", "--workspace"]
+coverage_merge = 'llvm-cov report --lcov --output-path ./target/coverage/lcov.info'
+coverage_open = 'llvm-cov report --open --output-dir ./target/coverage'
