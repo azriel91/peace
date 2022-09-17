@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use peace_resources::{
     resources_type_state::{SetUp, WithStatesDesired},
-    states::StatesDesired,
+    Resources,
 };
 use peace_rt_model::{CmdContext, Error};
 use peace_rt_model_core::OutputWrite;
@@ -26,27 +26,32 @@ where
     /// [`StatesDesiredDiscoverCmd`]: crate::StatesDesiredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
+        mut cmd_context: CmdContext<'_, E, O, SetUp>,
     ) -> Result<CmdContext<E, O, WithStatesDesired>, E> {
-        let result = StatesDesiredReadCmd::<E, O>::exec_no_output(cmd_context).await;
+        let CmdContext {
+            output,
+            resources,
+            states_type_regs,
+            ..
+        } = &mut cmd_context;
 
-        match result {
-            Ok(mut cmd_context) => {
-                {
-                    let CmdContext {
-                        resources, output, ..
-                    } = &mut cmd_context;
-                    let states_desired = resources.borrow::<StatesDesired>();
+        let states_desired_result = StatesDesiredReadCmd::<E, O>::exec_internal(
+            resources,
+            states_type_regs.states_desired_type_reg(),
+        )
+        .await;
 
-                    output.write_states_desired(&states_desired).await?;
-                }
+        match states_desired_result {
+            Ok(states_desired) => {
+                output.write_states_desired(&states_desired).await?;
 
+                let cmd_context = CmdContext::from((cmd_context, |resources| {
+                    Resources::<WithStatesDesired>::from((resources, states_desired))
+                }));
                 Ok(cmd_context)
             }
-            Err((mut cmd_context, e)) => {
-                let output = cmd_context.output_mut();
+            Err(e) => {
                 output.write_err(&e).await?;
-
                 Err(e)
             }
         }

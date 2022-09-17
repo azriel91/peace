@@ -213,3 +213,23 @@ impl<'ctx, E, O, TS>
         }
     }
 }
+
+impl<'ctx, E, O, TS0, TS1, F> From<(CmdContext<'ctx, E, O, TS0>, F)> for CmdContext<'ctx, E, O, TS1>
+where
+    E: std::error::Error,
+    F: FnOnce(Resources<TS0>) -> Resources<TS1>,
+{
+    fn from((cmd_context_ts0, f): (CmdContext<'ctx, E, O, TS0>, F)) -> Self {
+        let (workspace, item_spec_graph, output, resources, states_type_regs) =
+            cmd_context_ts0.into_inner();
+        let resources: Resources<TS1> = f(resources);
+
+        Self {
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+        }
+    }
+}
