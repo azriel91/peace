@@ -11,7 +11,7 @@ use peace_resources::{
     states::{StatesEnsured, StatesEnsuredDry},
     Resources,
 };
-use peace_rt_model::{CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph};
+use peace_rt_model::{CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph, OutputWrite};
 
 use crate::{DiffCmd, StatesCurrentDiscoverCmd};
 
@@ -21,6 +21,7 @@ pub struct EnsureCmd<E, O>(PhantomData<(E, O)>);
 impl<E, O> EnsureCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
+    O: OutputWrite<E>,
 {
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
     /// [`ItemSpec`].

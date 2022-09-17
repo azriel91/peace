@@ -5,7 +5,7 @@ use peace::{
 };
 
 use download::{
-    cmd_context, desired, diff, ensure, ensure_dry, setup_workspace_and_graph, status,
+    cmd_context, desired, diff, ensure, ensure_dry, fetch, setup_workspace_and_graph, status,
     DownloadArgs, DownloadCommand, DownloadError,
 };
 
@@ -26,6 +26,12 @@ pub fn main() -> Result<(), DownloadError> {
         let mut cli_output = CliOutput::default();
 
         match command {
+            DownloadCommand::Fetch { url, dest } => {
+                let workspace_and_graph =
+                    setup_workspace_and_graph(workspace_spec, profile, flow_id, url, dest).await?;
+                let cmd_context = cmd_context(&workspace_and_graph, &mut cli_output).await?;
+                fetch(cmd_context).await?;
+            }
             DownloadCommand::Status { url, dest } => {
                 let workspace_and_graph =
                     setup_workspace_and_graph(workspace_spec, profile, flow_id, url, dest).await?;

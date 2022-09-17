@@ -1,7 +1,7 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
     resources::states::{StatesCurrent, StatesDesired, StatesEnsured},
-    rt::EnsureCmd,
+    rt::{EnsureCmd, StatesDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -22,8 +22,13 @@ async fn contains_state_ensured_for_each_item_spec() -> Result<(), Box<dyn std::
         graph_builder.build()
     };
     let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
+    // Write current and desired states to disk.
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    StatesDiscoverCmd::exec(cmd_context).await?;
+
+    // Re-read states from disk.
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesCurrent>();

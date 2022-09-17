@@ -2,7 +2,7 @@ use diff::{Diff, VecDiff, VecDiffType};
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
     resources::states::{StateDiffs, StatesCurrent, StatesDesired},
-    rt::DiffCmd,
+    rt::{DiffCmd, StatesDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -24,8 +24,13 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
         graph_builder.build()
     };
     let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
+    // Write current and desired states to disk.
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    StatesDiscoverCmd::exec(cmd_context).await?;
+
+    // Re-read states from disk.
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesCurrent>();
@@ -67,13 +72,18 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         graph_builder.build()
     };
     let mut no_op_output = NoOpOutput;
-    let mut cmd_context = { CmdContext::init(&workspace, &graph, &mut no_op_output).await? };
+
+    // Write current and desired states to disk.
+    let mut cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
     // overwrite initial state
     let resources = cmd_context.resources_mut();
     #[rustfmt::skip]
     resources.insert(VecA(vec![0, 1, 2,    4, 5, 6, 8]));
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
+    StatesDiscoverCmd::exec(cmd_context).await?;
 
+    // Re-read states from disk.
+    let cmd_context = { CmdContext::init(&workspace, &graph, &mut no_op_output).await? };
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesCurrent>();

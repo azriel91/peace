@@ -28,21 +28,47 @@ where
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
     ) -> Result<CmdContext<E, O, WithStatesDesired>, E> {
+        Self::exec_no_output(cmd_context)
+            .await
+            .map_err(|(_cmd_context, e)| e)
+    }
+
+    /// Returns the [`StatesDesired`] of all [`ItemSpec`]s if it exists on disk.
+    ///
+    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    pub(crate) async fn exec_no_output(
+        cmd_context: CmdContext<'_, E, O, SetUp>,
+    ) -> Result<CmdContext<E, O, WithStatesDesired>, (CmdContext<E, O, SetUp>, E)> {
         let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
             cmd_context.into_inner();
-        let states_desired =
-            Self::exec_internal(&mut resources, states_type_regs.states_desired_type_reg()).await?;
+        let result =
+            Self::exec_internal(&mut resources, states_type_regs.states_desired_type_reg()).await;
 
-        let resources = Resources::<WithStatesDesired>::from((resources, states_desired));
+        match result {
+            Ok(states_desired) => {
+                let resources = Resources::<WithStatesDesired>::from((resources, states_desired));
 
-        let cmd_context = CmdContext::from((
-            workspace,
-            item_spec_graph,
-            output,
-            resources,
-            states_type_regs,
-        ));
-        Ok(cmd_context)
+                let cmd_context = CmdContext::from((
+                    workspace,
+                    item_spec_graph,
+                    output,
+                    resources,
+                    states_type_regs,
+                ));
+                Ok(cmd_context)
+            }
+            Err(e) => {
+                let cmd_context = CmdContext::from((
+                    workspace,
+                    item_spec_graph,
+                    output,
+                    resources,
+                    states_type_regs,
+                ));
+
+                Err((cmd_context, e))
+            }
+        }
     }
 
     /// Returns the [`StatesDesired`] of all [`ItemSpec`]s if it exists on disk.

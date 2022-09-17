@@ -4,11 +4,12 @@ use peace::{
     cfg::{FlowId, Profile},
     resources::{
         resources_type_state::{
-            Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesDesired,
+            Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired,
+            WithStatesDesired,
         },
         Resources,
     },
-    rt::{DiffCmd, EnsureCmd, StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
+    rt::{DiffCmd, EnsureCmd, StatesCurrentDisplayCmd, StatesDesiredDisplayCmd, StatesDiscoverCmd},
     rt_model::{
         CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, OutputWrite, Workspace, WorkspaceSpec,
     },
@@ -116,13 +117,23 @@ where
     CmdContext::init(workspace, item_spec_graph, output).await
 }
 
+pub async fn fetch<O>(
+    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
+) -> Result<Resources<WithStatesCurrentAndDesired>, DownloadError>
+where
+    O: OutputWrite<DownloadError>,
+{
+    let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
+    Ok(resources)
+}
+
 pub async fn status<O>(
     cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
 ) -> Result<Resources<WithStates>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
+    let CmdContext { resources, .. } = StatesCurrentDisplayCmd::exec(cmd_context).await?;
     Ok(resources)
 }
 
@@ -132,7 +143,7 @@ pub async fn desired<O>(
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdContext { resources, .. } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
+    let CmdContext { resources, .. } = StatesDesiredDisplayCmd::exec(cmd_context).await?;
     Ok(resources)
 }
 

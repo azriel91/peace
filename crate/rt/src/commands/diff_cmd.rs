@@ -7,9 +7,9 @@ use peace_resources::{
     states::StateDiffs,
     Resources,
 };
-use peace_rt_model::{CmdContext, Error};
+use peace_rt_model::{CmdContext, Error, OutputWrite};
 
-use crate::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd};
+use crate::{StatesCurrentReadCmd, StatesDesiredReadCmd};
 
 #[derive(Debug)]
 pub struct DiffCmd<E, O>(PhantomData<(E, O)>);
@@ -17,6 +17,7 @@ pub struct DiffCmd<E, O>(PhantomData<(E, O)>);
 impl<E, O> DiffCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
+    O: OutputWrite<E>,
 {
     /// Runs [`StateCurrentFnSpec`]` and `[`StateDesiredFnSpec`]`::`[`exec`] for
     /// each [`ItemSpec`].
@@ -44,15 +45,23 @@ where
     ) -> Result<CmdContext<E, O, WithStateDiffs>, E> {
         let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
             cmd_context.into_inner();
-        let states =
-            StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
-                .await?;
-        let states_desired =
-            StatesDesiredDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
-                .await?;
 
-        let resources =
-            Resources::<WithStatesCurrentAndDesired>::from((resources, states, states_desired));
+        let states_current = StatesCurrentReadCmd::<E, O>::exec_internal(
+            &mut resources,
+            states_type_regs.states_current_type_reg(),
+        )
+        .await?;
+        let states_desired = StatesDesiredReadCmd::<E, O>::exec_internal(
+            &mut resources,
+            states_type_regs.states_desired_type_reg(),
+        )
+        .await?;
+
+        let resources = Resources::<WithStatesCurrentAndDesired>::from((
+            resources,
+            states_current,
+            states_desired,
+        ));
         let resources_ref = &resources;
         let state_diffs = {
             let state_diffs_mut = item_spec_graph
@@ -71,13 +80,25 @@ where
         };
 
         let resources = Resources::<WithStateDiffs>::from((resources, state_diffs));
-        let cmd_context = CmdContext::from((
+        let mut cmd_context = CmdContext::from((
             workspace,
             item_spec_graph,
             output,
             resources,
             states_type_regs,
         ));
+
+        {
+            let CmdContext {
+                resources, output, ..
+            } = &mut cmd_context;
+            let state_diffs = resources.borrow::<StateDiffs>();
+
+            output.write_state_diffs(&state_diffs).await?;
+        }
+
+        // TODO: output.write_err(error) if any error happens while reading states.
+
         Ok(cmd_context)
     }
 }

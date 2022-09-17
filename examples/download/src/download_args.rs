@@ -19,6 +19,15 @@ pub struct DownloadArgs {
 
 #[derive(Subcommand)]
 pub enum DownloadCommand {
+    /// Fetches the current state and desired state.
+    Fetch {
+        /// URL to download from.
+        #[clap(value_hint(ValueHint::Url))]
+        url: Url,
+        /// File path to write to.
+        #[clap(value_parser)]
+        dest: PathBuf,
+    },
     /// Shows the download state.
     Status {
         /// URL to download from.

@@ -169,6 +169,11 @@
           document.querySelectorAll("button").forEach(element => element.removeAttribute("disabled"));
         }
 
+        document.querySelector("#fetch").addEventListener("click", () => {
+          exports.wasm_fetch(workspace_and_content_global)
+            .then(update_state);
+        });
+
         document.querySelector("#status").addEventListener("click", () => {
           exports.wasm_status(workspace_and_content_global)
             .then(update_state);
@@ -199,6 +204,7 @@
     <div class="section">
       <div id="spinner"><div class="loader">Loading...</div></div>
       <button id="init" autocomplete="off">init</button>
+      <button id="fetch"      class="init_required" disabled autocomplete="off">fetch</button>
       <button id="status"     class="init_required" disabled autocomplete="off">status</button>
       <button id="desired"    class="init_required" disabled autocomplete="off">desired</button>
       <button id="diff"       class="init_required" disabled autocomplete="off">diff</button>

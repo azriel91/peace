@@ -4,5 +4,6 @@ mod states_current_discover_cmd;
 mod states_current_display_cmd;
 mod states_current_read_cmd;
 mod states_desired_discover_cmd;
+mod states_desired_display_cmd;
 mod states_desired_read_cmd;
 mod states_discover_cmd;
