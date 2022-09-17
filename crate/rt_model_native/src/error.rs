@@ -31,7 +31,11 @@ pub enum Error {
     #[error("Desired states have not been written to disk.")]
     StatesDesiredDiscoverRequired,
 
-    // Native FS errors.
+    /// Failed to serialize state diffs.
+    #[error("Failed to serialize state diffs.")]
+    StateDiffsSerialize(#[source] serde_yaml::Error),
+
+    // Native errors.
     /// Failed to create file for writing.
     #[error("Failed to create file for writing: `{path}`")]
     FileCreate {
@@ -68,6 +72,9 @@ pub enum Error {
         #[source]
         error: std::io::Error,
     },
+    /// Failed to write to stdout.
+    #[error("Failed to write to stdout.")]
+    StdoutWrite(#[source] std::io::Error),
     /// Storage synchronous thread failed to be joined.
     ///
     /// This variant is used for thread spawning errors for both reads and

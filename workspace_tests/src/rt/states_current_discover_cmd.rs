@@ -21,7 +21,8 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let cmd_context = CmdContext::init(&workspace, &graph, &NoOpOutput).await?;
+    let mut no_op_output = NoOpOutput;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 

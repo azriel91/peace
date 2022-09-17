@@ -40,7 +40,7 @@ pub struct CmdContext<'ctx, E, O, TS> {
     /// Graph of item specs.
     pub item_spec_graph: &'ctx ItemSpecGraph<E>,
     /// `OutputWrite` to return values / errors to.
-    pub output: &'ctx O,
+    pub output: &'ctx mut O,
     /// `Resources` in this workspace.
     pub resources: Resources<TS>,
     /// Type registries to deserialize `StatesCurrentFile` and
@@ -61,7 +61,7 @@ where
     pub async fn init(
         workspace: &'ctx Workspace,
         item_spec_graph: &'ctx ItemSpecGraph<E>,
-        output: &'ctx O,
+        output: &'ctx mut O,
     ) -> Result<CmdContext<'ctx, E, O, SetUp>, E> {
         let mut resources = Resources::new();
 
@@ -134,7 +134,7 @@ where
     ) -> (
         &'ctx Workspace,
         &'ctx ItemSpecGraph<E>,
-        &'ctx O,
+        &'ctx mut O,
         Resources<TS>,
         StatesTypeRegs,
     ) {
@@ -167,6 +167,11 @@ where
 
     /// Returns a reference to the output.
     pub fn output(&self) -> &O {
+        &*self.output
+    }
+
+    /// Returns a mutable reference to the output.
+    pub fn output_mut(&mut self) -> &mut O {
         self.output
     }
 
@@ -185,7 +190,7 @@ impl<'ctx, E, O, TS>
     From<(
         &'ctx Workspace,
         &'ctx ItemSpecGraph<E>,
-        &'ctx O,
+        &'ctx mut O,
         Resources<TS>,
         StatesTypeRegs,
     )> for CmdContext<'ctx, E, O, TS>
@@ -194,7 +199,7 @@ impl<'ctx, E, O, TS>
         (workspace, item_spec_graph, output, resources, states_type_regs): (
             &'ctx Workspace,
             &'ctx ItemSpecGraph<E>,
-            &'ctx O,
+            &'ctx mut O,
             Resources<TS>,
             StatesTypeRegs,
         ),

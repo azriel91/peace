@@ -5,16 +5,19 @@
 
 // Re-exports
 pub use fn_graph::{self, FnRef, FnRefMut};
+pub use peace_rt_model_core::OutputWrite;
 
 pub use crate::{
-    cmd_context::CmdContext, item_spec_boxed::ItemSpecBoxed, item_spec_graph::ItemSpecGraph,
+    cmd_context::CmdContext, in_memory_text_output::InMemoryTextOutput,
+    item_spec_boxed::ItemSpecBoxed, item_spec_graph::ItemSpecGraph,
     item_spec_graph_builder::ItemSpecGraphBuilder, item_spec_rt::ItemSpecRt,
     item_spec_wrapper::ItemSpecWrapper, states_type_regs::StatesTypeRegs,
 };
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use peace_rt_model_native::{
-    Error, NativeStorage as Storage, SyncIoBridge, Workspace, WorkspaceDirsBuilder, WorkspaceSpec,
+    CliOutput, Error, NativeStorage as Storage, SyncIoBridge, Workspace, WorkspaceDirsBuilder,
+    WorkspaceSpec,
 };
 
 #[cfg(target_arch = "wasm32")]
@@ -23,6 +26,7 @@ pub use peace_rt_model_web::{
 };
 
 mod cmd_context;
+mod in_memory_text_output;
 mod item_spec_boxed;
 mod item_spec_graph;
 mod item_spec_graph_builder;

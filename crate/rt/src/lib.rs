@@ -7,8 +7,8 @@
 pub const BUFFERED_FUTURES_MAX: usize = 64;
 
 pub use crate::commands::{
-    DiffCmd, EnsureCmd, StatesCurrentDiscoverCmd, StatesCurrentReadCmd, StatesDesiredDiscoverCmd,
-    StatesDesiredReadCmd, StatesDiscoverCmd,
+    DiffCmd, EnsureCmd, StatesCurrentDiscoverCmd, StatesCurrentDisplayCmd, StatesCurrentReadCmd,
+    StatesDesiredDiscoverCmd, StatesDesiredReadCmd, StatesDiscoverCmd,
 };
 
 mod commands;

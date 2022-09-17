@@ -23,8 +23,9 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
         builder.add_fn(VecCopyItemSpec.into());
         builder.build()
     };
+    let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::init(&workspace, &graph, &NoOpOutput).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -57,8 +58,9 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
         builder.add_fn(VecCopyItemSpec.into());
         builder.build()
     };
+    let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::init(&workspace, &graph, &NoOpOutput).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -97,8 +99,9 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
         builder.add_fn(VecCopyItemSpec.into());
         builder.build()
     };
+    let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::init(&workspace, &graph, &NoOpOutput).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -131,8 +134,9 @@ async fn init_runs_graph_setup() -> Result<(), Box<dyn std::error::Error>> {
         builder.add_fn(VecCopyItemSpec.into());
         builder.build()
     };
+    let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::init(&workspace, &graph, &NoOpOutput).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<VecA>().is_ok());

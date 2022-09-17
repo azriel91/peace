@@ -7,10 +7,11 @@
 pub use tokio_util::io::SyncIoBridge;
 
 pub use crate::{
-    error::Error, native_storage::NativeStorage, workspace::Workspace,
+    cli_output::CliOutput, error::Error, native_storage::NativeStorage, workspace::Workspace,
     workspace_dirs_builder::WorkspaceDirsBuilder, workspace_spec::WorkspaceSpec,
 };
 
+mod cli_output;
 mod error;
 mod native_storage;
 mod workspace;

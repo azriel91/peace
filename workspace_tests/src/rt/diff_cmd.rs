@@ -23,7 +23,8 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let cmd_context = { CmdContext::init(&workspace, &graph, &NoOpOutput).await? };
+    let mut no_op_output = NoOpOutput;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
@@ -65,7 +66,8 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut cmd_context = { CmdContext::init(&workspace, &graph, &NoOpOutput).await? };
+    let mut no_op_output = NoOpOutput;
+    let mut cmd_context = { CmdContext::init(&workspace, &graph, &mut no_op_output).await? };
     // overwrite initial state
     let resources = cmd_context.resources_mut();
     #[rustfmt::skip]

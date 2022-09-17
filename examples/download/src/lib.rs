@@ -6,13 +6,13 @@ use peace::{
         resources_type_state::{
             Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesDesired,
         },
-        states::{StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry},
         Resources,
     },
     rt::{DiffCmd, EnsureCmd, StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
-    rt_model::{CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{
+        CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, OutputWrite, Workspace, WorkspaceSpec,
+    },
 };
-use tokio::io::{AsyncWrite, AsyncWriteExt};
 use url::Url;
 
 pub use crate::{
@@ -102,109 +102,68 @@ pub async fn setup_workspace_and_graph(
 }
 
 /// Returns a `CmdContext` initialized from the workspace and item spec graph
-pub async fn cmd_context(
-    workspace_and_graph: &WorkspaceAndGraph,
-) -> Result<CmdContext<'_, DownloadError, (), SetUp>, DownloadError> {
+pub async fn cmd_context<'ctx, O>(
+    workspace_and_graph: &'ctx WorkspaceAndGraph,
+    output: &'ctx mut O,
+) -> Result<CmdContext<'ctx, DownloadError, O, SetUp>, DownloadError>
+where
+    O: OutputWrite<DownloadError>,
+{
     let WorkspaceAndGraph {
         workspace,
         item_spec_graph,
     } = workspace_and_graph;
-    CmdContext::init(workspace, item_spec_graph, &()).await
+    CmdContext::init(workspace, item_spec_graph, output).await
 }
 
-pub async fn status<W>(
-    output: W,
-    cmd_context: CmdContext<'_, DownloadError, (), SetUp>,
+pub async fn status<O>(
+    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
 ) -> Result<Resources<WithStates>, DownloadError>
 where
-    W: AsyncWrite + Unpin,
+    O: OutputWrite<DownloadError>,
 {
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
-    let states_serialized = {
-        let states = resources.borrow::<StatesCurrent>();
-        serde_yaml::to_string(&*states).map_err(DownloadError::StatesSerialize)?
-    };
-
-    output_write(output, &states_serialized).await?;
     Ok(resources)
 }
 
-pub async fn desired<W>(
-    output: W,
-    cmd_context: CmdContext<'_, DownloadError, (), SetUp>,
+pub async fn desired<O>(
+    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
 ) -> Result<Resources<WithStatesDesired>, DownloadError>
 where
-    W: AsyncWrite + Unpin,
+    O: OutputWrite<DownloadError>,
 {
     let CmdContext { resources, .. } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
-    let states_desired_serialized = {
-        let states_desired = resources.borrow::<StatesDesired>();
-        serde_yaml::to_string(&*states_desired).map_err(DownloadError::StatesDesiredSerialize)?
-    };
-
-    output_write(output, &states_desired_serialized).await?;
     Ok(resources)
 }
 
-pub async fn diff<W>(
-    output: W,
-    cmd_context: CmdContext<'_, DownloadError, (), SetUp>,
+pub async fn diff<O>(
+    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
 ) -> Result<Resources<WithStateDiffs>, DownloadError>
 where
-    W: AsyncWrite + Unpin,
+    O: OutputWrite<DownloadError>,
 {
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
-    let state_diffs_serialized = {
-        let state_diffs = resources.borrow::<StateDiffs>();
-        serde_yaml::to_string(&*state_diffs).map_err(DownloadError::StateDiffsSerialize)?
-    };
-
-    output_write(output, &state_diffs_serialized).await?;
     Ok(resources)
 }
 
-pub async fn ensure_dry<W>(
-    output: W,
-    cmd_context: CmdContext<'_, DownloadError, (), SetUp>,
+pub async fn ensure_dry<O>(
+    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
 ) -> Result<Resources<EnsuredDry>, DownloadError>
 where
-    W: AsyncWrite + Unpin,
+    O: OutputWrite<DownloadError>,
 {
     let CmdContext { resources, .. } = EnsureCmd::exec_dry(cmd_context).await?;
-    let states_ensured_dry_serialized = {
-        let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
-        serde_yaml::to_string(&*states_ensured_dry).map_err(DownloadError::StateDiffsSerialize)?
-    };
-
-    output_write(output, &states_ensured_dry_serialized).await?;
     Ok(resources)
 }
 
-pub async fn ensure<W>(
-    output: W,
-    cmd_context: CmdContext<'_, DownloadError, (), SetUp>,
+pub async fn ensure<O>(
+    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
 ) -> Result<Resources<Ensured>, DownloadError>
 where
-    W: AsyncWrite + Unpin,
+    O: OutputWrite<DownloadError>,
 {
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
-    let states_ensured_serialized = {
-        let states_ensured = resources.borrow::<StatesEnsured>();
-        serde_yaml::to_string(&*states_ensured).map_err(DownloadError::StateDiffsSerialize)?
-    };
-
-    output_write(output, &states_ensured_serialized).await?;
     Ok(resources)
-}
-
-pub async fn output_write<W>(mut output: W, s: &str) -> Result<(), DownloadError>
-where
-    W: AsyncWrite + Unpin,
-{
-    output
-        .write_all(s.as_bytes())
-        .await
-        .map_err(DownloadError::StdoutWrite)
 }
 
 /// Read up to 1 kB in memory.

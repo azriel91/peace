@@ -21,7 +21,8 @@ async fn contains_state_ensured_for_each_item_spec() -> Result<(), Box<dyn std::
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let cmd_context = CmdContext::init(&workspace, &graph, &NoOpOutput).await?;
+    let mut no_op_output = NoOpOutput;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
 
