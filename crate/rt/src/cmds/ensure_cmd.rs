@@ -15,7 +15,7 @@ use peace_rt_model::{
     CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph, OutputWrite, StatesTypeRegs,
 };
 
-use crate::{DiffCmd, StatesCurrentDiscoverCmd};
+use crate::cmds::{DiffCmd, StatesCurrentDiscoverCmd};
 
 #[derive(Debug)]
 pub struct EnsureCmd<E, O>(PhantomData<(E, O)>);

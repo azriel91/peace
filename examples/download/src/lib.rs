@@ -9,7 +9,9 @@ use peace::{
         },
         Resources,
     },
-    rt::{DiffCmd, EnsureCmd, StatesCurrentDisplayCmd, StatesDesiredDisplayCmd, StatesDiscoverCmd},
+    rt::cmds::{
+        DiffCmd, EnsureCmd, StatesCurrentDisplayCmd, StatesDesiredDisplayCmd, StatesDiscoverCmd,
+    },
     rt_model::{
         CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, OutputWrite, Workspace, WorkspaceSpec,
     },

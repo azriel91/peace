@@ -5,7 +5,7 @@ use peace::{
         states::{StatesCurrent, StatesDesired},
         type_reg::untagged::TypeReg,
     },
-    rt::StatesDiscoverCmd,
+    rt::cmds::StatesDiscoverCmd,
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
