@@ -1,5 +1,7 @@
 use async_trait::async_trait;
-use peace_resources::states::{StateDiffs, StatesCurrent, StatesDesired};
+use peace_resources::states::{
+    StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry,
+};
 
 /// Transforms return values or errors into a suitable output format.
 ///
@@ -31,6 +33,21 @@ pub trait OutputWrite<E> {
 
     /// Writes state diffs to the output.
     async fn write_state_diffs(&mut self, state_diffs: &StateDiffs) -> Result<(), E>
+    where
+        E: std::error::Error;
+
+    /// Writes dry-ensured states to the output.
+    ///
+    /// These are the states that are simulated to be ensured.
+    async fn write_states_ensured_dry(
+        &mut self,
+        states_ensured_dry: &StatesEnsuredDry,
+    ) -> Result<(), E>
+    where
+        E: std::error::Error;
+
+    /// Writes ensured states to the output.
+    async fn write_states_ensured(&mut self, states_ensured: &StatesEnsured) -> Result<(), E>
     where
         E: std::error::Error;
 

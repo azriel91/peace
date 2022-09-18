@@ -11,7 +11,9 @@ use peace_resources::{
     states::{StatesEnsured, StatesEnsuredDry},
     Resources,
 };
-use peace_rt_model::{CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph, OutputWrite};
+use peace_rt_model::{
+    CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph, OutputWrite, StatesTypeRegs,
+};
 
 use crate::{DiffCmd, StatesCurrentDiscoverCmd};
 
@@ -50,20 +52,31 @@ where
     pub async fn exec_dry(
         cmd_context: CmdContext<'_, E, O, SetUp>,
     ) -> Result<CmdContext<E, O, EnsuredDry>, E> {
-        let cmd_context = DiffCmd::exec(cmd_context).await?;
         let (workspace, item_spec_graph, output, resources, states_type_regs) =
             cmd_context.into_inner();
-        let states_ensured_dry = Self::exec_dry_internal(item_spec_graph, &resources).await?;
+        let resources_result =
+            Self::exec_dry_internal(item_spec_graph, resources, &states_type_regs).await;
 
-        let resources = Resources::<EnsuredDry>::from((resources, states_ensured_dry));
-        let cmd_context = CmdContext::from((
-            workspace,
-            item_spec_graph,
-            output,
-            resources,
-            states_type_regs,
-        ));
-        Ok(cmd_context)
+        match resources_result {
+            Ok(resources) => {
+                {
+                    let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
+                    output.write_states_ensured_dry(&states_ensured_dry).await?;
+                }
+                let cmd_context = CmdContext::from((
+                    workspace,
+                    item_spec_graph,
+                    output,
+                    resources,
+                    states_type_regs,
+                ));
+                Ok(cmd_context)
+            }
+            Err(e) => {
+                output.write_err(&e).await?;
+                Err(e)
+            }
+        }
     }
 
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
@@ -77,18 +90,26 @@ where
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub(crate) async fn exec_dry_internal(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStateDiffs>,
-    ) -> Result<StatesEnsuredDry, E> {
-        let op_check_statuses = Self::ensure_op_spec_check(item_spec_graph, resources).await?;
-        Self::ensure_op_spec_exec_dry(item_spec_graph, resources, &op_check_statuses).await?;
+        resources: Resources<SetUp>,
+        states_type_regs: &StatesTypeRegs,
+    ) -> Result<Resources<EnsuredDry>, E> {
+        // https://github.com/rust-lang/rust-clippy/issues/9111
+        #[allow(clippy::needless_borrow)]
+        let resources =
+            DiffCmd::<E, O>::exec_internal(item_spec_graph, resources, &states_type_regs).await?;
+        let op_check_statuses = Self::ensure_op_spec_check(item_spec_graph, &resources).await?;
+        Self::ensure_op_spec_exec_dry(item_spec_graph, &resources, &op_check_statuses).await?;
 
         // TODO: This fetches the real state, whereas for a dry run, it would be useful
         // to show the imagined altered state.
-        let states =
-            StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure(item_spec_graph, resources)
+        let states_current =
+            StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure(item_spec_graph, &resources)
                 .await?;
 
-        Ok(StatesEnsuredDry::from((states, resources)))
+        let states_ensured_dry = StatesEnsuredDry::from((states_current, &resources));
+        let resources = Resources::<EnsuredDry>::from((resources, states_ensured_dry));
+
+        Ok(resources)
     }
 
     async fn ensure_op_spec_exec_dry(
@@ -131,20 +152,33 @@ where
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
     ) -> Result<CmdContext<E, O, Ensured>, E> {
-        let cmd_context = DiffCmd::exec(cmd_context).await?;
         let (workspace, item_spec_graph, output, resources, states_type_regs) =
             cmd_context.into_inner();
-        let states_ensured = Self::exec_internal(item_spec_graph, &resources).await?;
+        // https://github.com/rust-lang/rust-clippy/issues/9111
+        #[allow(clippy::needless_borrow)]
+        let resources_result =
+            Self::exec_internal(item_spec_graph, resources, &states_type_regs).await;
 
-        let resources = Resources::<Ensured>::from((resources, states_ensured));
-        let cmd_context = CmdContext::from((
-            workspace,
-            item_spec_graph,
-            output,
-            resources,
-            states_type_regs,
-        ));
-        Ok(cmd_context)
+        match resources_result {
+            Ok(resources) => {
+                {
+                    let states_ensured = resources.borrow::<StatesEnsured>();
+                    output.write_states_ensured(&states_ensured).await?;
+                }
+                let cmd_context = CmdContext::from((
+                    workspace,
+                    item_spec_graph,
+                    output,
+                    resources,
+                    states_type_regs,
+                ));
+                Ok(cmd_context)
+            }
+            Err(e) => {
+                output.write_err(&e).await?;
+                Err(e)
+            }
+        }
     }
 
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec`] for each [`ItemSpec`].
@@ -157,16 +191,24 @@ where
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub(crate) async fn exec_internal(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStateDiffs>,
-    ) -> Result<StatesEnsured, E> {
-        let op_check_statuses = Self::ensure_op_spec_check(item_spec_graph, resources).await?;
-        Self::ensure_op_spec_exec(item_spec_graph, resources, &op_check_statuses).await?;
+        resources: Resources<SetUp>,
+        states_type_regs: &StatesTypeRegs,
+    ) -> Result<Resources<Ensured>, E> {
+        // https://github.com/rust-lang/rust-clippy/issues/9111
+        #[allow(clippy::needless_borrow)]
+        let resources =
+            DiffCmd::<E, O>::exec_internal(item_spec_graph, resources, &states_type_regs).await?;
+        let op_check_statuses = Self::ensure_op_spec_check(item_spec_graph, &resources).await?;
+        Self::ensure_op_spec_exec(item_spec_graph, &resources, &op_check_statuses).await?;
 
-        let states =
-            StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure(item_spec_graph, resources)
+        let states_current =
+            StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure(item_spec_graph, &resources)
                 .await?;
 
-        Ok(StatesEnsured::from((states, resources)))
+        let states_ensured = StatesEnsured::from((states_current, &resources));
+        let resources = Resources::<Ensured>::from((resources, states_ensured));
+
+        Ok(resources)
     }
 
     async fn ensure_op_spec_check(

@@ -19,26 +19,17 @@ where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
 {
-    /// Runs [`StateCurrentFnSpec`]` and `[`StateDesiredFnSpec`]`::`[`exec`] for
-    /// each [`ItemSpec`].
+    /// Runs [`StateDiffFnSpec`]` for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
-    /// [`StatesCurrent`] and [`StatesDesired`].
+    /// [`StatesCurrent`], [`StatesDesired`], and [`StateDiffs`].
     ///
-    /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
-    /// `ItemSpec`, the [`StatesRw`] type should be used in
-    /// [`FnSpec::Data`].
-    ///
-    /// Likewise, if any `StateDesiredFnSpec` needs to read the desired `State`
-    /// from a previous `ItemSpec`, the [`StatesDesiredRw`] type should be
-    /// used in [`FnSpec::Data`].
-    ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
     /// [`FnSpec::Data`]: peace_cfg::FnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StatesCurrent`]: peace_resources::StatesCurrent
+    /// [`StatesDesired`]: peace_resources::StatesDesired
     /// [`StatesRw`]: peace_resources::StatesRw
-    /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    /// [`StateDiffFnSpec`]: peace_cfg::ItemSpec::StateDiffFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
@@ -55,10 +46,12 @@ where
             Self::exec_internal(item_spec_graph, resources, &states_type_regs).await;
 
         match state_diffs_result {
-            Ok((resources, state_diffs)) => {
-                output.write_state_diffs(&state_diffs).await?;
+            Ok(resources) => {
+                {
+                    let state_diffs = resources.borrow::<StateDiffs>();
+                    output.write_state_diffs(&state_diffs).await?;
+                }
 
-                let resources = Resources::<WithStateDiffs>::from((resources, state_diffs));
                 let cmd_context = CmdContext::from((
                     workspace,
                     item_spec_graph,
@@ -75,11 +68,15 @@ where
         }
     }
 
-    async fn exec_internal(
+    /// Returns `StateDiffs` between the current and desired states on disk.
+    ///
+    /// This also updates `Resources` from `SetUp` to
+    /// `WithStatesCurrentAndDesired`.
+    pub(crate) async fn exec_internal(
         item_spec_graph: &ItemSpecGraph<E>,
         mut resources: Resources<SetUp>,
         states_type_regs: &StatesTypeRegs,
-    ) -> Result<(Resources<WithStatesCurrentAndDesired>, StateDiffs), E> {
+    ) -> Result<Resources<WithStateDiffs>, E> {
         let states_current = StatesCurrentReadCmd::<E, O>::exec_internal(
             &mut resources,
             states_type_regs.states_current_type_reg(),
@@ -113,6 +110,7 @@ where
             StateDiffs::from(state_diffs_mut)
         };
 
-        Ok((resources, state_diffs))
+        let resources = Resources::<WithStateDiffs>::from((resources, state_diffs));
+        Ok(resources)
     }
 }

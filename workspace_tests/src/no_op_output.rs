@@ -1,6 +1,8 @@
 use peace::{
     cfg::async_trait,
-    resources::states::{StateDiffs, StatesCurrent, StatesDesired},
+    resources::states::{
+        StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry,
+    },
     rt_model::OutputWrite,
 };
 
@@ -22,6 +24,17 @@ where
     }
 
     async fn write_state_diffs(&mut self, _state_diffs: &StateDiffs) -> Result<(), E> {
+        Ok(())
+    }
+
+    async fn write_states_ensured_dry(
+        &mut self,
+        _states_ensured_dry: &StatesEnsuredDry,
+    ) -> Result<(), E> {
+        Ok(())
+    }
+
+    async fn write_states_ensured(&mut self, _states_ensured: &StatesEnsured) -> Result<(), E> {
         Ok(())
     }
 

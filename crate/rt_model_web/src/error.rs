@@ -33,6 +33,14 @@ pub enum Error {
     #[error("Failed to serialize state diffs.")]
     StateDiffsSerialize(#[source] serde_yaml::Error),
 
+    /// Failed to serialize dry-ensured states.
+    #[error("Failed to serialize dry-ensured states.")]
+    StatesEnsuredDrySerialize(#[source] serde_yaml::Error),
+
+    /// Failed to serialize ensured states.
+    #[error("Failed to serialize ensured states.")]
+    StatesEnsuredSerialize(#[source] serde_yaml::Error),
+
     // web_sys related errors
     /// Browser local storage unavailable.
     #[error("Browser local storage unavailable.")]

@@ -1,6 +1,8 @@
 use peace::{
     cfg::async_trait,
-    resources::states::{StateDiffs, StatesCurrent, StatesDesired},
+    resources::states::{
+        StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry,
+    },
     rt_model::OutputWrite,
 };
 
@@ -50,6 +52,25 @@ where
         self.fn_invocations.push(FnInvocation::new(
             "write_state_diffs",
             vec![Some(format!("{state_diffs:?}"))],
+        ));
+        Ok(())
+    }
+
+    async fn write_states_ensured_dry(
+        &mut self,
+        states_ensured_dry: &StatesEnsuredDry,
+    ) -> Result<(), E> {
+        self.fn_invocations.push(FnInvocation::new(
+            "write_states_ensured_dry",
+            vec![Some(format!("{states_ensured_dry:?}"))],
+        ));
+        Ok(())
+    }
+
+    async fn write_states_ensured(&mut self, states_ensured: &StatesEnsured) -> Result<(), E> {
+        self.fn_invocations.push(FnInvocation::new(
+            "write_states_ensured",
+            vec![Some(format!("{states_ensured:?}"))],
         ));
         Ok(())
     }
