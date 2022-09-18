@@ -9,7 +9,7 @@ use peace_resources::{
 };
 use peace_rt_model::{CmdContext, Error, ItemSpecGraph, OutputWrite, StatesTypeRegs};
 
-use crate::cmds::{StatesCurrentReadCmd, StatesDesiredReadCmd};
+use crate::cmds::sub::{StatesCurrentReadCmd, StatesDesiredReadCmd};
 
 #[derive(Debug)]
 pub struct DiffCmd<E, O>(PhantomData<(E, O)>);

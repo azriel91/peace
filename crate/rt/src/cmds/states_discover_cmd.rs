@@ -7,7 +7,7 @@ use peace_resources::{
 };
 use peace_rt_model::CmdContext;
 
-use crate::cmds::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd};
+use crate::cmds::sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd};
 
 #[derive(Debug)]
 pub struct StatesDiscoverCmd<E, O>(PhantomData<(E, O)>);

@@ -7,7 +7,7 @@ use peace_resources::{
 use peace_rt_model::{CmdContext, Error};
 use peace_rt_model_core::OutputWrite;
 
-use crate::cmds::StatesDesiredReadCmd;
+use crate::cmds::sub::StatesDesiredReadCmd;
 
 /// Displays [`StatesDesired`]s from storage.
 #[derive(Debug)]

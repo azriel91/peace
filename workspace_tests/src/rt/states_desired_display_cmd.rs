@@ -1,7 +1,7 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
     resources::states::StatesDesired,
-    rt::{StatesDesiredDiscoverCmd, StatesDesiredDisplayCmd},
+    rt::cmds::{sub::StatesDesiredDiscoverCmd, StatesDesiredDisplayCmd},
     rt_model::{CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 

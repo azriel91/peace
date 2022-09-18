@@ -2,7 +2,7 @@ use diff::{Diff, VecDiff, VecDiffType};
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
     resources::states::{StateDiffs, StatesCurrent, StatesDesired},
-    rt::{DiffCmd, StatesDiscoverCmd},
+    rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
