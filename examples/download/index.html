@@ -116,6 +116,7 @@
               update_state(workspace_and_content_global);
 
               document.querySelectorAll(".init_required").forEach(element => element.removeAttribute("disabled"));
+              document.querySelectorAll(".fetch_required").forEach(element => element.setAttribute("disabled", "disabled"));
             });
         });
 
@@ -127,6 +128,10 @@
           spinner.style.visibility = "visible";
         }
 
+        /**
+         * Updates the `#cmd_output_value` text output and `workspace_and_content_global` table
+         * output elements with the latest content.
+         */
         function update_state(workspace_and_content) {
           workspace_and_content_global = workspace_and_content;
           const in_memory_contents = document.querySelector("#in_memory_contents_value");
@@ -157,12 +162,20 @@
           spinner_show();
 
           fn_ref(workspace_and_content_global)
-            .then(update_state_and_enable_buttons);
+            .then(update_state_and_enable_buttons)
+            .catch((e) => {
+              // Indicate that nothing is in progress
+              spinner_hide();
+
+              // Provide feedback to the user.
+              in_memory_contents.innerHTML = `error: ${e}`;
+            });
         }
 
         function update_state_and_enable_buttons(workspace_and_content) {
           update_state(workspace_and_content);
 
+          // Indicate that nothing is in progress
           spinner_hide();
 
           // Enable user interaction
@@ -170,13 +183,13 @@
         }
 
         document.querySelector("#fetch").addEventListener("click", () => {
-          exports.wasm_fetch(workspace_and_content_global)
-            .then(update_state);
+          exec_disabling_buttons(exports.wasm_fetch);
+
+          document.querySelectorAll(".fetch_required").forEach(element => element.removeAttribute("disabled"));
         });
 
         document.querySelector("#status").addEventListener("click", () => {
-          exports.wasm_status(workspace_and_content_global)
-            .then(update_state);
+          exec_disabling_buttons(exports.wasm_status);
         });
 
         document.querySelector("#desired").addEventListener("click", () => {
@@ -205,11 +218,11 @@
       <div id="spinner"><div class="loader">Loading...</div></div>
       <button id="init" autocomplete="off">init</button>
       <button id="fetch"      class="init_required" disabled autocomplete="off">fetch</button>
-      <button id="status"     class="init_required" disabled autocomplete="off">status</button>
-      <button id="desired"    class="init_required" disabled autocomplete="off">desired</button>
-      <button id="diff"       class="init_required" disabled autocomplete="off">diff</button>
-      <button id="ensure_dry" class="init_required" disabled autocomplete="off">ensure (dry run)</button>
-      <button id="ensure"     class="init_required" disabled autocomplete="off">ensure</button>
+      <button id="status"     class="init_required fetch_required" disabled autocomplete="off">status</button>
+      <button id="desired"    class="init_required fetch_required" disabled autocomplete="off">desired</button>
+      <button id="diff"       class="init_required fetch_required" disabled autocomplete="off">diff</button>
+      <button id="ensure_dry" class="init_required fetch_required" disabled autocomplete="off">ensure (dry run)</button>
+      <button id="ensure"     class="init_required fetch_required" disabled autocomplete="off">ensure</button>
     </div>
 
     <div id="information" class="section">
