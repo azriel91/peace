@@ -10,9 +10,9 @@ use crate::{Error, WebStorage, WorkspaceDirsBuilder, WorkspaceSpec};
 pub struct Workspace {
     /// `Resources` in this workspace.
     dirs: WorkspaceDirs,
-    /// Workspace profile used.
+    /// Identifier or namespace to distinguish execution environments.
     profile: Profile,
-    /// Workspace profile used.
+    /// Identifier or name of the chosen process flow.
     flow_id: FlowId,
     /// Wrapper to retrieve `web_sys::Storage` on demand.
     storage: WebStorage,
