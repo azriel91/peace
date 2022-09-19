@@ -4,12 +4,6 @@ use peace::resources::{
     Resources,
 };
 
-#[derive(Debug, Default, PartialEq)]
-struct Res;
-
-#[derive(Debug, Default, PartialEq)]
-struct Value(u32);
-
 #[test]
 fn from_states_and_resources_with_state_diffs() {
     let resources_empty = Resources::new();

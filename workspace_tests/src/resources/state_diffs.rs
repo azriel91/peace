@@ -3,12 +3,6 @@ use peace::{
     resources::{internal::StateDiffsMut, states::StateDiffs, type_reg::untagged::TypeMap},
 };
 
-#[derive(Debug, Default, PartialEq)]
-struct Res;
-
-#[derive(Debug, Default, PartialEq)]
-struct Value(u32);
-
 #[test]
 fn with_capacity_reserves_enough_capacity() {
     let state_diffs = StateDiffs::with_capacity(100);
