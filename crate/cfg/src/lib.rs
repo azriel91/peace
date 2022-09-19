@@ -7,8 +7,8 @@
 pub use async_trait::async_trait;
 pub use nougat;
 pub use peace_core::{
-    flow_id, item_spec_id, profile, FlowId, ItemSpecId, ItemSpecIdInvalidFmt, OpCheckStatus,
-    Profile, ProfileInvalidFmt, ProgressLimit,
+    flow_id, item_spec_id, profile, FlowId, FlowIdInvalidFmt, ItemSpecId, ItemSpecIdInvalidFmt,
+    OpCheckStatus, Profile, ProfileInvalidFmt, ProgressLimit,
 };
 
 #[nougat::gat(Data)]

@@ -6,7 +6,7 @@ use peace::{
     rt_model::{CmdContext, ItemSpecGraphBuilder, Storage, Workspace, WorkspaceSpec},
 };
 
-use crate::{VecA, VecB, VecCopyItemSpec};
+use crate::{NoOpOutput, VecA, VecB, VecCopyItemSpec};
 
 #[tokio::test]
 async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_dir()
@@ -18,13 +18,14 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
         flow_id!("test_flow"),
     )
     .await?;
-    let item_spec_graph = {
+    let graph = {
         let mut builder = ItemSpecGraphBuilder::new();
         builder.add_fn(VecCopyItemSpec.into());
         builder.build()
     };
+    let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::init(&workspace, &item_spec_graph).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -52,13 +53,14 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
         flow_id!("test_flow"),
     )
     .await?;
-    let item_spec_graph = {
+    let graph = {
         let mut builder = ItemSpecGraphBuilder::new();
         builder.add_fn(VecCopyItemSpec.into());
         builder.build()
     };
+    let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::init(&workspace, &item_spec_graph).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -92,13 +94,14 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
         flow_id!("test_flow"),
     )
     .await?;
-    let item_spec_graph = {
+    let graph = {
         let mut builder = ItemSpecGraphBuilder::new();
         builder.add_fn(VecCopyItemSpec.into());
         builder.build()
     };
+    let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::init(&workspace, &item_spec_graph).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -126,13 +129,14 @@ async fn init_runs_graph_setup() -> Result<(), Box<dyn std::error::Error>> {
         flow_id!("test_flow"),
     )
     .await?;
-    let item_spec_graph = {
+    let graph = {
         let mut builder = ItemSpecGraphBuilder::new();
         builder.add_fn(VecCopyItemSpec.into());
         builder.build()
     };
+    let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::init(&workspace, &item_spec_graph).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<VecA>().is_ok());

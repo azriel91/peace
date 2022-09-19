@@ -32,14 +32,6 @@ pub enum DownloadError {
     // Scaffolding errors
     #[error("Failed to initialize tokio runtime.")]
     TokioRuntimeInit(#[source] std::io::Error),
-    #[error("Failed to serialize states.")]
-    StatesSerialize(#[source] serde_yaml::Error),
-    #[error("Failed to serialize desired states.")]
-    StatesDesiredSerialize(#[source] serde_yaml::Error),
-    #[error("Failed to serialize state diffs.")]
-    StateDiffsSerialize(#[source] serde_yaml::Error),
-    #[error("Failed to initialize tokio runtime.")]
-    StdoutWrite(#[source] std::io::Error),
 
     // WASM errors.
     #[cfg(target_arch = "wasm32")]

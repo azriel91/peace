@@ -1,11 +1,11 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, ItemSpecId, Profile},
     resources::{paths::StatesDesiredFile, states::StatesDesired, type_reg::untagged::TypeReg},
-    rt::StatesDesiredDiscoverCmd,
+    rt::cmds::sub::StatesDesiredDiscoverCmd,
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{VecCopyError, VecCopyItemSpec};
+use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec};
 
 #[tokio::test]
 async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>> {
@@ -21,7 +21,8 @@ async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::erro
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let cmd_context = CmdContext::init(&workspace, &graph).await?;
+    let mut no_op_output = NoOpOutput;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
 
     let CmdContext { resources, .. } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
 

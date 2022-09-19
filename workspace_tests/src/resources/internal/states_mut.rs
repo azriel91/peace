@@ -3,12 +3,6 @@ use peace::{
     resources::{internal::StatesMut, states::ts::Current, type_reg::untagged::TypeMap},
 };
 
-#[derive(Debug, Default, PartialEq)]
-struct Res;
-
-#[derive(Debug, Default, PartialEq)]
-struct Value(u32);
-
 #[test]
 fn with_capacity_reserves_enough_capacity() {
     let states = StatesMut::<Current>::with_capacity(100);

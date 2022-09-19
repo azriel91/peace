@@ -2,7 +2,13 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-/// Unique identifier for a `Profile`, `Cow<'static, str>` newtype.
+/// Identifier or namespace to distinguish execution environments.
+///
+/// Example suitable identifiers are:
+///
+/// * `"dev_user1"`
+/// * `"dev_user2"`
+/// * `"prod_customer1"`
 ///
 /// Must begin with a letter or underscore, and contain only letters, numbers,
 /// and underscores.

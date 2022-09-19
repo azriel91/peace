@@ -2,13 +2,13 @@ use std::{collections::HashMap, path::PathBuf};
 
 use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
-    rt_model::WorkspaceSpec,
+    rt_model::{InMemoryTextOutput, WorkspaceSpec},
 };
 use url::Url;
 use wasm_bindgen::prelude::*;
 
 pub use crate::{
-    cmd_context, desired, diff, ensure, ensure_dry, setup_workspace_and_graph, status,
+    cmd_context, desired, diff, ensure, ensure_dry, fetch, setup_workspace_and_graph, status,
     DownloadArgs, DownloadCleanOpSpec, DownloadCommand, DownloadEnsureOpSpec, DownloadError,
     DownloadItemSpec, DownloadParams, DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec,
     DownloadStateDiffFnSpec, FileState, FileStateDiff, WorkspaceAndGraph,
@@ -63,6 +63,37 @@ pub async fn wasm_setup(url: String, name: String) -> Result<WorkspaceAndContent
 }
 
 #[wasm_bindgen]
+pub async fn wasm_fetch(
+    workspace_and_content: WorkspaceAndContent,
+) -> Result<WorkspaceAndContent, JsValue> {
+    let WorkspaceAndContent {
+        workspace_and_graph,
+        content,
+        output: _,
+    } = workspace_and_content;
+    let mut in_memory_text_output = InMemoryTextOutput::new();
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output)
+        .await
+        .map_err(into_js_err_value)?;
+    let resources = cmd_context.resources_mut();
+    resources.insert(content);
+
+    let mut resources = fetch(cmd_context).await.map_err(into_js_err_value)?;
+    let output = in_memory_text_output.into_inner();
+
+    let content = resources
+        .remove::<std::collections::HashMap<PathBuf, String>>()
+        .ok_or(JsValue::from_str(
+            "Resources did not contain content HashMap.",
+        ))?;
+    Ok(WorkspaceAndContent {
+        workspace_and_graph,
+        content,
+        output,
+    })
+}
+
+#[wasm_bindgen]
 pub async fn wasm_status(
     workspace_and_content: WorkspaceAndContent,
 ) -> Result<WorkspaceAndContent, JsValue> {
@@ -71,17 +102,15 @@ pub async fn wasm_status(
         content,
         output: _,
     } = workspace_and_content;
-    let mut cmd_context = cmd_context(&workspace_and_graph)
+    let mut in_memory_text_output = InMemoryTextOutput::new();
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output)
         .await
         .map_err(into_js_err_value)?;
     let resources = cmd_context.resources_mut();
     resources.insert(content);
 
-    let mut buffer = Vec::<u8>::with_capacity(256);
-    let mut resources = status(&mut buffer, cmd_context)
-        .await
-        .map_err(into_js_err_value)?;
-    let output = String::from_utf8(buffer).map_err(into_js_err_value)?;
+    let mut resources = status(cmd_context).await.map_err(into_js_err_value)?;
+    let output = in_memory_text_output.into_inner();
 
     let content = resources
         .remove::<std::collections::HashMap<PathBuf, String>>()
@@ -104,17 +133,15 @@ pub async fn wasm_desired(
         content,
         output: _,
     } = workspace_and_content;
-    let mut cmd_context = cmd_context(&workspace_and_graph)
+    let mut in_memory_text_output = InMemoryTextOutput::new();
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output)
         .await
         .map_err(into_js_err_value)?;
     let resources = cmd_context.resources_mut();
     resources.insert(content);
 
-    let mut buffer = Vec::<u8>::with_capacity(256);
-    let mut resources = desired(&mut buffer, cmd_context)
-        .await
-        .map_err(into_js_err_value)?;
-    let output = String::from_utf8(buffer).map_err(into_js_err_value)?;
+    let mut resources = desired(cmd_context).await.map_err(into_js_err_value)?;
+    let output = in_memory_text_output.into_inner();
 
     let content = resources
         .remove::<std::collections::HashMap<PathBuf, String>>()
@@ -137,17 +164,15 @@ pub async fn wasm_diff(
         content,
         output: _,
     } = workspace_and_content;
-    let mut cmd_context = cmd_context(&workspace_and_graph)
+    let mut in_memory_text_output = InMemoryTextOutput::new();
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output)
         .await
         .map_err(into_js_err_value)?;
     let resources = cmd_context.resources_mut();
     resources.insert(content);
 
-    let mut buffer = Vec::<u8>::with_capacity(256);
-    let mut resources = diff(&mut buffer, cmd_context)
-        .await
-        .map_err(into_js_err_value)?;
-    let output = String::from_utf8(buffer).map_err(into_js_err_value)?;
+    let mut resources = diff(cmd_context).await.map_err(into_js_err_value)?;
+    let output = in_memory_text_output.into_inner();
 
     let content = resources
         .remove::<std::collections::HashMap<PathBuf, String>>()
@@ -170,17 +195,15 @@ pub async fn wasm_ensure_dry(
         content,
         output: _,
     } = workspace_and_content;
-    let mut cmd_context = cmd_context(&workspace_and_graph)
+    let mut in_memory_text_output = InMemoryTextOutput::new();
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output)
         .await
         .map_err(into_js_err_value)?;
     let resources = cmd_context.resources_mut();
     resources.insert(content);
 
-    let mut buffer = Vec::<u8>::with_capacity(256);
-    let mut resources = ensure_dry(&mut buffer, cmd_context)
-        .await
-        .map_err(into_js_err_value)?;
-    let output = String::from_utf8(buffer).map_err(into_js_err_value)?;
+    let mut resources = ensure_dry(cmd_context).await.map_err(into_js_err_value)?;
+    let output = in_memory_text_output.into_inner();
 
     let content = resources
         .remove::<std::collections::HashMap<PathBuf, String>>()
@@ -203,17 +226,15 @@ pub async fn wasm_ensure(
         content,
         output: _,
     } = workspace_and_content;
-    let mut cmd_context = cmd_context(&workspace_and_graph)
+    let mut in_memory_text_output = InMemoryTextOutput::new();
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output)
         .await
         .map_err(into_js_err_value)?;
     let resources = cmd_context.resources_mut();
     resources.insert(content);
 
-    let mut buffer = Vec::<u8>::with_capacity(256);
-    let mut resources = ensure(&mut buffer, cmd_context)
-        .await
-        .map_err(into_js_err_value)?;
-    let output = String::from_utf8(buffer).map_err(into_js_err_value)?;
+    let mut resources = ensure(cmd_context).await.map_err(into_js_err_value)?;
+    let output = in_memory_text_output.into_inner();
 
     let content = resources
         .remove::<std::collections::HashMap<PathBuf, String>>()

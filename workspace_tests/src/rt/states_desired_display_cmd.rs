@@ -1,14 +1,14 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
-    resources::states::StatesCurrent,
-    rt::cmds::sub::{StatesCurrentDiscoverCmd, StatesCurrentReadCmd},
+    resources::states::StatesDesired,
+    rt::cmds::{sub::StatesDesiredDiscoverCmd, StatesDesiredDisplayCmd},
     rt_model::{CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec};
+use crate::{FnInvocation, FnTrackerOutput, NoOpOutput, VecCopyError, VecCopyItemSpec};
 
 #[tokio::test]
-async fn reads_states_current_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
+async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::init(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
@@ -21,29 +21,38 @@ async fn reads_states_current_from_disk_when_present() -> Result<(), Box<dyn std
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
+    let mut fn_tracker_output = FnTrackerOutput::new();
 
-    // Write current states to disk.
+    // Write desired states to disk.
+    let mut no_op_output = NoOpOutput;
     let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext {
         resources: resources_from_discover,
         ..
-    } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
+    } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk in a new set of resources.
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut fn_tracker_output).await?;
     let CmdContext {
         resources: resources_from_read,
         ..
-    } = StatesCurrentReadCmd::exec(cmd_context).await?;
+    } = StatesDesiredDisplayCmd::exec(cmd_context).await?;
 
-    let states_from_discover = resources_from_discover.borrow::<StatesCurrent>();
+    let states_from_discover = resources_from_discover.borrow::<StatesDesired>();
     let vec_copy_state_from_discover =
         states_from_discover.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id());
-    let states_from_read = resources_from_read.borrow::<StatesCurrent>();
+    let states_from_read = resources_from_read.borrow::<StatesDesired>();
+    let states_from_read = &*states_from_read;
     let vec_copy_state_from_read =
         states_from_read.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id());
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
+    assert_eq!(
+        vec![FnInvocation::new(
+            "write_states_desired",
+            vec![Some(format!("{states_from_read:?}"))],
+        )],
+        fn_tracker_output.fn_invocations()
+    );
     Ok(())
 }
 
@@ -61,17 +70,25 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let mut fn_tracker_output = FnTrackerOutput::new();
 
-    // Try and read states from disk.
-    let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
-    let exec_result = StatesCurrentReadCmd::exec(cmd_context).await;
+    // Try and display states from disk.
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut fn_tracker_output).await?;
+    let exec_result = StatesDesiredDisplayCmd::exec(cmd_context).await;
 
     assert!(matches!(
         exec_result,
         Err(VecCopyError::PeaceRtError(
-            Error::StatesCurrentDiscoverRequired
+            Error::StatesDesiredDiscoverRequired
         ))
     ));
+    let err = VecCopyError::PeaceRtError(Error::StatesDesiredDiscoverRequired);
+    assert_eq!(
+        vec![FnInvocation::new(
+            "write_err",
+            vec![Some(format!("{err:?}"))],
+        )],
+        fn_tracker_output.fn_invocations()
+    );
     Ok(())
 }

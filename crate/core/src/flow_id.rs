@@ -2,7 +2,20 @@ use std::borrow::Cow;
 
 use serde::{Deserialize, Serialize};
 
-/// Unique identifier for a `FlowId`, `Cow<'static, str>` newtype.
+/// Identifier or name of a process flow.
+///
+/// Examples are `"dev_env"` and `"artifact"` in the following snippet:
+///
+/// ```bash
+/// peace dev_env discover # StatesDiscoverCmd
+/// peace dev_env status   # StatesCurrentDisplayCmd
+/// peace dev_env deploy   # EnsureCmd
+/// peace dev_env clean    # CleanCmd
+///
+/// peace artifact discover # StatesDiscoverCmd
+/// peace artifact status   # StatesCurrentDisplayCmd
+/// peace artifact publish  # EnsureCmd
+/// ```
 ///
 /// Must begin with a letter or underscore, and contain only letters, numbers,
 /// and underscores.

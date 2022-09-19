@@ -1,11 +1,11 @@
 use peace::{
     cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
     resources::states::StatesDesired,
-    rt::{StatesDesiredDiscoverCmd, StatesDesiredReadCmd},
+    rt::cmds::sub::{StatesDesiredDiscoverCmd, StatesDesiredReadCmd},
     rt_model::{CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{VecCopyError, VecCopyItemSpec};
+use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec};
 
 #[tokio::test]
 async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
@@ -21,16 +21,17 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let mut no_op_output = NoOpOutput;
 
     // Write desired states to disk.
-    let cmd_context = CmdContext::init(&workspace, &graph).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext {
         resources: resources_from_discover,
         ..
     } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk in a new set of resources.
-    let cmd_context = CmdContext::init(&workspace, &graph).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext {
         resources: resources_from_read,
         ..
@@ -60,9 +61,10 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let mut no_op_output = NoOpOutput;
 
     // Try and read desired states from disk.
-    let cmd_context = CmdContext::init(&workspace, &graph).await?;
+    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
     let exec_result = StatesDesiredReadCmd::exec(cmd_context).await;
 
     assert!(matches!(

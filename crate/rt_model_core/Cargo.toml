@@ -1,0 +1,20 @@
+[package]
+name = "peace_rt_model_core"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.2"
+edition = "2021"
+description = "Core runtime traits for the peace automation framework."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_rt_model_core/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+async-trait = "0.1.56"
+peace_resources = { path = "../resources", version = "0.0.2" }
