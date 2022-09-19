@@ -102,9 +102,11 @@ where
 
         // TODO: This fetches the real state, whereas for a dry run, it would be useful
         // to show the imagined altered state.
-        let states_current =
-            StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure(item_spec_graph, &resources)
-                .await?;
+        let states_current = StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure_dry(
+            item_spec_graph,
+            &resources,
+        )
+        .await?;
 
         let states_ensured_dry = StatesEnsuredDry::from((states_current, &resources));
         let resources = Resources::<EnsuredDry>::from((resources, states_ensured_dry));
@@ -196,14 +198,16 @@ where
     ) -> Result<Resources<Ensured>, E> {
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
-        let resources =
+        let mut resources =
             DiffCmd::<E, O>::exec_internal(item_spec_graph, resources, &states_type_regs).await?;
         let op_check_statuses = Self::ensure_op_spec_check(item_spec_graph, &resources).await?;
         Self::ensure_op_spec_exec(item_spec_graph, &resources, &op_check_statuses).await?;
 
-        let states_current =
-            StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure(item_spec_graph, &resources)
-                .await?;
+        let states_current = StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure(
+            item_spec_graph,
+            &mut resources,
+        )
+        .await?;
 
         let states_ensured = StatesEnsured::from((states_current, &resources));
         let resources = Resources::<Ensured>::from((resources, states_ensured));

@@ -90,7 +90,7 @@ where
     /// [`exec`]: peace_cfg::FnSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    pub(crate) async fn exec_internal_for_ensure(
+    pub(crate) async fn exec_internal_for_ensure_dry(
         item_spec_graph: &ItemSpecGraph<E>,
         resources: &Resources<WithStateDiffs>,
     ) -> Result<StatesCurrent, E> {
@@ -105,12 +105,45 @@ where
             .try_collect::<StatesMut<Current>>()
             .await?;
 
-        Ok(StatesCurrent::from(states_mut))
+        let states = StatesCurrent::from(states_mut);
+        // We don't serialize states to disk as this is for a dry run.
+
+        Ok(states)
+    }
+
+    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    ///
+    /// Same as [`Self::exec`], but does not change the type state, and returns
+    /// [`StatesCurrent`].
+    ///
+    /// [`exec`]: peace_cfg::FnSpec::exec
+    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    pub(crate) async fn exec_internal_for_ensure(
+        item_spec_graph: &ItemSpecGraph<E>,
+        resources: &mut Resources<WithStateDiffs>,
+    ) -> Result<StatesCurrent, E> {
+        let resources_ref = &*resources;
+        let states_mut = item_spec_graph
+            .stream()
+            .map(Result::<_, E>::Ok)
+            .map_ok(|item_spec| async move {
+                let state = item_spec.state_ensured_fn_exec(resources_ref).await?;
+                Ok((item_spec.id(), state))
+            })
+            .try_buffer_unordered(BUFFERED_FUTURES_MAX)
+            .try_collect::<StatesMut<Current>>()
+            .await?;
+
+        let states = StatesCurrent::from(states_mut);
+        Self::serialize_internal(resources, &states).await?;
+
+        Ok(states)
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    async fn serialize_internal(
-        resources: &mut Resources<SetUp>,
+    async fn serialize_internal<TS>(
+        resources: &mut Resources<TS>,
         states: &StatesCurrent,
     ) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
@@ -133,8 +166,8 @@ where
     }
 
     #[cfg(target_arch = "wasm32")]
-    async fn serialize_internal(
-        resources: &mut Resources<SetUp>,
+    async fn serialize_internal<TS>(
+        resources: &mut Resources<TS>,
         states: &StatesCurrent,
     ) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
