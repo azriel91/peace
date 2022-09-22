@@ -19,60 +19,26 @@ pub struct DownloadArgs {
 
 #[derive(Subcommand)]
 pub enum DownloadCommand {
+    Init {
+        /// URL to download from.
+        #[clap(value_hint(ValueHint::Url))]
+        url: Url,
+        /// File path to write to.
+        #[clap(value_parser)]
+        dest: PathBuf,
+    },
     /// Fetches the current state and desired state.
-    Fetch {
-        /// URL to download from.
-        #[clap(value_hint(ValueHint::Url))]
-        url: Url,
-        /// File path to write to.
-        #[clap(value_parser)]
-        dest: PathBuf,
-    },
+    Fetch,
     /// Shows the download state.
-    Status {
-        /// URL to download from.
-        #[clap(value_hint(ValueHint::Url))]
-        url: Url,
-        /// File path to write to.
-        #[clap(value_parser)]
-        dest: PathBuf,
-    },
+    Status,
     /// Shows the download state.
-    Desired {
-        /// URL to download from.
-        #[clap(value_hint(ValueHint::Url))]
-        url: Url,
-        /// File path to write to.
-        #[clap(value_parser)]
-        dest: PathBuf,
-    },
+    Desired,
     /// Shows the diff between the remote file and local file state.
     ///
     /// This may not be the full content diff if the file is large.
-    Diff {
-        /// URL to download from.
-        #[clap(value_hint(ValueHint::Url))]
-        url: Url,
-        /// File path to write to.
-        #[clap(value_parser)]
-        dest: PathBuf,
-    },
+    Diff,
     /// Dry-run to execute the download if necessary.
-    EnsureDry {
-        /// URL to download from.
-        #[clap(value_hint(ValueHint::Url))]
-        url: Url,
-        /// File path to write to.
-        #[clap(value_parser)]
-        dest: PathBuf,
-    },
+    EnsureDry,
     /// Executes the download if necessary.
-    Ensure {
-        /// URL to download from.
-        #[clap(value_hint(ValueHint::Url))]
-        url: Url,
-        /// File path to write to.
-        #[clap(value_parser)]
-        dest: PathBuf,
-    },
+    Ensure,
 }

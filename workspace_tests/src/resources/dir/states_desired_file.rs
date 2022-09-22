@@ -37,7 +37,7 @@ pub fn from_path_buf() {
 }
 
 #[test]
-pub fn from_profile_dir_relative() {
+pub fn from_flow_dir_relative() {
     let peace_dir = PeaceDir::from(Path::new(".").to_path_buf());
     let profile = profile!("test_profile");
     let profile_dir = ProfileDir::from((&peace_dir, &profile));

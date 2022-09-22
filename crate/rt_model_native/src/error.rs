@@ -43,6 +43,25 @@ pub enum Error {
     #[error("Failed to serialize ensured states.")]
     StatesEnsuredSerialize(#[source] serde_yaml::Error),
 
+    /// Failed to serialize workspace init params.
+    #[error("Failed to serialize workspace init params.")]
+    WorkspaceInitParamsSerialize(#[source] serde_yaml::Error),
+    /// Failed to deserialize workspace init params.
+    #[error("Failed to serialize workspace init params.")]
+    WorkspaceInitParamsDeserialize(#[source] serde_yaml::Error),
+    /// Failed to serialize profile init params.
+    #[error("Failed to serialize profile init params.")]
+    ProfileInitParamsSerialize(#[source] serde_yaml::Error),
+    /// Failed to deserialize profile init params.
+    #[error("Failed to serialize profile init params.")]
+    ProfileInitParamsDeserialize(#[source] serde_yaml::Error),
+    /// Failed to serialize flow init params.
+    #[error("Failed to serialize flow init params.")]
+    FlowInitParamsSerialize(#[source] serde_yaml::Error),
+    /// Failed to deserialize flow init params.
+    #[error("Failed to serialize flow init params.")]
+    FlowInitParamsDeserialize(#[source] serde_yaml::Error),
+
     // Native errors.
     /// Failed to create file for writing.
     #[error("Failed to create file for writing: `{path}`")]

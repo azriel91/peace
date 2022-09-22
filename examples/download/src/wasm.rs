@@ -8,10 +8,11 @@ use url::Url;
 use wasm_bindgen::prelude::*;
 
 pub use crate::{
-    cmd_context, desired, diff, ensure, ensure_dry, fetch, setup_workspace_and_graph, status,
-    DownloadArgs, DownloadCleanOpSpec, DownloadCommand, DownloadEnsureOpSpec, DownloadError,
-    DownloadItemSpec, DownloadParams, DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec,
-    DownloadStateDiffFnSpec, FileState, FileStateDiff, WorkspaceAndGraph,
+    cmd_context, desired, diff, ensure, ensure_dry, fetch, status, workspace_and_graph_setup,
+    workspace_init, DownloadArgs, DownloadCleanOpSpec, DownloadCommand, DownloadEnsureOpSpec,
+    DownloadError, DownloadItemSpec, DownloadParams, DownloadStateCurrentFnSpec,
+    DownloadStateDesiredFnSpec, DownloadStateDiffFnSpec, FileState, FileStateDiff,
+    WorkspaceAndGraph,
 };
 
 #[wasm_bindgen]
@@ -37,10 +38,10 @@ impl WorkspaceAndContent {
 }
 
 #[wasm_bindgen]
-pub async fn wasm_setup(url: String, name: String) -> Result<WorkspaceAndContent, JsValue> {
+pub async fn wasm_init(url: String, name: String) -> Result<WorkspaceAndContent, JsValue> {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    setup_workspace_and_graph(
+    workspace_init(
         WorkspaceSpec::SessionStorage,
         profile!("default"),
         flow_id!("file"),

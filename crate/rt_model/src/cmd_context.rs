@@ -1,3 +1,5 @@
+use std::fmt;
+
 use futures::{StreamExt, TryStreamExt};
 use peace_resources::{
     resources_type_state::{Empty, SetUp},
@@ -34,9 +36,9 @@ use crate::{Error, ItemSpecGraph, StatesTypeRegs, Workspace};
 /// [`ProfileDir`]: peace::resources::paths::ProfileDir
 /// [`ProfileHistoryDir`]: peace::resources::paths::ProfileHistoryDir
 #[derive(Debug)]
-pub struct CmdContext<'ctx, E, O, TS> {
+pub struct CmdContext<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit, TS> {
     /// Workspace that the `peace` tool runs in.
-    pub workspace: &'ctx Workspace,
+    pub workspace: &'ctx Workspace<WorkspaceInit, ProfileInit, FlowInit>,
     /// Graph of item specs.
     pub item_spec_graph: &'ctx ItemSpecGraph<E>,
     /// `OutputWrite` to return values / errors to.
@@ -48,9 +50,13 @@ pub struct CmdContext<'ctx, E, O, TS> {
     pub states_type_regs: StatesTypeRegs,
 }
 
-impl<'ctx, E, O> CmdContext<'ctx, E, O, SetUp>
+impl<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit>
+    CmdContext<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit, SetUp>
 where
     E: std::error::Error + From<Error>,
+    WorkspaceInit: Clone + fmt::Debug + Send + Sync + 'static,
+    ProfileInit: Clone + fmt::Debug + Send + Sync + 'static,
+    FlowInit: Clone + fmt::Debug + Send + Sync + 'static,
 {
     /// Prepares a workspace to run commands in.
     ///
@@ -59,10 +65,10 @@ where
     /// * `workspace`: Defines how to discover the workspace.
     /// * `item_spec_graph`: Logic to run in the command.
     pub async fn init(
-        workspace: &'ctx Workspace,
+        workspace: &'ctx Workspace<WorkspaceInit, ProfileInit, FlowInit>,
         item_spec_graph: &'ctx ItemSpecGraph<E>,
         output: &'ctx mut O,
-    ) -> Result<CmdContext<'ctx, E, O, SetUp>, E> {
+    ) -> Result<CmdContext<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit, SetUp>, E> {
         let mut resources = Resources::new();
 
         Self::insert_workspace_resources(workspace, &mut resources);
@@ -79,8 +85,12 @@ where
     }
 
     /// Inserts workspace directory resources into the `Resources` map.
-    fn insert_workspace_resources(workspace: &Workspace, resources: &mut Resources<Empty>) {
-        let (workspace_dirs, profile, flow_id, storage) = workspace.clone().into_inner();
+    fn insert_workspace_resources(
+        workspace: &Workspace<WorkspaceInit, ProfileInit, FlowInit>,
+        resources: &mut Resources<Empty>,
+    ) {
+        let (workspace_dirs, profile, flow_id, storage, workspace_init, profile_init, flow_init) =
+            workspace.clone().into_inner();
         let (workspace_dir, peace_dir, profile_dir, profile_history_dir, flow_dir) =
             workspace_dirs.into_inner();
 
@@ -93,10 +103,14 @@ where
         resources.insert(profile);
         resources.insert(flow_id);
         resources.insert(storage);
+        resources.insert(workspace_init);
+        resources.insert(profile_init);
+        resources.insert(flow_init);
     }
 }
 
-impl<'ctx, E, O, TS> CmdContext<'ctx, E, O, TS>
+impl<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit, TS>
+    CmdContext<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit, TS>
 where
     E: std::error::Error,
 {
@@ -132,7 +146,7 @@ where
     pub fn into_inner(
         self,
     ) -> (
-        &'ctx Workspace,
+        &'ctx Workspace<WorkspaceInit, ProfileInit, FlowInit>,
         &'ctx ItemSpecGraph<E>,
         &'ctx mut O,
         Resources<TS>,
@@ -156,7 +170,7 @@ where
     }
 
     /// Returns a reference to the workspace.
-    pub fn workspace(&self) -> &Workspace {
+    pub fn workspace(&self) -> &Workspace<WorkspaceInit, ProfileInit, FlowInit> {
         self.workspace
     }
 
@@ -186,18 +200,18 @@ where
     }
 }
 
-impl<'ctx, E, O, TS>
+impl<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit, TS>
     From<(
-        &'ctx Workspace,
+        &'ctx Workspace<WorkspaceInit, ProfileInit, FlowInit>,
         &'ctx ItemSpecGraph<E>,
         &'ctx mut O,
         Resources<TS>,
         StatesTypeRegs,
-    )> for CmdContext<'ctx, E, O, TS>
+    )> for CmdContext<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit, TS>
 {
     fn from(
         (workspace, item_spec_graph, output, resources, states_type_regs): (
-            &'ctx Workspace,
+            &'ctx Workspace<WorkspaceInit, ProfileInit, FlowInit>,
             &'ctx ItemSpecGraph<E>,
             &'ctx mut O,
             Resources<TS>,
@@ -214,12 +228,21 @@ impl<'ctx, E, O, TS>
     }
 }
 
-impl<'ctx, E, O, TS0, TS1, F> From<(CmdContext<'ctx, E, O, TS0>, F)> for CmdContext<'ctx, E, O, TS1>
+impl<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit, TS0, TS1, F>
+    From<(
+        CmdContext<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit, TS0>,
+        F,
+    )> for CmdContext<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit, TS1>
 where
     E: std::error::Error,
     F: FnOnce(Resources<TS0>) -> Resources<TS1>,
 {
-    fn from((cmd_context_ts0, f): (CmdContext<'ctx, E, O, TS0>, F)) -> Self {
+    fn from(
+        (cmd_context_ts0, f): (
+            CmdContext<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit, TS0>,
+            F,
+        ),
+    ) -> Self {
         let (workspace, item_spec_graph, output, resources, states_type_regs) =
             cmd_context_ts0.into_inner();
         let resources: Resources<TS1> = f(resources);

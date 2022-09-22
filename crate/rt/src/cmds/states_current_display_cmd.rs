@@ -11,9 +11,12 @@ use crate::cmds::sub::StatesCurrentReadCmd;
 
 /// Displays [`StatesCurrent`]s from storage.
 #[derive(Debug)]
-pub struct StatesCurrentDisplayCmd<E, O>(PhantomData<(E, O)>);
+pub struct StatesCurrentDisplayCmd<E, O, WorkspaceInit, ProfileInit, FlowInit>(
+    PhantomData<(E, O, WorkspaceInit, ProfileInit, FlowInit)>,
+);
 
-impl<E, O> StatesCurrentDisplayCmd<E, O>
+impl<E, O, WorkspaceInit, ProfileInit, FlowInit>
+    StatesCurrentDisplayCmd<E, O, WorkspaceInit, ProfileInit, FlowInit>
 where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
@@ -26,8 +29,8 @@ where
     /// [`StatesCurrentDiscoverCmd`]: crate::StatesCurrentDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<E, O, WithStates>, E> {
+        mut cmd_context: CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, WithStates>, E> {
         let CmdContext {
             output,
             resources,
@@ -35,11 +38,12 @@ where
             ..
         } = &mut cmd_context;
 
-        let states_current_result = StatesCurrentReadCmd::<E, O>::exec_internal(
-            resources,
-            states_type_regs.states_current_type_reg(),
-        )
-        .await;
+        let states_current_result =
+            StatesCurrentReadCmd::<E, O, WorkspaceInit, ProfileInit, FlowInit>::exec_internal(
+                resources,
+                states_type_regs.states_current_type_reg(),
+            )
+            .await;
 
         match states_current_result {
             Ok(states_current) => {

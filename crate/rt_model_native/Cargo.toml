@@ -20,6 +20,7 @@ futures = "0.3.21"
 peace_core = { path = "../core", version = "0.0.2" }
 peace_resources = { path = "../resources", version = "0.0.2" }
 peace_rt_model_core = { path = "../rt_model_core", version = "0.0.2" }
+serde = "1.0.139"
 serde_yaml = "0.8.26"
 thiserror = "1.0.31"
 tokio = { version = "1.20.0", features = ["fs", "io-std"] }

@@ -110,7 +110,7 @@
         document.querySelector("#init").addEventListener("click", () => {
           const path = document.querySelector("#path").value;
           const url = document.querySelector("#url").value;
-          exports.wasm_setup(url, path)
+          exports.wasm_init(url, path)
             .then(workspace_and_content => {
               workspace_and_content_global = workspace_and_content;
               update_state(workspace_and_content_global);

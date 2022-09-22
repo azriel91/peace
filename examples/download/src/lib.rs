@@ -60,7 +60,7 @@ pub struct WorkspaceAndGraph {
 
 /// Returns a default workspace and the Download item spec graph.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn setup_workspace_and_graph(
+pub async fn workspace_init(
     workspace_spec: WorkspaceSpec,
     profile: Profile,
     flow_id: FlowId,
@@ -68,6 +68,14 @@ pub async fn setup_workspace_and_graph(
     dest: PathBuf,
 ) -> Result<WorkspaceAndGraph, DownloadError> {
     let workspace = Workspace::init(workspace_spec, profile, flow_id).await?;
+
+    // TODO: Maybe params that are fed to ItemSpecGraph, which are automatically
+    // inserted into `Resources`. Params needs to be serialized so that they can
+    // be read from disk automatically.
+    //
+    // May be nice if they are defaulted to nothing so users don't have to specify
+    // them. However, automation usually has parameters.
+
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
         item_spec_graph_builder.add_fn(DownloadItemSpec::new(url, dest).into());
@@ -83,7 +91,7 @@ pub async fn setup_workspace_and_graph(
 
 /// Returns a default workspace and the Download item spec graph.
 #[cfg(target_arch = "wasm32")]
-pub async fn setup_workspace_and_graph(
+pub async fn workspace_init(
     workspace_spec: WorkspaceSpec,
     profile: Profile,
     flow_id: FlowId,

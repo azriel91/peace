@@ -18,9 +18,12 @@ use peace_rt_model::{
 use crate::cmds::{sub::StatesCurrentDiscoverCmd, DiffCmd};
 
 #[derive(Debug)]
-pub struct EnsureCmd<E, O>(PhantomData<(E, O)>);
+pub struct EnsureCmd<E, O, WorkspaceInit, ProfileInit, FlowInit>(
+    PhantomData<(E, O, WorkspaceInit, ProfileInit, FlowInit)>,
+);
 
-impl<E, O> EnsureCmd<E, O>
+impl<E, O, WorkspaceInit, ProfileInit, FlowInit>
+    EnsureCmd<E, O, WorkspaceInit, ProfileInit, FlowInit>
 where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
@@ -50,8 +53,8 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec_dry(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<E, O, EnsuredDry>, E> {
+        cmd_context: CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, EnsuredDry>, E> {
         let (workspace, item_spec_graph, output, resources, states_type_regs) =
             cmd_context.into_inner();
         let resources_result =
@@ -95,14 +98,18 @@ where
     ) -> Result<Resources<EnsuredDry>, E> {
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
-        let resources =
-            DiffCmd::<E, O>::exec_internal(item_spec_graph, resources, &states_type_regs).await?;
+        let resources = DiffCmd::<E, O, WorkspaceInit, ProfileInit, FlowInit>::exec_internal(
+            item_spec_graph,
+            resources,
+            &states_type_regs,
+        )
+        .await?;
         let op_check_statuses = Self::ensure_op_spec_check(item_spec_graph, &resources).await?;
         Self::ensure_op_spec_exec_dry(item_spec_graph, &resources, &op_check_statuses).await?;
 
         // TODO: This fetches the real state, whereas for a dry run, it would be useful
         // to show the imagined altered state.
-        let states_current = StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure_dry(
+        let states_current = StatesCurrentDiscoverCmd::<E, O, WorkspaceInit, ProfileInit, FlowInit>::exec_internal_for_ensure_dry(
             item_spec_graph,
             &resources,
         )
@@ -152,8 +159,8 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<E, O, Ensured>, E> {
+        cmd_context: CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, Ensured>, E> {
         let (workspace, item_spec_graph, output, resources, states_type_regs) =
             cmd_context.into_inner();
         // https://github.com/rust-lang/rust-clippy/issues/9111
@@ -198,12 +205,16 @@ where
     ) -> Result<Resources<Ensured>, E> {
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
-        let mut resources =
-            DiffCmd::<E, O>::exec_internal(item_spec_graph, resources, &states_type_regs).await?;
+        let mut resources = DiffCmd::<E, O, WorkspaceInit, ProfileInit, FlowInit>::exec_internal(
+            item_spec_graph,
+            resources,
+            &states_type_regs,
+        )
+        .await?;
         let op_check_statuses = Self::ensure_op_spec_check(item_spec_graph, &resources).await?;
         Self::ensure_op_spec_exec(item_spec_graph, &resources, &op_check_statuses).await?;
 
-        let states_current = StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure(
+        let states_current = StatesCurrentDiscoverCmd::<E, O, WorkspaceInit, ProfileInit, FlowInit>::exec_internal_for_ensure(
             item_spec_graph,
             &mut resources,
         )

@@ -1,3 +1,4 @@
+use serde::{de::DeserializeOwned, Serialize};
 use wasm_bindgen::prelude::*;
 
 use crate::{Error, WorkspaceSpec};
@@ -155,5 +156,40 @@ impl WebStorage {
                 error: crate::stringify_js_value(js_value),
             })
         })
+    }
+
+    /// Reads a serializable item from the given key.
+    ///
+    /// # Parameters
+    ///
+    /// * `key`: Path to read the serialized item.
+    /// * `f_map_err`: Maps the deserialization error (if any) to an [`Error`].
+    pub async fn serialized_read<T, F>(&self, key: &str, f_map_err: F) -> Result<T, Error>
+    where
+        T: Serialize + DeserializeOwned + Send + Sync,
+        F: FnOnce(serde_yaml::Error) -> Error + Send,
+    {
+        self.get_item(key)?
+            .ok_or_else(|| Error::SerializedReadNone {
+                key: key.to_string(),
+            })
+            .and_then(|s| serde_yaml::from_str::<T>(&s).map_err(f_map_err))
+    }
+
+    /// Writes a serializable item to the given key.
+    ///
+    /// # Parameters
+    ///
+    /// * `key`: Path to store the serialized item.
+    /// * `t`: Item to serialize.
+    /// * `f_map_err`: Maps the serialization error (if any) to an [`Error`].
+    pub async fn serialized_write<T, F>(&self, key: &str, t: &T, f_map_err: F) -> Result<(), Error>
+    where
+        T: Serialize + DeserializeOwned + Send + Sync,
+        F: FnOnce(serde_yaml::Error) -> Error + Send,
+    {
+        self.set_item(key, &serde_yaml::to_string(t).map_err(f_map_err)?)?;
+
+        Ok(())
     }
 }

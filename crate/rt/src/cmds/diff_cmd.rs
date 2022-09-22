@@ -12,9 +12,11 @@ use peace_rt_model::{CmdContext, Error, ItemSpecGraph, OutputWrite, StatesTypeRe
 use crate::cmds::sub::{StatesCurrentReadCmd, StatesDesiredReadCmd};
 
 #[derive(Debug)]
-pub struct DiffCmd<E, O>(PhantomData<(E, O)>);
+pub struct DiffCmd<E, O, WorkspaceInit, ProfileInit, FlowInit>(
+    PhantomData<(E, O, WorkspaceInit, ProfileInit, FlowInit)>,
+);
 
-impl<E, O> DiffCmd<E, O>
+impl<E, O, WorkspaceInit, ProfileInit, FlowInit> DiffCmd<E, O, WorkspaceInit, ProfileInit, FlowInit>
 where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
@@ -32,8 +34,8 @@ where
     /// [`StateDiffFnSpec`]: peace_cfg::ItemSpec::StateDiffFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<E, O, WithStateDiffs>, E> {
+        cmd_context: CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, WithStateDiffs>, E> {
         let CmdContext {
             workspace,
             item_spec_graph,
@@ -77,16 +79,18 @@ where
         mut resources: Resources<SetUp>,
         states_type_regs: &StatesTypeRegs,
     ) -> Result<Resources<WithStateDiffs>, E> {
-        let states_current = StatesCurrentReadCmd::<E, O>::exec_internal(
-            &mut resources,
-            states_type_regs.states_current_type_reg(),
-        )
-        .await?;
-        let states_desired = StatesDesiredReadCmd::<E, O>::exec_internal(
-            &mut resources,
-            states_type_regs.states_desired_type_reg(),
-        )
-        .await?;
+        let states_current =
+            StatesCurrentReadCmd::<E, O, WorkspaceInit, ProfileInit, FlowInit>::exec_internal(
+                &mut resources,
+                states_type_regs.states_current_type_reg(),
+            )
+            .await?;
+        let states_desired =
+            StatesDesiredReadCmd::<E, O, WorkspaceInit, ProfileInit, FlowInit>::exec_internal(
+                &mut resources,
+                states_type_regs.states_desired_type_reg(),
+            )
+            .await?;
 
         let resources = Resources::<WithStatesCurrentAndDesired>::from((
             resources,

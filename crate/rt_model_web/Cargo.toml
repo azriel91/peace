@@ -19,6 +19,7 @@ test = false
 peace_core = { path = "../core", version = "0.0.2" }
 peace_resources = { path = "../resources", version = "0.0.2" }
 thiserror = "1.0.31"
+serde = "1.0.139"
 serde_yaml = "0.8.26"
 wasm-bindgen = { version = "0.2.82", features = ["serde-serialize"] }
 web-sys = { version = "0.3.59", features = ["Storage", "Window"] }

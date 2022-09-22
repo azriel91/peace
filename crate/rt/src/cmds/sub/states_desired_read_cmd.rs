@@ -12,9 +12,12 @@ use peace_rt_model::{CmdContext, Error, Storage};
 
 /// Reads [`StatesDesired`]s from storage.
 #[derive(Debug)]
-pub struct StatesDesiredReadCmd<E, O>(PhantomData<(E, O)>);
+pub struct StatesDesiredReadCmd<E, O, WorkspaceInit, ProfileInit, FlowInit>(
+    PhantomData<(E, O, WorkspaceInit, ProfileInit, FlowInit)>,
+);
 
-impl<E, O> StatesDesiredReadCmd<E, O>
+impl<E, O, WorkspaceInit, ProfileInit, FlowInit>
+    StatesDesiredReadCmd<E, O, WorkspaceInit, ProfileInit, FlowInit>
 where
     E: std::error::Error + From<Error> + Send,
 {
@@ -26,8 +29,9 @@ where
     /// [`StatesDesiredDiscoverCmd`]: crate::StatesDesiredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<E, O, WithStatesDesired>, E> {
+        mut cmd_context: CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, WithStatesDesired>, E>
+    {
         let CmdContext {
             resources,
             states_type_regs,
