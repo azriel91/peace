@@ -31,13 +31,49 @@ impl NativeStorage {
         T: Serialize + DeserializeOwned + Send + Sync,
         F: FnOnce(serde_yaml::Error) -> Error + Send,
     {
-        let t = self
-            .read_with_sync_api(thread_name, file_path, |file| {
-                serde_yaml::from_reader::<_, T>(file).map_err(f_map_err)
-            })
-            .await?;
+        if file_path.exists() {
+            let t = self
+                .read_with_sync_api(thread_name, file_path, |file| {
+                    serde_yaml::from_reader::<_, T>(file).map_err(f_map_err)
+                })
+                .await?;
 
-        Ok(t)
+            Ok(t)
+        } else {
+            Err(Error::ItemNotExistent {
+                path: file_path.to_path_buf(),
+            })
+        }
+    }
+
+    /// Reads a serializable item from the given path if the file exists.
+    ///
+    /// # Parameters
+    ///
+    /// * `thread_name`: Name of the thread to use to do the read operation.
+    /// * `file_path`: Path to the file to read the serialized item.
+    /// * `f_map_err`: Maps the deserialization error (if any) to an [`Error`].
+    pub async fn serialized_read_opt<T, F>(
+        &self,
+        thread_name: String,
+        file_path: &Path,
+        f_map_err: F,
+    ) -> Result<Option<T>, Error>
+    where
+        T: Serialize + DeserializeOwned + Send + Sync,
+        F: FnOnce(serde_yaml::Error) -> Error + Send,
+    {
+        if file_path.exists() {
+            let t = self
+                .read_with_sync_api(thread_name, file_path, |file| {
+                    serde_yaml::from_reader::<_, T>(file).map_err(f_map_err)
+                })
+                .await?;
+
+            Ok(Some(t))
+        } else {
+            Ok(None)
+        }
     }
 
     /// Writes a serializable item to the given path.

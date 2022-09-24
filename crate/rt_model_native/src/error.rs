@@ -62,6 +62,13 @@ pub enum Error {
     #[error("Failed to serialize flow init params.")]
     FlowInitParamsDeserialize(#[source] serde_yaml::Error),
 
+    /// Item does not exist in storage.
+    #[error("Item does not exist in storage: `{}`.", path.display())]
+    ItemNotExistent {
+        /// Path to the file.
+        path: PathBuf,
+    },
+
     // Native errors.
     /// Failed to create file for writing.
     #[error("Failed to create file for writing: `{path}`")]

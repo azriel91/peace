@@ -8,13 +8,15 @@
 
 pub use crate::{
     error::Error, web_storage::WebStorage, workspace::Workspace,
-    workspace_dirs_builder::WorkspaceDirsBuilder, workspace_spec::WorkspaceSpec,
+    workspace_dirs_builder::WorkspaceDirsBuilder, workspace_initializer::WorkspaceInitializer,
+    workspace_spec::WorkspaceSpec,
 };
 
 mod error;
 mod web_storage;
 mod workspace;
 mod workspace_dirs_builder;
+mod workspace_initializer;
 mod workspace_spec;
 
 /// Converts the `JsValue` to a `String` to allow `Error` to be `Send`.

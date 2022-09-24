@@ -60,9 +60,9 @@ pub enum Error {
     #[error("Failed to serialize flow init params.")]
     FlowInitParamsDeserialize(#[source] serde_yaml::Error),
 
-    /// Serialized item does not exist in storage.
-    #[error("Serialized item does not exist in storage: `{key}`.")]
-    SerializedReadNone {
+    /// Item does not exist in storage.
+    #[error("Item does not exist in storage: `{key}`.")]
+    ItemNotExistent {
         /// Key to get.
         key: String,
     },
