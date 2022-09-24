@@ -25,7 +25,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
     };
     let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -60,7 +60,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
     };
     let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -101,7 +101,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
     };
     let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -136,7 +136,7 @@ async fn init_runs_graph_setup() -> Result<(), Box<dyn std::error::Error>> {
     };
     let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<VecA>().is_ok());

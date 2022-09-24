@@ -24,14 +24,14 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
     let mut no_op_output = NoOpOutput;
 
     // Write desired states to disk.
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext {
         resources: resources_from_discover,
         ..
     } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk in a new set of resources.
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext {
         resources: resources_from_read,
         ..
@@ -64,7 +64,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     let mut no_op_output = NoOpOutput;
 
     // Try and read desired states from disk.
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let exec_result = StatesDesiredReadCmd::exec(cmd_context).await;
 
     assert!(matches!(

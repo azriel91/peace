@@ -26,11 +26,11 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
     let mut no_op_output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesCurrent>();
@@ -74,7 +74,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     let mut no_op_output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let mut cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let mut cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     // overwrite initial state
     let resources = cmd_context.resources_mut();
     #[rustfmt::skip]
@@ -83,7 +83,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = { CmdContext::init(&workspace, &graph, &mut no_op_output).await? };
+    let cmd_context = { CmdContext::builder(&workspace, &graph, &mut no_op_output).await? };
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesCurrent>();

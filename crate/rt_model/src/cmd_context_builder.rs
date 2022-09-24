@@ -1,6 +1,6 @@
-use std::{fmt, marker::PhantomData};
+use std::{fmt, future::IntoFuture, marker::PhantomData, pin::Pin};
 
-use futures::{StreamExt, TryStreamExt};
+use futures::{Future, StreamExt, TryStreamExt};
 use peace_resources::{
     internal::{FlowInitFile, ProfileInitFile, WorkspaceInitFile},
     resources_type_state::{Empty, SetUp},
@@ -444,5 +444,29 @@ where
             .await?;
 
         Ok(Resources::<SetUp>::from(resources))
+    }
+}
+
+/// Future that returns the `CmdContext`.
+///
+/// This is boxed since [TAIT] is not yet available.
+///
+/// [TAIT]: https://rust-lang.github.io/impl-trait-initiative/explainer/tait.html
+pub type CmdContextFuture<'ctx, E, O> =
+    Pin<Box<dyn Future<Output = Result<CmdContext<'ctx, E, O, SetUp>, E>> + 'ctx>>;
+
+impl<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit> IntoFuture
+    for CmdContextBuilder<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit>
+where
+    E: std::error::Error + From<Error>,
+    WorkspaceInit: Clone + fmt::Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileInit: Clone + fmt::Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowInit: Clone + fmt::Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    type IntoFuture = CmdContextFuture<'ctx, E, O>;
+    type Output = <Self::IntoFuture as Future>::Output;
+
+    fn into_future(self) -> Self::IntoFuture {
+        Box::pin(self.build())
     }
 }

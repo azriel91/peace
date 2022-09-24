@@ -124,7 +124,7 @@ where
         workspace,
         item_spec_graph,
     } = workspace_and_graph;
-    CmdContext::init(workspace, item_spec_graph, output).await
+    CmdContext::builder(workspace, item_spec_graph, output).await
 }
 
 pub async fn fetch<O>(

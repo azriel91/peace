@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace_resources::Resources;
+use peace_resources::{resources_type_state::SetUp, Resources};
 
 use crate::{CmdContextBuilder, ItemSpecGraph, StatesTypeRegs, Workspace};
 
@@ -75,7 +75,7 @@ pub struct CmdContext<'ctx, E, O, TS> {
     pub(crate) marker: PhantomData<()>,
 }
 
-impl<'ctx, E, O, TS> CmdContext<'ctx, E, O, TS>
+impl<'ctx, E, O> CmdContext<'ctx, E, O, SetUp>
 where
     E: std::error::Error,
 {
@@ -95,7 +95,12 @@ where
     ) -> CmdContextBuilder<'ctx, E, O, (), (), ()> {
         CmdContextBuilder::new(workspace, item_spec_graph, output)
     }
+}
 
+impl<'ctx, E, O, TS> CmdContext<'ctx, E, O, TS>
+where
+    E: std::error::Error,
+{
     /// Returns the underlying data.
     pub fn into_inner(
         self,

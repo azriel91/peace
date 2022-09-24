@@ -25,14 +25,14 @@ async fn reads_states_current_from_disk_when_present() -> Result<(), Box<dyn std
 
     // Write current states to disk.
     let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext {
         resources: resources_from_discover,
         ..
     } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk in a new set of resources.
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut fn_tracker_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut fn_tracker_output).await?;
     let CmdContext {
         resources: resources_from_read,
         ..
@@ -73,7 +73,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     let mut fn_tracker_output = FnTrackerOutput::new();
 
     // Try and display states from disk.
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut fn_tracker_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut fn_tracker_output).await?;
     let exec_result = StatesCurrentDisplayCmd::exec(cmd_context).await;
 
     assert!(matches!(
