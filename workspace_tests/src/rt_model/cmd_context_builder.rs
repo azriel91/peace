@@ -2,11 +2,13 @@ use std::path::Path;
 
 use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
-    rt_model::{Workspace, WorkspaceSpec},
+    rt_model::{CmdContextBuilder, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
+use crate::{no_op_output::NoOpOutput, VecCopyError, VecCopyItemSpec};
+
 #[tokio::test]
-async fn init_initializes_dirs_using_profile_and_physically_creates_dirs()
+async fn build_initializes_dirs_using_profile_and_physically_creates_dirs()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::init(
@@ -15,8 +17,15 @@ async fn init_initializes_dirs_using_profile_and_physically_creates_dirs()
         flow_id!("test_flow"),
     )
     .await?;
-    let workspace_dirs = workspace.dirs();
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.build()
+    };
+    let mut no_op_output = NoOpOutput;
+    CmdContextBuilder::new(&workspace, &graph, &mut no_op_output).await?;
 
+    let workspace_dirs = workspace.dirs();
     let workspace_dir = tempdir.path();
     let peace_dir = tempdir
         .path()
