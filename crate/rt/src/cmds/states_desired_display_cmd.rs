@@ -11,12 +11,9 @@ use crate::cmds::sub::StatesDesiredReadCmd;
 
 /// Displays [`StatesDesired`]s from storage.
 #[derive(Debug)]
-pub struct StatesDesiredDisplayCmd<E, O, WorkspaceInit, ProfileInit, FlowInit>(
-    PhantomData<(E, O, WorkspaceInit, ProfileInit, FlowInit)>,
-);
+pub struct StatesDesiredDisplayCmd<E, O>(PhantomData<(E, O)>);
 
-impl<E, O, WorkspaceInit, ProfileInit, FlowInit>
-    StatesDesiredDisplayCmd<E, O, WorkspaceInit, ProfileInit, FlowInit>
+impl<E, O> StatesDesiredDisplayCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
@@ -29,9 +26,8 @@ where
     /// [`StatesDesiredDiscoverCmd`]: crate::StatesDesiredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_context: CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, WithStatesDesired>, E>
-    {
+        mut cmd_context: CmdContext<'_, E, O, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, WithStatesDesired>, E> {
         let CmdContext {
             output,
             resources,
@@ -39,12 +35,11 @@ where
             ..
         } = &mut cmd_context;
 
-        let states_desired_result =
-            StatesDesiredReadCmd::<E, O, WorkspaceInit, ProfileInit, FlowInit>::exec_internal(
-                resources,
-                states_type_regs.states_desired_type_reg(),
-            )
-            .await;
+        let states_desired_result = StatesDesiredReadCmd::<E, O>::exec_internal(
+            resources,
+            states_type_regs.states_desired_type_reg(),
+        )
+        .await;
 
         match states_desired_result {
             Ok(states_desired) => {

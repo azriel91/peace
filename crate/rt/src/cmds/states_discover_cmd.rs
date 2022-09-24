@@ -10,12 +10,9 @@ use peace_rt_model::CmdContext;
 use crate::cmds::sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd};
 
 #[derive(Debug)]
-pub struct StatesDiscoverCmd<E, O, WorkspaceInit, ProfileInit, FlowInit>(
-    PhantomData<(E, O, WorkspaceInit, ProfileInit, FlowInit)>,
-);
+pub struct StatesDiscoverCmd<E, O>(PhantomData<(E, O)>);
 
-impl<E, O, WorkspaceInit, ProfileInit, FlowInit>
-    StatesDiscoverCmd<E, O, WorkspaceInit, ProfileInit, FlowInit>
+impl<E, O> StatesDiscoverCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
 {
@@ -33,25 +30,16 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, SetUp>,
-    ) -> Result<
-        CmdContext<'_, E, O, WorkspaceInit, ProfileInit, FlowInit, WithStatesCurrentAndDesired>,
-        E,
-    > {
+        cmd_context: CmdContext<'_, E, O, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, WithStatesCurrentAndDesired>, E> {
         let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
             cmd_context.into_inner();
         let states =
-            StatesCurrentDiscoverCmd::<E, O, WorkspaceInit, ProfileInit, FlowInit>::exec_internal(
-                item_spec_graph,
-                &mut resources,
-            )
-            .await?;
+            StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
+                .await?;
         let states_desired =
-            StatesDesiredDiscoverCmd::<E, O, WorkspaceInit, ProfileInit, FlowInit>::exec_internal(
-                item_spec_graph,
-                &mut resources,
-            )
-            .await?;
+            StatesDesiredDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
+                .await?;
 
         let resources =
             Resources::<WithStatesCurrentAndDesired>::from((resources, states, states_desired));
