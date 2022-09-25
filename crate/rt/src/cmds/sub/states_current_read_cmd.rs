@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use peace_cfg::ItemSpecId;
 use peace_resources::{
     paths::{FlowDir, StatesCurrentFile},
-    resources_type_state::{SetUp, WithStates},
+    resources::ts::{SetUp, WithStates},
     states::StatesCurrent,
     type_reg::untagged::TypeReg,
     Resources,
@@ -101,9 +101,8 @@ where
         let storage = resources.borrow::<Storage>();
         let states_current_file = StatesCurrentFile::from(&*flow_dir);
 
-        let states_current_file_str = states_current_file.to_string_lossy();
         let states_serialized = storage
-            .get_item_opt(states_current_file_str.as_ref())?
+            .get_item_opt(&states_current_file)?
             .ok_or(Error::StatesCurrentDiscoverRequired)?;
         let deserializer = serde_yaml::Deserializer::from_str(&states_serialized);
         let states_current = StatesCurrent::from(

@@ -1,7 +1,7 @@
 use peace::{
     cfg::{FlowId, Profile},
     resources::{
-        resources_type_state::{
+        resources::ts::{
             Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired,
             WithStatesDesired,
         },

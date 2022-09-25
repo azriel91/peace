@@ -1,5 +1,5 @@
 use peace::resources::{
-    resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
+    resources::ts::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     states::{StateDiffs, StatesCurrent, StatesDesired, StatesEnsuredDry},
     Resources,
 };

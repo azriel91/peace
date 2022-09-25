@@ -13,7 +13,7 @@ use peace::{
         State,
     },
     data::{Data, R, W},
-    resources::{resources_type_state::Empty, Resources},
+    resources::{resources::ts::Empty, Resources},
     rt_model::ItemSpecWrapper,
 };
 use serde::{Deserialize, Serialize};

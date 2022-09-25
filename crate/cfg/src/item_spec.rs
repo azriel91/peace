@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use peace_core::ItemSpecId;
-use peace_resources::{resources_type_state::Empty, Resources};
+use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State, StateDiffFnSpec};

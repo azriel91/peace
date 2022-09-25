@@ -4,12 +4,14 @@ use std::{
 };
 
 use crate::{
-    resources_type_state::{
+    resources::ts::{
         Empty, Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired,
         WithStatesDesired,
     },
     states::{StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry},
 };
+
+pub mod ts;
 
 /// Map of all types at runtime. [`resman::Resources`] newtype.
 ///

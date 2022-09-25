@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use peace::{
     cfg::{async_trait, item_spec_id, ItemSpec, ItemSpecId},
-    resources::{resources_type_state::Empty, Resources},
+    resources::{resources::ts::Empty, Resources},
 };
 
 use crate::{

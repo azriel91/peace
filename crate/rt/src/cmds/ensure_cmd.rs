@@ -7,7 +7,7 @@ use futures::{
 use peace_cfg::OpCheckStatus;
 use peace_resources::{
     internal::OpCheckStatuses,
-    resources_type_state::{Ensured, EnsuredDry, SetUp, WithStateDiffs},
+    resources::ts::{Ensured, EnsuredDry, SetUp, WithStateDiffs},
     states::{StatesEnsured, StatesEnsuredDry},
     Resources,
 };

@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use serde::{de::DeserializeOwned, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -71,12 +73,13 @@ impl WebStorage {
     ///   exist.
     ///
     /// [`get_items_opt`]: Self::get_items
-    pub fn get_item_opt(&self, key: &str) -> Result<Option<String>, Error> {
+    pub fn get_item_opt(&self, path: &Path) -> Result<Option<String>, Error> {
         let storage = self.get()?;
+        let key = path.to_string_lossy();
         storage
-            .get_item(key)
+            .get_item(key.as_ref())
             .map_err(|js_value| Error::StorageGetItem {
-                key: key.to_string(),
+                path: path.to_path_buf(),
                 error: crate::stringify_js_value(js_value),
             })
     }
@@ -95,18 +98,19 @@ impl WebStorage {
     pub fn get_items_opt<'f, I>(
         &self,
         iter: I,
-    ) -> Result<impl Iterator<Item = Result<(&'f str, Option<String>), Error>>, Error>
+    ) -> Result<impl Iterator<Item = Result<(&'f Path, Option<String>), Error>>, Error>
     where
-        I: Iterator<Item = &'f str>,
+        I: Iterator<Item = &'f Path>,
     {
         let storage = self.get()?;
 
-        let iter = iter.map(move |key| {
+        let iter = iter.map(move |path| {
+            let key = path.to_string_lossy();
             storage
-                .get_item(key)
-                .map(|value| (key, value))
+                .get_item(key.as_ref())
+                .map(|value| (path, value))
                 .map_err(|js_value| Error::StorageGetItem {
-                    key: key.to_string(),
+                    path: path.to_path_buf(),
                     error: crate::stringify_js_value(js_value),
                 })
         });
@@ -125,17 +129,18 @@ impl WebStorage {
     ///   exist.
     ///
     /// [`get_items`]: Self::get_items
-    pub fn get_item(&self, key: &str) -> Result<String, Error> {
+    pub fn get_item(&self, path: &Path) -> Result<String, Error> {
         let storage = self.get()?;
+        let key = path.to_string_lossy();
         storage
-            .get_item(key)
+            .get_item(key.as_ref())
             .map_err(|js_value| Error::StorageGetItem {
-                key: key.to_string(),
+                path: path.to_path_buf(),
                 error: crate::stringify_js_value(js_value),
             })
             .and_then(|value| {
                 value.ok_or_else(|| Error::ItemNotExistent {
-                    key: key.to_string(),
+                    path: path.to_path_buf(),
                 })
             })
     }
@@ -154,25 +159,26 @@ impl WebStorage {
     pub fn get_items<'f, I>(
         &self,
         iter: I,
-    ) -> Result<impl Iterator<Item = Result<(&'f str, String), Error>>, Error>
+    ) -> Result<impl Iterator<Item = Result<(&'f Path, String), Error>>, Error>
     where
-        I: Iterator<Item = &'f str>,
+        I: Iterator<Item = &'f Path>,
     {
         let storage = self.get()?;
 
-        let iter = iter.map(move |key| {
+        let iter = iter.map(move |path| {
+            let key = path.to_string_lossy();
             storage
-                .get_item(key)
+                .get_item(key.as_ref())
                 .map_err(|js_value| Error::StorageGetItem {
-                    key: key.to_string(),
+                    path: path.to_path_buf(),
                     error: crate::stringify_js_value(js_value),
                 })
                 .and_then(|value| {
                     value.ok_or_else(|| Error::ItemNotExistent {
-                        key: key.to_string(),
+                        path: path.to_path_buf(),
                     })
                 })
-                .map(|value| (key, value))
+                .map(|value| (path, value))
         });
 
         Ok(iter)
@@ -183,12 +189,13 @@ impl WebStorage {
     /// See [`set_items`] if you would like to set multiple items.
     ///
     /// [`set_items`]: Self::set_items
-    pub fn set_item(&self, key: &str, value: &str) -> Result<(), Error> {
+    pub fn set_item(&self, path: &Path, value: &str) -> Result<(), Error> {
         let storage = self.get()?;
+        let key = path.to_string_lossy();
         storage
-            .set_item(key, value)
+            .set_item(key.as_ref(), value)
             .map_err(|js_value| Error::StorageSetItem {
-                key: key.to_string(),
+                path: path.to_path_buf(),
                 value: value.to_string(),
                 error: crate::stringify_js_value(js_value),
             })
@@ -201,15 +208,16 @@ impl WebStorage {
     /// [`set_item`]: Self::set_item
     pub fn set_items<'f, I>(&self, mut iter: I) -> Result<(), Error>
     where
-        I: Iterator<Item = (&'f str, &'f str)>,
+        I: Iterator<Item = (&'f Path, &'f str)>,
     {
         let storage = self.get()?;
 
-        iter.try_for_each(|(key, value)| {
+        iter.try_for_each(|(path, value)| {
+            let key = path.to_string_lossy();
             storage
-                .set_item(key, value)
+                .set_item(key.as_ref(), value)
                 .map_err(|js_value| Error::StorageSetItem {
-                    key: key.to_string(),
+                    path: path.to_path_buf(),
                     value: value.to_string(),
                     error: crate::stringify_js_value(js_value),
                 })
@@ -218,16 +226,40 @@ impl WebStorage {
 
     /// Runs the provided closure for each item produced by the iterator,
     /// augmented with the web storage.
+    ///
+    /// Note that the `storage` passed to the closure is the browser storage, so
+    /// `set_item` takes a `&str` for the key.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// # use std::path::PathBuf;
+    /// # use peace_rt_model_web::{WebStorage, WorkspaceSpec, Error};
+    /// #
+    /// # fn main() -> Result<(), Error> {
+    /// let web_storage = WebStorage::new(WorkspaceSpec::SessionStorage);
+    /// let keys = ["abc", "def"];
+    ///
+    /// web_storage.iter_with_storage(keys.into_iter(), |storage, key| {
+    ///     let value = "something";
+    ///     storage
+    ///         .set_item(key, value)
+    ///         .map_err(|js_value| (PathBuf::from(key), value.to_string(), js_value))
+    /// })?;
+    /// #
+    /// # Ok(())
+    /// # }
+    /// ```
     pub fn iter_with_storage<F, I, T>(&self, mut iter: I, mut f: F) -> Result<(), Error>
     where
-        F: for<'f> FnMut(&'f web_sys::Storage, T) -> Result<(), (String, String, JsValue)>,
+        F: for<'f> FnMut(&'f web_sys::Storage, T) -> Result<(), (PathBuf, String, JsValue)>,
         I: Iterator<Item = T>,
     {
         let storage = self.get()?;
 
         iter.try_for_each(|t| {
-            f(&storage, t).map_err(|(key, value, js_value)| Error::StorageSetItem {
-                key,
+            f(&storage, t).map_err(|(path, value, js_value)| Error::StorageSetItem {
+                path,
                 value,
                 error: crate::stringify_js_value(js_value),
             })
@@ -238,35 +270,40 @@ impl WebStorage {
     ///
     /// # Parameters
     ///
-    /// * `key`: Path to read the serialized item.
+    /// * `path`: Path to read the serialized item.
     /// * `f_map_err`: Maps the deserialization error (if any) to an [`Error`].
     pub async fn serialized_read_opt<T, F>(
         &self,
-        key: &str,
+        path: &Path,
         f_map_err: F,
     ) -> Result<Option<T>, Error>
     where
         T: Serialize + DeserializeOwned + Send + Sync,
         F: FnOnce(serde_yaml::Error) -> Error + Send,
     {
-        self.get_item_opt(key)?
+        self.get_item_opt(path)?
             .map(|s| serde_yaml::from_str::<T>(&s).map_err(f_map_err))
             .transpose()
     }
 
-    /// Writes a serializable item to the given key.
+    /// Writes a serializable item to the given path.
     ///
     /// # Parameters
     ///
-    /// * `key`: Path to store the serialized item.
+    /// * `path`: Path to store the serialized item.
     /// * `t`: Item to serialize.
     /// * `f_map_err`: Maps the serialization error (if any) to an [`Error`].
-    pub async fn serialized_write<T, F>(&self, key: &str, t: &T, f_map_err: F) -> Result<(), Error>
+    pub async fn serialized_write<T, F>(
+        &self,
+        path: &Path,
+        t: &T,
+        f_map_err: F,
+    ) -> Result<(), Error>
     where
         T: Serialize + DeserializeOwned + Send + Sync,
         F: FnOnce(serde_yaml::Error) -> Error + Send,
     {
-        self.set_item(key, &serde_yaml::to_string(t).map_err(f_map_err)?)?;
+        self.set_item(path, &serde_yaml::to_string(t).map_err(f_map_err)?)?;
 
         Ok(())
     }

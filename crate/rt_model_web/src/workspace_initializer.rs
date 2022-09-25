@@ -60,13 +60,7 @@ where
             )))
             .chain(iter::once(AsRef::<Path>::as_ref(dirs.flow_dir())));
 
-        storage.iter_with_storage(dirs, |storage, dir| {
-            let dir_str = dir.to_string_lossy();
-            let value = "";
-            storage
-                .set_item(dir_str.as_ref(), value)
-                .map_err(|js_value| (dir_str.to_string(), value.to_string(), js_value))
-        })?;
+        storage.set_items(dirs.map(|dir| (dir, "")))?;
 
         Ok(())
     }
@@ -78,7 +72,7 @@ where
     ) -> Result<(), Error> {
         storage
             .serialized_write(
-                &workspace_init_file.to_string_lossy(),
+                workspace_init_file,
                 workspace_init_params,
                 Error::WorkspaceInitParamsSerialize,
             )
@@ -90,10 +84,7 @@ where
         workspace_init_file: &WorkspaceInitFile,
     ) -> Result<Option<WorkspaceInit>, Error> {
         storage
-            .serialized_read_opt(
-                &workspace_init_file.to_string_lossy(),
-                Error::FlowInitParamsDeserialize,
-            )
+            .serialized_read_opt(workspace_init_file, Error::FlowInitParamsDeserialize)
             .await
     }
 
@@ -104,7 +95,7 @@ where
     ) -> Result<(), Error> {
         storage
             .serialized_write(
-                &profile_init_file.to_string_lossy(),
+                profile_init_file,
                 profile_init_params,
                 Error::ProfileInitParamsSerialize,
             )
@@ -116,10 +107,7 @@ where
         profile_init_file: &ProfileInitFile,
     ) -> Result<Option<ProfileInit>, Error> {
         storage
-            .serialized_read_opt(
-                &profile_init_file.to_string_lossy(),
-                Error::FlowInitParamsDeserialize,
-            )
+            .serialized_read_opt(profile_init_file, Error::FlowInitParamsDeserialize)
             .await
     }
 
@@ -130,7 +118,7 @@ where
     ) -> Result<(), Error> {
         storage
             .serialized_write(
-                &flow_init_file.to_string_lossy(),
+                flow_init_file,
                 flow_init_params,
                 Error::FlowInitParamsSerialize,
             )
@@ -142,10 +130,7 @@ where
         flow_init_file: &FlowInitFile,
     ) -> Result<Option<FlowInit>, Error> {
         storage
-            .serialized_read_opt(
-                &flow_init_file.to_string_lossy(),
-                Error::FlowInitParamsDeserialize,
-            )
+            .serialized_read_opt(flow_init_file, Error::FlowInitParamsDeserialize)
             .await
     }
 }

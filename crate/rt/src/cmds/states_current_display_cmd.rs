@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace_resources::{
-    resources_type_state::{SetUp, WithStates},
+    resources::ts::{SetUp, WithStates},
     Resources,
 };
 use peace_rt_model::{CmdContext, Error};

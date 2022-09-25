@@ -8,7 +8,7 @@ use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{async_trait, nougat::Gat, FnSpec, ItemSpec, ItemSpecId, OpCheckStatus, State};
 use peace_data::Data;
 use peace_resources::{
-    resources_type_state::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
+    resources::ts::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     states::{StateDiffs, StatesCurrent, StatesDesired},
     type_reg::untagged::DataType,
     Resources,
