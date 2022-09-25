@@ -381,10 +381,12 @@ where
             *profile_init_params =
             WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::profile_init_params_deserialize(storage, profile_init_file).await?;
         }
-        Ok(if flow_init_params.is_none() {
+        if flow_init_params.is_none() {
             *flow_init_params =
             WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::flow_init_params_deserialize(storage, flow_init_file).await?;
-        })
+        }
+
+        Ok(())
     }
 
     /// Serializes init params to storage.
@@ -413,14 +415,16 @@ where
             )
             .await?;
         }
-        Ok(if let Some(flow_init_params) = flow_init_params {
+        if let Some(flow_init_params) = flow_init_params {
             WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::flow_init_params_serialize(
                 storage,
                 flow_init_params,
                 flow_init_file,
             )
             .await?;
-        })
+        }
+
+        Ok(())
     }
 }
 

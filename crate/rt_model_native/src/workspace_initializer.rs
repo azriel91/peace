@@ -78,7 +78,7 @@ where
         storage
             .serialized_write(
                 "workspace_init_params_serialize".to_string(),
-                &workspace_init_file,
+                workspace_init_file,
                 workspace_init_params,
                 Error::WorkspaceInitParamsSerialize,
             )
@@ -92,7 +92,7 @@ where
         storage
             .serialized_read_opt(
                 "workspace_init_params_deserialize".to_string(),
-                &workspace_init_file,
+                workspace_init_file,
                 Error::FlowInitParamsDeserialize,
             )
             .await
@@ -106,7 +106,7 @@ where
         storage
             .serialized_write(
                 "profile_init_params_serialize".to_string(),
-                &profile_init_file,
+                profile_init_file,
                 profile_init_params,
                 Error::ProfileInitParamsSerialize,
             )
@@ -120,7 +120,7 @@ where
         storage
             .serialized_read_opt(
                 "profile_init_params_deserialize".to_string(),
-                &profile_init_file,
+                profile_init_file,
                 Error::FlowInitParamsDeserialize,
             )
             .await
@@ -134,7 +134,7 @@ where
         storage
             .serialized_write(
                 "flow_init_params_serialize".to_string(),
-                &flow_init_file,
+                flow_init_file,
                 flow_init_params,
                 Error::FlowInitParamsSerialize,
             )
@@ -148,7 +148,7 @@ where
         storage
             .serialized_read_opt(
                 "flow_init_params_deserialize".to_string(),
-                &flow_init_file,
+                flow_init_file,
                 Error::FlowInitParamsDeserialize,
             )
             .await
