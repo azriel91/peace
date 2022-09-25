@@ -54,3 +54,9 @@ where
         Ok(cmd_context)
     }
 }
+
+impl<E, O> Default for StatesDiscoverCmd<E, O> {
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}

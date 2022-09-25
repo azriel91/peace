@@ -72,3 +72,14 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
 
     Ok(())
 }
+
+#[test]
+fn debug() {
+    assert_eq!(
+        "StatesDiscoverCmd(PhantomData)",
+        format!(
+            "{:?}",
+            StatesDiscoverCmd::<VecCopyError, NoOpOutput>::default()
+        )
+    );
+}

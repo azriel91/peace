@@ -131,3 +131,9 @@ where
         Ok(())
     }
 }
+
+impl<E, O> Default for StatesDesiredDiscoverCmd<E, O> {
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}

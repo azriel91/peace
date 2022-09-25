@@ -90,3 +90,14 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     );
     Ok(())
 }
+
+#[test]
+fn debug() {
+    assert_eq!(
+        "StatesCurrentDisplayCmd(PhantomData)",
+        format!(
+            "{:?}",
+            StatesCurrentDisplayCmd::<VecCopyError, NoOpOutput>::default()
+        )
+    );
+}

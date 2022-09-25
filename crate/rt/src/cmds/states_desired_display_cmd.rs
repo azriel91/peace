@@ -57,3 +57,9 @@ where
         }
     }
 }
+
+impl<E, O> Default for StatesDesiredDisplayCmd<E, O> {
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}

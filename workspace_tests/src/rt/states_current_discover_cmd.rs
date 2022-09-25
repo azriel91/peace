@@ -48,3 +48,14 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
 
     Ok(())
 }
+
+#[test]
+fn debug() {
+    assert_eq!(
+        "StatesCurrentDiscoverCmd(PhantomData)",
+        format!(
+            "{:?}",
+            StatesCurrentDiscoverCmd::<VecCopyError, NoOpOutput>::default()
+        )
+    );
+}

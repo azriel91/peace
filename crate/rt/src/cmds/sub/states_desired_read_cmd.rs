@@ -120,3 +120,9 @@ where
         Ok(states_desired)
     }
 }
+
+impl<E, O> Default for StatesDesiredReadCmd<E, O> {
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}

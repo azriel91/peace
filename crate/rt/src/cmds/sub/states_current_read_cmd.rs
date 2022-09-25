@@ -120,3 +120,9 @@ where
         Ok(states_current)
     }
 }
+
+impl<E, O> Default for StatesCurrentReadCmd<E, O> {
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}
