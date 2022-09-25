@@ -118,16 +118,6 @@ where
         .await
 }
 
-pub async fn init<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
-) -> Result<Resources<SetUp>, DownloadError>
-where
-    O: OutputWrite<DownloadError>,
-{
-    let CmdContext { resources, .. } = cmd_context;
-    Ok(resources)
-}
-
 pub async fn fetch<O>(
     cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
 ) -> Result<Resources<WithStatesCurrentAndDesired>, DownloadError>

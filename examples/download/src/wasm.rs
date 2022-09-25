@@ -67,21 +67,37 @@ pub async fn wasm_init(url: String, name: String) -> Result<WorkspaceAndContent,
         DownloadProfileInit::new(url, dest)
     };
 
+    // Init also does a fetch
     let WorkspaceAndContent {
         workspace_and_graph,
-        content: _,
+        content,
         output: _,
-    } = &workspace_and_content;
+    } = workspace_and_content;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let mut _cmd_context = cmd_context(
-        workspace_and_graph,
+    let mut cmd_context = cmd_context(
+        &workspace_and_graph,
         &mut in_memory_text_output,
         Some(download_profile_init),
     )
     .await
     .map_err(into_js_err_value)?;
+    let resources = cmd_context.resources_mut();
+    resources.insert(content);
 
-    Ok(workspace_and_content)
+    let mut resources = fetch(cmd_context).await.map_err(into_js_err_value)?;
+    let output = in_memory_text_output.into_inner();
+
+    let content = resources
+        .remove::<std::collections::HashMap<PathBuf, String>>()
+        .ok_or(JsValue::from_str(
+            "Resources did not contain content HashMap.",
+        ))?;
+
+    Ok(WorkspaceAndContent {
+        workspace_and_graph,
+        content,
+        output,
+    })
 }
 
 #[wasm_bindgen]

@@ -5,7 +5,7 @@ use peace::{
 };
 
 use download::{
-    cmd_context, desired, diff, ensure, ensure_dry, fetch, init, status, workspace_and_graph_setup,
+    cmd_context, desired, diff, ensure, ensure_dry, fetch, status, workspace_and_graph_setup,
     DownloadArgs, DownloadCommand, DownloadError, DownloadProfileInit,
 };
 
@@ -35,7 +35,7 @@ pub fn main() -> Result<(), DownloadError> {
                     Some(DownloadProfileInit::new(url, dest)),
                 )
                 .await?;
-                init(cmd_context).await?;
+                fetch(cmd_context).await?;
             }
             DownloadCommand::Fetch => {
                 let workspace_and_graph =
