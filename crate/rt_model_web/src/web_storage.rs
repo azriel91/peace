@@ -27,7 +27,7 @@ impl WebStorage {
     /// Returns the browser storage used for the workspace.
     ///
     /// This is the local or session storage depending on the `WorkspaceSpec`
-    /// passed into `Workspace::init`.
+    /// passed into `Workspace::new`.
     ///
     /// `web_sys::Storage` is `!Send`, so cannot be inserted into `Resources`.
     /// As a compromise, we provide this function to fetch the storage when it

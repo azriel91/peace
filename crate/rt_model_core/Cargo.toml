@@ -16,5 +16,5 @@ doctest = false
 test = false
 
 [dependencies]
-async-trait = "0.1.56"
+async-trait = "0.1.57"
 peace_resources = { path = "../resources", version = "0.0.2" }

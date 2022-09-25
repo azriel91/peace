@@ -33,7 +33,7 @@ impl WorkspaceAndContent {
     /// Returns the content of the hashmap.
     #[wasm_bindgen]
     pub fn contents(&self) -> Result<JsValue, JsValue> {
-        JsValue::from_serde(&self.content).map_err(into_js_err_value)
+        serde_wasm_bindgen::to_value(&self.content).map_err(into_js_err_value)
     }
 }
 

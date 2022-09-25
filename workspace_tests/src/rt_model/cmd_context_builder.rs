@@ -11,12 +11,11 @@ use crate::{no_op_output::NoOpOutput, VecCopyError, VecCopyItemSpec};
 async fn build_initializes_dirs_using_profile_and_physically_creates_dirs()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::init(
+    let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().into()),
         profile!("test_profile"),
         flow_id!("test_flow"),
-    )
-    .await?;
+    )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());

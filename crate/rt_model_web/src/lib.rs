@@ -21,7 +21,5 @@ mod workspace_spec;
 
 /// Converts the `JsValue` to a `String` to allow `Error` to be `Send`.
 pub fn stringify_js_value(js_value: wasm_bindgen::JsValue) -> String {
-    js_value
-        .into_serde::<String>()
-        .unwrap_or_else(|_| String::from("<??>"))
+    serde_wasm_bindgen::from_value::<String>(js_value).unwrap_or_else(|_| String::from("<??>"))
 }

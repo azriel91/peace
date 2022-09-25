@@ -12,12 +12,11 @@ use crate::{NoOpOutput, VecA, VecB, VecCopyItemSpec};
 async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_dir()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::init(
+    let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().into()),
         profile!("test_profile"),
         flow_id!("test_flow"),
-    )
-    .await?;
+    )?;
     let graph = {
         let mut builder = ItemSpecGraphBuilder::new();
         builder.add_fn(VecCopyItemSpec.into());
@@ -47,12 +46,11 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
 #[tokio::test]
 async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
 -> Result<(), Box<dyn std::error::Error>> {
-    let workspace = Workspace::init(
+    let workspace = Workspace::new(
         WorkspaceSpec::Path(PathBuf::from(".")),
         profile!("test_profile"),
         flow_id!("test_flow"),
-    )
-    .await?;
+    )?;
     let graph = {
         let mut builder = ItemSpecGraphBuilder::new();
         builder.add_fn(VecCopyItemSpec.into());
@@ -88,12 +86,11 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
     tokio::fs::write(tempdir.path().join("Cargo.lock"), "").await?;
     tokio::fs::create_dir(&subdir).await?;
     std::env::set_current_dir(&subdir)?;
-    let workspace = Workspace::init(
+    let workspace = Workspace::new(
         WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
         profile!("test_profile"),
         flow_id!("test_flow"),
-    )
-    .await?;
+    )?;
     let graph = {
         let mut builder = ItemSpecGraphBuilder::new();
         builder.add_fn(VecCopyItemSpec.into());
@@ -123,12 +120,11 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
 #[tokio::test]
 async fn init_runs_graph_setup() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::init(
+    let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().into()),
         profile!("test_profile"),
         flow_id!("test_flow"),
-    )
-    .await?;
+    )?;
     let graph = {
         let mut builder = ItemSpecGraphBuilder::new();
         builder.add_fn(VecCopyItemSpec.into());

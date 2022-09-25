@@ -19,6 +19,6 @@ test = false
 peace_core = { version = "0.0.2", path = "../core" }
 peace_data = { version = "0.0.2", path = "../data" }
 resman = { version = "0.15.0", features = ["debug"] }
-serde = { version = "1.0.139", features = ["derive"] }
-tokio = { version = "1.20.0", features = ["sync"] }
+serde = { version = "1.0.145", features = ["derive"] }
+tokio = { version = "1.21.1", features = ["sync"] }
 type_reg = { version = "0.3.1", features = ["debug", "untagged", "ordered"] }
