@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use fn_graph::{DataAccess, DataAccessDyn};
 use peace_cfg::{async_trait, ItemSpecId, OpCheckStatus};
 use peace_resources::{
-    resources_type_state::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
+    resources::ts::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     type_reg::untagged::DataType,
     Resources,
 };

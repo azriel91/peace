@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use peace_cfg::ItemSpecId;
 use peace_resources::{
     paths::{FlowDir, StatesDesiredFile},
-    resources_type_state::{SetUp, WithStatesDesired},
+    resources::ts::{SetUp, WithStatesDesired},
     states::StatesDesired,
     type_reg::untagged::TypeReg,
     Resources,

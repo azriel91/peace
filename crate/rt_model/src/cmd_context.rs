@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace_resources::{resources_type_state::SetUp, Resources};
+use peace_resources::{resources::ts::SetUp, Resources};
 
 use crate::{CmdContextBuilder, ItemSpecGraph, StatesTypeRegs, Workspace};
 

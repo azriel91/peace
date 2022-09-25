@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use futures::{StreamExt, TryStreamExt};
 use peace_resources::{
     internal::StateDiffsMut,
-    resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
+    resources::ts::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
     states::StateDiffs,
     Resources,
 };

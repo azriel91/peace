@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use crate::{
-    resources_type_state::WithStateDiffs,
+    resources::ts::WithStateDiffs,
     states::{ts::Ensured, States, StatesCurrent},
     Resources,
 };

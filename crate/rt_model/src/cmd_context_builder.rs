@@ -3,7 +3,7 @@ use std::{fmt, future::IntoFuture, marker::PhantomData, pin::Pin};
 use futures::{Future, StreamExt, TryStreamExt};
 use peace_resources::{
     internal::{FlowInitFile, ProfileInitFile, WorkspaceInitFile},
-    resources_type_state::{Empty, SetUp},
+    resources::ts::{Empty, SetUp},
     Resources,
 };
 use serde::{de::DeserializeOwned, Serialize};

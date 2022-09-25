@@ -3,7 +3,7 @@ use peace::{
     cfg::{OpCheckStatus, ProgressLimit, State},
     resources::{
         internal::{StateDiffsMut, StatesMut},
-        resources_type_state::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
+        resources::ts::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
         states::{ts::Desired, StateDiffs, StatesCurrent, StatesDesired},
         Resources,
     },

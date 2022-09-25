@@ -4,7 +4,7 @@ use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesDesiredFile},
-    resources_type_state::{SetUp, WithStatesDesired},
+    resources::ts::{SetUp, WithStatesDesired},
     states::{ts::Desired, StatesDesired},
     Resources,
 };
