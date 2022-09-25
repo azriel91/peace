@@ -32,7 +32,7 @@ impl Workspace {
         let dirs = WorkspaceDirsBuilder::build(workspace_spec, &profile, &flow_id)?;
         let storage = WebStorage::new(workspace_spec);
 
-        Ok(Workspace {
+        Ok(Self {
             dirs,
             profile,
             flow_id,

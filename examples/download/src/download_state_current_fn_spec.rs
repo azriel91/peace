@@ -70,7 +70,7 @@ impl FnSpec for DownloadStateCurrentFnSpec {
     type Output = State<Option<FileState>, PathBuf>;
 
     async fn exec(download_params: DownloadParams<'_>) -> Result<Self::Output, DownloadError> {
-        let dest = download_params.dest();
+        let dest = download_params.download_profile_init().dest();
 
         #[cfg(not(target_arch = "wasm32"))]
         let file_exists = dest.exists();

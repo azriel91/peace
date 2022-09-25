@@ -24,7 +24,7 @@ impl Workspace {
     /// * `workspace_spec`: Defines how to discover the workspace.
     /// * `profile`: The profile / namespace that the execution is flow.
     /// * `flow_id`: ID of the flow that is being executed.
-    pub async fn init(
+    pub fn new(
         workspace_spec: WorkspaceSpec,
         profile: Profile,
         flow_id: FlowId,

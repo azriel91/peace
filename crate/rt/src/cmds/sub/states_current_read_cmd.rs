@@ -103,7 +103,7 @@ where
 
         let states_current_file_str = states_current_file.to_string_lossy();
         let states_serialized = storage
-            .get_item(states_current_file_str.as_ref())?
+            .get_item_opt(states_current_file_str.as_ref())?
             .ok_or(Error::StatesCurrentDiscoverRequired)?;
         let deserializer = serde_yaml::Deserializer::from_str(&states_serialized);
         let states_current = StatesCurrent::from(

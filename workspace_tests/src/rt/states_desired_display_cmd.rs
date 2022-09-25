@@ -10,12 +10,11 @@ use crate::{FnInvocation, FnTrackerOutput, NoOpOutput, VecCopyError, VecCopyItem
 #[tokio::test]
 async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::init(
+    let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         flow_id!("test_flow"),
-    )
-    .await?;
+    )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
@@ -59,12 +58,11 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
 #[tokio::test]
 async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::init(
+    let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         flow_id!("test_flow"),
-    )
-    .await?;
+    )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());

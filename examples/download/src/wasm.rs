@@ -9,8 +9,8 @@ use wasm_bindgen::prelude::*;
 
 pub use crate::{
     cmd_context, desired, diff, ensure, ensure_dry, fetch, status, workspace_and_graph_setup,
-    workspace_init, DownloadArgs, DownloadCleanOpSpec, DownloadCommand, DownloadEnsureOpSpec,
-    DownloadError, DownloadItemSpec, DownloadParams, DownloadStateCurrentFnSpec,
+    DownloadArgs, DownloadCleanOpSpec, DownloadCommand, DownloadEnsureOpSpec, DownloadError,
+    DownloadItemSpec, DownloadParams, DownloadProfileInit, DownloadStateCurrentFnSpec,
     DownloadStateDesiredFnSpec, DownloadStateDiffFnSpec, FileState, FileStateDiff,
     WorkspaceAndGraph,
 };
@@ -41,26 +41,47 @@ impl WorkspaceAndContent {
 pub async fn wasm_init(url: String, name: String) -> Result<WorkspaceAndContent, JsValue> {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    workspace_init(
+    let workspace_and_content = workspace_and_graph_setup(
         WorkspaceSpec::SessionStorage,
         profile!("default"),
         flow_id!("file"),
-        Url::parse(&url).expect("Failed to parse URL."),
-        std::path::PathBuf::from(name),
     )
     .await
     .map(|workspace_and_graph| async move {
         let content = HashMap::new();
         let output = String::new();
 
-        Ok(WorkspaceAndContent {
+        Result::<_, JsValue>::Ok(WorkspaceAndContent {
             workspace_and_graph,
             content,
             output,
         })
     })
     .map_err(into_js_err_value)?
+    .await?;
+
+    // Store init params in storage.
+    let download_profile_init = {
+        let url = Url::parse(&url).expect("Failed to parse URL.");
+        let dest = std::path::PathBuf::from(name);
+        DownloadProfileInit::new(url, dest)
+    };
+
+    let WorkspaceAndContent {
+        workspace_and_graph,
+        content: _,
+        output: _,
+    } = &workspace_and_content;
+    let mut in_memory_text_output = InMemoryTextOutput::new();
+    let mut _cmd_context = cmd_context(
+        workspace_and_graph,
+        &mut in_memory_text_output,
+        Some(download_profile_init),
+    )
     .await
+    .map_err(into_js_err_value)?;
+
+    Ok(workspace_and_content)
 }
 
 #[wasm_bindgen]
@@ -73,7 +94,7 @@ pub async fn wasm_fetch(
         output: _,
     } = workspace_and_content;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output)
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
         .await
         .map_err(into_js_err_value)?;
     let resources = cmd_context.resources_mut();
@@ -104,7 +125,7 @@ pub async fn wasm_status(
         output: _,
     } = workspace_and_content;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output)
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
         .await
         .map_err(into_js_err_value)?;
     let resources = cmd_context.resources_mut();
@@ -135,7 +156,7 @@ pub async fn wasm_desired(
         output: _,
     } = workspace_and_content;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output)
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
         .await
         .map_err(into_js_err_value)?;
     let resources = cmd_context.resources_mut();
@@ -166,7 +187,7 @@ pub async fn wasm_diff(
         output: _,
     } = workspace_and_content;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output)
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
         .await
         .map_err(into_js_err_value)?;
     let resources = cmd_context.resources_mut();
@@ -197,7 +218,7 @@ pub async fn wasm_ensure_dry(
         output: _,
     } = workspace_and_content;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output)
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
         .await
         .map_err(into_js_err_value)?;
     let resources = cmd_context.resources_mut();
@@ -228,7 +249,7 @@ pub async fn wasm_ensure(
         output: _,
     } = workspace_and_content;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output)
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
         .await
         .map_err(into_js_err_value)?;
     let resources = cmd_context.resources_mut();

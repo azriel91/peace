@@ -103,7 +103,7 @@ where
 
         let states_desired_file_str = states_desired_file.to_string_lossy();
         let states_serialized = storage
-            .get_item(states_desired_file_str.as_ref())?
+            .get_item_opt(states_desired_file_str.as_ref())?
             .ok_or(Error::StatesDesiredDiscoverRequired)?;
         let deserializer = serde_yaml::Deserializer::from_str(&states_serialized);
         let states_desired = StatesDesired::from(

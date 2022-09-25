@@ -8,7 +8,9 @@ use peace_resources::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{CmdContext, Error, ItemSpecGraph, StatesTypeRegs, Workspace, WorkspaceInitializer};
+use crate::{
+    CmdContext, Error, ItemSpecGraph, StatesTypeRegs, Storage, Workspace, WorkspaceInitializer,
+};
 
 /// Information needed to execute a command.
 ///
@@ -115,6 +117,9 @@ where
 {
     /// Sets the workspace initialization parameters.
     ///
+    /// The init param is optional in case the init parameters should be loaded
+    /// from storage.
+    ///
     /// Type state enforces that this can only be set once.
     ///
     /// # Parameters
@@ -122,7 +127,7 @@ where
     /// * `workspace_init_next`: The parameters to initialize the workspace.
     pub fn with_workspace_init<WorkspaceInitNext>(
         self,
-        workspace_init_next: WorkspaceInitNext,
+        workspace_init_next: Option<WorkspaceInitNext>,
     ) -> CmdContextBuilder<'ctx, E, O, WorkspaceInitNext, ProfileInit, FlowInit>
     where
         WorkspaceInitNext: Clone + fmt::Debug + Send + Sync + 'static,
@@ -140,7 +145,7 @@ where
             workspace,
             item_spec_graph,
             output,
-            workspace_init_params: Some(workspace_init_next),
+            workspace_init_params: workspace_init_next,
             profile_init_params,
             flow_init_params,
         }
@@ -155,6 +160,9 @@ where
 {
     /// Sets the profile initialization parameters.
     ///
+    /// The init param is optional in case the init parameters should be loaded
+    /// from storage.
+    ///
     /// Type state enforces that this can only be set once.
     ///
     /// # Parameters
@@ -162,7 +170,7 @@ where
     /// * `profile_init_next`: The parameters to initialize the profile.
     pub fn with_profile_init<ProfileInitNext>(
         self,
-        profile_init_next: ProfileInitNext,
+        profile_init_next: Option<ProfileInitNext>,
     ) -> CmdContextBuilder<'ctx, E, O, WorkspaceInit, ProfileInitNext, FlowInit>
     where
         ProfileInitNext: Clone + fmt::Debug + Send + Sync + 'static,
@@ -181,7 +189,7 @@ where
             item_spec_graph,
             output,
             workspace_init_params,
-            profile_init_params: Some(profile_init_next),
+            profile_init_params: profile_init_next,
             flow_init_params,
         }
     }
@@ -196,6 +204,9 @@ where
 {
     /// Sets the flow initialization parameters.
     ///
+    /// The init param is optional in case the init parameters should be loaded
+    /// from storage.
+    ///
     /// Type state enforces that this can only be set once.
     ///
     /// # Parameters
@@ -203,7 +214,7 @@ where
     /// * `flow_init_next`: The parameters to initialize the flow.
     pub fn with_flow_init<FlowInitNext>(
         self,
-        flow_init_next: FlowInitNext,
+        flow_init_next: Option<FlowInitNext>,
     ) -> CmdContextBuilder<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInitNext>
     where
         FlowInitNext: Clone + fmt::Debug + Send + Sync + 'static,
@@ -223,7 +234,7 @@ where
             output,
             workspace_init_params,
             profile_init_params,
-            flow_init_params: Some(flow_init_next),
+            flow_init_params: flow_init_next,
         }
     }
 }
@@ -272,12 +283,12 @@ where
         .await?;
 
         // Create directories and write init parameters to storage.
-        #[cfg(target = "wasm32")]
+        #[cfg(target_arch = "wasm32")]
         WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::dirs_initialize(
             storage, dirs,
         )
         .await?;
-        #[cfg(not(target = "wasm32"))]
+        #[cfg(not(target_arch = "wasm32"))]
         WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::dirs_initialize(dirs).await?;
         Self::init_params_serialize(
             storage,
@@ -353,7 +364,7 @@ where
     }
 
     async fn init_params_deserialize(
-        storage: &peace_rt_model_native::NativeStorage,
+        storage: &Storage,
         workspace_init_params: &mut Option<WorkspaceInit>,
         workspace_init_file: &WorkspaceInitFile,
         profile_init_params: &mut Option<ProfileInit>,
@@ -378,7 +389,7 @@ where
 
     /// Serializes init params to storage.
     async fn init_params_serialize(
-        storage: &peace_rt_model_native::NativeStorage,
+        storage: &Storage,
         workspace_init_params: Option<&WorkspaceInit>,
         workspace_init_file: &WorkspaceInitFile,
         profile_init_params: Option<&ProfileInit>,

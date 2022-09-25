@@ -1,10 +1,12 @@
-use std::path::{Path, PathBuf};
+#[cfg(target_arch = "wasm32")]
+use std::path::PathBuf;
 
 #[cfg(target_arch = "wasm32")]
 use peace::data::W;
 
 use peace::data::{Data, R};
-use url::Url;
+
+use crate::DownloadProfileInit;
 
 /// Download parameters from the user.
 #[derive(Data, Debug)]
@@ -12,11 +14,7 @@ pub struct DownloadParams<'op> {
     /// Client to make web requests.
     client: R<'op, reqwest::Client>,
     /// Url of the file to download.
-    src: R<'op, Url>,
-    /// Path of the destination.
-    ///
-    /// Must be a file path, and not a directory.
-    dest: R<'op, PathBuf>,
+    download_profile_init: R<'op, DownloadProfileInit>,
 
     // For wasm, we use a map to hold the file content.
     #[cfg(target_arch = "wasm32")]
@@ -25,21 +23,25 @@ pub struct DownloadParams<'op> {
 
 impl<'op> DownloadParams<'op> {
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn new(client: R<'op, reqwest::Client>, src: R<'op, Url>, dest: R<'op, PathBuf>) -> Self {
-        Self { client, src, dest }
+    pub fn new(
+        client: R<'op, reqwest::Client>,
+        download_profile_init: R<'op, DownloadProfileInit>,
+    ) -> Self {
+        Self {
+            client,
+            download_profile_init,
+        }
     }
 
     #[cfg(target_arch = "wasm32")]
     pub fn new(
         client: R<'op, reqwest::Client>,
-        src: R<'op, Url>,
-        dest: R<'op, PathBuf>,
+        download_profile_init: R<'op, DownloadProfileInit>,
         in_memory_contents: W<'op, std::collections::HashMap<PathBuf, String>>,
     ) -> Self {
         Self {
             client,
-            src,
-            dest,
+            download_profile_init,
             in_memory_contents,
         }
     }
@@ -48,12 +50,8 @@ impl<'op> DownloadParams<'op> {
         &self.client
     }
 
-    pub fn src(&self) -> &Url {
-        &self.src
-    }
-
-    pub fn dest(&self) -> &Path {
-        self.dest.as_ref()
+    pub fn download_profile_init(&self) -> &DownloadProfileInit {
+        &self.download_profile_init
     }
 
     #[cfg(target_arch = "wasm32")]
