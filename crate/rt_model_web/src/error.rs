@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 // Remember to add common variants to `rt_model_native/src/error.rs`.
 
 /// Peace web support errors.
@@ -61,10 +63,10 @@ pub enum Error {
     FlowInitParamsDeserialize(#[source] serde_yaml::Error),
 
     /// Item does not exist in storage.
-    #[error("Item does not exist in storage: `{key}`.")]
+    #[error("Item does not exist in storage: `{path}`.")]
     ItemNotExistent {
         /// Key to get.
-        key: String,
+        path: PathBuf,
     },
 
     // web_sys related errors
@@ -106,10 +108,10 @@ pub enum Error {
     ///
     /// This is because browsers are generally single threaded. The assumption
     /// would no longer be true if multiple threads are used, e.g. web workers.
-    #[error("Failed to get an item in browser storage: `{key}`. Error: `{error}`")]
+    #[error("Failed to get an item in browser storage: `{path}`. Error: `{error}`")]
     StorageGetItem {
         /// Key to get.
-        key: String,
+        path: PathBuf,
         /// Stringified JS error.
         error: String,
     },
@@ -125,10 +127,10 @@ pub enum Error {
     ///
     /// This is because browsers are generally single threaded. The assumption
     /// would no longer be true if multiple threads are used, e.g. web workers.
-    #[error("Failed to set an item in browser storage: `{key}`: `{value}`. Error: `{error}`")]
+    #[error("Failed to set an item in browser storage: `{path}`: `{value}`. Error: `{error}`")]
     StorageSetItem {
         /// Key to set.
-        key: String,
+        path: PathBuf,
         /// Value which failed to be set.
         value: String,
         /// Stringified JS error.

@@ -176,8 +176,7 @@ where
 
         let states_serialized =
             serde_yaml::to_string(&*states).map_err(Error::StatesCurrentSerialize)?;
-        let states_current_file_str = states_current_file.to_string_lossy();
-        storage.set_item(&states_current_file_str, &states_serialized)?;
+        storage.set_item(&states_current_file, &states_serialized)?;
         drop(flow_dir);
         drop(storage);
 
