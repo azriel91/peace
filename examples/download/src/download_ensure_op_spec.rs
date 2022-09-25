@@ -27,7 +27,7 @@ pub struct DownloadEnsureOpSpec;
 impl DownloadEnsureOpSpec {
     async fn file_download(download_params: DownloadParams<'_>) -> Result<(), DownloadError> {
         let client = download_params.client();
-        let src_url = download_params.src();
+        let src_url = download_params.download_profile_init().src();
         let response = client
             .get(src_url.clone())
             .send()
@@ -36,7 +36,11 @@ impl DownloadEnsureOpSpec {
 
         #[cfg(not(target_arch = "wasm32"))]
         {
-            Self::stream_write(download_params.dest(), response.bytes_stream()).await?;
+            Self::stream_write(
+                download_params.download_profile_init().dest(),
+                response.bytes_stream(),
+            )
+            .await?;
         }
 
         // reqwest in wasm doesn't support streams
@@ -44,7 +48,7 @@ impl DownloadEnsureOpSpec {
         #[cfg(target_arch = "wasm32")]
         {
             let mut download_params = download_params;
-            let dest = download_params.dest().to_path_buf();
+            let dest = download_params.download_profile_init().dest().to_path_buf();
             Self::stream_write(dest, download_params.in_memory_contents_mut(), response).await?;
         }
 
@@ -145,7 +149,7 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
         _file_state_desired: &Option<FileState>,
         _diff: &FileStateDiff,
     ) -> Result<PathBuf, DownloadError> {
-        let dest = download_params.dest();
+        let dest = download_params.download_profile_init().dest();
         Ok(dest.to_path_buf())
     }
 
@@ -155,7 +159,7 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
         _file_state_desired: &Option<FileState>,
         _diff: &FileStateDiff,
     ) -> Result<PathBuf, DownloadError> {
-        let dest = download_params.dest().to_path_buf();
+        let dest = download_params.download_profile_init().dest().to_path_buf();
         Self::file_download(download_params).await?;
         Ok(dest)
     }

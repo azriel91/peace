@@ -16,9 +16,9 @@ doctest = false
 test = false
 
 [dependencies]
-async-trait = "0.1.56"
-nougat = "0.2.1"
+async-trait = "0.1.57"
+nougat = "0.2.4"
 peace_core = { path = "../core", version = "0.0.2" }
 peace_data = { path = "../data", version = "0.0.2" }
 peace_resources = { path = "../resources", version = "0.0.2" }
-serde = { version = "1.0.139", features = ["derive"] }
+serde = { version = "1.0.145", features = ["derive"] }

@@ -27,7 +27,7 @@ where
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
         mut cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<E, O, WithStates>, E> {
+    ) -> Result<CmdContext<'_, E, O, WithStates>, E> {
         let CmdContext {
             output,
             resources,
@@ -55,5 +55,11 @@ where
                 Err(e)
             }
         }
+    }
+}
+
+impl<E, O> Default for StatesCurrentDisplayCmd<E, O> {
+    fn default() -> Self {
+        Self(PhantomData)
     }
 }

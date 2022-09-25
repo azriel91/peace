@@ -13,7 +13,7 @@ impl DownloadStateDesiredFnSpec {
         download_params: &DownloadParams<'_>,
     ) -> Result<FileState, DownloadError> {
         let client = download_params.client();
-        let src_url = download_params.src();
+        let src_url = download_params.download_profile_init().src();
         let response = client
             .get(src_url.clone())
             .send()

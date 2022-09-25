@@ -10,12 +10,11 @@ use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec};
 #[tokio::test]
 async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::init(
+    let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         flow_id!("test_flow"),
-    )
-    .await?;
+    )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
@@ -24,14 +23,14 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
     let mut no_op_output = NoOpOutput;
 
     // Write desired states to disk.
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext {
         resources: resources_from_discover,
         ..
     } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk in a new set of resources.
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext {
         resources: resources_from_read,
         ..
@@ -50,12 +49,11 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
 #[tokio::test]
 async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::init(
+    let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         flow_id!("test_flow"),
-    )
-    .await?;
+    )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
@@ -64,7 +62,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     let mut no_op_output = NoOpOutput;
 
     // Try and read desired states from disk.
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let exec_result = StatesDesiredReadCmd::exec(cmd_context).await;
 
     assert!(matches!(
@@ -74,4 +72,15 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
         ))
     ));
     Ok(())
+}
+
+#[test]
+fn debug() {
+    assert_eq!(
+        "StatesDesiredReadCmd(PhantomData)",
+        format!(
+            "{:?}",
+            StatesDesiredReadCmd::<VecCopyError, NoOpOutput>::default()
+        )
+    );
 }

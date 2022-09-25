@@ -1,6 +1,3 @@
-use std::{iter, path::Path};
-
-use futures::{stream, StreamExt, TryStreamExt};
 use peace_core::{FlowId, Profile};
 use peace_resources::internal::WorkspaceDirs;
 
@@ -9,7 +6,7 @@ use crate::{Error, NativeStorage, WorkspaceDirsBuilder, WorkspaceSpec};
 /// Workspace that the `peace` tool runs in.
 #[derive(Clone, Debug)]
 pub struct Workspace {
-    /// `Resources` in this workspace.
+    /// Convention-based directories in this workspace.
     dirs: WorkspaceDirs,
     /// Identifier or namespace to distinguish execution environments.
     profile: Profile,
@@ -27,16 +24,15 @@ impl Workspace {
     /// * `workspace_spec`: Defines how to discover the workspace.
     /// * `profile`: The profile / namespace that the execution is flow.
     /// * `flow_id`: ID of the flow that is being executed.
-    pub async fn init(
+    pub fn new(
         workspace_spec: WorkspaceSpec,
         profile: Profile,
         flow_id: FlowId,
-    ) -> Result<Workspace, Error> {
+    ) -> Result<Self, Error> {
         let dirs = WorkspaceDirsBuilder::build(workspace_spec, &profile, &flow_id)?;
-        Self::initialize_directories(&dirs).await?;
-
         let storage = NativeStorage;
-        Ok(Workspace {
+
+        Ok(Self {
             dirs,
             profile,
             flow_id,
@@ -44,7 +40,7 @@ impl Workspace {
         })
     }
 
-    /// Returns the inner data.
+    /// Returns the underlying data.
     pub fn into_inner(self) -> (WorkspaceDirs, Profile, FlowId, NativeStorage) {
         let Self {
             dirs,
@@ -74,25 +70,5 @@ impl Workspace {
     /// Returns a reference to the workspace's storage.
     pub fn storage(&self) -> &NativeStorage {
         &self.storage
-    }
-
-    async fn initialize_directories(dirs: &WorkspaceDirs) -> Result<(), Error> {
-        let dirs = iter::once(AsRef::<Path>::as_ref(dirs.workspace_dir()))
-            .chain(iter::once(AsRef::<Path>::as_ref(dirs.peace_dir())))
-            .chain(iter::once(AsRef::<Path>::as_ref(dirs.profile_dir())))
-            .chain(iter::once(AsRef::<Path>::as_ref(
-                dirs.profile_history_dir(),
-            )))
-            .chain(iter::once(AsRef::<Path>::as_ref(dirs.flow_dir())));
-
-        stream::iter(dirs)
-            .map(Result::<_, Error>::Ok)
-            .try_for_each(|dir| async move {
-                tokio::fs::create_dir_all(dir).await.map_err(|error| {
-                    let path = dir.to_path_buf();
-                    Error::WorkspaceDirCreate { path, error }
-                })
-            })
-            .await
     }
 }

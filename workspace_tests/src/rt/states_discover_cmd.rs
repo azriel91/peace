@@ -14,19 +14,18 @@ use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec};
 #[tokio::test]
 async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::init(
+    let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         flow_id!("test_flow"),
-    )
-    .await?;
+    )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
     let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
 
     let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
 
@@ -72,4 +71,15 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
     );
 
     Ok(())
+}
+
+#[test]
+fn debug() {
+    assert_eq!(
+        "StatesDiscoverCmd(PhantomData)",
+        format!(
+            "{:?}",
+            StatesDiscoverCmd::<VecCopyError, NoOpOutput>::default()
+        )
+    );
 }

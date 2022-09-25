@@ -8,24 +8,26 @@ pub use fn_graph::{self, FnRef, FnRefMut};
 pub use peace_rt_model_core::OutputWrite;
 
 pub use crate::{
-    cmd_context::CmdContext, in_memory_text_output::InMemoryTextOutput,
-    item_spec_boxed::ItemSpecBoxed, item_spec_graph::ItemSpecGraph,
-    item_spec_graph_builder::ItemSpecGraphBuilder, item_spec_rt::ItemSpecRt,
-    item_spec_wrapper::ItemSpecWrapper, states_type_regs::StatesTypeRegs,
+    cmd_context::CmdContext, cmd_context_builder::CmdContextBuilder,
+    in_memory_text_output::InMemoryTextOutput, item_spec_boxed::ItemSpecBoxed,
+    item_spec_graph::ItemSpecGraph, item_spec_graph_builder::ItemSpecGraphBuilder,
+    item_spec_rt::ItemSpecRt, item_spec_wrapper::ItemSpecWrapper, states_type_regs::StatesTypeRegs,
 };
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use peace_rt_model_native::{
     CliOutput, Error, NativeStorage as Storage, SyncIoBridge, Workspace, WorkspaceDirsBuilder,
-    WorkspaceSpec,
+    WorkspaceInitializer, WorkspaceSpec,
 };
 
 #[cfg(target_arch = "wasm32")]
 pub use peace_rt_model_web::{
-    Error, WebStorage as Storage, Workspace, WorkspaceDirsBuilder, WorkspaceSpec,
+    Error, WebStorage as Storage, Workspace, WorkspaceDirsBuilder, WorkspaceInitializer,
+    WorkspaceSpec,
 };
 
 mod cmd_context;
+mod cmd_context_builder;
 mod in_memory_text_output;
 mod item_spec_boxed;
 mod item_spec_graph;

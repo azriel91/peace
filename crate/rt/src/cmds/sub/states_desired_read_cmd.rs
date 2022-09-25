@@ -27,7 +27,7 @@ where
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
         mut cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<E, O, WithStatesDesired>, E> {
+    ) -> Result<CmdContext<'_, E, O, WithStatesDesired>, E> {
         let CmdContext {
             resources,
             states_type_regs,
@@ -103,7 +103,7 @@ where
 
         let states_desired_file_str = states_desired_file.to_string_lossy();
         let states_serialized = storage
-            .get_item(states_desired_file_str.as_ref())?
+            .get_item_opt(states_desired_file_str.as_ref())?
             .ok_or(Error::StatesDesiredDiscoverRequired)?;
         let deserializer = serde_yaml::Deserializer::from_str(&states_serialized);
         let states_desired = StatesDesired::from(
@@ -118,5 +118,11 @@ where
         resources.insert(states_desired_file);
 
         Ok(states_desired)
+    }
+}
+
+impl<E, O> Default for StatesDesiredReadCmd<E, O> {
+    fn default() -> Self {
+        Self(PhantomData)
     }
 }

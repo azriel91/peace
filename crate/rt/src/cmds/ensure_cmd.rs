@@ -51,7 +51,7 @@ where
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec_dry(
         cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<E, O, EnsuredDry>, E> {
+    ) -> Result<CmdContext<'_, E, O, EnsuredDry>, E> {
         let (workspace, item_spec_graph, output, resources, states_type_regs) =
             cmd_context.into_inner();
         let resources_result =
@@ -153,7 +153,7 @@ where
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<E, O, Ensured>, E> {
+    ) -> Result<CmdContext<'_, E, O, Ensured>, E> {
         let (workspace, item_spec_graph, output, resources, states_type_regs) =
             cmd_context.into_inner();
         // https://github.com/rust-lang/rust-clippy/issues/9111

@@ -33,13 +33,14 @@ where
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<E, O, WithStateDiffs>, E> {
+    ) -> Result<CmdContext<'_, E, O, WithStateDiffs>, E> {
         let CmdContext {
             workspace,
             item_spec_graph,
             output,
             resources,
             states_type_regs,
+            ..
         } = cmd_context;
 
         let state_diffs_result =

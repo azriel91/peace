@@ -32,16 +32,12 @@ pub struct ItemSpecBoxed<E>(Box<dyn ItemSpecRt<E>>);
 impl<E> Deref for ItemSpecBoxed<E> {
     type Target = dyn ItemSpecRt<E>;
 
-    // https://github.com/rust-lang/rust-clippy/issues/9101
-    #[allow(clippy::explicit_auto_deref)]
     fn deref(&self) -> &Self::Target {
         &*self.0
     }
 }
 
 impl<E> DerefMut for ItemSpecBoxed<E> {
-    // https://github.com/rust-lang/rust-clippy/issues/9101
-    #[allow(clippy::explicit_auto_deref)]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut *self.0
     }

@@ -12,12 +12,11 @@ use crate::{NoOpOutput, VecA, VecB, VecCopyError, VecCopyItemSpec};
 async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>>
 {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::init(
+    let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         flow_id!("test_flow"),
-    )
-    .await?;
+    )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
@@ -26,11 +25,11 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
     let mut no_op_output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesCurrent>();
@@ -60,12 +59,11 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
 #[tokio::test]
 async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::init(
+    let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         flow_id!("test_flow"),
-    )
-    .await?;
+    )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
@@ -74,7 +72,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     let mut no_op_output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let mut cmd_context = CmdContext::init(&workspace, &graph, &mut no_op_output).await?;
+    let mut cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     // overwrite initial state
     let resources = cmd_context.resources_mut();
     #[rustfmt::skip]
@@ -83,7 +81,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = { CmdContext::init(&workspace, &graph, &mut no_op_output).await? };
+    let cmd_context = { CmdContext::builder(&workspace, &graph, &mut no_op_output).await? };
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesCurrent>();

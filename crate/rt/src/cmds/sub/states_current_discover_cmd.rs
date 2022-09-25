@@ -35,7 +35,7 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<E, O, WithStates>, E> {
+    ) -> Result<CmdContext<'_, E, O, WithStates>, E> {
         let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
             cmd_context.into_inner();
         let states = Self::exec_internal(item_spec_graph, &mut resources).await?;
@@ -184,5 +184,11 @@ where
         resources.insert(states_current_file);
 
         Ok(())
+    }
+}
+
+impl<E, O> Default for StatesCurrentDiscoverCmd<E, O> {
+    fn default() -> Self {
+        Self(PhantomData)
     }
 }

@@ -1,5 +1,3 @@
-use std::{iter, path::Path};
-
 use peace_core::{FlowId, Profile};
 use peace_resources::internal::WorkspaceDirs;
 
@@ -26,15 +24,15 @@ impl Workspace {
     /// * `workspace_spec`: Defines how to discover the workspace.
     /// * `profile`: The profile / namespace that the execution is flow.
     /// * `flow_id`: ID of the flow that is being executed.
-    pub async fn init(
+    pub fn new(
         workspace_spec: WorkspaceSpec,
         profile: Profile,
         flow_id: FlowId,
-    ) -> Result<Workspace, Error> {
+    ) -> Result<Self, Error> {
         let dirs = WorkspaceDirsBuilder::build(workspace_spec, &profile, &flow_id)?;
-        let storage = Self::initialize_storage(workspace_spec, &dirs).await?;
+        let storage = WebStorage::new(workspace_spec);
 
-        Ok(Workspace {
+        Ok(Self {
             dirs,
             profile,
             flow_id,
@@ -42,7 +40,7 @@ impl Workspace {
         })
     }
 
-    /// Returns the inner data.
+    /// Returns the underlying data.
     pub fn into_inner(self) -> (WorkspaceDirs, Profile, FlowId, WebStorage) {
         let Self {
             dirs,
@@ -64,37 +62,13 @@ impl Workspace {
         &self.profile
     }
 
-    /// Returns a reference to the workspace's flow ID.
+    /// Returns a reference to the workspace's flow_id.
     pub fn flow_id(&self) -> &FlowId {
         &self.flow_id
     }
 
-    /// Returns the storage used for this workspace.
+    /// Returns a reference to the workspace's storage.
     pub fn storage(&self) -> &WebStorage {
         &self.storage
-    }
-
-    async fn initialize_storage(
-        workspace_spec: WorkspaceSpec,
-        dirs: &WorkspaceDirs,
-    ) -> Result<WebStorage, Error> {
-        let dirs = iter::once(AsRef::<Path>::as_ref(dirs.workspace_dir()))
-            .chain(iter::once(AsRef::<Path>::as_ref(dirs.peace_dir())))
-            .chain(iter::once(AsRef::<Path>::as_ref(dirs.profile_dir())))
-            .chain(iter::once(AsRef::<Path>::as_ref(
-                dirs.profile_history_dir(),
-            )))
-            .chain(iter::once(AsRef::<Path>::as_ref(dirs.flow_dir())));
-
-        let workspace_storage = WebStorage::new(workspace_spec);
-        workspace_storage.iter_with_storage(dirs, |storage, dir| {
-            let dir_str = dir.to_string_lossy();
-            let value = "";
-            storage
-                .set_item(dir_str.as_ref(), value)
-                .map_err(|js_value| (dir_str.to_string(), "".to_string(), js_value))
-        })?;
-
-        Ok(workspace_storage)
     }
 }

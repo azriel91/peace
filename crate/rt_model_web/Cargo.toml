@@ -18,7 +18,9 @@ test = false
 [dependencies]
 peace_core = { path = "../core", version = "0.0.2" }
 peace_resources = { path = "../resources", version = "0.0.2" }
-thiserror = "1.0.31"
-serde_yaml = "0.8.26"
-wasm-bindgen = { version = "0.2.82", features = ["serde-serialize"] }
-web-sys = { version = "0.3.59", features = ["Storage", "Window"] }
+thiserror = "1.0.35"
+serde = "1.0.145"
+serde-wasm-bindgen = "0.4.3"
+serde_yaml = "0.9.13"
+wasm-bindgen = "0.2.83"
+web-sys = { version = "0.3.60", features = ["Storage", "Window"] }

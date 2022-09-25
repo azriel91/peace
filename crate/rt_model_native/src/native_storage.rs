@@ -1,5 +1,6 @@
 use std::{io::Write, path::Path, sync::Mutex};
 
+use serde::{de::DeserializeOwned, Serialize};
 use tokio::{
     fs::File,
     io::{BufReader, BufWriter},
@@ -13,6 +14,95 @@ use crate::Error;
 pub struct NativeStorage;
 
 impl NativeStorage {
+    /// Reads a serializable item from the given path.
+    ///
+    /// # Parameters
+    ///
+    /// * `thread_name`: Name of the thread to use to do the read operation.
+    /// * `file_path`: Path to the file to read the serialized item.
+    /// * `f_map_err`: Maps the deserialization error (if any) to an [`Error`].
+    pub async fn serialized_read<T, F>(
+        &self,
+        thread_name: String,
+        file_path: &Path,
+        f_map_err: F,
+    ) -> Result<T, Error>
+    where
+        T: Serialize + DeserializeOwned + Send + Sync,
+        F: FnOnce(serde_yaml::Error) -> Error + Send,
+    {
+        if file_path.exists() {
+            let t = self
+                .read_with_sync_api(thread_name, file_path, |file| {
+                    serde_yaml::from_reader::<_, T>(file).map_err(f_map_err)
+                })
+                .await?;
+
+            Ok(t)
+        } else {
+            Err(Error::ItemNotExistent {
+                path: file_path.to_path_buf(),
+            })
+        }
+    }
+
+    /// Reads a serializable item from the given path if the file exists.
+    ///
+    /// # Parameters
+    ///
+    /// * `thread_name`: Name of the thread to use to do the read operation.
+    /// * `file_path`: Path to the file to read the serialized item.
+    /// * `f_map_err`: Maps the deserialization error (if any) to an [`Error`].
+    pub async fn serialized_read_opt<T, F>(
+        &self,
+        thread_name: String,
+        file_path: &Path,
+        f_map_err: F,
+    ) -> Result<Option<T>, Error>
+    where
+        T: Serialize + DeserializeOwned + Send + Sync,
+        F: FnOnce(serde_yaml::Error) -> Error + Send,
+    {
+        if file_path.exists() {
+            let t = self
+                .read_with_sync_api(thread_name, file_path, |file| {
+                    serde_yaml::from_reader::<_, T>(file).map_err(f_map_err)
+                })
+                .await?;
+
+            Ok(Some(t))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Writes a serializable item to the given path.
+    ///
+    /// # Parameters
+    ///
+    /// * `thread_name`: Name of the thread to use to do the write operation.
+    /// * `file_path`: Path to the file to store the serialized item.
+    /// * `t`: Item to serialize.
+    /// * `f_map_err`: Maps the serialization error (if any) to an [`Error`].
+    pub async fn serialized_write<T, F>(
+        &self,
+        thread_name: String,
+        file_path: &Path,
+        t: &T,
+        f_map_err: F,
+    ) -> Result<(), Error>
+    where
+        T: Serialize + DeserializeOwned + Send + Sync,
+        F: FnOnce(serde_yaml::Error) -> Error + Send,
+    {
+        self.write_with_sync_api(thread_name, file_path, |file| {
+            serde_yaml::to_writer(file, t).map_err(f_map_err)
+        })
+        .await?;
+
+        Ok(())
+    }
+
     /// Reads from a file, bridging to libraries that take a synchronous `Write`
     /// type.
     ///
@@ -58,6 +148,13 @@ impl NativeStorage {
     ///
     /// This method buffers the write, and calls flush on the buffer when the
     /// passed in closure returns.
+    ///
+    /// # Parameters
+    ///
+    /// * `thread_name`: Name of the thread to use to do the write operation.
+    /// * `file_path`: Path to the file to store the serialized item.
+    /// * `f`: Function that is given the `Write` implementation to call the
+    ///   sync API with.
     pub async fn write_with_sync_api<'f, F, T>(
         &self,
         thread_name: String,

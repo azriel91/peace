@@ -22,8 +22,7 @@ async fn outputs_states_current_verbose_mode() -> Result<(), Box<dyn std::error:
         .await?;
 
     assert_eq!(
-        r#"---
-item_0:
+        r#"item_0:
   logical: logical
   physical: 1.1
 item_1:
@@ -50,8 +49,7 @@ async fn outputs_states_desired_verbose_mode() -> Result<(), Box<dyn std::error:
         .await?;
 
     assert_eq!(
-        r#"---
-item_0:
+        r#"item_0:
   logical: logical
   physical: 1.1
 item_1:
@@ -77,8 +75,7 @@ async fn outputs_state_diffs_verbose_mode() -> Result<(), Box<dyn std::error::Er
     <CliOutput<_> as OutputWrite<Error>>::write_state_diffs(&mut cli_output, &state_diffs).await?;
 
     assert_eq!(
-        r#"---
-item_0: need one more server
+        r#"item_0: need one more server
 item_1: 1
 "#,
         String::from_utf8(buffer)?
