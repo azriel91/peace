@@ -107,16 +107,42 @@
         let workspace_and_content_global;
         const spinner = document.querySelector("#spinner");
 
+        document.querySelector("#init_and_fetch").addEventListener("click", () => {
+          const path = document.querySelector("#path").value;
+          const url = document.querySelector("#url").value;
+
+          document.querySelectorAll("button").forEach(element => element.setAttribute("disabled", "disabled"));
+          spinner_show();
+
+          exports.wasm_init(url, path)
+            .then(exports.wasm_fetch)
+            .then(workspace_and_content => {
+              workspace_and_content_global = workspace_and_content;
+              update_state(workspace_and_content_global);
+            })
+            .then(() => {
+              document.querySelectorAll(".init_required").forEach(element => element.removeAttribute("disabled"));
+              document.querySelectorAll(".fetch_required").forEach(element => element.removeAttribute("disabled"));
+              spinner_hide();
+            });
+        });
+
         document.querySelector("#init").addEventListener("click", () => {
           const path = document.querySelector("#path").value;
           const url = document.querySelector("#url").value;
+
+          document.querySelectorAll("button").forEach(element => element.setAttribute("disabled", "disabled"));
+          spinner_show();
+
           exports.wasm_init(url, path)
             .then(workspace_and_content => {
               workspace_and_content_global = workspace_and_content;
               update_state(workspace_and_content_global);
-
+            })
+            .then(() => {
               document.querySelectorAll(".init_required").forEach(element => element.removeAttribute("disabled"));
               document.querySelectorAll(".fetch_required").forEach(element => element.setAttribute("disabled", "disabled"));
+              spinner_hide();
             });
         });
 
@@ -206,6 +232,13 @@
         document.querySelector("#ensure").addEventListener("click", () => {
           exec_disabling_buttons(exports.wasm_ensure);
         });
+
+        document.querySelector("#clean_dry").addEventListener("click", () => {
+          exec_disabling_buttons(exports.wasm_clean_dry);
+        });
+        document.querySelector("#clean").addEventListener("click", () => {
+          exec_disabling_buttons(exports.wasm_clean);
+        });
       };
     </script>
     <div class="section">
@@ -216,13 +249,20 @@
     </div>
     <div class="section">
       <div id="spinner"><div class="loader">Loading...</div></div>
-      <button id="init" autocomplete="off">init</button>
-      <button id="fetch"      class="init_required" disabled autocomplete="off">fetch</button>
+      <button id="init_and_fetch" autocomplete="off">init &amp; fetch</button>
       <button id="status"     class="init_required fetch_required" disabled autocomplete="off">status</button>
       <button id="desired"    class="init_required fetch_required" disabled autocomplete="off">desired</button>
       <button id="diff"       class="init_required fetch_required" disabled autocomplete="off">diff</button>
       <button id="ensure_dry" class="init_required fetch_required" disabled autocomplete="off">ensure (dry run)</button>
       <button id="ensure"     class="init_required fetch_required" disabled autocomplete="off">ensure</button>
+      <button id="clean_dry"  class="init_required fetch_required" disabled autocomplete="off">clean (dry run)</button>
+      <button id="clean"      class="init_required fetch_required" disabled autocomplete="off">clean</button>
+
+      <p>
+        <div style="display: inline-block; width: 30px"></div>
+        <button id="init" autocomplete="off">init</button>
+        <button id="fetch"      class="init_required" disabled autocomplete="off">fetch</button>
+      </p>
     </div>
 
     <div id="information" class="section">

@@ -2,13 +2,14 @@ use peace::{
     cfg::{FlowId, Profile},
     resources::{
         resources::ts::{
-            Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired,
-            WithStatesDesired,
+            Cleaned, CleanedDry, Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates,
+            WithStatesCurrentAndDesired, WithStatesDesired,
         },
         Resources,
     },
     rt::cmds::{
-        DiffCmd, EnsureCmd, StatesCurrentDisplayCmd, StatesDesiredDisplayCmd, StatesDiscoverCmd,
+        CleanCmd, DiffCmd, EnsureCmd, StatesCurrentDisplayCmd, StatesDesiredDisplayCmd,
+        StatesDiscoverCmd,
     },
     rt_model::{
         CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, OutputWrite, Workspace, WorkspaceSpec,
@@ -175,6 +176,26 @@ where
     O: OutputWrite<DownloadError>,
 {
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
+    Ok(resources)
+}
+
+pub async fn clean_dry<O>(
+    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
+) -> Result<Resources<CleanedDry>, DownloadError>
+where
+    O: OutputWrite<DownloadError>,
+{
+    let CmdContext { resources, .. } = CleanCmd::exec_dry(cmd_context).await?;
+    Ok(resources)
+}
+
+pub async fn clean<O>(
+    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
+) -> Result<Resources<Cleaned>, DownloadError>
+where
+    O: OutputWrite<DownloadError>,
+{
+    let CmdContext { resources, .. } = CleanCmd::exec(cmd_context).await?;
     Ok(resources)
 }
 

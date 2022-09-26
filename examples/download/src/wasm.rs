@@ -8,11 +8,11 @@ use url::Url;
 use wasm_bindgen::prelude::*;
 
 pub use crate::{
-    cmd_context, desired, diff, ensure, ensure_dry, fetch, status, workspace_and_graph_setup,
-    DownloadArgs, DownloadCleanOpSpec, DownloadCommand, DownloadEnsureOpSpec, DownloadError,
-    DownloadItemSpec, DownloadParams, DownloadProfileInit, DownloadStateCurrentFnSpec,
-    DownloadStateDesiredFnSpec, DownloadStateDiffFnSpec, FileState, FileStateDiff,
-    WorkspaceAndGraph,
+    clean, clean_dry, cmd_context, desired, diff, ensure, ensure_dry, fetch, status,
+    workspace_and_graph_setup, DownloadArgs, DownloadCleanOpSpec, DownloadCommand,
+    DownloadEnsureOpSpec, DownloadError, DownloadItemSpec, DownloadParams, DownloadProfileInit,
+    DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec, DownloadStateDiffFnSpec, FileState,
+    FileStateDiff, WorkspaceAndGraph,
 };
 
 #[wasm_bindgen]
@@ -272,6 +272,68 @@ pub async fn wasm_ensure(
     resources.insert(content);
 
     let mut resources = ensure(cmd_context).await.map_err(into_js_err_value)?;
+    let output = in_memory_text_output.into_inner();
+
+    let content = resources
+        .remove::<std::collections::HashMap<PathBuf, String>>()
+        .ok_or(JsValue::from_str(
+            "Resources did not contain content HashMap.",
+        ))?;
+    Ok(WorkspaceAndContent {
+        workspace_and_graph,
+        content,
+        output,
+    })
+}
+
+#[wasm_bindgen]
+pub async fn wasm_clean_dry(
+    workspace_and_content: WorkspaceAndContent,
+) -> Result<WorkspaceAndContent, JsValue> {
+    let WorkspaceAndContent {
+        workspace_and_graph,
+        content,
+        output: _,
+    } = workspace_and_content;
+    let mut in_memory_text_output = InMemoryTextOutput::new();
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
+        .await
+        .map_err(into_js_err_value)?;
+    let resources = cmd_context.resources_mut();
+    resources.insert(content);
+
+    let mut resources = clean_dry(cmd_context).await.map_err(into_js_err_value)?;
+    let output = in_memory_text_output.into_inner();
+
+    let content = resources
+        .remove::<std::collections::HashMap<PathBuf, String>>()
+        .ok_or(JsValue::from_str(
+            "Resources did not contain content HashMap.",
+        ))?;
+    Ok(WorkspaceAndContent {
+        workspace_and_graph,
+        content,
+        output,
+    })
+}
+
+#[wasm_bindgen]
+pub async fn wasm_clean(
+    workspace_and_content: WorkspaceAndContent,
+) -> Result<WorkspaceAndContent, JsValue> {
+    let WorkspaceAndContent {
+        workspace_and_graph,
+        content,
+        output: _,
+    } = workspace_and_content;
+    let mut in_memory_text_output = InMemoryTextOutput::new();
+    let mut cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
+        .await
+        .map_err(into_js_err_value)?;
+    let resources = cmd_context.resources_mut();
+    resources.insert(content);
+
+    let mut resources = clean(cmd_context).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
 
     let content = resources
