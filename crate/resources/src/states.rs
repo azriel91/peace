@@ -1,8 +1,9 @@
 //! Resources that track current and desired states, and state diffs.
 
 pub use self::{
-    state_diffs::StateDiffs, states_current::StatesCurrent, states_desired::StatesDesired,
-    states_ensured::StatesEnsured, states_ensured_dry::StatesEnsuredDry,
+    state_diffs::StateDiffs, states_cleaned::StatesCleaned, states_cleaned_dry::StatesCleanedDry,
+    states_current::StatesCurrent, states_desired::StatesDesired, states_ensured::StatesEnsured,
+    states_ensured_dry::StatesEnsuredDry,
 };
 
 pub mod ts;
@@ -16,6 +17,8 @@ use type_reg::untagged::TypeMap;
 use crate::internal::StatesMut;
 
 mod state_diffs;
+mod states_cleaned;
+mod states_cleaned_dry;
 mod states_current;
 mod states_desired;
 mod states_ensured;

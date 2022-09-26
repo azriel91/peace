@@ -79,3 +79,29 @@ pub struct EnsuredDry;
 /// [`StateDiffs`]: crate::StateDiffs
 #[derive(Debug)]
 pub struct Ensured;
+
+/// [`Resources`] have been run through `CleanCmd::exec_dry`.
+///
+/// Implies [`SetUp`], [`WithStatesNowAndDesired`], and [`WithStateDiffs`].
+///
+/// [`Resources`]: crate::Resources
+/// [`StatesCurrent`]: crate::StatesCurrent
+/// [`StatesDesired`]: crate::StatesDesired
+/// [`StateDiffs`]: crate::StateDiffs
+#[derive(Debug)]
+pub struct CleanedDry;
+
+/// [`Resources`] have been run through `CleanCmd::exec`.
+///
+/// This means `StatesCurrent` is now stale, and [`StatesCleaned`] holds the up
+/// to date states.
+///
+/// Implies [`SetUp`], [`WithStatesNowAndDesired`], and [`WithStateDiffs`].
+///
+/// [`Resources`]: crate::Resources
+/// [`StatesCurrent`]: crate::StatesCurrent
+/// [`StatesDesired`]: crate::StatesDesired
+/// [`StatesCleaned`]: crate::StatesCleaned
+/// [`StateDiffs`]: crate::StateDiffs
+#[derive(Debug)]
+pub struct Cleaned;

@@ -1,5 +1,6 @@
 use peace_resources::states::{
-    StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry,
+    StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
+    StatesEnsuredDry,
 };
 use peace_rt_model_core::{async_trait, OutputWrite};
 
@@ -67,6 +68,23 @@ where
     async fn write_states_ensured(&mut self, states_ensured: &StatesEnsured) -> Result<(), E> {
         self.buffer =
             serde_yaml::to_string(states_ensured).map_err(Error::StatesEnsuredSerialize)?;
+
+        Ok(())
+    }
+
+    async fn write_states_cleaned_dry(
+        &mut self,
+        states_cleaned_dry: &StatesCleanedDry,
+    ) -> Result<(), E> {
+        self.buffer =
+            serde_yaml::to_string(states_cleaned_dry).map_err(Error::StatesCleanedDrySerialize)?;
+
+        Ok(())
+    }
+
+    async fn write_states_cleaned(&mut self, states_cleaned: &StatesCleaned) -> Result<(), E> {
+        self.buffer =
+            serde_yaml::to_string(states_cleaned).map_err(Error::StatesCleanedSerialize)?;
 
         Ok(())
     }

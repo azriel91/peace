@@ -1,5 +1,6 @@
 use peace_resources::states::{
-    StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry,
+    StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
+    StatesEnsuredDry,
 };
 use peace_rt_model_core::{async_trait, OutputWrite};
 use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
@@ -106,6 +107,33 @@ where
 
         self.writer
             .write_all(states_ensured_serialized.as_bytes())
+            .await
+            .map_err(Error::StdoutWrite)?;
+
+        Ok(())
+    }
+
+    async fn write_states_cleaned_dry(
+        &mut self,
+        states_cleaned_dry: &StatesCleanedDry,
+    ) -> Result<(), E> {
+        let states_cleaned_dry_serialized =
+            serde_yaml::to_string(states_cleaned_dry).map_err(Error::StatesCleanedDrySerialize)?;
+
+        self.writer
+            .write_all(states_cleaned_dry_serialized.as_bytes())
+            .await
+            .map_err(Error::StdoutWrite)?;
+
+        Ok(())
+    }
+
+    async fn write_states_cleaned(&mut self, states_cleaned: &StatesCleaned) -> Result<(), E> {
+        let states_cleaned_serialized =
+            serde_yaml::to_string(states_cleaned).map_err(Error::StatesCleanedSerialize)?;
+
+        self.writer
+            .write_all(states_cleaned_serialized.as_bytes())
             .await
             .map_err(Error::StdoutWrite)?;
 

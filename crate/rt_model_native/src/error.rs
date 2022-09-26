@@ -38,10 +38,16 @@ pub enum Error {
     /// Failed to serialize dry-ensured states.
     #[error("Failed to serialize dry-ensured states.")]
     StatesEnsuredDrySerialize(#[source] serde_yaml::Error),
-
     /// Failed to serialize ensured states.
     #[error("Failed to serialize ensured states.")]
     StatesEnsuredSerialize(#[source] serde_yaml::Error),
+
+    /// Failed to serialize dry-cleaned states.
+    #[error("Failed to serialize dry-cleaned states.")]
+    StatesCleanedDrySerialize(#[source] serde_yaml::Error),
+    /// Failed to serialize cleaned states.
+    #[error("Failed to serialize cleaned states.")]
+    StatesCleanedSerialize(#[source] serde_yaml::Error),
 
     /// Failed to serialize workspace init params.
     #[error("Failed to serialize workspace init params.")]

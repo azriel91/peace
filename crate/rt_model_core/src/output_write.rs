@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use peace_resources::states::{
-    StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry,
+    StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
+    StatesEnsuredDry,
 };
 
 /// Transforms return values or errors into a suitable output format.
@@ -48,6 +49,21 @@ pub trait OutputWrite<E> {
 
     /// Writes ensured states to the output.
     async fn write_states_ensured(&mut self, states_ensured: &StatesEnsured) -> Result<(), E>
+    where
+        E: std::error::Error;
+
+    /// Writes dry-cleaned states to the output.
+    ///
+    /// These are the states that are simulated to be cleaned.
+    async fn write_states_cleaned_dry(
+        &mut self,
+        states_cleaned_dry: &StatesCleanedDry,
+    ) -> Result<(), E>
+    where
+        E: std::error::Error;
+
+    /// Writes cleaned states to the output.
+    async fn write_states_cleaned(&mut self, states_cleaned: &StatesCleaned) -> Result<(), E>
     where
         E: std::error::Error;
 

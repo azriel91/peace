@@ -5,10 +5,13 @@ use std::{
 
 use crate::{
     resources::ts::{
-        Empty, Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired,
-        WithStatesDesired,
+        Cleaned, CleanedDry, Empty, Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates,
+        WithStatesCurrentAndDesired, WithStatesDesired,
     },
-    states::{StateDiffs, StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry},
+    states::{
+        StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
+        StatesEnsuredDry,
+    },
 };
 
 pub mod ts;
@@ -150,6 +153,30 @@ impl From<(Resources<WithStateDiffs>, StatesEnsuredDry)> for Resources<EnsuredDr
 impl From<(Resources<WithStateDiffs>, StatesEnsured)> for Resources<Ensured> {
     fn from((mut resources, states_ensured): (Resources<WithStateDiffs>, StatesEnsured)) -> Self {
         resources.insert(states_ensured);
+
+        Self {
+            inner: resources.into_inner(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl From<(Resources<WithStates>, StatesCleanedDry)> for Resources<CleanedDry> {
+    fn from(
+        (mut resources, states_cleaned_dry): (Resources<WithStates>, StatesCleanedDry),
+    ) -> Self {
+        resources.insert(states_cleaned_dry);
+
+        Self {
+            inner: resources.into_inner(),
+            marker: PhantomData,
+        }
+    }
+}
+
+impl From<(Resources<WithStates>, StatesCleaned)> for Resources<Cleaned> {
+    fn from((mut resources, states_cleaned): (Resources<WithStates>, StatesCleaned)) -> Self {
+        resources.insert(states_cleaned);
 
         Self {
             inner: resources.into_inner(),
