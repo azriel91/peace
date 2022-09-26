@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use fn_graph::{DataAccess, DataAccessDyn};
 use peace_cfg::{async_trait, ItemSpecId, OpCheckStatus};
 use peace_resources::{
-    resources::ts::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
+    resources::ts::{Empty, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired},
     type_reg::untagged::DataType,
     Resources,
 };
@@ -58,6 +58,17 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     where
         E: Debug + std::error::Error;
 
+    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`exec`].
+    ///
+    /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    /// [`exec`]: peace_cfg::FnSpec::exec
+    async fn state_cleaned_fn_exec(
+        &self,
+        resources: &Resources<WithStates>,
+    ) -> Result<Box<dyn DataType>, E>
+    where
+        E: Debug + std::error::Error;
+
     /// Runs [`ItemSpec::StateDesiredFnSpec`]`::`[`desired`].
     ///
     /// [`ItemSpec::StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
@@ -103,6 +114,30 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// [`ItemSpec::EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     /// [`exec`]: peace_cfg::OpSpec::exec
     async fn ensure_op_exec(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E>
+    where
+        E: Debug + std::error::Error;
+
+    /// Runs [`ItemSpec::CleanOpSpec`]`::`[`check`].
+    ///
+    /// [`ItemSpec::CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
+    /// [`check`]: peace_cfg::OpSpec::check
+    async fn clean_op_check(&self, resources: &Resources<WithStates>) -> Result<OpCheckStatus, E>
+    where
+        E: Debug + std::error::Error;
+
+    /// Runs [`ItemSpec::CleanOpSpec`]`::`[`exec_dry`].
+    ///
+    /// [`ItemSpec::CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
+    /// [`exec_dry`]: peace_cfg::OpSpec::exec_dry
+    async fn clean_op_exec_dry(&self, resources: &Resources<WithStates>) -> Result<(), E>
+    where
+        E: Debug + std::error::Error;
+
+    /// Runs [`ItemSpec::CleanOpSpec`]`::`[`exec`].
+    ///
+    /// [`ItemSpec::CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
+    /// [`exec`]: peace_cfg::OpSpec::exec
+    async fn clean_op_exec(&self, resources: &Resources<WithStates>) -> Result<(), E>
     where
         E: Debug + std::error::Error;
 }

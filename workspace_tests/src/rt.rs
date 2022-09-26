@@ -1,3 +1,4 @@
+mod clean_cmd;
 mod diff_cmd;
 mod ensure_cmd;
 mod states_current_discover_cmd;

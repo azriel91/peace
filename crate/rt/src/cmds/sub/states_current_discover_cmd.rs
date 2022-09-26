@@ -141,6 +141,65 @@ where
         Ok(states)
     }
 
+    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    ///
+    /// Same as [`Self::exec`], but does not change the type state, and returns
+    /// [`StatesCurrent`].
+    ///
+    /// [`exec`]: peace_cfg::FnSpec::exec
+    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    pub(crate) async fn exec_internal_for_clean_dry(
+        item_spec_graph: &ItemSpecGraph<E>,
+        resources: &Resources<WithStates>,
+    ) -> Result<StatesCurrent, E> {
+        let states_mut = item_spec_graph
+            .stream()
+            .map(Result::<_, E>::Ok)
+            .map_ok(|item_spec| async move {
+                let state = item_spec.state_cleaned_fn_exec(resources).await?;
+                Ok((item_spec.id(), state))
+            })
+            .try_buffer_unordered(BUFFERED_FUTURES_MAX)
+            .try_collect::<StatesMut<Current>>()
+            .await?;
+
+        let states = StatesCurrent::from(states_mut);
+        // We don't serialize states to disk as this is for a dry run.
+
+        Ok(states)
+    }
+
+    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    ///
+    /// Same as [`Self::exec`], but does not change the type state, and returns
+    /// [`StatesCurrent`].
+    ///
+    /// [`exec`]: peace_cfg::FnSpec::exec
+    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    pub(crate) async fn exec_internal_for_clean(
+        item_spec_graph: &ItemSpecGraph<E>,
+        resources: &mut Resources<WithStates>,
+    ) -> Result<StatesCurrent, E> {
+        let resources_ref = &*resources;
+        let states_mut = item_spec_graph
+            .stream()
+            .map(Result::<_, E>::Ok)
+            .map_ok(|item_spec| async move {
+                let state = item_spec.state_cleaned_fn_exec(resources_ref).await?;
+                Ok((item_spec.id(), state))
+            })
+            .try_buffer_unordered(BUFFERED_FUTURES_MAX)
+            .try_collect::<StatesMut<Current>>()
+            .await?;
+
+        let states = StatesCurrent::from(states_mut);
+        Self::serialize_internal(resources, &states).await?;
+
+        Ok(states)
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     async fn serialize_internal<TS>(
         resources: &mut Resources<TS>,

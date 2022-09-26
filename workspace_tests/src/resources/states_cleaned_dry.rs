@@ -1,6 +1,6 @@
 use peace::resources::{
-    resources::ts::{SetUp, WithStatesCurrentAndDesired},
-    states::{StateDiffs, StatesCleanedDry, StatesCurrent, StatesDesired},
+    resources::ts::{SetUp, WithStates},
+    states::{StatesCleanedDry, StatesCurrent},
     Resources,
 };
 
