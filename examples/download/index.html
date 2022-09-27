@@ -4,6 +4,13 @@
   </head>
   <body>
     <style type="text/css">
+      /* https://gist.github.com/JoeyBurzynski/617fb6201335779f8424ad9528b72c41 */
+      html {
+        max-width: 70ch;
+        padding: 3em 1em;
+        margin: auto;
+        line-height: 1.75;
+      }
       body {
         font-family: Verdana, sans-serif;
       }
@@ -22,16 +29,16 @@
         display: inline-block;
         width: 300px;
       }
-      #in_memory_contents {
-        vertical-align: top;
-        display: inline-block;
-      }
       #spinner {
         display: inline-block;
         width: 30px;
         height: 15px;
         vertical-align: top;
         visibility: hidden;
+      }
+      .group {
+        display: inline-block;
+        vertical-align: top;
       }
       .section {
         padding: 10px;
@@ -243,26 +250,26 @@
     </script>
     <div class="section">
       <fieldset>
-        <label for="path">file name:</label><input id="path" value="ip.json" /><br/>
-        <label for="url">url:</label><input id="url" value="https://ipecho.net/plain" /><br/>
+        <label for="path">file name:</label><input id="path" value="ip.json" /><br />
+        <label for="url">url:</label><input id="url" value="https://ipecho.net/plain" /><br />
       </fieldset>
     </div>
     <div class="section">
-      <div id="spinner"><div class="loader">Loading...</div></div>
-      <button id="init_and_fetch" autocomplete="off">init &amp; fetch</button>
-      <button id="status"     class="init_required fetch_required" disabled autocomplete="off">status</button>
-      <button id="desired"    class="init_required fetch_required" disabled autocomplete="off">desired</button>
-      <button id="diff"       class="init_required fetch_required" disabled autocomplete="off">diff</button>
-      <button id="ensure_dry" class="init_required fetch_required" disabled autocomplete="off">ensure (dry run)</button>
-      <button id="ensure"     class="init_required fetch_required" disabled autocomplete="off">ensure</button>
-      <button id="clean_dry"  class="init_required fetch_required" disabled autocomplete="off">clean (dry run)</button>
-      <button id="clean"      class="init_required fetch_required" disabled autocomplete="off">clean</button>
-
-      <p>
-        <div style="display: inline-block; width: 30px"></div>
+      <div id="spinner"><div class="loader">Loading...</div></div><br/>
+      <div class="group">
+        <button id="init_and_fetch" autocomplete="off">init &amp; fetch</button><br />
         <button id="init" autocomplete="off">init</button>
         <button id="fetch"      class="init_required" disabled autocomplete="off">fetch</button>
-      </p>
+      </div>
+      <div class="group">
+        <button id="status"     class="init_required fetch_required" disabled autocomplete="off">status</button>
+        <button id="desired"    class="init_required fetch_required" disabled autocomplete="off">desired</button>
+        <button id="diff"       class="init_required fetch_required" disabled autocomplete="off">diff</button>
+        <button id="ensure_dry" class="init_required fetch_required" disabled autocomplete="off">ensure (dry run)</button>
+        <button id="ensure"     class="init_required fetch_required" disabled autocomplete="off">ensure</button>
+        <button id="clean_dry"  class="init_required fetch_required" disabled autocomplete="off">clean (dry run)</button>
+        <button id="clean"      class="init_required fetch_required" disabled autocomplete="off">clean</button>
+      </div>
     </div>
 
     <div id="information" class="section">
@@ -271,7 +278,7 @@
         <div id="cmd_output_value"></div>
       </div>
 
-      <div id="in_memory_contents">
+      <div id="in_memory_contents" class="group">
         In-memory contents:
         <div id="in_memory_contents_value"></div>
       </div>
