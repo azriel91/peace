@@ -1,6 +1,6 @@
 [package]
 name = "download"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
 

@@ -1,6 +1,6 @@
 [package]
 name = "workspace_tests"
-version = "0.0.2"
+version = "0.0.3"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
 description = "Tests for the peace automation library."
@@ -18,7 +18,7 @@ test = true
 
 [dev-dependencies]
 diff-struct = "0.4.2"
-peace = { path = "..", version = "0.0.2" }
+peace = { path = "..", version = "0.0.3" }
 serde = { version = "1.0.145", features = ["derive"] }
 serde_yaml = "0.9.13"
 tempfile = "3.3.0"

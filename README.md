@@ -22,25 +22,29 @@ See:
 
 ## Features
 
-| Symbol | Meaning          |
-| :----: | ---------------- |
-|   🟢   | Supported        |
-|   🟡   | Work in progress |
-|   ⚫   | Planned          |
+| Symbol | Meaning           |
+|:------:|:------------------|
+|   🟢   | Works well        |
+|   🟡   | Work in progress  |
+|   ⚫   | Planned           |
+|   🔵   | Works, "fun idea" |
 
-* 🟢 Fetch current state.
-* 🟢 Fetch desired state.
+* 🟢 Define items to manage
+* 🟢 Define dependencies between items
+* 🟢 Fetch current and desired states
 * 🟢 Workflow graph with task dependencies
 * 🟢 Concurrent task execution
-* 🟢 Dry run
 * 🟢 Skip unnecessary work
+* 🟢 Show state differences
+* 🟢 Namespaced profile directories
+* 🟢 Dry run
+* 🟢 Resource clean up
+* 🔵 WASM support
 * ⚫ Understandable error reporting
+* ⚫ Understandable progress
 * ⚫ Feature-gated incremental functionality
 * ⚫ Built-in application execution methods -- CLI, web service
-* ⚫ Understandable progress
 * ⚫ Actionable error messages
-* ⚫ Namespaced working directory
-* ⚫ Resource clean up
 * ⚫ `peace` binary for configuration based workflows
 * ⚫ Off-the-shelf support for common tasks
 * ⚫ Web based UI
