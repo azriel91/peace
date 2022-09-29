@@ -1,8 +1,5 @@
 #[cfg(target_arch = "wasm32")]
-use std::path::PathBuf;
-
-#[cfg(target_arch = "wasm32")]
-use peace::data::W;
+use peace::rt_model::Storage;
 
 use peace::data::{Data, R};
 
@@ -16,9 +13,11 @@ pub struct DownloadParams<'op> {
     /// Url of the file to download.
     download_profile_init: R<'op, DownloadProfileInit>,
 
-    // For wasm, we use a map to hold the file content.
+    /// For wasm, we write to web storage through the `Storage` object.
+    ///
+    /// Presumably we should be able to use this for `NativeStorage` as well.
     #[cfg(target_arch = "wasm32")]
-    in_memory_contents: W<'op, std::collections::HashMap<PathBuf, String>>,
+    storage: R<'op, Storage>,
 }
 
 impl<'op> DownloadParams<'op> {
@@ -37,12 +36,12 @@ impl<'op> DownloadParams<'op> {
     pub fn new(
         client: R<'op, reqwest::Client>,
         download_profile_init: R<'op, DownloadProfileInit>,
-        in_memory_contents: W<'op, std::collections::HashMap<PathBuf, String>>,
+        storage: R<'op, Storage>,
     ) -> Self {
         Self {
             client,
             download_profile_init,
-            in_memory_contents,
+            storage,
         }
     }
 
@@ -55,12 +54,7 @@ impl<'op> DownloadParams<'op> {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub fn in_memory_contents(&self) -> &std::collections::HashMap<PathBuf, String> {
-        &*self.in_memory_contents
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    pub fn in_memory_contents_mut(&mut self) -> &mut std::collections::HashMap<PathBuf, String> {
-        &mut *self.in_memory_contents
+    pub fn storage(&self) -> &Storage {
+        &*self.storage
     }
 }

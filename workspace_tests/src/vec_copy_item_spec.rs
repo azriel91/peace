@@ -32,7 +32,7 @@ pub type VecCopyItemSpecWrapper = ItemSpecWrapper<
     VecCopyCleanOpSpec,
 >;
 
-/// Copies bytes from one `Vec` to another.
+/// Copies bytes from `VecA` to `VecB`.
 #[derive(Debug)]
 pub struct VecCopyItemSpec;
 

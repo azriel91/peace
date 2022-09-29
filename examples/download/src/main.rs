@@ -5,8 +5,8 @@ use peace::{
 };
 
 use download::{
-    cmd_context, desired, diff, ensure, ensure_dry, fetch, status, workspace_and_graph_setup,
-    DownloadArgs, DownloadCommand, DownloadError, DownloadProfileInit,
+    clean, clean_dry, cmd_context, desired, diff, ensure, ensure_dry, fetch, status,
+    workspace_and_graph_setup, DownloadArgs, DownloadCommand, DownloadError, DownloadProfileInit,
 };
 
 pub fn main() -> Result<(), DownloadError> {
@@ -72,6 +72,18 @@ pub fn main() -> Result<(), DownloadError> {
                     workspace_and_graph_setup(workspace_spec, profile, flow_id).await?;
                 let cmd_context = cmd_context(&workspace_and_graph, &mut cli_output, None).await?;
                 ensure(cmd_context).await?;
+            }
+            DownloadCommand::CleanDry => {
+                let workspace_and_graph =
+                    workspace_and_graph_setup(workspace_spec, profile, flow_id).await?;
+                let cmd_context = cmd_context(&workspace_and_graph, &mut cli_output, None).await?;
+                clean_dry(cmd_context).await?;
+            }
+            DownloadCommand::Clean => {
+                let workspace_and_graph =
+                    workspace_and_graph_setup(workspace_spec, profile, flow_id).await?;
+                let cmd_context = cmd_context(&workspace_and_graph, &mut cli_output, None).await?;
+                clean(cmd_context).await?;
             }
         }
 

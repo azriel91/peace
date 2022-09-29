@@ -41,4 +41,8 @@ pub enum DownloadCommand {
     EnsureDry,
     /// Executes the download if necessary.
     Ensure,
+    /// Dry-run to clean the downloaded file.
+    CleanDry,
+    /// Cleans the downloaded file.
+    Clean,
 }

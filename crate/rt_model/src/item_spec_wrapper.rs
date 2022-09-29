@@ -8,7 +8,7 @@ use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{async_trait, nougat::Gat, FnSpec, ItemSpec, ItemSpecId, OpCheckStatus, State};
 use peace_data::Data;
 use peace_resources::{
-    resources::ts::{Empty, SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
+    resources::ts::{Empty, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired},
     states::{StateDiffs, StatesCurrent, StatesDesired},
     type_reg::untagged::DataType,
     Resources,
@@ -470,6 +470,20 @@ where
         Ok(Box::new(state))
     }
 
+    async fn state_cleaned_fn_exec(
+        &self,
+        resources: &Resources<WithStates>,
+    ) -> Result<Box<dyn DataType>, E> {
+        let state: State<StateLogical, StatePhysical> = {
+            let data = <Gat!(<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
+                resources,
+            );
+            <StateCurrentFnSpec as FnSpec>::exec(data).await?
+        };
+
+        Ok(Box::new(state))
+    }
+
     async fn state_desired_fn_exec(
         &self,
         resources: &Resources<SetUp>,
@@ -601,6 +615,64 @@ where
             panic!(
                 "`ItemSpecWrapper::ensure_op_exec` must only be called with `StatesCurrent`, `StatesDesired`, and \
                 `StateDiffs` populated using `DiffCmd`."
+            );
+        }
+
+        Ok(())
+    }
+
+    async fn clean_op_check(&self, resources: &Resources<WithStates>) -> Result<OpCheckStatus, E> {
+        let op_check_status = {
+            let data = <Gat!(<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_>) as Data>::borrow(
+                resources,
+            );
+            let item_spec_id = <IS as ItemSpec>::id(self);
+            let states = resources.borrow::<StatesCurrent>();
+            let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+
+            if let Some(state) = state {
+                <CleanOpSpec as peace_cfg::CleanOpSpec>::check(data, state).await?
+            } else {
+                panic!(
+                    "`ItemSpecWrapper::clean_op_check` must only be called with `StatesCurrent`, `StatesDesired`, and \
+                    `StateDiffs` populated using `DiffCmd`."
+                );
+            }
+        };
+
+        Ok(op_check_status)
+    }
+
+    async fn clean_op_exec_dry(&self, resources: &Resources<WithStates>) -> Result<(), E> {
+        let data =
+            <Gat!(<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_>) as Data>::borrow(resources);
+        let item_spec_id = <IS as ItemSpec>::id(self);
+        let states = resources.borrow::<StatesCurrent>();
+        let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+
+        if let Some(state) = state {
+            <CleanOpSpec as peace_cfg::CleanOpSpec>::exec_dry(data, state).await?;
+        } else {
+            panic!(
+                "`ItemSpecWrapper::clean_op_exec_dry` must only be called with `StatesCurrent` populated using `StatesCurrentDiscoverCmd`."
+            );
+        }
+
+        Ok(())
+    }
+
+    async fn clean_op_exec(&self, resources: &Resources<WithStates>) -> Result<(), E> {
+        let data =
+            <Gat!(<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_>) as Data>::borrow(resources);
+        let item_spec_id = <IS as ItemSpec>::id(self);
+        let states = resources.borrow::<StatesCurrent>();
+        let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+
+        if let Some(state) = state {
+            <CleanOpSpec as peace_cfg::CleanOpSpec>::exec(data, state).await?;
+        } else {
+            panic!(
+                "`ItemSpecWrapper::clean_op_exec` must only be called with `StatesCurrent` populated using `StatesCurrentDiscoverCmd`."
             );
         }
 

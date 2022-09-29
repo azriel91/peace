@@ -1,6 +1,4 @@
-#[cfg(not(target_arch = "wasm32"))]
-use std::path::Path;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[cfg(not(target_arch = "wasm32"))]
 use bytes::Bytes;
@@ -10,6 +8,9 @@ use futures::{Stream, StreamExt, TryStreamExt};
 use tokio::io::AsyncWriteExt;
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::{fs::File, io::BufWriter};
+
+#[cfg(target_arch = "wasm32")]
+use peace::rt_model::Storage;
 
 #[nougat::gat(Data)]
 use peace::cfg::EnsureOpSpec;
@@ -47,9 +48,8 @@ impl DownloadEnsureOpSpec {
         // https://github.com/seanmonstar/reqwest/issues/1424
         #[cfg(target_arch = "wasm32")]
         {
-            let mut download_params = download_params;
-            let dest = download_params.download_profile_init().dest().to_path_buf();
-            Self::stream_write(dest, download_params.in_memory_contents_mut(), response).await?;
+            let dest = download_params.download_profile_init().dest();
+            Self::stream_write(dest, download_params.storage(), response).await?;
         }
 
         Ok(())
@@ -88,8 +88,8 @@ impl DownloadEnsureOpSpec {
     /// Streams the content to disk.
     #[cfg(target_arch = "wasm32")]
     async fn stream_write(
-        dest_path: PathBuf,
-        in_memory_contents: &mut std::collections::HashMap<PathBuf, String>,
+        dest_path: &Path,
+        storage: &Storage,
         response: reqwest::Response,
     ) -> Result<(), DownloadError> {
         let response_text = response.text();
@@ -97,7 +97,7 @@ impl DownloadEnsureOpSpec {
             .await
             .map_err(DownloadError::ResponseTextRead)?;
 
-        in_memory_contents.insert(dest_path, contents);
+        storage.set_item(dest_path, &contents)?;
 
         Ok(())
     }

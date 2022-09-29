@@ -38,28 +38,34 @@ pub enum Error {
     /// Failed to serialize dry-ensured states.
     #[error("Failed to serialize dry-ensured states.")]
     StatesEnsuredDrySerialize(#[source] serde_yaml::Error),
-
     /// Failed to serialize ensured states.
     #[error("Failed to serialize ensured states.")]
     StatesEnsuredSerialize(#[source] serde_yaml::Error),
+
+    /// Failed to serialize dry-cleaned states.
+    #[error("Failed to serialize dry-cleaned states.")]
+    StatesCleanedDrySerialize(#[source] serde_yaml::Error),
+    /// Failed to serialize cleaned states.
+    #[error("Failed to serialize cleaned states.")]
+    StatesCleanedSerialize(#[source] serde_yaml::Error),
 
     /// Failed to serialize workspace init params.
     #[error("Failed to serialize workspace init params.")]
     WorkspaceInitParamsSerialize(#[source] serde_yaml::Error),
     /// Failed to deserialize workspace init params.
-    #[error("Failed to serialize workspace init params.")]
+    #[error("Failed to deserialize workspace init params.")]
     WorkspaceInitParamsDeserialize(#[source] serde_yaml::Error),
     /// Failed to serialize profile init params.
     #[error("Failed to serialize profile init params.")]
     ProfileInitParamsSerialize(#[source] serde_yaml::Error),
     /// Failed to deserialize profile init params.
-    #[error("Failed to serialize profile init params.")]
+    #[error("Failed to deserialize profile init params.")]
     ProfileInitParamsDeserialize(#[source] serde_yaml::Error),
     /// Failed to serialize flow init params.
     #[error("Failed to serialize flow init params.")]
     FlowInitParamsSerialize(#[source] serde_yaml::Error),
     /// Failed to deserialize flow init params.
-    #[error("Failed to serialize flow init params.")]
+    #[error("Failed to deserialize flow init params.")]
     FlowInitParamsDeserialize(#[source] serde_yaml::Error),
 
     /// Item does not exist in storage.
@@ -133,6 +139,19 @@ pub enum Error {
         path: PathBuf,
         /// Value which failed to be set.
         value: String,
+        /// Stringified JS error.
+        error: String,
+    },
+    /// Failed to remove an item from browser storage.
+    ///
+    /// This failure mode happens when the `get_item` call to the browser fails.
+    ///
+    /// Note: The original `JsValue` error is converted to a `String` to allow
+    /// this type to be `Send`.
+    #[error("Failed to remove an item from browser storage: `{path}`. Error: `{error}`")]
+    StorageRemoveItem {
+        /// Key to remove.
+        path: PathBuf,
         /// Stringified JS error.
         error: String,
     },

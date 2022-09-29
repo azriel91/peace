@@ -4,6 +4,13 @@
   </head>
   <body>
     <style type="text/css">
+      /* https://gist.github.com/JoeyBurzynski/617fb6201335779f8424ad9528b72c41 */
+      html {
+        max-width: 70ch;
+        padding: 3em 1em;
+        margin: auto;
+        line-height: 1.75;
+      }
       body {
         font-family: Verdana, sans-serif;
       }
@@ -22,16 +29,16 @@
         display: inline-block;
         width: 300px;
       }
-      #in_memory_contents {
-        vertical-align: top;
-        display: inline-block;
-      }
       #spinner {
         display: inline-block;
         width: 30px;
         height: 15px;
         vertical-align: top;
         visibility: hidden;
+      }
+      .group {
+        display: inline-block;
+        vertical-align: top;
       }
       .section {
         padding: 10px;
@@ -104,19 +111,45 @@
       window.onload = async function() {
         await init();
 
-        let workspace_and_content_global;
+        let workspace_and_output_global;
         const spinner = document.querySelector("#spinner");
+
+        document.querySelector("#init_and_fetch").addEventListener("click", () => {
+          const path = document.querySelector("#path").value;
+          const url = document.querySelector("#url").value;
+
+          document.querySelectorAll("button").forEach(element => element.setAttribute("disabled", "disabled"));
+          spinner_show();
+
+          exports.wasm_init(url, path)
+            .then(exports.wasm_fetch)
+            .then(workspace_and_output => {
+              workspace_and_output_global = workspace_and_output;
+              update_state(workspace_and_output_global);
+            })
+            .then(() => {
+              document.querySelectorAll(".init_required").forEach(element => element.removeAttribute("disabled"));
+              document.querySelectorAll(".fetch_required").forEach(element => element.removeAttribute("disabled"));
+              spinner_hide();
+            });
+        });
 
         document.querySelector("#init").addEventListener("click", () => {
           const path = document.querySelector("#path").value;
           const url = document.querySelector("#url").value;
-          exports.wasm_init(url, path)
-            .then(workspace_and_content => {
-              workspace_and_content_global = workspace_and_content;
-              update_state(workspace_and_content_global);
 
+          document.querySelectorAll("button").forEach(element => element.setAttribute("disabled", "disabled"));
+          spinner_show();
+
+          exports.wasm_init(url, path)
+            .then(workspace_and_output => {
+              workspace_and_output_global = workspace_and_output;
+              update_state(workspace_and_output_global);
+            })
+            .then(() => {
               document.querySelectorAll(".init_required").forEach(element => element.removeAttribute("disabled"));
               document.querySelectorAll(".fetch_required").forEach(element => element.setAttribute("disabled", "disabled"));
+              spinner_hide();
             });
         });
 
@@ -129,30 +162,31 @@
         }
 
         /**
-         * Updates the `#cmd_output_value` text output and `workspace_and_content_global` table
+         * Updates the `#cmd_output_value` text output and `workspace_and_output_global` table
          * output elements with the latest content.
          */
-        function update_state(workspace_and_content) {
-          workspace_and_content_global = workspace_and_content;
-          const in_memory_contents = document.querySelector("#in_memory_contents_value");
+        function update_state(workspace_and_output) {
+          workspace_and_output_global = workspace_and_output;
+          const session_storage_contents = document.querySelector("#session_storage_contents_value");
 
-          document.querySelector("#cmd_output_value").innerHTML = `<pre>${workspace_and_content_global.output}</pre>`;
+          document.querySelector("#cmd_output_value").innerHTML = `<pre>${workspace_and_output_global.output}</pre>`;
 
           try {
-            const contents = workspace_and_content_global.contents();
+
             let innerHtml = "<table><thead><tr><th>key</th><th>value</th></tr></thead><tbody>";
-            if (contents != null && Object.entries(contents).length > 0) {
-              Object.entries(contents)
-                .forEach(([key, value]) => {1
+            if (Object.entries(window.sessionStorage).length > 0) {
+              Object.entries(window.sessionStorage)
+                .filter(([key, _]) => key.length !== 0 && !key.startsWith(".peace"))
+                .forEach(([key, value]) => {
                   innerHtml += `<tr><td>${key}</td><td>${value}</td></tr>`;
                 });
             } else {
               innerHtml += "<tr><td>empty</td><td></td></tr>";
             }
             innerHtml += "</tbody></table>";
-            in_memory_contents.innerHTML = innerHtml;
+            session_storage_contents.innerHTML = innerHtml;
           } catch (e) {
-            in_memory_contents.innerHTML = `error: ${e}`;
+            session_storage_contents.innerHTML = `error: ${e}`;
           }
         }
 
@@ -161,19 +195,19 @@
           document.querySelectorAll("button").forEach(element => element.setAttribute("disabled", "disabled"));
           spinner_show();
 
-          fn_ref(workspace_and_content_global)
+          fn_ref(workspace_and_output_global)
             .then(update_state_and_enable_buttons)
             .catch((e) => {
               // Indicate that nothing is in progress
               spinner_hide();
 
               // Provide feedback to the user.
-              in_memory_contents.innerHTML = `error: ${e}`;
+              session_storage_contents.innerHTML = `error: ${e}`;
             });
         }
 
-        function update_state_and_enable_buttons(workspace_and_content) {
-          update_state(workspace_and_content);
+        function update_state_and_enable_buttons(workspace_and_output) {
+          update_state(workspace_and_output);
 
           // Indicate that nothing is in progress
           spinner_hide();
@@ -206,23 +240,37 @@
         document.querySelector("#ensure").addEventListener("click", () => {
           exec_disabling_buttons(exports.wasm_ensure);
         });
+
+        document.querySelector("#clean_dry").addEventListener("click", () => {
+          exec_disabling_buttons(exports.wasm_clean_dry);
+        });
+        document.querySelector("#clean").addEventListener("click", () => {
+          exec_disabling_buttons(exports.wasm_clean);
+        });
       };
     </script>
     <div class="section">
       <fieldset>
-        <label for="path">file name:</label><input id="path" value="ip.json" /><br/>
-        <label for="url">url:</label><input id="url" value="https://ipecho.net/plain" /><br/>
+        <label for="path">file name:</label><input id="path" value="ip.json" /><br />
+        <label for="url">url:</label><input id="url" value="https://ipecho.net/plain" /><br />
       </fieldset>
     </div>
     <div class="section">
-      <div id="spinner"><div class="loader">Loading...</div></div>
-      <button id="init" autocomplete="off">init</button>
-      <button id="fetch"      class="init_required" disabled autocomplete="off">fetch</button>
-      <button id="status"     class="init_required fetch_required" disabled autocomplete="off">status</button>
-      <button id="desired"    class="init_required fetch_required" disabled autocomplete="off">desired</button>
-      <button id="diff"       class="init_required fetch_required" disabled autocomplete="off">diff</button>
-      <button id="ensure_dry" class="init_required fetch_required" disabled autocomplete="off">ensure (dry run)</button>
-      <button id="ensure"     class="init_required fetch_required" disabled autocomplete="off">ensure</button>
+      <div id="spinner"><div class="loader">Loading...</div></div><br/>
+      <div class="group">
+        <button id="init_and_fetch" autocomplete="off">init &amp; fetch</button><br />
+        <button id="init" autocomplete="off">init</button>
+        <button id="fetch"      class="init_required" disabled autocomplete="off">fetch</button>
+      </div>
+      <div class="group">
+        <button id="status"     class="init_required fetch_required" disabled autocomplete="off">status</button>
+        <button id="desired"    class="init_required fetch_required" disabled autocomplete="off">desired</button>
+        <button id="diff"       class="init_required fetch_required" disabled autocomplete="off">diff</button>
+        <button id="ensure_dry" class="init_required fetch_required" disabled autocomplete="off">ensure (dry run)</button>
+        <button id="ensure"     class="init_required fetch_required" disabled autocomplete="off">ensure</button>
+        <button id="clean_dry"  class="init_required fetch_required" disabled autocomplete="off">clean (dry run)</button>
+        <button id="clean"      class="init_required fetch_required" disabled autocomplete="off">clean</button>
+      </div>
     </div>
 
     <div id="information" class="section">
@@ -231,9 +279,9 @@
         <div id="cmd_output_value"></div>
       </div>
 
-      <div id="in_memory_contents">
+      <div id="session_storage_contents" class="group">
         In-memory contents:
-        <div id="in_memory_contents_value"></div>
+        <div id="session_storage_contents_value"></div>
       </div>
     </div>
   </body>

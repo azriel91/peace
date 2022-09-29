@@ -84,7 +84,7 @@ where
         workspace_init_file: &WorkspaceInitFile,
     ) -> Result<Option<WorkspaceInit>, Error> {
         storage
-            .serialized_read_opt(workspace_init_file, Error::FlowInitParamsDeserialize)
+            .serialized_read_opt(workspace_init_file, Error::WorkspaceInitParamsDeserialize)
             .await
     }
 
@@ -107,7 +107,7 @@ where
         profile_init_file: &ProfileInitFile,
     ) -> Result<Option<ProfileInit>, Error> {
         storage
-            .serialized_read_opt(profile_init_file, Error::FlowInitParamsDeserialize)
+            .serialized_read_opt(profile_init_file, Error::ProfileInitParamsDeserialize)
             .await
     }
 
