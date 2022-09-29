@@ -33,9 +33,6 @@ impl ItemSpec for DownloadItemSpec {
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), DownloadError> {
         resources.insert::<reqwest::Client>(reqwest::Client::new());
 
-        #[cfg(target_arch = "wasm32")]
-        resources.insert(std::collections::HashMap::<PathBuf, String>::new());
-
         Ok(())
     }
 }

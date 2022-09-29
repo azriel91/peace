@@ -307,4 +307,16 @@ impl WebStorage {
 
         Ok(())
     }
+
+    /// Deletes an item from the web storage.
+    pub fn remove_item(&self, path: &Path) -> Result<(), Error> {
+        let storage = self.get()?;
+        let key = path.to_string_lossy();
+        storage
+            .remove_item(key.as_ref())
+            .map_err(|js_value| Error::StorageRemoveItem {
+                path: path.to_path_buf(),
+                error: crate::stringify_js_value(js_value),
+            })
+    }
 }

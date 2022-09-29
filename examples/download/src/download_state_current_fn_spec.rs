@@ -6,6 +6,9 @@ use peace::cfg::{async_trait, nougat, State};
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::{fs::File, io::AsyncReadExt};
 
+#[cfg(target_arch = "wasm32")]
+use peace::rt_model::Storage;
+
 use crate::{DownloadError, DownloadParams, FileState};
 
 /// Status `FnSpec` for the file to download.
@@ -40,9 +43,9 @@ impl DownloadStateCurrentFnSpec {
     #[cfg(target_arch = "wasm32")]
     async fn read_file_contents(
         dest: &std::path::Path,
-        in_memory_contents: &std::collections::HashMap<PathBuf, String>,
+        storage: &Storage,
     ) -> Result<Option<FileState>, DownloadError> {
-        let file_state = in_memory_contents.get(dest).map(|contents| {
+        let file_state = storage.get_item_opt(dest)?.map(|contents| {
             contents
                 .bytes()
                 .len()
@@ -75,7 +78,7 @@ impl FnSpec for DownloadStateCurrentFnSpec {
         #[cfg(not(target_arch = "wasm32"))]
         let file_exists = dest.exists();
         #[cfg(target_arch = "wasm32")]
-        let file_exists = download_params.in_memory_contents().get(dest).is_some();
+        let file_exists = download_params.storage().get_item_opt(dest)?.is_some();
         if !file_exists {
             return Ok(State::new(None, dest.to_path_buf()));
         }
@@ -85,8 +88,7 @@ impl FnSpec for DownloadStateCurrentFnSpec {
         let file_state = Self::read_file_contents(dest).await?;
 
         #[cfg(target_arch = "wasm32")]
-        let file_state =
-            Self::read_file_contents(dest, download_params.in_memory_contents()).await?;
+        let file_state = Self::read_file_contents(dest, download_params.storage()).await?;
 
         Ok(State::new(file_state, dest.to_path_buf()))
     }
