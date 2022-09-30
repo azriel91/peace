@@ -24,7 +24,7 @@ peace_rt_model_core = { path = "../rt_model_core", version = "0.0.3" }
 serde_yaml = "0.9.13"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio = { version = "1.21.1", features = ["fs", "io-util"] }
+tokio = { version = "1.21.2", features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.4", features = ["io", "io-util"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

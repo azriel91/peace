@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use clap::{AppSettings, Parser, Subcommand, ValueHint};
+use clap::{Parser, Subcommand, ValueHint};
 use url::Url;
 
 #[derive(Parser)]
@@ -9,8 +9,7 @@ use url::Url;
     version,
     about = "Downloads a file",
     long_about = "Downloads a file from a URL only if the local copy is out of sync with the remote copy."
-)] // Read from `Cargo.toml`
-#[clap(global_setting(AppSettings::DeriveDisplayOrder))]
+)]
 pub struct DownloadArgs {
     /// Command to run.
     #[clap(subcommand)]
