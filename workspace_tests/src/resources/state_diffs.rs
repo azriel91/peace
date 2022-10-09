@@ -28,7 +28,7 @@ fn deref() {
 
 #[test]
 fn from_type_map() {
-    let _state_diffs = StateDiffs::from(TypeMap::new());
+    let _state_diffs = StateDiffs::from(TypeMap::new_typed());
 }
 
 #[test]

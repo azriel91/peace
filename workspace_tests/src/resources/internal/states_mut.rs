@@ -31,7 +31,7 @@ fn deref_and_deref_mut() {
 
 #[test]
 fn from_type_map() {
-    let _states = StatesMut::<Current>::from(TypeMap::new());
+    let _states = StatesMut::<Current>::from(TypeMap::new_typed());
 }
 
 #[test]
@@ -39,7 +39,7 @@ fn debug() {
     let states = test_states();
 
     assert_eq!(
-        r#"StatesMut({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData)"#,
+        r#"StatesMut({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData<peace_resources::states::ts::Current>)"#,
         format!("{states:?}")
     );
 }

@@ -1,11 +1,11 @@
 use peace::{
-    cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
+    cfg::{flow_id, profile, state::Nothing, FlowId, ItemSpec, Profile, State},
     resources::states::StatesDesired,
     rt::cmds::sub::{StatesDesiredDiscoverCmd, StatesDesiredReadCmd},
     rt_model::{CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec};
+use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
@@ -38,10 +38,10 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
 
     let states_desired_from_discover = resources_from_discover.borrow::<StatesDesired>();
     let vec_copy_state_from_discover =
-        states_desired_from_discover.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id());
+        states_desired_from_discover.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
     let states_desired_from_read = resources_from_read.borrow::<StatesDesired>();
     let vec_copy_state_from_read =
-        states_desired_from_read.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id());
+        states_desired_from_read.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
     Ok(())
 }
@@ -77,7 +77,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 #[test]
 fn debug() {
     assert_eq!(
-        "StatesDesiredReadCmd(PhantomData)",
+        "StatesDesiredReadCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput)>)",
         format!(
             "{:?}",
             StatesDesiredReadCmd::<VecCopyError, NoOpOutput>::default()

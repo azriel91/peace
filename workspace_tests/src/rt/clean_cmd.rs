@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
+    cfg::{flow_id, profile, state::Nothing, FlowId, ItemSpec, Profile, State},
     resources::states::{StatesCleaned, StatesCleanedDry, StatesCurrent},
     rt::cmds::{
         sub::{StatesCurrentDiscoverCmd, StatesCurrentReadCmd},
@@ -8,7 +8,7 @@ use peace::{
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec};
+use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn resources_cleaned_dry_does_not_alter_state() -> Result<(), Box<dyn std::error::Error>> {
@@ -36,12 +36,12 @@ async fn resources_cleaned_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     let states = resources.borrow::<StatesCurrent>();
     let states_cleaned_dry = resources.borrow::<StatesCleanedDry>();
     assert_eq!(
-        Some(State::new(vec![], ())).as_ref(),
-        states.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id())
+        Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
+        states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
     );
     assert_eq!(
-        Some(State::new(vec![], ())).as_ref(),
-        states_cleaned_dry.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id())
+        Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
+        states_cleaned_dry.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
     ); // states_cleaned_dry should be the same as the beginning.
 
     Ok(())
@@ -85,19 +85,19 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec()
     let cleaned_states_cleaned = resources_cleaned.borrow::<StatesCleaned>();
     let reread_states = resources_reread.borrow::<StatesCurrent>();
     assert_eq!(
-        Some(State::new(vec![], ())).as_ref(),
-        cleaned_states.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id())
+        Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
+        cleaned_states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
     );
     assert_eq!(
-        Some(vec![]).as_ref(),
+        Some(VecCopyState::new()).as_ref(),
         cleaned_states_cleaned
-            .get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id())
+            .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
             .map(|state| &state.logical)
     ); // states_cleaned.logical should be empty, if all went well.
     assert_eq!(
-        Some(vec![]).as_ref(),
+        Some(VecCopyState::new()).as_ref(),
         reread_states
-            .get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id())
+            .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
             .map(|state| &state.logical)
     );
 

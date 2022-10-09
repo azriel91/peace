@@ -4,7 +4,10 @@ pub(crate) use crate::{
     fn_invocation::FnInvocation,
     fn_tracker_output::FnTrackerOutput,
     no_op_output::NoOpOutput,
-    vec_copy_item_spec::{VecA, VecB, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper},
+    vec_copy_item_spec::{
+        VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper,
+        VecCopyState,
+    },
 };
 
 mod cfg;

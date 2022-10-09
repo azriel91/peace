@@ -4,7 +4,7 @@ use fn_graph::{DataAccess, DataAccessDyn};
 use peace_cfg::{async_trait, ItemSpecId, OpCheckStatus};
 use peace_resources::{
     resources::ts::{Empty, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired},
-    type_reg::untagged::DataType,
+    type_reg::untagged::BoxDtDisplay,
     Resources,
 };
 
@@ -40,10 +40,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     ///
     /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`exec`]: peace_cfg::FnSpec::exec
-    async fn state_current_fn_exec(
-        &self,
-        resources: &Resources<SetUp>,
-    ) -> Result<Box<dyn DataType>, E>
+    async fn state_current_fn_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
 
@@ -54,7 +51,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     async fn state_ensured_fn_exec(
         &self,
         resources: &Resources<WithStateDiffs>,
-    ) -> Result<Box<dyn DataType>, E>
+    ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
 
@@ -65,7 +62,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     async fn state_cleaned_fn_exec(
         &self,
         resources: &Resources<WithStates>,
-    ) -> Result<Box<dyn DataType>, E>
+    ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
 
@@ -73,10 +70,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     ///
     /// [`ItemSpec::StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     /// [`desired`]: peace_cfg::FnSpec::desired
-    async fn state_desired_fn_exec(
-        &self,
-        resources: &Resources<SetUp>,
-    ) -> Result<Box<dyn DataType>, E>
+    async fn state_desired_fn_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
 
@@ -86,7 +80,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     async fn state_diff_fn_exec(
         &self,
         resources: &Resources<WithStatesCurrentAndDesired>,
-    ) -> Result<Box<dyn DataType>, E>
+    ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
 

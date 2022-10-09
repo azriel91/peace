@@ -1,16 +1,19 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
-    cfg::{OpCheckStatus, ProgressLimit, State},
+    cfg::{state::Nothing, OpCheckStatus, ProgressLimit, State},
     resources::{
         internal::{StateDiffsMut, StatesMut},
         resources::ts::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
         states::{ts::Desired, StateDiffs, StatesCurrent, StatesDesired},
+        type_reg::untagged::BoxDataTypeDowncast,
         Resources,
     },
     rt_model::{ItemSpecRt, ItemSpecWrapper},
 };
 
-use crate::{VecA, VecB, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper};
+use crate::{
+    VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper, VecCopyState,
+};
 
 #[tokio::test]
 async fn deref_to_dyn_item_spec_rt() {
@@ -53,8 +56,8 @@ async fn state_current_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
     let state = item_spec_wrapper.state_current_fn_exec(&resources).await?;
 
     assert_eq!(
-        Some(State::new(vec![], ())).as_ref(),
-        state.downcast_ref::<State<Vec<u8>, ()>>()
+        Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
+        BoxDataTypeDowncast::<State<VecCopyState, Nothing>>::downcast_ref(&state)
     );
 
     Ok(())
@@ -68,8 +71,8 @@ async fn state_desired_fn_exec() -> Result<(), VecCopyError> {
     let state_desired = item_spec_wrapper.state_desired_fn_exec(&resources).await?;
 
     assert_eq!(
-        Some(vec![0u8, 1, 2, 3, 4, 5, 6, 7]).as_ref(),
-        state_desired.downcast_ref::<Vec<u8>>()
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(&state_desired)
     );
 
     Ok(())
@@ -84,12 +87,12 @@ async fn state_diff_fn_exec() -> Result<(), VecCopyError> {
     let state_diff = item_spec_wrapper.state_diff_fn_exec(&resources).await?;
 
     assert_eq!(
-        Some(VecDiff(vec![VecDiffType::Inserted {
+        Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
             index: 0,
             changes: vec![0u8, 1, 2, 3, 4, 5, 6, 7]
-        }]))
+        }])))
         .as_ref(),
-        state_diff.downcast_ref::<VecDiff<u8>>()
+        BoxDataTypeDowncast::<VecCopyDiff>::downcast_ref(&state_diff)
     );
 
     Ok(())

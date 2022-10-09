@@ -10,7 +10,7 @@ use peace_data::Data;
 use peace_resources::{
     resources::ts::{Empty, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired},
     states::{StateDiffs, StatesCurrent, StatesDesired},
-    type_reg::untagged::DataType,
+    type_reg::untagged::BoxDtDisplay,
     Resources,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -178,9 +178,11 @@ where
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateLogical:
+        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical:
+        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
     StateDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
@@ -247,9 +249,11 @@ where
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateLogical:
+        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical:
+        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
     StateDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
@@ -320,9 +324,11 @@ where
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateLogical:
+        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical:
+        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec: Debug + FnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
     StateDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
@@ -394,9 +400,11 @@ where
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateLogical:
+        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical:
+        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec:
         Debug + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
     StateDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync,
@@ -442,10 +450,7 @@ where
             .register::<StateLogical>(<IS as ItemSpec>::id(self));
     }
 
-    async fn state_current_fn_exec(
-        &self,
-        resources: &Resources<SetUp>,
-    ) -> Result<Box<dyn DataType>, E> {
+    async fn state_current_fn_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
         let state: State<StateLogical, StatePhysical> = {
             let data = <Gat!(<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
                 resources,
@@ -453,13 +458,13 @@ where
             <StateCurrentFnSpec as FnSpec>::exec(data).await?
         };
 
-        Ok(Box::new(state))
+        Ok(BoxDtDisplay::new(state))
     }
 
     async fn state_ensured_fn_exec(
         &self,
         resources: &Resources<WithStateDiffs>,
-    ) -> Result<Box<dyn DataType>, E> {
+    ) -> Result<BoxDtDisplay, E> {
         let state: State<StateLogical, StatePhysical> = {
             let data = <Gat!(<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
                 resources,
@@ -467,13 +472,13 @@ where
             <StateCurrentFnSpec as FnSpec>::exec(data).await?
         };
 
-        Ok(Box::new(state))
+        Ok(BoxDtDisplay::new(state))
     }
 
     async fn state_cleaned_fn_exec(
         &self,
         resources: &Resources<WithStates>,
-    ) -> Result<Box<dyn DataType>, E> {
+    ) -> Result<BoxDtDisplay, E> {
         let state: State<StateLogical, StatePhysical> = {
             let data = <Gat!(<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
                 resources,
@@ -481,13 +486,10 @@ where
             <StateCurrentFnSpec as FnSpec>::exec(data).await?
         };
 
-        Ok(Box::new(state))
+        Ok(BoxDtDisplay::new(state))
     }
 
-    async fn state_desired_fn_exec(
-        &self,
-        resources: &Resources<SetUp>,
-    ) -> Result<Box<dyn DataType>, E> {
+    async fn state_desired_fn_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
         let state_desired = {
             let data = <Gat!(<StateDesiredFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
                 resources,
@@ -495,13 +497,13 @@ where
             <StateDesiredFnSpec as peace_cfg::FnSpec>::exec(data).await?
         };
 
-        Ok(Box::new(state_desired))
+        Ok(BoxDtDisplay::new(state_desired))
     }
 
     async fn state_diff_fn_exec(
         &self,
         resources: &Resources<WithStatesCurrentAndDesired>,
-    ) -> Result<Box<dyn DataType>, E> {
+    ) -> Result<BoxDtDisplay, E> {
         let state_diff: StateDiff = {
             let data =
                 <Gat!(<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_>) as Data>::borrow(
@@ -524,7 +526,7 @@ where
             }
         };
 
-        Ok(Box::new(state_diff))
+        Ok(BoxDtDisplay::new(state_diff))
     }
 
     async fn ensure_op_check(

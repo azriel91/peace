@@ -1,12 +1,12 @@
-use diff::{Diff, VecDiff, VecDiffType};
+use diff::{VecDiff, VecDiffType};
 use peace::{
-    cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
+    cfg::{flow_id, profile, state::Nothing, FlowId, ItemSpec, Profile, State},
     resources::states::{StateDiffs, StatesCurrent, StatesDesired},
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, VecA, VecB, VecCopyError, VecCopyItemSpec};
+use crate::{NoOpOutput, VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>>
@@ -35,20 +35,20 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
     let states = resources.borrow::<StatesCurrent>();
     let states_desired = resources.borrow::<StatesDesired>();
     let state_diffs = resources.borrow::<StateDiffs>();
-    let vec_diff = state_diffs.get::<<Vec<u8> as Diff>::Repr, _>(&VecCopyItemSpec.id());
+    let vec_diff = state_diffs.get::<VecCopyDiff, _>(&VecCopyItemSpec.id());
     assert_eq!(
-        Some(State::new(vec![], ())).as_ref(),
-        states.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id())
+        Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
+        states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
     );
     assert_eq!(
-        Some(vec![0u8, 1, 2, 3, 4, 5, 6, 7]).as_ref(),
-        states_desired.get::<Vec<u8>, _>(&VecCopyItemSpec.id())
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_desired.get::<VecCopyState, _>(&VecCopyItemSpec.id())
     );
     assert_eq!(
-        Some(VecDiff(vec![VecDiffType::Inserted {
+        Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
             index: 0,
             changes: vec![0u8, 1, 2, 3, 4, 5, 6, 7]
-        }]))
+        }])))
         .as_ref(),
         vec_diff
     );
@@ -87,23 +87,27 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     let states = resources.borrow::<StatesCurrent>();
     let states_desired = resources.borrow::<StatesDesired>();
     let state_diffs = resources.borrow::<StateDiffs>();
-    let vec_diff = state_diffs.get::<<Vec<u8> as Diff>::Repr, _>(&VecCopyItemSpec.id());
+    let vec_diff = state_diffs.get::<VecCopyDiff, _>(&VecCopyItemSpec.id());
     assert_eq!(
-        Some(State::new(vec![0, 1, 2, 3, 4, 5, 6, 7], ())).as_ref(),
-        states.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id())
+        Some(State::new(
+            VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            Nothing
+        ))
+        .as_ref(),
+        states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
     );
     assert_eq!(
-        Some(vec![0u8, 1, 2, 4, 5, 6, 8]).as_ref(),
-        states_desired.get::<Vec<u8>, _>(&VecCopyItemSpec.id())
+        Some(VecCopyState::from(vec![0u8, 1, 2, 4, 5, 6, 8])).as_ref(),
+        states_desired.get::<VecCopyState, _>(&VecCopyItemSpec.id())
     );
     assert_eq!(
-        Some(VecDiff(vec![
+        Some(VecCopyDiff::from(VecDiff(vec![
             VecDiffType::Removed { index: 3, len: 1 },
             VecDiffType::Altered {
                 index: 7,
                 changes: vec![1] // 8 - 7 = 1
             }
-        ]))
+        ])))
         .as_ref(),
         vec_diff
     );

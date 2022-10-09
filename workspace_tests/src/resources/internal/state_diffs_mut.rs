@@ -31,7 +31,7 @@ fn deref_and_deref_mut() {
 
 #[test]
 fn from_type_map() {
-    let _state_diffs_mut = StateDiffsMut::from(TypeMap::new());
+    let _state_diffs_mut = StateDiffsMut::from(TypeMap::new_typed());
 }
 
 #[test]

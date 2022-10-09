@@ -11,7 +11,7 @@
 //! [`ItemSpecWrapper`]: crate::ItemSpecWrapper
 
 use std::{
-    fmt::Debug,
+    fmt::{self, Debug},
     ops::{Deref, DerefMut},
 };
 
@@ -71,9 +71,11 @@ where
         + Sync
         + 'static,
     E: Debug + Send + Sync + std::error::Error + 'static,
-    StateLogical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatePhysical: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiff: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateLogical:
+        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical:
+        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec: Debug
         + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>>
         + Send

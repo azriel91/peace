@@ -1,4 +1,9 @@
-use diff::{Diff, VecDiff};
+use std::{
+    fmt,
+    ops::{Deref, DerefMut},
+};
+
+use diff::{Diff, VecDiff, VecDiffType};
 #[nougat::gat(Data)]
 use peace::cfg::CleanOpSpec;
 #[nougat::gat(Data)]
@@ -9,8 +14,8 @@ use peace::cfg::FnSpec;
 use peace::cfg::StateDiffFnSpec;
 use peace::{
     cfg::{
-        async_trait, item_spec_id, nougat, ItemSpec, ItemSpecId, OpCheckStatus, ProgressLimit,
-        State,
+        async_trait, item_spec_id, nougat, state::Nothing, ItemSpec, ItemSpecId, OpCheckStatus,
+        ProgressLimit, State,
     },
     data::{Data, R, W},
     resources::{resources::ts::Empty, Resources},
@@ -22,9 +27,9 @@ use serde::{Deserialize, Serialize};
 pub type VecCopyItemSpecWrapper = ItemSpecWrapper<
     VecCopyItemSpec,
     VecCopyError,
-    Vec<u8>,
-    (),
-    VecDiff<u8>,
+    VecCopyState,
+    Nothing,
+    VecCopyDiff,
     VecCopyStateCurrentFnSpec,
     VecCopyStateDesiredFnSpec,
     VecCopyStateDiffFnSpec,
@@ -43,10 +48,10 @@ impl ItemSpec for VecCopyItemSpec {
     type Error = VecCopyError;
     type StateCurrentFnSpec = VecCopyStateCurrentFnSpec;
     type StateDesiredFnSpec = VecCopyStateDesiredFnSpec;
-    type StateDiff = VecDiff<u8>;
+    type StateDiff = VecCopyDiff;
     type StateDiffFnSpec = VecCopyStateDiffFnSpec;
-    type StateLogical = Vec<u8>;
-    type StatePhysical = ();
+    type StateLogical = VecCopyState;
+    type StatePhysical = Nothing;
 
     fn id(&self) -> ItemSpecId {
         item_spec_id!("vec_copy_item_spec")
@@ -69,8 +74,8 @@ impl CleanOpSpec for VecCopyCleanOpSpec {
     type Data<'op> = W<'op, VecB>
         where Self: 'op;
     type Error = VecCopyError;
-    type StateLogical = Vec<u8>;
-    type StatePhysical = ();
+    type StateLogical = VecCopyState;
+    type StatePhysical = Nothing;
 
     async fn check(
         vec_b: W<'_, VecB>,
@@ -115,17 +120,17 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     type Data<'op> = VecCopyParams<'op>
         where Self: 'op;
     type Error = VecCopyError;
-    type StateDiff = VecDiff<u8>;
-    type StateLogical = Vec<u8>;
-    type StatePhysical = ();
+    type StateDiff = VecCopyDiff;
+    type StateLogical = VecCopyState;
+    type StatePhysical = Nothing;
 
     async fn check(
         _vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        state_desired: &Vec<u8>,
-        diff: &VecDiff<u8>,
+        state_desired: &VecCopyState,
+        diff: &VecCopyDiff,
     ) -> Result<OpCheckStatus, VecCopyError> {
-        let op_check_status = if diff.0.is_empty() {
+        let op_check_status = if diff.0.0.is_empty() {
             OpCheckStatus::ExecNotRequired
         } else {
             let progress_limit = TryInto::<u64>::try_into(state_desired.len())
@@ -140,23 +145,23 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     async fn exec_dry(
         _vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        _state_desired: &Vec<u8>,
-        _diff: &VecDiff<u8>,
+        _state_desired: &VecCopyState,
+        _diff: &VecCopyDiff,
     ) -> Result<Self::StatePhysical, Self::Error> {
         // Would replace vec_b's contents with vec_a's
-        Ok(())
+        Ok(Nothing)
     }
 
     async fn exec(
         mut vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        state_desired: &Vec<u8>,
-        _diff: &VecDiff<u8>,
+        state_desired: &VecCopyState,
+        _diff: &VecCopyDiff,
     ) -> Result<Self::StatePhysical, VecCopyError> {
         let dest = vec_copy_params.dest_mut();
         dest.0.clear();
         dest.0.extend_from_slice(state_desired.as_slice());
-        Ok(())
+        Ok(Nothing)
     }
 }
 
@@ -190,10 +195,10 @@ impl FnSpec for VecCopyStateCurrentFnSpec {
     type Data<'op> = R<'op, VecB>
         where Self: 'op;
     type Error = VecCopyError;
-    type Output = State<Vec<u8>, ()>;
+    type Output = State<VecCopyState, Nothing>;
 
     async fn exec(vec_b: R<'_, VecB>) -> Result<Self::Output, VecCopyError> {
-        Ok(State::new(vec_b.0.clone(), ()))
+        Ok(State::new(VecCopyState::from(vec_b.0.clone()), Nothing))
     }
 }
 
@@ -207,10 +212,10 @@ impl FnSpec for VecCopyStateDesiredFnSpec {
     type Data<'op> = R<'op, VecA>
         where Self: 'op;
     type Error = VecCopyError;
-    type Output = Vec<u8>;
+    type Output = VecCopyState;
 
     async fn exec(vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
-        Ok(vec_a.0.clone())
+        Ok(vec_a.0.clone()).map(VecCopyState::from)
     }
 }
 
@@ -224,21 +229,104 @@ impl StateDiffFnSpec for VecCopyStateDiffFnSpec {
     type Data<'op> = &'op ()
         where Self: 'op;
     type Error = VecCopyError;
-    type StateDiff = VecDiff<u8>;
-    type StateLogical = Vec<u8>;
-    type StatePhysical = ();
+    type StateDiff = VecCopyDiff;
+    type StateLogical = VecCopyState;
+    type StatePhysical = Nothing;
 
     async fn exec(
         _: &(),
-        state_current: &State<Vec<u8>, ()>,
-        state_desired: &Vec<u8>,
+        state_current: &State<VecCopyState, Nothing>,
+        state_desired: &VecCopyState,
     ) -> Result<Self::StateDiff, VecCopyError> {
-        Ok(state_current.logical.diff(state_desired))
+        Ok(state_current.logical.diff(&state_desired)).map(VecCopyDiff)
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VecA(pub Vec<u8>);
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct VecB(pub Vec<u8>);
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct VecCopyState(Vec<u8>);
+
+impl VecCopyState {
+    /// Returns an empty `VecCopyState`.
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+}
+
+impl From<Vec<u8>> for VecCopyState {
+    fn from(v: Vec<u8>) -> Self {
+        Self(v)
+    }
+}
+
+impl Deref for VecCopyState {
+    type Target = Vec<u8>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for VecCopyState {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl fmt::Display for VecCopyState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.0)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct VecCopyDiff(VecDiff<u8>);
+
+impl From<VecDiff<u8>> for VecCopyDiff {
+    fn from(v: VecDiff<u8>) -> Self {
+        Self(v)
+    }
+}
+
+impl Deref for VecCopyDiff {
+    type Target = VecDiff<u8>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for VecCopyDiff {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl fmt::Display for VecCopyDiff {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "[")?;
+        self.0
+            .0
+            .iter()
+            .try_for_each(|vec_diff_type| match vec_diff_type {
+                VecDiffType::Removed { index, len } => {
+                    let index_end = index + len;
+                    write!(f, "-{index}..{index_end}, ")
+                }
+                VecDiffType::Altered { index, changes } => {
+                    write!(f, "-+{index};")?;
+                    changes.iter().try_for_each(|value| write!(f, "{value}, "))
+                }
+                VecDiffType::Inserted { index, changes } => {
+                    write!(f, "+{index};")?;
+                    changes.iter().try_for_each(|value| write!(f, "{value}, "))
+                }
+            })?;
+        write!(f, "]")
+    }
+}

@@ -1,11 +1,11 @@
 use peace::{
-    cfg::{flow_id, profile, FlowId, ItemSpec, Profile, State},
+    cfg::{flow_id, profile, state::Nothing, FlowId, ItemSpec, Profile, State},
     resources::states::{StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry},
     rt::cmds::{sub::StatesCurrentReadCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec};
+use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,16 +34,16 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     let states_desired = resources.borrow::<StatesDesired>();
     let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
     assert_eq!(
-        Some(State::new(vec![], ())).as_ref(),
-        states.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id())
+        Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
+        states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
     );
     assert_eq!(
-        Some(vec![0u8, 1, 2, 3, 4, 5, 6, 7]).as_ref(),
-        states_desired.get::<Vec<u8>, _>(&VecCopyItemSpec.id())
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_desired.get::<VecCopyState, _>(&VecCopyItemSpec.id())
     );
     assert_eq!(
-        Some(State::new(vec![], ())).as_ref(),
-        states_ensured_dry.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id())
+        Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
+        states_ensured_dry.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
     ); // states_ensured_dry should be the same as the beginning.
 
     Ok(())
@@ -88,23 +88,23 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec()
     let ensured_states_ensured = resources_ensured.borrow::<StatesEnsured>();
     let reread_states = resources_reread.borrow::<StatesCurrent>();
     assert_eq!(
-        Some(State::new(vec![], ())).as_ref(),
-        ensured_states.get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id())
+        Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
+        ensured_states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
     );
     assert_eq!(
-        Some(vec![0u8, 1, 2, 3, 4, 5, 6, 7]).as_ref(),
-        ensured_states_desired.get::<Vec<u8>, _>(&VecCopyItemSpec.id())
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        ensured_states_desired.get::<VecCopyState, _>(&VecCopyItemSpec.id())
     );
     assert_eq!(
-        Some(vec![0u8, 1, 2, 3, 4, 5, 6, 7]).as_ref(),
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         ensured_states_ensured
-            .get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id())
+            .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
             .map(|state| &state.logical)
     ); // states_ensured.logical should be the same as states desired, if all went well.
     assert_eq!(
-        Some(vec![0u8, 1, 2, 3, 4, 5, 6, 7]).as_ref(),
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         reread_states
-            .get::<State<Vec<u8>, ()>, _>(&VecCopyItemSpec.id())
+            .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
             .map(|state| &state.logical)
     );
 
