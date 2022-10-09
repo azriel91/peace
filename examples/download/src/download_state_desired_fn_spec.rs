@@ -13,6 +13,7 @@ impl DownloadStateDesiredFnSpec {
         download_params: &DownloadParams<'_>,
     ) -> Result<FileState, DownloadError> {
         let client = download_params.client();
+        let dest = download_params.download_profile_init().dest();
         let src_url = download_params.download_profile_init().src();
         let response = client
             .get(src_url.clone())
@@ -31,13 +32,21 @@ impl DownloadStateDesiredFnSpec {
                         response_text.await.map_err(DownloadError::SrcFileRead)
                     }
                     .await?;
-                    Ok(FileState::StringContents(remote_contents))
+                    Ok(FileState::StringContents {
+                        path: dest.to_path_buf(),
+                        contents: remote_contents,
+                    })
                 } else {
                     // Stream it later.
-                    Ok(FileState::Length(remote_file_length))
+                    Ok(FileState::Length {
+                        path: dest.to_path_buf(),
+                        byte_count: remote_file_length,
+                    })
                 }
             } else {
-                Ok(FileState::Unknown)
+                Ok(FileState::Unknown {
+                    path: dest.to_path_buf(),
+                })
             }
         } else {
             Err(DownloadError::SrcFileUndetermined { status_code })
@@ -51,11 +60,11 @@ impl FnSpec for DownloadStateDesiredFnSpec {
     type Data<'op> = DownloadParams<'op>
         where Self: 'op;
     type Error = DownloadError;
-    type Output = Option<FileState>;
+    type Output = FileState;
 
     async fn exec(download_params: DownloadParams<'_>) -> Result<Self::Output, DownloadError> {
         let file_state_desired = Self::file_state_desired(&download_params).await?;
 
-        Ok(Some(file_state_desired))
+        Ok(file_state_desired)
     }
 }
