@@ -22,13 +22,10 @@ async fn outputs_states_current_verbose_mode() -> Result<(), Box<dyn std::error:
         .await?;
 
     assert_eq!(
-        r#"item_0:
-  logical: logical
-  physical: 1.1
-item_1:
-  logical: 1
-  physical: true
-"#,
+        "\
+        item_0: logical, 1.1\n\
+        item_1: 1, true\n\
+        ",
         String::from_utf8(buffer)?
     );
     Ok(())
@@ -49,13 +46,10 @@ async fn outputs_states_desired_verbose_mode() -> Result<(), Box<dyn std::error:
         .await?;
 
     assert_eq!(
-        r#"item_0:
-  logical: logical
-  physical: 1.1
-item_1:
-  logical: 1
-  physical: true
-"#,
+        "\
+        item_0: logical, 1.1\n\
+        item_1: 1, true\n\
+        ",
         String::from_utf8(buffer)?
     );
     Ok(())

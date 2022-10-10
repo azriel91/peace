@@ -1,9 +1,10 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 #[cfg(not(target_arch = "wasm32"))]
 use bytes::Bytes;
 #[cfg(not(target_arch = "wasm32"))]
 use futures::{Stream, StreamExt, TryStreamExt};
+use peace::cfg::state::Nothing;
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::io::AsyncWriteExt;
 #[cfg(not(target_arch = "wasm32"))]
@@ -110,13 +111,13 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
         where Self: 'op;
     type Error = DownloadError;
     type StateDiff = FileStateDiff;
-    type StateLogical = Option<FileState>;
-    type StatePhysical = PathBuf;
+    type StateLogical = FileState;
+    type StatePhysical = Nothing;
 
     async fn check(
         _download_params: DownloadParams<'_>,
-        _file_state_current: &State<Option<FileState>, PathBuf>,
-        _file_state_desired: &Option<FileState>,
+        _file_state_current: &State<FileState, Nothing>,
+        _file_state_desired: &FileState,
         diff: &FileStateDiff,
     ) -> Result<OpCheckStatus, DownloadError> {
         let op_check_status = match diff {
@@ -144,23 +145,21 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
     }
 
     async fn exec_dry(
-        download_params: DownloadParams<'_>,
-        _state: &State<Option<FileState>, PathBuf>,
-        _file_state_desired: &Option<FileState>,
+        _download_params: DownloadParams<'_>,
+        _state: &State<FileState, Nothing>,
+        _file_state_desired: &FileState,
         _diff: &FileStateDiff,
-    ) -> Result<PathBuf, DownloadError> {
-        let dest = download_params.download_profile_init().dest();
-        Ok(dest.to_path_buf())
+    ) -> Result<Nothing, DownloadError> {
+        Ok(Nothing)
     }
 
     async fn exec(
         download_params: DownloadParams<'_>,
-        _state: &State<Option<FileState>, PathBuf>,
-        _file_state_desired: &Option<FileState>,
+        _state: &State<FileState, Nothing>,
+        _file_state_desired: &FileState,
         _diff: &FileStateDiff,
-    ) -> Result<PathBuf, DownloadError> {
-        let dest = download_params.download_profile_init().dest().to_path_buf();
+    ) -> Result<Nothing, DownloadError> {
         Self::file_download(download_params).await?;
-        Ok(dest)
+        Ok(Nothing)
     }
 }

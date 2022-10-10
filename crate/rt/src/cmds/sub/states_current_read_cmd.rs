@@ -5,7 +5,7 @@ use peace_resources::{
     paths::{FlowDir, StatesCurrentFile},
     resources::ts::{SetUp, WithStates},
     states::StatesCurrent,
-    type_reg::untagged::TypeReg,
+    type_reg::untagged::{BoxDtDisplay, TypeReg},
     Resources,
 };
 use peace_rt_model::{CmdContext, Error, Storage};
@@ -49,7 +49,7 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     pub(crate) async fn exec_internal(
         resources: &mut Resources<SetUp>,
-        states_current_type_reg: &TypeReg<ItemSpecId>,
+        states_current_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
     ) -> Result<StatesCurrent, E> {
         let states = Self::deserialize_internal(resources, states_current_type_reg).await?;
 
@@ -59,7 +59,7 @@ where
     #[cfg(not(target_arch = "wasm32"))]
     async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
-        states_current_type_reg: &TypeReg<ItemSpecId>,
+        states_current_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
     ) -> Result<StatesCurrent, E> {
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
@@ -95,7 +95,7 @@ where
     #[cfg(target_arch = "wasm32")]
     async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
-        states_current_type_reg: &TypeReg<ItemSpecId>,
+        states_current_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
     ) -> Result<StatesCurrent, E> {
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();

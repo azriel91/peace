@@ -1,6 +1,11 @@
-use peace_resources::states::{
-    StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
-    StatesEnsuredDry,
+use futures::{stream, StreamExt, TryStreamExt};
+use peace_core::ItemSpecId;
+use peace_resources::{
+    states::{
+        StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
+        StatesEnsuredDry,
+    },
+    type_reg::untagged::BoxDtDisplay,
 };
 use peace_rt_model_core::{async_trait, OutputWrite};
 use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
@@ -31,6 +36,30 @@ where
     pub fn new_with_writer(writer: W) -> Self {
         Self { writer }
     }
+
+    async fn output_any_display<'f, E, I>(&mut self, iter: I) -> Result<(), E>
+    where
+        E: std::error::Error + From<Error>,
+        I: Iterator<Item = (&'f ItemSpecId, &'f BoxDtDisplay)>,
+    {
+        let writer = &mut self.writer;
+        stream::iter(iter)
+            .map(Result::<_, std::io::Error>::Ok)
+            .try_fold(
+                writer,
+                |writer, (item_spec_id, item_spec_state)| async move {
+                    writer.write_all(item_spec_id.as_bytes()).await?;
+                    writer.write_all(b": ").await?;
+                    writer
+                        .write_all(format!("{item_spec_state}\n").as_bytes())
+                        .await?;
+                    Ok(writer)
+                },
+            )
+            .await
+            .map_err(Error::StdoutWrite)?;
+        Ok(())
+    }
 }
 
 impl Default for CliOutput<Stdout> {
@@ -51,93 +80,37 @@ where
     W: AsyncWrite + std::marker::Unpin,
 {
     async fn write_states_current(&mut self, states_current: &StatesCurrent) -> Result<(), E> {
-        let states_current_serialized =
-            serde_yaml::to_string(states_current).map_err(Error::StatesCurrentSerialize)?;
-
-        self.writer
-            .write_all(states_current_serialized.as_bytes())
-            .await
-            .map_err(Error::StdoutWrite)?;
-
-        Ok(())
+        self.output_any_display(states_current.iter()).await
     }
 
     async fn write_states_desired(&mut self, states_desired: &StatesDesired) -> Result<(), E> {
-        let states_desired_serialized =
-            serde_yaml::to_string(states_desired).map_err(Error::StatesDesiredSerialize)?;
-
-        self.writer
-            .write_all(states_desired_serialized.as_bytes())
-            .await
-            .map_err(Error::StdoutWrite)?;
-
-        Ok(())
+        self.output_any_display(states_desired.iter()).await
     }
 
     async fn write_state_diffs(&mut self, state_diffs: &StateDiffs) -> Result<(), E> {
-        let state_diffs_serialized =
-            serde_yaml::to_string(state_diffs).map_err(Error::StateDiffsSerialize)?;
-
-        self.writer
-            .write_all(state_diffs_serialized.as_bytes())
-            .await
-            .map_err(Error::StdoutWrite)?;
-
-        Ok(())
+        self.output_any_display(state_diffs.iter()).await
     }
 
     async fn write_states_ensured_dry(
         &mut self,
         states_ensured_dry: &StatesEnsuredDry,
     ) -> Result<(), E> {
-        let states_ensured_dry_serialized =
-            serde_yaml::to_string(states_ensured_dry).map_err(Error::StatesEnsuredDrySerialize)?;
-
-        self.writer
-            .write_all(states_ensured_dry_serialized.as_bytes())
-            .await
-            .map_err(Error::StdoutWrite)?;
-
-        Ok(())
+        self.output_any_display(states_ensured_dry.iter()).await
     }
 
     async fn write_states_ensured(&mut self, states_ensured: &StatesEnsured) -> Result<(), E> {
-        let states_ensured_serialized =
-            serde_yaml::to_string(states_ensured).map_err(Error::StatesEnsuredSerialize)?;
-
-        self.writer
-            .write_all(states_ensured_serialized.as_bytes())
-            .await
-            .map_err(Error::StdoutWrite)?;
-
-        Ok(())
+        self.output_any_display(states_ensured.iter()).await
     }
 
     async fn write_states_cleaned_dry(
         &mut self,
         states_cleaned_dry: &StatesCleanedDry,
     ) -> Result<(), E> {
-        let states_cleaned_dry_serialized =
-            serde_yaml::to_string(states_cleaned_dry).map_err(Error::StatesCleanedDrySerialize)?;
-
-        self.writer
-            .write_all(states_cleaned_dry_serialized.as_bytes())
-            .await
-            .map_err(Error::StdoutWrite)?;
-
-        Ok(())
+        self.output_any_display(states_cleaned_dry.iter()).await
     }
 
     async fn write_states_cleaned(&mut self, states_cleaned: &StatesCleaned) -> Result<(), E> {
-        let states_cleaned_serialized =
-            serde_yaml::to_string(states_cleaned).map_err(Error::StatesCleanedSerialize)?;
-
-        self.writer
-            .write_all(states_cleaned_serialized.as_bytes())
-            .await
-            .map_err(Error::StdoutWrite)?;
-
-        Ok(())
+        self.output_any_display(states_cleaned.iter()).await
     }
 
     async fn write_err(&mut self, error: &E) -> Result<(), E> {

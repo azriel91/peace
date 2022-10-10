@@ -1,9 +1,7 @@
-use std::path::PathBuf;
-
 #[nougat::gat(Data)]
 use peace::cfg::StateDiffFnSpec;
 use peace::{
-    cfg::{async_trait, nougat, State},
+    cfg::{async_trait, nougat, state::Nothing, State},
     diff::{Changeable, Tracked},
 };
 
@@ -20,28 +18,40 @@ impl StateDiffFnSpec for DownloadStateDiffFnSpec {
         where Self: 'op;
     type Error = DownloadError;
     type StateDiff = FileStateDiff;
-    type StateLogical = Option<FileState>;
-    type StatePhysical = PathBuf;
+    type StateLogical = FileState;
+    type StatePhysical = Nothing;
 
     async fn exec(
         _: &(),
-        state_current: &State<Option<FileState>, PathBuf>,
-        file_state_desired: &Option<FileState>,
+        state_current: &State<FileState, Nothing>,
+        file_state_desired: &FileState,
     ) -> Result<Self::StateDiff, DownloadError> {
         let file_state_diff = {
             let file_state_current = &state_current.logical;
-            match (file_state_current.as_ref(), file_state_desired.as_ref()) {
-                (Some(_file_state_current), None) => FileStateDiff::Deleted,
+            match (file_state_current, file_state_desired) {
+                (
+                    FileState::StringContents { .. }
+                    | FileState::Length { .. }
+                    | FileState::Unknown { .. },
+                    FileState::None,
+                ) => FileStateDiff::Deleted,
 
-                (file_state_current @ Some(_), file_state_desired @ Some(_))
-                | (file_state_current @ None, file_state_desired @ Some(_)) => {
-                    let (from_bytes, from_content) = file_state_current
-                        .map(to_file_state_diff)
-                        .unwrap_or((Tracked::None, Tracked::None));
-
-                    let (to_bytes, to_content) = file_state_desired
-                        .map(to_file_state_diff)
-                        .unwrap_or((Tracked::None, Tracked::None));
+                (
+                    file_state_current @ (FileState::StringContents { .. }
+                    | FileState::Length { .. }
+                    | FileState::Unknown { .. }),
+                    file_state_desired @ (FileState::StringContents { .. }
+                    | FileState::Length { .. }
+                    | FileState::Unknown { .. }),
+                )
+                | (
+                    file_state_current @ FileState::None,
+                    file_state_desired @ (FileState::StringContents { .. }
+                    | FileState::Length { .. }
+                    | FileState::Unknown { .. }),
+                ) => {
+                    let (from_bytes, from_content) = to_file_state_diff(file_state_current);
+                    let (to_bytes, to_content) = to_file_state_diff(file_state_desired);
 
                     match (from_bytes == to_bytes, from_content == to_content) {
                         (false, false) | (false, true) | (true, false) => FileStateDiff::Change {
@@ -51,7 +61,7 @@ impl StateDiffFnSpec for DownloadStateDiffFnSpec {
                         (true, true) => FileStateDiff::NoChangeSync,
                     }
                 }
-                (None, None) => FileStateDiff::NoChangeNonExistent,
+                (FileState::None, FileState::None) => FileStateDiff::NoChangeNonExistent,
             }
         };
 
@@ -61,17 +71,21 @@ impl StateDiffFnSpec for DownloadStateDiffFnSpec {
 
 fn to_file_state_diff(file_state: &FileState) -> (Tracked<usize>, Tracked<String>) {
     match file_state {
-        FileState::StringContents(s) => (
-            Tracked::Known(s.bytes().len()),
-            Tracked::Known(s.to_owned()),
+        FileState::None => (Tracked::None, Tracked::None),
+        FileState::StringContents { path: _, contents } => (
+            Tracked::Known(contents.bytes().len()),
+            Tracked::Known(contents.to_owned()),
         ),
-        FileState::Length(len) => (
-            (*len)
+        FileState::Length {
+            path: _,
+            byte_count,
+        } => (
+            (*byte_count)
                 .try_into()
                 .map(Tracked::Known)
                 .unwrap_or(Tracked::Unknown),
             Tracked::Unknown,
         ),
-        FileState::Unknown => (Tracked::Unknown, Tracked::Unknown),
+        FileState::Unknown { .. } => (Tracked::Unknown, Tracked::Unknown),
     }
 }

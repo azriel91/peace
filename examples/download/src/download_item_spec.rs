@@ -1,7 +1,5 @@
-use std::path::PathBuf;
-
 use peace::{
-    cfg::{async_trait, item_spec_id, ItemSpec, ItemSpecId},
+    cfg::{async_trait, item_spec_id, state::Nothing, ItemSpec, ItemSpecId},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -23,8 +21,8 @@ impl ItemSpec for DownloadItemSpec {
     type StateDesiredFnSpec = DownloadStateDesiredFnSpec;
     type StateDiff = FileStateDiff;
     type StateDiffFnSpec = DownloadStateDiffFnSpec;
-    type StateLogical = Option<FileState>;
-    type StatePhysical = PathBuf;
+    type StateLogical = FileState;
+    type StatePhysical = Nothing;
 
     fn id(&self) -> ItemSpecId {
         item_spec_id!("download")

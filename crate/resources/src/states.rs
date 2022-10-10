@@ -12,7 +12,7 @@ use std::{marker::PhantomData, ops::Deref};
 
 use peace_core::ItemSpecId;
 use serde::Serialize;
-use type_reg::untagged::TypeMap;
+use type_reg::untagged::{BoxDtDisplay, TypeMap};
 
 use crate::internal::StatesMut;
 
@@ -34,7 +34,10 @@ mod states_ensured_dry;
 /// * `TS`: Type state to distinguish the purpose of the `States` map.
 #[derive(Debug, Serialize)]
 #[serde(transparent)] // Needed to serialize as a map instead of a list.
-pub struct States<TS>(pub(crate) TypeMap<ItemSpecId>, pub(crate) PhantomData<TS>);
+pub struct States<TS>(
+    pub(crate) TypeMap<ItemSpecId, BoxDtDisplay>,
+    pub(crate) PhantomData<TS>,
+);
 
 impl<TS> States<TS> {
     /// Returns a new `States` map.
@@ -47,11 +50,11 @@ impl<TS> States<TS> {
     /// The `States` will be able to hold at least capacity elements
     /// without reallocating. If capacity is 0, the map will not allocate.
     pub fn with_capacity(capacity: usize) -> Self {
-        Self(TypeMap::with_capacity(capacity), PhantomData)
+        Self(TypeMap::with_capacity_typed(capacity), PhantomData)
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<ItemSpecId> {
+    pub fn into_inner(self) -> TypeMap<ItemSpecId, BoxDtDisplay> {
         self.0
     }
 }
@@ -63,15 +66,15 @@ impl<TS> Default for States<TS> {
 }
 
 impl<TS> Deref for States<TS> {
-    type Target = TypeMap<ItemSpecId>;
+    type Target = TypeMap<ItemSpecId, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<TS> From<TypeMap<ItemSpecId>> for States<TS> {
-    fn from(type_map: TypeMap<ItemSpecId>) -> Self {
+impl<TS> From<TypeMap<ItemSpecId, BoxDtDisplay>> for States<TS> {
+    fn from(type_map: TypeMap<ItemSpecId, BoxDtDisplay>) -> Self {
         Self(type_map, PhantomData)
     }
 }

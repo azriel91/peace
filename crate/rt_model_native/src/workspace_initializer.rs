@@ -121,7 +121,7 @@ where
             .serialized_read_opt(
                 "profile_init_params_deserialize".to_string(),
                 profile_init_file,
-                Error::FlowInitParamsDeserialize,
+                Error::ProfileInitParamsDeserialize,
             )
             .await
     }

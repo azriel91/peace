@@ -5,9 +5,9 @@ use std::{
 
 use peace_core::ItemSpecId;
 use serde::Serialize;
-use type_reg::untagged::{DataType, TypeMap};
+use type_reg::untagged::{BoxDtDisplay, TypeMap};
 
-/// `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
+/// `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId, BoxDtDisplay>` newtype.
 ///
 /// # Implementors
 ///
@@ -29,7 +29,7 @@ use type_reg::untagged::{DataType, TypeMap};
 /// [`StatesRw`]: crate::StatesRw
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Serialize)]
-pub struct StatesMut<TS>(TypeMap<ItemSpecId>, PhantomData<TS>);
+pub struct StatesMut<TS>(TypeMap<ItemSpecId, BoxDtDisplay>, PhantomData<TS>);
 
 impl<TS> StatesMut<TS> {
     /// Returns a new `StatesMut` map.
@@ -42,11 +42,11 @@ impl<TS> StatesMut<TS> {
     /// The `StatesMut` will be able to hold at least capacity elements
     /// without reallocating. If capacity is 0, the map will not allocate.
     pub fn with_capacity(capacity: usize) -> Self {
-        Self(TypeMap::with_capacity(capacity), PhantomData)
+        Self(TypeMap::with_capacity_typed(capacity), PhantomData)
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<ItemSpecId> {
+    pub fn into_inner(self) -> TypeMap<ItemSpecId, BoxDtDisplay> {
         self.0
     }
 }
@@ -58,7 +58,7 @@ impl<TS> Default for StatesMut<TS> {
 }
 
 impl<TS> Deref for StatesMut<TS> {
-    type Target = TypeMap<ItemSpecId>;
+    type Target = TypeMap<ItemSpecId, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -71,14 +71,14 @@ impl<TS> DerefMut for StatesMut<TS> {
     }
 }
 
-impl<TS> From<TypeMap<ItemSpecId>> for StatesMut<TS> {
-    fn from(type_map: TypeMap<ItemSpecId>) -> Self {
+impl<TS> From<TypeMap<ItemSpecId, BoxDtDisplay>> for StatesMut<TS> {
+    fn from(type_map: TypeMap<ItemSpecId, BoxDtDisplay>) -> Self {
         Self(type_map, PhantomData)
     }
 }
 
-impl<TS> Extend<(ItemSpecId, Box<dyn DataType>)> for StatesMut<TS> {
-    fn extend<T: IntoIterator<Item = (ItemSpecId, Box<dyn DataType>)>>(&mut self, iter: T) {
+impl<TS> Extend<(ItemSpecId, BoxDtDisplay)> for StatesMut<TS> {
+    fn extend<T: IntoIterator<Item = (ItemSpecId, BoxDtDisplay)>>(&mut self, iter: T) {
         iter.into_iter().for_each(|(item_spec_id, state)| {
             self.insert_raw(item_spec_id, state);
         });

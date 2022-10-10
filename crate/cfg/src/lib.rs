@@ -21,9 +21,10 @@ pub use crate::fn_spec::FnSpec;
 pub use crate::state_diff_fn_spec::StateDiffFnSpec;
 pub use crate::{item_spec::ItemSpec, state::State};
 
+pub mod state;
+
 mod clean_op_spec;
 mod ensure_op_spec;
 mod fn_spec;
 mod item_spec;
-mod state;
 mod state_diff_fn_spec;

@@ -1,3 +1,5 @@
+use std::fmt;
+
 use async_trait::async_trait;
 use peace_core::ItemSpecId;
 use peace_resources::{resources::ts::Empty, Resources};
@@ -121,7 +123,7 @@ pub trait ItemSpec {
     ///
     /// [`StateCurrentFnSpec`]: Self::StateCurrentFnSpec
     /// [`StatePhysical`]: Self::StatePhysical
-    type StateLogical: Clone + Serialize + DeserializeOwned;
+    type StateLogical: Clone + fmt::Display + Serialize + DeserializeOwned;
 
     /// State of the managed item that is not controlled.
     ///
@@ -137,7 +139,7 @@ pub trait ItemSpec {
     /// [`Data`]: crate::EnsureOpSpec::Data
     /// [`StateLogical`]: Self::StateLogical
     /// [`EnsureOpSpec::desired`]: crate::EnsureOpSpec::desired
-    type StatePhysical: Clone + Serialize + DeserializeOwned;
+    type StatePhysical: Clone + fmt::Display + Serialize + DeserializeOwned;
 
     /// Diff between the current [`State`] and the desired [`State`].
     ///
@@ -158,7 +160,7 @@ pub trait ItemSpec {
     ///
     /// [`StateLogical`]: Self::StateLogical
     /// [`StatePhysical`]: Self::StatePhysical
-    type StateDiff: Clone + Serialize + DeserializeOwned;
+    type StateDiff: Clone + fmt::Display + Serialize + DeserializeOwned;
 
     /// Function that returns the current state of the managed item.
     type StateCurrentFnSpec: FnSpec<

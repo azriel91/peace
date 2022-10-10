@@ -1,8 +1,6 @@
-use std::path::PathBuf;
-
 #[nougat::gat(Data)]
 use peace::cfg::CleanOpSpec;
-use peace::cfg::{async_trait, nougat, OpCheckStatus, ProgressLimit, State};
+use peace::cfg::{async_trait, nougat, state::Nothing, OpCheckStatus, ProgressLimit, State};
 
 use crate::{DownloadError, DownloadParams, FileState};
 
@@ -16,54 +14,37 @@ impl CleanOpSpec for DownloadCleanOpSpec {
     type Data<'op> = DownloadParams<'op>
         where Self: 'op;
     type Error = DownloadError;
-    type StateLogical = Option<FileState>;
-    type StatePhysical = PathBuf;
+    type StateLogical = FileState;
+    type StatePhysical = Nothing;
 
-    #[cfg(not(target_arch = "wasm32"))]
     async fn check(
         _download_params: DownloadParams<'_>,
         State {
-            physical: dest_path,
+            logical: file_state,
             ..
-        }: &State<Option<FileState>, PathBuf>,
+        }: &State<FileState, Nothing>,
     ) -> Result<OpCheckStatus, DownloadError> {
-        let op_check_status = if dest_path.exists() {
-            // TODO: read file size
-            OpCheckStatus::ExecRequired {
-                progress_limit: ProgressLimit::Bytes(1024),
-            }
-        } else {
-            OpCheckStatus::ExecNotRequired
-        };
-        Ok(op_check_status)
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    async fn check(
-        download_params: DownloadParams<'_>,
-        State {
-            physical: dest_path,
-            ..
-        }: &State<Option<FileState>, PathBuf>,
-    ) -> Result<OpCheckStatus, DownloadError> {
-        let dest_path_exists = download_params
-            .storage()
-            .get_item_opt(&dest_path)?
-            .is_some();
-        let op_check_status = if dest_path_exists {
-            // TODO: read file size
-            OpCheckStatus::ExecRequired {
-                progress_limit: ProgressLimit::Bytes(1024),
-            }
-        } else {
-            OpCheckStatus::ExecNotRequired
+        let op_check_status = match file_state {
+            FileState::None => OpCheckStatus::ExecNotRequired,
+            FileState::StringContents { path: _, contents } => OpCheckStatus::ExecRequired {
+                progress_limit: ProgressLimit::Bytes(contents.as_bytes().len().try_into().unwrap()),
+            },
+            FileState::Length {
+                path: _,
+                byte_count,
+            } => OpCheckStatus::ExecRequired {
+                progress_limit: ProgressLimit::Bytes(*byte_count),
+            },
+            FileState::Unknown { path: _ } => OpCheckStatus::ExecRequired {
+                progress_limit: ProgressLimit::Unknown,
+            },
         };
         Ok(op_check_status)
     }
 
     async fn exec_dry(
         _download_params: DownloadParams<'_>,
-        _state: &State<Option<FileState>, PathBuf>,
+        _state: &State<FileState, Nothing>,
     ) -> Result<(), DownloadError> {
         Ok(())
     }
@@ -72,13 +53,20 @@ impl CleanOpSpec for DownloadCleanOpSpec {
     async fn exec(
         _download_params: DownloadParams<'_>,
         State {
-            physical: dest_path,
+            logical: file_state,
             ..
-        }: &State<Option<FileState>, PathBuf>,
+        }: &State<FileState, Nothing>,
     ) -> Result<(), DownloadError> {
-        tokio::fs::remove_file(dest_path)
-            .await
-            .map_err(DownloadError::DestFileRemove)?;
+        match file_state {
+            FileState::None => {}
+            FileState::StringContents { path, .. }
+            | FileState::Length { path, .. }
+            | FileState::Unknown { path } => {
+                tokio::fs::remove_file(path)
+                    .await
+                    .map_err(DownloadError::DestFileRemove)?;
+            }
+        }
         Ok(())
     }
 
@@ -86,11 +74,18 @@ impl CleanOpSpec for DownloadCleanOpSpec {
     async fn exec(
         download_params: DownloadParams<'_>,
         State {
-            physical: dest_path,
+            logical: file_state,
             ..
-        }: &State<Option<FileState>, PathBuf>,
+        }: &State<FileState, Nothing>,
     ) -> Result<(), DownloadError> {
-        download_params.storage().remove_item(dest_path)?;
+        match file_state {
+            FileState::None => {}
+            FileState::StringContents { path, .. }
+            | FileState::Length { path, .. }
+            | FileState::Unknown { path } => {
+                download_params.storage().remove_item(path)?;
+            }
+        }
 
         Ok(())
     }

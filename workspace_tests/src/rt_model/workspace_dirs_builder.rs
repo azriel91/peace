@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use peace::{
-    cfg::{flow_id, profile, FlowId, Profile},
+    cfg::{profile, FlowId, Profile},
     rt_model::{Error, WorkspaceDirsBuilder, WorkspaceSpec},
 };
 
@@ -10,7 +10,7 @@ fn returns_workspace_dir_from_working_directory() -> Result<(), Box<dyn std::err
     let workspace_dirs = WorkspaceDirsBuilder::build(
         WorkspaceSpec::WorkingDir,
         &profile!("test_profile"),
-        &flow_id!("test_flow"),
+        &FlowId::new(crate::fn_name_short!())?,
     )?;
 
     let workspace_dir = workspace_dirs.workspace_dir();
@@ -28,7 +28,7 @@ fn returns_workspace_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::e
     let workspace_dirs = WorkspaceDirsBuilder::build(
         WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
         &profile!("test_profile"),
-        &flow_id!("test_flow"),
+        &FlowId::new(crate::fn_name_short!())?,
     )?;
 
     let workspace_dir = workspace_dirs.workspace_dir();
@@ -47,7 +47,7 @@ fn returns_workspace_file_not_found_when_workspace_root_file_does_not_exist()
     let workspace_dirs_result = WorkspaceDirsBuilder::build(
         WorkspaceSpec::FirstDirWithFile("non_existent_file".into()),
         &profile!("test_profile"),
-        &flow_id!("test_flow"),
+        &FlowId::new(crate::fn_name_short!())?,
     );
 
     assert!(matches!(
@@ -66,7 +66,7 @@ fn returns_workspace_dir_from_path() -> Result<(), Box<dyn std::error::Error>> {
     let workspace_dirs = WorkspaceDirsBuilder::build(
         WorkspaceSpec::Path(Path::new(tempdir.path()).to_path_buf()),
         &profile!("test_profile"),
-        &flow_id!("test_flow"),
+        &FlowId::new(crate::fn_name_short!())?,
     )?;
 
     let workspace_dir = workspace_dirs.workspace_dir();
@@ -80,7 +80,7 @@ fn returns_peace_dir_relative_to_workspace_dir() -> Result<(), Box<dyn std::erro
     let workspace_dirs = WorkspaceDirsBuilder::build(
         WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
         &profile!("test_profile"),
-        &flow_id!("test_flow"),
+        &FlowId::new(crate::fn_name_short!())?,
     )?;
 
     let peace_dir = workspace_dirs.peace_dir();
@@ -99,7 +99,7 @@ fn returns_profile_history_dir_from_first_dir_with_file() -> Result<(), Box<dyn 
     let workspace_dirs = WorkspaceDirsBuilder::build(
         WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
         &profile!("test_profile"),
-        &flow_id!("test_flow"),
+        &FlowId::new(crate::fn_name_short!())?,
     )?;
 
     let profile_history_dir = workspace_dirs.profile_history_dir();
@@ -117,7 +117,7 @@ fn returns_profile_dir_from_working_directory() -> Result<(), Box<dyn std::error
     let workspace_dirs = WorkspaceDirsBuilder::build(
         WorkspaceSpec::WorkingDir,
         &profile!("test_profile"),
-        &flow_id!("test_flow"),
+        &FlowId::new(crate::fn_name_short!())?,
     )?;
 
     let profile_dir = workspace_dirs.profile_dir();
@@ -135,7 +135,7 @@ fn returns_profile_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::err
     let workspace_dirs = WorkspaceDirsBuilder::build(
         WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
         &profile!("test_profile"),
-        &flow_id!("test_flow"),
+        &FlowId::new(crate::fn_name_short!())?,
     )?;
 
     let profile_dir = workspace_dirs.profile_dir();
