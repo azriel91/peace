@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use peace::{
-    cfg::{flow_id, profile, FlowId, Profile},
+    cfg::{profile, FlowId, Profile},
     resources::internal::{FlowInitFile, ProfileInitFile, WorkspaceInitFile},
     rt_model::{
         CmdContext, CmdContextBuilder, ItemSpecGraph, ItemSpecGraphBuilder, Workspace,
@@ -189,7 +189,7 @@ async fn test_setup() -> Result<
     let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().into()),
         profile!("test_profile"),
-        flow_id!("test_flow"),
+        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();

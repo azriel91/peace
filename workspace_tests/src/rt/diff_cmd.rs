@@ -1,6 +1,6 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
-    cfg::{flow_id, profile, state::Nothing, FlowId, ItemSpec, Profile, State},
+    cfg::{profile, state::Nothing, FlowId, ItemSpec, Profile, State},
     resources::states::{StateDiffs, StatesCurrent, StatesDesired},
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{CliOutput, CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
@@ -15,7 +15,7 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
     let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
-        flow_id!("test_flow"),
+        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -66,7 +66,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
-        flow_id!("test_flow"),
+        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();

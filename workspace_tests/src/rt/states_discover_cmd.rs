@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{flow_id, profile, state::Nothing, FlowId, ItemSpec, ItemSpecId, Profile, State},
+    cfg::{profile, state::Nothing, FlowId, ItemSpec, ItemSpecId, Profile, State},
     resources::{
         paths::{StatesCurrentFile, StatesDesiredFile},
         states::{StatesCurrent, StatesDesired},
@@ -17,7 +17,7 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
     let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
-        flow_id!("test_flow"),
+        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();

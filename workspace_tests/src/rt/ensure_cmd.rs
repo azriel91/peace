@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{flow_id, profile, state::Nothing, FlowId, ItemSpec, Profile, State},
+    cfg::{profile, state::Nothing, FlowId, ItemSpec, Profile, State},
     resources::states::{StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry},
     rt::cmds::{sub::StatesCurrentReadCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
@@ -13,7 +13,7 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
-        flow_id!("test_flow"),
+        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -60,7 +60,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
-        flow_id!("test_flow"),
+        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -128,7 +128,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
-        flow_id!("test_flow"),
+        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
