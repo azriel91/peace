@@ -23,14 +23,18 @@ async fn reads_states_current_from_disk_when_present() -> Result<(), Box<dyn std
     let mut no_op_output = NoOpOutput;
 
     // Write current states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output)
+        .with_profile_init::<VecCopyState>(Some(VecCopyState::new()))
+        .await?;
     let CmdContext {
         resources: resources_from_discover,
         ..
     } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
-    // Re-read states from disk in a new set of resources.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    // Re-read states from disk.
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output)
+        .with_profile_init::<VecCopyState>(None)
+        .await?;
     let CmdContext {
         resources: resources_from_read,
         ..
@@ -62,7 +66,9 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 
     // Try and read states from disk.
     let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output)
+        .with_profile_init::<VecCopyState>(Some(VecCopyState::new()))
+        .await?;
     let exec_result = StatesCurrentReadCmd::exec(cmd_context).await;
 
     assert!(matches!(

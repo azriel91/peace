@@ -54,12 +54,26 @@ impl ItemSpec for VecCopyItemSpec {
     type StatePhysical = Nothing;
 
     fn id(&self) -> ItemSpecId {
-        item_spec_id!("vec_copy_item_spec")
+        item_spec_id!("vec_copy")
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {
         resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-        resources.insert(VecB(vec![]));
+
+        // This is "unusual" initialization.
+        //
+        // Because this is an in-memory vector, even after the EnsureCmd has been run,
+        // the persisted state in `.peace/profile/flow/states_current.yaml` is not
+        // re-read for `VecB`. Instead, tests use `with_profile_init(Some(..))` if VecB
+        // needs to be initialized to a certain value.
+        let vec_b = {
+            if let Ok(vec_copy_state) = resources.try_borrow::<VecCopyState>() {
+                VecB((**vec_copy_state).clone())
+            } else {
+                VecB::default()
+            }
+        };
+        resources.insert(vec_b);
         Ok(())
     }
 }
@@ -238,14 +252,14 @@ impl StateDiffFnSpec for VecCopyStateDiffFnSpec {
         state_current: &State<VecCopyState, Nothing>,
         state_desired: &VecCopyState,
     ) -> Result<Self::StateDiff, VecCopyError> {
-        Ok(state_current.logical.diff(&state_desired)).map(VecCopyDiff)
+        Ok(state_current.logical.diff(&state_desired)).map(VecCopyDiff::from)
     }
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct VecA(pub Vec<u8>);
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct VecB(pub Vec<u8>);
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -316,14 +330,14 @@ impl fmt::Display for VecCopyDiff {
             .try_for_each(|vec_diff_type| match vec_diff_type {
                 VecDiffType::Removed { index, len } => {
                     let index_end = index + len;
-                    write!(f, "-{index}..{index_end}, ")
+                    write!(f, "(-){index}..{index_end}, ")
                 }
                 VecDiffType::Altered { index, changes } => {
-                    write!(f, "-+{index};")?;
+                    write!(f, "(~){index};")?;
                     changes.iter().try_for_each(|value| write!(f, "{value}, "))
                 }
                 VecDiffType::Inserted { index, changes } => {
-                    write!(f, "+{index};")?;
+                    write!(f, "(+){index};")?;
                     changes.iter().try_for_each(|value| write!(f, "{value}, "))
                 }
             })?;
