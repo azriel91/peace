@@ -8,9 +8,13 @@ use peace::{
 };
 
 #[tokio::test]
-async fn outputs_states_current_verbose_mode() -> Result<(), Box<dyn std::error::Error>> {
+async fn outputs_states_current() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
     let mut cli_output = CliOutput::new_with_writer(&mut buffer);
+    #[cfg(feature = "output_colorized")]
+    {
+        cli_output = cli_output.colorized();
+    }
     let states_current = {
         let mut states = StatesMut::new();
         states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
@@ -32,9 +36,13 @@ async fn outputs_states_current_verbose_mode() -> Result<(), Box<dyn std::error:
 }
 
 #[tokio::test]
-async fn outputs_states_desired_verbose_mode() -> Result<(), Box<dyn std::error::Error>> {
+async fn outputs_states_desired() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
     let mut cli_output = CliOutput::new_with_writer(&mut buffer);
+    #[cfg(feature = "output_colorized")]
+    {
+        cli_output = cli_output.colorized();
+    }
     let states_desired = {
         let mut states = StatesMut::new();
         states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
@@ -56,9 +64,13 @@ async fn outputs_states_desired_verbose_mode() -> Result<(), Box<dyn std::error:
 }
 
 #[tokio::test]
-async fn outputs_state_diffs_verbose_mode() -> Result<(), Box<dyn std::error::Error>> {
+async fn outputs_state_diffs() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
     let mut cli_output = CliOutput::new_with_writer(&mut buffer);
+    #[cfg(feature = "output_colorized")]
+    {
+        cli_output = cli_output.colorized();
+    }
     let state_diffs = {
         let mut state_diffs_mut = StateDiffsMut::new();
         state_diffs_mut.insert(item_spec_id!("item_0"), "need one more server");
@@ -78,9 +90,13 @@ item_1: 1
 }
 
 #[tokio::test]
-async fn outputs_error_one_line_mode() -> Result<(), Box<dyn std::error::Error>> {
+async fn outputs_error() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
     let mut cli_output = CliOutput::new_with_writer(&mut buffer);
+    #[cfg(feature = "output_colorized")]
+    {
+        cli_output = cli_output.colorized();
+    }
     let error = Error::CliOutputTest;
 
     <CliOutput<_> as OutputWrite<Error>>::write_err(&mut cli_output, &error).await?;

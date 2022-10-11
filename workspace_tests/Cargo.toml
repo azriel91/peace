@@ -24,3 +24,6 @@ serde_yaml = "0.9.13"
 tempfile = "3.3.0"
 thiserror = "1.0.37"
 tokio = { version = "1.21.2", features = ["rt", "macros"] }
+
+[features]
+output_colorized = ["peace/output_colorized"]

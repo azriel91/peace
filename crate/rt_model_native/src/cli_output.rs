@@ -31,13 +31,6 @@ impl CliOutput<Stdout> {
     pub fn new() -> Self {
         Self::default()
     }
-
-    /// Returns a new `CliOutput` using `io::stdout()` as the output stream.
-    #[cfg(feature = "output_colorized")]
-    pub fn colorized(mut self) -> Self {
-        self.colorized = true;
-        self
-    }
 }
 
 impl<W> CliOutput<W>
@@ -51,6 +44,13 @@ where
             #[cfg(feature = "output_colorized")]
             colorized: false,
         }
+    }
+
+    /// Returns a new `CliOutput` using `io::stdout()` as the output stream.
+    #[cfg(feature = "output_colorized")]
+    pub fn colorized(mut self) -> Self {
+        self.colorized = true;
+        self
     }
 
     #[cfg(not(feature = "output_colorized"))]
