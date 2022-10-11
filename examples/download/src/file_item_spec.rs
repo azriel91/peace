@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{async_trait, item_spec_id, state::Nothing, ItemSpec, ItemSpecId},
+    cfg::{async_trait, state::Nothing, ItemSpec, ItemSpecId},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -8,12 +8,22 @@ use crate::{
     DownloadStateDesiredFnSpec, DownloadStateDiffFnSpec, FileState, FileStateDiff,
 };
 
-/// Full spec for downloading a file.
+/// Item spec for downloading a file.
 #[derive(Debug)]
-pub struct DownloadItemSpec;
+pub struct FileItemSpec {
+    /// ID of the item spec to download the file.
+    item_spec_id: ItemSpecId,
+}
+
+impl FileItemSpec {
+    /// Returns a new `FileItemSpec`.
+    pub fn new(item_spec_id: ItemSpecId) -> Self {
+        Self { item_spec_id }
+    }
+}
 
 #[async_trait(?Send)]
-impl ItemSpec for DownloadItemSpec {
+impl ItemSpec for FileItemSpec {
     type CleanOpSpec = DownloadCleanOpSpec;
     type EnsureOpSpec = DownloadEnsureOpSpec;
     type Error = DownloadError;
@@ -25,7 +35,7 @@ impl ItemSpec for DownloadItemSpec {
     type StatePhysical = Nothing;
 
     fn id(&self) -> ItemSpecId {
-        item_spec_id!("download")
+        self.item_spec_id.clone()
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), DownloadError> {

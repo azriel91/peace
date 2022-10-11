@@ -24,6 +24,10 @@ pub fn main() -> Result<(), DownloadError> {
         let profile = profile!("default");
         let flow_id = flow_id!("file");
         let mut cli_output = CliOutput::default();
+        #[cfg(feature = "output_colorized")]
+        {
+            cli_output = cli_output.colorized();
+        }
 
         match command {
             DownloadCommand::Init { url, dest } => {

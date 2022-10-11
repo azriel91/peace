@@ -25,7 +25,7 @@ impl CleanOpSpec for DownloadCleanOpSpec {
         }: &State<FileState, Nothing>,
     ) -> Result<OpCheckStatus, DownloadError> {
         let op_check_status = match file_state {
-            FileState::None => OpCheckStatus::ExecNotRequired,
+            FileState::None { .. } => OpCheckStatus::ExecNotRequired,
             FileState::StringContents { path: _, contents } => OpCheckStatus::ExecRequired {
                 progress_limit: ProgressLimit::Bytes(contents.as_bytes().len().try_into().unwrap()),
             },
@@ -58,7 +58,7 @@ impl CleanOpSpec for DownloadCleanOpSpec {
         }: &State<FileState, Nothing>,
     ) -> Result<(), DownloadError> {
         match file_state {
-            FileState::None => {}
+            FileState::None { .. } => {}
             FileState::StringContents { path, .. }
             | FileState::Length { path, .. }
             | FileState::Unknown { path } => {
@@ -79,7 +79,7 @@ impl CleanOpSpec for DownloadCleanOpSpec {
         }: &State<FileState, Nothing>,
     ) -> Result<(), DownloadError> {
         match file_state {
-            FileState::None => {}
+            FileState::None { .. } => {}
             FileState::StringContents { path, .. }
             | FileState::Length { path, .. }
             | FileState::Unknown { path } => {

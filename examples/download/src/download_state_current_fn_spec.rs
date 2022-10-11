@@ -72,7 +72,9 @@ impl DownloadStateCurrentFnSpec {
                         contents: contents.clone(),
                     })
             })
-            .unwrap_or(FileState::None);
+            .unwrap_or(FileState::None {
+                path: dest.to_path_buf(),
+            });
 
         Ok(file_state)
     }
@@ -94,7 +96,8 @@ impl FnSpec for DownloadStateCurrentFnSpec {
         #[cfg(target_arch = "wasm32")]
         let file_exists = download_params.storage().get_item_opt(dest)?.is_some();
         if !file_exists {
-            return Ok(State::new(FileState::None, Nothing));
+            let path = dest.to_path_buf();
+            return Ok(State::new(FileState::None { path }, Nothing));
         }
 
         // Check file length

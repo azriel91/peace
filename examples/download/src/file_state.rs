@@ -9,7 +9,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum FileState {
     /// File does not exist.
-    None,
+    None {
+        /// Path to the tracked file.
+        path: PathBuf,
+    },
     /// String contents of the file.
     ///
     /// Use this when:
@@ -45,18 +48,21 @@ pub enum FileState {
 impl fmt::Display for FileState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::None => write!(f, "<non-existent>"),
+            Self::None { path } => {
+                let path = path.display();
+                write!(f, "`{path}` non-existent")
+            }
             Self::StringContents { path, contents } => {
                 let path = path.display();
-                write!(f, "{path} containing \"{contents}\"")
+                write!(f, "`{path}` containing \"{contents}\"")
             }
             Self::Length { path, byte_count } => {
                 let path = path.display();
-                write!(f, "{path} containing {byte_count} bytes")
+                write!(f, "`{path}` containing {byte_count} bytes")
             }
             Self::Unknown { path } => {
                 let path = path.display();
-                write!(f, "{path} (contents not tracked)")
+                write!(f, "`{path}` (contents not tracked)")
             }
         }
     }

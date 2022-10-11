@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{FlowId, Profile},
+    cfg::{item_spec_id, FlowId, ItemSpecId, Profile},
     resources::{
         resources::ts::{
             Cleaned, CleanedDry, Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates,
@@ -21,12 +21,12 @@ pub use crate::{
     download_clean_op_spec::DownloadCleanOpSpec,
     download_ensure_op_spec::DownloadEnsureOpSpec,
     download_error::DownloadError,
-    download_item_spec::DownloadItemSpec,
     download_params::DownloadParams,
     download_profile_init::DownloadProfileInit,
     download_state_current_fn_spec::DownloadStateCurrentFnSpec,
     download_state_desired_fn_spec::DownloadStateDesiredFnSpec,
     download_state_diff_fn_spec::DownloadStateDiffFnSpec,
+    file_item_spec::FileItemSpec,
     file_state::FileState,
     file_state_diff::FileStateDiff,
 };
@@ -35,12 +35,12 @@ mod download_args;
 mod download_clean_op_spec;
 mod download_ensure_op_spec;
 mod download_error;
-mod download_item_spec;
 mod download_params;
 mod download_profile_init;
 mod download_state_current_fn_spec;
 mod download_state_desired_fn_spec;
 mod download_state_diff_fn_spec;
+mod file_item_spec;
 mod file_state;
 mod file_state_diff;
 
@@ -69,7 +69,7 @@ pub async fn workspace_and_graph_setup(
 
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
-        item_spec_graph_builder.add_fn(DownloadItemSpec.into());
+        item_spec_graph_builder.add_fn(FileItemSpec::new(item_spec_id!("file")).into());
         item_spec_graph_builder.build()
     };
 
@@ -90,7 +90,7 @@ pub async fn workspace_and_graph_setup(
     let workspace = Workspace::new(workspace_spec, profile, flow_id)?;
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
-        item_spec_graph_builder.add_fn(DownloadItemSpec.into());
+        item_spec_graph_builder.add_fn(FileItemSpec::new(item_spec_id!("file")).into());
         item_spec_graph_builder.build()
     };
 

@@ -8,9 +8,9 @@ use wasm_bindgen::prelude::*;
 pub use crate::{
     clean, clean_dry, cmd_context, desired, diff, ensure, ensure_dry, fetch, status,
     workspace_and_graph_setup, DownloadArgs, DownloadCleanOpSpec, DownloadCommand,
-    DownloadEnsureOpSpec, DownloadError, DownloadItemSpec, DownloadParams, DownloadProfileInit,
-    DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec, DownloadStateDiffFnSpec, FileState,
-    FileStateDiff, WorkspaceAndGraph,
+    DownloadEnsureOpSpec, DownloadError, DownloadParams, DownloadProfileInit,
+    DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec, DownloadStateDiffFnSpec, FileItemSpec,
+    FileState, FileStateDiff, WorkspaceAndGraph,
 };
 
 #[wasm_bindgen]

@@ -121,10 +121,7 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
         diff: &FileStateDiff,
     ) -> Result<OpCheckStatus, DownloadError> {
         let op_check_status = match diff {
-            FileStateDiff::Change {
-                byte_len,
-                contents: _,
-            } => {
+            FileStateDiff::Change { byte_len, .. } => {
                 let progress_limit = match byte_len.to {
                     Tracked::None => ProgressLimit::Unknown,
                     Tracked::Known(len) => len
@@ -136,8 +133,9 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
 
                 OpCheckStatus::ExecRequired { progress_limit }
             }
-            FileStateDiff::Deleted => OpCheckStatus::ExecNotRequired, // Don't delete existing file
-            FileStateDiff::NoChangeNonExistent | FileStateDiff::NoChangeSync => {
+            FileStateDiff::Deleted { .. } => OpCheckStatus::ExecNotRequired, /* Don't delete */
+            // existing file
+            FileStateDiff::NoChangeNonExistent { .. } | FileStateDiff::NoChangeSync { .. } => {
                 OpCheckStatus::ExecNotRequired
             }
         };

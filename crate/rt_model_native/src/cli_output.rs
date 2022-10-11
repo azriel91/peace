@@ -19,10 +19,15 @@ use crate::Error;
 pub struct CliOutput<W> {
     /// Output stream to write to.
     writer: W,
+    /// Whether output should be colorized.
+    #[cfg(feature = "output_colorized")]
+    colorized: bool,
 }
 
 impl CliOutput<Stdout> {
     /// Returns a new `CliOutput` using `io::stdout()` as the output stream.
+    ///
+    /// The default output is not colorized.
     pub fn new() -> Self {
         Self::default()
     }
@@ -34,9 +39,21 @@ where
 {
     /// Returns a new `CliOutput` using `io::stdout()` as the output stream.
     pub fn new_with_writer(writer: W) -> Self {
-        Self { writer }
+        Self {
+            writer,
+            #[cfg(feature = "output_colorized")]
+            colorized: false,
+        }
     }
 
+    /// Returns a new `CliOutput` using `io::stdout()` as the output stream.
+    #[cfg(feature = "output_colorized")]
+    pub fn colorized(mut self) -> Self {
+        self.colorized = true;
+        self
+    }
+
+    #[cfg(not(feature = "output_colorized"))]
     async fn output_any_display<'f, E, I>(&mut self, iter: I) -> Result<(), E>
     where
         E: std::error::Error + From<Error>,
@@ -49,7 +66,46 @@ where
                 writer,
                 |writer, (item_spec_id, item_spec_state)| async move {
                     writer.write_all(item_spec_id.as_bytes()).await?;
+
                     writer.write_all(b": ").await?;
+
+                    writer
+                        .write_all(format!("{item_spec_state}\n").as_bytes())
+                        .await?;
+                    Ok(writer)
+                },
+            )
+            .await
+            .map_err(Error::StdoutWrite)?;
+        Ok(())
+    }
+
+    #[cfg(feature = "output_colorized")]
+    async fn output_any_display<'f, E, I>(&mut self, iter: I) -> Result<(), E>
+    where
+        E: std::error::Error + From<Error>,
+        I: Iterator<Item = (&'f ItemSpecId, &'f BoxDtDisplay)>,
+    {
+        let item_spec_id_style = &console::Style::new().color256(69);
+        let colorized = self.colorized;
+
+        let writer = &mut self.writer;
+        stream::iter(iter)
+            .map(Result::<_, std::io::Error>::Ok)
+            .try_fold(
+                writer,
+                |writer, (item_spec_id, item_spec_state)| async move {
+                    if colorized {
+                        let item_spec_id_colorized = item_spec_id_style.apply_to(item_spec_id);
+                        writer
+                            .write_all(format!("{item_spec_id_colorized}").as_bytes())
+                            .await?;
+                    } else {
+                        writer.write_all(item_spec_id.as_bytes()).await?;
+                    }
+
+                    writer.write_all(b": ").await?;
+
                     writer
                         .write_all(format!("{item_spec_state}\n").as_bytes())
                         .await?;
@@ -66,6 +122,8 @@ impl Default for CliOutput<Stdout> {
     fn default() -> Self {
         Self {
             writer: tokio::io::stdout(),
+            #[cfg(feature = "output_colorized")]
+            colorized: false,
         }
     }
 }
