@@ -13,11 +13,7 @@ use peace::{
 #[tokio::test]
 async fn outputs_states_current() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
-    let mut cli_output = CliOutput::new_with_writer(&mut buffer);
-    #[cfg(feature = "output_colorized")]
-    {
-        cli_output = cli_output.colorized();
-    }
+    let mut cli_output = cli_output(&mut buffer);
     let states_current = {
         let mut states = StatesMut::new();
         states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
@@ -41,11 +37,7 @@ async fn outputs_states_current() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn outputs_states_desired() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
-    let mut cli_output = CliOutput::new_with_writer(&mut buffer);
-    #[cfg(feature = "output_colorized")]
-    {
-        cli_output = cli_output.colorized();
-    }
+    let mut cli_output = cli_output(&mut buffer);
     let states_desired = {
         let mut states = StatesMut::new();
         states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
@@ -69,11 +61,7 @@ async fn outputs_states_desired() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn outputs_state_diffs() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
-    let mut cli_output = CliOutput::new_with_writer(&mut buffer);
-    #[cfg(feature = "output_colorized")]
-    {
-        cli_output = cli_output.colorized();
-    }
+    let mut cli_output = cli_output(&mut buffer);
     let state_diffs = {
         let mut state_diffs_mut = StateDiffsMut::new();
         state_diffs_mut.insert(item_spec_id!("item_0"), "need one more server");
@@ -95,11 +83,7 @@ item_1: 1
 #[tokio::test]
 async fn outputs_states_ensured_dry() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
-    let mut cli_output = CliOutput::new_with_writer(&mut buffer);
-    #[cfg(feature = "output_colorized")]
-    {
-        cli_output = cli_output.colorized();
-    }
+    let mut cli_output = cli_output(&mut buffer);
     let states_ensured_dry = {
         let mut states = StatesMut::new();
         states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
@@ -126,11 +110,7 @@ async fn outputs_states_ensured_dry() -> Result<(), Box<dyn std::error::Error>> 
 #[tokio::test]
 async fn outputs_states_ensured() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
-    let mut cli_output = CliOutput::new_with_writer(&mut buffer);
-    #[cfg(feature = "output_colorized")]
-    {
-        cli_output = cli_output.colorized();
-    }
+    let mut cli_output = cli_output(&mut buffer);
     let states_ensured = {
         let mut states = StatesMut::new();
         states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
@@ -154,11 +134,7 @@ async fn outputs_states_ensured() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn outputs_states_cleaned_dry() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
-    let mut cli_output = CliOutput::new_with_writer(&mut buffer);
-    #[cfg(feature = "output_colorized")]
-    {
-        cli_output = cli_output.colorized();
-    }
+    let mut cli_output = cli_output(&mut buffer);
     let states_cleaned_dry = {
         let mut states = StatesMut::new();
         states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
@@ -185,11 +161,7 @@ async fn outputs_states_cleaned_dry() -> Result<(), Box<dyn std::error::Error>> 
 #[tokio::test]
 async fn outputs_states_cleaned() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
-    let mut cli_output = CliOutput::new_with_writer(&mut buffer);
-    #[cfg(feature = "output_colorized")]
-    {
-        cli_output = cli_output.colorized();
-    }
+    let mut cli_output = cli_output(&mut buffer);
     let states_cleaned = {
         let mut states = StatesMut::new();
         states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
@@ -213,11 +185,7 @@ async fn outputs_states_cleaned() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn outputs_error() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
-    let mut cli_output = CliOutput::new_with_writer(&mut buffer);
-    #[cfg(feature = "output_colorized")]
-    {
-        cli_output = cli_output.colorized();
-    }
+    let mut cli_output = cli_output(&mut buffer);
     let error = Error::CliOutputTest;
 
     <CliOutput<_> as OutputWrite<Error>>::write_err(&mut cli_output, &error).await?;
@@ -240,4 +208,14 @@ enum Error {
     /// A `peace` runtime error occurred.
     #[error("A `peace` runtime error occurred.")]
     PeaceRtError(#[from] peace::rt_model::Error),
+}
+
+#[cfg(not(feature = "output_colorized"))]
+fn cli_output(buffer: &mut Vec<u8>) -> CliOutput<&mut Vec<u8>> {
+    CliOutput::new_with_writer(buffer)
+}
+
+#[cfg(feature = "output_colorized")]
+fn cli_output(buffer: &mut Vec<u8>) -> CliOutput<&mut Vec<u8>> {
+    CliOutput::new_with_writer(buffer).colorized()
 }
