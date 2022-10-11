@@ -30,38 +30,46 @@ impl StateDiffFnSpec for DownloadStateDiffFnSpec {
             let file_state_current = &state_current.logical;
             match (file_state_current, file_state_desired) {
                 (
-                    FileState::StringContents { .. }
-                    | FileState::Length { .. }
-                    | FileState::Unknown { .. },
-                    FileState::None,
-                ) => FileStateDiff::Deleted,
+                    FileState::StringContents { path, .. }
+                    | FileState::Length { path, .. }
+                    | FileState::Unknown { path, .. },
+                    FileState::None { .. },
+                ) => FileStateDiff::Deleted {
+                    path: path.to_path_buf(),
+                },
 
                 (
                     file_state_current @ (FileState::StringContents { .. }
                     | FileState::Length { .. }
                     | FileState::Unknown { .. }),
-                    file_state_desired @ (FileState::StringContents { .. }
-                    | FileState::Length { .. }
-                    | FileState::Unknown { .. }),
+                    file_state_desired @ (FileState::StringContents { path, .. }
+                    | FileState::Length { path, .. }
+                    | FileState::Unknown { path, .. }),
                 )
                 | (
-                    file_state_current @ FileState::None,
-                    file_state_desired @ (FileState::StringContents { .. }
-                    | FileState::Length { .. }
-                    | FileState::Unknown { .. }),
+                    file_state_current @ FileState::None { .. },
+                    file_state_desired @ (FileState::StringContents { path, .. }
+                    | FileState::Length { path, .. }
+                    | FileState::Unknown { path, .. }),
                 ) => {
+                    let path = path.to_path_buf();
                     let (from_bytes, from_content) = to_file_state_diff(file_state_current);
                     let (to_bytes, to_content) = to_file_state_diff(file_state_desired);
 
                     match (from_bytes == to_bytes, from_content == to_content) {
                         (false, false) | (false, true) | (true, false) => FileStateDiff::Change {
+                            path,
                             byte_len: Changeable::new(from_bytes, to_bytes),
                             contents: Changeable::new(from_content, to_content),
                         },
-                        (true, true) => FileStateDiff::NoChangeSync,
+                        (true, true) => FileStateDiff::NoChangeSync { path },
                     }
                 }
-                (FileState::None, FileState::None) => FileStateDiff::NoChangeNonExistent,
+                (FileState::None { .. }, FileState::None { path }) => {
+                    FileStateDiff::NoChangeNonExistent {
+                        path: path.to_path_buf(),
+                    }
+                }
             }
         };
 
@@ -71,7 +79,7 @@ impl StateDiffFnSpec for DownloadStateDiffFnSpec {
 
 fn to_file_state_diff(file_state: &FileState) -> (Tracked<usize>, Tracked<String>) {
     match file_state {
-        FileState::None => (Tracked::None, Tracked::None),
+        FileState::None { .. } => (Tracked::None, Tracked::None),
         FileState::StringContents { path: _, contents } => (
             Tracked::Known(contents.bytes().len()),
             Tracked::Known(contents.to_owned()),

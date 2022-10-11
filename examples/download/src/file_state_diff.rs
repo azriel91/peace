@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, path::PathBuf};
 
 use peace::diff::{Changeable, Tracked};
 use serde::{Deserialize, Serialize};
@@ -7,13 +7,24 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum FileStateDiff {
     /// File exists locally, but does not exist on server.
-    Deleted,
+    Deleted {
+        /// Path to the file.
+        path: PathBuf,
+    },
     /// File does not exist both locally and on server.
-    NoChangeNonExistent,
+    NoChangeNonExistent {
+        /// Path to the file.
+        path: PathBuf,
+    },
     /// File exists both locally and on server, and they are in sync.
-    NoChangeSync,
+    NoChangeSync {
+        /// Path to the file.
+        path: PathBuf,
+    },
     /// There is a change.
     Change {
+        /// Path to the file.
+        path: PathBuf,
         /// Possible change in byte length.
         byte_len: Changeable<usize>,
         /// Possible change in contents.
@@ -24,14 +35,23 @@ pub enum FileStateDiff {
 impl fmt::Display for FileStateDiff {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Deleted => write!(f, "server file deleted"),
-            Self::NoChangeNonExistent => write!(f, "no file to download"),
-            Self::NoChangeSync => write!(f, "file in sync with server"),
+            Self::Deleted { path } => write!(
+                f,
+                "resource does not exist on server; locally `{}` exists, but ensure will not delete it",
+                path.display()
+            ),
+            Self::NoChangeNonExistent { path } => write!(
+                f,
+                "resource does not exist on server, and `{}` does not exist locally",
+                path.display()
+            ),
+            Self::NoChangeSync { path } => write!(f, "`{}` in sync with server", path.display()),
             Self::Change {
+                path,
                 byte_len,
                 contents: _,
             } => {
-                write!(f, "file will change")?;
+                write!(f, "`{}` will change", path.display())?;
 
                 match byte_len.from {
                     Tracked::None => {
