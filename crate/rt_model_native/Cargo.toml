@@ -16,6 +16,7 @@ doctest = false
 test = false
 
 [dependencies]
+console = { version = "0.15.2", optional = true }
 futures = "0.3.24"
 peace_core = { path = "../core", version = "0.0.3" }
 peace_resources = { path = "../resources", version = "0.0.3" }
@@ -25,3 +26,7 @@ serde_yaml = "0.9.13"
 thiserror = "1.0.37"
 tokio = { version = "1.21.2", features = ["fs", "io-std"] }
 tokio-util = { version = "0.7.4", features = ["io", "io-util"] }
+
+[features]
+default = []
+output_colorized = ["dep:console"]
