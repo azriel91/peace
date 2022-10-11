@@ -2,7 +2,7 @@ pub use self::nothing::Nothing;
 
 mod nothing;
 
-use std::fmt;
+use std::{any::TypeId, fmt};
 
 use serde::{Deserialize, Serialize};
 
@@ -45,10 +45,17 @@ impl<Logical, Physical> State<Logical, Physical> {
 impl<Logical, Physical> fmt::Display for State<Logical, Physical>
 where
     Logical: fmt::Display,
-    Physical: fmt::Display,
+    Physical: fmt::Display + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let State { logical, physical } = self;
-        write!(f, "{logical}, {physical}")
+
+        // Perhaps we should provide a separate trait instead of using `Display`, which
+        // returns an optional function for each logical / physical state.
+        if TypeId::of::<Physical>() == TypeId::of::<Nothing>() {
+            write!(f, "{logical}")
+        } else {
+            write!(f, "{logical}, {physical}")
+        }
     }
 }
