@@ -2,7 +2,10 @@ use peace::{
     cfg::{item_spec_id, ItemSpecId, State},
     resources::{
         internal::{StateDiffsMut, StatesMut},
-        states::{StateDiffs, StatesCurrent, StatesDesired},
+        states::{
+            StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired,
+            StatesEnsured, StatesEnsuredDry,
+        },
     },
     rt_model::{CliOutput, OutputWrite},
 };
@@ -84,6 +87,124 @@ async fn outputs_state_diffs() -> Result<(), Box<dyn std::error::Error>> {
         r#"item_0: need one more server
 item_1: 1
 "#,
+        String::from_utf8(buffer)?
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn outputs_states_ensured_dry() -> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = Vec::with_capacity(128);
+    let mut cli_output = CliOutput::new_with_writer(&mut buffer);
+    #[cfg(feature = "output_colorized")]
+    {
+        cli_output = cli_output.colorized();
+    }
+    let states_ensured_dry = {
+        let mut states = StatesMut::new();
+        states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
+        states.insert(item_spec_id!("item_1"), State::new(1u8, true));
+        StatesEnsuredDry::from(states)
+    };
+
+    <CliOutput<_> as OutputWrite<Error>>::write_states_ensured_dry(
+        &mut cli_output,
+        &states_ensured_dry,
+    )
+    .await?;
+
+    assert_eq!(
+        "\
+        item_0: logical, 1.1\n\
+        item_1: 1, true\n\
+        ",
+        String::from_utf8(buffer)?
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn outputs_states_ensured() -> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = Vec::with_capacity(128);
+    let mut cli_output = CliOutput::new_with_writer(&mut buffer);
+    #[cfg(feature = "output_colorized")]
+    {
+        cli_output = cli_output.colorized();
+    }
+    let states_ensured = {
+        let mut states = StatesMut::new();
+        states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
+        states.insert(item_spec_id!("item_1"), State::new(1u8, true));
+        StatesEnsured::from(states)
+    };
+
+    <CliOutput<_> as OutputWrite<Error>>::write_states_ensured(&mut cli_output, &states_ensured)
+        .await?;
+
+    assert_eq!(
+        "\
+        item_0: logical, 1.1\n\
+        item_1: 1, true\n\
+        ",
+        String::from_utf8(buffer)?
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn outputs_states_cleaned_dry() -> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = Vec::with_capacity(128);
+    let mut cli_output = CliOutput::new_with_writer(&mut buffer);
+    #[cfg(feature = "output_colorized")]
+    {
+        cli_output = cli_output.colorized();
+    }
+    let states_cleaned_dry = {
+        let mut states = StatesMut::new();
+        states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
+        states.insert(item_spec_id!("item_1"), State::new(1u8, true));
+        StatesCleanedDry::from(states)
+    };
+
+    <CliOutput<_> as OutputWrite<Error>>::write_states_cleaned_dry(
+        &mut cli_output,
+        &states_cleaned_dry,
+    )
+    .await?;
+
+    assert_eq!(
+        "\
+        item_0: logical, 1.1\n\
+        item_1: 1, true\n\
+        ",
+        String::from_utf8(buffer)?
+    );
+    Ok(())
+}
+
+#[tokio::test]
+async fn outputs_states_cleaned() -> Result<(), Box<dyn std::error::Error>> {
+    let mut buffer = Vec::with_capacity(128);
+    let mut cli_output = CliOutput::new_with_writer(&mut buffer);
+    #[cfg(feature = "output_colorized")]
+    {
+        cli_output = cli_output.colorized();
+    }
+    let states_cleaned = {
+        let mut states = StatesMut::new();
+        states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
+        states.insert(item_spec_id!("item_1"), State::new(1u8, true));
+        StatesCleaned::from(states)
+    };
+
+    <CliOutput<_> as OutputWrite<Error>>::write_states_cleaned(&mut cli_output, &states_cleaned)
+        .await?;
+
+    assert_eq!(
+        "\
+        item_0: logical, 1.1\n\
+        item_1: 1, true\n\
+        ",
         String::from_utf8(buffer)?
     );
     Ok(())
