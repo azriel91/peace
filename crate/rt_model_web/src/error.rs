@@ -5,6 +5,10 @@ use std::path::PathBuf;
 /// Peace web support errors.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// Failed to serialize error.
+    #[error("Failed to deserialize error.")]
+    ErrorSerialize(#[source] serde_yaml::Error),
+
     /// Failed to deserialize current states.
     #[error("Failed to deserialize current states.")]
     StatesCurrentDeserialize(#[source] serde_yaml::Error),

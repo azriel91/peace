@@ -7,6 +7,7 @@
 // Re-exports
 pub use async_trait::async_trait;
 
-pub use crate::output_write::OutputWrite;
+pub use crate::{output_format::OutputFormat, output_write::OutputWrite};
 
+mod output_format;
 mod output_write;

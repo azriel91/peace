@@ -12,7 +12,7 @@ keywords = ["automation"]
 license = "MIT OR Apache-2.0"
 
 [lib]
-doctest = false
+doctest = true
 test = false
 
 [dependencies]

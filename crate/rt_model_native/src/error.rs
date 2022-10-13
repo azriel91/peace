@@ -1,10 +1,14 @@
-// Remember to add common variants to `rt_model_web/src/error.rs`.
-
 use std::{ffi::OsString, path::PathBuf, sync::Mutex};
+
+// Remember to add common variants to `rt_model_web/src/error.rs`.
 
 /// Peace runtime errors.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// Failed to serialize error.
+    #[error("Failed to deserialize error.")]
+    ErrorSerialize(#[source] serde_yaml::Error),
+
     /// Failed to deserialize current states.
     #[error("Failed to deserialize current states.")]
     StatesCurrentDeserialize(#[source] serde_yaml::Error),
