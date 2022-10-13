@@ -31,6 +31,7 @@ peace_rt_model_native = { path = "../rt_model_native", version = "0.0.3" }
 [features]
 default = []
 output_colorized = ["peace_rt_model_native/output_colorized"]
+output_json = ["peace_rt_model_native/output_json", "peace_rt_model_web/output_json"]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 peace_rt_model_web = { path = "../rt_model_web", version = "0.0.3" }

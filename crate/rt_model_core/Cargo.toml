@@ -18,3 +18,7 @@ test = false
 [dependencies]
 async-trait = "0.1.57"
 peace_resources = { path = "../resources", version = "0.0.3" }
+serde_json = { version = "1.0.86", optional = true }
+
+[features]
+output_json = ["dep:serde_json"]

@@ -39,3 +39,4 @@ web-sys = "0.3.60"
 
 [features]
 output_colorized = ["peace/output_colorized"]
+output_json = ["peace/output_json"]

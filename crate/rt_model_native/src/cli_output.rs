@@ -171,6 +171,23 @@ where
 
         Ok(())
     }
+
+    #[cfg(feature = "output_json")]
+    async fn output_json<'f, E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
+    where
+        E: std::error::Error + From<Error>,
+        T: Serialize,
+        F: FnOnce(serde_json::Error) -> Error,
+    {
+        let t_serialized = serde_json::to_string(t).map_err(fn_error)?;
+
+        self.writer
+            .write_all(t_serialized.as_bytes())
+            .await
+            .map_err(Error::StdoutWrite)?;
+
+        Ok(())
+    }
 }
 
 impl Default for CliOutput<Stdout> {
@@ -200,6 +217,11 @@ where
                 self.output_yaml(states_current, Error::StatesCurrentSerialize)
                     .await
             }
+            #[cfg(feature = "output_json")]
+            OutputFormat::Json => {
+                self.output_json(states_current, Error::StatesCurrentSerializeJson)
+                    .await
+            }
         }
     }
 
@@ -210,6 +232,11 @@ where
                 self.output_yaml(states_desired, Error::StatesDesiredSerialize)
                     .await
             }
+            #[cfg(feature = "output_json")]
+            OutputFormat::Json => {
+                self.output_json(states_desired, Error::StatesDesiredSerializeJson)
+                    .await
+            }
         }
     }
 
@@ -218,6 +245,11 @@ where
             OutputFormat::Text => self.output_display(state_diffs.iter()).await,
             OutputFormat::Yaml => {
                 self.output_yaml(state_diffs, Error::StateDiffsSerialize)
+                    .await
+            }
+            #[cfg(feature = "output_json")]
+            OutputFormat::Json => {
+                self.output_json(state_diffs, Error::StateDiffsSerializeJson)
                     .await
             }
         }
@@ -233,6 +265,11 @@ where
                 self.output_yaml(states_ensured_dry, Error::StatesEnsuredDrySerialize)
                     .await
             }
+            #[cfg(feature = "output_json")]
+            OutputFormat::Json => {
+                self.output_json(states_ensured_dry, Error::StatesEnsuredDrySerializeJson)
+                    .await
+            }
         }
     }
 
@@ -241,6 +278,11 @@ where
             OutputFormat::Text => self.output_display(states_ensured.iter()).await,
             OutputFormat::Yaml => {
                 self.output_yaml(states_ensured, Error::StatesEnsuredSerialize)
+                    .await
+            }
+            #[cfg(feature = "output_json")]
+            OutputFormat::Json => {
+                self.output_json(states_ensured, Error::StatesEnsuredSerializeJson)
                     .await
             }
         }
@@ -256,6 +298,11 @@ where
                 self.output_yaml(states_cleaned_dry, Error::StatesCleanedDrySerialize)
                     .await
             }
+            #[cfg(feature = "output_json")]
+            OutputFormat::Json => {
+                self.output_json(states_cleaned_dry, Error::StatesCleanedDrySerializeJson)
+                    .await
+            }
         }
     }
 
@@ -264,6 +311,11 @@ where
             OutputFormat::Text => self.output_display(states_cleaned.iter()).await,
             OutputFormat::Yaml => {
                 self.output_yaml(states_cleaned, Error::StatesCleanedSerialize)
+                    .await
+            }
+            #[cfg(feature = "output_json")]
+            OutputFormat::Json => {
+                self.output_json(states_cleaned, Error::StatesCleanedSerializeJson)
                     .await
             }
         }
@@ -281,6 +333,16 @@ where
                 // TODO: proper parsable structure with error code.
                 let error_serialized =
                     serde_yaml::to_string(&format!("{error}")).map_err(Error::ErrorSerialize)?;
+                self.writer
+                    .write_all(error_serialized.as_bytes())
+                    .await
+                    .map_err(Error::StdoutWrite)?;
+            }
+            #[cfg(feature = "output_json")]
+            OutputFormat::Json => {
+                // TODO: proper parsable structure with error code.
+                let error_serialized = serde_json::to_string(&format!("{error}"))
+                    .map_err(Error::ErrorSerializeJson)?;
                 self.writer
                     .write_all(error_serialized.as_bytes())
                     .await

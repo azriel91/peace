@@ -3,8 +3,13 @@
 pub enum OutputFormat {
     /// Human readable text.
     Text,
-    /// The [YAML] format.
+    /// The YAML Ain't Markup Language™ ([YAML]) format.
     ///
     /// [YAML]: https://yaml.org/
     Yaml,
+    /// The JavaScript Object Notation ([JSON]) format
+    ///
+    /// [JSON]: https://www.json.org/
+    #[cfg(feature = "output_json")]
+    Json,
 }
