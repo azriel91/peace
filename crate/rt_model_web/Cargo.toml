@@ -18,9 +18,13 @@ test = false
 [dependencies]
 peace_core = { path = "../core", version = "0.0.3" }
 peace_resources = { path = "../resources", version = "0.0.3" }
-thiserror = "1.0.37"
 serde = "1.0.145"
 serde-wasm-bindgen = "0.4.5"
+serde_json = { version = "1.0.86", optional = true }
 serde_yaml = "0.9.13"
+thiserror = "1.0.37"
 wasm-bindgen = "0.2.83"
 web-sys = { version = "0.3.60", features = ["Storage", "Window"] }
+
+[features]
+output_json = ["dep:serde_json"]

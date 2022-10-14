@@ -1,10 +1,14 @@
-// Remember to add common variants to `rt_model_web/src/error.rs`.
-
 use std::{ffi::OsString, path::PathBuf, sync::Mutex};
+
+// Remember to add common variants to `rt_model_web/src/error.rs`.
 
 /// Peace runtime errors.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// Failed to serialize error.
+    #[error("Failed to serialize error.")]
+    ErrorSerialize(#[source] serde_yaml::Error),
+
     /// Failed to deserialize current states.
     #[error("Failed to deserialize current states.")]
     StatesCurrentDeserialize(#[source] serde_yaml::Error),
@@ -48,6 +52,39 @@ pub enum Error {
     /// Failed to serialize cleaned states.
     #[error("Failed to serialize cleaned states.")]
     StatesCleanedSerialize(#[source] serde_yaml::Error),
+
+    /// Failed to serialize error as JSON.
+    #[cfg(feature = "output_json")]
+    #[error("Failed to serialize error as JSON.")]
+    ErrorSerializeJson(#[source] serde_json::Error),
+    /// Failed to serialize current states as JSON.
+    #[cfg(feature = "output_json")]
+    #[error("Failed to serialize current states as JSON.")]
+    StatesCurrentSerializeJson(#[source] serde_json::Error),
+    /// Failed to serialize desired states as JSON.
+    #[cfg(feature = "output_json")]
+    #[error("Failed to serialize desired states as JSON.")]
+    StatesDesiredSerializeJson(#[source] serde_json::Error),
+    /// Failed to serialize state diffs as JSON.
+    #[cfg(feature = "output_json")]
+    #[error("Failed to serialize state diffs as JSON.")]
+    StateDiffsSerializeJson(#[source] serde_json::Error),
+    /// Failed to serialize dry-ensured states as JSON.
+    #[cfg(feature = "output_json")]
+    #[error("Failed to serialize dry-ensured states as JSON.")]
+    StatesEnsuredDrySerializeJson(#[source] serde_json::Error),
+    /// Failed to serialize ensured states as JSON.
+    #[cfg(feature = "output_json")]
+    #[error("Failed to serialize ensured states as JSON.")]
+    StatesEnsuredSerializeJson(#[source] serde_json::Error),
+    /// Failed to serialize dry-cleaned states as JSON.
+    #[cfg(feature = "output_json")]
+    #[error("Failed to serialize dry-cleaned states as JSON.")]
+    StatesCleanedDrySerializeJson(#[source] serde_json::Error),
+    /// Failed to serialize cleaned states as JSON.
+    #[cfg(feature = "output_json")]
+    #[error("Failed to serialize cleaned states as JSON.")]
+    StatesCleanedSerializeJson(#[source] serde_json::Error),
 
     /// Failed to serialize workspace init params.
     #[error("Failed to serialize workspace init params.")]

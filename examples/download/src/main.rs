@@ -18,12 +18,15 @@ pub fn main() -> Result<(), DownloadError> {
         .build()
         .map_err(DownloadError::TokioRuntimeInit)?;
 
-    let DownloadArgs { command } = DownloadArgs::parse();
+    let DownloadArgs { command, format } = DownloadArgs::parse();
     runtime.block_on(async {
         let workspace_spec = WorkspaceSpec::WorkingDir;
         let profile = profile!("default");
         let flow_id = flow_id!("file");
         let mut cli_output = CliOutput::default();
+        if let Some(format) = format {
+            cli_output = cli_output.output_format(format);
+        }
         #[cfg(feature = "output_colorized")]
         {
             cli_output = cli_output.colorized();
