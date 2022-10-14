@@ -31,4 +31,4 @@ tokio-util = { version = "0.7.4", features = ["io", "io-util"] }
 [features]
 default = []
 output_colorized = ["dep:console"]
-output_json = ["dep:serde_json"]
+output_json = ["dep:serde_json", "peace_rt_model_core/output_json"]

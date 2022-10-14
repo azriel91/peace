@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use clap::{Parser, Subcommand, ValueHint};
+use peace::rt_model::OutputFormat;
 use url::Url;
 
 #[derive(Parser)]
@@ -14,6 +15,13 @@ pub struct DownloadArgs {
     /// Command to run.
     #[clap(subcommand)]
     pub command: DownloadCommand,
+    /// The format of the command output.
+    ///
+    /// At this level, this needs to be specified before the subcommand.
+    /// <https://github.com/clap-rs/clap/issues/3002> needs to be implemented
+    /// for the argument to be passed in after the subcommand.
+    #[clap(long)]
+    pub format: Option<OutputFormat>,
 }
 
 #[derive(Subcommand)]
