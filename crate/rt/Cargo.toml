@@ -31,3 +31,7 @@ tokio-util = { version = "0.7.4", features = ["io", "io-util"] }
 peace_rt_model_web = { path = "../rt_model_web", version = "0.0.3" }
 wasm-bindgen = { version = "0.2.83", features = ["serde-serialize"] }
 web-sys = { version = "0.3.60", features = ["Storage", "Window"] }
+
+[features]
+default = []
+error_reporting = ["peace_rt_model/error_reporting"]

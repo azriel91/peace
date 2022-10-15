@@ -1,0 +1,39 @@
+[package]
+name = "peace_rt_model_hack"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.3"
+edition = "2021"
+description = "Hack to selectively enable features in target specific crates."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_rt_model_hack/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+
+# We are not able to have target specific features in `peace_rt_model`:
+# <https://github.com/rust-lang/cargo/issues/1197>
+#
+# [target.'cfg(not(target_arch = "wasm32"))'.features]
+# error_reporting = ["peace_rt_model_native?/error_reporting"]
+#
+# [target.'cfg(target_arch = "wasm32")'.features]
+# error_reporting = ["peace_rt_model_web?/error_reporting"]
+#
+# As a workaround, we use the `peace_rt_model_hack` bridging crate that always
+# enables the feature per target, and we use a feature in this crate to toggle
+# the enablement of the bridging crate. This is the workaround suggested here:
+#
+# <https://github.com/rust-lang/cargo/issues/1197#issuecomment-268203727>
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+peace_rt_model_native = { path = "../rt_model_native", version = "0.0.3", features = ["error_reporting"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+peace_rt_model_web = { path = "../rt_model_web", version = "0.0.3", features = ["error_reporting"] }
