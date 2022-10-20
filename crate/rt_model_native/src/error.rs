@@ -3,10 +3,15 @@ use std::{ffi::OsString, path::PathBuf, sync::Mutex};
 // Remember to add common variants to `rt_model_web/src/error.rs`.
 
 /// Peace runtime errors.
+#[cfg_attr(feature = "error_reporting", derive(miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// Failed to serialize error.
     #[error("Failed to serialize error.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model_native::error_serialize))
+    )]
     ErrorSerialize(#[source] serde_yaml::Error),
 
     /// Failed to deserialize current states.

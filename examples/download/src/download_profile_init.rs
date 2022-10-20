@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use url::Url;
@@ -26,7 +26,7 @@ impl DownloadProfileInit {
     }
 
     /// Returns the file path to write to.
-    pub fn dest(&self) -> &PathBuf {
+    pub fn dest(&self) -> &Path {
         &self.dest
     }
 }

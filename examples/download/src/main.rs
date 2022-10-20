@@ -9,7 +9,22 @@ use download::{
     workspace_and_graph_setup, DownloadArgs, DownloadCommand, DownloadError, DownloadProfileInit,
 };
 
+#[cfg(not(feature = "error_reporting"))]
 pub fn main() -> Result<(), DownloadError> {
+    run()
+}
+
+#[cfg(feature = "error_reporting")]
+pub fn main() -> peace::miette::Result<(), peace::miette::Report> {
+    // Important to return `peace::miette::Report` instead of calling
+    // `IntoDiagnostic::intoDiagnostic` on the `Error`, as that does not present the
+    // diagnostic contextual information to the user.
+    //
+    // See <https://docs.rs/miette/latest/miette/trait.IntoDiagnostic.html#warning>.
+    run().map_err(Into::into)
+}
+
+pub fn run() -> Result<(), DownloadError> {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .thread_name("main")
         .thread_stack_size(3 * 1024 * 1024)
