@@ -67,6 +67,7 @@ impl DownloadEnsureOpSpec {
     ) -> Result<(), DownloadError> {
         use std::{fmt::Write, path::Component};
 
+        #[cfg(feature = "error_reporting")]
         use peace::miette::{SourceOffset, SourceSpan};
 
         let dest_path = download_profile_init.dest();
@@ -87,10 +88,12 @@ impl DownloadEnsureOpSpec {
 
             write!(&mut init_command_approx, "{exe_name} init {src} ")
                 .map_err(DownloadError::FormatString)?;
+            #[cfg(feature = "error_reporting")]
             let dest_offset_col = init_command_approx.len();
             write!(&mut init_command_approx, "{dest_display}")
                 .map_err(DownloadError::FormatString)?;
 
+            #[cfg(feature = "error_reporting")]
             let dest_span = {
                 let loc_line = 1;
                 // Add one to offset because we are 1-based, not 0-based?
@@ -109,6 +112,7 @@ impl DownloadEnsureOpSpec {
             };
             Err(DownloadError::DestFileCreate {
                 init_command_approx,
+                #[cfg(feature = "error_reporting")]
                 dest_span,
                 dest,
                 error,

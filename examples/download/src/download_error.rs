@@ -1,8 +1,7 @@
 use std::path::PathBuf;
 
 #[cfg(feature = "error_reporting")]
-use peace::miette;
-use peace::miette::SourceSpan;
+use peace::miette::{self, SourceSpan};
 
 /// Error while managing a file download.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
@@ -19,7 +18,7 @@ pub enum DownloadError {
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
-            code(download::E04::dest_file_create),
+            code(download::dest_file_create),
             help(
                 "Ensure that `{}` is not a directory, or rerun `download init` with a different file path.",
                 dest.display()))
@@ -29,6 +28,7 @@ pub enum DownloadError {
         #[cfg_attr(feature = "error_reporting", source_code)]
         init_command_approx: String,
         #[cfg_attr(feature = "error_reporting", label = "defined here")]
+        #[cfg(feature = "error_reporting")]
         dest_span: SourceSpan,
         /// Destination file path.
         dest: PathBuf,
@@ -58,7 +58,11 @@ pub enum DownloadError {
     // Framework errors
     /// A `peace` runtime error occurred.
     #[error("A `peace` runtime error occurred.")]
-    PeaceRtError(#[from] peace::rt_model::Error),
+    PeaceRtError(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[from]
+        peace::rt_model::Error,
+    ),
 
     // Scaffolding errors
     #[error("Failed to initialize tokio runtime.")]
