@@ -7,11 +7,14 @@
 * Support CLI output with colour with the `"output_colorized"` feature. ([#28], [#38])
 * Support CLI output as YAML. ([#28], [#39])
 * Support CLI output as JSON with the `"output_json"` feature. ([#28], [#39])
+* Error compatibility with `miette` with the `"error_reporting"` feature. ([#28], [#40])
 
 [#28]: https://github.com/azriel91/peace/issues/28
 [#37]: https://github.com/azriel91/peace/pull/37
 [#38]: https://github.com/azriel91/peace/pull/38
 [#39]: https://github.com/azriel91/peace/pull/39
+[#40]: https://github.com/azriel91/peace/pull/40
+
 
 ## 0.0.3 (2022-09-30)
 

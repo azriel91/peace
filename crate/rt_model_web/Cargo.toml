@@ -16,8 +16,10 @@ doctest = false
 test = false
 
 [dependencies]
+miette = { workspace = true, optional = true }
 peace_core = { path = "../core", version = "0.0.3" }
 peace_resources = { path = "../resources", version = "0.0.3" }
+peace_rt_model_core = { path = "../rt_model_core", version = "0.0.3" }
 serde = "1.0.145"
 serde-wasm-bindgen = "0.4.5"
 serde_json = { version = "1.0.86", optional = true }
@@ -27,4 +29,6 @@ wasm-bindgen = "0.2.83"
 web-sys = { version = "0.3.60", features = ["Storage", "Window"] }
 
 [features]
+default = []
+error_reporting = ["dep:miette", "peace_rt_model_core/error_reporting"]
 output_json = ["dep:serde_json"]

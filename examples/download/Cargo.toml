@@ -38,5 +38,7 @@ js-sys = "0.3.60"
 web-sys = "0.3.60"
 
 [features]
+default = []
+error_reporting = ["peace/error_reporting"]
 output_colorized = ["peace/output_colorized"]
 output_json = ["peace/output_json"]

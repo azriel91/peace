@@ -1,3 +1,4 @@
+#[cfg(target_arch = "wasm32")]
 use std::path::Path;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -20,6 +21,8 @@ use peace::{
     diff::Tracked,
 };
 
+#[cfg(not(target_arch = "wasm32"))]
+use crate::DownloadProfileInit;
 use crate::{DownloadError, DownloadParams, FileState, FileStateDiff};
 
 /// Ensure OpSpec for the file to download.
@@ -39,7 +42,7 @@ impl DownloadEnsureOpSpec {
         #[cfg(not(target_arch = "wasm32"))]
         {
             Self::stream_write(
-                download_params.download_profile_init().dest(),
+                download_params.download_profile_init(),
                 response.bytes_stream(),
             )
             .await?;
@@ -59,12 +62,62 @@ impl DownloadEnsureOpSpec {
     /// Streams the content to disk.
     #[cfg(not(target_arch = "wasm32"))]
     async fn stream_write(
-        dest_path: &Path,
+        download_profile_init: &DownloadProfileInit,
         byte_stream: impl Stream<Item = reqwest::Result<Bytes>>,
     ) -> Result<(), DownloadError> {
-        let dest_file = File::create(dest_path)
-            .await
-            .map_err(DownloadError::DestFileCreate)?;
+        use std::{fmt::Write, path::Component};
+
+        #[cfg(feature = "error_reporting")]
+        use peace::miette::{SourceOffset, SourceSpan};
+
+        let dest_path = download_profile_init.dest();
+        let dest_file = File::create(dest_path).await.or_else(|error| {
+            let mut init_command_approx = String::with_capacity(256);
+            let exe_path = std::env::current_exe().map_err(DownloadError::CurrentExeRead)?;
+            let exe_name =
+                if let Some(Component::Normal(exe_name)) = exe_path.components().next_back() {
+                    exe_name
+                } else {
+                    return Err(DownloadError::CurrentExeNameRead);
+                };
+
+            let exe_name = exe_name.to_string_lossy();
+            let src = download_profile_init.src();
+            let dest = dest_path.to_path_buf();
+            let dest_display = dest.display();
+
+            write!(&mut init_command_approx, "{exe_name} init {src} ")
+                .map_err(DownloadError::FormatString)?;
+            #[cfg(feature = "error_reporting")]
+            let dest_offset_col = init_command_approx.len();
+            write!(&mut init_command_approx, "{dest_display}")
+                .map_err(DownloadError::FormatString)?;
+
+            #[cfg(feature = "error_reporting")]
+            let dest_span = {
+                let loc_line = 1;
+                // Add one to offset because we are 1-based, not 0-based?
+                let start = SourceOffset::from_location(
+                    &init_command_approx,
+                    loc_line,
+                    dest_offset_col + 1,
+                );
+                // Add one to length because we are 1-based, not 0-based?
+                let length = SourceOffset::from_location(
+                    &init_command_approx,
+                    loc_line,
+                    init_command_approx.len() - dest_offset_col + 1,
+                );
+                SourceSpan::new(start, length)
+            };
+            Err(DownloadError::DestFileCreate {
+                init_command_approx,
+                #[cfg(feature = "error_reporting")]
+                dest_span,
+                dest,
+                error,
+            })
+        })?;
 
         let buffer = BufWriter::new(dest_file);
         let mut buffer = byte_stream
