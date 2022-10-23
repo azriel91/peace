@@ -27,8 +27,8 @@ pub enum DownloadError {
         /// Approximation of the init command that defined the destination path.
         #[cfg_attr(feature = "error_reporting", source_code)]
         init_command_approx: String,
-        #[cfg_attr(feature = "error_reporting", label = "defined here")]
         #[cfg(feature = "error_reporting")]
+        #[label = "defined here"]
         dest_span: SourceSpan,
         /// Destination file path.
         dest: PathBuf,
@@ -60,6 +60,7 @@ pub enum DownloadError {
     #[error("A `peace` runtime error occurred.")]
     PeaceRtError(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
         #[from]
         peace::rt_model::Error,
     ),

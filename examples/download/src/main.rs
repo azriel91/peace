@@ -21,7 +21,17 @@ pub fn main() -> peace::miette::Result<(), peace::miette::Report> {
     // diagnostic contextual information to the user.
     //
     // See <https://docs.rs/miette/latest/miette/trait.IntoDiagnostic.html#warning>.
-    run().map_err(Into::into)
+
+    // The explicit mapping for `PeaceRtError` appears to be necessary to display
+    // the diagnostic information. i.e. `miette` does not automatically delegate to
+    // the #[diagnostic_source].
+    //
+    // This is fixed by <https://github.com/zkat/miette/pull/170>.
+
+    run().map_err(|download_error| match download_error {
+        DownloadError::PeaceRtError(err) => peace::miette::Report::from(err),
+        other => peace::miette::Report::from(other),
+    })
 }
 
 pub fn run() -> Result<(), DownloadError> {
