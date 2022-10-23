@@ -26,5 +26,7 @@ thiserror = "1.0.37"
 tokio = { version = "1.21.2", features = ["rt", "macros"] }
 
 [features]
+default = []
+error_reporting = ["peace/error_reporting"]
 output_colorized = ["peace/output_colorized"]
 output_json = ["peace/output_json"]

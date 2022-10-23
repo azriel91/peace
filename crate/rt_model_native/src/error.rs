@@ -20,7 +20,22 @@ pub enum Error {
         feature = "error_reporting",
         diagnostic(code(peace_rt_model::states_current_deserialize))
     )]
-    StatesCurrentDeserialize(#[source] serde_yaml::Error),
+    StatesCurrentDeserialize {
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        states_file_source: miette::NamedSource,
+        #[cfg(feature = "error_reporting")]
+        #[label("{}", error_message)]
+        error_span: Option<miette::SourceOffset>,
+        #[cfg(feature = "error_reporting")]
+        error_message: String,
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        context_span: Option<miette::SourceOffset>,
+        /// Underlying error.
+        #[source]
+        error: serde_yaml::Error,
+    },
 
     /// Failed to serialize current states.
     #[error("Failed to serialize current states.")]
@@ -37,7 +52,10 @@ pub enum Error {
     #[error("Current states have not been written to disk.")]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_current_discover_required))
+        diagnostic(
+            code(peace_rt_model::states_current_discover_required),
+            help("Ensure that `StatesDiscoverCmd` or `StatesCurrentDiscoverCmd` has been called.")
+        )
     )]
     StatesCurrentDiscoverRequired,
 
@@ -64,7 +82,10 @@ pub enum Error {
     #[error("Desired states have not been written to disk.")]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_desired_discover_required))
+        diagnostic(
+            code(peace_rt_model::states_desired_discover_required),
+            help("Ensure that `StatesDiscoverCmd` or `StatesDesiredDiscoverCmd` has been called.")
+        )
     )]
     StatesDesiredDiscoverRequired,
 
