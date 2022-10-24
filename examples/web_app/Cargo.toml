@@ -1,0 +1,39 @@
+[package]
+name = "web_app"
+version = "0.0.3"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+edition = "2021"
+description = "Peace framework web application lifecycle example"
+repository = "https://github.com/azriel91/peace"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[[bin]]
+name = "web_app"
+test = false
+
+[lib]
+doctest = false
+test = false
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+peace = { path = "../.." }
+thiserror = "1.0.37"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { version = "1.21.2", features = ["rt"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+serde-wasm-bindgen = "0.4.5"
+tokio = { version = "1.21.2" }
+wasm-bindgen = "0.2.83"
+wasm-bindgen-futures = "0.4.33"
+js-sys = "0.3.60"
+web-sys = "0.3.60"
+
+[features]
+default = []
+error_reporting = ["peace/error_reporting"]
+output_colorized = ["peace/output_colorized"]
+output_json = ["peace/output_json"]
