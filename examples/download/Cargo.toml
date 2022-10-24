@@ -3,6 +3,9 @@ name = "download"
 version = "0.0.3"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
+description = "Peace framework file download example"
+repository = "https://github.com/azriel91/peace"
+license = "MIT OR Apache-2.0"
 publish = false
 
 [[bin]]
@@ -27,11 +30,11 @@ thiserror = "1.0.37"
 url = { version = "2.3.1", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio = { version = "1.21.2", features = ["fs", "io-std", "io-util", "rt"] }
+tokio = { version = "1.21.2", features = ["net", "time", "rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 serde-wasm-bindgen = "0.4.5"
-tokio = { version = "1.21.2", features = ["io-util"] }
+tokio = { version = "1.21.2" }
 wasm-bindgen = "0.2.83"
 wasm-bindgen-futures = "0.4.33"
 js-sys = "0.3.60"
