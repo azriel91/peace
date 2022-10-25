@@ -6,11 +6,12 @@ use peace::{
 
 use download::{
     clean, clean_dry, cmd_context, desired, diff, ensure, ensure_dry, fetch, status,
-    workspace_and_graph_setup, DownloadArgs, DownloadCommand, DownloadError, DownloadProfileInit,
+    workspace_and_graph_setup, DownloadArgs, DownloadCommand, FileDownloadError,
+    FileDownloadProfileInit,
 };
 
 #[cfg(not(feature = "error_reporting"))]
-pub fn main() -> Result<(), DownloadError> {
+pub fn main() -> Result<(), FileDownloadError> {
     run()
 }
 
@@ -28,20 +29,20 @@ pub fn main() -> peace::miette::Result<(), peace::miette::Report> {
     //
     // This is fixed by <https://github.com/zkat/miette/pull/170>.
 
-    run().map_err(|download_error| match download_error {
-        DownloadError::PeaceRtError(err) => peace::miette::Report::from(err),
+    run().map_err(|file_download_error| match file_download_error {
+        FileDownloadError::PeaceRtError(err) => peace::miette::Report::from(err),
         other => peace::miette::Report::from(other),
     })
 }
 
-pub fn run() -> Result<(), DownloadError> {
+pub fn run() -> Result<(), FileDownloadError> {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .thread_name("main")
         .thread_stack_size(3 * 1024 * 1024)
         .enable_io()
         .enable_time()
         .build()
-        .map_err(DownloadError::TokioRuntimeInit)?;
+        .map_err(FileDownloadError::TokioRuntimeInit)?;
 
     let DownloadArgs { command, format } = DownloadArgs::parse();
     runtime.block_on(async {
@@ -64,7 +65,7 @@ pub fn run() -> Result<(), DownloadError> {
                 let cmd_context = cmd_context(
                     &workspace_and_graph,
                     &mut cli_output,
-                    Some(DownloadProfileInit::new(url, dest)),
+                    Some(FileDownloadProfileInit::new(url, dest)),
                 )
                 .await?;
                 fetch(cmd_context).await?;
@@ -119,6 +120,6 @@ pub fn run() -> Result<(), DownloadError> {
             }
         }
 
-        Ok::<_, DownloadError>(())
+        Ok::<_, FileDownloadError>(())
     })
 }

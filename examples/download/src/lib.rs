@@ -18,44 +18,44 @@ use peace::{
 
 pub use crate::{
     download_args::{DownloadArgs, DownloadCommand},
-    download_clean_op_spec::DownloadCleanOpSpec,
-    download_ensure_op_spec::DownloadEnsureOpSpec,
-    download_error::DownloadError,
-    download_params::DownloadParams,
-    download_profile_init::DownloadProfileInit,
-    download_state_current_fn_spec::DownloadStateCurrentFnSpec,
-    download_state_desired_fn_spec::DownloadStateDesiredFnSpec,
-    download_state_diff_fn_spec::DownloadStateDiffFnSpec,
-    file_item_spec::FileItemSpec,
-    file_state::FileState,
-    file_state_diff::FileStateDiff,
+    file_download_clean_op_spec::FileDownloadCleanOpSpec,
+    file_download_ensure_op_spec::FileDownloadEnsureOpSpec,
+    file_download_error::FileDownloadError,
+    file_download_item_spec::FileDownloadItemSpec,
+    file_download_params::FileDownloadParams,
+    file_download_profile_init::FileDownloadProfileInit,
+    file_download_state::FileDownloadState,
+    file_download_state_current_fn_spec::FileDownloadStateCurrentFnSpec,
+    file_download_state_desired_fn_spec::FileDownloadStateDesiredFnSpec,
+    file_download_state_diff::FileDownloadStateDiff,
+    file_download_state_diff_fn_spec::FileDownloadStateDiffFnSpec,
 };
 
 mod download_args;
-mod download_clean_op_spec;
-mod download_ensure_op_spec;
-mod download_error;
-mod download_params;
-mod download_profile_init;
-mod download_state_current_fn_spec;
-mod download_state_desired_fn_spec;
-mod download_state_diff_fn_spec;
-mod file_item_spec;
-mod file_state;
-mod file_state_diff;
+mod file_download_clean_op_spec;
+mod file_download_ensure_op_spec;
+mod file_download_error;
+mod file_download_item_spec;
+mod file_download_params;
+mod file_download_profile_init;
+mod file_download_state;
+mod file_download_state_current_fn_spec;
+mod file_download_state_desired_fn_spec;
+mod file_download_state_diff;
+mod file_download_state_diff_fn_spec;
 
 #[cfg(target_arch = "wasm32")]
-pub use download_item_spec_graph::DownloadItemSpecGraph;
+pub use file_download_item_spec_graph::FileDownloadItemSpecGraph;
 
 #[cfg(target_arch = "wasm32")]
-mod download_item_spec_graph;
+mod file_download_item_spec_graph;
 #[cfg(target_arch = "wasm32")]
 mod wasm;
 
 #[derive(Debug)]
 pub struct WorkspaceAndGraph {
     workspace: Workspace,
-    item_spec_graph: ItemSpecGraph<DownloadError>,
+    item_spec_graph: ItemSpecGraph<FileDownloadError>,
 }
 
 /// Returns a default workspace and the Download item spec graph.
@@ -64,12 +64,12 @@ pub async fn workspace_and_graph_setup(
     workspace_spec: WorkspaceSpec,
     profile: Profile,
     flow_id: FlowId,
-) -> Result<WorkspaceAndGraph, DownloadError> {
+) -> Result<WorkspaceAndGraph, FileDownloadError> {
     let workspace = Workspace::new(workspace_spec, profile, flow_id)?;
 
     let item_spec_graph = {
-        let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
-        item_spec_graph_builder.add_fn(FileItemSpec::new(item_spec_id!("file")).into());
+        let mut item_spec_graph_builder = ItemSpecGraphBuilder::<FileDownloadError>::new();
+        item_spec_graph_builder.add_fn(FileDownloadItemSpec::new(item_spec_id!("file")).into());
         item_spec_graph_builder.build()
     };
 
@@ -86,11 +86,11 @@ pub async fn workspace_and_graph_setup(
     workspace_spec: WorkspaceSpec,
     profile: Profile,
     flow_id: FlowId,
-) -> Result<WorkspaceAndGraph, DownloadError> {
+) -> Result<WorkspaceAndGraph, FileDownloadError> {
     let workspace = Workspace::new(workspace_spec, profile, flow_id)?;
     let item_spec_graph = {
-        let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
-        item_spec_graph_builder.add_fn(FileItemSpec::new(item_spec_id!("file")).into());
+        let mut item_spec_graph_builder = ItemSpecGraphBuilder::<FileDownloadError>::new();
+        item_spec_graph_builder.add_fn(FileDownloadItemSpec::new(item_spec_id!("file")).into());
         item_spec_graph_builder.build()
     };
 
@@ -105,95 +105,95 @@ pub async fn workspace_and_graph_setup(
 pub async fn cmd_context<'ctx, O>(
     workspace_and_graph: &'ctx WorkspaceAndGraph,
     output: &'ctx mut O,
-    download_profile_init: Option<DownloadProfileInit>,
-) -> Result<CmdContext<'ctx, DownloadError, O, SetUp>, DownloadError>
+    file_download_profile_init: Option<FileDownloadProfileInit>,
+) -> Result<CmdContext<'ctx, FileDownloadError, O, SetUp>, FileDownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite<FileDownloadError>,
 {
     let WorkspaceAndGraph {
         workspace,
         item_spec_graph,
     } = workspace_and_graph;
     CmdContext::builder(workspace, item_spec_graph, output)
-        .with_profile_init(download_profile_init)
+        .with_profile_init(file_download_profile_init)
         .await
 }
 
 pub async fn fetch<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
-) -> Result<Resources<WithStatesCurrentAndDesired>, DownloadError>
+    cmd_context: CmdContext<'_, FileDownloadError, O, SetUp>,
+) -> Result<Resources<WithStatesCurrentAndDesired>, FileDownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite<FileDownloadError>,
 {
     let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
     Ok(resources)
 }
 
 pub async fn status<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
-) -> Result<Resources<WithStates>, DownloadError>
+    cmd_context: CmdContext<'_, FileDownloadError, O, SetUp>,
+) -> Result<Resources<WithStates>, FileDownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite<FileDownloadError>,
 {
     let CmdContext { resources, .. } = StatesCurrentDisplayCmd::exec(cmd_context).await?;
     Ok(resources)
 }
 
 pub async fn desired<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
-) -> Result<Resources<WithStatesDesired>, DownloadError>
+    cmd_context: CmdContext<'_, FileDownloadError, O, SetUp>,
+) -> Result<Resources<WithStatesDesired>, FileDownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite<FileDownloadError>,
 {
     let CmdContext { resources, .. } = StatesDesiredDisplayCmd::exec(cmd_context).await?;
     Ok(resources)
 }
 
 pub async fn diff<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
-) -> Result<Resources<WithStateDiffs>, DownloadError>
+    cmd_context: CmdContext<'_, FileDownloadError, O, SetUp>,
+) -> Result<Resources<WithStateDiffs>, FileDownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite<FileDownloadError>,
 {
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
     Ok(resources)
 }
 
 pub async fn ensure_dry<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
-) -> Result<Resources<EnsuredDry>, DownloadError>
+    cmd_context: CmdContext<'_, FileDownloadError, O, SetUp>,
+) -> Result<Resources<EnsuredDry>, FileDownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite<FileDownloadError>,
 {
     let CmdContext { resources, .. } = EnsureCmd::exec_dry(cmd_context).await?;
     Ok(resources)
 }
 
 pub async fn ensure<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
-) -> Result<Resources<Ensured>, DownloadError>
+    cmd_context: CmdContext<'_, FileDownloadError, O, SetUp>,
+) -> Result<Resources<Ensured>, FileDownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite<FileDownloadError>,
 {
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
     Ok(resources)
 }
 
 pub async fn clean_dry<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
-) -> Result<Resources<CleanedDry>, DownloadError>
+    cmd_context: CmdContext<'_, FileDownloadError, O, SetUp>,
+) -> Result<Resources<CleanedDry>, FileDownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite<FileDownloadError>,
 {
     let CmdContext { resources, .. } = CleanCmd::exec_dry(cmd_context).await?;
     Ok(resources)
 }
 
 pub async fn clean<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
-) -> Result<Resources<Cleaned>, DownloadError>
+    cmd_context: CmdContext<'_, FileDownloadError, O, SetUp>,
+) -> Result<Resources<Cleaned>, FileDownloadError>
 where
-    O: OutputWrite<DownloadError>,
+    O: OutputWrite<FileDownloadError>,
 {
     let CmdContext { resources, .. } = CleanCmd::exec(cmd_context).await?;
     Ok(resources)

@@ -3,15 +3,15 @@ use peace::rt_model::Storage;
 
 use peace::data::{Data, R};
 
-use crate::DownloadProfileInit;
+use crate::FileDownloadProfileInit;
 
 /// Download parameters from the user.
 #[derive(Data, Debug)]
-pub struct DownloadParams<'op> {
+pub struct FileDownloadParams<'op> {
     /// Client to make web requests.
     client: R<'op, reqwest::Client>,
     /// Url of the file to download.
-    download_profile_init: R<'op, DownloadProfileInit>,
+    file_download_profile_init: R<'op, FileDownloadProfileInit>,
 
     /// For wasm, we write to web storage through the `Storage` object.
     ///
@@ -20,27 +20,27 @@ pub struct DownloadParams<'op> {
     storage: R<'op, Storage>,
 }
 
-impl<'op> DownloadParams<'op> {
+impl<'op> FileDownloadParams<'op> {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn new(
         client: R<'op, reqwest::Client>,
-        download_profile_init: R<'op, DownloadProfileInit>,
+        file_download_profile_init: R<'op, FileDownloadProfileInit>,
     ) -> Self {
         Self {
             client,
-            download_profile_init,
+            file_download_profile_init,
         }
     }
 
     #[cfg(target_arch = "wasm32")]
     pub fn new(
         client: R<'op, reqwest::Client>,
-        download_profile_init: R<'op, DownloadProfileInit>,
+        file_download_profile_init: R<'op, FileDownloadProfileInit>,
         storage: R<'op, Storage>,
     ) -> Self {
         Self {
             client,
-            download_profile_init,
+            file_download_profile_init,
             storage,
         }
     }
@@ -49,8 +49,8 @@ impl<'op> DownloadParams<'op> {
         &self.client
     }
 
-    pub fn download_profile_init(&self) -> &DownloadProfileInit {
-        &self.download_profile_init
+    pub fn file_download_profile_init(&self) -> &FileDownloadProfileInit {
+        &self.file_download_profile_init
     }
 
     #[cfg(target_arch = "wasm32")]

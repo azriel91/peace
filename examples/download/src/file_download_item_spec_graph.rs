@@ -2,10 +2,10 @@ use std::ops::{Deref, DerefMut};
 
 use peace::rt_model::ItemSpecGraph;
 
-use crate::DownloadError;
+use crate::FileDownloadError;
 
 /// Graph of [`ItemSpec`]s for the `download` example.
-/// `ItemSpecGraph<DownloadError>` newtype.
+/// `ItemSpecGraph<FileDownloadError>` newtype.
 ///
 /// This is useful for WASM support -- `wasm_bindgen` doesn't currently support
 /// exporting types with type parameters, so if the type is to be exported to
@@ -14,31 +14,31 @@ use crate::DownloadError;
 /// [`ItemSpec`]: peace::cfg::ItemSpec
 #[derive(Debug)]
 #[wasm_bindgen::prelude::wasm_bindgen(getter_with_clone)]
-pub struct DownloadItemSpecGraph(ItemSpecGraph<DownloadError>);
+pub struct FileDownloadItemSpecGraph(ItemSpecGraph<FileDownloadError>);
 
-impl DownloadItemSpecGraph {
+impl FileDownloadItemSpecGraph {
     /// Returns the inner [`FnGraph`].
-    pub fn into_inner(self) -> ItemSpecGraph<DownloadError> {
+    pub fn into_inner(self) -> ItemSpecGraph<FileDownloadError> {
         self.0
     }
 }
 
-impl Deref for DownloadItemSpecGraph {
-    type Target = ItemSpecGraph<DownloadError>;
+impl Deref for FileDownloadItemSpecGraph {
+    type Target = ItemSpecGraph<FileDownloadError>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl DerefMut for DownloadItemSpecGraph {
+impl DerefMut for FileDownloadItemSpecGraph {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl From<ItemSpecGraph<DownloadError>> for DownloadItemSpecGraph {
-    fn from(graph: ItemSpecGraph<DownloadError>) -> Self {
+impl From<ItemSpecGraph<FileDownloadError>> for FileDownloadItemSpecGraph {
+    fn from(graph: ItemSpecGraph<FileDownloadError>) -> Self {
         Self(graph)
     }
 }

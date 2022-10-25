@@ -22,27 +22,29 @@ use peace::{
 };
 
 #[cfg(not(target_arch = "wasm32"))]
-use crate::DownloadProfileInit;
-use crate::{DownloadError, DownloadParams, FileState, FileStateDiff};
+use crate::FileDownloadProfileInit;
+use crate::{FileDownloadError, FileDownloadParams, FileDownloadState, FileDownloadStateDiff};
 
 /// Ensure OpSpec for the file to download.
 #[derive(Debug)]
-pub struct DownloadEnsureOpSpec;
+pub struct FileDownloadEnsureOpSpec;
 
-impl DownloadEnsureOpSpec {
-    async fn file_download(download_params: DownloadParams<'_>) -> Result<(), DownloadError> {
-        let client = download_params.client();
-        let src_url = download_params.download_profile_init().src();
+impl FileDownloadEnsureOpSpec {
+    async fn file_download(
+        file_download_params: FileDownloadParams<'_>,
+    ) -> Result<(), FileDownloadError> {
+        let client = file_download_params.client();
+        let src_url = file_download_params.file_download_profile_init().src();
         let response = client
             .get(src_url.clone())
             .send()
             .await
-            .map_err(DownloadError::SrcGet)?;
+            .map_err(FileDownloadError::SrcGet)?;
 
         #[cfg(not(target_arch = "wasm32"))]
         {
             Self::stream_write(
-                download_params.download_profile_init(),
+                file_download_params.file_download_profile_init(),
                 response.bytes_stream(),
             )
             .await?;
@@ -52,8 +54,8 @@ impl DownloadEnsureOpSpec {
         // https://github.com/seanmonstar/reqwest/issues/1424
         #[cfg(target_arch = "wasm32")]
         {
-            let dest = download_params.download_profile_init().dest();
-            Self::stream_write(dest, download_params.storage(), response).await?;
+            let dest = file_download_params.file_download_profile_init().dest();
+            Self::stream_write(dest, file_download_params.storage(), response).await?;
         }
 
         Ok(())
@@ -62,36 +64,36 @@ impl DownloadEnsureOpSpec {
     /// Streams the content to disk.
     #[cfg(not(target_arch = "wasm32"))]
     async fn stream_write(
-        download_profile_init: &DownloadProfileInit,
+        file_download_profile_init: &FileDownloadProfileInit,
         byte_stream: impl Stream<Item = reqwest::Result<Bytes>>,
-    ) -> Result<(), DownloadError> {
+    ) -> Result<(), FileDownloadError> {
         use std::{fmt::Write, path::Component};
 
         #[cfg(feature = "error_reporting")]
         use peace::miette::{SourceOffset, SourceSpan};
 
-        let dest_path = download_profile_init.dest();
+        let dest_path = file_download_profile_init.dest();
         let dest_file = File::create(dest_path).await.or_else(|error| {
             let mut init_command_approx = String::with_capacity(256);
-            let exe_path = std::env::current_exe().map_err(DownloadError::CurrentExeRead)?;
+            let exe_path = std::env::current_exe().map_err(FileDownloadError::CurrentExeRead)?;
             let exe_name =
                 if let Some(Component::Normal(exe_name)) = exe_path.components().next_back() {
                     exe_name
                 } else {
-                    return Err(DownloadError::CurrentExeNameRead);
+                    return Err(FileDownloadError::CurrentExeNameRead);
                 };
 
             let exe_name = exe_name.to_string_lossy();
-            let src = download_profile_init.src();
+            let src = file_download_profile_init.src();
             let dest = dest_path.to_path_buf();
             let dest_display = dest.display();
 
             write!(&mut init_command_approx, "{exe_name} init {src} ")
-                .map_err(DownloadError::FormatString)?;
+                .map_err(FileDownloadError::FormatString)?;
             #[cfg(feature = "error_reporting")]
             let dest_offset_col = init_command_approx.len();
             write!(&mut init_command_approx, "{dest_display}")
-                .map_err(DownloadError::FormatString)?;
+                .map_err(FileDownloadError::FormatString)?;
 
             #[cfg(feature = "error_reporting")]
             let dest_span = {
@@ -110,7 +112,7 @@ impl DownloadEnsureOpSpec {
                 );
                 SourceSpan::new(start, length)
             };
-            Err(DownloadError::DestFileCreate {
+            Err(FileDownloadError::DestFileCreate {
                 init_command_approx,
                 #[cfg(feature = "error_reporting")]
                 dest_span,
@@ -121,13 +123,13 @@ impl DownloadEnsureOpSpec {
 
         let buffer = BufWriter::new(dest_file);
         let mut buffer = byte_stream
-            .map(|bytes_result| bytes_result.map_err(DownloadError::ResponseBytesStream))
+            .map(|bytes_result| bytes_result.map_err(FileDownloadError::ResponseBytesStream))
             .try_fold(buffer, |mut buffer, bytes| async move {
                 // TODO: increment progress by bytes.len()
                 buffer
                     .write_all(&bytes)
                     .await
-                    .map_err(DownloadError::ResponseFileWrite)?;
+                    .map_err(FileDownloadError::ResponseFileWrite)?;
 
                 Ok(buffer)
             })
@@ -135,7 +137,7 @@ impl DownloadEnsureOpSpec {
         buffer
             .flush()
             .await
-            .map_err(DownloadError::ResponseFileWrite)?;
+            .map_err(FileDownloadError::ResponseFileWrite)?;
         Ok(())
     }
 
@@ -145,11 +147,11 @@ impl DownloadEnsureOpSpec {
         dest_path: &Path,
         storage: &Storage,
         response: reqwest::Response,
-    ) -> Result<(), DownloadError> {
+    ) -> Result<(), FileDownloadError> {
         let response_text = response.text();
         let contents = response_text
             .await
-            .map_err(DownloadError::ResponseTextRead)?;
+            .map_err(FileDownloadError::ResponseTextRead)?;
 
         storage.set_item(dest_path, &contents)?;
 
@@ -159,22 +161,22 @@ impl DownloadEnsureOpSpec {
 
 #[async_trait(?Send)]
 #[nougat::gat]
-impl EnsureOpSpec for DownloadEnsureOpSpec {
-    type Data<'op> = DownloadParams<'op>
+impl EnsureOpSpec for FileDownloadEnsureOpSpec {
+    type Data<'op> = FileDownloadParams<'op>
         where Self: 'op;
-    type Error = DownloadError;
-    type StateDiff = FileStateDiff;
-    type StateLogical = FileState;
+    type Error = FileDownloadError;
+    type StateDiff = FileDownloadStateDiff;
+    type StateLogical = FileDownloadState;
     type StatePhysical = Nothing;
 
     async fn check(
-        _download_params: DownloadParams<'_>,
-        _file_state_current: &State<FileState, Nothing>,
-        _file_state_desired: &FileState,
-        diff: &FileStateDiff,
-    ) -> Result<OpCheckStatus, DownloadError> {
+        _file_download_params: FileDownloadParams<'_>,
+        _file_state_current: &State<FileDownloadState, Nothing>,
+        _file_state_desired: &FileDownloadState,
+        diff: &FileDownloadStateDiff,
+    ) -> Result<OpCheckStatus, FileDownloadError> {
         let op_check_status = match diff {
-            FileStateDiff::Change { byte_len, .. } => {
+            FileDownloadStateDiff::Change { byte_len, .. } => {
                 let progress_limit = match byte_len.to {
                     Tracked::None => ProgressLimit::Unknown,
                     Tracked::Known(len) => len
@@ -186,31 +188,30 @@ impl EnsureOpSpec for DownloadEnsureOpSpec {
 
                 OpCheckStatus::ExecRequired { progress_limit }
             }
-            FileStateDiff::Deleted { .. } => OpCheckStatus::ExecNotRequired, /* Don't delete */
+            FileDownloadStateDiff::Deleted { .. } => OpCheckStatus::ExecNotRequired, /* Don't delete */
             // existing file
-            FileStateDiff::NoChangeNonExistent { .. } | FileStateDiff::NoChangeSync { .. } => {
-                OpCheckStatus::ExecNotRequired
-            }
+            FileDownloadStateDiff::NoChangeNonExistent { .. }
+            | FileDownloadStateDiff::NoChangeSync { .. } => OpCheckStatus::ExecNotRequired,
         };
         Ok(op_check_status)
     }
 
     async fn exec_dry(
-        _download_params: DownloadParams<'_>,
-        _state: &State<FileState, Nothing>,
-        _file_state_desired: &FileState,
-        _diff: &FileStateDiff,
-    ) -> Result<Nothing, DownloadError> {
+        _file_download_params: FileDownloadParams<'_>,
+        _state: &State<FileDownloadState, Nothing>,
+        _file_state_desired: &FileDownloadState,
+        _diff: &FileDownloadStateDiff,
+    ) -> Result<Nothing, FileDownloadError> {
         Ok(Nothing)
     }
 
     async fn exec(
-        download_params: DownloadParams<'_>,
-        _state: &State<FileState, Nothing>,
-        _file_state_desired: &FileState,
-        _diff: &FileStateDiff,
-    ) -> Result<Nothing, DownloadError> {
-        Self::file_download(download_params).await?;
+        file_download_params: FileDownloadParams<'_>,
+        _state: &State<FileDownloadState, Nothing>,
+        _file_state_desired: &FileDownloadState,
+        _diff: &FileDownloadStateDiff,
+    ) -> Result<Nothing, FileDownloadError> {
+        Self::file_download(file_download_params).await?;
         Ok(Nothing)
     }
 }

@@ -6,7 +6,7 @@ use peace::miette::{self, SourceSpan};
 /// Error while managing a file download.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
-pub enum DownloadError {
+pub enum FileDownloadError {
     #[error("Failed to open destination file.")]
     DestFileOpen(#[source] std::io::Error),
     #[error("Failed to read destination file metadata.")]

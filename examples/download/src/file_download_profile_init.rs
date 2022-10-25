@@ -5,7 +5,7 @@ use url::Url;
 
 /// User parameters for a download profile.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub struct DownloadProfileInit {
+pub struct FileDownloadProfileInit {
     /// Url of the file to download.
     src: Url,
     /// Path of the destination.
@@ -14,7 +14,7 @@ pub struct DownloadProfileInit {
     dest: PathBuf,
 }
 
-impl DownloadProfileInit {
+impl FileDownloadProfileInit {
     /// Returns a new `DownloadProfileInit`.
     pub fn new(src: Url, dest: PathBuf) -> Self {
         Self { src, dest }
