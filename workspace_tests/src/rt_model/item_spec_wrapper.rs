@@ -17,7 +17,8 @@ use crate::{
 
 #[tokio::test]
 async fn deref_to_dyn_item_spec_rt() {
-    let item_spec_wrapper = ItemSpecWrapper::from(VecCopyItemSpec);
+    let item_spec_wrapper =
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let item_spec_rt: &dyn ItemSpecRt<_> = &item_spec_wrapper;
 
     assert_eq!(
@@ -28,7 +29,8 @@ async fn deref_to_dyn_item_spec_rt() {
 
 #[tokio::test]
 async fn deref_mut_to_dyn_item_spec_rt() {
-    let item_spec_wrapper = ItemSpecWrapper::from(VecCopyItemSpec);
+    let item_spec_wrapper =
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let item_spec_rt: &dyn ItemSpecRt<_> = &item_spec_wrapper;
 
     assert_eq!(
@@ -39,7 +41,8 @@ async fn deref_mut_to_dyn_item_spec_rt() {
 
 #[tokio::test]
 async fn setup() -> Result<(), Box<dyn std::error::Error>> {
-    let item_spec_wrapper = ItemSpecWrapper::from(VecCopyItemSpec);
+    let item_spec_wrapper =
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let mut resources = Resources::new();
     item_spec_wrapper.setup(&mut resources).await?;
 
@@ -50,7 +53,8 @@ async fn setup() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 async fn state_current_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
-    let item_spec_wrapper = ItemSpecWrapper::from(VecCopyItemSpec);
+    let item_spec_wrapper =
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
     let state = item_spec_wrapper.state_current_fn_exec(&resources).await?;
@@ -65,7 +69,8 @@ async fn state_current_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 async fn state_desired_fn_exec() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::from(VecCopyItemSpec);
+    let item_spec_wrapper =
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
     let state_desired = item_spec_wrapper.state_desired_fn_exec(&resources).await?;
@@ -80,7 +85,8 @@ async fn state_desired_fn_exec() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn state_diff_fn_exec() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::from(VecCopyItemSpec);
+    let item_spec_wrapper =
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
 
     let resources = resources_with_states_now_and_desired(&item_spec_wrapper).await?;
 
@@ -100,7 +106,8 @@ async fn state_diff_fn_exec() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn ensure_op_check() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::from(VecCopyItemSpec);
+    let item_spec_wrapper =
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_with_state_diffs(&item_spec_wrapper).await?;
 
     let op_check_status = item_spec_wrapper.ensure_op_check(&resources).await?;
@@ -117,7 +124,8 @@ async fn ensure_op_check() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn ensure_op_exec_dry() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::from(VecCopyItemSpec);
+    let item_spec_wrapper =
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_with_state_diffs(&item_spec_wrapper).await?;
 
     item_spec_wrapper.ensure_op_exec_dry(&resources).await?;
@@ -130,7 +138,8 @@ async fn ensure_op_exec_dry() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn ensure_op_exec() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::from(VecCopyItemSpec);
+    let item_spec_wrapper =
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_with_state_diffs(&item_spec_wrapper).await?;
 
     item_spec_wrapper.ensure_op_exec(&resources).await?;
