@@ -55,19 +55,7 @@ pub enum FileDownloadError {
     #[error("Failed to transfer source file content.")]
     ResponseFileWrite(#[source] std::io::Error),
 
-    // Framework errors
-    /// A `peace` runtime error occurred.
-    #[error("A `peace` runtime error occurred.")]
-    PeaceRtError(
-        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
-        #[source]
-        #[from]
-        peace::rt_model::Error,
-    ),
-
-    // Scaffolding errors
-    #[error("Failed to initialize tokio runtime.")]
-    TokioRuntimeInit(#[source] std::io::Error),
+    // Native errors
     #[cfg(not(target_arch = "wasm32"))]
     #[error("Failed to read current executable path.")]
     CurrentExeRead(#[source] std::io::Error),
@@ -83,4 +71,14 @@ pub enum FileDownloadError {
     #[cfg(target_arch = "wasm32")]
     #[error("Failed to read text from contents.")]
     ResponseTextRead(#[source] reqwest::Error),
+
+    // === Framework errors === //
+    /// A `peace` runtime error occurred.
+    #[error("A `peace` runtime error occurred.")]
+    PeaceRtError(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        peace::rt_model::Error,
+    ),
 }

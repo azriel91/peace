@@ -3,15 +3,15 @@ use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
     rt_model::{CliOutput, WorkspaceSpec},
 };
+use peace_item_spec_file_download::FileDownloadProfileInit;
 
 use download::{
     clean, clean_dry, cmd_context, desired, diff, ensure, ensure_dry, fetch, status,
-    workspace_and_graph_setup, DownloadArgs, DownloadCommand, FileDownloadError,
-    FileDownloadProfileInit,
+    workspace_and_graph_setup, DownloadArgs, DownloadCommand, DownloadError,
 };
 
 #[cfg(not(feature = "error_reporting"))]
-pub fn main() -> Result<(), FileDownloadError> {
+pub fn main() -> Result<(), DownloadError> {
     run()
 }
 
@@ -30,19 +30,19 @@ pub fn main() -> peace::miette::Result<(), peace::miette::Report> {
     // This is fixed by <https://github.com/zkat/miette/pull/170>.
 
     run().map_err(|file_download_error| match file_download_error {
-        FileDownloadError::PeaceRtError(err) => peace::miette::Report::from(err),
+        DownloadError::PeaceRtError(err) => peace::miette::Report::from(err),
         other => peace::miette::Report::from(other),
     })
 }
 
-pub fn run() -> Result<(), FileDownloadError> {
+pub fn run() -> Result<(), DownloadError> {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .thread_name("main")
         .thread_stack_size(3 * 1024 * 1024)
         .enable_io()
         .enable_time()
         .build()
-        .map_err(FileDownloadError::TokioRuntimeInit)?;
+        .map_err(DownloadError::TokioRuntimeInit)?;
 
     let DownloadArgs { command, format } = DownloadArgs::parse();
     runtime.block_on(async {
@@ -120,6 +120,6 @@ pub fn run() -> Result<(), FileDownloadError> {
             }
         }
 
-        Ok::<_, FileDownloadError>(())
+        Ok::<_, DownloadError>(())
     })
 }

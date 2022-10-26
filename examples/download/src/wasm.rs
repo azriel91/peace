@@ -2,15 +2,13 @@ use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
     rt_model::{InMemoryTextOutput, WorkspaceSpec},
 };
+use peace_item_spec_file_download::FileDownloadProfileInit;
 use url::Url;
 use wasm_bindgen::prelude::*;
 
 pub use crate::{
     clean, clean_dry, cmd_context, desired, diff, ensure, ensure_dry, fetch, status,
-    workspace_and_graph_setup, DownloadArgs, FileDownloadCleanOpSpec, FileDownloadEnsureOpSpec,
-    FileDownloadError, FileDownloadItemSpec, FileDownloadParams, FileDownloadProfileInit,
-    FileDownloadState, FileDownloadStateCurrentFnSpec, FileDownloadStateDesiredFnSpec,
-    FileDownloadStateDiff, FileDownloadStateDiffFnSpec, WorkspaceAndGraph,
+    workspace_and_graph_setup, DownloadError, WorkspaceAndGraph,
 };
 
 #[wasm_bindgen]
