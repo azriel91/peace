@@ -20,6 +20,7 @@ pub fn main() -> peace::miette::Result<(), peace::miette::Report> {
     // This is fixed by <https://github.com/zkat/miette/pull/170>.
 
     run().map_err(|web_app_error| match web_app_error {
+        WebAppError::PeaceItemSpecFileDownload(err) => peace::miette::Report::from(err),
         WebAppError::PeaceRtError(err) => peace::miette::Report::from(err),
         other => peace::miette::Report::from(other),
     })

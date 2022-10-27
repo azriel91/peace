@@ -5,7 +5,25 @@ use peace::miette;
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 pub enum WebAppError {
-    // Framework errors
+    /// Failed to parse environment type.
+    #[error("Failed to parse environment type.")]
+    EnvTypeParseError(
+        #[source]
+        #[from]
+        crate::EnvTypeParseError,
+    ),
+
+    // === Item Spec errors === //
+    /// A `FileDownload` item spec error occurred.
+    #[error("A `FileDownload` item spec error occurred.")]
+    PeaceItemSpecFileDownload(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        peace_item_specs::file_download::FileDownloadError,
+    ),
+
+    // === Framework errors === //
     /// A `peace` runtime error occurred.
     #[error("A `peace` runtime error occurred.")]
     PeaceRtError(
@@ -15,7 +33,7 @@ pub enum WebAppError {
         peace::rt_model::Error,
     ),
 
-    // Scaffolding errors
+    // === Scaffolding errors === //
     #[error("Failed to initialize tokio runtime.")]
     TokioRuntimeInit(#[source] std::io::Error),
 }
