@@ -19,7 +19,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 peace = { path = "../.." }
-peace_item_spec_file_download = { path = "../../item_specs/file_download" }
+peace_item_specs = { path = "../../item_specs", features = ["file_download"] }
 thiserror = "1.0.37"
 url = { version = "2.3.1", features = ["serde"] }
 
@@ -38,6 +38,6 @@ web-sys = "0.3.60"
 
 [features]
 default = []
-error_reporting = ["peace/error_reporting", "peace_item_spec_file_download/error_reporting"]
+error_reporting = ["peace/error_reporting", "peace_item_specs/error_reporting"]
 output_colorized = ["peace/output_colorized"]
 output_json = ["peace/output_json"]

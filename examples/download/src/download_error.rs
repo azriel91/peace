@@ -11,7 +11,7 @@ pub enum DownloadError {
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
         #[from]
-        peace_item_spec_file_download::FileDownloadError,
+        peace_item_specs::file_download::FileDownloadError,
     ),
 
     // === Framework errors === //

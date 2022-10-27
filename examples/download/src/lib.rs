@@ -15,7 +15,7 @@ use peace::{
         CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, OutputWrite, Workspace, WorkspaceSpec,
     },
 };
-use peace_item_spec_file_download::{FileDownloadItemSpec, FileDownloadProfileInit};
+use peace_item_specs::file_download::{FileDownloadItemSpec, FileDownloadProfileInit};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::download_args::{DownloadArgs, DownloadCommand};

@@ -3,7 +3,7 @@ use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
     rt_model::{CliOutput, WorkspaceSpec},
 };
-use peace_item_spec_file_download::FileDownloadProfileInit;
+use peace_item_specs::file_download::FileDownloadProfileInit;
 
 use download::{
     clean, clean_dry, cmd_context, desired, diff, ensure, ensure_dry, fetch, status,

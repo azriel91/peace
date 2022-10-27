@@ -2,7 +2,7 @@ use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
     rt_model::{InMemoryTextOutput, WorkspaceSpec},
 };
-use peace_item_spec_file_download::FileDownloadProfileInit;
+use peace_item_specs::file_download::FileDownloadProfileInit;
 use url::Url;
 use wasm_bindgen::prelude::*;
 
