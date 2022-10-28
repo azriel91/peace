@@ -2,7 +2,7 @@
 use peace::cfg::CleanOpSpec;
 use peace::cfg::{async_trait, nougat, state::Nothing, OpCheckStatus, ProgressLimit, State};
 
-use crate::{FileDownloadError, FileDownloadParams, FileDownloadState};
+use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
 /// `CleanOpSpec` for the file to download.
 #[derive(Debug)]
@@ -11,14 +11,14 @@ pub struct FileDownloadCleanOpSpec;
 #[async_trait(?Send)]
 #[nougat::gat]
 impl CleanOpSpec for FileDownloadCleanOpSpec {
-    type Data<'op> = FileDownloadParams<'op>
+    type Data<'op> = FileDownloadData<'op>
         where Self: 'op;
     type Error = FileDownloadError;
     type StateLogical = FileDownloadState;
     type StatePhysical = Nothing;
 
     async fn check(
-        _file_download_params: FileDownloadParams<'_>,
+        _file_download_data: FileDownloadData<'_>,
         State {
             logical: file_state,
             ..
@@ -47,7 +47,7 @@ impl CleanOpSpec for FileDownloadCleanOpSpec {
     }
 
     async fn exec_dry(
-        _file_download_params: FileDownloadParams<'_>,
+        _file_download_data: FileDownloadData<'_>,
         _state: &State<FileDownloadState, Nothing>,
     ) -> Result<(), FileDownloadError> {
         Ok(())
@@ -55,7 +55,7 @@ impl CleanOpSpec for FileDownloadCleanOpSpec {
 
     #[cfg(not(target_arch = "wasm32"))]
     async fn exec(
-        _file_download_params: FileDownloadParams<'_>,
+        _file_download_data: FileDownloadData<'_>,
         State {
             logical: file_state,
             ..
@@ -76,7 +76,7 @@ impl CleanOpSpec for FileDownloadCleanOpSpec {
 
     #[cfg(target_arch = "wasm32")]
     async fn exec(
-        file_download_params: FileDownloadParams<'_>,
+        file_download_data: FileDownloadData<'_>,
         State {
             logical: file_state,
             ..
@@ -87,7 +87,7 @@ impl CleanOpSpec for FileDownloadCleanOpSpec {
             FileDownloadState::StringContents { path, .. }
             | FileDownloadState::Length { path, .. }
             | FileDownloadState::Unknown { path } => {
-                file_download_params.storage().remove_item(path)?;
+                file_download_data.storage().remove_item(path)?;
             }
         }
 

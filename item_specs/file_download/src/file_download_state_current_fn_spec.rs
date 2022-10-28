@@ -7,7 +7,7 @@ use tokio::{fs::File, io::AsyncReadExt};
 #[cfg(target_arch = "wasm32")]
 use peace::rt_model::Storage;
 
-use crate::{FileDownloadError, FileDownloadParams, FileDownloadState};
+use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
 /// Status `FnSpec` for the file to download.
 #[derive(Debug)]
@@ -85,20 +85,20 @@ impl FileDownloadStateCurrentFnSpec {
 #[async_trait(?Send)]
 #[nougat::gat]
 impl FnSpec for FileDownloadStateCurrentFnSpec {
-    type Data<'op> = FileDownloadParams<'op>
+    type Data<'op> = FileDownloadData<'op>
         where Self: 'op;
     type Error = FileDownloadError;
     type Output = State<FileDownloadState, Nothing>;
 
     async fn exec(
-        file_download_params: FileDownloadParams<'_>,
+        file_download_data: FileDownloadData<'_>,
     ) -> Result<Self::Output, FileDownloadError> {
-        let dest = file_download_params.file_download_profile_init().dest();
+        let dest = file_download_data.file_download_profile_init().dest();
 
         #[cfg(not(target_arch = "wasm32"))]
         let file_exists = dest.exists();
         #[cfg(target_arch = "wasm32")]
-        let file_exists = file_download_params.storage().get_item_opt(dest)?.is_some();
+        let file_exists = file_download_data.storage().get_item_opt(dest)?.is_some();
         if !file_exists {
             let path = dest.to_path_buf();
             return Ok(State::new(FileDownloadState::None { path }, Nothing));
@@ -109,7 +109,7 @@ impl FnSpec for FileDownloadStateCurrentFnSpec {
         let file_state = Self::read_file_contents(dest).await?;
 
         #[cfg(target_arch = "wasm32")]
-        let file_state = Self::read_file_contents(dest, file_download_params.storage()).await?;
+        let file_state = Self::read_file_contents(dest, file_download_data.storage()).await?;
 
         Ok(State::new(file_state, Nothing))
     }

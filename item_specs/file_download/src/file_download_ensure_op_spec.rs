@@ -23,7 +23,7 @@ use peace::{
 
 #[cfg(not(target_arch = "wasm32"))]
 use crate::FileDownloadProfileInit;
-use crate::{FileDownloadError, FileDownloadParams, FileDownloadState, FileDownloadStateDiff};
+use crate::{FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
 
 /// Ensure OpSpec for the file to download.
 #[derive(Debug)]
@@ -31,10 +31,10 @@ pub struct FileDownloadEnsureOpSpec;
 
 impl FileDownloadEnsureOpSpec {
     async fn file_download(
-        file_download_params: FileDownloadParams<'_>,
+        file_download_data: FileDownloadData<'_>,
     ) -> Result<(), FileDownloadError> {
-        let client = file_download_params.client();
-        let src_url = file_download_params.file_download_profile_init().src();
+        let client = file_download_data.client();
+        let src_url = file_download_data.file_download_profile_init().src();
         let response = client
             .get(src_url.clone())
             .send()
@@ -44,7 +44,7 @@ impl FileDownloadEnsureOpSpec {
         #[cfg(not(target_arch = "wasm32"))]
         {
             Self::stream_write(
-                file_download_params.file_download_profile_init(),
+                file_download_data.file_download_profile_init(),
                 response.bytes_stream(),
             )
             .await?;
@@ -54,8 +54,8 @@ impl FileDownloadEnsureOpSpec {
         // https://github.com/seanmonstar/reqwest/issues/1424
         #[cfg(target_arch = "wasm32")]
         {
-            let dest = file_download_params.file_download_profile_init().dest();
-            Self::stream_write(dest, file_download_params.storage(), response).await?;
+            let dest = file_download_data.file_download_profile_init().dest();
+            Self::stream_write(dest, file_download_data.storage(), response).await?;
         }
 
         Ok(())
@@ -162,7 +162,7 @@ impl FileDownloadEnsureOpSpec {
 #[async_trait(?Send)]
 #[nougat::gat]
 impl EnsureOpSpec for FileDownloadEnsureOpSpec {
-    type Data<'op> = FileDownloadParams<'op>
+    type Data<'op> = FileDownloadData<'op>
         where Self: 'op;
     type Error = FileDownloadError;
     type StateDiff = FileDownloadStateDiff;
@@ -170,7 +170,7 @@ impl EnsureOpSpec for FileDownloadEnsureOpSpec {
     type StatePhysical = Nothing;
 
     async fn check(
-        _file_download_params: FileDownloadParams<'_>,
+        _file_download_data: FileDownloadData<'_>,
         _file_state_current: &State<FileDownloadState, Nothing>,
         _file_state_desired: &FileDownloadState,
         diff: &FileDownloadStateDiff,
@@ -197,7 +197,7 @@ impl EnsureOpSpec for FileDownloadEnsureOpSpec {
     }
 
     async fn exec_dry(
-        _file_download_params: FileDownloadParams<'_>,
+        _file_download_data: FileDownloadData<'_>,
         _state: &State<FileDownloadState, Nothing>,
         _file_state_desired: &FileDownloadState,
         _diff: &FileDownloadStateDiff,
@@ -206,12 +206,12 @@ impl EnsureOpSpec for FileDownloadEnsureOpSpec {
     }
 
     async fn exec(
-        file_download_params: FileDownloadParams<'_>,
+        file_download_data: FileDownloadData<'_>,
         _state: &State<FileDownloadState, Nothing>,
         _file_state_desired: &FileDownloadState,
         _diff: &FileDownloadStateDiff,
     ) -> Result<Nothing, FileDownloadError> {
-        Self::file_download(file_download_params).await?;
+        Self::file_download(file_download_data).await?;
         Ok(Nothing)
     }
 }

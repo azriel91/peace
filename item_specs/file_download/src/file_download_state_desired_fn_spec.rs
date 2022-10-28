@@ -2,7 +2,7 @@
 use peace::cfg::FnSpec;
 use peace::cfg::{async_trait, nougat};
 
-use crate::{FileDownloadError, FileDownloadParams, FileDownloadState};
+use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
 /// Status desired `FnSpec` for the file to download.
 #[derive(Debug)]
@@ -10,11 +10,11 @@ pub struct FileDownloadStateDesiredFnSpec;
 
 impl FileDownloadStateDesiredFnSpec {
     async fn file_state_desired(
-        file_download_params: &FileDownloadParams<'_>,
+        file_download_data: &FileDownloadData<'_>,
     ) -> Result<FileDownloadState, FileDownloadError> {
-        let client = file_download_params.client();
-        let dest = file_download_params.file_download_profile_init().dest();
-        let src_url = file_download_params.file_download_profile_init().src();
+        let client = file_download_data.client();
+        let dest = file_download_data.file_download_profile_init().dest();
+        let src_url = file_download_data.file_download_profile_init().src();
         let response = client
             .get(src_url.clone())
             .send()
@@ -57,15 +57,15 @@ impl FileDownloadStateDesiredFnSpec {
 #[async_trait(?Send)]
 #[nougat::gat]
 impl FnSpec for FileDownloadStateDesiredFnSpec {
-    type Data<'op> = FileDownloadParams<'op>
+    type Data<'op> = FileDownloadData<'op>
         where Self: 'op;
     type Error = FileDownloadError;
     type Output = FileDownloadState;
 
     async fn exec(
-        file_download_params: FileDownloadParams<'_>,
+        file_download_data: FileDownloadData<'_>,
     ) -> Result<Self::Output, FileDownloadError> {
-        let file_state_desired = Self::file_state_desired(&file_download_params).await?;
+        let file_state_desired = Self::file_state_desired(&file_download_data).await?;
 
         Ok(file_state_desired)
     }

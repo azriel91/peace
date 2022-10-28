@@ -7,7 +7,7 @@ use crate::FileDownloadProfileInit;
 
 /// Download parameters from the user.
 #[derive(Data, Debug)]
-pub struct FileDownloadParams<'op> {
+pub struct FileDownloadData<'op> {
     /// Client to make web requests.
     client: R<'op, reqwest::Client>,
     /// Url of the file to download.
@@ -20,7 +20,7 @@ pub struct FileDownloadParams<'op> {
     storage: R<'op, Storage>,
 }
 
-impl<'op> FileDownloadParams<'op> {
+impl<'op> FileDownloadData<'op> {
     #[cfg(not(target_arch = "wasm32"))]
     pub fn new(
         client: R<'op, reqwest::Client>,
