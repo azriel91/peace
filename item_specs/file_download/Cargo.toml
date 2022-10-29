@@ -17,11 +17,11 @@ test = false
 
 [dependencies]
 bytes = "1.2.1"
-futures = "0.3.24"
+futures = "0.3.25"
 miette = { workspace = true, optional = true }
 peace = { path = "../..", version = "0.0.3" }
 reqwest = { version = "0.11.12", features = ["stream"] }
-serde = { version = "1.0.145", features = ["derive"] }
+serde = { version = "1.0.147", features = ["derive"] }
 thiserror = "1.0.37"
 url = { version = "2.3.1", features = ["serde"] }
 

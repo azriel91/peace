@@ -24,7 +24,7 @@ semver = "1.0.14"
 thiserror = "1.0.37"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-clap = { version = "4.0.13", features = ["derive"] }
+clap = { version = "4.0.18", features = ["derive"] }
 tokio = { version = "1.21.2", features = ["rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

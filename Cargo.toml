@@ -34,7 +34,7 @@ members = [
 ]
 
 [workspace.dependencies]
-miette = { version = "5.3.0" }
+miette = { version = "5.4.1" }
 
 [features]
 default = ["error_reporting", "output_colorized"]
