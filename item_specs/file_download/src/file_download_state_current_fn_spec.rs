@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 #[nougat::gat(Data)]
 use peace::cfg::FnSpec;
 use peace::cfg::{async_trait, nougat, state::Nothing, State};
@@ -11,9 +13,9 @@ use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
 /// Status `FnSpec` for the file to download.
 #[derive(Debug)]
-pub struct FileDownloadStateCurrentFnSpec;
+pub struct FileDownloadStateCurrentFnSpec<Id>(PhantomData<Id>);
 
-impl FileDownloadStateCurrentFnSpec {
+impl<Id> FileDownloadStateCurrentFnSpec<Id> {
     #[cfg(not(target_arch = "wasm32"))]
     async fn read_file_contents(
         dest: &std::path::Path,
@@ -84,16 +86,19 @@ impl FileDownloadStateCurrentFnSpec {
 
 #[async_trait(?Send)]
 #[nougat::gat]
-impl FnSpec for FileDownloadStateCurrentFnSpec {
-    type Data<'op> = FileDownloadData<'op>
+impl<Id> FnSpec for FileDownloadStateCurrentFnSpec<Id>
+where
+    Id: Send + Sync + 'static,
+{
+    type Data<'op> = FileDownloadData<'op, Id>
         where Self: 'op;
     type Error = FileDownloadError;
     type Output = State<FileDownloadState, Nothing>;
 
     async fn exec(
-        file_download_data: FileDownloadData<'_>,
+        file_download_data: FileDownloadData<'_, Id>,
     ) -> Result<Self::Output, FileDownloadError> {
-        let dest = file_download_data.file_download_profile_init().dest();
+        let dest = file_download_data.file_download_params().dest();
 
         #[cfg(not(target_arch = "wasm32"))]
         let file_exists = dest.exists();

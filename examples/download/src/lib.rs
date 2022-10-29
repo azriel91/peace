@@ -15,15 +15,16 @@ use peace::{
         CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, OutputWrite, Workspace, WorkspaceSpec,
     },
 };
-use peace_item_specs::file_download::{FileDownloadItemSpec, FileDownloadProfileInit};
+use peace_item_specs::file_download::{FileDownloadItemSpec, FileDownloadParams};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use crate::download_args::{DownloadArgs, DownloadCommand};
-pub use crate::download_error::DownloadError;
+pub use crate::{download_error::DownloadError, file_id::FileId};
 
 #[cfg(not(target_arch = "wasm32"))]
 mod download_args;
 mod download_error;
+mod file_id;
 
 #[cfg(target_arch = "wasm32")]
 mod wasm;
@@ -45,7 +46,8 @@ pub async fn workspace_and_graph_setup(
 
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
-        item_spec_graph_builder.add_fn(FileDownloadItemSpec::new(item_spec_id!("file")).into());
+        item_spec_graph_builder
+            .add_fn(FileDownloadItemSpec::<FileId>::new(item_spec_id!("file")).into());
         item_spec_graph_builder.build()
     };
 
@@ -66,7 +68,8 @@ pub async fn workspace_and_graph_setup(
     let workspace = Workspace::new(workspace_spec, profile, flow_id)?;
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
-        item_spec_graph_builder.add_fn(FileDownloadItemSpec::new(item_spec_id!("file")).into());
+        item_spec_graph_builder
+            .add_fn(FileDownloadItemSpec::<FileId>::new(item_spec_id!("file")).into());
         item_spec_graph_builder.build()
     };
 
@@ -81,7 +84,7 @@ pub async fn workspace_and_graph_setup(
 pub async fn cmd_context<'ctx, O>(
     workspace_and_graph: &'ctx WorkspaceAndGraph,
     output: &'ctx mut O,
-    file_download_profile_init: Option<FileDownloadProfileInit>,
+    file_download_params: Option<FileDownloadParams<FileId>>,
 ) -> Result<CmdContext<'ctx, DownloadError, O, SetUp>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
@@ -91,7 +94,7 @@ where
         item_spec_graph,
     } = workspace_and_graph;
     CmdContext::builder(workspace, item_spec_graph, output)
-        .with_profile_init(file_download_profile_init)
+        .with_profile_init(file_download_params)
         .await
 }
 

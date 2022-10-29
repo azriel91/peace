@@ -3,15 +3,23 @@ use peace::rt_model::Storage;
 
 use peace::data::{Data, R};
 
-use crate::FileDownloadProfileInit;
+use crate::FileDownloadParams;
 
-/// Download parameters from the user.
+/// Data used to download a file.
+///
+/// # Type Parameters
+///
+/// * `Id`: A zero-sized type used to distinguish different file download
+///   parameters from each other.
 #[derive(Data, Debug)]
-pub struct FileDownloadData<'op> {
+pub struct FileDownloadData<'op, Id>
+where
+    Id: Send + Sync + 'static,
+{
     /// Client to make web requests.
     client: R<'op, reqwest::Client>,
     /// Url of the file to download.
-    file_download_profile_init: R<'op, FileDownloadProfileInit>,
+    file_download_params: R<'op, FileDownloadParams<Id>>,
 
     /// For wasm, we write to web storage through the `Storage` object.
     ///
@@ -20,27 +28,30 @@ pub struct FileDownloadData<'op> {
     storage: R<'op, Storage>,
 }
 
-impl<'op> FileDownloadData<'op> {
+impl<'op, Id> FileDownloadData<'op, Id>
+where
+    Id: Send + Sync + 'static,
+{
     #[cfg(not(target_arch = "wasm32"))]
     pub fn new(
         client: R<'op, reqwest::Client>,
-        file_download_profile_init: R<'op, FileDownloadProfileInit>,
+        file_download_params: R<'op, FileDownloadParams<Id>>,
     ) -> Self {
         Self {
             client,
-            file_download_profile_init,
+            file_download_params,
         }
     }
 
     #[cfg(target_arch = "wasm32")]
     pub fn new(
         client: R<'op, reqwest::Client>,
-        file_download_profile_init: R<'op, FileDownloadProfileInit>,
+        file_download_params: R<'op, FileDownloadParams<Id>>,
         storage: R<'op, Storage>,
     ) -> Self {
         Self {
             client,
-            file_download_profile_init,
+            file_download_params,
             storage,
         }
     }
@@ -49,8 +60,8 @@ impl<'op> FileDownloadData<'op> {
         &self.client
     }
 
-    pub fn file_download_profile_init(&self) -> &FileDownloadProfileInit {
-        &self.file_download_profile_init
+    pub fn file_download_params(&self) -> &FileDownloadParams<Id> {
+        &self.file_download_params
     }
 
     #[cfg(target_arch = "wasm32")]

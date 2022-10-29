@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 #[nougat::gat(Data)]
 use peace::cfg::CleanOpSpec;
 use peace::cfg::{async_trait, nougat, state::Nothing, OpCheckStatus, ProgressLimit, State};
@@ -5,20 +7,23 @@ use peace::cfg::{async_trait, nougat, state::Nothing, OpCheckStatus, ProgressLim
 use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
 /// `CleanOpSpec` for the file to download.
-#[derive(Debug)]
-pub struct FileDownloadCleanOpSpec;
+#[derive(Debug, Default)]
+pub struct FileDownloadCleanOpSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
 #[nougat::gat]
-impl CleanOpSpec for FileDownloadCleanOpSpec {
-    type Data<'op> = FileDownloadData<'op>
+impl<Id> CleanOpSpec for FileDownloadCleanOpSpec<Id>
+where
+    Id: Send + Sync + 'static,
+{
+    type Data<'op> = FileDownloadData<'op, Id>
         where Self: 'op;
     type Error = FileDownloadError;
     type StateLogical = FileDownloadState;
     type StatePhysical = Nothing;
 
     async fn check(
-        _file_download_data: FileDownloadData<'_>,
+        _file_download_data: FileDownloadData<'_, Id>,
         State {
             logical: file_state,
             ..
@@ -47,7 +52,7 @@ impl CleanOpSpec for FileDownloadCleanOpSpec {
     }
 
     async fn exec_dry(
-        _file_download_data: FileDownloadData<'_>,
+        _file_download_data: FileDownloadData<'_, Id>,
         _state: &State<FileDownloadState, Nothing>,
     ) -> Result<(), FileDownloadError> {
         Ok(())
@@ -55,7 +60,7 @@ impl CleanOpSpec for FileDownloadCleanOpSpec {
 
     #[cfg(not(target_arch = "wasm32"))]
     async fn exec(
-        _file_download_data: FileDownloadData<'_>,
+        _file_download_data: FileDownloadData<'_, Id>,
         State {
             logical: file_state,
             ..
@@ -76,7 +81,7 @@ impl CleanOpSpec for FileDownloadCleanOpSpec {
 
     #[cfg(target_arch = "wasm32")]
     async fn exec(
-        file_download_data: FileDownloadData<'_>,
+        file_download_data: FileDownloadData<'_, Id>,
         State {
             logical: file_state,
             ..
