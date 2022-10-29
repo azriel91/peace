@@ -60,15 +60,13 @@
 //! web_app diff dev demo
 //! ```
 
-#[cfg(not(target_arch = "wasm32"))]
-pub use crate::cli_args::{CliArgs, WebAppCommand};
 pub use crate::{
     env_type::EnvType, env_type_parse_error::EnvTypeParseError, web_app_error::WebAppError,
 };
 
-mod web_app_error;
-
 #[cfg(not(target_arch = "wasm32"))]
-mod cli_args;
+pub mod cli_args;
+
 mod env_type;
 mod env_type_parse_error;
+mod web_app_error;

@@ -1,4 +1,12 @@
-use web_app::WebAppError;
+use clap::Parser;
+use peace::{
+    cfg::{flow_id, profile, FlowId, Profile},
+    rt_model::{CliOutput, WorkspaceSpec},
+};
+use web_app::{
+    cli_args::{CliArgs, ProfileCommand, WebAppCommand},
+    WebAppError,
+};
 
 #[cfg(not(feature = "error_reporting"))]
 pub fn main() -> Result<(), WebAppError> {
@@ -33,5 +41,38 @@ pub fn run() -> Result<(), WebAppError> {
         .build()
         .map_err(WebAppError::TokioRuntimeInit)?;
 
-    runtime.block_on(async { Ok::<_, WebAppError>(()) })
+    let CliArgs { command, format } = CliArgs::parse();
+    #[allow(unused_assignments, unreachable_code)]
+    runtime.block_on(async {
+        let _workspace_spec = WorkspaceSpec::WorkingDir;
+        let _profile = profile!("default");
+        let _flow_id = flow_id!("file");
+        let mut cli_output = CliOutput::default();
+        if let Some(format) = format {
+            cli_output = cli_output.output_format(format);
+        }
+        #[cfg(feature = "output_colorized")]
+        {
+            cli_output = cli_output.colorized();
+        }
+
+        match command {
+            WebAppCommand::Init { slug: _, semver: _ } => todo!(),
+            WebAppCommand::Profile { command } => match command {
+                ProfileCommand::Init { name: _, r#type: _ } => todo!(),
+                ProfileCommand::List => todo!(),
+                ProfileCommand::Show => todo!(),
+            },
+            WebAppCommand::Switch { profile: _ } => todo!(),
+            WebAppCommand::Fetch => todo!(),
+            WebAppCommand::Status => todo!(),
+            WebAppCommand::Desired => todo!(),
+            WebAppCommand::Diff => todo!(),
+            WebAppCommand::Push => todo!(),
+            WebAppCommand::Pull => todo!(),
+            WebAppCommand::Clean => todo!(),
+        }
+
+        Ok::<_, WebAppError>(())
+    })
 }

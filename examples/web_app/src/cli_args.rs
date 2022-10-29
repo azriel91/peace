@@ -26,6 +26,7 @@ pub struct CliArgs {
 
 #[derive(Subcommand)]
 pub enum WebAppCommand {
+    /// Downloads the web application to run.
     Init {
         /// Username and repository of the application to download.
         ///
@@ -38,9 +39,9 @@ pub enum WebAppCommand {
     },
     /// Shows or initializes the current profile.
     Profile {
-        /// Profile command to run, if any.
+        /// Profile command to run.
         #[command(subcommand)]
-        command: Option<ProfileCommand>,
+        command: ProfileCommand,
     },
     /// Switches the current profile.
     ///
@@ -77,4 +78,8 @@ pub enum ProfileCommand {
         #[arg(short, long)]
         r#type: EnvType,
     },
+    /// Lists available profiles.
+    List,
+    /// Shows the current profile, if any.
+    Show,
 }
