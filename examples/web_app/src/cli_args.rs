@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 use peace::{cfg::Profile, rt_model::OutputFormat};
 use semver::Version;
 
-use crate::EnvType;
+use crate::{EnvType, RepoSlug};
 
 #[derive(Parser)]
 #[clap(
@@ -29,11 +29,7 @@ pub enum WebAppCommand {
     /// Downloads the web application to run.
     Init {
         /// Username and repository of the application to download.
-        ///
-        /// TODO: parse
-        ///
-        /// See <https://github.com/azriel91/autexousious/blob/master/crate/asset_model/src/config/asset_slug.rs>
-        slug: String,
+        slug: RepoSlug,
         /// Version of the application to download.
         semver: Version,
     },
