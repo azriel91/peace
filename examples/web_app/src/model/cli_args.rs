@@ -2,7 +2,7 @@ use clap::{Parser, Subcommand};
 use peace::{cfg::Profile, rt_model::OutputFormat};
 use semver::Version;
 
-use crate::{EnvType, RepoSlug};
+use crate::model::{EnvType, RepoSlug};
 
 #[derive(Parser)]
 #[clap(

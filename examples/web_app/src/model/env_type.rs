@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::EnvTypeParseError;
+use crate::model::EnvTypeParseError;
 
 /// Type of environment: development or production.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

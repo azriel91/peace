@@ -10,7 +10,7 @@ pub enum WebAppError {
     EnvTypeParseError(
         #[source]
         #[from]
-        crate::EnvTypeParseError,
+        crate::model::EnvTypeParseError,
     ),
 
     // === Item Spec errors === //

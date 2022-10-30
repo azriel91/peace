@@ -4,7 +4,7 @@ use std::{fmt, str::FromStr};
 use peace::miette::SourceSpan;
 use serde::{Deserialize, Serialize};
 
-use crate::RepoSlugError;
+use crate::model::RepoSlugError;
 
 const FORWARD_SLASH: char = '/';
 
