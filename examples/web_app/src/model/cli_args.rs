@@ -31,7 +31,7 @@ pub enum WebAppCommand {
         /// Username and repository of the application to download.
         slug: RepoSlug,
         /// Version of the application to download.
-        semver: Version,
+        version: Version,
     },
     /// Shows or initializes the current profile.
     Profile {

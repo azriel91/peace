@@ -73,6 +73,16 @@ impl RepoSlug {
 
         first_char_valid && remainder_chars_valid
     }
+
+    /// Returns the account the repository belongs to.
+    pub fn account(&self) -> &str {
+        self.account.as_ref()
+    }
+
+    /// Returns the name of the repository.
+    pub fn repo_name(&self) -> &str {
+        self.repo_name.as_ref()
+    }
 }
 
 impl fmt::Display for RepoSlug {

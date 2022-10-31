@@ -16,10 +16,6 @@
 //! ```bash
 //! ## Download the application
 //! web_app init azriel91/web_app 0.1.0
-//!   ## windows:
-//!   ## https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.zip
-//!   ## linux:
-//!   ## https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.tar.gz
 //!
 //! ## Initialize different deployment environments
 //! ## Local development
@@ -60,4 +56,6 @@
 //! web_app diff dev demo
 //! ```
 
+pub mod cmds;
+pub mod flows;
 pub mod model;

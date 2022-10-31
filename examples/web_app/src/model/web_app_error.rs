@@ -5,6 +5,23 @@ use peace::miette;
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 pub enum WebAppError {
+    /// Failed to construct web application download URL.
+    #[error("Failed to construct web application download URL.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(web_app::web_app_url_build),
+            help("If the URL is valid, this may be a bug in the example, or the `url` library.")
+        )
+    )]
+    WebAppUrlBuild {
+        /// Computed URL that is attempted to be parsed.
+        #[cfg_attr(feature = "error_reporting", source_code)]
+        url_candidate: String,
+        /// URL parse error.
+        #[source]
+        error: url::ParseError,
+    },
     /// Failed to parse environment type.
     #[error("Failed to parse environment type.")]
     EnvTypeParseError(

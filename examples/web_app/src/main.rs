@@ -4,8 +4,11 @@ use peace::{
     rt_model::{CliOutput, WorkspaceSpec},
 };
 use web_app::{
-    cli_args::{CliArgs, ProfileCommand, WebAppCommand},
-    WebAppError,
+    cmds::AppInitCmd,
+    model::{
+        cli_args::{CliArgs, ProfileCommand, WebAppCommand},
+        WebAppError,
+    },
 };
 
 #[cfg(not(feature = "error_reporting"))]
@@ -38,11 +41,13 @@ pub fn run() -> Result<(), WebAppError> {
     let runtime = tokio::runtime::Builder::new_current_thread()
         .thread_name("main")
         .thread_stack_size(3 * 1024 * 1024)
+        .enable_io()
+        .enable_time()
         .build()
         .map_err(WebAppError::TokioRuntimeInit)?;
 
     let CliArgs { command, format } = CliArgs::parse();
-    #[allow(unused_assignments, unreachable_code)]
+    #[allow(unused_assignments)]
     runtime.block_on(async {
         let _workspace_spec = WorkspaceSpec::WorkingDir;
         let _profile = profile!("default");
@@ -57,7 +62,9 @@ pub fn run() -> Result<(), WebAppError> {
         }
 
         match command {
-            WebAppCommand::Init { slug: _, semver: _ } => todo!(),
+            WebAppCommand::Init { slug, version } => {
+                AppInitCmd::run(&mut cli_output, slug, version).await?
+            }
             WebAppCommand::Profile { command } => match command {
                 ProfileCommand::Init { name: _, r#type: _ } => todo!(),
                 ProfileCommand::List => todo!(),
