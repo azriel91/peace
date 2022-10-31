@@ -77,6 +77,30 @@ where
         use peace::miette::{SourceOffset, SourceSpan};
 
         let dest_path = file_download_params.dest();
+        if let Some(dest_parent) = dest_path.parent() {
+            // Ensure all parent directories are created
+            tokio::fs::create_dir_all(dest_parent)
+                .await
+                .or_else(|error| {
+                    #[cfg(feature = "error_reporting")]
+                    let dest_display = format!("{}", dest_path.display());
+                    #[cfg(feature = "error_reporting")]
+                    let parent_dirs_span = {
+                        let start = 1usize;
+                        SourceSpan::from((start, dest_display.len()))
+                    };
+
+                    Err(FileDownloadError::DestParentDirsCreate {
+                        dest: dest_path.to_path_buf(),
+                        dest_parent: dest_parent.to_path_buf(),
+                        #[cfg(feature = "error_reporting")]
+                        dest_display,
+                        #[cfg(feature = "error_reporting")]
+                        parent_dirs_span,
+                        error,
+                    })
+                })?;
+        }
         let dest_file = File::create(dest_path).await.or_else(|error| {
             let mut init_command_approx = String::with_capacity(256);
             let exe_path = std::env::current_exe().map_err(FileDownloadError::CurrentExeRead)?;

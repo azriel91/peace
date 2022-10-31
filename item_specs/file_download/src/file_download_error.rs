@@ -14,14 +14,39 @@ pub enum FileDownloadError {
     #[error("Failed to read destination file contents.")]
     DestFileRead(#[source] std::io::Error),
 
+    #[error("Failed to create directories: `{}`.", dest_parent.display())]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_item_spec_file_download::dest_parent_dirs_create),
+            help(
+                "Ensure that `{}` is not a file, or rerun the command with a different path.",
+                dest_parent.display())),
+    )]
+    DestParentDirsCreate {
+        /// Destination file path.
+        dest: PathBuf,
+        /// Destination parent directory path.
+        dest_parent: PathBuf,
+        /// String representation of the destination path.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        dest_display: String,
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        parent_dirs_span: SourceSpan,
+        /// Underlying IO error
+        #[source]
+        error: std::io::Error,
+    },
     #[error("Failed to open `{}` for writing.", dest.display())]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
-            code(download::dest_file_create),
+            code(peace_item_spec_file_download::dest_file_create),
             help(
-                "Ensure that `{}` is not a directory, or rerun `download init` with a different file path.",
-                dest.display()))
+                "Ensure that `{}` is not a directory, or rerun the command with a different path.",
+                dest.display())),
     )]
     DestFileCreate {
         /// Approximation of the init command that defined the destination path.
@@ -42,7 +67,10 @@ pub enum FileDownloadError {
     SrcUrlParse(url::ParseError),
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(download::src_get), help("Check that the URL is reachable."))
+        diagnostic(
+            code(peace_item_spec_file_download::src_get),
+            help("Check that the URL is reachable.")
+        )
     )]
     #[error("Failed to fetch from URL.")]
     SrcGet(#[source] reqwest::Error),
