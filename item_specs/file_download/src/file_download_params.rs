@@ -29,7 +29,7 @@ pub struct FileDownloadParams<Id> {
 }
 
 impl<Id> FileDownloadParams<Id> {
-    /// Returns a new `DownloadProfileInit`.
+    /// Returns new `FileDownloadParams`.
     pub fn new(src: Url, dest: PathBuf) -> Self {
         Self {
             src,
