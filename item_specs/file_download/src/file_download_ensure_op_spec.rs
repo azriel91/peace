@@ -81,7 +81,7 @@ where
             // Ensure all parent directories are created
             tokio::fs::create_dir_all(dest_parent)
                 .await
-                .or_else(|error| {
+                .map_err(|error| {
                     #[cfg(feature = "error_reporting")]
                     let dest_display = format!("{}", dest_path.display());
                     #[cfg(feature = "error_reporting")]
@@ -90,7 +90,7 @@ where
                         SourceSpan::from((start, dest_display.len()))
                     };
 
-                    Err(FileDownloadError::DestParentDirsCreate {
+                    FileDownloadError::DestParentDirsCreate {
                         dest: dest_path.to_path_buf(),
                         dest_parent: dest_parent.to_path_buf(),
                         #[cfg(feature = "error_reporting")]
@@ -98,7 +98,7 @@ where
                         #[cfg(feature = "error_reporting")]
                         parent_dirs_span,
                         error,
-                    })
+                    }
                 })?;
         }
         let dest_file = File::create(dest_path).await.or_else(|error| {
