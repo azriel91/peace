@@ -29,3 +29,5 @@
 // Re-exports
 #[cfg(feature = "file_download")]
 pub use peace_item_spec_file_download as file_download;
+#[cfg(feature = "tar_x")]
+pub use peace_item_spec_tar_x as tar_x;
