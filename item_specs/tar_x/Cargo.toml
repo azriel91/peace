@@ -1,0 +1,43 @@
+[package]
+name = "peace_item_spec_tar_x"
+version = "0.0.3"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+edition = "2021"
+description = "Manages extracting a tar file for the peace framework"
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_item_spec_tar_x/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+# futures = "0.3.25"
+miette = { workspace = true, optional = true }
+peace = { path = "../..", version = "0.0.3" }
+serde = { version = "1.0.147", features = ["derive"] }
+# We use this instead of tokio-tar, because:
+#
+# * We expect tar extraction to be a compute operation.
+# * tokio-tar is not actively maintained / released.
+# * tokio-tar depends on tokio's "io" feature, which does not support WASM.
+#
+# Asynchronous IO can be handled using [SyncIoBridge].
+#
+# [SyncIoBridge]: https://docs.rs/tokio-util/latest/tokio_util/io/struct.SyncIoBridge.html
+tar = "0.4.38"
+thiserror = "1.0.37"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { version = "1.21.2", features = ["net", "time", "rt"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+tokio = { version = "1.21.2" }
+
+[features]
+default = []
+error_reporting = ["peace/error_reporting"]

@@ -2,15 +2,13 @@ use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
     rt_model::{InMemoryTextOutput, WorkspaceSpec},
 };
+use peace_item_specs::file_download::FileDownloadParams;
 use url::Url;
 use wasm_bindgen::prelude::*;
 
 pub use crate::{
     clean, clean_dry, cmd_context, desired, diff, ensure, ensure_dry, fetch, status,
-    workspace_and_graph_setup, DownloadArgs, DownloadCleanOpSpec, DownloadCommand,
-    DownloadEnsureOpSpec, DownloadError, DownloadParams, DownloadProfileInit,
-    DownloadStateCurrentFnSpec, DownloadStateDesiredFnSpec, DownloadStateDiffFnSpec, FileItemSpec,
-    FileState, FileStateDiff, WorkspaceAndGraph,
+    workspace_and_graph_setup, DownloadError, WorkspaceAndGraph,
 };
 
 #[wasm_bindgen]
@@ -47,10 +45,10 @@ pub async fn wasm_init(url: String, name: String) -> Result<WorkspaceAndOutput, 
     .await?;
 
     // Store init params in storage.
-    let download_profile_init = {
+    let file_download_params = {
         let url = Url::parse(&url).expect("Failed to parse URL.");
         let dest = std::path::PathBuf::from(name);
-        DownloadProfileInit::new(url, dest)
+        FileDownloadParams::new(url, dest)
     };
 
     // Building the command context currently serializes the init params to storage.
@@ -62,7 +60,7 @@ pub async fn wasm_init(url: String, name: String) -> Result<WorkspaceAndOutput, 
     let _cmd_context = cmd_context(
         &workspace_and_graph,
         &mut in_memory_text_output,
-        Some(download_profile_init),
+        Some(file_download_params),
     )
     .await
     .map_err(into_js_err_value)?;

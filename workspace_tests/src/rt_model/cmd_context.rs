@@ -4,7 +4,7 @@ use peace::{
     rt_model::{CmdContext, ItemSpecGraphBuilder, Storage, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, VecA, VecB, VecCopyItemSpec, VecCopyState};
+use crate::{NoOpOutput, VecA, VecB, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_dir()
@@ -16,7 +16,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
         FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
-        let mut builder = ItemSpecGraphBuilder::new();
+        let mut builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         builder.add_fn(VecCopyItemSpec.into());
         builder.build()
     };
@@ -57,7 +57,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
         FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
-        let mut builder = ItemSpecGraphBuilder::new();
+        let mut builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         builder.add_fn(VecCopyItemSpec.into());
         builder.build()
     };
@@ -102,7 +102,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
         FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
-        let mut builder = ItemSpecGraphBuilder::new();
+        let mut builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         builder.add_fn(VecCopyItemSpec.into());
         builder.build()
     };
@@ -141,7 +141,7 @@ async fn init_runs_graph_setup() -> Result<(), Box<dyn std::error::Error>> {
         FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
-        let mut builder = ItemSpecGraphBuilder::new();
+        let mut builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         builder.add_fn(VecCopyItemSpec.into());
         builder.build()
     };

@@ -1,0 +1,37 @@
+[package]
+name = "peace_item_specs"
+version = "0.0.3"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+edition = "2021"
+description = "Collection of item specs the peace framework"
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_item_specs/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[lib]
+doctest = true
+test = false
+
+[dependencies]
+peace_item_spec_file_download = { path = "file_download", version = "0.0.3", optional = true }
+peace_item_spec_tar_x = { path = "tar_x", version = "0.0.3", optional = true }
+
+[dev-dependencies]
+peace = { path = "..", version = "0.0.3" }
+
+[features]
+default = []
+error_reporting = [
+    "peace_item_spec_file_download?/error_reporting",
+    "peace_item_spec_tar_x?/error_reporting",
+]
+
+# Subcrates
+file_download = ["dep:peace_item_spec_file_download"]
+tar_x = ["dep:peace_item_spec_tar_x"]

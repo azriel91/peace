@@ -58,7 +58,6 @@ impl<
 where
     IS: Debug
         + ItemSpec<
-            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -70,21 +69,25 @@ where
         > + Send
         + Sync
         + 'static,
-    E: Debug + Send + Sync + std::error::Error + 'static,
+    E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     StateLogical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec: Debug
-        + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>>
+        + FnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync
         + 'static,
-    StateDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync + 'static,
+    StateDesiredFnSpec: Debug
+        + FnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical>
+        + Send
+        + Sync
+        + 'static,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -93,7 +96,7 @@ where
         + 'static,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -102,7 +105,7 @@ where
         + 'static,
     CleanOpSpec: Debug
         + peace_cfg::CleanOpSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send

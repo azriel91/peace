@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 /// This is used to represent the state of the source file, as well as the
 /// destination file.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub enum FileState {
+pub enum FileDownloadState {
     /// File does not exist.
     None {
         /// Path to the tracked file.
@@ -45,7 +45,7 @@ pub enum FileState {
     },
 }
 
-impl fmt::Display for FileState {
+impl fmt::Display for FileDownloadState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::None { path } => {

@@ -346,6 +346,14 @@ where
     }
 
     /// Inserts init params into the `Resources` map.
+    ///
+    /// **TODO:** Multiple Init Params Support ([#45])
+    ///
+    /// Implementors may wish to take in init parameters that are relevant to
+    /// different `ItemSpec`s, and so each init parameter needs to be able to be
+    /// mapped to multiple different data types.
+    ///
+    /// [#45]: https://github.com/azriel91/peace/issues/45
     fn init_params_insert(
         resources: &mut Resources<Empty>,
         workspace_init_params: Option<WorkspaceInit>,

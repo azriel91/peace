@@ -15,40 +15,17 @@ use peace::{
         CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, OutputWrite, Workspace, WorkspaceSpec,
     },
 };
+use peace_item_specs::file_download::{FileDownloadItemSpec, FileDownloadParams};
 
-pub use crate::{
-    download_args::{DownloadArgs, DownloadCommand},
-    download_clean_op_spec::DownloadCleanOpSpec,
-    download_ensure_op_spec::DownloadEnsureOpSpec,
-    download_error::DownloadError,
-    download_params::DownloadParams,
-    download_profile_init::DownloadProfileInit,
-    download_state_current_fn_spec::DownloadStateCurrentFnSpec,
-    download_state_desired_fn_spec::DownloadStateDesiredFnSpec,
-    download_state_diff_fn_spec::DownloadStateDiffFnSpec,
-    file_item_spec::FileItemSpec,
-    file_state::FileState,
-    file_state_diff::FileStateDiff,
-};
+#[cfg(not(target_arch = "wasm32"))]
+pub use crate::download_args::{DownloadArgs, DownloadCommand};
+pub use crate::{download_error::DownloadError, file_id::FileId};
 
+#[cfg(not(target_arch = "wasm32"))]
 mod download_args;
-mod download_clean_op_spec;
-mod download_ensure_op_spec;
 mod download_error;
-mod download_params;
-mod download_profile_init;
-mod download_state_current_fn_spec;
-mod download_state_desired_fn_spec;
-mod download_state_diff_fn_spec;
-mod file_item_spec;
-mod file_state;
-mod file_state_diff;
+mod file_id;
 
-#[cfg(target_arch = "wasm32")]
-pub use download_item_spec_graph::DownloadItemSpecGraph;
-
-#[cfg(target_arch = "wasm32")]
-mod download_item_spec_graph;
 #[cfg(target_arch = "wasm32")]
 mod wasm;
 
@@ -69,7 +46,8 @@ pub async fn workspace_and_graph_setup(
 
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
-        item_spec_graph_builder.add_fn(FileItemSpec::new(item_spec_id!("file")).into());
+        item_spec_graph_builder
+            .add_fn(FileDownloadItemSpec::<FileId>::new(item_spec_id!("file")).into());
         item_spec_graph_builder.build()
     };
 
@@ -90,7 +68,8 @@ pub async fn workspace_and_graph_setup(
     let workspace = Workspace::new(workspace_spec, profile, flow_id)?;
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
-        item_spec_graph_builder.add_fn(FileItemSpec::new(item_spec_id!("file")).into());
+        item_spec_graph_builder
+            .add_fn(FileDownloadItemSpec::<FileId>::new(item_spec_id!("file")).into());
         item_spec_graph_builder.build()
     };
 
@@ -105,7 +84,7 @@ pub async fn workspace_and_graph_setup(
 pub async fn cmd_context<'ctx, O>(
     workspace_and_graph: &'ctx WorkspaceAndGraph,
     output: &'ctx mut O,
-    download_profile_init: Option<DownloadProfileInit>,
+    file_download_params: Option<FileDownloadParams<FileId>>,
 ) -> Result<CmdContext<'ctx, DownloadError, O, SetUp>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
@@ -115,7 +94,7 @@ where
         item_spec_graph,
     } = workspace_and_graph;
     CmdContext::builder(workspace, item_spec_graph, output)
-        .with_profile_init(download_profile_init)
+        .with_profile_init(file_download_params)
         .await
 }
 
@@ -198,6 +177,3 @@ where
     let CmdContext { resources, .. } = CleanCmd::exec(cmd_context).await?;
     Ok(resources)
 }
-
-/// Read up to 1 kB in memory.
-pub const IN_MEMORY_CONTENTS_MAX: u64 = 1024;

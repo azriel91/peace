@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Diff between the current and desired downloaded file.
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub enum FileStateDiff {
+pub enum FileDownloadStateDiff {
     /// File exists locally, but does not exist on server.
     Deleted {
         /// Path to the file.
@@ -32,7 +32,7 @@ pub enum FileStateDiff {
     },
 }
 
-impl fmt::Display for FileStateDiff {
+impl fmt::Display for FileDownloadStateDiff {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Deleted { path } => write!(

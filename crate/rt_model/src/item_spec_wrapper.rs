@@ -166,7 +166,6 @@ impl<
 where
     IS: Debug
         + ItemSpec<
-            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -177,7 +176,7 @@ where
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
-    E: Debug + Send + Sync + std::error::Error + 'static,
+    E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     StateLogical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical:
@@ -187,7 +186,6 @@ where
     StateDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
-            Error = E,
             StatePhysical = StatePhysical,
             StateLogical = StateLogical,
             StateDiff = StateDiff,
@@ -237,7 +235,6 @@ impl<
 where
     IS: Debug
         + ItemSpec<
-            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -248,7 +245,7 @@ where
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
-    E: Debug + Send + Sync + std::error::Error + 'static,
+    E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     StateLogical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical:
@@ -258,7 +255,6 @@ where
     StateDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
-            Error = E,
             StatePhysical = StatePhysical,
             StateLogical = StateLogical,
             StateDiff = StateDiff,
@@ -312,7 +308,6 @@ impl<
 where
     IS: Debug
         + ItemSpec<
-            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -323,7 +318,7 @@ where
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
-    E: Debug + Send + Sync + std::error::Error + 'static,
+    E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     StateLogical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical:
@@ -333,7 +328,6 @@ where
     StateDesiredFnSpec: Debug + FnSpec<Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
-            Error = E,
             StatePhysical = StatePhysical,
             StateLogical = StateLogical,
             StateDiff = StateDiff,
@@ -388,7 +382,6 @@ impl<
 where
     IS: Debug
         + ItemSpec<
-            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -399,18 +392,21 @@ where
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
-    E: Debug + Send + Sync + std::error::Error + 'static,
+    E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     StateLogical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + FnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StateDesiredFnSpec: Debug + FnSpec<Error = E, Output = StateLogical> + Send + Sync,
+    StateCurrentFnSpec: Debug
+        + FnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
+        + Send
+        + Sync,
+    StateDesiredFnSpec:
+        Debug + FnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -418,7 +414,7 @@ where
         + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -426,7 +422,7 @@ where
         + Sync,
     CleanOpSpec: Debug
         + peace_cfg::CleanOpSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
@@ -437,7 +433,9 @@ where
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E> {
-        <IS as ItemSpec>::setup(self, resources).await
+        <IS as ItemSpec>::setup(self, resources)
+            .await
+            .map_err(Into::<E>::into)
     }
 
     fn state_register(&self, states_type_regs: &mut StatesTypeRegs) {
@@ -517,7 +515,8 @@ where
 
             if let (Some(state), Some(state_desired)) = (state, state_desired) {
                 <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(data, state, state_desired)
-                    .await?
+                    .await
+                    .map_err(Into::<E>::into)?
             } else {
                 panic!(
                     "`ItemSpecWrapper::diff` must only be called with `StatesCurrent` and `StatesDesired` \

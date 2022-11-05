@@ -1,25 +1,30 @@
+use std::marker::PhantomData;
+
 #[nougat::gat(Data)]
 use peace::cfg::FnSpec;
 use peace::cfg::{async_trait, nougat};
 
-use crate::{DownloadError, DownloadParams, FileState};
+use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
 /// Status desired `FnSpec` for the file to download.
 #[derive(Debug)]
-pub struct DownloadStateDesiredFnSpec;
+pub struct FileDownloadStateDesiredFnSpec<Id>(PhantomData<Id>);
 
-impl DownloadStateDesiredFnSpec {
+impl<Id> FileDownloadStateDesiredFnSpec<Id>
+where
+    Id: Send + Sync + 'static,
+{
     async fn file_state_desired(
-        download_params: &DownloadParams<'_>,
-    ) -> Result<FileState, DownloadError> {
-        let client = download_params.client();
-        let dest = download_params.download_profile_init().dest();
-        let src_url = download_params.download_profile_init().src();
+        file_download_data: &FileDownloadData<'_, Id>,
+    ) -> Result<FileDownloadState, FileDownloadError> {
+        let client = file_download_data.client();
+        let dest = file_download_data.file_download_params().dest();
+        let src_url = file_download_data.file_download_params().src();
         let response = client
             .get(src_url.clone())
             .send()
             .await
-            .map_err(DownloadError::SrcGet)?;
+            .map_err(FileDownloadError::SrcGet)?;
 
         let status_code = response.status();
         if status_code.is_success() {
@@ -29,41 +34,46 @@ impl DownloadStateDesiredFnSpec {
                     // Download it now.
                     let remote_contents = async move {
                         let response_text = response.text();
-                        response_text.await.map_err(DownloadError::SrcFileRead)
+                        response_text.await.map_err(FileDownloadError::SrcFileRead)
                     }
                     .await?;
-                    Ok(FileState::StringContents {
+                    Ok(FileDownloadState::StringContents {
                         path: dest.to_path_buf(),
                         contents: remote_contents,
                     })
                 } else {
                     // Stream it later.
-                    Ok(FileState::Length {
+                    Ok(FileDownloadState::Length {
                         path: dest.to_path_buf(),
                         byte_count: remote_file_length,
                     })
                 }
             } else {
-                Ok(FileState::Unknown {
+                Ok(FileDownloadState::Unknown {
                     path: dest.to_path_buf(),
                 })
             }
         } else {
-            Err(DownloadError::SrcFileUndetermined { status_code })
+            Err(FileDownloadError::SrcFileUndetermined { status_code })
         }
     }
 }
 
 #[async_trait(?Send)]
 #[nougat::gat]
-impl FnSpec for DownloadStateDesiredFnSpec {
-    type Data<'op> = DownloadParams<'op>
+impl<Id> FnSpec for FileDownloadStateDesiredFnSpec<Id>
+where
+    Id: Send + Sync + 'static,
+{
+    type Data<'op> = FileDownloadData<'op, Id>
         where Self: 'op;
-    type Error = DownloadError;
-    type Output = FileState;
+    type Error = FileDownloadError;
+    type Output = FileDownloadState;
 
-    async fn exec(download_params: DownloadParams<'_>) -> Result<Self::Output, DownloadError> {
-        let file_state_desired = Self::file_state_desired(&download_params).await?;
+    async fn exec(
+        file_download_data: FileDownloadData<'_, Id>,
+    ) -> Result<Self::Output, FileDownloadError> {
+        let file_state_desired = Self::file_state_desired(&file_download_data).await?;
 
         Ok(file_state_desired)
     }
