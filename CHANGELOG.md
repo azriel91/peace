@@ -8,12 +8,15 @@
 * Support CLI output as YAML. ([#28], [#39])
 * Support CLI output as JSON with the `"output_json"` feature. ([#28], [#39])
 * Error compatibility with `miette` with the `"error_reporting"` feature. ([#28], [#40])
+* Item specs are published as part of the `peace_item_specs` crate. ([#44])
+* `file_download` item spec is type parameterized. ([#44])
 
 [#28]: https://github.com/azriel91/peace/issues/28
 [#37]: https://github.com/azriel91/peace/pull/37
 [#38]: https://github.com/azriel91/peace/pull/38
 [#39]: https://github.com/azriel91/peace/pull/39
 [#40]: https://github.com/azriel91/peace/pull/40
+[#44]: https://github.com/azriel91/peace/pull/44
 
 
 ## 0.0.3 (2022-09-30)
