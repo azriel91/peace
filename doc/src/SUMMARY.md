@@ -23,6 +23,7 @@
         - [State Inspection](technical_concepts/item_spec_graph/state_inspection.md)
         - [State Ensure](technical_concepts/item_spec_graph/state_ensure.md)
         - [Clean](technical_concepts/item_spec_graph/clean.md)
+    - [Output](technical_concepts/output.md)
 
 - [Reference](reference.md)
     - [Commands](commands.md)
