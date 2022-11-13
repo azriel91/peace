@@ -18,13 +18,18 @@ where
         file_download_data: &FileDownloadData<'_, Id>,
     ) -> Result<FileDownloadState, FileDownloadError> {
         let client = file_download_data.client();
-        let dest = file_download_data.file_download_params().dest();
-        let src_url = file_download_data.file_download_params().src();
-        let response = client
-            .get(src_url.clone())
-            .send()
-            .await
-            .map_err(FileDownloadError::SrcGet)?;
+        let file_download_params = file_download_data.file_download_params();
+        let dest = file_download_params.dest();
+        let src_url = file_download_params.src();
+        let response = client.get(src_url.clone()).send().await.or_else(|error| {
+            #[cfg(not(target_arch = "wasm32"))]
+            let (Ok(file_download_error) | Err(file_download_error)) =
+                FileDownloadError::src_get(src_url.clone(), dest, error);
+            #[cfg(target_arch = "wasm32")]
+            let file_download_error = FileDownloadError::src_get(src_url.clone(), error);
+
+            Err(file_download_error)
+        })?;
 
         let status_code = response.status();
         if status_code.is_success() {
