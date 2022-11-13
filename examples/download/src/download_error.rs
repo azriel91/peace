@@ -5,8 +5,8 @@ use peace::miette;
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 pub enum DownloadError {
-    /// A `FileDownload` item spec  error occurred.
-    #[error("A `FileDownload` item spec  error occurred.")]
+    /// A `FileDownload` error occurred.
+    #[error("A `FileDownload` error occurred.")]
     PeaceItemSpecFileDownload(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
