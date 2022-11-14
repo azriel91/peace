@@ -15,6 +15,9 @@ pub struct DownloadArgs {
     /// Command to run.
     #[clap(subcommand)]
     pub command: DownloadCommand,
+    /// Whether to output errors verbosely.
+    #[clap(short, long)]
+    pub verbose: bool,
     /// The format of the command output.
     ///
     /// At this level, this needs to be specified before the subcommand.

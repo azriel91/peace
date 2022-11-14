@@ -11,8 +11,8 @@ use download::{
 };
 
 #[cfg(not(feature = "error_reporting"))]
-pub fn main() -> Result<(), DownloadError> {
-    run()
+pub fn main() {
+    run().unwrap();
 }
 
 #[cfg(feature = "error_reporting")]
@@ -45,7 +45,24 @@ pub fn run() -> Result<(), DownloadError> {
         .build()
         .map_err(DownloadError::TokioRuntimeInit)?;
 
-    let DownloadArgs { command, format } = DownloadArgs::parse();
+    let DownloadArgs {
+        command,
+        verbose,
+        format,
+    } = DownloadArgs::parse();
+
+    if !verbose {
+        #[cfg(feature = "error_reporting")]
+        peace::miette::set_hook(Box::new(|_| {
+            Box::new(
+                peace::miette::MietteHandlerOpts::new()
+                    .without_cause_chain()
+                    .build(),
+            )
+        }))
+        .expect("Failed to configure miette hook.");
+    }
+
     runtime.block_on(async {
         let workspace_spec = WorkspaceSpec::WorkingDir;
         let profile = profile!("default");

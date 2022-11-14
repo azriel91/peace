@@ -39,11 +39,16 @@ where
     ) -> Result<(), FileDownloadError> {
         let client = file_download_data.client();
         let src_url = file_download_data.file_download_params().src();
-        let response = client
-            .get(src_url.clone())
-            .send()
-            .await
-            .map_err(FileDownloadError::SrcGet)?;
+        let dest = file_download_data.file_download_params().dest();
+        let response = client.get(src_url.clone()).send().await.or_else(|error| {
+            #[cfg(not(target_arch = "wasm32"))]
+            let (Ok(file_download_error) | Err(file_download_error)) =
+                FileDownloadError::src_get(src_url.clone(), dest, error);
+            #[cfg(target_arch = "wasm32")]
+            let file_download_error = FileDownloadError::src_get(src_url.clone(), error);
+
+            Err(file_download_error)
+        })?;
 
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -58,7 +63,6 @@ where
         // https://github.com/seanmonstar/reqwest/issues/1424
         #[cfg(target_arch = "wasm32")]
         {
-            let dest = file_download_data.file_download_params().dest();
             Self::stream_write(dest, file_download_data.storage(), response).await?;
         }
 
