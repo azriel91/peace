@@ -27,3 +27,9 @@
 
 - [Reference](reference.md)
     - [Commands](commands.md)
+
+---
+
+- [Learning Material]()
+    - [User Facing Automation - Part 1](learning_material/user_facing_automation_part_1.md)
+    - [User Facing Automation - Part 2](learning_material/user_facing_automation_part_2.md)
