@@ -54,9 +54,20 @@ download diff
 
 ### Concept 16: Profiles
 
+**What:** Use the same project files for logically separate environments.
+
+**Value:** Ease the creation of cloned environments.
+
 
 ### Concept 17: Flows
+
+**What:** Perform different workflows within an environment.
+
+**Value:** Workflows automatically share parameters with each other.
 
 
 ### Concept 18: Parameter Limits
 
+**What:** Guard automation from executing with unusual values.
+
+**Value:** Don't accidentally take down a system.
