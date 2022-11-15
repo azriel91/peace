@@ -40,7 +40,7 @@ jobs:
         if: steps.mdbook_graphviz_cache.outputs.cache-hit != 'true'
         with:
           command: install
-          args: mdbook-graphviz
+          args: mdbook-graphviz --version 0.1.4
 
       - name: 'Build examples'
         run: |
