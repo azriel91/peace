@@ -72,7 +72,7 @@ jobs:
 
       - name: workspaces Cache
         id: workspaces_cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cargo/bin/cargo-workspaces
           key: ${{ runner.os }}-cargo-workspaces
