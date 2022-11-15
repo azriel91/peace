@@ -28,7 +28,7 @@ jobs:
 
       - name: mdbook-graphviz Cache
         id: mdbook_graphviz_cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cargo/bin/mdbook-graphviz
           key: ${{ runner.os }}-mdbook-graphviz

@@ -34,7 +34,10 @@ In a separate shell:
 
 ```bash
 cd /tmp/automation_demo
-watch -n 0.4 -c -d "stat --format='%y' b.txt | cut -b 12-23 ; bat b.txt"
+case "$(uname)" in
+    Linux)  watch -n 0.4 -c -d "stat --format='%y' b.txt | cut -b 12-23 ; bat b.txt" ;;
+    Darwin) watch -n 0.4 -c -d "stat -f '%y' b.txt | cut -b 12-23 ; bat b.txt" ;;
+esac
 ```
 
 </details>
@@ -56,7 +59,7 @@ function slow_cp {
 
 ## Basics
 
-### Concept 1: Repeatable in One Command
+### Concept 1: Repeatable in One Action
 
 **What:** Do it again without thinking.
 
