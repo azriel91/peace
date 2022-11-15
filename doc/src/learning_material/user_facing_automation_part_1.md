@@ -56,7 +56,7 @@ function slow_cp {
 
 ## Basics
 
-### Concept 1: Repeatable in One Command
+### Concept 1: Repeatable in One Action
 
 **What:** Do it again without thinking.
 
