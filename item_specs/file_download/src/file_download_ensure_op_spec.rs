@@ -40,14 +40,14 @@ where
         let client = file_download_data.client();
         let src_url = file_download_data.file_download_params().src();
         let dest = file_download_data.file_download_params().dest();
-        let response = client.get(src_url.clone()).send().await.or_else(|error| {
+        let response = client.get(src_url.clone()).send().await.map_err(|error| {
             #[cfg(not(target_arch = "wasm32"))]
             let (Ok(file_download_error) | Err(file_download_error)) =
                 FileDownloadError::src_get(src_url.clone(), dest, error);
             #[cfg(target_arch = "wasm32")]
             let file_download_error = FileDownloadError::src_get(src_url.clone(), error);
 
-            Err(file_download_error)
+            file_download_error
         })?;
 
         #[cfg(not(target_arch = "wasm32"))]
