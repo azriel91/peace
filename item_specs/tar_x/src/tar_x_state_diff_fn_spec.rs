@@ -4,7 +4,7 @@ use peace::cfg::{async_trait, nougat, state::Nothing, State};
 
 use crate::{TarXError, TarXState, TarXStateDiff};
 
-/// Download status diff function.
+/// Tar extraction status diff function.
 #[derive(Debug)]
 pub struct TarXStateDiffFnSpec;
 
@@ -21,7 +21,7 @@ impl StateDiffFnSpec for TarXStateDiffFnSpec {
     async fn exec(
         _: &(),
         _state_current: &State<TarXState, Nothing>,
-        _file_state_desired: &TarXState,
+        _state_desired: &TarXState,
     ) -> Result<Self::StateDiff, TarXError> {
         todo!()
     }
