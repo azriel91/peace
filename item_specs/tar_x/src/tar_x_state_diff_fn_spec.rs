@@ -1,6 +1,4 @@
-#[nougat::gat(Data)]
-use peace::cfg::StateDiffFnSpec;
-use peace::cfg::{async_trait, nougat, state::Nothing, State};
+use peace::cfg::{async_trait, state::Nothing, State, StateDiffFnSpec};
 
 use crate::{TarXError, TarXState, TarXStateDiff};
 
@@ -9,7 +7,6 @@ use crate::{TarXError, TarXState, TarXStateDiff};
 pub struct TarXStateDiffFnSpec;
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl StateDiffFnSpec for TarXStateDiffFnSpec {
     type Data<'op> = &'op()
         where Self: 'op;

@@ -2,9 +2,8 @@ use std::marker::PhantomData;
 
 use peace::cfg::state::Nothing;
 
-#[nougat::gat(Data)]
 use peace::cfg::EnsureOpSpec;
-use peace::cfg::{async_trait, nougat, OpCheckStatus, State};
+use peace::cfg::{async_trait, OpCheckStatus, State};
 
 use crate::{ShCmdData, ShCmdError, ShCmdState, ShCmdStateDiff};
 
@@ -13,7 +12,6 @@ use crate::{ShCmdData, ShCmdError, ShCmdState, ShCmdStateDiff};
 pub struct ShCmdEnsureOpSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl<Id> EnsureOpSpec for ShCmdEnsureOpSpec<Id>
 where
     Id: Send + Sync + 'static,

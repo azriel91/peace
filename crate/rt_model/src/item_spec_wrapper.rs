@@ -5,7 +5,7 @@ use std::{
 };
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
-use peace_cfg::{async_trait, nougat::Gat, FnSpec, ItemSpec, ItemSpecId, OpCheckStatus, State};
+use peace_cfg::{async_trait, FnSpec, ItemSpec, ItemSpecId, OpCheckStatus, State};
 use peace_data::Data;
 use peace_resources::{
     resources::ts::{Empty, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired},
@@ -273,11 +273,11 @@ where
         + Sync,
 {
     fn borrows() -> TypeIds {
-        <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as DataAccess>::borrows()
+        <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as DataAccess>::borrows()
     }
 
     fn borrow_muts() -> TypeIds {
-        <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as DataAccess>::borrow_muts()
+        <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as DataAccess>::borrow_muts()
     }
 }
 
@@ -346,11 +346,11 @@ where
         + Sync,
 {
     fn borrows(&self) -> TypeIds {
-        <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as DataAccess>::borrows()
+        <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as DataAccess>::borrows()
     }
 
     fn borrow_muts(&self) -> TypeIds {
-        <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as DataAccess>::borrow_muts()
+        <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as DataAccess>::borrow_muts()
     }
 }
 
@@ -450,9 +450,8 @@ where
 
     async fn state_current_fn_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
         let state: State<StateLogical, StatePhysical> = {
-            let data = <Gat!(<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
-                resources,
-            );
+            let data =
+                <<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_> as Data>::borrow(resources);
             <StateCurrentFnSpec as FnSpec>::exec(data).await?
         };
 
@@ -464,9 +463,8 @@ where
         resources: &Resources<WithStateDiffs>,
     ) -> Result<BoxDtDisplay, E> {
         let state: State<StateLogical, StatePhysical> = {
-            let data = <Gat!(<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
-                resources,
-            );
+            let data =
+                <<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_> as Data>::borrow(resources);
             <StateCurrentFnSpec as FnSpec>::exec(data).await?
         };
 
@@ -478,9 +476,8 @@ where
         resources: &Resources<WithStates>,
     ) -> Result<BoxDtDisplay, E> {
         let state: State<StateLogical, StatePhysical> = {
-            let data = <Gat!(<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
-                resources,
-            );
+            let data =
+                <<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_> as Data>::borrow(resources);
             <StateCurrentFnSpec as FnSpec>::exec(data).await?
         };
 
@@ -489,9 +486,8 @@ where
 
     async fn state_desired_fn_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
         let state_desired = {
-            let data = <Gat!(<StateDesiredFnSpec as peace_cfg::FnSpec>::Data<'_>) as Data>::borrow(
-                resources,
-            );
+            let data =
+                <<StateDesiredFnSpec as peace_cfg::FnSpec>::Data<'_> as Data>::borrow(resources);
             <StateDesiredFnSpec as peace_cfg::FnSpec>::exec(data).await?
         };
 
@@ -503,10 +499,9 @@ where
         resources: &Resources<WithStatesCurrentAndDesired>,
     ) -> Result<BoxDtDisplay, E> {
         let state_diff: StateDiff = {
-            let data =
-                <Gat!(<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_>) as Data>::borrow(
-                    resources,
-                );
+            let data = <<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_> as Data>::borrow(
+                resources,
+            );
             let item_spec_id = <IS as ItemSpec>::id(self);
             let states = resources.borrow::<StatesCurrent>();
             let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
@@ -533,9 +528,8 @@ where
         resources: &Resources<WithStateDiffs>,
     ) -> Result<OpCheckStatus, E> {
         let op_check_status = {
-            let data = <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as Data>::borrow(
-                resources,
-            );
+            let data =
+                <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
             let item_spec_id = <IS as ItemSpec>::id(self);
             let states = resources.borrow::<StatesCurrent>();
             let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
@@ -566,8 +560,7 @@ where
     }
 
     async fn ensure_op_exec_dry(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E> {
-        let data =
-            <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as Data>::borrow(resources);
+        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
         let item_spec_id = <IS as ItemSpec>::id(self);
         let states = resources.borrow::<StatesCurrent>();
         let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
@@ -597,8 +590,7 @@ where
     }
 
     async fn ensure_op_exec(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E> {
-        let data =
-            <Gat!(<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_>) as Data>::borrow(resources);
+        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
         let item_spec_id = <IS as ItemSpec>::id(self);
         let states = resources.borrow::<StatesCurrent>();
         let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
@@ -624,9 +616,8 @@ where
 
     async fn clean_op_check(&self, resources: &Resources<WithStates>) -> Result<OpCheckStatus, E> {
         let op_check_status = {
-            let data = <Gat!(<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_>) as Data>::borrow(
-                resources,
-            );
+            let data =
+                <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(resources);
             let item_spec_id = <IS as ItemSpec>::id(self);
             let states = resources.borrow::<StatesCurrent>();
             let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
@@ -645,8 +636,7 @@ where
     }
 
     async fn clean_op_exec_dry(&self, resources: &Resources<WithStates>) -> Result<(), E> {
-        let data =
-            <Gat!(<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_>) as Data>::borrow(resources);
+        let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(resources);
         let item_spec_id = <IS as ItemSpec>::id(self);
         let states = resources.borrow::<StatesCurrent>();
         let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
@@ -663,8 +653,7 @@ where
     }
 
     async fn clean_op_exec(&self, resources: &Resources<WithStates>) -> Result<(), E> {
-        let data =
-            <Gat!(<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_>) as Data>::borrow(resources);
+        let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(resources);
         let item_spec_id = <IS as ItemSpec>::id(self);
         let states = resources.borrow::<StatesCurrent>();
         let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);

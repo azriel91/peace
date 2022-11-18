@@ -1,8 +1,7 @@
 use std::marker::PhantomData;
 
-#[nougat::gat(Data)]
 use peace::cfg::CleanOpSpec;
-use peace::cfg::{async_trait, nougat, state::Nothing, OpCheckStatus, State};
+use peace::cfg::{async_trait, state::Nothing, OpCheckStatus, State};
 
 use crate::{ShCmdData, ShCmdError, ShCmdState};
 
@@ -11,7 +10,6 @@ use crate::{ShCmdData, ShCmdError, ShCmdState};
 pub struct ShCmdCleanOpSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl<Id> CleanOpSpec for ShCmdCleanOpSpec<Id>
 where
     Id: Send + Sync + 'static,

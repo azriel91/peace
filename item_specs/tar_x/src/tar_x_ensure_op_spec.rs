@@ -2,9 +2,7 @@ use std::marker::PhantomData;
 
 use peace::cfg::state::Nothing;
 
-#[nougat::gat(Data)]
-use peace::cfg::EnsureOpSpec;
-use peace::cfg::{async_trait, nougat, OpCheckStatus, State};
+use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, State};
 
 use crate::{TarXData, TarXError, TarXState, TarXStateDiff};
 
@@ -13,7 +11,6 @@ use crate::{TarXData, TarXError, TarXState, TarXStateDiff};
 pub struct TarXEnsureOpSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl<Id> EnsureOpSpec for TarXEnsureOpSpec<Id>
 where
     Id: Send + Sync + 'static,

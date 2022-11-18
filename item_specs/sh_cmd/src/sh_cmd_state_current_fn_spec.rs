@@ -1,8 +1,7 @@
 use std::marker::PhantomData;
 
-#[nougat::gat(Data)]
 use peace::cfg::FnSpec;
-use peace::cfg::{async_trait, nougat, state::Nothing, State};
+use peace::cfg::{async_trait, state::Nothing, State};
 
 use crate::{ShCmdData, ShCmdError, ShCmdState};
 
@@ -11,7 +10,6 @@ use crate::{ShCmdData, ShCmdError, ShCmdState};
 pub struct ShCmdStateCurrentFnSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl<Id> FnSpec for ShCmdStateCurrentFnSpec<Id>
 where
     Id: Send + Sync + 'static,

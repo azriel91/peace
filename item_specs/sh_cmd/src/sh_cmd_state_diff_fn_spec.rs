@@ -1,6 +1,5 @@
-#[nougat::gat(Data)]
 use peace::cfg::StateDiffFnSpec;
-use peace::cfg::{async_trait, nougat, state::Nothing, State};
+use peace::cfg::{async_trait, state::Nothing, State};
 
 use crate::{ShCmdError, ShCmdState, ShCmdStateDiff};
 
@@ -9,7 +8,6 @@ use crate::{ShCmdError, ShCmdState, ShCmdStateDiff};
 pub struct ShCmdStateDiffFnSpec;
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl StateDiffFnSpec for ShCmdStateDiffFnSpec {
     type Data<'op> = &'op()
         where Self: 'op;

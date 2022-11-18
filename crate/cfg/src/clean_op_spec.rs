@@ -13,7 +13,6 @@ use crate::{OpCheckStatus, State};
 /// * Logic to check if the resources have already been cleaned.
 /// * Logic to do the cleaning.
 #[async_trait(?Send)]
-#[nougat::gat]
 pub trait CleanOpSpec {
     /// Error returned when any of the functions of this operation err.
     type Error: std::error::Error;

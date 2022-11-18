@@ -15,10 +15,8 @@ use tokio::{fs::File, io::BufWriter};
 #[cfg(target_arch = "wasm32")]
 use peace::rt_model::Storage;
 
-#[nougat::gat(Data)]
-use peace::cfg::EnsureOpSpec;
 use peace::{
-    cfg::{async_trait, nougat, OpCheckStatus, ProgressLimit, State},
+    cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, State},
     diff::Tracked,
 };
 
@@ -192,7 +190,6 @@ where
 }
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl<Id> EnsureOpSpec for FileDownloadEnsureOpSpec<Id>
 where
     Id: Send + Sync + 'static,

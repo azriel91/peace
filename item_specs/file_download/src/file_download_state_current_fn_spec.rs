@@ -1,8 +1,6 @@
 use std::marker::PhantomData;
 
-#[nougat::gat(Data)]
-use peace::cfg::FnSpec;
-use peace::cfg::{async_trait, nougat, state::Nothing, State};
+use peace::cfg::{async_trait, state::Nothing, FnSpec, State};
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::{fs::File, io::AsyncReadExt};
 
@@ -85,7 +83,6 @@ impl<Id> FileDownloadStateCurrentFnSpec<Id> {
 }
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl<Id> FnSpec for FileDownloadStateCurrentFnSpec<Id>
 where
     Id: Send + Sync + 'static,

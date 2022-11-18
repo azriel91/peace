@@ -1,8 +1,6 @@
 use std::marker::PhantomData;
 
-#[nougat::gat(Data)]
-use peace::cfg::FnSpec;
-use peace::cfg::{async_trait, nougat};
+use peace::cfg::{async_trait, FnSpec};
 
 use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
@@ -65,7 +63,6 @@ where
 }
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl<Id> FnSpec for FileDownloadStateDesiredFnSpec<Id>
 where
     Id: Send + Sync + 'static,

@@ -4,18 +4,10 @@ use std::{
 };
 
 use diff::{Diff, VecDiff, VecDiffType};
-#[nougat::gat(Data)]
-use peace::cfg::CleanOpSpec;
-#[nougat::gat(Data)]
-use peace::cfg::EnsureOpSpec;
-#[nougat::gat(Data)]
-use peace::cfg::FnSpec;
-#[nougat::gat(Data)]
-use peace::cfg::StateDiffFnSpec;
 use peace::{
     cfg::{
-        async_trait, item_spec_id, nougat, state::Nothing, ItemSpec, ItemSpecId, OpCheckStatus,
-        ProgressLimit, State,
+        async_trait, item_spec_id, state::Nothing, CleanOpSpec, EnsureOpSpec, FnSpec, ItemSpec,
+        ItemSpecId, OpCheckStatus, ProgressLimit, State, StateDiffFnSpec,
     },
     data::{Data, R, W},
     resources::{resources::ts::Empty, Resources},
@@ -83,7 +75,6 @@ impl ItemSpec for VecCopyItemSpec {
 pub struct VecCopyCleanOpSpec;
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl CleanOpSpec for VecCopyCleanOpSpec {
     type Data<'op> = W<'op, VecB>
         where Self: 'op;
@@ -129,7 +120,6 @@ impl CleanOpSpec for VecCopyCleanOpSpec {
 pub struct VecCopyEnsureOpSpec;
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl EnsureOpSpec for VecCopyEnsureOpSpec {
     type Data<'op> = VecCopyParams<'op>
         where Self: 'op;
@@ -213,7 +203,6 @@ impl<'op> VecCopyParams<'op> {
 pub struct VecCopyStateCurrentFnSpec;
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl FnSpec for VecCopyStateCurrentFnSpec {
     type Data<'op> = R<'op, VecB>
         where Self: 'op;
@@ -230,7 +219,6 @@ impl FnSpec for VecCopyStateCurrentFnSpec {
 pub struct VecCopyStateDesiredFnSpec;
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl FnSpec for VecCopyStateDesiredFnSpec {
     type Data<'op> = R<'op, VecA>
         where Self: 'op;
@@ -247,7 +235,6 @@ impl FnSpec for VecCopyStateDesiredFnSpec {
 pub struct VecCopyStateDiffFnSpec;
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl StateDiffFnSpec for VecCopyStateDiffFnSpec {
     type Data<'op> = &'op ()
         where Self: 'op;
