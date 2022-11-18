@@ -29,5 +29,7 @@
 // Re-exports
 #[cfg(feature = "file_download")]
 pub use peace_item_spec_file_download as file_download;
+#[cfg(feature = "sh_cmd")]
+pub use peace_item_spec_sh_cmd as sh_cmd;
 #[cfg(feature = "tar_x")]
 pub use peace_item_spec_tar_x as tar_x;

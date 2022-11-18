@@ -20,6 +20,7 @@ test = false
 
 [dependencies]
 peace_item_spec_file_download = { path = "file_download", version = "0.0.3", optional = true }
+peace_item_spec_sh_cmd = { path = "sh_cmd", version = "0.0.3", optional = true }
 peace_item_spec_tar_x = { path = "tar_x", version = "0.0.3", optional = true }
 
 [dev-dependencies]
@@ -29,9 +30,11 @@ peace = { path = "..", version = "0.0.3" }
 default = []
 error_reporting = [
     "peace_item_spec_file_download?/error_reporting",
+    "peace_item_spec_sh_cmd?/error_reporting",
     "peace_item_spec_tar_x?/error_reporting",
 ]
 
 # Subcrates
 file_download = ["dep:peace_item_spec_file_download"]
+sh_cmd = ["dep:peace_item_spec_sh_cmd"]
 tar_x = ["dep:peace_item_spec_tar_x"]
