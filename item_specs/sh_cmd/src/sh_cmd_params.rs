@@ -1,16 +1,10 @@
-use std::{
-    fmt,
-    marker::PhantomData,
-    path::{Path, PathBuf},
-};
+use std::{fmt, marker::PhantomData};
 
 use serde::{Deserialize, Serialize};
 
-// TODO: params for:
-//
-// * keep or remove unknown files
-// * force re-extraction
-/// Tar extraction parameters.
+use crate::ShCmd;
+
+/// Grouping of commands to run a shell command idempotently.
 ///
 /// The `Id` type parameter is needed for each command execution params to be a
 /// distinct type.
@@ -21,31 +15,31 @@ use serde::{Deserialize, Serialize};
 ///   parameters from each other.
 #[derive(Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct ShCmdParams<Id> {
-    /// Path of the file to extract.
-    dest: PathBuf,
+    /// Shell command to run that does the work.
+    work_sh_command: ShCmd,
     /// Marker for unique command execution parameters type.
     marker: PhantomData<Id>,
 }
 
 impl<Id> ShCmdParams<Id> {
     /// Returns new `ShCmdParams`.
-    pub fn new(dest: PathBuf) -> Self {
+    pub fn new(work_sh_command: ShCmd) -> Self {
         Self {
-            dest,
+            work_sh_command,
             marker: PhantomData,
         }
     }
 
-    /// Returns the file path to write to.
-    pub fn dest(&self) -> &Path {
-        &self.dest
+    /// Returns the shell command that does the work.
+    pub fn work_sh_command(&self) -> &ShCmd {
+        &self.work_sh_command
     }
 }
 
 impl<Id> fmt::Debug for ShCmdParams<Id> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ShCmdParams")
-            .field("dest", &self.dest)
+            .field("work_sh_command", &self.work_sh_command)
             .finish()
     }
 }
