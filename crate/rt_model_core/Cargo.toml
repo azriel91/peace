@@ -18,7 +18,7 @@ test = false
 [dependencies]
 async-trait = "0.1.58"
 peace_resources = { path = "../resources", version = "0.0.3" }
-serde_json = { version = "1.0.87", optional = true }
+serde_json = { version = "1.0.88", optional = true }
 miette = { workspace = true, optional = true }
 
 [features]
