@@ -13,8 +13,7 @@ impl<Id> CleanOpSpec for FileDownloadCleanOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = FileDownloadData<'op, Id>
-        where Self: 'op;
+    type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
     type StateLogical = FileDownloadState;
     type StatePhysical = Nothing;

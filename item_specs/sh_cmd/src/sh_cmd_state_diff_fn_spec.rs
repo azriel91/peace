@@ -8,8 +8,7 @@ pub struct ShCmdStateDiffFnSpec;
 
 #[async_trait(?Send)]
 impl StateDiffFnSpec for ShCmdStateDiffFnSpec {
-    type Data<'op> = &'op()
-        where Self: 'op;
+    type Data<'op> = &'op ();
     type Error = ShCmdError;
     type StateDiff = ShCmdStateDiff;
     type StateLogical = ShCmdState;

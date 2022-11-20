@@ -13,8 +13,7 @@ impl<Id> FnSpec for ShCmdStateCurrentFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = ShCmdData<'op, Id>
-        where Self: 'op;
+    type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
     type Output = State<ShCmdState, Nothing>;
 

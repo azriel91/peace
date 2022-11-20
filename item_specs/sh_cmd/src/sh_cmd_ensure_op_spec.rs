@@ -15,8 +15,7 @@ impl<Id> EnsureOpSpec for ShCmdEnsureOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = ShCmdData<'op, Id>
-        where Self: 'op;
+    type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
     type StateDiff = ShCmdStateDiff;
     type StateLogical = ShCmdState;

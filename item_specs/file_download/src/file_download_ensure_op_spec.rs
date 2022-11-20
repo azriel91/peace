@@ -194,8 +194,7 @@ impl<Id> EnsureOpSpec for FileDownloadEnsureOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = FileDownloadData<'op, Id>
-        where Self: 'op;
+    type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
     type StateDiff = FileDownloadStateDiff;
     type StateLogical = FileDownloadState;

@@ -8,8 +8,7 @@ pub struct TarXStateDiffFnSpec;
 
 #[async_trait(?Send)]
 impl StateDiffFnSpec for TarXStateDiffFnSpec {
-    type Data<'op> = &'op()
-        where Self: 'op;
+    type Data<'op> = &'op ();
     type Error = TarXError;
     type StateDiff = TarXStateDiff;
     type StateLogical = TarXState;

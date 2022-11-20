@@ -13,8 +13,7 @@ impl<Id> CleanOpSpec for ShCmdCleanOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = ShCmdData<'op, Id>
-        where Self: 'op;
+    type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
     type StateLogical = ShCmdState;
     type StatePhysical = Nothing;

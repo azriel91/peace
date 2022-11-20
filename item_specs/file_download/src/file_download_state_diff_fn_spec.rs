@@ -11,8 +11,7 @@ pub struct FileDownloadStateDiffFnSpec;
 
 #[async_trait(?Send)]
 impl StateDiffFnSpec for FileDownloadStateDiffFnSpec {
-    type Data<'op> = &'op()
-        where Self: 'op;
+    type Data<'op> = &'op ();
     type Error = FileDownloadError;
     type StateDiff = FileDownloadStateDiff;
     type StateLogical = FileDownloadState;

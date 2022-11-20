@@ -13,8 +13,7 @@ impl<Id> FnSpec for TarXStateDesiredFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = TarXData<'op, Id>
-        where Self: 'op;
+    type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
     type Output = TarXState;
 

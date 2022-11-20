@@ -74,8 +74,7 @@ pub struct VecCopyCleanOpSpec;
 
 #[async_trait(?Send)]
 impl CleanOpSpec for VecCopyCleanOpSpec {
-    type Data<'op> = W<'op, VecB>
-        where Self: 'op;
+    type Data<'op> = W<'op, VecB>;
     type Error = VecCopyError;
     type StateLogical = VecCopyState;
     type StatePhysical = Nothing;
@@ -119,8 +118,7 @@ pub struct VecCopyEnsureOpSpec;
 
 #[async_trait(?Send)]
 impl EnsureOpSpec for VecCopyEnsureOpSpec {
-    type Data<'op> = VecCopyParams<'op>
-        where Self: 'op;
+    type Data<'op> = VecCopyParams<'op>;
     type Error = VecCopyError;
     type StateDiff = VecCopyDiff;
     type StateLogical = VecCopyState;
@@ -202,8 +200,7 @@ pub struct VecCopyStateCurrentFnSpec;
 
 #[async_trait(?Send)]
 impl FnSpec for VecCopyStateCurrentFnSpec {
-    type Data<'op> = R<'op, VecB>
-        where Self: 'op;
+    type Data<'op> = R<'op, VecB>;
     type Error = VecCopyError;
     type Output = State<VecCopyState, Nothing>;
 
@@ -218,8 +215,7 @@ pub struct VecCopyStateDesiredFnSpec;
 
 #[async_trait(?Send)]
 impl FnSpec for VecCopyStateDesiredFnSpec {
-    type Data<'op> = R<'op, VecA>
-        where Self: 'op;
+    type Data<'op> = R<'op, VecA>;
     type Error = VecCopyError;
     type Output = VecCopyState;
 
@@ -234,8 +230,7 @@ pub struct VecCopyStateDiffFnSpec;
 
 #[async_trait(?Send)]
 impl StateDiffFnSpec for VecCopyStateDiffFnSpec {
-    type Data<'op> = &'op ()
-        where Self: 'op;
+    type Data<'op> = &'op ();
     type Error = VecCopyError;
     type StateDiff = VecCopyDiff;
     type StateLogical = VecCopyState;

@@ -15,8 +15,7 @@ impl<Id> EnsureOpSpec for TarXEnsureOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = TarXData<'op, Id>
-        where Self: 'op;
+    type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
     type StateDiff = TarXStateDiff;
     type StateLogical = TarXState;
