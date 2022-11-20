@@ -4,7 +4,7 @@ use peace::{
     rt_model::{CmdContext, ItemSpecGraphBuilder, Storage, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, VecA, VecB, VecCopyError, VecCopyItemSpec, VecCopyState};
+use crate::{NoOpOutput, VecA, VecB, VecCopyError, VecCopyItemSpec};
 
 #[tokio::test]
 async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_dir()
@@ -22,9 +22,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
     };
     let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output)
-        .with_profile_init::<VecCopyState>(Some(VecCopyState::new()))
-        .await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -63,9 +61,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
     };
     let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output)
-        .with_profile_init::<VecCopyState>(Some(VecCopyState::new()))
-        .await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -108,9 +104,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
     };
     let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output)
-        .with_profile_init::<VecCopyState>(Some(VecCopyState::new()))
-        .await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -147,9 +141,7 @@ async fn init_runs_graph_setup() -> Result<(), Box<dyn std::error::Error>> {
     };
     let mut no_op_output = NoOpOutput;
 
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output)
-        .with_profile_init::<VecCopyState>(Some(VecCopyState::new()))
-        .await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<VecA>().is_ok());

@@ -6,6 +6,10 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Previous states of items.
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Previous;
+
 /// Current states of items.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Current;

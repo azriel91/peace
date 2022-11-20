@@ -9,8 +9,8 @@ use peace::{
         async_trait, item_spec_id, state::Nothing, CleanOpSpec, EnsureOpSpec, FnSpec, ItemSpec,
         ItemSpecId, OpCheckStatus, ProgressLimit, State, StateDiffFnSpec,
     },
-    data::{Data, R, W},
-    resources::{resources::ts::Empty, Resources},
+    data::{Data, RMaybe, R, W},
+    resources::{resources::ts::Empty, states::StatesPrevious, Resources},
     rt_model::ItemSpecWrapper,
 };
 use serde::{Deserialize, Serialize};
@@ -52,15 +52,13 @@ impl ItemSpec for VecCopyItemSpec {
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {
         resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
-        // This is "unusual" initialization.
-        //
-        // Because this is an in-memory vector, even after the EnsureCmd has been run,
-        // the persisted state in `.peace/profile/flow/states_current.yaml` is not
-        // re-read for `VecB`. Instead, tests use `with_profile_init(Some(..))` if VecB
-        // needs to be initialized to a certain value.
         let vec_b = {
-            if let Ok(vec_copy_state) = resources.try_borrow::<VecCopyState>() {
-                VecB((**vec_copy_state).clone())
+            let states_previous = <RMaybe<'_, StatesPrevious> as Data>::borrow(resources);
+            let vec_copy_state_previous: Option<&'_ State<VecCopyState, Nothing>> = states_previous
+                .as_ref()
+                .and_then(|states_previous| states_previous.get(&self.id()));
+            if let Some(vec_copy_state) = vec_copy_state_previous {
+                VecB((*vec_copy_state.logical).clone())
             } else {
                 VecB::default()
             }

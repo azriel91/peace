@@ -3,13 +3,16 @@ use std::{fmt, future::IntoFuture, marker::PhantomData, pin::Pin};
 use futures::{Future, StreamExt, TryStreamExt};
 use peace_resources::{
     internal::{FlowInitFile, ProfileInitFile, WorkspaceInitFile},
+    paths::StatesCurrentFile,
     resources::ts::{Empty, SetUp},
+    states::StatesPrevious,
     Resources,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    CmdContext, Error, ItemSpecGraph, StatesTypeRegs, Storage, Workspace, WorkspaceInitializer,
+    CmdContext, Error, ItemSpecGraph, StatesDeserializer, StatesTypeRegs, Storage, Workspace,
+    WorkspaceInitializer,
 };
 
 /// Information needed to execute a command.
@@ -269,6 +272,7 @@ where
         let workspace_init_file = WorkspaceInitFile::from(dirs.peace_dir());
         let profile_init_file = ProfileInitFile::from(dirs.profile_dir());
         let flow_init_file = FlowInitFile::from(dirs.flow_dir());
+        let states_current_file = StatesCurrentFile::from(dirs.flow_dir());
 
         // Read existing init params from storage.
         Self::init_params_deserialize(
@@ -314,9 +318,21 @@ where
             flow_init_params,
         );
 
+        // Read existing states from storage.
+        let states_type_regs = Self::states_type_regs(item_spec_graph);
+        let states_previous = StatesDeserializer::deserialize_opt(
+            storage,
+            states_type_regs.states_current_type_reg(),
+            &states_current_file,
+        )
+        .await?
+        .map(Into::<StatesPrevious>::into);
+        if let Some(states_previous) = states_previous {
+            resources.insert(states_previous);
+        }
+
         // Call each `ItemSpec`'s initialization function.
         let resources = Self::item_spec_graph_setup(item_spec_graph, resources).await?;
-        let states_type_regs = Self::states_type_regs(item_spec_graph);
 
         Ok(CmdContext {
             workspace,

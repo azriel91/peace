@@ -62,6 +62,11 @@ impl WebStorage {
         Ok(storage)
     }
 
+    /// Returns whether an item exists in the web storage.
+    pub fn contains_item(&self, path: &Path) -> Result<bool, Error> {
+        self.get_item_opt(path).map(|item| item.is_some())
+    }
+
     /// Gets an optional item in the web storage.
     ///
     /// * Use [`get_item_opt`] if you would like to fetch an item that may not

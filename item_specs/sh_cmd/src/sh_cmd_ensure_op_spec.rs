@@ -2,8 +2,7 @@ use std::marker::PhantomData;
 
 use peace::cfg::state::Nothing;
 
-use peace::cfg::EnsureOpSpec;
-use peace::cfg::{async_trait, OpCheckStatus, State};
+use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, State};
 
 use crate::{ShCmdData, ShCmdError, ShCmdState, ShCmdStateDiff};
 

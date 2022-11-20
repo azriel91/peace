@@ -1,5 +1,4 @@
-use peace::cfg::StateDiffFnSpec;
-use peace::cfg::{async_trait, state::Nothing, State};
+use peace::cfg::{async_trait, state::Nothing, State, StateDiffFnSpec};
 
 use crate::{ShCmdError, ShCmdState, ShCmdStateDiff};
 

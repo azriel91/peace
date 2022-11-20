@@ -1,7 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::FnSpec;
-use peace::cfg::{async_trait, state::Nothing, State};
+use peace::cfg::{async_trait, state::Nothing, FnSpec, State};
 
 use crate::{ShCmdData, ShCmdError, ShCmdState};
 
