@@ -103,11 +103,13 @@ async fn inserts_states_previous_from_states_current_file() -> Result<(), Box<dy
 
 #[test]
 fn debug() {
-    assert_eq!(
-        "StatesCurrentDiscoverCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput)>)",
-        format!(
-            "{:?}",
-            StatesCurrentDiscoverCmd::<VecCopyError, NoOpOutput>::default()
-        )
+    let debug_str = format!(
+        "{:?}",
+        StatesCurrentDiscoverCmd::<VecCopyError, NoOpOutput>::default()
+    );
+    assert!(
+        debug_str
+            == r#"StatesCurrentDiscoverCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput)>)"#
+            || debug_str == r#"StatesCurrentDiscoverCmd(PhantomData)"#
     );
 }

@@ -40,9 +40,12 @@ fn from_states_mut() {
 fn debug() {
     let states = test_states();
 
-    assert_eq!(
-        r#"States({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData<peace_resources::states::ts::Current>)"#,
-        format!("{states:?}")
+    let debug_str = format!("{states:?}");
+    assert!(
+        debug_str
+            == r#"States({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData<peace_resources::states::ts::Current>)"#
+            || debug_str
+                == r#"States({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData)"#
     );
 }
 
