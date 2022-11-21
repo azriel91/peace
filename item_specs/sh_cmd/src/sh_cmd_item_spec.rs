@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, state::Nothing, ItemSpec, ItemSpecId},
+    cfg::{async_trait, ItemSpec, ItemSpecId},
     resources::{resources::ts::Empty, Resources},
 };
 
 use crate::{
-    ShCmdCleanOpSpec, ShCmdEnsureOpSpec, ShCmdError, ShCmdState, ShCmdStateCurrentFnSpec,
-    ShCmdStateDesiredFnSpec, ShCmdStateDiff, ShCmdStateDiffFnSpec,
+    ShCmdCleanOpSpec, ShCmdEnsureOpSpec, ShCmdError, ShCmdExecutionRecord, ShCmdStateCurrentFnSpec,
+    ShCmdStateDesiredFnSpec, ShCmdStateDiff, ShCmdStateDiffFnSpec, ShCmdSyncStatus,
 };
 
 /// Item spec for executing a shell command.
@@ -49,8 +49,8 @@ where
     type StateDesiredFnSpec = ShCmdStateDesiredFnSpec<Id>;
     type StateDiff = ShCmdStateDiff;
     type StateDiffFnSpec = ShCmdStateDiffFnSpec;
-    type StateLogical = ShCmdState;
-    type StatePhysical = Nothing;
+    type StateLogical = ShCmdSyncStatus;
+    type StatePhysical = ShCmdExecutionRecord;
 
     fn id(&self) -> ItemSpecId {
         self.item_spec_id.clone()

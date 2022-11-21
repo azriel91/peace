@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Nothing, CleanOpSpec, OpCheckStatus, State};
+use peace::cfg::{async_trait, CleanOpSpec, OpCheckStatus, State};
 
-use crate::{ShCmdData, ShCmdError, ShCmdState};
+use crate::{ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdSyncStatus};
 
 /// `CleanOpSpec` for the command to execute.
 #[derive(Debug, Default)]
@@ -15,19 +15,19 @@ where
 {
     type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
-    type StateLogical = ShCmdState;
-    type StatePhysical = Nothing;
+    type StateLogical = ShCmdSyncStatus;
+    type StatePhysical = ShCmdExecutionRecord;
 
     async fn check(
         _sh_cmd_data: ShCmdData<'_, Id>,
-        _state: &State<ShCmdState, Nothing>,
+        _state: &State<ShCmdSyncStatus, ShCmdExecutionRecord>,
     ) -> Result<OpCheckStatus, ShCmdError> {
         todo!()
     }
 
     async fn exec_dry(
         _sh_cmd_data: ShCmdData<'_, Id>,
-        _state: &State<ShCmdState, Nothing>,
+        _state: &State<ShCmdSyncStatus, ShCmdExecutionRecord>,
     ) -> Result<(), ShCmdError> {
         Ok(())
     }
@@ -35,7 +35,7 @@ where
     #[cfg(not(target_arch = "wasm32"))]
     async fn exec(
         _sh_cmd_data: ShCmdData<'_, Id>,
-        _state: &State<ShCmdState, Nothing>,
+        _state: &State<ShCmdSyncStatus, ShCmdExecutionRecord>,
     ) -> Result<(), ShCmdError> {
         todo!()
     }
@@ -46,7 +46,7 @@ where
         State {
             logical: file_state,
             ..
-        }: &State<ShCmdState, Nothing>,
+        }: &State<ShCmdSyncStatus, ShCmdExecutionRecord>,
     ) -> Result<(), ShCmdError> {
         todo!()
     }

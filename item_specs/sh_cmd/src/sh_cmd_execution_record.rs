@@ -3,16 +3,16 @@ use std::fmt;
 use chrono::{offset::Local, DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-/// State of the command execution.
+/// Record of a shell command execution.
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
-pub enum ShCmdState {
-    /// The command is not executed.
+pub enum ShCmdExecutionRecord {
+    /// There is no execution record.
     ///
     /// Represents when the command has either never been executed, or has been
     /// cleaned up.
-    NotExecuted,
+    None,
     /// Record of the command's last execution.
-    Executed {
+    Some {
         /// Timestamp of execution.
         datetime: chrono::DateTime<Utc>,
         /// Duration of execution.
@@ -26,11 +26,11 @@ pub enum ShCmdState {
     },
 }
 
-impl fmt::Display for ShCmdState {
+impl fmt::Display for ShCmdExecutionRecord {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::NotExecuted => write!(f, "not executed"),
-            Self::Executed {
+            Self::None => write!(f, "not executed"),
+            Self::Some {
                 datetime,
                 exit_code,
                 ..

@@ -1,6 +1,6 @@
-use peace::cfg::{async_trait, state::Nothing, State, StateDiffFnSpec};
+use peace::cfg::{async_trait, State, StateDiffFnSpec};
 
-use crate::{ShCmdError, ShCmdState, ShCmdStateDiff};
+use crate::{ShCmdError, ShCmdExecutionRecord, ShCmdStateDiff, ShCmdSyncStatus};
 
 /// Tar extraction status diff function.
 #[derive(Debug)]
@@ -11,13 +11,13 @@ impl StateDiffFnSpec for ShCmdStateDiffFnSpec {
     type Data<'op> = &'op ();
     type Error = ShCmdError;
     type StateDiff = ShCmdStateDiff;
-    type StateLogical = ShCmdState;
-    type StatePhysical = Nothing;
+    type StateLogical = ShCmdSyncStatus;
+    type StatePhysical = ShCmdExecutionRecord;
 
     async fn exec(
         _: &(),
-        _state_current: &State<ShCmdState, Nothing>,
-        _state_desired: &ShCmdState,
+        _state_current: &State<ShCmdSyncStatus, ShCmdExecutionRecord>,
+        _state_desired: &ShCmdSyncStatus,
     ) -> Result<Self::StateDiff, ShCmdError> {
         todo!()
     }
