@@ -117,10 +117,9 @@ jobs:
           toolchain: stable
           override: true
 
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --release
+      - uses: taiki-e/install-action@nextest
+      - name: 'Build and test'
+        run: cargo nextest run --workspace --all-targets
 
   build_and_test_windows:
     name: Build and Test (Windows)
@@ -137,10 +136,9 @@ jobs:
           toolchain: stable
           override: true
 
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --release
+      - uses: taiki-e/install-action@nextest
+      - name: 'Build and test'
+        run: cargo nextest run --workspace --all-targets
 
   build_examples_wasm:
     name: Build examples (WASM)
