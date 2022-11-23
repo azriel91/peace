@@ -6,8 +6,8 @@ use peace::{
 };
 
 use crate::{
-    ShCmdCleanOpSpec, ShCmdEnsureOpSpec, ShCmdError, ShCmdExecutionRecord, ShCmdStateCurrentFnSpec,
-    ShCmdStateDesiredFnSpec, ShCmdStateDiff, ShCmdStateDiffFnSpec, ShCmdSyncStatus,
+    ShCmdCleanOpSpec, ShCmdEnsureOpSpec, ShCmdError, ShCmdExecutionRecord, ShCmdState,
+    ShCmdStateCurrentFnSpec, ShCmdStateDesiredFnSpec, ShCmdStateDiff, ShCmdStateDiffFnSpec,
 };
 
 /// Item spec for executing a shell command.
@@ -49,7 +49,7 @@ where
     type StateDesiredFnSpec = ShCmdStateDesiredFnSpec<Id>;
     type StateDiff = ShCmdStateDiff;
     type StateDiffFnSpec = ShCmdStateDiffFnSpec;
-    type StateLogical = ShCmdSyncStatus;
+    type StateLogical = ShCmdState;
     type StatePhysical = ShCmdExecutionRecord;
 
     fn id(&self) -> ItemSpecId {

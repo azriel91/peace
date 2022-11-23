@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use peace::cfg::{async_trait, FnSpec, State};
 
-use crate::{ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdSyncStatus};
+use crate::{ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdState};
 
 /// Status `FnSpec` for the command to execute.
 #[derive(Debug)]
@@ -15,7 +15,7 @@ where
 {
     type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
-    type Output = State<ShCmdSyncStatus, ShCmdExecutionRecord>;
+    type Output = State<ShCmdState, ShCmdExecutionRecord>;
 
     async fn exec(_sh_cmd_data: ShCmdData<'_, Id>) -> Result<Self::Output, ShCmdError> {
         todo!()
