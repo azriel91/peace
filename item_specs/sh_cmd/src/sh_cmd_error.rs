@@ -16,6 +16,7 @@ pub enum ShCmdError {
     CmdExecFail {
         /// The command that failed to be executed.
         sh_cmd: ShCmd,
+        /// The command that failed to be executed as a string.
         #[cfg(feature = "error_reporting")]
         #[source_code]
         sh_cmd_string: String,
@@ -74,6 +75,29 @@ pub enum ShCmdError {
         /// Underlying Utf8 error.
         #[source]
         error: std::str::Utf8Error,
+    },
+
+    /// Ensure check shell command did not output "true" or "false".
+    #[error(
+        r#"Ensure check shell command did not return "true" or "false": `{}`"#,
+        sh_cmd
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_item_spec_sh_cmd::output_non_utf8)),
+        help(
+            r#"Update the command to return "true" if execution is required, or "false" if not."#
+        )
+    )]
+    EnsureCheckValueNotBoolean {
+        /// The ensure check shell command.
+        sh_cmd: ShCmd,
+        /// The ensure check shell command as a string.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        sh_cmd_string: String,
+        /// Stdout.
+        stdout: Option<String>,
     },
 
     // === Framework errors === //
