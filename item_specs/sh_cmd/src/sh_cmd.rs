@@ -1,6 +1,7 @@
-use std::ffi::OsString;
+use std::{ffi::OsString, fmt};
 
 use serde::{Deserialize, Serialize};
+use tokio::process::Command;
 
 /// Shell command to execute.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
@@ -123,5 +124,25 @@ impl ShCmd {
             self.args.push(arg.into());
         });
         self
+    }
+}
+
+impl From<&ShCmd> for Command {
+    fn from(sh_cmd: &ShCmd) -> Command {
+        let mut command = Command::new(&sh_cmd.program);
+        command.args(&sh_cmd.args);
+
+        command
+    }
+}
+
+impl fmt::Display for ShCmd {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.program.to_string_lossy().fmt(f)?;
+        self.args
+            .iter()
+            .map(|arg| arg.to_string_lossy())
+            .try_for_each(|arg| write!(f, " {arg}"))?;
+        Ok(())
     }
 }
