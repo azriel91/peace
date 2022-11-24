@@ -23,12 +23,15 @@ pub use crate::{
     sh_cmd_state_diff_fn_spec::ShCmdStateDiffFnSpec,
 };
 
+pub(crate) use sh_cmd_executor::ShCmdExecutor;
+
 mod sh_cmd;
 mod sh_cmd_clean_op_spec;
 mod sh_cmd_data;
 mod sh_cmd_ensure_op_spec;
 mod sh_cmd_error;
 mod sh_cmd_execution_record;
+mod sh_cmd_executor;
 mod sh_cmd_item_spec;
 mod sh_cmd_params;
 mod sh_cmd_state;
