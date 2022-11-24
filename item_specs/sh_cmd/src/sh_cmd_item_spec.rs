@@ -48,7 +48,7 @@ where
     type StateCurrentFnSpec = ShCmdStateCurrentFnSpec<Id>;
     type StateDesiredFnSpec = ShCmdStateDesiredFnSpec<Id>;
     type StateDiff = ShCmdStateDiff;
-    type StateDiffFnSpec = ShCmdStateDiffFnSpec;
+    type StateDiffFnSpec = ShCmdStateDiffFnSpec<Id>;
     type StateLogical = ShCmdState;
     type StatePhysical = ShCmdExecutionRecord;
 

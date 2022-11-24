@@ -1,24 +1,52 @@
+use std::marker::PhantomData;
+
 use peace::cfg::{async_trait, State, StateDiffFnSpec};
 
-use crate::{ShCmdError, ShCmdExecutionRecord, ShCmdState, ShCmdStateDiff};
+use crate::{
+    ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState, ShCmdStateDiff,
+};
 
-/// Tar extraction status diff function.
+/// Runs a shell command to obtain the `ShCmd` diff.
 #[derive(Debug)]
-pub struct ShCmdStateDiffFnSpec;
+pub struct ShCmdStateDiffFnSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-impl StateDiffFnSpec for ShCmdStateDiffFnSpec {
-    type Data<'op> = &'op ();
+impl<Id> StateDiffFnSpec for ShCmdStateDiffFnSpec<Id>
+where
+    Id: Send + Sync + 'static,
+{
+    type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
     type StateDiff = ShCmdStateDiff;
     type StateLogical = ShCmdState;
     type StatePhysical = ShCmdExecutionRecord;
 
     async fn exec(
-        _: &(),
-        _state_current: &State<ShCmdState, ShCmdExecutionRecord>,
-        _state_desired: &ShCmdState,
+        sh_cmd_data: ShCmdData<'_, Id>,
+        state_current: &State<ShCmdState, ShCmdExecutionRecord>,
+        state_desired: &ShCmdState,
     ) -> Result<Self::StateDiff, ShCmdError> {
-        todo!()
+        let mut state_desired_sh_cmd = sh_cmd_data.sh_cmd_params().state_desired_sh_cmd().clone();
+
+        let state_current_arg = match &state_current.logical {
+            ShCmdState::None => "",
+            ShCmdState::Some(s) => s.as_ref(),
+        };
+        let state_desired_arg = match state_desired {
+            ShCmdState::None => "",
+            ShCmdState::Some(s) => s.as_ref(),
+        };
+        state_desired_sh_cmd
+            .arg(state_current_arg)
+            .arg(state_desired_arg);
+        ShCmdExecutor::exec(&state_desired_sh_cmd)
+            .await
+            .map(|state| {
+                let s = match state.logical {
+                    ShCmdState::None => String::from(""),
+                    ShCmdState::Some(s) => s,
+                };
+                ShCmdStateDiff::from(s)
+            })
     }
 }

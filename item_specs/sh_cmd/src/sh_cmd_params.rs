@@ -31,7 +31,7 @@ pub struct ShCmdParams<Id> {
     state_desired_sh_cmd: ShCmd,
     /// Shell command to run to show the state difference.
     ///
-    /// The command will be passed the following as three separate arguments:
+    /// The command will be passed the following as two separate arguments:
     ///
     /// * Current state string
     /// * Desired state string
