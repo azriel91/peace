@@ -29,7 +29,7 @@ pub enum ShCmdError {
     #[error("Command produced non-UTF-8 stdout output: `{}`", sh_cmd)]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_item_spec_sh_cmd::output_non_utf8)),
+        diagnostic(code(peace_item_spec_sh_cmd::stdout_non_utf8)),
         help(
             "Update the command to something that outputs UTF8: `{}`\n\
             Perhaps encode the output using `base64`",
@@ -55,7 +55,7 @@ pub enum ShCmdError {
     #[error("Command produced non-UTF-8 stderr output: `{}`", sh_cmd)]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_item_spec_sh_cmd::output_non_utf8)),
+        diagnostic(code(peace_item_spec_sh_cmd::stderr_non_utf8)),
         help(
             "Update the command to something that outputs UTF8: `{}`\n\
             Perhaps encode the output using `base64`",
@@ -84,7 +84,7 @@ pub enum ShCmdError {
     )]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_item_spec_sh_cmd::output_non_utf8)),
+        diagnostic(code(peace_item_spec_sh_cmd::ensure_check_value_not_boolean)),
         help(
             r#"Update the command to return "true" if execution is required, or "false" if not."#
         )
@@ -93,6 +93,29 @@ pub enum ShCmdError {
         /// The ensure check shell command.
         sh_cmd: ShCmd,
         /// The ensure check shell command as a string.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        sh_cmd_string: String,
+        /// Stdout.
+        stdout: Option<String>,
+    },
+
+    /// Clean check shell command did not output "true" or "false".
+    #[error(
+        r#"Clean check shell command did not return "true" or "false": `{}`"#,
+        sh_cmd
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_item_spec_sh_cmd::clean_check_value_not_boolean)),
+        help(
+            r#"Update the command to return "true" if execution is required, or "false" if not."#
+        )
+    )]
+    CleanCheckValueNotBoolean {
+        /// The clean check shell command.
+        sh_cmd: ShCmd,
+        /// The clean check shell command as a string.
         #[cfg(feature = "error_reporting")]
         #[source_code]
         sh_cmd_string: String,
