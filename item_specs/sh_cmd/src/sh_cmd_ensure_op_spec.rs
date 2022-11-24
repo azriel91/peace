@@ -68,19 +68,36 @@ where
 
     async fn exec_dry(
         _sh_cmd_data: ShCmdData<'_, Id>,
-        _state: &State<ShCmdState, ShCmdExecutionRecord>,
-        _file_state_desired: &ShCmdState,
-        _diff: &ShCmdStateDiff,
+        _state_current: &State<ShCmdState, ShCmdExecutionRecord>,
+        _state_desired: &ShCmdState,
+        _state_diff: &ShCmdStateDiff,
     ) -> Result<ShCmdExecutionRecord, ShCmdError> {
         todo!()
     }
 
     async fn exec(
-        _sh_cmd_data: ShCmdData<'_, Id>,
-        _state: &State<ShCmdState, ShCmdExecutionRecord>,
-        _file_state_desired: &ShCmdState,
-        _diff: &ShCmdStateDiff,
+        sh_cmd_data: ShCmdData<'_, Id>,
+        state_current: &State<ShCmdState, ShCmdExecutionRecord>,
+        state_desired: &ShCmdState,
+        state_diff: &ShCmdStateDiff,
     ) -> Result<ShCmdExecutionRecord, ShCmdError> {
-        todo!();
+        let mut ensure_exec_sh_cmd = sh_cmd_data.sh_cmd_params().ensure_exec_sh_cmd().clone();
+
+        let state_current_arg = match &state_current.logical {
+            ShCmdState::None => "",
+            ShCmdState::Some(s) => s.as_ref(),
+        };
+        let state_desired_arg = match state_desired {
+            ShCmdState::None => "",
+            ShCmdState::Some(s) => s.as_ref(),
+        };
+        ensure_exec_sh_cmd
+            .arg(state_current_arg)
+            .arg(state_desired_arg)
+            .arg(&**state_diff);
+
+        ShCmdExecutor::exec(&ensure_exec_sh_cmd)
+            .await
+            .map(|state| state.physical)
     }
 }
