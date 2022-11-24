@@ -63,10 +63,20 @@ where
 
     #[cfg(not(target_arch = "wasm32"))]
     async fn exec(
-        _sh_cmd_data: ShCmdData<'_, Id>,
-        _state: &State<ShCmdState, ShCmdExecutionRecord>,
+        sh_cmd_data: ShCmdData<'_, Id>,
+        state_current: &State<ShCmdState, ShCmdExecutionRecord>,
     ) -> Result<(), ShCmdError> {
-        todo!()
+        let mut clean_exec_sh_cmd = sh_cmd_data.sh_cmd_params().clean_exec_sh_cmd().clone();
+
+        let state_current_arg = match &state_current.logical {
+            ShCmdState::None => "",
+            ShCmdState::Some(s) => s.as_ref(),
+        };
+        clean_exec_sh_cmd.arg(state_current_arg);
+
+        ShCmdExecutor::exec(&clean_exec_sh_cmd)
+            .await
+            .map(|_state| ())
     }
 
     #[cfg(target_arch = "wasm32")]
