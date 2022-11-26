@@ -17,10 +17,6 @@ pub enum ShCmdExecutionRecord {
         start_datetime: chrono::DateTime<Utc>,
         /// Timestamp that the execution ended.
         end_datetime: chrono::DateTime<Utc>,
-        /// stdout output.
-        stdout: String,
-        /// stderr output.
-        stderr: String,
         /// Exit code of the process, if any.
         ///
         /// See [`ExitStatus::code()`].

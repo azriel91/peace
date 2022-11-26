@@ -30,23 +30,20 @@ where
 
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
-            ShCmdState::Some(s) => s.as_ref(),
+            ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
         let state_desired_arg = match state_desired {
             ShCmdState::None => "",
-            ShCmdState::Some(s) => s.as_ref(),
+            ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
         state_desired_sh_cmd
             .arg(state_current_arg)
             .arg(state_desired_arg);
         ShCmdExecutor::exec(&state_desired_sh_cmd)
             .await
-            .map(|state| {
-                let s = match state.logical {
-                    ShCmdState::None => String::from(""),
-                    ShCmdState::Some(s) => s,
-                };
-                ShCmdStateDiff::from(s)
+            .map(|state| match state.logical {
+                ShCmdState::None => ShCmdStateDiff::new(String::from(""), String::from("")),
+                ShCmdState::Some { stdout, stderr } => ShCmdStateDiff::new(stdout, stderr),
             })
     }
 }

@@ -74,12 +74,10 @@ impl ShCmdExecutor {
         })?;
 
         Ok(State::new(
-            ShCmdState::Some(stdout.clone()),
+            ShCmdState::Some { stdout, stderr },
             ShCmdExecutionRecord::Some {
                 start_datetime,
                 end_datetime,
-                stdout,
-                stderr,
                 exit_code: output.status.code(),
             },
         ))

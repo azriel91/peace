@@ -14,14 +14,19 @@ pub enum ShCmdState {
     /// cleaned up.
     None,
     /// Command has not been executed since the source files have been updated.
-    Some(String),
+    Some {
+        /// stdout output.
+        stdout: String,
+        /// stderr output.
+        stderr: String,
+    },
 }
 
 impl fmt::Display for ShCmdState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::None => write!(f, "<none>"),
-            Self::Some(s) => write!(f, "{s}"),
+            Self::Some { stderr, .. } => stderr.fmt(f),
         }
     }
 }

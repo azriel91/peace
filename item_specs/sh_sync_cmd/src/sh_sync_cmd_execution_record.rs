@@ -13,16 +13,20 @@ pub enum ShSyncCmdExecutionRecord {
     None,
     /// Record of the command's last execution.
     Some {
-        /// Timestamp of execution.
-        datetime: chrono::DateTime<Utc>,
-        /// Duration of execution.
-        duration: chrono::DateTime<Utc>,
+        /// Timestamp of beginning of execution.
+        start_datetime: chrono::DateTime<Utc>,
+        /// Timestamp that the execution ended.
+        end_datetime: chrono::DateTime<Utc>,
         /// stdout output.
         stdout: String,
         /// stderr output.
         stderr: String,
-        /// Exit code.
-        exit_code: u32,
+        /// Exit code of the process, if any.
+        ///
+        /// See [`ExitStatus::code()`].
+        ///
+        /// [`ExitStatus::code()`]: std::process::ExitStatus::code
+        exit_code: Option<i32>,
     },
 }
 
@@ -31,17 +35,17 @@ impl fmt::Display for ShSyncCmdExecutionRecord {
         match self {
             Self::None => write!(f, "not executed"),
             Self::Some {
-                datetime,
+                start_datetime,
                 exit_code,
                 ..
-            } => {
-                if *exit_code == 0 {
-                    let datetime_local = DateTime::<Local>::from(*datetime);
-                    write!(f, "executed successfully at {datetime_local}")
-                } else {
-                    write!(f, "execution failed with code: {exit_code}")
+            } => match exit_code {
+                Some(0) => {
+                    let start_datetime_local = DateTime::<Local>::from(*start_datetime);
+                    write!(f, "executed successfully at {start_datetime_local}")
                 }
-            }
+                Some(code) => write!(f, "execution failed with code: {code}"),
+                None => write!(f, "execution was interrupted"),
+            },
         }
     }
 }

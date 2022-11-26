@@ -26,14 +26,14 @@ where
 
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
-            ShCmdState::Some(s) => s.as_ref(),
+            ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
         clean_check_sh_cmd.arg(state_current_arg);
 
         ShCmdExecutor::exec(&clean_check_sh_cmd)
             .await
             .and_then(|state| match state.logical {
-                ShCmdState::Some(stdout) => match stdout.trim().lines().rev().next() {
+                ShCmdState::Some { stdout, .. } => match stdout.trim().lines().rev().next() {
                     Some("true") => Ok(OpCheckStatus::ExecRequired {
                         progress_limit: ProgressLimit::Unknown,
                     }),
@@ -70,7 +70,7 @@ where
 
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
-            ShCmdState::Some(s) => s.as_ref(),
+            ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
         clean_exec_sh_cmd.arg(state_current_arg);
 
