@@ -10,6 +10,7 @@
 * Error compatibility with `miette` with the `"error_reporting"` feature. ([#28], [#40])
 * Item specs are published as part of the `peace_item_specs` crate. ([#44])
 * `file_download` item spec is type parameterized. ([#44])
+* Add `ShCmdItemSpec`, which allows item spec logic to be defined by shell commands. ([#53], [#54])
 
 [#28]: https://github.com/azriel91/peace/issues/28
 [#37]: https://github.com/azriel91/peace/pull/37
@@ -17,6 +18,8 @@
 [#39]: https://github.com/azriel91/peace/pull/39
 [#40]: https://github.com/azriel91/peace/pull/40
 [#44]: https://github.com/azriel91/peace/pull/44
+[#53]: https://github.com/azriel91/peace/issues/53
+[#54]: https://github.com/azriel91/peace/pull/54
 
 
 ## 0.0.3 (2022-09-30)
