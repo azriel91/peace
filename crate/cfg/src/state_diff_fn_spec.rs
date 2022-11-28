@@ -31,7 +31,6 @@ use crate::State;
 ///     No, from the previous point, other information that may affect the diff
 ///     may not belong in the `State`.
 #[async_trait(?Send)]
-#[nougat::gat]
 pub trait StateDiffFnSpec {
     /// Logical state of the managed item.
     ///

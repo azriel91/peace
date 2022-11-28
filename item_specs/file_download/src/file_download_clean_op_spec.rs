@@ -1,8 +1,6 @@
 use std::marker::PhantomData;
 
-#[nougat::gat(Data)]
-use peace::cfg::CleanOpSpec;
-use peace::cfg::{async_trait, nougat, state::Nothing, OpCheckStatus, ProgressLimit, State};
+use peace::cfg::{async_trait, state::Nothing, CleanOpSpec, OpCheckStatus, ProgressLimit, State};
 
 use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
@@ -11,13 +9,11 @@ use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 pub struct FileDownloadCleanOpSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl<Id> CleanOpSpec for FileDownloadCleanOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = FileDownloadData<'op, Id>
-        where Self: 'op;
+    type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
     type StateLogical = FileDownloadState;
     type StatePhysical = Nothing;

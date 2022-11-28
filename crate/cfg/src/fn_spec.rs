@@ -3,7 +3,6 @@ use peace_data::Data;
 
 /// Defines the logic and data of a function.
 #[async_trait(?Send)]
-#[nougat::gat]
 pub trait FnSpec {
     /// Return type of the function.
     ///

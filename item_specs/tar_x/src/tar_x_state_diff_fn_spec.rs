@@ -1,18 +1,14 @@
-#[nougat::gat(Data)]
-use peace::cfg::StateDiffFnSpec;
-use peace::cfg::{async_trait, nougat, state::Nothing, State};
+use peace::cfg::{async_trait, state::Nothing, State, StateDiffFnSpec};
 
 use crate::{TarXError, TarXState, TarXStateDiff};
 
-/// Download status diff function.
+/// Tar extraction status diff function.
 #[derive(Debug)]
 pub struct TarXStateDiffFnSpec;
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl StateDiffFnSpec for TarXStateDiffFnSpec {
-    type Data<'op> = &'op()
-        where Self: 'op;
+    type Data<'op> = &'op ();
     type Error = TarXError;
     type StateDiff = TarXStateDiff;
     type StateLogical = TarXState;
@@ -21,7 +17,7 @@ impl StateDiffFnSpec for TarXStateDiffFnSpec {
     async fn exec(
         _: &(),
         _state_current: &State<TarXState, Nothing>,
-        _file_state_desired: &TarXState,
+        _state_desired: &TarXState,
     ) -> Result<Self::StateDiff, TarXError> {
         todo!()
     }

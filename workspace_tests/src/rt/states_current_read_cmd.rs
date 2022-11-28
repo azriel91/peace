@@ -23,18 +23,14 @@ async fn reads_states_current_from_disk_when_present() -> Result<(), Box<dyn std
     let mut no_op_output = NoOpOutput;
 
     // Write current states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output)
-        .with_profile_init::<VecCopyState>(Some(VecCopyState::new()))
-        .await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext {
         resources: resources_from_discover,
         ..
     } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output)
-        .with_profile_init::<VecCopyState>(None)
-        .await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext {
         resources: resources_from_read,
         ..
@@ -66,9 +62,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 
     // Try and read states from disk.
     let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output)
-        .with_profile_init::<VecCopyState>(Some(VecCopyState::new()))
-        .await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let exec_result = StatesCurrentReadCmd::exec(cmd_context).await;
 
     assert!(matches!(
@@ -82,11 +76,13 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 
 #[test]
 fn debug() {
-    assert_eq!(
-        "StatesCurrentReadCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput)>)",
-        format!(
-            "{:?}",
-            StatesCurrentReadCmd::<VecCopyError, NoOpOutput>::default()
-        )
+    let debug_str = format!(
+        "{:?}",
+        StatesCurrentReadCmd::<VecCopyError, NoOpOutput>::default()
+    );
+    assert!(
+        debug_str
+            == r#"StatesCurrentReadCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput)>)"#
+            || debug_str == r#"StatesCurrentReadCmd(PhantomData)"#
     );
 }

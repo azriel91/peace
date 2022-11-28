@@ -1,4 +1,11 @@
 [alias]
+# Nextest for different feature combinations
+test_0 = ["nextest", "run", "--workspace", "--no-default-features"]
+test_1 = ["nextest", "run", "--workspace", "--features", "output_colorized"]
+test_2 = ["nextest", "run", "--workspace", "--features", "output_json"]
+test_3 = ["nextest", "run", "--workspace", "--features", "output_colorized output_json"]
+
+# Coverage for different feature combinations
 coverage_clean = ["llvm-cov", "clean", "--workspace"]
 coverage_0 = ["llvm-cov", "--no-report", "--output-dir", "./target/coverage", "nextest", "--workspace", "--no-default-features"]
 coverage_1 = ["llvm-cov", "--no-report", "--output-dir", "./target/coverage", "nextest", "--workspace", "--features", "output_colorized"]

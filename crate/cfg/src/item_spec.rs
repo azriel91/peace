@@ -52,7 +52,6 @@ use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State, StateDiffFnSpec};
 ///
 /// [`Data`]: crate::CleanOpSpec::Data
 #[async_trait(?Send)]
-#[nougat::gat]
 pub trait ItemSpec {
     /// Consumer provided error type.
     type Error: std::error::Error;

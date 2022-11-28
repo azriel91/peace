@@ -23,7 +23,7 @@ serde = { version = "1.0.147", features = ["derive"] }
 serde_yaml = "0.9.14"
 tempfile = "3.3.0"
 thiserror = "1.0.37"
-tokio = { version = "1.21.2", features = ["rt", "macros"] }
+tokio = { version = "1.22.0", features = ["rt", "macros"] }
 
 [features]
 default = []

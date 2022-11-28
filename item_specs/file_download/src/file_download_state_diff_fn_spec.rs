@@ -1,7 +1,5 @@
-#[nougat::gat(Data)]
-use peace::cfg::StateDiffFnSpec;
 use peace::{
-    cfg::{async_trait, nougat, state::Nothing, State},
+    cfg::{async_trait, state::Nothing, State, StateDiffFnSpec},
     diff::{Changeable, Tracked},
 };
 
@@ -12,10 +10,8 @@ use crate::{FileDownloadError, FileDownloadState, FileDownloadStateDiff};
 pub struct FileDownloadStateDiffFnSpec;
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl StateDiffFnSpec for FileDownloadStateDiffFnSpec {
-    type Data<'op> = &'op()
-        where Self: 'op;
+    type Data<'op> = &'op ();
     type Error = FileDownloadError;
     type StateDiff = FileDownloadStateDiff;
     type StateLogical = FileDownloadState;

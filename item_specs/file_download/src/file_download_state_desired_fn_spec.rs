@@ -1,8 +1,6 @@
 use std::marker::PhantomData;
 
-#[nougat::gat(Data)]
-use peace::cfg::FnSpec;
-use peace::cfg::{async_trait, nougat};
+use peace::cfg::{async_trait, FnSpec};
 
 use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
@@ -21,14 +19,14 @@ where
         let file_download_params = file_download_data.file_download_params();
         let dest = file_download_params.dest();
         let src_url = file_download_params.src();
-        let response = client.get(src_url.clone()).send().await.or_else(|error| {
+        let response = client.get(src_url.clone()).send().await.map_err(|error| {
             #[cfg(not(target_arch = "wasm32"))]
             let (Ok(file_download_error) | Err(file_download_error)) =
                 FileDownloadError::src_get(src_url.clone(), dest, error);
             #[cfg(target_arch = "wasm32")]
             let file_download_error = FileDownloadError::src_get(src_url.clone(), error);
 
-            Err(file_download_error)
+            file_download_error
         })?;
 
         let status_code = response.status();
@@ -65,13 +63,11 @@ where
 }
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl<Id> FnSpec for FileDownloadStateDesiredFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = FileDownloadData<'op, Id>
-        where Self: 'op;
+    type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
     type Output = FileDownloadState;
 

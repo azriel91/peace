@@ -15,6 +15,12 @@ use crate::{
 /// The `Id` type parameter is needed for each tar extraction params to be a
 /// distinct type.
 ///
+/// The following use cases are intended to be supported:
+///
+/// * A pristine directory with only the tar's contents and nothing else (in
+///   progress).
+/// * Extraction of a tar over an existing directory (not yet implemented).
+///
 /// # Type Parameters
 ///
 /// * `Id`: A zero-sized type used to distinguish different tar extraction

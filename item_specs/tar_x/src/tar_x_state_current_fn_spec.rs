@@ -1,8 +1,6 @@
 use std::marker::PhantomData;
 
-#[nougat::gat(Data)]
-use peace::cfg::FnSpec;
-use peace::cfg::{async_trait, nougat, state::Nothing, State};
+use peace::cfg::{async_trait, state::Nothing, FnSpec, State};
 
 use crate::{TarXData, TarXError, TarXState};
 
@@ -11,13 +9,11 @@ use crate::{TarXData, TarXError, TarXState};
 pub struct TarXStateCurrentFnSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-#[nougat::gat]
 impl<Id> FnSpec for TarXStateCurrentFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = TarXData<'op, Id>
-        where Self: 'op;
+    type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
     type Output = State<TarXState, Nothing>;
 

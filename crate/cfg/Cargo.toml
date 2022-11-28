@@ -17,7 +17,6 @@ test = false
 
 [dependencies]
 async-trait = "0.1.58"
-nougat = "0.2.4"
 peace_core = { path = "../core", version = "0.0.3" }
 peace_data = { path = "../data", version = "0.0.3" }
 peace_resources = { path = "../resources", version = "0.0.3" }
