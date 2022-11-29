@@ -22,12 +22,13 @@ See:
 
 ## Features
 
-| Symbol | Meaning           |
-|:------:|:------------------|
-|   🟢   | Works well        |
-|   🟡   | Work in progress  |
-|   ⚫   | Planned           |
-|   🔵   | Works, "fun idea" |
+| Symbol | Meaning              |
+|:------:|:---------------------|
+|   🟢   | Works well           |
+|   🟡   | Work in progress     |
+|   ⚫   | Planned              |
+|   🔵   | Compatible by design |
+|   🟣   | Works, "fun idea"    |
 
 * 🟢 Define items to manage
 * 🟢 Define dependencies between items
@@ -39,12 +40,12 @@ See:
 * 🟢 Namespaced profile directories
 * 🟢 Dry run
 * 🟢 Resource clean up
-* 🔵 WASM support
-* ⚫ Understandable error reporting
-* ⚫ Understandable progress
-* ⚫ Feature-gated incremental functionality
+* 🟡 Feature-gated incremental functionality
+* 🔵 Understandable error reporting
+* 🔵 Actionable error messages
+* 🟣 WASM support
+* ⚫ Understandable progress [#42]
 * ⚫ Built-in application execution methods -- CLI, web service
-* ⚫ Actionable error messages
 * ⚫ `peace` binary for configuration based workflows
 * ⚫ Off-the-shelf support for common tasks
 * ⚫ Web based UI
@@ -66,7 +67,14 @@ Examples are run using `--package` instead of `--example`, as each example is or
 cargo run --package $example_name
 
 # e.g.
-cargo run --package download -- status https://ifconfig.me ip.json
+cargo run -q --package download -- init https://ifconfig.me ip.json
+
+for cmd in status desired diff ensure diff clean diff
+do
+    printf "=== ${cmd} ===\n"
+    cargo run -q --package download -- $cmd
+    printf '\n'
+done
 ```
 
 ### WASM
@@ -101,5 +109,6 @@ at your option.
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
 
 
+[#42]: https://github.com/azriel91/peace/issues/42
 [`wasm-pack`]: https://rustwasm.github.io/
 [HTTP server]: https://crates.io/crates/simple-http-server
