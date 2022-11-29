@@ -31,7 +31,11 @@ jobs:
 
       - uses: taiki-e/install-action@nextest
       - name: 'Build and test'
-        run: cargo nextest run --workspace --all-targets
+        # FIXME: Switch back when actions-rs/cargo#217 gets merged
+        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
+        with:
+          command: nextest
+          args: run --workspace --all-targets
 
   build_and_test_windows:
     name: Build and Test (Windows)
@@ -51,7 +55,11 @@ jobs:
 
       - uses: taiki-e/install-action@nextest
       - name: 'Build and test'
-        run: cargo nextest run --workspace --all-targets
+        # FIXME: Switch back when actions-rs/cargo#217 gets merged
+        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
+        with:
+          command: nextest
+          args: run --workspace --all-targets
 
   crates_io_publish:
     name: Publish (crates.io)

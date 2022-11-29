@@ -33,7 +33,8 @@ jobs:
           override: true
           components: rustfmt
 
-      - uses: actions-rs/cargo@v1
+      - # FIXME: Switch back when actions-rs/cargo#217 gets merged
+        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
         with:
           command: fmt
           args: --all -- --check
@@ -57,7 +58,8 @@ jobs:
       - name: Check spelling
         uses: crate-ci/typos@master
 
-      - uses: actions-rs/cargo@v1
+      - # FIXME: Switch back when actions-rs/cargo#217 gets merged
+        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
         with:
           command: doc
           args: --no-deps
@@ -79,7 +81,8 @@ jobs:
       - name: Install Clippy
         run: rustup component add clippy
 
-      - uses: actions-rs/cargo@v1
+      - # FIXME: Switch back when actions-rs/cargo#217 gets merged
+        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
         with:
           command: clippy
           args: -- -D warnings
