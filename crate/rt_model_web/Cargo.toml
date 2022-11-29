@@ -1,7 +1,7 @@
 [package]
 name = "peace_rt_model_web"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 description = "Web support for the peace automation framework."
 repository = "https://github.com/azriel91/peace"
@@ -17,9 +17,9 @@ test = false
 
 [dependencies]
 miette = { workspace = true, optional = true }
-peace_core = { path = "../core", version = "0.0.3" }
-peace_resources = { path = "../resources", version = "0.0.3" }
-peace_rt_model_core = { path = "../rt_model_core", version = "0.0.3" }
+peace_core = { path = "../core", version = "0.0.4" }
+peace_resources = { path = "../resources", version = "0.0.4" }
+peace_rt_model_core = { path = "../rt_model_core", version = "0.0.4" }
 serde = "1.0.147"
 serde-wasm-bindgen = "0.4.5"
 serde_json = { version = "1.0.88", optional = true }
