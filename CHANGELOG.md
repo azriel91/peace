@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.0.4 (2022-11-29)
 
 * Require `Display` to be implemented for `StateLogical` and `StatePhysical`. ([#28], [#37])
 * Output states and diff as text on single line. ([#28], [#37])
