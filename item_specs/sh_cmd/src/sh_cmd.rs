@@ -90,7 +90,7 @@ impl ShCmd {
     ///
     /// let sh_cmd = ShCmd::new("ls").arg("-l").arg("-a");
     /// ```
-    pub fn arg<S: Into<OsString>>(&mut self, arg: S) -> &mut Self {
+    pub fn arg<S: Into<OsString>>(mut self, arg: S) -> Self {
         self.args.push(arg.into());
         self
     }
@@ -115,7 +115,7 @@ impl ShCmd {
     ///
     /// let sh_cmd = ShCmd::new("ls").args(["-l", "-a"]);
     /// ```
-    pub fn args<I, S>(&mut self, args: I) -> &mut Self
+    pub fn args<I, S>(mut self, args: I) -> Self
     where
         I: IntoIterator<Item = S>,
         S: Into<OsString>,

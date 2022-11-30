@@ -22,13 +22,15 @@ where
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState, ShCmdExecutionRecord>,
     ) -> Result<OpCheckStatus, ShCmdError> {
-        let mut clean_check_sh_cmd = sh_cmd_data.sh_cmd_params().clean_check_sh_cmd().clone();
-
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        clean_check_sh_cmd.arg(state_current_arg);
+        let clean_check_sh_cmd = sh_cmd_data
+            .sh_cmd_params()
+            .clean_check_sh_cmd()
+            .clone()
+            .arg(state_current_arg);
 
         ShCmdExecutor::exec(&clean_check_sh_cmd)
             .await
@@ -66,13 +68,15 @@ where
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState, ShCmdExecutionRecord>,
     ) -> Result<(), ShCmdError> {
-        let mut clean_exec_sh_cmd = sh_cmd_data.sh_cmd_params().clean_exec_sh_cmd().clone();
-
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        clean_exec_sh_cmd.arg(state_current_arg);
+        let clean_exec_sh_cmd = sh_cmd_data
+            .sh_cmd_params()
+            .clean_exec_sh_cmd()
+            .clone()
+            .arg(state_current_arg);
 
         ShCmdExecutor::exec(&clean_exec_sh_cmd)
             .await

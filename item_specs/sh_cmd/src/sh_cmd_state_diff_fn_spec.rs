@@ -26,8 +26,6 @@ where
         state_current: &State<ShCmdState, ShCmdExecutionRecord>,
         state_desired: &ShCmdState,
     ) -> Result<Self::StateDiff, ShCmdError> {
-        let mut state_diff_sh_cmd = sh_cmd_data.sh_cmd_params().state_diff_sh_cmd().clone();
-
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
@@ -36,7 +34,10 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        state_diff_sh_cmd
+        let state_diff_sh_cmd = sh_cmd_data
+            .sh_cmd_params()
+            .state_diff_sh_cmd()
+            .clone()
             .arg(state_current_arg)
             .arg(state_desired_arg);
         ShCmdExecutor::exec(&state_diff_sh_cmd)

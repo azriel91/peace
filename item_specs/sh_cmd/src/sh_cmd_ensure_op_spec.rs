@@ -27,8 +27,6 @@ where
         state_desired: &ShCmdState,
         state_diff: &ShCmdStateDiff,
     ) -> Result<OpCheckStatus, ShCmdError> {
-        let mut ensure_check_sh_cmd = sh_cmd_data.sh_cmd_params().ensure_check_sh_cmd().clone();
-
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
@@ -37,7 +35,10 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        ensure_check_sh_cmd
+        let ensure_check_sh_cmd = sh_cmd_data
+            .sh_cmd_params()
+            .ensure_check_sh_cmd()
+            .clone()
             .arg(state_current_arg)
             .arg(state_desired_arg)
             .arg(&**state_diff);
@@ -81,8 +82,6 @@ where
         state_desired: &ShCmdState,
         state_diff: &ShCmdStateDiff,
     ) -> Result<ShCmdExecutionRecord, ShCmdError> {
-        let mut ensure_exec_sh_cmd = sh_cmd_data.sh_cmd_params().ensure_exec_sh_cmd().clone();
-
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
@@ -91,7 +90,10 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        ensure_exec_sh_cmd
+        let ensure_exec_sh_cmd = sh_cmd_data
+            .sh_cmd_params()
+            .ensure_exec_sh_cmd()
+            .clone()
             .arg(state_current_arg)
             .arg(state_desired_arg)
             .arg(&**state_diff);
