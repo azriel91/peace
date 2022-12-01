@@ -19,6 +19,7 @@ test = true
 [dev-dependencies]
 diff-struct = "0.5.0"
 peace = { path = "..", version = "0.0.4" }
+peace_item_specs = { path = "../item_specs", version = "0.0.4" }
 serde = { version = "1.0.147", features = ["derive"] }
 serde_yaml = "0.9.14"
 tempfile = "3.3.0"
@@ -26,7 +27,17 @@ thiserror = "1.0.37"
 tokio = { version = "1.22.0", features = ["rt", "macros"] }
 
 [features]
-default = []
+default = ["item_specs"]
+
+# `peace` features
 error_reporting = ["peace/error_reporting"]
 output_colorized = ["peace/output_colorized"]
 output_json = ["peace/output_json"]
+
+# `peace_item_specs` features
+item_specs = [
+    "peace_item_specs/file_download",
+    "peace_item_specs/sh_cmd",
+    "peace_item_specs/sh_sync_cmd",
+    "peace_item_specs/tar_x",
+]
