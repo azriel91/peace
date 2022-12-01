@@ -1,3 +1,19 @@
+function Write-StdErr {
+  param ([PSObject] $InputObject)
+  $outFunc = if ($Host.Name -eq 'ConsoleHost') {
+    [Console]::Error.WriteLine
+  } else {
+    $host.ui.WriteErrorLine
+  }
+  if ($InputObject) {
+    [void] $outFunc.Invoke($InputObject.ToString())
+  } else {
+    [string[]] $lines = @()
+    $Input | % { $lines += $_.ToString() }
+    [void] $outFunc.Invoke($lines -join "`r`n")
+  }
+}
+
 $current=$args[0]
 $desired=$args[1]
 
@@ -8,15 +24,13 @@ switch ("$current $desired")
         Write-Information 'creation_required'
 
         # display string
-        Write-Error -Message '`test_file` will be created' -ErrorVariable ev 2>$null
-        $ev[0].exception
+        Write-StdErr '`test_file` will be created'
     }
     'exists exists' {
         # state
         Write-Information 'exists_sync'
 
         # display string
-        Write-Error -Message 'Nothing to do' -ErrorVariable ev 2>$null
-        $ev[0].exception
+        Write-StdErr 'Nothing to do'
     }
 }
