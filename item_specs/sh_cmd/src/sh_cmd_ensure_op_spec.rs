@@ -18,13 +18,13 @@ where
     type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
     type StateDiff = ShCmdStateDiff;
-    type StateLogical = ShCmdState;
+    type StateLogical = ShCmdState<Id>;
     type StatePhysical = ShCmdExecutionRecord;
 
     async fn check(
         sh_cmd_data: ShCmdData<'_, Id>,
-        state_current: &State<ShCmdState, ShCmdExecutionRecord>,
-        state_desired: &ShCmdState,
+        state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
+        state_desired: &ShCmdState<Id>,
         state_diff: &ShCmdStateDiff,
     ) -> Result<OpCheckStatus, ShCmdError> {
         let state_current_arg = match &state_current.logical {
@@ -43,7 +43,7 @@ where
             .arg(state_desired_arg)
             .arg(&**state_diff);
 
-        ShCmdExecutor::exec(&ensure_check_sh_cmd)
+        ShCmdExecutor::<Id>::exec(&ensure_check_sh_cmd)
             .await
             .and_then(|state| match state.logical {
                 ShCmdState::Some { stdout, .. } => match stdout.trim().lines().rev().next() {
@@ -69,8 +69,8 @@ where
 
     async fn exec_dry(
         _sh_cmd_data: ShCmdData<'_, Id>,
-        _state_current: &State<ShCmdState, ShCmdExecutionRecord>,
-        _state_desired: &ShCmdState,
+        _state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
+        _state_desired: &ShCmdState<Id>,
         _state_diff: &ShCmdStateDiff,
     ) -> Result<ShCmdExecutionRecord, ShCmdError> {
         todo!()
@@ -78,8 +78,8 @@ where
 
     async fn exec(
         sh_cmd_data: ShCmdData<'_, Id>,
-        state_current: &State<ShCmdState, ShCmdExecutionRecord>,
-        state_desired: &ShCmdState,
+        state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
+        state_desired: &ShCmdState<Id>,
         state_diff: &ShCmdStateDiff,
     ) -> Result<ShCmdExecutionRecord, ShCmdError> {
         let state_current_arg = match &state_current.logical {
@@ -98,7 +98,7 @@ where
             .arg(state_desired_arg)
             .arg(&**state_diff);
 
-        ShCmdExecutor::exec(&ensure_exec_sh_cmd)
+        ShCmdExecutor::<Id>::exec(&ensure_exec_sh_cmd)
             .await
             .map(|state| state.physical)
     }

@@ -1,4 +1,4 @@
-use std::process::Stdio;
+use std::{marker::PhantomData, process::Stdio};
 
 use chrono::Utc;
 use peace::cfg::State;
@@ -8,13 +8,13 @@ use crate::{ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdState};
 
 /// Common code to run `ShCmd`s.
 #[derive(Debug)]
-pub(crate) struct ShCmdExecutor;
+pub(crate) struct ShCmdExecutor<Id>(PhantomData<Id>);
 
-impl ShCmdExecutor {
+impl<Id> ShCmdExecutor<Id> {
     /// Executes the provided `ShCmd` and returns execution information.
     pub async fn exec(
         sh_cmd: &ShCmd,
-    ) -> Result<State<ShCmdState, ShCmdExecutionRecord>, ShCmdError> {
+    ) -> Result<State<ShCmdState<Id>, ShCmdExecutionRecord>, ShCmdError> {
         let start_datetime = Utc::now();
         let mut command: Command = sh_cmd.into();
         let output = command
@@ -74,7 +74,11 @@ impl ShCmdExecutor {
         })?;
 
         Ok(State::new(
-            ShCmdState::Some { stdout, stderr },
+            ShCmdState::Some {
+                stdout,
+                stderr,
+                marker: PhantomData,
+            },
             ShCmdExecutionRecord::Some {
                 start_datetime,
                 end_datetime,

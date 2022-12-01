@@ -49,7 +49,7 @@ where
     type StateDesiredFnSpec = ShCmdStateDesiredFnSpec<Id>;
     type StateDiff = ShCmdStateDiff;
     type StateDiffFnSpec = ShCmdStateDiffFnSpec<Id>;
-    type StateLogical = ShCmdState;
+    type StateLogical = ShCmdState<Id>;
     type StatePhysical = ShCmdExecutionRecord;
 
     fn id(&self) -> ItemSpecId {

@@ -15,7 +15,7 @@ where
 {
     type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
-    type Output = ShCmdState;
+    type Output = ShCmdState<Id>;
 
     async fn exec(sh_cmd_data: ShCmdData<'_, Id>) -> Result<Self::Output, ShCmdError> {
         let state_desired_sh_cmd = sh_cmd_data.sh_cmd_params().state_desired_sh_cmd();

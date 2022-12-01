@@ -18,13 +18,13 @@ where
     type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
     type StateDiff = ShCmdStateDiff;
-    type StateLogical = ShCmdState;
+    type StateLogical = ShCmdState<Id>;
     type StatePhysical = ShCmdExecutionRecord;
 
     async fn exec(
         sh_cmd_data: ShCmdData<'_, Id>,
-        state_current: &State<ShCmdState, ShCmdExecutionRecord>,
-        state_desired: &ShCmdState,
+        state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
+        state_desired: &ShCmdState<Id>,
     ) -> Result<Self::StateDiff, ShCmdError> {
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
@@ -40,11 +40,15 @@ where
             .clone()
             .arg(state_current_arg)
             .arg(state_desired_arg);
-        ShCmdExecutor::exec(&state_diff_sh_cmd)
+        ShCmdExecutor::<Id>::exec(&state_diff_sh_cmd)
             .await
             .map(|state| match state.logical {
                 ShCmdState::None => ShCmdStateDiff::new(String::from(""), String::from("")),
-                ShCmdState::Some { stdout, stderr } => ShCmdStateDiff::new(stdout, stderr),
+                ShCmdState::Some {
+                    stdout,
+                    stderr,
+                    marker: _,
+                } => ShCmdStateDiff::new(stdout, stderr),
             })
     }
 }
