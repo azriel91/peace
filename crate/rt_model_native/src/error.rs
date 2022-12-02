@@ -1,5 +1,7 @@
 use std::{ffi::OsString, path::PathBuf, sync::Mutex};
 
+use peace_resources::paths::WorkspaceDir;
+
 // Remember to add common variants to `rt_model_web/src/error.rs`.
 
 /// Peace runtime errors.
@@ -261,6 +263,19 @@ pub enum Error {
     },
 
     // Native errors.
+    #[error("Failed to set current dir to workspace directory: `{}`", workspace_dir.display())]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model_native::current_dir_set))
+    )]
+    CurrentDirSet {
+        /// The workspace directory.
+        workspace_dir: WorkspaceDir,
+        /// Underlying IO error
+        #[source]
+        error: std::io::Error,
+    },
+
     /// Failed to create file for writing.
     #[error("Failed to create file for writing: `{path}`")]
     #[cfg_attr(

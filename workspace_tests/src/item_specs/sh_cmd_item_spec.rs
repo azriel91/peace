@@ -1,9 +1,9 @@
 use peace::{
     cfg::{item_spec_id, profile, FlowId, ItemSpecId, Profile, State},
-    resources::states::{StateDiffs, StatesCurrent, StatesDesired},
+    resources::states::{StateDiffs, StatesCurrent, StatesDesired, StatesEnsured},
     rt::cmds::{
         sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
-        DiffCmd, StatesDiscoverCmd,
+        DiffCmd, EnsureCmd, StatesDiscoverCmd,
     },
     rt_model::{CmdContext, InMemoryTextOutput, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -225,6 +225,107 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
         .unwrap();
     assert_eq!("creation_required", state_diff.stdout());
     assert_eq!("`test_file` will be created", state_diff.stderr());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn ensure_when_creation_required_executes_ensure_exec_shell_command()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+        profile!("test_profile"),
+        FlowId::new(crate::fn_name_short!())?,
+    )?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<ShCmdError>::new();
+        graph_builder.add_fn(TestFileCreationShCmdItemSpec::new().into());
+        graph_builder.build()
+    };
+    let mut output = InMemoryTextOutput::new();
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+
+    // Discover states current and desired
+    StatesDiscoverCmd::exec(cmd_context).await?;
+
+    // Create the file
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
+
+    let states_ensured = resources.borrow::<StatesEnsured>();
+    let state_ensured = states_ensured
+        .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItemSpec::ID)
+        .unwrap();
+    if let ShCmdState::Some {
+        stdout,
+        stderr,
+        marker: _,
+    } = &state_ensured.logical
+    {
+        assert_eq!("exists", stdout);
+        assert_eq!("`test_file` exists", stderr);
+    } else {
+        panic!("Expected `state_ensured` to be `ShCmdState::Some` after `EnsureCmd` execution.");
+    }
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+        profile!("test_profile"),
+        FlowId::new(crate::fn_name_short!())?,
+    )?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<ShCmdError>::new();
+        graph_builder.add_fn(TestFileCreationShCmdItemSpec::new().into());
+        graph_builder.build()
+    };
+    let mut output = InMemoryTextOutput::new();
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+
+    // Discover states current and desired
+    StatesDiscoverCmd::exec(cmd_context).await?;
+
+    // Create the file
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    EnsureCmd::exec(cmd_context).await?;
+
+    // Diff state after creation
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
+
+    let state_diffs = resources.borrow::<StateDiffs>();
+    let state_diff = state_diffs
+        .get::<ShCmdStateDiff, _>(&TestFileCreationShCmdItemSpec::ID)
+        .unwrap();
+    assert_eq!("exists_sync", state_diff.stdout());
+    assert_eq!("nothing to do", state_diff.stderr());
+
+    // Run again, for idempotence checck
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
+
+    let states_ensured = resources.borrow::<StatesEnsured>();
+    let state_ensured = states_ensured
+        .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItemSpec::ID)
+        .unwrap();
+    if let ShCmdState::Some {
+        stdout,
+        stderr,
+        marker: _,
+    } = &state_ensured.logical
+    {
+        assert_eq!("exists", stdout);
+        assert_eq!("`test_file` exists", stderr);
+    } else {
+        panic!("Expected `state_ensured` to be `ShCmdState::Some` after `EnsureCmd` execution.");
+    }
 
     Ok(())
 }

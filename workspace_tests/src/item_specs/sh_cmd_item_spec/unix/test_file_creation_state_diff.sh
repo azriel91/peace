@@ -17,6 +17,6 @@ case "$current $desired" in
         printf 'exists_sync'
 
         # display string
-        printf 'Nothing to do' 1>&2
+        printf 'nothing to do' 1>&2
         ;;
 esac
