@@ -1,12 +1,14 @@
 use std::{fmt, marker::PhantomData};
 
+use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 
 /// State of the shell command execution.
 ///
 /// * If the command has never been executed, this will be `None`.
 /// * If it has been executed, this is `Some(String)` captured from stdout.
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Derivative, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derivative(Clone)]
 pub enum ShCmdState<Id> {
     /// The command is not executed.
     ///
@@ -22,24 +24,6 @@ pub enum ShCmdState<Id> {
         /// Marker.
         marker: PhantomData<Id>,
     },
-}
-
-// Manual implementation to avoid `Id: Clone` bound.
-impl<Id> std::clone::Clone for ShCmdState<Id> {
-    fn clone(&self) -> Self {
-        match self {
-            Self::None => Self::None,
-            Self::Some {
-                stdout,
-                stderr,
-                marker: _,
-            } => Self::Some {
-                stdout: stdout.clone(),
-                stderr: stderr.clone(),
-                marker: PhantomData,
-            },
-        }
-    }
 }
 
 impl<Id> fmt::Display for ShCmdState<Id> {

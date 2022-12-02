@@ -22,7 +22,96 @@ impl TestFileCreationShCmdItemSpec {
 
     /// Returns a new `TestFileCreationShCmdItemSpec`.
     pub fn new() -> ShCmdItemSpec<Self> {
-        ShCmdItemSpec::new(Self::ID)
+        #[cfg(unix)]
+        let sh_cmd_params = {
+            let state_current_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item_spec/unix/test_file_creation_state_current.sh"
+            ));
+
+            let state_desired_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item_spec/unix/test_file_creation_state_desired.sh"
+            ));
+            let state_diff_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item_spec/unix/test_file_creation_state_diff.sh"
+            ));
+            let ensure_check_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item_spec/unix/test_file_creation_ensure_check.sh"
+            ));
+            let ensure_exec_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item_spec/unix/test_file_creation_ensure_exec.sh"
+            ));
+            let clean_check_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item_spec/unix/test_file_creation_clean_check.sh"
+            ));
+            let clean_exec_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item_spec/unix/test_file_creation_clean_exec.sh"
+            ));
+            ShCmdParams::<TestFileCreationShCmdItemSpec>::new(
+                state_current_sh_cmd,
+                state_desired_sh_cmd,
+                state_diff_sh_cmd,
+                ensure_check_sh_cmd,
+                ensure_exec_sh_cmd,
+                clean_check_sh_cmd,
+                clean_exec_sh_cmd,
+            )
+        };
+
+        #[cfg(windows)]
+        let sh_cmd_params = {
+            let state_current_sh_cmd =
+                ShCmd::new("Powershell.exe")
+                    .arg("-Command")
+                    .arg(include_str!(
+                        "sh_cmd_item_spec/windows/test_file_creation_state_current.ps1"
+                    ));
+
+            let state_desired_sh_cmd =
+                ShCmd::new("Powershell.exe")
+                    .arg("-Command")
+                    .arg(include_str!(
+                        "sh_cmd_item_spec/windows/test_file_creation_state_desired.ps1"
+                    ));
+            let state_diff_sh_cmd = ShCmd::new("Powershell.exe")
+                .arg("-Command")
+                .arg(include_str!(
+                    "sh_cmd_item_spec/windows/test_file_creation_state_diff.ps1"
+                ));
+            let ensure_check_sh_cmd =
+                ShCmd::new("Powershell.exe")
+                    .arg("-Command")
+                    .arg(include_str!(
+                        "sh_cmd_item_spec/windows/test_file_creation_ensure_check.ps1"
+                    ));
+            let ensure_exec_sh_cmd =
+                ShCmd::new("Powershell.exe")
+                    .arg("-Command")
+                    .arg(include_str!(
+                        "sh_cmd_item_spec/windows/test_file_creation_ensure_exec.ps1"
+                    ));
+            let clean_check_sh_cmd =
+                ShCmd::new("Powershell.exe")
+                    .arg("-Command")
+                    .arg(include_str!(
+                        "sh_cmd_item_spec/windows/test_file_creation_clean_check.ps1"
+                    ));
+            let clean_exec_sh_cmd = ShCmd::new("Powershell.exe")
+                .arg("-Command")
+                .arg(include_str!(
+                    "sh_cmd_item_spec/windows/test_file_creation_clean_exec.ps1"
+                ));
+            ShCmdParams::<TestFileCreationShCmdItemSpec>::new(
+                state_current_sh_cmd,
+                state_desired_sh_cmd,
+                state_diff_sh_cmd,
+                ensure_check_sh_cmd,
+                ensure_exec_sh_cmd,
+                clean_check_sh_cmd,
+                clean_exec_sh_cmd,
+            )
+        };
+
+        ShCmdItemSpec::new(Self::ID, Some(sh_cmd_params))
     }
 }
 
@@ -41,94 +130,7 @@ async fn state_current_returns_shell_command_current_state()
         graph_builder.build()
     };
     let mut output = InMemoryTextOutput::new();
-    let mut cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
-    let resources = cmd_context.resources_mut();
-
-    #[cfg(unix)]
-    let sh_cmd_params = {
-        let state_current_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-            "sh_cmd_item_spec/unix/test_file_creation_state_current.sh"
-        ));
-
-        let state_desired_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-            "sh_cmd_item_spec/unix/test_file_creation_state_desired.sh"
-        ));
-        let state_diff_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-            "sh_cmd_item_spec/unix/test_file_creation_state_diff.sh"
-        ));
-        let ensure_check_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-            "sh_cmd_item_spec/unix/test_file_creation_ensure_check.sh"
-        ));
-        let ensure_exec_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-            "sh_cmd_item_spec/unix/test_file_creation_ensure_exec.sh"
-        ));
-        let clean_check_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-            "sh_cmd_item_spec/unix/test_file_creation_clean_check.sh"
-        ));
-        let clean_exec_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-            "sh_cmd_item_spec/unix/test_file_creation_clean_exec.sh"
-        ));
-        ShCmdParams::<TestFileCreationShCmdItemSpec>::new(
-            state_current_sh_cmd,
-            state_desired_sh_cmd,
-            state_diff_sh_cmd,
-            ensure_check_sh_cmd,
-            ensure_exec_sh_cmd,
-            clean_check_sh_cmd,
-            clean_exec_sh_cmd,
-        )
-    };
-
-    #[cfg(windows)]
-    let sh_cmd_params = {
-        let state_current_sh_cmd = ShCmd::new("Powershell.exe")
-            .arg("-Command")
-            .arg(include_str!(
-                "sh_cmd_item_spec/windows/test_file_creation_state_current.ps1"
-            ));
-
-        let state_desired_sh_cmd = ShCmd::new("Powershell.exe")
-            .arg("-Command")
-            .arg(include_str!(
-                "sh_cmd_item_spec/windows/test_file_creation_state_desired.ps1"
-            ));
-        let state_diff_sh_cmd = ShCmd::new("Powershell.exe")
-            .arg("-Command")
-            .arg(include_str!(
-                "sh_cmd_item_spec/windows/test_file_creation_state_diff.ps1"
-            ));
-        let ensure_check_sh_cmd = ShCmd::new("Powershell.exe")
-            .arg("-Command")
-            .arg(include_str!(
-                "sh_cmd_item_spec/windows/test_file_creation_ensure_check.ps1"
-            ));
-        let ensure_exec_sh_cmd = ShCmd::new("Powershell.exe")
-            .arg("-Command")
-            .arg(include_str!(
-                "sh_cmd_item_spec/windows/test_file_creation_ensure_exec.ps1"
-            ));
-        let clean_check_sh_cmd = ShCmd::new("Powershell.exe")
-            .arg("-Command")
-            .arg(include_str!(
-                "sh_cmd_item_spec/windows/test_file_creation_clean_check.ps1"
-            ));
-        let clean_exec_sh_cmd = ShCmd::new("Powershell.exe")
-            .arg("-Command")
-            .arg(include_str!(
-                "sh_cmd_item_spec/windows/test_file_creation_clean_exec.ps1"
-            ));
-        ShCmdParams::<TestFileCreationShCmdItemSpec>::new(
-            state_current_sh_cmd,
-            state_desired_sh_cmd,
-            state_diff_sh_cmd,
-            ensure_check_sh_cmd,
-            ensure_exec_sh_cmd,
-            clean_check_sh_cmd,
-            clean_exec_sh_cmd,
-        )
-    };
-
-    resources.insert(sh_cmd_params);
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
 
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
     let states_current = resources.borrow::<StatesCurrent>();

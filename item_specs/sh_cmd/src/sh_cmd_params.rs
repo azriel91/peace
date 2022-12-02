@@ -1,5 +1,6 @@
 use std::{fmt, marker::PhantomData};
 
+use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 
 use crate::ShCmd;
@@ -13,7 +14,8 @@ use crate::ShCmd;
 ///
 /// * `Id`: A zero-sized type used to distinguish different command execution
 ///   parameters from each other.
-#[derive(Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Derivative, PartialEq, Eq, Deserialize, Serialize)]
+#[derivative(Clone)]
 pub struct ShCmdParams<Id> {
     /// Shell command to run to discover the current state.
     ///
