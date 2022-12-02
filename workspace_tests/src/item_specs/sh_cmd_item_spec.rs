@@ -1,11 +1,14 @@
 use peace::{
     cfg::{item_spec_id, profile, FlowId, ItemSpecId, Profile, State},
-    resources::states::{StatesCurrent, StatesDesired},
-    rt::cmds::sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
+    resources::states::{StateDiffs, StatesCurrent, StatesDesired},
+    rt::cmds::{
+        sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
+        DiffCmd, StatesDiscoverCmd,
+    },
     rt_model::{CmdContext, InMemoryTextOutput, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 use peace_item_specs::sh_cmd::{
-    ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdItemSpec, ShCmdParams, ShCmdState,
+    ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdItemSpec, ShCmdParams, ShCmdState, ShCmdStateDiff,
 };
 
 /// Creates a file.
@@ -189,6 +192,39 @@ async fn state_desired_returns_shell_command_desired_state()
             "Expected `state_desired` to be `ShCmdState::Some` after `StatesDesired` discovery."
         );
     }
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+        profile!("test_profile"),
+        FlowId::new(crate::fn_name_short!())?,
+    )?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<ShCmdError>::new();
+        graph_builder.add_fn(TestFileCreationShCmdItemSpec::new().into());
+        graph_builder.build()
+    };
+    let mut output = InMemoryTextOutput::new();
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+
+    // Discover states current and desired
+    StatesDiscoverCmd::exec(cmd_context).await?;
+
+    // Diff them
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
+
+    let state_diffs = resources.borrow::<StateDiffs>();
+    let state_diff = state_diffs
+        .get::<ShCmdStateDiff, _>(&TestFileCreationShCmdItemSpec::ID)
+        .unwrap();
+    assert_eq!("creation_required", state_diff.stdout());
+    assert_eq!("`test_file` will be created", state_diff.stderr());
 
     Ok(())
 }
