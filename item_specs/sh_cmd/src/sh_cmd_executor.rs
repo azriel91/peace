@@ -54,24 +54,27 @@ impl<Id> ShCmdExecutor<Id> {
             }
         })?;
 
-        let stderr = String::from_utf8(output.stderr).map_err(|from_utf8_error| {
-            let stderr_lossy = String::from_utf8_lossy(from_utf8_error.as_bytes()).to_string();
-            let error = from_utf8_error.utf8_error();
-            #[cfg(feature = "error_reporting")]
-            let invalid_span = {
-                let start = error.valid_up_to();
-                let len = error.error_len().unwrap_or(1);
-                miette::SourceSpan::from((start, len))
-            };
-
-            ShCmdError::StderrNonUtf8 {
-                sh_cmd: sh_cmd.clone(),
-                stderr_lossy,
+        let stderr = String::from_utf8(output.stderr)
+            .map_err(|from_utf8_error| {
+                let stderr_lossy = String::from_utf8_lossy(from_utf8_error.as_bytes()).to_string();
+                let error = from_utf8_error.utf8_error();
                 #[cfg(feature = "error_reporting")]
-                invalid_span,
-                error,
-            }
-        })?;
+                let invalid_span = {
+                    let start = error.valid_up_to();
+                    let len = error.error_len().unwrap_or(1);
+                    miette::SourceSpan::from((start, len))
+                };
+
+                ShCmdError::StderrNonUtf8 {
+                    sh_cmd: sh_cmd.clone(),
+                    stderr_lossy,
+                    #[cfg(feature = "error_reporting")]
+                    invalid_span,
+                    error,
+                }
+            })?
+            .trim()
+            .to_string();
 
         Ok(State::new(
             ShCmdState::Some {
