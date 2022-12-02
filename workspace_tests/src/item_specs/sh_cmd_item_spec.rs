@@ -75,34 +75,31 @@ impl TestFileCreationShCmdItemSpec {
                     .arg(include_str!(
                         "sh_cmd_item_spec/windows/test_file_creation_state_desired.ps1"
                     ));
-            let state_diff_sh_cmd = ShCmd::new("Powershell.exe")
-                .arg("-Command")
-                .arg(include_str!(
-                    "sh_cmd_item_spec/windows/test_file_creation_state_diff.ps1"
-                ));
-            let ensure_check_sh_cmd =
-                ShCmd::new("Powershell.exe")
-                    .arg("-Command")
-                    .arg(include_str!(
-                        "sh_cmd_item_spec/windows/test_file_creation_ensure_check.ps1"
-                    ));
-            let ensure_exec_sh_cmd =
-                ShCmd::new("Powershell.exe")
-                    .arg("-Command")
-                    .arg(include_str!(
-                        "sh_cmd_item_spec/windows/test_file_creation_ensure_exec.ps1"
-                    ));
-            let clean_check_sh_cmd =
-                ShCmd::new("Powershell.exe")
-                    .arg("-Command")
-                    .arg(include_str!(
-                        "sh_cmd_item_spec/windows/test_file_creation_clean_check.ps1"
-                    ));
-            let clean_exec_sh_cmd = ShCmd::new("Powershell.exe")
-                .arg("-Command")
-                .arg(include_str!(
-                    "sh_cmd_item_spec/windows/test_file_creation_clean_exec.ps1"
-                ));
+            let state_diff_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
+                "& { ",
+                include_str!("sh_cmd_item_spec/windows/test_file_creation_state_diff.ps1"),
+                " }"
+            ));
+            let ensure_check_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
+                "& { ",
+                include_str!("sh_cmd_item_spec/windows/test_file_creation_ensure_check.ps1"),
+                " }"
+            ));
+            let ensure_exec_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
+                "& { ",
+                include_str!("sh_cmd_item_spec/windows/test_file_creation_ensure_exec.ps1"),
+                " }"
+            ));
+            let clean_check_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
+                "& { ",
+                include_str!("sh_cmd_item_spec/windows/test_file_creation_clean_check.ps1"),
+                " }"
+            ));
+            let clean_exec_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
+                "& { ",
+                include_str!("sh_cmd_item_spec/windows/test_file_creation_clean_exec.ps1"),
+                " }"
+            ));
             ShCmdParams::<TestFileCreationShCmdItemSpec>::new(
                 state_current_sh_cmd,
                 state_desired_sh_cmd,

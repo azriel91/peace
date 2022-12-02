@@ -5,9 +5,9 @@ $diff=$args[2]
 switch ("$diff")
 {
     'creation_required' {
-        Write-Information 'true'
+        Write-Host -NoNewLine 'true'
     }
     'exists_sync' {
-        Write-Information 'false'
+        Write-Host -NoNewLine 'false'
     }
 }

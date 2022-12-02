@@ -3,9 +3,9 @@ $current=$args[0]
 switch ("$current")
 {
     'not_exists' {
-        Write-Information 'false'
+        Write-Host -NoNewLine 'false'
     }
     'exists' {
-        Write-Information 'true'
+        Write-Host -NoNewLine 'true'
     }
 }

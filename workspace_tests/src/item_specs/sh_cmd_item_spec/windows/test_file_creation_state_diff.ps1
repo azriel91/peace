@@ -5,16 +5,16 @@ switch ("$current $desired")
 {
     'not_exists exists' {
         # state
-        Write-Information 'creation_required'
+        Write-Host -NoNewLine 'creation_required'
 
         # display string
         [Console]::Error.WriteLine('`test_file` will be created')
     }
     'exists exists' {
         # state
-        Write-Information 'exists_sync'
+        Write-Host -NoNewLine 'exists_sync'
 
         # display string
-        [Console]::Error.WriteLine('Nothing to do')
+        [Console]::Error.WriteLine('nothing to do')
     }
 }
