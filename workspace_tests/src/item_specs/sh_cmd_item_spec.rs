@@ -1,9 +1,9 @@
 use peace::{
     cfg::{item_spec_id, profile, FlowId, ItemSpecId, Profile, State},
-    resources::states::{StateDiffs, StatesCurrent, StatesDesired, StatesEnsured},
+    resources::states::{StateDiffs, StatesCleaned, StatesCurrent, StatesDesired, StatesEnsured},
     rt::cmds::{
         sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
-        DiffCmd, EnsureCmd, StatesDiscoverCmd,
+        CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd,
     },
     rt_model::{CmdContext, InMemoryTextOutput, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -325,6 +325,60 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
         assert_eq!("`test_file` exists", stderr);
     } else {
         panic!("Expected `state_ensured` to be `ShCmdState::Some` after `EnsureCmd` execution.");
+    }
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+        profile!("test_profile"),
+        FlowId::new(crate::fn_name_short!())?,
+    )?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<ShCmdError>::new();
+        graph_builder.add_fn(TestFileCreationShCmdItemSpec::new().into());
+        graph_builder.build()
+    };
+    let mut output = InMemoryTextOutput::new();
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+
+    // Discover states current and desired
+    StatesDiscoverCmd::exec(cmd_context).await?;
+
+    // Create the file
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    EnsureCmd::exec(cmd_context).await?;
+
+    assert!(tempdir.path().join("test_file").exists());
+
+    // Clean the file
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    CleanCmd::exec(cmd_context).await?;
+
+    assert!(!tempdir.path().join("test_file").exists());
+
+    // Run again, for idempotence checck
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let CmdContext { resources, .. } = CleanCmd::exec(cmd_context).await?;
+
+    let states_cleaned = resources.borrow::<StatesCleaned>();
+    let state_cleaned = states_cleaned
+        .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItemSpec::ID)
+        .unwrap();
+    if let ShCmdState::Some {
+        stdout,
+        stderr,
+        marker: _,
+    } = &state_cleaned.logical
+    {
+        assert_eq!("not_exists", stdout);
+        assert_eq!("`test_file` does not exist", stderr);
+    } else {
+        panic!("Expected `state_cleaned` to be `ShCmdState::Some` after `CleanCmd` execution.");
     }
 
     Ok(())
