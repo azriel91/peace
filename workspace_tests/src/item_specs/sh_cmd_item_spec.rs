@@ -1,7 +1,7 @@
 use peace::{
     cfg::{item_spec_id, profile, FlowId, ItemSpecId, Profile, State},
-    resources::states::StatesCurrent,
-    rt::cmds::sub::StatesCurrentDiscoverCmd,
+    resources::states::{StatesCurrent, StatesDesired},
+    rt::cmds::sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
     rt_model::{CmdContext, InMemoryTextOutput, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 use peace_item_specs::sh_cmd::{
@@ -134,19 +134,60 @@ async fn state_current_returns_shell_command_current_state()
 
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
     let states_current = resources.borrow::<StatesCurrent>();
-    let test_file_creation_sh_cmd_state = states_current
+    let state_current = states_current
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItemSpec::ID)
         .unwrap();
     if let ShCmdState::Some {
         stdout,
         stderr,
         marker: _,
-    } = &test_file_creation_sh_cmd_state.logical
+    } = &state_current.logical
     {
         assert_eq!("not_exists", stdout);
         assert_eq!("`test_file` does not exist", stderr);
     } else {
-        panic!("Expected `sh_cmd_state` to be `ShCmdState::Some` after `StatesCurrent` discovery.");
+        panic!(
+            "Expected `state_current` to be `ShCmdState::Some` after `StatesCurrent` discovery."
+        );
+    }
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn state_desired_returns_shell_command_desired_state()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+        profile!("test_profile"),
+        FlowId::new(crate::fn_name_short!())?,
+    )?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<ShCmdError>::new();
+        graph_builder.add_fn(TestFileCreationShCmdItemSpec::new().into());
+        graph_builder.build()
+    };
+    let mut output = InMemoryTextOutput::new();
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+
+    let CmdContext { resources, .. } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
+    let states_desired = resources.borrow::<StatesDesired>();
+    let state_desired = states_desired
+        .get::<TestFileCreationShCmdStateLogical, _>(&TestFileCreationShCmdItemSpec::ID)
+        .unwrap();
+    if let ShCmdState::Some {
+        stdout,
+        stderr,
+        marker: _,
+    } = &state_desired
+    {
+        assert_eq!("exists", stdout);
+        assert_eq!("`test_file` exists", stderr);
+    } else {
+        panic!(
+            "Expected `state_desired` to be `ShCmdState::Some` after `StatesDesired` discovery."
+        );
     }
 
     Ok(())
