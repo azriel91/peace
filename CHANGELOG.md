@@ -1,5 +1,15 @@
 # Changelog
 
+## unreleased
+
+* `ShCmdStateDiffFnSpec` correctly runs `state_diff_sh_cmd` for state diff. ([#57])
+* `ShCmdParams` now uses the `Id` type parameter so that different `ShCmdItemSpec`s can be used correctly. ([#57])
+* `ShCmdItemSpec` takes in optional `ShCmdParams<Id>` and inserts it into `resources`. ([#57])
+* `CmdContextBuilder` sets the current directory to the workspace directory. ([#57])
+
+[#57]: https://github.com/azriel91/peace/pull/57
+
+
 ## 0.0.4 (2022-11-29)
 
 * Require `Display` to be implemented for `StateLogical` and `StatePhysical`. ([#28], [#37])
