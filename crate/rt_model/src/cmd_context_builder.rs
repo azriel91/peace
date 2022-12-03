@@ -293,17 +293,26 @@ where
         )
         .await?;
         #[cfg(not(target_arch = "wasm32"))]
-        WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::dirs_initialize(dirs).await?;
-        Self::init_params_serialize(
-            storage,
-            workspace_init_params.as_ref(),
-            &workspace_init_file,
-            profile_init_params.as_ref(),
-            &profile_init_file,
-            flow_init_params.as_ref(),
-            &flow_init_file,
-        )
-        .await?;
+        {
+            let workspace_dir = dirs.workspace_dir();
+            std::env::set_current_dir(workspace_dir).map_err(|error| Error::CurrentDirSet {
+                workspace_dir: workspace_dir.clone(),
+                error,
+            })?;
+
+            WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::dirs_initialize(dirs)
+                .await?;
+            Self::init_params_serialize(
+                storage,
+                workspace_init_params.as_ref(),
+                &workspace_init_file,
+                profile_init_params.as_ref(),
+                &profile_init_file,
+                flow_init_params.as_ref(),
+                &flow_init_file,
+            )
+            .await?;
+        }
 
         // Track items in memory.
         let mut resources = Resources::new();

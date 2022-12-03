@@ -16,6 +16,16 @@ impl ShCmdStateDiff {
     pub fn new(stdout: String, stderr: String) -> Self {
         Self { stdout, stderr }
     }
+
+    /// Returns the `stdout` string, representing the logical state difference.
+    pub fn stdout(&self) -> &str {
+        self.stdout.as_ref()
+    }
+
+    /// Returns the `stderr` string, representing the display string.
+    pub fn stderr(&self) -> &str {
+        self.stderr.as_ref()
+    }
 }
 
 impl std::ops::Deref for ShCmdStateDiff {

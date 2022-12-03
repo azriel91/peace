@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    ShCmdCleanOpSpec, ShCmdEnsureOpSpec, ShCmdError, ShCmdExecutionRecord, ShCmdState,
+    ShCmdCleanOpSpec, ShCmdEnsureOpSpec, ShCmdError, ShCmdExecutionRecord, ShCmdParams, ShCmdState,
     ShCmdStateCurrentFnSpec, ShCmdStateDesiredFnSpec, ShCmdStateDiff, ShCmdStateDiffFnSpec,
 };
 
@@ -23,15 +23,23 @@ use crate::{
 pub struct ShCmdItemSpec<Id> {
     /// ID to easily tell what the item spec command is for.
     item_spec_id: ItemSpecId,
+    /// Parameters to insert into `resources` in [`ItemSpec::setup`].
+    sh_cmd_params: Option<ShCmdParams<Id>>,
     /// Marker for unique command execution parameters type.
     marker: PhantomData<Id>,
 }
 
 impl<Id> ShCmdItemSpec<Id> {
     /// Returns a new `ShCmdItemSpec`.
-    pub fn new(item_spec_id: ItemSpecId) -> Self {
+    ///
+    /// # Parameters
+    ///
+    /// * `item_spec_id`: ID of this `ShCmdItemSpec`.
+    /// * `sh_cmd_params`: Parameters to insert into `Resources`.
+    pub fn new(item_spec_id: ItemSpecId, sh_cmd_params: Option<ShCmdParams<Id>>) -> Self {
         Self {
             item_spec_id,
+            sh_cmd_params,
             marker: PhantomData,
         }
     }
@@ -49,14 +57,18 @@ where
     type StateDesiredFnSpec = ShCmdStateDesiredFnSpec<Id>;
     type StateDiff = ShCmdStateDiff;
     type StateDiffFnSpec = ShCmdStateDiffFnSpec<Id>;
-    type StateLogical = ShCmdState;
+    type StateLogical = ShCmdState<Id>;
     type StatePhysical = ShCmdExecutionRecord;
 
     fn id(&self) -> ItemSpecId {
         self.item_spec_id.clone()
     }
 
-    async fn setup(&self, _resources: &mut Resources<Empty>) -> Result<(), ShCmdError> {
+    async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), ShCmdError> {
+        if let Some(sh_cmd_params) = self.sh_cmd_params.clone() {
+            resources.insert(sh_cmd_params);
+        }
+
         Ok(())
     }
 }

@@ -15,22 +15,24 @@ where
 {
     type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
-    type StateLogical = ShCmdState;
+    type StateLogical = ShCmdState<Id>;
     type StatePhysical = ShCmdExecutionRecord;
 
     async fn check(
         sh_cmd_data: ShCmdData<'_, Id>,
-        state_current: &State<ShCmdState, ShCmdExecutionRecord>,
+        state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
     ) -> Result<OpCheckStatus, ShCmdError> {
-        let mut clean_check_sh_cmd = sh_cmd_data.sh_cmd_params().clean_check_sh_cmd().clone();
-
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        clean_check_sh_cmd.arg(state_current_arg);
+        let clean_check_sh_cmd = sh_cmd_data
+            .sh_cmd_params()
+            .clean_check_sh_cmd()
+            .clone()
+            .arg(state_current_arg);
 
-        ShCmdExecutor::exec(&clean_check_sh_cmd)
+        ShCmdExecutor::<Id>::exec(&clean_check_sh_cmd)
             .await
             .and_then(|state| match state.logical {
                 ShCmdState::Some { stdout, .. } => match stdout.trim().lines().rev().next() {
@@ -56,7 +58,7 @@ where
 
     async fn exec_dry(
         _sh_cmd_data: ShCmdData<'_, Id>,
-        _state: &State<ShCmdState, ShCmdExecutionRecord>,
+        _state: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
     ) -> Result<(), ShCmdError> {
         Ok(())
     }
@@ -64,17 +66,19 @@ where
     #[cfg(not(target_arch = "wasm32"))]
     async fn exec(
         sh_cmd_data: ShCmdData<'_, Id>,
-        state_current: &State<ShCmdState, ShCmdExecutionRecord>,
+        state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
     ) -> Result<(), ShCmdError> {
-        let mut clean_exec_sh_cmd = sh_cmd_data.sh_cmd_params().clean_exec_sh_cmd().clone();
-
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        clean_exec_sh_cmd.arg(state_current_arg);
+        let clean_exec_sh_cmd = sh_cmd_data
+            .sh_cmd_params()
+            .clean_exec_sh_cmd()
+            .clone()
+            .arg(state_current_arg);
 
-        ShCmdExecutor::exec(&clean_exec_sh_cmd)
+        ShCmdExecutor::<Id>::exec(&clean_exec_sh_cmd)
             .await
             .map(|_state| ())
     }
@@ -85,7 +89,7 @@ where
         State {
             logical: file_state,
             ..
-        }: &State<ShCmdState, ShCmdExecutionRecord>,
+        }: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
     ) -> Result<(), ShCmdError> {
         todo!()
     }

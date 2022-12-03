@@ -1,4 +1,4 @@
-use std::process::Stdio;
+use std::{marker::PhantomData, process::Stdio};
 
 use chrono::Utc;
 use peace::cfg::State;
@@ -8,13 +8,13 @@ use crate::{ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdState};
 
 /// Common code to run `ShCmd`s.
 #[derive(Debug)]
-pub(crate) struct ShCmdExecutor;
+pub(crate) struct ShCmdExecutor<Id>(PhantomData<Id>);
 
-impl ShCmdExecutor {
+impl<Id> ShCmdExecutor<Id> {
     /// Executes the provided `ShCmd` and returns execution information.
     pub async fn exec(
         sh_cmd: &ShCmd,
-    ) -> Result<State<ShCmdState, ShCmdExecutionRecord>, ShCmdError> {
+    ) -> Result<State<ShCmdState<Id>, ShCmdExecutionRecord>, ShCmdError> {
         let start_datetime = Utc::now();
         let mut command: Command = sh_cmd.into();
         let output = command
@@ -54,27 +54,34 @@ impl ShCmdExecutor {
             }
         })?;
 
-        let stderr = String::from_utf8(output.stderr).map_err(|from_utf8_error| {
-            let stderr_lossy = String::from_utf8_lossy(from_utf8_error.as_bytes()).to_string();
-            let error = from_utf8_error.utf8_error();
-            #[cfg(feature = "error_reporting")]
-            let invalid_span = {
-                let start = error.valid_up_to();
-                let len = error.error_len().unwrap_or(1);
-                miette::SourceSpan::from((start, len))
-            };
-
-            ShCmdError::StderrNonUtf8 {
-                sh_cmd: sh_cmd.clone(),
-                stderr_lossy,
+        let stderr = String::from_utf8(output.stderr)
+            .map_err(|from_utf8_error| {
+                let stderr_lossy = String::from_utf8_lossy(from_utf8_error.as_bytes()).to_string();
+                let error = from_utf8_error.utf8_error();
                 #[cfg(feature = "error_reporting")]
-                invalid_span,
-                error,
-            }
-        })?;
+                let invalid_span = {
+                    let start = error.valid_up_to();
+                    let len = error.error_len().unwrap_or(1);
+                    miette::SourceSpan::from((start, len))
+                };
+
+                ShCmdError::StderrNonUtf8 {
+                    sh_cmd: sh_cmd.clone(),
+                    stderr_lossy,
+                    #[cfg(feature = "error_reporting")]
+                    invalid_span,
+                    error,
+                }
+            })?
+            .trim()
+            .to_string();
 
         Ok(State::new(
-            ShCmdState::Some { stdout, stderr },
+            ShCmdState::Some {
+                stdout,
+                stderr,
+                marker: PhantomData,
+            },
             ShCmdExecutionRecord::Some {
                 start_datetime,
                 end_datetime,

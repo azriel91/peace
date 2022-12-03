@@ -11,6 +11,7 @@ pub(crate) use crate::{
     },
 };
 
+// `peace` test modules
 mod cfg;
 mod data;
 mod diff;
@@ -18,6 +19,11 @@ mod resources;
 mod rt;
 mod rt_model;
 
+// `peace_item_specs` test modules
+#[cfg(feature = "item_specs")]
+mod item_specs;
+
+// `workspace_tests` support code
 mod fn_invocation;
 mod fn_name;
 mod fn_tracker_output;
