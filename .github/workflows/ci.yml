@@ -108,9 +108,9 @@ jobs:
         run: ./coverage.sh
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
-          file: ./target/coverage/lcov.info
+          files: ./target/coverage/lcov.info
 
   build_and_test_linux:
     name: Build and Test (Linux)
