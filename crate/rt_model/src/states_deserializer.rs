@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use peace_cfg::ItemSpecId;
 use peace_resources::{
-    paths::StatesCurrentFile,
+    paths::StatesPreviousFile,
     states::{ts::Current, States, StatesCurrent},
     type_reg::untagged::{BoxDtDisplay, TypeReg},
 };
@@ -24,16 +24,16 @@ where
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
     ///   item spec state.
-    /// * `states_current_file`: `StatesCurrentFile` to deserialize.
+    /// * `states_previous_file`: `StatesPreviousFile` to deserialize.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     pub async fn deserialize(
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
-        states_current_file: &StatesCurrentFile,
+        states_previous_file: &StatesPreviousFile,
     ) -> Result<StatesCurrent, E> {
         let states =
-            Self::deserialize_internal::<Current>(storage, states_type_reg, states_current_file)
+            Self::deserialize_internal::<Current>(storage, states_type_reg, states_previous_file)
                 .await?;
 
         states.ok_or_else(|| E::from(Error::StatesCurrentDiscoverRequired))
@@ -46,15 +46,15 @@ where
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
     ///   item spec state.
-    /// * `states_current_file`: `StatesCurrentFile` to deserialize.
+    /// * `states_previous_file`: `StatesPreviousFile` to deserialize.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     pub async fn deserialize_opt(
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
-        states_current_file: &StatesCurrentFile,
+        states_previous_file: &StatesPreviousFile,
     ) -> Result<Option<StatesCurrent>, E> {
-        Self::deserialize_internal(storage, states_type_reg, states_current_file).await
+        Self::deserialize_internal(storage, states_type_reg, states_previous_file).await
     }
 
     /// Returns the [`States`] of all [`ItemSpec`]s if it exists on disk.
@@ -64,7 +64,7 @@ where
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
     ///   item spec state.
-    /// * `states_current_file`: `StatesCurrentFile` to deserialize.
+    /// * `states_previous_file`: `StatesPreviousFile` to deserialize.
     ///
     /// # Type Parameters
     ///
@@ -78,19 +78,19 @@ where
     async fn deserialize_internal<TS>(
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
-        states_current_file: &StatesCurrentFile,
+        states_previous_file: &StatesPreviousFile,
     ) -> Result<Option<States<TS>>, E>
     where
         TS: Send,
     {
-        if !states_current_file.exists() {
+        if !states_previous_file.exists() {
             return Ok(None);
         }
 
         let states_current = storage
             .read_with_sync_api(
-                "states_current_file_read".to_string(),
-                states_current_file,
+                "states_previous_file_read".to_string(),
+                states_previous_file,
                 |file| {
                     let deserializer = serde_yaml::Deserializer::from_reader(file);
                     let states_current =
@@ -105,12 +105,12 @@ where
                                     use miette::NamedSource;
 
                                     let file_contents =
-                                        std::fs::read_to_string(states_current_file).unwrap();
+                                        std::fs::read_to_string(states_previous_file).unwrap();
 
                                     let (error_span, error_message, context_span) =
                                         Self::error_and_context(&file_contents, &error);
                                     let states_file_source = NamedSource::new(
-                                        states_current_file.to_string_lossy(),
+                                        states_previous_file.to_string_lossy(),
                                         file_contents,
                                     );
 
@@ -139,7 +139,7 @@ where
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
     ///   item spec state.
-    /// * `states_current_file`: `StatesCurrentFile` to deserialize.
+    /// * `states_previous_file`: `StatesPreviousFile` to deserialize.
     ///
     /// # Type Parameters
     ///
@@ -153,9 +153,9 @@ where
     async fn deserialize_internal<TS>(
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
-        states_current_file: &StatesCurrentFile,
+        states_previous_file: &StatesPreviousFile,
     ) -> Result<Option<States<TS>>, E> {
-        let states_serialized = storage.get_item_opt(&states_current_file)?;
+        let states_serialized = storage.get_item_opt(&states_previous_file)?;
 
         if let Some(states_serialized) = states_serialized {
             let deserializer = serde_yaml::Deserializer::from_str(&states_serialized);
@@ -172,12 +172,12 @@ where
                             use miette::NamedSource;
 
                             let file_contents =
-                                std::fs::read_to_string(&states_current_file).unwrap();
+                                std::fs::read_to_string(&states_previous_file).unwrap();
 
                             let (error_span, error_message, context_span) =
                                 Self::error_and_context(&file_contents, &error);
                             let states_file_source = NamedSource::new(
-                                states_current_file.to_string_lossy(),
+                                states_previous_file.to_string_lossy(),
                                 file_contents,
                             );
 

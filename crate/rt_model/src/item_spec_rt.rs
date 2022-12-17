@@ -32,7 +32,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
 
     /// Registers state types with type registries for deserializing from disk.
     ///
-    /// This is necessary to deserialize `StatesCurrentFile` and
+    /// This is necessary to deserialize `StatesPreviousFile` and
     /// `StatesDesiredFile`.
     fn state_register(&self, states_type_regs: &mut StatesTypeRegs);
 

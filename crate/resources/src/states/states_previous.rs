@@ -8,12 +8,12 @@ use crate::states::{
 /// Previous `State`s for all `ItemSpec`s.
 ///
 /// This is loaded into [`Resources`] at the beginning of any command execution,
-/// from the [`StatesCurrentFile`].
+/// from the [`StatesPreviousFile`].
 ///
 /// This is distinct from [`StatesCurrent`] to address the following use cases:
 ///
 /// * Discovering current state from what is recorded in the
-///   [`StatesCurrentFile`].
+///   [`StatesPreviousFile`].
 /// * Discovering current state and comparing it with previous state within the
 ///   same execution.
 ///
@@ -49,7 +49,7 @@ use crate::states::{
 /// is not mutable as `StatesPrevious` must remain unchanged so that all
 /// `ItemSpec`s operate over consistent data.
 ///
-/// [`StatesCurrentFile`]: crate::paths::StatesCurrentFile
+/// [`StatesPreviousFile`]: crate::paths::StatesPreviousFile
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
 pub type StatesPrevious = States<Previous>;

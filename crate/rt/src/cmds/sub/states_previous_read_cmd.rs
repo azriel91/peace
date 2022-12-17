@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use peace_cfg::ItemSpecId;
 use peace_resources::{
-    paths::{FlowDir, StatesCurrentFile},
+    paths::{FlowDir, StatesPreviousFile},
     resources::ts::{SetUp, WithStates},
     states::StatesCurrent,
     type_reg::untagged::{BoxDtDisplay, TypeReg},
@@ -53,19 +53,19 @@ where
     ) -> Result<StatesCurrent, E> {
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_current_file = StatesCurrentFile::from(&*flow_dir);
+        let states_previous_file = StatesPreviousFile::from(&*flow_dir);
 
         let states_current = StatesDeserializer::deserialize(
             &storage,
             states_current_type_reg,
-            &states_current_file,
+            &states_previous_file,
         )
         .await?;
 
         drop(flow_dir);
         drop(storage);
 
-        resources.insert(states_current_file);
+        resources.insert(states_previous_file);
 
         Ok(states_current)
     }

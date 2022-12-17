@@ -47,7 +47,7 @@ pub enum Error {
 
     /// Current states have not been written to disk.
     ///
-    /// This is returned when `StatesCurrentFile` is attempted to be
+    /// This is returned when `StatesPreviousFile` is attempted to be
     /// deserialized but does not exist.
     #[error("Current states have not been written to disk.")]
     #[cfg_attr(

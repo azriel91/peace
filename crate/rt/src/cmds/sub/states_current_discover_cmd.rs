@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     internal::StatesMut,
-    paths::{FlowDir, StatesCurrentFile},
+    paths::{FlowDir, StatesPreviousFile},
     resources::ts::{SetUp, WithStateDiffs, WithStates},
     states::{ts::Current, StatesCurrent},
     Resources,
@@ -23,7 +23,7 @@ where
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`], and will be serialized to
-    /// `$flow_dir/states_current.yaml`.
+    /// `$flow_dir/states_previous.yaml`.
     ///
     /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
     /// `ItemSpec`, the predecessor should insert a copy / clone of their state
@@ -208,19 +208,19 @@ where
     ) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_current_file = StatesCurrentFile::from(&*flow_dir);
+        let states_previous_file = StatesPreviousFile::from(&*flow_dir);
 
         storage
             .write_with_sync_api(
-                "states_current_file_write".to_string(),
-                &states_current_file,
+                "states_previous_file_write".to_string(),
+                &states_previous_file,
                 |file| serde_yaml::to_writer(file, states).map_err(Error::StatesCurrentSerialize),
             )
             .await?;
         drop(flow_dir);
         drop(storage);
 
-        resources.insert(states_current_file);
+        resources.insert(states_previous_file);
 
         Ok(())
     }
@@ -232,15 +232,15 @@ where
     ) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_current_file = StatesCurrentFile::from(&*flow_dir);
+        let states_previous_file = StatesPreviousFile::from(&*flow_dir);
 
         let states_serialized =
             serde_yaml::to_string(&*states).map_err(Error::StatesCurrentSerialize)?;
-        storage.set_item(&states_current_file, &states_serialized)?;
+        storage.set_item(&states_previous_file, &states_serialized)?;
         drop(flow_dir);
         drop(storage);
 
-        resources.insert(states_current_file);
+        resources.insert(states_previous_file);
 
         Ok(())
     }

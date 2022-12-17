@@ -3,7 +3,7 @@ use crate::states::{ts::Current, States};
 /// Current `State`s for all `ItemSpec`s.
 ///
 /// This is strictly only present when the [`States`] are discovered in the
-/// current execution. `States` read from the [`StatesCurrentFile`] are
+/// current execution. `States` read from the [`StatesPreviousFile`] are
 /// inserted into [`Resources`] as [`StatesPrevious`], as those discovered
 /// states may be out of date with the actual.
 ///
@@ -41,6 +41,6 @@ use crate::states::{ts::Current, States};
 ///
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
-/// [`StatesCurrentFile`] crate::paths::StatesCurrentFile
+/// [`StatesPreviousFile`] crate::paths::StatesPreviousFile
 /// [`StatesPrevious`]: crate::states::StatesPrevious
 pub type StatesCurrent = States<Current>;
