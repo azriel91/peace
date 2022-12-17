@@ -496,7 +496,7 @@ where
             let state_desired_logical =
                 <StateDesiredFnSpec as peace_cfg::FnSpec>::exec(data).await?;
 
-            State::new(state_desired_logical, Placeholder)
+            State::new(state_desired_logical, Placeholder::calculated())
         };
 
         Ok(BoxDtDisplay::new(state_desired))
