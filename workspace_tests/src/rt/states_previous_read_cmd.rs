@@ -1,7 +1,7 @@
 use peace::{
     cfg::{profile, state::Nothing, FlowId, ItemSpec, Profile, State},
     resources::states::StatesCurrent,
-    rt::cmds::sub::{StatesCurrentDiscoverCmd, StatesCurrentReadCmd},
+    rt::cmds::sub::{StatesCurrentDiscoverCmd, StatesPreviousReadCmd},
     rt_model::{CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -34,7 +34,7 @@ async fn reads_states_current_from_disk_when_present() -> Result<(), Box<dyn std
     let CmdContext {
         resources: resources_from_read,
         ..
-    } = StatesCurrentReadCmd::exec(cmd_context).await?;
+    } = StatesPreviousReadCmd::exec(cmd_context).await?;
 
     let states_from_discover = resources_from_discover.borrow::<StatesCurrent>();
     let vec_copy_state_from_discover =
@@ -63,7 +63,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     // Try and read states from disk.
     let mut no_op_output = NoOpOutput;
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
-    let exec_result = StatesCurrentReadCmd::exec(cmd_context).await;
+    let exec_result = StatesPreviousReadCmd::exec(cmd_context).await;
 
     assert!(matches!(
         exec_result,
@@ -78,11 +78,11 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 fn debug() {
     let debug_str = format!(
         "{:?}",
-        StatesCurrentReadCmd::<VecCopyError, NoOpOutput>::default()
+        StatesPreviousReadCmd::<VecCopyError, NoOpOutput>::default()
     );
     assert!(
         debug_str
-            == r#"StatesCurrentReadCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput)>)"#
-            || debug_str == r#"StatesCurrentReadCmd(PhantomData)"#
+            == r#"StatesPreviousReadCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput)>)"#
+            || debug_str == r#"StatesPreviousReadCmd(PhantomData)"#
     );
 }

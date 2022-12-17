@@ -2,7 +2,7 @@ use peace::{
     cfg::{profile, state::Nothing, FlowId, ItemSpec, Profile, State},
     resources::states::{StatesCleaned, StatesCleanedDry, StatesCurrent, StatesEnsured},
     rt::cmds::{
-        sub::{StatesCurrentDiscoverCmd, StatesCurrentReadCmd},
+        sub::{StatesCurrentDiscoverCmd, StatesPreviousReadCmd},
         CleanCmd, EnsureCmd, StatesDiscoverCmd,
     },
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
@@ -87,7 +87,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
     let CmdContext {
         resources: resources_reread,
         ..
-    } = StatesCurrentReadCmd::exec(cmd_context).await?;
+    } = StatesPreviousReadCmd::exec(cmd_context).await?;
 
     let ensured_states = resources_ensured.borrow::<StatesEnsured>();
     let cleaned_states_before = resources_cleaned.borrow::<StatesCurrent>();
@@ -151,7 +151,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let CmdContext {
         resources: resources_reread,
         ..
-    } = StatesCurrentReadCmd::exec(cmd_context).await?;
+    } = StatesPreviousReadCmd::exec(cmd_context).await?;
 
     let cleaned_states = resources_cleaned.borrow::<StatesCurrent>();
     let cleaned_states_cleaned = resources_cleaned.borrow::<StatesCleaned>();
@@ -215,7 +215,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let CmdContext {
         resources: resources_reread,
         ..
-    } = StatesCurrentReadCmd::exec(cmd_context).await?;
+    } = StatesPreviousReadCmd::exec(cmd_context).await?;
 
     let ensured_states = resources_ensured.borrow::<StatesEnsured>();
     let cleaned_states_before = resources_cleaned.borrow::<StatesCurrent>();

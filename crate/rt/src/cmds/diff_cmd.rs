@@ -9,7 +9,7 @@ use peace_resources::{
 };
 use peace_rt_model::{CmdContext, Error, ItemSpecGraph, OutputWrite, StatesTypeRegs};
 
-use crate::cmds::sub::{StatesCurrentReadCmd, StatesDesiredReadCmd};
+use crate::cmds::sub::{StatesDesiredReadCmd, StatesPreviousReadCmd};
 
 #[derive(Debug)]
 pub struct DiffCmd<E, O>(PhantomData<(E, O)>);
@@ -78,7 +78,7 @@ where
         mut resources: Resources<SetUp>,
         states_type_regs: &StatesTypeRegs,
     ) -> Result<Resources<WithStateDiffs>, E> {
-        let states_current = StatesCurrentReadCmd::<E, O>::exec_internal(
+        let states_current = StatesPreviousReadCmd::<E, O>::exec_internal(
             &mut resources,
             states_type_regs.states_current_type_reg(),
         )

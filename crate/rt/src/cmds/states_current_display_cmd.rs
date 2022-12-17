@@ -7,7 +7,7 @@ use peace_resources::{
 use peace_rt_model::{CmdContext, Error};
 use peace_rt_model_core::OutputWrite;
 
-use crate::cmds::sub::StatesCurrentReadCmd;
+use crate::cmds::sub::StatesPreviousReadCmd;
 
 /// Displays [`StatesCurrent`]s from storage.
 #[derive(Debug)]
@@ -35,7 +35,7 @@ where
             ..
         } = &mut cmd_context;
 
-        let states_current_result = StatesCurrentReadCmd::<E, O>::exec_internal(
+        let states_current_result = StatesPreviousReadCmd::<E, O>::exec_internal(
             resources,
             states_type_regs.states_current_type_reg(),
         )

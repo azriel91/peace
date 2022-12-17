@@ -5,7 +5,7 @@ use peace::{
         FlowId, ItemSpec, Profile, State,
     },
     resources::states::{StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry},
-    rt::cmds::{sub::StatesCurrentReadCmd, EnsureCmd, StatesDiscoverCmd},
+    rt::cmds::{sub::StatesPreviousReadCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -87,7 +87,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     let CmdContext {
         resources: resources_reread,
         ..
-    } = StatesCurrentReadCmd::exec(cmd_context).await?;
+    } = StatesPreviousReadCmd::exec(cmd_context).await?;
 
     let ensured_states_before = resources_ensured.borrow::<StatesCurrent>();
     let ensured_states_desired = resources_ensured.borrow::<StatesDesired>();
@@ -158,7 +158,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     let CmdContext {
         resources: resources_reread,
         ..
-    } = StatesCurrentReadCmd::exec(cmd_context).await?;
+    } = StatesPreviousReadCmd::exec(cmd_context).await?;
 
     let ensured_states_before = resources_ensured.borrow::<StatesCurrent>();
     let ensured_states_desired = resources_ensured.borrow::<StatesDesired>();

@@ -12,9 +12,9 @@ use peace_rt_model::{CmdContext, Error, StatesDeserializer, Storage};
 
 /// Reads [`StatesCurrent`]s from storage.
 #[derive(Debug)]
-pub struct StatesCurrentReadCmd<E, O>(PhantomData<(E, O)>);
+pub struct StatesPreviousReadCmd<E, O>(PhantomData<(E, O)>);
 
-impl<E, O> StatesCurrentReadCmd<E, O>
+impl<E, O> StatesPreviousReadCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
 {
@@ -71,7 +71,7 @@ where
     }
 }
 
-impl<E, O> Default for StatesCurrentReadCmd<E, O> {
+impl<E, O> Default for StatesPreviousReadCmd<E, O> {
     fn default() -> Self {
         Self(PhantomData)
     }
