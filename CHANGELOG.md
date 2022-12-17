@@ -6,8 +6,11 @@
 * `ShCmdParams` now uses the `Id` type parameter so that different `ShCmdItemSpec`s can be used correctly. ([#57])
 * `ShCmdItemSpec` takes in optional `ShCmdParams<Id>` and inserts it into `resources`. ([#57])
 * `CmdContextBuilder` sets the current directory to the workspace directory. ([#57])
+* `StatesDesired` is now stored as `State<Logical, Placeholder>`. ([#52], [#58])
 
 [#57]: https://github.com/azriel91/peace/pull/57
+[#52]: https://github.com/azriel91/peace/issues/52
+[#58]: https://github.com/azriel91/peace/pull/58
 
 
 ## 0.0.4 (2022-11-29)
