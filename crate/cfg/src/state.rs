@@ -1,6 +1,7 @@
-pub use self::nothing::Nothing;
+pub use self::{nothing::Nothing, placeholder::Placeholder};
 
 mod nothing;
+mod placeholder;
 
 use std::{any::TypeId, fmt};
 

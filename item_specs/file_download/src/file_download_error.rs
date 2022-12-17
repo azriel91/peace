@@ -145,6 +145,11 @@ impl FileDownloadError {
     ///
     /// [`Normal`]: std::path::Component::Normal
     #[cfg(not(target_arch = "wasm32"))]
+    // Large `Err` variants are discouraged, but since our `Ok` variant is the same size, the rule
+    // does not apply.
+    //
+    // See <https://rust-lang.github.io/rust-clippy/master/index.html#result_large_err>
+    #[allow(clippy::result_large_err)]
     pub(crate) fn src_get(
         src: url::Url,
         dest: &std::path::Path,

@@ -54,7 +54,7 @@ download diff
 
 ### Concept 16: Profiles
 
-**What:** Use the same project files for logically separate environments.
+**What:** Use the same workspace input for logically separate environments.
 
 **Value:** Ease the creation of cloned environments.
 
@@ -70,4 +70,36 @@ download diff
 
 **What:** Guard automation from executing with unusual values.
 
-**Value:** Don't accidentally take down a system.
+**Value:** Don't accidentally incur large costs.
+
+
+## Efficiency Concepts (Again!)
+
+### Concept 19: Do It Before It's Asked
+
+> If a process cannot take less than 10 minutes,  
+> then to do it in 5,  
+> you must begin in the past.
+
+**What:** Execute the automation in the background, show where it is when it is asked to be executed.
+
+**Value:** Reduce waiting time.
+
+**Cost:** Background work consumes resources, and may be redundant.
+
+
+### Concept 20: Reverse Execution
+
+> At the beginning of a process, what's the fastest way to get to step 9?
+>
+> Go through steps 1 through 9.
+>
+> What if you're on step 10?
+>
+> Transition from step 10 to 9.
+
+**What:** The beginning and destination state are not necessarily the start and end of a process.
+
+**Value:** Allows inspection / mutation of state at a particular point, or re-testing of automation steps after that point.
+
+

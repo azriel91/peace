@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-/// Represent no data.
+/// Represents no data.
 ///
 /// This is used to represent no separate physical state.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]

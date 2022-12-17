@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{item_spec_id, profile, FlowId, ItemSpecId, Profile, State},
+    cfg::{item_spec_id, profile, state::Placeholder, FlowId, ItemSpecId, Profile, State},
     resources::states::{StateDiffs, StatesCleaned, StatesCurrent, StatesDesired, StatesEnsured},
     rt::cmds::{
         sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
@@ -174,13 +174,15 @@ async fn state_desired_returns_shell_command_desired_state()
     let CmdContext { resources, .. } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
     let states_desired = resources.borrow::<StatesDesired>();
     let state_desired = states_desired
-        .get::<TestFileCreationShCmdStateLogical, _>(&TestFileCreationShCmdItemSpec::ID)
+        .get::<State<TestFileCreationShCmdStateLogical, Placeholder>, _>(
+            &TestFileCreationShCmdItemSpec::ID,
+        )
         .unwrap();
     if let ShCmdState::Some {
         stdout,
         stderr,
         marker: _,
-    } = &state_desired
+    } = &state_desired.logical
     {
         assert_eq!("exists", stdout);
         assert_eq!("`test_file` exists", stderr);
