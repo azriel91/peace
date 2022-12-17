@@ -1,9 +1,12 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, path::Path};
 
 use peace_cfg::ItemSpecId;
 use peace_resources::{
-    paths::StatesPreviousFile,
-    states::{ts::Previous, States, StatesPrevious},
+    paths::{StatesDesiredFile, StatesPreviousFile},
+    states::{
+        ts::{Desired, Previous},
+        States, StatesDesired, StatesPrevious,
+    },
     type_reg::untagged::{BoxDtDisplay, TypeReg},
 };
 
@@ -28,16 +31,49 @@ where
     /// * `states_previous_file`: `StatesPreviousFile` to deserialize.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    pub async fn deserialize(
+    pub async fn deserialize_previous(
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
         states_previous_file: &StatesPreviousFile,
     ) -> Result<StatesPrevious, E> {
-        let states =
-            Self::deserialize_internal::<Previous>(storage, states_type_reg, states_previous_file)
-                .await?;
+        let states = Self::deserialize_internal::<Previous>(
+            #[cfg(not(target_arch = "wasm32"))]
+            "StatesDeserializer::deserialize_previous".to_string(),
+            storage,
+            states_type_reg,
+            states_previous_file,
+        )
+        .await?;
 
         states.ok_or_else(|| E::from(Error::StatesCurrentDiscoverRequired))
+    }
+
+    /// Returns the [`StatesDesired`] of all [`ItemSpec`]s if it exists on
+    /// disk.
+    ///
+    /// # Parameters:
+    ///
+    /// * `storage`: `Storage` to read from.
+    /// * `states_type_reg`: Type registry with functions to deserialize each
+    ///   item spec state.
+    /// * `states_desired_file`: `StatesDesiredFile` to deserialize.
+    ///
+    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    pub async fn deserialize_desired(
+        storage: &Storage,
+        states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
+        states_desired_file: &StatesDesiredFile,
+    ) -> Result<StatesDesired, E> {
+        let states = Self::deserialize_internal::<Desired>(
+            #[cfg(not(target_arch = "wasm32"))]
+            "StatesDeserializer::deserialize_desired".to_string(),
+            storage,
+            states_type_reg,
+            states_desired_file,
+        )
+        .await?;
+
+        states.ok_or_else(|| E::from(Error::StatesDesiredDiscoverRequired))
     }
 
     /// Returns the [`StatesPrevious`] of all [`ItemSpec`]s if it exists on
@@ -51,12 +87,19 @@ where
     /// * `states_previous_file`: `StatesPreviousFile` to deserialize.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    pub async fn deserialize_opt(
+    pub async fn deserialize_previous_opt(
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
         states_previous_file: &StatesPreviousFile,
     ) -> Result<Option<StatesPrevious>, E> {
-        Self::deserialize_internal(storage, states_type_reg, states_previous_file).await
+        Self::deserialize_internal(
+            #[cfg(not(target_arch = "wasm32"))]
+            "StatesDeserializer::deserialize_previous_opt".to_string(),
+            storage,
+            states_type_reg,
+            states_previous_file,
+        )
+        .await
     }
 
     /// Returns the [`States`] of all [`ItemSpec`]s if it exists on disk.
@@ -78,57 +121,54 @@ where
     /// [`ts::Previous`]: peace_resources::states::ts::Previous
     #[cfg(not(target_arch = "wasm32"))]
     async fn deserialize_internal<TS>(
+        thread_name: String,
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
-        states_previous_file: &StatesPreviousFile,
+        states_file_path: &Path,
     ) -> Result<Option<States<TS>>, E>
     where
         TS: Send,
     {
-        if !states_previous_file.exists() {
+        if !states_file_path.exists() {
             return Ok(None);
         }
 
         let states_current = storage
-            .read_with_sync_api(
-                "states_previous_file_read".to_string(),
-                states_previous_file,
-                |file| {
-                    let deserializer = serde_yaml::Deserializer::from_reader(file);
-                    let states_current =
-                        States::from(states_type_reg.deserialize_map(deserializer).map_err(
-                            |error| {
-                                #[cfg(not(feature = "error_reporting"))]
-                                {
-                                    Error::StatesCurrentDeserialize { error }
+            .read_with_sync_api(thread_name, states_file_path, |file| {
+                let deserializer = serde_yaml::Deserializer::from_reader(file);
+                let states_current =
+                    States::from(states_type_reg.deserialize_map(deserializer).map_err(
+                        |error| {
+                            #[cfg(not(feature = "error_reporting"))]
+                            {
+                                Error::StatesDeserialize { error }
+                            }
+                            #[cfg(feature = "error_reporting")]
+                            {
+                                use miette::NamedSource;
+
+                                let file_contents =
+                                    std::fs::read_to_string(states_file_path).unwrap();
+
+                                let (error_span, error_message, context_span) =
+                                    Self::error_and_context(&file_contents, &error);
+                                let states_file_source = NamedSource::new(
+                                    states_file_path.to_string_lossy(),
+                                    file_contents,
+                                );
+
+                                Error::StatesDeserialize {
+                                    states_file_source,
+                                    error_span,
+                                    error_message,
+                                    context_span,
+                                    error,
                                 }
-                                #[cfg(feature = "error_reporting")]
-                                {
-                                    use miette::NamedSource;
-
-                                    let file_contents =
-                                        std::fs::read_to_string(states_previous_file).unwrap();
-
-                                    let (error_span, error_message, context_span) =
-                                        Self::error_and_context(&file_contents, &error);
-                                    let states_file_source = NamedSource::new(
-                                        states_previous_file.to_string_lossy(),
-                                        file_contents,
-                                    );
-
-                                    Error::StatesCurrentDeserialize {
-                                        states_file_source,
-                                        error_span,
-                                        error_message,
-                                        context_span,
-                                        error,
-                                    }
-                                }
-                            },
-                        )?);
-                    Ok(states_current)
-                },
-            )
+                            }
+                        },
+                    )?);
+                Ok(states_current)
+            })
             .await?;
 
         Ok(Some(states_current))
@@ -155,46 +195,41 @@ where
     async fn deserialize_internal<TS>(
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
-        states_previous_file: &StatesPreviousFile,
+        states_file_path: &Path,
     ) -> Result<Option<States<TS>>, E> {
-        let states_serialized = storage.get_item_opt(&states_previous_file)?;
+        let states_serialized = storage.get_item_opt(&states_file_path)?;
 
         if let Some(states_serialized) = states_serialized {
             let deserializer = serde_yaml::Deserializer::from_str(&states_serialized);
-            let states_current = States::from(
-                states_type_reg
-                    .deserialize_map(deserializer)
-                    .map_err(|error| {
-                        #[cfg(not(feature = "error_reporting"))]
-                        {
-                            Error::StatesCurrentDeserialize { error }
+            let states = States::from(states_type_reg.deserialize_map(deserializer).map_err(
+                |error| {
+                    #[cfg(not(feature = "error_reporting"))]
+                    {
+                        Error::StatesDeserialize { error }
+                    }
+                    #[cfg(feature = "error_reporting")]
+                    {
+                        use miette::NamedSource;
+
+                        let file_contents = std::fs::read_to_string(&states_file_path).unwrap();
+
+                        let (error_span, error_message, context_span) =
+                            Self::error_and_context(&file_contents, &error);
+                        let states_file_source =
+                            NamedSource::new(states_file_path.to_string_lossy(), file_contents);
+
+                        Error::StatesDeserialize {
+                            states_file_source,
+                            error_span,
+                            error_message,
+                            context_span,
+                            error,
                         }
-                        #[cfg(feature = "error_reporting")]
-                        {
-                            use miette::NamedSource;
+                    }
+                },
+            )?);
 
-                            let file_contents =
-                                std::fs::read_to_string(&states_previous_file).unwrap();
-
-                            let (error_span, error_message, context_span) =
-                                Self::error_and_context(&file_contents, &error);
-                            let states_file_source = NamedSource::new(
-                                states_previous_file.to_string_lossy(),
-                                file_contents,
-                            );
-
-                            Error::StatesCurrentDeserialize {
-                                states_file_source,
-                                error_span,
-                                error_message,
-                                context_span,
-                                error,
-                            }
-                        }
-                    })?,
-            );
-
-            Ok(Some(states_current))
+            Ok(Some(states))
         } else {
             Ok(None)
         }

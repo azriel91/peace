@@ -214,12 +214,12 @@ where
         match self.format {
             OutputFormat::Text => self.output_display(states_previous.iter()).await,
             OutputFormat::Yaml => {
-                self.output_yaml(states_previous, Error::StatesPreviousSerialize)
+                self.output_yaml(states_previous, Error::StatesSerialize)
                     .await
             }
             #[cfg(feature = "output_json")]
             OutputFormat::Json => {
-                self.output_json(states_previous, Error::StatesPreviousSerializeJson)
+                self.output_json(states_previous, Error::StatesSerializeJson)
                     .await
             }
         }
@@ -229,12 +229,12 @@ where
         match self.format {
             OutputFormat::Text => self.output_display(states_desired.iter()).await,
             OutputFormat::Yaml => {
-                self.output_yaml(states_desired, Error::StatesDesiredSerialize)
+                self.output_yaml(states_desired, Error::StatesSerialize)
                     .await
             }
             #[cfg(feature = "output_json")]
             OutputFormat::Json => {
-                self.output_json(states_desired, Error::StatesDesiredSerializeJson)
+                self.output_json(states_desired, Error::StatesSerializeJson)
                     .await
             }
         }
@@ -262,12 +262,12 @@ where
         match self.format {
             OutputFormat::Text => self.output_display(states_ensured_dry.iter()).await,
             OutputFormat::Yaml => {
-                self.output_yaml(states_ensured_dry, Error::StatesEnsuredDrySerialize)
+                self.output_yaml(states_ensured_dry, Error::StatesSerialize)
                     .await
             }
             #[cfg(feature = "output_json")]
             OutputFormat::Json => {
-                self.output_json(states_ensured_dry, Error::StatesEnsuredDrySerializeJson)
+                self.output_json(states_ensured_dry, Error::StatesSerializeJson)
                     .await
             }
         }
@@ -277,12 +277,12 @@ where
         match self.format {
             OutputFormat::Text => self.output_display(states_ensured.iter()).await,
             OutputFormat::Yaml => {
-                self.output_yaml(states_ensured, Error::StatesEnsuredSerialize)
+                self.output_yaml(states_ensured, Error::StatesSerialize)
                     .await
             }
             #[cfg(feature = "output_json")]
             OutputFormat::Json => {
-                self.output_json(states_ensured, Error::StatesEnsuredSerializeJson)
+                self.output_json(states_ensured, Error::StatesSerializeJson)
                     .await
             }
         }
@@ -295,12 +295,12 @@ where
         match self.format {
             OutputFormat::Text => self.output_display(states_cleaned_dry.iter()).await,
             OutputFormat::Yaml => {
-                self.output_yaml(states_cleaned_dry, Error::StatesCleanedDrySerialize)
+                self.output_yaml(states_cleaned_dry, Error::StatesSerialize)
                     .await
             }
             #[cfg(feature = "output_json")]
             OutputFormat::Json => {
-                self.output_json(states_cleaned_dry, Error::StatesCleanedDrySerializeJson)
+                self.output_json(states_cleaned_dry, Error::StatesSerializeJson)
                     .await
             }
         }
@@ -310,12 +310,12 @@ where
         match self.format {
             OutputFormat::Text => self.output_display(states_cleaned.iter()).await,
             OutputFormat::Yaml => {
-                self.output_yaml(states_cleaned, Error::StatesCleanedSerialize)
+                self.output_yaml(states_cleaned, Error::StatesSerialize)
                     .await
             }
             #[cfg(feature = "output_json")]
             OutputFormat::Json => {
-                self.output_json(states_cleaned, Error::StatesCleanedSerializeJson)
+                self.output_json(states_cleaned, Error::StatesSerializeJson)
                     .await
             }
         }

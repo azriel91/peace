@@ -55,7 +55,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_previous_file = StatesPreviousFile::from(&*flow_dir);
 
-        let states_previous = StatesDeserializer::deserialize(
+        let states_previous = StatesDeserializer::deserialize_previous(
             &storage,
             states_current_type_reg,
             &states_previous_file,

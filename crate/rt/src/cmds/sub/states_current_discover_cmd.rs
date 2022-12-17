@@ -214,7 +214,7 @@ where
             .write_with_sync_api(
                 "states_previous_file_write".to_string(),
                 &states_previous_file,
-                |file| serde_yaml::to_writer(file, states).map_err(Error::StatesPreviousSerialize),
+                |file| serde_yaml::to_writer(file, states).map_err(Error::StatesSerialize),
             )
             .await?;
         drop(flow_dir);
@@ -234,8 +234,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_previous_file = StatesPreviousFile::from(&*flow_dir);
 
-        let states_serialized =
-            serde_yaml::to_string(&*states).map_err(Error::StatesPreviousSerialize)?;
+        let states_serialized = serde_yaml::to_string(&*states).map_err(Error::StatesSerialize)?;
         storage.set_item(&states_previous_file, &states_serialized)?;
         drop(flow_dir);
         drop(storage);

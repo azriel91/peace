@@ -96,10 +96,7 @@ where
             .write_with_sync_api(
                 "states_desired_file_write".to_string(),
                 &states_desired_file,
-                |file| {
-                    serde_yaml::to_writer(file, states_desired)
-                        .map_err(Error::StatesDesiredSerialize)
-                },
+                |file| serde_yaml::to_writer(file, states_desired).map_err(Error::StatesSerialize),
             )
             .await?;
         drop(flow_dir);
@@ -120,7 +117,7 @@ where
         let states_desired_file = StatesDesiredFile::from(&*flow_dir);
 
         let states_serialized =
-            serde_yaml::to_string(states_desired).map_err(Error::StatesDesiredSerialize)?;
+            serde_yaml::to_string(states_desired).map_err(Error::StatesSerialize)?;
         storage.set_item(&states_desired_file, &states_serialized)?;
         drop(flow_dir);
         drop(storage);
