@@ -22,7 +22,8 @@ where
     /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
-    /// [`StatesCurrent`], and will be serialized to `{flow_dir}/states.yaml`.
+    /// [`StatesCurrent`], and will be serialized to
+    /// `$flow_dir/states_current.yaml`.
     ///
     /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
     /// `ItemSpec`, the predecessor should insert a copy / clone of their state
