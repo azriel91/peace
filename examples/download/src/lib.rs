@@ -2,14 +2,14 @@ use peace::{
     cfg::{item_spec_id, FlowId, ItemSpecId, Profile},
     resources::{
         resources::ts::{
-            Cleaned, CleanedDry, Ensured, EnsuredDry, SetUp, WithStateDiffs, WithStates,
-            WithStatesCurrentAndDesired, WithStatesDesired,
+            Cleaned, CleanedDry, Ensured, EnsuredDry, SetUp, WithStatesCurrentAndDesired,
+            WithStatesDesired, WithStatesSaved, WithStatesSavedDiffs,
         },
         Resources,
     },
     rt::cmds::{
-        CleanCmd, DiffCmd, EnsureCmd, StatesCurrentDisplayCmd, StatesDesiredDisplayCmd,
-        StatesDiscoverCmd,
+        CleanCmd, DiffCmd, EnsureCmd, StatesDesiredDisplayCmd, StatesDiscoverCmd,
+        StatesSavedDisplayCmd,
     },
     rt_model::{
         CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, OutputWrite, Workspace, WorkspaceSpec,
@@ -110,11 +110,11 @@ where
 
 pub async fn status<O>(
     cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
-) -> Result<Resources<WithStates>, DownloadError>
+) -> Result<Resources<WithStatesSaved>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdContext { resources, .. } = StatesCurrentDisplayCmd::exec(cmd_context).await?;
+    let CmdContext { resources, .. } = StatesSavedDisplayCmd::exec(cmd_context).await?;
     Ok(resources)
 }
 
@@ -130,7 +130,7 @@ where
 
 pub async fn diff<O>(
     cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
-) -> Result<Resources<WithStateDiffs>, DownloadError>
+) -> Result<Resources<WithStatesSavedDiffs>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {

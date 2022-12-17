@@ -42,7 +42,7 @@ jobs:
   docs_and_spell_check:
     name: Docs and Spell Check
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 10
     env:
       RUSTDOCFLAGS: "-Dwarnings"
     steps:

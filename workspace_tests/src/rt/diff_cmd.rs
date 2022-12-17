@@ -5,7 +5,7 @@ use peace::{
         state::{Nothing, Placeholder},
         FlowId, ItemSpec, Profile, State,
     },
-    resources::states::{StateDiffs, StatesCurrent, StatesDesired},
+    resources::states::{StateDiffs, StatesDesired, StatesSaved},
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{CliOutput, CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -36,13 +36,13 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
-    let states = resources.borrow::<StatesCurrent>();
+    let states_saved = resources.borrow::<StatesSaved>();
     let states_desired = resources.borrow::<StatesDesired>();
     let state_diffs = resources.borrow::<StateDiffs>();
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(&VecCopyItemSpec.id());
     assert_eq!(
         Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
-        states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        states_saved.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
@@ -91,7 +91,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut cli_output).await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
-    let states = resources.borrow::<StatesCurrent>();
+    let states_saved = resources.borrow::<StatesSaved>();
     let states_desired = resources.borrow::<StatesDesired>();
     let state_diffs = resources.borrow::<StateDiffs>();
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(&VecCopyItemSpec.id());
@@ -101,7 +101,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
             Nothing
         ))
         .as_ref(),
-        states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        states_saved.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 4, 5, 6, 8, 9])).as_ref(),

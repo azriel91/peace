@@ -3,25 +3,25 @@ use peace::{
     resources::{
         internal::{StateDiffsMut, StatesMut},
         states::{
-            StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired,
-            StatesEnsured, StatesEnsuredDry,
+            StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
+            StatesEnsuredDry, StatesSaved,
         },
     },
     rt_model::{CliOutput, OutputFormat, OutputWrite},
 };
 
 #[tokio::test]
-async fn outputs_states_current_as_text() -> Result<(), Box<dyn std::error::Error>> {
+async fn outputs_states_saved_as_text() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Text);
-    let states_current = {
+    let states_saved = {
         let mut states = StatesMut::new();
         states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
         states.insert(item_spec_id!("item_1"), State::new(1u8, true));
-        StatesCurrent::from(states)
+        StatesSaved::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::write_states_current(&mut cli_output, &states_current)
+    <CliOutput<_> as OutputWrite<Error>>::write_states_saved(&mut cli_output, &states_saved)
         .await?;
 
     assert_eq!(
@@ -200,17 +200,17 @@ async fn outputs_error_as_text() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(feature = "output_colorized")]
 #[tokio::test]
-async fn outputs_states_current_as_text_colorized() -> Result<(), Box<dyn std::error::Error>> {
+async fn outputs_states_saved_as_text_colorized() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
     let mut cli_output = cli_output_colorized(&mut buffer, OutputFormat::Text);
-    let states_current = {
+    let states_saved = {
         let mut states = StatesMut::new();
         states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
         states.insert(item_spec_id!("item_1"), State::new(1u8, true));
-        StatesCurrent::from(states)
+        StatesSaved::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::write_states_current(&mut cli_output, &states_current)
+    <CliOutput<_> as OutputWrite<Error>>::write_states_saved(&mut cli_output, &states_saved)
         .await?;
 
     assert_eq!(
@@ -395,17 +395,17 @@ async fn outputs_error_as_text_colorized() -> Result<(), Box<dyn std::error::Err
 }
 
 #[tokio::test]
-async fn outputs_states_current_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
+async fn outputs_states_saved_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Yaml);
-    let states_current = {
+    let states_saved = {
         let mut states = StatesMut::new();
         states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
         states.insert(item_spec_id!("item_1"), State::new(1u8, true));
-        StatesCurrent::from(states)
+        StatesSaved::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::write_states_current(&mut cli_output, &states_current)
+    <CliOutput<_> as OutputWrite<Error>>::write_states_saved(&mut cli_output, &states_saved)
         .await?;
 
     assert_eq!(
@@ -602,17 +602,17 @@ async fn outputs_error_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(feature = "output_json")]
 #[tokio::test]
-async fn outputs_states_current_as_json() -> Result<(), Box<dyn std::error::Error>> {
+async fn outputs_states_saved_as_json() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::with_capacity(128);
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Json);
-    let states_current = {
+    let states_saved = {
         let mut states = StatesMut::new();
         states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
         states.insert(item_spec_id!("item_1"), State::new(1u8, true));
-        StatesCurrent::from(states)
+        StatesSaved::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::write_states_current(&mut cli_output, &states_current)
+    <CliOutput<_> as OutputWrite<Error>>::write_states_saved(&mut cli_output, &states_saved)
         .await?;
 
     assert_eq!(

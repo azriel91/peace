@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use peace_resources::states::{
-    StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
-    StatesEnsuredDry,
+    StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured, StatesEnsuredDry,
+    StatesSaved,
 };
 
 /// Transforms return values or errors into a suitable output format.
@@ -23,7 +23,7 @@ use peace_resources::states::{
 #[async_trait(?Send)]
 pub trait OutputWrite<E> {
     /// Writes current states to the output.
-    async fn write_states_current(&mut self, states_current: &StatesCurrent) -> Result<(), E>
+    async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E>
     where
         E: std::error::Error;
 

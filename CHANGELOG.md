@@ -7,10 +7,15 @@
 * `ShCmdItemSpec` takes in optional `ShCmdParams<Id>` and inserts it into `resources`. ([#57])
 * `CmdContextBuilder` sets the current directory to the workspace directory. ([#57])
 * `StatesDesired` is now stored as `State<Logical, Placeholder>`. ([#52], [#58])
+* Re-read discovered `States` are now named `StatesSaved`. ([#52], [#60])
+* `StatesCurrent` is only present when the discovered in the current execution. ([#52], [#60])
+* `States*Deserialize` errors are consolidated into a single variant. ([#52], [#60])
+* `States*Serialize` errors are consolidated into a single variant. ([#52], [#60])
 
 [#57]: https://github.com/azriel91/peace/pull/57
 [#52]: https://github.com/azriel91/peace/issues/52
 [#58]: https://github.com/azriel91/peace/pull/58
+[#60]: https://github.com/azriel91/peace/pull/60
 
 
 ## 0.0.4 (2022-11-29)

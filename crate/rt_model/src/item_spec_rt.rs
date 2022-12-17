@@ -3,7 +3,10 @@ use std::fmt::Debug;
 use fn_graph::{DataAccess, DataAccessDyn};
 use peace_cfg::{async_trait, ItemSpecId, OpCheckStatus};
 use peace_resources::{
-    resources::ts::{Empty, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired},
+    resources::ts::{
+        Empty, SetUp, WithStatesCurrent, WithStatesCurrentAndDesired, WithStatesCurrentDiffs,
+        WithStatesSavedAndDesired,
+    },
     type_reg::untagged::BoxDtDisplay,
     Resources,
 };
@@ -32,7 +35,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
 
     /// Registers state types with type registries for deserializing from disk.
     ///
-    /// This is necessary to deserialize `StatesCurrentFile` and
+    /// This is necessary to deserialize `StatesSavedFile` and
     /// `StatesDesiredFile`.
     fn state_register(&self, states_type_regs: &mut StatesTypeRegs);
 
@@ -50,7 +53,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// [`exec`]: peace_cfg::FnSpec::exec
     async fn state_ensured_fn_exec(
         &self,
-        resources: &Resources<WithStateDiffs>,
+        resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
@@ -61,7 +64,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// [`exec`]: peace_cfg::FnSpec::exec
     async fn state_cleaned_fn_exec(
         &self,
-        resources: &Resources<WithStates>,
+        resources: &Resources<WithStatesCurrent>,
     ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
@@ -74,10 +77,20 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     where
         E: Debug + std::error::Error;
 
+    /// Returns the diff between the previous and desired [`State`]s.
+    ///
+    /// [`State`]: peace_cfg::State
+    async fn state_diff_fn_exec_with_states_saved(
+        &self,
+        resources: &Resources<WithStatesSavedAndDesired>,
+    ) -> Result<BoxDtDisplay, E>
+    where
+        E: Debug + std::error::Error;
+
     /// Returns the diff between the current and desired [`State`]s.
     ///
     /// [`State`]: peace_cfg::State
-    async fn state_diff_fn_exec(
+    async fn state_diff_fn_exec_with_states_current(
         &self,
         resources: &Resources<WithStatesCurrentAndDesired>,
     ) -> Result<BoxDtDisplay, E>
@@ -90,7 +103,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// [`check`]: peace_cfg::OpSpec::check
     async fn ensure_op_check(
         &self,
-        resources: &Resources<WithStateDiffs>,
+        resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<OpCheckStatus, E>
     where
         E: Debug + std::error::Error;
@@ -99,7 +112,10 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     ///
     /// [`ItemSpec::EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     /// [`exec_dry`]: peace_cfg::OpSpec::exec_dry
-    async fn ensure_op_exec_dry(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E>
+    async fn ensure_op_exec_dry(
+        &self,
+        resources: &Resources<WithStatesCurrentDiffs>,
+    ) -> Result<(), E>
     where
         E: Debug + std::error::Error;
 
@@ -107,7 +123,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     ///
     /// [`ItemSpec::EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     /// [`exec`]: peace_cfg::OpSpec::exec
-    async fn ensure_op_exec(&self, resources: &Resources<WithStateDiffs>) -> Result<(), E>
+    async fn ensure_op_exec(&self, resources: &Resources<WithStatesCurrentDiffs>) -> Result<(), E>
     where
         E: Debug + std::error::Error;
 
@@ -115,7 +131,10 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     ///
     /// [`ItemSpec::CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
     /// [`check`]: peace_cfg::OpSpec::check
-    async fn clean_op_check(&self, resources: &Resources<WithStates>) -> Result<OpCheckStatus, E>
+    async fn clean_op_check(
+        &self,
+        resources: &Resources<WithStatesCurrent>,
+    ) -> Result<OpCheckStatus, E>
     where
         E: Debug + std::error::Error;
 
@@ -123,7 +142,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     ///
     /// [`ItemSpec::CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
     /// [`exec_dry`]: peace_cfg::OpSpec::exec_dry
-    async fn clean_op_exec_dry(&self, resources: &Resources<WithStates>) -> Result<(), E>
+    async fn clean_op_exec_dry(&self, resources: &Resources<WithStatesCurrent>) -> Result<(), E>
     where
         E: Debug + std::error::Error;
 
@@ -131,7 +150,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     ///
     /// [`ItemSpec::CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
     /// [`exec`]: peace_cfg::OpSpec::exec
-    async fn clean_op_exec(&self, resources: &Resources<WithStates>) -> Result<(), E>
+    async fn clean_op_exec(&self, resources: &Resources<WithStatesCurrent>) -> Result<(), E>
     where
         E: Debug + std::error::Error;
 }

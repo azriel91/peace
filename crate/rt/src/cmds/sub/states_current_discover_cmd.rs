@@ -3,8 +3,8 @@ use std::marker::PhantomData;
 use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     internal::StatesMut,
-    paths::{FlowDir, StatesCurrentFile},
-    resources::ts::{SetUp, WithStateDiffs, WithStates},
+    paths::{FlowDir, StatesSavedFile},
+    resources::ts::{SetUp, WithStatesCurrent, WithStatesCurrentDiffs},
     states::{ts::Current, StatesCurrent},
     Resources,
 };
@@ -22,7 +22,8 @@ where
     /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
-    /// [`StatesCurrent`], and will be serialized to `{flow_dir}/states.yaml`.
+    /// [`StatesCurrent`], and will be serialized to
+    /// `$flow_dir/states_saved.yaml`.
     ///
     /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
     /// `ItemSpec`, the predecessor should insert a copy / clone of their state
@@ -35,12 +36,12 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStates>, E> {
+    ) -> Result<CmdContext<'_, E, O, WithStatesCurrent>, E> {
         let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
             cmd_context.into_inner();
         let states = Self::exec_internal(item_spec_graph, &mut resources).await?;
 
-        let resources = Resources::<WithStates>::from((resources, states));
+        let resources = Resources::<WithStatesCurrent>::from((resources, states));
 
         let cmd_context = CmdContext::from((
             workspace,
@@ -92,7 +93,7 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_ensure_dry(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStateDiffs>,
+        resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<StatesCurrent, E> {
         let states_mut = item_spec_graph
             .stream()
@@ -121,7 +122,7 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_ensure(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &mut Resources<WithStateDiffs>,
+        resources: &mut Resources<WithStatesCurrentDiffs>,
     ) -> Result<StatesCurrent, E> {
         let resources_ref = &*resources;
         let states_mut = item_spec_graph
@@ -151,7 +152,7 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_clean_dry(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStates>,
+        resources: &Resources<WithStatesCurrent>,
     ) -> Result<StatesCurrent, E> {
         let states_mut = item_spec_graph
             .stream()
@@ -180,7 +181,7 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_clean(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &mut Resources<WithStates>,
+        resources: &mut Resources<WithStatesCurrent>,
     ) -> Result<StatesCurrent, E> {
         let resources_ref = &*resources;
         let states_mut = item_spec_graph
@@ -207,19 +208,19 @@ where
     ) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_current_file = StatesCurrentFile::from(&*flow_dir);
+        let states_saved_file = StatesSavedFile::from(&*flow_dir);
 
         storage
             .write_with_sync_api(
-                "states_current_file_write".to_string(),
-                &states_current_file,
-                |file| serde_yaml::to_writer(file, states).map_err(Error::StatesCurrentSerialize),
+                "states_saved_file_write".to_string(),
+                &states_saved_file,
+                |file| serde_yaml::to_writer(file, states).map_err(Error::StatesSerialize),
             )
             .await?;
         drop(flow_dir);
         drop(storage);
 
-        resources.insert(states_current_file);
+        resources.insert(states_saved_file);
 
         Ok(())
     }
@@ -231,15 +232,14 @@ where
     ) -> Result<(), E> {
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_current_file = StatesCurrentFile::from(&*flow_dir);
+        let states_saved_file = StatesSavedFile::from(&*flow_dir);
 
-        let states_serialized =
-            serde_yaml::to_string(&*states).map_err(Error::StatesCurrentSerialize)?;
-        storage.set_item(&states_current_file, &states_serialized)?;
+        let states_serialized = serde_yaml::to_string(&*states).map_err(Error::StatesSerialize)?;
+        storage.set_item(&states_saved_file, &states_serialized)?;
         drop(flow_dir);
         drop(storage);
 
-        resources.insert(states_current_file);
+        resources.insert(states_saved_file);
 
         Ok(())
     }

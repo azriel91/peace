@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use crate::{
-    resources::ts::WithStateDiffs,
+    resources::ts::WithStatesCurrentDiffs,
     states::{ts::Ensured, States, StatesCurrent},
     Resources,
 };
@@ -17,10 +17,10 @@ use crate::{
 /// [`Data`]: peace_data::Data
 pub type StatesEnsured = States<Ensured>;
 
-/// `Resources` is not used at runtime, but is present to signal this type
-/// should only be constructed by `EnsureCmd`.
-impl From<(StatesCurrent, &Resources<WithStateDiffs>)> for StatesEnsured {
-    fn from((states, _resources): (StatesCurrent, &Resources<WithStateDiffs>)) -> Self {
+/// `Resources` is not used, but is present to signal this type should only be
+/// constructed by `EnsureCmd`.
+impl From<(StatesCurrent, &Resources<WithStatesCurrentDiffs>)> for StatesEnsured {
+    fn from((states, _resources): (StatesCurrent, &Resources<WithStatesCurrentDiffs>)) -> Self {
         Self(states.into_inner(), PhantomData)
     }
 }

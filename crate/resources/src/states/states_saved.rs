@@ -1,19 +1,19 @@
 use std::marker::PhantomData;
 
 use crate::states::{
-    ts::{Current, Previous},
+    ts::{Current, Saved},
     States,
 };
 
-/// Previous `State`s for all `ItemSpec`s.
+/// Saved `State`s for all `ItemSpec`s.
 ///
 /// This is loaded into [`Resources`] at the beginning of any command execution,
-/// from the [`StatesCurrentFile`].
+/// from the [`StatesSavedFile`].
 ///
 /// This is distinct from [`StatesCurrent`] to address the following use cases:
 ///
 /// * Discovering current state from what is recorded in the
-///   [`StatesCurrentFile`].
+///   [`StatesSavedFile`].
 /// * Discovering current state and comparing it with previous state within the
 ///   same execution.
 ///
@@ -45,16 +45,16 @@ use crate::states::{
 /// }
 /// ```
 ///
-/// You may reference [`StatesPrevious`] in `EnsureOpSpec::Data` for reading. It
-/// is not mutable as `StatesPrevious` must remain unchanged so that all
+/// You may reference [`StatesSaved`] in `EnsureOpSpec::Data` for reading. It
+/// is not mutable as `StatesSaved` must remain unchanged so that all
 /// `ItemSpec`s operate over consistent data.
 ///
-/// [`StatesCurrentFile`]: crate::paths::StatesCurrentFile
+/// [`StatesSavedFile`]: crate::paths::StatesSavedFile
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
-pub type StatesPrevious = States<Previous>;
+pub type StatesSaved = States<Saved>;
 
-impl From<States<Current>> for States<Previous> {
+impl From<States<Current>> for States<Saved> {
     fn from(states_current: States<Current>) -> Self {
         let States(type_map, PhantomData) = states_current;
 

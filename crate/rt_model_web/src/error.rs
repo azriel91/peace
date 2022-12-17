@@ -14,21 +14,25 @@ pub enum Error {
     )]
     ErrorSerialize(#[source] serde_yaml::Error),
 
-    /// Failed to deserialize current states.
-    #[error("Failed to deserialize current states.")]
+    /// Failed to deserialize states.
+    #[error("Failed to deserialize states.")]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_current_deserialize))
+        diagnostic(code(peace_rt_model::states_deserialize))
     )]
-    StatesCurrentDeserialize {
+    StatesDeserialize {
+        /// Source text to be deserialized.
         #[cfg(feature = "error_reporting")]
         #[source_code]
         states_file_source: miette::NamedSource,
+        /// Offset within the source text that the error occurred.
         #[cfg(feature = "error_reporting")]
         #[label("{}", error_message)]
         error_span: Option<miette::SourceOffset>,
+        /// Message explaining the error.
         #[cfg(feature = "error_reporting")]
         error_message: String,
+        /// Offset within the source text surrounding the error.
         #[cfg(feature = "error_reporting")]
         #[label]
         context_span: Option<miette::SourceOffset>,
@@ -37,19 +41,19 @@ pub enum Error {
         error: serde_yaml::Error,
     },
 
-    /// Failed to serialize current states.
-    #[error("Failed to serialize current states.")]
+    /// Failed to serialize states.
+    #[error("Failed to serialize states.")]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_current_serialize))
+        diagnostic(code(peace_rt_model::states_serialize))
     )]
-    StatesCurrentSerialize(#[source] serde_yaml::Error),
+    StatesSerialize(#[source] serde_yaml::Error),
 
-    /// Current states have not been written to disk.
+    /// Current states have not been discovered.
     ///
-    /// This is returned when `StatesCurrentFile` is attempted to be
+    /// This is returned when `StatesSavedFile` is attempted to be
     /// deserialized but does not exist.
-    #[error("Current states have not been written to disk.")]
+    #[error("Current states have not been discovered.")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
@@ -58,22 +62,6 @@ pub enum Error {
         )
     )]
     StatesCurrentDiscoverRequired,
-
-    /// Failed to deserialize desired states.
-    #[error("Failed to deserialize desired states.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_desired_deserialize))
-    )]
-    StatesDesiredDeserialize(#[source] serde_yaml::Error),
-
-    /// Failed to serialize desired states.
-    #[error("Failed to serialize desired states.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_desired_serialize))
-    )]
-    StatesDesiredSerialize(#[source] serde_yaml::Error),
 
     /// Desired states have not been written to disk.
     ///
@@ -97,38 +85,6 @@ pub enum Error {
     )]
     StateDiffsSerialize(#[source] serde_yaml::Error),
 
-    /// Failed to serialize dry-ensured states.
-    #[error("Failed to serialize dry-ensured states.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_ensured_dry_serialize))
-    )]
-    StatesEnsuredDrySerialize(#[source] serde_yaml::Error),
-
-    /// Failed to serialize ensured states.
-    #[error("Failed to serialize ensured states.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_ensured_serialize))
-    )]
-    StatesEnsuredSerialize(#[source] serde_yaml::Error),
-
-    /// Failed to serialize dry-cleaned states.
-    #[error("Failed to serialize dry-cleaned states.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_cleaned_dry_serialize))
-    )]
-    StatesCleanedDrySerialize(#[source] serde_yaml::Error),
-
-    /// Failed to serialize cleaned states.
-    #[error("Failed to serialize cleaned states.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_cleaned_serialize))
-    )]
-    StatesCleanedSerialize(#[source] serde_yaml::Error),
-
     /// Failed to serialize error as JSON.
     #[cfg(feature = "output_json")]
     #[error("Failed to serialize error as JSON.")]
@@ -138,23 +94,14 @@ pub enum Error {
     )]
     ErrorSerializeJson(#[source] serde_json::Error),
 
-    /// Failed to serialize current states as JSON.
+    /// Failed to serialize states as JSON.
     #[cfg(feature = "output_json")]
-    #[error("Failed to serialize current states as JSON.")]
+    #[error("Failed to serialize states as JSON.")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(code(peace_rt_model::states_current_serialize_json))
     )]
-    StatesCurrentSerializeJson(#[source] serde_json::Error),
-
-    /// Failed to serialize desired states as JSON.
-    #[cfg(feature = "output_json")]
-    #[error("Failed to serialize desired states as JSON.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_desired_serialize_json))
-    )]
-    StatesDesiredSerializeJson(#[source] serde_json::Error),
+    StatesSerializeJson(#[source] serde_json::Error),
 
     /// Failed to serialize state diffs as JSON.
     #[cfg(feature = "output_json")]
@@ -164,42 +111,6 @@ pub enum Error {
         diagnostic(code(peace_rt_model::state_diffs_serialize_json))
     )]
     StateDiffsSerializeJson(#[source] serde_json::Error),
-
-    /// Failed to serialize dry-ensured states as JSON.
-    #[cfg(feature = "output_json")]
-    #[error("Failed to serialize dry-ensured states as JSON.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_ensured_dry_serialize_json))
-    )]
-    StatesEnsuredDrySerializeJson(#[source] serde_json::Error),
-
-    /// Failed to serialize ensured states as JSON.
-    #[cfg(feature = "output_json")]
-    #[error("Failed to serialize ensured states as JSON.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_ensured_serialize_json))
-    )]
-    StatesEnsuredSerializeJson(#[source] serde_json::Error),
-
-    /// Failed to serialize dry-cleaned states as JSON.
-    #[cfg(feature = "output_json")]
-    #[error("Failed to serialize dry-cleaned states as JSON.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_cleaned_dry_serialize_json))
-    )]
-    StatesCleanedDrySerializeJson(#[source] serde_json::Error),
-
-    /// Failed to serialize cleaned states as JSON.
-    #[cfg(feature = "output_json")]
-    #[error("Failed to serialize cleaned states as JSON.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_cleaned_serialize_json))
-    )]
-    StatesCleanedSerializeJson(#[source] serde_json::Error),
 
     /// Failed to serialize workspace init params.
     #[error("Failed to serialize workspace init params.")]

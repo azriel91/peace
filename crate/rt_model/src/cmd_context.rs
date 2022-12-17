@@ -68,7 +68,7 @@ pub struct CmdContext<'ctx, E, O, TS> {
     pub output: &'ctx mut O,
     /// `Resources` in this workspace.
     pub resources: Resources<TS>,
-    /// Type registries to deserialize `StatesCurrentFile` and
+    /// Type registries to deserialize `StatesSavedFile` and
     /// `StatesDesiredFile`.
     pub states_type_regs: StatesTypeRegs,
     /// Prevents instantiation not through builder.

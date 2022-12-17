@@ -8,7 +8,7 @@ use peace_resources::{
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     Resources,
 };
-use peace_rt_model::{CmdContext, Error, Storage};
+use peace_rt_model::{CmdContext, Error, StatesDeserializer, Storage};
 
 /// Reads [`StatesDesired`]s from storage.
 #[derive(Debug)]
@@ -44,7 +44,7 @@ where
         Ok(cmd_context)
     }
 
-    /// Returns the [`StatesDesired`] of all [`ItemSpec`]s if it exists on disk.
+    /// Returns [`StatesDesired`] of all [`ItemSpec`]s if it exists on disk.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     pub(crate) async fn exec_internal(
@@ -56,7 +56,6 @@ where
         Ok(states)
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
         states_desired_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
@@ -65,51 +64,12 @@ where
         let storage = resources.borrow::<Storage>();
         let states_desired_file = StatesDesiredFile::from(&*flow_dir);
 
-        if !states_desired_file.exists() {
-            return Err(E::from(Error::StatesDesiredDiscoverRequired));
-        }
-
-        let states_desired = storage
-            .read_with_sync_api(
-                "states_desired_file_read".to_string(),
-                &states_desired_file,
-                |file| {
-                    let deserializer = serde_yaml::Deserializer::from_reader(file);
-                    let states_desired = StatesDesired::from(
-                        states_desired_type_reg
-                            .deserialize_map(deserializer)
-                            .map_err(Error::StatesDesiredDeserialize)?,
-                    );
-                    Ok(states_desired)
-                },
-            )
-            .await?;
-        drop(flow_dir);
-        drop(storage);
-
-        resources.insert(states_desired_file);
-
-        Ok(states_desired)
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    async fn deserialize_internal(
-        resources: &mut Resources<SetUp>,
-        states_desired_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
-    ) -> Result<StatesDesired, E> {
-        let flow_dir = resources.borrow::<FlowDir>();
-        let storage = resources.borrow::<Storage>();
-        let states_desired_file = StatesDesiredFile::from(&*flow_dir);
-
-        let states_serialized = storage
-            .get_item_opt(&states_desired_file)?
-            .ok_or(Error::StatesDesiredDiscoverRequired)?;
-        let deserializer = serde_yaml::Deserializer::from_str(&states_serialized);
-        let states_desired = StatesDesired::from(
-            states_desired_type_reg
-                .deserialize_map(deserializer)
-                .map_err(Error::StatesDesiredDeserialize)?,
-        );
+        let states_desired = StatesDeserializer::deserialize_desired(
+            &storage,
+            states_desired_type_reg,
+            &states_desired_file,
+        )
+        .await?;
 
         drop(flow_dir);
         drop(storage);

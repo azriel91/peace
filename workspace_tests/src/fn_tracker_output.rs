@@ -1,8 +1,8 @@
 use peace::{
     cfg::async_trait,
     resources::states::{
-        StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
-        StatesEnsuredDry,
+        StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
+        StatesEnsuredDry, StatesSaved,
     },
     rt_model::OutputWrite,
 };
@@ -33,10 +33,10 @@ impl<E> OutputWrite<E> for FnTrackerOutput
 where
     E: std::error::Error,
 {
-    async fn write_states_current(&mut self, states_current: &StatesCurrent) -> Result<(), E> {
+    async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         self.fn_invocations.push(FnInvocation::new(
-            "write_states_current",
-            vec![Some(format!("{states_current:?}"))],
+            "write_states_saved",
+            vec![Some(format!("{states_saved:?}"))],
         ));
         Ok(())
     }

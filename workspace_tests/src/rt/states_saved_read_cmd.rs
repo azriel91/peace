@@ -1,14 +1,14 @@
 use peace::{
     cfg::{profile, state::Nothing, FlowId, ItemSpec, Profile, State},
-    resources::states::StatesCurrent,
-    rt::cmds::sub::{StatesCurrentDiscoverCmd, StatesCurrentReadCmd},
+    resources::states::{StatesCurrent, StatesSaved},
+    rt::cmds::sub::{StatesCurrentDiscoverCmd, StatesSavedReadCmd},
     rt_model::{CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
-async fn reads_states_current_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
+async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
@@ -34,12 +34,12 @@ async fn reads_states_current_from_disk_when_present() -> Result<(), Box<dyn std
     let CmdContext {
         resources: resources_from_read,
         ..
-    } = StatesCurrentReadCmd::exec(cmd_context).await?;
+    } = StatesSavedReadCmd::exec(cmd_context).await?;
 
     let states_from_discover = resources_from_discover.borrow::<StatesCurrent>();
     let vec_copy_state_from_discover =
         states_from_discover.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
-    let states_from_read = resources_from_read.borrow::<StatesCurrent>();
+    let states_from_read = resources_from_read.borrow::<StatesSaved>();
     let vec_copy_state_from_read =
         states_from_read.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
@@ -63,7 +63,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     // Try and read states from disk.
     let mut no_op_output = NoOpOutput;
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
-    let exec_result = StatesCurrentReadCmd::exec(cmd_context).await;
+    let exec_result = StatesSavedReadCmd::exec(cmd_context).await;
 
     assert!(matches!(
         exec_result,
@@ -78,11 +78,11 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 fn debug() {
     let debug_str = format!(
         "{:?}",
-        StatesCurrentReadCmd::<VecCopyError, NoOpOutput>::default()
+        StatesSavedReadCmd::<VecCopyError, NoOpOutput>::default()
     );
     assert!(
         debug_str
-            == r#"StatesCurrentReadCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput)>)"#
-            || debug_str == r#"StatesCurrentReadCmd(PhantomData)"#
+            == r#"StatesSavedReadCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput)>)"#
+            || debug_str == r#"StatesSavedReadCmd(PhantomData)"#
     );
 }

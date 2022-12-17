@@ -4,8 +4,10 @@ use peace::{
         state::{Nothing, Placeholder},
         FlowId, ItemSpec, Profile, State,
     },
-    resources::states::{StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry},
-    rt::cmds::{sub::StatesCurrentReadCmd, EnsureCmd, StatesDiscoverCmd},
+    resources::states::{
+        StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry, StatesSaved,
+    },
+    rt::cmds::{sub::StatesSavedReadCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -87,12 +89,12 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     let CmdContext {
         resources: resources_reread,
         ..
-    } = StatesCurrentReadCmd::exec(cmd_context).await?;
+    } = StatesSavedReadCmd::exec(cmd_context).await?;
 
     let ensured_states_before = resources_ensured.borrow::<StatesCurrent>();
     let ensured_states_desired = resources_ensured.borrow::<StatesDesired>();
     let ensured_states_ensured = resources_ensured.borrow::<StatesEnsured>();
-    let reread_states = resources_reread.borrow::<StatesCurrent>();
+    let states_saved = resources_reread.borrow::<StatesSaved>();
     assert_eq!(
         Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
         ensured_states_before.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
@@ -111,7 +113,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     ); // states_ensured.logical should be the same as states desired, if all went well.
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        reread_states
+        states_saved
             .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
             .map(|state| &state.logical)
     );
@@ -158,13 +160,13 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     let CmdContext {
         resources: resources_reread,
         ..
-    } = StatesCurrentReadCmd::exec(cmd_context).await?;
+    } = StatesSavedReadCmd::exec(cmd_context).await?;
 
     let ensured_states_before = resources_ensured.borrow::<StatesCurrent>();
     let ensured_states_desired = resources_ensured.borrow::<StatesDesired>();
     let ensured_states_ensured = resources_ensured.borrow::<StatesEnsured>();
     let ensured_states_ensured_dry = resources_ensured_dry.borrow::<StatesEnsuredDry>();
-    let reread_states = resources_reread.borrow::<StatesCurrent>();
+    let states_saved = resources_reread.borrow::<StatesSaved>();
     assert_eq!(
         Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
         ensured_states_before.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
@@ -189,7 +191,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     ); // TODO: EnsureDry state should simulate the actual states, not return the actual current state
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        reread_states
+        states_saved
             .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
             .map(|state| &state.logical)
     );

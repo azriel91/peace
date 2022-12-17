@@ -34,15 +34,18 @@ where
     ) -> Result<CmdContext<'_, E, O, WithStatesCurrentAndDesired>, E> {
         let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
             cmd_context.into_inner();
-        let states =
+        let states_current =
             StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
                 .await?;
         let states_desired =
             StatesDesiredDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
                 .await?;
 
-        let resources =
-            Resources::<WithStatesCurrentAndDesired>::from((resources, states, states_desired));
+        let resources = Resources::<WithStatesCurrentAndDesired>::from((
+            resources,
+            states_current,
+            states_desired,
+        ));
 
         let cmd_context = CmdContext::from((
             workspace,
