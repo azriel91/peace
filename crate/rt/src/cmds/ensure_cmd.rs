@@ -7,7 +7,7 @@ use futures::{
 use peace_cfg::OpCheckStatus;
 use peace_resources::{
     internal::OpCheckStatuses,
-    resources::ts::{Ensured, EnsuredDry, SetUp, WithStateCurrentDiffs},
+    resources::ts::{Ensured, EnsuredDry, SetUp, WithStatesCurrentDiffs},
     states::{StatesEnsured, StatesEnsuredDry},
     Resources,
 };
@@ -120,7 +120,7 @@ where
 
     async fn ensure_op_spec_exec_dry(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStateCurrentDiffs>,
+        resources: &Resources<WithStatesCurrentDiffs>,
         op_check_statuses: &OpCheckStatuses,
     ) -> Result<(), E> {
         Self::ensure_op_spec_stream(item_spec_graph, op_check_statuses)
@@ -225,7 +225,7 @@ where
 
     async fn ensure_op_spec_check(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStateCurrentDiffs>,
+        resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<OpCheckStatuses, E> {
         let op_check_statuses = item_spec_graph
             .stream()
@@ -242,7 +242,7 @@ where
 
     async fn ensure_op_spec_exec(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStateCurrentDiffs>,
+        resources: &Resources<WithStatesCurrentDiffs>,
         op_check_statuses: &OpCheckStatuses,
     ) -> Result<(), E> {
         Self::ensure_op_spec_stream(item_spec_graph, op_check_statuses)

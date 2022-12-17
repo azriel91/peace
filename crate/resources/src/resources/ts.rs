@@ -70,7 +70,7 @@ pub struct WithStatesCurrentAndDesired;
 /// [`StatesDesired`]: crate::StatesDesired
 /// [`StateDiffs`]: crate::StateDiffs
 #[derive(Debug)]
-pub struct WithStatePreviousDiffs;
+pub struct WithStatesSavedDiffs;
 
 /// [`Resources`] contains [`StatesCurrent`], [`StatesDesired`], and
 /// [`StateDiffs`].
@@ -82,7 +82,7 @@ pub struct WithStatePreviousDiffs;
 /// [`StatesDesired`]: crate::StatesDesired
 /// [`StateDiffs`]: crate::StateDiffs
 #[derive(Debug)]
-pub struct WithStateCurrentDiffs;
+pub struct WithStatesCurrentDiffs;
 
 /// [`Resources`] have been run through `EnsureCmd::exec_dry`.
 ///

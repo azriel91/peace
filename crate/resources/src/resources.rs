@@ -5,9 +5,9 @@ use std::{
 
 use crate::{
     resources::ts::{
-        Cleaned, CleanedDry, Empty, Ensured, EnsuredDry, SetUp, WithStateCurrentDiffs,
-        WithStatePreviousDiffs, WithStatesCurrent, WithStatesCurrentAndDesired, WithStatesDesired,
-        WithStatesSaved, WithStatesSavedAndDesired,
+        Cleaned, CleanedDry, Empty, Ensured, EnsuredDry, SetUp, WithStatesCurrent,
+        WithStatesCurrentAndDesired, WithStatesCurrentDiffs, WithStatesDesired, WithStatesSaved,
+        WithStatesSavedAndDesired, WithStatesSavedDiffs,
     },
     states::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
@@ -159,9 +159,7 @@ impl From<(Resources<SetUp>, StatesCurrent, StatesDesired)>
     }
 }
 
-impl From<(Resources<WithStatesSavedAndDesired>, StateDiffs)>
-    for Resources<WithStatePreviousDiffs>
-{
+impl From<(Resources<WithStatesSavedAndDesired>, StateDiffs)> for Resources<WithStatesSavedDiffs> {
     fn from(
         (mut resources, state_diffs): (Resources<WithStatesSavedAndDesired>, StateDiffs),
     ) -> Self {
@@ -175,7 +173,7 @@ impl From<(Resources<WithStatesSavedAndDesired>, StateDiffs)>
 }
 
 impl From<(Resources<WithStatesCurrentAndDesired>, StateDiffs)>
-    for Resources<WithStateCurrentDiffs>
+    for Resources<WithStatesCurrentDiffs>
 {
     fn from(
         (mut resources, state_diffs): (Resources<WithStatesCurrentAndDesired>, StateDiffs),
@@ -189,9 +187,9 @@ impl From<(Resources<WithStatesCurrentAndDesired>, StateDiffs)>
     }
 }
 
-impl From<(Resources<WithStateCurrentDiffs>, StatesEnsuredDry)> for Resources<EnsuredDry> {
+impl From<(Resources<WithStatesCurrentDiffs>, StatesEnsuredDry)> for Resources<EnsuredDry> {
     fn from(
-        (mut resources, states_ensured_dry): (Resources<WithStateCurrentDiffs>, StatesEnsuredDry),
+        (mut resources, states_ensured_dry): (Resources<WithStatesCurrentDiffs>, StatesEnsuredDry),
     ) -> Self {
         resources.insert(states_ensured_dry);
 
@@ -202,9 +200,9 @@ impl From<(Resources<WithStateCurrentDiffs>, StatesEnsuredDry)> for Resources<En
     }
 }
 
-impl From<(Resources<WithStateCurrentDiffs>, StatesEnsured)> for Resources<Ensured> {
+impl From<(Resources<WithStatesCurrentDiffs>, StatesEnsured)> for Resources<Ensured> {
     fn from(
-        (mut resources, states_ensured): (Resources<WithStateCurrentDiffs>, StatesEnsured),
+        (mut resources, states_ensured): (Resources<WithStatesCurrentDiffs>, StatesEnsured),
     ) -> Self {
         resources.insert(states_ensured);
 

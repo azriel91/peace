@@ -7,7 +7,7 @@ use peace::{
     resources::{
         internal::{StateDiffsMut, StatesMut},
         resources::ts::{
-            SetUp, WithStateCurrentDiffs, WithStatesCurrentAndDesired, WithStatesSavedAndDesired,
+            SetUp, WithStatesCurrentAndDesired, WithStatesCurrentDiffs, WithStatesSavedAndDesired,
         },
         states::{ts::Desired, StateDiffs, StatesCurrent, StatesDesired, StatesSaved},
         type_reg::untagged::BoxDataTypeDowncast,
@@ -170,7 +170,7 @@ async fn resources_set_up(
 
 async fn resources_with_state_current_diffs(
     item_spec_wrapper: &VecCopyItemSpecWrapper,
-) -> Result<Resources<WithStateCurrentDiffs>, VecCopyError> {
+) -> Result<Resources<WithStatesCurrentDiffs>, VecCopyError> {
     let resources = resources_with_states_current_and_desired(item_spec_wrapper).await?;
 
     let state_diffs = {
@@ -182,7 +182,7 @@ async fn resources_with_state_current_diffs(
 
         StateDiffs::from(state_diffs_mut)
     };
-    let resources = Resources::<WithStateCurrentDiffs>::from((resources, state_diffs));
+    let resources = Resources::<WithStatesCurrentDiffs>::from((resources, state_diffs));
     Ok(resources)
 }
 

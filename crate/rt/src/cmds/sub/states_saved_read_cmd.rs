@@ -55,7 +55,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_saved_file = StatesSavedFile::from(&*flow_dir);
 
-        let states_saved = StatesDeserializer::deserialize_previous(
+        let states_saved = StatesDeserializer::deserialize_saved(
             &storage,
             states_current_type_reg,
             &states_saved_file,

@@ -4,8 +4,8 @@ use futures::{StreamExt, TryStreamExt};
 use peace_resources::{
     internal::StateDiffsMut,
     resources::ts::{
-        SetUp, WithStateCurrentDiffs, WithStatePreviousDiffs, WithStatesCurrentAndDesired,
-        WithStatesSavedAndDesired,
+        SetUp, WithStatesCurrentAndDesired, WithStatesCurrentDiffs, WithStatesSavedAndDesired,
+        WithStatesSavedDiffs,
     },
     states::StateDiffs,
     Resources,
@@ -38,7 +38,7 @@ where
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStatePreviousDiffs>, E> {
+    ) -> Result<CmdContext<'_, E, O, WithStatesSavedDiffs>, E> {
         let CmdContext {
             workspace,
             item_spec_graph,
@@ -83,7 +83,7 @@ where
         item_spec_graph: &ItemSpecGraph<E>,
         mut resources: Resources<SetUp>,
         states_type_regs: &StatesTypeRegs,
-    ) -> Result<Resources<WithStatePreviousDiffs>, E> {
+    ) -> Result<Resources<WithStatesSavedDiffs>, E> {
         let states_saved = StatesSavedReadCmd::<E, O>::exec_internal(
             &mut resources,
             states_type_regs.states_current_type_reg(),
@@ -116,7 +116,7 @@ where
             StateDiffs::from(state_diffs_mut)
         };
 
-        let resources = Resources::<WithStatePreviousDiffs>::from((resources, state_diffs));
+        let resources = Resources::<WithStatesSavedDiffs>::from((resources, state_diffs));
         Ok(resources)
     }
 
@@ -128,7 +128,7 @@ where
         item_spec_graph: &ItemSpecGraph<E>,
         mut resources: Resources<SetUp>,
         states_type_regs: &StatesTypeRegs,
-    ) -> Result<Resources<WithStateCurrentDiffs>, E> {
+    ) -> Result<Resources<WithStatesCurrentDiffs>, E> {
         let states_current =
             StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
                 .await?;
@@ -162,7 +162,7 @@ where
             StateDiffs::from(state_diffs_mut)
         };
 
-        let resources = Resources::<WithStateCurrentDiffs>::from((resources, state_diffs));
+        let resources = Resources::<WithStatesCurrentDiffs>::from((resources, state_diffs));
         Ok(resources)
     }
 }

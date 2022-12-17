@@ -54,10 +54,10 @@ impl ItemSpec for VecCopyItemSpec {
 
         let vec_b = {
             let states_saved = <RMaybe<'_, StatesSaved> as Data>::borrow(resources);
-            let vec_copy_state_previous: Option<&'_ State<VecCopyState, Nothing>> = states_saved
+            let vec_copy_state_saved: Option<&'_ State<VecCopyState, Nothing>> = states_saved
                 .as_ref()
                 .and_then(|states_saved| states_saved.get(&self.id()));
-            if let Some(vec_copy_state) = vec_copy_state_previous {
+            if let Some(vec_copy_state) = vec_copy_state_saved {
                 VecB((*vec_copy_state.logical).clone())
             } else {
                 VecB::default()

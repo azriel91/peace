@@ -1,8 +1,8 @@
 use peace::resources::{
     resources::ts::{
-        Cleaned, CleanedDry, Ensured, EnsuredDry, SetUp, WithStateCurrentDiffs,
-        WithStatePreviousDiffs, WithStatesCurrent, WithStatesCurrentAndDesired, WithStatesDesired,
-        WithStatesSaved, WithStatesSavedAndDesired,
+        Cleaned, CleanedDry, Ensured, EnsuredDry, SetUp, WithStatesCurrent,
+        WithStatesCurrentAndDesired, WithStatesCurrentDiffs, WithStatesDesired, WithStatesSaved,
+        WithStatesSavedAndDesired, WithStatesSavedDiffs,
     },
     states::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
@@ -67,7 +67,7 @@ fn resources_with_states_saved_and_desired_from_resources_set_up() {
 }
 
 #[test]
-fn resources_with_state_previous_diffs_from_resources_with_states_saved_and_desired() {
+fn resources_with_state_saved_diffs_from_resources_with_states_saved_and_desired() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
     let resources_with_states_saved_and_desired = Resources::<WithStatesSavedAndDesired>::from((
@@ -75,14 +75,14 @@ fn resources_with_state_previous_diffs_from_resources_with_states_saved_and_desi
         StatesSaved::new(),
         StatesDesired::new(),
     ));
-    let resources_with_state_previous_diffs = Resources::<WithStatePreviousDiffs>::from((
+    let resources_with_state_saved_diffs = Resources::<WithStatesSavedDiffs>::from((
         resources_with_states_saved_and_desired,
         StateDiffs::new(),
     ));
 
-    assert!(resources_with_state_previous_diffs.contains::<StatesSaved>());
-    assert!(resources_with_state_previous_diffs.contains::<StatesDesired>());
-    assert!(resources_with_state_previous_diffs.contains::<StateDiffs>());
+    assert!(resources_with_state_saved_diffs.contains::<StatesSaved>());
+    assert!(resources_with_state_saved_diffs.contains::<StatesDesired>());
+    assert!(resources_with_state_saved_diffs.contains::<StateDiffs>());
 }
 
 #[test]
@@ -92,7 +92,7 @@ fn resources_with_state_current_diffs_from_resources_with_states_current_and_des
     let resources_with_states_current_and_desired = Resources::<WithStatesCurrentAndDesired>::from(
         (resources_set_up, StatesCurrent::new(), StatesDesired::new()),
     );
-    let resources_with_state_current_diffs = Resources::<WithStateCurrentDiffs>::from((
+    let resources_with_state_current_diffs = Resources::<WithStatesCurrentDiffs>::from((
         resources_with_states_current_and_desired,
         StateDiffs::new(),
     ));
@@ -109,7 +109,7 @@ fn resources_ensured_dry_from_resources_with_state_current_diffs() {
     let resources_with_states_current_and_desired = Resources::<WithStatesCurrentAndDesired>::from(
         (resources_set_up, StatesCurrent::new(), StatesDesired::new()),
     );
-    let resources_with_state_current_diffs = Resources::<WithStateCurrentDiffs>::from((
+    let resources_with_state_current_diffs = Resources::<WithStatesCurrentDiffs>::from((
         resources_with_states_current_and_desired,
         StateDiffs::new(),
     ));
@@ -131,7 +131,7 @@ fn resources_ensured_from_resources_with_state_current_diffs() {
     let resources_with_states_current_and_desired = Resources::<WithStatesCurrentAndDesired>::from(
         (resources_set_up, StatesCurrent::new(), StatesDesired::new()),
     );
-    let resources_with_state_current_diffs = Resources::<WithStateCurrentDiffs>::from((
+    let resources_with_state_current_diffs = Resources::<WithStatesCurrentDiffs>::from((
         resources_with_states_current_and_desired,
         StateDiffs::new(),
     ));

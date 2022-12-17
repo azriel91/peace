@@ -19,7 +19,7 @@ where
     /// Parameters to determine what shell command to run.
     sh_sync_cmd_params: R<'op, ShSyncCmdParams<Id>>,
 
-    /// Previous states with this item spec's previous execution.
+    /// Saved states with this item spec's previous execution.
     states_saved: RMaybe<'op, StatesSaved>,
 }
 

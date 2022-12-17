@@ -2,8 +2,8 @@ use peace::{
     cfg::{item_spec_id, FlowId, ItemSpecId, Profile},
     resources::{
         resources::ts::{
-            Cleaned, CleanedDry, Ensured, EnsuredDry, SetUp, WithStatePreviousDiffs,
-            WithStatesCurrentAndDesired, WithStatesDesired, WithStatesSaved,
+            Cleaned, CleanedDry, Ensured, EnsuredDry, SetUp, WithStatesCurrentAndDesired,
+            WithStatesDesired, WithStatesSaved, WithStatesSavedDiffs,
         },
         Resources,
     },
@@ -130,7 +130,7 @@ where
 
 pub async fn diff<O>(
     cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
-) -> Result<Resources<WithStatePreviousDiffs>, DownloadError>
+) -> Result<Resources<WithStatesSavedDiffs>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {

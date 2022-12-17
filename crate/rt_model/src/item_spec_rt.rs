@@ -4,7 +4,7 @@ use fn_graph::{DataAccess, DataAccessDyn};
 use peace_cfg::{async_trait, ItemSpecId, OpCheckStatus};
 use peace_resources::{
     resources::ts::{
-        Empty, SetUp, WithStateCurrentDiffs, WithStatesCurrent, WithStatesCurrentAndDesired,
+        Empty, SetUp, WithStatesCurrent, WithStatesCurrentAndDesired, WithStatesCurrentDiffs,
         WithStatesSavedAndDesired,
     },
     type_reg::untagged::BoxDtDisplay,
@@ -53,7 +53,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// [`exec`]: peace_cfg::FnSpec::exec
     async fn state_ensured_fn_exec(
         &self,
-        resources: &Resources<WithStateCurrentDiffs>,
+        resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
@@ -103,7 +103,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// [`check`]: peace_cfg::OpSpec::check
     async fn ensure_op_check(
         &self,
-        resources: &Resources<WithStateCurrentDiffs>,
+        resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<OpCheckStatus, E>
     where
         E: Debug + std::error::Error;
@@ -114,7 +114,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// [`exec_dry`]: peace_cfg::OpSpec::exec_dry
     async fn ensure_op_exec_dry(
         &self,
-        resources: &Resources<WithStateCurrentDiffs>,
+        resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<(), E>
     where
         E: Debug + std::error::Error;
@@ -123,7 +123,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     ///
     /// [`ItemSpec::EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     /// [`exec`]: peace_cfg::OpSpec::exec
-    async fn ensure_op_exec(&self, resources: &Resources<WithStateCurrentDiffs>) -> Result<(), E>
+    async fn ensure_op_exec(&self, resources: &Resources<WithStatesCurrentDiffs>) -> Result<(), E>
     where
         E: Debug + std::error::Error;
 

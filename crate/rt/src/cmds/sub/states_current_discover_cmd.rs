@@ -4,7 +4,7 @@ use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesSavedFile},
-    resources::ts::{SetUp, WithStateCurrentDiffs, WithStatesCurrent},
+    resources::ts::{SetUp, WithStatesCurrent, WithStatesCurrentDiffs},
     states::{ts::Current, StatesCurrent},
     Resources,
 };
@@ -93,7 +93,7 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_ensure_dry(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStateCurrentDiffs>,
+        resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<StatesCurrent, E> {
         let states_mut = item_spec_graph
             .stream()
@@ -122,7 +122,7 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_ensure(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &mut Resources<WithStateCurrentDiffs>,
+        resources: &mut Resources<WithStatesCurrentDiffs>,
     ) -> Result<StatesCurrent, E> {
         let resources_ref = &*resources;
         let states_mut = item_spec_graph

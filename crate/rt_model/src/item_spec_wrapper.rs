@@ -11,7 +11,7 @@ use peace_cfg::{
 use peace_data::Data;
 use peace_resources::{
     resources::ts::{
-        Empty, SetUp, WithStateCurrentDiffs, WithStatesCurrent, WithStatesCurrentAndDesired,
+        Empty, SetUp, WithStatesCurrent, WithStatesCurrentAndDesired, WithStatesCurrentDiffs,
         WithStatesSavedAndDesired,
     },
     states::{StateDiffs, StatesCurrent, StatesDesired, StatesSaved},
@@ -465,7 +465,7 @@ where
 
     async fn state_ensured_fn_exec(
         &self,
-        resources: &Resources<WithStateCurrentDiffs>,
+        resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<BoxDtDisplay, E> {
         let state: State<StateLogical, StatePhysical> = {
             let data =
@@ -574,7 +574,7 @@ where
 
     async fn ensure_op_check(
         &self,
-        resources: &Resources<WithStateCurrentDiffs>,
+        resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<OpCheckStatus, E> {
         let op_check_status = {
             let data =
@@ -611,7 +611,7 @@ where
 
     async fn ensure_op_exec_dry(
         &self,
-        resources: &Resources<WithStateCurrentDiffs>,
+        resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<(), E> {
         let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
         let item_spec_id = <IS as ItemSpec>::id(self);
@@ -643,7 +643,7 @@ where
         Ok(())
     }
 
-    async fn ensure_op_exec(&self, resources: &Resources<WithStateCurrentDiffs>) -> Result<(), E> {
+    async fn ensure_op_exec(&self, resources: &Resources<WithStatesCurrentDiffs>) -> Result<(), E> {
         let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
         let item_spec_id = <IS as ItemSpec>::id(self);
         let states = resources.borrow::<StatesCurrent>();

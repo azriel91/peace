@@ -330,7 +330,7 @@ where
 
         // Read existing states from storage.
         let states_type_regs = Self::states_type_regs(item_spec_graph);
-        let states_saved = StatesDeserializer::deserialize_previous_opt(
+        let states_saved = StatesDeserializer::deserialize_saved_opt(
             storage,
             states_type_regs.states_current_type_reg(),
             &states_saved_file,

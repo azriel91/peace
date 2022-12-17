@@ -4,7 +4,7 @@ use peace_cfg::ItemSpecId;
 use peace_resources::{
     paths::{StatesDesiredFile, StatesSavedFile},
     states::{
-        ts::{Desired, Previous},
+        ts::{Desired, Saved},
         States, StatesDesired, StatesSaved,
     },
     type_reg::untagged::{BoxDtDisplay, TypeReg},
@@ -31,14 +31,14 @@ where
     /// * `states_saved_file`: `StatesSavedFile` to deserialize.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    pub async fn deserialize_previous(
+    pub async fn deserialize_saved(
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
         states_saved_file: &StatesSavedFile,
     ) -> Result<StatesSaved, E> {
-        let states = Self::deserialize_internal::<Previous>(
+        let states = Self::deserialize_internal::<Saved>(
             #[cfg(not(target_arch = "wasm32"))]
-            "StatesDeserializer::deserialize_previous".to_string(),
+            "StatesDeserializer::deserialize_saved".to_string(),
             storage,
             states_type_reg,
             states_saved_file,
@@ -87,14 +87,14 @@ where
     /// * `states_saved_file`: `StatesSavedFile` to deserialize.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    pub async fn deserialize_previous_opt(
+    pub async fn deserialize_saved_opt(
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
         states_saved_file: &StatesSavedFile,
     ) -> Result<Option<StatesSaved>, E> {
         Self::deserialize_internal(
             #[cfg(not(target_arch = "wasm32"))]
-            "StatesDeserializer::deserialize_previous_opt".to_string(),
+            "StatesDeserializer::deserialize_saved_opt".to_string(),
             storage,
             states_type_reg,
             states_saved_file,
@@ -114,11 +114,11 @@ where
     /// # Type Parameters
     ///
     /// * `TS`: The states type state to use, such as [`ts::Current`] or
-    ///   [`ts::Previous`].
+    ///   [`ts::Saved`].
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`ts::Current`]: peace_resources::states::ts::Current
-    /// [`ts::Previous`]: peace_resources::states::ts::Previous
+    /// [`ts::Saved`]: peace_resources::states::ts::Saved
     #[cfg(not(target_arch = "wasm32"))]
     async fn deserialize_internal<TS>(
         thread_name: String,
@@ -186,11 +186,11 @@ where
     /// # Type Parameters
     ///
     /// * `TS`: The states type state to use, such as [`ts::Current`] or
-    ///   [`ts::Previous`].
+    ///   [`ts::Saved`].
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`ts::Current`]: peace_resources::states::ts::Current
-    /// [`ts::Previous`]: peace_resources::states::ts::Previous
+    /// [`ts::Saved`]: peace_resources::states::ts::Saved
     #[cfg(target_arch = "wasm32")]
     async fn deserialize_internal<TS>(
         storage: &Storage,
