@@ -3,13 +3,13 @@ use std::marker::PhantomData;
 use peace_cfg::ItemSpecId;
 use peace_resources::{
     paths::StatesPreviousFile,
-    states::{ts::Current, States, StatesCurrent},
+    states::{ts::Previous, States, StatesPrevious},
     type_reg::untagged::{BoxDtDisplay, TypeReg},
 };
 
 use crate::{Error, Storage};
 
-/// Reads [`StatesCurrent`]s from storage.
+/// Reads [`StatesPrevious`]s from storage.
 #[derive(Debug)]
 pub struct StatesDeserializer<E>(PhantomData<E>);
 
@@ -17,7 +17,8 @@ impl<E> StatesDeserializer<E>
 where
     E: std::error::Error + From<Error> + Send,
 {
-    /// Returns the [`StatesCurrent`] of all [`ItemSpec`]s if it exists on disk.
+    /// Returns the [`StatesPrevious`] of all [`ItemSpec`]s if it exists on
+    /// disk.
     ///
     /// # Parameters:
     ///
@@ -31,15 +32,16 @@ where
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
         states_previous_file: &StatesPreviousFile,
-    ) -> Result<StatesCurrent, E> {
+    ) -> Result<StatesPrevious, E> {
         let states =
-            Self::deserialize_internal::<Current>(storage, states_type_reg, states_previous_file)
+            Self::deserialize_internal::<Previous>(storage, states_type_reg, states_previous_file)
                 .await?;
 
         states.ok_or_else(|| E::from(Error::StatesCurrentDiscoverRequired))
     }
 
-    /// Returns the [`StatesCurrent`] of all [`ItemSpec`]s if it exists on disk.
+    /// Returns the [`StatesPrevious`] of all [`ItemSpec`]s if it exists on
+    /// disk.
     ///
     /// # Parameters:
     ///
@@ -53,7 +55,7 @@ where
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
         states_previous_file: &StatesPreviousFile,
-    ) -> Result<Option<StatesCurrent>, E> {
+    ) -> Result<Option<StatesPrevious>, E> {
         Self::deserialize_internal(storage, states_type_reg, states_previous_file).await
     }
 

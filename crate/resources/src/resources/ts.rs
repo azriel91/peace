@@ -15,13 +15,21 @@ pub struct Empty;
 #[derive(Debug)]
 pub struct SetUp;
 
+/// [`Resources`] contains [`StatesPrevious`].
+///
+/// Implies [`SetUp`].
+///
+/// [`StatesPrevious`]: crate::StatesPrevious
+#[derive(Debug)]
+pub struct WithStatesPrevious;
+
 /// [`Resources`] contains [`StatesCurrent`].
 ///
 /// Implies [`SetUp`].
 ///
 /// [`StatesCurrent`]: crate::StatesCurrent
 #[derive(Debug)]
-pub struct WithStates;
+pub struct WithStatesCurrent;
 
 /// [`Resources`] contains [`StatesDesired`].
 ///
@@ -31,6 +39,16 @@ pub struct WithStates;
 /// [`StatesDesired`]: crate::StatesDesired
 #[derive(Debug)]
 pub struct WithStatesDesired;
+
+/// [`Resources`] contains [`StatesPrevious`] and [`StatesDesired`].
+///
+/// Implies [`SetUp`], [`WithStates`], and [`WithStatesDesired`].
+///
+/// [`Resources`]: crate::Resources
+/// [`StatesPrevious`]: crate::StatesPrevious
+/// [`StatesDesired`]: crate::StatesDesired
+#[derive(Debug)]
+pub struct WithStatesPreviousAndDesired;
 
 /// [`Resources`] contains [`StatesCurrent`] and [`StatesDesired`].
 ///
@@ -42,21 +60,33 @@ pub struct WithStatesDesired;
 #[derive(Debug)]
 pub struct WithStatesCurrentAndDesired;
 
+/// [`Resources`] contains [`StatesPrevious`], [`StatesDesired`], and
+/// [`StateDiffs`].
+///
+/// Implies [`SetUp`] and [`WithStatesPreviousAndDesired`].
+///
+/// [`Resources`]: crate::Resources
+/// [`StatesPrevious`]: crate::StatesPrevious
+/// [`StatesDesired`]: crate::StatesDesired
+/// [`StateDiffs`]: crate::StateDiffs
+#[derive(Debug)]
+pub struct WithStatePreviousDiffs;
+
 /// [`Resources`] contains [`StatesCurrent`], [`StatesDesired`], and
 /// [`StateDiffs`].
 ///
-/// Implies [`SetUp`] and [`WithStatesNowAndDesired`].
+/// Implies [`SetUp`] and [`WithStatesCurrentAndDesired`].
 ///
 /// [`Resources`]: crate::Resources
 /// [`StatesCurrent`]: crate::StatesCurrent
 /// [`StatesDesired`]: crate::StatesDesired
 /// [`StateDiffs`]: crate::StateDiffs
 #[derive(Debug)]
-pub struct WithStateDiffs;
+pub struct WithStateCurrentDiffs;
 
 /// [`Resources`] have been run through `EnsureCmd::exec_dry`.
 ///
-/// Implies [`SetUp`], [`WithStatesNowAndDesired`], and [`WithStateDiffs`].
+/// Implies [`SetUp`], [`WithStatesPreviousAndDesired`], and [`WithStateDiffs`].
 ///
 /// [`Resources`]: crate::Resources
 /// [`StatesCurrent`]: crate::StatesCurrent
@@ -70,7 +100,7 @@ pub struct EnsuredDry;
 /// This means `StatesCurrent` is now stale, and [`StatesEnsured`] holds the up
 /// to date states.
 ///
-/// Implies [`SetUp`], [`WithStatesNowAndDesired`], and [`WithStateDiffs`].
+/// Implies [`SetUp`], [`WithStatesPreviousAndDesired`], and [`WithStateDiffs`].
 ///
 /// [`Resources`]: crate::Resources
 /// [`StatesCurrent`]: crate::StatesCurrent
@@ -82,7 +112,7 @@ pub struct Ensured;
 
 /// [`Resources`] have been run through `CleanCmd::exec_dry`.
 ///
-/// Implies [`SetUp`], [`WithStatesNowAndDesired`], and [`WithStateDiffs`].
+/// Implies [`SetUp`], [`WithStatesPreviousAndDesired`], and [`WithStateDiffs`].
 ///
 /// [`Resources`]: crate::Resources
 /// [`StatesCurrent`]: crate::StatesCurrent
@@ -96,7 +126,7 @@ pub struct CleanedDry;
 /// This means `StatesCurrent` is now stale, and [`StatesCleaned`] holds the up
 /// to date states.
 ///
-/// Implies [`SetUp`], [`WithStatesNowAndDesired`], and [`WithStateDiffs`].
+/// Implies [`SetUp`], [`WithStatesPreviousAndDesired`], and [`WithStateDiffs`].
 ///
 /// [`Resources`]: crate::Resources
 /// [`StatesCurrent`]: crate::StatesCurrent

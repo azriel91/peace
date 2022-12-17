@@ -3,14 +3,14 @@ use std::marker::PhantomData;
 use peace_cfg::ItemSpecId;
 use peace_resources::{
     paths::{FlowDir, StatesPreviousFile},
-    resources::ts::{SetUp, WithStates},
-    states::StatesCurrent,
+    resources::ts::{SetUp, WithStatesPrevious},
+    states::StatesPrevious,
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     Resources,
 };
 use peace_rt_model::{CmdContext, Error, StatesDeserializer, Storage};
 
-/// Reads [`StatesCurrent`]s from storage.
+/// Reads [`StatesPrevious`]s from storage.
 #[derive(Debug)]
 pub struct StatesPreviousReadCmd<E, O>(PhantomData<(E, O)>);
 
@@ -18,7 +18,7 @@ impl<E, O> StatesPreviousReadCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
 {
-    /// Reads [`StatesCurrent`]s from storage.
+    /// Reads [`StatesPrevious`]s from storage.
     ///
     /// Either [`StatesCurrentDiscoverCmd`] or [`StatesDiscoverCmd`] must have
     /// run prior to this command to read the state.
@@ -27,35 +27,35 @@ where
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
         mut cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStates>, E> {
+    ) -> Result<CmdContext<'_, E, O, WithStatesPrevious>, E> {
         let CmdContext {
             resources,
             states_type_regs,
             ..
         } = &mut cmd_context;
 
-        let states_current =
+        let states_previous =
             Self::exec_internal(resources, states_type_regs.states_current_type_reg()).await?;
 
         let cmd_context = CmdContext::from((cmd_context, |resources| {
-            Resources::<WithStates>::from((resources, states_current))
+            Resources::<WithStatesPrevious>::from((resources, states_previous))
         }));
 
         Ok(cmd_context)
     }
 
-    /// Returns the [`StatesCurrent`] of all [`ItemSpec`]s if it exists on disk.
+    /// Returns [`StatesPrevious`] of all [`ItemSpec`]s if it exists on disk.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     pub(crate) async fn exec_internal(
         resources: &mut Resources<SetUp>,
         states_current_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
-    ) -> Result<StatesCurrent, E> {
+    ) -> Result<StatesPrevious, E> {
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
         let states_previous_file = StatesPreviousFile::from(&*flow_dir);
 
-        let states_current = StatesDeserializer::deserialize(
+        let states_previous = StatesDeserializer::deserialize(
             &storage,
             states_current_type_reg,
             &states_previous_file,
@@ -67,7 +67,7 @@ where
 
         resources.insert(states_previous_file);
 
-        Ok(states_current)
+        Ok(states_previous)
     }
 }
 

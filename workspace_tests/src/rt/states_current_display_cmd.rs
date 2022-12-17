@@ -1,6 +1,6 @@
 use peace::{
     cfg::{profile, state::Nothing, FlowId, ItemSpec, Profile, State},
-    resources::states::StatesCurrent,
+    resources::states::{StatesCurrent, StatesPrevious},
     rt::cmds::{sub::StatesCurrentDiscoverCmd, StatesCurrentDisplayCmd},
     rt_model::{CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -10,7 +10,7 @@ use crate::{
 };
 
 #[tokio::test]
-async fn reads_states_current_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
+async fn reads_states_previous_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
@@ -42,14 +42,14 @@ async fn reads_states_current_from_disk_when_present() -> Result<(), Box<dyn std
     let states_from_discover = resources_from_discover.borrow::<StatesCurrent>();
     let vec_copy_state_from_discover =
         states_from_discover.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
-    let states_from_read = resources_from_read.borrow::<StatesCurrent>();
+    let states_from_read = resources_from_read.borrow::<StatesPrevious>();
     let states_from_read = &*states_from_read;
     let vec_copy_state_from_read =
         states_from_read.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
     assert_eq!(
         vec![FnInvocation::new(
-            "write_states_current",
+            "write_states_previous",
             vec![Some(format!("{states_from_read:?}"))],
         )],
         fn_tracker_output.fn_invocations()

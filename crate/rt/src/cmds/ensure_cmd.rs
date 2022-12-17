@@ -7,7 +7,7 @@ use futures::{
 use peace_cfg::OpCheckStatus;
 use peace_resources::{
     internal::OpCheckStatuses,
-    resources::ts::{Ensured, EnsuredDry, SetUp, WithStateDiffs},
+    resources::ts::{Ensured, EnsuredDry, SetUp, WithStateCurrentDiffs},
     states::{StatesEnsured, StatesEnsuredDry},
     Resources,
 };
@@ -95,8 +95,12 @@ where
     ) -> Result<Resources<EnsuredDry>, E> {
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
-        let resources =
-            DiffCmd::<E, O>::exec_internal(item_spec_graph, resources, &states_type_regs).await?;
+        let resources = DiffCmd::<E, O>::exec_internal_with_states_current(
+            item_spec_graph,
+            resources,
+            &states_type_regs,
+        )
+        .await?;
         let op_check_statuses = Self::ensure_op_spec_check(item_spec_graph, &resources).await?;
         Self::ensure_op_spec_exec_dry(item_spec_graph, &resources, &op_check_statuses).await?;
 
@@ -116,7 +120,7 @@ where
 
     async fn ensure_op_spec_exec_dry(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStateDiffs>,
+        resources: &Resources<WithStateCurrentDiffs>,
         op_check_statuses: &OpCheckStatuses,
     ) -> Result<(), E> {
         Self::ensure_op_spec_stream(item_spec_graph, op_check_statuses)
@@ -198,8 +202,12 @@ where
     ) -> Result<Resources<Ensured>, E> {
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
-        let mut resources =
-            DiffCmd::<E, O>::exec_internal(item_spec_graph, resources, &states_type_regs).await?;
+        let mut resources = DiffCmd::<E, O>::exec_internal_with_states_current(
+            item_spec_graph,
+            resources,
+            &states_type_regs,
+        )
+        .await?;
         let op_check_statuses = Self::ensure_op_spec_check(item_spec_graph, &resources).await?;
         Self::ensure_op_spec_exec(item_spec_graph, &resources, &op_check_statuses).await?;
 
@@ -217,7 +225,7 @@ where
 
     async fn ensure_op_spec_check(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStateDiffs>,
+        resources: &Resources<WithStateCurrentDiffs>,
     ) -> Result<OpCheckStatuses, E> {
         let op_check_statuses = item_spec_graph
             .stream()
@@ -234,7 +242,7 @@ where
 
     async fn ensure_op_spec_exec(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStateDiffs>,
+        resources: &Resources<WithStateCurrentDiffs>,
         op_check_statuses: &OpCheckStatuses,
     ) -> Result<(), E> {
         Self::ensure_op_spec_stream(item_spec_graph, op_check_statuses)

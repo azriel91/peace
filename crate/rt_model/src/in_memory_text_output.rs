@@ -1,6 +1,6 @@
 use peace_resources::states::{
-    StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
-    StatesEnsuredDry,
+    StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured, StatesEnsuredDry,
+    StatesPrevious,
 };
 use peace_rt_model_core::{async_trait, OutputWrite};
 
@@ -35,9 +35,9 @@ impl<E> OutputWrite<E> for InMemoryTextOutput
 where
     E: std::error::Error + From<Error>,
 {
-    async fn write_states_current(&mut self, states_current: &StatesCurrent) -> Result<(), E> {
+    async fn write_states_previous(&mut self, states_previous: &StatesPrevious) -> Result<(), E> {
         self.buffer =
-            serde_yaml::to_string(states_current).map_err(Error::StatesCurrentSerialize)?;
+            serde_yaml::to_string(states_previous).map_err(Error::StatesPreviousSerialize)?;
 
         Ok(())
     }

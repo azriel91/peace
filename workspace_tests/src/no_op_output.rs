@@ -1,8 +1,8 @@
 use peace::{
     cfg::async_trait,
     resources::states::{
-        StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
-        StatesEnsuredDry,
+        StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
+        StatesEnsuredDry, StatesPrevious,
     },
     rt_model::OutputWrite,
 };
@@ -16,7 +16,7 @@ impl<E> OutputWrite<E> for NoOpOutput
 where
     E: std::error::Error,
 {
-    async fn write_states_current(&mut self, _states_current: &StatesCurrent) -> Result<(), E> {
+    async fn write_states_previous(&mut self, _states_previous: &StatesPrevious) -> Result<(), E> {
         Ok(())
     }
 

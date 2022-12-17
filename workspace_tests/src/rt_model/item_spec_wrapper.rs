@@ -6,8 +6,10 @@ use peace::{
     },
     resources::{
         internal::{StateDiffsMut, StatesMut},
-        resources::ts::{SetUp, WithStateDiffs, WithStatesCurrentAndDesired},
-        states::{ts::Desired, StateDiffs, StatesCurrent, StatesDesired},
+        resources::ts::{
+            SetUp, WithStateCurrentDiffs, WithStatesCurrentAndDesired, WithStatesPreviousAndDesired,
+        },
+        states::{ts::Desired, StateDiffs, StatesCurrent, StatesDesired, StatesPrevious},
         type_reg::untagged::BoxDataTypeDowncast,
         Resources,
     },
@@ -88,13 +90,15 @@ async fn state_desired_fn_exec() -> Result<(), VecCopyError> {
 }
 
 #[tokio::test]
-async fn state_diff_fn_exec() -> Result<(), VecCopyError> {
+async fn state_diff_fn_exec_with_states_previous() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
 
-    let resources = resources_with_states_now_and_desired(&item_spec_wrapper).await?;
+    let resources = resources_with_states_previous_and_desired(&item_spec_wrapper).await?;
 
-    let state_diff = item_spec_wrapper.state_diff_fn_exec(&resources).await?;
+    let state_diff = item_spec_wrapper
+        .state_diff_fn_exec_with_states_previous(&resources)
+        .await?;
 
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
@@ -112,7 +116,7 @@ async fn state_diff_fn_exec() -> Result<(), VecCopyError> {
 async fn ensure_op_check() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
-    let resources = resources_with_state_diffs(&item_spec_wrapper).await?;
+    let resources = resources_with_state_current_diffs(&item_spec_wrapper).await?;
 
     let op_check_status = item_spec_wrapper.ensure_op_check(&resources).await?;
 
@@ -130,7 +134,7 @@ async fn ensure_op_check() -> Result<(), VecCopyError> {
 async fn ensure_op_exec_dry() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
-    let resources = resources_with_state_diffs(&item_spec_wrapper).await?;
+    let resources = resources_with_state_current_diffs(&item_spec_wrapper).await?;
 
     item_spec_wrapper.ensure_op_exec_dry(&resources).await?;
 
@@ -144,7 +148,7 @@ async fn ensure_op_exec_dry() -> Result<(), VecCopyError> {
 async fn ensure_op_exec() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
-    let resources = resources_with_state_diffs(&item_spec_wrapper).await?;
+    let resources = resources_with_state_current_diffs(&item_spec_wrapper).await?;
 
     item_spec_wrapper.ensure_op_exec(&resources).await?;
 
@@ -164,7 +168,52 @@ async fn resources_set_up(
     Ok(resources)
 }
 
-async fn resources_with_states_now_and_desired(
+async fn resources_with_state_current_diffs(
+    item_spec_wrapper: &VecCopyItemSpecWrapper,
+) -> Result<Resources<WithStateCurrentDiffs>, VecCopyError> {
+    let resources = resources_with_states_current_and_desired(item_spec_wrapper).await?;
+
+    let state_diffs = {
+        let mut state_diffs_mut = StateDiffsMut::new();
+        let state_desired = item_spec_wrapper
+            .state_diff_fn_exec_with_states_current(&resources)
+            .await?;
+        state_diffs_mut.insert_raw(item_spec_wrapper.id(), state_desired);
+
+        StateDiffs::from(state_diffs_mut)
+    };
+    let resources = Resources::<WithStateCurrentDiffs>::from((resources, state_diffs));
+    Ok(resources)
+}
+
+async fn resources_with_states_previous_and_desired(
+    item_spec_wrapper: &VecCopyItemSpecWrapper,
+) -> Result<Resources<WithStatesPreviousAndDesired>, VecCopyError> {
+    let resources = resources_set_up(item_spec_wrapper).await?;
+
+    let states_previous = {
+        let mut states_mut = StatesMut::new();
+        let state = item_spec_wrapper.state_current_fn_exec(&resources).await?;
+        states_mut.insert_raw(item_spec_wrapper.id(), state);
+
+        Into::<StatesPrevious>::into(StatesCurrent::from(states_mut))
+    };
+    let states_desired = {
+        let mut states_desired_mut = StatesMut::<Desired>::new();
+        let state_desired = item_spec_wrapper.state_desired_fn_exec(&resources).await?;
+        states_desired_mut.insert_raw(item_spec_wrapper.id(), state_desired);
+
+        StatesDesired::from(states_desired_mut)
+    };
+    let resources = Resources::<WithStatesPreviousAndDesired>::from((
+        resources,
+        states_previous,
+        states_desired,
+    ));
+    Ok(resources)
+}
+
+async fn resources_with_states_current_and_desired(
     item_spec_wrapper: &VecCopyItemSpecWrapper,
 ) -> Result<Resources<WithStatesCurrentAndDesired>, VecCopyError> {
     let resources = resources_set_up(item_spec_wrapper).await?;
@@ -185,21 +234,5 @@ async fn resources_with_states_now_and_desired(
     };
     let resources =
         Resources::<WithStatesCurrentAndDesired>::from((resources, states_current, states_desired));
-    Ok(resources)
-}
-
-async fn resources_with_state_diffs(
-    item_spec_wrapper: &VecCopyItemSpecWrapper,
-) -> Result<Resources<WithStateDiffs>, VecCopyError> {
-    let resources = resources_with_states_now_and_desired(item_spec_wrapper).await?;
-
-    let state_diffs = {
-        let mut state_diffs_mut = StateDiffsMut::new();
-        let state_desired = item_spec_wrapper.state_diff_fn_exec(&resources).await?;
-        state_diffs_mut.insert_raw(item_spec_wrapper.id(), state_desired);
-
-        StateDiffs::from(state_diffs_mut)
-    };
-    let resources = Resources::<WithStateDiffs>::from((resources, state_diffs));
     Ok(resources)
 }

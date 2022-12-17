@@ -37,13 +37,13 @@ pub enum Error {
         error: serde_yaml::Error,
     },
 
-    /// Failed to serialize current states.
-    #[error("Failed to serialize current states.")]
+    /// Failed to serialize previous states.
+    #[error("Failed to serialize previous states.")]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_current_serialize))
+        diagnostic(code(peace_rt_model::states_previous_serialize))
     )]
-    StatesCurrentSerialize(#[source] serde_yaml::Error),
+    StatesPreviousSerialize(#[source] serde_yaml::Error),
 
     /// Current states have not been written to disk.
     ///
@@ -138,14 +138,14 @@ pub enum Error {
     )]
     ErrorSerializeJson(#[source] serde_json::Error),
 
-    /// Failed to serialize current states as JSON.
+    /// Failed to serialize previous states as JSON.
     #[cfg(feature = "output_json")]
-    #[error("Failed to serialize current states as JSON.")]
+    #[error("Failed to serialize previous states as JSON.")]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_current_serialize_json))
+        diagnostic(code(peace_rt_model::states_previous_serialize_json))
     )]
-    StatesCurrentSerializeJson(#[source] serde_json::Error),
+    StatesPreviousSerializeJson(#[source] serde_json::Error),
 
     /// Failed to serialize desired states as JSON.
     #[cfg(feature = "output_json")]

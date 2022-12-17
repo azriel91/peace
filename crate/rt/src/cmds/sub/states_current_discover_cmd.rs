@@ -4,7 +4,7 @@ use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesPreviousFile},
-    resources::ts::{SetUp, WithStateDiffs, WithStates},
+    resources::ts::{SetUp, WithStateCurrentDiffs, WithStatesCurrent},
     states::{ts::Current, StatesCurrent},
     Resources,
 };
@@ -36,12 +36,12 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStates>, E> {
+    ) -> Result<CmdContext<'_, E, O, WithStatesCurrent>, E> {
         let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
             cmd_context.into_inner();
         let states = Self::exec_internal(item_spec_graph, &mut resources).await?;
 
-        let resources = Resources::<WithStates>::from((resources, states));
+        let resources = Resources::<WithStatesCurrent>::from((resources, states));
 
         let cmd_context = CmdContext::from((
             workspace,
@@ -93,7 +93,7 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_ensure_dry(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStateDiffs>,
+        resources: &Resources<WithStateCurrentDiffs>,
     ) -> Result<StatesCurrent, E> {
         let states_mut = item_spec_graph
             .stream()
@@ -122,7 +122,7 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_ensure(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &mut Resources<WithStateDiffs>,
+        resources: &mut Resources<WithStateCurrentDiffs>,
     ) -> Result<StatesCurrent, E> {
         let resources_ref = &*resources;
         let states_mut = item_spec_graph
@@ -152,7 +152,7 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_clean_dry(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStates>,
+        resources: &Resources<WithStatesCurrent>,
     ) -> Result<StatesCurrent, E> {
         let states_mut = item_spec_graph
             .stream()
@@ -181,7 +181,7 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_clean(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &mut Resources<WithStates>,
+        resources: &mut Resources<WithStatesCurrent>,
     ) -> Result<StatesCurrent, E> {
         let resources_ref = &*resources;
         let states_mut = item_spec_graph
@@ -214,7 +214,7 @@ where
             .write_with_sync_api(
                 "states_previous_file_write".to_string(),
                 &states_previous_file,
-                |file| serde_yaml::to_writer(file, states).map_err(Error::StatesCurrentSerialize),
+                |file| serde_yaml::to_writer(file, states).map_err(Error::StatesPreviousSerialize),
             )
             .await?;
         drop(flow_dir);
@@ -235,7 +235,7 @@ where
         let states_previous_file = StatesPreviousFile::from(&*flow_dir);
 
         let states_serialized =
-            serde_yaml::to_string(&*states).map_err(Error::StatesCurrentSerialize)?;
+            serde_yaml::to_string(&*states).map_err(Error::StatesPreviousSerialize)?;
         storage.set_item(&states_previous_file, &states_serialized)?;
         drop(flow_dir);
         drop(storage);

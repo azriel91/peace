@@ -7,7 +7,7 @@ use futures::{
 use peace_cfg::OpCheckStatus;
 use peace_resources::{
     internal::OpCheckStatuses,
-    resources::ts::{Cleaned, CleanedDry, SetUp, WithStates},
+    resources::ts::{Cleaned, CleanedDry, SetUp, WithStatesCurrent},
     states::{StatesCleaned, StatesCleanedDry},
     Resources,
 };
@@ -94,7 +94,7 @@ where
         let states_current =
             StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
                 .await?;
-        let resources = Resources::<WithStates>::from((resources, states_current));
+        let resources = Resources::<WithStatesCurrent>::from((resources, states_current));
         let op_check_statuses = Self::clean_op_spec_check(item_spec_graph, &resources).await?;
         Self::clean_op_spec_exec_dry(item_spec_graph, &resources, &op_check_statuses).await?;
 
@@ -114,7 +114,7 @@ where
 
     async fn clean_op_spec_exec_dry(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStates>,
+        resources: &Resources<WithStatesCurrent>,
         op_check_statuses: &OpCheckStatuses,
     ) -> Result<(), E> {
         Self::clean_op_spec_stream(item_spec_graph, op_check_statuses)
@@ -197,7 +197,7 @@ where
         let states =
             StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
                 .await?;
-        let mut resources = Resources::<WithStates>::from((resources, states));
+        let mut resources = Resources::<WithStatesCurrent>::from((resources, states));
         let op_check_statuses = Self::clean_op_spec_check(item_spec_graph, &resources).await?;
         Self::clean_op_spec_exec(item_spec_graph, &resources, &op_check_statuses).await?;
 
@@ -215,7 +215,7 @@ where
 
     async fn clean_op_spec_check(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStates>,
+        resources: &Resources<WithStatesCurrent>,
     ) -> Result<OpCheckStatuses, E> {
         let op_check_statuses = item_spec_graph
             .stream()
@@ -232,7 +232,7 @@ where
 
     async fn clean_op_spec_exec(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStates>,
+        resources: &Resources<WithStatesCurrent>,
         op_check_statuses: &OpCheckStatuses,
     ) -> Result<(), E> {
         Self::clean_op_spec_stream(item_spec_graph, op_check_statuses)

@@ -33,9 +33,10 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
 
     let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
 
-    let states = resources.borrow::<StatesCurrent>();
+    let states_current = resources.borrow::<StatesCurrent>();
     let states_desired = resources.borrow::<StatesDesired>();
-    let vec_copy_state = states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+    let vec_copy_state =
+        states_current.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
     let states_on_disk = {
         let states_previous_file = resources.borrow::<StatesPreviousFile>();
         let states_slice = std::fs::read(&*states_previous_file)?;
@@ -63,7 +64,7 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
         vec_copy_state
     );
     assert_eq!(
-        states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id()),
+        states_current.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id()),
         states_on_disk.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
     );
     assert_eq!(

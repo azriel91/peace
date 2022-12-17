@@ -1,6 +1,8 @@
 use peace::{
     cfg::{profile, state::Nothing, FlowId, ItemSpec, Profile, State},
-    resources::states::{StatesCleaned, StatesCleanedDry, StatesCurrent, StatesEnsured},
+    resources::states::{
+        StatesCleaned, StatesCleanedDry, StatesCurrent, StatesEnsured, StatesPrevious,
+    },
     rt::cmds::{
         sub::{StatesCurrentDiscoverCmd, StatesPreviousReadCmd},
         CleanCmd, EnsureCmd, StatesDiscoverCmd,
@@ -91,7 +93,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
 
     let ensured_states = resources_ensured.borrow::<StatesEnsured>();
     let cleaned_states_before = resources_cleaned.borrow::<StatesCurrent>();
-    let reread_states = resources_reread.borrow::<StatesCurrent>();
+    let states_previous = resources_reread.borrow::<StatesPrevious>();
 
     assert_eq!(
         Some(State::new(
@@ -111,7 +113,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        reread_states
+        states_previous
             .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
             .map(|state| &state.logical)
     );
@@ -155,7 +157,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
 
     let cleaned_states = resources_cleaned.borrow::<StatesCurrent>();
     let cleaned_states_cleaned = resources_cleaned.borrow::<StatesCleaned>();
-    let reread_states = resources_reread.borrow::<StatesCurrent>();
+    let states_previous = resources_reread.borrow::<StatesPrevious>();
     assert_eq!(
         Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
         cleaned_states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
@@ -168,7 +170,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     ); // states_cleaned.logical should be empty, if all went well.
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
-        reread_states
+        states_previous
             .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
             .map(|state| &state.logical)
     );
@@ -220,7 +222,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let ensured_states = resources_ensured.borrow::<StatesEnsured>();
     let cleaned_states_before = resources_cleaned.borrow::<StatesCurrent>();
     let cleaned_states_cleaned = resources_cleaned.borrow::<StatesCleaned>();
-    let reread_states = resources_reread.borrow::<StatesCurrent>();
+    let states_previous = resources_reread.borrow::<StatesPrevious>();
 
     assert_eq!(
         Some(State::new(
@@ -246,7 +248,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     ); // states_cleaned.logical should be empty, if all went well.
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
-        reread_states
+        states_previous
             .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
             .map(|state| &state.logical)
     );

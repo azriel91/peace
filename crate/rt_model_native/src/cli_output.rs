@@ -2,8 +2,8 @@ use futures::{stream, StreamExt, TryStreamExt};
 use peace_core::ItemSpecId;
 use peace_resources::{
     states::{
-        StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
-        StatesEnsuredDry,
+        StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
+        StatesEnsuredDry, StatesPrevious,
     },
     type_reg::untagged::BoxDtDisplay,
 };
@@ -210,16 +210,16 @@ where
     E: std::error::Error + From<Error>,
     W: AsyncWrite + std::marker::Unpin,
 {
-    async fn write_states_current(&mut self, states_current: &StatesCurrent) -> Result<(), E> {
+    async fn write_states_previous(&mut self, states_previous: &StatesPrevious) -> Result<(), E> {
         match self.format {
-            OutputFormat::Text => self.output_display(states_current.iter()).await,
+            OutputFormat::Text => self.output_display(states_previous.iter()).await,
             OutputFormat::Yaml => {
-                self.output_yaml(states_current, Error::StatesCurrentSerialize)
+                self.output_yaml(states_previous, Error::StatesPreviousSerialize)
                     .await
             }
             #[cfg(feature = "output_json")]
             OutputFormat::Json => {
-                self.output_json(states_current, Error::StatesCurrentSerializeJson)
+                self.output_json(states_previous, Error::StatesPreviousSerializeJson)
                     .await
             }
         }
