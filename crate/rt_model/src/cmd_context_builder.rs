@@ -302,17 +302,18 @@ where
 
             WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::dirs_initialize(dirs)
                 .await?;
-            Self::init_params_serialize(
-                storage,
-                workspace_init_params.as_ref(),
-                &workspace_init_file,
-                profile_init_params.as_ref(),
-                &profile_init_file,
-                flow_init_params.as_ref(),
-                &flow_init_file,
-            )
-            .await?;
         }
+
+        Self::init_params_serialize(
+            storage,
+            workspace_init_params.as_ref(),
+            &workspace_init_file,
+            profile_init_params.as_ref(),
+            &profile_init_file,
+            flow_init_params.as_ref(),
+            &flow_init_file,
+        )
+        .await?;
 
         // Track items in memory.
         let mut resources = Resources::new();
