@@ -5,7 +5,7 @@ use peace_cfg::{async_trait, ItemSpecId, OpCheckStatus};
 use peace_resources::{
     resources::ts::{
         Empty, SetUp, WithStateCurrentDiffs, WithStatesCurrent, WithStatesCurrentAndDesired,
-        WithStatesPreviousAndDesired,
+        WithStatesSavedAndDesired,
     },
     type_reg::untagged::BoxDtDisplay,
     Resources,
@@ -35,7 +35,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
 
     /// Registers state types with type registries for deserializing from disk.
     ///
-    /// This is necessary to deserialize `StatesPreviousFile` and
+    /// This is necessary to deserialize `StatesSavedFile` and
     /// `StatesDesiredFile`.
     fn state_register(&self, states_type_regs: &mut StatesTypeRegs);
 
@@ -80,9 +80,9 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// Returns the diff between the previous and desired [`State`]s.
     ///
     /// [`State`]: peace_cfg::State
-    async fn state_diff_fn_exec_with_states_previous(
+    async fn state_diff_fn_exec_with_states_saved(
         &self,
-        resources: &Resources<WithStatesPreviousAndDesired>,
+        resources: &Resources<WithStatesSavedAndDesired>,
     ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;

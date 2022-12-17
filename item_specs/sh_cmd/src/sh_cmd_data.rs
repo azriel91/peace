@@ -1,6 +1,6 @@
 use peace::{
     data::{Data, RMaybe, R},
-    resources::states::StatesPrevious,
+    resources::states::StatesSaved,
 };
 
 use crate::ShCmdParams;
@@ -20,7 +20,7 @@ where
     sh_cmd_params: R<'op, ShCmdParams<Id>>,
 
     /// Previous states with this item spec's previous execution.
-    states_previous: RMaybe<'op, StatesPrevious>,
+    states_saved: RMaybe<'op, StatesSaved>,
 }
 
 impl<'op, Id> ShCmdData<'op, Id>
@@ -33,7 +33,7 @@ where
     }
 
     /// Returns the previous states.
-    pub fn states_previous(&self) -> Option<&StatesPrevious> {
-        self.states_previous.as_deref()
+    pub fn states_saved(&self) -> Option<&StatesSaved> {
+        self.states_saved.as_deref()
     }
 }

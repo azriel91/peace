@@ -5,14 +5,14 @@ use peace_resources::{
     internal::StateDiffsMut,
     resources::ts::{
         SetUp, WithStateCurrentDiffs, WithStatePreviousDiffs, WithStatesCurrentAndDesired,
-        WithStatesPreviousAndDesired,
+        WithStatesSavedAndDesired,
     },
     states::StateDiffs,
     Resources,
 };
 use peace_rt_model::{CmdContext, Error, ItemSpecGraph, OutputWrite, StatesTypeRegs};
 
-use crate::cmds::sub::{StatesDesiredReadCmd, StatesPreviousReadCmd};
+use crate::cmds::sub::{StatesDesiredReadCmd, StatesSavedReadCmd};
 
 use super::sub::StatesCurrentDiscoverCmd;
 
@@ -49,7 +49,7 @@ where
         } = cmd_context;
 
         let state_diffs_result =
-            Self::exec_internal_with_states_previous(item_spec_graph, resources, &states_type_regs)
+            Self::exec_internal_with_states_saved(item_spec_graph, resources, &states_type_regs)
                 .await;
 
         match state_diffs_result {
@@ -79,12 +79,12 @@ where
     ///
     /// This also updates `Resources` from `SetUp` to
     /// `WithStatesCurrentAndDesired`.
-    pub(crate) async fn exec_internal_with_states_previous(
+    pub(crate) async fn exec_internal_with_states_saved(
         item_spec_graph: &ItemSpecGraph<E>,
         mut resources: Resources<SetUp>,
         states_type_regs: &StatesTypeRegs,
     ) -> Result<Resources<WithStatePreviousDiffs>, E> {
-        let states_previous = StatesPreviousReadCmd::<E, O>::exec_internal(
+        let states_saved = StatesSavedReadCmd::<E, O>::exec_internal(
             &mut resources,
             states_type_regs.states_current_type_reg(),
         )
@@ -95,11 +95,8 @@ where
         )
         .await?;
 
-        let resources = Resources::<WithStatesPreviousAndDesired>::from((
-            resources,
-            states_previous,
-            states_desired,
-        ));
+        let resources =
+            Resources::<WithStatesSavedAndDesired>::from((resources, states_saved, states_desired));
         let resources_ref = &resources;
         let state_diffs = {
             let state_diffs_mut = item_spec_graph
@@ -109,7 +106,7 @@ where
                     Ok((
                         item_spec.id(),
                         item_spec
-                            .state_diff_fn_exec_with_states_previous(resources_ref)
+                            .state_diff_fn_exec_with_states_saved(resources_ref)
                             .await?,
                     ))
                 })

@@ -51,7 +51,7 @@ pub enum Error {
 
     /// Current states have not been discovered.
     ///
-    /// This is returned when `StatesPreviousFile` is attempted to be
+    /// This is returned when `StatesSavedFile` is attempted to be
     /// deserialized but does not exist.
     #[error("Current states have not been discovered.")]
     #[cfg_attr(

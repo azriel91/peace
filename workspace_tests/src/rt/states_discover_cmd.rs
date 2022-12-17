@@ -5,7 +5,7 @@ use peace::{
         FlowId, ItemSpec, ItemSpecId, Profile, State,
     },
     resources::{
-        paths::{StatesDesiredFile, StatesPreviousFile},
+        paths::{StatesDesiredFile, StatesSavedFile},
         states::{StatesCurrent, StatesDesired},
         type_reg::untagged::{BoxDtDisplay, TypeReg},
     },
@@ -38,8 +38,8 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
     let vec_copy_state =
         states_current.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
     let states_on_disk = {
-        let states_previous_file = resources.borrow::<StatesPreviousFile>();
-        let states_slice = std::fs::read(&*states_previous_file)?;
+        let states_saved_file = resources.borrow::<StatesSavedFile>();
+        let states_slice = std::fs::read(&*states_saved_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId, BoxDtDisplay>::new_typed();
         type_reg.register::<State<VecCopyState, Nothing>>(VecCopyItemSpec.id());

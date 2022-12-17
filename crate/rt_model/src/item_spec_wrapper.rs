@@ -12,9 +12,9 @@ use peace_data::Data;
 use peace_resources::{
     resources::ts::{
         Empty, SetUp, WithStateCurrentDiffs, WithStatesCurrent, WithStatesCurrentAndDesired,
-        WithStatesPreviousAndDesired,
+        WithStatesSavedAndDesired,
     },
-    states::{StateDiffs, StatesCurrent, StatesDesired, StatesPrevious},
+    states::{StateDiffs, StatesCurrent, StatesDesired, StatesSaved},
     type_reg::untagged::BoxDtDisplay,
     Resources,
 };
@@ -502,17 +502,17 @@ where
         Ok(BoxDtDisplay::new(state_desired))
     }
 
-    async fn state_diff_fn_exec_with_states_previous(
+    async fn state_diff_fn_exec_with_states_saved(
         &self,
-        resources: &Resources<WithStatesPreviousAndDesired>,
+        resources: &Resources<WithStatesSavedAndDesired>,
     ) -> Result<BoxDtDisplay, E> {
         let state_diff: StateDiff = {
             let data = <<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_> as Data>::borrow(
                 resources,
             );
             let item_spec_id = <IS as ItemSpec>::id(self);
-            let states_previous = resources.borrow::<StatesPrevious>();
-            let state = states_previous.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+            let states_saved = resources.borrow::<StatesSaved>();
+            let state = states_saved.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
             let states_desired = resources.borrow::<StatesDesired>();
             let state_desired =
                 states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
@@ -527,8 +527,8 @@ where
                 .map_err(Into::<E>::into)?
             } else {
                 panic!(
-                    "`ItemSpecWrapper::state_diff_fn_exec_with_states_previous` must only be called with \
-                    `StatesPrevious` and `StatesDesired` populated using `StatesPreviousReadCmd` and \
+                    "`ItemSpecWrapper::state_diff_fn_exec_with_states_saved` must only be called with \
+                    `StatesSaved` and `StatesDesired` populated using `StatesSavedReadCmd` and \
                     `StatesDesiredDiscoverCmd`."
                 );
             }

@@ -3,13 +3,13 @@ use peace::{
     resources::{
         resources::ts::{
             Cleaned, CleanedDry, Ensured, EnsuredDry, SetUp, WithStatePreviousDiffs,
-            WithStatesCurrentAndDesired, WithStatesDesired, WithStatesPrevious,
+            WithStatesCurrentAndDesired, WithStatesDesired, WithStatesSaved,
         },
         Resources,
     },
     rt::cmds::{
         CleanCmd, DiffCmd, EnsureCmd, StatesDesiredDisplayCmd, StatesDiscoverCmd,
-        StatesPreviousDisplayCmd,
+        StatesSavedDisplayCmd,
     },
     rt_model::{
         CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, OutputWrite, Workspace, WorkspaceSpec,
@@ -110,11 +110,11 @@ where
 
 pub async fn status<O>(
     cmd_context: CmdContext<'_, DownloadError, O, SetUp>,
-) -> Result<Resources<WithStatesPrevious>, DownloadError>
+) -> Result<Resources<WithStatesSaved>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdContext { resources, .. } = StatesPreviousDisplayCmd::exec(cmd_context).await?;
+    let CmdContext { resources, .. } = StatesSavedDisplayCmd::exec(cmd_context).await?;
     Ok(resources)
 }
 

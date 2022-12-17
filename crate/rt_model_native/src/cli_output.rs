@@ -3,7 +3,7 @@ use peace_core::ItemSpecId;
 use peace_resources::{
     states::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
-        StatesEnsuredDry, StatesPrevious,
+        StatesEnsuredDry, StatesSaved,
     },
     type_reg::untagged::BoxDtDisplay,
 };
@@ -210,16 +210,13 @@ where
     E: std::error::Error + From<Error>,
     W: AsyncWrite + std::marker::Unpin,
 {
-    async fn write_states_previous(&mut self, states_previous: &StatesPrevious) -> Result<(), E> {
+    async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         match self.format {
-            OutputFormat::Text => self.output_display(states_previous.iter()).await,
-            OutputFormat::Yaml => {
-                self.output_yaml(states_previous, Error::StatesSerialize)
-                    .await
-            }
+            OutputFormat::Text => self.output_display(states_saved.iter()).await,
+            OutputFormat::Yaml => self.output_yaml(states_saved, Error::StatesSerialize).await,
             #[cfg(feature = "output_json")]
             OutputFormat::Json => {
-                self.output_json(states_previous, Error::StatesSerializeJson)
+                self.output_json(states_saved, Error::StatesSerializeJson)
                     .await
             }
         }

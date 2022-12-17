@@ -2,17 +2,17 @@ use std::{marker::PhantomData, path::Path};
 
 use peace_cfg::ItemSpecId;
 use peace_resources::{
-    paths::{StatesDesiredFile, StatesPreviousFile},
+    paths::{StatesDesiredFile, StatesSavedFile},
     states::{
         ts::{Desired, Previous},
-        States, StatesDesired, StatesPrevious,
+        States, StatesDesired, StatesSaved,
     },
     type_reg::untagged::{BoxDtDisplay, TypeReg},
 };
 
 use crate::{Error, Storage};
 
-/// Reads [`StatesPrevious`]s from storage.
+/// Reads [`StatesSaved`]s from storage.
 #[derive(Debug)]
 pub struct StatesDeserializer<E>(PhantomData<E>);
 
@@ -20,7 +20,7 @@ impl<E> StatesDeserializer<E>
 where
     E: std::error::Error + From<Error> + Send,
 {
-    /// Returns the [`StatesPrevious`] of all [`ItemSpec`]s if it exists on
+    /// Returns the [`StatesSaved`] of all [`ItemSpec`]s if it exists on
     /// disk.
     ///
     /// # Parameters:
@@ -28,20 +28,20 @@ where
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
     ///   item spec state.
-    /// * `states_previous_file`: `StatesPreviousFile` to deserialize.
+    /// * `states_saved_file`: `StatesSavedFile` to deserialize.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     pub async fn deserialize_previous(
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
-        states_previous_file: &StatesPreviousFile,
-    ) -> Result<StatesPrevious, E> {
+        states_saved_file: &StatesSavedFile,
+    ) -> Result<StatesSaved, E> {
         let states = Self::deserialize_internal::<Previous>(
             #[cfg(not(target_arch = "wasm32"))]
             "StatesDeserializer::deserialize_previous".to_string(),
             storage,
             states_type_reg,
-            states_previous_file,
+            states_saved_file,
         )
         .await?;
 
@@ -76,7 +76,7 @@ where
         states.ok_or_else(|| E::from(Error::StatesDesiredDiscoverRequired))
     }
 
-    /// Returns the [`StatesPrevious`] of all [`ItemSpec`]s if it exists on
+    /// Returns the [`StatesSaved`] of all [`ItemSpec`]s if it exists on
     /// disk.
     ///
     /// # Parameters:
@@ -84,20 +84,20 @@ where
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
     ///   item spec state.
-    /// * `states_previous_file`: `StatesPreviousFile` to deserialize.
+    /// * `states_saved_file`: `StatesSavedFile` to deserialize.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     pub async fn deserialize_previous_opt(
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
-        states_previous_file: &StatesPreviousFile,
-    ) -> Result<Option<StatesPrevious>, E> {
+        states_saved_file: &StatesSavedFile,
+    ) -> Result<Option<StatesSaved>, E> {
         Self::deserialize_internal(
             #[cfg(not(target_arch = "wasm32"))]
             "StatesDeserializer::deserialize_previous_opt".to_string(),
             storage,
             states_type_reg,
-            states_previous_file,
+            states_saved_file,
         )
         .await
     }
@@ -109,7 +109,7 @@ where
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
     ///   item spec state.
-    /// * `states_previous_file`: `StatesPreviousFile` to deserialize.
+    /// * `states_saved_file`: `StatesSavedFile` to deserialize.
     ///
     /// # Type Parameters
     ///
@@ -181,7 +181,7 @@ where
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
     ///   item spec state.
-    /// * `states_previous_file`: `StatesPreviousFile` to deserialize.
+    /// * `states_saved_file`: `StatesSavedFile` to deserialize.
     ///
     /// # Type Parameters
     ///

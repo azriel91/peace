@@ -7,9 +7,9 @@ use peace::{
     resources::{
         internal::{StateDiffsMut, StatesMut},
         resources::ts::{
-            SetUp, WithStateCurrentDiffs, WithStatesCurrentAndDesired, WithStatesPreviousAndDesired,
+            SetUp, WithStateCurrentDiffs, WithStatesCurrentAndDesired, WithStatesSavedAndDesired,
         },
-        states::{ts::Desired, StateDiffs, StatesCurrent, StatesDesired, StatesPrevious},
+        states::{ts::Desired, StateDiffs, StatesCurrent, StatesDesired, StatesSaved},
         type_reg::untagged::BoxDataTypeDowncast,
         Resources,
     },
@@ -90,14 +90,14 @@ async fn state_desired_fn_exec() -> Result<(), VecCopyError> {
 }
 
 #[tokio::test]
-async fn state_diff_fn_exec_with_states_previous() -> Result<(), VecCopyError> {
+async fn state_diff_fn_exec_with_states_saved() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
 
-    let resources = resources_with_states_previous_and_desired(&item_spec_wrapper).await?;
+    let resources = resources_with_states_saved_and_desired(&item_spec_wrapper).await?;
 
     let state_diff = item_spec_wrapper
-        .state_diff_fn_exec_with_states_previous(&resources)
+        .state_diff_fn_exec_with_states_saved(&resources)
         .await?;
 
     assert_eq!(
@@ -186,17 +186,17 @@ async fn resources_with_state_current_diffs(
     Ok(resources)
 }
 
-async fn resources_with_states_previous_and_desired(
+async fn resources_with_states_saved_and_desired(
     item_spec_wrapper: &VecCopyItemSpecWrapper,
-) -> Result<Resources<WithStatesPreviousAndDesired>, VecCopyError> {
+) -> Result<Resources<WithStatesSavedAndDesired>, VecCopyError> {
     let resources = resources_set_up(item_spec_wrapper).await?;
 
-    let states_previous = {
+    let states_saved = {
         let mut states_mut = StatesMut::new();
         let state = item_spec_wrapper.state_current_fn_exec(&resources).await?;
         states_mut.insert_raw(item_spec_wrapper.id(), state);
 
-        Into::<StatesPrevious>::into(StatesCurrent::from(states_mut))
+        Into::<StatesSaved>::into(StatesCurrent::from(states_mut))
     };
     let states_desired = {
         let mut states_desired_mut = StatesMut::<Desired>::new();
@@ -205,11 +205,8 @@ async fn resources_with_states_previous_and_desired(
 
         StatesDesired::from(states_desired_mut)
     };
-    let resources = Resources::<WithStatesPreviousAndDesired>::from((
-        resources,
-        states_previous,
-        states_desired,
-    ));
+    let resources =
+        Resources::<WithStatesSavedAndDesired>::from((resources, states_saved, states_desired));
     Ok(resources)
 }
 

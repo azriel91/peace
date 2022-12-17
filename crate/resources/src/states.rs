@@ -3,7 +3,7 @@
 pub use self::{
     state_diffs::StateDiffs, states_cleaned::StatesCleaned, states_cleaned_dry::StatesCleanedDry,
     states_current::StatesCurrent, states_desired::StatesDesired, states_ensured::StatesEnsured,
-    states_ensured_dry::StatesEnsuredDry, states_previous::StatesPrevious,
+    states_ensured_dry::StatesEnsuredDry, states_saved::StatesSaved,
 };
 
 pub mod ts;
@@ -23,7 +23,7 @@ mod states_current;
 mod states_desired;
 mod states_ensured;
 mod states_ensured_dry;
-mod states_previous;
+mod states_saved;
 
 /// Current `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
 ///

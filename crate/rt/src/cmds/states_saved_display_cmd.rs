@@ -1,19 +1,19 @@
 use std::marker::PhantomData;
 
 use peace_resources::{
-    resources::ts::{SetUp, WithStatesPrevious},
+    resources::ts::{SetUp, WithStatesSaved},
     Resources,
 };
 use peace_rt_model::{CmdContext, Error};
 use peace_rt_model_core::OutputWrite;
 
-use crate::cmds::sub::StatesPreviousReadCmd;
+use crate::cmds::sub::StatesSavedReadCmd;
 
 /// Displays [`StatesCurrent`]s from storage.
 #[derive(Debug)]
-pub struct StatesPreviousDisplayCmd<E, O>(PhantomData<(E, O)>);
+pub struct StatesSavedDisplayCmd<E, O>(PhantomData<(E, O)>);
 
-impl<E, O> StatesPreviousDisplayCmd<E, O>
+impl<E, O> StatesSavedDisplayCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
@@ -27,7 +27,7 @@ where
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
         mut cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesPrevious>, E> {
+    ) -> Result<CmdContext<'_, E, O, WithStatesSaved>, E> {
         let CmdContext {
             output,
             resources,
@@ -35,18 +35,18 @@ where
             ..
         } = &mut cmd_context;
 
-        let states_previous_result = StatesPreviousReadCmd::<E, O>::exec_internal(
+        let states_saved_result = StatesSavedReadCmd::<E, O>::exec_internal(
             resources,
             states_type_regs.states_current_type_reg(),
         )
         .await;
 
-        match states_previous_result {
-            Ok(states_previous) => {
-                output.write_states_previous(&states_previous).await?;
+        match states_saved_result {
+            Ok(states_saved) => {
+                output.write_states_saved(&states_saved).await?;
 
                 let cmd_context = CmdContext::from((cmd_context, |resources| {
-                    Resources::<WithStatesPrevious>::from((resources, states_previous))
+                    Resources::<WithStatesSaved>::from((resources, states_saved))
                 }));
                 Ok(cmd_context)
             }
@@ -58,7 +58,7 @@ where
     }
 }
 
-impl<E, O> Default for StatesPreviousDisplayCmd<E, O> {
+impl<E, O> Default for StatesSavedDisplayCmd<E, O> {
     fn default() -> Self {
         Self(PhantomData)
     }

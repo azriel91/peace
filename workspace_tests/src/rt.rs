@@ -6,5 +6,5 @@ mod states_desired_discover_cmd;
 mod states_desired_display_cmd;
 mod states_desired_read_cmd;
 mod states_discover_cmd;
-mod states_previous_display_cmd;
-mod states_previous_read_cmd;
+mod states_saved_display_cmd;
+mod states_saved_read_cmd;

@@ -10,7 +10,7 @@ use peace::{
         ItemSpecId, OpCheckStatus, ProgressLimit, State, StateDiffFnSpec,
     },
     data::{Data, RMaybe, R, W},
-    resources::{resources::ts::Empty, states::StatesPrevious, Resources},
+    resources::{resources::ts::Empty, states::StatesSaved, Resources},
     rt_model::ItemSpecWrapper,
 };
 use serde::{Deserialize, Serialize};
@@ -53,10 +53,10 @@ impl ItemSpec for VecCopyItemSpec {
         resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
         let vec_b = {
-            let states_previous = <RMaybe<'_, StatesPrevious> as Data>::borrow(resources);
-            let vec_copy_state_previous: Option<&'_ State<VecCopyState, Nothing>> = states_previous
+            let states_saved = <RMaybe<'_, StatesSaved> as Data>::borrow(resources);
+            let vec_copy_state_previous: Option<&'_ State<VecCopyState, Nothing>> = states_saved
                 .as_ref()
-                .and_then(|states_previous| states_previous.get(&self.id()));
+                .and_then(|states_saved| states_saved.get(&self.id()));
             if let Some(vec_copy_state) = vec_copy_state_previous {
                 VecB((*vec_copy_state.logical).clone())
             } else {

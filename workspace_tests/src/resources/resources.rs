@@ -2,11 +2,11 @@ use peace::resources::{
     resources::ts::{
         Cleaned, CleanedDry, Ensured, EnsuredDry, SetUp, WithStateCurrentDiffs,
         WithStatePreviousDiffs, WithStatesCurrent, WithStatesCurrentAndDesired, WithStatesDesired,
-        WithStatesPrevious, WithStatesPreviousAndDesired,
+        WithStatesSaved, WithStatesSavedAndDesired,
     },
     states::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesCurrent, StatesDesired, StatesEnsured,
-        StatesEnsuredDry, StatesPrevious,
+        StatesEnsuredDry, StatesSaved,
     },
     Resources,
 };
@@ -23,13 +23,13 @@ fn resources_set_up_from_resources_empty() {
 }
 
 #[test]
-fn resources_with_states_previous_from_resources_set_up() {
+fn resources_with_states_saved_from_resources_set_up() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_previous =
-        Resources::<WithStatesPrevious>::from((resources_set_up, StatesPrevious::new()));
+    let resources_with_states_saved =
+        Resources::<WithStatesSaved>::from((resources_set_up, StatesSaved::new()));
 
-    assert!(resources_with_states_previous.contains::<StatesPrevious>());
+    assert!(resources_with_states_saved.contains::<StatesSaved>());
 }
 
 #[test]
@@ -53,36 +53,34 @@ fn resources_with_states_desired_from_resources_set_up() {
 }
 
 #[test]
-fn resources_with_states_previous_and_desired_from_resources_set_up() {
+fn resources_with_states_saved_and_desired_from_resources_set_up() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_previous_and_desired =
-        Resources::<WithStatesPreviousAndDesired>::from((
-            resources_set_up,
-            StatesPrevious::new(),
-            StatesDesired::new(),
-        ));
+    let resources_with_states_saved_and_desired = Resources::<WithStatesSavedAndDesired>::from((
+        resources_set_up,
+        StatesSaved::new(),
+        StatesDesired::new(),
+    ));
 
-    assert!(resources_with_states_previous_and_desired.contains::<StatesPrevious>());
-    assert!(resources_with_states_previous_and_desired.contains::<StatesDesired>());
+    assert!(resources_with_states_saved_and_desired.contains::<StatesSaved>());
+    assert!(resources_with_states_saved_and_desired.contains::<StatesDesired>());
 }
 
 #[test]
-fn resources_with_state_previous_diffs_from_resources_with_states_previous_and_desired() {
+fn resources_with_state_previous_diffs_from_resources_with_states_saved_and_desired() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_previous_and_desired =
-        Resources::<WithStatesPreviousAndDesired>::from((
-            resources_set_up,
-            StatesPrevious::new(),
-            StatesDesired::new(),
-        ));
+    let resources_with_states_saved_and_desired = Resources::<WithStatesSavedAndDesired>::from((
+        resources_set_up,
+        StatesSaved::new(),
+        StatesDesired::new(),
+    ));
     let resources_with_state_previous_diffs = Resources::<WithStatePreviousDiffs>::from((
-        resources_with_states_previous_and_desired,
+        resources_with_states_saved_and_desired,
         StateDiffs::new(),
     ));
 
-    assert!(resources_with_state_previous_diffs.contains::<StatesPrevious>());
+    assert!(resources_with_state_previous_diffs.contains::<StatesSaved>());
     assert!(resources_with_state_previous_diffs.contains::<StatesDesired>());
     assert!(resources_with_state_previous_diffs.contains::<StateDiffs>());
 }

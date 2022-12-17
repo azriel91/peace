@@ -1,7 +1,7 @@
 use peace_cfg::ItemSpecId;
 use peace_resources::type_reg::untagged::{BoxDtDisplay, TypeReg};
 
-/// Type registries to deserialize `StatesPreviousFile` and `StatesDesiredFile`.
+/// Type registries to deserialize `StatesSavedFile` and `StatesDesiredFile`.
 #[derive(Debug, Default)]
 pub struct StatesTypeRegs {
     /// Type registry for each item spec's `State<StateLogical, StatePhysical>`.
