@@ -11,9 +11,9 @@ use crate::cmds::sub::StatesPreviousReadCmd;
 
 /// Displays [`StatesCurrent`]s from storage.
 #[derive(Debug)]
-pub struct StatesCurrentDisplayCmd<E, O>(PhantomData<(E, O)>);
+pub struct StatesPreviousDisplayCmd<E, O>(PhantomData<(E, O)>);
 
-impl<E, O> StatesCurrentDisplayCmd<E, O>
+impl<E, O> StatesPreviousDisplayCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
@@ -58,7 +58,7 @@ where
     }
 }
 
-impl<E, O> Default for StatesCurrentDisplayCmd<E, O> {
+impl<E, O> Default for StatesPreviousDisplayCmd<E, O> {
     fn default() -> Self {
         Self(PhantomData)
     }

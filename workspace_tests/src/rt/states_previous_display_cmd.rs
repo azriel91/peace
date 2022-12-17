@@ -1,7 +1,7 @@
 use peace::{
     cfg::{profile, state::Nothing, FlowId, ItemSpec, Profile, State},
     resources::states::{StatesCurrent, StatesPrevious},
-    rt::cmds::{sub::StatesCurrentDiscoverCmd, StatesCurrentDisplayCmd},
+    rt::cmds::{sub::StatesCurrentDiscoverCmd, StatesPreviousDisplayCmd},
     rt_model::{CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -37,7 +37,7 @@ async fn reads_states_previous_from_disk_when_present() -> Result<(), Box<dyn st
     let CmdContext {
         resources: resources_from_read,
         ..
-    } = StatesCurrentDisplayCmd::exec(cmd_context).await?;
+    } = StatesPreviousDisplayCmd::exec(cmd_context).await?;
 
     let states_from_discover = resources_from_discover.borrow::<StatesCurrent>();
     let vec_copy_state_from_discover =
@@ -74,7 +74,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 
     // Try and display states from disk.
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut fn_tracker_output).await?;
-    let exec_result = StatesCurrentDisplayCmd::exec(cmd_context).await;
+    let exec_result = StatesPreviousDisplayCmd::exec(cmd_context).await;
 
     assert!(matches!(
         exec_result,
@@ -97,11 +97,11 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 fn debug() {
     let debug_str = format!(
         "{:?}",
-        StatesCurrentDisplayCmd::<VecCopyError, NoOpOutput>::default()
+        StatesPreviousDisplayCmd::<VecCopyError, NoOpOutput>::default()
     );
     assert!(
         debug_str
-            == r#"StatesCurrentDisplayCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput)>)"#
-            || debug_str == r#"StatesCurrentDisplayCmd(PhantomData)"#
+            == r#"StatesPreviousDisplayCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput)>)"#
+            || debug_str == r#"StatesPreviousDisplayCmd(PhantomData)"#
     );
 }

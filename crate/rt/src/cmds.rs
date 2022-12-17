@@ -10,8 +10,8 @@
 
 pub use self::{
     clean_cmd::CleanCmd, diff_cmd::DiffCmd, ensure_cmd::EnsureCmd,
-    states_current_display_cmd::StatesCurrentDisplayCmd,
     states_desired_display_cmd::StatesDesiredDisplayCmd, states_discover_cmd::StatesDiscoverCmd,
+    states_previous_display_cmd::StatesPreviousDisplayCmd,
 };
 
 pub mod sub;
@@ -19,6 +19,6 @@ pub mod sub;
 mod clean_cmd;
 mod diff_cmd;
 mod ensure_cmd;
-mod states_current_display_cmd;
 mod states_desired_display_cmd;
 mod states_discover_cmd;
+mod states_previous_display_cmd;

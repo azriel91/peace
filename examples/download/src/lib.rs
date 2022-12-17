@@ -8,8 +8,8 @@ use peace::{
         Resources,
     },
     rt::cmds::{
-        CleanCmd, DiffCmd, EnsureCmd, StatesCurrentDisplayCmd, StatesDesiredDisplayCmd,
-        StatesDiscoverCmd,
+        CleanCmd, DiffCmd, EnsureCmd, StatesDesiredDisplayCmd, StatesDiscoverCmd,
+        StatesPreviousDisplayCmd,
     },
     rt_model::{
         CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, OutputWrite, Workspace, WorkspaceSpec,
@@ -114,7 +114,7 @@ pub async fn status<O>(
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdContext { resources, .. } = StatesCurrentDisplayCmd::exec(cmd_context).await?;
+    let CmdContext { resources, .. } = StatesPreviousDisplayCmd::exec(cmd_context).await?;
     Ok(resources)
 }
 
