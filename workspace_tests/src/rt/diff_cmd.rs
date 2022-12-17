@@ -1,6 +1,10 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
-    cfg::{profile, state::Nothing, FlowId, ItemSpec, Profile, State},
+    cfg::{
+        profile,
+        state::{Nothing, Placeholder},
+        FlowId, ItemSpec, Profile, State,
+    },
     resources::states::{StateDiffs, StatesCurrent, StatesDesired},
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{CliOutput, CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
@@ -42,7 +46,9 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_desired.get::<VecCopyState, _>(&VecCopyItemSpec.id())
+        states_desired
+            .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
+            .map(|state_desired| &state_desired.logical)
     );
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
@@ -99,7 +105,9 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 4, 5, 6, 8, 9])).as_ref(),
-        states_desired.get::<VecCopyState, _>(&VecCopyItemSpec.id())
+        states_desired
+            .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
+            .map(|state_desired| &state_desired.logical)
     );
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![

@@ -1,5 +1,9 @@
 use peace::{
-    cfg::{profile, state::Nothing, FlowId, ItemSpec, Profile, State},
+    cfg::{
+        profile,
+        state::{Nothing, Placeholder},
+        FlowId, ItemSpec, Profile, State,
+    },
     resources::states::{StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry},
     rt::cmds::{sub::StatesCurrentReadCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
@@ -39,7 +43,9 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_desired.get::<VecCopyState, _>(&VecCopyItemSpec.id())
+        states_desired
+            .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
+            .map(|state_desired| &state_desired.logical)
     );
     assert_eq!(
         Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
@@ -93,7 +99,9 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        ensured_states_desired.get::<VecCopyState, _>(&VecCopyItemSpec.id())
+        ensured_states_desired
+            .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
+            .map(|state_desired| &state_desired.logical)
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
@@ -163,7 +171,9 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        ensured_states_desired.get::<VecCopyState, _>(&VecCopyItemSpec.id())
+        ensured_states_desired
+            .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
+            .map(|state_desired| &state_desired.logical)
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),

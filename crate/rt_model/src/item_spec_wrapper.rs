@@ -5,7 +5,9 @@ use std::{
 };
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
-use peace_cfg::{async_trait, FnSpec, ItemSpec, ItemSpecId, OpCheckStatus, State};
+use peace_cfg::{
+    async_trait, state::Placeholder, FnSpec, ItemSpec, ItemSpecId, OpCheckStatus, State,
+};
 use peace_data::Data;
 use peace_resources::{
     resources::ts::{Empty, SetUp, WithStateDiffs, WithStates, WithStatesCurrentAndDesired},
@@ -445,7 +447,7 @@ where
 
         states_type_regs
             .states_desired_type_reg_mut()
-            .register::<StateLogical>(<IS as ItemSpec>::id(self));
+            .register::<State<StateLogical, Placeholder>>(<IS as ItemSpec>::id(self));
     }
 
     async fn state_current_fn_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
@@ -488,7 +490,10 @@ where
         let state_desired = {
             let data =
                 <<StateDesiredFnSpec as peace_cfg::FnSpec>::Data<'_> as Data>::borrow(resources);
-            <StateDesiredFnSpec as peace_cfg::FnSpec>::exec(data).await?
+            let state_desired_logical =
+                <StateDesiredFnSpec as peace_cfg::FnSpec>::exec(data).await?;
+
+            State::new(state_desired_logical, Placeholder)
         };
 
         Ok(BoxDtDisplay::new(state_desired))
@@ -506,12 +511,17 @@ where
             let states = resources.borrow::<StatesCurrent>();
             let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
             let states_desired = resources.borrow::<StatesDesired>();
-            let state_desired = states_desired.get::<StateLogical, _>(&item_spec_id);
+            let state_desired =
+                states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
 
             if let (Some(state), Some(state_desired)) = (state, state_desired) {
-                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(data, state, state_desired)
-                    .await
-                    .map_err(Into::<E>::into)?
+                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(
+                    data,
+                    state,
+                    &state_desired.logical,
+                )
+                .await
+                .map_err(Into::<E>::into)?
             } else {
                 panic!(
                     "`ItemSpecWrapper::diff` must only be called with `StatesCurrent` and `StatesDesired` \
@@ -534,7 +544,8 @@ where
             let states = resources.borrow::<StatesCurrent>();
             let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
             let states_desired = resources.borrow::<StatesDesired>();
-            let state_desired = states_desired.get::<StateLogical, _>(&item_spec_id);
+            let state_desired =
+                states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
             let state_diffs = resources.borrow::<StateDiffs>();
             let state_diff = state_diffs.get::<StateDiff, _>(&item_spec_id);
 
@@ -544,7 +555,7 @@ where
                 <EnsureOpSpec as peace_cfg::EnsureOpSpec>::check(
                     data,
                     state,
-                    state_desired,
+                    &state_desired.logical,
                     state_diff,
                 )
                 .await?
@@ -565,7 +576,8 @@ where
         let states = resources.borrow::<StatesCurrent>();
         let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
         let states_desired = resources.borrow::<StatesDesired>();
-        let state_desired = states_desired.get::<StateLogical, _>(&item_spec_id);
+        let state_desired =
+            states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
         let state_diffs = resources.borrow::<StateDiffs>();
         let state_diff = state_diffs.get::<StateDiff, _>(&item_spec_id);
 
@@ -575,7 +587,7 @@ where
             <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec_dry(
                 data,
                 state,
-                state_desired,
+                &state_desired.logical,
                 state_diff,
             )
             .await?;
@@ -595,15 +607,21 @@ where
         let states = resources.borrow::<StatesCurrent>();
         let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
         let states_desired = resources.borrow::<StatesDesired>();
-        let state_desired = states_desired.get::<StateLogical, _>(&item_spec_id);
+        let state_desired =
+            states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
         let state_diffs = resources.borrow::<StateDiffs>();
         let state_diff = state_diffs.get::<StateDiff, _>(&item_spec_id);
 
         if let (Some(state), Some(state_desired), Some(state_diff)) =
             (state, state_desired, state_diff)
         {
-            <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec(data, state, state_desired, state_diff)
-                .await?;
+            <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec(
+                data,
+                state,
+                &state_desired.logical,
+                state_diff,
+            )
+            .await?;
         } else {
             panic!(
                 "`ItemSpecWrapper::ensure_op_exec` must only be called with `StatesCurrent`, `StatesDesired`, and \
