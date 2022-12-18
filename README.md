@@ -30,24 +30,26 @@ See:
 |   🔵   | Compatible by design |
 |   🟣   | Works, "fun idea"    |
 
-* 🟢 Define items to manage
+* 🟢 Define items to manage with automation
 * 🟢 Define dependencies between items
 * 🟢 Fetch current and desired states
-* 🟢 Workflow graph with task dependencies
-* 🟢 Concurrent task execution
+* 🟢 Show diff: what would change
+* 🟢 Concurrent task execution via [`fn_graph`]
 * 🟢 Skip unnecessary work
+* 🟢 Idempotence: Multiple executions
 * 🟢 Show state differences
 * 🟢 Namespaced profile directories
 * 🟢 Dry run
 * 🟢 Resource clean up
 * 🟡 Feature-gated incremental functionality
-* 🔵 Understandable error reporting
+* 🟡 Off-the-shelf support for common items
+* 🔵 Understandable error reporting via [`miette`]
 * 🔵 Actionable error messages
 * 🟣 WASM support
-* ⚫ Understandable progress [#42]
+* ⚫ Understandable progress ([#42])
+* ⚫ Informative
 * ⚫ Built-in application execution methods -- CLI, web service
 * ⚫ `peace` binary for configuration based workflows
-* ⚫ Off-the-shelf support for common tasks
 * ⚫ Web based UI
 * ⚫ Agent mode to run `peace` on servers (Web API invocation)
 
@@ -110,5 +112,7 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 
 
 [#42]: https://github.com/azriel91/peace/issues/42
+[`fn_graph`]: https://github.com/azriel91/fn_graph
+[`miette`]: https://github.com/zkat/miette
 [`wasm-pack`]: https://rustwasm.github.io/
 [HTTP server]: https://crates.io/crates/simple-http-server

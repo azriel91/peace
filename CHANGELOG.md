@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.0.5 (2022-12-18)
 
 * `ShCmdStateDiffFnSpec` correctly runs `state_diff_sh_cmd` for state diff. ([#57])
 * `ShCmdParams` now uses the `Id` type parameter so that different `ShCmdItemSpec`s can be used correctly. ([#57])
