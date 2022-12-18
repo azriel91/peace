@@ -86,19 +86,22 @@ jobs:
           path: ~/.cargo/bin/cargo-workspaces
           key: ${{ runner.os }}-cargo-workspaces
 
-      - uses: actions-rs/cargo@v1
+      - # FIXME: Switch back when actions-rs/cargo#217 gets merged
+        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
         if: steps.workspaces_cache.outputs.cache-hit != 'true'
         with:
           command: install
           args: cargo-workspaces
 
       - name: cargo login
-        uses: actions-rs/cargo@v1
+        # FIXME: Switch back when actions-rs/cargo#217 gets merged
+        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
         with:
           command: login
           args: ${{ secrets.CRATES_IO_API_TOKEN }}
 
-      - uses: actions-rs/cargo@v1
+      - # FIXME: Switch back when actions-rs/cargo#217 gets merged
+        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
         with:
           command: workspaces
           args: >
