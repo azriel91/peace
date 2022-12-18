@@ -16,7 +16,7 @@ pub struct TarXData<'op, Id>
 where
     Id: Send + Sync + 'static,
 {
-    /// Url of the tar to extract.
+    /// Tar extraction parameters.
     tar_x_params: R<'op, TarXParams<Id>>,
 
     /// For wasm, we write to web storage through the `Storage` object.

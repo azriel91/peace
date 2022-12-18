@@ -6,10 +6,6 @@ use std::{
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 
-// TODO: params for:
-//
-// * keep or remove unknown files
-// * force re-extraction
 /// Tar extraction parameters.
 ///
 /// The `Id` type parameter is needed for each tar extraction params to be a
@@ -19,6 +15,10 @@ use serde::{Deserialize, Serialize};
 ///
 /// * `Id`: A zero-sized type used to distinguish different tar extraction
 ///   parameters from each other.
+// TODO: params for:
+//
+// * keep or remove unknown files
+// * force re-extraction
 #[derive(Clone, Derivative, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Debug)]
 pub struct TarXParams<Id> {
