@@ -1,9 +1,9 @@
 use std::{
-    fmt,
     marker::PhantomData,
     path::{Path, PathBuf},
 };
 
+use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 
 // TODO: params for:
@@ -19,7 +19,8 @@ use serde::{Deserialize, Serialize};
 ///
 /// * `Id`: A zero-sized type used to distinguish different tar extraction
 ///   parameters from each other.
-#[derive(Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Derivative, PartialEq, Eq, Deserialize, Serialize)]
+#[derivative(Debug)]
 pub struct TarXParams<Id> {
     /// Path of the file to extract.
     dest: PathBuf,
@@ -39,13 +40,5 @@ impl<Id> TarXParams<Id> {
     /// Returns the file path to write to.
     pub fn dest(&self) -> &Path {
         &self.dest
-    }
-}
-
-impl<Id> fmt::Debug for TarXParams<Id> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("TarXParams")
-            .field("dest", &self.dest)
-            .finish()
     }
 }
