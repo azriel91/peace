@@ -1,5 +1,5 @@
 [package]
-name = "web_app"
+name = "app_cycle"
 version = "0.0.5"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 publish = false
 
 [[bin]]
-name = "web_app"
+name = "app_cycle"
 test = false
 
 [lib]

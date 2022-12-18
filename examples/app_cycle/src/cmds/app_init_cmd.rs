@@ -7,7 +7,7 @@ use url::Url;
 
 use crate::{
     flows::AppInitFlow,
-    model::{RepoSlug, WebAppError},
+    model::{RepoSlug, AppCycleError},
 };
 
 /// Takes app init parameters and runs the [`AppInitFlow`].
@@ -21,11 +21,11 @@ impl AppInitCmd {
     ///
     /// * `slug`: Username and repository of the application to download.
     /// * `semver`: Version of the application to download.
-    pub async fn run<O>(output: &mut O, slug: RepoSlug, version: Version) -> Result<(), WebAppError>
+    pub async fn run<O>(output: &mut O, slug: RepoSlug, version: Version) -> Result<(), AppCycleError>
     where
-        O: OutputWrite<WebAppError>,
+        O: OutputWrite<AppCycleError>,
     {
-        let web_app_file_download_params = {
+        let app_cycle_file_download_params = {
             let account = slug.account();
             let repo_name = slug.repo_name();
             #[cfg(target_family = "windows")]
@@ -33,15 +33,15 @@ impl AppInitCmd {
             #[cfg(any(target_family = "unix", target_family = "wasm"))]
             let file_ext = "tar.gz";
             // windows:
-            // https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.zip
+            // https://github.com/azriel91/web_app/releases/download/0.1.0/app_cycle.zip
             //
             // linux:
-            // https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.tar.gz
+            // https://github.com/azriel91/web_app/releases/download/0.1.0/app_cycle.tar.gz
             let src = {
                 let url_candidate = format!(
                     "https://github.com/{account}/{repo_name}/releases/download/{version}/{repo_name}.{file_ext}"
                 );
-                Url::parse(&url_candidate).map_err(|error| WebAppError::WebAppUrlBuild {
+                Url::parse(&url_candidate).map_err(|error| AppCycleError::AppCycleUrlBuild {
                     url_candidate,
                     error,
                 })?
@@ -54,6 +54,6 @@ impl AppInitCmd {
             ]);
             FileDownloadParams::new(src, dest)
         };
-        AppInitFlow::run(output, web_app_file_download_params).await
+        AppInitFlow::run(output, app_cycle_file_download_params).await
     }
 }

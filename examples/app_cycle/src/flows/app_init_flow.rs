@@ -7,7 +7,7 @@ use peace::{
 };
 use peace_item_specs::file_download::{FileDownloadItemSpec, FileDownloadParams};
 
-use crate::model::{WebAppError, WebAppFileId};
+use crate::model::{AppCycleError, AppCycleFileId};
 
 /// Flow to download a web application.
 #[derive(Debug)]
@@ -17,10 +17,10 @@ impl AppInitFlow {
     /// Sets up this workspace
     pub async fn run<O>(
         output: &mut O,
-        web_app_file_download_params: FileDownloadParams<WebAppFileId>,
-    ) -> Result<(), WebAppError>
+        app_cycle_file_download_params: FileDownloadParams<AppCycleFileId>,
+    ) -> Result<(), AppCycleError>
     where
-        O: OutputWrite<WebAppError>,
+        O: OutputWrite<AppCycleError>,
     {
         let workspace = Workspace::new(
             #[cfg(not(target_arch = "wasm32"))]
@@ -33,25 +33,25 @@ impl AppInitFlow {
         let graph = Self::graph()?;
 
         let cmd_context = CmdContext::builder(&workspace, &graph, output)
-            .with_workspace_init::<FileDownloadParams<WebAppFileId>>(Some(
-                web_app_file_download_params,
+            .with_workspace_init::<FileDownloadParams<AppCycleFileId>>(Some(
+                app_cycle_file_download_params,
             ))
             .await?;
         StatesDiscoverCmd::exec(cmd_context).await?;
 
         let cmd_context = CmdContext::builder(&workspace, &graph, output)
-            .with_workspace_init::<FileDownloadParams<WebAppFileId>>(None)
+            .with_workspace_init::<FileDownloadParams<AppCycleFileId>>(None)
             .await?;
         EnsureCmd::exec(cmd_context).await?;
 
         Ok(())
     }
 
-    fn graph() -> Result<ItemSpecGraph<WebAppError>, WebAppError> {
-        let mut graph_builder = ItemSpecGraphBuilder::<WebAppError>::new();
+    fn graph() -> Result<ItemSpecGraph<AppCycleError>, AppCycleError> {
+        let mut graph_builder = ItemSpecGraphBuilder::<AppCycleError>::new();
 
         graph_builder
-            .add_fn(FileDownloadItemSpec::<WebAppFileId>::new(item_spec_id!("web_app")).into());
+            .add_fn(FileDownloadItemSpec::<AppCycleFileId>::new(item_spec_id!("app_cycle")).into());
 
         Ok(graph_builder.build())
     }

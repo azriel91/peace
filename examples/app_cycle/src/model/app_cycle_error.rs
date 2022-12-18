@@ -4,17 +4,17 @@ use peace::miette;
 /// Error while managing a web application.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
-pub enum WebAppError {
+pub enum AppCycleError {
     /// Failed to construct web application download URL.
     #[error("Failed to construct web application download URL.")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
-            code(web_app::web_app_url_build),
+            code(app_cycle::app_cycle_url_build),
             help("If the URL is valid, this may be a bug in the example, or the `url` library.")
         )
     )]
-    WebAppUrlBuild {
+    AppCycleUrlBuild {
         /// Computed URL that is attempted to be parsed.
         #[cfg_attr(feature = "error_reporting", source_code)]
         url_candidate: String,

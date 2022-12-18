@@ -8,8 +8,8 @@
 
 - [Examples](examples.md)
     - [Download](examples/download.md)
-    - [Web App](examples/web_app.md)
-        - [Walkthrough](examples/web_app/walkthrough.md)
+    - [App Cycle](examples/app_cycle.md)
+        - [Walkthrough](examples/app_cycle/walkthrough.md)
 
 - [Technical Concepts](technical_concepts.md)
     - [Resources](technical_concepts/resources.md)

@@ -12,7 +12,7 @@ pub enum RepoSlugError {
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
-            code(web_app::account_invalid),
+            code(app_cycle::account_invalid),
             help(
                 "Account IDs must begin with an ascii letter, \
                 and only contain letters, numbers, hyphens, and underscores."
@@ -36,7 +36,7 @@ pub enum RepoSlugError {
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
-            code(web_app::repo_name_invalid),
+            code(app_cycle::repo_name_invalid),
             help(
                 "Repository names must begin with an ascii letter, \
                 and only contain letters, numbers, hyphens, and underscores."
@@ -60,7 +60,7 @@ pub enum RepoSlugError {
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
-            code(web_app::segment_count_invalid),
+            code(app_cycle::segment_count_invalid),
             help("Repository slug must contain exactly one slash.")
         )
     )]

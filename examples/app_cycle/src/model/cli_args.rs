@@ -14,7 +14,7 @@ use crate::model::{EnvType, RepoSlug};
 pub struct CliArgs {
     /// Command to run.
     #[command(subcommand)]
-    pub command: WebAppCommand,
+    pub command: AppCycleCommand,
     /// The format of the command output.
     ///
     /// At this level, this needs to be specified before the subcommand.
@@ -25,7 +25,7 @@ pub struct CliArgs {
 }
 
 #[derive(Subcommand)]
-pub enum WebAppCommand {
+pub enum AppCycleCommand {
     /// Downloads the web application to run.
     Init {
         /// Username and repository of the application to download.
