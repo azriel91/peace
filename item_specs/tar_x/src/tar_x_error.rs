@@ -71,6 +71,97 @@ pub enum TarXError {
         error: std::io::Error,
     },
 
+    /// Failed to read tar extraction destination path
+    #[error(
+        r#"Failed to read tar extraction destination path: `{}`"#,
+        dest.display()
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_item_spec_tar_x::tar_dest_read_dir))
+    )]
+    TarDestReadDir {
+        /// Path to the destination directory.
+        dest: PathBuf,
+        /// Underlying error.
+        error: std::io::Error,
+    },
+
+    /// Failed to read destination file entry.
+    #[error(
+        r#"Failed to read destination file entry in `{}`"#,
+        dest.display()
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_item_spec_tar_x::tar_dest_entry_read))
+    )]
+    TarDestEntryRead {
+        /// Path to the destination directory.
+        dest: PathBuf,
+        /// Underlying error.
+        error: std::io::Error,
+    },
+
+    /// Failed to read destination file modified time.
+    #[cfg(not(target_arch = "wasm32"))]
+    #[error(
+        r#"Failed to read destination file modified time: `{}` in `{}`"#,
+        entry_path.display(),
+        dest.display()
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_item_spec_tar_x::tar_entry_m_time_read))
+    )]
+    TarDestFileMTimeRead {
+        /// Path to the destination directory.
+        dest: PathBuf,
+        /// Entry path in the tar file.
+        entry_path: PathBuf,
+        /// Underlying error.
+        error: std::io::Error,
+    },
+
+    /// Failed to read destination file modified time system time.
+    #[cfg(not(target_arch = "wasm32"))]
+    #[error(
+        r#"Failed to read destination file modified time system time: `{}` in `{}`"#,
+        entry_path.display(),
+        dest.display()
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_item_spec_tar_x::tar_dest_file_m_time_system_time_read))
+    )]
+    TarDestFileMTimeSystemTimeRead {
+        /// Path to the destination directory.
+        dest: PathBuf,
+        /// Entry path in the tar file.
+        entry_path: PathBuf,
+        /// Underlying error.
+        error: std::time::SystemTimeError,
+    },
+    /// Failed to map destination file modified time system time.
+    #[cfg(not(target_arch = "wasm32"))]
+    #[error(
+        r#"Failed to map destination file modified time system time: `{}` in `{}`"#,
+        entry_path.display(),
+        dest.display()
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_item_spec_tar_x::tar_dest_file_m_time_system_time_map))
+    )]
+    TarDestFileMTimeSystemTimeMap {
+        /// Path to the destination directory.
+        dest: PathBuf,
+        /// Entry path in the tar file.
+        entry_path: PathBuf,
+        /// Underlying error.
+        error: std::num::TryFromIntError,
+    },
+
     // === Framework errors === //
     /// A `peace` runtime error occurred.
     #[error("A `peace` runtime error occurred.")]
