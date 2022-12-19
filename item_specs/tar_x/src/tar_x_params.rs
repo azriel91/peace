@@ -22,7 +22,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Derivative, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Debug)]
 pub struct TarXParams<Id> {
-    /// Path of the file to extract.
+    /// Path of the tar file to extract.
+    tar_path: PathBuf,
+    /// Directory path to extract the tar file to.
     dest: PathBuf,
     /// Marker for unique tar extraction parameters type.
     marker: PhantomData<Id>,
@@ -30,14 +32,20 @@ pub struct TarXParams<Id> {
 
 impl<Id> TarXParams<Id> {
     /// Returns new `TarXParams`.
-    pub fn new(dest: PathBuf) -> Self {
+    pub fn new(tar_path: PathBuf, dest: PathBuf) -> Self {
         Self {
+            tar_path,
             dest,
             marker: PhantomData,
         }
     }
 
-    /// Returns the file path to write to.
+    /// Returns the path of the tar file to extract.
+    pub fn tar_path(&self) -> &Path {
+        &self.tar_path
+    }
+
+    /// Returns the directory path to extract the tar file to.
     pub fn dest(&self) -> &Path {
         &self.dest
     }

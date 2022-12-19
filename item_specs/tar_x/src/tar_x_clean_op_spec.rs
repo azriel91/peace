@@ -42,9 +42,9 @@ where
 
     #[cfg(target_arch = "wasm32")]
     async fn exec(
-        tar_x_data: TarXData<'_, Id>,
+        _tar_x_data: TarXData<'_, Id>,
         State {
-            logical: file_state,
+            logical: _file_state,
             ..
         }: &State<TarXState, Nothing>,
     ) -> Result<(), TarXError> {

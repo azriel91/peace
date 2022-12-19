@@ -17,6 +17,16 @@ pub struct FileMetadata {
     modified_time: u64,
 }
 
+impl FileMetadata {
+    /// Returns a new `FileMetadata`.
+    pub fn new(path: PathBuf, modified_time: u64) -> Self {
+        Self {
+            path,
+            modified_time,
+        }
+    }
+}
+
 impl From<tar::Header> for FileMetadata {
     fn from(_header: tar::Header) -> Self {
         todo!()
