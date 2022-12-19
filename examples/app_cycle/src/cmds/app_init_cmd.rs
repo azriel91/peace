@@ -7,7 +7,7 @@ use url::Url;
 
 use crate::{
     flows::AppInitFlow,
-    model::{RepoSlug, AppCycleError},
+    model::{AppCycleError, RepoSlug},
 };
 
 /// Takes app init parameters and runs the [`AppInitFlow`].
@@ -21,7 +21,11 @@ impl AppInitCmd {
     ///
     /// * `slug`: Username and repository of the application to download.
     /// * `semver`: Version of the application to download.
-    pub async fn run<O>(output: &mut O, slug: RepoSlug, version: Version) -> Result<(), AppCycleError>
+    pub async fn run<O>(
+        output: &mut O,
+        slug: RepoSlug,
+        version: Version,
+    ) -> Result<(), AppCycleError>
     where
         O: OutputWrite<AppCycleError>,
     {
@@ -52,7 +56,12 @@ impl AppInitCmd {
                 &format!("{version}"),
                 &format!("{repo_name}.{file_ext}"),
             ]);
-            FileDownloadParams::new(src, dest)
+            FileDownloadParams::new(
+                src,
+                dest,
+                #[cfg(target_arch = "wasm32")]
+                peace_item_specs::file_download::StorageForm::Base64,
+            )
         };
         AppInitFlow::run(output, app_cycle_file_download_params).await
     }

@@ -2,7 +2,7 @@ use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
     rt_model::{InMemoryTextOutput, WorkspaceSpec},
 };
-use peace_item_specs::file_download::FileDownloadParams;
+use peace_item_specs::file_download::{FileDownloadParams, StorageForm};
 use url::Url;
 use wasm_bindgen::prelude::*;
 
@@ -48,7 +48,7 @@ pub async fn wasm_init(url: String, name: String) -> Result<WorkspaceAndOutput, 
     let file_download_params = {
         let url = Url::parse(&url).expect("Failed to parse URL.");
         let dest = std::path::PathBuf::from(name);
-        FileDownloadParams::new(url, dest)
+        FileDownloadParams::new(url, dest, StorageForm::Text)
     };
 
     // Building the command context currently serializes the init params to storage.
