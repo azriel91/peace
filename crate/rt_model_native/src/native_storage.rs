@@ -108,15 +108,16 @@ impl NativeStorage {
     ///
     /// This method buffers the write, and calls flush on the buffer when the
     /// passed in closure returns.
-    pub async fn read_with_sync_api<'f, F, T>(
+    pub async fn read_with_sync_api<'f, F, T, E>(
         &self,
         thread_name: String,
         file_path: &Path,
         f: F,
-    ) -> Result<T, Error>
+    ) -> Result<T, E>
     where
-        F: FnOnce(&mut SyncIoBridge<BufReader<File>>) -> Result<T, Error> + Send + 'f,
+        F: FnOnce(&mut SyncIoBridge<BufReader<File>>) -> Result<T, E> + Send + 'f,
         T: Send,
+        E: From<Error> + Send,
     {
         let file = File::open(file_path).await.map_err(|error| {
             let path = file_path.to_path_buf();
@@ -129,11 +130,7 @@ impl NativeStorage {
         let t = std::thread::scope(move |s| {
             std::thread::Builder::new()
                 .name(thread_name)
-                .spawn_scoped(s, move || {
-                    let t = f(&mut sync_io_bridge)?;
-
-                    Ok(t)
-                })
+                .spawn_scoped(s, move || f(&mut sync_io_bridge))
                 .map_err(Error::StorageSyncThreadSpawn)?
                 .join()
                 .map_err(Mutex::new)
