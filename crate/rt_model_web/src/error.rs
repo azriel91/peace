@@ -164,9 +164,9 @@ pub enum Error {
     #[error("Item does not exist in storage: `{}`.", path.display())]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_rt_model::item_not_existent))
+        diagnostic(code(peace_rt_model::item_not_exists))
     )]
-    ItemNotExistent {
+    ItemNotExists {
         /// Path to the file.
         path: PathBuf,
     },

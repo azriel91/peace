@@ -40,7 +40,7 @@ impl NativeStorage {
 
             Ok(t)
         } else {
-            Err(Error::ItemNotExistent {
+            Err(Error::ItemNotExists {
                 path: file_path.to_path_buf(),
             })
         }

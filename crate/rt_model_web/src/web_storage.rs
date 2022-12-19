@@ -144,7 +144,7 @@ impl WebStorage {
                 error: crate::stringify_js_value(js_value),
             })
             .and_then(|value| {
-                value.ok_or_else(|| Error::ItemNotExistent {
+                value.ok_or_else(|| Error::ItemNotExists {
                     path: path.to_path_buf(),
                 })
             })
@@ -200,7 +200,7 @@ impl WebStorage {
                     error: crate::stringify_js_value(js_value),
                 })
                 .and_then(|value| {
-                    value.ok_or_else(|| Error::ItemNotExistent {
+                    value.ok_or_else(|| Error::ItemNotExists {
                         path: path.to_path_buf(),
                     })
                 })

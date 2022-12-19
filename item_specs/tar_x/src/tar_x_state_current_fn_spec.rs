@@ -88,7 +88,7 @@ where
             }
         } else {
             let tar_path = tar_path.to_path_buf();
-            return Err(TarXError::TarFileNonExistent { tar_path });
+            return Err(TarXError::TarFileNotExists { tar_path });
         };
 
         let files_extracted = if dest.exists() {

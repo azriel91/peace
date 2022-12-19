@@ -237,7 +237,7 @@ where
             }
             FileDownloadStateDiff::Deleted { .. } => OpCheckStatus::ExecNotRequired, /* Don't delete */
             // existing file
-            FileDownloadStateDiff::NoChangeNonExistent { .. }
+            FileDownloadStateDiff::NoChangeNotExists { .. }
             | FileDownloadStateDiff::NoChangeSync { .. } => OpCheckStatus::ExecNotRequired,
         };
         Ok(op_check_status)

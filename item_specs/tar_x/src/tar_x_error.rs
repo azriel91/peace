@@ -14,9 +14,9 @@ pub enum TarXError {
     )]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_item_spec_tar_x::tar_file_non_existent))
+        diagnostic(code(peace_item_spec_tar_x::tar_file_not_exists))
     )]
-    TarFileNonExistent {
+    TarFileNotExists {
         /// Path to the tar file to extract.
         tar_path: PathBuf,
     },
@@ -60,7 +60,7 @@ pub enum TarXError {
     )]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_item_spec_tar_x::tar_entry_m_time_non_existent))
+        diagnostic(code(peace_item_spec_tar_x::tar_entry_m_time_read))
     )]
     TarEntryMTimeRead {
         /// Path to the tar file.
