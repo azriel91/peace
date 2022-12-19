@@ -34,7 +34,6 @@ members = [
 ]
 
 [workspace.dependencies]
-base64 = "0.20.0"
 miette = { version = "5.4.1" }
 derivative = "2.2.0"
 

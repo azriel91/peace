@@ -184,19 +184,22 @@ where
     ) -> Result<(), FileDownloadError> {
         use crate::StorageForm;
 
-        let contents = match storage_form {
-            StorageForm::Text => response
-                .text()
-                .await
-                .map_err(FileDownloadError::ResponseTextRead)?,
-            StorageForm::Base64 => response
-                .bytes()
-                .await
-                .map_err(FileDownloadError::ResponseBytesRead)
-                .map(|bytes| base64::encode(bytes))?,
-        };
-
-        storage.set_item(dest_path, &contents)?;
+        match storage_form {
+            StorageForm::Text => {
+                let value = response
+                    .text()
+                    .await
+                    .map_err(FileDownloadError::ResponseTextRead)?;
+                storage.set_item(dest_path, &value)?;
+            }
+            StorageForm::Base64 => {
+                let bytes = response
+                    .bytes()
+                    .await
+                    .map_err(FileDownloadError::ResponseBytesRead)?;
+                storage.set_item_b64(dest_path, &bytes)?;
+            }
+        }
 
         Ok(())
     }

@@ -150,6 +150,27 @@ impl WebStorage {
             })
     }
 
+    /// Gets an item in the web storage.
+    ///
+    /// * Use [`get_item_opt`] if you would like to fetch an item that may not
+    ///   exist.
+    /// * Use [`get_items_opt`] if you would like to fetch multiple optional
+    ///   items.
+    /// * Use [`get_item`] if you would like to fetch an item that must exist.
+    /// * Use [`get_items`] if you would like to fetch multiple items that must
+    ///   exist.
+    ///
+    /// [`get_items`]: Self::get_items
+    pub fn get_item_b64(&self, path: &Path) -> Result<Vec<u8>, Error> {
+        self.get_item(path).and_then(|value| {
+            base64::decode(&value).map_err(|error| Error::StorageB64Decode {
+                path: path.to_path_buf(),
+                value,
+                error,
+            })
+        })
+    }
+
     /// Gets multiple items in the web storage.
     ///
     /// * Use [`get_item_opt`] if you would like to fetch an item that may not
@@ -204,6 +225,15 @@ impl WebStorage {
                 value: value.to_string(),
                 error: crate::stringify_js_value(js_value),
             })
+    }
+
+    /// Base64 encodes and sets a value in the web storage.
+    pub fn set_item_b64<B>(&self, path: &Path, bytes: &B) -> Result<(), Error>
+    where
+        B: AsRef<[u8]>,
+    {
+        let value = base64::encode(bytes);
+        self.set_item(path, &value)
     }
 
     /// Sets multiple items in the web storage.
