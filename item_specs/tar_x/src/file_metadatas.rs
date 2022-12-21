@@ -35,7 +35,9 @@ impl std::ops::DerefMut for FileMetadatas {
 }
 
 impl fmt::Display for FileMetadatas {
-    fn fmt(&self, _f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let len = self.len();
+        let s = if len == 1 { "" } else { "s" };
+        write!(f, "{len} file{s}")
     }
 }
