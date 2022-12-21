@@ -1,6 +1,6 @@
 use peace::cfg::{async_trait, state::Nothing, State, StateDiffFnSpec};
 
-use crate::{TarXError, TarXState, TarXStateDiff};
+use crate::{FileMetadatas, TarXError, TarXStateDiff};
 
 /// Tar extraction status diff function.
 #[derive(Debug)]
@@ -11,13 +11,13 @@ impl StateDiffFnSpec for TarXStateDiffFnSpec {
     type Data<'op> = &'op ();
     type Error = TarXError;
     type StateDiff = TarXStateDiff;
-    type StateLogical = TarXState;
+    type StateLogical = FileMetadatas;
     type StatePhysical = Nothing;
 
     async fn exec(
         _: &(),
-        _state_current: &State<TarXState, Nothing>,
-        _state_desired: &TarXState,
+        _state_current: &State<FileMetadatas, Nothing>,
+        _state_desired: &FileMetadatas,
     ) -> Result<Self::StateDiff, TarXError> {
         todo!()
     }

@@ -14,7 +14,8 @@ pub enum TarXError {
     )]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_item_spec_tar_x::tar_file_not_exists))
+        diagnostic(code(peace_item_spec_tar_x::tar_file_not_exists)),
+        help("Make sure there is an item spec that downloads the tar file.")
     )]
     TarFileNotExists {
         /// Path to the tar file to extract.
@@ -141,25 +142,6 @@ pub enum TarXError {
         entry_path: PathBuf,
         /// Underlying error.
         error: std::time::SystemTimeError,
-    },
-    /// Failed to map destination file modified time system time.
-    #[cfg(not(target_arch = "wasm32"))]
-    #[error(
-        r#"Failed to map destination file modified time system time: `{}` in `{}`"#,
-        entry_path.display(),
-        dest.display()
-    )]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_item_spec_tar_x::tar_dest_file_m_time_system_time_map))
-    )]
-    TarDestFileMTimeSystemTimeMap {
-        /// Path to the destination directory.
-        dest: PathBuf,
-        /// Entry path in the tar file.
-        entry_path: PathBuf,
-        /// Underlying error.
-        error: std::num::TryFromIntError,
     },
 
     // === Framework errors === //

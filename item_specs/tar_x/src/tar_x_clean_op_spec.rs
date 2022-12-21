@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use peace::cfg::{async_trait, state::Nothing, CleanOpSpec, OpCheckStatus, State};
 
-use crate::{TarXData, TarXError, TarXState};
+use crate::{FileMetadatas, TarXData, TarXError};
 
 /// `CleanOpSpec` for the tar to extract.
 #[derive(Debug, Default)]
@@ -15,19 +15,19 @@ where
 {
     type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
-    type StateLogical = TarXState;
+    type StateLogical = FileMetadatas;
     type StatePhysical = Nothing;
 
     async fn check(
         _tar_x_data: TarXData<'_, Id>,
-        _state: &State<TarXState, Nothing>,
+        _state: &State<FileMetadatas, Nothing>,
     ) -> Result<OpCheckStatus, TarXError> {
         todo!()
     }
 
     async fn exec_dry(
         _tar_x_data: TarXData<'_, Id>,
-        _state: &State<TarXState, Nothing>,
+        _state: &State<FileMetadatas, Nothing>,
     ) -> Result<(), TarXError> {
         Ok(())
     }
@@ -35,7 +35,7 @@ where
     #[cfg(not(target_arch = "wasm32"))]
     async fn exec(
         _tar_x_data: TarXData<'_, Id>,
-        _state: &State<TarXState, Nothing>,
+        _state: &State<FileMetadatas, Nothing>,
     ) -> Result<(), TarXError> {
         todo!()
     }
@@ -46,7 +46,7 @@ where
         State {
             logical: _file_state,
             ..
-        }: &State<TarXState, Nothing>,
+        }: &State<FileMetadatas, Nothing>,
     ) -> Result<(), TarXError> {
         todo!()
     }

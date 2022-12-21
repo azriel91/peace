@@ -39,6 +39,6 @@ where
     }
 
     pub fn storage(&self) -> &Storage {
-        &*self.storage
+        &self.storage
     }
 }

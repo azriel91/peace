@@ -4,7 +4,7 @@ use peace::cfg::state::Nothing;
 
 use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, State};
 
-use crate::{TarXData, TarXError, TarXState, TarXStateDiff};
+use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
 
 /// Ensure OpSpec for the tar to extract.
 #[derive(Debug)]
@@ -18,13 +18,13 @@ where
     type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
     type StateDiff = TarXStateDiff;
-    type StateLogical = TarXState;
+    type StateLogical = FileMetadatas;
     type StatePhysical = Nothing;
 
     async fn check(
         _tar_x_data: TarXData<'_, Id>,
-        _file_state_current: &State<TarXState, Nothing>,
-        _file_state_desired: &TarXState,
+        _file_state_current: &State<FileMetadatas, Nothing>,
+        _file_state_desired: &FileMetadatas,
         _diff: &TarXStateDiff,
     ) -> Result<OpCheckStatus, TarXError> {
         todo!();
@@ -32,8 +32,8 @@ where
 
     async fn exec_dry(
         _tar_x_data: TarXData<'_, Id>,
-        _state: &State<TarXState, Nothing>,
-        _file_state_desired: &TarXState,
+        _state: &State<FileMetadatas, Nothing>,
+        _file_state_desired: &FileMetadatas,
         _diff: &TarXStateDiff,
     ) -> Result<Nothing, TarXError> {
         Ok(Nothing)
@@ -41,8 +41,8 @@ where
 
     async fn exec(
         _tar_x_data: TarXData<'_, Id>,
-        _state: &State<TarXState, Nothing>,
-        _file_state_desired: &TarXState,
+        _state: &State<FileMetadatas, Nothing>,
+        _file_state_desired: &FileMetadatas,
         _diff: &TarXStateDiff,
     ) -> Result<Nothing, TarXError> {
         todo!();
