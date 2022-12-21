@@ -97,6 +97,6 @@ where
         #[cfg(target_arch = "wasm32")]
         let files_in_tar = Self::files_in_tar(storage, tar_path)?;
 
-        Ok(FileMetadatas::new(files_in_tar))
+        Ok(FileMetadatas::from(files_in_tar))
     }
 }

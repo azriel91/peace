@@ -119,7 +119,7 @@ where
             #[cfg(target_arch = "wasm32")]
             let files_extracted = Self::files_extracted(storage, dest)?;
 
-            FileMetadatas::new(files_extracted)
+            FileMetadatas::from(files_extracted)
         } else {
             let tar_path = tar_path.to_path_buf();
             return Err(TarXError::TarFileNotExists { tar_path });
