@@ -74,16 +74,16 @@ pub enum TarXError {
 
     /// Failed to read tar extraction destination path
     #[error(
-        r#"Failed to read tar extraction destination path: `{}`"#,
-        dest.display()
+        r#"Failed to read directory within tar extraction destination path: `{}`"#,
+        dir.display()
     )]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(code(peace_item_spec_tar_x::tar_dest_read_dir))
     )]
     TarDestReadDir {
-        /// Path to the destination directory.
-        dest: PathBuf,
+        /// Path within the extraction directory.
+        dir: PathBuf,
         /// Underlying error.
         error: std::io::Error,
     },
@@ -100,6 +100,22 @@ pub enum TarXError {
     TarDestEntryRead {
         /// Path to the destination directory.
         dest: PathBuf,
+        /// Underlying error.
+        error: std::io::Error,
+    },
+
+    /// Failed to read destination file type.
+    #[error(
+        r#"Failed to read destination file type for `{}`"#,
+        entry_path.display()
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_item_spec_tar_x::tar_dest_entry_file_type_read))
+    )]
+    TarDestEntryFileTypeRead {
+        /// Path to the file in the destination directory.
+        entry_path: PathBuf,
         /// Underlying error.
         error: std::io::Error,
     },

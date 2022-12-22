@@ -16,63 +16,48 @@ impl<Id> TarXStateCurrentFnSpec<Id> {
         use futures::stream::TryStreamExt;
 
         let dest_file_metadatas = if dest.exists() {
-            let read_dir = tokio::fs::read_dir(dest).await.map_err(|error| {
-                let dest = dest.to_path_buf();
-                TarXError::TarDestReadDir { dest, error }
-            })?;
-
-            // `ReadDir` doesn't implement `Stream`, this does that mapping.
-            futures::stream::try_unfold(read_dir, move |mut read_dir| async move {
-                read_dir
-                    .next_entry()
-                    .await
-                    .map_err(|error| {
-                        let dest = dest.to_path_buf();
-                        TarXError::TarDestEntryRead { dest, error }
-                    })
-                    .map(|dir_entry| dir_entry.map(|dir_entry| (dir_entry, read_dir)))
-            })
-            .try_fold(
-                Vec::new(),
-                |mut dest_file_metadatas, dir_entry| async move {
-                    let entry_path = dir_entry.path();
-                    let mtime = dir_entry
-                        .metadata()
-                        .await
-                        .map_err(|error| {
-                            Self::dest_mtime_read_error(
-                                dest.to_path_buf(),
-                                entry_path.clone(),
-                                error,
-                            )
-                        })?
-                        .modified()
-                        .map_err(|error| {
-                            Self::dest_mtime_read_error(
-                                dest.to_path_buf(),
-                                entry_path.clone(),
-                                error,
-                            )
-                        })
-                        .and_then(|system_time| {
-                            let mtime_secs = system_time
-                                .duration_since(UNIX_EPOCH)
-                                .map_err(|error| TarXError::TarDestFileMTimeSystemTimeRead {
-                                    dest: dest.to_path_buf(),
-                                    entry_path: entry_path.clone(),
+            crate::DirUnfold::unfold(dest)
+                .try_fold(
+                    Vec::new(),
+                    |mut dest_file_metadatas, dir_entry| async move {
+                        let entry_path = dir_entry.path();
+                        let mtime = dir_entry
+                            .metadata()
+                            .await
+                            .map_err(|error| {
+                                Self::dest_mtime_read_error(
+                                    dest.to_path_buf(),
+                                    entry_path.clone(),
                                     error,
-                                })?
-                                .as_secs();
-                            Ok(mtime_secs)
-                        })?;
+                                )
+                            })?
+                            .modified()
+                            .map_err(|error| {
+                                Self::dest_mtime_read_error(
+                                    dest.to_path_buf(),
+                                    entry_path.clone(),
+                                    error,
+                                )
+                            })
+                            .and_then(|system_time| {
+                                let mtime_secs = system_time
+                                    .duration_since(UNIX_EPOCH)
+                                    .map_err(|error| TarXError::TarDestFileMTimeSystemTimeRead {
+                                        dest: dest.to_path_buf(),
+                                        entry_path: entry_path.clone(),
+                                        error,
+                                    })?
+                                    .as_secs();
+                                Ok(mtime_secs)
+                            })?;
 
-                    let file_metadata = FileMetadata::new(entry_path, mtime);
-                    dest_file_metadatas.push(file_metadata);
+                        let file_metadata = FileMetadata::new(entry_path, mtime);
+                        dest_file_metadatas.push(file_metadata);
 
-                    Ok(dest_file_metadatas)
-                },
-            )
-            .await?
+                        Ok(dest_file_metadatas)
+                    },
+                )
+                .await?
         } else {
             Vec::new()
         };

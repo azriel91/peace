@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
@@ -24,6 +24,20 @@ impl FileMetadata {
             path,
             modified_time,
         }
+    }
+
+    /// Returns the path of this file metadata.
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    /// Returns the modified time of this file metadata.
+    ///
+    /// This is the number of seconds since the [Unix epoch].
+    ///
+    /// [Unix epoch]: https://doc.rust-lang.org/std/time/constant.UNIX_EPOCH.html
+    pub fn modified_time(&self) -> u64 {
+        self.modified_time
     }
 }
 
