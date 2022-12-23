@@ -53,20 +53,33 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
 
 * If `dest` is not available, then `state_current` may simply be "does not exist".
 * If `src` is not available, and we want to show `state_desired` that is not just "we can't look it up", then `src` must be defined in terms of something readable during discovery.
-* If that is not possible, or is too expensive, then one of the following has to be chosen:
+* If that is not possible, or is too expensive, then one or more of the following has to be chosen:
 
-    - `StateDesiredFnSpec`s have to always cater for `src` not being available.
-    - the `peace` framework defaults to not running `state_current_fn_spec` for items that have a logical dependency on things that `EnsureOpSpec::check` returns `ExecRequired`
+    1. `StateDesiredFnSpec`s have to always cater for `src` not being available.
+
+        It incurs mental effort to always cater for `src` not being available &ndash; i.e. implementing an item spec would need knowledge beyond itself.
+
+    2. the `peace` framework defaults to not running `state_current_fn_spec` for items that have a logical dependency on things that `EnsureOpSpec::check` returns `ExecRequired`
+
+        For this to work, when `StateCurrentFnSpec::exec` is requested, `peace` will:
+
+        1. For each non-parent item, run `StateCurrentFnSpec`, `StateDesiredFnSpec`, `StateDiffFnSpec`, and `EnsureOpSpec::check`.
+        2. If `EnsureOpSpec::check` returns `OpCheckStatus::ExecNotRequired`, then successor items can be processed as well.
+
+    3. `StateCurrentFnSpec` could return `Result<Option<Status>, E>`:
+
+        + `Ok(None)`: State cannot be discovered, likely because predecessor hasn't run
+        + `Ok(Some(State<_, _>))`: State cannot be discovered.
+        + `Err(E)`: An error happened when discovering state.
+
+            May be difficult to distinguish some cases from `Ok(None)`, e.g. failed to connect to server, is it because the server doesn't exist, or because the address is incorrect.
+
+            Should we have two `StateCurrentFnSpec`s? Or pass in whether it's being called from `Discover` vs `Ensure` &ndash; i.e. some information that says "err when failing to connect because the predecessor has been ensured".
 
         <!--  -->
 
-    Because it incurs mental effort to always cater for `src` not being available &ndash; i.e. implementing an item spec would need knowledge beyond itself &ndash; the decision is for `peace` not to run `state_current_fn_spec` if a predecessor is not already ensured.
+    Option 2 may be something we have to do anyway &ndash; we will not be able to provide current state to run `EnsureOpSpec::exec` for successors for the same reason.
 
-    For this to work, when `StateCurrentFnSpec::exec` is requested, `peace` will:
-
-    1. For each non-parent item, run `StateCurrentFnSpec`, `StateDesiredFnSpec`, `StateDiffFnSpec`, and `EnsureOpSpec::check`.
-    2. If `EnsureOpSpec::check` returns `OpCheckStatus::ExecNotRequired`, then successor items can be processed as well.
-
-        <!--  -->
+    Option 3 may coexist with option 2.
 
     **Note:** State discovery may be expensive, so it is important to be able to show a saved copy of what is discovered.
