@@ -120,7 +120,9 @@ where
         Ok(resources)
     }
 
-    /// Returns `StateDiffs` between the current and desired states on disk.
+    /// Returns `StateDiffs` between current states and desired states on disk.
+    ///
+    /// The current states are discovered when this is invoked.
     ///
     /// This also updates `Resources` from `SetUp` to
     /// `WithStatesCurrentAndDesired`.

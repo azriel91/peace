@@ -6,12 +6,12 @@ use peace::{
     cfg::{
         item_spec_id, profile,
         state::{Nothing, Placeholder},
-        FlowId, ItemSpecId, Profile, State,
+        EnsureOpSpec, FlowId, ItemSpecId, OpCheckStatus, Profile, State,
     },
+    data::Data,
     resources::{
         resources::ts::SetUp,
         states::{StateDiffs, StatesCleaned, StatesCurrent, StatesDesired, StatesEnsured},
-        Resources,
     },
     rt::cmds::{
         sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
@@ -23,7 +23,8 @@ use peace::{
     },
 };
 use peace_item_specs::tar_x::{
-    FileMetadata, FileMetadatas, TarXError, TarXItemSpec, TarXParams, TarXStateDiff,
+    FileMetadata, FileMetadatas, TarXData, TarXEnsureOpSpec, TarXError, TarXItemSpec, TarXParams,
+    TarXStateDiff,
 };
 use pretty_assertions::assert_eq;
 use tempfile::TempDir;
@@ -413,6 +414,162 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
     let state_diff = state_diffs.get::<TarXStateDiff, _>(&TarXTest::ID).unwrap();
 
     assert_eq!(&TarXStateDiff::ExtractionInSync, state_diff);
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
+-> Result<(), Box<dyn std::error::Error>> {
+    let TestEnv {
+        tempdir: _tempdir,
+        workspace,
+        graph,
+        mut output,
+        tar_path,
+        dest,
+    } = test_env(TAR_X2_TAR).await?;
+
+    // Create files in the destination.
+    tokio::fs::create_dir(&dest).await?;
+    tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
+
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .await?;
+    let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
+    let states_current = resources.borrow::<StatesCurrent>();
+    let state_current = states_current
+        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .unwrap();
+
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .await?;
+    let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
+    let states_desired = resources.borrow::<StatesDesired>();
+    let state_desired = states_desired
+        .get::<State<FileMetadatas, Placeholder>, _>(&TarXTest::ID)
+        .unwrap();
+    let state_diffs = resources.borrow::<StateDiffs>();
+    let state_diff = state_diffs.get::<TarXStateDiff, _>(&TarXTest::ID).unwrap();
+
+    assert_eq!(
+        OpCheckStatus::ExecNotRequired,
+        <TarXEnsureOpSpec::<TarXTest> as EnsureOpSpec>::check(
+            <TarXData<TarXTest> as Data>::borrow(&resources),
+            state_current,
+            &state_desired.logical,
+            state_diff
+        )
+        .await?
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::error::Error>> {
+    let TestEnv {
+        tempdir: _tempdir,
+        workspace,
+        graph,
+        mut output,
+        tar_path,
+        dest,
+    } = test_env(TAR_X2_TAR).await?;
+
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .await?;
+    StatesDiscoverCmd::exec(cmd_context).await?;
+
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .await?;
+    let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
+
+    let states_ensured = resources.borrow::<StatesEnsured>();
+    let state_ensured = states_ensured
+        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .unwrap();
+
+    let b_path = PathBuf::from("b");
+    let d_path = PathBuf::from("sub").join("d");
+    assert_eq!(
+        FileMetadatas::from(vec![
+            FileMetadata::new(b_path, TAR_X2_MTIME),
+            FileMetadata::new(d_path, TAR_X2_MTIME),
+        ]),
+        state_ensured.logical
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn std::error::Error>> {
+    let TestEnv {
+        tempdir: _tempdir,
+        workspace,
+        graph,
+        mut output,
+        tar_path,
+        dest,
+    } = test_env(TAR_X2_TAR).await?;
+
+    // Create files in the destination.
+    let sub_path = dest.join("sub");
+    tokio::fs::create_dir_all(sub_path).await?;
+    tar::Archive::new(Cursor::new(TAR_X1_TAR)).unpack(&dest)?;
+    tokio::fs::write(&dest.join("b"), []).await?;
+    tokio::fs::write(&dest.join("sub").join("d"), []).await?;
+
+    let b_path = PathBuf::from("b");
+    let d_path = PathBuf::from("sub").join("d");
+
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .await?;
+    StatesDiscoverCmd::exec(cmd_context).await?;
+
+    // Overwrite changed files and remove extra files
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .await?;
+    let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
+
+    let states_ensured = resources.borrow::<StatesEnsured>();
+    let state_ensured = states_ensured
+        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .unwrap();
+
+    assert_eq!(
+        FileMetadatas::from(vec![
+            FileMetadata::new(b_path.clone(), TAR_X2_MTIME),
+            FileMetadata::new(d_path.clone(), TAR_X2_MTIME),
+        ]),
+        state_ensured.logical
+    );
+
+    // Execute again to check idempotence
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .await?;
+    let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
+
+    let states_ensured = resources.borrow::<StatesEnsured>();
+    let state_ensured = states_ensured
+        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .unwrap();
+
+    assert_eq!(
+        FileMetadatas::from(vec![
+            FileMetadata::new(b_path, TAR_X2_MTIME),
+            FileMetadata::new(d_path, TAR_X2_MTIME),
+        ]),
+        state_ensured.logical
+    );
 
     Ok(())
 }

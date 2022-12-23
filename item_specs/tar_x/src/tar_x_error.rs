@@ -72,7 +72,7 @@ pub enum TarXError {
         error: std::io::Error,
     },
 
-    /// Failed to read tar extraction destination path
+    /// Failed to read tar extraction destination path.
     #[error(
         r#"Failed to read directory within tar extraction destination path: `{}`"#,
         dir.display()
@@ -158,6 +158,60 @@ pub enum TarXError {
         entry_path: PathBuf,
         /// Underlying error.
         error: std::time::SystemTimeError,
+    },
+
+    /// Failed to create tar extraction directory.
+    #[error(
+        r#"Failed to create tar extraction directory: `{}`"#,
+        dest.display()
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_item_spec_tar_x::tar_dest_dir_create))
+    )]
+    TarDestDirCreate {
+        /// Path to the destination directory.
+        dest: PathBuf,
+        /// Underlying error.
+        error: std::io::Error,
+    },
+
+    /// Failed to unpack tar.
+    #[error(
+        r#"Failed to unpack tar `{}` into `{}`"#,
+        tar_path.display(),
+        dest.display()
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_item_spec_tar_x::tar_unpack))
+    )]
+    TarUnpack {
+        /// Path to the tar file to extract.
+        tar_path: PathBuf,
+        /// Path to the destination directory.
+        dest: PathBuf,
+        /// Underlying error.
+        error: std::io::Error,
+    },
+
+    /// Failed to remove file in destination directory.
+    #[error(
+        r#"Failed to remove file `{}` in `{}`"#,
+        entry_path.display(),
+        dest.display()
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_item_spec_tar_x::tar_dest_file_remove))
+    )]
+    TarDestFileRemove {
+        /// Path to the destination directory.
+        dest: PathBuf,
+        /// Path to the file to remove, relative to the destination directory.
+        entry_path: PathBuf,
+        /// Underlying error.
+        error: std::io::Error,
     },
 
     // === Framework errors === //
