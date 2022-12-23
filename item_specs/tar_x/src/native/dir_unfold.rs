@@ -87,31 +87,29 @@ impl DirUnfold {
                         dir_and_read_dir_opt = None;
                         continue;
                     }
-                } else {
-                    if let Some(dir_to_read) = dir_to_reads.pop_front() {
-                        let DirToRead {
-                            dir_path,
-                            dir_path_base_rel,
-                        } = dir_to_read;
-                        // Process next directory
-                        dir_and_read_dir_opt = Some(
-                            tokio::fs::read_dir(&dir_path)
-                                .await
-                                .map_err(|error| TarXError::TarDestReadDir {
-                                    dir: dir_path,
-                                    error,
-                                })
-                                .map(|read_dir| DirAndReadDir {
-                                    dir_path_base_rel,
-                                    read_dir,
-                                })?,
-                        );
+                } else if let Some(dir_to_read) = dir_to_reads.pop_front() {
+                    let DirToRead {
+                        dir_path,
+                        dir_path_base_rel,
+                    } = dir_to_read;
+                    // Process next directory
+                    dir_and_read_dir_opt = Some(
+                        tokio::fs::read_dir(&dir_path)
+                            .await
+                            .map_err(|error| TarXError::TarDestReadDir {
+                                dir: dir_path,
+                                error,
+                            })
+                            .map(|read_dir| DirAndReadDir {
+                                dir_path_base_rel,
+                                read_dir,
+                            })?,
+                    );
 
-                        continue;
-                    } else {
-                        // no more directories to process
-                        break Ok(None);
-                    }
+                    continue;
+                } else {
+                    // no more directories to process
+                    break Ok(None);
                 }
             }
         })

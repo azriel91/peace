@@ -86,7 +86,7 @@ impl StateDiffFnSpec for TarXStateDiffFnSpec {
             }
         }
 
-        if added.len() == 0 && modified.len() == 0 && removed.len() == 0 {
+        if added.is_empty() && modified.is_empty() && removed.is_empty() {
             Ok(TarXStateDiff::ExtractionInSync)
         } else {
             let added = FileMetadatas::from(added);
