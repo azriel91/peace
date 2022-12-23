@@ -3,6 +3,9 @@
 ## unreleased
 
 * `FileDownload` item spec now supports base64 storage for WASM target.
+* Implement `TarXItemSpec` for native target. ([#62])
+
+[#62]: https://github.com/azriel91/peace/pull/62
 
 
 ## 0.0.5 (2022-12-18)
