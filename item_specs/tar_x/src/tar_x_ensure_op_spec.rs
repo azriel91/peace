@@ -3,7 +3,6 @@ use std::marker::PhantomData;
 use peace::cfg::state::Nothing;
 
 use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, State};
-use tar::Archive;
 
 use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
 
@@ -81,13 +80,13 @@ where
                 "TarXEnsureOpSpec::exec".to_string(),
                 tar_path,
                 |sync_io_bridge| {
-                    Archive::new(sync_io_bridge).unpack(dest).map_err(|error| {
-                        TarXError::TarUnpack {
+                    tar::Archive::new(sync_io_bridge)
+                        .unpack(dest)
+                        .map_err(|error| TarXError::TarUnpack {
                             tar_path: tar_path.to_path_buf(),
                             dest: dest.to_path_buf(),
                             error,
-                        }
-                    })?;
+                        })?;
                     Result::<_, TarXError>::Ok(())
                 },
             )
@@ -119,7 +118,7 @@ where
 
     #[cfg(target_arch = "wasm32")]
     async fn exec(
-        tar_x_data: TarXData<'_, Id>,
+        _tar_x_data: TarXData<'_, Id>,
         _state_current: &State<FileMetadatas, Nothing>,
         _state_desired: &FileMetadatas,
         _diff: &TarXStateDiff,

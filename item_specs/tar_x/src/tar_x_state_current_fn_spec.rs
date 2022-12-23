@@ -85,7 +85,10 @@ impl<Id> TarXStateCurrentFnSpec<Id> {
     }
 
     #[cfg(target_arch = "wasm32")]
-    fn files_extracted(_storage: &Storage, _dest: &Path) -> Result<Vec<FileMetadata>, TarXError> {
+    fn files_extracted(
+        _storage: &peace::rt_model::Storage,
+        _dest: &Path,
+    ) -> Result<Vec<FileMetadata>, TarXError> {
         todo!()
     }
 }
@@ -108,7 +111,7 @@ where
             #[cfg(not(target_arch = "wasm32"))]
             let files_extracted = Self::files_extracted(dest).await?;
             #[cfg(target_arch = "wasm32")]
-            let files_extracted = Self::files_extracted(storage, dest)?;
+            let files_extracted = Self::files_extracted(tar_x_data.storage(), dest)?;
 
             FileMetadatas::from(files_extracted)
         } else {
