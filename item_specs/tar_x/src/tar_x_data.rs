@@ -1,7 +1,7 @@
-#[cfg(target_arch = "wasm32")]
-use peace::rt_model::Storage;
-
-use peace::data::{Data, R};
+use peace::{
+    data::{Data, R},
+    rt_model::Storage,
+};
 
 use crate::TarXParams;
 
@@ -16,13 +16,10 @@ pub struct TarXData<'op, Id>
 where
     Id: Send + Sync + 'static,
 {
-    /// Url of the tar to extract.
+    /// Tar extraction parameters.
     tar_x_params: R<'op, TarXParams<Id>>,
 
-    /// For wasm, we write to web storage through the `Storage` object.
-    ///
-    /// Presumably we should be able to use this for `NativeStorage` as well.
-    #[cfg(target_arch = "wasm32")]
+    /// Storage to interact with to read the tar file / extract to.
     storage: R<'op, Storage>,
 }
 
@@ -30,12 +27,6 @@ impl<'op, Id> TarXData<'op, Id>
 where
     Id: Send + Sync + 'static,
 {
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn new(tar_x_params: R<'op, TarXParams<Id>>) -> Self {
-        Self { tar_x_params }
-    }
-
-    #[cfg(target_arch = "wasm32")]
     pub fn new(tar_x_params: R<'op, TarXParams<Id>>, storage: R<'op, Storage>) -> Self {
         Self {
             tar_x_params,
@@ -47,8 +38,7 @@ where
         &self.tar_x_params
     }
 
-    #[cfg(target_arch = "wasm32")]
     pub fn storage(&self) -> &Storage {
-        &*self.storage
+        &self.storage
     }
 }

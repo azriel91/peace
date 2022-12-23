@@ -36,8 +36,9 @@ where
         file_download_data: FileDownloadData<'_, Id>,
     ) -> Result<(), FileDownloadError> {
         let client = file_download_data.client();
-        let src_url = file_download_data.file_download_params().src();
-        let dest = file_download_data.file_download_params().dest();
+        let params = file_download_data.file_download_params();
+        let src_url = params.src();
+        let dest = params.dest();
         let response = client.get(src_url.clone()).send().await.map_err(|error| {
             #[cfg(not(target_arch = "wasm32"))]
             let (Ok(file_download_error) | Err(file_download_error)) =
@@ -50,18 +51,20 @@ where
 
         #[cfg(not(target_arch = "wasm32"))]
         {
-            Self::stream_write(
-                file_download_data.file_download_params(),
-                response.bytes_stream(),
-            )
-            .await?;
+            Self::stream_write(params, response.bytes_stream()).await?;
         }
 
         // reqwest in wasm doesn't support streams
         // https://github.com/seanmonstar/reqwest/issues/1424
         #[cfg(target_arch = "wasm32")]
         {
-            Self::stream_write(dest, file_download_data.storage(), response).await?;
+            Self::stream_write(
+                dest,
+                file_download_data.storage(),
+                params.storage_form(),
+                response,
+            )
+            .await?;
         }
 
         Ok(())
@@ -176,14 +179,27 @@ where
     async fn stream_write(
         dest_path: &Path,
         storage: &Storage,
+        storage_form: crate::StorageForm,
         response: reqwest::Response,
     ) -> Result<(), FileDownloadError> {
-        let response_text = response.text();
-        let contents = response_text
-            .await
-            .map_err(FileDownloadError::ResponseTextRead)?;
+        use crate::StorageForm;
 
-        storage.set_item(dest_path, &contents)?;
+        match storage_form {
+            StorageForm::Text => {
+                let value = response
+                    .text()
+                    .await
+                    .map_err(FileDownloadError::ResponseTextRead)?;
+                storage.set_item(dest_path, &value)?;
+            }
+            StorageForm::Base64 => {
+                let bytes = response
+                    .bytes()
+                    .await
+                    .map_err(FileDownloadError::ResponseBytesRead)?;
+                storage.set_item_b64(dest_path, &bytes)?;
+            }
+        }
 
         Ok(())
     }
@@ -221,7 +237,7 @@ where
             }
             FileDownloadStateDiff::Deleted { .. } => OpCheckStatus::ExecNotRequired, /* Don't delete */
             // existing file
-            FileDownloadStateDiff::NoChangeNonExistent { .. }
+            FileDownloadStateDiff::NoChangeNotExists { .. }
             | FileDownloadStateDiff::NoChangeSync { .. } => OpCheckStatus::ExecNotRequired,
         };
         Ok(op_check_status)

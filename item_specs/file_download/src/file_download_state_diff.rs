@@ -12,7 +12,7 @@ pub enum FileDownloadStateDiff {
         path: PathBuf,
     },
     /// File does not exist both locally and on server.
-    NoChangeNonExistent {
+    NoChangeNotExists {
         /// Path to the file.
         path: PathBuf,
     },
@@ -40,7 +40,7 @@ impl fmt::Display for FileDownloadStateDiff {
                 "resource does not exist on server; locally `{}` exists, but ensure will not delete it",
                 path.display()
             ),
-            Self::NoChangeNonExistent { path } => write!(
+            Self::NoChangeNotExists { path } => write!(
                 f,
                 "resource does not exist on server, and `{}` does not exist locally",
                 path.display()

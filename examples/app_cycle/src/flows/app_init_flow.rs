@@ -5,9 +5,12 @@ use peace::{
         CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, OutputWrite, Workspace, WorkspaceSpec,
     },
 };
-use peace_item_specs::file_download::{FileDownloadItemSpec, FileDownloadParams};
+use peace_item_specs::{
+    file_download::{FileDownloadItemSpec, FileDownloadParams},
+    tar_x::TarXItemSpec,
+};
 
-use crate::model::{WebAppError, WebAppFileId};
+use crate::model::{AppCycleError, WebAppFileId};
 
 /// Flow to download a web application.
 #[derive(Debug)]
@@ -17,10 +20,10 @@ impl AppInitFlow {
     /// Sets up this workspace
     pub async fn run<O>(
         output: &mut O,
-        web_app_file_download_params: FileDownloadParams<WebAppFileId>,
-    ) -> Result<(), WebAppError>
+        app_cycle_file_download_params: FileDownloadParams<WebAppFileId>,
+    ) -> Result<(), AppCycleError>
     where
-        O: OutputWrite<WebAppError>,
+        O: OutputWrite<AppCycleError>,
     {
         let workspace = Workspace::new(
             #[cfg(not(target_arch = "wasm32"))]
@@ -34,7 +37,7 @@ impl AppInitFlow {
 
         let cmd_context = CmdContext::builder(&workspace, &graph, output)
             .with_workspace_init::<FileDownloadParams<WebAppFileId>>(Some(
-                web_app_file_download_params,
+                app_cycle_file_download_params,
             ))
             .await?;
         StatesDiscoverCmd::exec(cmd_context).await?;
@@ -44,14 +47,22 @@ impl AppInitFlow {
             .await?;
         EnsureCmd::exec(cmd_context).await?;
 
-        Ok(())
+        todo!(
+            "add `TarXParams` to command context somehow. \
+            See <https://github.com/azriel91/peace/issues/45>"
+        );
     }
 
-    fn graph() -> Result<ItemSpecGraph<WebAppError>, WebAppError> {
-        let mut graph_builder = ItemSpecGraphBuilder::<WebAppError>::new();
+    fn graph() -> Result<ItemSpecGraph<AppCycleError>, AppCycleError> {
+        let mut graph_builder = ItemSpecGraphBuilder::<AppCycleError>::new();
 
-        graph_builder
-            .add_fn(FileDownloadItemSpec::<WebAppFileId>::new(item_spec_id!("web_app")).into());
+        let web_app_download_id = graph_builder.add_fn(
+            FileDownloadItemSpec::<WebAppFileId>::new(item_spec_id!("web_app_download")).into(),
+        );
+        let web_app_extract_id = graph_builder
+            .add_fn(TarXItemSpec::<WebAppFileId>::new(item_spec_id!("web_app_extract")).into());
+
+        graph_builder.add_edge(web_app_download_id, web_app_extract_id)?;
 
         Ok(graph_builder.build())
     }

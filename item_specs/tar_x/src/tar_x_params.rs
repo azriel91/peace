@@ -1,15 +1,11 @@
 use std::{
-    fmt,
     marker::PhantomData,
     path::{Path, PathBuf},
 };
 
+use derivative::Derivative;
 use serde::{Deserialize, Serialize};
 
-// TODO: params for:
-//
-// * keep or remove unknown files
-// * force re-extraction
 /// Tar extraction parameters.
 ///
 /// The `Id` type parameter is needed for each tar extraction params to be a
@@ -19,9 +15,16 @@ use serde::{Deserialize, Serialize};
 ///
 /// * `Id`: A zero-sized type used to distinguish different tar extraction
 ///   parameters from each other.
-#[derive(Clone, PartialEq, Eq, Deserialize, Serialize)]
+// TODO: params for:
+//
+// * keep or remove unknown files
+// * force re-extraction
+#[derive(Clone, Derivative, PartialEq, Eq, Deserialize, Serialize)]
+#[derivative(Debug)]
 pub struct TarXParams<Id> {
-    /// Path of the file to extract.
+    /// Path of the tar file to extract.
+    tar_path: PathBuf,
+    /// Directory path to extract the tar file to.
     dest: PathBuf,
     /// Marker for unique tar extraction parameters type.
     marker: PhantomData<Id>,
@@ -29,23 +32,21 @@ pub struct TarXParams<Id> {
 
 impl<Id> TarXParams<Id> {
     /// Returns new `TarXParams`.
-    pub fn new(dest: PathBuf) -> Self {
+    pub fn new(tar_path: PathBuf, dest: PathBuf) -> Self {
         Self {
+            tar_path,
             dest,
             marker: PhantomData,
         }
     }
 
-    /// Returns the file path to write to.
+    /// Returns the path of the tar file to extract.
+    pub fn tar_path(&self) -> &Path {
+        &self.tar_path
+    }
+
+    /// Returns the directory path to extract the tar file to.
     pub fn dest(&self) -> &Path {
         &self.dest
-    }
-}
-
-impl<Id> fmt::Debug for TarXParams<Id> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("TarXParams")
-            .field("dest", &self.dest)
-            .finish()
     }
 }

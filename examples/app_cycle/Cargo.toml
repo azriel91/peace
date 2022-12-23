@@ -1,5 +1,5 @@
 [package]
-name = "web_app"
+name = "app_cycle"
 version = "0.0.5"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 publish = false
 
 [[bin]]
-name = "web_app"
+name = "app_cycle"
 test = false
 
 [lib]
@@ -19,7 +19,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 peace = { path = "../.." }
-peace_item_specs = { path = "../../item_specs", features = ["file_download"] }
+peace_item_specs = { path = "../../item_specs", features = ["file_download", "tar_x"] }
 semver = "1.0.14"
 serde = { version = "1.0.147", features = ["derive"] }
 thiserror = "1.0.37"

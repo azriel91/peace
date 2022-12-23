@@ -64,7 +64,7 @@ impl StateDiffFnSpec for FileDownloadStateDiffFnSpec {
                     }
                 }
                 (FileDownloadState::None { .. }, FileDownloadState::None { path }) => {
-                    FileDownloadStateDiff::NoChangeNonExistent {
+                    FileDownloadStateDiff::NoChangeNotExists {
                         path: path.to_path_buf(),
                     }
                 }

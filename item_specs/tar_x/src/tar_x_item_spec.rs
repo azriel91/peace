@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    TarXCleanOpSpec, TarXEnsureOpSpec, TarXError, TarXState, TarXStateCurrentFnSpec,
+    FileMetadatas, TarXCleanOpSpec, TarXEnsureOpSpec, TarXError, TarXStateCurrentFnSpec,
     TarXStateDesiredFnSpec, TarXStateDiff, TarXStateDiffFnSpec,
 };
 
@@ -55,7 +55,7 @@ where
     type StateDesiredFnSpec = TarXStateDesiredFnSpec<Id>;
     type StateDiff = TarXStateDiff;
     type StateDiffFnSpec = TarXStateDiffFnSpec;
-    type StateLogical = TarXState;
+    type StateLogical = FileMetadatas;
     type StatePhysical = Nothing;
 
     fn id(&self) -> ItemSpecId {

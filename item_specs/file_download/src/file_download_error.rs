@@ -116,7 +116,10 @@ pub enum FileDownloadError {
 
     // WASM errors.
     #[cfg(target_arch = "wasm32")]
-    #[error("Failed to read text from contents.")]
+    #[error("Failed to read bytes from response.")]
+    ResponseBytesRead(#[source] reqwest::Error),
+    #[cfg(target_arch = "wasm32")]
+    #[error("Failed to read text from response.")]
     ResponseTextRead(#[source] reqwest::Error),
 
     // === Framework errors === //

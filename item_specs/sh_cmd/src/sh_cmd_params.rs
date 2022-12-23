@@ -1,4 +1,4 @@
-use std::{fmt, marker::PhantomData};
+use std::marker::PhantomData;
 
 use derivative::Derivative;
 use serde::{Deserialize, Serialize};
@@ -15,7 +15,7 @@ use crate::ShCmd;
 /// * `Id`: A zero-sized type used to distinguish different command execution
 ///   parameters from each other.
 #[derive(Derivative, PartialEq, Eq, Deserialize, Serialize)]
-#[derivative(Clone)]
+#[derivative(Clone, Debug)]
 pub struct ShCmdParams<Id> {
     /// Shell command to run to discover the current state.
     ///
@@ -195,20 +195,5 @@ impl<Id> ShCmdParams<Id> {
     /// * Current state string
     pub fn clean_exec_sh_cmd(&self) -> &ShCmd {
         &self.clean_exec_sh_cmd
-    }
-}
-
-impl<Id> fmt::Debug for ShCmdParams<Id> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("ShCmdParams")
-            .field("state_current_sh_cmd", &self.state_current_sh_cmd)
-            .field("state_desired_sh_cmd", &self.state_desired_sh_cmd)
-            .field("state_diff_sh_cmd", &self.state_diff_sh_cmd)
-            .field("ensure_check_sh_cmd", &self.ensure_check_sh_cmd)
-            .field("ensure_exec_sh_cmd", &self.ensure_exec_sh_cmd)
-            .field("clean_check_sh_cmd", &self.clean_check_sh_cmd)
-            .field("clean_exec_sh_cmd", &self.clean_exec_sh_cmd)
-            .field("marker", &self.marker)
-            .finish()
     }
 }
