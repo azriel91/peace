@@ -75,7 +75,7 @@ where
         }
     }
 
-    /// Returns `StateDiffs` between the current and desired states on disk.
+    /// Returns `StateDiffs` between the saved and desired states on disk.
     ///
     /// This also updates `Resources` from `SetUp` to
     /// `WithStatesCurrentAndDesired`.

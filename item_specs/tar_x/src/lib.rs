@@ -23,7 +23,4 @@ mod tar_x_state_diff;
 mod tar_x_state_diff_fn_spec;
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use crate::dir_unfold::DirUnfold;
-
-#[cfg(not(target_arch = "wasm32"))]
-mod dir_unfold;
+mod native;

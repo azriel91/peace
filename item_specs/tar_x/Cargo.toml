@@ -29,7 +29,7 @@ serde = { version = "1.0.147", features = ["derive"] }
 # Asynchronous IO can be handled using [SyncIoBridge].
 #
 # [SyncIoBridge]: https://docs.rs/tokio-util/latest/tokio_util/io/struct.SyncIoBridge.html
-tar = "0.4.38"
+tar = { workspace = true }
 thiserror = "1.0.37"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

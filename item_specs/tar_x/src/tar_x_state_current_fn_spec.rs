@@ -15,11 +15,17 @@ impl<Id> TarXStateCurrentFnSpec<Id> {
 
         use futures::stream::TryStreamExt;
 
+        use crate::native::{DestDirEntry, DirUnfold};
+
         let dest_file_metadatas = if dest.exists() {
-            crate::DirUnfold::unfold(dest)
+            DirUnfold::unfold(dest)
                 .try_fold(
                     Vec::new(),
-                    |mut dest_file_metadatas, dir_entry| async move {
+                    |mut dest_file_metadatas, dest_dir_entry| async move {
+                        let DestDirEntry {
+                            dest_dir_relative_path,
+                            dir_entry,
+                        } = dest_dir_entry;
                         let entry_path = dir_entry.path();
                         let mtime = dir_entry
                             .metadata()
@@ -51,7 +57,7 @@ impl<Id> TarXStateCurrentFnSpec<Id> {
                                 Ok(mtime_secs)
                             })?;
 
-                        let file_metadata = FileMetadata::new(entry_path, mtime);
+                        let file_metadata = FileMetadata::new(dest_dir_relative_path, mtime);
                         dest_file_metadatas.push(file_metadata);
 
                         Ok(dest_file_metadatas)
