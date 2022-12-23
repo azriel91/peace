@@ -1,6 +1,8 @@
 #[cfg(feature = "error_reporting")]
 use peace::miette;
 
+use peace::rt_model::fn_graph::{Edge, WouldCycle};
+
 /// Error while managing a web application.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
@@ -39,6 +41,14 @@ pub enum AppCycleError {
         #[from]
         peace_item_specs::file_download::FileDownloadError,
     ),
+    /// A `TarX` item spec error occurred.
+    #[error("A `TarX` item spec error occurred.")]
+    PeaceItemSpecTarX(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        peace_item_specs::tar_x::TarXError,
+    ),
 
     // === Framework errors === //
     /// A `peace` runtime error occurred.
@@ -48,6 +58,14 @@ pub enum AppCycleError {
         #[source]
         #[from]
         peace::rt_model::Error,
+    ),
+
+    /// A graph `WouldCycle` error occurred.
+    #[error("A `peace` runtime error occurred.")]
+    WouldCycleError(
+        #[source]
+        #[from]
+        WouldCycle<Edge>,
     ),
 
     // === Scaffolding errors === //

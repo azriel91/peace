@@ -1,3 +1,3 @@
 /// Marker type for web application `FileDownloadParams`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct AppCycleFileId;
+pub struct WebAppFileId;
