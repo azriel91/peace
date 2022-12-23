@@ -85,7 +85,7 @@ jobs:
         uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
         with:
           command: clippy
-          args: -- -D warnings
+          args: --workspace --all-features -- -D warnings
 
   coverage:
     name: Coverage
