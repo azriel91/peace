@@ -22,11 +22,11 @@ miette = { workspace = true, optional = true }
 peace_core = { path = "../core", version = "0.0.5" }
 peace_resources = { path = "../resources", version = "0.0.5" }
 peace_rt_model_core = { path = "../rt_model_core", version = "0.0.5" }
-serde = "1.0.147"
-serde_json = { version = "1.0.88", optional = true }
-serde_yaml = "0.9.14"
-thiserror = "1.0.37"
-tokio = { version = "1.22.0", features = ["fs", "io-std"] }
+serde = "1.0.151"
+serde_json = { version = "1.0.91", optional = true }
+serde_yaml = "0.9.16"
+thiserror = "1.0.38"
+tokio = { version = "1.23.0", features = ["fs", "io-std"] }
 tokio-util = { version = "0.7.4", features = ["io", "io-util"] }
 
 [features]

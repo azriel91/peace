@@ -19,7 +19,7 @@ test = false
 derivative = { workspace = true }
 miette = { workspace = true, optional = true }
 peace = { path = "../..", version = "0.0.5" }
-serde = { version = "1.0.147", features = ["derive"] }
+serde = { version = "1.0.151", features = ["derive"] }
 # We use this instead of tokio-tar, because:
 #
 # * We expect tar extraction to be a compute operation.
@@ -30,14 +30,14 @@ serde = { version = "1.0.147", features = ["derive"] }
 #
 # [SyncIoBridge]: https://docs.rs/tokio-util/latest/tokio_util/io/struct.SyncIoBridge.html
 tar = { workspace = true }
-thiserror = "1.0.37"
+thiserror = "1.0.38"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 futures = "0.3.25"
-tokio = { version = "1.22.0", features = ["fs"] }
+tokio = { version = "1.23.0", features = ["fs"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-tokio = { version = "1.22.0" }
+tokio = { version = "1.23.0" }
 
 [features]
 default = []
