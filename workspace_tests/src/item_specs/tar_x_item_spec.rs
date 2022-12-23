@@ -1,18 +1,13 @@
-#![allow(unused_imports)]
-
 use std::{io::Cursor, path::PathBuf};
 
 use peace::{
     cfg::{
         item_spec_id, profile,
         state::{Nothing, Placeholder},
-        EnsureOpSpec, FlowId, ItemSpecId, OpCheckStatus, Profile, State,
+        CleanOpSpec, EnsureOpSpec, FlowId, ItemSpecId, OpCheckStatus, Profile, State,
     },
     data::Data,
-    resources::{
-        resources::ts::SetUp,
-        states::{StateDiffs, StatesCleaned, StatesCurrent, StatesDesired, StatesEnsured},
-    },
+    resources::states::{StateDiffs, StatesCleaned, StatesCurrent, StatesDesired, StatesEnsured},
     rt::cmds::{
         sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
         CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd,
@@ -23,8 +18,8 @@ use peace::{
     },
 };
 use peace_item_specs::tar_x::{
-    FileMetadata, FileMetadatas, TarXData, TarXEnsureOpSpec, TarXError, TarXItemSpec, TarXParams,
-    TarXStateDiff,
+    FileMetadata, FileMetadatas, TarXCleanOpSpec, TarXData, TarXEnsureOpSpec, TarXError,
+    TarXItemSpec, TarXParams, TarXStateDiff,
 };
 use pretty_assertions::assert_eq;
 use tempfile::TempDir;
@@ -570,6 +565,72 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
         ]),
         state_ensured.logical
     );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn clean_check_returns_exec_not_required_when_dest_empty()
+-> Result<(), Box<dyn std::error::Error>> {
+    let TestEnv {
+        tempdir: _tempdir,
+        workspace,
+        graph,
+        mut output,
+        tar_path,
+        dest,
+    } = test_env(TAR_X2_TAR).await?;
+
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .await?;
+    let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
+    let states_current = resources.borrow::<StatesCurrent>();
+    let state_current = states_current
+        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .unwrap();
+
+    assert_eq!(
+        OpCheckStatus::ExecNotRequired,
+        <TarXCleanOpSpec::<TarXTest> as CleanOpSpec>::check(
+            <TarXData<TarXTest> as Data>::borrow(&resources),
+            state_current,
+        )
+        .await?
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::error::Error>> {
+    let TestEnv {
+        tempdir: _tempdir,
+        workspace,
+        graph,
+        mut output,
+        tar_path,
+        dest,
+    } = test_env(TAR_X2_TAR).await?;
+
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest.clone())))
+        .await?;
+    StatesDiscoverCmd::exec(cmd_context).await?;
+
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .await?;
+    let CmdContext { resources, .. } = CleanCmd::exec(cmd_context).await?;
+
+    let states_cleaned = resources.borrow::<StatesCleaned>();
+    let state_cleaned = states_cleaned
+        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .unwrap();
+
+    assert_eq!(FileMetadatas::default(), state_cleaned.logical);
+    assert!(!dest.join("b").exists());
+    assert!(!dest.join("sub").join("d").exists());
 
     Ok(())
 }
