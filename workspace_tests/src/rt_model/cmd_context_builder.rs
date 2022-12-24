@@ -51,7 +51,7 @@ async fn build_inserts_workspace_init_params_from_parameter()
     let (_tempdir, workspace, graph, mut output) = test_setup().await?;
 
     let CmdContext { resources, .. } = CmdContextBuilder::new(&workspace, &graph, &mut output)
-        .with_workspace_init(Some("workspace_init".to_string()))
+        .with_workspace_param("param".to_string(), Some("workspace_init".to_string()))
         .await?;
     let workspace_init_file = resources.borrow::<WorkspaceInitFile>();
     let workspace_init = resources.borrow::<String>();
@@ -70,12 +70,13 @@ async fn build_inserts_workspace_init_params_from_storage() -> Result<(), Box<dy
 {
     let (_tempdir, workspace, graph, mut output) = test_setup().await?;
     let _cmd_context = CmdContextBuilder::new(&workspace, &graph, &mut output)
-        .with_workspace_init(Some("workspace_init".to_string()))
+        .with_workspace_param("param1".to_string(), Some("workspace_init".to_string()))
         .await?;
 
     // Create another CmdContext, this time using no parameter.
     let CmdContext { resources, .. } = CmdContextBuilder::new(&workspace, &graph, &mut output)
-        .with_workspace_init::<String>(None)
+        .with_workspace_param("param1".to_string(), Option::<String>::None)
+        .with_workspace_param("param2".to_string(), Option::<String>::None)
         .await?;
     let workspace_init_file = resources.borrow::<WorkspaceInitFile>();
     let workspace_init = resources.borrow::<String>();
@@ -95,7 +96,7 @@ async fn build_inserts_profile_init_params_from_parameter() -> Result<(), Box<dy
     let (_tempdir, workspace, graph, mut output) = test_setup().await?;
 
     let CmdContext { resources, .. } = CmdContextBuilder::new(&workspace, &graph, &mut output)
-        .with_profile_init(Some("profile_init".to_string()))
+        .with_profile_param("param".to_string(), Some("profile_init".to_string()))
         .await?;
     let profile_init_file = resources.borrow::<ProfileInitFile>();
     let profile_init = resources.borrow::<String>();
@@ -114,12 +115,13 @@ async fn build_inserts_profile_init_params_from_storage() -> Result<(), Box<dyn 
 {
     let (_tempdir, workspace, graph, mut output) = test_setup().await?;
     let _cmd_context = CmdContextBuilder::new(&workspace, &graph, &mut output)
-        .with_profile_init(Some("profile_init".to_string()))
+        .with_profile_param("param1".to_string(), Some("profile_init".to_string()))
         .await?;
 
     // Create another CmdContext, this time using no parameter.
     let CmdContext { resources, .. } = CmdContextBuilder::new(&workspace, &graph, &mut output)
-        .with_profile_init::<String>(None)
+        .with_profile_param("param1".to_string(), None::<String>)
+        .with_profile_param("param2".to_string(), None::<String>)
         .await?;
     let profile_init_file = resources.borrow::<ProfileInitFile>();
     let profile_init = resources.borrow::<String>();
@@ -138,7 +140,7 @@ async fn build_inserts_flow_init_params_from_parameter() -> Result<(), Box<dyn s
     let (_tempdir, workspace, graph, mut output) = test_setup().await?;
 
     let CmdContext { resources, .. } = CmdContextBuilder::new(&workspace, &graph, &mut output)
-        .with_flow_init(Some("flow_init".to_string()))
+        .with_flow_param("param".to_string(), Some("flow_init".to_string()))
         .await?;
     let flow_init_file = resources.borrow::<FlowInitFile>();
     let flow_init = resources.borrow::<String>();
@@ -156,12 +158,13 @@ async fn build_inserts_flow_init_params_from_parameter() -> Result<(), Box<dyn s
 async fn build_inserts_flow_init_params_from_storage() -> Result<(), Box<dyn std::error::Error>> {
     let (_tempdir, workspace, graph, mut output) = test_setup().await?;
     let _cmd_context = CmdContextBuilder::new(&workspace, &graph, &mut output)
-        .with_flow_init(Some("flow_init".to_string()))
+        .with_flow_param("param1".to_string(), Some("flow_init".to_string()))
         .await?;
 
     // Create another CmdContext, this time using no parameter.
     let CmdContext { resources, .. } = CmdContextBuilder::new(&workspace, &graph, &mut output)
-        .with_flow_init::<String>(None)
+        .with_flow_param("param1".to_string(), None::<String>)
+        .with_flow_param("param2".to_string(), None::<String>)
         .await?;
     let flow_init_file = resources.borrow::<FlowInitFile>();
     let flow_init = resources.borrow::<String>();

@@ -54,7 +54,10 @@ async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_e
     } = test_env(TAR_X2_TAR).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
+        )
         .await?;
 
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
@@ -87,7 +90,10 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
+        )
         .await?;
 
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
@@ -121,7 +127,10 @@ async fn state_desired_returns_file_metadatas_from_tar() -> Result<(), Box<dyn s
     let d_path = PathBuf::from("sub").join("d");
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
+        )
         .await?;
 
     let CmdContext { resources, .. } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
@@ -156,12 +165,15 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
     let d_path = PathBuf::from("sub").join("d");
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
+        )
         .await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
     let state_diffs = resources.borrow::<StateDiffs>();
@@ -203,12 +215,15 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
     tar::Archive::new(Cursor::new(TAR_X1_TAR)).unpack(&dest)?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
+        )
         .await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
     let state_diffs = resources.borrow::<StateDiffs>();
@@ -252,12 +267,15 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
+        )
         .await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
     let state_diffs = resources.borrow::<StateDiffs>();
@@ -299,12 +317,15 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
+        )
         .await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
     let state_diffs = resources.borrow::<StateDiffs>();
@@ -351,12 +372,15 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
     let d_path = PathBuf::from("sub").join("d");
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
+        )
         .await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
     let state_diffs = resources.borrow::<StateDiffs>();
@@ -397,12 +421,15 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
+        )
         .await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
     let state_diffs = resources.borrow::<StateDiffs>();
@@ -430,7 +457,10 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
+        )
         .await?;
     let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
     let states_current = resources.borrow::<StatesCurrent>();
@@ -439,7 +469,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         .unwrap();
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
     let states_desired = resources.borrow::<StatesDesired>();
@@ -475,12 +505,15 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
     } = test_env(TAR_X2_TAR).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
+        )
         .await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
 
@@ -524,13 +557,16 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
     let d_path = PathBuf::from("sub").join("d");
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
+        )
         .await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Overwrite changed files and remove extra files
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
 
@@ -549,7 +585,7 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
 
     // Execute again to check idempotence
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
 
@@ -582,7 +618,10 @@ async fn clean_check_returns_exec_not_required_when_dest_empty()
     } = test_env(TAR_X2_TAR).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest)))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
+        )
         .await?;
     let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
     let states_current = resources.borrow::<StatesCurrent>();
@@ -614,12 +653,15 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
     } = test_env(TAR_X2_TAR).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init(Some(TarXParams::<TarXTest>::new(tar_path, dest.clone())))
+        .with_flow_param(
+            "param".to_string(),
+            Some(TarXParams::<TarXTest>::new(tar_path, dest.clone())),
+        )
         .await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_flow_init::<TarXParams<TarXTest>>(None)
+        .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = CleanCmd::exec(cmd_context).await?;
 

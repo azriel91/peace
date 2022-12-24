@@ -9,7 +9,7 @@ use peace_resources::{
     type_reg::untagged::{BoxDt, TypeReg},
     Resources,
 };
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
     cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams},
@@ -47,11 +47,17 @@ use crate::{
 /// [`ProfileDir`]: peace::resources::paths::ProfileDir
 /// [`ProfileHistoryDir`]: peace::resources::paths::ProfileHistoryDir
 #[derive(Debug)]
-pub struct CmdContextBuilder<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
-where
-    WorkspaceParamsK: Debug + Eq + Hash,
-    ProfileParamsK: Debug + Eq + Hash,
-    FlowParamsK: Debug + Eq + Hash,
+pub struct CmdContextBuilder<
+    'ctx,
+    E,
+    O,
+    WorkspaceParamsKMaybe = KeyUnknown,
+    ProfileParamsKMaybe = KeyUnknown,
+    FlowParamsKMaybe = KeyUnknown,
+> where
+    WorkspaceParamsKMaybe: KeyMaybe,
+    ProfileParamsKMaybe: KeyMaybe,
+    FlowParamsKMaybe: KeyMaybe,
 {
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
@@ -60,28 +66,43 @@ where
     /// `OutputWrite` to return values / errors to.
     output: &'ctx mut O,
     /// Workspace parameters.
-    workspace_params: Option<WorkspaceParams<WorkspaceParamsK>>,
+    workspace_params: Option<WorkspaceParams<WorkspaceParamsKMaybe::Key>>,
     /// Type registry for `WorkspaceParams` deserialization.
-    workspace_params_type_reg: TypeReg<WorkspaceParamsK, BoxDt>,
+    workspace_params_type_reg: TypeReg<WorkspaceParamsKMaybe::Key, BoxDt>,
     /// Profile parameters.
-    profile_params: Option<ProfileParams<ProfileParamsK>>,
+    profile_params: Option<ProfileParams<ProfileParamsKMaybe::Key>>,
     /// Type registry for `ProfileParams` deserialization.
-    profile_params_type_reg: TypeReg<ProfileParamsK, BoxDt>,
+    profile_params_type_reg: TypeReg<ProfileParamsKMaybe::Key, BoxDt>,
     /// Flow parameters.
-    flow_params: Option<FlowParams<FlowParamsK>>,
+    flow_params: Option<FlowParams<FlowParamsKMaybe::Key>>,
     /// Type registry for `FlowParams` deserialization.
-    flow_params_type_reg: TypeReg<FlowParamsK, BoxDt>,
+    flow_params_type_reg: TypeReg<FlowParamsKMaybe::Key, BoxDt>,
 }
 
-impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
-    CmdContextBuilder<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct KeyUnknown;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
+pub struct KeyKnown<K>(PhantomData<K>);
+
+pub trait KeyMaybe {
+    type Key: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static;
+}
+
+impl KeyMaybe for KeyUnknown {
+    type Key = ();
+}
+
+impl<K> KeyMaybe for KeyKnown<K>
+where
+    K: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    type Key = K;
+}
+
+impl<'ctx, E, O> CmdContextBuilder<'ctx, E, O, KeyUnknown, KeyUnknown, KeyUnknown>
 where
     E: std::error::Error + From<Error>,
-    WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     /// Returns a builder for the command context.
     ///
@@ -109,68 +130,16 @@ where
             flow_params_type_reg: TypeReg::new(),
         }
     }
+}
 
-    /// Sets the workspace parameters.
-    ///
-    /// # Parameters
-    ///
-    /// * `k`: Key to store the parameter with.
-    /// * `workspace_param`: The workspace parameter to register.
-    pub fn with_workspace_param<WorkspaceParam>(
-        mut self,
-        k: WorkspaceParamsK,
-        workspace_param: WorkspaceParam,
-    ) -> Self
-    where
-        WorkspaceParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-    {
-        self.workspace_params_type_reg
-            .register::<WorkspaceParam>(k.clone());
-        self.workspace_params
-            .get_or_insert_with(WorkspaceParams::new)
-            .insert(k, workspace_param);
-        self
-    }
-
-    /// Sets the profile parameters.
-    ///
-    /// # Parameters
-    ///
-    /// * `k`: Key to store the parameter with.
-    /// * `profile_param`: The profile parameter to register.
-    pub fn with_profile_param<ProfileParam>(
-        mut self,
-        k: ProfileParamsK,
-        profile_param: ProfileParam,
-    ) -> Self
-    where
-        ProfileParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-    {
-        self.profile_params_type_reg
-            .register::<ProfileParam>(k.clone());
-        self.profile_params
-            .get_or_insert_with(ProfileParams::new)
-            .insert(k, profile_param);
-        self
-    }
-
-    /// Sets the flow parameters.
-    ///
-    /// # Parameters
-    ///
-    /// * `k`: Key to store the parameter with.
-    /// * `flow_param`: The flow parameter to register.
-    pub fn with_flow_param<FlowParam>(mut self, k: FlowParamsK, flow_param: FlowParam) -> Self
-    where
-        FlowParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-    {
-        self.flow_params_type_reg.register::<FlowParam>(k.clone());
-        self.flow_params
-            .get_or_insert_with(FlowParams::new)
-            .insert(k, flow_param);
-        self
-    }
-
+impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
+    CmdContextBuilder<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
+where
+    E: std::error::Error + From<Error>,
+    WorkspaceParamsKMaybe: KeyMaybe,
+    ProfileParamsKMaybe: KeyMaybe,
+    FlowParamsKMaybe: KeyMaybe,
+{
     /// Prepares a workspace to run commands in.
     ///
     /// # Parameters
@@ -299,9 +268,9 @@ where
     /// [#45]: https://github.com/azriel91/peace/issues/45
     fn init_params_insert(
         resources: &mut Resources<Empty>,
-        workspace_params: Option<WorkspaceParams<WorkspaceParamsK>>,
-        profile_params: Option<ProfileParams<ProfileParamsK>>,
-        flow_params: Option<FlowParams<FlowParamsK>>,
+        workspace_params: Option<WorkspaceParams<WorkspaceParamsKMaybe::Key>>,
+        profile_params: Option<ProfileParams<ProfileParamsKMaybe::Key>>,
+        flow_params: Option<FlowParams<FlowParamsKMaybe::Key>>,
     ) {
         if let Some(workspace_params) = workspace_params {
             resources.insert(workspace_params);
@@ -352,11 +321,11 @@ where
     /// Serializes init params to storage.
     async fn init_params_serialize(
         storage: &Storage,
-        workspace_params: Option<&WorkspaceParams<WorkspaceParamsK>>,
+        workspace_params: Option<&WorkspaceParams<WorkspaceParamsKMaybe::Key>>,
         workspace_init_file: &WorkspaceInitFile,
-        profile_params: Option<&ProfileParams<ProfileParamsK>>,
+        profile_params: Option<&ProfileParams<ProfileParamsKMaybe::Key>>,
         profile_init_file: &ProfileInitFile,
-        flow_params: Option<&FlowParams<FlowParamsK>>,
+        flow_params: Option<&FlowParams<FlowParamsKMaybe::Key>>,
         flow_init_file: &FlowInitFile,
     ) -> Result<(), E> {
         if let Some(workspace_params) = workspace_params {
@@ -384,13 +353,13 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
-    CmdContextBuilder<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
+    CmdContextBuilder<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
 where
     E: std::error::Error,
-    WorkspaceParamsK: Debug + Eq + Hash,
-    ProfileParamsK: Debug + Eq + Hash,
-    FlowParamsK: Debug + Eq + Hash,
+    WorkspaceParamsKMaybe: KeyMaybe,
+    ProfileParamsKMaybe: KeyMaybe,
+    FlowParamsKMaybe: KeyMaybe,
 {
     /// Registers each item spec's `State` and `StateLogical` for
     /// deserialization.
@@ -429,20 +398,321 @@ where
 pub type CmdContextFuture<'ctx, E, O> =
     Pin<Box<dyn Future<Output = Result<CmdContext<'ctx, E, O, SetUp>, E>> + 'ctx>>;
 
-impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> IntoFuture
-    for CmdContextBuilder<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe> IntoFuture
+    for CmdContextBuilder<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
 where
     E: std::error::Error + From<Error>,
-    WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    WorkspaceParamsKMaybe: KeyMaybe + 'ctx,
+    ProfileParamsKMaybe: KeyMaybe + 'ctx,
+    FlowParamsKMaybe: KeyMaybe + 'ctx,
 {
     type IntoFuture = CmdContextFuture<'ctx, E, O>;
     type Output = <Self::IntoFuture as Future>::Output;
 
     fn into_future(self) -> Self::IntoFuture {
         Box::pin(self.build())
+    }
+}
+
+// Crazy stuff for ergonomic API usage
+
+impl<'ctx, E, O, ProfileParamsKMaybe, FlowParamsKMaybe>
+    CmdContextBuilder<'ctx, E, O, KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe>
+where
+    E: std::error::Error + From<Error>,
+    ProfileParamsKMaybe: KeyMaybe,
+    FlowParamsKMaybe: KeyMaybe,
+{
+    /// Adds a workspace parameter.
+    ///
+    /// # Parameters
+    ///
+    /// * `k`: Key to store the parameter with.
+    /// * `workspace_param`: The workspace parameter to register.
+    pub fn with_workspace_param<WorkspaceParamsK, WorkspaceParam>(
+        self,
+        k: WorkspaceParamsK,
+        workspace_param: WorkspaceParam,
+    ) -> CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        KeyKnown<WorkspaceParamsK>,
+        ProfileParamsKMaybe,
+        FlowParamsKMaybe,
+    >
+    where
+        WorkspaceParamsK:
+            Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+        WorkspaceParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
+    {
+        let Self {
+            workspace,
+            item_spec_graph,
+            output,
+            workspace_params: _,
+            workspace_params_type_reg: _,
+            profile_params,
+            profile_params_type_reg,
+            flow_params,
+            flow_params_type_reg,
+        } = self;
+
+        let mut workspace_params_type_reg = TypeReg::<WorkspaceParamsK, BoxDt>::new();
+        workspace_params_type_reg.register::<WorkspaceParam>(k.clone());
+        let mut workspace_params = WorkspaceParams::<WorkspaceParamsK>::new();
+        workspace_params.insert(k, workspace_param);
+
+        CmdContextBuilder {
+            workspace,
+            item_spec_graph,
+            output,
+            workspace_params: Some(workspace_params),
+            workspace_params_type_reg,
+            profile_params,
+            profile_params_type_reg,
+            flow_params,
+            flow_params_type_reg,
+        }
+    }
+}
+
+impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    CmdContextBuilder<'ctx, E, O, KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>
+where
+    E: std::error::Error + From<Error>,
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsKMaybe: KeyMaybe,
+    FlowParamsKMaybe: KeyMaybe,
+{
+    /// Adds a workspace parameter.
+    ///
+    /// # Parameters
+    ///
+    /// * `k`: Key to store the parameter with.
+    /// * `workspace_param`: The workspace parameter to register.
+    pub fn with_workspace_param<WorkspaceParam>(
+        mut self,
+        k: WorkspaceParamsK,
+        workspace_param: WorkspaceParam,
+    ) -> CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        KeyKnown<WorkspaceParamsK>,
+        ProfileParamsKMaybe,
+        FlowParamsKMaybe,
+    >
+    where
+        WorkspaceParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
+    {
+        self.workspace_params_type_reg
+            .register::<WorkspaceParam>(k.clone());
+        if let Some(workspace_params) = self.workspace_params.as_mut() {
+            workspace_params.insert(k, workspace_param);
+        }
+
+        self
+    }
+}
+
+impl<'ctx, E, O, WorkflowParamsKMaybe, FlowParamsKMaybe>
+    CmdContextBuilder<'ctx, E, O, WorkflowParamsKMaybe, KeyUnknown, FlowParamsKMaybe>
+where
+    E: std::error::Error + From<Error>,
+    WorkflowParamsKMaybe: KeyMaybe,
+    FlowParamsKMaybe: KeyMaybe,
+{
+    /// Adds a profile parameter.
+    ///
+    /// # Parameters
+    ///
+    /// * `k`: Key to store the parameter with.
+    /// * `profile_param`: The profile parameter to register.
+    pub fn with_profile_param<ProfileParamsK, ProfileParam>(
+        self,
+        k: ProfileParamsK,
+        profile_param: ProfileParam,
+    ) -> CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        WorkflowParamsKMaybe,
+        KeyKnown<ProfileParamsK>,
+        FlowParamsKMaybe,
+    >
+    where
+        ProfileParamsK:
+            Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+        ProfileParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
+    {
+        let Self {
+            workspace,
+            item_spec_graph,
+            output,
+            workspace_params,
+            workspace_params_type_reg,
+            profile_params: _,
+            profile_params_type_reg: _,
+            flow_params,
+            flow_params_type_reg,
+        } = self;
+
+        let mut profile_params_type_reg = TypeReg::<ProfileParamsK, BoxDt>::new();
+        profile_params_type_reg.register::<ProfileParam>(k.clone());
+        let mut profile_params = ProfileParams::<ProfileParamsK>::new();
+        profile_params.insert(k, profile_param);
+
+        CmdContextBuilder {
+            workspace,
+            item_spec_graph,
+            output,
+            workspace_params,
+            workspace_params_type_reg,
+            profile_params: Some(profile_params),
+            profile_params_type_reg,
+            flow_params,
+            flow_params_type_reg,
+        }
+    }
+}
+
+impl<'ctx, E, O, WorkflowParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+    CmdContextBuilder<'ctx, E, O, WorkflowParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>
+where
+    E: std::error::Error + From<Error>,
+    WorkflowParamsKMaybe: KeyMaybe,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsKMaybe: KeyMaybe,
+{
+    /// Adds a profile parameter.
+    ///
+    /// # Parameters
+    ///
+    /// * `k`: Key to store the parameter with.
+    /// * `profile_param`: The profile parameter to register.
+    pub fn with_profile_param<ProfileParam>(
+        mut self,
+        k: ProfileParamsK,
+        profile_param: ProfileParam,
+    ) -> CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        WorkflowParamsKMaybe,
+        KeyKnown<ProfileParamsK>,
+        FlowParamsKMaybe,
+    >
+    where
+        ProfileParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
+    {
+        self.profile_params_type_reg
+            .register::<ProfileParam>(k.clone());
+        if let Some(profile_params) = self.profile_params.as_mut() {
+            profile_params.insert(k, profile_param);
+        }
+
+        self
+    }
+}
+
+impl<'ctx, E, O, WorkflowParamsKMaybe, ProfileParamsKMaybe>
+    CmdContextBuilder<'ctx, E, O, WorkflowParamsKMaybe, ProfileParamsKMaybe, KeyUnknown>
+where
+    E: std::error::Error + From<Error>,
+    WorkflowParamsKMaybe: KeyMaybe,
+    ProfileParamsKMaybe: KeyMaybe,
+{
+    /// Adds a flow parameter.
+    ///
+    /// # Parameters
+    ///
+    /// * `k`: Key to store the parameter with.
+    /// * `flow_param`: The flow parameter to register.
+    pub fn with_flow_param<FlowParamsK, FlowParam>(
+        self,
+        k: FlowParamsK,
+        flow_param: FlowParam,
+    ) -> CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        WorkflowParamsKMaybe,
+        ProfileParamsKMaybe,
+        KeyKnown<FlowParamsK>,
+    >
+    where
+        FlowParamsK:
+            Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+        FlowParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
+    {
+        let Self {
+            workspace,
+            item_spec_graph,
+            output,
+            workspace_params,
+            workspace_params_type_reg,
+            profile_params,
+            profile_params_type_reg,
+            flow_params: _,
+            flow_params_type_reg: _,
+        } = self;
+
+        let mut flow_params_type_reg = TypeReg::<FlowParamsK, BoxDt>::new();
+        flow_params_type_reg.register::<FlowParam>(k.clone());
+        let mut flow_params = FlowParams::<FlowParamsK>::new();
+        flow_params.insert(k, flow_param);
+
+        CmdContextBuilder {
+            workspace,
+            item_spec_graph,
+            output,
+            workspace_params,
+            workspace_params_type_reg,
+            profile_params,
+            profile_params_type_reg,
+            flow_params: Some(flow_params),
+            flow_params_type_reg,
+        }
+    }
+}
+
+impl<'ctx, E, O, WorkflowParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+    CmdContextBuilder<'ctx, E, O, WorkflowParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>
+where
+    E: std::error::Error + From<Error>,
+    WorkflowParamsKMaybe: KeyMaybe,
+    ProfileParamsKMaybe: KeyMaybe,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    /// Adds a flow parameter.
+    ///
+    /// # Parameters
+    ///
+    /// * `k`: Key to store the parameter with.
+    /// * `flow_param`: The flow parameter to register.
+    pub fn with_flow_param<FlowParam>(
+        mut self,
+        k: FlowParamsK,
+        flow_param: FlowParam,
+    ) -> CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        WorkflowParamsKMaybe,
+        ProfileParamsKMaybe,
+        KeyKnown<FlowParamsK>,
+    >
+    where
+        FlowParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
+    {
+        self.flow_params_type_reg.register::<FlowParam>(k.clone());
+        if let Some(flow_params) = self.flow_params.as_mut() {
+            flow_params.insert(k, flow_param);
+        }
+
+        self
     }
 }
