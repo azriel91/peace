@@ -77,7 +77,7 @@ pub struct CmdContext<'ctx, E, O, TS> {
 
 impl<'ctx, E, O> CmdContext<'ctx, E, O, SetUp>
 where
-    E: std::error::Error,
+    E: std::error::Error + From<crate::Error>,
 {
     /// Returns a builder for the command context.
     ///

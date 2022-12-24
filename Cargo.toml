@@ -37,6 +37,7 @@ members = [
 miette = { version = "5.5.0" }
 derivative = "2.2.0"
 tar = "0.4.38"
+type_reg = { version = "0.4.0", features = ["debug", "untagged", "ordered"] }
 
 [features]
 default = ["error_reporting", "output_colorized"]

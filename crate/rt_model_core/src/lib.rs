@@ -12,6 +12,8 @@ pub use crate::{
     output_write::OutputWrite,
 };
 
+pub mod cmd_context_params;
+
 mod output_format;
 mod output_format_parse_error;
 mod output_write;

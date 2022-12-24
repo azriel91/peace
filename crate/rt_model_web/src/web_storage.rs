@@ -313,7 +313,7 @@ impl WebStorage {
         f_map_err: F,
     ) -> Result<Option<T>, Error>
     where
-        T: Serialize + DeserializeOwned + Send + Sync,
+        T: DeserializeOwned + Send + Sync,
         F: FnOnce(serde_yaml::Error) -> Error + Send,
     {
         self.get_item_opt(path)?
@@ -335,7 +335,7 @@ impl WebStorage {
         f_map_err: F,
     ) -> Result<(), Error>
     where
-        T: Serialize + DeserializeOwned + Send + Sync,
+        T: Serialize + Send + Sync,
         F: FnOnce(serde_yaml::Error) -> Error + Send,
     {
         self.set_item(path, &serde_yaml::to_string(t).map_err(f_map_err)?)?;

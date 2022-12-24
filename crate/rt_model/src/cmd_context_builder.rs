@@ -1,4 +1,4 @@
-use std::{fmt, future::IntoFuture, marker::PhantomData, pin::Pin};
+use std::{fmt::Debug, future::IntoFuture, hash::Hash, marker::PhantomData, pin::Pin};
 
 use futures::{Future, StreamExt, TryStreamExt};
 use peace_resources::{
@@ -6,11 +6,13 @@ use peace_resources::{
     paths::StatesSavedFile,
     resources::ts::{Empty, SetUp},
     states::StatesSaved,
+    type_reg::untagged::{BoxDt, TypeReg},
     Resources,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
+    cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams},
     CmdContext, Error, ItemSpecGraph, StatesDeserializer, StatesTypeRegs, Storage, Workspace,
     WorkspaceInitializer,
 };
@@ -35,32 +37,9 @@ use crate::{
 ///
 /// * `E`: Consumer provided error type.
 /// * `O`: `OutputWrite` to return values / errors to.
-/// * `WorkspaceInit`: Parameters to initialize the workspace.
-///
-///     These are parameters common to the workspace. Examples:
-///
-///     - Organization username.
-///     - Repository URL for multiple environments.
-///
-///     This may be `()` if there are no parameters common to the workspace.
-///
-/// * `ProfileInit`: Parameters to initialize the profile.
-///
-///     These are parameters specific to a profile, but common to flows within
-///     that profile. Examples:
-///
-///     - Environment specific credentials.
-///     - URL to publish / download an artifact.
-///
-///     This may be `()` if there are no profile specific parameters.
-///
-/// * `FlowInit`: Parameters to initialize the flow.
-///
-///     These are parameters specific to a flow. Examples:
-///
-///     - Configuration to skip warnings for the particular flow.
-///
-///     This may be `()` if there are no flow specific parameters.
+/// * `WorkspaceParamsK`: `WorkspaceParams` map `K` type parameter.
+/// * `ProfileParamsK`: `ProfileParams` map `K` type parameter.
+/// * `FlowParamsK`: `FlowParams` map `K` type parameter.
 ///
 /// [`Profile`]: peace_cfg::Profile
 /// [`WorkspaceDir`]: peace::resources::paths::WorkspaceDir
@@ -68,24 +47,41 @@ use crate::{
 /// [`ProfileDir`]: peace::resources::paths::ProfileDir
 /// [`ProfileHistoryDir`]: peace::resources::paths::ProfileHistoryDir
 #[derive(Debug)]
-pub struct CmdContextBuilder<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit> {
+pub struct CmdContextBuilder<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+where
+    WorkspaceParamsK: Debug + Eq + Hash,
+    ProfileParamsK: Debug + Eq + Hash,
+    FlowParamsK: Debug + Eq + Hash,
+{
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Graph of item specs.
     item_spec_graph: &'ctx ItemSpecGraph<E>,
     /// `OutputWrite` to return values / errors to.
     output: &'ctx mut O,
-    /// Workspace initialization parameters.
-    workspace_init_params: Option<WorkspaceInit>,
-    /// Profile initialization parameters.
-    profile_init_params: Option<ProfileInit>,
-    /// Flow initialization parameters.
-    flow_init_params: Option<FlowInit>,
+    /// Workspace parameters.
+    workspace_params: Option<WorkspaceParams<WorkspaceParamsK>>,
+    /// Type registry for `WorkspaceParams` deserialization.
+    workspace_params_type_reg: TypeReg<WorkspaceParamsK, BoxDt>,
+    /// Profile parameters.
+    profile_params: Option<ProfileParams<ProfileParamsK>>,
+    /// Type registry for `ProfileParams` deserialization.
+    profile_params_type_reg: TypeReg<ProfileParamsK, BoxDt>,
+    /// Flow parameters.
+    flow_params: Option<FlowParams<FlowParamsK>>,
+    /// Type registry for `FlowParams` deserialization.
+    flow_params_type_reg: TypeReg<FlowParamsK, BoxDt>,
 }
 
-impl<'ctx, E, O> CmdContextBuilder<'ctx, E, O, (), (), ()>
+impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+    CmdContextBuilder<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
 where
-    E: std::error::Error,
+    E: std::error::Error + From<Error>,
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     /// Returns a builder for the command context.
     ///
@@ -105,193 +101,115 @@ where
             workspace,
             item_spec_graph,
             output,
-            workspace_init_params: None,
-            profile_init_params: None,
-            flow_init_params: None,
+            workspace_params: None,
+            workspace_params_type_reg: TypeReg::new(),
+            profile_params: None,
+            profile_params_type_reg: TypeReg::new(),
+            flow_params: None,
+            flow_params_type_reg: TypeReg::new(),
         }
     }
-}
 
-impl<'ctx, E, O, ProfileInit, FlowInit> CmdContextBuilder<'ctx, E, O, (), ProfileInit, FlowInit>
-where
-    E: std::error::Error,
-    ProfileInit: Clone + fmt::Debug + Send + Sync + 'static,
-    FlowInit: Clone + fmt::Debug + Send + Sync + 'static,
-{
-    /// Sets the workspace initialization parameters.
-    ///
-    /// The init param is optional in case the init parameters should be loaded
-    /// from storage.
-    ///
-    /// Type state enforces that this can only be set once.
+    /// Sets the workspace parameters.
     ///
     /// # Parameters
     ///
-    /// * `workspace_init_next`: The parameters to initialize the workspace.
-    pub fn with_workspace_init<WorkspaceInitNext>(
-        self,
-        workspace_init_next: Option<WorkspaceInitNext>,
-    ) -> CmdContextBuilder<'ctx, E, O, WorkspaceInitNext, ProfileInit, FlowInit>
+    /// * `k`: Key to store the parameter with.
+    /// * `workspace_param`: The workspace parameter to register.
+    pub fn with_workspace_param<WorkspaceParam>(
+        mut self,
+        k: WorkspaceParamsK,
+        workspace_param: WorkspaceParam,
+    ) -> Self
     where
-        WorkspaceInitNext: Clone + fmt::Debug + Send + Sync + 'static,
+        WorkspaceParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
     {
-        let CmdContextBuilder {
-            workspace,
-            item_spec_graph,
-            output,
-            workspace_init_params: _,
-            profile_init_params,
-            flow_init_params,
-        } = self;
-
-        CmdContextBuilder {
-            workspace,
-            item_spec_graph,
-            output,
-            workspace_init_params: workspace_init_next,
-            profile_init_params,
-            flow_init_params,
-        }
+        self.workspace_params_type_reg
+            .register::<WorkspaceParam>(k.clone());
+        self.workspace_params
+            .get_or_insert_with(WorkspaceParams::new)
+            .insert(k, workspace_param);
+        self
     }
-}
 
-impl<'ctx, E, O, WorkspaceInit, FlowInit> CmdContextBuilder<'ctx, E, O, WorkspaceInit, (), FlowInit>
-where
-    E: std::error::Error,
-    WorkspaceInit: Clone + fmt::Debug + Send + Sync + 'static,
-    FlowInit: Clone + fmt::Debug + Send + Sync + 'static,
-{
-    /// Sets the profile initialization parameters.
-    ///
-    /// The init param is optional in case the init parameters should be loaded
-    /// from storage.
-    ///
-    /// Type state enforces that this can only be set once.
+    /// Sets the profile parameters.
     ///
     /// # Parameters
     ///
-    /// * `profile_init_next`: The parameters to initialize the profile.
-    pub fn with_profile_init<ProfileInitNext>(
-        self,
-        profile_init_next: Option<ProfileInitNext>,
-    ) -> CmdContextBuilder<'ctx, E, O, WorkspaceInit, ProfileInitNext, FlowInit>
+    /// * `k`: Key to store the parameter with.
+    /// * `profile_param`: The profile parameter to register.
+    pub fn with_profile_param<ProfileParam>(
+        mut self,
+        k: ProfileParamsK,
+        profile_param: ProfileParam,
+    ) -> Self
     where
-        ProfileInitNext: Clone + fmt::Debug + Send + Sync + 'static,
+        ProfileParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
     {
-        let CmdContextBuilder {
-            workspace,
-            item_spec_graph,
-            output,
-            workspace_init_params,
-            profile_init_params: _,
-            flow_init_params,
-        } = self;
-
-        CmdContextBuilder {
-            workspace,
-            item_spec_graph,
-            output,
-            workspace_init_params,
-            profile_init_params: profile_init_next,
-            flow_init_params,
-        }
+        self.profile_params_type_reg
+            .register::<ProfileParam>(k.clone());
+        self.profile_params
+            .get_or_insert_with(ProfileParams::new)
+            .insert(k, profile_param);
+        self
     }
-}
 
-impl<'ctx, E, O, WorkspaceInit, ProfileInit>
-    CmdContextBuilder<'ctx, E, O, WorkspaceInit, ProfileInit, ()>
-where
-    E: std::error::Error,
-    WorkspaceInit: Clone + fmt::Debug + Send + Sync + 'static,
-    ProfileInit: Clone + fmt::Debug + Send + Sync + 'static,
-{
-    /// Sets the flow initialization parameters.
-    ///
-    /// The init param is optional in case the init parameters should be loaded
-    /// from storage.
-    ///
-    /// Type state enforces that this can only be set once.
+    /// Sets the flow parameters.
     ///
     /// # Parameters
     ///
-    /// * `flow_init_next`: The parameters to initialize the flow.
-    pub fn with_flow_init<FlowInitNext>(
-        self,
-        flow_init_next: Option<FlowInitNext>,
-    ) -> CmdContextBuilder<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInitNext>
+    /// * `k`: Key to store the parameter with.
+    /// * `flow_param`: The flow parameter to register.
+    pub fn with_flow_param<FlowParam>(mut self, k: FlowParamsK, flow_param: FlowParam) -> Self
     where
-        FlowInitNext: Clone + fmt::Debug + Send + Sync + 'static,
+        FlowParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
     {
-        let CmdContextBuilder {
-            workspace,
-            item_spec_graph,
-            output,
-            workspace_init_params,
-            profile_init_params,
-            flow_init_params: _,
-        } = self;
-
-        CmdContextBuilder {
-            workspace,
-            item_spec_graph,
-            output,
-            workspace_init_params,
-            profile_init_params,
-            flow_init_params: flow_init_next,
-        }
+        self.flow_params_type_reg.register::<FlowParam>(k.clone());
+        self.flow_params
+            .get_or_insert_with(FlowParams::new)
+            .insert(k, flow_param);
+        self
     }
-}
 
-impl<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit>
-    CmdContextBuilder<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit>
-where
-    E: std::error::Error + From<Error>,
-    WorkspaceInit: Clone + fmt::Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-    ProfileInit: Clone + fmt::Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-    FlowInit: Clone + fmt::Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-{
     /// Prepares a workspace to run commands in.
     ///
     /// # Parameters
     ///
-    /// * `workspace_init_params`: Initialization parameters for the workspace.
-    /// * `profile_init_params`: Initialization parameters for the profile.
-    /// * `flow_init_params`: Initialization parameters for the flow.
-    pub async fn build(self) -> Result<CmdContext<'ctx, E, O, SetUp>, E> {
-        let CmdContextBuilder {
-            workspace,
-            item_spec_graph,
-            output,
-            mut workspace_init_params,
-            mut profile_init_params,
-            mut flow_init_params,
-        } = self;
-
-        let dirs = workspace.dirs();
-        let storage = workspace.storage();
+    /// * `workspace_params`: Initialization parameters for the workspace.
+    /// * `profile_params`: Initialization parameters for the profile.
+    /// * `flow_params`: Initialization parameters for the flow.
+    pub async fn build(mut self) -> Result<CmdContext<'ctx, E, O, SetUp>, E> {
+        let dirs = self.workspace.dirs();
+        let storage = self.workspace.storage();
         let workspace_init_file = WorkspaceInitFile::from(dirs.peace_dir());
         let profile_init_file = ProfileInitFile::from(dirs.profile_dir());
         let flow_init_file = FlowInitFile::from(dirs.flow_dir());
         let states_saved_file = StatesSavedFile::from(dirs.flow_dir());
 
         // Read existing init params from storage.
-        Self::init_params_deserialize(
+        self.init_params_deserialize(
             storage,
-            &mut workspace_init_params,
             &workspace_init_file,
-            &mut profile_init_params,
             &profile_init_file,
-            &mut flow_init_params,
             &flow_init_file,
         )
         .await?;
 
+        let CmdContextBuilder {
+            workspace,
+            item_spec_graph,
+            output,
+            workspace_params,
+            workspace_params_type_reg: _,
+            profile_params,
+            profile_params_type_reg: _,
+            flow_params,
+            flow_params_type_reg: _,
+        } = self;
+
         // Create directories and write init parameters to storage.
         #[cfg(target_arch = "wasm32")]
-        WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::dirs_initialize(
-            storage, dirs,
-        )
-        .await?;
+        WorkspaceInitializer::dirs_initialize(storage, dirs).await?;
         #[cfg(not(target_arch = "wasm32"))]
         {
             let workspace_dir = dirs.workspace_dir();
@@ -300,17 +218,16 @@ where
                 error,
             })?;
 
-            WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::dirs_initialize(dirs)
-                .await?;
+            WorkspaceInitializer::dirs_initialize(dirs).await?;
         }
 
         Self::init_params_serialize(
             storage,
-            workspace_init_params.as_ref(),
+            workspace_params.as_ref(),
             &workspace_init_file,
-            profile_init_params.as_ref(),
+            profile_params.as_ref(),
             &profile_init_file,
-            flow_init_params.as_ref(),
+            flow_params.as_ref(),
             &flow_init_file,
         )
         .await?;
@@ -323,9 +240,9 @@ where
         resources.insert(flow_init_file);
         Self::init_params_insert(
             &mut resources,
-            workspace_init_params,
-            profile_init_params,
-            flow_init_params,
+            workspace_params,
+            profile_params,
+            flow_params,
         );
 
         // Read existing states from storage.
@@ -382,42 +299,51 @@ where
     /// [#45]: https://github.com/azriel91/peace/issues/45
     fn init_params_insert(
         resources: &mut Resources<Empty>,
-        workspace_init_params: Option<WorkspaceInit>,
-        profile_init_params: Option<ProfileInit>,
-        flow_init_params: Option<FlowInit>,
+        workspace_params: Option<WorkspaceParams<WorkspaceParamsK>>,
+        profile_params: Option<ProfileParams<ProfileParamsK>>,
+        flow_params: Option<FlowParams<FlowParamsK>>,
     ) {
-        if let Some(workspace_init_params) = workspace_init_params {
-            resources.insert(workspace_init_params);
+        if let Some(workspace_params) = workspace_params {
+            resources.insert(workspace_params);
         }
-        if let Some(profile_init_params) = profile_init_params {
-            resources.insert(profile_init_params);
+        if let Some(profile_params) = profile_params {
+            resources.insert(profile_params);
         }
-        if let Some(flow_init_params) = flow_init_params {
-            resources.insert(flow_init_params);
+        if let Some(flow_params) = flow_params {
+            resources.insert(flow_params);
         }
     }
 
     async fn init_params_deserialize(
+        &mut self,
         storage: &Storage,
-        workspace_init_params: &mut Option<WorkspaceInit>,
         workspace_init_file: &WorkspaceInitFile,
-        profile_init_params: &mut Option<ProfileInit>,
         profile_init_file: &ProfileInitFile,
-        flow_init_params: &mut Option<FlowInit>,
         flow_init_file: &FlowInitFile,
     ) -> Result<(), E> {
-        if workspace_init_params.is_none() {
-            *workspace_init_params =
-            WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::workspace_init_params_deserialize(storage, workspace_init_file)
-                .await?
+        if self.workspace_params.is_none() {
+            self.workspace_params = WorkspaceInitializer::workspace_params_deserialize(
+                storage,
+                &self.workspace_params_type_reg,
+                workspace_init_file,
+            )
+            .await?
         };
-        if profile_init_params.is_none() {
-            *profile_init_params =
-            WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::profile_init_params_deserialize(storage, profile_init_file).await?;
+        if self.profile_params.is_none() {
+            self.profile_params = WorkspaceInitializer::profile_params_deserialize(
+                storage,
+                &self.profile_params_type_reg,
+                profile_init_file,
+            )
+            .await?;
         }
-        if flow_init_params.is_none() {
-            *flow_init_params =
-            WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::flow_init_params_deserialize(storage, flow_init_file).await?;
+        if self.flow_params.is_none() {
+            self.flow_params = WorkspaceInitializer::flow_params_deserialize(
+                storage,
+                &self.flow_params_type_reg,
+                flow_init_file,
+            )
+            .await?;
         }
 
         Ok(())
@@ -426,46 +352,45 @@ where
     /// Serializes init params to storage.
     async fn init_params_serialize(
         storage: &Storage,
-        workspace_init_params: Option<&WorkspaceInit>,
+        workspace_params: Option<&WorkspaceParams<WorkspaceParamsK>>,
         workspace_init_file: &WorkspaceInitFile,
-        profile_init_params: Option<&ProfileInit>,
+        profile_params: Option<&ProfileParams<ProfileParamsK>>,
         profile_init_file: &ProfileInitFile,
-        flow_init_params: Option<&FlowInit>,
+        flow_params: Option<&FlowParams<FlowParamsK>>,
         flow_init_file: &FlowInitFile,
     ) -> Result<(), E> {
-        if let Some(workspace_init_params) = workspace_init_params {
-            WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::workspace_init_params_serialize(
+        if let Some(workspace_params) = workspace_params {
+            WorkspaceInitializer::workspace_params_serialize(
                 storage,
-                workspace_init_params,
+                workspace_params,
                 workspace_init_file,
             )
             .await?;
         }
-        if let Some(profile_init_params) = profile_init_params {
-            WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::profile_init_params_serialize(
+        if let Some(profile_params) = profile_params {
+            WorkspaceInitializer::profile_params_serialize(
                 storage,
-                profile_init_params,
+                profile_params,
                 profile_init_file,
             )
             .await?;
         }
-        if let Some(flow_init_params) = flow_init_params {
-            WorkspaceInitializer::<WorkspaceInit, ProfileInit, FlowInit>::flow_init_params_serialize(
-                storage,
-                flow_init_params,
-                flow_init_file,
-            )
-            .await?;
+        if let Some(flow_params) = flow_params {
+            WorkspaceInitializer::flow_params_serialize(storage, flow_params, flow_init_file)
+                .await?;
         }
 
         Ok(())
     }
 }
 
-impl<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit>
-    CmdContextBuilder<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit>
+impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+    CmdContextBuilder<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
 where
     E: std::error::Error,
+    WorkspaceParamsK: Debug + Eq + Hash,
+    ProfileParamsK: Debug + Eq + Hash,
+    FlowParamsK: Debug + Eq + Hash,
 {
     /// Registers each item spec's `State` and `StateLogical` for
     /// deserialization.
@@ -504,13 +429,15 @@ where
 pub type CmdContextFuture<'ctx, E, O> =
     Pin<Box<dyn Future<Output = Result<CmdContext<'ctx, E, O, SetUp>, E>> + 'ctx>>;
 
-impl<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit> IntoFuture
-    for CmdContextBuilder<'ctx, E, O, WorkspaceInit, ProfileInit, FlowInit>
+impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> IntoFuture
+    for CmdContextBuilder<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
 where
     E: std::error::Error + From<Error>,
-    WorkspaceInit: Clone + fmt::Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-    ProfileInit: Clone + fmt::Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
-    FlowInit: Clone + fmt::Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     type IntoFuture = CmdContextFuture<'ctx, E, O>;
     type Output = <Self::IntoFuture as Future>::Output;
