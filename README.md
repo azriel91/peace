@@ -32,8 +32,9 @@ See:
 
 * 🟢 Define items to manage with automation
 * 🟢 Define dependencies between items
-* 🟢 Fetch current and desired states
+* 🟢 Discover current and desired states
 * 🟢 Show diff: what would change
+* 🟢 Store and recall parameters across commands
 * 🟢 Concurrent task execution via [`fn_graph`]
 * 🟢 Skip unnecessary work
 * 🟢 Idempotence: Multiple executions
@@ -48,6 +49,7 @@ See:
 * 🟣 WASM support
 * ⚫ Understandable progress ([#42])
 * ⚫ Informative
+* ⚫ Tutorial for writing a software lifecycle management tool
 * ⚫ Built-in application execution methods -- CLI, web service
 * ⚫ `peace` binary for configuration based workflows
 * ⚫ Web based UI
