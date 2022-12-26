@@ -1,5 +1,10 @@
-use std::path::{Path, PathBuf};
+use std::{
+    fmt::Debug,
+    hash::Hash,
+    path::{Path, PathBuf},
+};
 
+use peace_resources::type_reg::untagged::{DataTypeWrapper, TypeMap, TypeReg};
 use serde::{de::DeserializeOwned, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -318,6 +323,36 @@ impl WebStorage {
     {
         self.get_item_opt(path)?
             .map(|s| serde_yaml::from_str::<T>(&s).map_err(f_map_err))
+            .transpose()
+    }
+
+    /// Deserializes a typemap from the given path if the file exists.
+    ///
+    /// # Parameters
+    ///
+    /// * `thread_name`: Name of the thread to use to do the read operation.
+    /// * `type_reg`: Type registry with the stateful deserialization mappings.
+    /// * `file_path`: Path to the file to read the serialized item.
+    /// * `f_map_err`: Maps the deserialization error (if any) to an [`Error`].
+    pub async fn serialized_typemap_read_opt<T, K, BoxDT, F>(
+        &self,
+        type_reg: &TypeReg<K, BoxDT>,
+        path: &Path,
+        f_map_err: F,
+    ) -> Result<Option<T>, Error>
+    where
+        T: From<TypeMap<K, BoxDT>> + Send + Sync,
+        K: Debug + DeserializeOwned + Eq + Hash + Sync,
+        BoxDT: DataTypeWrapper + 'static,
+        F: FnOnce(serde_yaml::Error) -> Error + Send,
+    {
+        self.get_item_opt(path)?
+            .map(|s| {
+                let deserializer = serde_yaml::Deserializer::from_str(&s);
+                let type_map = type_reg.deserialize_map(deserializer).map_err(f_map_err)?;
+
+                Ok(T::from(type_map))
+            })
             .transpose()
     }
 

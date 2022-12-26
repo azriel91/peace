@@ -1,6 +1,10 @@
-use std::{iter, marker::PhantomData, path::Path};
+use std::{fmt::Debug, hash::Hash, iter, path::Path};
 
-use peace_resources::internal::{FlowInitFile, ProfileInitFile, WorkspaceDirs, WorkspaceInitFile};
+use peace_resources::{
+    internal::{FlowInitFile, ProfileInitFile, WorkspaceDirs, WorkspaceInitFile},
+    type_reg::untagged::TypeReg,
+};
+use peace_rt_model_core::cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{Error, WebStorage};
@@ -36,17 +40,9 @@ use crate::{Error, WebStorage};
 ///
 ///     This may be `()` if there are no flow specific parameters.
 #[derive(Debug)]
-pub struct WorkspaceInitializer<WorkspaceInit, ProfileInit, FlowInit>(
-    PhantomData<(WorkspaceInit, ProfileInit, FlowInit)>,
-);
+pub struct WorkspaceInitializer;
 
-impl<WorkspaceInit, ProfileInit, FlowInit>
-    WorkspaceInitializer<WorkspaceInit, ProfileInit, FlowInit>
-where
-    WorkspaceInit: Serialize + DeserializeOwned + Send + Sync + 'static,
-    ProfileInit: Serialize + DeserializeOwned + Send + Sync + 'static,
-    FlowInit: Serialize + DeserializeOwned + Send + Sync + 'static,
-{
+impl WorkspaceInitializer {
     /// Creates directories used by the peace framework.
     ///
     /// For web storage, this sets empty values at directory paths to emulate
@@ -65,72 +61,97 @@ where
         Ok(())
     }
 
-    pub async fn workspace_init_params_serialize(
+    pub async fn workspace_params_serialize<K>(
         storage: &WebStorage,
-        workspace_init_params: &WorkspaceInit,
+        workspace_params: &WorkspaceParams<K>,
         workspace_init_file: &WorkspaceInitFile,
-    ) -> Result<(), Error> {
+    ) -> Result<(), Error>
+    where
+        K: Eq + Hash + Serialize + Send + Sync,
+    {
         storage
             .serialized_write(
                 workspace_init_file,
-                workspace_init_params,
+                workspace_params,
                 Error::WorkspaceInitParamsSerialize,
             )
             .await
     }
 
-    pub async fn workspace_init_params_deserialize(
+    pub async fn workspace_params_deserialize<K>(
         storage: &WebStorage,
+        type_reg: &TypeReg<K>,
         workspace_init_file: &WorkspaceInitFile,
-    ) -> Result<Option<WorkspaceInit>, Error> {
+    ) -> Result<Option<WorkspaceParams<K>>, Error>
+    where
+        K: Debug + Eq + Hash + DeserializeOwned + Send + Sync,
+    {
         storage
-            .serialized_read_opt(workspace_init_file, Error::WorkspaceInitParamsDeserialize)
+            .serialized_typemap_read_opt(
+                type_reg,
+                workspace_init_file,
+                Error::WorkspaceInitParamsDeserialize,
+            )
             .await
     }
 
-    pub async fn profile_init_params_serialize(
+    pub async fn profile_params_serialize<K>(
         storage: &WebStorage,
-        profile_init_params: &ProfileInit,
+        profile_params: &ProfileParams<K>,
         profile_init_file: &ProfileInitFile,
-    ) -> Result<(), Error> {
+    ) -> Result<(), Error>
+    where
+        K: Eq + Hash + Serialize + Send + Sync,
+    {
         storage
             .serialized_write(
                 profile_init_file,
-                profile_init_params,
+                profile_params,
                 Error::ProfileInitParamsSerialize,
             )
             .await
     }
 
-    pub async fn profile_init_params_deserialize(
+    pub async fn profile_params_deserialize<K>(
         storage: &WebStorage,
+        type_reg: &TypeReg<K>,
         profile_init_file: &ProfileInitFile,
-    ) -> Result<Option<ProfileInit>, Error> {
+    ) -> Result<Option<ProfileParams<K>>, Error>
+    where
+        K: Debug + Eq + Hash + DeserializeOwned + Send + Sync,
+    {
         storage
-            .serialized_read_opt(profile_init_file, Error::ProfileInitParamsDeserialize)
-            .await
-    }
-
-    pub async fn flow_init_params_serialize(
-        storage: &WebStorage,
-        flow_init_params: &FlowInit,
-        flow_init_file: &FlowInitFile,
-    ) -> Result<(), Error> {
-        storage
-            .serialized_write(
-                flow_init_file,
-                flow_init_params,
-                Error::FlowInitParamsSerialize,
+            .serialized_typemap_read_opt(
+                type_reg,
+                profile_init_file,
+                Error::ProfileInitParamsDeserialize,
             )
             .await
     }
 
-    pub async fn flow_init_params_deserialize(
+    pub async fn flow_params_serialize<K>(
         storage: &WebStorage,
+        flow_params: &FlowParams<K>,
         flow_init_file: &FlowInitFile,
-    ) -> Result<Option<FlowInit>, Error> {
+    ) -> Result<(), Error>
+    where
+        K: Eq + Hash + Serialize + Send + Sync,
+    {
         storage
-            .serialized_read_opt(flow_init_file, Error::FlowInitParamsDeserialize)
+            .serialized_write(flow_init_file, flow_params, Error::FlowInitParamsSerialize)
+            .await
+    }
+
+    pub async fn flow_params_deserialize<K>(
+        storage: &WebStorage,
+        type_reg: &TypeReg<K>,
+        flow_init_file: &FlowInitFile,
+    ) -> Result<Option<FlowParams<K>>, Error>
+    where
+        K: Debug + Eq + Hash + DeserializeOwned + Send + Sync,
+    {
+        storage
+            .serialized_typemap_read_opt(type_reg, flow_init_file, Error::FlowInitParamsDeserialize)
             .await
     }
 }
