@@ -7,7 +7,7 @@ use peace::{
 };
 use peace_item_specs::{
     file_download::{FileDownloadItemSpec, FileDownloadParams},
-    tar_x::TarXItemSpec,
+    tar_x::{TarXItemSpec, TarXParams},
 };
 
 use crate::model::{AppCycleError, WebAppFileId};
@@ -20,7 +20,7 @@ impl AppInitFlow {
     /// Sets up this workspace
     pub async fn run<O>(
         output: &mut O,
-        app_cycle_file_download_params: FileDownloadParams<WebAppFileId>,
+        web_app_file_download_params: FileDownloadParams<WebAppFileId>,
     ) -> Result<(), AppCycleError>
     where
         O: OutputWrite<AppCycleError>,
@@ -35,22 +35,38 @@ impl AppInitFlow {
         )?;
         let graph = Self::graph()?;
 
+        let web_app_tar_x_params = {
+            let tar_path = web_app_file_download_params.dest().to_path_buf();
+            let dest = web_app_file_download_params.dest().join("web_app"); // TODO: get the name
+
+            TarXParams::<WebAppFileId>::new(tar_path, dest)
+        };
+
         let cmd_context = CmdContext::builder(&workspace, &graph, output)
-            .with_workspace_init::<FileDownloadParams<WebAppFileId>>(Some(
-                app_cycle_file_download_params,
-            ))
+            .with_workspace_param(
+                "web_app_file_download_params".to_string(),
+                Some(web_app_file_download_params),
+            )
+            .with_workspace_param(
+                "web_app_tar_x_params".to_string(),
+                Some(web_app_tar_x_params),
+            )
             .await?;
         StatesDiscoverCmd::exec(cmd_context).await?;
 
         let cmd_context = CmdContext::builder(&workspace, &graph, output)
-            .with_workspace_init::<FileDownloadParams<WebAppFileId>>(None)
+            .with_workspace_param(
+                "web_app_file_download_params".to_string(),
+                None::<FileDownloadParams<WebAppFileId>>,
+            )
+            .with_workspace_param(
+                "web_app_tar_x_params".to_string(),
+                None::<TarXParams<WebAppFileId>>,
+            )
             .await?;
         EnsureCmd::exec(cmd_context).await?;
 
-        todo!(
-            "add `TarXParams` to command context somehow. \
-            See <https://github.com/azriel91/peace/issues/45>"
-        );
+        Ok(())
     }
 
     fn graph() -> Result<ItemSpecGraph<AppCycleError>, AppCycleError> {

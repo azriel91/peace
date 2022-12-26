@@ -1,5 +1,6 @@
-use std::{io::Write, path::Path, sync::Mutex};
+use std::{fmt::Debug, hash::Hash, io::Write, path::Path, sync::Mutex};
 
+use peace_resources::type_reg::untagged::{DataTypeWrapper, TypeMap, TypeReg};
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::{
     fs::File,
@@ -60,13 +61,50 @@ impl NativeStorage {
         f_map_err: F,
     ) -> Result<Option<T>, Error>
     where
-        T: Serialize + DeserializeOwned + Send + Sync,
+        T: DeserializeOwned + Send + Sync,
         F: FnOnce(serde_yaml::Error) -> Error + Send,
     {
         if file_path.exists() {
             let t = self
                 .read_with_sync_api(thread_name, file_path, |file| {
                     serde_yaml::from_reader::<_, T>(file).map_err(f_map_err)
+                })
+                .await?;
+
+            Ok(Some(t))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Deserializes a typemap from the given path if the file exists.
+    ///
+    /// # Parameters
+    ///
+    /// * `thread_name`: Name of the thread to use to do the read operation.
+    /// * `type_reg`: Type registry with the stateful deserialization mappings.
+    /// * `file_path`: Path to the file to read the serialized item.
+    /// * `f_map_err`: Maps the deserialization error (if any) to an [`Error`].
+    pub async fn serialized_typemap_read_opt<T, K, BoxDT, F>(
+        &self,
+        thread_name: String,
+        type_reg: &TypeReg<K, BoxDT>,
+        file_path: &Path,
+        f_map_err: F,
+    ) -> Result<Option<T>, Error>
+    where
+        T: From<TypeMap<K, BoxDT>> + Send + Sync,
+        K: Debug + DeserializeOwned + Eq + Hash + Sync,
+        BoxDT: DataTypeWrapper + 'static,
+        F: FnOnce(serde_yaml::Error) -> Error + Send,
+    {
+        if file_path.exists() {
+            let t = self
+                .read_with_sync_api(thread_name, file_path, |file| {
+                    let deserializer = serde_yaml::Deserializer::from_reader(file);
+                    let type_map = type_reg.deserialize_map(deserializer).map_err(f_map_err)?;
+
+                    Ok(T::from(type_map))
                 })
                 .await?;
 
@@ -92,7 +130,7 @@ impl NativeStorage {
         f_map_err: F,
     ) -> Result<(), Error>
     where
-        T: Serialize + DeserializeOwned + Send + Sync,
+        T: Serialize + Send + Sync,
         F: FnOnce(serde_yaml::Error) -> Error + Send,
     {
         self.write_with_sync_api(thread_name, file_path, |file| {

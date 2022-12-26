@@ -201,41 +201,18 @@ where
         Ok(states)
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     async fn serialize_internal<TS>(
         resources: &mut Resources<TS>,
-        states: &StatesCurrent,
+        states_current: &StatesCurrent,
     ) -> Result<(), E> {
+        use peace_rt_model::StatesDeserializer;
+
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
         let states_saved_file = StatesSavedFile::from(&*flow_dir);
 
-        storage
-            .write_with_sync_api(
-                "states_saved_file_write".to_string(),
-                &states_saved_file,
-                |file| serde_yaml::to_writer(file, states).map_err(Error::StatesSerialize),
-            )
-            .await?;
-        drop(flow_dir);
-        drop(storage);
+        StatesDeserializer::serialize(&storage, states_current, &states_saved_file).await?;
 
-        resources.insert(states_saved_file);
-
-        Ok(())
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    async fn serialize_internal<TS>(
-        resources: &mut Resources<TS>,
-        states: &StatesCurrent,
-    ) -> Result<(), E> {
-        let flow_dir = resources.borrow::<FlowDir>();
-        let storage = resources.borrow::<Storage>();
-        let states_saved_file = StatesSavedFile::from(&*flow_dir);
-
-        let states_serialized = serde_yaml::to_string(&*states).map_err(Error::StatesSerialize)?;
-        storage.set_item(&states_saved_file, &states_serialized)?;
         drop(flow_dir);
         drop(storage);
 

@@ -6,20 +6,20 @@ use crate::paths::FlowDir;
 ///
 /// Typically `$workspace_dir/.peace/$profile/$flow_id/init.yaml`.
 ///
-/// See `FlowInitFile::from<&FlowDir>` if you want to construct a
-/// `FlowInitFile` with the conventional `$flow_dir/init.yaml`
+/// See `FlowParamsFile::from<&FlowDir>` if you want to construct a
+/// `FlowParamsFile` with the conventional `$flow_dir/init.yaml`
 /// path.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FlowInitFile(PathBuf);
+pub struct FlowParamsFile(PathBuf);
 
-crate::paths::pathbuf_newtype!(FlowInitFile);
+crate::paths::pathbuf_newtype!(FlowParamsFile);
 
-impl FlowInitFile {
+impl FlowParamsFile {
     /// File name of the initialization parameters file.
     pub const NAME: &'static str = "init.yaml";
 }
 
-impl From<&FlowDir> for FlowInitFile {
+impl From<&FlowDir> for FlowParamsFile {
     fn from(flow_dir: &FlowDir) -> Self {
         let path = flow_dir.join(Self::NAME);
 

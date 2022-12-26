@@ -94,7 +94,7 @@ where
         item_spec_graph,
     } = workspace_and_graph;
     CmdContext::builder(workspace, item_spec_graph, output)
-        .with_profile_init(file_download_params)
+        .with_profile_param("file_download_params".to_string(), file_download_params)
         .await
 }
 

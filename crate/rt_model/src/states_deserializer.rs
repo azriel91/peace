@@ -12,14 +12,44 @@ use peace_resources::{
 
 use crate::{Error, Storage};
 
-/// Reads [`StatesSaved`]s from storage.
-#[derive(Debug)]
+/// Reads [`StatesSaved`] and [`StatesDesired`] from storage.
 pub struct StatesDeserializer<E>(PhantomData<E>);
 
 impl<E> StatesDeserializer<E>
 where
     E: std::error::Error + From<Error> + Send,
 {
+    /// Returns the [`StatesSaved`] of all [`ItemSpec`]s if it exists on
+    /// disk.
+    ///
+    /// # Parameters:
+    ///
+    /// * `storage`: `Storage` to read from.
+    /// * `states`: States to serialize.
+    /// * `states_file_path`: Path to save the serialized states to.
+    ///
+    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    pub async fn serialize<TS>(
+        storage: &Storage,
+        states: &States<TS>,
+        states_file_path: &Path,
+    ) -> Result<(), E>
+    where
+        TS: Send + Sync,
+    {
+        storage
+            .serialized_write(
+                #[cfg(not(target_arch = "wasm32"))]
+                "StatesDeserializer::serialize".to_string(),
+                states_file_path,
+                states,
+                Error::StatesSerialize,
+            )
+            .await?;
+
+        Ok(())
+    }
+
     /// Returns the [`StatesSaved`] of all [`ItemSpec`]s if it exists on
     /// disk.
     ///
@@ -127,51 +157,37 @@ where
         states_file_path: &Path,
     ) -> Result<Option<States<TS>>, E>
     where
-        TS: Send,
+        TS: Send + Sync,
     {
-        if !states_file_path.exists() {
-            return Ok(None);
-        }
+        let states_opt = storage
+            .serialized_typemap_read_opt(thread_name, states_type_reg, states_file_path, |error| {
+                #[cfg(not(feature = "error_reporting"))]
+                {
+                    Error::StatesDeserialize { error }
+                }
+                #[cfg(feature = "error_reporting")]
+                {
+                    use miette::NamedSource;
 
-        let states_current = storage
-            .read_with_sync_api(thread_name, states_file_path, |file| {
-                let deserializer = serde_yaml::Deserializer::from_reader(file);
-                let states_current =
-                    States::from(states_type_reg.deserialize_map(deserializer).map_err(
-                        |error| {
-                            #[cfg(not(feature = "error_reporting"))]
-                            {
-                                Error::StatesDeserialize { error }
-                            }
-                            #[cfg(feature = "error_reporting")]
-                            {
-                                use miette::NamedSource;
+                    let file_contents = std::fs::read_to_string(states_file_path).unwrap();
 
-                                let file_contents =
-                                    std::fs::read_to_string(states_file_path).unwrap();
+                    let (error_span, error_message, context_span) =
+                        Self::error_and_context(&file_contents, &error);
+                    let states_file_source =
+                        NamedSource::new(states_file_path.to_string_lossy(), file_contents);
 
-                                let (error_span, error_message, context_span) =
-                                    Self::error_and_context(&file_contents, &error);
-                                let states_file_source = NamedSource::new(
-                                    states_file_path.to_string_lossy(),
-                                    file_contents,
-                                );
-
-                                Error::StatesDeserialize {
-                                    states_file_source,
-                                    error_span,
-                                    error_message,
-                                    context_span,
-                                    error,
-                                }
-                            }
-                        },
-                    )?);
-                Ok(states_current)
+                    Error::StatesDeserialize {
+                        states_file_source,
+                        error_span,
+                        error_message,
+                        context_span,
+                        error,
+                    }
+                }
             })
             .await?;
 
-        Ok(Some(states_current))
+        Ok(states_opt)
     }
 
     /// Returns the [`States`] of all [`ItemSpec`]s if it exists on disk.
@@ -196,43 +212,39 @@ where
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
         states_file_path: &Path,
-    ) -> Result<Option<States<TS>>, E> {
-        let states_serialized = storage.get_item_opt(&states_file_path)?;
+    ) -> Result<Option<States<TS>>, E>
+    where
+        TS: Send + Sync,
+    {
+        let states_opt = storage
+            .serialized_typemap_read_opt(states_type_reg, states_file_path, |error| {
+                #[cfg(not(feature = "error_reporting"))]
+                {
+                    Error::StatesDeserialize { error }
+                }
+                #[cfg(feature = "error_reporting")]
+                {
+                    use miette::NamedSource;
 
-        if let Some(states_serialized) = states_serialized {
-            let deserializer = serde_yaml::Deserializer::from_str(&states_serialized);
-            let states = States::from(states_type_reg.deserialize_map(deserializer).map_err(
-                |error| {
-                    #[cfg(not(feature = "error_reporting"))]
-                    {
-                        Error::StatesDeserialize { error }
+                    let file_contents = std::fs::read_to_string(&states_file_path).unwrap();
+
+                    let (error_span, error_message, context_span) =
+                        Self::error_and_context(&file_contents, &error);
+                    let states_file_source =
+                        NamedSource::new(states_file_path.to_string_lossy(), file_contents);
+
+                    Error::StatesDeserialize {
+                        states_file_source,
+                        error_span,
+                        error_message,
+                        context_span,
+                        error,
                     }
-                    #[cfg(feature = "error_reporting")]
-                    {
-                        use miette::NamedSource;
+                }
+            })
+            .await?;
 
-                        let file_contents = std::fs::read_to_string(&states_file_path).unwrap();
-
-                        let (error_span, error_message, context_span) =
-                            Self::error_and_context(&file_contents, &error);
-                        let states_file_source =
-                            NamedSource::new(states_file_path.to_string_lossy(), file_contents);
-
-                        Error::StatesDeserialize {
-                            states_file_source,
-                            error_span,
-                            error_message,
-                            context_span,
-                            error,
-                        }
-                    }
-                },
-            )?);
-
-            Ok(Some(states))
-        } else {
-            Ok(None)
-        }
+        Ok(states_opt)
     }
 
     /// Returns the error location and message to pass to miette.

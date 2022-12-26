@@ -3,6 +3,8 @@ use peace::{
     resources::{internal::StatesMut, states::StatesCurrent, type_reg::untagged::TypeMap},
 };
 
+mod ts;
+
 #[test]
 fn with_capacity_reserves_enough_capacity() {
     let states = StatesCurrent::with_capacity(100);

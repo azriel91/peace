@@ -6,20 +6,20 @@ use crate::paths::ProfileDir;
 ///
 /// Typically `$workspace_dir/.peace/$profile/init.yaml`.
 ///
-/// See `ProfileInitFile::from<&ProfileDir>` if you want to construct a
-/// `ProfileInitFile` with the conventional `$profile_dir/init.yaml`
+/// See `ProfileParamsFile::from<&ProfileDir>` if you want to construct a
+/// `ProfileParamsFile` with the conventional `$profile_dir/init.yaml`
 /// path.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct ProfileInitFile(PathBuf);
+pub struct ProfileParamsFile(PathBuf);
 
-crate::paths::pathbuf_newtype!(ProfileInitFile);
+crate::paths::pathbuf_newtype!(ProfileParamsFile);
 
-impl ProfileInitFile {
+impl ProfileParamsFile {
     /// File name of the initialization parameters file.
     pub const NAME: &'static str = "init.yaml";
 }
 
-impl From<&ProfileDir> for ProfileInitFile {
+impl From<&ProfileDir> for ProfileParamsFile {
     fn from(flow_dir: &ProfileDir) -> Self {
         let path = flow_dir.join(Self::NAME);
 

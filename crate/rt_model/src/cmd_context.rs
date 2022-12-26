@@ -2,7 +2,9 @@ use std::marker::PhantomData;
 
 use peace_resources::{resources::ts::SetUp, Resources};
 
-use crate::{CmdContextBuilder, ItemSpecGraph, StatesTypeRegs, Workspace};
+use crate::{
+    cmd_context_builder::KeyUnknown, CmdContextBuilder, ItemSpecGraph, StatesTypeRegs, Workspace,
+};
 
 /// Information needed to execute a command.
 ///
@@ -77,7 +79,7 @@ pub struct CmdContext<'ctx, E, O, TS> {
 
 impl<'ctx, E, O> CmdContext<'ctx, E, O, SetUp>
 where
-    E: std::error::Error,
+    E: std::error::Error + From<crate::Error>,
 {
     /// Returns a builder for the command context.
     ///
@@ -92,7 +94,7 @@ where
         workspace: &'ctx Workspace,
         item_spec_graph: &'ctx ItemSpecGraph<E>,
         output: &'ctx mut O,
-    ) -> CmdContextBuilder<'ctx, E, O, (), (), ()> {
+    ) -> CmdContextBuilder<'ctx, E, O, KeyUnknown, KeyUnknown, KeyUnknown> {
         CmdContextBuilder::new(workspace, item_spec_graph, output)
     }
 }

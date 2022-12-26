@@ -16,10 +16,12 @@ doctest = false
 test = false
 
 [dependencies]
-async-trait = "0.1.58"
-peace_resources = { path = "../resources", version = "0.0.5" }
-serde_json = { version = "1.0.88", optional = true }
+async-trait = "0.1.60"
 miette = { workspace = true, optional = true }
+peace_resources = { path = "../resources", version = "0.0.5" }
+serde = "1.0.151"
+serde_json = { version = "1.0.91", optional = true }
+type_reg = { workspace = true, features = ["resman"] }
 
 [features]
 default = []

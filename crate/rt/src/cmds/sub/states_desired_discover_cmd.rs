@@ -8,7 +8,7 @@ use peace_resources::{
     states::{ts::Desired, StatesDesired},
     Resources,
 };
-use peace_rt_model::{CmdContext, Error, ItemSpecGraph, Storage};
+use peace_rt_model::{CmdContext, Error, ItemSpecGraph, StatesDeserializer, Storage};
 
 use crate::BUFFERED_FUTURES_MAX;
 
@@ -83,7 +83,6 @@ where
         Ok(states_desired)
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     pub(crate) async fn serialize_internal(
         resources: &mut Resources<SetUp>,
         states_desired: &StatesDesired,
@@ -92,33 +91,8 @@ where
         let storage = resources.borrow::<Storage>();
         let states_desired_file = StatesDesiredFile::from(&*flow_dir);
 
-        storage
-            .write_with_sync_api(
-                "states_desired_file_write".to_string(),
-                &states_desired_file,
-                |file| serde_yaml::to_writer(file, states_desired).map_err(Error::StatesSerialize),
-            )
-            .await?;
-        drop(flow_dir);
-        drop(storage);
+        StatesDeserializer::serialize(&storage, states_desired, &states_desired_file).await?;
 
-        resources.insert(states_desired_file);
-
-        Ok(())
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    pub(crate) async fn serialize_internal(
-        resources: &mut Resources<SetUp>,
-        states_desired: &StatesDesired,
-    ) -> Result<(), E> {
-        let flow_dir = resources.borrow::<FlowDir>();
-        let storage = resources.borrow::<Storage>();
-        let states_desired_file = StatesDesiredFile::from(&*flow_dir);
-
-        let states_serialized =
-            serde_yaml::to_string(states_desired).map_err(Error::StatesSerialize)?;
-        storage.set_item(&states_desired_file, &states_serialized)?;
         drop(flow_dir);
         drop(storage);
 

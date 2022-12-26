@@ -34,12 +34,13 @@ members = [
 ]
 
 [workspace.dependencies]
-miette = { version = "5.4.1" }
+miette = { version = "5.5.0" }
 derivative = "2.2.0"
 tar = "0.4.38"
+type_reg = { version = "0.5.0", features = ["debug", "untagged", "ordered"] }
 
 [features]
-default = ["error_reporting", "output_colorized"]
+default = []
 error_reporting = ["dep:miette", "miette?/fancy", "peace_rt/error_reporting", "peace_rt_model/error_reporting"]
 output_colorized = ["peace_rt_model/output_colorized"]
 output_json = ["peace_rt_model/output_json"]

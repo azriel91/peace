@@ -5,7 +5,9 @@
 
 // Re-exports
 pub use fn_graph::{self, FnRef, FnRefMut};
-pub use peace_rt_model_core::{OutputFormat, OutputFormatParseError, OutputWrite};
+pub use peace_rt_model_core::{
+    cmd_context_params, OutputFormat, OutputFormatParseError, OutputWrite,
+};
 
 pub use crate::{
     cmd_context::CmdContext, cmd_context_builder::CmdContextBuilder,

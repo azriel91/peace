@@ -5,4 +5,5 @@ mod item_spec_boxed;
 mod item_spec_wrapper;
 mod output_format;
 mod output_format_parse_error;
+mod states_deserializer;
 mod workspace_dirs_builder;

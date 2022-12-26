@@ -6,20 +6,20 @@ use crate::paths::PeaceDir;
 ///
 /// Typically `$workspace_dir/.peace/init.yaml`.
 ///
-/// See `WorkspaceInitFile::from<&PeaceDir>` if you want to construct a
-/// `WorkspaceInitFile` with the conventional `$peace_dir/init.yaml`
+/// See `WorkspaceParamsFile::from<&PeaceDir>` if you want to construct a
+/// `WorkspaceParamsFile` with the conventional `$peace_dir/init.yaml`
 /// path.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct WorkspaceInitFile(PathBuf);
+pub struct WorkspaceParamsFile(PathBuf);
 
-crate::paths::pathbuf_newtype!(WorkspaceInitFile);
+crate::paths::pathbuf_newtype!(WorkspaceParamsFile);
 
-impl WorkspaceInitFile {
+impl WorkspaceParamsFile {
     /// File name of the initialization parameters file.
     pub const NAME: &'static str = "init.yaml";
 }
 
-impl From<&PeaceDir> for WorkspaceInitFile {
+impl From<&PeaceDir> for WorkspaceParamsFile {
     fn from(flow_dir: &PeaceDir) -> Self {
         let path = flow_dir.join(Self::NAME);
 
