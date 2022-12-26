@@ -3,7 +3,7 @@ use std::{fmt::Debug, future::IntoFuture, hash::Hash, marker::PhantomData, pin::
 use fn_graph::resman::Resource;
 use futures::{Future, StreamExt, TryStreamExt};
 use peace_resources::{
-    internal::{FlowInitFile, ProfileInitFile, WorkspaceInitFile},
+    internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
     paths::StatesSavedFile,
     resources::ts::{Empty, SetUp},
     states::StatesSaved,
@@ -151,17 +151,17 @@ where
     pub async fn build(mut self) -> Result<CmdContext<'ctx, E, O, SetUp>, E> {
         let dirs = self.workspace.dirs();
         let storage = self.workspace.storage();
-        let workspace_init_file = WorkspaceInitFile::from(dirs.peace_dir());
-        let profile_init_file = ProfileInitFile::from(dirs.profile_dir());
-        let flow_init_file = FlowInitFile::from(dirs.flow_dir());
+        let workspace_params_file = WorkspaceParamsFile::from(dirs.peace_dir());
+        let profile_params_file = ProfileParamsFile::from(dirs.profile_dir());
+        let flow_params_file = FlowParamsFile::from(dirs.flow_dir());
         let states_saved_file = StatesSavedFile::from(dirs.flow_dir());
 
         // Read existing init params from storage.
         self.init_params_deserialize(
             storage,
-            &workspace_init_file,
-            &profile_init_file,
-            &flow_init_file,
+            &workspace_params_file,
+            &profile_params_file,
+            &flow_params_file,
         )
         .await?;
 
@@ -181,9 +181,9 @@ where
 
         self.init_params_serialize(
             storage,
-            &workspace_init_file,
-            &profile_init_file,
-            &flow_init_file,
+            &workspace_params_file,
+            &profile_params_file,
+            &flow_params_file,
         )
         .await?;
 
@@ -203,9 +203,9 @@ where
         } = self;
 
         Self::workspace_dirs_insert(&mut resources, workspace);
-        resources.insert(workspace_init_file);
-        resources.insert(profile_init_file);
-        resources.insert(flow_init_file);
+        resources.insert(workspace_params_file);
+        resources.insert(profile_params_file);
+        resources.insert(flow_params_file);
 
         // Read existing states from storage.
         let states_type_regs = Self::states_type_regs(item_spec_graph);
@@ -281,9 +281,9 @@ where
     async fn init_params_deserialize(
         &mut self,
         storage: &Storage,
-        workspace_init_file: &WorkspaceInitFile,
-        profile_init_file: &ProfileInitFile,
-        flow_init_file: &FlowInitFile,
+        workspace_params_file: &WorkspaceParamsFile,
+        profile_params_file: &ProfileParamsFile,
+        flow_params_file: &FlowParamsFile,
     ) -> Result<(), E> {
         macro_rules! params_deserialize_and_merge {
             ($params:ident, $params_type_reg:ident, $params_deserialize_fn:ident, $init_file:ident) => {
@@ -320,19 +320,19 @@ where
             workspace_params,
             workspace_params_type_reg,
             workspace_params_deserialize,
-            workspace_init_file
+            workspace_params_file
         );
         params_deserialize_and_merge!(
             profile_params,
             profile_params_type_reg,
             profile_params_deserialize,
-            profile_init_file
+            profile_params_file
         );
         params_deserialize_and_merge!(
             flow_params,
             flow_params_type_reg,
             flow_params_deserialize,
-            flow_init_file
+            flow_params_file
         );
 
         Ok(())
@@ -342,15 +342,15 @@ where
     async fn init_params_serialize(
         &self,
         storage: &Storage,
-        workspace_init_file: &WorkspaceInitFile,
-        profile_init_file: &ProfileInitFile,
-        flow_init_file: &FlowInitFile,
+        workspace_params_file: &WorkspaceParamsFile,
+        profile_params_file: &ProfileParamsFile,
+        flow_params_file: &FlowParamsFile,
     ) -> Result<(), E> {
         if let Some(workspace_params) = self.workspace_params.as_ref() {
             WorkspaceInitializer::workspace_params_serialize(
                 storage,
                 workspace_params,
-                workspace_init_file,
+                workspace_params_file,
             )
             .await?;
         }
@@ -358,12 +358,12 @@ where
             WorkspaceInitializer::profile_params_serialize(
                 storage,
                 profile_params,
-                profile_init_file,
+                profile_params_file,
             )
             .await?;
         }
         if let Some(flow_params) = self.flow_params.as_ref() {
-            WorkspaceInitializer::flow_params_serialize(storage, flow_params, flow_init_file)
+            WorkspaceInitializer::flow_params_serialize(storage, flow_params, flow_params_file)
                 .await?;
         }
 

@@ -3,7 +3,7 @@ use std::{fmt::Debug, hash::Hash, iter, path::Path};
 use futures::{stream, StreamExt, TryStreamExt};
 
 use peace_resources::{
-    internal::{FlowInitFile, ProfileInitFile, WorkspaceDirs, WorkspaceInitFile},
+    internal::{FlowParamsFile, ProfileParamsFile, WorkspaceDirs, WorkspaceParamsFile},
     type_reg::untagged::TypeReg,
 };
 use peace_rt_model_core::cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams};
@@ -69,7 +69,7 @@ impl WorkspaceInitializer {
     pub async fn workspace_params_serialize<K>(
         storage: &NativeStorage,
         workspace_params: &WorkspaceParams<K>,
-        workspace_init_file: &WorkspaceInitFile,
+        workspace_params_file: &WorkspaceParamsFile,
     ) -> Result<(), Error>
     where
         K: Eq + Hash + Serialize + Send + Sync,
@@ -77,9 +77,9 @@ impl WorkspaceInitializer {
         storage
             .serialized_write(
                 "workspace_params_serialize".to_string(),
-                workspace_init_file,
+                workspace_params_file,
                 workspace_params,
-                Error::WorkspaceInitParamsSerialize,
+                Error::WorkspaceParamsSerialize,
             )
             .await
     }
@@ -87,7 +87,7 @@ impl WorkspaceInitializer {
     pub async fn workspace_params_deserialize<K>(
         storage: &NativeStorage,
         type_reg: &TypeReg<K>,
-        workspace_init_file: &WorkspaceInitFile,
+        workspace_params_file: &WorkspaceParamsFile,
     ) -> Result<Option<WorkspaceParams<K>>, Error>
     where
         K: Debug + Eq + Hash + DeserializeOwned + Send + Sync,
@@ -96,8 +96,8 @@ impl WorkspaceInitializer {
             .serialized_typemap_read_opt(
                 "workspace_params_deserialize".to_string(),
                 type_reg,
-                workspace_init_file,
-                Error::WorkspaceInitParamsDeserialize,
+                workspace_params_file,
+                Error::WorkspaceParamsDeserialize,
             )
             .await
     }
@@ -105,7 +105,7 @@ impl WorkspaceInitializer {
     pub async fn profile_params_serialize<K>(
         storage: &NativeStorage,
         profile_params: &ProfileParams<K>,
-        profile_init_file: &ProfileInitFile,
+        profile_params_file: &ProfileParamsFile,
     ) -> Result<(), Error>
     where
         K: Eq + Hash + Serialize + Send + Sync,
@@ -113,9 +113,9 @@ impl WorkspaceInitializer {
         storage
             .serialized_write(
                 "profile_params_serialize".to_string(),
-                profile_init_file,
+                profile_params_file,
                 profile_params,
-                Error::ProfileInitParamsSerialize,
+                Error::ProfileParamsSerialize,
             )
             .await
     }
@@ -123,7 +123,7 @@ impl WorkspaceInitializer {
     pub async fn profile_params_deserialize<K>(
         storage: &NativeStorage,
         type_reg: &TypeReg<K>,
-        profile_init_file: &ProfileInitFile,
+        profile_params_file: &ProfileParamsFile,
     ) -> Result<Option<ProfileParams<K>>, Error>
     where
         K: Debug + Eq + Hash + DeserializeOwned + Send + Sync,
@@ -132,8 +132,8 @@ impl WorkspaceInitializer {
             .serialized_typemap_read_opt(
                 "profile_params_deserialize".to_string(),
                 type_reg,
-                profile_init_file,
-                Error::ProfileInitParamsDeserialize,
+                profile_params_file,
+                Error::ProfileParamsDeserialize,
             )
             .await
     }
@@ -141,7 +141,7 @@ impl WorkspaceInitializer {
     pub async fn flow_params_serialize<K>(
         storage: &NativeStorage,
         flow_params: &FlowParams<K>,
-        flow_init_file: &FlowInitFile,
+        flow_params_file: &FlowParamsFile,
     ) -> Result<(), Error>
     where
         K: Eq + Hash + Serialize + Send + Sync,
@@ -149,9 +149,9 @@ impl WorkspaceInitializer {
         storage
             .serialized_write(
                 "flow_params_serialize".to_string(),
-                flow_init_file,
+                flow_params_file,
                 flow_params,
-                Error::FlowInitParamsSerialize,
+                Error::FlowParamsSerialize,
             )
             .await
     }
@@ -159,7 +159,7 @@ impl WorkspaceInitializer {
     pub async fn flow_params_deserialize<K>(
         storage: &NativeStorage,
         type_reg: &TypeReg<K>,
-        flow_init_file: &FlowInitFile,
+        flow_params_file: &FlowParamsFile,
     ) -> Result<Option<FlowParams<K>>, Error>
     where
         K: Debug + Eq + Hash + DeserializeOwned + Send + Sync,
@@ -168,8 +168,8 @@ impl WorkspaceInitializer {
             .serialized_typemap_read_opt(
                 "flow_params_deserialize".to_string(),
                 type_reg,
-                flow_init_file,
-                Error::FlowInitParamsDeserialize,
+                flow_params_file,
+                Error::FlowParamsDeserialize,
             )
             .await
     }

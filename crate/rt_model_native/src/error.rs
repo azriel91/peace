@@ -120,7 +120,7 @@ pub enum Error {
         feature = "error_reporting",
         diagnostic(code(peace_rt_model::workspace_init_params_serialize))
     )]
-    WorkspaceInitParamsSerialize(#[source] serde_yaml::Error),
+    WorkspaceParamsSerialize(#[source] serde_yaml::Error),
 
     /// Failed to deserialize workspace init params.
     #[error("Failed to serialize workspace init params.")]
@@ -128,7 +128,7 @@ pub enum Error {
         feature = "error_reporting",
         diagnostic(code(peace_rt_model::workspace_init_params_deserialize))
     )]
-    WorkspaceInitParamsDeserialize(#[source] serde_yaml::Error),
+    WorkspaceParamsDeserialize(#[source] serde_yaml::Error),
 
     /// Failed to serialize profile init params.
     #[error("Failed to serialize profile init params.")]
@@ -136,7 +136,7 @@ pub enum Error {
         feature = "error_reporting",
         diagnostic(code(peace_rt_model::profile_init_params_serialize))
     )]
-    ProfileInitParamsSerialize(#[source] serde_yaml::Error),
+    ProfileParamsSerialize(#[source] serde_yaml::Error),
 
     /// Failed to deserialize profile init params.
     #[error("Failed to serialize profile init params.")]
@@ -144,7 +144,7 @@ pub enum Error {
         feature = "error_reporting",
         diagnostic(code(peace_rt_model::profile_init_params_deserialize))
     )]
-    ProfileInitParamsDeserialize(#[source] serde_yaml::Error),
+    ProfileParamsDeserialize(#[source] serde_yaml::Error),
 
     /// Failed to serialize flow init params.
     #[error("Failed to serialize flow init params.")]
@@ -152,7 +152,7 @@ pub enum Error {
         feature = "error_reporting",
         diagnostic(code(peace_rt_model::flow_init_params_serialize))
     )]
-    FlowInitParamsSerialize(#[source] serde_yaml::Error),
+    FlowParamsSerialize(#[source] serde_yaml::Error),
 
     /// Failed to deserialize flow init params.
     #[error("Failed to serialize flow init params.")]
@@ -160,7 +160,7 @@ pub enum Error {
         feature = "error_reporting",
         diagnostic(code(peace_rt_model::flow_init_params_deserialize))
     )]
-    FlowInitParamsDeserialize(#[source] serde_yaml::Error),
+    FlowParamsDeserialize(#[source] serde_yaml::Error),
 
     /// Item does not exist in storage.
     #[error("Item does not exist in storage: `{}`.", path.display())]

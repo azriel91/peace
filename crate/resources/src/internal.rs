@@ -4,15 +4,15 @@
 //! framework). There may be breakage between releases.
 
 pub use self::{
-    flow_init_file::FlowInitFile, op_check_statuses::OpCheckStatuses,
-    profile_init_file::ProfileInitFile, state_diffs_mut::StateDiffsMut, states_mut::StatesMut,
-    workspace_dirs::WorkspaceDirs, workspace_init_file::WorkspaceInitFile,
+    flow_params_file::FlowParamsFile, op_check_statuses::OpCheckStatuses,
+    profile_params_file::ProfileParamsFile, state_diffs_mut::StateDiffsMut, states_mut::StatesMut,
+    workspace_dirs::WorkspaceDirs, workspace_params_file::WorkspaceParamsFile,
 };
 
-mod flow_init_file;
+mod flow_params_file;
 mod op_check_statuses;
-mod profile_init_file;
+mod profile_params_file;
 mod state_diffs_mut;
 mod states_mut;
 mod workspace_dirs;
-mod workspace_init_file;
+mod workspace_params_file;
