@@ -33,7 +33,13 @@ test = false
 # <https://github.com/rust-lang/cargo/issues/1197#issuecomment-268203727>
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-peace_rt_model_native = { path = "../rt_model_native", version = "0.0.5", features = ["error_reporting"] }
+peace_rt_model_native = { path = "../rt_model_native", version = "0.0.5" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-peace_rt_model_web = { path = "../rt_model_web", version = "0.0.5", features = ["error_reporting"] }
+peace_rt_model_web = { path = "../rt_model_web", version = "0.0.5" }
+
+[features]
+error_reporting = [
+    "peace_rt_model_native/error_reporting",
+    "peace_rt_model_web/error_reporting",
+]
