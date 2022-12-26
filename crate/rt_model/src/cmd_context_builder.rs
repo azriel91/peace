@@ -1,5 +1,6 @@
 use std::{fmt::Debug, future::IntoFuture, hash::Hash, marker::PhantomData, pin::Pin};
 
+use fn_graph::resman::Resource;
 use futures::{Future, StreamExt, TryStreamExt};
 use peace_resources::{
     internal::{FlowInitFile, ProfileInitFile, WorkspaceInitFile},
@@ -164,18 +165,6 @@ where
         )
         .await?;
 
-        let CmdContextBuilder {
-            workspace,
-            item_spec_graph,
-            output,
-            workspace_params,
-            workspace_params_type_reg: _,
-            profile_params,
-            profile_params_type_reg: _,
-            flow_params,
-            flow_params_type_reg: _,
-        } = self;
-
         // Create directories and write init parameters to storage.
         #[cfg(target_arch = "wasm32")]
         WorkspaceInitializer::dirs_initialize(storage, dirs).await?;
@@ -190,29 +179,33 @@ where
             WorkspaceInitializer::dirs_initialize(dirs).await?;
         }
 
-        Self::init_params_serialize(
+        self.init_params_serialize(
             storage,
-            workspace_params.as_ref(),
             &workspace_init_file,
-            profile_params.as_ref(),
             &profile_init_file,
-            flow_params.as_ref(),
             &flow_init_file,
         )
         .await?;
 
         // Track items in memory.
         let mut resources = Resources::new();
+        self.init_params_insert(&mut resources);
+        let CmdContextBuilder {
+            workspace,
+            item_spec_graph,
+            output,
+            workspace_params: _,
+            workspace_params_type_reg: _,
+            profile_params: _,
+            profile_params_type_reg: _,
+            flow_params: _,
+            flow_params_type_reg: _,
+        } = self;
+
         Self::workspace_dirs_insert(&mut resources, workspace);
         resources.insert(workspace_init_file);
         resources.insert(profile_init_file);
         resources.insert(flow_init_file);
-        Self::init_params_insert(
-            &mut resources,
-            workspace_params,
-            profile_params,
-            flow_params,
-        );
 
         // Read existing states from storage.
         let states_type_regs = Self::states_type_regs(item_spec_graph);
@@ -258,28 +251,30 @@ where
     }
 
     /// Inserts init params into the `Resources` map.
-    ///
-    /// **TODO:** Multiple Init Params Support ([#45])
-    ///
-    /// Implementors may wish to take in init parameters that are relevant to
-    /// different `ItemSpec`s, and so each init parameter needs to be able to be
-    /// mapped to multiple different data types.
-    ///
-    /// [#45]: https://github.com/azriel91/peace/issues/45
-    fn init_params_insert(
-        resources: &mut Resources<Empty>,
-        workspace_params: Option<WorkspaceParams<WorkspaceParamsKMaybe::Key>>,
-        profile_params: Option<ProfileParams<ProfileParamsKMaybe::Key>>,
-        flow_params: Option<FlowParams<FlowParamsKMaybe::Key>>,
-    ) {
-        if let Some(workspace_params) = workspace_params {
-            resources.insert(workspace_params);
+    fn init_params_insert(&mut self, resources: &mut Resources<Empty>) {
+        // TODO: we need to insert the raw type, right now we're inserting the box
+        if let Some(workspace_params) = self.workspace_params.as_mut() {
+            workspace_params
+                .drain(..)
+                .for_each(|(_key, workspace_param)| {
+                    let workspace_param = workspace_param.into_inner().upcast();
+                    let type_id = Resource::type_id(&*workspace_param);
+                    resources.insert_raw(type_id, workspace_param);
+                });
         }
-        if let Some(profile_params) = profile_params {
-            resources.insert(profile_params);
+        if let Some(profile_params) = self.profile_params.as_mut() {
+            profile_params.drain(..).for_each(|(_key, profile_param)| {
+                let profile_param = profile_param.into_inner().upcast();
+                let type_id = Resource::type_id(&*profile_param);
+                resources.insert_raw(type_id, profile_param);
+            });
         }
-        if let Some(flow_params) = flow_params {
-            resources.insert(flow_params);
+        if let Some(flow_params) = self.flow_params.as_mut() {
+            flow_params.drain(..).for_each(|(_key, flow_param)| {
+                let flow_param = flow_param.into_inner().upcast();
+                let type_id = Resource::type_id(&*flow_param);
+                resources.insert_raw(type_id, flow_param);
+            });
         }
     }
 
@@ -290,45 +285,68 @@ where
         profile_init_file: &ProfileInitFile,
         flow_init_file: &FlowInitFile,
     ) -> Result<(), E> {
-        if self.workspace_params.is_none() {
-            self.workspace_params = WorkspaceInitializer::workspace_params_deserialize(
-                storage,
-                &self.workspace_params_type_reg,
-                workspace_init_file,
-            )
-            .await?
-        };
-        if self.profile_params.is_none() {
-            self.profile_params = WorkspaceInitializer::profile_params_deserialize(
-                storage,
-                &self.profile_params_type_reg,
-                profile_init_file,
-            )
-            .await?;
+        macro_rules! params_deserialize_and_merge {
+            ($params:ident, $params_type_reg:ident, $params_deserialize_fn:ident, $init_file:ident) => {
+                let params_deserialized = WorkspaceInitializer::$params_deserialize_fn(
+                    storage,
+                    &self.$params_type_reg,
+                    $init_file,
+                )
+                .await?;
+                match (self.$params.as_mut(), params_deserialized) {
+                    (Some(params), Some(params_deserialized)) => {
+                        // Merge `params` on top of `params_deserialized`.
+                        // or, copy `params_deserialized` to `params` where
+                        // there isn't a value.
+
+                        params_deserialized
+                            .into_inner()
+                            .into_inner()
+                            .into_iter()
+                            .for_each(|(key, param)| {
+                                if !params.contains_key(&key) {
+                                    params.insert_raw(key, param);
+                                }
+                            });
+                    }
+                    (None, Some(params_deserialized)) => self.$params = Some(params_deserialized),
+                    (Some(_), None) => {}
+                    (None, None) => {}
+                }
+            };
         }
-        if self.flow_params.is_none() {
-            self.flow_params = WorkspaceInitializer::flow_params_deserialize(
-                storage,
-                &self.flow_params_type_reg,
-                flow_init_file,
-            )
-            .await?;
-        }
+
+        params_deserialize_and_merge!(
+            workspace_params,
+            workspace_params_type_reg,
+            workspace_params_deserialize,
+            workspace_init_file
+        );
+        params_deserialize_and_merge!(
+            profile_params,
+            profile_params_type_reg,
+            profile_params_deserialize,
+            profile_init_file
+        );
+        params_deserialize_and_merge!(
+            flow_params,
+            flow_params_type_reg,
+            flow_params_deserialize,
+            flow_init_file
+        );
 
         Ok(())
     }
 
     /// Serializes init params to storage.
     async fn init_params_serialize(
+        &self,
         storage: &Storage,
-        workspace_params: Option<&WorkspaceParams<WorkspaceParamsKMaybe::Key>>,
         workspace_init_file: &WorkspaceInitFile,
-        profile_params: Option<&ProfileParams<ProfileParamsKMaybe::Key>>,
         profile_init_file: &ProfileInitFile,
-        flow_params: Option<&FlowParams<FlowParamsKMaybe::Key>>,
         flow_init_file: &FlowInitFile,
     ) -> Result<(), E> {
-        if let Some(workspace_params) = workspace_params {
+        if let Some(workspace_params) = self.workspace_params.as_ref() {
             WorkspaceInitializer::workspace_params_serialize(
                 storage,
                 workspace_params,
@@ -336,7 +354,7 @@ where
             )
             .await?;
         }
-        if let Some(profile_params) = profile_params {
+        if let Some(profile_params) = self.profile_params.as_ref() {
             WorkspaceInitializer::profile_params_serialize(
                 storage,
                 profile_params,
@@ -344,7 +362,7 @@ where
             )
             .await?;
         }
-        if let Some(flow_params) = flow_params {
+        if let Some(flow_params) = self.flow_params.as_ref() {
             WorkspaceInitializer::flow_params_serialize(storage, flow_params, flow_init_file)
                 .await?;
         }
@@ -432,7 +450,7 @@ where
     pub fn with_workspace_param<WorkspaceParamsK, WorkspaceParam>(
         self,
         k: WorkspaceParamsK,
-        workspace_param: WorkspaceParam,
+        workspace_param: Option<WorkspaceParam>,
     ) -> CmdContextBuilder<
         'ctx,
         E,
@@ -461,7 +479,9 @@ where
         let mut workspace_params_type_reg = TypeReg::<WorkspaceParamsK, BoxDt>::new();
         workspace_params_type_reg.register::<WorkspaceParam>(k.clone());
         let mut workspace_params = WorkspaceParams::<WorkspaceParamsK>::new();
-        workspace_params.insert(k, workspace_param);
+        if let Some(workspace_param) = workspace_param {
+            workspace_params.insert(k, workspace_param);
+        }
 
         CmdContextBuilder {
             workspace,
@@ -495,7 +515,7 @@ where
     pub fn with_workspace_param<WorkspaceParam>(
         mut self,
         k: WorkspaceParamsK,
-        workspace_param: WorkspaceParam,
+        workspace_param: Option<WorkspaceParam>,
     ) -> CmdContextBuilder<
         'ctx,
         E,
@@ -509,7 +529,9 @@ where
     {
         self.workspace_params_type_reg
             .register::<WorkspaceParam>(k.clone());
-        if let Some(workspace_params) = self.workspace_params.as_mut() {
+        if let (Some(workspace_params), Some(workspace_param)) =
+            (self.workspace_params.as_mut(), workspace_param)
+        {
             workspace_params.insert(k, workspace_param);
         }
 
@@ -533,7 +555,7 @@ where
     pub fn with_profile_param<ProfileParamsK, ProfileParam>(
         self,
         k: ProfileParamsK,
-        profile_param: ProfileParam,
+        profile_param: Option<ProfileParam>,
     ) -> CmdContextBuilder<
         'ctx,
         E,
@@ -562,7 +584,9 @@ where
         let mut profile_params_type_reg = TypeReg::<ProfileParamsK, BoxDt>::new();
         profile_params_type_reg.register::<ProfileParam>(k.clone());
         let mut profile_params = ProfileParams::<ProfileParamsK>::new();
-        profile_params.insert(k, profile_param);
+        if let Some(profile_param) = profile_param {
+            profile_params.insert(k, profile_param);
+        }
 
         CmdContextBuilder {
             workspace,
@@ -596,7 +620,7 @@ where
     pub fn with_profile_param<ProfileParam>(
         mut self,
         k: ProfileParamsK,
-        profile_param: ProfileParam,
+        profile_param: Option<ProfileParam>,
     ) -> CmdContextBuilder<
         'ctx,
         E,
@@ -610,7 +634,9 @@ where
     {
         self.profile_params_type_reg
             .register::<ProfileParam>(k.clone());
-        if let Some(profile_params) = self.profile_params.as_mut() {
+        if let (Some(profile_params), Some(profile_param)) =
+            (self.profile_params.as_mut(), profile_param)
+        {
             profile_params.insert(k, profile_param);
         }
 
@@ -634,7 +660,7 @@ where
     pub fn with_flow_param<FlowParamsK, FlowParam>(
         self,
         k: FlowParamsK,
-        flow_param: FlowParam,
+        flow_param: Option<FlowParam>,
     ) -> CmdContextBuilder<
         'ctx,
         E,
@@ -663,7 +689,9 @@ where
         let mut flow_params_type_reg = TypeReg::<FlowParamsK, BoxDt>::new();
         flow_params_type_reg.register::<FlowParam>(k.clone());
         let mut flow_params = FlowParams::<FlowParamsK>::new();
-        flow_params.insert(k, flow_param);
+        if let Some(flow_param) = flow_param {
+            flow_params.insert(k, flow_param);
+        }
 
         CmdContextBuilder {
             workspace,
@@ -696,7 +724,7 @@ where
     pub fn with_flow_param<FlowParam>(
         mut self,
         k: FlowParamsK,
-        flow_param: FlowParam,
+        flow_param: Option<FlowParam>,
     ) -> CmdContextBuilder<
         'ctx,
         E,
@@ -709,7 +737,7 @@ where
         FlowParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
     {
         self.flow_params_type_reg.register::<FlowParam>(k.clone());
-        if let Some(flow_params) = self.flow_params.as_mut() {
+        if let (Some(flow_params), Some(flow_param)) = (self.flow_params.as_mut(), flow_param) {
             flow_params.insert(k, flow_param);
         }
 
