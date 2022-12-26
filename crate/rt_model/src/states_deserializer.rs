@@ -212,7 +212,10 @@ where
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
         states_file_path: &Path,
-    ) -> Result<Option<States<TS>>, E> {
+    ) -> Result<Option<States<TS>>, E>
+    where
+        TS: Send + Sync,
+    {
         let states_opt = storage
             .serialized_typemap_read_opt(states_type_reg, states_file_path, |error| {
                 #[cfg(not(feature = "error_reporting"))]
