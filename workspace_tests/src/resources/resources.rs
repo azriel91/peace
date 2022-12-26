@@ -13,6 +13,8 @@ use peace::resources::{
     Resources,
 };
 
+mod ts;
+
 #[test]
 fn debug() {
     let mut resources = Resources::new();
