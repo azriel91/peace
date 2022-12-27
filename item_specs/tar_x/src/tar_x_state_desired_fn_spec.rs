@@ -1,14 +1,14 @@
 use std::{io::Read, marker::PhantomData, path::Path};
 
 use peace::{
-    cfg::{async_trait, FnSpec},
+    cfg::{async_trait, StateDiscoverFnSpec},
     rt_model::Storage,
 };
 use tar::Archive;
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
 
-/// Status desired `FnSpec` for the tar to extract.
+/// Reads the desired state of the tar to extract.
 #[derive(Debug)]
 pub struct TarXStateDesiredFnSpec<Id>(PhantomData<Id>);
 
@@ -88,7 +88,7 @@ impl<Id> TarXStateDesiredFnSpec<Id> {
 }
 
 #[async_trait(?Send)]
-impl<Id> FnSpec for TarXStateDesiredFnSpec<Id>
+impl<Id> StateDiscoverFnSpec for TarXStateDesiredFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {

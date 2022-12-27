@@ -6,7 +6,8 @@ use std::{
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{
-    async_trait, state::Placeholder, FnSpec, ItemSpec, ItemSpecId, OpCheckStatus, State,
+    async_trait, state::Placeholder, ItemSpec, ItemSpecId, OpCheckStatus, State,
+    StateDiscoverFnSpec,
 };
 use peace_data::Data;
 use peace_resources::{
@@ -187,9 +188,11 @@ where
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + FnSpec<Output = Option<State<StateLogical, StatePhysical>>> + Send + Sync,
-    StateDesiredFnSpec: Debug + FnSpec<Output = Option<StateLogical>> + Send + Sync,
+    StateCurrentFnSpec: Debug
+        + StateDiscoverFnSpec<Output = Option<State<StateLogical, StatePhysical>>>
+        + Send
+        + Sync,
+    StateDesiredFnSpec: Debug + StateDiscoverFnSpec<Output = Option<StateLogical>> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             StatePhysical = StatePhysical,
@@ -257,9 +260,11 @@ where
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + FnSpec<Output = Option<State<StateLogical, StatePhysical>>> + Send + Sync,
-    StateDesiredFnSpec: Debug + FnSpec<Output = Option<StateLogical>> + Send + Sync,
+    StateCurrentFnSpec: Debug
+        + StateDiscoverFnSpec<Output = Option<State<StateLogical, StatePhysical>>>
+        + Send
+        + Sync,
+    StateDesiredFnSpec: Debug + StateDiscoverFnSpec<Output = Option<StateLogical>> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             StatePhysical = StatePhysical,
@@ -331,9 +336,11 @@ where
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + FnSpec<Output = Option<State<StateLogical, StatePhysical>>> + Send + Sync,
-    StateDesiredFnSpec: Debug + FnSpec<Output = Option<StateLogical>> + Send + Sync,
+    StateCurrentFnSpec: Debug
+        + StateDiscoverFnSpec<Output = Option<State<StateLogical, StatePhysical>>>
+        + Send
+        + Sync,
+    StateDesiredFnSpec: Debug + StateDiscoverFnSpec<Output = Option<StateLogical>> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             StatePhysical = StatePhysical,
@@ -413,11 +420,13 @@ where
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec: Debug
-        + FnSpec<Error = <IS as ItemSpec>::Error, Output = Option<State<StateLogical, StatePhysical>>>
-        + Send
+        + StateDiscoverFnSpec<
+            Error = <IS as ItemSpec>::Error,
+            Output = Option<State<StateLogical, StatePhysical>>,
+        > + Send
         + Sync,
     StateDesiredFnSpec: Debug
-        + FnSpec<Error = <IS as ItemSpec>::Error, Output = Option<StateLogical>>
+        + StateDiscoverFnSpec<Error = <IS as ItemSpec>::Error, Output = Option<StateLogical>>
         + Send
         + Sync,
     StateDiffFnSpec: Debug
@@ -470,8 +479,10 @@ where
     ) -> Result<Option<BoxDtDisplay>, E> {
         let state: Option<State<StateLogical, StatePhysical>> = {
             let data =
-                <<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_> as Data>::borrow(resources);
-            <StateCurrentFnSpec as FnSpec>::exec(data).await?
+                <<StateCurrentFnSpec as peace_cfg::StateDiscoverFnSpec>::Data<'_> as Data>::borrow(
+                    resources,
+                );
+            <StateCurrentFnSpec as StateDiscoverFnSpec>::exec(data).await?
         };
 
         Ok(state.map(BoxDtDisplay::new))
@@ -483,8 +494,10 @@ where
     ) -> Result<BoxDtDisplay, E> {
         let state: State<StateLogical, StatePhysical> = {
             let data =
-                <<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_> as Data>::borrow(resources);
-            <StateCurrentFnSpec as FnSpec>::exec(data)
+                <<StateCurrentFnSpec as peace_cfg::StateDiscoverFnSpec>::Data<'_> as Data>::borrow(
+                    resources,
+                );
+            <StateCurrentFnSpec as StateDiscoverFnSpec>::exec(data)
                 .await?
                 .ok_or_else(|| {
                     let item_spec_id = self.id();
@@ -501,8 +514,10 @@ where
     ) -> Result<Option<BoxDtDisplay>, E> {
         let state: Option<State<StateLogical, StatePhysical>> = {
             let data =
-                <<StateCurrentFnSpec as peace_cfg::FnSpec>::Data<'_> as Data>::borrow(resources);
-            <StateCurrentFnSpec as FnSpec>::exec(data).await?
+                <<StateCurrentFnSpec as peace_cfg::StateDiscoverFnSpec>::Data<'_> as Data>::borrow(
+                    resources,
+                );
+            <StateCurrentFnSpec as StateDiscoverFnSpec>::exec(data).await?
         };
 
         Ok(state.map(BoxDtDisplay::new))
@@ -514,9 +529,11 @@ where
     ) -> Result<Option<BoxDtDisplay>, E> {
         let state_desired = {
             let data =
-                <<StateDesiredFnSpec as peace_cfg::FnSpec>::Data<'_> as Data>::borrow(resources);
+                <<StateDesiredFnSpec as peace_cfg::StateDiscoverFnSpec>::Data<'_> as Data>::borrow(
+                    resources,
+                );
             let state_desired_logical =
-                <StateDesiredFnSpec as peace_cfg::FnSpec>::exec(data).await?;
+                <StateDesiredFnSpec as peace_cfg::StateDiscoverFnSpec>::exec(data).await?;
 
             state_desired_logical.map(|state_desired_logical| {
                 State::new(state_desired_logical, Placeholder::calculated())

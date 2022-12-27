@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Nothing, FnSpec, State};
+use peace::cfg::{async_trait, state::Nothing, State, StateDiscoverFnSpec};
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::{fs::File, io::AsyncReadExt};
 
@@ -9,7 +9,7 @@ use peace::rt_model::Storage;
 
 use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
-/// Status `FnSpec` for the file to download.
+/// Reads the current state of the file to download.
 #[derive(Debug)]
 pub struct FileDownloadStateCurrentFnSpec<Id>(PhantomData<Id>);
 
@@ -83,7 +83,7 @@ impl<Id> FileDownloadStateCurrentFnSpec<Id> {
 }
 
 #[async_trait(?Send)]
-impl<Id> FnSpec for FileDownloadStateCurrentFnSpec<Id>
+impl<Id> StateDiscoverFnSpec for FileDownloadStateCurrentFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {

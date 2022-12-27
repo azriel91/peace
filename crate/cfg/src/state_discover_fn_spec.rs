@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use peace_data::Data;
 
-/// Defines the logic and data of a function.
+/// Defines the logic and data of a state discovery function.
 #[async_trait(?Send)]
-pub trait FnSpec {
+pub trait StateDiscoverFnSpec {
     /// Return type of the function.
     ///
     /// * For [`StateCurrentFnSpec`], this is the current [`State`] of the

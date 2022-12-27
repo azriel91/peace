@@ -5,7 +5,7 @@ use peace_core::ItemSpecId;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{CleanOpSpec, EnsureOpSpec, FnSpec, State, StateDiffFnSpec};
+use crate::{CleanOpSpec, EnsureOpSpec, State, StateDiffFnSpec, StateDiscoverFnSpec};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -162,7 +162,7 @@ pub trait ItemSpec {
     type StateDiff: Clone + fmt::Display + Serialize + DeserializeOwned;
 
     /// Function that returns the current state of the managed item.
-    type StateCurrentFnSpec: FnSpec<
+    type StateCurrentFnSpec: StateDiscoverFnSpec<
         Error = Self::Error,
         Output = Option<State<Self::StateLogical, Self::StatePhysical>>,
     >;
@@ -176,7 +176,10 @@ pub trait ItemSpec {
     ///
     /// * For a web application service operation, the desired state could be
     ///   the web service is running on the latest version.
-    type StateDesiredFnSpec: FnSpec<Error = Self::Error, Output = Option<Self::StateLogical>>;
+    type StateDesiredFnSpec: StateDiscoverFnSpec<
+        Error = Self::Error,
+        Output = Option<Self::StateLogical>,
+    >;
 
     /// Returns the difference between the current state and desired state.
     ///

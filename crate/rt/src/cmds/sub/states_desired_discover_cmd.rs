@@ -28,10 +28,10 @@ where
     /// If any `StateDesiredFnSpec` needs to read the `State` from a previous
     /// `ItemSpec`, the predecessor should insert a copy / clone of their
     /// desired state into `Resources`, and the successor should references
-    /// it in their [`FnSpec::Data`].
+    /// it in their [`Data`].
     ///
-    /// [`exec`]: peace_cfg::StateDesiredFnSpec::exec
-    /// [`FnSpec::Data`]: peace_cfg::FnSpec::Data
+    /// [`exec`]: peace_cfg::StateDiscoverFnSpec::exec
+    /// [`Data`]: peace_cfg::StateDiscoverFnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StatesDesired`]: peace_resources::StatesDesired
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec

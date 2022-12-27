@@ -1,15 +1,15 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, FnSpec, State};
+use peace::cfg::{async_trait, State, StateDiscoverFnSpec};
 
 use crate::{ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord, ShSyncCmdSyncStatus};
 
-/// Status `FnSpec` for the command to execute.
+/// Reads the current state of the command to execute.
 #[derive(Debug)]
 pub struct ShSyncCmdStateCurrentFnSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-impl<Id> FnSpec for ShSyncCmdStateCurrentFnSpec<Id>
+impl<Id> StateDiscoverFnSpec for ShSyncCmdStateCurrentFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {

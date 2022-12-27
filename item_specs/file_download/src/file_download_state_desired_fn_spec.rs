@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, FnSpec};
+use peace::cfg::{async_trait, StateDiscoverFnSpec};
 
 use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
-/// Status desired `FnSpec` for the file to download.
+/// Reads the desired state of the file to download.
 #[derive(Debug)]
 pub struct FileDownloadStateDesiredFnSpec<Id>(PhantomData<Id>);
 
@@ -63,7 +63,7 @@ where
 }
 
 #[async_trait(?Send)]
-impl<Id> FnSpec for FileDownloadStateDesiredFnSpec<Id>
+impl<Id> StateDiscoverFnSpec for FileDownloadStateDesiredFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {

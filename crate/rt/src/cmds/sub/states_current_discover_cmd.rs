@@ -28,10 +28,10 @@ where
     /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
     /// `ItemSpec`, the predecessor should insert a copy / clone of their state
     /// into `Resources`, and the successor should references it in their
-    /// [`FnSpec::Data`].
+    /// [`Data`].
     ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
-    /// [`FnSpec::Data`]: peace_cfg::FnSpec::Data
+    /// [`exec`]: peace_cfg::StateDiscoverFnSpec::exec
+    /// [`Data`]: peace_cfg::StateDiscoverFnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub async fn exec(
@@ -58,7 +58,7 @@ where
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`StatesCurrent`].
     ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
+    /// [`exec`]: peace_cfg::StateDiscoverFnSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal(

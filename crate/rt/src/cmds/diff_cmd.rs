@@ -29,7 +29,6 @@ where
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`], [`StatesDesired`], and [`StateDiffs`].
     ///
-    /// [`FnSpec::Data`]: peace_cfg::FnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StatesCurrent`]: peace_resources::StatesCurrent
     /// [`StatesDesired`]: peace_resources::StatesDesired

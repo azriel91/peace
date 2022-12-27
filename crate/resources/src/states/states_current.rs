@@ -11,21 +11,21 @@ use crate::states::{ts::Current, States};
 ///
 /// If an `ItemSpec`'s state discovery depends on the `State` of a previous
 /// `ItemSpec`, then you should insert the predecessor's state into
-/// [`Resources`], and reference that in the subsequent `FnSpec`'s [`Data`]:
+/// [`Resources`], and reference that in the subsequent `StateDiscoverFnSpec`'s [`Data`]:
 ///
 /// ```rust
 /// # use std::path::PathBuf;
 /// #
 /// # use peace_data::{Data, R};
 /// #
-/// /// Predecessor `FnSpec::Data`.
+/// /// Predecessor `StateDiscoverFnSpec::Data`.
 /// #[derive(Data, Debug)]
 /// pub struct AppUploadParams<'op> {
 ///     /// Path to the application directory.
 ///     app_dir: W<'op, PathBuf>,
 /// }
 ///
-/// /// Successor `FnSpec::Data`.
+/// /// Successor `StateDiscoverFnSpec::Data`.
 /// #[derive(Data, Debug)]
 /// pub struct AppInstallParams<'op> {
 ///     /// Path to the application directory.

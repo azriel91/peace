@@ -1,10 +1,10 @@
 use std::{marker::PhantomData, path::Path};
 
-use peace::cfg::{async_trait, state::Nothing, FnSpec, State};
+use peace::cfg::{async_trait, state::Nothing, State, StateDiscoverFnSpec};
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
 
-/// Status `FnSpec` for the tar to extract.
+/// Reads the current state of the tar to extract.
 #[derive(Debug)]
 pub struct TarXStateCurrentFnSpec<Id>(PhantomData<Id>);
 
@@ -94,7 +94,7 @@ impl<Id> TarXStateCurrentFnSpec<Id> {
 }
 
 #[async_trait(?Send)]
-impl<Id> FnSpec for TarXStateCurrentFnSpec<Id>
+impl<Id> StateDiscoverFnSpec for TarXStateCurrentFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {

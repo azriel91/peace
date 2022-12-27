@@ -16,7 +16,7 @@ use std::{
 };
 
 use fn_graph::{DataAccessDyn, TypeIds};
-use peace_cfg::{FnSpec, ItemSpec, State};
+use peace_cfg::{ItemSpec, State, StateDiscoverFnSpec};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{ItemSpecRt, ItemSpecWrapper};
@@ -82,12 +82,14 @@ where
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec: Debug
-        + FnSpec<Error = <IS as ItemSpec>::Error, Output = Option<State<StateLogical, StatePhysical>>>
-        + Send
+        + StateDiscoverFnSpec<
+            Error = <IS as ItemSpec>::Error,
+            Output = Option<State<StateLogical, StatePhysical>>,
+        > + Send
         + Sync
         + 'static,
     StateDesiredFnSpec: Debug
-        + FnSpec<Error = <IS as ItemSpec>::Error, Output = Option<StateLogical>>
+        + StateDiscoverFnSpec<Error = <IS as ItemSpec>::Error, Output = Option<StateLogical>>
         + Send
         + Sync
         + 'static,
