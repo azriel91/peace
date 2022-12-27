@@ -69,10 +69,15 @@ where
         let states_mut = item_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
-            .map_ok(|item_spec| async move {
+            .try_filter_map(|item_spec| async move {
                 let state = item_spec.state_current_fn_exec(resources_ref).await?;
-                Ok((item_spec.id(), state))
+                Ok(state
+                    .map(|state| (item_spec.id(), state))
+                    .map(Result::Ok)
+                    .map(futures::future::ready))
             })
+            // TODO: do we need this?
+            // If not, we can remove the `Ok` and `future::ready` mappings above.
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)
             .try_collect::<StatesMut<Current>>()
             .await?;
@@ -157,9 +162,12 @@ where
         let states_mut = item_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
-            .map_ok(|item_spec| async move {
+            .try_filter_map(|item_spec| async move {
                 let state = item_spec.state_cleaned_fn_exec(resources).await?;
-                Ok((item_spec.id(), state))
+                Ok(state
+                    .map(|state| (item_spec.id(), state))
+                    .map(Result::Ok)
+                    .map(futures::future::ready))
             })
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)
             .try_collect::<StatesMut<Current>>()
@@ -187,9 +195,12 @@ where
         let states_mut = item_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
-            .map_ok(|item_spec| async move {
+            .try_filter_map(|item_spec| async move {
                 let state = item_spec.state_cleaned_fn_exec(resources_ref).await?;
-                Ok((item_spec.id(), state))
+                Ok(state
+                    .map(|state| (item_spec.id(), state))
+                    .map(Result::Ok)
+                    .map(futures::future::ready))
             })
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)
             .try_collect::<StatesMut<Current>>()

@@ -164,7 +164,7 @@ pub trait ItemSpec {
     /// Function that returns the current state of the managed item.
     type StateCurrentFnSpec: FnSpec<
         Error = Self::Error,
-        Output = State<Self::StateLogical, Self::StatePhysical>,
+        Output = Option<State<Self::StateLogical, Self::StatePhysical>>,
     >;
 
     /// Function that returns the desired state of the managed item.

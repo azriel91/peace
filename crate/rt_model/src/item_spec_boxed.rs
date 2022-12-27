@@ -69,14 +69,20 @@ where
         > + Send
         + Sync
         + 'static,
-    E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
+    E: Debug
+        + Send
+        + Sync
+        + std::error::Error
+        + From<<IS as ItemSpec>::Error>
+        + From<crate::Error>
+        + 'static,
     StateLogical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec: Debug
-        + FnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
+        + FnSpec<Error = <IS as ItemSpec>::Error, Output = Option<State<StateLogical, StatePhysical>>>
         + Send
         + Sync
         + 'static,

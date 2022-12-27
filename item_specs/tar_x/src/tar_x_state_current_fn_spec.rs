@@ -100,7 +100,7 @@ where
 {
     type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
-    type Output = State<FileMetadatas, Nothing>;
+    type Output = Option<State<FileMetadatas, Nothing>>;
 
     async fn exec(tar_x_data: TarXData<'_, Id>) -> Result<Self::Output, TarXError> {
         let tar_x_params = tar_x_data.tar_x_params();
@@ -115,11 +115,14 @@ where
 
             FileMetadatas::from(files_extracted)
         } else {
-            let tar_path = tar_path.to_path_buf();
-            return Err(TarXError::TarFileNotExists { tar_path });
+            // TODO: Return err when we can tell if this is called from discover or ensure..
+            // let tar_path = tar_path.to_path_buf();
+            // return Err(TarXError::TarFileNotExists { tar_path });
+
+            return Ok(None);
         };
         let state = State::new(tar_x_state, Nothing);
 
-        Ok(state)
+        Ok(Some(state))
     }
 }

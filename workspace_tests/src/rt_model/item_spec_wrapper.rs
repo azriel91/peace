@@ -62,7 +62,10 @@ async fn state_current_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
-    let state = item_spec_wrapper.state_current_fn_exec(&resources).await?;
+    let state = item_spec_wrapper
+        .state_current_fn_exec(&resources)
+        .await?
+        .unwrap();
 
     assert_eq!(
         Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
@@ -194,7 +197,9 @@ async fn resources_with_states_saved_and_desired(
     let states_saved = {
         let mut states_mut = StatesMut::new();
         let state = item_spec_wrapper.state_current_fn_exec(&resources).await?;
-        states_mut.insert_raw(item_spec_wrapper.id(), state);
+        if let Some(state) = state {
+            states_mut.insert_raw(item_spec_wrapper.id(), state);
+        }
 
         Into::<StatesSaved>::into(StatesCurrent::from(states_mut))
     };
@@ -218,7 +223,9 @@ async fn resources_with_states_current_and_desired(
     let states_current = {
         let mut states_mut = StatesMut::new();
         let state = item_spec_wrapper.state_current_fn_exec(&resources).await?;
-        states_mut.insert_raw(item_spec_wrapper.id(), state);
+        if let Some(state) = state {
+            states_mut.insert_raw(item_spec_wrapper.id(), state);
+        }
 
         StatesCurrent::from(states_mut)
     };

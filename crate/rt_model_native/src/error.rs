@@ -1,5 +1,6 @@
 use std::{ffi::OsString, path::PathBuf, sync::Mutex};
 
+use peace_core::ItemSpecId;
 use peace_resources::paths::WorkspaceDir;
 
 // Remember to add common variants to `rt_model_web/src/error.rs`.
@@ -50,6 +51,33 @@ pub enum Error {
         diagnostic(code(peace_rt_model::states_serialize))
     )]
     StatesSerialize(#[source] serde_yaml::Error),
+
+    /// Failed to discover current state for a particular item spec.
+    ///
+    /// This happens when current state is discovered during an `EnsureCmd`
+    /// execution -- as the current state is expected to be discovered for all
+    /// item specs as their predecessors (dependencies) are meant to exist.
+    ///
+    /// This does *not* happen during a `StateCurrentDiscoverCmd` execution --
+    /// i.e. it is okay for a `StateCurrentFnSpec` to return `Ok(None)` for
+    /// inspecting the state of a file on a remote server, if the server doesn't
+    /// exist.
+    #[error("Failed to discover current state for item spec: `{item_spec_id}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::state_current_discover_none),
+            help(
+                "This is a bug in the automation for `{item_spec_id}`.\n\
+                It should return an error explaining why the current state could not be discovered,\n\
+                instead of `None`."
+            )
+        )
+    )]
+    StateCurrentDiscoverNone {
+        /// ID of the item spec whose state failed to be discovered.
+        item_spec_id: ItemSpecId,
+    },
 
     /// Current states have not been discovered.
     ///
