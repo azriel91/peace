@@ -81,7 +81,10 @@ async fn state_desired_fn_exec() -> Result<(), VecCopyError> {
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
-    let state_desired = item_spec_wrapper.state_desired_fn_exec(&resources).await?;
+    let state_desired = item_spec_wrapper
+        .state_desired_fn_exec(&resources)
+        .await?
+        .unwrap();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
@@ -205,7 +208,10 @@ async fn resources_with_states_saved_and_desired(
     };
     let states_desired = {
         let mut states_desired_mut = StatesMut::<Desired>::new();
-        let state_desired = item_spec_wrapper.state_desired_fn_exec(&resources).await?;
+        let state_desired = item_spec_wrapper
+            .state_desired_fn_exec(&resources)
+            .await?
+            .unwrap();
         states_desired_mut.insert_raw(item_spec_wrapper.id(), state_desired);
 
         StatesDesired::from(states_desired_mut)
@@ -231,7 +237,10 @@ async fn resources_with_states_current_and_desired(
     };
     let states_desired = {
         let mut states_desired_mut = StatesMut::<Desired>::new();
-        let state_desired = item_spec_wrapper.state_desired_fn_exec(&resources).await?;
+        let state_desired = item_spec_wrapper
+            .state_desired_fn_exec(&resources)
+            .await?
+            .unwrap();
         states_desired_mut.insert_raw(item_spec_wrapper.id(), state_desired);
 
         StatesDesired::from(states_desired_mut)

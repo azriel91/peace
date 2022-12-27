@@ -155,15 +155,30 @@ impl WebStorage {
             })
     }
 
-    /// Gets an item in the web storage.
+    /// Gets a base64 encoded item in the web storage.
     ///
-    /// * Use [`get_item_opt`] if you would like to fetch an item that may not
-    ///   exist.
-    /// * Use [`get_items_opt`] if you would like to fetch multiple optional
-    ///   items.
-    /// * Use [`get_item`] if you would like to fetch an item that must exist.
-    /// * Use [`get_items`] if you would like to fetch multiple items that must
-    ///   exist.
+    /// * Use [`get_item_b64_opt`] if you would like to fetch an item that may
+    ///   not exist.
+    ///
+    /// [`get_items`]: Self::get_items
+    pub fn get_item_b64_opt(&self, path: &Path) -> Result<Option<Vec<u8>>, Error> {
+        self.get_item_opt(path).and_then(|value| {
+            value
+                .map(|value| {
+                    base64::decode(&value).map_err(|error| Error::StorageB64Decode {
+                        path: path.to_path_buf(),
+                        value,
+                        error,
+                    })
+                })
+                .transpose()
+        })
+    }
+
+    /// Gets a base64 encoded item in the web storage.
+    ///
+    /// * Use [`get_item_b64_opt`] if you would like to fetch an item that may
+    ///   not exist.
     ///
     /// [`get_items`]: Self::get_items
     pub fn get_item_b64(&self, path: &Path) -> Result<Vec<u8>, Error> {

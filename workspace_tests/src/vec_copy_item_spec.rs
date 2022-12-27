@@ -220,10 +220,10 @@ pub struct VecCopyStateDesiredFnSpec;
 impl FnSpec for VecCopyStateDesiredFnSpec {
     type Data<'op> = R<'op, VecA>;
     type Error = VecCopyError;
-    type Output = VecCopyState;
+    type Output = Option<VecCopyState>;
 
     async fn exec(vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
-        Ok(vec_a.0.clone()).map(VecCopyState::from)
+        Ok(vec_a.0.clone()).map(VecCopyState::from).map(Some)
     }
 }
 

@@ -17,25 +17,34 @@ impl<Id> TarXStateDesiredFnSpec<Id> {
     pub async fn files_in_tar(
         storage: &Storage,
         tar_path: &Path,
-    ) -> Result<Vec<FileMetadata>, TarXError> {
-        storage
-            .read_with_sync_api(
-                "TarXStateDesiredFnSpec::files_in_tar".to_string(),
-                tar_path,
-                |sync_io_bridge| Self::tar_file_metadata(tar_path, Archive::new(sync_io_bridge)),
-            )
-            .await
+    ) -> Result<Option<Vec<FileMetadata>>, TarXError> {
+        if !tar_path.exists() {
+            // TODO: return Error if we're executing for EnsureCmd
+            Ok(None)
+        } else {
+            let file_metadatas = storage
+                .read_with_sync_api(
+                    "TarXStateDesiredFnSpec::files_in_tar".to_string(),
+                    tar_path,
+                    |sync_io_bridge| {
+                        Self::tar_file_metadata(tar_path, Archive::new(sync_io_bridge))
+                    },
+                )
+                .await?;
+
+            Ok(Some(file_metadatas))
+        }
     }
 
     #[cfg(target_arch = "wasm32")]
     pub fn files_in_tar(
         storage: &Storage,
         tar_path: &Path,
-    ) -> Result<Vec<FileMetadata>, TarXError> {
+    ) -> Result<Option<Vec<FileMetadata>>, TarXError> {
         use std::io::Cursor;
 
         let bytes = storage.get_item_b64(tar_path)?;
-        Self::tar_file_metadata(tar_path, Archive::new(Cursor::new(bytes)))
+        Self::tar_file_metadata(tar_path, Archive::new(Cursor::new(bytes))).map(Some)
     }
 
     fn tar_file_metadata<R>(
@@ -85,7 +94,7 @@ where
 {
     type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
-    type Output = FileMetadatas;
+    type Output = Option<FileMetadatas>;
 
     async fn exec(tar_x_data: TarXData<'_, Id>) -> Result<Self::Output, TarXError> {
         let tar_x_params = tar_x_data.tar_x_params();
@@ -97,6 +106,6 @@ where
         #[cfg(target_arch = "wasm32")]
         let files_in_tar = Self::files_in_tar(storage, tar_path)?;
 
-        Ok(FileMetadatas::from(files_in_tar))
+        Ok(files_in_tar.map(FileMetadatas::from))
     }
 }

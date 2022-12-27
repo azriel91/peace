@@ -76,7 +76,10 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     ///
     /// [`ItemSpec::StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     /// [`desired`]: peace_cfg::FnSpec::desired
-    async fn state_desired_fn_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
+    async fn state_desired_fn_exec(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<Option<BoxDtDisplay>, E>
     where
         E: Debug + std::error::Error;
 

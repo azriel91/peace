@@ -176,7 +176,7 @@ pub trait ItemSpec {
     ///
     /// * For a web application service operation, the desired state could be
     ///   the web service is running on the latest version.
-    type StateDesiredFnSpec: FnSpec<Error = Self::Error, Output = Self::StateLogical>;
+    type StateDesiredFnSpec: FnSpec<Error = Self::Error, Output = Option<Self::StateLogical>>;
 
     /// Returns the difference between the current state and desired state.
     ///

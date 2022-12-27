@@ -69,9 +69,12 @@ where
         let states_desired_mut = item_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
-            .map_ok(|item_spec| async move {
+            .try_filter_map(|item_spec| async move {
                 let state_desired = item_spec.state_desired_fn_exec(resources_ref).await?;
-                Ok((item_spec.id(), state_desired))
+                Ok(state_desired
+                    .map(|state_desired| (item_spec.id(), state_desired))
+                    .map(Result::Ok)
+                    .map(futures::future::ready))
             })
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)
             .try_collect::<StatesMut<Desired>>()

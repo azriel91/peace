@@ -93,6 +93,33 @@ pub enum Error {
     )]
     StatesCurrentDiscoverRequired,
 
+    /// Failed to discover desired state for a particular item spec.
+    ///
+    /// This happens when desired state is discovered during an `EnsureCmd`
+    /// execution -- as the desired state is expected to be discovered for all
+    /// item specs as their predecessors (dependencies) are meant to exist.
+    ///
+    /// This does *not* happen during a `StateDesiredDiscoverCmd` execution --
+    /// i.e. it is okay for a `StateDesiredFnSpec` to return `Ok(None)` for
+    /// inspecting the state of a file to transfer, if the file needs to be
+    /// created.
+    #[error("Failed to discover desired state for item spec: `{item_spec_id}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::state_current_discover_none),
+            help(
+                "This is a bug in the automation for `{item_spec_id}`.\n\
+                It should return an error explaining why the desired state could not be discovered,\n\
+                instead of `None`."
+            )
+        )
+    )]
+    StateDesiredDiscoverNone {
+        /// ID of the item spec whose state failed to be discovered.
+        item_spec_id: ItemSpecId,
+    },
+
     /// Desired states have not been written to disk.
     ///
     /// This is returned when `StatesDesiredFile` is attempted to be

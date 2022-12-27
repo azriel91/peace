@@ -15,7 +15,7 @@ where
 {
     type Data<'op> = ShSyncCmdData<'op, Id>;
     type Error = ShSyncCmdError;
-    type Output = ShSyncCmdSyncStatus;
+    type Output = Option<ShSyncCmdSyncStatus>;
 
     async fn exec(
         _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,

@@ -87,7 +87,7 @@ where
         + Sync
         + 'static,
     StateDesiredFnSpec: Debug
-        + FnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical>
+        + FnSpec<Error = <IS as ItemSpec>::Error, Output = Option<StateLogical>>
         + Send
         + Sync
         + 'static,
