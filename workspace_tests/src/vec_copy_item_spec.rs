@@ -7,7 +7,7 @@ use diff::{Diff, VecDiff, VecDiffType};
 use peace::{
     cfg::{
         async_trait, item_spec_id, state::Nothing, CleanOpSpec, EnsureOpSpec, ItemSpec, ItemSpecId,
-        OpCheckStatus, ProgressLimit, State, StateDiffFnSpec, StateDiscoverFnSpec,
+        OpCheckStatus, ProgressLimit, State, StateDiffFnSpec, TryFnSpec,
     },
     data::{Data, RMaybe, R, W},
     resources::{resources::ts::Empty, states::StatesSaved, Resources},
@@ -199,7 +199,7 @@ impl<'op> VecCopyParams<'op> {
 pub struct VecCopyStateCurrentFnSpec;
 
 #[async_trait(?Send)]
-impl StateDiscoverFnSpec for VecCopyStateCurrentFnSpec {
+impl TryFnSpec for VecCopyStateCurrentFnSpec {
     type Data<'op> = R<'op, VecB>;
     type Error = VecCopyError;
     type Output = Option<State<VecCopyState, Nothing>>;
@@ -217,7 +217,7 @@ impl StateDiscoverFnSpec for VecCopyStateCurrentFnSpec {
 pub struct VecCopyStateDesiredFnSpec;
 
 #[async_trait(?Send)]
-impl StateDiscoverFnSpec for VecCopyStateDesiredFnSpec {
+impl TryFnSpec for VecCopyStateDesiredFnSpec {
     type Data<'op> = R<'op, VecA>;
     type Error = VecCopyError;
     type Output = Option<VecCopyState>;

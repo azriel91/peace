@@ -24,7 +24,7 @@ pub mod ts;
 /// functions that require particular operations to have executed over the
 /// resources beforehand.
 ///
-/// For example, `Resources` must be `setup` before any `StateDiscoverFnSpec`,
+/// For example, `Resources` must be `setup` before any `TryFnSpec`,
 /// `EnsureOpSpec`, or `CleanOpSpec` may execute with it.
 ///
 /// # Type Parameters

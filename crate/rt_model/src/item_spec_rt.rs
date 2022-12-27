@@ -39,33 +39,33 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// `StatesDesiredFile`.
     fn state_register(&self, states_type_regs: &mut StatesTypeRegs);
 
-    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`try_discover`].
+    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`try_exec`].
     ///
     /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`try_discover`]: peace_cfg::StateDiscoverFnSpec::try_discover
-    async fn state_current_try_discover(
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
+    async fn state_current_try_exec(
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E>
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`try_discover`].
+    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`try_exec`].
     ///
     /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`try_discover`]: peace_cfg::StateDiscoverFnSpec::try_discover
-    async fn state_ensured_try_discover(
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
+    async fn state_ensured_try_exec(
         &self,
         resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`try_discover`].
+    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`try_exec`].
     ///
     /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`try_discover`]: peace_cfg::StateDiscoverFnSpec::try_discover
-    async fn state_cleaned_try_discover(
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
+    async fn state_cleaned_try_exec(
         &self,
         resources: &Resources<WithStatesCurrent>,
     ) -> Result<Option<BoxDtDisplay>, E>
@@ -76,7 +76,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     ///
     /// [`ItemSpec::StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     /// [`desired`]: peace_cfg::FnSpec::desired
-    async fn state_desired_try_discover(
+    async fn state_desired_try_exec(
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E>
@@ -86,7 +86,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// Returns the diff between the previous and desired [`State`]s.
     ///
     /// [`State`]: peace_cfg::State
-    async fn state_diff_try_discover_with_states_saved(
+    async fn state_diff_exec_with_states_saved(
         &self,
         resources: &Resources<WithStatesSavedAndDesired>,
     ) -> Result<BoxDtDisplay, E>
@@ -96,7 +96,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// Returns the diff between the current and desired [`State`]s.
     ///
     /// [`State`]: peace_cfg::State
-    async fn state_diff_try_discover_with_states_current(
+    async fn state_diff_exec_with_states_current(
         &self,
         resources: &Resources<WithStatesCurrentAndDesired>,
     ) -> Result<BoxDtDisplay, E>

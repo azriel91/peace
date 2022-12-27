@@ -20,7 +20,7 @@ To discover the current state of all items, the following method is used:
 
 1. `EnsureOpSpec::check` is run for all item specs.
 2. Of the ones that return `OpCheckStatus::ExecRequired`, `EnsureOpSpec::exec` is run.
-3. Finally, `StateCurrentFnSpec::try_discover` is run so that the end state can be compared with the desired state to confirm that they match.
+3. Finally, `StateCurrentFnSpec::try_exec` is run so that the end state can be compared with the desired state to confirm that they match.
 
 ### `EnsureOpSpec::check`
 

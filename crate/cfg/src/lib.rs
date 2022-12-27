@@ -12,7 +12,7 @@ pub use peace_core::{
 
 pub use crate::{
     clean_op_spec::CleanOpSpec, ensure_op_spec::EnsureOpSpec, item_spec::ItemSpec, state::State,
-    state_diff_fn_spec::StateDiffFnSpec, state_discover_fn_spec::StateDiscoverFnSpec,
+    state_diff_fn_spec::StateDiffFnSpec, try_fn_spec::TryFnSpec,
 };
 
 pub mod state;
@@ -21,4 +21,4 @@ mod clean_op_spec;
 mod ensure_op_spec;
 mod item_spec;
 mod state_diff_fn_spec;
-mod state_discover_fn_spec;
+mod try_fn_spec;

@@ -1,7 +1,7 @@
 use std::{io::Read, marker::PhantomData, path::Path};
 
 use peace::{
-    cfg::{async_trait, StateDiscoverFnSpec},
+    cfg::{async_trait, TryFnSpec},
     rt_model::Storage,
 };
 use tar::Archive;
@@ -88,7 +88,7 @@ impl<Id> TarXStateDesiredFnSpec<Id> {
 }
 
 #[async_trait(?Send)]
-impl<Id> StateDiscoverFnSpec for TarXStateDesiredFnSpec<Id>
+impl<Id> TryFnSpec for TarXStateDesiredFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {

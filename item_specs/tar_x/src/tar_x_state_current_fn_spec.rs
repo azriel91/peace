@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, path::Path};
 
-use peace::cfg::{async_trait, state::Nothing, State, StateDiscoverFnSpec};
+use peace::cfg::{async_trait, state::Nothing, State, TryFnSpec};
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
 
@@ -94,7 +94,7 @@ impl<Id> TarXStateCurrentFnSpec<Id> {
 }
 
 #[async_trait(?Send)]
-impl<Id> StateDiscoverFnSpec for TarXStateCurrentFnSpec<Id>
+impl<Id> TryFnSpec for TarXStateCurrentFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {

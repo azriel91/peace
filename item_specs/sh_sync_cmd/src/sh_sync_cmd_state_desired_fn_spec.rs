@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, StateDiscoverFnSpec};
+use peace::cfg::{async_trait, TryFnSpec};
 
 use crate::{ShSyncCmdData, ShSyncCmdError, ShSyncCmdSyncStatus};
 
@@ -9,7 +9,7 @@ use crate::{ShSyncCmdData, ShSyncCmdError, ShSyncCmdSyncStatus};
 pub struct ShSyncCmdStateDesiredFnSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-impl<Id> StateDiscoverFnSpec for ShSyncCmdStateDesiredFnSpec<Id>
+impl<Id> TryFnSpec for ShSyncCmdStateDesiredFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {

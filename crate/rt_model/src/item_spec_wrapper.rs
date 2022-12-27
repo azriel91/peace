@@ -6,8 +6,7 @@ use std::{
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{
-    async_trait, state::Placeholder, ItemSpec, ItemSpecId, OpCheckStatus, State,
-    StateDiscoverFnSpec,
+    async_trait, state::Placeholder, ItemSpec, ItemSpecId, OpCheckStatus, State, TryFnSpec,
 };
 use peace_data::Data;
 use peace_resources::{
@@ -188,11 +187,9 @@ where
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec: Debug
-        + StateDiscoverFnSpec<Output = Option<State<StateLogical, StatePhysical>>>
-        + Send
-        + Sync,
-    StateDesiredFnSpec: Debug + StateDiscoverFnSpec<Output = Option<StateLogical>> + Send + Sync,
+    StateCurrentFnSpec:
+        Debug + TryFnSpec<Output = Option<State<StateLogical, StatePhysical>>> + Send + Sync,
+    StateDesiredFnSpec: Debug + TryFnSpec<Output = Option<StateLogical>> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             StatePhysical = StatePhysical,
@@ -260,11 +257,9 @@ where
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec: Debug
-        + StateDiscoverFnSpec<Output = Option<State<StateLogical, StatePhysical>>>
-        + Send
-        + Sync,
-    StateDesiredFnSpec: Debug + StateDiscoverFnSpec<Output = Option<StateLogical>> + Send + Sync,
+    StateCurrentFnSpec:
+        Debug + TryFnSpec<Output = Option<State<StateLogical, StatePhysical>>> + Send + Sync,
+    StateDesiredFnSpec: Debug + TryFnSpec<Output = Option<StateLogical>> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             StatePhysical = StatePhysical,
@@ -336,11 +331,9 @@ where
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec: Debug
-        + StateDiscoverFnSpec<Output = Option<State<StateLogical, StatePhysical>>>
-        + Send
-        + Sync,
-    StateDesiredFnSpec: Debug + StateDiscoverFnSpec<Output = Option<StateLogical>> + Send + Sync,
+    StateCurrentFnSpec:
+        Debug + TryFnSpec<Output = Option<State<StateLogical, StatePhysical>>> + Send + Sync,
+    StateDesiredFnSpec: Debug + TryFnSpec<Output = Option<StateLogical>> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             StatePhysical = StatePhysical,
@@ -420,13 +413,13 @@ where
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec: Debug
-        + StateDiscoverFnSpec<
+        + TryFnSpec<
             Error = <IS as ItemSpec>::Error,
             Output = Option<State<StateLogical, StatePhysical>>,
         > + Send
         + Sync,
     StateDesiredFnSpec: Debug
-        + StateDiscoverFnSpec<Error = <IS as ItemSpec>::Error, Output = Option<StateLogical>>
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = Option<StateLogical>>
         + Send
         + Sync,
     StateDiffFnSpec: Debug
@@ -473,31 +466,27 @@ where
             .register::<State<StateLogical, Placeholder>>(<IS as ItemSpec>::id(self));
     }
 
-    async fn state_current_try_discover(
+    async fn state_current_try_exec(
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E> {
         let state: Option<State<StateLogical, StatePhysical>> = {
             let data =
-                <<StateCurrentFnSpec as peace_cfg::StateDiscoverFnSpec>::Data<'_> as Data>::borrow(
-                    resources,
-                );
-            <StateCurrentFnSpec as StateDiscoverFnSpec>::try_discover(data).await?
+                <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
+            <StateCurrentFnSpec as TryFnSpec>::try_exec(data).await?
         };
 
         Ok(state.map(BoxDtDisplay::new))
     }
 
-    async fn state_ensured_try_discover(
+    async fn state_ensured_try_exec(
         &self,
         resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<BoxDtDisplay, E> {
         let state: State<StateLogical, StatePhysical> = {
             let data =
-                <<StateCurrentFnSpec as peace_cfg::StateDiscoverFnSpec>::Data<'_> as Data>::borrow(
-                    resources,
-                );
-            <StateCurrentFnSpec as StateDiscoverFnSpec>::try_discover(data)
+                <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
+            <StateCurrentFnSpec as TryFnSpec>::try_exec(data)
                 .await?
                 .ok_or_else(|| {
                     let item_spec_id = self.id();
@@ -508,32 +497,28 @@ where
         Ok(BoxDtDisplay::new(state))
     }
 
-    async fn state_cleaned_try_discover(
+    async fn state_cleaned_try_exec(
         &self,
         resources: &Resources<WithStatesCurrent>,
     ) -> Result<Option<BoxDtDisplay>, E> {
         let state: Option<State<StateLogical, StatePhysical>> = {
             let data =
-                <<StateCurrentFnSpec as peace_cfg::StateDiscoverFnSpec>::Data<'_> as Data>::borrow(
-                    resources,
-                );
-            <StateCurrentFnSpec as StateDiscoverFnSpec>::try_discover(data).await?
+                <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
+            <StateCurrentFnSpec as TryFnSpec>::try_exec(data).await?
         };
 
         Ok(state.map(BoxDtDisplay::new))
     }
 
-    async fn state_desired_try_discover(
+    async fn state_desired_try_exec(
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E> {
         let state_desired = {
             let data =
-                <<StateDesiredFnSpec as peace_cfg::StateDiscoverFnSpec>::Data<'_> as Data>::borrow(
-                    resources,
-                );
+                <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
             let state_desired_logical =
-                <StateDesiredFnSpec as peace_cfg::StateDiscoverFnSpec>::try_discover(data).await?;
+                <StateDesiredFnSpec as peace_cfg::TryFnSpec>::try_exec(data).await?;
 
             state_desired_logical.map(|state_desired_logical| {
                 State::new(state_desired_logical, Placeholder::calculated())
@@ -543,7 +528,7 @@ where
         Ok(state_desired.map(BoxDtDisplay::new))
     }
 
-    async fn state_diff_try_discover_with_states_saved(
+    async fn state_diff_exec_with_states_saved(
         &self,
         resources: &Resources<WithStatesSavedAndDesired>,
     ) -> Result<BoxDtDisplay, E> {
@@ -559,7 +544,7 @@ where
                 states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
 
             if let (Some(state), Some(state_desired)) = (state, state_desired) {
-                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::try_discover(
+                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(
                     data,
                     state,
                     &state_desired.logical,
@@ -568,7 +553,7 @@ where
                 .map_err(Into::<E>::into)?
             } else {
                 panic!(
-                    "`ItemSpecWrapper::state_diff_try_discover_with_states_saved` must only be called with \
+                    "`ItemSpecWrapper::state_diff_exec_with_states_saved` must only be called with \
                     `StatesSaved` and `StatesDesired` populated using `StatesSavedReadCmd` and \
                     `StatesDesiredDiscoverCmd`."
                 );
@@ -578,7 +563,7 @@ where
         Ok(BoxDtDisplay::new(state_diff))
     }
 
-    async fn state_diff_try_discover_with_states_current(
+    async fn state_diff_exec_with_states_current(
         &self,
         resources: &Resources<WithStatesCurrentAndDesired>,
     ) -> Result<BoxDtDisplay, E> {
@@ -594,7 +579,7 @@ where
                 states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
 
             if let (Some(state), Some(state_desired)) = (state, state_desired) {
-                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::try_discover(
+                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(
                     data,
                     state,
                     &state_desired.logical,
@@ -603,7 +588,7 @@ where
                 .map_err(Into::<E>::into)?
             } else {
                 panic!(
-                    "`ItemSpecWrapper::state_diff_try_discover_with_states_current` must only be called with \
+                    "`ItemSpecWrapper::state_diff_exec_with_states_current` must only be called with \
                     `StatesCurrent` and `StatesDesired` populated using `StatesCurrentDiscoverCmd` and \
                     `StatesDesiredDiscoverCmd`."
                 );

@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, StateDiscoverFnSpec};
+use peace::cfg::{async_trait, TryFnSpec};
 
 use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
@@ -63,7 +63,7 @@ where
 }
 
 #[async_trait(?Send)]
-impl<Id> StateDiscoverFnSpec for FileDownloadStateDesiredFnSpec<Id>
+impl<Id> TryFnSpec for FileDownloadStateDesiredFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {

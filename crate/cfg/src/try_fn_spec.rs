@@ -3,7 +3,7 @@ use peace_data::Data;
 
 /// Defines the logic and data of a state discovery function.
 #[async_trait(?Send)]
-pub trait StateDiscoverFnSpec {
+pub trait TryFnSpec {
     /// Return type of the function.
     ///
     /// * For [`StateCurrentFnSpec`], this is the current [`State`] of the
@@ -28,6 +28,6 @@ pub trait StateDiscoverFnSpec {
     /// Error returned when this function errs.
     type Error: std::error::Error;
 
-    /// Executes the state discovery function.
-    async fn try_discover(data: Self::Data<'_>) -> Result<Self::Output, Self::Error>;
+    /// Executes the function.
+    async fn try_exec(data: Self::Data<'_>) -> Result<Self::Output, Self::Error>;
 }

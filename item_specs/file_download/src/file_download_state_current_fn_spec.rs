@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Nothing, State, StateDiscoverFnSpec};
+use peace::cfg::{async_trait, state::Nothing, State, TryFnSpec};
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::{fs::File, io::AsyncReadExt};
 
@@ -83,7 +83,7 @@ impl<Id> FileDownloadStateCurrentFnSpec<Id> {
 }
 
 #[async_trait(?Send)]
-impl<Id> StateDiscoverFnSpec for FileDownloadStateCurrentFnSpec<Id>
+impl<Id> TryFnSpec for FileDownloadStateCurrentFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
