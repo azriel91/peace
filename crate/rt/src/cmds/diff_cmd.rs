@@ -105,7 +105,7 @@ where
                     Ok((
                         item_spec.id(),
                         item_spec
-                            .state_diff_fn_exec_with_states_saved(resources_ref)
+                            .state_diff_try_discover_with_states_saved(resources_ref)
                             .await?,
                     ))
                 })
@@ -153,7 +153,7 @@ where
                     Ok((
                         item_spec.id(),
                         item_spec
-                            .state_diff_fn_exec_with_states_current(resources_ref)
+                            .state_diff_try_discover_with_states_current(resources_ref)
                             .await?,
                     ))
                 })

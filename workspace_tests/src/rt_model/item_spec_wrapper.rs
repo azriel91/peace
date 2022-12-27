@@ -57,13 +57,13 @@ async fn setup() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn state_current_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
+async fn state_current_try_discover() -> Result<(), Box<dyn std::error::Error>> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
     let state = item_spec_wrapper
-        .state_current_fn_exec(&resources)
+        .state_current_try_discover(&resources)
         .await?
         .unwrap();
 
@@ -76,13 +76,13 @@ async fn state_current_fn_exec() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn state_desired_fn_exec() -> Result<(), VecCopyError> {
+async fn state_desired_try_discover() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
     let state_desired = item_spec_wrapper
-        .state_desired_fn_exec(&resources)
+        .state_desired_try_discover(&resources)
         .await?
         .unwrap();
 
@@ -96,14 +96,14 @@ async fn state_desired_fn_exec() -> Result<(), VecCopyError> {
 }
 
 #[tokio::test]
-async fn state_diff_fn_exec_with_states_saved() -> Result<(), VecCopyError> {
+async fn state_diff_try_discover_with_states_saved() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
 
     let resources = resources_with_states_saved_and_desired(&item_spec_wrapper).await?;
 
     let state_diff = item_spec_wrapper
-        .state_diff_fn_exec_with_states_saved(&resources)
+        .state_diff_try_discover_with_states_saved(&resources)
         .await?;
 
     assert_eq!(
@@ -182,7 +182,7 @@ async fn resources_with_state_current_diffs(
     let state_diffs = {
         let mut state_diffs_mut = StateDiffsMut::new();
         let state_desired = item_spec_wrapper
-            .state_diff_fn_exec_with_states_current(&resources)
+            .state_diff_try_discover_with_states_current(&resources)
             .await?;
         state_diffs_mut.insert_raw(item_spec_wrapper.id(), state_desired);
 
@@ -199,7 +199,9 @@ async fn resources_with_states_saved_and_desired(
 
     let states_saved = {
         let mut states_mut = StatesMut::new();
-        let state = item_spec_wrapper.state_current_fn_exec(&resources).await?;
+        let state = item_spec_wrapper
+            .state_current_try_discover(&resources)
+            .await?;
         if let Some(state) = state {
             states_mut.insert_raw(item_spec_wrapper.id(), state);
         }
@@ -209,7 +211,7 @@ async fn resources_with_states_saved_and_desired(
     let states_desired = {
         let mut states_desired_mut = StatesMut::<Desired>::new();
         let state_desired = item_spec_wrapper
-            .state_desired_fn_exec(&resources)
+            .state_desired_try_discover(&resources)
             .await?
             .unwrap();
         states_desired_mut.insert_raw(item_spec_wrapper.id(), state_desired);
@@ -228,7 +230,9 @@ async fn resources_with_states_current_and_desired(
 
     let states_current = {
         let mut states_mut = StatesMut::new();
-        let state = item_spec_wrapper.state_current_fn_exec(&resources).await?;
+        let state = item_spec_wrapper
+            .state_current_try_discover(&resources)
+            .await?;
         if let Some(state) = state {
             states_mut.insert_raw(item_spec_wrapper.id(), state);
         }
@@ -238,7 +242,7 @@ async fn resources_with_states_current_and_desired(
     let states_desired = {
         let mut states_desired_mut = StatesMut::<Desired>::new();
         let state_desired = item_spec_wrapper
-            .state_desired_fn_exec(&resources)
+            .state_desired_try_discover(&resources)
             .await?
             .unwrap();
         states_desired_mut.insert_raw(item_spec_wrapper.id(), state_desired);

@@ -28,6 +28,6 @@ pub trait StateDiscoverFnSpec {
     /// Error returned when this function errs.
     type Error: std::error::Error;
 
-    /// Executes this function.
-    async fn exec(data: Self::Data<'_>) -> Result<Self::Output, Self::Error>;
+    /// Executes the state discovery function.
+    async fn try_discover(data: Self::Data<'_>) -> Result<Self::Output, Self::Error>;
 }

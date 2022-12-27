@@ -16,14 +16,14 @@ impl<E, O> StatesDiscoverCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
 {
-    /// Runs [`StateCurrentFnSpec`]` and `[`StateDesiredFnSpec`]`::`[`exec`] for
-    /// each [`ItemSpec`].
+    /// Runs [`StateCurrentFnSpec`]` and
+    /// `[`StateDesiredFnSpec`]`::`[`try_discover`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`] and [`StatesDesired`], and will be serialized to
     /// `{profile_dir}/states.yaml` and `{profile_dir}/states_desired.yaml`.
     ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
+    /// [`try_discover`]: peace_cfg::StateDiscoverFnSpec::try_discover
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StatesCurrent`]: peace_resources::StatesCurrent
     /// [`StatesDesired`]: peace_resources::StatesDesired

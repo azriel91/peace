@@ -19,7 +19,7 @@ impl<E, O> StatesCurrentDiscoverCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
 {
-    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    /// Runs [`StateCurrentFnSpec`]`::`[`try_discover`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`], and will be serialized to
@@ -30,7 +30,7 @@ where
     /// into `Resources`, and the successor should references it in their
     /// [`Data`].
     ///
-    /// [`exec`]: peace_cfg::StateDiscoverFnSpec::exec
+    /// [`try_discover`]: peace_cfg::StateDiscoverFnSpec::try_discover
     /// [`Data`]: peace_cfg::StateDiscoverFnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
@@ -53,12 +53,12 @@ where
         Ok(cmd_context)
     }
 
-    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    /// Runs [`StateCurrentFnSpec`]`::`[`try_discover`] for each [`ItemSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`StatesCurrent`].
     ///
-    /// [`exec`]: peace_cfg::StateDiscoverFnSpec::exec
+    /// [`try_discover`]: peace_cfg::StateDiscoverFnSpec::try_discover
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal(
@@ -70,7 +70,7 @@ where
             .stream()
             .map(Result::<_, E>::Ok)
             .try_filter_map(|item_spec| async move {
-                let state = item_spec.state_current_fn_exec(resources_ref).await?;
+                let state = item_spec.state_current_try_discover(resources_ref).await?;
                 Ok(state
                     .map(|state| (item_spec.id(), state))
                     .map(Result::Ok)
@@ -88,12 +88,12 @@ where
         Ok(states)
     }
 
-    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    /// Runs [`StateCurrentFnSpec`]`::`[`try_discover`] for each [`ItemSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`StatesCurrent`].
     ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
+    /// [`try_discover`]: peace_cfg::StateDiscoverFnSpec::try_discover
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_ensure_dry(
@@ -104,7 +104,7 @@ where
             .stream()
             .map(Result::<_, E>::Ok)
             .map_ok(|item_spec| async move {
-                let state = item_spec.state_ensured_fn_exec(resources).await?;
+                let state = item_spec.state_ensured_try_discover(resources).await?;
                 Ok((item_spec.id(), state))
             })
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)
@@ -117,12 +117,12 @@ where
         Ok(states)
     }
 
-    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    /// Runs [`StateCurrentFnSpec`]`::`[`try_discover`] for each [`ItemSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`StatesCurrent`].
     ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
+    /// [`try_discover`]: peace_cfg::StateDiscoverFnSpec::try_discover
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_ensure(
@@ -134,7 +134,7 @@ where
             .stream()
             .map(Result::<_, E>::Ok)
             .map_ok(|item_spec| async move {
-                let state = item_spec.state_ensured_fn_exec(resources_ref).await?;
+                let state = item_spec.state_ensured_try_discover(resources_ref).await?;
                 Ok((item_spec.id(), state))
             })
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)
@@ -147,12 +147,12 @@ where
         Ok(states)
     }
 
-    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    /// Runs [`StateCurrentFnSpec`]`::`[`try_discover`] for each [`ItemSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`StatesCurrent`].
     ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
+    /// [`try_discover`]: peace_cfg::StateDiscoverFnSpec::try_discover
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_clean_dry(
@@ -163,7 +163,7 @@ where
             .stream()
             .map(Result::<_, E>::Ok)
             .try_filter_map(|item_spec| async move {
-                let state = item_spec.state_cleaned_fn_exec(resources).await?;
+                let state = item_spec.state_cleaned_try_discover(resources).await?;
                 Ok(state
                     .map(|state| (item_spec.id(), state))
                     .map(Result::Ok)
@@ -179,12 +179,12 @@ where
         Ok(states)
     }
 
-    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    /// Runs [`StateCurrentFnSpec`]`::`[`try_discover`] for each [`ItemSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`StatesCurrent`].
     ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
+    /// [`try_discover`]: peace_cfg::StateDiscoverFnSpec::try_discover
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_clean(
@@ -196,7 +196,7 @@ where
             .stream()
             .map(Result::<_, E>::Ok)
             .try_filter_map(|item_spec| async move {
-                let state = item_spec.state_cleaned_fn_exec(resources_ref).await?;
+                let state = item_spec.state_cleaned_try_discover(resources_ref).await?;
                 Ok(state
                     .map(|state| (item_spec.id(), state))
                     .map(Result::Ok)

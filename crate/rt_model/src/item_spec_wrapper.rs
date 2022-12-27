@@ -473,7 +473,7 @@ where
             .register::<State<StateLogical, Placeholder>>(<IS as ItemSpec>::id(self));
     }
 
-    async fn state_current_fn_exec(
+    async fn state_current_try_discover(
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E> {
@@ -482,13 +482,13 @@ where
                 <<StateCurrentFnSpec as peace_cfg::StateDiscoverFnSpec>::Data<'_> as Data>::borrow(
                     resources,
                 );
-            <StateCurrentFnSpec as StateDiscoverFnSpec>::exec(data).await?
+            <StateCurrentFnSpec as StateDiscoverFnSpec>::try_discover(data).await?
         };
 
         Ok(state.map(BoxDtDisplay::new))
     }
 
-    async fn state_ensured_fn_exec(
+    async fn state_ensured_try_discover(
         &self,
         resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<BoxDtDisplay, E> {
@@ -497,7 +497,7 @@ where
                 <<StateCurrentFnSpec as peace_cfg::StateDiscoverFnSpec>::Data<'_> as Data>::borrow(
                     resources,
                 );
-            <StateCurrentFnSpec as StateDiscoverFnSpec>::exec(data)
+            <StateCurrentFnSpec as StateDiscoverFnSpec>::try_discover(data)
                 .await?
                 .ok_or_else(|| {
                     let item_spec_id = self.id();
@@ -508,7 +508,7 @@ where
         Ok(BoxDtDisplay::new(state))
     }
 
-    async fn state_cleaned_fn_exec(
+    async fn state_cleaned_try_discover(
         &self,
         resources: &Resources<WithStatesCurrent>,
     ) -> Result<Option<BoxDtDisplay>, E> {
@@ -517,13 +517,13 @@ where
                 <<StateCurrentFnSpec as peace_cfg::StateDiscoverFnSpec>::Data<'_> as Data>::borrow(
                     resources,
                 );
-            <StateCurrentFnSpec as StateDiscoverFnSpec>::exec(data).await?
+            <StateCurrentFnSpec as StateDiscoverFnSpec>::try_discover(data).await?
         };
 
         Ok(state.map(BoxDtDisplay::new))
     }
 
-    async fn state_desired_fn_exec(
+    async fn state_desired_try_discover(
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E> {
@@ -533,7 +533,7 @@ where
                     resources,
                 );
             let state_desired_logical =
-                <StateDesiredFnSpec as peace_cfg::StateDiscoverFnSpec>::exec(data).await?;
+                <StateDesiredFnSpec as peace_cfg::StateDiscoverFnSpec>::try_discover(data).await?;
 
             state_desired_logical.map(|state_desired_logical| {
                 State::new(state_desired_logical, Placeholder::calculated())
@@ -543,7 +543,7 @@ where
         Ok(state_desired.map(BoxDtDisplay::new))
     }
 
-    async fn state_diff_fn_exec_with_states_saved(
+    async fn state_diff_try_discover_with_states_saved(
         &self,
         resources: &Resources<WithStatesSavedAndDesired>,
     ) -> Result<BoxDtDisplay, E> {
@@ -559,7 +559,7 @@ where
                 states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
 
             if let (Some(state), Some(state_desired)) = (state, state_desired) {
-                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(
+                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::try_discover(
                     data,
                     state,
                     &state_desired.logical,
@@ -568,7 +568,7 @@ where
                 .map_err(Into::<E>::into)?
             } else {
                 panic!(
-                    "`ItemSpecWrapper::state_diff_fn_exec_with_states_saved` must only be called with \
+                    "`ItemSpecWrapper::state_diff_try_discover_with_states_saved` must only be called with \
                     `StatesSaved` and `StatesDesired` populated using `StatesSavedReadCmd` and \
                     `StatesDesiredDiscoverCmd`."
                 );
@@ -578,7 +578,7 @@ where
         Ok(BoxDtDisplay::new(state_diff))
     }
 
-    async fn state_diff_fn_exec_with_states_current(
+    async fn state_diff_try_discover_with_states_current(
         &self,
         resources: &Resources<WithStatesCurrentAndDesired>,
     ) -> Result<BoxDtDisplay, E> {
@@ -594,7 +594,7 @@ where
                 states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
 
             if let (Some(state), Some(state_desired)) = (state, state_desired) {
-                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(
+                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::try_discover(
                     data,
                     state,
                     &state_desired.logical,
@@ -603,7 +603,7 @@ where
                 .map_err(Into::<E>::into)?
             } else {
                 panic!(
-                    "`ItemSpecWrapper::state_diff_fn_exec_with_states_current` must only be called with \
+                    "`ItemSpecWrapper::state_diff_try_discover_with_states_current` must only be called with \
                     `StatesCurrent` and `StatesDesired` populated using `StatesCurrentDiscoverCmd` and \
                     `StatesDesiredDiscoverCmd`."
                 );
