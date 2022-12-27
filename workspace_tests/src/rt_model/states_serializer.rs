@@ -4,7 +4,7 @@ use peace::{
         internal::StatesMut, paths::StatesSavedFile, states::StatesSaved,
         type_reg::untagged::TypeReg,
     },
-    rt_model::{Error, StatesDeserializer, Storage},
+    rt_model::{Error, StatesSerializer, Storage},
 };
 use pretty_assertions::assert_eq;
 
@@ -19,7 +19,7 @@ async fn serialize() -> Result<(), Box<dyn std::error::Error>> {
         states.insert(item_spec_id!("a"), 123u32);
         StatesSaved::from(states)
     };
-    StatesDeserializer::<Error>::serialize(&storage, &states, &states_saved_file).await?;
+    StatesSerializer::<Error>::serialize(&storage, &states, &states_saved_file).await?;
 
     let serialized = tokio::fs::read_to_string(states_saved_file).await?;
     assert_eq!("a: 123\n", serialized);
@@ -41,9 +41,9 @@ async fn deserialize_saved() -> Result<(), Box<dyn std::error::Error>> {
         states.insert(item_spec_id.clone(), 123u32);
         StatesSaved::from(states)
     };
-    StatesDeserializer::<Error>::serialize(&storage, &states, &states_saved_file).await?;
+    StatesSerializer::<Error>::serialize(&storage, &states, &states_saved_file).await?;
 
-    let states_deserialized = StatesDeserializer::<Error>::deserialize_saved(
+    let states_deserialized = StatesSerializer::<Error>::deserialize_saved(
         &storage,
         &states_type_reg,
         &states_saved_file,
@@ -70,7 +70,7 @@ async fn deserialize_saved_error_maps_byte_indices() -> Result<(), Box<dyn std::
     let contents = "a: [123]\n";
     tokio::fs::write(&states_saved_file, contents).await?;
 
-    let error = StatesDeserializer::<Error>::deserialize_saved(
+    let error = StatesSerializer::<Error>::deserialize_saved(
         &storage,
         &states_type_reg,
         &states_saved_file,

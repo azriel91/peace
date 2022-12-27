@@ -8,7 +8,7 @@ use peace_resources::{
     states::{ts::Desired, StatesDesired},
     Resources,
 };
-use peace_rt_model::{CmdContext, Error, ItemSpecGraph, StatesDeserializer, Storage};
+use peace_rt_model::{CmdContext, Error, ItemSpecGraph, StatesSerializer, Storage};
 
 use crate::BUFFERED_FUTURES_MAX;
 
@@ -91,7 +91,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_desired_file = StatesDesiredFile::from(&*flow_dir);
 
-        StatesDeserializer::serialize(&storage, states_desired, &states_desired_file).await?;
+        StatesSerializer::serialize(&storage, states_desired, &states_desired_file).await?;
 
         drop(flow_dir);
         drop(storage);

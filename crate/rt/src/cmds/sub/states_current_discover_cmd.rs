@@ -205,13 +205,13 @@ where
         resources: &mut Resources<TS>,
         states_current: &StatesCurrent,
     ) -> Result<(), E> {
-        use peace_rt_model::StatesDeserializer;
+        use peace_rt_model::StatesSerializer;
 
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
         let states_saved_file = StatesSavedFile::from(&*flow_dir);
 
-        StatesDeserializer::serialize(&storage, states_current, &states_saved_file).await?;
+        StatesSerializer::serialize(&storage, states_current, &states_saved_file).await?;
 
         drop(flow_dir);
         drop(storage);

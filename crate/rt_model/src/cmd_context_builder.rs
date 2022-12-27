@@ -14,7 +14,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
     cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams},
-    CmdContext, Error, ItemSpecGraph, StatesDeserializer, StatesTypeRegs, Storage, Workspace,
+    CmdContext, Error, ItemSpecGraph, StatesSerializer, StatesTypeRegs, Storage, Workspace,
     WorkspaceInitializer,
 };
 
@@ -209,7 +209,7 @@ where
 
         // Read existing states from storage.
         let states_type_regs = Self::states_type_regs(item_spec_graph);
-        let states_saved = StatesDeserializer::deserialize_saved_opt(
+        let states_saved = StatesSerializer::deserialize_saved_opt(
             storage,
             states_type_regs.states_current_type_reg(),
             &states_saved_file,
