@@ -82,14 +82,12 @@ where
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec: Debug
-        + TryFnSpec<
-            Error = <IS as ItemSpec>::Error,
-            Output = Option<State<StateLogical, StatePhysical>>,
-        > + Send
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
+        + Send
         + Sync
         + 'static,
     StateDesiredFnSpec: Debug
-        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = Option<StateLogical>>
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical>
         + Send
         + Sync
         + 'static,

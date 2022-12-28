@@ -89,7 +89,13 @@ where
 {
     type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
-    type Output = Option<State<FileDownloadState, Nothing>>;
+    type Output = State<FileDownloadState, Nothing>;
+
+    async fn try_exec(
+        file_download_data: FileDownloadData<'_, Id>,
+    ) -> Result<Option<Self::Output>, FileDownloadError> {
+        Self::exec(file_download_data).await.map(Some)
+    }
 
     async fn exec(
         file_download_data: FileDownloadData<'_, Id>,
@@ -102,7 +108,7 @@ where
         let file_exists = file_download_data.storage().get_item_opt(dest)?.is_some();
         if !file_exists {
             let path = dest.to_path_buf();
-            return Ok(Some(State::new(FileDownloadState::None { path }, Nothing)));
+            return Ok(State::new(FileDownloadState::None { path }, Nothing));
         }
 
         // Check file length
@@ -112,6 +118,6 @@ where
         #[cfg(target_arch = "wasm32")]
         let file_state = Self::read_file_contents(dest, file_download_data.storage()).await?;
 
-        Ok(Some(State::new(file_state, Nothing)))
+        Ok(State::new(file_state, Nothing))
     }
 }

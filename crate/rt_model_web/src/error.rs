@@ -1,7 +1,5 @@
 use std::path::PathBuf;
 
-use peace_core::ItemSpecId;
-
 // Remember to add common variants to `rt_model_native/src/error.rs`.
 
 /// Peace web support errors.
@@ -51,33 +49,6 @@ pub enum Error {
     )]
     StatesSerialize(#[source] serde_yaml::Error),
 
-    /// Failed to discover current state for a particular item spec.
-    ///
-    /// This happens when current state is discovered during an `EnsureCmd`
-    /// execution -- as the current state is expected to be discovered for all
-    /// item specs as their predecessors (dependencies) are meant to exist.
-    ///
-    /// This does *not* happen during a `StateCurrentDiscoverCmd` execution --
-    /// i.e. it is okay for a `StateCurrentFnSpec` to return `Ok(None)` for
-    /// inspecting the state of a file on a remote server, if the server doesn't
-    /// exist.
-    #[error("Failed to discover current state for item spec: `{item_spec_id}`.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(
-            code(peace_rt_model::state_current_discover_none),
-            help(
-                "This is a bug in the automation for `{item_spec_id}`.\n\
-                It should return an error explaining why the current state could not be discovered,\n\
-                instead of `None`."
-            )
-        )
-    )]
-    StateCurrentDiscoverNone {
-        /// ID of the item spec whose state failed to be discovered.
-        item_spec_id: ItemSpecId,
-    },
-
     /// Current states have not been discovered.
     ///
     /// This is returned when `StatesSavedFile` is attempted to be
@@ -91,33 +62,6 @@ pub enum Error {
         )
     )]
     StatesCurrentDiscoverRequired,
-
-    /// Failed to discover desired state for a particular item spec.
-    ///
-    /// This happens when desired state is discovered during an `EnsureCmd`
-    /// execution -- as the desired state is expected to be discovered for all
-    /// item specs as their predecessors (dependencies) are meant to exist.
-    ///
-    /// This does *not* happen during a `StateDesiredDiscoverCmd` execution --
-    /// i.e. it is okay for a `StateDesiredFnSpec` to return `Ok(None)` for
-    /// inspecting the state of a file to transfer, if the file needs to be
-    /// created.
-    #[error("Failed to discover desired state for item spec: `{item_spec_id}`.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(
-            code(peace_rt_model::state_current_discover_none),
-            help(
-                "This is a bug in the automation for `{item_spec_id}`.\n\
-                It should return an error explaining why the desired state could not be discovered,\n\
-                instead of `None`."
-            )
-        )
-    )]
-    StateDesiredDiscoverNone {
-        /// ID of the item spec whose desired state failed to be discovered.
-        item_spec_id: ItemSpecId,
-    },
 
     /// Desired states have not been written to disk.
     ///

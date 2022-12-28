@@ -76,6 +76,22 @@ async fn state_current_try_exec() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
+async fn state_ensured_exec() -> Result<(), Box<dyn std::error::Error>> {
+    let item_spec_wrapper =
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+    let resources = resources_with_state_current_diffs(&item_spec_wrapper).await?;
+
+    let state = item_spec_wrapper.state_ensured_exec(&resources).await?;
+
+    assert_eq!(
+        Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
+        BoxDataTypeDowncast::<State<VecCopyState, Nothing>>::downcast_ref(&state)
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn state_desired_try_exec() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);

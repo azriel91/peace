@@ -15,7 +15,11 @@ where
 {
     type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
-    type Output = Option<ShCmdState<Id>>;
+    type Output = ShCmdState<Id>;
+
+    async fn try_exec(sh_cmd_data: ShCmdData<'_, Id>) -> Result<Option<Self::Output>, ShCmdError> {
+        Self::exec(sh_cmd_data).await.map(Some)
+    }
 
     async fn exec(sh_cmd_data: ShCmdData<'_, Id>) -> Result<Self::Output, ShCmdError> {
         let state_desired_sh_cmd = sh_cmd_data.sh_cmd_params().state_desired_sh_cmd();
@@ -23,6 +27,6 @@ where
         // value.
         ShCmdExecutor::exec(state_desired_sh_cmd)
             .await
-            .map(|state| Some(state.logical))
+            .map(|state| state.logical)
     }
 }

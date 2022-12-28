@@ -15,7 +15,13 @@ where
 {
     type Data<'op> = ShSyncCmdData<'op, Id>;
     type Error = ShSyncCmdError;
-    type Output = Option<State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>>;
+    type Output = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;
+
+    async fn try_exec(
+        sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
+    ) -> Result<Option<Self::Output>, ShSyncCmdError> {
+        Self::exec(sh_sync_cmd_data).await.map(Some)
+    }
 
     async fn exec(
         _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,

@@ -69,13 +69,19 @@ where
 {
     type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
-    type Output = Option<FileDownloadState>;
+    type Output = FileDownloadState;
+
+    async fn try_exec(
+        file_download_data: FileDownloadData<'_, Id>,
+    ) -> Result<Option<Self::Output>, FileDownloadError> {
+        Self::exec(file_download_data).await.map(Some)
+    }
 
     async fn exec(
         file_download_data: FileDownloadData<'_, Id>,
     ) -> Result<Self::Output, FileDownloadError> {
         let file_state_desired = Self::file_state_desired(&file_download_data).await?;
 
-        Ok(Some(file_state_desired))
+        Ok(file_state_desired)
     }
 }

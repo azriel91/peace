@@ -164,7 +164,7 @@ pub trait ItemSpec {
     /// Function that returns the current state of the managed item.
     type StateCurrentFnSpec: TryFnSpec<
         Error = Self::Error,
-        Output = Option<State<Self::StateLogical, Self::StatePhysical>>,
+        Output = State<Self::StateLogical, Self::StatePhysical>,
     >;
 
     /// Function that returns the desired state of the managed item.
@@ -176,7 +176,7 @@ pub trait ItemSpec {
     ///
     /// * For a web application service operation, the desired state could be
     ///   the web service is running on the latest version.
-    type StateDesiredFnSpec: TryFnSpec<Error = Self::Error, Output = Option<Self::StateLogical>>;
+    type StateDesiredFnSpec: TryFnSpec<Error = Self::Error, Output = Self::StateLogical>;
 
     /// Returns the difference between the current state and desired state.
     ///

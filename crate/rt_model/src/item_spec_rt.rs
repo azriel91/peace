@@ -50,11 +50,11 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`try_exec`].
+    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`exec`].
     ///
     /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
-    async fn state_ensured_try_exec(
+    /// [`exec`]: peace_cfg::TryFnSpec::exec
+    async fn state_ensured_exec(
         &self,
         resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<BoxDtDisplay, E>
@@ -72,14 +72,22 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`ItemSpec::StateDesiredFnSpec`]`::`[`desired`].
+    /// Runs [`ItemSpec::StateDesiredFnSpec`]`::`[`try_exec`].
     ///
     /// [`ItemSpec::StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    /// [`desired`]: peace_cfg::FnSpec::desired
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     async fn state_desired_try_exec(
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E>
+    where
+        E: Debug + std::error::Error;
+
+    /// Runs [`ItemSpec::StateDesiredFnSpec`]`::`[`exec`].
+    ///
+    /// [`ItemSpec::StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
+    /// [`exec`]: peace_cfg::TryFnSpec::exec
+    async fn state_desired_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
 

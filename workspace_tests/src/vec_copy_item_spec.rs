@@ -202,13 +202,14 @@ pub struct VecCopyStateCurrentFnSpec;
 impl TryFnSpec for VecCopyStateCurrentFnSpec {
     type Data<'op> = R<'op, VecB>;
     type Error = VecCopyError;
-    type Output = Option<State<VecCopyState, Nothing>>;
+    type Output = State<VecCopyState, Nothing>;
+
+    async fn try_exec(vec_b: R<'_, VecB>) -> Result<Option<Self::Output>, VecCopyError> {
+        Self::exec(vec_b).await.map(Some)
+    }
 
     async fn exec(vec_b: R<'_, VecB>) -> Result<Self::Output, VecCopyError> {
-        Ok(Some(State::new(
-            VecCopyState::from(vec_b.0.clone()),
-            Nothing,
-        )))
+        Ok(State::new(VecCopyState::from(vec_b.0.clone()), Nothing))
     }
 }
 
@@ -220,10 +221,14 @@ pub struct VecCopyStateDesiredFnSpec;
 impl TryFnSpec for VecCopyStateDesiredFnSpec {
     type Data<'op> = R<'op, VecA>;
     type Error = VecCopyError;
-    type Output = Option<VecCopyState>;
+    type Output = VecCopyState;
+
+    async fn try_exec(vec_a: R<'_, VecA>) -> Result<Option<Self::Output>, VecCopyError> {
+        Self::exec(vec_a).await.map(Some)
+    }
 
     async fn exec(vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
-        Ok(vec_a.0.clone()).map(VecCopyState::from).map(Some)
+        Ok(vec_a.0.clone()).map(VecCopyState::from)
     }
 }
 

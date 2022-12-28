@@ -104,7 +104,7 @@ where
             .stream()
             .map(Result::<_, E>::Ok)
             .map_ok(|item_spec| async move {
-                let state = item_spec.state_ensured_try_exec(resources).await?;
+                let state = item_spec.state_ensured_exec(resources).await?;
                 Ok((item_spec.id(), state))
             })
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)
@@ -134,7 +134,7 @@ where
             .stream()
             .map(Result::<_, E>::Ok)
             .map_ok(|item_spec| async move {
-                let state = item_spec.state_ensured_try_exec(resources_ref).await?;
+                let state = item_spec.state_ensured_exec(resources_ref).await?;
                 Ok((item_spec.id(), state))
             })
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)

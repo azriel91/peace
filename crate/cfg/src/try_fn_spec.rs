@@ -28,6 +28,10 @@ pub trait TryFnSpec {
     /// Error returned when this function errs.
     type Error: std::error::Error;
 
+    /// Executes the function, returning `Ok(None)` if the output is not ready
+    /// to be queried.
+    async fn try_exec(data: Self::Data<'_>) -> Result<Option<Self::Output>, Self::Error>;
+
     /// Executes the function.
-    async fn try_exec(data: Self::Data<'_>) -> Result<Self::Output, Self::Error>;
+    async fn exec(data: Self::Data<'_>) -> Result<Self::Output, Self::Error>;
 }

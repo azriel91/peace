@@ -188,8 +188,8 @@ where
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec:
-        Debug + TryFnSpec<Output = Option<State<StateLogical, StatePhysical>>> + Send + Sync,
-    StateDesiredFnSpec: Debug + TryFnSpec<Output = Option<StateLogical>> + Send + Sync,
+        Debug + TryFnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
+    StateDesiredFnSpec: Debug + TryFnSpec<Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             StatePhysical = StatePhysical,
@@ -258,8 +258,8 @@ where
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec:
-        Debug + TryFnSpec<Output = Option<State<StateLogical, StatePhysical>>> + Send + Sync,
-    StateDesiredFnSpec: Debug + TryFnSpec<Output = Option<StateLogical>> + Send + Sync,
+        Debug + TryFnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
+    StateDesiredFnSpec: Debug + TryFnSpec<Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             StatePhysical = StatePhysical,
@@ -332,8 +332,8 @@ where
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec:
-        Debug + TryFnSpec<Output = Option<State<StateLogical, StatePhysical>>> + Send + Sync,
-    StateDesiredFnSpec: Debug + TryFnSpec<Output = Option<StateLogical>> + Send + Sync,
+        Debug + TryFnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
+    StateDesiredFnSpec: Debug + TryFnSpec<Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             StatePhysical = StatePhysical,
@@ -413,15 +413,11 @@ where
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec: Debug
-        + TryFnSpec<
-            Error = <IS as ItemSpec>::Error,
-            Output = Option<State<StateLogical, StatePhysical>>,
-        > + Send
-        + Sync,
-    StateDesiredFnSpec: Debug
-        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = Option<StateLogical>>
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync,
+    StateDesiredFnSpec:
+        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             Error = <IS as ItemSpec>::Error,
@@ -470,7 +466,7 @@ where
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        let state: Option<State<StateLogical, StatePhysical>> = {
+        let state = {
             let data =
                 <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
             <StateCurrentFnSpec as TryFnSpec>::try_exec(data).await?
@@ -479,19 +475,14 @@ where
         Ok(state.map(BoxDtDisplay::new))
     }
 
-    async fn state_ensured_try_exec(
+    async fn state_ensured_exec(
         &self,
         resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<BoxDtDisplay, E> {
         let state: State<StateLogical, StatePhysical> = {
             let data =
                 <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
-            <StateCurrentFnSpec as TryFnSpec>::try_exec(data)
-                .await?
-                .ok_or_else(|| {
-                    let item_spec_id = self.id();
-                    crate::Error::StateCurrentDiscoverNone { item_spec_id }
-                })?
+            <StateCurrentFnSpec as TryFnSpec>::exec(data).await?
         };
 
         Ok(BoxDtDisplay::new(state))
@@ -501,7 +492,7 @@ where
         &self,
         resources: &Resources<WithStatesCurrent>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        let state: Option<State<StateLogical, StatePhysical>> = {
+        let state = {
             let data =
                 <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
             <StateCurrentFnSpec as TryFnSpec>::try_exec(data).await?
@@ -526,6 +517,19 @@ where
         };
 
         Ok(state_desired.map(BoxDtDisplay::new))
+    }
+
+    async fn state_desired_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
+        let state_desired = {
+            let data =
+                <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
+            let state_desired_logical =
+                <StateDesiredFnSpec as peace_cfg::TryFnSpec>::exec(data).await?;
+
+            State::new(state_desired_logical, Placeholder::calculated())
+        };
+
+        Ok(BoxDtDisplay::new(state_desired))
     }
 
     async fn state_diff_exec_with_states_saved(

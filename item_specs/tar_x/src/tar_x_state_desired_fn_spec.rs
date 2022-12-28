@@ -17,34 +17,27 @@ impl<Id> TarXStateDesiredFnSpec<Id> {
     pub async fn files_in_tar(
         storage: &Storage,
         tar_path: &Path,
-    ) -> Result<Option<Vec<FileMetadata>>, TarXError> {
-        if !tar_path.exists() {
-            // TODO: return Error if we're executing for EnsureCmd
-            Ok(None)
-        } else {
-            let file_metadatas = storage
-                .read_with_sync_api(
-                    "TarXStateDesiredFnSpec::files_in_tar".to_string(),
-                    tar_path,
-                    |sync_io_bridge| {
-                        Self::tar_file_metadata(tar_path, Archive::new(sync_io_bridge))
-                    },
-                )
-                .await?;
+    ) -> Result<Vec<FileMetadata>, TarXError> {
+        let file_metadatas = storage
+            .read_with_sync_api(
+                "TarXStateDesiredFnSpec::files_in_tar".to_string(),
+                tar_path,
+                |sync_io_bridge| Self::tar_file_metadata(tar_path, Archive::new(sync_io_bridge)),
+            )
+            .await?;
 
-            Ok(Some(file_metadatas))
-        }
+        Ok(file_metadatas)
     }
 
     #[cfg(target_arch = "wasm32")]
     pub fn files_in_tar(
         storage: &Storage,
         tar_path: &Path,
-    ) -> Result<Option<Vec<FileMetadata>>, TarXError> {
+    ) -> Result<Vec<FileMetadata>, TarXError> {
         use std::io::Cursor;
 
         let bytes = storage.get_item_b64(tar_path)?;
-        Self::tar_file_metadata(tar_path, Archive::new(Cursor::new(bytes))).map(Some)
+        Self::tar_file_metadata(tar_path, Archive::new(Cursor::new(bytes)))
     }
 
     fn tar_file_metadata<R>(
@@ -94,7 +87,24 @@ where
 {
     type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
-    type Output = Option<FileMetadatas>;
+    type Output = FileMetadatas;
+
+    async fn try_exec(tar_x_data: TarXData<'_, Id>) -> Result<Option<Self::Output>, TarXError> {
+        #[cfg(not(target_arch = "wasm32"))]
+        let tar_file_exists = tar_x_data.tar_x_params().tar_path().exists();
+        #[cfg(target_arch = "wasm32")]
+        let tar_file_exists = {
+            let storage = tar_x_data.storage();
+            let tar_path = tar_x_data.tar_x_params().tar_path();
+            storage.contains_item(tar_path)?
+        };
+
+        if tar_file_exists {
+            Self::exec(tar_x_data).await.map(Some)
+        } else {
+            Ok(None)
+        }
+    }
 
     async fn exec(tar_x_data: TarXData<'_, Id>) -> Result<Self::Output, TarXError> {
         let tar_x_params = tar_x_data.tar_x_params();
@@ -102,10 +112,20 @@ where
         let tar_path = tar_x_params.tar_path();
 
         #[cfg(not(target_arch = "wasm32"))]
-        let files_in_tar = Self::files_in_tar(storage, tar_path).await?;
+        let tar_file_exists = tar_x_data.tar_x_params().tar_path().exists();
         #[cfg(target_arch = "wasm32")]
-        let files_in_tar = Self::files_in_tar(storage, tar_path)?;
+        let tar_file_exists = storage.contains_item(tar_path)?;
 
-        Ok(files_in_tar.map(FileMetadatas::from))
+        if tar_file_exists {
+            #[cfg(not(target_arch = "wasm32"))]
+            let files_in_tar = Self::files_in_tar(storage, tar_path).await?;
+            #[cfg(target_arch = "wasm32")]
+            let files_in_tar = Self::files_in_tar(storage, tar_path)?;
+
+            Ok(FileMetadatas::from(files_in_tar))
+        } else {
+            let tar_path = tar_path.to_path_buf();
+            Err(TarXError::TarFileNotExists { tar_path })
+        }
     }
 }
