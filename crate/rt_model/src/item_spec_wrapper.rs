@@ -14,13 +14,16 @@ use peace_resources::{
         Empty, SetUp, WithStatesCurrent, WithStatesCurrentAndDesired, WithStatesCurrentDiffs,
         WithStatesSavedAndDesired,
     },
-    states::{StateDiffs, StatesCurrent, StatesDesired, StatesSaved},
+    states::{self, States, StatesCurrent, StatesDesired},
     type_reg::untagged::BoxDtDisplay,
     Resources,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{ItemSpecRt, StatesTypeRegs};
+use crate::{
+    outcomes::{ItemEnsure, ItemEnsureBoxed, ItemEnsurePartial, ItemEnsurePartialBoxed},
+    ItemSpecRt, StatesTypeRegs,
+};
 
 /// Wraps a type implementing [`ItemSpec`].
 #[allow(clippy::type_complexity)]
@@ -49,6 +52,226 @@ pub struct ItemSpecWrapper<
         CleanOpSpec,
     )>,
 );
+
+impl<
+    IS,
+    E,
+    StateLogical,
+    StatePhysical,
+    StateDiff,
+    StateCurrentFnSpec,
+    StateDesiredFnSpec,
+    StateDiffFnSpec,
+    EnsureOpSpec,
+    CleanOpSpec,
+>
+    ItemSpecWrapper<
+        IS,
+        E,
+        StateLogical,
+        StatePhysical,
+        StateDiff,
+        StateCurrentFnSpec,
+        StateDesiredFnSpec,
+        StateDiffFnSpec,
+        EnsureOpSpec,
+        CleanOpSpec,
+    >
+where
+    IS: Debug
+        + ItemSpec<
+            Error = E,
+            StateLogical = StateLogical,
+            StatePhysical = StatePhysical,
+            StateDiff = StateDiff,
+            StateCurrentFnSpec = StateCurrentFnSpec,
+            StateDesiredFnSpec = StateDesiredFnSpec,
+            StateDiffFnSpec = StateDiffFnSpec,
+            EnsureOpSpec = EnsureOpSpec,
+            CleanOpSpec = CleanOpSpec,
+        > + Send
+        + Sync,
+    E: Debug
+        + Send
+        + Sync
+        + std::error::Error
+        + From<<IS as ItemSpec>::Error>
+        + From<crate::Error>
+        + 'static,
+    StateLogical:
+        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical:
+        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateCurrentFnSpec:
+        Debug + TryFnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
+    StateDesiredFnSpec: Debug + TryFnSpec<Error = E, Output = StateLogical> + Send + Sync,
+    StateDiffFnSpec: Debug
+        + peace_cfg::StateDiffFnSpec<
+            Error = E,
+            StatePhysical = StatePhysical,
+            StateLogical = StateLogical,
+            StateDiff = StateDiff,
+        > + Send
+        + Sync,
+    EnsureOpSpec: Debug
+        + peace_cfg::EnsureOpSpec<
+            Error = E,
+            StateLogical = StateLogical,
+            StatePhysical = StatePhysical,
+            StateDiff = StateDiff,
+        > + Send
+        + Sync,
+    CleanOpSpec: Debug
+        + peace_cfg::CleanOpSpec<
+            Error = E,
+            StateLogical = StateLogical,
+            StatePhysical = StatePhysical,
+        > + Send
+        + Sync,
+{
+    async fn state_current_try_exec<ResourcesTs>(
+        &self,
+        resources: &Resources<ResourcesTs>,
+    ) -> Result<Option<State<StateLogical, StatePhysical>>, E> {
+        let state_current = {
+            let data =
+                <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
+            <StateCurrentFnSpec as TryFnSpec>::try_exec(data).await?
+        };
+
+        Ok(state_current)
+    }
+
+    async fn state_current_exec<ResourcesTs>(
+        &self,
+        resources: &Resources<ResourcesTs>,
+    ) -> Result<State<StateLogical, StatePhysical>, E> {
+        let state_current = {
+            let data =
+                <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
+            <StateCurrentFnSpec as TryFnSpec>::exec(data).await?
+        };
+
+        Ok(state_current)
+    }
+
+    async fn state_desired_try_exec(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<Option<State<StateLogical, Placeholder>>, E> {
+        let data =
+            <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
+        let state_desired_logical =
+            <StateDesiredFnSpec as peace_cfg::TryFnSpec>::try_exec(data).await?;
+
+        Ok(state_desired_logical.map(|state_desired_logical| {
+            State::new(state_desired_logical, Placeholder::calculated())
+        }))
+    }
+
+    async fn state_desired_exec(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<State<StateLogical, Placeholder>, E> {
+        let data =
+            <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
+        let state_desired_logical =
+            <StateDesiredFnSpec as peace_cfg::TryFnSpec>::exec(data).await?;
+
+        Ok(State::new(state_desired_logical, Placeholder::calculated()))
+    }
+
+    async fn state_diff_exec<ResourcesTs, StatesTs>(
+        &self,
+        resources: &Resources<ResourcesTs>,
+    ) -> Result<StateDiff, E>
+    where
+        StatesTs: Debug + Send + Sync + 'static,
+    {
+        let state_diff: StateDiff = {
+            let data = <<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_> as Data>::borrow(
+                resources,
+            );
+            let item_spec_id = <IS as ItemSpec>::id(self);
+            let states = resources.borrow::<States<StatesTs>>();
+            let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+            let states_desired = resources.borrow::<StatesDesired>();
+            let state_desired =
+                states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
+
+            if let (Some(state), Some(state_desired)) = (state, state_desired) {
+                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(
+                    data,
+                    state,
+                    &state_desired.logical,
+                )
+                .await
+                .map_err(Into::<E>::into)?
+            } else {
+                panic!(
+                    "`ItemSpecWrapper::state_diff_exec<{StatesTs}>` must be called after \
+                    `States<{StatesTs}>` and `StatesDesired` are populated, e.g. using `StatesSavedReadCmd` and \
+                    `StatesDesiredDiscoverCmd`.",
+                    StatesTs = std::any::type_name::<StatesTs>()
+                );
+            }
+        };
+
+        Ok(state_diff)
+    }
+
+    async fn ensure_op_check<ResourcesTs>(
+        &self,
+        resources: &Resources<ResourcesTs>,
+        state_current: &State<StateLogical, StatePhysical>,
+        state_desired: &State<StateLogical, Placeholder>,
+        state_diff: &StateDiff,
+    ) -> Result<OpCheckStatus, E> {
+        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
+        <EnsureOpSpec as peace_cfg::EnsureOpSpec>::check(
+            data,
+            state_current,
+            &state_desired.logical,
+            state_diff,
+        )
+        .await
+    }
+
+    async fn ensure_op_exec_dry<ResourcesTs>(
+        &self,
+        resources: &Resources<ResourcesTs>,
+        state_current: &State<StateLogical, StatePhysical>,
+        state_desired: &State<StateLogical, Placeholder>,
+        state_diff: &StateDiff,
+    ) -> Result<StatePhysical, E> {
+        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
+        <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec_dry(
+            data,
+            state_current,
+            &state_desired.logical,
+            state_diff,
+        )
+        .await
+    }
+
+    async fn ensure_op_exec<ResourcesTs>(
+        &self,
+        resources: &Resources<ResourcesTs>,
+        state_current: &State<StateLogical, StatePhysical>,
+        state_desired: &State<StateLogical, Placeholder>,
+        state_diff: &StateDiff,
+    ) -> Result<StatePhysical, E> {
+        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
+        <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec(
+            data,
+            state_current,
+            &state_desired.logical,
+            state_diff,
+        )
+        .await
+    }
+}
 
 impl<
     IS,
@@ -171,6 +394,7 @@ impl<
 where
     IS: Debug
         + ItemSpec<
+            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -188,10 +412,11 @@ where
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec:
-        Debug + TryFnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StateDesiredFnSpec: Debug + TryFnSpec<Output = StateLogical> + Send + Sync,
+        Debug + TryFnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
+    StateDesiredFnSpec: Debug + TryFnSpec<Error = E, Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
+            Error = E,
             StatePhysical = StatePhysical,
             StateLogical = StateLogical,
             StateDiff = StateDiff,
@@ -199,14 +424,18 @@ where
         + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
+            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
         > + Send
         + Sync,
     CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<StateLogical = StateLogical, StatePhysical = StatePhysical>
-        + Send
+        + peace_cfg::CleanOpSpec<
+            Error = E,
+            StateLogical = StateLogical,
+            StatePhysical = StatePhysical,
+        > + Send
         + Sync,
 {
     fn from(item_spec: IS) -> Self {
@@ -241,6 +470,7 @@ impl<
 where
     IS: Debug
         + ItemSpec<
+            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -258,10 +488,11 @@ where
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec:
-        Debug + TryFnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StateDesiredFnSpec: Debug + TryFnSpec<Output = StateLogical> + Send + Sync,
+        Debug + TryFnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
+    StateDesiredFnSpec: Debug + TryFnSpec<Error = E, Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
+            Error = E,
             StatePhysical = StatePhysical,
             StateLogical = StateLogical,
             StateDiff = StateDiff,
@@ -269,14 +500,18 @@ where
         + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
+            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
         > + Send
         + Sync,
     CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<StateLogical = StateLogical, StatePhysical = StatePhysical>
-        + Send
+        + peace_cfg::CleanOpSpec<
+            Error = E,
+            StateLogical = StateLogical,
+            StatePhysical = StatePhysical,
+        > + Send
         + Sync,
 {
     fn borrows() -> TypeIds {
@@ -315,6 +550,7 @@ impl<
 where
     IS: Debug
         + ItemSpec<
+            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -332,10 +568,11 @@ where
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec:
-        Debug + TryFnSpec<Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StateDesiredFnSpec: Debug + TryFnSpec<Output = StateLogical> + Send + Sync,
+        Debug + TryFnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
+    StateDesiredFnSpec: Debug + TryFnSpec<Error = E, Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
+            Error = E,
             StatePhysical = StatePhysical,
             StateLogical = StateLogical,
             StateDiff = StateDiff,
@@ -343,14 +580,18 @@ where
         + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
+            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
         > + Send
         + Sync,
     CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<StateLogical = StateLogical, StatePhysical = StatePhysical>
-        + Send
+        + peace_cfg::CleanOpSpec<
+            Error = E,
+            StateLogical = StateLogical,
+            StatePhysical = StatePhysical,
+        > + Send
         + Sync,
 {
     fn borrows(&self) -> TypeIds {
@@ -390,6 +631,7 @@ impl<
 where
     IS: Debug
         + ItemSpec<
+            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -466,239 +708,175 @@ where
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        let state = {
-            let data =
-                <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
-            <StateCurrentFnSpec as TryFnSpec>::try_exec(data).await?
-        };
+        self.state_current_try_exec(resources)
+            .await
+            .map(|state_current| state_current.map(BoxDtDisplay::new))
+    }
 
-        Ok(state.map(BoxDtDisplay::new))
+    async fn state_current_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
+        self.state_current_exec(resources)
+            .await
+            .map(BoxDtDisplay::new)
     }
 
     async fn state_ensured_exec(
         &self,
         resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<BoxDtDisplay, E> {
-        let state: State<StateLogical, StatePhysical> = {
-            let data =
-                <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
-            <StateCurrentFnSpec as TryFnSpec>::exec(data).await?
-        };
-
-        Ok(BoxDtDisplay::new(state))
+        self.state_current_exec(resources)
+            .await
+            .map(BoxDtDisplay::new)
     }
 
     async fn state_cleaned_try_exec(
         &self,
         resources: &Resources<WithStatesCurrent>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        let state = {
-            let data =
-                <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
-            <StateCurrentFnSpec as TryFnSpec>::try_exec(data).await?
-        };
-
-        Ok(state.map(BoxDtDisplay::new))
+        self.state_current_try_exec(resources)
+            .await
+            .map(|state_current| state_current.map(BoxDtDisplay::new))
     }
 
     async fn state_desired_try_exec(
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        let state_desired = {
-            let data =
-                <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
-            let state_desired_logical =
-                <StateDesiredFnSpec as peace_cfg::TryFnSpec>::try_exec(data).await?;
-
-            state_desired_logical.map(|state_desired_logical| {
-                State::new(state_desired_logical, Placeholder::calculated())
-            })
-        };
-
-        Ok(state_desired.map(BoxDtDisplay::new))
+        self.state_desired_try_exec(resources)
+            .await
+            .map(|state_desired| state_desired.map(BoxDtDisplay::new))
     }
 
     async fn state_desired_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
-        let state_desired = {
-            let data =
-                <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
-            let state_desired_logical =
-                <StateDesiredFnSpec as peace_cfg::TryFnSpec>::exec(data).await?;
-
-            State::new(state_desired_logical, Placeholder::calculated())
-        };
-
-        Ok(BoxDtDisplay::new(state_desired))
+        self.state_desired_exec(resources)
+            .await
+            .map(BoxDtDisplay::new)
     }
 
     async fn state_diff_exec_with_states_saved(
         &self,
         resources: &Resources<WithStatesSavedAndDesired>,
     ) -> Result<BoxDtDisplay, E> {
-        let state_diff: StateDiff = {
-            let data = <<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_> as Data>::borrow(
-                resources,
-            );
-            let item_spec_id = <IS as ItemSpec>::id(self);
-            let states_saved = resources.borrow::<StatesSaved>();
-            let state = states_saved.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
-            let states_desired = resources.borrow::<StatesDesired>();
-            let state_desired =
-                states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
-
-            if let (Some(state), Some(state_desired)) = (state, state_desired) {
-                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(
-                    data,
-                    state,
-                    &state_desired.logical,
-                )
-                .await
-                .map_err(Into::<E>::into)?
-            } else {
-                panic!(
-                    "`ItemSpecWrapper::state_diff_exec_with_states_saved` must only be called with \
-                    `StatesSaved` and `StatesDesired` populated using `StatesSavedReadCmd` and \
-                    `StatesDesiredDiscoverCmd`."
-                );
-            }
-        };
-
-        Ok(BoxDtDisplay::new(state_diff))
+        self.state_diff_exec::<_, states::ts::Saved>(resources)
+            .await
+            .map(BoxDtDisplay::new)
     }
 
     async fn state_diff_exec_with_states_current(
         &self,
         resources: &Resources<WithStatesCurrentAndDesired>,
     ) -> Result<BoxDtDisplay, E> {
-        let state_diff: StateDiff = {
-            let data = <<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_> as Data>::borrow(
-                resources,
-            );
-            let item_spec_id = <IS as ItemSpec>::id(self);
-            let states_current = resources.borrow::<StatesCurrent>();
-            let state = states_current.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
-            let states_desired = resources.borrow::<StatesDesired>();
-            let state_desired =
-                states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
-
-            if let (Some(state), Some(state_desired)) = (state, state_desired) {
-                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(
-                    data,
-                    state,
-                    &state_desired.logical,
-                )
-                .await
-                .map_err(Into::<E>::into)?
-            } else {
-                panic!(
-                    "`ItemSpecWrapper::state_diff_exec_with_states_current` must only be called with \
-                    `StatesCurrent` and `StatesDesired` populated using `StatesCurrentDiscoverCmd` and \
-                    `StatesDesiredDiscoverCmd`."
-                );
-            }
-        };
-
-        Ok(BoxDtDisplay::new(state_diff))
+        self.state_diff_exec::<_, states::ts::Current>(resources)
+            .await
+            .map(BoxDtDisplay::new)
     }
 
-    async fn ensure_op_check(
+    async fn ensure_prepare(
         &self,
-        resources: &Resources<WithStatesCurrentDiffs>,
-    ) -> Result<OpCheckStatus, E> {
-        let op_check_status = {
-            let data =
-                <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
-            let item_spec_id = <IS as ItemSpec>::id(self);
-            let states = resources.borrow::<StatesCurrent>();
-            let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
-            let states_desired = resources.borrow::<StatesDesired>();
-            let state_desired =
-                states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
-            let state_diffs = resources.borrow::<StateDiffs>();
-            let state_diff = state_diffs.get::<StateDiff, _>(&item_spec_id);
+        resources: &Resources<SetUp>,
+    ) -> Result<ItemEnsureBoxed, (E, ItemEnsurePartialBoxed)> {
+        let mut item_ensure_partial =
+            ItemEnsurePartial::<StateLogical, StatePhysical, StateDiff>::new();
 
-            if let (Some(state), Some(state_desired), Some(state_diff)) =
-                (state, state_desired, state_diff)
-            {
-                <EnsureOpSpec as peace_cfg::EnsureOpSpec>::check(
-                    data,
-                    state,
-                    &state_desired.logical,
-                    state_diff,
-                )
-                .await?
-            } else {
-                panic!(
-                    "`ItemSpecWrapper::ensure_op_check` must only be called with `StatesCurrent`, `StatesDesired`, and \
-                    `StateDiffs` populated using `DiffCmd`."
-                );
-            }
-        };
-
-        Ok(op_check_status)
-    }
-
-    async fn ensure_op_exec_dry(
-        &self,
-        resources: &Resources<WithStatesCurrentDiffs>,
-    ) -> Result<(), E> {
-        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
-        let item_spec_id = <IS as ItemSpec>::id(self);
-        let states = resources.borrow::<StatesCurrent>();
-        let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
-        let states_desired = resources.borrow::<StatesDesired>();
-        let state_desired =
-            states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
-        let state_diffs = resources.borrow::<StateDiffs>();
-        let state_diff = state_diffs.get::<StateDiff, _>(&item_spec_id);
-
-        if let (Some(state), Some(state_desired), Some(state_diff)) =
-            (state, state_desired, state_diff)
+        match self.state_current_exec(resources).await {
+            Ok(state_current) => item_ensure_partial.state_current = Some(state_current),
+            Err(error) => return Err((error, item_ensure_partial.into())),
+        }
+        match self.state_desired_exec(resources).await {
+            Ok(state_desired) => item_ensure_partial.state_desired = Some(state_desired),
+            Err(error) => return Err((error, item_ensure_partial.into())),
+        }
+        match self
+            .state_diff_exec::<_, states::ts::Current>(resources)
+            .await
         {
-            <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec_dry(
-                data,
-                state,
-                &state_desired.logical,
-                state_diff,
-            )
-            .await?;
-        } else {
-            panic!(
-                "`ItemSpecWrapper::ensure_op_exec_dry` must only be called with `StatesCurrent`, `StatesDesired`, and \
-                `StateDiffs` populated using `DiffCmd`."
-            );
+            Ok(state_diff) => item_ensure_partial.state_diff = Some(state_diff),
+            Err(error) => return Err((error, item_ensure_partial.into())),
+        }
+
+        let (Some(state_current), Some(state_desired), Some(state_diff)) = (
+            item_ensure_partial.state_current.as_ref(),
+            item_ensure_partial.state_desired.as_ref(),
+            item_ensure_partial.state_diff.as_ref(),
+        ) else {
+            unreachable!("These are set just above.");
+        };
+
+        match self
+            .ensure_op_check(resources, state_current, state_desired, state_diff)
+            .await
+        {
+            Ok(op_check_status) => item_ensure_partial.op_check_status = Some(op_check_status),
+            Err(error) => return Err((error, item_ensure_partial.into())),
+        }
+
+        Ok(ItemEnsure::try_from((item_ensure_partial, None))
+            .expect("unreachable: All the fields are set above.")
+            .into())
+    }
+
+    async fn ensure_exec_dry(
+        &self,
+        resources: &Resources<SetUp>,
+        item_ensure_boxed: &mut ItemEnsureBoxed,
+    ) -> Result<(), E> {
+        let Some(item_ensure) =
+            item_ensure_boxed.downcast_mut::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>() else {
+                panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`. This is a bug in the `peace` framework.",
+                    concrete_type = std::any::type_name::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>())
+            };
+
+        let ItemEnsure {
+            state_saved: _,
+            state_current,
+            state_desired,
+            state_diff,
+            op_check_status,
+            state_ensured,
+        } = item_ensure;
+
+        match op_check_status {
+            OpCheckStatus::ExecRequired { progress_limit: _ } => {
+                let state_physical = self
+                    .ensure_op_exec_dry(resources, state_current, state_desired, state_diff)
+                    .await?;
+
+                *state_ensured = Some(State::new(state_desired.logical.clone(), state_physical));
+            }
+            OpCheckStatus::ExecNotRequired => {}
         }
 
         Ok(())
     }
 
-    async fn ensure_op_exec(&self, resources: &Resources<WithStatesCurrentDiffs>) -> Result<(), E> {
-        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
-        let item_spec_id = <IS as ItemSpec>::id(self);
-        let states = resources.borrow::<StatesCurrent>();
-        let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
-        let states_desired = resources.borrow::<StatesDesired>();
-        let state_desired =
-            states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
-        let state_diffs = resources.borrow::<StateDiffs>();
-        let state_diff = state_diffs.get::<StateDiff, _>(&item_spec_id);
+    async fn ensure_exec(
+        &self,
+        resources: &Resources<SetUp>,
+        item_ensure_boxed: &mut ItemEnsureBoxed,
+    ) -> Result<(), E> {
+        let Some(item_ensure) =
+            item_ensure_boxed.downcast_mut::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>() else {
+                panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`. This is a bug in the `peace` framework.",
+                    concrete_type = std::any::type_name::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>())
+            };
 
-        if let (Some(state), Some(state_desired), Some(state_diff)) =
-            (state, state_desired, state_diff)
-        {
-            <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec(
-                data,
-                state,
-                &state_desired.logical,
-                state_diff,
-            )
-            .await?;
-        } else {
-            panic!(
-                "`ItemSpecWrapper::ensure_op_exec` must only be called with `StatesCurrent`, `StatesDesired`, and \
-                `StateDiffs` populated using `DiffCmd`."
-            );
+        let ItemEnsure {
+            state_saved: _,
+            state_current,
+            state_desired,
+            state_diff,
+            op_check_status,
+            state_ensured,
+        } = item_ensure;
+
+        match op_check_status {
+            OpCheckStatus::ExecRequired { progress_limit: _ } => {
+                let state_physical = self
+                    .ensure_op_exec(resources, state_current, state_desired, state_diff)
+                    .await?;
+
+                *state_ensured = Some(State::new(state_desired.logical.clone(), state_physical));
+            }
+            OpCheckStatus::ExecNotRequired => {}
         }
 
         Ok(())

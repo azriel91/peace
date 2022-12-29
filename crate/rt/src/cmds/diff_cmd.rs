@@ -3,18 +3,13 @@ use std::marker::PhantomData;
 use futures::{StreamExt, TryStreamExt};
 use peace_resources::{
     internal::StateDiffsMut,
-    resources::ts::{
-        SetUp, WithStatesCurrentAndDesired, WithStatesCurrentDiffs, WithStatesSavedAndDesired,
-        WithStatesSavedDiffs,
-    },
+    resources::ts::{SetUp, WithStatesSavedAndDesired, WithStatesSavedDiffs},
     states::StateDiffs,
     Resources,
 };
 use peace_rt_model::{CmdContext, Error, ItemSpecGraph, OutputWrite, StatesTypeRegs};
 
 use crate::cmds::sub::{StatesDesiredReadCmd, StatesSavedReadCmd};
-
-use super::sub::StatesCurrentDiscoverCmd;
 
 #[derive(Debug)]
 pub struct DiffCmd<E, O>(PhantomData<(E, O)>);
@@ -116,54 +111,6 @@ where
         };
 
         let resources = Resources::<WithStatesSavedDiffs>::from((resources, state_diffs));
-        Ok(resources)
-    }
-
-    /// Returns `StateDiffs` between current states and desired states on disk.
-    ///
-    /// The current states are discovered when this is invoked.
-    ///
-    /// This also updates `Resources` from `SetUp` to
-    /// `WithStatesCurrentAndDesired`.
-    pub(crate) async fn exec_internal_with_states_current(
-        item_spec_graph: &ItemSpecGraph<E>,
-        mut resources: Resources<SetUp>,
-        states_type_regs: &StatesTypeRegs,
-    ) -> Result<Resources<WithStatesCurrentDiffs>, E> {
-        let states_current =
-            StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
-                .await?;
-        let states_desired = StatesDesiredReadCmd::<E, O>::exec_internal(
-            &mut resources,
-            states_type_regs.states_desired_type_reg(),
-        )
-        .await?;
-
-        let resources = Resources::<WithStatesCurrentAndDesired>::from((
-            resources,
-            states_current,
-            states_desired,
-        ));
-        let resources_ref = &resources;
-        let state_diffs = {
-            let state_diffs_mut = item_spec_graph
-                .stream()
-                .map(Result::<_, E>::Ok)
-                .and_then(|item_spec| async move {
-                    Ok((
-                        item_spec.id(),
-                        item_spec
-                            .state_diff_exec_with_states_current(resources_ref)
-                            .await?,
-                    ))
-                })
-                .try_collect::<StateDiffsMut>()
-                .await?;
-
-            StateDiffs::from(state_diffs_mut)
-        };
-
-        let resources = Resources::<WithStatesCurrentDiffs>::from((resources, state_diffs));
         Ok(resources)
     }
 }

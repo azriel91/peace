@@ -29,6 +29,8 @@ pub use peace_rt_model_web::{
     WorkspaceSpec,
 };
 
+pub mod outcomes;
+
 mod cmd_context;
 mod cmd_context_builder;
 mod in_memory_text_output;

@@ -58,6 +58,7 @@ impl<
 where
     IS: Debug
         + ItemSpec<
+            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
