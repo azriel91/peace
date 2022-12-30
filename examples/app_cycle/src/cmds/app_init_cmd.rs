@@ -35,12 +35,12 @@ impl AppInitCmd {
             #[cfg(target_family = "windows")]
             let file_ext = "zip";
             #[cfg(any(target_family = "unix", target_family = "wasm"))]
-            let file_ext = "tar.gz";
+            let file_ext = "tar";
             // windows:
             // https://github.com/azriel91/web_app/releases/download/0.1.0/app_cycle.zip
             //
             // linux:
-            // https://github.com/azriel91/web_app/releases/download/0.1.0/app_cycle.tar.gz
+            // https://github.com/azriel91/web_app/releases/download/0.1.0/app_cycle.tar
             let src = {
                 let url_candidate = format!(
                     "https://github.com/{account}/{repo_name}/releases/download/{version}/{repo_name}.{file_ext}"
