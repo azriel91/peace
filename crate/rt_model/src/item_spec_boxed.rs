@@ -58,7 +58,6 @@ impl<
 where
     IS: Debug
         + ItemSpec<
-            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -70,6 +69,7 @@ where
         > + Send
         + Sync
         + 'static,
+    <IS as ItemSpec>::Error: Send + Sync,
     E: Debug
         + Send
         + Sync

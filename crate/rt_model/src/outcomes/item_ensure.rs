@@ -1,7 +1,10 @@
-use peace_cfg::{state::Placeholder, OpCheckStatus, State};
-use serde::{Deserialize, Serialize};
+use std::fmt::{Debug, Display};
 
-use crate::outcomes::ItemEnsurePartial;
+use peace_cfg::{state::Placeholder, OpCheckStatus, State};
+use peace_resources::type_reg::untagged::{DataType, DataTypeDisplay};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+
+use crate::outcomes::{ItemEnsurePartial, ItemEnsureRt};
 
 /// Information about an item during an `EnsureCmd` execution.
 ///
@@ -75,5 +78,49 @@ impl<StateLogical, StatePhysical, StateDiff>
             };
             Err((partial, state_ensured))
         }
+    }
+}
+
+impl<StateLogical, StatePhysical, StateDiff> ItemEnsureRt
+    for ItemEnsure<StateLogical, StatePhysical, StateDiff>
+where
+    StateLogical: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+{
+    fn state_saved(&self) -> Option<Box<dyn DataTypeDisplay>> {
+        self.state_saved
+            .clone()
+            .map(|state_saved| Box::new(state_saved) as Box<dyn DataTypeDisplay>)
+    }
+
+    fn state_current(&self) -> Box<dyn DataTypeDisplay> {
+        Box::new(self.state_current.clone())
+    }
+
+    fn state_desired(&self) -> Box<dyn DataTypeDisplay> {
+        Box::new(self.state_desired.clone())
+    }
+
+    fn state_diff(&self) -> Box<dyn DataTypeDisplay> {
+        Box::new(self.state_diff.clone())
+    }
+
+    fn op_check_status(&self) -> OpCheckStatus {
+        self.op_check_status
+    }
+
+    fn state_ensured(&self) -> Option<Box<dyn DataTypeDisplay>> {
+        self.state_ensured
+            .clone()
+            .map(|state_ensured| Box::new(state_ensured) as Box<dyn DataTypeDisplay>)
+    }
+
+    fn as_data_type(&self) -> &dyn DataType {
+        self
+    }
+
+    fn as_data_type_mut(&mut self) -> &mut dyn DataType {
+        self
     }
 }

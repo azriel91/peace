@@ -1,15 +1,13 @@
-use peace_resources::type_reg::untagged::DataType;
-
-use crate::outcomes::ItemEnsurePartial;
+use crate::outcomes::{ItemEnsurePartial, ItemEnsurePartialRt};
 
 /// A boxed `ItemEnsurePartial`.
 #[derive(Clone, serde::Serialize)]
-pub struct ItemEnsurePartialBoxed(pub(crate) Box<dyn DataType>);
+pub struct ItemEnsurePartialBoxed(pub(crate) Box<dyn ItemEnsurePartialRt>);
 
 impl<StateLogical, StatePhysical, StateDiff>
     From<ItemEnsurePartial<StateLogical, StatePhysical, StateDiff>> for ItemEnsurePartialBoxed
 where
-    ItemEnsurePartial<StateLogical, StatePhysical, StateDiff>: DataType,
+    ItemEnsurePartial<StateLogical, StatePhysical, StateDiff>: ItemEnsurePartialRt,
 {
     /// Returns an `ItemEnsurePartialBoxed` which erases an
     /// `ItemEnsurePartial`'s type parameters.
@@ -18,4 +16,4 @@ where
     }
 }
 
-crate::outcomes::box_data_type_newtype!(ItemEnsurePartialBoxed);
+crate::outcomes::box_data_type_newtype!(ItemEnsurePartialBoxed, ItemEnsurePartialRt);

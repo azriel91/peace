@@ -1,15 +1,13 @@
-use peace_resources::type_reg::untagged::DataType;
-
-use crate::outcomes::ItemEnsure;
+use crate::outcomes::{ItemEnsure, ItemEnsureRt};
 
 /// A boxed `ItemEnsure`.
 #[derive(Clone, serde::Serialize)]
-pub struct ItemEnsureBoxed(pub(crate) Box<dyn DataType>);
+pub struct ItemEnsureBoxed(pub(crate) Box<dyn ItemEnsureRt>);
 
 impl<StateLogical, StatePhysical, StateDiff>
     From<ItemEnsure<StateLogical, StatePhysical, StateDiff>> for ItemEnsureBoxed
 where
-    ItemEnsure<StateLogical, StatePhysical, StateDiff>: DataType,
+    ItemEnsure<StateLogical, StatePhysical, StateDiff>: ItemEnsureRt,
 {
     /// Returns an `ItemEnsureBoxed` which erases an `ItemEnsure`'s type
     /// parameters.
@@ -18,4 +16,4 @@ where
     }
 }
 
-crate::outcomes::box_data_type_newtype!(ItemEnsureBoxed);
+crate::outcomes::box_data_type_newtype!(ItemEnsureBoxed, ItemEnsureRt);

@@ -80,7 +80,6 @@ impl<
 where
     IS: Debug
         + ItemSpec<
-            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -103,12 +102,15 @@ where
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + TryFnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StateDesiredFnSpec: Debug + TryFnSpec<Error = E, Output = StateLogical> + Send + Sync,
+    StateCurrentFnSpec: Debug
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
+        + Send
+        + Sync,
+    StateDesiredFnSpec:
+        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StatePhysical = StatePhysical,
             StateLogical = StateLogical,
             StateDiff = StateDiff,
@@ -116,7 +118,7 @@ where
         + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -124,7 +126,7 @@ where
         + Sync,
     CleanOpSpec: Debug
         + peace_cfg::CleanOpSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
@@ -190,24 +192,17 @@ where
         StatesTs: Debug + Send + Sync + 'static,
     {
         let state_diff: StateDiff = {
-            let data = <<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_> as Data>::borrow(
-                resources,
-            );
             let item_spec_id = <IS as ItemSpec>::id(self);
-            let states = resources.borrow::<States<StatesTs>>();
-            let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+            let states_base = resources.borrow::<States<StatesTs>>();
+            let state_base =
+                states_base.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
             let states_desired = resources.borrow::<StatesDesired>();
             let state_desired =
                 states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
 
-            if let (Some(state), Some(state_desired)) = (state, state_desired) {
-                <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(
-                    data,
-                    state,
-                    &state_desired.logical,
-                )
-                .await
-                .map_err(Into::<E>::into)?
+            if let (Some(state_base), Some(state_desired)) = (state_base, state_desired) {
+                self.state_diff_exec_with(resources, state_base, state_desired)
+                    .await?
             } else {
                 panic!(
                     "`ItemSpecWrapper::state_diff_exec<{StatesTs}>` must be called after \
@@ -216,6 +211,28 @@ where
                     StatesTs = std::any::type_name::<StatesTs>()
                 );
             }
+        };
+
+        Ok(state_diff)
+    }
+
+    async fn state_diff_exec_with<ResourcesTs>(
+        &self,
+        resources: &Resources<ResourcesTs>,
+        state_base: &State<StateLogical, StatePhysical>,
+        state_desired: &State<StateLogical, Placeholder>,
+    ) -> Result<StateDiff, E> {
+        let state_diff: StateDiff = {
+            let data = <<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_> as Data>::borrow(
+                resources,
+            );
+            <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(
+                data,
+                state_base,
+                &state_desired.logical,
+            )
+            .await
+            .map_err(Into::<E>::into)?
         };
 
         Ok(state_diff)
@@ -236,6 +253,7 @@ where
             state_diff,
         )
         .await
+        .map_err(Into::<E>::into)
     }
 
     async fn ensure_op_exec_dry<ResourcesTs>(
@@ -253,6 +271,7 @@ where
             state_diff,
         )
         .await
+        .map_err(Into::<E>::into)
     }
 
     async fn ensure_op_exec<ResourcesTs>(
@@ -270,6 +289,7 @@ where
             state_diff,
         )
         .await
+        .map_err(Into::<E>::into)
     }
 }
 
@@ -394,7 +414,6 @@ impl<
 where
     IS: Debug
         + ItemSpec<
-            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -411,12 +430,15 @@ where
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + TryFnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StateDesiredFnSpec: Debug + TryFnSpec<Error = E, Output = StateLogical> + Send + Sync,
+    StateCurrentFnSpec: Debug
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
+        + Send
+        + Sync,
+    StateDesiredFnSpec:
+        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StatePhysical = StatePhysical,
             StateLogical = StateLogical,
             StateDiff = StateDiff,
@@ -424,7 +446,7 @@ where
         + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -432,7 +454,7 @@ where
         + Sync,
     CleanOpSpec: Debug
         + peace_cfg::CleanOpSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
@@ -470,7 +492,6 @@ impl<
 where
     IS: Debug
         + ItemSpec<
-            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -487,12 +508,15 @@ where
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + TryFnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StateDesiredFnSpec: Debug + TryFnSpec<Error = E, Output = StateLogical> + Send + Sync,
+    StateCurrentFnSpec: Debug
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
+        + Send
+        + Sync,
+    StateDesiredFnSpec:
+        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StatePhysical = StatePhysical,
             StateLogical = StateLogical,
             StateDiff = StateDiff,
@@ -500,7 +524,7 @@ where
         + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -508,7 +532,7 @@ where
         + Sync,
     CleanOpSpec: Debug
         + peace_cfg::CleanOpSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
@@ -550,7 +574,6 @@ impl<
 where
     IS: Debug
         + ItemSpec<
-            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -567,12 +590,15 @@ where
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + TryFnSpec<Error = E, Output = State<StateLogical, StatePhysical>> + Send + Sync,
-    StateDesiredFnSpec: Debug + TryFnSpec<Error = E, Output = StateLogical> + Send + Sync,
+    StateCurrentFnSpec: Debug
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
+        + Send
+        + Sync,
+    StateDesiredFnSpec:
+        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StatePhysical = StatePhysical,
             StateLogical = StateLogical,
             StateDiff = StateDiff,
@@ -580,7 +606,7 @@ where
         + Sync,
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -588,7 +614,7 @@ where
         + Sync,
     CleanOpSpec: Debug
         + peace_cfg::CleanOpSpec<
-            Error = E,
+            Error = <IS as ItemSpec>::Error,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
         > + Send
@@ -631,7 +657,6 @@ impl<
 where
     IS: Debug
         + ItemSpec<
-            Error = E,
             StateLogical = StateLogical,
             StatePhysical = StatePhysical,
             StateDiff = StateDiff,
@@ -711,12 +736,14 @@ where
         self.state_current_try_exec(resources)
             .await
             .map(|state_current| state_current.map(BoxDtDisplay::new))
+            .map_err(Into::<E>::into)
     }
 
     async fn state_current_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
         self.state_current_exec(resources)
             .await
             .map(BoxDtDisplay::new)
+            .map_err(Into::<E>::into)
     }
 
     async fn state_ensured_exec(
@@ -726,6 +753,7 @@ where
         self.state_current_exec(resources)
             .await
             .map(BoxDtDisplay::new)
+            .map_err(Into::<E>::into)
     }
 
     async fn state_cleaned_try_exec(
@@ -735,6 +763,7 @@ where
         self.state_current_try_exec(resources)
             .await
             .map(|state_current| state_current.map(BoxDtDisplay::new))
+            .map_err(Into::<E>::into)
     }
 
     async fn state_desired_try_exec(
@@ -744,12 +773,14 @@ where
         self.state_desired_try_exec(resources)
             .await
             .map(|state_desired| state_desired.map(BoxDtDisplay::new))
+            .map_err(Into::<E>::into)
     }
 
     async fn state_desired_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
         self.state_desired_exec(resources)
             .await
             .map(BoxDtDisplay::new)
+            .map_err(Into::<E>::into)
     }
 
     async fn state_diff_exec_with_states_saved(
@@ -759,6 +790,7 @@ where
         self.state_diff_exec::<_, states::ts::Saved>(resources)
             .await
             .map(BoxDtDisplay::new)
+            .map_err(Into::<E>::into)
     }
 
     async fn state_diff_exec_with_states_current(
@@ -768,6 +800,7 @@ where
         self.state_diff_exec::<_, states::ts::Current>(resources)
             .await
             .map(BoxDtDisplay::new)
+            .map_err(Into::<E>::into)
     }
 
     async fn ensure_prepare(
@@ -786,7 +819,17 @@ where
             Err(error) => return Err((error, item_ensure_partial.into())),
         }
         match self
-            .state_diff_exec::<_, states::ts::Current>(resources)
+            .state_diff_exec_with(
+                resources,
+                item_ensure_partial
+                    .state_current
+                    .as_ref()
+                    .expect("unreachable: This is set just above."),
+                item_ensure_partial
+                    .state_desired
+                    .as_ref()
+                    .expect("unreachable: This is set just above."),
+            )
             .await
         {
             Ok(state_diff) => item_ensure_partial.state_diff = Some(state_diff),
@@ -820,7 +863,7 @@ where
         item_ensure_boxed: &mut ItemEnsureBoxed,
     ) -> Result<(), E> {
         let Some(item_ensure) =
-            item_ensure_boxed.downcast_mut::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>() else {
+            item_ensure_boxed.as_data_type_mut().downcast_mut::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>() else {
                 panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`. This is a bug in the `peace` framework.",
                     concrete_type = std::any::type_name::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>())
             };
@@ -854,7 +897,7 @@ where
         item_ensure_boxed: &mut ItemEnsureBoxed,
     ) -> Result<(), E> {
         let Some(item_ensure) =
-            item_ensure_boxed.downcast_mut::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>() else {
+            item_ensure_boxed.as_data_type_mut().downcast_mut::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>() else {
                 panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`. This is a bug in the `peace` framework.",
                     concrete_type = std::any::type_name::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>())
             };

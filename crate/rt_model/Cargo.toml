@@ -16,6 +16,8 @@ doctest = false
 test = false
 
 [dependencies]
+dyn-clone = "1.0.10"
+erased-serde = "0.3.24"
 fn_graph = { version = "0.6.0", features = ["resman"] }
 futures = "0.3.25"
 miette = { workspace = true, optional = true }

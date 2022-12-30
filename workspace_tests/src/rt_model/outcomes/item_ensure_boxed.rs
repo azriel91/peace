@@ -1,59 +1,97 @@
 use std::ops::{Deref, DerefMut};
 
-use peace::cfg::type_reg::untagged::{BoxDataTypeDowncast, DataTypeWrapper};
-
-use super::ItemEnsureBoxed;
+use peace::{
+    cfg::{state::Placeholder, OpCheckStatus, State},
+    resources::type_reg::untagged::{BoxDataTypeDowncast, DataTypeWrapper},
+    rt_model::outcomes::{ItemEnsure, ItemEnsureBoxed, ItemEnsurePartial},
+};
+use pretty_assertions::assert_eq;
 
 #[test]
 fn clone() {
-    let box_dt = ItemEnsureBoxed::new(1u32);
-    let mut box_dt_clone = Clone::clone(&box_dt);
+    let item_ensure_boxed = ItemEnsureBoxed::from(item_ensure());
+    let mut item_ensure_boxed_clone = Clone::clone(&item_ensure_boxed);
 
-    *BoxDataTypeDowncast::<u32>::downcast_mut(&mut box_dt_clone).unwrap() = 2;
+    *BoxDataTypeDowncast::<ItemEnsure<u32, u32, u32>>::downcast_mut(&mut item_ensure_boxed_clone)
+        .unwrap() = item_ensure();
 
     assert_eq!(
-        Some(1u32),
-        BoxDataTypeDowncast::<u32>::downcast_ref(&box_dt).copied()
+        Some(item_ensure()),
+        BoxDataTypeDowncast::<ItemEnsure<u32, u32, u32>>::downcast_ref(&item_ensure_boxed).cloned()
     );
     assert_eq!(
-        Some(2u32),
-        BoxDataTypeDowncast::<u32>::downcast_ref(&box_dt_clone).copied()
+        Some(item_ensure()),
+        BoxDataTypeDowncast::<ItemEnsure<u32, u32, u32>>::downcast_ref(&item_ensure_boxed_clone)
+            .cloned()
     );
 }
 
-#[cfg(not(feature = "debug"))]
 #[test]
 fn debug() {
-    let box_dt = ItemEnsureBoxed::new(1u32);
+    let item_ensure_boxed = ItemEnsureBoxed::from(item_ensure());
 
-    assert_eq!(r#"ItemEnsureBoxed("..")"#, format!("{box_dt:?}"));
-}
-
-#[cfg(feature = "debug")]
-#[test]
-fn debug() {
-    let box_dt = ItemEnsureBoxed::new(1u32);
-
-    assert_eq!("ItemEnsureBoxed(1)", format!("{box_dt:?}"));
+    assert_eq!(
+        r#"ItemEnsureBoxed(
+    ItemEnsure {
+        state_saved: None,
+        state_current: State {
+            logical: 1,
+            physical: 0,
+        },
+        state_desired: State {
+            logical: 3,
+            physical: Calculated(
+                PhantomData<()>,
+            ),
+        },
+        state_diff: 2,
+        op_check_status: ExecNotRequired,
+        state_ensured: None,
+    },
+)"#,
+        format!("{item_ensure_boxed:#?}")
+    );
 }
 
 #[test]
 fn deref() {
-    let box_dt = ItemEnsureBoxed::new(1u32);
-    let _data_type = Deref::deref(&box_dt);
+    let item_ensure_boxed = ItemEnsureBoxed::from(item_ensure());
+    let _data_type = Deref::deref(&item_ensure_boxed);
 }
 
 #[test]
 fn deref_mut() {
-    let mut box_dt = ItemEnsureBoxed::new(1u32);
-    let _data_type = DerefMut::deref_mut(&mut box_dt);
+    let mut item_ensure_boxed = ItemEnsureBoxed::from(item_ensure());
+    let _data_type = DerefMut::deref_mut(&mut item_ensure_boxed);
 }
 
 #[test]
 fn serialize() -> Result<(), serde_yaml::Error> {
-    let box_dt = ItemEnsureBoxed::new(1u32);
-    let data_type_wrapper: &dyn DataTypeWrapper = &box_dt;
+    let item_ensure_boxed = ItemEnsureBoxed::from(item_ensure());
+    let data_type_wrapper: &dyn DataTypeWrapper = &item_ensure_boxed;
 
-    assert_eq!("1\n", serde_yaml::to_string(data_type_wrapper)?);
+    assert_eq!(
+        r#"state_saved: null
+state_current:
+  logical: 1
+  physical: 0
+state_desired:
+  logical: 3
+  physical: !Calculated null
+state_diff: 2
+op_check_status: ExecNotRequired
+state_ensured: null
+"#,
+        serde_yaml::to_string(data_type_wrapper)?
+    );
     Ok(())
+}
+
+fn item_ensure() -> ItemEnsure<u32, u32, u32> {
+    let mut item_ensure_partial = ItemEnsurePartial::new();
+    item_ensure_partial.state_current = Some(State::new(1, 0));
+    item_ensure_partial.state_desired = Some(State::new(3, Placeholder::calculated()));
+    item_ensure_partial.state_diff = Some(2);
+    item_ensure_partial.op_check_status = Some(OpCheckStatus::ExecNotRequired);
+    ItemEnsure::try_from((item_ensure_partial, None)).unwrap()
 }

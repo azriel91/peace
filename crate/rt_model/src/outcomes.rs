@@ -6,15 +6,18 @@
 pub use self::{
     item_ensure::ItemEnsure, item_ensure_boxed::ItemEnsureBoxed,
     item_ensure_partial::ItemEnsurePartial, item_ensure_partial_boxed::ItemEnsurePartialBoxed,
+    item_ensure_partial_rt::ItemEnsurePartialRt, item_ensure_rt::ItemEnsureRt,
 };
 
 mod item_ensure;
 mod item_ensure_boxed;
 mod item_ensure_partial;
 mod item_ensure_partial_boxed;
+mod item_ensure_partial_rt;
+mod item_ensure_rt;
 
 macro_rules! box_data_type_newtype {
-    ($ty_name:ident) => {
+    ($ty_name:ident, $trait_path:path) => {
         impl std::fmt::Debug for $ty_name {
             fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
                 f.debug_tuple(stringify!($ty_name)).field(&self.0).finish()
@@ -22,14 +25,14 @@ macro_rules! box_data_type_newtype {
         }
 
         impl $ty_name {
-            /// Returns the inner `Box<dyn DataType>`.
-            pub fn into_inner(self) -> Box<dyn peace_resources::type_reg::untagged::DataType> {
+            /// Returns the inner boxed trait.
+            pub fn into_inner(self) -> Box<dyn $trait_path> {
                 self.0
             }
         }
 
         impl std::ops::Deref for $ty_name {
-            type Target = dyn peace_resources::type_reg::untagged::DataType;
+            type Target = dyn $trait_path;
 
             fn deref(&self) -> &Self::Target {
                 &self.0
@@ -44,14 +47,14 @@ macro_rules! box_data_type_newtype {
 
         impl<T> peace_resources::type_reg::untagged::BoxDataTypeDowncast<T> for $ty_name
         where
-            T: peace_resources::type_reg::untagged::DataType,
+            T: $trait_path,
         {
             fn downcast_ref(&self) -> Option<&T> {
-                self.0.downcast_ref::<T>()
+                self.0.as_data_type().downcast_ref::<T>()
             }
 
             fn downcast_mut(&mut self) -> Option<&mut T> {
-                self.0.downcast_mut::<T>()
+                self.0.as_data_type_mut().downcast_mut::<T>()
             }
         }
 

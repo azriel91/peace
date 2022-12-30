@@ -131,21 +131,9 @@ fn resources_with_state_current_diffs_from_resources_with_states_current_and_des
 fn resources_ensured_dry_from_resources_with_state_current_diffs() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_current_and_desired = Resources::<WithStatesCurrentAndDesired>::from(
-        (resources_set_up, StatesCurrent::new(), StatesDesired::new()),
-    );
-    let resources_with_state_current_diffs = Resources::<WithStatesCurrentDiffs>::from((
-        resources_with_states_current_and_desired,
-        StateDiffs::new(),
-    ));
-    let resources_ensured_dry = Resources::<EnsuredDry>::from((
-        resources_with_state_current_diffs,
-        StatesEnsuredDry::new(),
-    ));
+    let resources_ensured_dry =
+        Resources::<EnsuredDry>::from((resources_set_up, StatesEnsuredDry::new()));
 
-    assert!(resources_ensured_dry.contains::<StatesCurrent>());
-    assert!(resources_ensured_dry.contains::<StatesDesired>());
-    assert!(resources_ensured_dry.contains::<StateDiffs>());
     assert!(resources_ensured_dry.contains::<StatesEnsuredDry>());
 }
 
@@ -153,19 +141,8 @@ fn resources_ensured_dry_from_resources_with_state_current_diffs() {
 fn resources_ensured_from_resources_with_state_current_diffs() {
     let resources_empty = Resources::new();
     let resources_set_up = Resources::<SetUp>::from(resources_empty);
-    let resources_with_states_current_and_desired = Resources::<WithStatesCurrentAndDesired>::from(
-        (resources_set_up, StatesCurrent::new(), StatesDesired::new()),
-    );
-    let resources_with_state_current_diffs = Resources::<WithStatesCurrentDiffs>::from((
-        resources_with_states_current_and_desired,
-        StateDiffs::new(),
-    ));
-    let resources_ensured =
-        Resources::<Ensured>::from((resources_with_state_current_diffs, StatesEnsured::new()));
+    let resources_ensured = Resources::<Ensured>::from((resources_set_up, StatesEnsured::new()));
 
-    assert!(resources_ensured.contains::<StatesCurrent>());
-    assert!(resources_ensured.contains::<StatesDesired>());
-    assert!(resources_ensured.contains::<StateDiffs>());
     assert!(resources_ensured.contains::<StatesEnsured>());
 }
 

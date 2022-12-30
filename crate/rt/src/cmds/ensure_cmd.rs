@@ -181,25 +181,22 @@ where
         };
 
         let _outcomes_rx_task = async move {
-            loop {
-                match outcomes_rx.recv().await {
-                    Some(outcome) => match outcome {
-                        ItemEnsureOutcome::EnsurePrepFail {
-                            item_spec_id: _,
-                            item_ensure_partial: _,
-                            error: _,
-                        } => todo!(),
-                        ItemEnsureOutcome::EnsureSuccess {
-                            item_spec_id: _,
-                            item_ensure: _,
-                        } => todo!(),
-                        ItemEnsureOutcome::EnsureFail {
-                            item_spec_id: _,
-                            item_ensure: _,
-                            error: _,
-                        } => todo!(),
-                    },
-                    None => break,
+            while let Some(outcome) = outcomes_rx.recv().await {
+                match outcome {
+                    ItemEnsureOutcome::PrepareFail {
+                        item_spec_id: _,
+                        item_ensure_partial: _,
+                        error: _,
+                    } => todo!(),
+                    ItemEnsureOutcome::Success {
+                        item_spec_id: _,
+                        item_ensure: _,
+                    } => todo!(),
+                    ItemEnsureOutcome::Fail {
+                        item_spec_id: _,
+                        item_ensure: _,
+                        error: _,
+                    } => todo!(),
                 }
             }
         };
@@ -241,9 +238,9 @@ where
         dry_run: bool,
     ) -> bool {
         let f = if dry_run {
-            ItemSpecRt::ensure_exec
-        } else {
             ItemSpecRt::ensure_exec_dry
+        } else {
+            ItemSpecRt::ensure_exec
         };
         match item_spec.ensure_prepare(resources).await {
             Ok(mut item_ensure) => {
@@ -251,7 +248,7 @@ where
                     Ok(()) => {
                         // ensure succeeded
                         outcomes_tx
-                            .send(ItemEnsureOutcome::EnsureSuccess {
+                            .send(ItemEnsureOutcome::Success {
                                 item_spec_id: item_spec.id(),
                                 item_ensure,
                             })
@@ -262,7 +259,7 @@ where
                     Err(error) => {
                         // ensure failed
                         outcomes_tx
-                            .send(ItemEnsureOutcome::EnsureFail {
+                            .send(ItemEnsureOutcome::Fail {
                                 item_spec_id: item_spec.id(),
                                 item_ensure,
                                 error,
@@ -276,7 +273,7 @@ where
             }
             Err((error, item_ensure_partial)) => {
                 outcomes_tx
-                    .send(ItemEnsureOutcome::EnsurePrepFail {
+                    .send(ItemEnsureOutcome::PrepareFail {
                         item_spec_id: item_spec.id(),
                         item_ensure_partial,
                         error,
@@ -292,16 +289,20 @@ where
 #[allow(dead_code)]
 #[derive(Debug)]
 enum ItemEnsureOutcome<E> {
-    EnsurePrepFail {
+    /// Error occurred when discovering current state, desired states, state
+    /// diff, or `OpCheckStatus`.
+    PrepareFail {
         item_spec_id: ItemSpecId,
         item_ensure_partial: ItemEnsurePartialBoxed,
         error: E,
     },
-    EnsureSuccess {
+    /// Ensure execution succeeded.
+    Success {
         item_spec_id: ItemSpecId,
         item_ensure: ItemEnsureBoxed,
     },
-    EnsureFail {
+    /// Ensure execution failed.
+    Fail {
         item_spec_id: ItemSpecId,
         item_ensure: ItemEnsureBoxed,
         error: E,

@@ -1,5 +1,10 @@
+use std::fmt::{Debug, Display};
+
 use peace_cfg::{state::Placeholder, OpCheckStatus, State};
-use serde::{Deserialize, Serialize};
+use peace_resources::type_reg::untagged::{DataType, DataTypeDisplay};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
+
+use crate::outcomes::ItemEnsurePartialRt;
 
 /// Information about an item during an `EnsureCmd` execution.
 ///
@@ -60,5 +65,49 @@ impl<StateLogical, StatePhysical, StateDiff> Default
             state_diff: None,
             op_check_status: None,
         }
+    }
+}
+
+impl<StateLogical, StatePhysical, StateDiff> ItemEnsurePartialRt
+    for ItemEnsurePartial<StateLogical, StatePhysical, StateDiff>
+where
+    StateLogical: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StatePhysical: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+{
+    fn state_saved(&self) -> Option<Box<dyn DataTypeDisplay>> {
+        self.state_saved
+            .clone()
+            .map(|state_saved| Box::new(state_saved) as Box<dyn DataTypeDisplay>)
+    }
+
+    fn state_current(&self) -> Option<Box<dyn DataTypeDisplay>> {
+        self.state_current
+            .clone()
+            .map(|state_current| Box::new(state_current) as Box<dyn DataTypeDisplay>)
+    }
+
+    fn state_desired(&self) -> Option<Box<dyn DataTypeDisplay>> {
+        self.state_desired
+            .clone()
+            .map(|state_desired| Box::new(state_desired) as Box<dyn DataTypeDisplay>)
+    }
+
+    fn state_diff(&self) -> Option<Box<dyn DataTypeDisplay>> {
+        self.state_diff
+            .clone()
+            .map(|state_diff| Box::new(state_diff) as Box<dyn DataTypeDisplay>)
+    }
+
+    fn op_check_status(&self) -> Option<OpCheckStatus> {
+        self.op_check_status
+    }
+
+    fn as_data_type(&self) -> &dyn DataType {
+        self
+    }
+
+    fn as_data_type_mut(&mut self) -> &mut dyn DataType {
+        self
     }
 }

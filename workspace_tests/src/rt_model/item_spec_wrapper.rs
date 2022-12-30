@@ -135,31 +135,38 @@ async fn state_diff_exec_with_states_saved() -> Result<(), VecCopyError> {
 }
 
 #[tokio::test]
-async fn ensure_op_check() -> Result<(), VecCopyError> {
+async fn ensure_prepare() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
-    let resources = resources_with_state_current_diffs(&item_spec_wrapper).await?;
+    let resources = resources_set_up(&item_spec_wrapper).await?;
 
-    let op_check_status =
-        <dyn ItemSpecRt<_>>::ensure_op_check(&item_spec_wrapper, &resources).await?;
+    match <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources).await {
+        Ok(item_ensure) => {
+            assert_eq!(
+                OpCheckStatus::ExecRequired {
+                    progress_limit: ProgressLimit::Bytes(8)
+                },
+                item_ensure.op_check_status()
+            );
 
-    assert_eq!(
-        OpCheckStatus::ExecRequired {
-            progress_limit: ProgressLimit::Bytes(8)
-        },
-        op_check_status
-    );
-
-    Ok(())
+            Ok(())
+        }
+        Err((error, _item_ensure_partial)) => Err(error),
+    }
 }
 
 #[tokio::test]
-async fn ensure_op_exec_dry() -> Result<(), VecCopyError> {
+async fn ensure_exec_dry() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
-    let resources = resources_with_state_current_diffs(&item_spec_wrapper).await?;
+    let resources = resources_set_up(&item_spec_wrapper).await?;
 
-    <dyn ItemSpecRt<_>>::ensure_op_exec_dry(&item_spec_wrapper, &resources).await?;
+    let mut item_ensure_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
+        .await
+        .map_err(|(error, _)| error)?;
+
+    <dyn ItemSpecRt<_>>::ensure_exec_dry(&item_spec_wrapper, &resources, &mut item_ensure_boxed)
+        .await?;
 
     let vec_b = resources.borrow::<VecB>();
     assert_eq!(&[0u8; 0], &*vec_b.0);
@@ -168,12 +175,17 @@ async fn ensure_op_exec_dry() -> Result<(), VecCopyError> {
 }
 
 #[tokio::test]
-async fn ensure_op_exec() -> Result<(), VecCopyError> {
+async fn ensure_exec() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
-    let resources = resources_with_state_current_diffs(&item_spec_wrapper).await?;
+    let resources = resources_set_up(&item_spec_wrapper).await?;
 
-    <dyn ItemSpecRt<_>>::ensure_op_exec(&item_spec_wrapper, &resources).await?;
+    let mut item_ensure_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
+        .await
+        .map_err(|(error, _)| error)?;
+
+    <dyn ItemSpecRt<_>>::ensure_exec(&item_spec_wrapper, &resources, &mut item_ensure_boxed)
+        .await?;
 
     let vec_b = resources.borrow::<VecB>();
     assert_eq!(&[0u8, 1, 2, 3, 4, 5, 6, 7], &*vec_b.0);
