@@ -16,13 +16,13 @@ doctest = true
 test = false
 
 [dependencies]
-console = { version = "0.15.2", optional = true }
+console = { version = "0.15.3", optional = true }
 futures = "0.3.25"
 miette = { workspace = true, optional = true }
 peace_core = { path = "../core", version = "0.0.5" }
 peace_resources = { path = "../resources", version = "0.0.5" }
 peace_rt_model_core = { path = "../rt_model_core", version = "0.0.5" }
-serde = "1.0.151"
+serde = "1.0.152"
 serde_json = { version = "1.0.91", optional = true }
 serde_yaml = "0.9.16"
 thiserror = "1.0.38"

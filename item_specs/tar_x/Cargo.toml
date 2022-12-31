@@ -19,7 +19,7 @@ test = false
 derivative = { workspace = true }
 miette = { workspace = true, optional = true }
 peace = { path = "../..", version = "0.0.5", default-features = false }
-serde = { version = "1.0.151", features = ["derive"] }
+serde = { version = "1.0.152", features = ["derive"] }
 # We use this instead of tokio-tar, because:
 #
 # * We expect tar extraction to be a compute operation.

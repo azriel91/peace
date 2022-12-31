@@ -20,4 +20,4 @@ async-trait = "0.1.60"
 peace_core = { path = "../core", version = "0.0.5" }
 peace_data = { path = "../data", version = "0.0.5" }
 peace_resources = { path = "../resources", version = "0.0.5" }
-serde = { version = "1.0.151", features = ["derive"] }
+serde = { version = "1.0.152", features = ["derive"] }

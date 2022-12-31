@@ -21,7 +21,7 @@ diff-struct = "0.5.1"
 peace = { path = "..", version = "0.0.5", default-features = false }
 peace_item_specs = { path = "../item_specs", version = "0.0.5" }
 pretty_assertions = "1.3.0"
-serde = { version = "1.0.151", features = ["derive"] }
+serde = { version = "1.0.152", features = ["derive"] }
 serde_yaml = "0.9.16"
 tar = { workspace = true }
 tempfile = "3.3.0"
