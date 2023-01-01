@@ -1,10 +1,10 @@
 use std::{marker::PhantomData, path::Path};
 
-use peace::cfg::{async_trait, state::Nothing, FnSpec, State};
+use peace::cfg::{async_trait, state::Nothing, State, TryFnSpec};
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
 
-/// Status `FnSpec` for the tar to extract.
+/// Reads the current state of the tar to extract.
 #[derive(Debug)]
 pub struct TarXStateCurrentFnSpec<Id>(PhantomData<Id>);
 
@@ -94,7 +94,7 @@ impl<Id> TarXStateCurrentFnSpec<Id> {
 }
 
 #[async_trait(?Send)]
-impl<Id> FnSpec for TarXStateCurrentFnSpec<Id>
+impl<Id> TryFnSpec for TarXStateCurrentFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -102,23 +102,22 @@ where
     type Error = TarXError;
     type Output = State<FileMetadatas, Nothing>;
 
+    async fn try_exec(tar_x_data: TarXData<'_, Id>) -> Result<Option<Self::Output>, TarXError> {
+        Self::exec(tar_x_data).await.map(Some)
+    }
+
     async fn exec(tar_x_data: TarXData<'_, Id>) -> Result<Self::Output, TarXError> {
         let tar_x_params = tar_x_data.tar_x_params();
-        let tar_path = tar_x_params.tar_path();
         let dest = tar_x_params.dest();
 
-        let tar_x_state = if tar_path.exists() {
-            #[cfg(not(target_arch = "wasm32"))]
-            let files_extracted = Self::files_extracted(dest).await?;
-            #[cfg(target_arch = "wasm32")]
-            let files_extracted = Self::files_extracted(tar_x_data.storage(), dest)?;
+        #[cfg(not(target_arch = "wasm32"))]
+        let files_extracted = Self::files_extracted(dest).await?;
+        #[cfg(target_arch = "wasm32")]
+        let files_extracted = Self::files_extracted(tar_x_data.storage(), dest)?;
 
-            FileMetadatas::from(files_extracted)
-        } else {
-            let tar_path = tar_path.to_path_buf();
-            return Err(TarXError::TarFileNotExists { tar_path });
-        };
-        let state = State::new(tar_x_state, Nothing);
+        let dest_files = FileMetadatas::from(files_extracted);
+
+        let state = State::new(dest_files, Nothing);
 
         Ok(state)
     }

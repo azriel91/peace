@@ -13,9 +13,9 @@ use peace_resources::{
 use crate::{Error, Storage};
 
 /// Reads [`StatesSaved`] and [`StatesDesired`] from storage.
-pub struct StatesDeserializer<E>(PhantomData<E>);
+pub struct StatesSerializer<E>(PhantomData<E>);
 
-impl<E> StatesDeserializer<E>
+impl<E> StatesSerializer<E>
 where
     E: std::error::Error + From<Error> + Send,
 {
@@ -40,7 +40,7 @@ where
         storage
             .serialized_write(
                 #[cfg(not(target_arch = "wasm32"))]
-                "StatesDeserializer::serialize".to_string(),
+                "StatesSerializer::serialize".to_string(),
                 states_file_path,
                 states,
                 Error::StatesSerialize,
@@ -68,7 +68,7 @@ where
     ) -> Result<StatesSaved, E> {
         let states = Self::deserialize_internal::<Saved>(
             #[cfg(not(target_arch = "wasm32"))]
-            "StatesDeserializer::deserialize_saved".to_string(),
+            "StatesSerializer::deserialize_saved".to_string(),
             storage,
             states_type_reg,
             states_saved_file,
@@ -96,7 +96,7 @@ where
     ) -> Result<StatesDesired, E> {
         let states = Self::deserialize_internal::<Desired>(
             #[cfg(not(target_arch = "wasm32"))]
-            "StatesDeserializer::deserialize_desired".to_string(),
+            "StatesSerializer::deserialize_desired".to_string(),
             storage,
             states_type_reg,
             states_desired_file,
@@ -124,7 +124,7 @@ where
     ) -> Result<Option<StatesSaved>, E> {
         Self::deserialize_internal(
             #[cfg(not(target_arch = "wasm32"))]
-            "StatesDeserializer::deserialize_saved_opt".to_string(),
+            "StatesSerializer::deserialize_saved_opt".to_string(),
             storage,
             states_type_reg,
             states_saved_file,

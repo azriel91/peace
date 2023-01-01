@@ -14,7 +14,7 @@ pub use crate::{
     in_memory_text_output::InMemoryTextOutput, item_spec_boxed::ItemSpecBoxed,
     item_spec_graph::ItemSpecGraph, item_spec_graph_builder::ItemSpecGraphBuilder,
     item_spec_rt::ItemSpecRt, item_spec_wrapper::ItemSpecWrapper,
-    states_deserializer::StatesDeserializer, states_type_regs::StatesTypeRegs,
+    states_serializer::StatesSerializer, states_type_regs::StatesTypeRegs,
 };
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -29,6 +29,8 @@ pub use peace_rt_model_web::{
     WorkspaceSpec,
 };
 
+pub mod outcomes;
+
 mod cmd_context;
 mod cmd_context_builder;
 mod in_memory_text_output;
@@ -37,5 +39,5 @@ mod item_spec_graph;
 mod item_spec_graph_builder;
 mod item_spec_rt;
 mod item_spec_wrapper;
-mod states_deserializer;
+mod states_serializer;
 mod states_type_regs;

@@ -21,6 +21,7 @@ impl AppInitFlow {
     pub async fn run<O>(
         output: &mut O,
         web_app_file_download_params: FileDownloadParams<WebAppFileId>,
+        web_app_tar_x_params: TarXParams<WebAppFileId>,
     ) -> Result<(), AppCycleError>
     where
         O: OutputWrite<AppCycleError>,
@@ -34,13 +35,6 @@ impl AppInitFlow {
             flow_id!("app_init_flow"),
         )?;
         let graph = Self::graph()?;
-
-        let web_app_tar_x_params = {
-            let tar_path = web_app_file_download_params.dest().to_path_buf();
-            let dest = web_app_file_download_params.dest().join("web_app"); // TODO: get the name
-
-            TarXParams::<WebAppFileId>::new(tar_path, dest)
-        };
 
         let cmd_context = CmdContext::builder(&workspace, &graph, output)
             .with_workspace_param(

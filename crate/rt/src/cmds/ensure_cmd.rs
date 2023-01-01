@@ -1,21 +1,18 @@
 use std::marker::PhantomData;
 
-use futures::{
-    stream::{StreamExt, TryStreamExt},
-    TryStream,
-};
-use peace_cfg::OpCheckStatus;
+use peace_cfg::ItemSpecId;
 use peace_resources::{
-    internal::OpCheckStatuses,
-    resources::ts::{Ensured, EnsuredDry, SetUp, WithStatesCurrentDiffs},
-    states::{StatesEnsured, StatesEnsuredDry},
+    resources::ts::{Ensured, EnsuredDry, SetUp},
+    states::{self, States, StatesCurrent, StatesEnsured, StatesEnsuredDry},
     Resources,
 };
 use peace_rt_model::{
-    CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph, OutputWrite, StatesTypeRegs,
+    outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
+    CmdContext, Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt, OutputWrite,
 };
+use tokio::sync::{mpsc, mpsc::UnboundedSender};
 
-use crate::cmds::{sub::StatesCurrentDiscoverCmd, DiffCmd};
+use crate::{cmds::sub::StatesCurrentDiscoverCmd, BUFFERED_FUTURES_MAX};
 
 #[derive(Debug)]
 pub struct EnsureCmd<E, O>(PhantomData<(E, O)>);
@@ -54,8 +51,12 @@ where
     ) -> Result<CmdContext<'_, E, O, EnsuredDry>, E> {
         let (workspace, item_spec_graph, output, resources, states_type_regs) =
             cmd_context.into_inner();
-        let resources_result =
-            Self::exec_dry_internal(item_spec_graph, resources, &states_type_regs).await;
+        let resources_result = Self::exec_internal::<EnsuredDry, states::ts::EnsuredDry>(
+            item_spec_graph,
+            resources,
+            true,
+        )
+        .await;
 
         match resources_result {
             Ok(resources) => {
@@ -77,56 +78,6 @@ where
                 Err(e)
             }
         }
-    }
-
-    /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
-    /// [`ItemSpec`].
-    ///
-    /// Same as [`Self::exec_dry`], but does not change the type state, and
-    /// returns [`StatesEnsured`].
-    ///
-    /// [`exec_dry`]: peace_cfg::EnsureOpSpec::exec_dry
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    pub(crate) async fn exec_dry_internal(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: Resources<SetUp>,
-        states_type_regs: &StatesTypeRegs,
-    ) -> Result<Resources<EnsuredDry>, E> {
-        // https://github.com/rust-lang/rust-clippy/issues/9111
-        #[allow(clippy::needless_borrow)]
-        let resources = DiffCmd::<E, O>::exec_internal_with_states_current(
-            item_spec_graph,
-            resources,
-            &states_type_regs,
-        )
-        .await?;
-        let op_check_statuses = Self::ensure_op_spec_check(item_spec_graph, &resources).await?;
-        Self::ensure_op_spec_exec_dry(item_spec_graph, &resources, &op_check_statuses).await?;
-
-        // TODO: This fetches the real state, whereas for a dry run, it would be useful
-        // to show the imagined altered state.
-        let states_current = StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure_dry(
-            item_spec_graph,
-            &resources,
-        )
-        .await?;
-
-        let states_ensured_dry = StatesEnsuredDry::from((states_current, &resources));
-        let resources = Resources::<EnsuredDry>::from((resources, states_ensured_dry));
-
-        Ok(resources)
-    }
-
-    async fn ensure_op_spec_exec_dry(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStatesCurrentDiffs>,
-        op_check_statuses: &OpCheckStatuses,
-    ) -> Result<(), E> {
-        Self::ensure_op_spec_stream(item_spec_graph, op_check_statuses)
-            .try_for_each(|item_spec| async move { item_spec.ensure_op_exec_dry(resources).await })
-            .await?;
-        Ok(())
     }
 
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec`] for each [`ItemSpec`].
@@ -163,7 +114,8 @@ where
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
         let resources_result =
-            Self::exec_internal(item_spec_graph, resources, &states_type_regs).await;
+            Self::exec_internal::<Ensured, states::ts::Ensured>(item_spec_graph, resources, false)
+                .await;
 
         match resources_result {
             Ok(resources) => {
@@ -195,78 +147,153 @@ where
     /// [`exec`]: peace_cfg::EnsureOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    pub(crate) async fn exec_internal(
+    async fn exec_internal<ResourcesTs, StatesTs>(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: Resources<SetUp>,
-        states_type_regs: &StatesTypeRegs,
-    ) -> Result<Resources<Ensured>, E> {
-        // https://github.com/rust-lang/rust-clippy/issues/9111
-        #[allow(clippy::needless_borrow)]
-        let mut resources = DiffCmd::<E, O>::exec_internal_with_states_current(
-            item_spec_graph,
-            resources,
-            &states_type_regs,
-        )
-        .await?;
-        let op_check_statuses = Self::ensure_op_spec_check(item_spec_graph, &resources).await?;
-        Self::ensure_op_spec_exec(item_spec_graph, &resources, &op_check_statuses).await?;
+        mut resources: Resources<SetUp>,
+        dry_run: bool,
+    ) -> Result<Resources<ResourcesTs>, E>
+    where
+        for<'resources> States<StatesTs>: From<(StatesCurrent, &'resources Resources<SetUp>)>,
+        Resources<ResourcesTs>: From<(Resources<SetUp>, States<StatesTs>)>,
+    {
+        let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemEnsureOutcome<E>>();
 
-        let states_current = StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_ensure(
-            item_spec_graph,
-            &mut resources,
-        )
-        .await?;
+        let resources_ref = &resources;
+        let execution_task = async move {
+            let outcomes_tx = &outcomes_tx;
+            let (Ok(()) | Err(())) = item_spec_graph
+                .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
+                    Self::item_ensure_exec(resources_ref, outcomes_tx, item_spec, dry_run)
+                })
+                .await
+                .map_err(|_vec_units: Vec<()>| ());
+        };
 
-        let states_ensured = StatesEnsured::from((states_current, &resources));
-        let resources = Resources::<Ensured>::from((resources, states_ensured));
+        let _outcomes_rx_task = async move {
+            while let Some(outcome) = outcomes_rx.recv().await {
+                match outcome {
+                    ItemEnsureOutcome::PrepareFail {
+                        item_spec_id: _,
+                        item_ensure_partial: _,
+                        error: _,
+                    } => todo!(),
+                    ItemEnsureOutcome::Success {
+                        item_spec_id: _,
+                        item_ensure: _,
+                    } => todo!(),
+                    ItemEnsureOutcome::Fail {
+                        item_spec_id: _,
+                        item_ensure: _,
+                        error: _,
+                    } => todo!(),
+                }
+            }
+        };
+
+        futures::join!(execution_task);
+
+        let states_current =
+            StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
+                .await?;
+
+        let states_ensured = States::<StatesTs>::from((states_current, &resources));
+        let resources = Resources::<ResourcesTs>::from((resources, states_ensured));
 
         Ok(resources)
     }
 
-    async fn ensure_op_spec_check(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStatesCurrentDiffs>,
-    ) -> Result<OpCheckStatuses, E> {
-        let op_check_statuses = item_spec_graph
-            .stream()
-            .map(Result::<_, E>::Ok)
-            .and_then(|item_spec| async move {
-                let op_check_status = item_spec.ensure_op_check(resources).await?;
-                Ok((item_spec.id(), op_check_status))
-            })
-            .try_collect::<OpCheckStatuses>()
-            .await?;
+    ///
+    /// # Implementation Note
+    ///
+    /// Tried passing through the function to execute instead of a `dry_run`
+    /// parameter, but couldn't convince the compiler that the lifetimes match
+    /// up:
+    ///
+    /// ```rust,ignore
+    /// async fn item_ensure_exec<F, Fut>(
+    ///     resources: &Resources<SetUp>,
+    ///     outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
+    ///     item_spec: FnRef<'_, ItemSpecBoxed<E>>,
+    ///     f: F,
+    /// ) -> bool
+    /// where
+    ///     F: (Fn(&dyn ItemSpecRt<E>, &Resources<SetUp>, &mut ItemEnsureBoxed) -> Fut) + Copy,
+    ///     Fut: Future<Output = Result<(), E>>,
+    /// ```
+    async fn item_ensure_exec(
+        resources: &Resources<SetUp>,
+        outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
+        item_spec: &ItemSpecBoxed<E>,
+        dry_run: bool,
+    ) -> Result<(), ()> {
+        let f = if dry_run {
+            ItemSpecRt::ensure_exec_dry
+        } else {
+            ItemSpecRt::ensure_exec
+        };
+        match item_spec.ensure_prepare(resources).await {
+            Ok(mut item_ensure) => {
+                match f(&**item_spec, resources, &mut item_ensure).await {
+                    Ok(()) => {
+                        // ensure succeeded
+                        outcomes_tx
+                            .send(ItemEnsureOutcome::Success {
+                                item_spec_id: item_spec.id(),
+                                item_ensure,
+                            })
+                            .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
-        Ok(op_check_statuses)
-    }
+                        Ok(())
+                    }
+                    Err(error) => {
+                        // ensure failed
+                        outcomes_tx
+                            .send(ItemEnsureOutcome::Fail {
+                                item_spec_id: item_spec.id(),
+                                item_ensure,
+                                error,
+                            })
+                            .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
-    async fn ensure_op_spec_exec(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStatesCurrentDiffs>,
-        op_check_statuses: &OpCheckStatuses,
-    ) -> Result<(), E> {
-        Self::ensure_op_spec_stream(item_spec_graph, op_check_statuses)
-            .try_for_each(|item_spec| async move { item_spec.ensure_op_exec(resources).await })
-            .await?;
-        Ok(())
-    }
-
-    fn ensure_op_spec_stream<'f>(
-        item_spec_graph: &'f ItemSpecGraph<E>,
-        op_check_statuses: &'f OpCheckStatuses,
-    ) -> impl TryStream<Ok = FnRef<'f, ItemSpecBoxed<E>>, Error = E> {
-        item_spec_graph
-            .stream()
-            .filter(|item_spec| {
-                let exec_required = op_check_statuses
-                    .get(&item_spec.id())
-                    .map(|op_check_status| {
-                        matches!(op_check_status, OpCheckStatus::ExecRequired { .. })
+                        // we should stop processing.
+                        Err(())
+                    }
+                }
+            }
+            Err((error, item_ensure_partial)) => {
+                outcomes_tx
+                    .send(ItemEnsureOutcome::PrepareFail {
+                        item_spec_id: item_spec.id(),
+                        item_ensure_partial,
+                        error,
                     })
-                    .unwrap_or(true); // Should be unreachable, but we just execute if we get to this state.
+                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
-                async move { exec_required }
-            })
-            .map(Result::Ok)
+                Err(())
+            }
+        }
     }
+}
+
+#[allow(dead_code)]
+#[derive(Debug)]
+enum ItemEnsureOutcome<E> {
+    /// Error occurred when discovering current state, desired states, state
+    /// diff, or `OpCheckStatus`.
+    PrepareFail {
+        item_spec_id: ItemSpecId,
+        item_ensure_partial: ItemEnsurePartialBoxed,
+        error: E,
+    },
+    /// Ensure execution succeeded.
+    Success {
+        item_spec_id: ItemSpecId,
+        item_ensure: ItemEnsureBoxed,
+    },
+    /// Ensure execution failed.
+    Fail {
+        item_spec_id: ItemSpecId,
+        item_ensure: ItemEnsureBoxed,
+        error: E,
+    },
 }

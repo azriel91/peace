@@ -11,7 +11,10 @@ use peace_resources::{
     Resources,
 };
 
-use crate::StatesTypeRegs;
+use crate::{
+    outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
+    StatesTypeRegs,
+};
 
 /// Internal trait that erases the types from [`ItemSpec`]
 ///
@@ -39,48 +42,70 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// `StatesDesiredFile`.
     fn state_register(&self, states_type_regs: &mut StatesTypeRegs);
 
-    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`exec`].
+    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`try_exec`].
     ///
     /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`exec`]: peace_cfg::FnSpec::exec
-    async fn state_current_fn_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
+    async fn state_current_try_exec(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<Option<BoxDtDisplay>, E>
     where
         E: Debug + std::error::Error;
 
     /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`exec`].
     ///
     /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`exec`]: peace_cfg::FnSpec::exec
-    async fn state_ensured_fn_exec(
+    /// [`exec`]: peace_cfg::TryFnSpec::exec
+    async fn state_current_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
+    where
+        E: Debug + std::error::Error;
+
+    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`exec`].
+    ///
+    /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    /// [`exec`]: peace_cfg::TryFnSpec::exec
+    async fn state_ensured_exec(
         &self,
         resources: &Resources<WithStatesCurrentDiffs>,
     ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`exec`].
+    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`try_exec`].
     ///
     /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`exec`]: peace_cfg::FnSpec::exec
-    async fn state_cleaned_fn_exec(
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
+    async fn state_cleaned_try_exec(
         &self,
         resources: &Resources<WithStatesCurrent>,
-    ) -> Result<BoxDtDisplay, E>
+    ) -> Result<Option<BoxDtDisplay>, E>
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`ItemSpec::StateDesiredFnSpec`]`::`[`desired`].
+    /// Runs [`ItemSpec::StateDesiredFnSpec`]`::`[`try_exec`].
     ///
     /// [`ItemSpec::StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    /// [`desired`]: peace_cfg::FnSpec::desired
-    async fn state_desired_fn_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
+    async fn state_desired_try_exec(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<Option<BoxDtDisplay>, E>
+    where
+        E: Debug + std::error::Error;
+
+    /// Runs [`ItemSpec::StateDesiredFnSpec`]`::`[`exec`].
+    ///
+    /// [`ItemSpec::StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
+    /// [`exec`]: peace_cfg::TryFnSpec::exec
+    async fn state_desired_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
 
     /// Returns the diff between the previous and desired [`State`]s.
     ///
     /// [`State`]: peace_cfg::State
-    async fn state_diff_fn_exec_with_states_saved(
+    async fn state_diff_exec_with_states_saved(
         &self,
         resources: &Resources<WithStatesSavedAndDesired>,
     ) -> Result<BoxDtDisplay, E>
@@ -90,40 +115,81 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
     /// Returns the diff between the current and desired [`State`]s.
     ///
     /// [`State`]: peace_cfg::State
-    async fn state_diff_fn_exec_with_states_current(
+    async fn state_diff_exec_with_states_current(
         &self,
         resources: &Resources<WithStatesCurrentAndDesired>,
     ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`ItemSpec::EnsureOpSpec`]`::`[`check`].
+    /// Discovers the information needed for an ensure execution.
     ///
-    /// [`ItemSpec::EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    /// [`check`]: peace_cfg::OpSpec::check
-    async fn ensure_op_check(
+    /// This runs the following functions in order:
+    ///
+    /// * [`StateCurrentFnSpec::try_exec`]
+    /// * [`StateDesiredFnSpec::try_exec`]
+    /// * [`StateDiffFnSpec::exec`]
+    /// * [`EnsureOpSpec::check`]
+    ///
+    /// [`StateCurrentFnSpec::try_exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    /// [`StateDesiredFnSpec::try_exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
+    /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
+    /// [`EnsureOpSpec::check`]: peace_cfg::ItemSpec::EnsureOpSpec
+    async fn ensure_prepare(
         &self,
-        resources: &Resources<WithStatesCurrentDiffs>,
-    ) -> Result<OpCheckStatus, E>
+        resources: &Resources<SetUp>,
+    ) -> Result<ItemEnsureBoxed, (E, ItemEnsurePartialBoxed)>
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`ItemSpec::EnsureOpSpec`]`::`[`exec_dry`].
+    /// Dry ensures the item from its current state to its desired state.
     ///
-    /// [`ItemSpec::EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    /// [`exec_dry`]: peace_cfg::OpSpec::exec_dry
-    async fn ensure_op_exec_dry(
+    /// This runs the following functions in order:
+    ///
+    /// * [`StateCurrentFnSpec::try_exec`]
+    /// * [`StateDesiredFnSpec::try_exec`]
+    /// * [`StateDiffFnSpec::exec`]
+    /// * [`EnsureOpSpec::check`]
+    /// * [`EnsureOpSpec::exec_dry`]
+    ///
+    /// # Parameters
+    ///
+    /// * `resources`: The resources in the current execution.
+    /// * `item_ensure`: The information collected in `self.ensure_prepare`.
+    ///
+    /// [`StateCurrentFnSpec::try_exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    /// [`StateDesiredFnSpec::try_exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
+    /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
+    /// [`EnsureOpSpec::check`]: peace_cfg::ItemSpec::EnsureOpSpec
+    /// [`EnsureOpSpec::exec_dry`]: peace_cfg::ItemSpec::EnsureOpSpec
+    async fn ensure_exec_dry(
         &self,
-        resources: &Resources<WithStatesCurrentDiffs>,
+        resources: &Resources<SetUp>,
+        item_ensure: &mut ItemEnsureBoxed,
     ) -> Result<(), E>
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`ItemSpec::EnsureOpSpec`]`::`[`exec`].
+    /// Ensures the item from its current state to its desired state.
     ///
-    /// [`ItemSpec::EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    /// [`exec`]: peace_cfg::OpSpec::exec
-    async fn ensure_op_exec(&self, resources: &Resources<WithStatesCurrentDiffs>) -> Result<(), E>
+    /// This runs the following functions in order:
+    ///
+    /// * [`StateCurrentFnSpec::exec`]
+    /// * [`StateDesiredFnSpec::exec`]
+    /// * [`StateDiffFnSpec::exec`]
+    /// * [`EnsureOpSpec::check`]
+    /// * [`EnsureOpSpec::exec`]
+    ///
+    /// [`StateCurrentFnSpec::exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    /// [`StateDesiredFnSpec::exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
+    /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
+    /// [`EnsureOpSpec::check`]: peace_cfg::ItemSpec::EnsureOpSpec
+    /// [`EnsureOpSpec::exec`]: peace_cfg::ItemSpec::EnsureOpSpec
+    async fn ensure_exec(
+        &self,
+        resources: &Resources<SetUp>,
+        item_ensure: &mut ItemEnsureBoxed,
+    ) -> Result<(), E>
     where
         E: Debug + std::error::Error;
 

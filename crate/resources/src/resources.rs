@@ -24,8 +24,8 @@ pub mod ts;
 /// functions that require particular operations to have executed over the
 /// resources beforehand.
 ///
-/// For example, `Resources` must be `setup` before any `FnSpec` or `OpSpec` may
-/// execute with it.
+/// For example, `Resources` must be `setup` before any `TryFnSpec`,
+/// `EnsureOpSpec`, or `CleanOpSpec` may execute with it.
 ///
 /// # Type Parameters
 ///
@@ -187,10 +187,8 @@ impl From<(Resources<WithStatesCurrentAndDesired>, StateDiffs)>
     }
 }
 
-impl From<(Resources<WithStatesCurrentDiffs>, StatesEnsuredDry)> for Resources<EnsuredDry> {
-    fn from(
-        (mut resources, states_ensured_dry): (Resources<WithStatesCurrentDiffs>, StatesEnsuredDry),
-    ) -> Self {
+impl From<(Resources<SetUp>, StatesEnsuredDry)> for Resources<EnsuredDry> {
+    fn from((mut resources, states_ensured_dry): (Resources<SetUp>, StatesEnsuredDry)) -> Self {
         resources.insert(states_ensured_dry);
 
         Self {
@@ -200,10 +198,8 @@ impl From<(Resources<WithStatesCurrentDiffs>, StatesEnsuredDry)> for Resources<E
     }
 }
 
-impl From<(Resources<WithStatesCurrentDiffs>, StatesEnsured)> for Resources<Ensured> {
-    fn from(
-        (mut resources, states_ensured): (Resources<WithStatesCurrentDiffs>, StatesEnsured),
-    ) -> Self {
+impl From<(Resources<SetUp>, StatesEnsured)> for Resources<Ensured> {
+    fn from((mut resources, states_ensured): (Resources<SetUp>, StatesEnsured)) -> Self {
         resources.insert(states_ensured);
 
         Self {

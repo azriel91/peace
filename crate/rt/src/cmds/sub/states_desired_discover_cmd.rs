@@ -8,7 +8,7 @@ use peace_resources::{
     states::{ts::Desired, StatesDesired},
     Resources,
 };
-use peace_rt_model::{CmdContext, Error, ItemSpecGraph, StatesDeserializer, Storage};
+use peace_rt_model::{CmdContext, Error, ItemSpecGraph, StatesSerializer, Storage};
 
 use crate::BUFFERED_FUTURES_MAX;
 
@@ -19,7 +19,7 @@ impl<E, O> StatesDesiredDiscoverCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
 {
-    /// Runs [`StateDesiredFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    /// Runs [`StateDesiredFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesDesired`], and will be serialized to
@@ -28,10 +28,10 @@ where
     /// If any `StateDesiredFnSpec` needs to read the `State` from a previous
     /// `ItemSpec`, the predecessor should insert a copy / clone of their
     /// desired state into `Resources`, and the successor should references
-    /// it in their [`FnSpec::Data`].
+    /// it in their [`Data`].
     ///
-    /// [`exec`]: peace_cfg::StateDesiredFnSpec::exec
-    /// [`FnSpec::Data`]: peace_cfg::FnSpec::Data
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
+    /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StatesDesired`]: peace_resources::StatesDesired
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
@@ -54,11 +54,11 @@ where
         Ok(cmd_context)
     }
 
-    /// Runs [`StateDesiredFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    /// Runs [`StateDesiredFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state.
     ///
-    /// [`exec`]: peace_cfg::StateDesiredFnSpec::exec
+    /// [`exec`]: peace_cfg::StateDesiredFnSpec::try_exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub(crate) async fn exec_internal(
@@ -69,9 +69,12 @@ where
         let states_desired_mut = item_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
-            .map_ok(|item_spec| async move {
-                let state_desired = item_spec.state_desired_fn_exec(resources_ref).await?;
-                Ok((item_spec.id(), state_desired))
+            .try_filter_map(|item_spec| async move {
+                let state_desired = item_spec.state_desired_try_exec(resources_ref).await?;
+                Ok(state_desired
+                    .map(|state_desired| (item_spec.id(), state_desired))
+                    .map(Result::Ok)
+                    .map(futures::future::ready))
             })
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)
             .try_collect::<StatesMut<Desired>>()
@@ -91,7 +94,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_desired_file = StatesDesiredFile::from(&*flow_dir);
 
-        StatesDeserializer::serialize(&storage, states_desired, &states_desired_file).await?;
+        StatesSerializer::serialize(&storage, states_desired, &states_desired_file).await?;
 
         drop(flow_dir);
         drop(storage);

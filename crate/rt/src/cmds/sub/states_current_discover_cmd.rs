@@ -4,7 +4,7 @@ use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesSavedFile},
-    resources::ts::{SetUp, WithStatesCurrent, WithStatesCurrentDiffs},
+    resources::ts::{SetUp, WithStatesCurrent},
     states::{ts::Current, StatesCurrent},
     Resources,
 };
@@ -19,7 +19,7 @@ impl<E, O> StatesCurrentDiscoverCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
 {
-    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`], and will be serialized to
@@ -28,10 +28,10 @@ where
     /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
     /// `ItemSpec`, the predecessor should insert a copy / clone of their state
     /// into `Resources`, and the successor should references it in their
-    /// [`FnSpec::Data`].
+    /// [`Data`].
     ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
-    /// [`FnSpec::Data`]: peace_cfg::FnSpec::Data
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
+    /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub async fn exec(
@@ -53,12 +53,12 @@ where
         Ok(cmd_context)
     }
 
-    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`StatesCurrent`].
     ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal(
@@ -69,10 +69,15 @@ where
         let states_mut = item_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
-            .map_ok(|item_spec| async move {
-                let state = item_spec.state_current_fn_exec(resources_ref).await?;
-                Ok((item_spec.id(), state))
+            .try_filter_map(|item_spec| async move {
+                let state = item_spec.state_current_try_exec(resources_ref).await?;
+                Ok(state
+                    .map(|state| (item_spec.id(), state))
+                    .map(Result::Ok)
+                    .map(futures::future::ready))
             })
+            // TODO: do we need this?
+            // If not, we can remove the `Ok` and `future::ready` mappings above.
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)
             .try_collect::<StatesMut<Current>>()
             .await?;
@@ -83,71 +88,12 @@ where
         Ok(states)
     }
 
-    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`StatesCurrent`].
     ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    pub(crate) async fn exec_internal_for_ensure_dry(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStatesCurrentDiffs>,
-    ) -> Result<StatesCurrent, E> {
-        let states_mut = item_spec_graph
-            .stream()
-            .map(Result::<_, E>::Ok)
-            .map_ok(|item_spec| async move {
-                let state = item_spec.state_ensured_fn_exec(resources).await?;
-                Ok((item_spec.id(), state))
-            })
-            .try_buffer_unordered(BUFFERED_FUTURES_MAX)
-            .try_collect::<StatesMut<Current>>()
-            .await?;
-
-        let states = StatesCurrent::from(states_mut);
-        // We don't serialize states to disk as this is for a dry run.
-
-        Ok(states)
-    }
-
-    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
-    ///
-    /// Same as [`Self::exec`], but does not change the type state, and returns
-    /// [`StatesCurrent`].
-    ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    pub(crate) async fn exec_internal_for_ensure(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: &mut Resources<WithStatesCurrentDiffs>,
-    ) -> Result<StatesCurrent, E> {
-        let resources_ref = &*resources;
-        let states_mut = item_spec_graph
-            .stream()
-            .map(Result::<_, E>::Ok)
-            .map_ok(|item_spec| async move {
-                let state = item_spec.state_ensured_fn_exec(resources_ref).await?;
-                Ok((item_spec.id(), state))
-            })
-            .try_buffer_unordered(BUFFERED_FUTURES_MAX)
-            .try_collect::<StatesMut<Current>>()
-            .await?;
-
-        let states = StatesCurrent::from(states_mut);
-        Self::serialize_internal(resources, &states).await?;
-
-        Ok(states)
-    }
-
-    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
-    ///
-    /// Same as [`Self::exec`], but does not change the type state, and returns
-    /// [`StatesCurrent`].
-    ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_clean_dry(
@@ -157,9 +103,12 @@ where
         let states_mut = item_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
-            .map_ok(|item_spec| async move {
-                let state = item_spec.state_cleaned_fn_exec(resources).await?;
-                Ok((item_spec.id(), state))
+            .try_filter_map(|item_spec| async move {
+                let state = item_spec.state_cleaned_try_exec(resources).await?;
+                Ok(state
+                    .map(|state| (item_spec.id(), state))
+                    .map(Result::Ok)
+                    .map(futures::future::ready))
             })
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)
             .try_collect::<StatesMut<Current>>()
@@ -171,12 +120,12 @@ where
         Ok(states)
     }
 
-    /// Runs [`StateCurrentFnSpec`]`::`[`exec`] for each [`ItemSpec`].
+    /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`StatesCurrent`].
     ///
-    /// [`exec`]: peace_cfg::FnSpec::exec
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub(crate) async fn exec_internal_for_clean(
@@ -187,9 +136,12 @@ where
         let states_mut = item_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
-            .map_ok(|item_spec| async move {
-                let state = item_spec.state_cleaned_fn_exec(resources_ref).await?;
-                Ok((item_spec.id(), state))
+            .try_filter_map(|item_spec| async move {
+                let state = item_spec.state_cleaned_try_exec(resources_ref).await?;
+                Ok(state
+                    .map(|state| (item_spec.id(), state))
+                    .map(Result::Ok)
+                    .map(futures::future::ready))
             })
             .try_buffer_unordered(BUFFERED_FUTURES_MAX)
             .try_collect::<StatesMut<Current>>()
@@ -205,13 +157,13 @@ where
         resources: &mut Resources<TS>,
         states_current: &StatesCurrent,
     ) -> Result<(), E> {
-        use peace_rt_model::StatesDeserializer;
+        use peace_rt_model::StatesSerializer;
 
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
         let states_saved_file = StatesSavedFile::from(&*flow_dir);
 
-        StatesDeserializer::serialize(&storage, states_current, &states_saved_file).await?;
+        StatesSerializer::serialize(&storage, states_current, &states_saved_file).await?;
 
         drop(flow_dir);
         drop(storage);

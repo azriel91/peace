@@ -8,7 +8,7 @@ use peace_resources::{
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     Resources,
 };
-use peace_rt_model::{CmdContext, Error, StatesDeserializer, Storage};
+use peace_rt_model::{CmdContext, Error, StatesSerializer, Storage};
 
 /// Reads [`StatesSaved`]s from storage.
 #[derive(Debug)]
@@ -55,7 +55,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_saved_file = StatesSavedFile::from(&*flow_dir);
 
-        let states_saved = StatesDeserializer::deserialize_saved(
+        let states_saved = StatesSerializer::deserialize_saved(
             &storage,
             states_current_type_reg,
             &states_saved_file,

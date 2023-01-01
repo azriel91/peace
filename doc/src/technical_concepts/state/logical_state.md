@@ -61,7 +61,7 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
 
     2. the `peace` framework defaults to not running `state_current_fn_spec` for items that have a logical dependency on things that `EnsureOpSpec::check` returns `ExecRequired`
 
-        For this to work, when `StateCurrentFnSpec::exec` is requested, `peace` will:
+        For this to work, when `StateCurrentFnSpec::try_exec` is requested, `peace` will:
 
         1. For each non-parent item, run `StateCurrentFnSpec`, `StateDesiredFnSpec`, `StateDiffFnSpec`, and `EnsureOpSpec::check`.
         2. If `EnsureOpSpec::check` returns `OpCheckStatus::ExecNotRequired`, then successor items can be processed as well.

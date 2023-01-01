@@ -16,7 +16,7 @@ use std::{
 };
 
 use fn_graph::{DataAccessDyn, TypeIds};
-use peace_cfg::{FnSpec, ItemSpec, State};
+use peace_cfg::{ItemSpec, State, TryFnSpec};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{ItemSpecRt, ItemSpecWrapper};
@@ -69,19 +69,26 @@ where
         > + Send
         + Sync
         + 'static,
-    E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
+    <IS as ItemSpec>::Error: Send + Sync,
+    E: Debug
+        + Send
+        + Sync
+        + std::error::Error
+        + From<<IS as ItemSpec>::Error>
+        + From<crate::Error>
+        + 'static,
     StateLogical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StatePhysical:
         Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateCurrentFnSpec: Debug
-        + FnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync
         + 'static,
     StateDesiredFnSpec: Debug
-        + FnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical>
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical>
         + Send
         + Sync
         + 'static,

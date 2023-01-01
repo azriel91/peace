@@ -1,12 +1,6 @@
 use peace::{
-    cfg::{
-        profile,
-        state::{Nothing, Placeholder},
-        FlowId, ItemSpec, Profile, State,
-    },
-    resources::states::{
-        StatesCurrent, StatesDesired, StatesEnsured, StatesEnsuredDry, StatesSaved,
-    },
+    cfg::{profile, state::Nothing, FlowId, ItemSpec, Profile, State},
+    resources::states::{StatesEnsured, StatesEnsuredDry, StatesSaved},
     rt::cmds::{sub::StatesSavedReadCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -36,19 +30,26 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
     let CmdContext { resources, .. } = EnsureCmd::exec_dry(cmd_context).await?;
 
-    let states = resources.borrow::<StatesCurrent>();
-    let states_desired = resources.borrow::<StatesDesired>();
     let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
-    assert_eq!(
-        Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
-        states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
-    );
-    assert_eq!(
-        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_desired
-            .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
-            .map(|state_desired| &state_desired.logical)
-    );
+
+    // TODO: When EnsureCmd returns the execution report, assert on the state that
+    // was discovered.
+    //
+    // ```rust,ignore
+    // let states = resources.borrow::<StatesCurrent>();
+    // let states_desired = resources.borrow::<StatesDesired>();
+    // assert_eq!(
+    //     Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
+    //     states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+    // );
+    // assert_eq!(
+    //     Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+    //     states_desired
+    //         .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
+    //         .map(|state_desired| &state_desired.logical)
+    // );
+    // ```
+
     assert_eq!(
         Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
         states_ensured_dry.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
@@ -91,20 +92,27 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
         ..
     } = StatesSavedReadCmd::exec(cmd_context).await?;
 
-    let ensured_states_before = resources_ensured.borrow::<StatesCurrent>();
-    let ensured_states_desired = resources_ensured.borrow::<StatesDesired>();
     let ensured_states_ensured = resources_ensured.borrow::<StatesEnsured>();
     let states_saved = resources_reread.borrow::<StatesSaved>();
-    assert_eq!(
-        Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
-        ensured_states_before.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
-    );
-    assert_eq!(
-        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        ensured_states_desired
-            .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
-            .map(|state_desired| &state_desired.logical)
-    );
+
+    // TODO: When EnsureCmd returns the execution report, assert on the state that
+    // was discovered.
+    //
+    // ```rust,ignore
+    // let ensured_states_before = resources_ensured.borrow::<StatesCurrent>();
+    // let ensured_states_desired = resources_ensured.borrow::<StatesDesired>();
+    // assert_eq!(
+    //     Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
+    //     ensured_states_before.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+    // );
+    // assert_eq!(
+    //     Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+    //     ensured_states_desired
+    //         .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
+    //         .map(|state_desired| &state_desired.logical)
+    // );
+    // ```
+
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         ensured_states_ensured
@@ -162,21 +170,27 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
         ..
     } = StatesSavedReadCmd::exec(cmd_context).await?;
 
-    let ensured_states_before = resources_ensured.borrow::<StatesCurrent>();
-    let ensured_states_desired = resources_ensured.borrow::<StatesDesired>();
     let ensured_states_ensured = resources_ensured.borrow::<StatesEnsured>();
     let ensured_states_ensured_dry = resources_ensured_dry.borrow::<StatesEnsuredDry>();
     let states_saved = resources_reread.borrow::<StatesSaved>();
-    assert_eq!(
-        Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
-        ensured_states_before.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
-    );
-    assert_eq!(
-        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        ensured_states_desired
-            .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
-            .map(|state_desired| &state_desired.logical)
-    );
+
+    // TODO: When EnsureCmd returns the execution report, assert on the state that
+    // was discovered.
+    //
+    // ```rust,ignore
+    // let ensured_states_before = resources_ensured.borrow::<StatesCurrent>();
+    // let ensured_states_desired = resources_ensured.borrow::<StatesDesired>();
+    // assert_eq!(
+    //     Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
+    //     ensured_states_before.get::<State<VecCopyState, Nothing>,
+    // _>(&VecCopyItemSpec.id()) );
+    // assert_eq!(
+    //     Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+    //     ensured_states_desired
+    //         .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
+    //         .map(|state_desired| &state_desired.logical)
+    // );
+    // ```
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         ensured_states_ensured

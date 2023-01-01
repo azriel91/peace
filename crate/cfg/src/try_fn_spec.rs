@@ -1,9 +1,9 @@
 use async_trait::async_trait;
 use peace_data::Data;
 
-/// Defines the logic and data of a function.
+/// Defines the logic and data of a state discovery function.
 #[async_trait(?Send)]
-pub trait FnSpec {
+pub trait TryFnSpec {
     /// Return type of the function.
     ///
     /// * For [`StateCurrentFnSpec`], this is the current [`State`] of the
@@ -28,6 +28,10 @@ pub trait FnSpec {
     /// Error returned when this function errs.
     type Error: std::error::Error;
 
-    /// Executes this function.
+    /// Executes the function, returning `Ok(None)` if the output is not ready
+    /// to be queried.
+    async fn try_exec(data: Self::Data<'_>) -> Result<Option<Self::Output>, Self::Error>;
+
+    /// Executes the function.
     async fn exec(data: Self::Data<'_>) -> Result<Self::Output, Self::Error>;
 }

@@ -6,8 +6,8 @@ use std::{
 use diff::{Diff, VecDiff, VecDiffType};
 use peace::{
     cfg::{
-        async_trait, item_spec_id, state::Nothing, CleanOpSpec, EnsureOpSpec, FnSpec, ItemSpec,
-        ItemSpecId, OpCheckStatus, ProgressLimit, State, StateDiffFnSpec,
+        async_trait, item_spec_id, state::Nothing, CleanOpSpec, EnsureOpSpec, ItemSpec, ItemSpecId,
+        OpCheckStatus, ProgressLimit, State, StateDiffFnSpec, TryFnSpec,
     },
     data::{Data, RMaybe, R, W},
     resources::{resources::ts::Empty, states::StatesSaved, Resources},
@@ -199,10 +199,14 @@ impl<'op> VecCopyParams<'op> {
 pub struct VecCopyStateCurrentFnSpec;
 
 #[async_trait(?Send)]
-impl FnSpec for VecCopyStateCurrentFnSpec {
+impl TryFnSpec for VecCopyStateCurrentFnSpec {
     type Data<'op> = R<'op, VecB>;
     type Error = VecCopyError;
     type Output = State<VecCopyState, Nothing>;
+
+    async fn try_exec(vec_b: R<'_, VecB>) -> Result<Option<Self::Output>, VecCopyError> {
+        Self::exec(vec_b).await.map(Some)
+    }
 
     async fn exec(vec_b: R<'_, VecB>) -> Result<Self::Output, VecCopyError> {
         Ok(State::new(VecCopyState::from(vec_b.0.clone()), Nothing))
@@ -214,10 +218,14 @@ impl FnSpec for VecCopyStateCurrentFnSpec {
 pub struct VecCopyStateDesiredFnSpec;
 
 #[async_trait(?Send)]
-impl FnSpec for VecCopyStateDesiredFnSpec {
+impl TryFnSpec for VecCopyStateDesiredFnSpec {
     type Data<'op> = R<'op, VecA>;
     type Error = VecCopyError;
     type Output = VecCopyState;
+
+    async fn try_exec(vec_a: R<'_, VecA>) -> Result<Option<Self::Output>, VecCopyError> {
+        Self::exec(vec_a).await.map(Some)
+    }
 
     async fn exec(vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
         Ok(vec_a.0.clone()).map(VecCopyState::from)
