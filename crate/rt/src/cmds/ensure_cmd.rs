@@ -1,6 +1,5 @@
 use std::marker::PhantomData;
 
-use futures::stream::StreamExt;
 use peace_cfg::ItemSpecId;
 use peace_resources::{
     resources::ts::{Ensured, EnsuredDry, SetUp},
@@ -9,7 +8,7 @@ use peace_resources::{
 };
 use peace_rt_model::{
     outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
-    CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt, OutputWrite,
+    CmdContext, Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt, OutputWrite,
 };
 use tokio::sync::{mpsc, mpsc::UnboundedSender};
 
@@ -162,22 +161,12 @@ where
         let resources_ref = &resources;
         let execution_task = async move {
             let outcomes_tx = &outcomes_tx;
-            item_spec_graph
-                .stream()
-                .then(|item_spec| {
+            let (Ok(()) | Err(())) = item_spec_graph
+                .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
                     Self::item_ensure_exec(resources_ref, outcomes_tx, item_spec, dry_run)
                 })
-                // Important: We need to take_while before the buffer, so that we do not begin
-                // buffering later item specs if the predecessor has failed
-                .take_while(|should_continue| futures::future::ready(*should_continue))
-                // `buffer_unordered` needs `Stream::Item` to be a future, otherwise it gives a
-                // really obscure error.
-                .map(|_| futures::future::ready(()))
-                .buffer_unordered(BUFFERED_FUTURES_MAX)
-                .for_each(|_| futures::future::ready(()))
-                .await;
-
-            // drop(outcomes_tx);
+                .await
+                .map_err(|_vec_units: Vec<()>| ());
         };
 
         let _outcomes_rx_task = async move {
@@ -234,9 +223,9 @@ where
     async fn item_ensure_exec(
         resources: &Resources<SetUp>,
         outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
-        item_spec: FnRef<'_, ItemSpecBoxed<E>>,
+        item_spec: &ItemSpecBoxed<E>,
         dry_run: bool,
-    ) -> bool {
+    ) -> Result<(), ()> {
         let f = if dry_run {
             ItemSpecRt::ensure_exec_dry
         } else {
@@ -254,7 +243,7 @@ where
                             })
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
-                        true
+                        Ok(())
                     }
                     Err(error) => {
                         // ensure failed
@@ -267,7 +256,7 @@ where
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
                         // we should stop processing.
-                        false
+                        Err(())
                     }
                 }
             }
@@ -280,7 +269,7 @@ where
                     })
                     .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
-                false
+                Err(())
             }
         }
     }
