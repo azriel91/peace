@@ -27,6 +27,8 @@
 //! ```
 
 // Re-exports
+#[cfg(feature = "blank")]
+pub use peace_item_spec_blank as blank;
 #[cfg(feature = "file_download")]
 pub use peace_item_spec_file_download as file_download;
 #[cfg(feature = "sh_cmd")]

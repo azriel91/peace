@@ -1,0 +1,27 @@
+[package]
+name = "peace_item_spec_blank"
+version = "0.0.5"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+edition = "2021"
+description = "Copies a number from one resource to another"
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_item_spec_blank/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+derivative = { workspace = true }
+miette = { workspace = true, optional = true }
+peace = { path = "../..", version = "0.0.5", default-features = false }
+serde = { version = "1.0.152", features = ["derive"] }
+thiserror = "1.0.38"
+
+[features]
+default = []
+error_reporting = ["peace/error_reporting"]

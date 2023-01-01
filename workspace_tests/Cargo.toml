@@ -38,6 +38,7 @@ output_json = ["peace/output_json"]
 
 # `peace_item_specs` features
 item_specs = [
+    "peace_item_specs/blank",
     "peace_item_specs/file_download",
     "peace_item_specs/sh_cmd",
     "peace_item_specs/sh_sync_cmd",

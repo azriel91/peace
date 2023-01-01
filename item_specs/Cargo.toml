@@ -19,6 +19,7 @@ doctest = true
 test = false
 
 [dependencies]
+peace_item_spec_blank = { path = "blank", version = "0.0.5", optional = true }
 peace_item_spec_file_download = { path = "file_download", version = "0.0.5", optional = true }
 peace_item_spec_sh_cmd = { path = "sh_cmd", version = "0.0.5", optional = true }
 peace_item_spec_sh_sync_cmd = { path = "sh_sync_cmd", version = "0.0.5", optional = true }
@@ -36,6 +37,7 @@ output_json = ["peace/output_json"]
 
 error_reporting = [
     "peace/error_reporting",
+    "peace_item_spec_blank?/error_reporting",
     "peace_item_spec_file_download?/error_reporting",
     "peace_item_spec_sh_cmd?/error_reporting",
     "peace_item_spec_sh_sync_cmd?/error_reporting",
@@ -43,6 +45,7 @@ error_reporting = [
 ]
 
 # Subcrates
+blank = ["dep:peace_item_spec_blank"]
 file_download = ["dep:peace_item_spec_file_download"]
 sh_cmd = ["dep:peace_item_spec_sh_cmd"]
 sh_sync_cmd = ["dep:peace_item_spec_sh_sync_cmd"]
