@@ -37,3 +37,4 @@
     - [User Facing Automation - Part 1](learning_material/user_facing_automation_part_1.md)
     - [User Facing Automation - Part 2](learning_material/user_facing_automation_part_2.md)
 - [Ideas](ideas.md)
+    - [Feature Gated Incremental Functionality](ideas/feature_gated_incremental_functionality.md)
