@@ -26,6 +26,7 @@
     - [State](technical_concepts/state.md)
         - [Logical State](technical_concepts/state/logical_state.md)
     - [Output](technical_concepts/output.md)
+        - [Execution Progress](technical_concepts/output/execution_progress.md)
 
 - [Reference](reference.md)
     - [Commands](commands.md)
