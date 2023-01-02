@@ -44,3 +44,7 @@ default = []
 error_reporting = ["dep:miette", "miette?/fancy", "peace_rt/error_reporting", "peace_rt_model/error_reporting"]
 output_colorized = ["peace_rt_model/output_colorized"]
 output_json = ["peace_rt_model/output_json"]
+
+[patch.crates-io]
+# https://github.com/console-rs/indicatif/pull/504
+indicatif = { git = "https://github.com/azriel91/indicatif.git", branch = "maintenance/remove-unused-tokio-fs-feature" }

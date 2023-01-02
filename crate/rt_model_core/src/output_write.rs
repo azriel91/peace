@@ -6,7 +6,7 @@ use peace_resources::states::{
 
 /// Transforms return values or errors into a suitable output format.
 ///
-/// Examples:
+/// # Examples
 ///
 /// * A CLI implementation transforms the values into text to be printed.
 /// * A REST implementation transforms the values into the response.
@@ -15,11 +15,14 @@ use peace_resources::states::{
 /// # Design
 ///
 /// The write functions currently take `&mut self`. From an API consumer
-/// perspective, this should not be an annoyance as a return value / error value
-/// is intended to be returned once per command.
+/// perspective, this should not be difficult to use as the return value / error
+/// value is intended to be returned at the end of a command.
 ///
-/// Progress updates that are sent from `exec` functions would not be sent
-/// through an `OutputWrite`, but possibly an `OutputProgressWrite`.
+/// Progress updates sent during `EnsureOpSpec::exec` and `CleanOpSpec::exec`
+/// functions are not implemented through `OutputWrite`, but through
+/// [`ProgressOutputWrite`].
+///
+/// [`ProgressOutputWrite`]: crate::ProgressOutputWrite
 #[async_trait(?Send)]
 pub trait OutputWrite<E> {
     /// Writes current states to the output.
