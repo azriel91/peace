@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use peace_data::Data;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{OpCheckStatus, State};
+use crate::{OpCheckStatus, OpCtx, State};
 
 /// Defines the logic and data of an ensure operation.
 ///
@@ -150,6 +150,7 @@ pub trait EnsureOpSpec {
     /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     /// [`StateLogical`]: Self::StateLogical
     async fn exec_dry(
+        ctx: OpCtx<'_>,
         data: Self::Data<'_>,
         state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,
@@ -178,6 +179,7 @@ pub trait EnsureOpSpec {
     /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     /// [`StateLogical`]: Self::StateLogical
     async fn exec(
+        ctx: OpCtx<'_>,
         data: Self::Data<'_>,
         state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &Self::StateLogical,

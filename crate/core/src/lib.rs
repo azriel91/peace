@@ -9,6 +9,7 @@ pub use crate::{
     op_check_status::OpCheckStatus,
     profile::{Profile, ProfileInvalidFmt},
     progress_limit::ProgressLimit,
+    progress_update::ProgressUpdate,
 };
 
 mod flow_id;
@@ -16,6 +17,7 @@ mod item_spec_id;
 mod op_check_status;
 mod profile;
 mod progress_limit;
+mod progress_update;
 
 macro_rules! id_newtype {
     ($ty_name:ident, $ty_err_name:ident, $macro_name:ident) => {
