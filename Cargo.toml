@@ -34,6 +34,7 @@ members = [
 ]
 
 [workspace.dependencies]
+cfg-if = "1.0.0"
 miette = { version = "5.5.0" }
 derivative = "2.2.0"
 tar = "0.4.38"
@@ -44,6 +45,8 @@ default = []
 error_reporting = ["dep:miette", "miette?/fancy", "peace_rt/error_reporting", "peace_rt_model/error_reporting"]
 output_colorized = ["peace_rt_model/output_colorized"]
 output_json = ["peace_rt_model/output_json"]
+output_progress = ["peace_cfg/output_progress", "peace_rt_model/output_progress"]
+
 
 [patch.crates-io]
 # https://github.com/console-rs/indicatif/pull/504

@@ -7,11 +7,8 @@
 // Re-exports
 pub use async_trait::async_trait;
 pub use indicatif;
-// Keep in sync with `peace_cfg`.
-pub use tokio::sync::mpsc::{
-    error::{SendError, TryRecvError, TrySendError},
-    Receiver, Sender,
-};
+#[cfg(feature = "output_progress")]
+pub use peace_core::ProgressUpdate;
 
 pub use crate::{
     output_format::OutputFormat, output_format_parse_error::OutputFormatParseError,

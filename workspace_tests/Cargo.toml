@@ -17,6 +17,7 @@ doctest = false
 test = true
 
 [dev-dependencies]
+cfg-if = { workspace = true }
 diff-struct = "0.5.1"
 peace = { path = "..", version = "0.0.5", default-features = false }
 peace_item_specs = { path = "../item_specs", version = "0.0.5" }
@@ -35,6 +36,7 @@ default = ["item_specs"]
 error_reporting = ["peace/error_reporting"]
 output_colorized = ["peace/output_colorized"]
 output_json = ["peace/output_json"]
+output_progress = ["peace/output_progress", "peace_item_specs/output_progress"]
 
 # `peace_item_specs` features
 item_specs = [

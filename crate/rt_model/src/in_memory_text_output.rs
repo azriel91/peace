@@ -1,4 +1,3 @@
-use peace_cfg::ProgressUpdate;
 use peace_resources::states::{
     StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured, StatesEnsuredDry,
     StatesSaved,
@@ -36,7 +35,8 @@ impl<E> OutputWrite<E> for InMemoryTextOutput
 where
     E: std::error::Error + From<Error>,
 {
-    async fn render(&mut self, _progress_update: ProgressUpdate) {}
+    #[cfg(feature = "output_progress")]
+    async fn render(&mut self, _progress_update: peace_cfg::ProgressUpdate) {}
 
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         self.buffer = serde_yaml::to_string(states_saved).map_err(Error::StatesSerialize)?;

@@ -15,8 +15,11 @@ use tokio::{fs::File, io::BufWriter};
 #[cfg(target_arch = "wasm32")]
 use peace::rt_model::Storage;
 
+#[cfg(feature = "output_progress")]
+use peace::cfg::{ProgressUpdate, Sender};
+
 use peace::{
-    cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, ProgressUpdate, Sender, State},
+    cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, State},
     diff::Tracked,
 };
 
@@ -33,7 +36,8 @@ where
     Id: Send + Sync + 'static,
 {
     async fn file_download(
-        op_ctx: OpCtx<'_>,
+        #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
+        #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
         file_download_data: FileDownloadData<'_, Id>,
     ) -> Result<(), FileDownloadError> {
         let client = file_download_data.client();
@@ -52,7 +56,13 @@ where
 
         #[cfg(not(target_arch = "wasm32"))]
         {
-            Self::stream_write(op_ctx.progress_tx, params, response.bytes_stream()).await?;
+            Self::stream_write(
+                #[cfg(feature = "output_progress")]
+                op_ctx.progress_tx,
+                params,
+                response.bytes_stream(),
+            )
+            .await?;
         }
 
         // reqwest in wasm doesn't support streams
@@ -60,6 +70,7 @@ where
         #[cfg(target_arch = "wasm32")]
         {
             Self::stream_write(
+                #[cfg(feature = "output_progress")]
                 op_ctx.progress_tx,
                 dest,
                 file_download_data.storage(),
@@ -75,7 +86,7 @@ where
     /// Streams the content to disk.
     #[cfg(not(target_arch = "wasm32"))]
     async fn stream_write(
-        progress_tx: &Sender<ProgressUpdate>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdate>,
         file_download_params: &FileDownloadParams<Id>,
         byte_stream: impl Stream<Item = reqwest::Result<Bytes>>,
     ) -> Result<(), FileDownloadError> {
@@ -166,6 +177,7 @@ where
                     .await
                     .map_err(FileDownloadError::ResponseFileWrite)?;
 
+                #[cfg(feature = "output_progress")]
                 let _progress_send = {
                     let progress_update = if let Ok(progress_inc) = u64::try_from(bytes.len()) {
                         ProgressUpdate::Inc(progress_inc)
@@ -188,7 +200,7 @@ where
     /// Streams the content to disk.
     #[cfg(target_arch = "wasm32")]
     async fn stream_write(
-        progress_tx: &Sender<ProgressUpdate>,
+        #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdate>,
         dest_path: &Path,
         storage: &Storage,
         storage_form: crate::StorageForm,

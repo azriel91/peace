@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace_cfg::{ItemSpecId, OpCtx, ProgressUpdate};
+use peace_cfg::{ItemSpecId, OpCtx};
 use peace_resources::{
     resources::ts::{Ensured, EnsuredDry, SetUp},
     states::{self, States, StatesCurrent, StatesEnsured, StatesEnsuredDry},
@@ -10,10 +10,7 @@ use peace_rt_model::{
     outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
     CmdContext, Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt, OutputWrite,
 };
-use tokio::sync::{
-    mpsc,
-    mpsc::{Sender, UnboundedSender},
-};
+use tokio::sync::{mpsc, mpsc::UnboundedSender};
 
 use crate::{cmds::sub::StatesCurrentDiscoverCmd, BUFFERED_FUTURES_MAX};
 
@@ -25,6 +22,7 @@ where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
 {
+    #[cfg(feature = "output_progress")]
     /// Maximum number of progress messages to buffer.
     const PROGRESS_COUNT_MAX: usize = 256;
 
@@ -160,7 +158,8 @@ where
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     async fn exec_internal<ResourcesTs, StatesTs>(
         item_spec_graph: &ItemSpecGraph<E>,
-        progress_output: &mut O,
+        #[cfg(not(feature = "output_progress"))] _output: &mut O,
+        #[cfg(feature = "output_progress")] output: &mut O,
         mut resources: Resources<SetUp>,
         dry_run: bool,
     ) -> Result<Resources<ResourcesTs>, E>
@@ -168,17 +167,20 @@ where
         for<'resources> States<StatesTs>: From<(StatesCurrent, &'resources Resources<SetUp>)>,
         Resources<ResourcesTs>: From<(Resources<SetUp>, States<StatesTs>)>,
     {
+        #[cfg(feature = "output_progress")]
         let (progress_tx, mut progress_rx) = mpsc::channel(Self::PROGRESS_COUNT_MAX);
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemEnsureOutcome<E>>();
 
         let resources_ref = &resources;
         let execution_task = async move {
+            #[cfg(feature = "output_progress")]
             let progress_tx = &progress_tx;
             let outcomes_tx = &outcomes_tx;
             let (Ok(()) | Err(())) = item_spec_graph
                 .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
                     Self::item_ensure_exec(
                         resources_ref,
+                        #[cfg(feature = "output_progress")]
                         progress_tx,
                         outcomes_tx,
                         item_spec,
@@ -189,9 +191,10 @@ where
                 .map_err(|_vec_units: Vec<()>| ());
         };
 
+        #[cfg(feature = "output_progress")]
         let progress_render_task = async move {
             while let Some(progress_update) = progress_rx.recv().await {
-                progress_output.render(progress_update).await
+                output.render(progress_update).await
             }
         };
 
@@ -216,7 +219,13 @@ where
             }
         };
 
-        futures::join!(execution_task, progress_render_task);
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "output_progress")] {
+                futures::join!(execution_task, progress_render_task);
+            } else {
+                futures::join!(execution_task);
+            }
+        }
 
         let states_current =
             StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
@@ -248,7 +257,9 @@ where
     /// ```
     async fn item_ensure_exec(
         resources: &Resources<SetUp>,
-        progress_tx: &Sender<ProgressUpdate>,
+        #[cfg(feature = "output_progress")] progress_tx: &peace_cfg::Sender<
+            peace_cfg::ProgressUpdate,
+        >,
         outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
         item_spec: &ItemSpecBoxed<E>,
         dry_run: bool,
@@ -260,7 +271,10 @@ where
         };
         match item_spec.ensure_prepare(resources).await {
             Ok(mut item_ensure) => {
-                let op_ctx = OpCtx { progress_tx };
+                let op_ctx = OpCtx::new(
+                    #[cfg(feature = "output_progress")]
+                    progress_tx,
+                );
                 match f(&**item_spec, op_ctx, resources, &mut item_ensure).await {
                     Ok(()) => {
                         // ensure succeeded

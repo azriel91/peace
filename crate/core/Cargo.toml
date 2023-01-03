@@ -18,3 +18,7 @@ test = false
 [dependencies]
 peace_static_check_macros = { path = "../static_check_macros", version = "0.0.5" }
 serde = { version = "1.0.152", features = ["derive"] }
+
+[features]
+default = []
+output_progress = []

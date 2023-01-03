@@ -15,6 +15,7 @@ use peace::{
     },
     rt_model::{ItemSpecRt, ItemSpecWrapper},
 };
+#[cfg(feature = "output_progress")]
 use tokio::sync::mpsc;
 
 use crate::{
@@ -165,9 +166,16 @@ async fn ensure_exec_dry() -> Result<(), VecCopyError> {
     let mut item_ensure_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
         .await
         .map_err(|(error, _)| error)?;
-    let (progress_tx, _progress_rx) = mpsc::channel(10);
-    let progress_tx = &progress_tx;
-    let op_ctx = OpCtx { progress_tx };
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "output_progress")] {
+            let (progress_tx, _progress_rx) = mpsc::channel(10);
+            let progress_tx = &progress_tx;
+        }
+    }
+    let op_ctx = OpCtx::new(
+        #[cfg(feature = "output_progress")]
+        progress_tx,
+    );
 
     <dyn ItemSpecRt<_>>::ensure_exec_dry(
         &item_spec_wrapper,
@@ -192,9 +200,16 @@ async fn ensure_exec() -> Result<(), VecCopyError> {
     let mut item_ensure_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
         .await
         .map_err(|(error, _)| error)?;
-    let (progress_tx, _progress_rx) = mpsc::channel(10);
-    let progress_tx = &progress_tx;
-    let op_ctx = OpCtx { progress_tx };
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "output_progress")] {
+            let (progress_tx, _progress_rx) = mpsc::channel(10);
+            let progress_tx = &progress_tx;
+        }
+    }
+    let op_ctx = OpCtx::new(
+        #[cfg(feature = "output_progress")]
+        progress_tx,
+    );
 
     <dyn ItemSpecRt<_>>::ensure_exec(
         &item_spec_wrapper,

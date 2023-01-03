@@ -9,14 +9,18 @@ pub use crate::{
     op_check_status::OpCheckStatus,
     profile::{Profile, ProfileInvalidFmt},
     progress_limit::ProgressLimit,
-    progress_update::ProgressUpdate,
 };
+
+#[cfg(feature = "output_progress")]
+pub use crate::progress_update::ProgressUpdate;
 
 mod flow_id;
 mod item_spec_id;
 mod op_check_status;
 mod profile;
 mod progress_limit;
+
+#[cfg(feature = "output_progress")]
 mod progress_update;
 
 macro_rules! id_newtype {

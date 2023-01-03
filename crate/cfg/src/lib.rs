@@ -5,14 +5,19 @@
 
 // Re-exports
 pub use async_trait::async_trait;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        pub use peace_core::ProgressUpdate;
+        pub use tokio::sync::mpsc::{
+            error::{SendError, TrySendError},
+            Sender,
+        };
+    }
+}
+
 pub use peace_core::{
     flow_id, item_spec_id, profile, FlowId, FlowIdInvalidFmt, ItemSpecId, ItemSpecIdInvalidFmt,
-    OpCheckStatus, Profile, ProfileInvalidFmt, ProgressLimit, ProgressUpdate,
-};
-// Keep in sync with `peace_rt_model_core`.
-pub use tokio::sync::mpsc::{
-    error::{SendError, TryRecvError, TrySendError},
-    Receiver, Sender,
+    OpCheckStatus, Profile, ProfileInvalidFmt, ProgressLimit,
 };
 
 pub use crate::{

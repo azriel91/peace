@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{async_trait, ProgressUpdate},
+    cfg::async_trait,
     resources::states::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
         StatesEnsuredDry, StatesSaved,
@@ -33,7 +33,8 @@ impl<E> OutputWrite<E> for FnTrackerOutput
 where
     E: std::error::Error,
 {
-    async fn render(&mut self, _progress_update: ProgressUpdate) {}
+    #[cfg(feature = "output_progress")]
+    async fn render(&mut self, _progress_update: peace::cfg::ProgressUpdate) {}
 
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         self.fn_invocations.push(FnInvocation::new(

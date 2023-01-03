@@ -1,5 +1,5 @@
 use futures::{stream, StreamExt, TryStreamExt};
-use peace_core::{ItemSpecId, ProgressUpdate};
+use peace_core::ItemSpecId;
 use peace_resources::{
     states::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
@@ -210,7 +210,8 @@ where
     E: std::error::Error + From<Error>,
     W: AsyncWrite + std::marker::Unpin,
 {
-    async fn render(&mut self, progress_update: ProgressUpdate) {
+    #[cfg(feature = "output_progress")]
+    async fn render(&mut self, progress_update: peace_core::ProgressUpdate) {
         let _ = self
             .writer
             .write(format!("{progress_update:?}").as_bytes())
