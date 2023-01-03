@@ -16,7 +16,7 @@ doctest = true
 test = false
 
 [dependencies]
-console = { version = "0.15.3", optional = true }
+console = { version = "0.15.4", optional = true }
 futures = "0.3.25"
 miette = { workspace = true, optional = true }
 peace_core = { path = "../core", version = "0.0.5" }

@@ -49,5 +49,4 @@ output_progress = ["peace_cfg/output_progress", "peace_rt_model/output_progress"
 
 
 [patch.crates-io]
-# https://github.com/console-rs/indicatif/pull/504
-indicatif = { git = "https://github.com/azriel91/indicatif.git", branch = "maintenance/remove-unused-tokio-fs-feature" }
+indicatif = { git = "https://github.com/console-rs/indicatif.git", branch = "main" }
