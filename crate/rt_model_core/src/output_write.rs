@@ -4,9 +4,11 @@ use peace_resources::states::{
     StatesSaved,
 };
 
+use crate::ProgressOutputWrite;
+
 /// Transforms return values or errors into a suitable output format.
 ///
-/// # Examples
+/// # Use cases
 ///
 /// * A CLI implementation transforms the values into text to be printed.
 /// * A REST implementation transforms the values into the response.
@@ -19,12 +21,10 @@ use peace_resources::states::{
 /// value is intended to be returned at the end of a command.
 ///
 /// Progress updates sent during `EnsureOpSpec::exec` and `CleanOpSpec::exec`
-/// functions are not implemented through `OutputWrite`, but through
+/// functions are not implemented on `OutputWrite`, but on
 /// [`ProgressOutputWrite`].
-///
-/// [`ProgressOutputWrite`]: crate::ProgressOutputWrite
 #[async_trait(?Send)]
-pub trait OutputWrite<E> {
+pub trait OutputWrite<E>: ProgressOutputWrite {
     /// Writes current states to the output.
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E>
     where

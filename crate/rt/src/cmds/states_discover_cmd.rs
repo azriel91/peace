@@ -10,9 +10,9 @@ use peace_rt_model::CmdContext;
 use crate::cmds::sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd};
 
 #[derive(Debug)]
-pub struct StatesDiscoverCmd<E, O, PO>(PhantomData<(E, O, PO)>);
+pub struct StatesDiscoverCmd<E, O>(PhantomData<(E, O)>);
 
-impl<E, O, PO> StatesDiscoverCmd<E, O, PO>
+impl<E, O> StatesDiscoverCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
 {
@@ -30,15 +30,15 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, PO, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, PO, WithStatesCurrentAndDesired>, E> {
-        let (workspace, item_spec_graph, output, progress_output, mut resources, states_type_regs) =
+        cmd_context: CmdContext<'_, E, O, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, WithStatesCurrentAndDesired>, E> {
+        let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
             cmd_context.into_inner();
         let states_current =
-            StatesCurrentDiscoverCmd::<E, O, PO>::exec_internal(item_spec_graph, &mut resources)
+            StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
                 .await?;
         let states_desired =
-            StatesDesiredDiscoverCmd::<E, O, PO>::exec_internal(item_spec_graph, &mut resources)
+            StatesDesiredDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
                 .await?;
 
         let resources = Resources::<WithStatesCurrentAndDesired>::from((
@@ -51,7 +51,6 @@ where
             workspace,
             item_spec_graph,
             output,
-            progress_output,
             resources,
             states_type_regs,
         ));
@@ -59,7 +58,7 @@ where
     }
 }
 
-impl<E, O, PO> Default for StatesDiscoverCmd<E, O, PO> {
+impl<E, O> Default for StatesDiscoverCmd<E, O> {
     fn default() -> Self {
         Self(PhantomData)
     }

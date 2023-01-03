@@ -11,9 +11,9 @@ use crate::cmds::sub::StatesDesiredReadCmd;
 
 /// Displays [`StatesDesired`]s from storage.
 #[derive(Debug)]
-pub struct StatesDesiredDisplayCmd<E, O, PO>(PhantomData<(E, O, PO)>);
+pub struct StatesDesiredDisplayCmd<E, O>(PhantomData<(E, O)>);
 
-impl<E, O, PO> StatesDesiredDisplayCmd<E, O, PO>
+impl<E, O> StatesDesiredDisplayCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
@@ -26,17 +26,16 @@ where
     /// [`StatesDesiredDiscoverCmd`]: crate::StatesDesiredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_context: CmdContext<'_, E, O, PO, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, PO, WithStatesDesired>, E> {
+        mut cmd_context: CmdContext<'_, E, O, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, WithStatesDesired>, E> {
         let CmdContext {
             output,
-            progress_output: _,
             resources,
             states_type_regs,
             ..
         } = &mut cmd_context;
 
-        let states_desired_result = StatesDesiredReadCmd::<E, O, PO>::exec_internal(
+        let states_desired_result = StatesDesiredReadCmd::<E, O>::exec_internal(
             resources,
             states_type_regs.states_desired_type_reg(),
         )
@@ -59,7 +58,7 @@ where
     }
 }
 
-impl<E, O, PO> Default for StatesDesiredDisplayCmd<E, O, PO> {
+impl<E, O> Default for StatesDesiredDisplayCmd<E, O> {
     fn default() -> Self {
         Self(PhantomData)
     }

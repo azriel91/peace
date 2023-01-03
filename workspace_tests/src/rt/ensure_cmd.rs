@@ -20,14 +20,14 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
+    let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext { resources, .. } = EnsureCmd::exec_dry(cmd_context).await?;
 
     let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
@@ -72,21 +72,21 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
+    let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Alter states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext {
         resources: resources_ensured,
         ..
     } = EnsureCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext {
         resources: resources_reread,
         ..
@@ -143,28 +143,28 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
+    let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Alter states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext {
         resources: resources_ensured,
         ..
     } = EnsureCmd::exec(cmd_context).await?;
 
     // Dry ensure states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext {
         resources: resources_ensured_dry,
         ..
     } = EnsureCmd::exec_dry(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext {
         resources: resources_reread,
         ..

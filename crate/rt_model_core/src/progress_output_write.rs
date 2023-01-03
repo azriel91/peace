@@ -1,10 +1,9 @@
 use async_trait::async_trait;
 use peace_core::ProgressUpdate;
-use tokio::sync::mpsc::Sender;
 
 /// Transforms progress information into a suitable output format.
 ///
-/// # Examples
+/// # Use cases
 ///
 /// * A CLI implementation renders the progress as a textual progress bar.
 /// * A REST implementation serializes the values as JSON for a response body.
@@ -21,21 +20,6 @@ use tokio::sync::mpsc::Sender;
 /// [`Receiver`]: tokio::sync::mpsc::Receiver::recv
 #[async_trait(?Send)]
 pub trait ProgressOutputWrite {
-    /// Returns a new progress output channel sender.
-    ///
-    /// # Implementors
-    ///
-    /// This should create a new channel, and return the channel sender.
-    ///
-    /// The sender will be passed to each of the `EnsureOpSpec::exec` functions
-    /// so that progress information can be sent within them.
-    ///
-    /// The return value should be the only instance of the [`Sender`], as Peace
-    /// will drop the sender to signal that operation execution has ended.
-    ///
-    /// [`Sender`]: tokio::sync::mpsc::Sender
-    async fn begin(&mut self) -> Sender<ProgressUpdate>;
-
     /// Renders the progress information, and returns when no more progress
     /// information is available to write.
     ///
@@ -49,5 +33,5 @@ pub trait ProgressOutputWrite {
     ///
     /// The sender will be passed to each of the `EnsureOpSpec::exec` functions
     /// so that progress information can be sent within them.
-    async fn render(&mut self);
+    async fn render(&mut self, progress_update: ProgressUpdate);
 }

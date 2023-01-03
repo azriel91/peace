@@ -1,10 +1,10 @@
 use peace::{
-    cfg::async_trait,
+    cfg::{async_trait, ProgressUpdate},
     resources::states::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
         StatesEnsuredDry, StatesSaved,
     },
-    rt_model::OutputWrite,
+    rt_model::{OutputWrite, ProgressOutputWrite},
 };
 
 use crate::FnInvocation;
@@ -26,6 +26,11 @@ impl FnTrackerOutput {
     pub fn fn_invocations(&self) -> &[FnInvocation] {
         self.fn_invocations.as_ref()
     }
+}
+
+#[async_trait(?Send)]
+impl ProgressOutputWrite for FnTrackerOutput {
+    async fn render(&mut self, _progress_update: ProgressUpdate) {}
 }
 
 #[async_trait(?Send)]

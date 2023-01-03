@@ -25,8 +25,8 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
     let mut fn_tracker_output = FnTrackerOutput::new();
 
     // Write current states to disk.
-    let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let mut output = NoOpOutput;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext {
         resources: resources_from_discover,
         ..

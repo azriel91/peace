@@ -2,7 +2,7 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{
         state::{Nothing, Placeholder},
-        OpCheckStatus, ProgressLimit, State,
+        OpCheckStatus, OpCtx, ProgressLimit, State,
     },
     resources::{
         internal::{StateDiffsMut, StatesMut},
@@ -15,6 +15,7 @@ use peace::{
     },
     rt_model::{ItemSpecRt, ItemSpecWrapper},
 };
+use tokio::sync::mpsc;
 
 use crate::{
     VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper, VecCopyState,
@@ -164,9 +165,17 @@ async fn ensure_exec_dry() -> Result<(), VecCopyError> {
     let mut item_ensure_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
         .await
         .map_err(|(error, _)| error)?;
+    let (progress_tx, _progress_rx) = mpsc::channel(10);
+    let progress_tx = &progress_tx;
+    let op_ctx = OpCtx { progress_tx };
 
-    <dyn ItemSpecRt<_>>::ensure_exec_dry(&item_spec_wrapper, &resources, &mut item_ensure_boxed)
-        .await?;
+    <dyn ItemSpecRt<_>>::ensure_exec_dry(
+        &item_spec_wrapper,
+        op_ctx,
+        &resources,
+        &mut item_ensure_boxed,
+    )
+    .await?;
 
     let vec_b = resources.borrow::<VecB>();
     assert_eq!(&[0u8; 0], &*vec_b.0);
@@ -183,9 +192,17 @@ async fn ensure_exec() -> Result<(), VecCopyError> {
     let mut item_ensure_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
         .await
         .map_err(|(error, _)| error)?;
+    let (progress_tx, _progress_rx) = mpsc::channel(10);
+    let progress_tx = &progress_tx;
+    let op_ctx = OpCtx { progress_tx };
 
-    <dyn ItemSpecRt<_>>::ensure_exec(&item_spec_wrapper, &resources, &mut item_ensure_boxed)
-        .await?;
+    <dyn ItemSpecRt<_>>::ensure_exec(
+        &item_spec_wrapper,
+        op_ctx,
+        &resources,
+        &mut item_ensure_boxed,
+    )
+    .await?;
 
     let vec_b = resources.borrow::<VecB>();
     assert_eq!(&[0u8, 1, 2, 3, 4, 5, 6, 7], &*vec_b.0);

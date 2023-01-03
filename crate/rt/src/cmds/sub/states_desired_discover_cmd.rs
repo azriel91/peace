@@ -13,9 +13,9 @@ use peace_rt_model::{CmdContext, Error, ItemSpecGraph, StatesSerializer, Storage
 use crate::BUFFERED_FUTURES_MAX;
 
 #[derive(Debug)]
-pub struct StatesDesiredDiscoverCmd<E, O, PO>(PhantomData<(E, O, PO)>);
+pub struct StatesDesiredDiscoverCmd<E, O>(PhantomData<(E, O)>);
 
-impl<E, O, PO> StatesDesiredDiscoverCmd<E, O, PO>
+impl<E, O> StatesDesiredDiscoverCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
 {
@@ -36,9 +36,9 @@ where
     /// [`StatesDesired`]: peace_resources::StatesDesired
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, PO, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, PO, WithStatesDesired>, E> {
-        let (workspace, item_spec_graph, output, progress_output, mut resources, states_type_regs) =
+        cmd_context: CmdContext<'_, E, O, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, WithStatesDesired>, E> {
+        let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
             cmd_context.into_inner();
         let states_desired = Self::exec_internal(item_spec_graph, &mut resources).await?;
 
@@ -48,7 +48,6 @@ where
             workspace,
             item_spec_graph,
             output,
-            progress_output,
             resources,
             states_type_regs,
         ));
@@ -106,7 +105,7 @@ where
     }
 }
 
-impl<E, O, PO> Default for StatesDesiredDiscoverCmd<E, O, PO> {
+impl<E, O> Default for StatesDesiredDiscoverCmd<E, O> {
     fn default() -> Self {
         Self(PhantomData)
     }

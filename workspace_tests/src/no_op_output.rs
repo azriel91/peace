@@ -1,15 +1,20 @@
 use peace::{
-    cfg::async_trait,
+    cfg::{async_trait, ProgressUpdate},
     resources::states::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
         StatesEnsuredDry, StatesSaved,
     },
-    rt_model::OutputWrite,
+    rt_model::{OutputWrite, ProgressOutputWrite},
 };
 
 /// An `OutputWrite` implementation that does nothing.
 #[derive(Debug)]
 pub struct NoOpOutput;
+
+#[async_trait(?Send)]
+impl ProgressOutputWrite for NoOpOutput {
+    async fn render(&mut self, _progress_update: ProgressUpdate) {}
+}
 
 #[async_trait(?Send)]
 impl<E> OutputWrite<E> for NoOpOutput

@@ -9,7 +9,11 @@ pub use peace_core::{
     flow_id, item_spec_id, profile, FlowId, FlowIdInvalidFmt, ItemSpecId, ItemSpecIdInvalidFmt,
     OpCheckStatus, Profile, ProfileInvalidFmt, ProgressLimit, ProgressUpdate,
 };
-pub use tokio::sync::mpsc::Sender;
+// Keep in sync with `peace_rt_model_core`.
+pub use tokio::sync::mpsc::{
+    error::{SendError, TryRecvError, TrySendError},
+    Receiver, Sender,
+};
 
 pub use crate::{
     clean_op_spec::CleanOpSpec, ensure_op_spec::EnsureOpSpec, item_spec::ItemSpec, op_ctx::OpCtx,

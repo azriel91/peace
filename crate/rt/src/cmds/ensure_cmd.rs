@@ -10,7 +10,6 @@ use peace_rt_model::{
     outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
     CmdContext, Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt, OutputWrite,
 };
-use peace_rt_model_core::ProgressOutputWrite;
 use tokio::sync::{
     mpsc,
     mpsc::{Sender, UnboundedSender},
@@ -19,14 +18,16 @@ use tokio::sync::{
 use crate::{cmds::sub::StatesCurrentDiscoverCmd, BUFFERED_FUTURES_MAX};
 
 #[derive(Debug)]
-pub struct EnsureCmd<E, O, PO>(PhantomData<(E, O, PO)>);
+pub struct EnsureCmd<E, O>(PhantomData<(E, O)>);
 
-impl<E, O, PO> EnsureCmd<E, O, PO>
+impl<E, O> EnsureCmd<E, O>
 where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
-    PO: ProgressOutputWrite,
 {
+    /// Maximum number of progress messages to buffer.
+    const PROGRESS_COUNT_MAX: usize = 256;
+
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
     /// [`ItemSpec`].
     ///
@@ -52,13 +53,13 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec_dry(
-        cmd_context: CmdContext<'_, E, O, PO, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, PO, EnsuredDry>, E> {
-        let (workspace, item_spec_graph, output, progress_output, resources, states_type_regs) =
+        cmd_context: CmdContext<'_, E, O, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, EnsuredDry>, E> {
+        let (workspace, item_spec_graph, output, resources, states_type_regs) =
             cmd_context.into_inner();
         let resources_result = Self::exec_internal::<EnsuredDry, states::ts::EnsuredDry>(
             item_spec_graph,
-            progress_output,
+            output,
             resources,
             true,
         )
@@ -74,7 +75,6 @@ where
                     workspace,
                     item_spec_graph,
                     output,
-                    progress_output,
                     resources,
                     states_type_regs,
                 ));
@@ -114,15 +114,15 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, PO, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, PO, Ensured>, E> {
-        let (workspace, item_spec_graph, output, progress_output, resources, states_type_regs) =
+        cmd_context: CmdContext<'_, E, O, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, Ensured>, E> {
+        let (workspace, item_spec_graph, output, resources, states_type_regs) =
             cmd_context.into_inner();
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
         let resources_result = Self::exec_internal::<Ensured, states::ts::Ensured>(
             item_spec_graph,
-            progress_output,
+            output,
             resources,
             false,
         )
@@ -138,7 +138,6 @@ where
                     workspace,
                     item_spec_graph,
                     output,
-                    progress_output,
                     resources,
                     states_type_regs,
                 ));
@@ -161,7 +160,7 @@ where
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     async fn exec_internal<ResourcesTs, StatesTs>(
         item_spec_graph: &ItemSpecGraph<E>,
-        progress_output: &mut PO,
+        progress_output: &mut O,
         mut resources: Resources<SetUp>,
         dry_run: bool,
     ) -> Result<Resources<ResourcesTs>, E>
@@ -169,12 +168,12 @@ where
         for<'resources> States<StatesTs>: From<(StatesCurrent, &'resources Resources<SetUp>)>,
         Resources<ResourcesTs>: From<(Resources<SetUp>, States<StatesTs>)>,
     {
-        let progress_tx = progress_output.begin().await;
-        let progress_tx = &progress_tx;
+        let (progress_tx, mut progress_rx) = mpsc::channel(Self::PROGRESS_COUNT_MAX);
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemEnsureOutcome<E>>();
 
         let resources_ref = &resources;
         let execution_task = async move {
+            let progress_tx = &progress_tx;
             let outcomes_tx = &outcomes_tx;
             let (Ok(()) | Err(())) = item_spec_graph
                 .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
@@ -190,7 +189,11 @@ where
                 .map_err(|_vec_units: Vec<()>| ());
         };
 
-        let progress_render_task = progress_output.render();
+        let progress_render_task = async move {
+            while let Some(progress_update) = progress_rx.recv().await {
+                progress_output.render(progress_update).await
+            }
+        };
 
         let _outcomes_rx_task = async move {
             while let Some(outcome) = outcomes_rx.recv().await {
@@ -216,7 +219,7 @@ where
         futures::join!(execution_task, progress_render_task);
 
         let states_current =
-            StatesCurrentDiscoverCmd::<E, O, PO>::exec_internal(item_spec_graph, &mut resources)
+            StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
                 .await?;
 
         let states_ensured = States::<StatesTs>::from((states_current, &resources));

@@ -7,7 +7,11 @@
 // Re-exports
 pub use async_trait::async_trait;
 pub use indicatif;
-pub use tokio::sync::mpsc::Sender;
+// Keep in sync with `peace_cfg`.
+pub use tokio::sync::mpsc::{
+    error::{SendError, TryRecvError, TrySendError},
+    Receiver, Sender,
+};
 
 pub use crate::{
     output_format::OutputFormat, output_format_parse_error::OutputFormatParseError,

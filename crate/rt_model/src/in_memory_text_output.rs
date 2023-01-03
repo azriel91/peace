@@ -1,8 +1,9 @@
+use peace_cfg::ProgressUpdate;
 use peace_resources::states::{
     StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured, StatesEnsuredDry,
     StatesSaved,
 };
-use peace_rt_model_core::{async_trait, OutputWrite};
+use peace_rt_model_core::{async_trait, OutputWrite, ProgressOutputWrite};
 
 use crate::Error;
 
@@ -25,6 +26,11 @@ impl InMemoryTextOutput {
     pub fn into_inner(self) -> String {
         self.buffer
     }
+}
+
+#[async_trait(?Send)]
+impl ProgressOutputWrite for InMemoryTextOutput {
+    async fn render(&mut self, _progress_update: ProgressUpdate) {}
 }
 
 /// Simple serialization implementations for now.

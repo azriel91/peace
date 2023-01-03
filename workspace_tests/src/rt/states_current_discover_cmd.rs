@@ -24,8 +24,8 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let mut output = NoOpOutput;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
 
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
@@ -66,14 +66,14 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let mut output = NoOpOutput;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
 
     // Writes to states_saved_file.yaml
     StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     // Execute again to ensure StatesSaved is included
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesSaved>();

@@ -26,14 +26,14 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
+    let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
     let states_saved = resources.borrow::<StatesSaved>();

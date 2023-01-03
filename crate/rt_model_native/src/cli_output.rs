@@ -1,5 +1,5 @@
 use futures::{stream, StreamExt, TryStreamExt};
-use peace_core::ItemSpecId;
+use peace_core::{ItemSpecId, ProgressUpdate};
 use peace_resources::{
     states::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
@@ -7,7 +7,7 @@ use peace_resources::{
     },
     type_reg::untagged::BoxDtDisplay,
 };
-use peace_rt_model_core::{async_trait, OutputFormat, OutputWrite};
+use peace_rt_model_core::{async_trait, OutputFormat, OutputWrite, ProgressOutputWrite};
 use serde::Serialize;
 use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
 
@@ -198,6 +198,21 @@ impl Default for CliOutput<Stdout> {
             #[cfg(feature = "output_colorized")]
             colorized: false,
         }
+    }
+}
+
+#[async_trait(?Send)]
+impl<W> ProgressOutputWrite for CliOutput<W>
+where
+    W: AsyncWrite + std::marker::Unpin,
+{
+    async fn render(&mut self, progress_update: ProgressUpdate) {
+        let _ = self
+            .writer
+            .write(format!("{progress_update:?}").as_bytes())
+            .await;
+
+        let _ = self.writer.flush().await;
     }
 }
 

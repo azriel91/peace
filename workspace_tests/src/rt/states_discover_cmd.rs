@@ -28,8 +28,8 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let mut output = NoOpOutput;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
 
     let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
 
