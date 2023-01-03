@@ -18,7 +18,7 @@ test = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-peace = { path = "../..", default_features = false }
+peace = { path = "../..", default-features = false }
 peace_item_specs = { path = "../../item_specs", features = ["file_download", "tar_x"] }
 semver = "1.0.16"
 serde = { version = "1.0.152", features = ["derive"] }
