@@ -37,21 +37,25 @@ use crate::{
 /// # Type Parameters
 ///
 /// * `E`: Consumer provided error type.
-/// * `O`: `OutputWrite` to return values / errors to.
+/// * `O`: [`OutputWrite`] to return values / errors to.
+/// * `PO`: [`ProgressOutputWrite`] to write progress information to.
 /// * `WorkspaceParamsK`: `WorkspaceParams` map `K` type parameter.
 /// * `ProfileParamsK`: `ProfileParams` map `K` type parameter.
 /// * `FlowParamsK`: `FlowParams` map `K` type parameter.
 ///
 /// [`Profile`]: peace_cfg::Profile
-/// [`WorkspaceDir`]: peace::resources::paths::WorkspaceDir
-/// [`PeaceDir`]: peace::resources::paths::PeaceDir
-/// [`ProfileDir`]: peace::resources::paths::ProfileDir
-/// [`ProfileHistoryDir`]: peace::resources::paths::ProfileHistoryDir
+/// [`WorkspaceDir`]: peace_resources::paths::WorkspaceDir
+/// [`PeaceDir`]: peace_resources::paths::PeaceDir
+/// [`ProfileDir`]: peace_resources::paths::ProfileDir
+/// [`ProfileHistoryDir`]: peace_resources::paths::ProfileHistoryDir
+/// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+/// [`ProgressOutputWrite`]: peace_rt_model_core::ProgressOutputWrite
 #[derive(Debug)]
 pub struct CmdContextBuilder<
     'ctx,
     E,
     O,
+    PO,
     WorkspaceParamsKMaybe = KeyUnknown,
     ProfileParamsKMaybe = KeyUnknown,
     FlowParamsKMaybe = KeyUnknown,
@@ -64,8 +68,14 @@ pub struct CmdContextBuilder<
     workspace: &'ctx Workspace,
     /// Graph of item specs.
     item_spec_graph: &'ctx ItemSpecGraph<E>,
-    /// `OutputWrite` to return values / errors to.
+    /// [`OutputWrite`] to return values / errors to.
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     output: &'ctx mut O,
+    /// [`ProgressOutputWrite`] to write progress information to.
+    ///
+    /// [`ProgressOutputWrite`]: peace_rt_model_core::ProgressOutputWrite
+    progress_output: &'ctx mut PO,
     /// Workspace parameters.
     workspace_params: Option<WorkspaceParams<WorkspaceParamsKMaybe::Key>>,
     /// Type registry for `WorkspaceParams` deserialization.
@@ -101,7 +111,7 @@ where
     type Key = K;
 }
 
-impl<'ctx, E, O> CmdContextBuilder<'ctx, E, O, KeyUnknown, KeyUnknown, KeyUnknown>
+impl<'ctx, E, O, PO> CmdContextBuilder<'ctx, E, O, PO, KeyUnknown, KeyUnknown, KeyUnknown>
 where
     E: std::error::Error + From<Error>,
 {
@@ -112,17 +122,22 @@ where
     /// * `workspace`: Defines how to discover the workspace.
     /// * `item_spec_graph`: Logic to run in the command.
     /// * `output`: [`OutputWrite`] to return values or errors.
+    /// * `progress_output`: [`ProgressOutputWrite`] to write progress
+    ///   information to.
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    /// [`ProgressOutputWrite`]: peace_rt_model_core::ProgressOutputWrite
     pub fn new(
         workspace: &'ctx Workspace,
         item_spec_graph: &'ctx ItemSpecGraph<E>,
         output: &'ctx mut O,
+        progress_output: &'ctx mut PO,
     ) -> Self {
         Self {
             workspace,
             item_spec_graph,
             output,
+            progress_output,
             workspace_params: None,
             workspace_params_type_reg: TypeReg::new(),
             profile_params: None,
@@ -133,8 +148,8 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
-    CmdContextBuilder<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<'ctx, E, O, PO, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
+    CmdContextBuilder<'ctx, E, O, PO, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
 where
     E: std::error::Error + From<Error>,
     WorkspaceParamsKMaybe: KeyMaybe,
@@ -148,7 +163,7 @@ where
     /// * `workspace_params`: Initialization parameters for the workspace.
     /// * `profile_params`: Initialization parameters for the profile.
     /// * `flow_params`: Initialization parameters for the flow.
-    pub async fn build(mut self) -> Result<CmdContext<'ctx, E, O, SetUp>, E> {
+    pub async fn build(mut self) -> Result<CmdContext<'ctx, E, O, PO, SetUp>, E> {
         let dirs = self.workspace.dirs();
         let storage = self.workspace.storage();
         let workspace_params_file = WorkspaceParamsFile::from(dirs.peace_dir());
@@ -194,6 +209,7 @@ where
             workspace,
             item_spec_graph,
             output,
+            progress_output,
             workspace_params: _,
             workspace_params_type_reg: _,
             profile_params: _,
@@ -227,6 +243,7 @@ where
             workspace,
             item_spec_graph,
             output,
+            progress_output,
             resources,
             states_type_regs,
             marker: PhantomData,
@@ -371,8 +388,8 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
-    CmdContextBuilder<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<'ctx, E, O, PO, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
+    CmdContextBuilder<'ctx, E, O, PO, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
 where
     E: std::error::Error,
     WorkspaceParamsKMaybe: KeyMaybe,
@@ -413,18 +430,26 @@ where
 /// This is boxed since [TAIT] is not yet available.
 ///
 /// [TAIT]: https://rust-lang.github.io/impl-trait-initiative/explainer/tait.html
-pub type CmdContextFuture<'ctx, E, O> =
-    Pin<Box<dyn Future<Output = Result<CmdContext<'ctx, E, O, SetUp>, E>> + 'ctx>>;
+pub type CmdContextFuture<'ctx, E, O, PO> =
+    Pin<Box<dyn Future<Output = Result<CmdContext<'ctx, E, O, PO, SetUp>, E>> + 'ctx>>;
 
-impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe> IntoFuture
-    for CmdContextBuilder<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<'ctx, E, O, PO, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe> IntoFuture
+    for CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        PO,
+        WorkspaceParamsKMaybe,
+        ProfileParamsKMaybe,
+        FlowParamsKMaybe,
+    >
 where
     E: std::error::Error + From<Error>,
     WorkspaceParamsKMaybe: KeyMaybe + 'ctx,
     ProfileParamsKMaybe: KeyMaybe + 'ctx,
     FlowParamsKMaybe: KeyMaybe + 'ctx,
 {
-    type IntoFuture = CmdContextFuture<'ctx, E, O>;
+    type IntoFuture = CmdContextFuture<'ctx, E, O, PO>;
     type Output = <Self::IntoFuture as Future>::Output;
 
     fn into_future(self) -> Self::IntoFuture {
@@ -434,8 +459,8 @@ where
 
 // Crazy stuff for ergonomic API usage
 
-impl<'ctx, E, O, ProfileParamsKMaybe, FlowParamsKMaybe>
-    CmdContextBuilder<'ctx, E, O, KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<'ctx, E, O, PO, ProfileParamsKMaybe, FlowParamsKMaybe>
+    CmdContextBuilder<'ctx, E, O, PO, KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe>
 where
     E: std::error::Error + From<Error>,
     ProfileParamsKMaybe: KeyMaybe,
@@ -455,6 +480,7 @@ where
         'ctx,
         E,
         O,
+        PO,
         KeyKnown<WorkspaceParamsK>,
         ProfileParamsKMaybe,
         FlowParamsKMaybe,
@@ -468,6 +494,7 @@ where
             workspace,
             item_spec_graph,
             output,
+            progress_output,
             workspace_params: _,
             workspace_params_type_reg: _,
             profile_params,
@@ -487,6 +514,7 @@ where
             workspace,
             item_spec_graph,
             output,
+            progress_output,
             workspace_params: Some(workspace_params),
             workspace_params_type_reg,
             profile_params,
@@ -497,8 +525,16 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
-    CmdContextBuilder<'ctx, E, O, KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<'ctx, E, O, PO, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        PO,
+        KeyKnown<WorkspaceParamsK>,
+        ProfileParamsKMaybe,
+        FlowParamsKMaybe,
+    >
 where
     E: std::error::Error + From<Error>,
     WorkspaceParamsK:
@@ -520,6 +556,7 @@ where
         'ctx,
         E,
         O,
+        PO,
         KeyKnown<WorkspaceParamsK>,
         ProfileParamsKMaybe,
         FlowParamsKMaybe,
@@ -539,8 +576,8 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkflowParamsKMaybe, FlowParamsKMaybe>
-    CmdContextBuilder<'ctx, E, O, WorkflowParamsKMaybe, KeyUnknown, FlowParamsKMaybe>
+impl<'ctx, E, O, PO, WorkflowParamsKMaybe, FlowParamsKMaybe>
+    CmdContextBuilder<'ctx, E, O, PO, WorkflowParamsKMaybe, KeyUnknown, FlowParamsKMaybe>
 where
     E: std::error::Error + From<Error>,
     WorkflowParamsKMaybe: KeyMaybe,
@@ -560,6 +597,7 @@ where
         'ctx,
         E,
         O,
+        PO,
         WorkflowParamsKMaybe,
         KeyKnown<ProfileParamsK>,
         FlowParamsKMaybe,
@@ -573,6 +611,7 @@ where
             workspace,
             item_spec_graph,
             output,
+            progress_output,
             workspace_params,
             workspace_params_type_reg,
             profile_params: _,
@@ -592,6 +631,7 @@ where
             workspace,
             item_spec_graph,
             output,
+            progress_output,
             workspace_params,
             workspace_params_type_reg,
             profile_params: Some(profile_params),
@@ -602,8 +642,16 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkflowParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
-    CmdContextBuilder<'ctx, E, O, WorkflowParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>
+impl<'ctx, E, O, PO, WorkflowParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+    CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        PO,
+        WorkflowParamsKMaybe,
+        KeyKnown<ProfileParamsK>,
+        FlowParamsKMaybe,
+    >
 where
     E: std::error::Error + From<Error>,
     WorkflowParamsKMaybe: KeyMaybe,
@@ -625,6 +673,7 @@ where
         'ctx,
         E,
         O,
+        PO,
         WorkflowParamsKMaybe,
         KeyKnown<ProfileParamsK>,
         FlowParamsKMaybe,
@@ -644,8 +693,8 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkflowParamsKMaybe, ProfileParamsKMaybe>
-    CmdContextBuilder<'ctx, E, O, WorkflowParamsKMaybe, ProfileParamsKMaybe, KeyUnknown>
+impl<'ctx, E, O, PO, WorkflowParamsKMaybe, ProfileParamsKMaybe>
+    CmdContextBuilder<'ctx, E, O, PO, WorkflowParamsKMaybe, ProfileParamsKMaybe, KeyUnknown>
 where
     E: std::error::Error + From<Error>,
     WorkflowParamsKMaybe: KeyMaybe,
@@ -665,6 +714,7 @@ where
         'ctx,
         E,
         O,
+        PO,
         WorkflowParamsKMaybe,
         ProfileParamsKMaybe,
         KeyKnown<FlowParamsK>,
@@ -678,6 +728,7 @@ where
             workspace,
             item_spec_graph,
             output,
+            progress_output,
             workspace_params,
             workspace_params_type_reg,
             profile_params,
@@ -697,6 +748,7 @@ where
             workspace,
             item_spec_graph,
             output,
+            progress_output,
             workspace_params,
             workspace_params_type_reg,
             profile_params,
@@ -707,8 +759,16 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkflowParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
-    CmdContextBuilder<'ctx, E, O, WorkflowParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>
+impl<'ctx, E, O, PO, WorkflowParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+    CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        PO,
+        WorkflowParamsKMaybe,
+        ProfileParamsKMaybe,
+        KeyKnown<FlowParamsK>,
+    >
 where
     E: std::error::Error + From<Error>,
     WorkflowParamsKMaybe: KeyMaybe,
@@ -729,6 +789,7 @@ where
         'ctx,
         E,
         O,
+        PO,
         WorkflowParamsKMaybe,
         ProfileParamsKMaybe,
         KeyKnown<FlowParamsK>,

@@ -14,7 +14,7 @@ use peace_resources::states::{
 ///
 /// # Design
 ///
-/// The write functions currently take `&mut self`. From an API consumer
+/// The write functions currently take `&mut self`. From an API implementor
 /// perspective, this should not be difficult to use as the return value / error
 /// value is intended to be returned at the end of a command.
 ///

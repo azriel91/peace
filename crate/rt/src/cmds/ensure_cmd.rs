@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace_cfg::ItemSpecId;
+use peace_cfg::{ItemSpecId, OpCtx, ProgressUpdate};
 use peace_resources::{
     resources::ts::{Ensured, EnsuredDry, SetUp},
     states::{self, States, StatesCurrent, StatesEnsured, StatesEnsuredDry},
@@ -10,17 +10,22 @@ use peace_rt_model::{
     outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
     CmdContext, Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt, OutputWrite,
 };
-use tokio::sync::{mpsc, mpsc::UnboundedSender};
+use peace_rt_model_core::ProgressOutputWrite;
+use tokio::sync::{
+    mpsc,
+    mpsc::{Sender, UnboundedSender},
+};
 
 use crate::{cmds::sub::StatesCurrentDiscoverCmd, BUFFERED_FUTURES_MAX};
 
 #[derive(Debug)]
-pub struct EnsureCmd<E, O>(PhantomData<(E, O)>);
+pub struct EnsureCmd<E, O, PO>(PhantomData<(E, O, PO)>);
 
-impl<E, O> EnsureCmd<E, O>
+impl<E, O, PO> EnsureCmd<E, O, PO>
 where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
+    PO: ProgressOutputWrite,
 {
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
     /// [`ItemSpec`].
@@ -47,12 +52,13 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec_dry(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, EnsuredDry>, E> {
-        let (workspace, item_spec_graph, output, resources, states_type_regs) =
+        cmd_context: CmdContext<'_, E, O, PO, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, PO, EnsuredDry>, E> {
+        let (workspace, item_spec_graph, output, progress_output, resources, states_type_regs) =
             cmd_context.into_inner();
         let resources_result = Self::exec_internal::<EnsuredDry, states::ts::EnsuredDry>(
             item_spec_graph,
+            progress_output,
             resources,
             true,
         )
@@ -68,6 +74,7 @@ where
                     workspace,
                     item_spec_graph,
                     output,
+                    progress_output,
                     resources,
                     states_type_regs,
                 ));
@@ -107,15 +114,19 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, Ensured>, E> {
-        let (workspace, item_spec_graph, output, resources, states_type_regs) =
+        cmd_context: CmdContext<'_, E, O, PO, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, PO, Ensured>, E> {
+        let (workspace, item_spec_graph, output, progress_output, resources, states_type_regs) =
             cmd_context.into_inner();
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
-        let resources_result =
-            Self::exec_internal::<Ensured, states::ts::Ensured>(item_spec_graph, resources, false)
-                .await;
+        let resources_result = Self::exec_internal::<Ensured, states::ts::Ensured>(
+            item_spec_graph,
+            progress_output,
+            resources,
+            false,
+        )
+        .await;
 
         match resources_result {
             Ok(resources) => {
@@ -127,6 +138,7 @@ where
                     workspace,
                     item_spec_graph,
                     output,
+                    progress_output,
                     resources,
                     states_type_regs,
                 ));
@@ -149,6 +161,7 @@ where
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     async fn exec_internal<ResourcesTs, StatesTs>(
         item_spec_graph: &ItemSpecGraph<E>,
+        progress_output: &mut PO,
         mut resources: Resources<SetUp>,
         dry_run: bool,
     ) -> Result<Resources<ResourcesTs>, E>
@@ -156,6 +169,8 @@ where
         for<'resources> States<StatesTs>: From<(StatesCurrent, &'resources Resources<SetUp>)>,
         Resources<ResourcesTs>: From<(Resources<SetUp>, States<StatesTs>)>,
     {
+        let progress_tx = progress_output.begin().await;
+        let progress_tx = &progress_tx;
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemEnsureOutcome<E>>();
 
         let resources_ref = &resources;
@@ -163,11 +178,19 @@ where
             let outcomes_tx = &outcomes_tx;
             let (Ok(()) | Err(())) = item_spec_graph
                 .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
-                    Self::item_ensure_exec(resources_ref, outcomes_tx, item_spec, dry_run)
+                    Self::item_ensure_exec(
+                        resources_ref,
+                        progress_tx,
+                        outcomes_tx,
+                        item_spec,
+                        dry_run,
+                    )
                 })
                 .await
                 .map_err(|_vec_units: Vec<()>| ());
         };
+
+        let progress_render_task = progress_output.render();
 
         let _outcomes_rx_task = async move {
             while let Some(outcome) = outcomes_rx.recv().await {
@@ -190,10 +213,10 @@ where
             }
         };
 
-        futures::join!(execution_task);
+        futures::join!(execution_task, progress_render_task);
 
         let states_current =
-            StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
+            StatesCurrentDiscoverCmd::<E, O, PO>::exec_internal(item_spec_graph, &mut resources)
                 .await?;
 
         let states_ensured = States::<StatesTs>::from((states_current, &resources));
@@ -217,11 +240,12 @@ where
     ///     f: F,
     /// ) -> bool
     /// where
-    ///     F: (Fn(&dyn ItemSpecRt<E>, &Resources<SetUp>, &mut ItemEnsureBoxed) -> Fut) + Copy,
+    ///     F: (Fn(&dyn ItemSpecRt<E>, op_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemEnsureBoxed) -> Fut) + Copy,
     ///     Fut: Future<Output = Result<(), E>>,
     /// ```
     async fn item_ensure_exec(
         resources: &Resources<SetUp>,
+        progress_tx: &Sender<ProgressUpdate>,
         outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
         item_spec: &ItemSpecBoxed<E>,
         dry_run: bool,
@@ -233,7 +257,8 @@ where
         };
         match item_spec.ensure_prepare(resources).await {
             Ok(mut item_ensure) => {
-                match f(&**item_spec, resources, &mut item_ensure).await {
+                let op_ctx = OpCtx { progress_tx };
+                match f(&**item_spec, op_ctx, resources, &mut item_ensure).await {
                     Ok(()) => {
                         // ensure succeeded
                         outcomes_tx

@@ -11,9 +11,9 @@ use crate::cmds::sub::StatesSavedReadCmd;
 
 /// Displays [`StatesCurrent`]s from storage.
 #[derive(Debug)]
-pub struct StatesSavedDisplayCmd<E, O>(PhantomData<(E, O)>);
+pub struct StatesSavedDisplayCmd<E, O, PO>(PhantomData<(E, O, PO)>);
 
-impl<E, O> StatesSavedDisplayCmd<E, O>
+impl<E, O, PO> StatesSavedDisplayCmd<E, O, PO>
 where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
@@ -26,16 +26,17 @@ where
     /// [`StatesCurrentDiscoverCmd`]: crate::StatesCurrentDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesSaved>, E> {
+        mut cmd_context: CmdContext<'_, E, O, PO, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, PO, WithStatesSaved>, E> {
         let CmdContext {
             output,
+            progress_output: _,
             resources,
             states_type_regs,
             ..
         } = &mut cmd_context;
 
-        let states_saved_result = StatesSavedReadCmd::<E, O>::exec_internal(
+        let states_saved_result = StatesSavedReadCmd::<E, O, PO>::exec_internal(
             resources,
             states_type_regs.states_current_type_reg(),
         )
@@ -58,7 +59,7 @@ where
     }
 }
 
-impl<E, O> Default for StatesSavedDisplayCmd<E, O> {
+impl<E, O, PO> Default for StatesSavedDisplayCmd<E, O, PO> {
     fn default() -> Self {
         Self(PhantomData)
     }

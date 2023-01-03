@@ -6,7 +6,7 @@ use std::{
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{
-    async_trait, state::Placeholder, ItemSpec, ItemSpecId, OpCheckStatus, State, TryFnSpec,
+    async_trait, state::Placeholder, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, State, TryFnSpec,
 };
 use peace_data::Data;
 use peace_resources::{
@@ -258,6 +258,7 @@ where
 
     async fn ensure_op_exec_dry<ResourcesTs>(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
         state_current: &State<StateLogical, StatePhysical>,
         state_desired: &State<StateLogical, Placeholder>,
@@ -265,6 +266,7 @@ where
     ) -> Result<StatePhysical, E> {
         let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
         <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec_dry(
+            op_ctx,
             data,
             state_current,
             &state_desired.logical,
@@ -276,6 +278,7 @@ where
 
     async fn ensure_op_exec<ResourcesTs>(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
         state_current: &State<StateLogical, StatePhysical>,
         state_desired: &State<StateLogical, Placeholder>,
@@ -283,6 +286,7 @@ where
     ) -> Result<StatePhysical, E> {
         let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
         <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec(
+            op_ctx,
             data,
             state_current,
             &state_desired.logical,
@@ -859,6 +863,7 @@ where
 
     async fn ensure_exec_dry(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
         item_ensure_boxed: &mut ItemEnsureBoxed,
     ) -> Result<(), E> {
@@ -880,7 +885,7 @@ where
         match op_check_status {
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
                 let state_physical = self
-                    .ensure_op_exec_dry(resources, state_current, state_desired, state_diff)
+                    .ensure_op_exec_dry(op_ctx, resources, state_current, state_desired, state_diff)
                     .await?;
 
                 *state_ensured = Some(State::new(state_desired.logical.clone(), state_physical));
@@ -893,6 +898,7 @@ where
 
     async fn ensure_exec(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
         item_ensure_boxed: &mut ItemEnsureBoxed,
     ) -> Result<(), E> {
@@ -914,7 +920,7 @@ where
         match op_check_status {
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
                 let state_physical = self
-                    .ensure_op_exec(resources, state_current, state_desired, state_diff)
+                    .ensure_op_exec(op_ctx, resources, state_current, state_desired, state_diff)
                     .await?;
 
                 *state_ensured = Some(State::new(state_desired.logical.clone(), state_physical));

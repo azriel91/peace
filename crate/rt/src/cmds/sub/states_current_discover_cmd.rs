@@ -13,9 +13,9 @@ use peace_rt_model::{CmdContext, Error, ItemSpecGraph, Storage};
 use crate::BUFFERED_FUTURES_MAX;
 
 #[derive(Debug)]
-pub struct StatesCurrentDiscoverCmd<E, O>(PhantomData<(E, O)>);
+pub struct StatesCurrentDiscoverCmd<E, O, PO>(PhantomData<(E, O, PO)>);
 
-impl<E, O> StatesCurrentDiscoverCmd<E, O>
+impl<E, O, PO> StatesCurrentDiscoverCmd<E, O, PO>
 where
     E: std::error::Error + From<Error> + Send,
 {
@@ -35,9 +35,9 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesCurrent>, E> {
-        let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
+        cmd_context: CmdContext<'_, E, O, PO, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, PO, WithStatesCurrent>, E> {
+        let (workspace, item_spec_graph, output, progress_output, mut resources, states_type_regs) =
             cmd_context.into_inner();
         let states = Self::exec_internal(item_spec_graph, &mut resources).await?;
 
@@ -47,6 +47,7 @@ where
             workspace,
             item_spec_graph,
             output,
+            progress_output,
             resources,
             states_type_regs,
         ));
@@ -174,7 +175,7 @@ where
     }
 }
 
-impl<E, O> Default for StatesCurrentDiscoverCmd<E, O> {
+impl<E, O, PO> Default for StatesCurrentDiscoverCmd<E, O, PO> {
     fn default() -> Self {
         Self(PhantomData)
     }

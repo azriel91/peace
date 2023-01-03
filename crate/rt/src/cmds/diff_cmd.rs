@@ -12,9 +12,9 @@ use peace_rt_model::{CmdContext, Error, ItemSpecGraph, OutputWrite, StatesTypeRe
 use crate::cmds::sub::{StatesDesiredReadCmd, StatesSavedReadCmd};
 
 #[derive(Debug)]
-pub struct DiffCmd<E, O>(PhantomData<(E, O)>);
+pub struct DiffCmd<E, O, PO>(PhantomData<(E, O, PO)>);
 
-impl<E, O> DiffCmd<E, O>
+impl<E, O, PO> DiffCmd<E, O, PO>
 where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
@@ -31,12 +31,13 @@ where
     /// [`StateDiffFnSpec`]: peace_cfg::ItemSpec::StateDiffFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesSavedDiffs>, E> {
+        cmd_context: CmdContext<'_, E, O, PO, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, PO, WithStatesSavedDiffs>, E> {
         let CmdContext {
             workspace,
             item_spec_graph,
             output,
+            progress_output,
             resources,
             states_type_regs,
             ..
@@ -57,6 +58,7 @@ where
                     workspace,
                     item_spec_graph,
                     output,
+                    progress_output,
                     resources,
                     states_type_regs,
                 ));
@@ -78,12 +80,12 @@ where
         mut resources: Resources<SetUp>,
         states_type_regs: &StatesTypeRegs,
     ) -> Result<Resources<WithStatesSavedDiffs>, E> {
-        let states_saved = StatesSavedReadCmd::<E, O>::exec_internal(
+        let states_saved = StatesSavedReadCmd::<E, O, PO>::exec_internal(
             &mut resources,
             states_type_regs.states_current_type_reg(),
         )
         .await?;
-        let states_desired = StatesDesiredReadCmd::<E, O>::exec_internal(
+        let states_desired = StatesDesiredReadCmd::<E, O, PO>::exec_internal(
             &mut resources,
             states_type_regs.states_desired_type_reg(),
         )

@@ -16,9 +16,9 @@ use peace_rt_model::{CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph, Out
 use crate::cmds::sub::StatesCurrentDiscoverCmd;
 
 #[derive(Debug)]
-pub struct CleanCmd<E, O>(PhantomData<(E, O)>);
+pub struct CleanCmd<E, O, PO>(PhantomData<(E, O, PO)>);
 
-impl<E, O> CleanCmd<E, O>
+impl<E, O, PO> CleanCmd<E, O, PO>
 where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
@@ -48,9 +48,9 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
     pub async fn exec_dry(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, CleanedDry>, E> {
-        let (workspace, item_spec_graph, output, resources, states_type_regs) =
+        cmd_context: CmdContext<'_, E, O, PO, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, PO, CleanedDry>, E> {
+        let (workspace, item_spec_graph, output, progress_output, resources, states_type_regs) =
             cmd_context.into_inner();
         let resources_result = Self::exec_dry_internal(item_spec_graph, resources).await;
 
@@ -64,6 +64,7 @@ where
                     workspace,
                     item_spec_graph,
                     output,
+                    progress_output,
                     resources,
                     states_type_regs,
                 ));
@@ -92,7 +93,7 @@ where
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
         let states_current =
-            StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
+            StatesCurrentDiscoverCmd::<E, O, PO>::exec_internal(item_spec_graph, &mut resources)
                 .await?;
         let resources = Resources::<WithStatesCurrent>::from((resources, states_current));
         let op_check_statuses = Self::clean_op_spec_check(item_spec_graph, &resources).await?;
@@ -100,7 +101,7 @@ where
 
         // TODO: This fetches the real state, whereas for a dry run, it would be useful
         // to show the imagined altered state.
-        let states_current = StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_clean_dry(
+        let states_current = StatesCurrentDiscoverCmd::<E, O, PO>::exec_internal_for_clean_dry(
             item_spec_graph,
             &resources,
         )
@@ -150,9 +151,9 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, Cleaned>, E> {
-        let (workspace, item_spec_graph, output, resources, states_type_regs) =
+        cmd_context: CmdContext<'_, E, O, PO, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, PO, Cleaned>, E> {
+        let (workspace, item_spec_graph, output, progress_output, resources, states_type_regs) =
             cmd_context.into_inner();
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
@@ -168,6 +169,7 @@ where
                     workspace,
                     item_spec_graph,
                     output,
+                    progress_output,
                     resources,
                     states_type_regs,
                 ));
@@ -195,13 +197,13 @@ where
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
         let states =
-            StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
+            StatesCurrentDiscoverCmd::<E, O, PO>::exec_internal(item_spec_graph, &mut resources)
                 .await?;
         let mut resources = Resources::<WithStatesCurrent>::from((resources, states));
         let op_check_statuses = Self::clean_op_spec_check(item_spec_graph, &resources).await?;
         Self::clean_op_spec_exec(item_spec_graph, &resources, &op_check_statuses).await?;
 
-        let states_current = StatesCurrentDiscoverCmd::<E, O>::exec_internal_for_clean(
+        let states_current = StatesCurrentDiscoverCmd::<E, O, PO>::exec_internal_for_clean(
             item_spec_graph,
             &mut resources,
         )

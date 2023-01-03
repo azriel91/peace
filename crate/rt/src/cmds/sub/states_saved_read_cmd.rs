@@ -12,9 +12,9 @@ use peace_rt_model::{CmdContext, Error, StatesSerializer, Storage};
 
 /// Reads [`StatesSaved`]s from storage.
 #[derive(Debug)]
-pub struct StatesSavedReadCmd<E, O>(PhantomData<(E, O)>);
+pub struct StatesSavedReadCmd<E, O, PO>(PhantomData<(E, O, PO)>);
 
-impl<E, O> StatesSavedReadCmd<E, O>
+impl<E, O, PO> StatesSavedReadCmd<E, O, PO>
 where
     E: std::error::Error + From<Error> + Send,
 {
@@ -26,8 +26,8 @@ where
     /// [`StatesCurrentDiscoverCmd`]: crate::StatesCurrentDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesSaved>, E> {
+        mut cmd_context: CmdContext<'_, E, O, PO, SetUp>,
+    ) -> Result<CmdContext<'_, E, O, PO, WithStatesSaved>, E> {
         let CmdContext {
             resources,
             states_type_regs,
@@ -71,7 +71,7 @@ where
     }
 }
 
-impl<E, O> Default for StatesSavedReadCmd<E, O> {
+impl<E, O, PO> Default for StatesSavedReadCmd<E, O, PO> {
     fn default() -> Self {
         Self(PhantomData)
     }
