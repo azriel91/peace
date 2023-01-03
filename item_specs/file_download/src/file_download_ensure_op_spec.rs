@@ -6,7 +6,7 @@ use std::path::Path;
 use bytes::Bytes;
 #[cfg(not(target_arch = "wasm32"))]
 use futures::{Stream, StreamExt, TryStreamExt};
-use peace::cfg::state::Nothing;
+use peace::cfg::{state::Nothing, OpCtx};
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::io::AsyncWriteExt;
 #[cfg(not(target_arch = "wasm32"))]
@@ -16,7 +16,7 @@ use tokio::{fs::File, io::BufWriter};
 use peace::rt_model::Storage;
 
 use peace::{
-    cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, State},
+    cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, ProgressUpdate, Sender, State},
     diff::Tracked,
 };
 
@@ -33,6 +33,7 @@ where
     Id: Send + Sync + 'static,
 {
     async fn file_download(
+        op_ctx: OpCtx<'_>,
         file_download_data: FileDownloadData<'_, Id>,
     ) -> Result<(), FileDownloadError> {
         let client = file_download_data.client();
@@ -51,7 +52,7 @@ where
 
         #[cfg(not(target_arch = "wasm32"))]
         {
-            Self::stream_write(params, response.bytes_stream()).await?;
+            Self::stream_write(op_ctx.progress_tx, params, response.bytes_stream()).await?;
         }
 
         // reqwest in wasm doesn't support streams
@@ -59,6 +60,7 @@ where
         #[cfg(target_arch = "wasm32")]
         {
             Self::stream_write(
+                op_ctx.progress_tx,
                 dest,
                 file_download_data.storage(),
                 params.storage_form(),
@@ -73,6 +75,7 @@ where
     /// Streams the content to disk.
     #[cfg(not(target_arch = "wasm32"))]
     async fn stream_write(
+        progress_tx: &Sender<ProgressUpdate>,
         file_download_params: &FileDownloadParams<Id>,
         byte_stream: impl Stream<Item = reqwest::Result<Bytes>>,
     ) -> Result<(), FileDownloadError> {
@@ -158,11 +161,19 @@ where
         let mut buffer = byte_stream
             .map(|bytes_result| bytes_result.map_err(FileDownloadError::ResponseBytesStream))
             .try_fold(buffer, |mut buffer, bytes| async move {
-                // TODO: increment progress by bytes.len()
                 buffer
                     .write_all(&bytes)
                     .await
                     .map_err(FileDownloadError::ResponseFileWrite)?;
+
+                let _progress_send = {
+                    let progress_update = if let Ok(progress_inc) = u64::try_from(bytes.len()) {
+                        ProgressUpdate::Inc(progress_inc)
+                    } else {
+                        ProgressUpdate::Tick
+                    };
+                    progress_tx.send(progress_update).await
+                };
 
                 Ok(buffer)
             })
@@ -177,6 +188,7 @@ where
     /// Streams the content to disk.
     #[cfg(target_arch = "wasm32")]
     async fn stream_write(
+        progress_tx: &Sender<ProgressUpdate>,
         dest_path: &Path,
         storage: &Storage,
         storage_form: crate::StorageForm,
@@ -244,6 +256,7 @@ where
     }
 
     async fn exec_dry(
+        _op_ctx: OpCtx<'_>,
         _file_download_data: FileDownloadData<'_, Id>,
         _state: &State<FileDownloadState, Nothing>,
         _file_state_desired: &FileDownloadState,
@@ -253,12 +266,13 @@ where
     }
 
     async fn exec(
+        op_ctx: OpCtx<'_>,
         file_download_data: FileDownloadData<'_, Id>,
         _state: &State<FileDownloadState, Nothing>,
         _file_state_desired: &FileDownloadState,
         _diff: &FileDownloadStateDiff,
     ) -> Result<Nothing, FileDownloadError> {
-        Self::file_download(file_download_data).await?;
+        Self::file_download(op_ctx, file_download_data).await?;
         Ok(Nothing)
     }
 }

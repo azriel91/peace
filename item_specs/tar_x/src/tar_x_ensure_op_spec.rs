@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use peace::cfg::state::Nothing;
 
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, State};
+use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx, ProgressLimit, State};
 
 use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
 
@@ -43,6 +43,7 @@ where
     }
 
     async fn exec_dry(
+        _op_ctx: OpCtx<'_>,
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &State<FileMetadatas, Nothing>,
         _state_desired: &FileMetadatas,
@@ -53,6 +54,7 @@ where
 
     #[cfg(not(target_arch = "wasm32"))]
     async fn exec(
+        _op_ctx: OpCtx<'_>,
         tar_x_data: TarXData<'_, Id>,
         _state_current: &State<FileMetadatas, Nothing>,
         _state_desired: &FileMetadatas,
@@ -75,6 +77,8 @@ where
         // TODO: Optimize by unpacking only the entries that changed.
         // Probably store entries in `IndexMap`s, then look them up to determine if they
         // need to be unpacked.
+        //
+        // Then we can send proper progress updates via `op_ctx.progress_tx`.
         storage
             .read_with_sync_api(
                 "TarXEnsureOpSpec::exec".to_string(),
@@ -118,6 +122,7 @@ where
 
     #[cfg(target_arch = "wasm32")]
     async fn exec(
+        _op_ctx: OpCtx<'_>,
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &State<FileMetadatas, Nothing>,
         _state_desired: &FileMetadatas,

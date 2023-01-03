@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, State};
+use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx, ProgressLimit, State};
 
 use crate::{
     ShCmd, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState, ShCmdStateDiff,
@@ -68,6 +68,7 @@ where
     }
 
     async fn exec_dry(
+        _op_ctx: OpCtx<'_>,
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &ShCmdState<Id>,
@@ -96,6 +97,7 @@ where
     }
 
     async fn exec(
+        _op_ctx: OpCtx<'_>,
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &ShCmdState<Id>,

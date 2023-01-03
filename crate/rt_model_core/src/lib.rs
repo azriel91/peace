@@ -7,6 +7,7 @@
 // Re-exports
 pub use async_trait::async_trait;
 pub use indicatif;
+pub use tokio::sync::mpsc::Sender;
 
 pub use crate::{
     output_format::OutputFormat, output_format_parse_error::OutputFormatParseError,

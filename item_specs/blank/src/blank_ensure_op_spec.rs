@@ -1,6 +1,8 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Nothing, EnsureOpSpec, OpCheckStatus, ProgressLimit, State};
+use peace::cfg::{
+    async_trait, state::Nothing, EnsureOpSpec, OpCheckStatus, OpCtx, ProgressLimit, State,
+};
 
 use crate::{BlankData, BlankError, BlankState, BlankStateDiff};
 
@@ -37,6 +39,7 @@ where
     }
 
     async fn exec_dry(
+        _op_ctx: OpCtx<'_>,
         _blank_data: BlankData<'_, Id>,
         _state_current: &State<BlankState, Nothing>,
         _state_desired: &BlankState,
@@ -46,6 +49,7 @@ where
     }
 
     async fn exec(
+        _op_ctx: OpCtx<'_>,
         mut blank_data: BlankData<'_, Id>,
         _state_current: &State<BlankState, Nothing>,
         _state_desired: &BlankState,

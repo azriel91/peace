@@ -7,7 +7,7 @@ use diff::{Diff, VecDiff, VecDiffType};
 use peace::{
     cfg::{
         async_trait, item_spec_id, state::Nothing, CleanOpSpec, EnsureOpSpec, ItemSpec, ItemSpecId,
-        OpCheckStatus, ProgressLimit, State, StateDiffFnSpec, TryFnSpec,
+        OpCheckStatus, OpCtx, ProgressLimit, State, StateDiffFnSpec, TryFnSpec,
     },
     data::{Data, RMaybe, R, W},
     resources::{resources::ts::Empty, states::StatesSaved, Resources},
@@ -143,6 +143,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     }
 
     async fn exec_dry(
+        _op_ctx: OpCtx<'_>,
         _vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         _state_desired: &VecCopyState,
@@ -153,6 +154,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     }
 
     async fn exec(
+        _op_ctx: OpCtx<'_>,
         mut vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &VecCopyState,
