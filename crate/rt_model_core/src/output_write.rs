@@ -4,8 +4,6 @@ use peace_resources::states::{
     StatesSaved,
 };
 
-use crate::ProgressOutputWrite;
-
 /// Transforms return values or errors into a suitable output format.
 ///
 /// # Use cases
@@ -20,11 +18,24 @@ use crate::ProgressOutputWrite;
 /// perspective, this should not be difficult to use as the return value / error
 /// value is intended to be returned at the end of a command.
 ///
-/// Progress updates sent during `EnsureOpSpec::exec` and `CleanOpSpec::exec`
-/// functions are not implemented on `OutputWrite`, but on
-/// [`ProgressOutputWrite`].
+/// Progress updates sent during `EnsureOpSpec::exec` and `CleanOpSpec::exec`.
 #[async_trait(?Send)]
-pub trait OutputWrite<E>: ProgressOutputWrite {
+pub trait OutputWrite<E> {
+    /// Renders progress information, and returns when no more progress
+    /// information is available to write.
+    ///
+    /// This function is infallible as progress information is considered
+    /// transient, and loss of progress information is not considered as
+    /// something worth stopping an operation.
+    ///
+    /// # Implementors
+    ///
+    /// This should create a new channel, and return the channel sender.
+    ///
+    /// The sender will be passed to each of the `EnsureOpSpec::exec` functions
+    /// so that progress information can be sent within them.
+    async fn render(&mut self, progress_update: peace_core::ProgressUpdate);
+
     /// Writes current states to the output.
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E>
     where

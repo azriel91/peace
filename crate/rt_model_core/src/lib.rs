@@ -15,7 +15,7 @@ pub use tokio::sync::mpsc::{
 
 pub use crate::{
     output_format::OutputFormat, output_format_parse_error::OutputFormatParseError,
-    output_write::OutputWrite, progress_output_write::ProgressOutputWrite,
+    output_write::OutputWrite,
 };
 
 pub mod cmd_context_params;
@@ -23,4 +23,3 @@ pub mod cmd_context_params;
 mod output_format;
 mod output_format_parse_error;
 mod output_write;
-mod progress_output_write;

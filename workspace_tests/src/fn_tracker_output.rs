@@ -4,7 +4,7 @@ use peace::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
         StatesEnsuredDry, StatesSaved,
     },
-    rt_model::{OutputWrite, ProgressOutputWrite},
+    rt_model::OutputWrite,
 };
 
 use crate::FnInvocation;
@@ -29,15 +29,12 @@ impl FnTrackerOutput {
 }
 
 #[async_trait(?Send)]
-impl ProgressOutputWrite for FnTrackerOutput {
-    async fn render(&mut self, _progress_update: ProgressUpdate) {}
-}
-
-#[async_trait(?Send)]
 impl<E> OutputWrite<E> for FnTrackerOutput
 where
     E: std::error::Error,
 {
+    async fn render(&mut self, _progress_update: ProgressUpdate) {}
+
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         self.fn_invocations.push(FnInvocation::new(
             "write_states_saved",

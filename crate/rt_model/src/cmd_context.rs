@@ -26,7 +26,6 @@ use crate::{
 ///
 /// * `E`: Consumer provided error type.
 /// * `O`: [`OutputWrite`] to return values / errors to.
-/// * `PO`: [`ProgressOutputWrite`] to write progress information to.
 /// * `TS`: Type state of `Resources`.
 ///
 /// [`Profile`]: peace_cfg::Profile
@@ -35,7 +34,6 @@ use crate::{
 /// [`ProfileDir`]: peace_resources::paths::ProfileDir
 /// [`ProfileHistoryDir`]: peace_resources::paths::ProfileHistoryDir
 /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-/// [`ProgressOutputWrite`]: peace_rt_model_core::ProgressOutputWrite
 #[derive(Debug)]
 pub struct CmdContext<'ctx, E, O, TS> {
     /// Workspace that the `peace` tool runs in.
@@ -45,10 +43,9 @@ pub struct CmdContext<'ctx, E, O, TS> {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
     ///
-    /// See [`OutputWrite`] and [`ProgressOutputWrite`].
+    /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    /// [`ProgressOutputWrite`]: peace_rt_model_core::ProgressOutputWrite
     pub output: &'ctx mut O,
     /// `Resources` in this workspace.
     pub resources: Resources<TS>,
@@ -70,11 +67,8 @@ where
     /// * `workspace`: Defines how to discover the workspace.
     /// * `item_spec_graph`: Logic to run in the command.
     /// * `output`: [`OutputWrite`] to return values or errors.
-    /// * `progress_output`: [`ProgressOutputWrite`] to write progress
-    ///   information to.
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    /// [`ProgressOutputWrite`]: peace_rt_model_core::ProgressOutputWrite
     pub fn builder(
         workspace: &'ctx Workspace,
         item_spec_graph: &'ctx ItemSpecGraph<E>,

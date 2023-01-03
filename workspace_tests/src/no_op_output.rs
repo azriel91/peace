@@ -4,7 +4,7 @@ use peace::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
         StatesEnsuredDry, StatesSaved,
     },
-    rt_model::{OutputWrite, ProgressOutputWrite},
+    rt_model::OutputWrite,
 };
 
 /// An `OutputWrite` implementation that does nothing.
@@ -12,15 +12,12 @@ use peace::{
 pub struct NoOpOutput;
 
 #[async_trait(?Send)]
-impl ProgressOutputWrite for NoOpOutput {
-    async fn render(&mut self, _progress_update: ProgressUpdate) {}
-}
-
-#[async_trait(?Send)]
 impl<E> OutputWrite<E> for NoOpOutput
 where
     E: std::error::Error,
 {
+    async fn render(&mut self, _progress_update: ProgressUpdate) {}
+
     async fn write_states_saved(&mut self, _states_saved: &StatesSaved) -> Result<(), E> {
         Ok(())
     }

@@ -38,7 +38,6 @@ use crate::{
 ///
 /// * `E`: Consumer provided error type.
 /// * `O`: [`OutputWrite`] to return values / errors to.
-/// * `PO`: [`ProgressOutputWrite`] to write progress information to.
 /// * `WorkspaceParamsK`: `WorkspaceParams` map `K` type parameter.
 /// * `ProfileParamsK`: `ProfileParams` map `K` type parameter.
 /// * `FlowParamsK`: `FlowParams` map `K` type parameter.
@@ -49,7 +48,6 @@ use crate::{
 /// [`ProfileDir`]: peace_resources::paths::ProfileDir
 /// [`ProfileHistoryDir`]: peace_resources::paths::ProfileHistoryDir
 /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-/// [`ProgressOutputWrite`]: peace_rt_model_core::ProgressOutputWrite
 #[derive(Debug)]
 pub struct CmdContextBuilder<
     'ctx,
@@ -70,11 +68,10 @@ pub struct CmdContextBuilder<
     /// Output endpoint to return values / errors, and write progress
     /// information to.
     ///
-    /// See [`OutputWrite`] and [`ProgressOutputWrite`].
+    /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    /// [`ProgressOutputWrite`]: peace_rt_model_core::ProgressOutputWrite
-    pub output: &'ctx mut O,
+    output: &'ctx mut O,
     /// Workspace parameters.
     workspace_params: Option<WorkspaceParams<WorkspaceParamsKMaybe::Key>>,
     /// Type registry for `WorkspaceParams` deserialization.
@@ -120,12 +117,9 @@ where
     ///
     /// * `workspace`: Defines how to discover the workspace.
     /// * `item_spec_graph`: Logic to run in the command.
-    /// * `output`: [`OutputWrite`] to return values or errors.
-    /// * `progress_output`: [`ProgressOutputWrite`] to write progress
-    ///   information to.
+    /// * `output`: [`OutputWrite`] to return values or errors. information to.
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    /// [`ProgressOutputWrite`]: peace_rt_model_core::ProgressOutputWrite
     pub fn new(
         workspace: &'ctx Workspace,
         item_spec_graph: &'ctx ItemSpecGraph<E>,

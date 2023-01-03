@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-/// Message to update the `ProgressOutputWrite`.
+/// Message to update the `OutputWrite`.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ProgressUpdate {
     /// Ticks the progress bar without incrementing its value.

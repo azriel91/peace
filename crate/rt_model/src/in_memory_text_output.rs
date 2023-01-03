@@ -3,7 +3,7 @@ use peace_resources::states::{
     StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured, StatesEnsuredDry,
     StatesSaved,
 };
-use peace_rt_model_core::{async_trait, OutputWrite, ProgressOutputWrite};
+use peace_rt_model_core::{async_trait, OutputWrite};
 
 use crate::Error;
 
@@ -28,11 +28,6 @@ impl InMemoryTextOutput {
     }
 }
 
-#[async_trait(?Send)]
-impl ProgressOutputWrite for InMemoryTextOutput {
-    async fn render(&mut self, _progress_update: ProgressUpdate) {}
-}
-
 /// Simple serialization implementations for now.
 ///
 /// See <https://github.com/azriel91/peace/issues/28> for further improvements.
@@ -41,6 +36,8 @@ impl<E> OutputWrite<E> for InMemoryTextOutput
 where
     E: std::error::Error + From<Error>,
 {
+    async fn render(&mut self, _progress_update: ProgressUpdate) {}
+
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         self.buffer = serde_yaml::to_string(states_saved).map_err(Error::StatesSerialize)?;
 

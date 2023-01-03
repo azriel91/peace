@@ -7,7 +7,7 @@ use peace_resources::{
     },
     type_reg::untagged::BoxDtDisplay,
 };
-use peace_rt_model_core::{async_trait, OutputFormat, OutputWrite, ProgressOutputWrite};
+use peace_rt_model_core::{async_trait, OutputFormat, OutputWrite};
 use serde::Serialize;
 use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
 
@@ -201,9 +201,13 @@ impl Default for CliOutput<Stdout> {
     }
 }
 
+/// Simple serialization implementations for now.
+///
+/// See <https://github.com/azriel91/peace/issues/28> for further improvements.
 #[async_trait(?Send)]
-impl<W> ProgressOutputWrite for CliOutput<W>
+impl<E, W> OutputWrite<E> for CliOutput<W>
 where
+    E: std::error::Error + From<Error>,
     W: AsyncWrite + std::marker::Unpin,
 {
     async fn render(&mut self, progress_update: ProgressUpdate) {
@@ -214,17 +218,7 @@ where
 
         let _ = self.writer.flush().await;
     }
-}
 
-/// Simple serialization implementations for now.
-///
-/// See <https://github.com/azriel91/peace/issues/28> for further improvements.
-#[async_trait(?Send)]
-impl<E, W> OutputWrite<E> for CliOutput<W>
-where
-    E: std::error::Error + From<Error>,
-    W: AsyncWrite + std::marker::Unpin,
-{
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         match self.format {
             OutputFormat::Text => self.output_display(states_saved.iter()).await,
