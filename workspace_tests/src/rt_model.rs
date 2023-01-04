@@ -8,3 +8,8 @@ mod output_format;
 mod output_format_parse_error;
 mod states_serializer;
 mod workspace_dirs_builder;
+
+#[cfg(feature = "output_progress")]
+mod cli_progress_format;
+#[cfg(feature = "output_progress")]
+mod cli_progress_format_parse_error;

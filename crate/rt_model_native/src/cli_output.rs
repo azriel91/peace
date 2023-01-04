@@ -1,4 +1,5 @@
 use futures::{stream, StreamExt, TryStreamExt};
+
 use peace_core::ItemSpecId;
 use peace_resources::{
     states::{
@@ -13,6 +14,13 @@ use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
 
 use crate::Error;
 
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use is_terminal::IsTerminal;
+        use crate::{CliProgressFormat, CliProgressFormatChosen};
+    }
+}
+
 /// An `OutputWrite` implementation that writes to the command line.
 ///
 /// Currently this only outputs return values or errors, not progress.
@@ -25,6 +33,11 @@ pub struct CliOutput<W> {
     /// Whether output should be colorized.
     #[cfg(feature = "output_colorized")]
     colorized: bool,
+    /// Whether the writer is an interactive terminal.
+    ///
+    /// This is detected on instantiation.
+    #[cfg(feature = "output_progress")]
+    cli_progress_format: CliProgressFormatChosen,
 }
 
 impl CliOutput<Stdout> {
@@ -57,7 +70,30 @@ where
             format: OutputFormat::Text,
             #[cfg(feature = "output_colorized")]
             colorized: false,
+            #[cfg(feature = "output_progress")]
+            cli_progress_format: CliProgressFormatChosen::Output,
         }
+    }
+
+    /// Sets the CLI output progress format.
+    #[cfg(feature = "output_progress")]
+    pub fn output_progress_format(mut self, cli_progress_format: CliProgressFormat) -> Self {
+        let cli_progress_format = match cli_progress_format {
+            CliProgressFormat::Auto => {
+                // Even though we're using `tokio::io::stdout`, `IsTerminal` is only implemented
+                // on `std::io::stdout`.
+                if std::io::stdout().is_terminal() {
+                    CliProgressFormatChosen::ProgressBar
+                } else {
+                    CliProgressFormatChosen::Output
+                }
+            }
+            CliProgressFormat::Output => CliProgressFormatChosen::Output,
+            CliProgressFormat::ProgressBar => CliProgressFormatChosen::ProgressBar,
+        };
+
+        self.cli_progress_format = cli_progress_format;
+        self
     }
 
     /// Sets the output format for this `CliOutput`.
@@ -192,11 +228,24 @@ where
 
 impl Default for CliOutput<Stdout> {
     fn default() -> Self {
+        let stdout = tokio::io::stdout();
+
+        // Even though we're using `tokio::io::stdout`, `IsTerminal` is only implemented
+        // on `std::io::stdout`.
+        #[cfg(feature = "output_progress")]
+        let cli_progress_format = if std::io::stdout().is_terminal() {
+            CliProgressFormatChosen::ProgressBar
+        } else {
+            CliProgressFormatChosen::Output
+        };
+
         Self {
-            writer: tokio::io::stdout(),
+            writer: stdout,
             format: OutputFormat::Text,
             #[cfg(feature = "output_colorized")]
             colorized: false,
+            #[cfg(feature = "output_progress")]
+            cli_progress_format,
         }
     }
 }
@@ -212,12 +261,32 @@ where
 {
     #[cfg(feature = "output_progress")]
     async fn render(&mut self, progress_update: peace_core::ProgressUpdate) {
-        let _ = self
-            .writer
-            .write(format!("{progress_update:?}").as_bytes())
-            .await;
-
-        let _ = self.writer.flush().await;
+        match self.cli_progress_format {
+            CliProgressFormatChosen::ProgressBar => {
+                // TODO: write progress bar
+            }
+            CliProgressFormatChosen::Output => match self.format {
+                // Note: outputting yaml for Text output, because we aren't sending much progress
+                // information.
+                //
+                // We probably need to send more information in the `ProgressUpdate`, i.e. which
+                // item it came from.
+                OutputFormat::Text | OutputFormat::Yaml => {
+                    let _unused = self
+                        .output_yaml::<E, _, _>(&progress_update, Error::ProgressUpdateSerialize)
+                        .await;
+                }
+                #[cfg(feature = "output_json")]
+                OutputFormat::Json => {
+                    let _unused = self
+                        .output_json::<E, _, _>(
+                            &progress_update,
+                            Error::ProgressUpdateSerializeJson,
+                        )
+                        .await;
+                }
+            },
+        }
     }
 
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {

@@ -16,8 +16,10 @@ doctest = true
 test = false
 
 [dependencies]
+cfg-if = { workspace = true }
 console = { version = "0.15.4", optional = true }
 futures = "0.3.25"
+is-terminal = { version = "0.4.2", optional = true }
 miette = { workspace = true, optional = true }
 peace_core = { path = "../core", version = "0.0.5" }
 peace_resources = { path = "../resources", version = "0.0.5" }
@@ -34,4 +36,8 @@ default = []
 error_reporting = ["dep:miette", "peace_rt_model_core/error_reporting"]
 output_colorized = ["dep:console"]
 output_json = ["dep:serde_json", "peace_rt_model_core/output_json"]
-output_progress = ["peace_core/output_progress"]
+output_progress = [
+    "dep:is-terminal",
+    "peace_core/output_progress",
+    "peace_rt_model_core/output_progress",
+]
