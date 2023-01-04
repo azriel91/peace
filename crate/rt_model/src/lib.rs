@@ -5,6 +5,8 @@
 
 // Re-exports
 pub use fn_graph::{self, FnRef, FnRefMut};
+#[cfg(feature = "output_progress")]
+pub use peace_rt_model_core::CmdProgressTracker;
 pub use peace_rt_model_core::{
     cmd_context_params, OutputFormat, OutputFormatParseError, OutputWrite,
 };
@@ -44,11 +46,3 @@ mod item_spec_rt;
 mod item_spec_wrapper;
 mod states_serializer;
 mod states_type_regs;
-
-cfg_if::cfg_if! {
-    if #[cfg(feature = "output_progress")] {
-        pub use crate::cmd_progress_tracker::CmdProgressTracker;
-
-        mod cmd_progress_tracker;
-    }
-}

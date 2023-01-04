@@ -21,6 +21,17 @@ use peace_resources::states::{
 /// Progress updates sent during `EnsureOpSpec::exec` and `CleanOpSpec::exec`.
 #[async_trait(?Send)]
 pub trait OutputWrite<E> {
+    /// Prepares this `OutputWrite` implementation for rendering progress.
+    ///
+    /// # Implementors
+    ///
+    /// This is called at the beginning of command execution, before any
+    /// potential calls to `OutputWrite::progress_update`.
+    ///
+    /// At the end of command execution, `OutputWrite::progress_end` is called.
+    #[cfg(feature = "output_progress")]
+    async fn progress_begin(&mut self, cmd_progress_tracker: &crate::CmdProgressTracker);
+
     /// Renders progress information, and returns when no more progress
     /// information is available to write.
     ///
@@ -30,12 +41,20 @@ pub trait OutputWrite<E> {
     ///
     /// # Implementors
     ///
-    /// This should create a new channel, and return the channel sender.
-    ///
-    /// The sender will be passed to each of the `EnsureOpSpec::exec` functions
-    /// so that progress information can be sent within them.
+    /// This should render the progress update to the user in a way that is not
+    /// overwhelming.
     #[cfg(feature = "output_progress")]
     async fn progress_update(&mut self, progress_update: peace_core::ProgressUpdate);
+
+    /// Notifies this `OutputWrite` implementation to stop rendering progress.
+    ///
+    /// # Implementors
+    ///
+    /// This is called at the end of command execution. After this is called,
+    /// there will be no more calls to `OutputWrite::progress_update` until
+    /// another call to `OutputWrite::progress_begin`.
+    #[cfg(feature = "output_progress")]
+    async fn progress_end(&mut self, cmd_progress_tracker: &crate::CmdProgressTracker);
 
     /// Writes current states to the output.
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E>

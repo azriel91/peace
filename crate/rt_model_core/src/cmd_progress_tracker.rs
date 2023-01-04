@@ -1,9 +1,19 @@
 use std::collections::HashMap;
 
 use indicatif::{MultiProgress, ProgressBar};
-use peace_cfg::ItemSpecId;
+use peace_core::ItemSpecId;
 
 /// Tracks progress for each item spec's command execution.
+///
+/// The Peace framework initializes the `multi_progress` and `progress_bars` and
+/// manage updating the `ProgressBar` values.
+///
+/// By default, the `MultiProgress` will use [`ProgressDrawTarget::hidden()`].
+/// However, by default [`CliOutput`] sets the draw target to `stdout` if an
+/// executable built using Peace is run interactively.
+///
+/// [`ProgressDrawTarget::hidden()`]: indicatif::ProgressDrawTarget::hidden
+/// [`CliOutput`]: https://docs.rs/peace_rt_model_native/latest/peace_rt_model_native/struct.CliOutput.html
 #[derive(Debug)]
 pub struct CmdProgressTracker {
     /// `MultiProgress` that tracks the remaining progress bars.
@@ -14,7 +24,7 @@ pub struct CmdProgressTracker {
 
 impl CmdProgressTracker {
     /// Returns a new `CmdProgressTracker`.
-    pub(crate) fn new(
+    pub fn new(
         multi_progress: MultiProgress,
         progress_bars: HashMap<ItemSpecId, ProgressBar>,
     ) -> Self {
