@@ -52,6 +52,9 @@ pub struct CmdContext<'ctx, E, O, TS> {
     /// Type registries to deserialize `StatesSavedFile` and
     /// `StatesDesiredFile`.
     pub states_type_regs: StatesTypeRegs,
+    /// Multi-progress to track progress of each operation execution.
+    #[cfg(feature = "output_progress")]
+    pub cmd_progress_tracker: crate::CmdProgressTracker,
     /// Prevents instantiation not through builder.
     pub(crate) marker: PhantomData<()>,
 }
@@ -78,26 +81,39 @@ where
     }
 }
 
+#[cfg(not(feature = "output_progress"))]
+type CmdContextFields<'ctx, E, O, TS> = (
+    &'ctx Workspace,
+    &'ctx ItemSpecGraph<E>,
+    &'ctx mut O,
+    Resources<TS>,
+    StatesTypeRegs,
+);
+
+#[cfg(feature = "output_progress")]
+type CmdContextFields<'ctx, E, O, TS> = (
+    &'ctx Workspace,
+    &'ctx ItemSpecGraph<E>,
+    &'ctx mut O,
+    Resources<TS>,
+    StatesTypeRegs,
+    crate::CmdProgressTracker,
+);
+
 impl<'ctx, E, O, TS> CmdContext<'ctx, E, O, TS>
 where
     E: std::error::Error,
 {
     /// Returns the underlying data.
-    pub fn into_inner(
-        self,
-    ) -> (
-        &'ctx Workspace,
-        &'ctx ItemSpecGraph<E>,
-        &'ctx mut O,
-        Resources<TS>,
-        StatesTypeRegs,
-    ) {
+    pub fn into_inner(self) -> CmdContextFields<'ctx, E, O, TS> {
         let Self {
             workspace,
             item_spec_graph,
             output,
-            states_type_regs,
             resources,
+            states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
             marker: _,
         } = self;
 
@@ -107,6 +123,8 @@ where
             output,
             resources,
             states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
         )
     }
 
@@ -141,23 +159,29 @@ where
     }
 }
 
-impl<'ctx, E, O, TS>
-    From<(
-        &'ctx Workspace,
-        &'ctx ItemSpecGraph<E>,
-        &'ctx mut O,
-        Resources<TS>,
-        StatesTypeRegs,
-    )> for CmdContext<'ctx, E, O, TS>
-{
+impl<'ctx, E, O, TS> From<CmdContextFields<'ctx, E, O, TS>> for CmdContext<'ctx, E, O, TS> {
     fn from(
-        (workspace, item_spec_graph, output, resources, states_type_regs): (
-            &'ctx Workspace,
-            &'ctx ItemSpecGraph<E>,
-            &'ctx mut O,
-            Resources<TS>,
-            StatesTypeRegs,
-        ),
+        #[cfg(not(feature = "output_progress"))]
+        (workspace, item_spec_graph, output, resources, states_type_regs): CmdContextFields<
+            'ctx,
+            E,
+            O,
+            TS,
+        >,
+        #[cfg(feature = "output_progress")]
+        (
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+            cmd_progress_tracker,
+        ): CmdContextFields<
+            'ctx,
+            E,
+            O,
+            TS,
+        >,
     ) -> Self {
         Self {
             workspace,
@@ -165,6 +189,8 @@ impl<'ctx, E, O, TS>
             output,
             resources,
             states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
             marker: PhantomData,
         }
     }
@@ -176,7 +202,11 @@ where
     F: FnOnce(Resources<TS0>) -> Resources<TS1>,
 {
     fn from((cmd_context_ts0, f): (CmdContext<'ctx, E, O, TS0>, F)) -> Self {
+        #[cfg(not(feature = "output_progress"))]
         let (workspace, item_spec_graph, output, resources, states_type_regs) =
+            cmd_context_ts0.into_inner();
+        #[cfg(feature = "output_progress")]
+        let (workspace, item_spec_graph, output, resources, states_type_regs, cmd_progress_tracker) =
             cmd_context_ts0.into_inner();
         let resources: Resources<TS1> = f(resources);
 
@@ -186,6 +216,8 @@ where
             output,
             resources,
             states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
             marker: PhantomData,
         }
     }

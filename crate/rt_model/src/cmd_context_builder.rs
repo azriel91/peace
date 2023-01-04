@@ -12,6 +12,17 @@ use peace_resources::{
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use std::collections::HashMap;
+
+        use peace_cfg::ItemSpecId;
+        use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget};
+
+        use crate::CmdProgressTracker;
+    }
+}
+
 use crate::{
     cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams},
     CmdContext, Error, ItemSpecGraph, StatesSerializer, StatesTypeRegs, Storage, Workspace,
@@ -229,12 +240,25 @@ where
         // Call each `ItemSpec`'s initialization function.
         let resources = Self::item_spec_graph_setup(item_spec_graph, resources).await?;
 
+        #[cfg(feature = "output_progress")]
+        let cmd_progress_tracker = {
+            let multi_progress = MultiProgress::with_draw_target(ProgressDrawTarget::hidden());
+            let progress_bars = item_spec_graph
+                .iter_insertion()
+                .map(|item_spec| (item_spec.id(), multi_progress.add(ProgressBar::hidden())))
+                .collect::<HashMap<ItemSpecId, ProgressBar>>();
+
+            CmdProgressTracker::new(multi_progress, progress_bars)
+        };
+
         Ok(CmdContext {
             workspace,
             item_spec_graph,
             output,
             resources,
             states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
             marker: PhantomData,
         })
     }

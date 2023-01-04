@@ -33,3 +33,4 @@ web-sys = { version = "0.3.60", features = ["Storage", "Window"] }
 default = []
 error_reporting = ["dep:miette", "peace_rt_model_core/error_reporting"]
 output_json = ["dep:serde_json"]
+output_progress = []
