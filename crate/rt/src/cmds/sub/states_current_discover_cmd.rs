@@ -37,8 +37,16 @@ where
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
     ) -> Result<CmdContext<'_, E, O, WithStatesCurrent>, E> {
-        let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
-            cmd_context.into_inner();
+        let CmdContext {
+            workspace,
+            item_spec_graph,
+            output,
+            mut resources,
+            states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            ..
+        } = cmd_context;
         let states = Self::exec_internal(item_spec_graph, &mut resources).await?;
 
         let resources = Resources::<WithStatesCurrent>::from((resources, states));
@@ -49,6 +57,8 @@ where
             output,
             resources,
             states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
         ));
         Ok(cmd_context)
     }

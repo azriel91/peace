@@ -53,8 +53,17 @@ where
     pub async fn exec_dry(
         cmd_context: CmdContext<'_, E, O, SetUp>,
     ) -> Result<CmdContext<'_, E, O, EnsuredDry>, E> {
-        let (workspace, item_spec_graph, output, resources, states_type_regs) =
-            cmd_context.into_inner();
+        let CmdContext {
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            ..
+        } = cmd_context;
+
         let resources_result = Self::exec_internal::<EnsuredDry, states::ts::EnsuredDry>(
             item_spec_graph,
             output,
@@ -75,6 +84,8 @@ where
                     output,
                     resources,
                     states_type_regs,
+                    #[cfg(feature = "output_progress")]
+                    cmd_progress_tracker,
                 ));
                 Ok(cmd_context)
             }
@@ -114,8 +125,16 @@ where
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
     ) -> Result<CmdContext<'_, E, O, Ensured>, E> {
-        let (workspace, item_spec_graph, output, resources, states_type_regs) =
-            cmd_context.into_inner();
+        let CmdContext {
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            ..
+        } = cmd_context;
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
         let resources_result = Self::exec_internal::<Ensured, states::ts::Ensured>(
@@ -138,6 +157,8 @@ where
                     output,
                     resources,
                     states_type_regs,
+                    #[cfg(feature = "output_progress")]
+                    cmd_progress_tracker,
                 ));
                 Ok(cmd_context)
             }

@@ -39,6 +39,8 @@ where
             output,
             resources,
             states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
             ..
         } = cmd_context;
 
@@ -59,6 +61,8 @@ where
                     output,
                     resources,
                     states_type_regs,
+                    #[cfg(feature = "output_progress")]
+                    cmd_progress_tracker,
                 ));
                 Ok(cmd_context)
             }

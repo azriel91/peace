@@ -45,7 +45,7 @@ default = []
 error_reporting = ["dep:miette", "miette?/fancy", "peace_rt/error_reporting", "peace_rt_model/error_reporting"]
 output_colorized = ["peace_rt_model/output_colorized"]
 output_json = ["peace_rt_model/output_json"]
-output_progress = ["peace_cfg/output_progress", "peace_rt_model/output_progress"]
+output_progress = ["peace_cfg/output_progress", "peace_rt_model/output_progress", "peace_rt/output_progress"]
 
 
 [patch.crates-io]
