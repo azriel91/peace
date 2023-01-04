@@ -215,7 +215,7 @@ where
         #[cfg(feature = "output_progress")]
         let progress_render_task = async move {
             while let Some(progress_update) = progress_rx.recv().await {
-                output.render(progress_update).await
+                output.progress_update(progress_update).await
             }
         };
 

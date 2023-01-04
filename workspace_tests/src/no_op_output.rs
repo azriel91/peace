@@ -17,7 +17,7 @@ where
     E: std::error::Error,
 {
     #[cfg(feature = "output_progress")]
-    async fn render(&mut self, _progress_update: peace::cfg::ProgressUpdate) {}
+    async fn progress_update(&mut self, _progress_update: peace::cfg::ProgressUpdate) {}
 
     async fn write_states_saved(&mut self, _states_saved: &StatesSaved) -> Result<(), E> {
         Ok(())

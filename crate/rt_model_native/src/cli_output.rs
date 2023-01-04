@@ -260,7 +260,7 @@ where
     W: AsyncWrite + std::marker::Unpin,
 {
     #[cfg(feature = "output_progress")]
-    async fn render(&mut self, progress_update: peace_core::ProgressUpdate) {
+    async fn progress_update(&mut self, progress_update: peace_core::ProgressUpdate) {
         match self.cli_progress_format {
             CliProgressFormatChosen::ProgressBar => {
                 // TODO: write progress bar

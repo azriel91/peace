@@ -35,7 +35,7 @@ pub trait OutputWrite<E> {
     /// The sender will be passed to each of the `EnsureOpSpec::exec` functions
     /// so that progress information can be sent within them.
     #[cfg(feature = "output_progress")]
-    async fn render(&mut self, progress_update: peace_core::ProgressUpdate);
+    async fn progress_update(&mut self, progress_update: peace_core::ProgressUpdate);
 
     /// Writes current states to the output.
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E>
