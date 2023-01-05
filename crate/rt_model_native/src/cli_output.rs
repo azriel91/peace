@@ -17,6 +17,8 @@ use crate::Error;
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use is_terminal::IsTerminal;
+        use peace_rt_model_core::{indicatif::InMemoryTerm, CmdProgressTracker};
+
         use crate::{CliProgressFormat, CliProgressFormatChosen};
     }
 }
@@ -38,6 +40,9 @@ pub struct CliOutput<W> {
     /// This is detected on instantiation.
     #[cfg(feature = "output_progress")]
     cli_progress_format: CliProgressFormatChosen,
+    /// The in-memory terminal for `indicatif` to render to.
+    #[cfg(feature = "output_progress")]
+    in_memory_term: Option<InMemoryTerm>,
 }
 
 impl CliOutput<Stdout> {
@@ -72,6 +77,8 @@ where
             colorized: false,
             #[cfg(feature = "output_progress")]
             cli_progress_format: CliProgressFormatChosen::Output,
+            #[cfg(feature = "output_progress")]
+            in_memory_term: None,
         }
     }
 
@@ -246,6 +253,8 @@ impl Default for CliOutput<Stdout> {
             colorized: false,
             #[cfg(feature = "output_progress")]
             cli_progress_format,
+            #[cfg(feature = "output_progress")]
+            in_memory_term: None,
         }
     }
 }
@@ -260,10 +269,36 @@ where
     W: AsyncWrite + std::marker::Unpin,
 {
     #[cfg(feature = "output_progress")]
+    async fn progress_begin(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
+        use peace_rt_model_core::indicatif::{InMemoryTerm, ProgressDrawTarget};
+
+        if self.cli_progress_format == CliProgressFormatChosen::ProgressBar {
+            let rows = cmd_progress_tracker
+                .progress_bars()
+                .len()
+                .try_into()
+                .unwrap_or(50);
+            let cols = 120; // Don't make line length too long
+            let term = InMemoryTerm::new(rows, cols);
+            self.in_memory_term = Some(term.clone());
+            cmd_progress_tracker
+                .multi_progress()
+                .set_draw_target(ProgressDrawTarget::term_like(Box::new(term)));
+        }
+    }
+
+    #[cfg(feature = "output_progress")]
     async fn progress_update(&mut self, progress_update: peace_core::ProgressUpdate) {
         match self.cli_progress_format {
             CliProgressFormatChosen::ProgressBar => {
-                // TODO: write progress bar
+                // Output progress bar to writer.
+                if let Some(in_memory_term) = self.in_memory_term.as_ref() {
+                    let _unused = self
+                        .writer
+                        .write_all(in_memory_term.contents().as_bytes())
+                        .await;
+                    let _unused = self.writer.flush().await;
+                }
             }
             CliProgressFormatChosen::Output => match self.format {
                 // Note: outputting yaml for Text output, because we aren't sending much progress
@@ -287,6 +322,11 @@ where
                 }
             },
         }
+    }
+
+    #[cfg(feature = "output_progress")]
+    async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {
+        self.in_memory_term = None;
     }
 
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {

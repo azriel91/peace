@@ -36,7 +36,13 @@ where
     E: std::error::Error + From<Error>,
 {
     #[cfg(feature = "output_progress")]
+    async fn progress_begin(&mut self, _cmd_progress_tracker: &crate::CmdProgressTracker) {}
+
+    #[cfg(feature = "output_progress")]
     async fn progress_update(&mut self, _progress_update: peace_cfg::ProgressUpdate) {}
+
+    #[cfg(feature = "output_progress")]
+    async fn progress_end(&mut self, _cmd_progress_tracker: &crate::CmdProgressTracker) {}
 
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         self.buffer = serde_yaml::to_string(states_saved).map_err(Error::StatesSerialize)?;
