@@ -4,22 +4,34 @@ use peace::rt_model::{CliProgressFormat, CliProgressFormatParseError};
 
 #[test]
 fn from_str_returns_ok_for_auto() {
-    assert_eq!(Ok(CliProgressFormat::Auto), CliProgressFormat::from_str("auto"))
+    assert_eq!(
+        Ok(CliProgressFormat::Auto),
+        CliProgressFormat::from_str("auto")
+    )
 }
 
 #[test]
 fn from_str_returns_ok_for_output() {
-    assert_eq!(Ok(CliProgressFormat::Output), CliProgressFormat::from_str("output"))
+    assert_eq!(
+        Ok(CliProgressFormat::Output),
+        CliProgressFormat::from_str("output")
+    )
 }
 
 #[test]
 fn from_str_returns_ok_for_pb() {
-    assert_eq!(Ok(CliProgressFormat::ProgressBar), CliProgressFormat::from_str("pb"))
+    assert_eq!(
+        Ok(CliProgressFormat::ProgressBar),
+        CliProgressFormat::from_str("pb")
+    )
 }
 
 #[test]
 fn from_str_returns_ok_for_progress_bar() {
-    assert_eq!(Ok(CliProgressFormat::ProgressBar), CliProgressFormat::from_str("progress_bar"))
+    assert_eq!(
+        Ok(CliProgressFormat::ProgressBar),
+        CliProgressFormat::from_str("progress_bar")
+    )
 }
 
 #[test]
