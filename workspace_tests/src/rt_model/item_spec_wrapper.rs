@@ -32,10 +32,7 @@ async fn deref_to_dyn_item_spec_rt() {
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let item_spec_rt: &dyn ItemSpecRt<_> = &item_spec_wrapper;
 
-    assert_eq!(
-        format!("{VecCopyItemSpec:?}"),
-        format!("{item_spec_rt:?}")
-    );
+    assert_eq!(format!("{VecCopyItemSpec:?}"), format!("{item_spec_rt:?}"));
 }
 
 #[tokio::test]
@@ -44,10 +41,7 @@ async fn deref_mut_to_dyn_item_spec_rt() {
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let item_spec_rt: &dyn ItemSpecRt<_> = &item_spec_wrapper;
 
-    assert_eq!(
-        format!("{VecCopyItemSpec:?}"),
-        format!("{item_spec_rt:?}")
-    );
+    assert_eq!(format!("{VecCopyItemSpec:?}"), format!("{item_spec_rt:?}"));
 }
 
 #[tokio::test]

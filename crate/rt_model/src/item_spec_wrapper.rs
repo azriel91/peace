@@ -194,8 +194,7 @@ where
         let state_diff: StateDiff = {
             let item_spec_id = <IS as ItemSpec>::id(self);
             let states_base = resources.borrow::<States<StatesTs>>();
-            let state_base =
-                states_base.get::<State<StateLogical, StatePhysical>, _>(item_spec_id);
+            let state_base = states_base.get::<State<StateLogical, StatePhysical>, _>(item_spec_id);
             let states_desired = resources.borrow::<StatesDesired>();
             let state_desired =
                 states_desired.get::<State<StateLogical, Placeholder>, _>(item_spec_id);
