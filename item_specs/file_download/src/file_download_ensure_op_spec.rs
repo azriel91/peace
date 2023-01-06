@@ -21,10 +21,7 @@ use crate::{FileDownloadData, FileDownloadError, FileDownloadState, FileDownload
 
 #[cfg(feature = "output_progress")]
 use peace::{
-    cfg::{
-        progress::{ProgressIncrement, ProgressLimit, ProgressUpdate},
-        Sender,
-    },
+    cfg::progress::{ProgressIncrement, ProgressLimit, ProgressUpdate},
     diff::Tracked,
 };
 
@@ -59,7 +56,7 @@ where
         {
             Self::stream_write(
                 #[cfg(feature = "output_progress")]
-                op_ctx.progress_tx,
+                op_ctx,
                 params,
                 response.bytes_stream(),
             )
@@ -72,7 +69,7 @@ where
         {
             Self::stream_write(
                 #[cfg(feature = "output_progress")]
-                op_ctx.progress_tx,
+                op_ctx,
                 dest,
                 file_download_data.storage(),
                 params.storage_form(),
@@ -87,7 +84,7 @@ where
     /// Streams the content to disk.
     #[cfg(not(target_arch = "wasm32"))]
     async fn stream_write(
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdate>,
+        #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
         file_download_params: &FileDownloadParams<Id>,
         byte_stream: impl Stream<Item = reqwest::Result<Bytes>>,
     ) -> Result<(), FileDownloadError> {
@@ -186,11 +183,11 @@ where
                         ProgressIncrement::Tick
                     };
                     let progress_update = ProgressUpdate {
-                        item_spec_id: todo!(),
+                        item_spec_id: op_ctx.item_spec_id.clone(),
                         increment,
                     };
 
-                    progress_tx.send(progress_update).await
+                    op_ctx.progress_tx.send(progress_update).await
                 };
 
                 Ok(buffer)
@@ -206,7 +203,7 @@ where
     /// Streams the content to disk.
     #[cfg(target_arch = "wasm32")]
     async fn stream_write(
-        #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdate>,
+        #[cfg(feature = "output_progress")] _op_ctx: OpCtx<'_>,
         dest_path: &Path,
         storage: &Storage,
         storage_form: crate::StorageForm,

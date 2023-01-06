@@ -292,7 +292,9 @@ where
         };
         match item_spec.ensure_prepare(resources).await {
             Ok(mut item_ensure) => {
+                let item_spec_id = item_spec.id();
                 let op_ctx = OpCtx::new(
+                    item_spec_id,
                     #[cfg(feature = "output_progress")]
                     progress_tx,
                 );

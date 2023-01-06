@@ -180,6 +180,7 @@ async fn ensure_exec_dry() -> Result<(), VecCopyError> {
         }
     }
     let op_ctx = OpCtx::new(
+        VecCopyItemSpec::ID,
         #[cfg(feature = "output_progress")]
         progress_tx,
     );
@@ -214,6 +215,7 @@ async fn ensure_exec() -> Result<(), VecCopyError> {
         }
     }
     let op_ctx = OpCtx::new(
+        VecCopyItemSpec::ID,
         #[cfg(feature = "output_progress")]
         progress_tx,
     );
