@@ -21,7 +21,7 @@ dyn-clone = "1.0.10"
 erased-serde = "0.3.24"
 fn_graph = { version = "0.8.0", features = ["resman"] }
 futures = "0.3.25"
-indicatif = { version = "0.17.2", features = ["tokio"] }
+indicatif = { workspace = true, features = ["tokio"] }
 miette = { workspace = true, optional = true }
 peace_cfg = { path = "../cfg", version = "0.0.5" }
 peace_data = { path = "../data", version = "0.0.5" }

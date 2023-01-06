@@ -1,12 +1,11 @@
-use std::collections::HashMap;
+use indicatif::MultiProgress;
+use peace_core::{progress::ProgressTracker, ItemSpecId};
+use rt_map::RtMap;
 
-use indicatif::{MultiProgress, ProgressBar};
-use peace_core::ItemSpecId;
-
-/// Tracks progress for each item spec's command execution.
+/// Tracks command execution progress for all item specs.
 ///
-/// The Peace framework initializes the `multi_progress` and `progress_bars` and
-/// manage updating the `ProgressBar` values.
+/// The Peace framework initializes the `multi_progress` and `progress_trackers`
+/// and manages updating the `ProgressBar` values.
 ///
 /// By default, the `MultiProgress` will use [`ProgressDrawTarget::hidden()`].
 /// However, by default [`CliOutput`] sets the draw target to `stdout` if an
@@ -18,19 +17,19 @@ use peace_core::ItemSpecId;
 pub struct CmdProgressTracker {
     /// `MultiProgress` that tracks the remaining progress bars.
     multi_progress: MultiProgress,
-    /// `ProgressBar`s for each item spec.
-    progress_bars: HashMap<ItemSpecId, ProgressBar>,
+    /// Tracks progress for each item spec.
+    progress_trackers: RtMap<ItemSpecId, ProgressTracker>,
 }
 
 impl CmdProgressTracker {
     /// Returns a new `CmdProgressTracker`.
     pub fn new(
         multi_progress: MultiProgress,
-        progress_bars: HashMap<ItemSpecId, ProgressBar>,
+        progress_trackers: RtMap<ItemSpecId, ProgressTracker>,
     ) -> Self {
         Self {
             multi_progress,
-            progress_bars,
+            progress_trackers,
         }
     }
 
@@ -45,13 +44,14 @@ impl CmdProgressTracker {
         &mut self.multi_progress
     }
 
-    /// Returns the `ProgressBar`s for each item spec.
-    pub fn progress_bars(&self) -> &HashMap<ItemSpecId, ProgressBar> {
-        &self.progress_bars
+    /// Returns the `ProgressTracker`s for each item spec.
+    pub fn progress_trackers(&self) -> &RtMap<ItemSpecId, ProgressTracker> {
+        &self.progress_trackers
     }
 
-    /// Returns a mutable reference to the `ProgressBar`s for each item spec.
-    pub fn progress_bars_mut(&mut self) -> &mut HashMap<ItemSpecId, ProgressBar> {
-        &mut self.progress_bars
+    /// Returns a mutable reference to the `ProgressTracker`s for each item
+    /// spec.
+    pub fn progress_trackers_mut(&mut self) -> &mut RtMap<ItemSpecId, ProgressTracker> {
+        &mut self.progress_trackers
     }
 }

@@ -9,6 +9,7 @@ pub use async_trait::async_trait;
 pub use indicatif;
 #[cfg(feature = "output_progress")]
 pub use peace_core::progress::ProgressUpdate;
+pub use rt_map;
 
 pub use crate::{
     output_format::OutputFormat, output_format_parse_error::OutputFormatParseError,

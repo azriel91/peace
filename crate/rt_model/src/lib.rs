@@ -8,7 +8,7 @@ pub use fn_graph::{self, FnRef, FnRefMut};
 #[cfg(feature = "output_progress")]
 pub use peace_rt_model_core::CmdProgressTracker;
 pub use peace_rt_model_core::{
-    cmd_context_params, OutputFormat, OutputFormatParseError, OutputWrite,
+    cmd_context_params, rt_map, OutputFormat, OutputFormatParseError, OutputWrite,
 };
 
 #[cfg(not(target_arch = "wasm32"))]

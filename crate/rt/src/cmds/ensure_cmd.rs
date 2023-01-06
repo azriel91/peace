@@ -14,6 +14,13 @@ use tokio::sync::{mpsc, mpsc::UnboundedSender};
 
 use crate::{cmds::sub::StatesCurrentDiscoverCmd, BUFFERED_FUTURES_MAX};
 
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use peace_cfg::progress::ProgressTracker;
+        use peace_rt_model::{CmdProgressTracker, rt_map::RtMap};
+    }
+}
+
 #[derive(Debug)]
 pub struct EnsureCmd<E, O>(PhantomData<(E, O)>);
 
@@ -68,6 +75,8 @@ where
             item_spec_graph,
             output,
             resources,
+            #[cfg(feature = "output_progress")]
+            &cmd_progress_tracker,
             true,
         )
         .await;
@@ -141,6 +150,8 @@ where
             item_spec_graph,
             output,
             resources,
+            #[cfg(feature = "output_progress")]
+            &cmd_progress_tracker,
             false,
         )
         .await;
@@ -182,6 +193,7 @@ where
         #[cfg(not(feature = "output_progress"))] _output: &mut O,
         #[cfg(feature = "output_progress")] output: &mut O,
         mut resources: Resources<SetUp>,
+        #[cfg(feature = "output_progress")] cmd_progress_tracker: &CmdProgressTracker,
         dry_run: bool,
     ) -> Result<Resources<ResourcesTs>, E>
     where
@@ -194,6 +206,7 @@ where
 
         let resources_ref = &resources;
         let execution_task = async move {
+            let progress_trackers = cmd_progress_tracker.progress_trackers();
             #[cfg(feature = "output_progress")]
             let progress_tx = &progress_tx;
             let outcomes_tx = &outcomes_tx;
@@ -202,7 +215,7 @@ where
                     Self::item_ensure_exec(
                         resources_ref,
                         #[cfg(feature = "output_progress")]
-                        progress_tx,
+                        progress_trackers,
                         outcomes_tx,
                         item_spec,
                         dry_run,
@@ -278,9 +291,7 @@ where
     /// ```
     async fn item_ensure_exec(
         resources: &Resources<SetUp>,
-        #[cfg(feature = "output_progress")] progress_tx: &peace_cfg::Sender<
-            peace_cfg::progress::ProgressUpdate,
-        >,
+        #[cfg(feature = "output_progress")] progress_trackers: &RtMap<ItemSpecId, ProgressTracker>,
         outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
         item_spec: &ItemSpecBoxed<E>,
         dry_run: bool,
@@ -293,10 +304,12 @@ where
         match item_spec.ensure_prepare(resources).await {
             Ok(mut item_ensure) => {
                 let item_spec_id = item_spec.id();
+                #[cfg(feature = "output_progress")]
+                let mut progress_tracker = progress_trackers.borrow_mut(item_spec_id);
                 let op_ctx = OpCtx::new(
                     item_spec_id,
                     #[cfg(feature = "output_progress")]
-                    progress_tx,
+                    &mut progress_tracker,
                 );
                 match f(&**item_spec, op_ctx, resources, &mut item_ensure).await {
                     Ok(()) => {

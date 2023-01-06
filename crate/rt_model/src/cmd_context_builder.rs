@@ -14,9 +14,8 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use std::collections::HashMap;
-
-        use peace_cfg::ItemSpecId;
+        use peace_rt_model_core::rt_map::RtMap;
+        use peace_cfg::progress::ProgressTracker;
         use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget};
 
         use crate::CmdProgressTracker;
@@ -243,17 +242,17 @@ where
         #[cfg(feature = "output_progress")]
         let cmd_progress_tracker = {
             let multi_progress = MultiProgress::with_draw_target(ProgressDrawTarget::hidden());
-            let progress_bars = item_spec_graph
-                .iter_insertion()
-                .map(|item_spec| {
-                    (
-                        item_spec.id().clone(),
-                        multi_progress.add(ProgressBar::hidden()),
-                    )
-                })
-                .collect::<HashMap<ItemSpecId, ProgressBar>>();
+            let progress_trackers = item_spec_graph.iter_insertion().fold(
+                RtMap::with_capacity(item_spec_graph.node_count()),
+                |mut progress_trackers, item_spec| {
+                    let progress_bar = multi_progress.add(ProgressBar::hidden());
+                    let progress_tracker = ProgressTracker::new(progress_bar);
+                    progress_trackers.insert(item_spec.id().clone(), progress_tracker);
+                    progress_trackers
+                },
+            );
 
-            CmdProgressTracker::new(multi_progress, progress_bars)
+            CmdProgressTracker::new(multi_progress, progress_trackers)
         };
 
         Ok(CmdContext {

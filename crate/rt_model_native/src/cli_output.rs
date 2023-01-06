@@ -275,7 +275,7 @@ where
 
         if self.cli_progress_format == CliProgressFormatChosen::ProgressBar {
             let rows = cmd_progress_tracker
-                .progress_bars()
+                .progress_trackers()
                 .len()
                 .try_into()
                 .unwrap_or(50);

@@ -17,12 +17,10 @@ test = false
 
 [dependencies]
 async-trait = "0.1.60"
-cfg-if = { workspace = true }
 peace_core = { path = "../core", version = "0.0.5" }
 peace_data = { path = "../data", version = "0.0.5" }
 peace_resources = { path = "../resources", version = "0.0.5" }
 serde = { version = "1.0.152", features = ["derive"] }
-tokio = { version = "1.23.0", features = ["sync"] }
 
 [features]
 default = []

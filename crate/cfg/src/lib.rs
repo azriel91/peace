@@ -5,15 +5,8 @@
 
 // Re-exports
 pub use async_trait::async_trait;
-cfg_if::cfg_if! {
-    if #[cfg(feature = "output_progress")] {
-        pub use peace_core::progress;
-        pub use tokio::sync::mpsc::{
-            error::{SendError, TrySendError},
-            Sender,
-        };
-    }
-}
+#[cfg(feature = "output_progress")]
+pub use peace_core::progress;
 
 pub use peace_core::{
     flow_id, item_spec_id, profile, FlowId, FlowIdInvalidFmt, ItemSpecId, ItemSpecIdInvalidFmt,
