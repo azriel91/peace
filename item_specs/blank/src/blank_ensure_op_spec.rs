@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{
-    async_trait, state::Nothing, EnsureOpSpec, OpCheckStatus, OpCtx, ProgressLimit, State,
-};
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressLimit;
+use peace::cfg::{async_trait, state::Nothing, EnsureOpSpec, OpCheckStatus, OpCtx, State};
 
 use crate::{BlankData, BlankError, BlankState, BlankStateDiff};
 
@@ -30,8 +30,15 @@ where
         let op_check_status = match *diff {
             BlankStateDiff::InSync { .. } => OpCheckStatus::ExecNotRequired,
             BlankStateDiff::Added { .. } | BlankStateDiff::OutOfSync { .. } => {
-                let progress_limit = ProgressLimit::Steps(1);
-                OpCheckStatus::ExecRequired { progress_limit }
+                #[cfg(not(feature = "output_progress"))]
+                {
+                    OpCheckStatus::ExecRequired
+                }
+                #[cfg(feature = "output_progress")]
+                {
+                    let progress_limit = ProgressLimit::Steps(1);
+                    OpCheckStatus::ExecRequired { progress_limit }
+                }
             }
         };
 

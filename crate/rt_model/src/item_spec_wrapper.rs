@@ -883,6 +883,15 @@ where
         } = item_ensure;
 
         match op_check_status {
+            #[cfg(not(feature = "output_progress"))]
+            OpCheckStatus::ExecRequired => {
+                let state_physical = self
+                    .ensure_op_exec_dry(op_ctx, resources, state_current, state_desired, state_diff)
+                    .await?;
+
+                *state_ensured = Some(State::new(state_desired.logical.clone(), state_physical));
+            }
+            #[cfg(feature = "output_progress")]
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
                 let state_physical = self
                     .ensure_op_exec_dry(op_ctx, resources, state_current, state_desired, state_diff)
@@ -918,6 +927,15 @@ where
         } = item_ensure;
 
         match op_check_status {
+            #[cfg(not(feature = "output_progress"))]
+            OpCheckStatus::ExecRequired => {
+                let state_physical = self
+                    .ensure_op_exec(op_ctx, resources, state_current, state_desired, state_diff)
+                    .await?;
+
+                *state_ensured = Some(State::new(state_desired.logical.clone(), state_physical));
+            }
+            #[cfg(feature = "output_progress")]
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
                 let state_physical = self
                     .ensure_op_exec(op_ctx, resources, state_current, state_desired, state_diff)

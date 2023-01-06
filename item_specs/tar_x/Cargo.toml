@@ -42,3 +42,4 @@ tokio = { version = "1.23.0" }
 [features]
 default = []
 error_reporting = ["peace/error_reporting"]
+output_progress = ["peace/output_progress"]

@@ -17,6 +17,7 @@ test = false
 
 [dependencies]
 bytes = "1.3.0"
+cfg-if = { workspace = true }
 futures = "0.3.25"
 miette = { workspace = true, optional = true }
 peace = { path = "../..", version = "0.0.5", default-features = false }

@@ -279,7 +279,7 @@ where
     async fn item_ensure_exec(
         resources: &Resources<SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &peace_cfg::Sender<
-            peace_cfg::ProgressUpdate,
+            peace_cfg::progress::ProgressUpdate,
         >,
         outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
         item_spec: &ItemSpecBoxed<E>,

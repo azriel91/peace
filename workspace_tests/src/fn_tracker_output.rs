@@ -41,7 +41,7 @@ where
     }
 
     #[cfg(feature = "output_progress")]
-    async fn progress_update(&mut self, _progress_update: peace::cfg::ProgressUpdate) {}
+    async fn progress_update(&mut self, _progress_update: peace::cfg::progress::ProgressUpdate) {}
 
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, _cmd_progress_tracker: &peace::rt_model::CmdProgressTracker) {}

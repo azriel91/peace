@@ -17,6 +17,7 @@ use crate::Error;
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use is_terminal::IsTerminal;
+        use peace_core::progress::ProgressUpdate;
         use peace_rt_model_core::{indicatif::InMemoryTerm, CmdProgressTracker};
 
         use crate::{CliProgressFormat, CliProgressFormatChosen};
@@ -288,7 +289,7 @@ where
     }
 
     #[cfg(feature = "output_progress")]
-    async fn progress_update(&mut self, progress_update: peace_core::ProgressUpdate) {
+    async fn progress_update(&mut self, progress_update: ProgressUpdate) {
         match self.cli_progress_format {
             CliProgressFormatChosen::ProgressBar => {
                 // Output progress bar to writer.

@@ -4,10 +4,12 @@ use std::{
 };
 
 use diff::{Diff, VecDiff, VecDiffType};
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressLimit;
 use peace::{
     cfg::{
         async_trait, item_spec_id, state::Nothing, CleanOpSpec, EnsureOpSpec, ItemSpec, ItemSpecId,
-        OpCheckStatus, OpCtx, ProgressLimit, State, StateDiffFnSpec, TryFnSpec,
+        OpCheckStatus, OpCtx, State, StateDiffFnSpec, TryFnSpec,
     },
     data::{Data, RMaybe, R, W},
     resources::{resources::ts::Empty, states::StatesSaved, Resources},
@@ -86,11 +88,18 @@ impl CleanOpSpec for VecCopyCleanOpSpec {
         let op_check_status = if vec_b.0.is_empty() {
             OpCheckStatus::ExecNotRequired
         } else {
-            let progress_limit = TryInto::<u64>::try_into(vec_b.0.len())
-                .map(ProgressLimit::Bytes)
-                .unwrap_or(ProgressLimit::Unknown);
+            #[cfg(not(feature = "output_progress"))]
+            {
+                OpCheckStatus::ExecRequired
+            }
+            #[cfg(feature = "output_progress")]
+            {
+                let progress_limit = TryInto::<u64>::try_into(vec_b.0.len())
+                    .map(ProgressLimit::Bytes)
+                    .unwrap_or(ProgressLimit::Unknown);
 
-            OpCheckStatus::ExecRequired { progress_limit }
+                OpCheckStatus::ExecRequired { progress_limit }
+            }
         };
         Ok(op_check_status)
     }
@@ -124,6 +133,12 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     type StateLogical = VecCopyState;
     type StatePhysical = Nothing;
 
+    // We can't use attributes to selectively definee the params:
+    // <https://github.com/dtolnay/async-trait/issues/226>
+    //
+    // #[cfg(not(feature = "output_progress"))] _state_desired: &VecCopyState,
+    // #[cfg(feature = "output_progress")] state_desired: &VecCopyState,
+    #[allow(unused_variables)]
     async fn check(
         _vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
@@ -133,11 +148,18 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
         let op_check_status = if diff.0.0.is_empty() {
             OpCheckStatus::ExecNotRequired
         } else {
-            let progress_limit = TryInto::<u64>::try_into(state_desired.len())
-                .map(ProgressLimit::Bytes)
-                .unwrap_or(ProgressLimit::Unknown);
+            #[cfg(not(feature = "output_progress"))]
+            {
+                OpCheckStatus::ExecRequired
+            }
+            #[cfg(feature = "output_progress")]
+            {
+                let progress_limit = TryInto::<u64>::try_into(state_desired.len())
+                    .map(ProgressLimit::Bytes)
+                    .unwrap_or(ProgressLimit::Unknown);
 
-            OpCheckStatus::ExecRequired { progress_limit }
+                OpCheckStatus::ExecRequired { progress_limit }
+            }
         };
         Ok(op_check_status)
     }

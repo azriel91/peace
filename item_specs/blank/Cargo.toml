@@ -25,3 +25,4 @@ thiserror = "1.0.38"
 [features]
 default = []
 error_reporting = ["peace/error_reporting"]
+output_progress = ["peace/output_progress"]

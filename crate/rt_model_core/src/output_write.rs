@@ -44,7 +44,7 @@ pub trait OutputWrite<E> {
     /// This should render the progress update to the user in a way that is not
     /// overwhelming.
     #[cfg(feature = "output_progress")]
-    async fn progress_update(&mut self, progress_update: peace_core::ProgressUpdate);
+    async fn progress_update(&mut self, progress_update: peace_core::progress::ProgressUpdate);
 
     /// Notifies this `OutputWrite` implementation to stop rendering progress.
     ///

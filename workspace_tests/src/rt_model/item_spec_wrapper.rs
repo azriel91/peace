@@ -2,7 +2,7 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{
         state::{Nothing, Placeholder},
-        OpCheckStatus, OpCtx, ProgressLimit, State,
+        OpCheckStatus, OpCtx, State,
     },
     resources::{
         internal::{StateDiffsMut, StatesMut},
@@ -15,8 +15,12 @@ use peace::{
     },
     rt_model::{ItemSpecRt, ItemSpecWrapper},
 };
-#[cfg(feature = "output_progress")]
-use tokio::sync::mpsc;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use peace::cfg::progress::ProgressLimit;
+        use tokio::sync::mpsc;
+    }
+}
 
 use crate::{
     VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper, VecCopyState,
@@ -144,6 +148,9 @@ async fn ensure_prepare() -> Result<(), VecCopyError> {
 
     match <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources).await {
         Ok(item_ensure) => {
+            #[cfg(not(feature = "output_progress"))]
+            assert_eq!(OpCheckStatus::ExecRequired, item_ensure.op_check_status());
+            #[cfg(feature = "output_progress")]
             assert_eq!(
                 OpCheckStatus::ExecRequired {
                     progress_limit: ProgressLimit::Bytes(8)

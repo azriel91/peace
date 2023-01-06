@@ -1,6 +1,8 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Nothing, CleanOpSpec, OpCheckStatus, ProgressLimit, State};
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressLimit;
+use peace::cfg::{async_trait, state::Nothing, CleanOpSpec, OpCheckStatus, State};
 
 use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
@@ -27,22 +29,54 @@ where
     ) -> Result<OpCheckStatus, FileDownloadError> {
         let op_check_status = match file_state {
             FileDownloadState::None { .. } => OpCheckStatus::ExecNotRequired,
-            FileDownloadState::StringContents { path: _, contents } => {
-                OpCheckStatus::ExecRequired {
-                    progress_limit: ProgressLimit::Bytes(
-                        contents.as_bytes().len().try_into().unwrap(),
-                    ),
+            FileDownloadState::StringContents {
+                path: _,
+                #[cfg(not(feature = "output_progress"))]
+                    contents: _,
+                #[cfg(feature = "output_progress")]
+                contents,
+            } => {
+                #[cfg(not(feature = "output_progress"))]
+                {
+                    OpCheckStatus::ExecRequired
+                }
+                #[cfg(feature = "output_progress")]
+                {
+                    OpCheckStatus::ExecRequired {
+                        progress_limit: ProgressLimit::Bytes(
+                            contents.as_bytes().len().try_into().unwrap(),
+                        ),
+                    }
                 }
             }
             FileDownloadState::Length {
                 path: _,
+                #[cfg(not(feature = "output_progress"))]
+                    byte_count: _,
+                #[cfg(feature = "output_progress")]
                 byte_count,
-            } => OpCheckStatus::ExecRequired {
-                progress_limit: ProgressLimit::Bytes(*byte_count),
-            },
-            FileDownloadState::Unknown { path: _ } => OpCheckStatus::ExecRequired {
-                progress_limit: ProgressLimit::Unknown,
-            },
+            } => {
+                #[cfg(not(feature = "output_progress"))]
+                {
+                    OpCheckStatus::ExecRequired
+                }
+
+                #[cfg(feature = "output_progress")]
+                OpCheckStatus::ExecRequired {
+                    progress_limit: ProgressLimit::Bytes(*byte_count),
+                }
+            }
+            FileDownloadState::Unknown { path: _ } => {
+                #[cfg(not(feature = "output_progress"))]
+                {
+                    OpCheckStatus::ExecRequired
+                }
+
+                #[cfg(feature = "output_progress")]
+                OpCheckStatus::ExecRequired {
+                    progress_limit: ProgressLimit::Unknown,
+                }
+            }
         };
         Ok(op_check_status)
     }

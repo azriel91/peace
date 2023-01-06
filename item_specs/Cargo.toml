@@ -32,13 +32,6 @@ peace = { path = "..", version = "0.0.5", default-features = false }
 default = []
 
 # `peace` features
-output_colorized = ["peace/output_colorized"]
-output_json = ["peace/output_json"]
-output_progress = [
-    "peace/output_progress",
-    "peace_item_spec_file_download?/output_progress",
-]
-
 error_reporting = [
     "peace/error_reporting",
     "peace_item_spec_blank?/error_reporting",
@@ -46,6 +39,16 @@ error_reporting = [
     "peace_item_spec_sh_cmd?/error_reporting",
     "peace_item_spec_sh_sync_cmd?/error_reporting",
     "peace_item_spec_tar_x?/error_reporting",
+]
+output_colorized = ["peace/output_colorized"]
+output_json = ["peace/output_json"]
+output_progress = [
+    "peace/output_progress",
+    "peace_item_spec_blank?/output_progress",
+    "peace_item_spec_file_download?/output_progress",
+    "peace_item_spec_sh_cmd?/output_progress",
+    "peace_item_spec_sh_sync_cmd?/output_progress",
+    "peace_item_spec_tar_x?/output_progress",
 ]
 
 # Subcrates

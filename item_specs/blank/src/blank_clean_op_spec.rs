@@ -1,6 +1,8 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Nothing, CleanOpSpec, OpCheckStatus, ProgressLimit, State};
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressLimit;
+use peace::cfg::{async_trait, state::Nothing, CleanOpSpec, OpCheckStatus, State};
 
 use crate::{BlankData, BlankError, BlankState};
 
@@ -26,8 +28,15 @@ where
         let op_check_status = if blank_state.is_none() {
             OpCheckStatus::ExecNotRequired
         } else {
-            let progress_limit = ProgressLimit::Steps(1);
-            OpCheckStatus::ExecRequired { progress_limit }
+            #[cfg(not(feature = "output_progress"))]
+            {
+                OpCheckStatus::ExecRequired
+            }
+            #[cfg(feature = "output_progress")]
+            {
+                let progress_limit = ProgressLimit::Steps(1);
+                OpCheckStatus::ExecRequired { progress_limit }
+            }
         };
 
         Ok(op_check_status)

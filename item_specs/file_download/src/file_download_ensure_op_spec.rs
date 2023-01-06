@@ -1,31 +1,32 @@
 use std::marker::PhantomData;
-#[cfg(target_arch = "wasm32")]
-use std::path::Path;
 
-#[cfg(not(target_arch = "wasm32"))]
-use bytes::Bytes;
-#[cfg(not(target_arch = "wasm32"))]
-use futures::{Stream, StreamExt, TryStreamExt};
-use peace::cfg::{state::Nothing, OpCtx};
-#[cfg(not(target_arch = "wasm32"))]
-use tokio::io::AsyncWriteExt;
-#[cfg(not(target_arch = "wasm32"))]
-use tokio::{fs::File, io::BufWriter};
+cfg_if::cfg_if! {
+    if #[cfg(not(target_arch = "wasm32"))] {
+        use bytes::Bytes;
+        use futures::{Stream, StreamExt, TryStreamExt};
+        use tokio::io::AsyncWriteExt;
+        use tokio::{fs::File, io::BufWriter};
 
-#[cfg(target_arch = "wasm32")]
-use peace::rt_model::Storage;
+        use crate::FileDownloadParams;
+    } else if #[cfg(target_arch = "wasm32")] {
+        use std::path::Path;
+
+        use peace::rt_model::Storage;
+    }
+}
+
+use peace::cfg::{async_trait, state::Nothing, EnsureOpSpec, OpCheckStatus, OpCtx, State};
+
+use crate::{FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
 
 #[cfg(feature = "output_progress")]
-use peace::cfg::{ProgressUpdate, Sender};
-
 use peace::{
-    cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, State},
+    cfg::{
+        progress::{ProgressIncrement, ProgressLimit, ProgressUpdate},
+        Sender,
+    },
     diff::Tracked,
 };
-
-#[cfg(not(target_arch = "wasm32"))]
-use crate::FileDownloadParams;
-use crate::{FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
 
 /// Ensure OpSpec for the file to download.
 #[derive(Debug)]
@@ -179,11 +180,16 @@ where
 
                 #[cfg(feature = "output_progress")]
                 let _progress_send = {
-                    let progress_update = if let Ok(progress_inc) = u64::try_from(bytes.len()) {
-                        ProgressUpdate::Inc(progress_inc)
+                    let increment = if let Ok(progress_inc) = u64::try_from(bytes.len()) {
+                        ProgressIncrement::Inc(progress_inc)
                     } else {
-                        ProgressUpdate::Tick
+                        ProgressIncrement::Tick
                     };
+                    let progress_update = ProgressUpdate {
+                        item_spec_id: todo!(),
+                        increment,
+                    };
+
                     progress_tx.send(progress_update).await
                 };
 
@@ -247,17 +253,29 @@ where
         diff: &FileDownloadStateDiff,
     ) -> Result<OpCheckStatus, FileDownloadError> {
         let op_check_status = match diff {
-            FileDownloadStateDiff::Change { byte_len, .. } => {
-                let progress_limit = match byte_len.to {
-                    Tracked::None => ProgressLimit::Unknown,
-                    Tracked::Known(len) => len
-                        .try_into()
-                        .map(ProgressLimit::Bytes)
-                        .unwrap_or(ProgressLimit::Unknown),
-                    Tracked::Unknown => ProgressLimit::Unknown,
-                };
+            FileDownloadStateDiff::Change {
+                #[cfg(feature = "output_progress")]
+                byte_len,
+                ..
+            } => {
+                #[cfg(not(feature = "output_progress"))]
+                {
+                    OpCheckStatus::ExecRequired
+                }
 
-                OpCheckStatus::ExecRequired { progress_limit }
+                #[cfg(feature = "output_progress")]
+                {
+                    let progress_limit = match byte_len.to {
+                        Tracked::None => ProgressLimit::Unknown,
+                        Tracked::Known(len) => len
+                            .try_into()
+                            .map(ProgressLimit::Bytes)
+                            .unwrap_or(ProgressLimit::Unknown),
+                        Tracked::Unknown => ProgressLimit::Unknown,
+                    };
+
+                    OpCheckStatus::ExecRequired { progress_limit }
+                }
             }
             FileDownloadStateDiff::Deleted { .. } => OpCheckStatus::ExecNotRequired, /* Don't delete */
             // existing file

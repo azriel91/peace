@@ -7,7 +7,7 @@
 pub use async_trait::async_trait;
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        pub use peace_core::ProgressUpdate;
+        pub use peace_core::progress;
         pub use tokio::sync::mpsc::{
             error::{SendError, TrySendError},
             Sender,
@@ -17,7 +17,7 @@ cfg_if::cfg_if! {
 
 pub use peace_core::{
     flow_id, item_spec_id, profile, FlowId, FlowIdInvalidFmt, ItemSpecId, ItemSpecIdInvalidFmt,
-    OpCheckStatus, Profile, ProfileInvalidFmt, ProgressLimit,
+    OpCheckStatus, Profile, ProfileInvalidFmt,
 };
 
 pub use crate::{

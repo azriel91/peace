@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-/// Message to update the `OutputWrite`.
+/// The amount that the item spec progressed by.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub enum ProgressUpdate {
+pub enum ProgressIncrement {
     /// Ticks the progress bar without incrementing its value.
     ///
     /// Generally useful for progress bars with an unknown total.

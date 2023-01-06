@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_core::ProgressUpdate;
+        use peace_core::progress::ProgressUpdate;
         use tokio::sync::mpsc::Sender;
     }
 }

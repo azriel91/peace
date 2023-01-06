@@ -1,6 +1,8 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, CleanOpSpec, OpCheckStatus, ProgressLimit, State};
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressLimit;
+use peace::cfg::{async_trait, CleanOpSpec, OpCheckStatus, State};
 
 use crate::{ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState};
 
@@ -36,9 +38,17 @@ where
             .await
             .and_then(|state| match state.logical {
                 ShCmdState::Some { stdout, .. } => match stdout.trim().lines().rev().next() {
-                    Some("true") => Ok(OpCheckStatus::ExecRequired {
-                        progress_limit: ProgressLimit::Unknown,
-                    }),
+                    Some("true") => {
+                        #[cfg(not(feature = "output_progress"))]
+                        {
+                            Ok(OpCheckStatus::ExecRequired)
+                        }
+
+                        #[cfg(feature = "output_progress")]
+                        Ok(OpCheckStatus::ExecRequired {
+                            progress_limit: ProgressLimit::Unknown,
+                        })
+                    }
                     Some("false") => Ok(OpCheckStatus::ExecNotRequired),
                     _ => Err(ShCmdError::CleanCheckValueNotBoolean {
                         sh_cmd: clean_check_sh_cmd.clone(),

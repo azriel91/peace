@@ -2,7 +2,9 @@ use std::marker::PhantomData;
 
 use peace::cfg::state::Nothing;
 
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx, ProgressLimit, State};
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressLimit;
+use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx, State};
 
 use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
 
@@ -21,6 +23,12 @@ where
     type StateLogical = FileMetadatas;
     type StatePhysical = Nothing;
 
+    // We can't use attributes to selectively definee the params:
+    // <https://github.com/dtolnay/async-trait/issues/226>
+    //
+    // #[cfg(not(feature = "output_progress"))] _state_desired: &VecCopyState,
+    // #[cfg(feature = "output_progress")] state_desired: &VecCopyState,
+    #[allow(unused_variables)]
     async fn check(
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &State<FileMetadatas, Nothing>,
@@ -34,8 +42,16 @@ where
                 modified: _,
                 removed: _,
             } => {
-                let progress_limit = ProgressLimit::Steps(state_desired.len().try_into().unwrap());
-                OpCheckStatus::ExecRequired { progress_limit }
+                #[cfg(not(feature = "output_progress"))]
+                {
+                    OpCheckStatus::ExecRequired
+                }
+                #[cfg(feature = "output_progress")]
+                {
+                    let progress_limit =
+                        ProgressLimit::Steps(state_desired.len().try_into().unwrap());
+                    OpCheckStatus::ExecRequired { progress_limit }
+                }
             }
         };
 
