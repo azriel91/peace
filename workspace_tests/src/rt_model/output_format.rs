@@ -38,7 +38,7 @@ fn from_str_returns_err_for_unknown_string() {
 #[test]
 fn clone() {
     let output_format = OutputFormat::Text;
-    let output_format_clone = output_format.clone();
+    let output_format_clone = output_format;
 
     assert_eq!(output_format, output_format_clone);
 }

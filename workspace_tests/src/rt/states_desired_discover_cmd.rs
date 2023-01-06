@@ -31,7 +31,7 @@ async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::erro
 
     let states_desired = resources.borrow::<StatesDesired>();
     let vec_copy_desired_state =
-        states_desired.get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id());
+        states_desired.get::<State<VecCopyState, Placeholder>, _>(VecCopyItemSpec.id());
     let states_desired_on_disk = {
         let states_desired_file = resources.borrow::<StatesDesiredFile>();
         let states_slice = std::fs::read(&*states_desired_file)?;
@@ -47,8 +47,8 @@ async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::erro
         vec_copy_desired_state.map(|state_desired| &state_desired.logical)
     );
     assert_eq!(
-        states_desired.get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id()),
-        states_desired_on_disk.get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
+        states_desired.get::<State<VecCopyState, Placeholder>, _>(VecCopyItemSpec.id()),
+        states_desired_on_disk.get::<State<VecCopyState, Placeholder>, _>(VecCopyItemSpec.id())
     );
 
     Ok(())

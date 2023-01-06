@@ -41,11 +41,11 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
 
     let states_from_discover = resources_from_discover.borrow::<StatesCurrent>();
     let vec_copy_state_from_discover =
-        states_from_discover.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+        states_from_discover.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     let states_from_read = resources_from_read.borrow::<StatesSaved>();
     let states_from_read = &*states_from_read;
     let vec_copy_state_from_read =
-        states_from_read.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+        states_from_read.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
     assert_eq!(
         vec![FnInvocation::new(

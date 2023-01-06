@@ -66,26 +66,26 @@ mod partial_eq {
 
     #[test]
     fn tracked_unknown_returns_equality_unknown() {
-        assert_eq!(false, Tracked::<Value>::Unknown == Tracked::<Value>::None);
-        assert_eq!(false, Tracked::<Value>::Unknown == Tracked::Unknown);
-        assert_eq!(false, Tracked::Unknown == Tracked::Known(Value(1)));
+        assert!(!(Tracked::<Value>::Unknown == Tracked::<Value>::None));
+        assert!(!(Tracked::<Value>::Unknown == Tracked::Unknown));
+        assert!(!(Tracked::Unknown == Tracked::Known(Value(1))));
     }
 
     #[test]
     fn tracked_nones_are_equal() {
-        assert_eq!(true, Tracked::<Value>::None == Tracked::<Value>::None);
+        assert!(Tracked::<Value>::None == Tracked::<Value>::None);
     }
 
     #[test]
     fn tracked_knowns_delegate_to_known_value() {
-        assert_eq!(true, Tracked::Known(Value(1)) == Tracked::Known(Value(1)));
-        assert_eq!(false, Tracked::Known(Value(1)) == Tracked::Known(Value(2)));
+        assert!(Tracked::Known(Value(1)) == Tracked::Known(Value(1)));
+        assert!(!(Tracked::Known(Value(1)) == Tracked::Known(Value(2))));
     }
 
     #[test]
     fn tracked_known_does_not_equal_tracked_none() {
-        assert_eq!(false, Tracked::Known(Value(1)) == Tracked::None);
-        assert_eq!(false, Tracked::None == Tracked::Known(Value(2)));
+        assert!(!(Tracked::Known(Value(1)) == Tracked::None));
+        assert!(!(Tracked::None == Tracked::Known(Value(2))));
     }
 }
 

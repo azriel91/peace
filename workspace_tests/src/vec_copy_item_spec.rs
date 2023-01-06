@@ -62,7 +62,7 @@ impl ItemSpec for VecCopyItemSpec {
             let states_saved = <RMaybe<'_, StatesSaved> as Data>::borrow(resources);
             let vec_copy_state_saved: Option<&'_ State<VecCopyState, Nothing>> = states_saved
                 .as_ref()
-                .and_then(|states_saved| states_saved.get(&self.id()));
+                .and_then(|states_saved| states_saved.get(self.id()));
             if let Some(vec_copy_state) = vec_copy_state_saved {
                 VecB((*vec_copy_state.logical).clone())
             } else {
@@ -218,7 +218,7 @@ pub struct VecCopyParams<'op> {
 
 impl<'op> VecCopyParams<'op> {
     pub fn dest_mut(&mut self) -> &mut VecB {
-        &mut *self.dest
+        &mut self.dest
     }
 }
 
@@ -277,7 +277,7 @@ impl StateDiffFnSpec for VecCopyStateDiffFnSpec {
         state_current: &State<VecCopyState, Nothing>,
         state_desired: &VecCopyState,
     ) -> Result<Self::StateDiff, VecCopyError> {
-        Ok(state_current.logical.diff(&state_desired)).map(VecCopyDiff::from)
+        Ok(state_current.logical.diff(state_desired)).map(VecCopyDiff::from)
     }
 }
 

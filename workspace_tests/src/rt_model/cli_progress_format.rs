@@ -45,7 +45,7 @@ fn from_str_returns_err_for_unknown_string() {
 #[test]
 fn clone() {
     let cli_progress_format = CliProgressFormat::Auto;
-    let cli_progress_format_clone = cli_progress_format.clone();
+    let cli_progress_format_clone = cli_progress_format;
 
     assert_eq!(cli_progress_format, cli_progress_format_clone);
 }

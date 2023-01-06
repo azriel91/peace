@@ -38,10 +38,10 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
 
     let states_desired_from_discover = resources_from_discover.borrow::<StatesDesired>();
     let vec_copy_state_from_discover =
-        states_desired_from_discover.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+        states_desired_from_discover.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     let states_desired_from_read = resources_from_read.borrow::<StatesDesired>();
     let vec_copy_state_from_read =
-        states_desired_from_read.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+        states_desired_from_read.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
     Ok(())
 }

@@ -269,7 +269,7 @@ where
             .stream()
             .filter(|item_spec| {
                 let exec_required = op_check_statuses
-                    .get(&item_spec.id())
+                    .get(item_spec.id())
                     .map(|op_check_status| {
                         matches!(op_check_status, OpCheckStatus::ExecRequired { .. })
                     })

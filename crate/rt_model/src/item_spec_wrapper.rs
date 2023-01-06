@@ -195,10 +195,10 @@ where
             let item_spec_id = <IS as ItemSpec>::id(self);
             let states_base = resources.borrow::<States<StatesTs>>();
             let state_base =
-                states_base.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+                states_base.get::<State<StateLogical, StatePhysical>, _>(item_spec_id);
             let states_desired = resources.borrow::<StatesDesired>();
             let state_desired =
-                states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
+                states_desired.get::<State<StateLogical, Placeholder>, _>(item_spec_id);
 
             if let (Some(state_base), Some(state_desired)) = (state_base, state_desired) {
                 self.state_diff_exec_with(resources, state_base, state_desired)
@@ -958,7 +958,7 @@ where
                 <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(resources);
             let item_spec_id = <IS as ItemSpec>::id(self);
             let states = resources.borrow::<StatesCurrent>();
-            let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+            let state = states.get::<State<StateLogical, StatePhysical>, _>(item_spec_id);
 
             if let Some(state) = state {
                 <CleanOpSpec as peace_cfg::CleanOpSpec>::check(data, state).await?
@@ -977,7 +977,7 @@ where
         let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(resources);
         let item_spec_id = <IS as ItemSpec>::id(self);
         let states = resources.borrow::<StatesCurrent>();
-        let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+        let state = states.get::<State<StateLogical, StatePhysical>, _>(item_spec_id);
 
         if let Some(state) = state {
             <CleanOpSpec as peace_cfg::CleanOpSpec>::exec_dry(data, state).await?;
@@ -994,7 +994,7 @@ where
         let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(resources);
         let item_spec_id = <IS as ItemSpec>::id(self);
         let states = resources.borrow::<StatesCurrent>();
-        let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+        let state = states.get::<State<StateLogical, StatePhysical>, _>(item_spec_id);
 
         if let Some(state) = state {
             <CleanOpSpec as peace_cfg::CleanOpSpec>::exec(data, state).await?;

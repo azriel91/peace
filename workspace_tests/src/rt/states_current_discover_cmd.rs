@@ -30,7 +30,7 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesCurrent>();
-    let vec_copy_state = states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+    let vec_copy_state = states.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     let states_on_disk = {
         let states_saved_file = resources.borrow::<StatesSavedFile>();
         let states_slice = std::fs::read(&*states_saved_file)?;
@@ -46,8 +46,8 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
         vec_copy_state
     );
     assert_eq!(
-        states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id()),
-        states_on_disk.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        states.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id()),
+        states_on_disk.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
     );
 
     Ok(())
@@ -77,7 +77,7 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesSaved>();
-    let vec_copy_state = states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+    let vec_copy_state = states.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     let states_on_disk = {
         let states_saved_file = resources.borrow::<StatesSavedFile>();
         let states_slice = std::fs::read(&*states_saved_file)?;
@@ -93,8 +93,8 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
         vec_copy_state
     );
     assert_eq!(
-        states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id()),
-        states_on_disk.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        states.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id()),
+        states_on_disk.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
     );
 
     Ok(())

@@ -40,11 +40,11 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
     let states_cleaned_dry = resources.borrow::<StatesCleanedDry>();
     assert_eq!(
         Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
-        states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        states.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
-        states_cleaned_dry.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        states_cleaned_dry.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
     ); // states_cleaned_dry should be the same as the beginning.
 
     Ok(())
@@ -101,7 +101,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
             Nothing
         ))
         .as_ref(),
-        ensured_states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        ensured_states.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(State::new(
@@ -109,12 +109,12 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
             Nothing
         ))
         .as_ref(),
-        cleaned_states_before.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        cleaned_states_before.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         states_saved
-            .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+            .get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
             .map(|state| &state.logical)
     );
 
@@ -160,18 +160,18 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let states_saved = resources_reread.borrow::<StatesSaved>();
     assert_eq!(
         Some(State::new(VecCopyState::new(), Nothing)).as_ref(),
-        cleaned_states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        cleaned_states.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
         cleaned_states_cleaned
-            .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+            .get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
             .map(|state| &state.logical)
     ); // states_cleaned.logical should be empty, if all went well.
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
         states_saved
-            .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+            .get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
             .map(|state| &state.logical)
     );
 
@@ -230,7 +230,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
             Nothing
         ))
         .as_ref(),
-        ensured_states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        ensured_states.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(State::new(
@@ -238,18 +238,18 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
             Nothing
         ))
         .as_ref(),
-        cleaned_states_before.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        cleaned_states_before.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
         cleaned_states_cleaned
-            .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+            .get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
             .map(|state| &state.logical)
     ); // states_cleaned.logical should be empty, if all went well.
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
         states_saved
-            .get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+            .get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
             .map(|state| &state.logical)
     );
 

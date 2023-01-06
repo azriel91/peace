@@ -8,7 +8,7 @@ fn defaults_to_unknown() {
 #[test]
 fn clone() {
     let progress_limit_0 = ProgressLimit::Steps(3);
-    let progress_limit_1 = progress_limit_0.clone();
+    let progress_limit_1 = progress_limit_0;
 
     assert_eq!(progress_limit_0, progress_limit_1);
 }
