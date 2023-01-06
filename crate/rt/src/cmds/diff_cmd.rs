@@ -102,7 +102,7 @@ where
                 .map(Result::<_, E>::Ok)
                 .and_then(|item_spec| async move {
                     Ok((
-                        item_spec.id(),
+                        item_spec.id().clone(),
                         item_spec
                             .state_diff_exec_with_states_saved(resources_ref)
                             .await?,

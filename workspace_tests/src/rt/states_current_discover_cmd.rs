@@ -36,7 +36,7 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
         let states_slice = std::fs::read(&*states_saved_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId, BoxDtDisplay>::new_typed();
-        type_reg.register::<State<VecCopyState, Nothing>>(VecCopyItemSpec.id());
+        type_reg.register::<State<VecCopyState, Nothing>>(VecCopyItemSpec.id().clone());
 
         let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
         StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
@@ -83,7 +83,7 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
         let states_slice = std::fs::read(&*states_saved_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId, BoxDtDisplay>::new_typed();
-        type_reg.register::<State<VecCopyState, Nothing>>(VecCopyItemSpec.id());
+        type_reg.register::<State<VecCopyState, Nothing>>(VecCopyItemSpec.id().clone());
 
         let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
         StatesCurrent::from(type_reg.deserialize_map(deserializer)?)

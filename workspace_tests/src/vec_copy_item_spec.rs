@@ -35,6 +35,10 @@ pub type VecCopyItemSpecWrapper = ItemSpecWrapper<
 #[derive(Debug)]
 pub struct VecCopyItemSpec;
 
+impl VecCopyItemSpec {
+    pub const ID: &ItemSpecId = &item_spec_id!("vec_copy");
+}
+
 #[async_trait(?Send)]
 impl ItemSpec for VecCopyItemSpec {
     type CleanOpSpec = VecCopyCleanOpSpec;
@@ -47,8 +51,8 @@ impl ItemSpec for VecCopyItemSpec {
     type StateLogical = VecCopyState;
     type StatePhysical = Nothing;
 
-    fn id(&self) -> ItemSpecId {
-        item_spec_id!("vec_copy")
+    fn id(&self) -> &ItemSpecId {
+        Self::ID
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {

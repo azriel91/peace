@@ -242,7 +242,7 @@ where
             .map(Result::<_, E>::Ok)
             .and_then(|item_spec| async move {
                 let op_check_status = item_spec.clean_op_check(resources).await?;
-                Ok((item_spec.id(), op_check_status))
+                Ok((item_spec.id().clone(), op_check_status))
             })
             .try_collect::<OpCheckStatuses>()
             .await?;

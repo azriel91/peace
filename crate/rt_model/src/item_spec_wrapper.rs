@@ -713,7 +713,7 @@ where
         > + Send
         + Sync,
 {
-    fn id(&self) -> ItemSpecId {
+    fn id(&self) -> &ItemSpecId {
         <IS as ItemSpec>::id(self)
     }
 
@@ -726,11 +726,11 @@ where
     fn state_register(&self, states_type_regs: &mut StatesTypeRegs) {
         states_type_regs
             .states_current_type_reg_mut()
-            .register::<State<StateLogical, StatePhysical>>(<IS as ItemSpec>::id(self));
+            .register::<State<StateLogical, StatePhysical>>(<IS as ItemSpec>::id(self).clone());
 
         states_type_regs
             .states_desired_type_reg_mut()
-            .register::<State<StateLogical, Placeholder>>(<IS as ItemSpec>::id(self));
+            .register::<State<StateLogical, Placeholder>>(<IS as ItemSpec>::id(self).clone());
     }
 
     async fn state_current_try_exec(

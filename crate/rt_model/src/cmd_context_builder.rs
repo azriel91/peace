@@ -245,7 +245,12 @@ where
             let multi_progress = MultiProgress::with_draw_target(ProgressDrawTarget::hidden());
             let progress_bars = item_spec_graph
                 .iter_insertion()
-                .map(|item_spec| (item_spec.id(), multi_progress.add(ProgressBar::hidden())))
+                .map(|item_spec| {
+                    (
+                        item_spec.id().clone(),
+                        multi_progress.add(ProgressBar::hidden()),
+                    )
+                })
                 .collect::<HashMap<ItemSpecId, ProgressBar>>();
 
             CmdProgressTracker::new(multi_progress, progress_bars)

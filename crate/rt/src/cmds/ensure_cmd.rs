@@ -301,7 +301,7 @@ where
                         // ensure succeeded
                         outcomes_tx
                             .send(ItemEnsureOutcome::Success {
-                                item_spec_id: item_spec.id(),
+                                item_spec_id: item_spec.id().clone(),
                                 item_ensure,
                             })
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
@@ -312,7 +312,7 @@ where
                         // ensure failed
                         outcomes_tx
                             .send(ItemEnsureOutcome::Fail {
-                                item_spec_id: item_spec.id(),
+                                item_spec_id: item_spec.id().clone(),
                                 item_ensure,
                                 error,
                             })
@@ -326,7 +326,7 @@ where
             Err((error, item_ensure_partial)) => {
                 outcomes_tx
                     .send(ItemEnsureOutcome::PrepareFail {
-                        item_spec_id: item_spec.id(),
+                        item_spec_id: item_spec.id().clone(),
                         item_ensure_partial,
                         error,
                     })

@@ -24,12 +24,12 @@ use crate::{
 /// [`ItemSpec`]: peace_cfg::ItemSpec
 #[async_trait(?Send)]
 pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
-    /// Returns the ID of this full spec.
+    /// Returns the ID of this item spec.
     ///
     /// See [`ItemSpec::id`];
     ///
     /// [`ItemSpec::id`]: peace_cfg::ItemSpec::id
-    fn id(&self) -> ItemSpecId;
+    fn id(&self) -> &ItemSpecId;
 
     /// Initializes data for the operation's check and `exec` functions.
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E>

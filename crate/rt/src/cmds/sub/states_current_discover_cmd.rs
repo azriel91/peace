@@ -82,7 +82,7 @@ where
             .try_filter_map(|item_spec| async move {
                 let state = item_spec.state_current_try_exec(resources_ref).await?;
                 Ok(state
-                    .map(|state| (item_spec.id(), state))
+                    .map(|state| (item_spec.id().clone(), state))
                     .map(Result::Ok)
                     .map(futures::future::ready))
             })
@@ -116,7 +116,7 @@ where
             .try_filter_map(|item_spec| async move {
                 let state = item_spec.state_cleaned_try_exec(resources).await?;
                 Ok(state
-                    .map(|state| (item_spec.id(), state))
+                    .map(|state| (item_spec.id().clone(), state))
                     .map(Result::Ok)
                     .map(futures::future::ready))
             })
@@ -149,7 +149,7 @@ where
             .try_filter_map(|item_spec| async move {
                 let state = item_spec.state_cleaned_try_exec(resources_ref).await?;
                 Ok(state
-                    .map(|state| (item_spec.id(), state))
+                    .map(|state| (item_spec.id().clone(), state))
                     .map(Result::Ok)
                     .map(futures::future::ready))
             })

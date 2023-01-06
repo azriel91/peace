@@ -37,7 +37,7 @@ async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::erro
         let states_slice = std::fs::read(&*states_desired_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId, BoxDtDisplay>::new_typed();
-        type_reg.register::<State<VecCopyState, Placeholder>>(VecCopyItemSpec.id());
+        type_reg.register::<State<VecCopyState, Placeholder>>(VecCopyItemSpec.id().clone());
 
         let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
         StatesDesired::from(type_reg.deserialize_map(deserializer)?)

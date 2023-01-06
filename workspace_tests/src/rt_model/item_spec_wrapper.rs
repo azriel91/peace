@@ -252,7 +252,10 @@ async fn resources_with_state_current_diffs(
         let state_desired = item_spec_wrapper
             .state_diff_exec_with_states_current(&resources)
             .await?;
-        state_diffs_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper), state_desired);
+        state_diffs_mut.insert_raw(
+            <dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(),
+            state_desired,
+        );
 
         StateDiffs::from(state_diffs_mut)
     };
@@ -270,7 +273,7 @@ async fn resources_with_states_saved_and_desired(
         let state =
             <dyn ItemSpecRt<_>>::state_current_try_exec(item_spec_wrapper, &resources).await?;
         if let Some(state) = state {
-            states_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper), state);
+            states_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(), state);
         }
 
         Into::<StatesSaved>::into(StatesCurrent::from(states_mut))
@@ -281,7 +284,10 @@ async fn resources_with_states_saved_and_desired(
             .state_desired_try_exec(&resources)
             .await?
             .unwrap();
-        states_desired_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper), state_desired);
+        states_desired_mut.insert_raw(
+            <dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(),
+            state_desired,
+        );
 
         StatesDesired::from(states_desired_mut)
     };
@@ -300,7 +306,7 @@ async fn resources_with_states_current_and_desired(
         let state =
             <dyn ItemSpecRt<_>>::state_current_try_exec(item_spec_wrapper, &resources).await?;
         if let Some(state) = state {
-            states_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper), state);
+            states_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(), state);
         }
 
         StatesCurrent::from(states_mut)
@@ -311,7 +317,10 @@ async fn resources_with_states_current_and_desired(
             .state_desired_try_exec(&resources)
             .await?
             .unwrap();
-        states_desired_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper), state_desired);
+        states_desired_mut.insert_raw(
+            <dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(),
+            state_desired,
+        );
 
         StatesDesired::from(states_desired_mut)
     };

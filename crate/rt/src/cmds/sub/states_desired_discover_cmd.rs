@@ -82,7 +82,7 @@ where
             .try_filter_map(|item_spec| async move {
                 let state_desired = item_spec.state_desired_try_exec(resources_ref).await?;
                 Ok(state_desired
-                    .map(|state_desired| (item_spec.id(), state_desired))
+                    .map(|state_desired| (item_spec.id().clone(), state_desired))
                     .map(Result::Ok)
                     .map(futures::future::ready))
             })
