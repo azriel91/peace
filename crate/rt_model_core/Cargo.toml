@@ -22,9 +22,9 @@ indicatif = { workspace = true, features = ["in_memory", "tokio"] }
 miette = { workspace = true, optional = true }
 peace_core = { path = "../core", version = "0.0.5", optional = true }
 peace_resources = { path = "../resources", version = "0.0.5" }
-rt_map = { version = "0.5.2", features = ["unsafe_debug"] }
 serde = "1.0.152"
 serde_json = { version = "1.0.91", optional = true }
+tokio = { version = "1.23.0", optional = true, features = ["sync"] }
 type_reg = { workspace = true, features = ["resman"] }
 
 [features]
@@ -32,4 +32,4 @@ default = []
 error_reporting = ["dep:miette"]
 output_colorized = ["miette?/fancy"]
 output_json = ["dep:serde_json"]
-output_progress = ["peace_core/output_progress"]
+output_progress = ["dep:tokio", "peace_core/output_progress"]

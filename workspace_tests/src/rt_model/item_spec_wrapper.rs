@@ -17,7 +17,10 @@ use peace::{
 };
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace::cfg::progress::ProgressLimit;
+        use peace::{
+            cfg::progress::{ProgressLimit, ProgressTracker},
+            rt_model::indicatif::ProgressBar,
+        };
         use tokio::sync::mpsc;
     }
 }
@@ -170,13 +173,18 @@ async fn ensure_exec_dry() -> Result<(), VecCopyError> {
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
-            let progress_tx = &progress_tx;
+            let progress_bar = ProgressBar::hidden();
+            let progress_tracker = ProgressTracker::new(
+                VecCopyItemSpec::ID.clone(),
+                progress_bar,
+                progress_tx,
+            );
         }
     }
     let op_ctx = OpCtx::new(
         VecCopyItemSpec::ID,
         #[cfg(feature = "output_progress")]
-        progress_tx,
+        &progress_tracker,
     );
 
     <dyn ItemSpecRt<_>>::ensure_exec_dry(
@@ -205,13 +213,18 @@ async fn ensure_exec() -> Result<(), VecCopyError> {
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
-            let progress_tx = &progress_tx;
+            let progress_bar = ProgressBar::hidden();
+            let progress_tracker = ProgressTracker::new(
+                VecCopyItemSpec::ID.clone(),
+                progress_bar,
+                progress_tx,
+            );
         }
     }
     let op_ctx = OpCtx::new(
         VecCopyItemSpec::ID,
         #[cfg(feature = "output_progress")]
-        progress_tx,
+        &progress_tracker,
     );
 
     <dyn ItemSpecRt<_>>::ensure_exec(

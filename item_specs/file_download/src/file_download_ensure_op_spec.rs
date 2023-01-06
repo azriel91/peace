@@ -20,10 +20,7 @@ use peace::cfg::{async_trait, state::Nothing, EnsureOpSpec, OpCheckStatus, OpCtx
 use crate::{FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
 
 #[cfg(feature = "output_progress")]
-use peace::{
-    cfg::progress::{ProgressIncrement, ProgressLimit, ProgressUpdate},
-    diff::Tracked,
-};
+use peace::{cfg::progress::ProgressLimit, diff::Tracked};
 
 /// Ensure OpSpec for the file to download.
 #[derive(Debug)]
@@ -176,18 +173,10 @@ where
                     .map_err(FileDownloadError::ResponseFileWrite)?;
 
                 #[cfg(feature = "output_progress")]
-                let _progress_send = {
-                    let increment = if let Ok(progress_inc) = u64::try_from(bytes.len()) {
-                        ProgressIncrement::Inc(progress_inc)
-                    } else {
-                        ProgressIncrement::Tick
-                    };
-                    let progress_update = ProgressUpdate {
-                        item_spec_id: op_ctx.item_spec_id.clone(),
-                        increment,
-                    };
-
-                    op_ctx.progress_tx.send(progress_update).await
+                if let Ok(progress_inc) = u64::try_from(bytes.len()) {
+                    op_ctx.progress_tracker.inc(progress_inc).await
+                } else {
+                    op_ctx.progress_tracker.tick().await
                 };
 
                 Ok(buffer)

@@ -16,8 +16,10 @@ use crate::{cmds::sub::StatesCurrentDiscoverCmd, BUFFERED_FUTURES_MAX};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
+        use std::collections::HashMap;
+
         use peace_cfg::progress::ProgressTracker;
-        use peace_rt_model::{CmdProgressTracker, rt_map::RtMap};
+        use peace_rt_model::{CmdProgressTracker};
     }
 }
 
@@ -29,10 +31,6 @@ where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
 {
-    #[cfg(feature = "output_progress")]
-    /// Maximum number of progress messages to buffer.
-    const PROGRESS_COUNT_MAX: usize = 256;
-
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
     /// [`ItemSpec`].
     ///
@@ -67,7 +65,7 @@ where
             resources,
             states_type_regs,
             #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
+            mut cmd_progress_tracker,
             ..
         } = cmd_context;
 
@@ -76,7 +74,7 @@ where
             output,
             resources,
             #[cfg(feature = "output_progress")]
-            &cmd_progress_tracker,
+            &mut cmd_progress_tracker,
             true,
         )
         .await;
@@ -141,7 +139,7 @@ where
             resources,
             states_type_regs,
             #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
+            mut cmd_progress_tracker,
             ..
         } = cmd_context;
         // https://github.com/rust-lang/rust-clippy/issues/9111
@@ -151,7 +149,7 @@ where
             output,
             resources,
             #[cfg(feature = "output_progress")]
-            &cmd_progress_tracker,
+            &mut cmd_progress_tracker,
             false,
         )
         .await;
@@ -193,7 +191,7 @@ where
         #[cfg(not(feature = "output_progress"))] _output: &mut O,
         #[cfg(feature = "output_progress")] output: &mut O,
         mut resources: Resources<SetUp>,
-        #[cfg(feature = "output_progress")] cmd_progress_tracker: &CmdProgressTracker,
+        #[cfg(feature = "output_progress")] cmd_progress_tracker: &mut CmdProgressTracker,
         dry_run: bool,
     ) -> Result<Resources<ResourcesTs>, E>
     where
@@ -201,14 +199,15 @@ where
         Resources<ResourcesTs>: From<(Resources<SetUp>, States<StatesTs>)>,
     {
         #[cfg(feature = "output_progress")]
-        let (progress_tx, mut progress_rx) = mpsc::channel(Self::PROGRESS_COUNT_MAX);
+        let CmdProgressTracker {
+            multi_progress: _,
+            progress_rx,
+            progress_trackers,
+        } = cmd_progress_tracker;
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemEnsureOutcome<E>>();
 
         let resources_ref = &resources;
         let execution_task = async move {
-            let progress_trackers = cmd_progress_tracker.progress_trackers();
-            #[cfg(feature = "output_progress")]
-            let progress_tx = &progress_tx;
             let outcomes_tx = &outcomes_tx;
             let (Ok(()) | Err(())) = item_spec_graph
                 .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
@@ -291,7 +290,10 @@ where
     /// ```
     async fn item_ensure_exec(
         resources: &Resources<SetUp>,
-        #[cfg(feature = "output_progress")] progress_trackers: &RtMap<ItemSpecId, ProgressTracker>,
+        #[cfg(feature = "output_progress")] progress_trackers: &HashMap<
+            ItemSpecId,
+            ProgressTracker,
+        >,
         outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
         item_spec: &ItemSpecBoxed<E>,
         dry_run: bool,
@@ -305,11 +307,13 @@ where
             Ok(mut item_ensure) => {
                 let item_spec_id = item_spec.id();
                 #[cfg(feature = "output_progress")]
-                let mut progress_tracker = progress_trackers.borrow_mut(item_spec_id);
+                let Some(progress_tracker) = progress_trackers.get(item_spec_id) else {
+                    panic!("Expected a progress tracker to exist for {item_spec_id}");
+                };
                 let op_ctx = OpCtx::new(
                     item_spec_id,
                     #[cfg(feature = "output_progress")]
-                    &mut progress_tracker,
+                    progress_tracker,
                 );
                 match f(&**item_spec, op_ctx, resources, &mut item_ensure).await {
                     Ok(()) => {

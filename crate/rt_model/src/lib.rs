@@ -5,11 +5,11 @@
 
 // Re-exports
 pub use fn_graph::{self, FnRef, FnRefMut};
-#[cfg(feature = "output_progress")]
-pub use peace_rt_model_core::CmdProgressTracker;
 pub use peace_rt_model_core::{
-    cmd_context_params, rt_map, OutputFormat, OutputFormatParseError, OutputWrite,
+    cmd_context_params, OutputFormat, OutputFormatParseError, OutputWrite,
 };
+#[cfg(feature = "output_progress")]
+pub use peace_rt_model_core::{indicatif, CmdProgressTracker};
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use peace_rt_model_native::{

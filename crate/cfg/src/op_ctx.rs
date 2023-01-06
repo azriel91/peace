@@ -12,7 +12,7 @@ pub struct OpCtx<'op> {
     pub item_spec_id: &'op ItemSpecId,
     /// `ProgressTracker` for item specs to send progress to.
     #[cfg(feature = "output_progress")]
-    pub progress_tracker: &'op mut ProgressTracker,
+    pub progress_tracker: &'op ProgressTracker,
     /// Marker.
     pub marker: PhantomData<&'op ()>,
 }
@@ -21,7 +21,7 @@ impl<'op> OpCtx<'op> {
     /// Returns a new `OpCtx`.
     pub fn new(
         item_spec_id: &'op ItemSpecId,
-        #[cfg(feature = "output_progress")] progress_tracker: &'op mut ProgressTracker,
+        #[cfg(feature = "output_progress")] progress_tracker: &'op ProgressTracker,
     ) -> Self {
         Self {
             item_spec_id,
@@ -33,7 +33,7 @@ impl<'op> OpCtx<'op> {
 
     /// Returns the `ProgressTracker` for item specs to send progress to.
     #[cfg(feature = "output_progress")]
-    pub fn progress_tracker(&mut self) -> &mut ProgressTracker {
+    pub fn progress_tracker(&self) -> &ProgressTracker {
         self.progress_tracker
     }
 }
