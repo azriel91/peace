@@ -20,5 +20,5 @@ peace_core = { version = "0.0.5", path = "../core" }
 peace_data = { version = "0.0.5", path = "../data" }
 resman = { version = "0.16.0", features = ["debug"] }
 serde = { version = "1.0.152", features = ["derive"] }
-tokio = { version = "1.23.0", features = ["sync"] }
+tokio = { workspace = true, features = ["sync"] }
 type_reg = { workspace = true }

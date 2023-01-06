@@ -36,10 +36,11 @@ members = [
 [workspace.dependencies]
 cfg-if = "1.0.0"
 chrono = { version = "0.4.23", default-features = false, features = ["clock", "serde"] }
+derivative = "2.2.0"
 indicatif = { version = "0.17.2" }
 miette = { version = "5.5.0" }
-derivative = "2.2.0"
 tar = "0.4.38"
+tokio = "1.23.0"
 type_reg = { version = "0.5.0", features = ["debug", "untagged", "ordered"] }
 
 [features]
