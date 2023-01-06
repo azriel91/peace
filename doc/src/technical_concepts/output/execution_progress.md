@@ -41,8 +41,8 @@ The following variant is possible conceptually, but not applicable to the Peace 
 
 * Unit of measurement: Steps, Bytes, Percentage, None
 * Units total: Known / Unknown
-* Units initially completed: Numeric / Unknown
-* Units remaining: Numeric / Unknown. This is `total - completed`.
+* Units current: Numeric / Unknown
+* Units remaining: Numeric / Unknown. This is `total - current`.
 * Unit of progress tick: as it happens.
 
 

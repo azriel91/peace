@@ -18,8 +18,9 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use std::collections::HashMap;
 
-        use peace_cfg::progress::ProgressTracker;
-        use peace_rt_model::{CmdProgressTracker};
+        use peace_cfg::progress::{ProgressSender, ProgressTracker, ProgressUpdate};
+        use peace_rt_model::CmdProgressTracker;
+        use tokio::sync::mpsc::Sender;
     }
 }
 
@@ -31,6 +32,10 @@ where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
 {
+    #[cfg(feature = "output_progress")]
+    /// Maximum number of progress messages to buffer.
+    const PROGRESS_COUNT_MAX: usize = 256;
+
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
     /// [`ItemSpec`].
     ///
@@ -201,13 +206,17 @@ where
         #[cfg(feature = "output_progress")]
         let CmdProgressTracker {
             multi_progress: _,
-            progress_rx,
             progress_trackers,
         } = cmd_progress_tracker;
+
+        #[cfg(feature = "output_progress")]
+        let (progress_tx, mut progress_rx) = mpsc::channel(Self::PROGRESS_COUNT_MAX);
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemEnsureOutcome<E>>();
 
         let resources_ref = &resources;
         let execution_task = async move {
+            #[cfg(feature = "output_progress")]
+            let progress_tx = &progress_tx;
             let outcomes_tx = &outcomes_tx;
             let (Ok(()) | Err(())) = item_spec_graph
                 .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
@@ -215,6 +224,8 @@ where
                         resources_ref,
                         #[cfg(feature = "output_progress")]
                         progress_trackers,
+                        #[cfg(feature = "output_progress")]
+                        progress_tx,
                         outcomes_tx,
                         item_spec,
                         dry_run,
@@ -294,6 +305,7 @@ where
             ItemSpecId,
             ProgressTracker,
         >,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdate>,
         outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
         item_spec: &ItemSpecBoxed<E>,
         dry_run: bool,
@@ -307,13 +319,16 @@ where
             Ok(mut item_ensure) => {
                 let item_spec_id = item_spec.id();
                 #[cfg(feature = "output_progress")]
-                let Some(progress_tracker) = progress_trackers.get(item_spec_id) else {
-                    panic!("Expected a progress tracker to exist for {item_spec_id}");
+                let progress_sender = {
+                    let Some(progress_tracker) = progress_trackers.get(item_spec_id) else {
+                        panic!("Expected a progress tracker to exist for {item_spec_id}");
+                    };
+                    ProgressSender::new(item_spec_id, progress_tracker, progress_tx)
                 };
                 let op_ctx = OpCtx::new(
                     item_spec_id,
                     #[cfg(feature = "output_progress")]
-                    progress_tracker,
+                    progress_sender,
                 );
                 match f(&**item_spec, op_ctx, resources, &mut item_ensure).await {
                     Ok(()) => {
@@ -341,6 +356,8 @@ where
                         Err(())
                     }
                 }
+
+                // TODO drop the channel sender. Right now it hangs.
             }
             Err((error, item_ensure_partial)) => {
                 outcomes_tx

@@ -18,7 +18,6 @@ cfg_if::cfg_if! {
 
         use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget};
         use peace_cfg::progress::ProgressTracker;
-        use tokio::sync::mpsc;
 
         use crate::CmdProgressTracker;
     }
@@ -159,10 +158,6 @@ where
     ProfileParamsKMaybe: KeyMaybe,
     FlowParamsKMaybe: KeyMaybe,
 {
-    #[cfg(feature = "output_progress")]
-    /// Maximum number of progress messages to buffer.
-    const PROGRESS_COUNT_MAX: usize = 256;
-
     /// Prepares a workspace to run commands in.
     ///
     /// # Parameters
@@ -247,23 +242,18 @@ where
 
         #[cfg(feature = "output_progress")]
         let cmd_progress_tracker = {
-            let (progress_tx, progress_rx) = mpsc::channel(Self::PROGRESS_COUNT_MAX);
             let multi_progress = MultiProgress::with_draw_target(ProgressDrawTarget::hidden());
             let progress_trackers = item_spec_graph.iter_insertion().fold(
                 HashMap::with_capacity(item_spec_graph.node_count()),
                 |mut progress_trackers, item_spec| {
                     let progress_bar = multi_progress.add(ProgressBar::hidden());
-                    let progress_tracker = ProgressTracker::new(
-                        item_spec.id().clone(),
-                        progress_bar,
-                        progress_tx.clone(),
-                    );
+                    let progress_tracker = ProgressTracker::new(progress_bar);
                     progress_trackers.insert(item_spec.id().clone(), progress_tracker);
                     progress_trackers
                 },
             );
 
-            CmdProgressTracker::new(multi_progress, progress_rx, progress_trackers)
+            CmdProgressTracker::new(multi_progress, progress_trackers)
         };
 
         Ok(CmdContext {

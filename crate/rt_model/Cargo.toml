@@ -30,7 +30,6 @@ peace_rt_model_core = { path = "../rt_model_core", version = "0.0.5" }
 peace_rt_model_hack = { path = "../rt_model_hack", version = "0.0.5", optional = true }
 serde = "1.0.152"
 serde_yaml = "0.9.16"
-tokio = { version = "1.23.0", optional = true, features = ["sync"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 peace_rt_model_native = { path = "../rt_model_native", version = "0.0.5" }
@@ -44,7 +43,6 @@ error_reporting = ["dep:miette", "peace_rt_model_hack/error_reporting"]
 output_colorized = ["peace_rt_model_native/output_colorized"]
 output_json = ["peace_rt_model_native/output_json", "peace_rt_model_web/output_json"]
 output_progress = [
-    "dep:tokio",
     "peace_cfg/output_progress",
     "peace_rt_model_hack/output_progress"
 ]

@@ -1,11 +1,7 @@
 use std::collections::HashMap;
 
 use indicatif::MultiProgress;
-use peace_core::{
-    progress::{ProgressTracker, ProgressUpdate},
-    ItemSpecId,
-};
-use tokio::sync::mpsc::Receiver;
+use peace_core::{progress::ProgressTracker, ItemSpecId};
 
 /// Tracks command execution progress for all item specs.
 ///
@@ -22,8 +18,6 @@ use tokio::sync::mpsc::Receiver;
 pub struct CmdProgressTracker {
     /// `MultiProgress` that tracks the remaining progress bars.
     pub multi_progress: MultiProgress,
-    /// Channel receiver for progress updates.
-    pub progress_rx: Receiver<ProgressUpdate>,
     /// Tracks progress for each item spec.
     pub progress_trackers: HashMap<ItemSpecId, ProgressTracker>,
 }
@@ -32,12 +26,10 @@ impl CmdProgressTracker {
     /// Returns a new `CmdProgressTracker`.
     pub fn new(
         multi_progress: MultiProgress,
-        progress_rx: Receiver<ProgressUpdate>,
         progress_trackers: HashMap<ItemSpecId, ProgressTracker>,
     ) -> Self {
         Self {
             multi_progress,
-            progress_rx,
             progress_trackers,
         }
     }
@@ -51,17 +43,6 @@ impl CmdProgressTracker {
     /// remaining progress bars.
     pub fn multi_progress_mut(&mut self) -> &mut MultiProgress {
         &mut self.multi_progress
-    }
-
-    /// Returns the channel receiver for progress updates.
-    pub fn progress_rx(&self) -> &Receiver<ProgressUpdate> {
-        &self.progress_rx
-    }
-
-    /// Returns a mutable reference to the channel receiver for progress
-    /// updates.
-    pub fn progress_rx_mut(&mut self) -> &mut Receiver<ProgressUpdate> {
-        &mut self.progress_rx
     }
 
     /// Returns the `ProgressTracker`s for each item spec.

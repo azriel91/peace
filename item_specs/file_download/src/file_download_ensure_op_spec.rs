@@ -164,6 +164,8 @@ where
         })?;
 
         let buffer = BufWriter::new(dest_file);
+        #[cfg(feature = "output_progress")]
+        let progress_sender = &op_ctx.progress_sender;
         let mut buffer = byte_stream
             .map(|bytes_result| bytes_result.map_err(FileDownloadError::ResponseBytesStream))
             .try_fold(buffer, |mut buffer, bytes| async move {
@@ -174,9 +176,9 @@ where
 
                 #[cfg(feature = "output_progress")]
                 if let Ok(progress_inc) = u64::try_from(bytes.len()) {
-                    op_ctx.progress_tracker.inc(progress_inc).await
+                    progress_sender.inc(progress_inc).await
                 } else {
-                    op_ctx.progress_tracker.tick().await
+                    progress_sender.tick().await
                 };
 
                 Ok(buffer)
