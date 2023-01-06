@@ -16,7 +16,7 @@ doctest = false
 test = false
 
 [dependencies]
-async-trait = "0.1.60"
+async-trait = "0.1.61"
 cfg-if = { workspace = true }
 indicatif = { workspace = true, features = ["in_memory", "tokio"] }
 miette = { workspace = true, optional = true }
