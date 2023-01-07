@@ -165,9 +165,9 @@ where
     /// # use peace_rt_model_native::CliOutput;
     /// // use peace::rt_model::{CliOutput, OutputFormat};
     ///
-    /// let cli_output = CliOutput::new().output_format(OutputFormat::Yaml);
+    /// let cli_output = CliOutput::new().with_output_format(OutputFormat::Yaml);
     /// ```
-    pub fn output_format(mut self, output_format: OutputFormat) -> Self {
+    pub fn with_output_format(mut self, output_format: OutputFormat) -> Self {
         self.format = output_format;
         self
     }

@@ -788,7 +788,7 @@ enum Error {
 }
 
 fn cli_output(buffer: &mut Vec<u8>, output_format: OutputFormat) -> CliOutput<&mut Vec<u8>> {
-    CliOutput::new_with_writer(buffer).output_format(output_format)
+    CliOutput::new_with_writer(buffer).with_output_format(output_format)
 }
 
 #[cfg(feature = "output_colorized")]
@@ -797,6 +797,6 @@ fn cli_output_colorized(
     output_format: OutputFormat,
 ) -> CliOutput<&mut Vec<u8>> {
     CliOutput::new_with_writer(buffer)
-        .output_format(output_format)
+        .with_output_format(output_format)
         .colorized()
 }

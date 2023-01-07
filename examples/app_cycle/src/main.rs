@@ -54,7 +54,7 @@ pub fn run() -> Result<(), AppCycleError> {
         let _flow_id = flow_id!("file");
         let mut cli_output = CliOutput::default();
         if let Some(format) = format {
-            cli_output = cli_output.output_format(format);
+            cli_output = cli_output.with_output_format(format);
         }
         #[cfg(feature = "output_colorized")]
         {
