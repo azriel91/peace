@@ -137,11 +137,14 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     type StateLogical = VecCopyState;
     type StatePhysical = Nothing;
 
-    // We can't use attributes to selectively definee the params:
-    // <https://github.com/dtolnay/async-trait/issues/226>
+    // Not sure why we can't use this:
     //
     // #[cfg(not(feature = "output_progress"))] _state_desired: &VecCopyState,
     // #[cfg(feature = "output_progress")] state_desired: &VecCopyState,
+    //
+    // There's an error saying lifetime bounds don't match the trait definition.
+    //
+    // Likely an issue with the codegen in `async-trait`.
     #[allow(unused_variables)]
     async fn check(
         _vec_copy_params: VecCopyParams<'_>,
