@@ -18,32 +18,43 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use is_terminal::IsTerminal;
         use peace_core::progress::ProgressUpdate;
-        use peace_rt_model_core::{indicatif::{InMemoryTerm, ProgressStyle}, CmdProgressTracker};
+        use peace_rt_model_core::{
+            indicatif::{ProgressStyle, ProgressDrawTarget},
+            CmdProgressTracker,
+        };
 
-        use crate::{CliProgressFormat, CliProgressFormatChosen};
+        use crate::{CliOutputTarget, CliProgressFormat, CliProgressFormatChosen};
     }
 }
 
 /// An `OutputWrite` implementation that writes to the command line.
 ///
-/// Currently this only outputs return values or errors, not progress.
+/// When the `"output_progress"` feature is enabled, progress is written to
+/// `stderr` by default.
+///
+/// # Implementation Note
+///
+/// `indicatif`'s internal writing to `stdout` / `stderr` is used, which is
+/// sync. I didn't figure out how to write the in-memory term contents to the
+/// `W` writer correctly.
 #[derive(Debug)]
 pub struct CliOutput<W> {
-    /// Output stream to write to.
+    /// Output stream to write the command outcome to.
     writer: W,
-    /// How to format command output -- human readable or machine parsable.
+    /// How to format command outcome output -- human readable or machine
+    /// parsable.
     format: OutputFormat,
     /// Whether output should be colorized.
     #[cfg(feature = "output_colorized")]
     colorized: bool,
+    #[cfg(feature = "output_progress")]
+    /// Where to output progress updates to -- stdout or stderr.
+    progress_target: CliOutputTarget,
     /// Whether the writer is an interactive terminal.
     ///
     /// This is detected on instantiation.
     #[cfg(feature = "output_progress")]
     cli_progress_format: CliProgressFormatChosen,
-    /// The in-memory terminal for `indicatif` to render to.
-    #[cfg(feature = "output_progress")]
-    in_memory_term: Option<InMemoryTerm>,
 }
 
 impl CliOutput<Stdout> {
@@ -77,15 +88,22 @@ where
             #[cfg(feature = "output_colorized")]
             colorized: false,
             #[cfg(feature = "output_progress")]
-            cli_progress_format: CliProgressFormatChosen::Output,
+            progress_target: CliOutputTarget::default(),
             #[cfg(feature = "output_progress")]
-            in_memory_term: None,
+            cli_progress_format: CliProgressFormatChosen::Output,
         }
     }
 
-    /// Sets the CLI output progress format.
+    /// Sets the progress output target -- stdout or stderr (default).
     #[cfg(feature = "output_progress")]
-    pub fn output_progress_format(mut self, cli_progress_format: CliProgressFormat) -> Self {
+    pub fn with_progress_target(mut self, progress_target: CliOutputTarget) -> Self {
+        self.progress_target = progress_target;
+        self
+    }
+
+    /// Sets the progress output format.
+    #[cfg(feature = "output_progress")]
+    pub fn with_progress_format(mut self, cli_progress_format: CliProgressFormat) -> Self {
         let cli_progress_format = match cli_progress_format {
             CliProgressFormat::Auto => {
                 // Even though we're using `tokio::io::stdout`, `IsTerminal` is only implemented
@@ -253,9 +271,9 @@ impl Default for CliOutput<Stdout> {
             #[cfg(feature = "output_colorized")]
             colorized: false,
             #[cfg(feature = "output_progress")]
-            cli_progress_format,
+            progress_target: CliOutputTarget::default(),
             #[cfg(feature = "output_progress")]
-            in_memory_term: None,
+            cli_progress_format,
         }
     }
 }
@@ -271,20 +289,15 @@ where
 {
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
-        use peace_rt_model_core::indicatif::{InMemoryTerm, ProgressDrawTarget};
-
         if self.cli_progress_format == CliProgressFormatChosen::ProgressBar {
-            let rows = cmd_progress_tracker
-                .progress_trackers()
-                .len()
-                .try_into()
-                .unwrap_or(50);
-            let cols = 120; // Don't make line length too long
-            let term = InMemoryTerm::new(rows, cols);
-            self.in_memory_term = Some(term.clone());
+            let progress_draw_target = match self.progress_target {
+                CliOutputTarget::Stdout => ProgressDrawTarget::stdout(),
+                CliOutputTarget::Stderr => ProgressDrawTarget::stderr(),
+            };
+
             cmd_progress_tracker
                 .multi_progress()
-                .set_draw_target(ProgressDrawTarget::term_like(Box::new(term)));
+                .set_draw_target(progress_draw_target);
 
             cmd_progress_tracker.progress_trackers().iter().for_each(
                 |(item_spec_id, progress_tracker)| {
@@ -309,14 +322,8 @@ where
     async fn progress_update(&mut self, progress_update: ProgressUpdate) {
         match self.cli_progress_format {
             CliProgressFormatChosen::ProgressBar => {
-                // Output progress bar to writer.
-                if let Some(in_memory_term) = self.in_memory_term.as_ref() {
-                    let _unused = self
-                        .writer
-                        .write_all(in_memory_term.contents().as_bytes())
-                        .await;
-                    let _unused = self.writer.flush().await;
-                }
+                // Don't need to do anything, as `indicatif` handles output to
+                // terminal.
             }
             CliProgressFormatChosen::Output => match self.format {
                 // Note: outputting yaml for Text output, because we aren't sending much progress
@@ -343,9 +350,7 @@ where
     }
 
     #[cfg(feature = "output_progress")]
-    async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {
-        self.in_memory_term = None;
-    }
+    async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         match self.format {

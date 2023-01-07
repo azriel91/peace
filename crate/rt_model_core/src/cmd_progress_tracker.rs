@@ -9,7 +9,7 @@ use peace_core::{progress::ProgressTracker, ItemSpecId};
 /// and manages updating the `ProgressBar` values.
 ///
 /// By default, the `MultiProgress` will use [`ProgressDrawTarget::hidden()`].
-/// However, by default [`CliOutput`] sets the draw target to `stdout` if an
+/// However, by default [`CliOutput`] sets the draw target to `stderr` if an
 /// executable built using Peace is run interactively.
 ///
 /// [`ProgressDrawTarget::hidden()`]: indicatif::ProgressDrawTarget::hidden
