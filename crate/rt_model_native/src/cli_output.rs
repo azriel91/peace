@@ -18,7 +18,7 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use is_terminal::IsTerminal;
         use peace_core::progress::ProgressUpdate;
-        use peace_rt_model_core::{indicatif::InMemoryTerm, CmdProgressTracker};
+        use peace_rt_model_core::{indicatif::{InMemoryTerm, ProgressStyle}, CmdProgressTracker};
 
         use crate::{CliProgressFormat, CliProgressFormatChosen};
     }
@@ -285,6 +285,23 @@ where
             cmd_progress_tracker
                 .multi_progress()
                 .set_draw_target(ProgressDrawTarget::term_like(Box::new(term)));
+
+            cmd_progress_tracker.progress_trackers().iter().for_each(
+                |(item_spec_id, progress_tracker)| {
+                    let progress_bar = progress_tracker.progress_bar();
+                    progress_bar.set_prefix(format!("{item_spec_id}"));
+                    let template = format!("{{prefix:20}} ▕{pb}▏", pb = "{bar:40.green.on_17}");
+                    progress_bar.set_style(
+                        ProgressStyle::with_template(template.as_str())
+                            .unwrap_or_else(|error| {
+                                panic!(
+                                    "`ProgressStyle` template was invalid. Template: `{template:?}`. Error: {error}"
+                                )
+                            })
+                            .progress_chars("█▉▊▋▌▍▎▏  "),
+                    );
+                },
+            );
         }
     }
 

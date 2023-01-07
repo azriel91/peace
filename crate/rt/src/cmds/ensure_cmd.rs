@@ -204,6 +204,9 @@ where
         Resources<ResourcesTs>: From<(Resources<SetUp>, States<StatesTs>)>,
     {
         #[cfg(feature = "output_progress")]
+        output.progress_begin(cmd_progress_tracker).await;
+
+        #[cfg(feature = "output_progress")]
         let CmdProgressTracker {
             multi_progress: _,
             progress_trackers,
@@ -233,10 +236,12 @@ where
                 })
                 .await
                 .map_err(|_vec_units: Vec<()>| ());
+
+            // `progress_tx` is dropped here, so `progress_rx` will safely end.
         };
 
         #[cfg(feature = "output_progress")]
-        let progress_render_task = async move {
+        let progress_render_task = async {
             while let Some(progress_update) = progress_rx.recv().await {
                 output.progress_update(progress_update).await
             }
@@ -266,6 +271,8 @@ where
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_progress")] {
                 futures::join!(execution_task, progress_render_task);
+
+                output.progress_end(cmd_progress_tracker).await;
             } else {
                 futures::join!(execution_task);
             }
@@ -323,7 +330,8 @@ where
                     let Some(progress_tracker) = progress_trackers.get(item_spec_id) else {
                         panic!("Expected a progress tracker to exist for {item_spec_id}");
                     };
-                    ProgressSender::new(item_spec_id, progress_tracker, progress_tx)
+                    let progress_bar = progress_tracker.progress_bar().clone();
+                    ProgressSender::new(item_spec_id, progress_bar, progress_tx)
                 };
                 let op_ctx = OpCtx::new(
                     item_spec_id,

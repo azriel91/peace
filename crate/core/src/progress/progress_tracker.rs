@@ -25,21 +25,9 @@ impl ProgressTracker {
         }
     }
 
-    /// Increments the progress by the given delta.
-    pub fn inc(&self, delta: u64) {
-        self.progress_bar.inc(delta);
-    }
-
-    /// Ticks the tracker without incrementing its progress.
-    ///
-    /// This is useful for spinners -- progress trackers where there is an
-    /// unknown.
-    ///
-    /// Note, this also updates the `last_update_dt`, so in the case of a
-    /// spinner, this should only be called when there is actually a detected
-    /// change.
-    pub fn tick(&self) {
-        self.progress_bar.tick();
+    /// Returns a reference to this `ProgressTracker`'s progress bar.
+    pub fn progress_bar(&self) -> &ProgressBar {
+        &self.progress_bar
     }
 
     /// Returns the estimated remaining duration to completion.
