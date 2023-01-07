@@ -29,14 +29,37 @@ cfg_if::cfg_if! {
 
 /// An `OutputWrite` implementation that writes to the command line.
 ///
-/// When the `"output_progress"` feature is enabled, progress is written to
-/// `stderr` by default.
+/// # Features
+///
+/// ## `"output_colorized"`
+///
+/// When this feature is enabled, text output is coloured when the [`colorized`]
+/// method is called with `true`.
+///
+/// ## `"output_progress"`
+///
+/// When this feature is enabled, progress is written to `stderr` by default.
+///
+/// By default, when the progress target is a terminal (i.e. not piped to
+/// another process, or redirected to a file), then the progress output format
+/// is a progress bar.
+///
+/// If it is piped to another process or redirected to a file, then the progress
+/// output format defaults to the same format at the outcome output format --
+/// text, YAML, or JSON.
+///
+/// These defaults may be overidden through the [`with_progress_target`] and
+/// [`with_progress_format`] methods.
 ///
 /// # Implementation Note
 ///
 /// `indicatif`'s internal writing to `stdout` / `stderr` is used, which is
 /// sync. I didn't figure out how to write the in-memory term contents to the
 /// `W` writer correctly.
+///
+/// [`colorized`]: Self::colorized
+/// [`with_progress_format`]: Self::with_progress_format
+/// [`with_progress_target`]: Self::with_progress_target
 #[derive(Debug)]
 pub struct CliOutput<W> {
     /// Output stream to write the command outcome to.
@@ -54,7 +77,7 @@ pub struct CliOutput<W> {
     ///
     /// This is detected on instantiation.
     #[cfg(feature = "output_progress")]
-    cli_progress_format: CliProgressFormatChosen,
+    progress_format: CliProgressFormatChosen,
 }
 
 impl CliOutput<Stdout> {
@@ -90,7 +113,7 @@ where
             #[cfg(feature = "output_progress")]
             progress_target: CliOutputTarget::default(),
             #[cfg(feature = "output_progress")]
-            cli_progress_format: CliProgressFormatChosen::Output,
+            progress_format: CliProgressFormatChosen::Output,
         }
     }
 
@@ -103,22 +126,33 @@ where
 
     /// Sets the progress output format.
     #[cfg(feature = "output_progress")]
-    pub fn with_progress_format(mut self, cli_progress_format: CliProgressFormat) -> Self {
-        let cli_progress_format = match cli_progress_format {
+    pub fn with_progress_format(mut self, progress_format: CliProgressFormat) -> Self {
+        let progress_format_chosen = match progress_format {
             CliProgressFormat::Auto => {
-                // Even though we're using `tokio::io::stdout`, `IsTerminal` is only implemented
-                // on `std::io::stdout`.
-                if std::io::stdout().is_terminal() {
-                    CliProgressFormatChosen::ProgressBar
-                } else {
-                    CliProgressFormatChosen::Output
+                // Even though we're using `tokio::io::stdout` / `stderr`, `IsTerminal` is only
+                // implemented on `std::io::stdout` / `stderr`.
+                match self.progress_target {
+                    CliOutputTarget::Stdout => {
+                        if std::io::stdout().is_terminal() {
+                            CliProgressFormatChosen::ProgressBar
+                        } else {
+                            CliProgressFormatChosen::Output
+                        }
+                    }
+                    CliOutputTarget::Stderr => {
+                        if std::io::stderr().is_terminal() {
+                            CliProgressFormatChosen::ProgressBar
+                        } else {
+                            CliProgressFormatChosen::Output
+                        }
+                    }
                 }
             }
             CliProgressFormat::Output => CliProgressFormatChosen::Output,
             CliProgressFormat::ProgressBar => CliProgressFormatChosen::ProgressBar,
         };
 
-        self.cli_progress_format = cli_progress_format;
+        self.progress_format = progress_format_chosen;
         self
     }
 
@@ -259,7 +293,7 @@ impl Default for CliOutput<Stdout> {
         // Even though we're using `tokio::io::stdout`, `IsTerminal` is only implemented
         // on `std::io::stdout`.
         #[cfg(feature = "output_progress")]
-        let cli_progress_format = if std::io::stdout().is_terminal() {
+        let progress_format = if std::io::stdout().is_terminal() {
             CliProgressFormatChosen::ProgressBar
         } else {
             CliProgressFormatChosen::Output
@@ -273,7 +307,7 @@ impl Default for CliOutput<Stdout> {
             #[cfg(feature = "output_progress")]
             progress_target: CliOutputTarget::default(),
             #[cfg(feature = "output_progress")]
-            cli_progress_format,
+            progress_format,
         }
     }
 }
@@ -289,7 +323,7 @@ where
 {
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
-        if self.cli_progress_format == CliProgressFormatChosen::ProgressBar {
+        if self.progress_format == CliProgressFormatChosen::ProgressBar {
             let progress_draw_target = match self.progress_target {
                 CliOutputTarget::Stdout => ProgressDrawTarget::stdout(),
                 CliOutputTarget::Stderr => ProgressDrawTarget::stderr(),
@@ -320,7 +354,7 @@ where
 
     #[cfg(feature = "output_progress")]
     async fn progress_update(&mut self, progress_update: ProgressUpdate) {
-        match self.cli_progress_format {
+        match self.progress_format {
             CliProgressFormatChosen::ProgressBar => {
                 // Don't need to do anything, as `indicatif` handles output to
                 // terminal.
