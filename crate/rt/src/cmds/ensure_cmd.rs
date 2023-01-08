@@ -378,7 +378,7 @@ where
                         OpCheckStatus::ExecRequired => {}
                         #[cfg(feature = "output_progress")]
                         OpCheckStatus::ExecRequired { progress_limit } => {
-                            let _unused = progress_tx.try_send(ProgressUpdateAndId {
+                            let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
                                 item_spec_id: item_spec_id.clone(),
                                 progress_update: ProgressUpdate::Limit {
                                     limit: progress_limit,

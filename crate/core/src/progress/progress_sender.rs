@@ -37,7 +37,7 @@ impl<'op> ProgressSender<'op> {
     pub async fn inc(&self, delta: u64) {
         self.progress_bar.inc(delta);
 
-        let _unused = self
+        let _progress_send_unused = self
             .progress_tx
             .send(ProgressUpdateAndId {
                 item_spec_id: self.item_spec_id.clone(),
@@ -59,7 +59,7 @@ impl<'op> ProgressSender<'op> {
     pub async fn tick(&self) {
         self.progress_bar.tick();
 
-        let _unused = self
+        let _progress_send_unused = self
             .progress_tx
             .send(ProgressUpdateAndId {
                 item_spec_id: self.item_spec_id.clone(),

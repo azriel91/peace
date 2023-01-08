@@ -343,13 +343,13 @@ where
                 // We probably need to send more information in the `ProgressUpdate`, i.e. which
                 // item it came from.
                 OutputFormat::Text | OutputFormat::Yaml => {
-                    let _unused = self
+                    let _progress_send_unused = self
                         .output_yaml::<E, _, _>(&progress_update, Error::ProgressUpdateSerialize)
                         .await;
                 }
                 #[cfg(feature = "output_json")]
                 OutputFormat::Json => {
-                    let _unused = self
+                    let _progress_send_unused = self
                         .output_json::<E, _, _>(
                             &progress_update,
                             Error::ProgressUpdateSerializeJson,
