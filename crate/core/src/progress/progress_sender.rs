@@ -4,7 +4,7 @@ use indicatif::ProgressBar;
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    progress::{ProgressIncrement, ProgressUpdate},
+    progress::{ProgressDelta, ProgressUpdate},
     ItemSpecId,
 };
 
@@ -39,9 +39,9 @@ impl<'op> ProgressSender<'op> {
 
         let _unused = self
             .progress_tx
-            .send(ProgressUpdate {
+            .send(ProgressUpdate::Delta {
                 item_spec_id: self.item_spec_id.clone(),
-                increment: ProgressIncrement::Inc(delta),
+                delta: ProgressDelta::Inc(delta),
             })
             .await;
     }
@@ -59,9 +59,9 @@ impl<'op> ProgressSender<'op> {
 
         let _unused = self
             .progress_tx
-            .send(ProgressUpdate {
+            .send(ProgressUpdate::Delta {
                 item_spec_id: self.item_spec_id.clone(),
-                increment: ProgressIncrement::Tick,
+                delta: ProgressDelta::Tick,
             })
             .await;
     }

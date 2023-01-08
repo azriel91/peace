@@ -22,7 +22,7 @@ use crate::output::CliColorizeChosen;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_core::progress::ProgressUpdate;
+        use peace_core::progress::{ProgressLimit, ProgressUpdate};
         use peace_rt_model_core::{
             indicatif::{ProgressStyle, ProgressDrawTarget},
             CmdProgressTracker,
@@ -228,6 +228,27 @@ where
 
         Ok(())
     }
+
+    #[cfg(feature = "output_progress")]
+    fn progress_bar_template(progress_limit: Option<ProgressLimit>) -> String {
+        // 40: width
+        // 35: pale green
+        // 32: pale blue
+        // 17: dark blue
+        let bar = "{bar:40.32.on_17}"; // TODO: change based on progress status
+        let units = if let Some(progress_limit) = progress_limit {
+            match progress_limit {
+                ProgressLimit::Unknown => "",
+                ProgressLimit::Steps(_) => "{pos}/{len}",
+                ProgressLimit::Bytes(_) => "{bytes}/{total_bytes}",
+            }
+        } else {
+            ""
+        };
+
+        // `prefix` is the item spec ID.
+        format!("{{prefix:20}} ▕{bar}▏{units}")
+    }
 }
 
 impl Default for CliOutput<Stdout> {
@@ -259,9 +280,10 @@ where
 
             cmd_progress_tracker.progress_trackers().iter().for_each(
                 |(item_spec_id, progress_tracker)| {
+                    let template = Self::progress_bar_template(None);
+
                     let progress_bar = progress_tracker.progress_bar();
                     progress_bar.set_prefix(format!("{item_spec_id}"));
-                    let template = format!("{{prefix:20}} ▕{pb}▏", pb = "{bar:40.green.on_17}");
                     progress_bar.set_style(
                         ProgressStyle::with_template(template.as_str())
                             .unwrap_or_else(|error| {
@@ -271,6 +293,8 @@ where
                             })
                             .progress_chars("█▉▊▋▌▍▎▏  "),
                     );
+                    // Rerender the progress bar after setting style.
+                    progress_bar.tick();
                 },
             );
         }
@@ -280,8 +304,18 @@ where
     async fn progress_update(&mut self, progress_update: ProgressUpdate) {
         match self.progress_format {
             CliProgressFormatChosen::ProgressBar => {
-                // Don't need to do anything, as `indicatif` handles output to
-                // terminal.
+                // Don't need to write anything, as `indicatif` handles output
+                // to terminal.
+
+                // TODO:
+                //
+                // Need to have the `ProgressBar` (or `ProgressTracker`) here.
+                //
+                // * Need to update progress bar colour on the first delta (grey
+                //   to blue)
+                // * Need to update progress bar colour on finish (blue to
+                //   green)
+                // * Need to update progress bar colour on error (blue to red)
             }
             CliProgressFormatChosen::Output => match self.format {
                 // Note: outputting yaml for Text output, because we aren't sending much progress
