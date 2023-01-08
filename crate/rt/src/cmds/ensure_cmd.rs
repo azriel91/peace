@@ -20,7 +20,12 @@ cfg_if::cfg_if! {
         use std::collections::HashMap;
 
         use peace_cfg::{
-            progress::{ProgressLimit, ProgressSender, ProgressTracker, ProgressUpdate},
+            progress::{
+                ProgressLimit,
+                ProgressSender,
+                ProgressTracker,
+                ProgressUpdateAndId,
+            },
             OpCheckStatus,
         };
         use peace_rt_model::CmdProgressTracker;
@@ -207,17 +212,24 @@ where
         for<'resources> States<StatesTs>: From<(StatesCurrent, &'resources Resources<SetUp>)>,
         Resources<ResourcesTs>: From<(Resources<SetUp>, States<StatesTs>)>,
     {
-        #[cfg(feature = "output_progress")]
-        output.progress_begin(cmd_progress_tracker).await;
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "output_progress")] {
+                output.progress_begin(cmd_progress_tracker).await;
 
-        #[cfg(feature = "output_progress")]
-        let CmdProgressTracker {
-            multi_progress: _,
-            progress_trackers,
-        } = cmd_progress_tracker;
+                let CmdProgressTracker {
+                    multi_progress: _,
+                    progress_trackers,
+                } = cmd_progress_tracker;
 
-        #[cfg(feature = "output_progress")]
-        let (progress_tx, mut progress_rx) = mpsc::channel(Self::PROGRESS_COUNT_MAX);
+                // Change mutable reference to immutable reference, so it can be referenced in
+                // multiple async tasks.
+                let progress_trackers = &*progress_trackers;
+
+                let (progress_tx, mut progress_rx) =
+                    mpsc::channel::<ProgressUpdateAndId>(Self::PROGRESS_COUNT_MAX);
+            }
+        }
+
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemEnsureOutcome<E>>();
 
         let resources_ref = &resources;
@@ -231,7 +243,7 @@ where
             // `progress_trackers` in the closure.
             //
             // This would allow us to hold a `&mut ProgressTracker` when
-            // `progress_rx` receives `ProgressUpdate` -- so that we can store
+            // `progress_rx` receives `ProgressUpdateAndId` -- so that we can store
             // `progress_limit` inside `ProgressTracker`.
             //
             // Subsequently we can pass `&ProgressTracker` in
@@ -259,8 +271,19 @@ where
 
         #[cfg(feature = "output_progress")]
         let progress_render_task = async {
-            while let Some(progress_update) = progress_rx.recv().await {
-                output.progress_update(progress_update).await
+            while let Some(progress_update_and_id) = progress_rx.recv().await {
+                let ProgressUpdateAndId {
+                    item_spec_id,
+                    progress_update,
+                } = progress_update_and_id;
+
+                let Some(progress_tracker) = progress_trackers.get(&item_spec_id) else {
+                    panic!("Expected a progress tracker to exist for {item_spec_id}");
+                };
+
+                output
+                    .progress_update(progress_tracker, progress_update)
+                    .await
             }
         };
 
@@ -329,7 +352,7 @@ where
             ItemSpecId,
             ProgressTracker,
         >,
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdate>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
         outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
         item_spec: &ItemSpecBoxed<E>,
         dry_run: bool,

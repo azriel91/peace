@@ -6,6 +6,14 @@ use peace_rt_model_core::{async_trait, output::OutputWrite};
 
 use crate::Error;
 
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use peace_cfg::progress::{ProgressTracker, ProgressUpdate};
+
+        use crate::CmdProgressTracker;
+    }
+}
+
 /// An `OutputWrite` implementation that writes to the command line.
 ///
 /// Currently this only outputs return values or errors, not progress.
@@ -36,13 +44,18 @@ where
     E: std::error::Error + From<Error>,
 {
     #[cfg(feature = "output_progress")]
-    async fn progress_begin(&mut self, _cmd_progress_tracker: &crate::CmdProgressTracker) {}
+    async fn progress_begin(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
     #[cfg(feature = "output_progress")]
-    async fn progress_update(&mut self, _progress_update: peace_cfg::progress::ProgressUpdate) {}
+    async fn progress_update(
+        &mut self,
+        _progress_tracker: &ProgressTracker,
+        _progress_update: ProgressUpdate,
+    ) {
+    }
 
     #[cfg(feature = "output_progress")]
-    async fn progress_end(&mut self, _cmd_progress_tracker: &crate::CmdProgressTracker) {}
+    async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         self.buffer = serde_yaml::to_string(states_saved).map_err(Error::StatesSerialize)?;

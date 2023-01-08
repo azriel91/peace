@@ -4,6 +4,14 @@ use peace_resources::states::{
     StatesSaved,
 };
 
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use peace_core::progress::{ProgressTracker, ProgressUpdate};
+
+        use crate::CmdProgressTracker;
+    }
+}
+
 /// Transforms return values or errors into a suitable output format.
 ///
 /// # Use cases
@@ -30,7 +38,7 @@ pub trait OutputWrite<E> {
     ///
     /// At the end of command execution, `OutputWrite::progress_end` is called.
     #[cfg(feature = "output_progress")]
-    async fn progress_begin(&mut self, cmd_progress_tracker: &crate::CmdProgressTracker);
+    async fn progress_begin(&mut self, cmd_progress_tracker: &CmdProgressTracker);
 
     /// Renders progress information, and returns when no more progress
     /// information is available to write.
@@ -44,7 +52,11 @@ pub trait OutputWrite<E> {
     /// This should render the progress update to the user in a way that is not
     /// overwhelming.
     #[cfg(feature = "output_progress")]
-    async fn progress_update(&mut self, progress_update: peace_core::progress::ProgressUpdate);
+    async fn progress_update(
+        &mut self,
+        progress_tracker: &ProgressTracker,
+        progress_update: ProgressUpdate,
+    );
 
     /// Notifies this `OutputWrite` implementation to stop rendering progress.
     ///
@@ -54,7 +66,7 @@ pub trait OutputWrite<E> {
     /// there will be no more calls to `OutputWrite::progress_update` until
     /// another call to `OutputWrite::progress_begin`.
     #[cfg(feature = "output_progress")]
-    async fn progress_end(&mut self, cmd_progress_tracker: &crate::CmdProgressTracker);
+    async fn progress_end(&mut self, cmd_progress_tracker: &CmdProgressTracker);
 
     /// Writes current states to the output.
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E>

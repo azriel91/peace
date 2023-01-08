@@ -4,7 +4,7 @@ use indicatif::ProgressBar;
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    progress::{ProgressDelta, ProgressUpdate},
+    progress::{ProgressDelta, ProgressUpdate, ProgressUpdateAndId},
     ItemSpecId,
 };
 
@@ -16,7 +16,7 @@ pub struct ProgressSender<'op> {
     /// Progress bar to update.
     progress_bar: ProgressBar,
     /// Channel sender to send progress updates to.
-    progress_tx: &'op Sender<ProgressUpdate>,
+    progress_tx: &'op Sender<ProgressUpdateAndId>,
 }
 
 impl<'op> ProgressSender<'op> {
@@ -24,7 +24,7 @@ impl<'op> ProgressSender<'op> {
     pub fn new(
         item_spec_id: &'op ItemSpecId,
         progress_bar: ProgressBar,
-        progress_tx: &'op Sender<ProgressUpdate>,
+        progress_tx: &'op Sender<ProgressUpdateAndId>,
     ) -> Self {
         Self {
             item_spec_id,
@@ -39,9 +39,11 @@ impl<'op> ProgressSender<'op> {
 
         let _unused = self
             .progress_tx
-            .send(ProgressUpdate::Delta {
+            .send(ProgressUpdateAndId {
                 item_spec_id: self.item_spec_id.clone(),
-                delta: ProgressDelta::Inc(delta),
+                progress_update: ProgressUpdate::Delta {
+                    delta: ProgressDelta::Inc(delta),
+                },
             })
             .await;
     }
@@ -59,9 +61,11 @@ impl<'op> ProgressSender<'op> {
 
         let _unused = self
             .progress_tx
-            .send(ProgressUpdate::Delta {
+            .send(ProgressUpdateAndId {
                 item_spec_id: self.item_spec_id.clone(),
-                delta: ProgressDelta::Tick,
+                progress_update: ProgressUpdate::Delta {
+                    delta: ProgressDelta::Tick,
+                },
             })
             .await;
     }
