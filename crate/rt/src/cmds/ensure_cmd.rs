@@ -24,6 +24,7 @@ cfg_if::cfg_if! {
                 ProgressLimit,
                 ProgressSender,
                 ProgressTracker,
+                ProgressUpdate,
                 ProgressUpdateAndId,
             },
             OpCheckStatus,
@@ -377,6 +378,13 @@ where
                         OpCheckStatus::ExecRequired => {}
                         #[cfg(feature = "output_progress")]
                         OpCheckStatus::ExecRequired { progress_limit } => {
+                            let _unused = progress_tx.try_send(ProgressUpdateAndId {
+                                item_spec_id: item_spec_id.clone(),
+                                progress_update: ProgressUpdate::Limit {
+                                    limit: progress_limit,
+                                },
+                            });
+
                             match progress_limit {
                                 ProgressLimit::Unknown => {
                                     // Same as `indicatif` internally.
