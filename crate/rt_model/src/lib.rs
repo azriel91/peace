@@ -5,23 +5,22 @@
 
 // Re-exports
 pub use fn_graph::{self, FnRef, FnRefMut};
-pub use peace_rt_model_core::{
-    cmd_context_params, OutputFormat, OutputFormatParseError, OutputWrite,
-};
+pub use peace_rt_model_core::cmd_context_params;
 #[cfg(feature = "output_progress")]
 pub use peace_rt_model_core::{indicatif, CmdProgressTracker};
 
+pub mod output {
+    pub use peace_rt_model_core::output::*;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub use peace_rt_model_native::output::*;
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 pub use peace_rt_model_native::{
-    CliOutput, Error, NativeStorage as Storage, SyncIoBridge, Workspace, WorkspaceDirsBuilder,
+    Error, NativeStorage as Storage, SyncIoBridge, Workspace, WorkspaceDirsBuilder,
     WorkspaceInitializer, WorkspaceSpec,
 };
-
-#[cfg(all(not(target_arch = "wasm32"), feature = "output_colorized"))]
-pub use peace_rt_model_native::CliColorize;
-
-#[cfg(all(not(target_arch = "wasm32"), feature = "output_progress"))]
-pub use peace_rt_model_native::{CliProgressFormat, CliProgressFormatParseError};
 
 #[cfg(target_arch = "wasm32")]
 pub use peace_rt_model_web::{

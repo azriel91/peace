@@ -1,4 +1,4 @@
-use peace::rt_model::OutputFormatParseError;
+use peace::rt_model::output::OutputFormatParseError;
 
 #[cfg(not(feature = "output_json"))]
 #[test]

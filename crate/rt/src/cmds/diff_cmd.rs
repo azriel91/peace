@@ -7,7 +7,7 @@ use peace_resources::{
     states::StateDiffs,
     Resources,
 };
-use peace_rt_model::{CmdContext, Error, ItemSpecGraph, OutputWrite, StatesTypeRegs};
+use peace_rt_model::{output::OutputWrite, CmdContext, Error, ItemSpecGraph, StatesTypeRegs};
 
 use crate::cmds::sub::{StatesDesiredReadCmd, StatesSavedReadCmd};
 

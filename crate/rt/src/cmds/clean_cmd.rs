@@ -11,7 +11,7 @@ use peace_resources::{
     states::{StatesCleaned, StatesCleanedDry},
     Resources,
 };
-use peace_rt_model::{CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph, OutputWrite};
+use peace_rt_model::{output::OutputWrite, CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph};
 
 use crate::cmds::sub::StatesCurrentDiscoverCmd;
 

@@ -4,7 +4,7 @@ use peace::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
         StatesEnsuredDry, StatesSaved,
     },
-    rt_model::OutputWrite,
+    rt_model::output::OutputWrite,
 };
 
 /// An `OutputWrite` implementation that does nothing.

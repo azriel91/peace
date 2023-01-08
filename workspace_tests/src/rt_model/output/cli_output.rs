@@ -7,11 +7,11 @@ use peace::{
             StatesEnsuredDry, StatesSaved,
         },
     },
-    rt_model::{CliOutput, OutputFormat, OutputWrite},
+    rt_model::output::{CliOutput, OutputFormat, OutputWrite},
 };
 
 #[cfg(feature = "output_colorized")]
-use peace::rt_model::CliColorize;
+use peace::rt_model::output::CliColorize;
 
 #[tokio::test]
 async fn outputs_states_saved_as_text() -> Result<(), Box<dyn std::error::Error>> {

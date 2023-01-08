@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::CliColorizeParseError;
+use crate::output::CliColorizeParseError;
 
 /// Whether to colourize output using ANSI codes on the CLI.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

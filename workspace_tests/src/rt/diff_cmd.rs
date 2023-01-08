@@ -7,7 +7,7 @@ use peace::{
     },
     resources::states::{StateDiffs, StatesDesired, StatesSaved},
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
-    rt_model::{CliOutput, CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{output::CliOutput, CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{NoOpOutput, VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyState};

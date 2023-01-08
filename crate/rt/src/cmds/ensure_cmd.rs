@@ -8,7 +8,8 @@ use peace_resources::{
 };
 use peace_rt_model::{
     outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
-    CmdContext, Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt, OutputWrite,
+    output::OutputWrite,
+    CmdContext, Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt,
 };
 use tokio::sync::{mpsc, mpsc::UnboundedSender};
 

@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use peace::rt_model::{OutputFormat, OutputFormatParseError};
+use peace::rt_model::output::{OutputFormat, OutputFormatParseError};
 
 #[test]
 fn from_str_returns_ok_for_text() {

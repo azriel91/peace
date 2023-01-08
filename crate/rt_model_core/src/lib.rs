@@ -10,16 +10,8 @@ pub use indicatif;
 #[cfg(feature = "output_progress")]
 pub use peace_core::progress::ProgressUpdate;
 
-pub use crate::{
-    output_format::OutputFormat, output_format_parse_error::OutputFormatParseError,
-    output_write::OutputWrite,
-};
-
 pub mod cmd_context_params;
-
-mod output_format;
-mod output_format_parse_error;
-mod output_write;
+pub mod output;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {

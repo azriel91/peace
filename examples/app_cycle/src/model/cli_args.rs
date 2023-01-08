@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use peace::{cfg::Profile, rt_model::OutputFormat};
+use peace::{cfg::Profile, rt_model::output::OutputFormat};
 use semver::Version;
 
 use crate::model::{EnvType, RepoSlug};

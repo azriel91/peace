@@ -8,7 +8,7 @@ use app_cycle::{
 use clap::Parser;
 use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
-    rt_model::{CliOutput, WorkspaceSpec},
+    rt_model::{output::CliOutput, WorkspaceSpec},
 };
 
 #[cfg(not(feature = "error_reporting"))]

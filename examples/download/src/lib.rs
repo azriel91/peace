@@ -12,7 +12,8 @@ use peace::{
         StatesSavedDisplayCmd,
     },
     rt_model::{
-        CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, OutputWrite, Workspace, WorkspaceSpec,
+        output::OutputWrite, CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, Workspace,
+        WorkspaceSpec,
     },
 };
 use peace_item_specs::file_download::{FileDownloadItemSpec, FileDownloadParams};

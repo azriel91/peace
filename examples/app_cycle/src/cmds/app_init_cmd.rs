@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use peace::rt_model::OutputWrite;
+use peace::rt_model::output::OutputWrite;
 use peace_item_specs::{file_download::FileDownloadParams, tar_x::TarXParams};
 use semver::Version;
 use url::Url;

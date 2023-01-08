@@ -1,7 +1,7 @@
 use clap::Parser;
 use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
-    rt_model::{CliOutput, WorkspaceSpec},
+    rt_model::{output::CliOutput, WorkspaceSpec},
 };
 use peace_item_specs::file_download::FileDownloadParams;
 

@@ -8,14 +8,17 @@ use peace_resources::{
     },
     type_reg::untagged::BoxDtDisplay,
 };
-use peace_rt_model_core::{async_trait, OutputFormat, OutputWrite};
+use peace_rt_model_core::{
+    async_trait,
+    output::{OutputFormat, OutputWrite},
+};
 use serde::Serialize;
 use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
 
 use crate::Error;
 
 #[cfg(feature = "output_colorized")]
-use crate::{CliColorize, CliColorizeChosen};
+use crate::output::{CliColorize, CliColorizeChosen};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -25,7 +28,7 @@ cfg_if::cfg_if! {
             CmdProgressTracker,
         };
 
-        use crate::{CliOutputTarget, CliProgressFormat, CliProgressFormatChosen};
+        use crate::output::{CliOutputTarget, CliProgressFormat, CliProgressFormatChosen};
     }
 }
 
@@ -45,7 +48,7 @@ use is_terminal::IsTerminal;
 /// If it is piped to another process or redirected to a file, then the outcome
 /// output is not colourized.
 ///
-/// This automatic detection can be overidden by calling the [`with_colorized`]
+/// This automatic detection can be overridden by calling the [`with_colorized`]
 /// method.
 ///
 /// ## `"output_progress"`
@@ -60,7 +63,7 @@ use is_terminal::IsTerminal;
 /// output format defaults to the same format at the outcome output format --
 /// text, YAML, or JSON.
 ///
-/// These defaults may be overidden through the [`with_progress_target`] and
+/// These defaults may be overridden through the [`with_progress_target`] and
 /// [`with_progress_format`] methods.
 ///
 /// # Implementation Note

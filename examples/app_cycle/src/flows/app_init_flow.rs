@@ -2,7 +2,8 @@ use peace::{
     cfg::{flow_id, item_spec_id, profile, FlowId, ItemSpecId, Profile},
     rt::cmds::{EnsureCmd, StatesDiscoverCmd},
     rt_model::{
-        CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, OutputWrite, Workspace, WorkspaceSpec,
+        output::OutputWrite, CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, Workspace,
+        WorkspaceSpec,
     },
 };
 use peace_item_specs::{

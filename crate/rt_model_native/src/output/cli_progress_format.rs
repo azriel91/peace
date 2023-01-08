@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::CliProgressFormatParseError;
+use crate::output::CliProgressFormatParseError;
 
 /// How to format progress on the CLI.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

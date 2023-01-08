@@ -2,7 +2,7 @@ use peace_resources::states::{
     StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured, StatesEnsuredDry,
     StatesSaved,
 };
-use peace_rt_model_core::{async_trait, OutputWrite};
+use peace_rt_model_core::{async_trait, output::OutputWrite};
 
 use crate::Error;
 
