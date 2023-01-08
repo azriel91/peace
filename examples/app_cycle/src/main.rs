@@ -52,10 +52,13 @@ pub fn run() -> Result<(), AppCycleError> {
         let _workspace_spec = WorkspaceSpec::WorkingDir;
         let _profile = profile!("default");
         let _flow_id = flow_id!("file");
-        let mut cli_output = CliOutput::default();
-        if let Some(format) = format {
-            cli_output = cli_output.with_output_format(format);
-        }
+        let mut cli_output = {
+            let mut builder = CliOutput::builder();
+            if let Some(format) = format {
+                builder = builder.with_output_format(format);
+            }
+            builder.build()
+        };
 
         match command {
             AppCycleCommand::Init { slug, version } => {

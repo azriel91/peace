@@ -1,6 +1,7 @@
-pub use self::cli_output::CliOutput;
+pub use self::{cli_output::CliOutput, cli_output_builder::CliOutputBuilder};
 
 mod cli_output;
+mod cli_output_builder;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_colorized")] {

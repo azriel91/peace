@@ -67,10 +67,13 @@ pub fn run() -> Result<(), DownloadError> {
         let workspace_spec = WorkspaceSpec::WorkingDir;
         let profile = profile!("default");
         let flow_id = flow_id!("file");
-        let mut cli_output = CliOutput::default();
-        if let Some(format) = format {
-            cli_output = cli_output.with_output_format(format);
-        }
+        let mut cli_output = {
+            let mut builder = CliOutput::builder();
+            if let Some(format) = format {
+                builder = builder.with_output_format(format);
+            }
+            builder.build()
+        };
 
         match command {
             DownloadCommand::Init { url, dest } => {

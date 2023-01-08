@@ -7,7 +7,7 @@ use peace::{
             StatesEnsuredDry, StatesSaved,
         },
     },
-    rt_model::output::{CliOutput, OutputFormat, OutputWrite},
+    rt_model::output::{CliOutput, CliOutputBuilder, OutputFormat, OutputWrite},
 };
 
 #[cfg(feature = "output_colorized")]
@@ -791,7 +791,9 @@ enum Error {
 }
 
 fn cli_output(buffer: &mut Vec<u8>, output_format: OutputFormat) -> CliOutput<&mut Vec<u8>> {
-    CliOutput::new_with_writer(buffer).with_output_format(output_format)
+    CliOutputBuilder::new_with_writer(buffer)
+        .with_output_format(output_format)
+        .build()
 }
 
 #[cfg(feature = "output_colorized")]
@@ -799,7 +801,8 @@ fn cli_output_colorized(
     buffer: &mut Vec<u8>,
     output_format: OutputFormat,
 ) -> CliOutput<&mut Vec<u8>> {
-    CliOutput::new_with_writer(buffer)
+    CliOutputBuilder::new_with_writer(buffer)
         .with_output_format(output_format)
         .with_colorize(CliColorize::Always)
+        .build()
 }
