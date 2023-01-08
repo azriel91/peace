@@ -19,7 +19,10 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use std::collections::HashMap;
 
-        use peace_cfg::progress::{ProgressSender, ProgressTracker, ProgressUpdate};
+        use peace_cfg::{
+            progress::{ProgressLimit, ProgressSender, ProgressTracker, ProgressUpdate},
+            OpCheckStatus,
+        };
         use peace_rt_model::CmdProgressTracker;
         use tokio::sync::mpsc::Sender;
     }
@@ -332,6 +335,25 @@ where
                         panic!("Expected a progress tracker to exist for {item_spec_id}");
                     };
                     let progress_bar = progress_tracker.progress_bar().clone();
+
+                    match item_ensure.op_check_status() {
+                        #[cfg(not(feature = "output_progress"))]
+                        OpCheckStatus::ExecRequired => {}
+                        #[cfg(feature = "output_progress")]
+                        OpCheckStatus::ExecRequired { progress_limit } => {
+                            match progress_limit {
+                                ProgressLimit::Unknown => {
+                                    // Same as `indicatif` internally.
+                                    progress_bar.set_length(u64::MAX);
+                                }
+                                ProgressLimit::Steps(n) | ProgressLimit::Bytes(n) => {
+                                    progress_bar.set_length(n);
+                                }
+                            }
+                        }
+                        OpCheckStatus::ExecNotRequired => {}
+                    }
+
                     ProgressSender::new(item_spec_id, progress_bar, progress_tx)
                 };
                 let op_ctx = OpCtx::new(
@@ -365,8 +387,6 @@ where
                         Err(())
                     }
                 }
-
-                // TODO drop the channel sender. Right now it hangs.
             }
             Err((error, item_ensure_partial)) => {
                 outcomes_tx

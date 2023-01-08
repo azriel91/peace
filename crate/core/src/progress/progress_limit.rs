@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-/// Unit of measurement and limit to indicate progress.
+/// Unit of measurement and total number of units.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ProgressLimit {
     /// There is no meaningful way to measure progress.
