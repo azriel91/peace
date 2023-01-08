@@ -17,6 +17,9 @@ pub use peace_rt_model_native::{
     WorkspaceInitializer, WorkspaceSpec,
 };
 
+#[cfg(all(not(target_arch = "wasm32"), feature = "output_colorized"))]
+pub use peace_rt_model_native::CliColorize;
+
 #[cfg(all(not(target_arch = "wasm32"), feature = "output_progress"))]
 pub use peace_rt_model_native::{CliProgressFormat, CliProgressFormatParseError};
 

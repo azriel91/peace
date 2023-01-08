@@ -71,10 +71,6 @@ pub fn run() -> Result<(), DownloadError> {
         if let Some(format) = format {
             cli_output = cli_output.with_output_format(format);
         }
-        #[cfg(feature = "output_colorized")]
-        {
-            cli_output = cli_output.colorized();
-        }
 
         match command {
             DownloadCommand::Init { url, dest } => {

@@ -56,10 +56,6 @@ pub fn run() -> Result<(), AppCycleError> {
         if let Some(format) = format {
             cli_output = cli_output.with_output_format(format);
         }
-        #[cfg(feature = "output_colorized")]
-        {
-            cli_output = cli_output.colorized();
-        }
 
         match command {
             AppCycleCommand::Init { slug, version } => {

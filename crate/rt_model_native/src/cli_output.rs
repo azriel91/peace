@@ -14,9 +14,11 @@ use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
 
 use crate::Error;
 
+#[cfg(feature = "output_colorized")]
+use crate::{CliColorize, CliColorizeChosen};
+
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use is_terminal::IsTerminal;
         use peace_core::progress::ProgressUpdate;
         use peace_rt_model_core::{
             indicatif::{ProgressStyle, ProgressDrawTarget},
@@ -27,20 +29,30 @@ cfg_if::cfg_if! {
     }
 }
 
+#[cfg(any(feature = "output_colorized", feature = "output_progress"))]
+use is_terminal::IsTerminal;
+
 /// An `OutputWrite` implementation that writes to the command line.
 ///
 /// # Features
 ///
 /// ## `"output_colorized"`
 ///
-/// When this feature is enabled, text output is coloured when the [`colorized`]
-/// method is called with `true`.
+/// When this feature is enabled, text output is coloured with ANSI codes when
+/// the outcome output stream is a terminal (i.e. not piped to another process,
+/// or redirected to a file).
+///
+/// If it is piped to another process or redirected to a file, then the outcome
+/// output is not colourized.
+///
+/// This automatic detection can be overidden by calling the [`with_colorized`]
+/// method.
 ///
 /// ## `"output_progress"`
 ///
 /// When this feature is enabled, progress is written to `stderr` by default.
 ///
-/// By default, when the progress target is a terminal (i.e. not piped to
+/// By default, when the progress stream is a terminal (i.e. not piped to
 /// another process, or redirected to a file), then the progress output format
 /// is a progress bar.
 ///
@@ -57,7 +69,7 @@ cfg_if::cfg_if! {
 /// sync. I didn't figure out how to write the in-memory term contents to the
 /// `W` writer correctly.
 ///
-/// [`colorized`]: Self::colorized
+/// [`with_colorized`]: Self::with_colorized
 /// [`with_progress_format`]: Self::with_progress_format
 /// [`with_progress_target`]: Self::with_progress_target
 #[derive(Debug)]
@@ -69,7 +81,7 @@ pub struct CliOutput<W> {
     format: OutputFormat,
     /// Whether output should be colorized.
     #[cfg(feature = "output_colorized")]
-    colorized: bool,
+    colorized: CliColorizeChosen,
     #[cfg(feature = "output_progress")]
     /// Where to output progress updates to -- stdout or stderr.
     progress_target: CliOutputTarget,
@@ -82,8 +94,6 @@ pub struct CliOutput<W> {
 
 impl CliOutput<Stdout> {
     /// Returns a new `CliOutput` using `io::stdout()` as the output stream.
-    ///
-    /// The default output is not colorized.
     pub fn new() -> Self {
         Self::default()
     }
@@ -109,7 +119,7 @@ where
             writer,
             format: OutputFormat::Text,
             #[cfg(feature = "output_colorized")]
-            colorized: false,
+            colorized: CliColorizeChosen::Colored, // TODO: builder
             #[cfg(feature = "output_progress")]
             progress_target: CliOutputTarget::default(),
             #[cfg(feature = "output_progress")]
@@ -178,13 +188,26 @@ where
     ///
     /// ```rust
     /// # use peace_rt_model_native::CliOutput;
-    /// // use peace::rt_model::CliOutput;
+    /// // use peace::rt_model::{CliColorize, CliOutput};
     ///
-    /// let cli_output = CliOutput::new().colorized();
+    /// # #[cfg(feature = "output_colorized")]
+    /// let cli_output = CliOutput::new().with_colorized(CliColorize::Auto);
     /// ```
     #[cfg(feature = "output_colorized")]
-    pub fn colorized(mut self) -> Self {
-        self.colorized = true;
+    pub fn with_colorize(mut self, colorize: CliColorize) -> Self {
+        self.colorized = match colorize {
+            CliColorize::Auto => {
+                // Even though we're using `tokio::io::stdout` / `stderr`, `IsTerminal` is only
+                // implemented on `std::io::stdout` / `stderr`.
+                if std::io::stdout().is_terminal() {
+                    CliColorizeChosen::Colored
+                } else {
+                    CliColorizeChosen::Uncolored
+                }
+            }
+            CliColorize::Always => CliColorizeChosen::Colored,
+            CliColorize::Never => CliColorizeChosen::Uncolored,
+        };
         self
     }
 
@@ -230,7 +253,7 @@ where
             .try_fold(
                 writer,
                 |writer, (item_spec_id, item_spec_state)| async move {
-                    if colorized {
+                    if colorized == CliColorizeChosen::Colored {
                         let item_spec_id_colorized = item_spec_id_style.apply_to(item_spec_id);
                         writer
                             .write_all(format!("{item_spec_id_colorized}").as_bytes())
@@ -303,7 +326,7 @@ impl Default for CliOutput<Stdout> {
             writer: stdout,
             format: OutputFormat::Text,
             #[cfg(feature = "output_colorized")]
-            colorized: false,
+            colorized: CliColorizeChosen::Colored, // TODO: builder
             #[cfg(feature = "output_progress")]
             progress_target: CliOutputTarget::default(),
             #[cfg(feature = "output_progress")]
