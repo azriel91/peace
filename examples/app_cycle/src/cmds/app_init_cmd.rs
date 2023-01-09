@@ -25,6 +25,7 @@ impl AppInitCmd {
         output: &mut O,
         slug: RepoSlug,
         version: Version,
+        url: Option<Url>,
     ) -> Result<(), AppCycleError>
     where
         O: OutputWrite<AppCycleError>,
@@ -44,13 +45,20 @@ impl AppInitCmd {
             // linux:
             // https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.tar
             let src = {
-                let url_candidate = format!(
-                    "https://github.com/{account}/{repo_name}/releases/download/{version}/{repo_name}.{file_ext}"
-                );
-                Url::parse(&url_candidate).map_err(|error| AppCycleError::AppCycleUrlBuild {
-                    url_candidate,
-                    error,
-                })?
+                match url {
+                    Some(url) => url,
+                    None => {
+                        let url_candidate = format!(
+                            "https://github.com/{account}/{repo_name}/releases/download/{version}/{repo_name}.{file_ext}"
+                        );
+                        Url::parse(&url_candidate).map_err(|error| {
+                            AppCycleError::AppCycleUrlBuild {
+                                url_candidate,
+                                error,
+                            }
+                        })?
+                    }
+                }
             };
             let dest = web_app_download_dir.join(format!("{repo_name}.{file_ext}"));
             FileDownloadParams::new(

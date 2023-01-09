@@ -1,6 +1,7 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueHint};
 use peace::{cfg::Profile, rt_model::output::OutputFormat};
 use semver::Version;
+use url::Url;
 
 use crate::model::{EnvType, RepoSlug};
 
@@ -32,6 +33,9 @@ pub enum AppCycleCommand {
         slug: RepoSlug,
         /// Version of the application to download.
         version: Version,
+        /// URL to override the default download URL.
+        #[clap(long, value_hint(ValueHint::Url))]
+        url: Option<Url>,
     },
     /// Shows or initializes the current profile.
     Profile {

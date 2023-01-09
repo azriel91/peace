@@ -61,8 +61,8 @@ pub fn run() -> Result<(), AppCycleError> {
         };
 
         match command {
-            AppCycleCommand::Init { slug, version } => {
-                AppInitCmd::run(&mut cli_output, slug, version).await?
+            AppCycleCommand::Init { slug, version, url } => {
+                AppInitCmd::run(&mut cli_output, slug, version, url).await?
             }
             AppCycleCommand::Profile { command } => match command {
                 ProfileCommand::Init { name: _, r#type: _ } => todo!(),
