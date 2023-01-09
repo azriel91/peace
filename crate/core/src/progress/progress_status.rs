@@ -4,7 +4,9 @@ use crate::progress::ProgressComplete;
 
 /// Status of an item spec's execution progress.
 ///
-/// # Implementation Note
+/// # Implementation Notes
+///
+/// ## Variants
 ///
 /// The following variant is possible conceptually, but not applicable to the
 /// Peace framework:
@@ -17,6 +19,12 @@ use crate::progress::ProgressComplete;
 /// due to reasoning over inconsistent state.
 ///
 /// For rate limiting tasks, the task in its entirety would be held back.
+///
+/// ## `!Copy`
+///
+/// This type isn't `Copy`, because one way wish to include detail about the
+/// operation to render as part of the progress output, and that detail may not
+/// be `Copy` -- not sure yet.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ProgressStatus {
     /// Execution has not yet begun.

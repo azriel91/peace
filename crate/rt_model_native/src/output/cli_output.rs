@@ -236,12 +236,9 @@ where
     }
 
     #[cfg(feature = "output_progress")]
-    fn progress_bar_style_update(
-        progress_bar: &ProgressBar,
-        progress_status: &ProgressStatus,
-        progress_limit: Option<ProgressLimit>,
-    ) {
-        let template = Self::progress_bar_template(progress_status, progress_limit);
+    fn progress_bar_style_update(progress_tracker: &ProgressTracker) {
+        let template = Self::progress_bar_template(progress_tracker);
+        let progress_bar = progress_tracker.progress_bar();
         progress_bar.set_style(
             ProgressStyle::with_template(template.as_str())
                 .unwrap_or_else(|error| {
@@ -257,10 +254,7 @@ where
     }
 
     #[cfg(feature = "output_progress")]
-    fn progress_bar_template(
-        progress_status: &ProgressStatus,
-        progress_limit: Option<ProgressLimit>,
-    ) -> String {
+    fn progress_bar_template(progress_tracker: &ProgressTracker) -> String {
         /// This is used when we are rendering a bar that is not calculated by
         /// `ProgressBar`'s length and current value,
         const SOLID_BAR: &str = "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒";
@@ -280,7 +274,7 @@ where
 
         const GRAY_DARK: u8 = 237;
 
-        let bar = match progress_status {
+        let bar = match progress_tracker.progress_status() {
             ProgressStatus::ExecPending => console::style(SOLID_BAR).color256(GRAY_DARK),
             ProgressStatus::Running => console::style("{bar:40.32.on_17}"),
             ProgressStatus::RunningStalled => console::style("{bar:40.222.on_17}"),
@@ -291,7 +285,7 @@ where
             },
         };
 
-        let units = if let Some(progress_limit) = progress_limit {
+        let units = if let Some(progress_limit) = progress_tracker.progress_limit() {
             match progress_limit {
                 ProgressLimit::Unknown => "",
                 ProgressLimit::Steps(_) => "{pos}/{len}",
@@ -338,11 +332,7 @@ where
                     let progress_tracker = progress_tracker.borrow();
                     let progress_bar = progress_tracker.progress_bar();
                     progress_bar.set_prefix(format!("{item_spec_id}"));
-                    Self::progress_bar_style_update(
-                        progress_bar,
-                        progress_tracker.progress_status(),
-                        progress_tracker.progress_limit(),
-                    );
+                    Self::progress_bar_style_update(progress_tracker);
                 },
             );
         }
@@ -364,12 +354,9 @@ where
                 // * Need to update progress bar colour on error (blue to red)
 
                 match progress_update {
-                    ProgressUpdate::Limit(progress_limit) => {
-                        Self::progress_bar_style_update(
-                            progress_tracker.progress_bar(),
-                            progress_tracker.progress_status(),
-                            Some(progress_limit),
-                        );
+                    ProgressUpdate::Limit(_progress_limit) => {
+                        // Note: `progress_tracker` also carries the `progress_limit`
+                        Self::progress_bar_style_update(progress_tracker);
                     }
                     ProgressUpdate::Delta(_delta) => {
                         // Nothing to do -- the progress bar is already updated
@@ -377,25 +364,16 @@ where
                     }
                     ProgressUpdate::Complete(progress_complete) => match progress_complete {
                         ProgressComplete::Success => {
-                            progress_tracker.progress_bar().finish();
                             let progress_bar = progress_tracker.progress_bar();
-                            progress_bar.abandon();
+                            progress_bar.finish();
 
-                            Self::progress_bar_style_update(
-                                progress_bar,
-                                progress_tracker.progress_status(),
-                                progress_tracker.progress_limit(),
-                            );
+                            Self::progress_bar_style_update(progress_tracker);
                         }
                         ProgressComplete::Fail => {
                             let progress_bar = progress_tracker.progress_bar();
                             progress_bar.abandon();
 
-                            Self::progress_bar_style_update(
-                                progress_bar,
-                                progress_tracker.progress_status(),
-                                progress_tracker.progress_limit(),
-                            );
+                            Self::progress_bar_style_update(progress_tracker);
                         }
                     },
                 }
