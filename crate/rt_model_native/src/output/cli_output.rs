@@ -335,6 +335,7 @@ where
 
             cmd_progress_tracker.progress_trackers().iter().for_each(
                 |(item_spec_id, progress_tracker)| {
+                    let progress_tracker = progress_tracker.borrow();
                     let progress_bar = progress_tracker.progress_bar();
                     progress_bar.set_prefix(format!("{item_spec_id}"));
                     Self::progress_bar_style_update(

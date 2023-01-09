@@ -17,8 +17,6 @@ use crate::{cmds::sub::StatesCurrentDiscoverCmd, BUFFERED_FUTURES_MAX};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use std::collections::HashMap;
-
         use peace_cfg::{
             progress::{
                 ProgressComplete,
@@ -30,7 +28,7 @@ cfg_if::cfg_if! {
             },
             OpCheckStatus,
         };
-        use peace_rt_model::CmdProgressTracker;
+        use peace_rt_model::{CmdProgressTracker, rt_map::RtMap};
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -279,12 +277,12 @@ where
                     progress_update,
                 } = progress_update_and_id;
 
-                let Some(progress_tracker) = progress_trackers.get(&item_spec_id) else {
-                    panic!("Expected a progress tracker to exist for {item_spec_id}");
-                };
+                // This requires `Self::item_ensure_exec` to have released the progress tracker,
+                // which it should have, since it only borrows it to clone the progress bar.
+                let progress_tracker = progress_trackers.borrow_mut(&item_spec_id);
 
                 output
-                    .progress_update(progress_tracker, progress_update)
+                    .progress_update(&progress_tracker, progress_update)
                     .await
             }
         };
@@ -350,10 +348,7 @@ where
     /// ```
     async fn item_ensure_exec(
         resources: &Resources<SetUp>,
-        #[cfg(feature = "output_progress")] progress_trackers: &HashMap<
-            ItemSpecId,
-            ProgressTracker,
-        >,
+        #[cfg(feature = "output_progress")] progress_trackers: &RtMap<ItemSpecId, ProgressTracker>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
         outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
         item_spec: &ItemSpecBoxed<E>,
@@ -369,9 +364,7 @@ where
                 let item_spec_id = item_spec.id();
                 #[cfg(feature = "output_progress")]
                 let progress_sender = {
-                    let Some(progress_tracker) = progress_trackers.get(item_spec_id) else {
-                        panic!("Expected a progress tracker to exist for {item_spec_id}");
-                    };
+                    let progress_tracker = progress_trackers.borrow(item_spec_id);
                     let progress_bar = progress_tracker.progress_bar().clone();
 
                     match item_ensure.op_check_status() {

@@ -7,14 +7,15 @@
 // Re-exports
 pub use async_trait::async_trait;
 pub use indicatif;
-#[cfg(feature = "output_progress")]
-pub use peace_core::progress::ProgressUpdate;
 
 pub mod cmd_context_params;
 pub mod output;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
+        pub use rt_map;
+        pub use peace_core::progress::ProgressUpdate;
+
         pub use crate::cmd_progress_tracker::CmdProgressTracker;
 
         mod cmd_progress_tracker;

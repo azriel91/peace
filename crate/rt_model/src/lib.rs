@@ -7,7 +7,7 @@
 pub use fn_graph::{self, FnRef, FnRefMut};
 pub use peace_rt_model_core::cmd_context_params;
 #[cfg(feature = "output_progress")]
-pub use peace_rt_model_core::{indicatif, CmdProgressTracker};
+pub use peace_rt_model_core::{indicatif, rt_map, CmdProgressTracker};
 
 pub mod output {
     pub use peace_rt_model_core::output::*;
