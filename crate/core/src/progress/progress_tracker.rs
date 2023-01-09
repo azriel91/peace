@@ -3,11 +3,15 @@ use std::time::Duration;
 use chrono::{DateTime, Utc};
 use indicatif::ProgressBar;
 
+use crate::progress::ProgressLimit;
+
 /// Tracks progress for an item spec's `EnsureOpSpec::exec` method.
 #[derive(Debug)]
 pub struct ProgressTracker {
     /// Internal progress bar to update.
     progress_bar: ProgressBar,
+    /// Progress limit for the execution, if known.
+    progress_limit: Option<ProgressLimit>,
     /// Timestamp of last progress update.
     ///
     /// This is useful to determine if execution has stalled.
@@ -21,6 +25,7 @@ impl ProgressTracker {
 
         Self {
             progress_bar,
+            progress_limit: None,
             last_update_dt,
         }
     }
@@ -45,8 +50,23 @@ impl ProgressTracker {
         self.progress_bar.length()
     }
 
+    /// Returns the progress limit for the execution, if known.
+    pub fn progress_limit(&self) -> Option<ProgressLimit> {
+        self.progress_limit
+    }
+
+    /// Sets the progress limit of the execution.
+    pub fn set_progress_limit(&mut self, progress_limit: Option<ProgressLimit>) {
+        self.progress_limit = progress_limit;
+    }
+
     /// Returns the timestamp a progress update was last made.
     pub fn last_update_dt(&self) -> DateTime<Utc> {
         self.last_update_dt
+    }
+
+    /// Returns the timestamp a progress update was last made.
+    pub fn last_update_dt_update(&mut self) {
+        self.last_update_dt = Utc::now();
     }
 }

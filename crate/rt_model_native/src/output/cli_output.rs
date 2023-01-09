@@ -341,7 +341,7 @@ where
                     Self::progress_bar_style_update(
                         progress_bar,
                         ProgressStatus::ExecPending,
-                        None,
+                        progress_tracker.progress_limit(),
                     );
                 },
             );
@@ -386,7 +386,7 @@ where
                             Self::progress_bar_style_update(
                                 progress_bar,
                                 ProgressStatus::Complete(ProgressComplete::Success),
-                                None, // TODO: retain progress limit from before
+                                progress_tracker.progress_limit(),
                             );
                         }
                         ProgressComplete::Fail => {
@@ -396,7 +396,7 @@ where
                             Self::progress_bar_style_update(
                                 progress_bar,
                                 ProgressStatus::Complete(ProgressComplete::Fail),
-                                None, // TODO: retain progress limit from before
+                                progress_tracker.progress_limit(),
                             );
                         }
                     },

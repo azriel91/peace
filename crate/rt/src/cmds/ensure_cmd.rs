@@ -279,7 +279,19 @@ where
 
                 // This requires `Self::item_ensure_exec` to have released the progress tracker,
                 // which it should have, since it only borrows it to clone the progress bar.
-                let progress_tracker = progress_trackers.borrow_mut(&item_spec_id);
+                let mut progress_tracker = progress_trackers.borrow_mut(&item_spec_id);
+                match &progress_update {
+                    ProgressUpdate::Limit(progress_limit) => {
+                        progress_tracker.set_progress_limit(Some(*progress_limit))
+                    }
+                    ProgressUpdate::Delta(_delta) => {
+                        // TODO: Update `progress_status`
+                    }
+                    ProgressUpdate::Complete(_progress_complete) => {
+                        // TODO: Update `progress_status`
+                    }
+                }
+                progress_tracker.last_update_dt_update();
 
                 output
                     .progress_update(&progress_tracker, progress_update)
