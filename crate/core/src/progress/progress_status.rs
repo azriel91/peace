@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::progress::ProgressComplete;
 
-/// Status of the execution.
+/// Status of an item spec's execution progress.
 ///
 /// # Implementation Note
 ///
@@ -19,7 +19,12 @@ use crate::progress::ProgressComplete;
 /// For rate limiting tasks, the task in its entirety would be held back.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ProgressStatus {
-    /// Execution is pending a predecessor's execution.
+    /// Execution has not yet begun.
+    ///
+    /// This is waiting on either:
+    ///
+    /// * The framework to begin executing the logic.
+    /// * A predecessor's execution completion.
     ExecPending,
     /// Execution is in progress.
     ///

@@ -238,7 +238,7 @@ where
     #[cfg(feature = "output_progress")]
     fn progress_bar_style_update(
         progress_bar: &ProgressBar,
-        progress_status: ProgressStatus,
+        progress_status: &ProgressStatus,
         progress_limit: Option<ProgressLimit>,
     ) {
         let template = Self::progress_bar_template(progress_status, progress_limit);
@@ -258,7 +258,7 @@ where
 
     #[cfg(feature = "output_progress")]
     fn progress_bar_template(
-        progress_status: ProgressStatus,
+        progress_status: &ProgressStatus,
         progress_limit: Option<ProgressLimit>,
     ) -> String {
         /// This is used when we are rendering a bar that is not calculated by
@@ -269,25 +269,25 @@ where
         //
         // 40: width
         //
-        // 32: pale blue (running)
-        // 17: dark blue (running background)
-        // 222: pale yellow (stalled)
-        // 69: pale indigo (user pending)
-        // 35: pale green (success)
-        // 22: dark green (success background)
-        // 124: semi-dim red (fail)
-        // 52: dark red (fail background)
+        //  32: blue pale (running)
+        //  17: blue dark (running background)
+        // 222: yellow pale (stalled)
+        //  69: indigo pale (user pending)
+        //  35: green pale (success)
+        //  22: green dark (success background)
+        // 160: red slightly dim (fail)
+        //  88: red dark (fail background)
 
-        const DARK_GRAY: u8 = 237;
+        const GRAY_DARK: u8 = 237;
 
         let bar = match progress_status {
-            ProgressStatus::ExecPending => console::style(SOLID_BAR).color256(DARK_GRAY),
+            ProgressStatus::ExecPending => console::style(SOLID_BAR).color256(GRAY_DARK),
             ProgressStatus::Running => console::style("{bar:40.32.on_17}"),
             ProgressStatus::RunningStalled => console::style("{bar:40.222.on_17}"),
             ProgressStatus::UserPending => console::style("{bar:40.69.on_17}"),
             ProgressStatus::Complete(progress_complete) => match progress_complete {
                 ProgressComplete::Success => console::style("{bar:40.35.on_22}"),
-                ProgressComplete::Fail => console::style("{bar:40.124.on_52}"),
+                ProgressComplete::Fail => console::style("{bar:40.160.on_88}"),
             },
         };
 
@@ -340,7 +340,7 @@ where
                     progress_bar.set_prefix(format!("{item_spec_id}"));
                     Self::progress_bar_style_update(
                         progress_bar,
-                        ProgressStatus::ExecPending,
+                        progress_tracker.progress_status(),
                         progress_tracker.progress_limit(),
                     );
                 },
@@ -367,7 +367,7 @@ where
                     ProgressUpdate::Limit(progress_limit) => {
                         Self::progress_bar_style_update(
                             progress_tracker.progress_bar(),
-                            ProgressStatus::Running,
+                            progress_tracker.progress_status(),
                             Some(progress_limit),
                         );
                     }
@@ -377,15 +377,13 @@ where
                     }
                     ProgressUpdate::Complete(progress_complete) => match progress_complete {
                         ProgressComplete::Success => {
-                            // TODO: Consolidate styling logic by passing
-                            // progress status, possibly in progress tracker.
                             progress_tracker.progress_bar().finish();
                             let progress_bar = progress_tracker.progress_bar();
                             progress_bar.abandon();
 
                             Self::progress_bar_style_update(
                                 progress_bar,
-                                ProgressStatus::Complete(ProgressComplete::Success),
+                                progress_tracker.progress_status(),
                                 progress_tracker.progress_limit(),
                             );
                         }
@@ -395,7 +393,7 @@ where
 
                             Self::progress_bar_style_update(
                                 progress_bar,
-                                ProgressStatus::Complete(ProgressComplete::Fail),
+                                progress_tracker.progress_status(),
                                 progress_tracker.progress_limit(),
                             );
                         }

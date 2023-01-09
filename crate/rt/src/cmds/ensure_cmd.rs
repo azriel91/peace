@@ -22,6 +22,7 @@ cfg_if::cfg_if! {
                 ProgressComplete,
                 ProgressLimit,
                 ProgressSender,
+                ProgressStatus,
                 ProgressTracker,
                 ProgressUpdate,
                 ProgressUpdateAndId,
@@ -285,10 +286,12 @@ where
                         progress_tracker.set_progress_limit(Some(*progress_limit))
                     }
                     ProgressUpdate::Delta(_delta) => {
-                        // TODO: Update `progress_status`
+                        progress_tracker.set_progress_status(ProgressStatus::Running);
                     }
-                    ProgressUpdate::Complete(_progress_complete) => {
-                        // TODO: Update `progress_status`
+                    ProgressUpdate::Complete(progress_complete) => {
+                        progress_tracker.set_progress_status(ProgressStatus::Complete(
+                            progress_complete.clone(),
+                        ));
                     }
                 }
                 progress_tracker.last_update_dt_update();
