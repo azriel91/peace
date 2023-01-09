@@ -17,16 +17,32 @@ Information that is likely useful to the consumer, and therefore should be captu
 
 Whether a task has started, is in-progress, stalled, or completed.
 
-* **Waiting:** Task has not yet started.
-* **Running:** Task is in progress.
-* **Stalled:** Task has not received any progress updates for a given period.
+* **Execution Pending:** Execution is pending a predecessor's execution.
+* **Running:** Execution is in progress.
 
-    Implementors are responsible for sending progress updates, but if there are no progress updates, or an identical "it's running" progress update is continuously received, then Peace may determine that the task may have stalled, and user attention is required.
+    This status is best conveyed alongside the following information:
+
+    - **Units total:** Unknown (spinner) / known (progress bar).
+    - **Units current**
+    - **Operation:** State current / desired / diff discovery, `EnsureOpSpec::exec`.
+
+        Certain operations will not be applicable, e.g. when `StateCurrent` is feature gated, then the operation won't be available when the feature is not enabled.
+
+* **Running Stalled:** Progress updates have not been received for a given period.
+
+
+    Item spec implementations are responsible for sending progress updates, but if there are no progress updates, or an identical "it's running" progress update is continuously received, then Peace may determine that the task may have stalled, and user attention is required.
 
     Peace may also provide a hook for implementors to output a suggestion to the user.
 
-* **Pending Input:** Task is pending user input.
-* **Ended:** Task has finished running, and cannot be restarted.
+* **User Pending:** Task is pending user input.
+* **Completed:** Task has completed.
+
+    This status is best conveyed alongside the following information:
+
+    - **Completion Status**: Success, Failed.
+    - **Operation:** State current / desired / diff discovery, `EnsureOpSpec::exec`.
+
 
 The following variant is possible conceptually, but not applicable to the Peace framework:
 

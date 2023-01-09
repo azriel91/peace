@@ -37,6 +37,7 @@ error_reporting = ["dep:miette", "peace_rt_model_core/error_reporting"]
 output_colorized = ["dep:console", "dep:is-terminal"]
 output_json = ["dep:serde_json", "peace_rt_model_core/output_json"]
 output_progress = [
+    "dep:console",
     "dep:is-terminal",
     "peace_core/output_progress",
     "peace_rt_model_core/output_progress",

@@ -21,6 +21,7 @@ cfg_if::cfg_if! {
 
         use peace_cfg::{
             progress::{
+                ProgressComplete,
                 ProgressLimit,
                 ProgressSender,
                 ProgressTracker,
@@ -378,13 +379,7 @@ where
                         OpCheckStatus::ExecRequired => {}
                         #[cfg(feature = "output_progress")]
                         OpCheckStatus::ExecRequired { progress_limit } => {
-                            let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                                item_spec_id: item_spec_id.clone(),
-                                progress_update: ProgressUpdate::Limit {
-                                    limit: progress_limit,
-                                },
-                            });
-
+                            // Update units total on `ProgressBar`.
                             match progress_limit {
                                 ProgressLimit::Unknown => {
                                     // Same as `indicatif` internally.
@@ -394,6 +389,12 @@ where
                                     progress_bar.set_length(n);
                                 }
                             }
+
+                            // Update `OutputWrite`s with progress limit.
+                            let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                                item_spec_id: item_spec_id.clone(),
+                                progress_update: ProgressUpdate::Limit(progress_limit),
+                            });
                         }
                         OpCheckStatus::ExecNotRequired => {}
                     }
@@ -408,6 +409,13 @@ where
                 match f(&**item_spec, op_ctx, resources, &mut item_ensure).await {
                     Ok(()) => {
                         // ensure succeeded
+
+                        #[cfg(feature = "output_progress")]
+                        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                            item_spec_id: item_spec_id.clone(),
+                            progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
+                        });
+
                         outcomes_tx
                             .send(ItemEnsureOutcome::Success {
                                 item_spec_id: item_spec.id().clone(),
@@ -419,6 +427,13 @@ where
                     }
                     Err(error) => {
                         // ensure failed
+
+                        #[cfg(feature = "output_progress")]
+                        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                            item_spec_id: item_spec_id.clone(),
+                            progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
+                        });
+
                         outcomes_tx
                             .send(ItemEnsureOutcome::Fail {
                                 item_spec_id: item_spec.id().clone(),
@@ -433,6 +448,12 @@ where
                 }
             }
             Err((error, item_ensure_partial)) => {
+                #[cfg(feature = "output_progress")]
+                let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                    item_spec_id: item_spec.id().clone(),
+                    progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
+                });
+
                 outcomes_tx
                     .send(ItemEnsureOutcome::PrepareFail {
                         item_spec_id: item_spec.id().clone(),

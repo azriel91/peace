@@ -41,9 +41,7 @@ impl<'op> ProgressSender<'op> {
             .progress_tx
             .send(ProgressUpdateAndId {
                 item_spec_id: self.item_spec_id.clone(),
-                progress_update: ProgressUpdate::Delta {
-                    delta: ProgressDelta::Inc(delta),
-                },
+                progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(delta)),
             })
             .await;
     }
@@ -63,9 +61,7 @@ impl<'op> ProgressSender<'op> {
             .progress_tx
             .send(ProgressUpdateAndId {
                 item_spec_id: self.item_spec_id.clone(),
-                progress_update: ProgressUpdate::Delta {
-                    delta: ProgressDelta::Tick,
-                },
+                progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
             })
             .await;
     }

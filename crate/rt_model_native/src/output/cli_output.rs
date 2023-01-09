@@ -22,7 +22,13 @@ use crate::output::CliColorizeChosen;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_core::progress::{ProgressLimit, ProgressTracker, ProgressUpdate};
+        use peace_core::progress::{
+            ProgressComplete,
+            ProgressLimit,
+            ProgressStatus,
+            ProgressTracker,
+            ProgressUpdate,
+        };
         use peace_rt_model_core::{
             indicatif::{ProgressBar, ProgressStyle, ProgressDrawTarget},
             CmdProgressTracker,
@@ -232,9 +238,10 @@ where
     #[cfg(feature = "output_progress")]
     fn progress_bar_style_update(
         progress_bar: &ProgressBar,
+        progress_status: ProgressStatus,
         progress_limit: Option<ProgressLimit>,
     ) {
-        let template = Self::progress_bar_template(progress_limit);
+        let template = Self::progress_bar_template(progress_status, progress_limit);
         progress_bar.set_style(
             ProgressStyle::with_template(template.as_str())
                 .unwrap_or_else(|error| {
@@ -250,12 +257,40 @@ where
     }
 
     #[cfg(feature = "output_progress")]
-    fn progress_bar_template(progress_limit: Option<ProgressLimit>) -> String {
+    fn progress_bar_template(
+        progress_status: ProgressStatus,
+        progress_limit: Option<ProgressLimit>,
+    ) -> String {
+        /// This is used when we are rendering a bar that is not calculated by
+        /// `ProgressBar`'s length and current value,
+        const SOLID_BAR: &str = "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒";
+
+        // These are used to tell `indicatif` how to style the computed bar.
+        //
         // 40: width
-        // 35: pale green
-        // 32: pale blue
-        // 17: dark blue
-        let bar = "{bar:40.32.on_17}"; // TODO: change based on progress status
+        //
+        // 32: pale blue (running)
+        // 17: dark blue (running background)
+        // 222: pale yellow (stalled)
+        // 69: pale indigo (user pending)
+        // 35: pale green (success)
+        // 22: dark green (success background)
+        // 124: semi-dim red (fail)
+        // 52: dark red (fail background)
+
+        const DARK_GRAY: u8 = 237;
+
+        let bar = match progress_status {
+            ProgressStatus::ExecPending => console::style(SOLID_BAR).color256(DARK_GRAY),
+            ProgressStatus::Running => console::style("{bar:40.32.on_17}"),
+            ProgressStatus::RunningStalled => console::style("{bar:40.222.on_17}"),
+            ProgressStatus::UserPending => console::style("{bar:40.69.on_17}"),
+            ProgressStatus::Complete(progress_complete) => match progress_complete {
+                ProgressComplete::Success => console::style("{bar:40.35.on_22}"),
+                ProgressComplete::Fail => console::style("{bar:40.124.on_52}"),
+            },
+        };
+
         let units = if let Some(progress_limit) = progress_limit {
             match progress_limit {
                 ProgressLimit::Unknown => "",
@@ -302,7 +337,11 @@ where
                 |(item_spec_id, progress_tracker)| {
                     let progress_bar = progress_tracker.progress_bar();
                     progress_bar.set_prefix(format!("{item_spec_id}"));
-                    Self::progress_bar_style_update(progress_bar, None);
+                    Self::progress_bar_style_update(
+                        progress_bar,
+                        ProgressStatus::ExecPending,
+                        None,
+                    );
                 },
             );
         }
@@ -324,16 +363,42 @@ where
                 // * Need to update progress bar colour on error (blue to red)
 
                 match progress_update {
-                    ProgressUpdate::Limit { limit } => {
+                    ProgressUpdate::Limit(progress_limit) => {
                         Self::progress_bar_style_update(
                             progress_tracker.progress_bar(),
-                            Some(limit),
+                            ProgressStatus::Running,
+                            Some(progress_limit),
                         );
                     }
-                    ProgressUpdate::Delta { delta: _ } => {
+                    ProgressUpdate::Delta(_delta) => {
                         // Nothing to do -- the progress bar is already updated
                         // within Peace.
                     }
+                    ProgressUpdate::Complete(progress_complete) => match progress_complete {
+                        ProgressComplete::Success => {
+                            // TODO: Consolidate styling logic by passing
+                            // progress status, possibly in progress tracker.
+                            progress_tracker.progress_bar().finish();
+                            let progress_bar = progress_tracker.progress_bar();
+                            progress_bar.abandon();
+
+                            Self::progress_bar_style_update(
+                                progress_bar,
+                                ProgressStatus::Complete(ProgressComplete::Success),
+                                None, // TODO: retain progress limit from before
+                            );
+                        }
+                        ProgressComplete::Fail => {
+                            let progress_bar = progress_tracker.progress_bar();
+                            progress_bar.abandon();
+
+                            Self::progress_bar_style_update(
+                                progress_bar,
+                                ProgressStatus::Complete(ProgressComplete::Fail),
+                                None, // TODO: retain progress limit from before
+                            );
+                        }
+                    },
                 }
             }
             CliProgressFormatChosen::Output => match self.format {
