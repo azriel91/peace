@@ -30,7 +30,7 @@ cfg_if::cfg_if! {
             ProgressUpdate,
         };
         use peace_rt_model_core::{
-            indicatif::{ProgressBar, ProgressStyle, ProgressDrawTarget},
+            indicatif::{ProgressDrawTarget, ProgressStyle},
             CmdProgressTracker,
         };
 
@@ -275,8 +275,10 @@ where
         const GRAY_DARK: u8 = 237;
 
         let bar = match progress_tracker.progress_status() {
-            ProgressStatus::ExecPending => console::style(SOLID_BAR).color256(GRAY_DARK),
-            ProgressStatus::Running => console::style("{bar:40.32.on_17}"),
+            ProgressStatus::Initialized => console::style(SOLID_BAR).color256(GRAY_DARK),
+            ProgressStatus::ExecPending | ProgressStatus::Running => {
+                console::style("{bar:40.32.on_17}")
+            }
             ProgressStatus::RunningStalled => console::style("{bar:40.222.on_17}"),
             ProgressStatus::UserPending => console::style("{bar:40.69.on_17}"),
             ProgressStatus::Complete(progress_complete) => match progress_complete {
@@ -332,7 +334,7 @@ where
                     let progress_tracker = progress_tracker.borrow();
                     let progress_bar = progress_tracker.progress_bar();
                     progress_bar.set_prefix(format!("{item_spec_id}"));
-                    Self::progress_bar_style_update(progress_tracker);
+                    Self::progress_bar_style_update(&progress_tracker);
                 },
             );
         }
@@ -359,8 +361,11 @@ where
                         Self::progress_bar_style_update(progress_tracker);
                     }
                     ProgressUpdate::Delta(_delta) => {
-                        // Nothing to do -- the progress bar is already updated
-                        // within Peace.
+                        // Status may have changed from `ExecPending` to
+                        // `Running`.
+                        //
+                        // We don't have the previous status though, so we use
+                        // the same style for both `ExecPending` and `Running`
                     }
                     ProgressUpdate::Complete(progress_complete) => match progress_complete {
                         ProgressComplete::Success => {

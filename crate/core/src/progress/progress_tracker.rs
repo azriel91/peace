@@ -26,7 +26,7 @@ impl ProgressTracker {
         let last_update_dt = Utc::now();
 
         Self {
-            progress_status: ProgressStatus::ExecPending,
+            progress_status: ProgressStatus::Initialized,
             progress_bar,
             progress_limit: None,
             last_update_dt,

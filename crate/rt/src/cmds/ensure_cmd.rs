@@ -283,7 +283,8 @@ where
                 let mut progress_tracker = progress_trackers.borrow_mut(&item_spec_id);
                 match &progress_update {
                     ProgressUpdate::Limit(progress_limit) => {
-                        progress_tracker.set_progress_limit(Some(*progress_limit))
+                        progress_tracker.set_progress_limit(Some(*progress_limit));
+                        progress_tracker.set_progress_status(ProgressStatus::ExecPending);
                     }
                     ProgressUpdate::Delta(_delta) => {
                         progress_tracker.set_progress_status(ProgressStatus::Running);

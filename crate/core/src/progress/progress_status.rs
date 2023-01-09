@@ -27,6 +27,10 @@ use crate::progress::ProgressComplete;
 /// be `Copy` -- not sure yet.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ProgressStatus {
+    /// This item is registered for execution.
+    ///
+    /// This status is used when we don't know the progress limit.
+    Initialized,
     /// Execution has not yet begun.
     ///
     /// This is waiting on either:
