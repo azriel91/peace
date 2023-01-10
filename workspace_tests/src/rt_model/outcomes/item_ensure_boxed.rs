@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 
 use peace::{
     cfg::{state::Placeholder, OpCheckStatus, State},
-    resources::type_reg::untagged::{BoxDataTypeDowncast, DataTypeWrapper},
+    resources::type_reg::untagged::BoxDataTypeDowncast,
     rt_model::outcomes::{ItemEnsure, ItemEnsureBoxed, ItemEnsurePartial},
 };
 use pretty_assertions::assert_eq;
@@ -68,7 +68,7 @@ fn deref_mut() {
 #[test]
 fn serialize() -> Result<(), serde_yaml::Error> {
     let item_ensure_boxed = ItemEnsureBoxed::from(item_ensure());
-    let data_type_wrapper: &dyn DataTypeWrapper = &item_ensure_boxed;
+    let data_type_wrapper = &item_ensure_boxed;
 
     assert_eq!(
         r#"state_saved: null
