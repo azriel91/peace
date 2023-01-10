@@ -1,7 +1,7 @@
 use peace::rt_model::output::{CliOutputBuilder, OutputFormat};
 
 #[cfg(feature = "output_colorized")]
-use peace::rt_model::output::{CliColorize, CliColorizeUsed};
+use peace::rt_model::output::{CliColorizeOpt, CliColorizeUsed};
 #[cfg(feature = "output_progress")]
 use peace::rt_model::output::{CliOutputTarget, CliProgressFormat, CliProgressFormatOpt};
 
@@ -11,7 +11,7 @@ async fn new_uses_sensible_defaults() -> Result<(), Box<dyn std::error::Error>> 
 
     assert_eq!(OutputFormat::Text, builder.outcome_format());
     #[cfg(feature = "output_colorized")]
-    assert_eq!(CliColorize::Auto, builder.colorize());
+    assert_eq!(CliColorizeOpt::Auto, builder.colorize());
     #[cfg(feature = "output_progress")]
     assert_eq!(CliOutputTarget::Stderr, builder.progress_target());
     #[cfg(feature = "output_progress")]
@@ -30,9 +30,9 @@ async fn with_outcome_format_sets_outcome_format() -> Result<(), Box<dyn std::er
 #[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn with_colorize_sets_colorize() -> Result<(), Box<dyn std::error::Error>> {
-    let builder = CliOutputBuilder::new().with_colorize(CliColorize::Always);
+    let builder = CliOutputBuilder::new().with_colorize(CliColorizeOpt::Always);
 
-    assert_eq!(CliColorize::Always, builder.colorize());
+    assert_eq!(CliColorizeOpt::Always, builder.colorize());
     Ok(())
 }
 
@@ -67,7 +67,7 @@ async fn build_passes_through_outcome_format() -> Result<(), Box<dyn std::error:
 #[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn build_passes_through_colorize() -> Result<(), Box<dyn std::error::Error>> {
-    let builder = CliOutputBuilder::new().with_colorize(CliColorize::Always);
+    let builder = CliOutputBuilder::new().with_colorize(CliColorizeOpt::Always);
 
     let cli_output = builder.build();
 

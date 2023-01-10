@@ -5,7 +5,7 @@ use peace_rt_model_core::output::OutputFormat;
 use tokio::io::{AsyncWrite, Stdout};
 
 #[cfg(feature = "output_colorized")]
-use crate::output::{CliColorize, CliColorizeUsed};
+use crate::output::{CliColorizeOpt, CliColorizeUsed};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -64,7 +64,7 @@ pub struct CliOutputBuilder<W> {
     outcome_format: OutputFormat,
     /// Whether output should be colorized.
     #[cfg(feature = "output_colorized")]
-    colorize: CliColorize,
+    colorize: CliColorizeOpt,
     /// Where to output progress updates to -- stdout or stderr.
     #[cfg(feature = "output_progress")]
     progress_target: CliOutputTarget,
@@ -108,7 +108,7 @@ where
             writer,
             outcome_format: OutputFormat::Text,
             #[cfg(feature = "output_colorized")]
-            colorize: CliColorize::Auto,
+            colorize: CliColorizeOpt::Auto,
             #[cfg(feature = "output_progress")]
             progress_target: CliOutputTarget::default(),
             #[cfg(feature = "output_progress")]
@@ -124,7 +124,7 @@ where
 
     /// Returns whether output should be colorized.
     #[cfg(feature = "output_colorized")]
-    pub fn colorize(&self) -> CliColorize {
+    pub fn colorize(&self) -> CliColorizeOpt {
         self.colorize
     }
 
@@ -169,7 +169,7 @@ where
     /// let cli_output = CliOutput::new().with_colorized(CliColorize::Auto);
     /// ```
     #[cfg(feature = "output_colorized")]
-    pub fn with_colorize(mut self, colorize: CliColorize) -> Self {
+    pub fn with_colorize(mut self, colorize: CliColorizeOpt) -> Self {
         self.colorize = colorize;
         self
     }
@@ -203,7 +203,7 @@ where
 
         #[cfg(feature = "output_colorized")]
         let colorize = match colorize {
-            CliColorize::Auto => {
+            CliColorizeOpt::Auto => {
                 // Even though we're using `tokio::io::stdout` / `stderr`, `IsTerminal` is only
                 // implemented on `std::io::stdout` / `stderr`.
                 //
@@ -225,8 +225,8 @@ where
                     CliColorizeUsed::Uncolored
                 }
             }
-            CliColorize::Always => CliColorizeUsed::Colored,
-            CliColorize::Never => CliColorizeUsed::Uncolored,
+            CliColorizeOpt::Always => CliColorizeUsed::Colored,
+            CliColorizeOpt::Never => CliColorizeUsed::Uncolored,
         };
 
         #[cfg(feature = "output_progress")]
@@ -275,7 +275,7 @@ impl Default for CliOutputBuilder<Stdout> {
             writer: stdout,
             outcome_format: OutputFormat::Text,
             #[cfg(feature = "output_colorized")]
-            colorize: CliColorize::Auto,
+            colorize: CliColorizeOpt::Auto,
             #[cfg(feature = "output_progress")]
             progress_target: CliOutputTarget::default(),
             #[cfg(feature = "output_progress")]

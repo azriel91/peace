@@ -1,3 +1,7 @@
+#[cfg(feature = "output_colorized")]
+mod cli_colorize_opt;
+#[cfg(feature = "output_colorized")]
+mod cli_colorize_opt_parse_error;
 mod cli_output;
 mod cli_output_builder;
 #[cfg(feature = "output_progress")]

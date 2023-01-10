@@ -11,7 +11,7 @@ use peace::{
 };
 
 #[cfg(feature = "output_colorized")]
-use peace::rt_model::output::CliColorize;
+use peace::rt_model::output::CliColorizeOpt;
 
 #[tokio::test]
 async fn outputs_states_saved_as_text() -> Result<(), Box<dyn std::error::Error>> {
@@ -803,6 +803,6 @@ fn cli_output_colorized(
 ) -> CliOutput<&mut Vec<u8>> {
     CliOutputBuilder::new_with_writer(buffer)
         .with_outcome_format(output_format)
-        .with_colorize(CliColorize::Always)
+        .with_colorize(CliColorizeOpt::Always)
         .build()
 }
