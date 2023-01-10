@@ -2,7 +2,7 @@
 
 This page records ideas that I'd like, but there isn't enough mental capacity and time to design and work on them yet.
 
-1. Abstraction over native storage and web storage &ndash; use IndexDB instead of WebStorage APIs.
+1. Abstraction over native storage and web storage &ndash; use IndexDB instead of `WebStorage` APIs.
 2. Graphical user interface that renders each flow's graph.
 
     1. Each item spec is a node.

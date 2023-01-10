@@ -7,7 +7,7 @@ use peace_resources::{
 use peace_rt_model_core::cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{Error, WebStorage};
+use crate::{Error, Storage};
 
 /// Logic to create peace directories and reads/writes initialization params.
 ///
@@ -47,7 +47,7 @@ impl WorkspaceInitializer {
     ///
     /// For web storage, this sets empty values at directory paths to emulate
     /// the native storage.
-    pub async fn dirs_initialize(storage: &WebStorage, dirs: &WorkspaceDirs) -> Result<(), Error> {
+    pub async fn dirs_initialize(storage: &Storage, dirs: &WorkspaceDirs) -> Result<(), Error> {
         let dirs = iter::once(AsRef::<Path>::as_ref(dirs.workspace_dir()))
             .chain(iter::once(AsRef::<Path>::as_ref(dirs.peace_dir())))
             .chain(iter::once(AsRef::<Path>::as_ref(dirs.profile_dir())))
@@ -62,7 +62,7 @@ impl WorkspaceInitializer {
     }
 
     pub async fn workspace_params_serialize<K>(
-        storage: &WebStorage,
+        storage: &Storage,
         workspace_params: &WorkspaceParams<K>,
         workspace_params_file: &WorkspaceParamsFile,
     ) -> Result<(), Error>
@@ -79,7 +79,7 @@ impl WorkspaceInitializer {
     }
 
     pub async fn workspace_params_deserialize<K>(
-        storage: &WebStorage,
+        storage: &Storage,
         type_reg: &TypeReg<K>,
         workspace_params_file: &WorkspaceParamsFile,
     ) -> Result<Option<WorkspaceParams<K>>, Error>
@@ -96,7 +96,7 @@ impl WorkspaceInitializer {
     }
 
     pub async fn profile_params_serialize<K>(
-        storage: &WebStorage,
+        storage: &Storage,
         profile_params: &ProfileParams<K>,
         profile_params_file: &ProfileParamsFile,
     ) -> Result<(), Error>
@@ -113,7 +113,7 @@ impl WorkspaceInitializer {
     }
 
     pub async fn profile_params_deserialize<K>(
-        storage: &WebStorage,
+        storage: &Storage,
         type_reg: &TypeReg<K>,
         profile_params_file: &ProfileParamsFile,
     ) -> Result<Option<ProfileParams<K>>, Error>
@@ -130,7 +130,7 @@ impl WorkspaceInitializer {
     }
 
     pub async fn flow_params_serialize<K>(
-        storage: &WebStorage,
+        storage: &Storage,
         flow_params: &FlowParams<K>,
         flow_params_file: &FlowParamsFile,
     ) -> Result<(), Error>
@@ -143,7 +143,7 @@ impl WorkspaceInitializer {
     }
 
     pub async fn flow_params_deserialize<K>(
-        storage: &WebStorage,
+        storage: &Storage,
         type_reg: &TypeReg<K>,
         flow_params_file: &FlowParamsFile,
     ) -> Result<Option<FlowParams<K>>, Error>

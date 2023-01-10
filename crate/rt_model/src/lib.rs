@@ -24,8 +24,7 @@ pub use peace_rt_model_native::{
 
 #[cfg(target_arch = "wasm32")]
 pub use peace_rt_model_web::{
-    Error, WebStorage as Storage, Workspace, WorkspaceDirsBuilder, WorkspaceInitializer,
-    WorkspaceSpec,
+    Error, Storage, Workspace, WorkspaceDirsBuilder, WorkspaceInitializer, WorkspaceSpec,
 };
 
 pub use crate::{
