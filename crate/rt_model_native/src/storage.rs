@@ -10,11 +10,11 @@ use tokio_util::io::SyncIoBridge;
 
 use crate::Error;
 
-/// Wrapper to retrieve `web_sys::Storage` on demand.
+/// Wrapper around file system operations.
 #[derive(Clone, Debug)]
-pub struct NativeStorage;
+pub struct Storage;
 
-impl NativeStorage {
+impl Storage {
     /// Reads a serializable item from the given path.
     ///
     /// # Parameters

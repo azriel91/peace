@@ -1,7 +1,7 @@
 use peace_core::{FlowId, Profile};
 use peace_resources::internal::WorkspaceDirs;
 
-use crate::{Error, NativeStorage, WorkspaceDirsBuilder, WorkspaceSpec};
+use crate::{Error, Storage, WorkspaceDirsBuilder, WorkspaceSpec};
 
 /// Workspace that the `peace` tool runs in.
 #[derive(Clone, Debug)]
@@ -13,7 +13,7 @@ pub struct Workspace {
     /// Identifier or name of the chosen process flow.
     flow_id: FlowId,
     /// File system storage access.
-    storage: NativeStorage,
+    storage: Storage,
 }
 
 impl Workspace {
@@ -30,7 +30,7 @@ impl Workspace {
         flow_id: FlowId,
     ) -> Result<Self, Error> {
         let dirs = WorkspaceDirsBuilder::build(workspace_spec, &profile, &flow_id)?;
-        let storage = NativeStorage;
+        let storage = Storage;
 
         Ok(Self {
             dirs,
@@ -41,7 +41,7 @@ impl Workspace {
     }
 
     /// Returns the underlying data.
-    pub fn into_inner(self) -> (WorkspaceDirs, Profile, FlowId, NativeStorage) {
+    pub fn into_inner(self) -> (WorkspaceDirs, Profile, FlowId, Storage) {
         let Self {
             dirs,
             profile,
@@ -68,7 +68,7 @@ impl Workspace {
     }
 
     /// Returns a reference to the workspace's storage.
-    pub fn storage(&self) -> &NativeStorage {
+    pub fn storage(&self) -> &Storage {
         &self.storage
     }
 }

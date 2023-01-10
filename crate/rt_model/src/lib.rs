@@ -18,8 +18,8 @@ pub mod output {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub use peace_rt_model_native::{
-    Error, NativeStorage as Storage, SyncIoBridge, Workspace, WorkspaceDirsBuilder,
-    WorkspaceInitializer, WorkspaceSpec,
+    Error, Storage, SyncIoBridge, Workspace, WorkspaceDirsBuilder, WorkspaceInitializer,
+    WorkspaceSpec,
 };
 
 #[cfg(target_arch = "wasm32")]
