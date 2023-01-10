@@ -5,7 +5,7 @@ use peace_rt_model_core::output::OutputFormat;
 use tokio::io::{AsyncWrite, Stdout};
 
 #[cfg(feature = "output_colorized")]
-use crate::output::{CliColorizeOpt, CliColorizeUsed};
+use crate::output::{CliColorize, CliColorizeOpt};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -220,13 +220,13 @@ where
                 // * We *could* add another enum just like `CliOutputTarget`, with the
                 //   additional variant.
                 if std::io::stdout().is_terminal() {
-                    CliColorizeUsed::Colored
+                    CliColorize::Colored
                 } else {
-                    CliColorizeUsed::Uncolored
+                    CliColorize::Uncolored
                 }
             }
-            CliColorizeOpt::Always => CliColorizeUsed::Colored,
-            CliColorizeOpt::Never => CliColorizeUsed::Uncolored,
+            CliColorizeOpt::Always => CliColorize::Colored,
+            CliColorizeOpt::Never => CliColorize::Uncolored,
         };
 
         #[cfg(feature = "output_progress")]

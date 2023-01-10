@@ -1,7 +1,7 @@
 use peace::rt_model::output::{CliOutputBuilder, OutputFormat};
 
 #[cfg(feature = "output_colorized")]
-use peace::rt_model::output::{CliColorizeOpt, CliColorizeUsed};
+use peace::rt_model::output::{CliColorize, CliColorizeOpt};
 #[cfg(feature = "output_progress")]
 use peace::rt_model::output::{CliOutputTarget, CliProgressFormat, CliProgressFormatOpt};
 
@@ -71,7 +71,7 @@ async fn build_passes_through_colorize() -> Result<(), Box<dyn std::error::Error
 
     let cli_output = builder.build();
 
-    assert_eq!(CliColorizeUsed::Colored, cli_output.colorize());
+    assert_eq!(CliColorize::Colored, cli_output.colorize());
     Ok(())
 }
 
@@ -112,7 +112,7 @@ async fn build_colorize_auto_passes_uncolored_for_non_interactive_terminal()
 -> Result<(), Box<dyn std::error::Error>> {
     let cli_output = CliOutputBuilder::new().build();
 
-    assert_eq!(CliColorizeUsed::Uncolored, cli_output.colorize());
+    assert_eq!(CliColorize::Uncolored, cli_output.colorize());
     Ok(())
 }
 

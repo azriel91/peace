@@ -6,7 +6,7 @@ mod cli_output_builder;
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_colorized")] {
         pub use self::{
-            cli_colorize::CliColorizeUsed,
+            cli_colorize::CliColorize,
             cli_colorize_opt::CliColorizeOpt,
             cli_colorize_parse_error::CliColorizeOptParseError,
         };

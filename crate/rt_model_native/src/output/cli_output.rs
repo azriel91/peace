@@ -18,7 +18,7 @@ use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
 use crate::{output::CliOutputBuilder, Error};
 
 #[cfg(feature = "output_colorized")]
-use crate::output::CliColorizeUsed;
+use crate::output::CliColorize;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -87,7 +87,7 @@ pub struct CliOutput<W> {
     pub(crate) outcome_format: OutputFormat,
     /// Whether output should be colorized.
     #[cfg(feature = "output_colorized")]
-    pub(crate) colorize: CliColorizeUsed,
+    pub(crate) colorize: CliColorize,
     #[cfg(feature = "output_progress")]
     /// Where to output progress updates to -- stdout or stderr.
     pub(crate) progress_target: CliOutputTarget,
@@ -146,7 +146,7 @@ where
 
     /// Returns whether output should be colorized.
     #[cfg(feature = "output_colorized")]
-    pub fn colorize(&self) -> CliColorizeUsed {
+    pub fn colorize(&self) -> CliColorize {
         self.colorize
     }
 
@@ -205,7 +205,7 @@ where
             .try_fold(
                 writer,
                 |writer, (item_spec_id, item_spec_state)| async move {
-                    if colorized == CliColorizeUsed::Colored {
+                    if colorized == CliColorize::Colored {
                         let item_spec_id_colorized = item_spec_id_style.apply_to(item_spec_id);
                         writer
                             .write_all(format!("{item_spec_id_colorized}").as_bytes())
