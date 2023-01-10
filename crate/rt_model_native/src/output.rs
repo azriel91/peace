@@ -18,7 +18,7 @@ cfg_if::cfg_if! {
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         pub use self::{
-            cli_progress_format::CliProgressFormatUsed,
+            cli_progress_format::CliProgressFormat,
             cli_progress_format_opt::CliProgressFormatOpt,
             cli_progress_format_parse_error::CliProgressFormatOptParseError,
         };

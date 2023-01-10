@@ -9,7 +9,7 @@ use crate::output::{CliColorize, CliColorizeUsed};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use crate::output::{CliOutputTarget, CliProgressFormatOpt, CliProgressFormatUsed};
+        use crate::output::{CliOutputTarget, CliProgressFormatOpt, CliProgressFormat};
     }
 }
 
@@ -237,22 +237,22 @@ where
                 match progress_target {
                     CliOutputTarget::Stdout => {
                         if std::io::stdout().is_terminal() {
-                            CliProgressFormatUsed::ProgressBar
+                            CliProgressFormat::ProgressBar
                         } else {
-                            CliProgressFormatUsed::Output
+                            CliProgressFormat::Output
                         }
                     }
                     CliOutputTarget::Stderr => {
                         if std::io::stderr().is_terminal() {
-                            CliProgressFormatUsed::ProgressBar
+                            CliProgressFormat::ProgressBar
                         } else {
-                            CliProgressFormatUsed::Output
+                            CliProgressFormat::Output
                         }
                     }
                 }
             }
-            CliProgressFormatOpt::Output => CliProgressFormatUsed::Output,
-            CliProgressFormatOpt::ProgressBar => CliProgressFormatUsed::ProgressBar,
+            CliProgressFormatOpt::Output => CliProgressFormat::Output,
+            CliProgressFormatOpt::ProgressBar => CliProgressFormat::ProgressBar,
         };
 
         CliOutput {

@@ -34,7 +34,7 @@ cfg_if::cfg_if! {
             CmdProgressTracker,
         };
 
-        use crate::output::{CliOutputTarget, CliProgressFormatUsed};
+        use crate::output::{CliOutputTarget, CliProgressFormat};
     }
 }
 
@@ -95,7 +95,7 @@ pub struct CliOutput<W> {
     ///
     /// This is detected on instantiation.
     #[cfg(feature = "output_progress")]
-    pub(crate) progress_format: CliProgressFormatUsed,
+    pub(crate) progress_format: CliProgressFormat,
 }
 
 impl CliOutput<Stdout> {
@@ -159,7 +159,7 @@ where
     /// Returns how to format progress output -- progress bar or mimic outcome
     /// format.
     #[cfg(feature = "output_progress")]
-    pub fn progress_format(&self) -> CliProgressFormatUsed {
+    pub fn progress_format(&self) -> CliProgressFormat {
         self.progress_format
     }
 
@@ -344,7 +344,7 @@ where
 {
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
-        if self.progress_format == CliProgressFormatUsed::ProgressBar {
+        if self.progress_format == CliProgressFormat::ProgressBar {
             let progress_draw_target = match self.progress_target {
                 CliOutputTarget::Stdout => ProgressDrawTarget::stdout(),
                 CliOutputTarget::Stderr => ProgressDrawTarget::stderr(),
@@ -372,7 +372,7 @@ where
         progress_update: ProgressUpdate,
     ) {
         match self.progress_format {
-            CliProgressFormatUsed::ProgressBar => {
+            CliProgressFormat::ProgressBar => {
                 // Don't need to write anything, as `indicatif` handles output
                 // to terminal.
 
@@ -408,7 +408,7 @@ where
                     },
                 }
             }
-            CliProgressFormatUsed::Output => match self.outcome_format {
+            CliProgressFormat::Output => match self.outcome_format {
                 // Note: outputting yaml for Text output, because we aren't sending much progress
                 // information.
                 //

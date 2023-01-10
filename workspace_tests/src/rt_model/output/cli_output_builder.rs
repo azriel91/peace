@@ -3,7 +3,7 @@ use peace::rt_model::output::{CliOutputBuilder, OutputFormat};
 #[cfg(feature = "output_colorized")]
 use peace::rt_model::output::{CliColorize, CliColorizeUsed};
 #[cfg(feature = "output_progress")]
-use peace::rt_model::output::{CliOutputTarget, CliProgressFormatOpt, CliProgressFormatUsed};
+use peace::rt_model::output::{CliOutputTarget, CliProgressFormat, CliProgressFormatOpt};
 
 #[tokio::test]
 async fn new_uses_sensible_defaults() -> Result<(), Box<dyn std::error::Error>> {
@@ -93,7 +93,7 @@ async fn build_passes_through_progress_format() -> Result<(), Box<dyn std::error
 
     let cli_output = builder.build();
 
-    assert_eq!(CliProgressFormatUsed::Output, cli_output.progress_format());
+    assert_eq!(CliProgressFormat::Output, cli_output.progress_format());
     Ok(())
 }
 
@@ -122,6 +122,6 @@ async fn build_progress_format_auto_passes_stderr_for_non_interactive_terminal()
 -> Result<(), Box<dyn std::error::Error>> {
     let cli_output = CliOutputBuilder::new().build();
 
-    assert_eq!(CliProgressFormatUsed::Output, cli_output.progress_format());
+    assert_eq!(CliProgressFormat::Output, cli_output.progress_format());
     Ok(())
 }
