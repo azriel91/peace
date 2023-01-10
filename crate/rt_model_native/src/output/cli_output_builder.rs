@@ -9,7 +9,7 @@ use crate::output::{CliColorize, CliColorizeUsed};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use crate::output::{CliOutputTarget, CliProgressFormat, CliProgressFormatUsed};
+        use crate::output::{CliOutputTarget, CliProgressFormatOpt, CliProgressFormatUsed};
     }
 }
 
@@ -72,7 +72,7 @@ pub struct CliOutputBuilder<W> {
     ///
     /// This is detected on instantiation.
     #[cfg(feature = "output_progress")]
-    progress_format: CliProgressFormat,
+    progress_format: CliProgressFormatOpt,
 }
 
 impl CliOutputBuilder<Stdout> {
@@ -112,7 +112,7 @@ where
             #[cfg(feature = "output_progress")]
             progress_target: CliOutputTarget::default(),
             #[cfg(feature = "output_progress")]
-            progress_format: CliProgressFormat::Auto,
+            progress_format: CliProgressFormatOpt::Auto,
         }
     }
 
@@ -137,7 +137,7 @@ where
     /// Returns how to format progress output -- progress bar or mimic outcome
     /// format.
     #[cfg(feature = "output_progress")]
-    pub fn progress_format(&self) -> CliProgressFormat {
+    pub fn progress_format(&self) -> CliProgressFormatOpt {
         self.progress_format
     }
 
@@ -183,7 +183,7 @@ where
 
     /// Sets the progress output format.
     #[cfg(feature = "output_progress")]
-    pub fn with_progress_format(mut self, progress_format: CliProgressFormat) -> Self {
+    pub fn with_progress_format(mut self, progress_format: CliProgressFormatOpt) -> Self {
         self.progress_format = progress_format;
         self
     }
@@ -231,7 +231,7 @@ where
 
         #[cfg(feature = "output_progress")]
         let progress_format = match progress_format {
-            CliProgressFormat::Auto => {
+            CliProgressFormatOpt::Auto => {
                 // Even though we're using `tokio::io::stdout` / `stderr`, `IsTerminal` is only
                 // implemented on `std::io::stdout` / `stderr`.
                 match progress_target {
@@ -251,8 +251,8 @@ where
                     }
                 }
             }
-            CliProgressFormat::Output => CliProgressFormatUsed::Output,
-            CliProgressFormat::ProgressBar => CliProgressFormatUsed::ProgressBar,
+            CliProgressFormatOpt::Output => CliProgressFormatUsed::Output,
+            CliProgressFormatOpt::ProgressBar => CliProgressFormatUsed::ProgressBar,
         };
 
         CliOutput {
@@ -279,7 +279,7 @@ impl Default for CliOutputBuilder<Stdout> {
             #[cfg(feature = "output_progress")]
             progress_target: CliOutputTarget::default(),
             #[cfg(feature = "output_progress")]
-            progress_format: CliProgressFormat::Auto,
+            progress_format: CliProgressFormatOpt::Auto,
         }
     }
 }

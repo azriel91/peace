@@ -2,9 +2,9 @@ use std::fmt;
 
 /// Failed to parse CLI progress format from string.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct CliProgressFormatParseError(pub String);
+pub struct CliProgressFormatOptParseError(pub String);
 
-impl fmt::Display for CliProgressFormatParseError {
+impl fmt::Display for CliProgressFormatOptParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -15,4 +15,4 @@ impl fmt::Display for CliProgressFormatParseError {
     }
 }
 
-impl std::error::Error for CliProgressFormatParseError {}
+impl std::error::Error for CliProgressFormatOptParseError {}

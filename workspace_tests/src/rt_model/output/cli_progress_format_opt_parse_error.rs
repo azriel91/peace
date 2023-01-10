@@ -1,8 +1,8 @@
-use peace::rt_model::output::CliProgressFormatParseError;
+use peace::rt_model::output::CliProgressFormatOptParseError;
 
 #[test]
 fn display_includes_auto_output_pb_progress_bar() {
-    let error = CliProgressFormatParseError("rara".to_string());
+    let error = CliProgressFormatOptParseError("rara".to_string());
 
     assert_eq!(
         "Failed to parse CLI progress format from string: `\"rara\"`.\n\
@@ -13,7 +13,7 @@ fn display_includes_auto_output_pb_progress_bar() {
 
 #[test]
 fn clone() {
-    let error = CliProgressFormatParseError("rara".to_string());
+    let error = CliProgressFormatOptParseError("rara".to_string());
     let error_clone = error.clone();
 
     assert_eq!(error, error_clone);
@@ -21,10 +21,10 @@ fn clone() {
 
 #[test]
 fn debug() {
-    let error = CliProgressFormatParseError("rara".to_string());
+    let error = CliProgressFormatOptParseError("rara".to_string());
 
     assert_eq!(
-        r#"CliProgressFormatParseError("rara")"#,
+        r#"CliProgressFormatOptParseError("rara")"#,
         format!("{error:?}")
     );
 }
