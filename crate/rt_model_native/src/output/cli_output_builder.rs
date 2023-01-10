@@ -5,11 +5,11 @@ use peace_rt_model_core::output::OutputFormat;
 use tokio::io::{AsyncWrite, Stdout};
 
 #[cfg(feature = "output_colorized")]
-use crate::output::{CliColorize, CliColorizeChosen};
+use crate::output::{CliColorize, CliColorizeUsed};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use crate::output::{CliOutputTarget, CliProgressFormat, CliProgressFormatChosen};
+        use crate::output::{CliOutputTarget, CliProgressFormat, CliProgressFormatUsed};
     }
 }
 
@@ -60,16 +60,15 @@ use is_terminal::IsTerminal;
 pub struct CliOutputBuilder<W> {
     /// Output stream to write the command outcome to.
     writer: W,
-    /// How to format command outcome output -- human readable or machine
-    /// parsable.
+    /// How to format outcome output -- human readable or machine parsable.
     outcome_format: OutputFormat,
     /// Whether output should be colorized.
     #[cfg(feature = "output_colorized")]
     colorize: CliColorize,
-    #[cfg(feature = "output_progress")]
     /// Where to output progress updates to -- stdout or stderr.
+    #[cfg(feature = "output_progress")]
     progress_target: CliOutputTarget,
-    /// Whether the writer is an interactive terminal.
+    /// How to format progress output -- progress bar or mimic outcome format.
     ///
     /// This is detected on instantiation.
     #[cfg(feature = "output_progress")]
@@ -117,18 +116,29 @@ where
         }
     }
 
-    /// Sets the progress output target -- stdout or stderr (default).
-    #[cfg(feature = "output_progress")]
-    pub fn with_progress_target(mut self, progress_target: CliOutputTarget) -> Self {
-        self.progress_target = progress_target;
-        self
+    /// Returns how to format outcome output -- human readable or machine
+    /// parsable.
+    pub fn outcome_format(&self) -> OutputFormat {
+        self.outcome_format
     }
 
-    /// Sets the progress output format.
+    /// Returns whether output should be colorized.
+    #[cfg(feature = "output_colorized")]
+    pub fn colorize(&self) -> CliColorize {
+        self.colorize
+    }
+
+    /// Returns where to output progress updates to -- stdout or stderr.
     #[cfg(feature = "output_progress")]
-    pub fn with_progress_format(mut self, progress_format: CliProgressFormat) -> Self {
-        self.progress_format = progress_format;
-        self
+    pub fn progress_target(&self) -> CliOutputTarget {
+        self.progress_target
+    }
+
+    /// Returns how to format progress output -- progress bar or mimic outcome
+    /// format.
+    #[cfg(feature = "output_progress")]
+    pub fn progress_format(&self) -> CliProgressFormat {
+        self.progress_format
     }
 
     /// Sets the outcome output format for this `CliOutput`.
@@ -164,6 +174,20 @@ where
         self
     }
 
+    /// Sets the progress output target -- stdout or stderr (default).
+    #[cfg(feature = "output_progress")]
+    pub fn with_progress_target(mut self, progress_target: CliOutputTarget) -> Self {
+        self.progress_target = progress_target;
+        self
+    }
+
+    /// Sets the progress output format.
+    #[cfg(feature = "output_progress")]
+    pub fn with_progress_format(mut self, progress_format: CliProgressFormat) -> Self {
+        self.progress_format = progress_format;
+        self
+    }
+
     /// Builds and returns the `CliOutput`.
     pub fn build(self) -> CliOutput<W> {
         let CliOutputBuilder {
@@ -196,13 +220,13 @@ where
                 // * We *could* add another enum just like `CliOutputTarget`, with the
                 //   additional variant.
                 if std::io::stdout().is_terminal() {
-                    CliColorizeChosen::Colored
+                    CliColorizeUsed::Colored
                 } else {
-                    CliColorizeChosen::Uncolored
+                    CliColorizeUsed::Uncolored
                 }
             }
-            CliColorize::Always => CliColorizeChosen::Colored,
-            CliColorize::Never => CliColorizeChosen::Uncolored,
+            CliColorize::Always => CliColorizeUsed::Colored,
+            CliColorize::Never => CliColorizeUsed::Uncolored,
         };
 
         #[cfg(feature = "output_progress")]
@@ -213,22 +237,22 @@ where
                 match progress_target {
                     CliOutputTarget::Stdout => {
                         if std::io::stdout().is_terminal() {
-                            CliProgressFormatChosen::ProgressBar
+                            CliProgressFormatUsed::ProgressBar
                         } else {
-                            CliProgressFormatChosen::Output
+                            CliProgressFormatUsed::Output
                         }
                     }
                     CliOutputTarget::Stderr => {
                         if std::io::stderr().is_terminal() {
-                            CliProgressFormatChosen::ProgressBar
+                            CliProgressFormatUsed::ProgressBar
                         } else {
-                            CliProgressFormatChosen::Output
+                            CliProgressFormatUsed::Output
                         }
                     }
                 }
             }
-            CliProgressFormat::Output => CliProgressFormatChosen::Output,
-            CliProgressFormat::ProgressBar => CliProgressFormatChosen::ProgressBar,
+            CliProgressFormat::Output => CliProgressFormatUsed::Output,
+            CliProgressFormat::ProgressBar => CliProgressFormatUsed::ProgressBar,
         };
 
         CliOutput {

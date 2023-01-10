@@ -1,4 +1,5 @@
 mod cli_output;
+mod cli_output_builder;
 #[cfg(feature = "output_progress")]
 mod cli_progress_format;
 #[cfg(feature = "output_progress")]

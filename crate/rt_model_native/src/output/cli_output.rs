@@ -18,7 +18,7 @@ use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
 use crate::{output::CliOutputBuilder, Error};
 
 #[cfg(feature = "output_colorized")]
-use crate::output::CliColorizeChosen;
+use crate::output::CliColorizeUsed;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -34,7 +34,7 @@ cfg_if::cfg_if! {
             CmdProgressTracker,
         };
 
-        use crate::output::{CliOutputTarget, CliProgressFormatChosen};
+        use crate::output::{CliOutputTarget, CliProgressFormatUsed};
     }
 }
 
@@ -87,7 +87,7 @@ pub struct CliOutput<W> {
     pub(crate) outcome_format: OutputFormat,
     /// Whether output should be colorized.
     #[cfg(feature = "output_colorized")]
-    pub(crate) colorize: CliColorizeChosen,
+    pub(crate) colorize: CliColorizeUsed,
     #[cfg(feature = "output_progress")]
     /// Where to output progress updates to -- stdout or stderr.
     pub(crate) progress_target: CliOutputTarget,
@@ -95,7 +95,7 @@ pub struct CliOutput<W> {
     ///
     /// This is detected on instantiation.
     #[cfg(feature = "output_progress")]
-    pub(crate) progress_format: CliProgressFormatChosen,
+    pub(crate) progress_format: CliProgressFormatUsed,
 }
 
 impl CliOutput<Stdout> {
@@ -136,6 +136,31 @@ where
     /// ```
     pub fn new_with_writer(writer: W) -> Self {
         CliOutputBuilder::new_with_writer(writer).build()
+    }
+
+    /// Returns how to format outcome output -- human readable or machine
+    /// parsable.
+    pub fn outcome_format(&self) -> OutputFormat {
+        self.outcome_format
+    }
+
+    /// Returns whether output should be colorized.
+    #[cfg(feature = "output_colorized")]
+    pub fn colorize(&self) -> CliColorizeUsed {
+        self.colorize
+    }
+
+    /// Returns where to output progress updates to -- stdout or stderr.
+    #[cfg(feature = "output_progress")]
+    pub fn progress_target(&self) -> CliOutputTarget {
+        self.progress_target
+    }
+
+    /// Returns how to format progress output -- progress bar or mimic outcome
+    /// format.
+    #[cfg(feature = "output_progress")]
+    pub fn progress_format(&self) -> CliProgressFormatUsed {
+        self.progress_format
     }
 
     #[cfg(not(feature = "output_colorized"))]
@@ -180,7 +205,7 @@ where
             .try_fold(
                 writer,
                 |writer, (item_spec_id, item_spec_state)| async move {
-                    if colorized == CliColorizeChosen::Colored {
+                    if colorized == CliColorizeUsed::Colored {
                         let item_spec_id_colorized = item_spec_id_style.apply_to(item_spec_id);
                         writer
                             .write_all(format!("{item_spec_id_colorized}").as_bytes())
@@ -319,7 +344,7 @@ where
 {
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
-        if self.progress_format == CliProgressFormatChosen::ProgressBar {
+        if self.progress_format == CliProgressFormatUsed::ProgressBar {
             let progress_draw_target = match self.progress_target {
                 CliOutputTarget::Stdout => ProgressDrawTarget::stdout(),
                 CliOutputTarget::Stderr => ProgressDrawTarget::stderr(),
@@ -347,7 +372,7 @@ where
         progress_update: ProgressUpdate,
     ) {
         match self.progress_format {
-            CliProgressFormatChosen::ProgressBar => {
+            CliProgressFormatUsed::ProgressBar => {
                 // Don't need to write anything, as `indicatif` handles output
                 // to terminal.
 
@@ -383,7 +408,7 @@ where
                     },
                 }
             }
-            CliProgressFormatChosen::Output => match self.outcome_format {
+            CliProgressFormatUsed::Output => match self.outcome_format {
                 // Note: outputting yaml for Text output, because we aren't sending much progress
                 // information.
                 //
