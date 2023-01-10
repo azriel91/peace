@@ -70,7 +70,7 @@ impl AppInitCmd {
         };
         let web_app_tar_x_params = {
             let tar_path = web_app_file_download_params.dest().to_path_buf();
-            let dest = web_app_download_dir;
+            let dest = web_app_download_dir.join("extracted");
 
             TarXParams::<WebAppFileId>::new(tar_path, dest)
         };
