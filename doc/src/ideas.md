@@ -13,4 +13,6 @@ This page records ideas that I'd like, but there isn't enough mental capacity an
 
     **Note:** Graphviz is compiled to WASM and published by [hpcc-systems/hpcc-js-wasm](https://github.com/hpcc-systems/hpcc-js-wasm). May be able to use that to render.
 
+    [graphviz-visual-editor](https://github.com/magjac/graphviz-visual-editor) is a library that allows basic editing of a graphviz graph. It's not yet developed to a point that is intuitive for users.
+
 3. Tool that uses `peace` to check consumer code whether it adheres to best practices.
