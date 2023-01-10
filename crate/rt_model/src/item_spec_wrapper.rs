@@ -868,7 +868,8 @@ where
     ) -> Result<(), E> {
         let Some(item_ensure) =
             item_ensure_boxed.as_data_type_mut().downcast_mut::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>() else {
-                panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`. This is a bug in the `peace` framework.",
+                panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`.\n\
+                    This is a bug in the Peace framework.",
                     concrete_type = std::any::type_name::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>())
             };
 
@@ -912,7 +913,8 @@ where
     ) -> Result<(), E> {
         let Some(item_ensure) =
             item_ensure_boxed.as_data_type_mut().downcast_mut::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>() else {
-                panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`. This is a bug in the `peace` framework.",
+                panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`.\n\
+                    This is a bug in the Peace framework.",
                     concrete_type = std::any::type_name::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>())
             };
 
