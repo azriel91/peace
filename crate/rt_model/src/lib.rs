@@ -7,7 +7,7 @@
 pub use fn_graph::{self, FnRef, FnRefMut};
 pub use peace_rt_model_core::cmd_context_params;
 #[cfg(feature = "output_progress")]
-pub use peace_rt_model_core::{indicatif, rt_map, CmdProgressTracker};
+pub use peace_rt_model_core::*;
 
 pub mod output {
     pub use peace_rt_model_core::output::*;
@@ -17,15 +17,10 @@ pub mod output {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use peace_rt_model_native::{
-    Error, Storage, SyncIoBridge, Workspace, WorkspaceDirsBuilder, WorkspaceInitializer,
-    WorkspaceSpec,
-};
+pub use peace_rt_model_native::*;
 
 #[cfg(target_arch = "wasm32")]
-pub use peace_rt_model_web::{
-    Error, Storage, Workspace, WorkspaceDirsBuilder, WorkspaceInitializer, WorkspaceSpec,
-};
+pub use peace_rt_model_web::*;
 
 pub use crate::{
     cmd_context::CmdContext, cmd_context_builder::CmdContextBuilder,
