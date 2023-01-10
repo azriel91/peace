@@ -62,7 +62,7 @@ pub struct CliOutputBuilder<W> {
     writer: W,
     /// How to format command outcome output -- human readable or machine
     /// parsable.
-    format: OutputFormat,
+    outcome_format: OutputFormat,
     /// Whether output should be colorized.
     #[cfg(feature = "output_colorized")]
     colorize: CliColorize,
@@ -107,7 +107,7 @@ where
     pub fn new_with_writer(writer: W) -> Self {
         Self {
             writer,
-            format: OutputFormat::Text,
+            outcome_format: OutputFormat::Text,
             #[cfg(feature = "output_colorized")]
             colorize: CliColorize::Auto,
             #[cfg(feature = "output_progress")]
@@ -131,7 +131,7 @@ where
         self
     }
 
-    /// Sets the output format for this `CliOutput`.
+    /// Sets the outcome output format for this `CliOutput`.
     ///
     /// # Examples
     ///
@@ -140,10 +140,10 @@ where
     /// # use peace_rt_model_native::output::CliOutput;
     /// // use peace::rt_model::output::{CliOutput, OutputFormat};
     ///
-    /// let cli_output = CliOutput::builder().with_output_format(OutputFormat::Yaml);
+    /// let cli_output = CliOutput::builder().with_outcome_format(OutputFormat::Yaml);
     /// ```
-    pub fn with_output_format(mut self, output_format: OutputFormat) -> Self {
-        self.format = output_format;
+    pub fn with_outcome_format(mut self, output_format: OutputFormat) -> Self {
+        self.outcome_format = output_format;
         self
     }
 
@@ -168,7 +168,7 @@ where
     pub fn build(self) -> CliOutput<W> {
         let CliOutputBuilder {
             writer,
-            format,
+            outcome_format,
             #[cfg(feature = "output_colorized")]
             colorize,
             #[cfg(feature = "output_progress")]
@@ -233,7 +233,7 @@ where
 
         CliOutput {
             writer,
-            format,
+            outcome_format,
             #[cfg(feature = "output_colorized")]
             colorize,
             #[cfg(feature = "output_progress")]
@@ -249,7 +249,7 @@ impl Default for CliOutputBuilder<Stdout> {
         let stdout = tokio::io::stdout();
         Self {
             writer: stdout,
-            format: OutputFormat::Text,
+            outcome_format: OutputFormat::Text,
             #[cfg(feature = "output_colorized")]
             colorize: CliColorize::Auto,
             #[cfg(feature = "output_progress")]

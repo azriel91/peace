@@ -84,7 +84,7 @@ pub struct CliOutput<W> {
     pub(crate) writer: W,
     /// How to format command outcome output -- human readable or machine
     /// parsable.
-    pub(crate) format: OutputFormat,
+    pub(crate) outcome_format: OutputFormat,
     /// Whether output should be colorized.
     #[cfg(feature = "output_colorized")]
     pub(crate) colorize: CliColorizeChosen,
@@ -383,7 +383,7 @@ where
                     },
                 }
             }
-            CliProgressFormatChosen::Output => match self.format {
+            CliProgressFormatChosen::Output => match self.outcome_format {
                 // Note: outputting yaml for Text output, because we aren't sending much progress
                 // information.
                 //
@@ -411,7 +411,7 @@ where
     async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
-        match self.format {
+        match self.outcome_format {
             OutputFormat::Text => self.output_display(states_saved.iter()).await,
             OutputFormat::Yaml => self.output_yaml(states_saved, Error::StatesSerialize).await,
             #[cfg(feature = "output_json")]
@@ -423,7 +423,7 @@ where
     }
 
     async fn write_states_desired(&mut self, states_desired: &StatesDesired) -> Result<(), E> {
-        match self.format {
+        match self.outcome_format {
             OutputFormat::Text => self.output_display(states_desired.iter()).await,
             OutputFormat::Yaml => {
                 self.output_yaml(states_desired, Error::StatesSerialize)
@@ -438,7 +438,7 @@ where
     }
 
     async fn write_state_diffs(&mut self, state_diffs: &StateDiffs) -> Result<(), E> {
-        match self.format {
+        match self.outcome_format {
             OutputFormat::Text => self.output_display(state_diffs.iter()).await,
             OutputFormat::Yaml => {
                 self.output_yaml(state_diffs, Error::StateDiffsSerialize)
@@ -456,7 +456,7 @@ where
         &mut self,
         states_ensured_dry: &StatesEnsuredDry,
     ) -> Result<(), E> {
-        match self.format {
+        match self.outcome_format {
             OutputFormat::Text => self.output_display(states_ensured_dry.iter()).await,
             OutputFormat::Yaml => {
                 self.output_yaml(states_ensured_dry, Error::StatesSerialize)
@@ -471,7 +471,7 @@ where
     }
 
     async fn write_states_ensured(&mut self, states_ensured: &StatesEnsured) -> Result<(), E> {
-        match self.format {
+        match self.outcome_format {
             OutputFormat::Text => self.output_display(states_ensured.iter()).await,
             OutputFormat::Yaml => {
                 self.output_yaml(states_ensured, Error::StatesSerialize)
@@ -489,7 +489,7 @@ where
         &mut self,
         states_cleaned_dry: &StatesCleanedDry,
     ) -> Result<(), E> {
-        match self.format {
+        match self.outcome_format {
             OutputFormat::Text => self.output_display(states_cleaned_dry.iter()).await,
             OutputFormat::Yaml => {
                 self.output_yaml(states_cleaned_dry, Error::StatesSerialize)
@@ -504,7 +504,7 @@ where
     }
 
     async fn write_states_cleaned(&mut self, states_cleaned: &StatesCleaned) -> Result<(), E> {
-        match self.format {
+        match self.outcome_format {
             OutputFormat::Text => self.output_display(states_cleaned.iter()).await,
             OutputFormat::Yaml => {
                 self.output_yaml(states_cleaned, Error::StatesSerialize)
@@ -519,7 +519,7 @@ where
     }
 
     async fn write_err(&mut self, error: &E) -> Result<(), E> {
-        match self.format {
+        match self.outcome_format {
             OutputFormat::Text => {
                 self.writer
                     .write_all(format!("{error}\n").as_bytes())

@@ -792,7 +792,7 @@ enum Error {
 
 fn cli_output(buffer: &mut Vec<u8>, output_format: OutputFormat) -> CliOutput<&mut Vec<u8>> {
     CliOutputBuilder::new_with_writer(buffer)
-        .with_output_format(output_format)
+        .with_outcome_format(output_format)
         .build()
 }
 
@@ -802,7 +802,7 @@ fn cli_output_colorized(
     output_format: OutputFormat,
 ) -> CliOutput<&mut Vec<u8>> {
     CliOutputBuilder::new_with_writer(buffer)
-        .with_output_format(output_format)
+        .with_outcome_format(output_format)
         .with_colorize(CliColorize::Always)
         .build()
 }

@@ -55,7 +55,7 @@ pub fn run() -> Result<(), AppCycleError> {
         let mut cli_output = {
             let mut builder = CliOutput::builder();
             if let Some(format) = format {
-                builder = builder.with_output_format(format);
+                builder = builder.with_outcome_format(format);
             }
             builder.build()
         };
