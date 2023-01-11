@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
 
 /// Unit of measurement and total number of units.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ProgressLimit {
     /// There is no meaningful way to measure progress.
+    #[default]
     Unknown,
     /// Progress is complete when `n` steps have been completed.
     Steps(u64),
@@ -11,10 +12,4 @@ pub enum ProgressLimit {
     ///
     /// Useful for upload / download progress.
     Bytes(u64),
-}
-
-impl Default for ProgressLimit {
-    fn default() -> Self {
-        Self::Unknown
-    }
 }
