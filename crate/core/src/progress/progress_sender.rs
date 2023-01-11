@@ -27,14 +27,11 @@ impl<'op> ProgressSender<'op> {
     }
 
     /// Increments the progress by the given unit count.
-    pub async fn inc(&self, unit_count: u64) {
-        let _progress_send_unused = self
-            .progress_tx
-            .send(ProgressUpdateAndId {
-                item_spec_id: self.item_spec_id.clone(),
-                progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(unit_count)),
-            })
-            .await;
+    pub fn inc(&self, unit_count: u64) {
+        let _progress_send_unused = self.progress_tx.try_send(ProgressUpdateAndId {
+            item_spec_id: self.item_spec_id.clone(),
+            progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(unit_count)),
+        });
     }
 
     /// Ticks the tracker without incrementing its progress.
@@ -45,13 +42,10 @@ impl<'op> ProgressSender<'op> {
     /// Note, this also updates the `last_update_dt`, so in the case of a
     /// spinner, this should only be called when there is actually a detected
     /// change.
-    pub async fn tick(&self) {
-        let _progress_send_unused = self
-            .progress_tx
-            .send(ProgressUpdateAndId {
-                item_spec_id: self.item_spec_id.clone(),
-                progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
-            })
-            .await;
+    pub fn tick(&self) {
+        let _progress_send_unused = self.progress_tx.try_send(ProgressUpdateAndId {
+            item_spec_id: self.item_spec_id.clone(),
+            progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
+        });
     }
 }

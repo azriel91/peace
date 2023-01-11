@@ -176,9 +176,9 @@ where
 
                 #[cfg(feature = "output_progress")]
                 if let Ok(progress_inc) = u64::try_from(bytes.len()) {
-                    progress_sender.inc(progress_inc).await
+                    progress_sender.inc(progress_inc)
                 } else {
-                    progress_sender.tick().await
+                    progress_sender.tick()
                 };
 
                 Ok(buffer)
