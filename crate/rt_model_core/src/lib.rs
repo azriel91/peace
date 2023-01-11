@@ -13,7 +13,6 @@ pub mod output;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        pub use rt_map;
         pub use peace_core::progress::ProgressUpdate;
 
         pub use crate::cmd_progress_tracker::CmdProgressTracker;

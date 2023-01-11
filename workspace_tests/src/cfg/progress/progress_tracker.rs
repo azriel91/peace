@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use peace::{
     cfg::progress::{ProgressLimit, ProgressStatus, ProgressTracker},
     rt_model::indicatif::ProgressBar,
@@ -88,6 +90,49 @@ fn set_progress_limit_with_steps_sets_progress_bar_length_and_updates_last_updat
     assert_eq!(Some(123), progress_tracker.progress_bar().length());
     assert_eq!(Some(123), progress_tracker.units_total());
     assert!(progress_tracker.last_update_dt() > last_update_dt_before);
+}
+
+#[test]
+fn set_progress_limit_with_bytes_sets_progress_bar_length_and_updates_last_update_dt() {
+    let progress_bar = ProgressBar::hidden();
+    progress_bar.set_length(10);
+    let mut progress_tracker = ProgressTracker::new(progress_bar);
+
+    let last_update_dt_before = progress_tracker.last_update_dt();
+    progress_tracker.set_progress_limit(ProgressLimit::Bytes(123));
+
+    assert_eq!(
+        Some(ProgressLimit::Bytes(123)),
+        progress_tracker.progress_limit()
+    );
+    assert_eq!(Some(123), progress_tracker.progress_bar().length());
+    assert_eq!(Some(123), progress_tracker.units_total());
+    assert!(progress_tracker.last_update_dt() > last_update_dt_before);
+}
+
+#[test]
+fn eta() {
+    let progress_bar = ProgressBar::hidden();
+    progress_bar.set_length(100);
+    let mut progress_tracker = ProgressTracker::new(progress_bar);
+
+    progress_tracker.inc(50);
+    let eta = progress_tracker.eta();
+
+    assert!(eta < Duration::from_millis(500));
+}
+
+#[test]
+fn elapsed() {
+    let progress_bar = ProgressBar::hidden();
+    progress_bar.set_length(10);
+    let mut progress_tracker = ProgressTracker::new(progress_bar);
+    progress_tracker.tick();
+
+    let elapsed = progress_tracker.elapsed();
+
+    assert!(elapsed > Duration::from_millis(0));
+    assert!(elapsed < Duration::from_millis(500));
 }
 
 #[test]

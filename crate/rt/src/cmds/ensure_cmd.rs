@@ -221,10 +221,6 @@ where
                     progress_trackers,
                 } = cmd_progress_tracker;
 
-                // Change mutable reference to immutable reference, so it can be referenced in
-                // multiple async tasks.
-                let progress_trackers = &*progress_trackers;
-
                 let (progress_tx, mut progress_rx) =
                     mpsc::channel::<ProgressUpdateAndId>(Self::PROGRESS_COUNT_MAX);
             }
@@ -275,9 +271,9 @@ where
                     progress_update,
                 } = progress_update_and_id;
 
-                // This requires `Self::item_ensure_exec` to have released the progress tracker,
-                // which it should have, since it only borrows it to clone the progress bar.
-                let mut progress_tracker = progress_trackers.borrow_mut(&item_spec_id);
+                let Some(progress_tracker) = progress_trackers.get_mut(&item_spec_id) else {
+                    panic!("Expected `progress_tracker` to exist for item spec: `{item_spec_id}`.");
+                };
                 match &progress_update {
                     ProgressUpdate::Limit(progress_limit) => {
                         progress_tracker.set_progress_limit(*progress_limit);
@@ -298,7 +294,7 @@ where
                 }
 
                 output
-                    .progress_update(&progress_tracker, progress_update)
+                    .progress_update(progress_tracker, progress_update)
                     .await
             }
         };
