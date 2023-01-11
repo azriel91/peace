@@ -20,16 +20,15 @@ cfg_if::cfg_if! {
         use peace_cfg::{
             progress::{
                 ProgressComplete,
-                ProgressLimit,
+                ProgressDelta,
                 ProgressSender,
                 ProgressStatus,
-                ProgressTracker,
                 ProgressUpdate,
                 ProgressUpdateAndId,
             },
             OpCheckStatus,
         };
-        use peace_rt_model::{CmdProgressTracker, rt_map::RtMap};
+        use peace_rt_model::CmdProgressTracker;
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -256,8 +255,6 @@ where
                     Self::item_ensure_exec(
                         resources_ref,
                         #[cfg(feature = "output_progress")]
-                        progress_trackers,
-                        #[cfg(feature = "output_progress")]
                         progress_tx,
                         outcomes_tx,
                         item_spec,
@@ -283,10 +280,14 @@ where
                 let mut progress_tracker = progress_trackers.borrow_mut(&item_spec_id);
                 match &progress_update {
                     ProgressUpdate::Limit(progress_limit) => {
-                        progress_tracker.set_progress_limit(Some(*progress_limit));
+                        progress_tracker.set_progress_limit(*progress_limit);
                         progress_tracker.set_progress_status(ProgressStatus::ExecPending);
                     }
-                    ProgressUpdate::Delta(_delta) => {
+                    ProgressUpdate::Delta(delta) => {
+                        match delta {
+                            ProgressDelta::Tick => progress_tracker.tick(),
+                            ProgressDelta::Inc(unit_count) => progress_tracker.inc(*unit_count),
+                        }
                         progress_tracker.set_progress_status(ProgressStatus::Running);
                     }
                     ProgressUpdate::Complete(progress_complete) => {
@@ -295,7 +296,6 @@ where
                         ));
                     }
                 }
-                progress_tracker.last_update_dt_update();
 
                 output
                     .progress_update(&progress_tracker, progress_update)
@@ -364,7 +364,6 @@ where
     /// ```
     async fn item_ensure_exec(
         resources: &Resources<SetUp>,
-        #[cfg(feature = "output_progress")] progress_trackers: &RtMap<ItemSpecId, ProgressTracker>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
         outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
         item_spec: &ItemSpecBoxed<E>,
@@ -380,25 +379,11 @@ where
                 let item_spec_id = item_spec.id();
                 #[cfg(feature = "output_progress")]
                 let progress_sender = {
-                    let progress_tracker = progress_trackers.borrow(item_spec_id);
-                    let progress_bar = progress_tracker.progress_bar().clone();
-
                     match item_ensure.op_check_status() {
                         #[cfg(not(feature = "output_progress"))]
                         OpCheckStatus::ExecRequired => {}
                         #[cfg(feature = "output_progress")]
                         OpCheckStatus::ExecRequired { progress_limit } => {
-                            // Update units total on `ProgressBar`.
-                            match progress_limit {
-                                ProgressLimit::Unknown => {
-                                    // Same as `indicatif` internally.
-                                    progress_bar.set_length(u64::MAX);
-                                }
-                                ProgressLimit::Steps(n) | ProgressLimit::Bytes(n) => {
-                                    progress_bar.set_length(n);
-                                }
-                            }
-
                             // Update `OutputWrite`s with progress limit.
                             let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
                                 item_spec_id: item_spec_id.clone(),
@@ -408,7 +393,7 @@ where
                         OpCheckStatus::ExecNotRequired => {}
                     }
 
-                    ProgressSender::new(item_spec_id, progress_bar, progress_tx)
+                    ProgressSender::new(item_spec_id, progress_tx)
                 };
                 let op_ctx = OpCtx::new(
                     item_spec_id,
