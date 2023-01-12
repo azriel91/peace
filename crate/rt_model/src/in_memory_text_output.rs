@@ -8,7 +8,7 @@ use crate::Error;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::{ProgressTracker, ProgressUpdate};
+        use peace_cfg::progress::{ProgressTracker, ProgressUpdateAndId};
 
         use crate::CmdProgressTracker;
     }
@@ -50,7 +50,7 @@ where
     async fn progress_update(
         &mut self,
         _progress_tracker: &ProgressTracker,
-        _progress_update: ProgressUpdate,
+        _progress_update_and_id: &ProgressUpdateAndId,
     ) {
     }
 

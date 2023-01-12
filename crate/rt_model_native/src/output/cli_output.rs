@@ -28,6 +28,7 @@ cfg_if::cfg_if! {
             ProgressStatus,
             ProgressTracker,
             ProgressUpdate,
+            ProgressUpdateAndId,
         };
         use peace_rt_model_core::{
             indicatif::{ProgressDrawTarget, ProgressStyle},
@@ -390,7 +391,7 @@ where
     async fn progress_update(
         &mut self,
         progress_tracker: &ProgressTracker,
-        progress_update: ProgressUpdate,
+        progress_update_and_id: &ProgressUpdateAndId,
     ) {
         match self.progress_format {
             CliProgressFormat::ProgressBar => {
@@ -401,7 +402,7 @@ where
                 // * Need to update progress bar colour on finish (blue to green)
                 // * Need to update progress bar colour on error (blue to red)
 
-                match progress_update {
+                match &progress_update_and_id.progress_update {
                     ProgressUpdate::Limit(_progress_limit) => {
                         // Note: `progress_tracker` also carries the `progress_limit`
                         Self::progress_bar_style_update(progress_tracker);
@@ -429,26 +430,30 @@ where
                     },
                 }
             }
-            CliProgressFormat::Outcome => match self.outcome_format {
-                // Note: outputting yaml for Text output, because we aren't sending much progress
-                // information.
-                //
-                // We probably need to send more information in the `ProgressUpdate`, i.e. which
-                // item it came from.
-                OutputFormat::Text | OutputFormat::Yaml => {
-                    let _progress_display_unused =
-                        serde_yaml::to_string(&progress_update).map(|t_serialized| {
-                            progress_tracker.progress_bar().println(t_serialized);
-                        });
+            CliProgressFormat::Outcome => {
+                let progress_bar = progress_tracker.progress_bar();
+                match self.outcome_format {
+                    // Note: outputting yaml for Text output, because we aren't sending much
+                    // progress information.
+                    //
+                    // We probably need to send more information in the `ProgressUpdate`, i.e. which
+                    // item it came from.
+                    OutputFormat::Text | OutputFormat::Yaml => {
+                        let _progress_display_unused =
+                            serde_yaml::to_string(progress_update_and_id).map(|t_serialized| {
+                                progress_bar.println("---");
+                                progress_bar.println(t_serialized);
+                            });
+                    }
+                    #[cfg(feature = "output_json")]
+                    OutputFormat::Json => {
+                        let _progress_display_unused =
+                            serde_json::to_string(progress_update_and_id).map(|t_serialized| {
+                                progress_bar.println(t_serialized);
+                            });
+                    }
                 }
-                #[cfg(feature = "output_json")]
-                OutputFormat::Json => {
-                    let _progress_display_unused =
-                        serde_json::to_string(&progress_update).map(|t_serialized| {
-                            progress_tracker.progress_bar().println(t_serialized);
-                        });
-                }
-            },
+            }
         }
     }
 

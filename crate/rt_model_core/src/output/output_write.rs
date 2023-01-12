@@ -6,7 +6,7 @@ use peace_resources::states::{
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use peace_core::progress::{ProgressTracker, ProgressUpdate};
+        use peace_core::progress::{ProgressTracker, ProgressUpdateAndId};
 
         use crate::CmdProgressTracker;
     }
@@ -55,7 +55,7 @@ pub trait OutputWrite<E> {
     async fn progress_update(
         &mut self,
         progress_tracker: &ProgressTracker,
-        progress_update: ProgressUpdate,
+        progress_update_and_id: &ProgressUpdateAndId,
     );
 
     /// Notifies this `OutputWrite` implementation to stop rendering progress.

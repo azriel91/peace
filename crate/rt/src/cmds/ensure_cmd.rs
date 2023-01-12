@@ -269,12 +269,12 @@ where
                 let ProgressUpdateAndId {
                     item_spec_id,
                     progress_update,
-                } = progress_update_and_id;
+                } = &progress_update_and_id;
 
-                let Some(progress_tracker) = progress_trackers.get_mut(&item_spec_id) else {
+                let Some(progress_tracker) = progress_trackers.get_mut(item_spec_id) else {
                     panic!("Expected `progress_tracker` to exist for item spec: `{item_spec_id}`.");
                 };
-                match &progress_update {
+                match progress_update {
                     ProgressUpdate::Limit(progress_limit) => {
                         progress_tracker.set_progress_limit(*progress_limit);
                         progress_tracker.set_progress_status(ProgressStatus::ExecPending);
@@ -294,7 +294,7 @@ where
                 }
 
                 output
-                    .progress_update(progress_tracker, progress_update)
+                    .progress_update(progress_tracker, &progress_update_and_id)
                     .await
             }
         };

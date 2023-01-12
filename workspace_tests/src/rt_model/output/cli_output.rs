@@ -25,6 +25,7 @@ cfg_if::cfg_if! {
                 ProgressStatus,
                 ProgressTracker,
                 ProgressUpdate,
+                ProgressUpdateAndId,
             },
             rt_model::{
                 indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget},
@@ -894,11 +895,14 @@ async fn progress_update_with_limit_sets_progress_bar_style() {
     progress_tracker.set_progress_status(ProgressStatus::Running);
     progress_bar.set_length(100);
 
-    let progress_update = ProgressUpdate::Limit(ProgressLimit::Steps(100));
+    let progress_update_and_id = ProgressUpdateAndId {
+        item_spec_id: item_spec_id!("test_item_spec_id"),
+        progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+    };
     <CliOutput<_> as OutputWrite<Error>>::progress_update(
         &mut cli_output,
         &progress_tracker,
-        progress_update,
+        &progress_update_and_id,
     )
     .await;
 
@@ -946,11 +950,14 @@ async fn progress_update_with_complete_success_finishes_progress_bar() {
     progress_tracker.set_progress_status(ProgressStatus::Running);
     progress_bar.set_length(100);
 
-    let progress_update = ProgressUpdate::Limit(ProgressLimit::Steps(100));
+    let progress_update_and_id = ProgressUpdateAndId {
+        item_spec_id: item_spec_id!("test_item_spec_id"),
+        progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+    };
     <CliOutput<_> as OutputWrite<Error>>::progress_update(
         &mut cli_output,
         &progress_tracker,
-        progress_update,
+        &progress_update_and_id,
     )
     .await;
 
@@ -964,11 +971,14 @@ async fn progress_update_with_complete_success_finishes_progress_bar() {
         in_memory_term.contents()
     );
 
-    let progress_update = ProgressUpdate::Complete(ProgressComplete::Success);
+    let progress_update_and_id = ProgressUpdateAndId {
+        item_spec_id: item_spec_id!("test_item_spec_id"),
+        progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
+    };
     <CliOutput<_> as OutputWrite<Error>>::progress_update(
         &mut cli_output,
         &progress_tracker,
-        progress_update,
+        &progress_update_and_id,
     )
     .await;
     let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
@@ -1003,11 +1013,14 @@ async fn progress_update_with_complete_fail_abandons_progress_bar() {
     progress_tracker.set_progress_status(ProgressStatus::Running);
     progress_bar.set_length(100);
 
-    let progress_update = ProgressUpdate::Limit(ProgressLimit::Steps(100));
+    let progress_update_and_id = ProgressUpdateAndId {
+        item_spec_id: item_spec_id!("test_item_spec_id"),
+        progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+    };
     <CliOutput<_> as OutputWrite<Error>>::progress_update(
         &mut cli_output,
         &progress_tracker,
-        progress_update,
+        &progress_update_and_id,
     )
     .await;
 
@@ -1021,11 +1034,14 @@ async fn progress_update_with_complete_fail_abandons_progress_bar() {
         in_memory_term.contents()
     );
 
-    let progress_update = ProgressUpdate::Complete(ProgressComplete::Fail);
+    let progress_update_and_id = ProgressUpdateAndId {
+        item_spec_id: item_spec_id!("test_item_spec_id"),
+        progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
+    };
     <CliOutput<_> as OutputWrite<Error>>::progress_update(
         &mut cli_output,
         &progress_tracker,
-        progress_update,
+        &progress_update_and_id,
     )
     .await;
     let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
@@ -1056,11 +1072,14 @@ async fn progress_update_delta_with_progress_format_outcome_writes_yaml() {
         .get_mut(&item_spec_id!("test_item_spec_id"))
         .unwrap();
 
-    let progress_update = ProgressUpdate::Limit(ProgressLimit::Steps(100));
+    let progress_update_and_id = ProgressUpdateAndId {
+        item_spec_id: item_spec_id!("test_item_spec_id"),
+        progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+    };
     <CliOutput<_> as OutputWrite<Error>>::progress_update(
         &mut cli_output,
         &progress_tracker,
-        progress_update,
+        &progress_update_and_id,
     )
     .await;
 
@@ -1068,22 +1087,28 @@ async fn progress_update_delta_with_progress_format_outcome_writes_yaml() {
     progress_tracker.set_progress_status(ProgressStatus::Running);
     progress_bar.set_length(100);
 
-    let progress_update = ProgressUpdate::Delta(ProgressDelta::Inc(21));
+    let progress_update_and_id = ProgressUpdateAndId {
+        item_spec_id: item_spec_id!("test_item_spec_id"),
+        progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+    };
     <CliOutput<_> as OutputWrite<Error>>::progress_update(
         &mut cli_output,
         &progress_tracker,
-        progress_update,
+        &progress_update_and_id,
     )
     .await;
     let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
         unreachable!("This is set in `cli_output_progress`.");
     };
-    // TODO: send in `ProgressUpdateAndId`.
     assert_eq!(
-        r#"!Limit
-Steps: 100
-!Delta
-Inc: 21"#,
+        r#"---
+item_spec_id: test_item_spec_id
+progress_update: !Limit
+  Steps: 100
+---
+item_spec_id: test_item_spec_id
+progress_update: !Delta
+  Inc: 21"#,
         in_memory_term.contents()
     );
 }
@@ -1107,11 +1132,14 @@ async fn progress_update_delta_with_progress_format_outcome_writes_json() {
         .get_mut(&item_spec_id!("test_item_spec_id"))
         .unwrap();
 
-    let progress_update = ProgressUpdate::Limit(ProgressLimit::Steps(100));
+    let progress_update_and_id = ProgressUpdateAndId {
+        item_spec_id: item_spec_id!("test_item_spec_id"),
+        progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+    };
     <CliOutput<_> as OutputWrite<Error>>::progress_update(
         &mut cli_output,
         &progress_tracker,
-        progress_update,
+        &progress_update_and_id,
     )
     .await;
 
@@ -1119,20 +1147,22 @@ async fn progress_update_delta_with_progress_format_outcome_writes_json() {
     progress_tracker.set_progress_status(ProgressStatus::Running);
     progress_bar.set_length(100);
 
-    let progress_update = ProgressUpdate::Delta(ProgressDelta::Inc(21));
+    let progress_update_and_id = ProgressUpdateAndId {
+        item_spec_id: item_spec_id!("test_item_spec_id"),
+        progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+    };
     <CliOutput<_> as OutputWrite<Error>>::progress_update(
         &mut cli_output,
         &progress_tracker,
-        progress_update,
+        &progress_update_and_id,
     )
     .await;
     let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
         unreachable!("This is set in `cli_output_progress`.");
     };
-    // TODO: send in `ProgressUpdateAndId`.
     assert_eq!(
-        r#"{"Limit":{"Steps":100}}
-{"Delta":{"Inc":21}}"#,
+        r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}}}
+{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}}}"#,
         in_memory_term.contents()
     );
 }

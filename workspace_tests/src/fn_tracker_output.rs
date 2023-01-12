@@ -12,7 +12,7 @@ use crate::FnInvocation;
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace::{
-            cfg::progress::{ProgressTracker, ProgressUpdate},
+            cfg::progress::{ProgressTracker, ProgressUpdateAndId},
             rt_model::CmdProgressTracker,
         };
     }
@@ -49,7 +49,7 @@ where
     async fn progress_update(
         &mut self,
         _progress_tracker: &ProgressTracker,
-        _progress_update: ProgressUpdate,
+        _progress_update_and_id: &ProgressUpdateAndId,
     ) {
     }
 
