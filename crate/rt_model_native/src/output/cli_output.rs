@@ -20,14 +20,12 @@ use crate::{output::CliOutputBuilder, Error};
 #[cfg(feature = "output_colorized")]
 use crate::output::CliColorize;
 
-#[cfg(all(feature = "output_colorized", feature = "output_progress"))]
-use peace_core::progress::ProgressStatus;
-
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_core::progress::{
             ProgressComplete,
             ProgressLimit,
+            ProgressStatus,
             ProgressTracker,
             ProgressUpdate,
             ProgressUpdateAndId,
@@ -287,11 +285,12 @@ where
 
     #[cfg(feature = "output_progress")]
     fn progress_bar_template(&self, progress_tracker: &ProgressTracker) -> String {
+        /// This is used when we are rendering a bar that is not calculated by
+        /// `ProgressBar`'s length and current value,
+        const SOLID_BAR: &str = "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒";
+
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_colorized")] {
-                /// This is used when we are rendering a bar that is not calculated by
-                /// `ProgressBar`'s length and current value,
-                const SOLID_BAR: &str = "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒";
 
                 // These are used to tell `indicatif` how to style the computed bar.
                 //
@@ -323,7 +322,15 @@ where
                             },
                         }
                     }
-                    CliColorize::Uncolored => console::style("{bar:40}"),
+                    CliColorize::Uncolored => {
+                        match progress_tracker.progress_status() {
+                            ProgressStatus::Initialized => console::style(SOLID_BAR),
+                            ProgressStatus::ExecPending | ProgressStatus::Running |
+                            ProgressStatus::RunningStalled |
+                            ProgressStatus::UserPending |
+                            ProgressStatus::Complete(_) => console::style("{bar:40}"),
+                        }
+                    },
                 };
 
                 let prefix = match self.colorize {
@@ -331,7 +338,13 @@ where
                     CliColorize::Uncolored => "{prefix:20}",
                 };
             } else {
-                let bar = "{bar:40}";
+                let bar = match progress_tracker.progress_status() {
+                    ProgressStatus::Initialized => console::style(SOLID_BAR),
+                    ProgressStatus::ExecPending | ProgressStatus::Running |
+                    ProgressStatus::RunningStalled |
+                    ProgressStatus::UserPending |
+                    ProgressStatus::Complete(_) => console::style("{bar:40}"),
+                };
                 let prefix = "{prefix:20}";
             }
         }

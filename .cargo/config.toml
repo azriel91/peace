@@ -3,14 +3,16 @@
 test_0 = ["nextest", "run", "--workspace", "--no-default-features"]
 test_1 = ["nextest", "run", "--workspace", "--features", "output_colorized"]
 test_2 = ["nextest", "run", "--workspace", "--features", "output_json"]
-test_3 = ["nextest", "run", "--workspace", "--all-features"]
+test_3 = ["nextest", "run", "--workspace", "--features", "output_progress"]
+test_4 = ["nextest", "run", "--workspace", "--all-features"]
 
 # Coverage for different feature combinations
 coverage_clean = ["llvm-cov", "clean", "--workspace"]
 coverage_0 = ["llvm-cov", "--no-report", "--output-dir", "./target/coverage", "nextest", "--workspace", "--no-default-features"]
 coverage_1 = ["llvm-cov", "--no-report", "--output-dir", "./target/coverage", "nextest", "--workspace", "--features", "output_colorized"]
 coverage_2 = ["llvm-cov", "--no-report", "--output-dir", "./target/coverage", "nextest", "--workspace", "--features", "output_json"]
-coverage_3 = ["llvm-cov", "--no-report", "--output-dir", "./target/coverage", "nextest", "--workspace", "--all-features"]
+coverage_3 = ["llvm-cov", "--no-report", "--output-dir", "./target/coverage", "nextest", "--workspace", "--features", "output_progress"]
+coverage_4 = ["llvm-cov", "--no-report", "--output-dir", "./target/coverage", "nextest", "--workspace", "--all-features"]
 coverage_merge = 'llvm-cov report --lcov --output-path ./target/coverage/lcov.info'
 coverage_open = 'llvm-cov report --open --output-dir ./target/coverage'
 
