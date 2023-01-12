@@ -11,10 +11,10 @@ fn from_str_returns_ok_for_auto() {
 }
 
 #[test]
-fn from_str_returns_ok_for_output() {
+fn from_str_returns_ok_for_outcome() {
     assert_eq!(
-        Ok(CliProgressFormatOpt::Output),
-        CliProgressFormatOpt::from_str("output")
+        Ok(CliProgressFormatOpt::Outcome),
+        CliProgressFormatOpt::from_str("outcome")
     )
 }
 

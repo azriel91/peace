@@ -5,11 +5,11 @@ use crate::output::CliProgressFormatOptParseError;
 /// How to format progress on the CLI.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CliProgressFormatOpt {
-    /// Automatically detect whether to render a progress bar or the output
+    /// Automatically detect whether to render a progress bar or the outcome
     /// format.
     Auto,
-    /// Render progress in the same format as the output.
-    Output,
+    /// Render progress in the same format as the outcome.
+    Outcome,
     /// Always render progress as a progress bar.
     ProgressBar,
 }
@@ -20,7 +20,7 @@ impl FromStr for CliProgressFormatOpt {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "auto" => Ok(Self::Auto),
-            "output" => Ok(Self::Output),
+            "outcome" => Ok(Self::Outcome),
             "pb" | "progress_bar" => Ok(Self::ProgressBar),
             _ => Err(CliProgressFormatOptParseError(s.to_string())),
         }

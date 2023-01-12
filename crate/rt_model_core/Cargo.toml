@@ -30,5 +30,6 @@ type_reg = { workspace = true, features = ["resman"] }
 default = []
 error_reporting = ["dep:miette"]
 output_colorized = ["miette?/fancy"]
+output_in_memory = ["indicatif/in_memory"]
 output_json = ["dep:serde_json"]
 output_progress = ["peace_core/output_progress"]

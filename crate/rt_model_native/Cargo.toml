@@ -35,6 +35,7 @@ tokio-util = { version = "0.7.4", features = ["io", "io-util"] }
 default = []
 error_reporting = ["dep:miette", "peace_rt_model_core/error_reporting"]
 output_colorized = ["dep:console", "dep:is-terminal"]
+output_in_memory = ["peace_rt_model_core/output_in_memory"]
 output_json = ["dep:serde_json", "peace_rt_model_core/output_json"]
 output_progress = [
     "dep:console",

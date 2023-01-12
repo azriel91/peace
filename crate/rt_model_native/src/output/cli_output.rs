@@ -151,9 +151,13 @@ where
     }
 
     /// Returns where to output progress updates to -- stdout or stderr.
+    ///
+    /// If the `"output_in_memory"` feature is enabled, there is a third
+    /// `InMemory` variant that holds the buffer for progress output. This
+    /// variant is intended to be used for verifying output in tests.
     #[cfg(feature = "output_progress")]
-    pub fn progress_target(&self) -> CliOutputTarget {
-        self.progress_target
+    pub fn progress_target(&self) -> &CliOutputTarget {
+        &self.progress_target
     }
 
     /// Returns how to format progress output -- progress bar or mimic outcome
@@ -344,23 +348,41 @@ where
 {
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
-        if self.progress_format == CliProgressFormat::ProgressBar {
-            let progress_draw_target = match self.progress_target {
-                CliOutputTarget::Stdout => ProgressDrawTarget::stdout(),
-                CliOutputTarget::Stderr => ProgressDrawTarget::stderr(),
-            };
+        let progress_draw_target = match &self.progress_target {
+            CliOutputTarget::Stdout => ProgressDrawTarget::stdout(),
+            CliOutputTarget::Stderr => ProgressDrawTarget::stderr(),
+            #[cfg(feature = "output_in_memory")]
+            CliOutputTarget::InMemory(in_memory_term) => {
+                ProgressDrawTarget::term_like(Box::new(in_memory_term.clone()))
+            }
+        };
 
-            cmd_progress_tracker
-                .multi_progress()
-                .set_draw_target(progress_draw_target);
+        cmd_progress_tracker
+            .multi_progress()
+            .set_draw_target(progress_draw_target);
 
-            cmd_progress_tracker.progress_trackers().iter().for_each(
-                |(item_spec_id, progress_tracker)| {
-                    let progress_bar = progress_tracker.progress_bar();
-                    progress_bar.set_prefix(format!("{item_spec_id}"));
-                    Self::progress_bar_style_update(progress_tracker);
-                },
-            );
+        match self.progress_format {
+            CliProgressFormat::ProgressBar => {
+                cmd_progress_tracker.progress_trackers().iter().for_each(
+                    |(item_spec_id, progress_tracker)| {
+                        let progress_bar = progress_tracker.progress_bar();
+                        progress_bar.set_prefix(format!("{item_spec_id}"));
+                        Self::progress_bar_style_update(progress_tracker);
+                    },
+                );
+            }
+            CliProgressFormat::Outcome => {
+                let progress_style = ProgressStyle::with_template("").unwrap_or_else(|error| {
+                    panic!("`ProgressStyle` template was invalid. Template: `\"\"`. Error: {error}")
+                });
+                cmd_progress_tracker.progress_trackers().iter().for_each(
+                    |(item_spec_id, progress_tracker)| {
+                        let progress_bar = progress_tracker.progress_bar();
+                        progress_bar.set_prefix(format!("{item_spec_id}"));
+                        progress_bar.set_style(progress_style.clone());
+                    },
+                );
+            }
         }
     }
 
@@ -407,25 +429,24 @@ where
                     },
                 }
             }
-            CliProgressFormat::Output => match self.outcome_format {
+            CliProgressFormat::Outcome => match self.outcome_format {
                 // Note: outputting yaml for Text output, because we aren't sending much progress
                 // information.
                 //
                 // We probably need to send more information in the `ProgressUpdate`, i.e. which
                 // item it came from.
                 OutputFormat::Text | OutputFormat::Yaml => {
-                    let _progress_send_unused = self
-                        .output_yaml::<E, _, _>(&progress_update, Error::ProgressUpdateSerialize)
-                        .await;
+                    let _progress_display_unused =
+                        serde_yaml::to_string(&progress_update).map(|t_serialized| {
+                            progress_tracker.progress_bar().println(t_serialized);
+                        });
                 }
                 #[cfg(feature = "output_json")]
                 OutputFormat::Json => {
-                    let _progress_send_unused = self
-                        .output_json::<E, _, _>(
-                            &progress_update,
-                            Error::ProgressUpdateSerializeJson,
-                        )
-                        .await;
+                    let _progress_display_unused =
+                        serde_json::to_string(&progress_update).map(|t_serialized| {
+                            progress_tracker.progress_bar().println(t_serialized);
+                        });
                 }
             },
         }

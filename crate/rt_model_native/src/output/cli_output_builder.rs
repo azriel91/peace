@@ -129,9 +129,13 @@ where
     }
 
     /// Returns where to output progress updates to -- stdout or stderr.
+    ///
+    /// If the `"output_in_memory"` feature is enabled, there is a third
+    /// `InMemory` variant that holds the buffer for progress output. This
+    /// variant is intended to be used for verifying output in tests.
     #[cfg(feature = "output_progress")]
-    pub fn progress_target(&self) -> CliOutputTarget {
-        self.progress_target
+    pub fn progress_target(&self) -> &CliOutputTarget {
+        &self.progress_target
     }
 
     /// Returns how to format progress output -- progress bar or mimic outcome
@@ -234,24 +238,26 @@ where
             CliProgressFormatOpt::Auto => {
                 // Even though we're using `tokio::io::stdout` / `stderr`, `IsTerminal` is only
                 // implemented on `std::io::stdout` / `stderr`.
-                match progress_target {
+                match &progress_target {
                     CliOutputTarget::Stdout => {
                         if std::io::stdout().is_terminal() {
                             CliProgressFormat::ProgressBar
                         } else {
-                            CliProgressFormat::Output
+                            CliProgressFormat::Outcome
                         }
                     }
                     CliOutputTarget::Stderr => {
                         if std::io::stderr().is_terminal() {
                             CliProgressFormat::ProgressBar
                         } else {
-                            CliProgressFormat::Output
+                            CliProgressFormat::Outcome
                         }
                     }
+                    #[cfg(feature = "output_in_memory")]
+                    CliOutputTarget::InMemory(_) => CliProgressFormat::ProgressBar,
                 }
             }
-            CliProgressFormatOpt::Output => CliProgressFormat::Output,
+            CliProgressFormatOpt::Outcome => CliProgressFormat::Outcome,
             CliProgressFormatOpt::ProgressBar => CliProgressFormat::ProgressBar,
         };
 

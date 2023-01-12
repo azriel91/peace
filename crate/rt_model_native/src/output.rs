@@ -22,12 +22,12 @@ cfg_if::cfg_if! {
         pub use self::{
             cli_progress_format::CliProgressFormat,
             cli_progress_format_opt::CliProgressFormatOpt,
-            cli_progress_format_parse_error::CliProgressFormatOptParseError,
+            cli_progress_format_opt_parse_error::CliProgressFormatOptParseError,
         };
 
         mod cli_progress_format;
         mod cli_progress_format_opt;
-        mod cli_progress_format_parse_error;
+        mod cli_progress_format_opt_parse_error;
     }
 }
 

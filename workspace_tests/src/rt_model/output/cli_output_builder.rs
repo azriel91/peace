@@ -13,7 +13,7 @@ async fn new_uses_sensible_defaults() -> Result<(), Box<dyn std::error::Error>> 
     #[cfg(feature = "output_colorized")]
     assert_eq!(CliColorizeOpt::Auto, builder.colorize());
     #[cfg(feature = "output_progress")]
-    assert_eq!(CliOutputTarget::Stderr, builder.progress_target());
+    assert_eq!(&CliOutputTarget::Stderr, builder.progress_target());
     #[cfg(feature = "output_progress")]
     assert_eq!(CliProgressFormatOpt::Auto, builder.progress_format());
     Ok(())
@@ -41,16 +41,16 @@ async fn with_colorize_sets_colorize() -> Result<(), Box<dyn std::error::Error>>
 async fn with_progress_target_sets_progress_target() -> Result<(), Box<dyn std::error::Error>> {
     let builder = CliOutputBuilder::new().with_progress_target(CliOutputTarget::Stdout);
 
-    assert_eq!(CliOutputTarget::Stdout, builder.progress_target());
+    assert_eq!(&CliOutputTarget::Stdout, builder.progress_target());
     Ok(())
 }
 
 #[cfg(feature = "output_progress")]
 #[tokio::test]
 async fn with_progress_format_sets_progress_format() -> Result<(), Box<dyn std::error::Error>> {
-    let builder = CliOutputBuilder::new().with_progress_format(CliProgressFormatOpt::Output);
+    let builder = CliOutputBuilder::new().with_progress_format(CliProgressFormatOpt::Outcome);
 
-    assert_eq!(CliProgressFormatOpt::Output, builder.progress_format());
+    assert_eq!(CliProgressFormatOpt::Outcome, builder.progress_format());
     Ok(())
 }
 
@@ -82,18 +82,18 @@ async fn build_passes_through_progress_target() -> Result<(), Box<dyn std::error
 
     let cli_output = builder.build();
 
-    assert_eq!(CliOutputTarget::Stdout, cli_output.progress_target());
+    assert_eq!(&CliOutputTarget::Stdout, cli_output.progress_target());
     Ok(())
 }
 
 #[cfg(feature = "output_progress")]
 #[tokio::test]
 async fn build_passes_through_progress_format() -> Result<(), Box<dyn std::error::Error>> {
-    let builder = CliOutputBuilder::new().with_progress_format(CliProgressFormatOpt::Output);
+    let builder = CliOutputBuilder::new().with_progress_format(CliProgressFormatOpt::Outcome);
 
     let cli_output = builder.build();
 
-    assert_eq!(CliProgressFormat::Output, cli_output.progress_format());
+    assert_eq!(CliProgressFormat::Outcome, cli_output.progress_format());
     Ok(())
 }
 
@@ -122,6 +122,6 @@ async fn build_progress_format_auto_passes_stderr_for_non_interactive_terminal()
 -> Result<(), Box<dyn std::error::Error>> {
     let cli_output = CliOutputBuilder::new().build();
 
-    assert_eq!(CliProgressFormat::Output, cli_output.progress_format());
+    assert_eq!(CliProgressFormat::Outcome, cli_output.progress_format());
     Ok(())
 }
