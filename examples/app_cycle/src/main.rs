@@ -46,7 +46,12 @@ pub fn run() -> Result<(), AppCycleError> {
         .build()
         .map_err(AppCycleError::TokioRuntimeInit)?;
 
-    let CliArgs { command, format } = CliArgs::parse();
+    let CliArgs {
+        command,
+        format,
+        #[cfg(feature = "output_colorized")]
+        color,
+    } = CliArgs::parse();
     #[allow(unused_assignments)]
     runtime.block_on(async {
         let _workspace_spec = WorkspaceSpec::WorkingDir;
@@ -57,6 +62,11 @@ pub fn run() -> Result<(), AppCycleError> {
             if let Some(format) = format {
                 builder = builder.with_outcome_format(format);
             }
+            #[cfg(feature = "output_colorized")]
+            {
+                builder = builder.with_colorize(color);
+            }
+
             builder.build()
         };
 

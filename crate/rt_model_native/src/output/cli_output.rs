@@ -268,8 +268,8 @@ where
     }
 
     #[cfg(feature = "output_progress")]
-    fn progress_bar_style_update(progress_tracker: &ProgressTracker) {
-        let template = Self::progress_bar_template(progress_tracker);
+    fn progress_bar_style_update(&self, progress_tracker: &ProgressTracker) {
+        let template = self.progress_bar_template(progress_tracker);
         let progress_bar = progress_tracker.progress_bar();
         progress_bar.set_style(
             ProgressStyle::with_template(template.as_str())
@@ -286,43 +286,55 @@ where
     }
 
     #[cfg(feature = "output_progress")]
-    fn progress_bar_template(progress_tracker: &ProgressTracker) -> String {
-        /// This is used when we are rendering a bar that is not calculated by
-        /// `ProgressBar`'s length and current value,
-        #[cfg(feature = "output_colorized")]
-        const SOLID_BAR: &str = "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒";
+    fn progress_bar_template(&self, progress_tracker: &ProgressTracker) -> String {
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "output_colorized")] {
+                /// This is used when we are rendering a bar that is not calculated by
+                /// `ProgressBar`'s length and current value,
+                const SOLID_BAR: &str = "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒";
 
-        // These are used to tell `indicatif` how to style the computed bar.
-        //
-        // 40: width
-        //
-        //  32: blue pale (running)
-        //  17: blue dark (running background)
-        // 222: yellow pale (stalled)
-        //  69: indigo pale (user pending, item spec id)
-        //  35: green pale (success)
-        //  22: green dark (success background)
-        // 160: red slightly dim (fail)
-        //  88: red dark (fail background)
+                // These are used to tell `indicatif` how to style the computed bar.
+                //
+                // 40: width
+                //
+                //  32: blue pale (running)
+                //  17: blue dark (running background)
+                // 222: yellow pale (stalled)
+                //  69: indigo pale (user pending, item spec id)
+                //  35: green pale (success)
+                //  22: green dark (success background)
+                // 160: red slightly dim (fail)
+                //  88: red dark (fail background)
 
-        #[cfg(feature = "output_colorized")]
-        const GRAY_DARK: u8 = 237;
+                const GRAY_DARK: u8 = 237;
 
-        #[cfg(feature = "output_colorized")]
-        let bar = match progress_tracker.progress_status() {
-            ProgressStatus::Initialized => console::style(SOLID_BAR).color256(GRAY_DARK),
-            ProgressStatus::ExecPending | ProgressStatus::Running => {
-                console::style("{bar:40.32.on_17}")
+                let bar = match self.colorize {
+                    CliColorize::Colored => {
+                        match progress_tracker.progress_status() {
+                            ProgressStatus::Initialized => console::style(SOLID_BAR).color256(GRAY_DARK),
+                            ProgressStatus::ExecPending | ProgressStatus::Running => {
+                                console::style("{bar:40.32.on_17}")
+                            }
+                            ProgressStatus::RunningStalled => console::style("{bar:40.222.on_17}"),
+                            ProgressStatus::UserPending => console::style("{bar:40.69.on_17}"),
+                            ProgressStatus::Complete(progress_complete) => match progress_complete {
+                                ProgressComplete::Success => console::style("{bar:40.35.on_22}"),
+                                ProgressComplete::Fail => console::style("{bar:40.160.on_88}"),
+                            },
+                        }
+                    }
+                    CliColorize::Uncolored => console::style("{bar:40}"),
+                };
+
+                let prefix = match self.colorize {
+                    CliColorize::Colored => "{prefix:20.69}",
+                    CliColorize::Uncolored => "{prefix:20}",
+                };
+            } else {
+                let bar = "{bar:40}";
+                let prefix = "{prefix:20}";
             }
-            ProgressStatus::RunningStalled => console::style("{bar:40.222.on_17}"),
-            ProgressStatus::UserPending => console::style("{bar:40.69.on_17}"),
-            ProgressStatus::Complete(progress_complete) => match progress_complete {
-                ProgressComplete::Success => console::style("{bar:40.35.on_22}"),
-                ProgressComplete::Fail => console::style("{bar:40.160.on_88}"),
-            },
-        };
-        #[cfg(not(feature = "output_colorized"))]
-        let bar = "{bar:40}";
+        }
 
         let units = if let Some(progress_limit) = progress_tracker.progress_limit() {
             match progress_limit {
@@ -333,11 +345,6 @@ where
         } else {
             ""
         };
-
-        #[cfg(feature = "output_colorized")]
-        let prefix = "{prefix:20.69}";
-        #[cfg(not(feature = "output_colorized"))]
-        let prefix = "{prefix:20}";
 
         // `prefix` is the item spec ID.
         format!("{prefix} ▕{bar}▏{units}")
@@ -380,7 +387,7 @@ where
                     |(item_spec_id, progress_tracker)| {
                         let progress_bar = progress_tracker.progress_bar();
                         progress_bar.set_prefix(format!("{item_spec_id}"));
-                        Self::progress_bar_style_update(progress_tracker);
+                        self.progress_bar_style_update(progress_tracker);
                     },
                 );
             }
@@ -417,7 +424,7 @@ where
                 match &progress_update_and_id.progress_update {
                     ProgressUpdate::Limit(_progress_limit) => {
                         // Note: `progress_tracker` also carries the `progress_limit`
-                        Self::progress_bar_style_update(progress_tracker);
+                        self.progress_bar_style_update(progress_tracker);
                     }
                     ProgressUpdate::Delta(_delta) => {
                         // Status may have changed from `ExecPending` to
@@ -431,13 +438,13 @@ where
                             let progress_bar = progress_tracker.progress_bar();
                             progress_bar.finish();
 
-                            Self::progress_bar_style_update(progress_tracker);
+                            self.progress_bar_style_update(progress_tracker);
                         }
                         ProgressComplete::Fail => {
                             let progress_bar = progress_tracker.progress_bar();
                             progress_bar.abandon();
 
-                            Self::progress_bar_style_update(progress_tracker);
+                            self.progress_bar_style_update(progress_tracker);
                         }
                     },
                 }

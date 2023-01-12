@@ -5,6 +5,9 @@ use url::Url;
 
 use crate::model::{EnvType, RepoSlug};
 
+#[cfg(feature = "output_colorized")]
+use peace::rt_model::output::CliColorizeOpt;
+
 #[derive(Parser)]
 #[clap(
     author,
@@ -23,6 +26,14 @@ pub struct CliArgs {
     /// for the argument to be passed in after the subcommand.
     #[clap(long)]
     pub format: Option<OutputFormat>,
+    /// Whether output should be colorized.
+    ///
+    /// * "auto" (default): Colorize when used interactively.
+    /// * "always": Always colorize output.
+    /// * "never": Never colorize output.
+    #[cfg(feature = "output_colorized")]
+    #[clap(long, default_value = "auto")]
+    pub color: CliColorizeOpt,
 }
 
 #[derive(Subcommand)]

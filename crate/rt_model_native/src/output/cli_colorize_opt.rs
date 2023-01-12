@@ -3,9 +3,10 @@ use std::str::FromStr;
 use crate::output::CliColorizeOptParseError;
 
 /// Whether to colourize output using ANSI codes on the CLI.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum CliColorizeOpt {
     /// Automatically detect whether to colourize the output.
+    #[default]
     Auto,
     /// Always colourize the output.
     Always,
