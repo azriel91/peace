@@ -40,7 +40,7 @@ fn debug() {
         },
         state_desired: State {
             logical: 3,
-            physical: Calculated(
+            physical: Tbd(
                 PhantomData<()>,
             ),
         },
@@ -77,7 +77,7 @@ state_current:
   physical: 0
 state_desired:
   logical: 3
-  physical: !Calculated null
+  physical: !Tbd null
 state_diff: 2
 op_check_status: ExecNotRequired
 state_ensured: null
@@ -90,7 +90,7 @@ state_ensured: null
 fn item_ensure() -> ItemEnsure<u32, u32, u32> {
     let mut item_ensure_partial = ItemEnsurePartial::new();
     item_ensure_partial.state_current = Some(State::new(1, 0));
-    item_ensure_partial.state_desired = Some(State::new(3, Placeholder::calculated()));
+    item_ensure_partial.state_desired = Some(State::new(3, Placeholder::tbd()));
     item_ensure_partial.state_diff = Some(2);
     item_ensure_partial.op_check_status = Some(OpCheckStatus::ExecNotRequired);
     ItemEnsure::try_from((item_ensure_partial, None)).unwrap()

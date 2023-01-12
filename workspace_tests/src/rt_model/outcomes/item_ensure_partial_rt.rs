@@ -11,7 +11,7 @@ fn item_ensure_rt_state_saved_returns_state_saved() -> Result<(), Box<dyn std::e
     let item_ensure_partial = ItemEnsurePartial {
         state_saved: Some(State::new(Nothing, 456u32)),
         state_current: Some(State::new(Nothing, 123u32)),
-        state_desired: Some(State::new(Nothing, Placeholder::calculated())),
+        state_desired: Some(State::new(Nothing, Placeholder::tbd())),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -31,7 +31,7 @@ fn item_ensure_rt_state_current_returns_state_current() -> Result<(), Box<dyn st
     let item_ensure_partial = ItemEnsurePartial {
         state_saved: Some(State::new(Nothing, 456u32)),
         state_current: Some(State::new(Nothing, 123u32)),
-        state_desired: Some(State::new(Nothing, Placeholder::calculated())),
+        state_desired: Some(State::new(Nothing, Placeholder::tbd())),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -51,7 +51,7 @@ fn item_ensure_rt_state_desired_returns_state_desired() -> Result<(), Box<dyn st
     let item_ensure_partial = ItemEnsurePartial {
         state_saved: Some(State::new(Nothing, 456u32)),
         state_current: Some(State::new(Nothing, 123u32)),
-        state_desired: Some(State::new(Nothing, Placeholder::calculated())),
+        state_desired: Some(State::new(Nothing, Placeholder::tbd())),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -60,7 +60,7 @@ fn item_ensure_rt_state_desired_returns_state_desired() -> Result<(), Box<dyn st
     let state_desired = ItemEnsurePartialRt::state_desired(&item_ensure_partial_boxed).unwrap();
 
     assert_eq!(
-        State::new(Nothing, Placeholder::calculated()),
+        State::new(Nothing, Placeholder::tbd()),
         *state_desired
             .downcast::<State<Nothing, Placeholder>>()
             .unwrap()
@@ -73,7 +73,7 @@ fn item_ensure_rt_state_diff_returns_state_diff() -> Result<(), Box<dyn std::err
     let item_ensure_partial = ItemEnsurePartial {
         state_saved: Some(State::new(Nothing, 456u32)),
         state_current: Some(State::new(Nothing, 123u32)),
-        state_desired: Some(State::new(Nothing, Placeholder::calculated())),
+        state_desired: Some(State::new(Nothing, Placeholder::tbd())),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -91,7 +91,7 @@ fn item_ensure_rt_op_check_status_returns_op_check_status() -> Result<(), Box<dy
     let item_ensure_partial = ItemEnsurePartial {
         state_saved: Some(State::new(Nothing, 456u32)),
         state_current: Some(State::new(Nothing, 123u32)),
-        state_desired: Some(State::new(Nothing, Placeholder::calculated())),
+        state_desired: Some(State::new(Nothing, Placeholder::tbd())),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -108,7 +108,7 @@ fn item_ensure_rt_as_data_type_returns_self() -> Result<(), Box<dyn std::error::
     let item_ensure_partial = ItemEnsurePartial {
         state_saved: Some(State::new(Nothing, 456u32)),
         state_current: Some(State::new(Nothing, 123u32)),
-        state_desired: Some(State::new(Nothing, Placeholder::calculated())),
+        state_desired: Some(State::new(Nothing, Placeholder::tbd())),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -132,7 +132,7 @@ fn item_ensure_rt_as_data_type_mut_returns_self() -> Result<(), Box<dyn std::err
     let item_ensure_partial = ItemEnsurePartial {
         state_saved: Some(State::new(Nothing, 456u32)),
         state_current: Some(State::new(Nothing, 123u32)),
-        state_desired: Some(State::new(Nothing, Placeholder::calculated())),
+        state_desired: Some(State::new(Nothing, Placeholder::tbd())),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -156,7 +156,7 @@ fn serialize() -> Result<(), Box<dyn std::error::Error>> {
     let item_ensure_partial = ItemEnsurePartial {
         state_saved: Some(State::new(Nothing, 456u32)),
         state_current: Some(State::new(Nothing, 123u32)),
-        state_desired: Some(State::new(Nothing, Placeholder::calculated())),
+        state_desired: Some(State::new(Nothing, Placeholder::tbd())),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -172,7 +172,7 @@ state_current:
   physical: 123
 state_desired:
   logical: null
-  physical: !Calculated null
+  physical: !Tbd null
 state_diff: 8
 op_check_status: ExecNotRequired
 "#,

@@ -167,9 +167,8 @@ where
         let state_desired_logical =
             <StateDesiredFnSpec as peace_cfg::TryFnSpec>::try_exec(data).await?;
 
-        Ok(state_desired_logical.map(|state_desired_logical| {
-            State::new(state_desired_logical, Placeholder::calculated())
-        }))
+        Ok(state_desired_logical
+            .map(|state_desired_logical| State::new(state_desired_logical, Placeholder::tbd())))
     }
 
     async fn state_desired_exec(
@@ -181,7 +180,7 @@ where
         let state_desired_logical =
             <StateDesiredFnSpec as peace_cfg::TryFnSpec>::exec(data).await?;
 
-        Ok(State::new(state_desired_logical, Placeholder::calculated()))
+        Ok(State::new(state_desired_logical, Placeholder::tbd()))
     }
 
     async fn state_diff_exec<ResourcesTs, StatesTs>(

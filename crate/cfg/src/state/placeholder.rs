@@ -7,17 +7,17 @@ use serde::{Deserialize, Serialize};
 pub enum Placeholder {
     /// Placeholder indicating this value is calculated.
     ///
-    /// Using a newtype enum has the benefit of having a `!Calculated` tag in
+    /// Using a newtype enum has the benefit of having a `!Tbd` tag in
     /// the serialized YAML form.
-    Calculated(PhantomData<()>),
+    Tbd(PhantomData<()>),
 }
 
 impl Placeholder {
-    /// Returns the `Calculated` variant.
+    /// Returns the `Tbd` variant.
     ///
     /// Convenience function so consumers don't have to import `PhantomData`.
-    pub fn calculated() -> Self {
-        Self::Calculated(PhantomData)
+    pub fn tbd() -> Self {
+        Self::Tbd(PhantomData)
     }
 }
 
