@@ -110,7 +110,7 @@ pub trait EnsureOpSpec {
     async fn check(
         data: Self::Data<'_>,
         state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        state_desired: &Self::StateLogical,
+        state_desired: &State<Self::StateLogical, Self::StatePhysical>,
         diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error>;
 
@@ -153,7 +153,7 @@ pub trait EnsureOpSpec {
         ctx: OpCtx<'_>,
         data: Self::Data<'_>,
         state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        state_desired: &Self::StateLogical,
+        state_desired: &State<Self::StateLogical, Self::StatePhysical>,
         diff: &Self::StateDiff,
     ) -> Result<Self::StatePhysical, Self::Error>;
 
@@ -182,7 +182,7 @@ pub trait EnsureOpSpec {
         ctx: OpCtx<'_>,
         data: Self::Data<'_>,
         state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        state_desired: &Self::StateLogical,
+        state_desired: &State<Self::StateLogical, Self::StatePhysical>,
         diff: &Self::StateDiff,
     ) -> Result<Self::StatePhysical, Self::Error>;
 }

@@ -237,7 +237,7 @@ where
     async fn check(
         _file_download_data: FileDownloadData<'_, Id>,
         _file_state_current: &State<FileDownloadState, Nothing>,
-        _file_state_desired: &FileDownloadState,
+        _file_state_desired: &State<FileDownloadState, Nothing>,
         diff: &FileDownloadStateDiff,
     ) -> Result<OpCheckStatus, FileDownloadError> {
         let op_check_status = match diff {
@@ -277,7 +277,7 @@ where
         _op_ctx: OpCtx<'_>,
         _file_download_data: FileDownloadData<'_, Id>,
         _state: &State<FileDownloadState, Nothing>,
-        _file_state_desired: &FileDownloadState,
+        _file_state_desired: &State<FileDownloadState, Nothing>,
         _diff: &FileDownloadStateDiff,
     ) -> Result<Nothing, FileDownloadError> {
         Ok(Nothing)
@@ -287,7 +287,7 @@ where
         op_ctx: OpCtx<'_>,
         file_download_data: FileDownloadData<'_, Id>,
         _state: &State<FileDownloadState, Nothing>,
-        _file_state_desired: &FileDownloadState,
+        _file_state_desired: &State<FileDownloadState, Nothing>,
         _diff: &FileDownloadStateDiff,
     ) -> Result<Nothing, FileDownloadError> {
         Self::file_download(op_ctx, file_download_data).await?;

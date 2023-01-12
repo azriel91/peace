@@ -1,9 +1,5 @@
 use peace::{
-    cfg::{
-        profile,
-        state::{External, Nothing},
-        FlowId, ItemSpec, ItemSpecId, Profile, State,
-    },
+    cfg::{profile, state::Nothing, FlowId, ItemSpec, ItemSpecId, Profile, State},
     resources::{
         paths::{StatesDesiredFile, StatesSavedFile},
         states::{StatesCurrent, StatesDesired},
@@ -48,13 +44,13 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
         StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
     };
     let vec_copy_desired_state =
-        states_desired.get::<State<VecCopyState, External>, _>(VecCopyItemSpec.id());
+        states_desired.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     let states_desired_on_disk = {
         let states_desired_file = resources.borrow::<StatesDesiredFile>();
         let states_slice = std::fs::read(&*states_desired_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId, BoxDtDisplay>::new_typed();
-        type_reg.register::<State<VecCopyState, External>>(VecCopyItemSpec.id().clone());
+        type_reg.register::<State<VecCopyState, Nothing>>(VecCopyItemSpec.id().clone());
 
         let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
         StatesDesired::from(type_reg.deserialize_map(deserializer)?)
@@ -72,8 +68,8 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
         vec_copy_desired_state.map(|state_desired| &state_desired.logical)
     );
     assert_eq!(
-        states_desired.get::<State<VecCopyState, External>, _>(VecCopyItemSpec.id()),
-        states_desired_on_disk.get::<State<VecCopyState, External>, _>(VecCopyItemSpec.id())
+        states_desired.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id()),
+        states_desired_on_disk.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
     );
 
     Ok(())

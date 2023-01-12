@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use peace_cfg::{state::External, OpCheckStatus, State};
+use peace_cfg::{OpCheckStatus, State};
 use peace_resources::type_reg::untagged::{DataType, DataTypeDisplay};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
@@ -38,7 +38,7 @@ pub struct ItemEnsurePartial<StateLogical, StatePhysical, StateDiff> {
     /// Current state discovered during the execution.
     pub state_current: Option<State<StateLogical, StatePhysical>>,
     /// Desired state discovered during the execution.
-    pub state_desired: Option<State<StateLogical, External>>,
+    pub state_desired: Option<State<StateLogical, StatePhysical>>,
     /// Diff between current and desired states.
     pub state_diff: Option<StateDiff>,
     /// Whether item execution is required.

@@ -26,14 +26,14 @@ where
     async fn check(
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_desired: &ShCmdState<Id>,
+        state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
     ) -> Result<OpCheckStatus, ShCmdError> {
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_desired_arg = match state_desired {
+        let state_desired_arg = match &state_desired.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
@@ -81,7 +81,7 @@ where
         _op_ctx: OpCtx<'_>,
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_desired: &ShCmdState<Id>,
+        state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
     ) -> Result<ShCmdExecutionRecord, ShCmdError> {
         // TODO: implement properly
@@ -89,7 +89,7 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_desired_arg = match state_desired {
+        let state_desired_arg = match &state_desired.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
@@ -110,14 +110,14 @@ where
         _op_ctx: OpCtx<'_>,
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_desired: &ShCmdState<Id>,
+        state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
     ) -> Result<ShCmdExecutionRecord, ShCmdError> {
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_desired_arg = match state_desired {
+        let state_desired_arg = match &state_desired.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };

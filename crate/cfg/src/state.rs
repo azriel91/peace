@@ -1,4 +1,7 @@
-pub use self::{external::External, nothing::Nothing};
+pub use self::{
+    external::{External, Fetched, Generated, Timestamped},
+    nothing::Nothing,
+};
 
 mod external;
 mod nothing;

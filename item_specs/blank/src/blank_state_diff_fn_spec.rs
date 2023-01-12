@@ -17,9 +17,9 @@ impl StateDiffFnSpec for BlankStateDiffFnSpec {
     async fn exec(
         _: &(),
         state_current: &State<BlankState, Nothing>,
-        state_desired: &BlankState,
+        state_desired: &State<BlankState, Nothing>,
     ) -> Result<Self::StateDiff, BlankError> {
-        let diff = match (state_current.logical, *state_desired) {
+        let diff = match (state_current.logical, state_desired.logical) {
             (BlankState(Some(current)), BlankState(Some(desired))) if current == desired => {
                 BlankStateDiff::InSync { value: current }
             }

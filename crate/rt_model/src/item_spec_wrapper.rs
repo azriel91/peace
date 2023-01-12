@@ -5,9 +5,7 @@ use std::{
 };
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
-use peace_cfg::{
-    async_trait, state::External, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, State, TryFnSpec,
-};
+use peace_cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, State, TryFnSpec};
 use peace_data::Data;
 use peace_resources::{
     resources::ts::{
@@ -106,8 +104,10 @@ where
         + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync,
-    StateDesiredFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical> + Send + Sync,
+    StateDesiredFnSpec: Debug
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
+        + Send
+        + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             Error = <IS as ItemSpec>::Error,
@@ -161,26 +161,23 @@ where
     async fn state_desired_try_exec(
         &self,
         resources: &Resources<SetUp>,
-    ) -> Result<Option<State<StateLogical, External>>, E> {
+    ) -> Result<Option<State<StateLogical, StatePhysical>>, E> {
         let data =
             <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
-        let state_desired_logical =
-            <StateDesiredFnSpec as peace_cfg::TryFnSpec>::try_exec(data).await?;
+        let state_desired = <StateDesiredFnSpec as peace_cfg::TryFnSpec>::try_exec(data).await?;
 
-        Ok(state_desired_logical
-            .map(|state_desired_logical| State::new(state_desired_logical, External::tbd())))
+        Ok(state_desired)
     }
 
     async fn state_desired_exec(
         &self,
         resources: &Resources<SetUp>,
-    ) -> Result<State<StateLogical, External>, E> {
+    ) -> Result<State<StateLogical, StatePhysical>, E> {
         let data =
             <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
-        let state_desired_logical =
-            <StateDesiredFnSpec as peace_cfg::TryFnSpec>::exec(data).await?;
+        let state_desired = <StateDesiredFnSpec as peace_cfg::TryFnSpec>::exec(data).await?;
 
-        Ok(State::new(state_desired_logical, External::tbd()))
+        Ok(state_desired)
     }
 
     async fn state_diff_exec<ResourcesTs, StatesTs>(
@@ -196,7 +193,7 @@ where
             let state_base = states_base.get::<State<StateLogical, StatePhysical>, _>(item_spec_id);
             let states_desired = resources.borrow::<StatesDesired>();
             let state_desired =
-                states_desired.get::<State<StateLogical, External>, _>(item_spec_id);
+                states_desired.get::<State<StateLogical, StatePhysical>, _>(item_spec_id);
 
             if let (Some(state_base), Some(state_desired)) = (state_base, state_desired) {
                 self.state_diff_exec_with(resources, state_base, state_desired)
@@ -218,19 +215,15 @@ where
         &self,
         resources: &Resources<ResourcesTs>,
         state_base: &State<StateLogical, StatePhysical>,
-        state_desired: &State<StateLogical, External>,
+        state_desired: &State<StateLogical, StatePhysical>,
     ) -> Result<StateDiff, E> {
         let state_diff: StateDiff = {
             let data = <<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_> as Data>::borrow(
                 resources,
             );
-            <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(
-                data,
-                state_base,
-                &state_desired.logical,
-            )
-            .await
-            .map_err(Into::<E>::into)?
+            <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(data, state_base, state_desired)
+                .await
+                .map_err(Into::<E>::into)?
         };
 
         Ok(state_diff)
@@ -240,14 +233,14 @@ where
         &self,
         resources: &Resources<ResourcesTs>,
         state_current: &State<StateLogical, StatePhysical>,
-        state_desired: &State<StateLogical, External>,
+        state_desired: &State<StateLogical, StatePhysical>,
         state_diff: &StateDiff,
     ) -> Result<OpCheckStatus, E> {
         let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
         <EnsureOpSpec as peace_cfg::EnsureOpSpec>::check(
             data,
             state_current,
-            &state_desired.logical,
+            state_desired,
             state_diff,
         )
         .await
@@ -259,7 +252,7 @@ where
         op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
         state_current: &State<StateLogical, StatePhysical>,
-        state_desired: &State<StateLogical, External>,
+        state_desired: &State<StateLogical, StatePhysical>,
         state_diff: &StateDiff,
     ) -> Result<StatePhysical, E> {
         let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
@@ -267,7 +260,7 @@ where
             op_ctx,
             data,
             state_current,
-            &state_desired.logical,
+            state_desired,
             state_diff,
         )
         .await
@@ -279,7 +272,7 @@ where
         op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
         state_current: &State<StateLogical, StatePhysical>,
-        state_desired: &State<StateLogical, External>,
+        state_desired: &State<StateLogical, StatePhysical>,
         state_diff: &StateDiff,
     ) -> Result<StatePhysical, E> {
         let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
@@ -287,7 +280,7 @@ where
             op_ctx,
             data,
             state_current,
-            &state_desired.logical,
+            state_desired,
             state_diff,
         )
         .await
@@ -436,8 +429,10 @@ where
         + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync,
-    StateDesiredFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical> + Send + Sync,
+    StateDesiredFnSpec: Debug
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
+        + Send
+        + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             Error = <IS as ItemSpec>::Error,
@@ -514,8 +509,10 @@ where
         + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync,
-    StateDesiredFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical> + Send + Sync,
+    StateDesiredFnSpec: Debug
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
+        + Send
+        + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             Error = <IS as ItemSpec>::Error,
@@ -596,8 +593,10 @@ where
         + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync,
-    StateDesiredFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical> + Send + Sync,
+    StateDesiredFnSpec: Debug
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
+        + Send
+        + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             Error = <IS as ItemSpec>::Error,
@@ -685,8 +684,10 @@ where
         + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
         + Send
         + Sync,
-    StateDesiredFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = StateLogical> + Send + Sync,
+    StateDesiredFnSpec: Debug
+        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
+        + Send
+        + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             Error = <IS as ItemSpec>::Error,
@@ -728,7 +729,7 @@ where
 
         states_type_regs
             .states_desired_type_reg_mut()
-            .register::<State<StateLogical, External>>(<IS as ItemSpec>::id(self).clone());
+            .register::<State<StateLogical, StatePhysical>>(<IS as ItemSpec>::id(self).clone());
     }
 
     async fn state_current_try_exec(

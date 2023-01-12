@@ -24,7 +24,7 @@ where
     async fn check(
         _blank_data: BlankData<'_, Id>,
         _state_current: &State<BlankState, Nothing>,
-        _state_desired: &BlankState,
+        _state_desired: &State<BlankState, Nothing>,
         diff: &BlankStateDiff,
     ) -> Result<OpCheckStatus, BlankError> {
         let op_check_status = match *diff {
@@ -49,7 +49,7 @@ where
         _op_ctx: OpCtx<'_>,
         _blank_data: BlankData<'_, Id>,
         _state_current: &State<BlankState, Nothing>,
-        _state_desired: &BlankState,
+        _state_desired: &State<BlankState, Nothing>,
         _diff: &BlankStateDiff,
     ) -> Result<Nothing, BlankError> {
         Ok(Nothing)
@@ -59,7 +59,7 @@ where
         _op_ctx: OpCtx<'_>,
         mut blank_data: BlankData<'_, Id>,
         _state_current: &State<BlankState, Nothing>,
-        _state_desired: &BlankState,
+        _state_desired: &State<BlankState, Nothing>,
         _diff: &BlankStateDiff,
     ) -> Result<Nothing, BlankError> {
         let params = blank_data.params_mut();

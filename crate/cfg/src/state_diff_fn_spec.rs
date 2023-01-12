@@ -75,6 +75,6 @@ pub trait StateDiffFnSpec {
     async fn exec(
         data: Self::Data<'_>,
         state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        state_desired: &Self::StateLogical,
+        state_desired: &State<Self::StateLogical, Self::StatePhysical>,
     ) -> Result<Self::StateDiff, Self::Error>;
 }

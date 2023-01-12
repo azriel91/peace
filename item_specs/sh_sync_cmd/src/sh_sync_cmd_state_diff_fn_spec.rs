@@ -17,7 +17,7 @@ impl StateDiffFnSpec for ShSyncCmdStateDiffFnSpec {
     async fn exec(
         _: &(),
         _state_current: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
-        _state_desired: &ShSyncCmdSyncStatus,
+        _state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
     ) -> Result<Self::StateDiff, ShSyncCmdError> {
         todo!()
     }

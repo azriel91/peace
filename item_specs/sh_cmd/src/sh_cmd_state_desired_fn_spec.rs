@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, TryFnSpec};
+use peace::cfg::{async_trait, State, TryFnSpec};
 
-use crate::{ShCmdData, ShCmdError, ShCmdExecutor, ShCmdState};
+use crate::{ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState};
 
 /// Reads the desired state of the command to execute.
 #[derive(Debug)]
@@ -15,7 +15,7 @@ where
 {
     type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
-    type Output = ShCmdState<Id>;
+    type Output = State<ShCmdState<Id>, ShCmdExecutionRecord>;
 
     async fn try_exec(sh_cmd_data: ShCmdData<'_, Id>) -> Result<Option<Self::Output>, ShCmdError> {
         Self::exec(sh_cmd_data).await.map(Some)
@@ -25,8 +25,6 @@ where
         let state_desired_sh_cmd = sh_cmd_data.sh_cmd_params().state_desired_sh_cmd();
         // Maybe we should support reading different exit statuses for an `Ok(None)`
         // value.
-        ShCmdExecutor::exec(state_desired_sh_cmd)
-            .await
-            .map(|state| state.logical)
+        ShCmdExecutor::exec(state_desired_sh_cmd).await
     }
 }

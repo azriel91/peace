@@ -149,7 +149,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     async fn check(
         _vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        state_desired: &VecCopyState,
+        state_desired: &State<Self::StateLogical, Self::StatePhysical>,
         diff: &VecCopyDiff,
     ) -> Result<OpCheckStatus, VecCopyError> {
         let op_check_status = if diff.0.0.is_empty() {
@@ -161,7 +161,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
             }
             #[cfg(feature = "output_progress")]
             {
-                let progress_limit = TryInto::<u64>::try_into(state_desired.len())
+                let progress_limit = TryInto::<u64>::try_into(state_desired.logical.len())
                     .map(ProgressLimit::Bytes)
                     .unwrap_or(ProgressLimit::Unknown);
 
@@ -175,7 +175,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
         _op_ctx: OpCtx<'_>,
         _vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        _state_desired: &VecCopyState,
+        _state_desired: &State<Self::StateLogical, Self::StatePhysical>,
         _diff: &VecCopyDiff,
     ) -> Result<Self::StatePhysical, Self::Error> {
         // Would replace vec_b's contents with vec_a's
@@ -186,12 +186,12 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
         _op_ctx: OpCtx<'_>,
         mut vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        state_desired: &VecCopyState,
+        state_desired: &State<Self::StateLogical, Self::StatePhysical>,
         _diff: &VecCopyDiff,
     ) -> Result<Self::StatePhysical, VecCopyError> {
         let dest = vec_copy_params.dest_mut();
         dest.0.clear();
-        dest.0.extend_from_slice(state_desired.as_slice());
+        dest.0.extend_from_slice(state_desired.logical.as_slice());
         Ok(Nothing)
     }
 }
@@ -252,14 +252,14 @@ pub struct VecCopyStateDesiredFnSpec;
 impl TryFnSpec for VecCopyStateDesiredFnSpec {
     type Data<'op> = R<'op, VecA>;
     type Error = VecCopyError;
-    type Output = VecCopyState;
+    type Output = State<VecCopyState, Nothing>;
 
     async fn try_exec(vec_a: R<'_, VecA>) -> Result<Option<Self::Output>, VecCopyError> {
         Self::exec(vec_a).await.map(Some)
     }
 
     async fn exec(vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
-        Ok(vec_a.0.clone()).map(VecCopyState::from)
+        Ok(vec_a.0.clone()).map(|vec| State::new(VecCopyState::from(vec), Nothing))
     }
 }
 
@@ -278,9 +278,9 @@ impl StateDiffFnSpec for VecCopyStateDiffFnSpec {
     async fn exec(
         _: &(),
         state_current: &State<VecCopyState, Nothing>,
-        state_desired: &VecCopyState,
+        state_desired: &State<VecCopyState, Nothing>,
     ) -> Result<Self::StateDiff, VecCopyError> {
-        Ok(state_current.logical.diff(state_desired)).map(VecCopyDiff::from)
+        Ok(state_current.logical.diff(&state_desired.logical)).map(VecCopyDiff::from)
     }
 }
 

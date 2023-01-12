@@ -35,7 +35,7 @@ where
     async fn check(
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &State<FileMetadatas, Nothing>,
-        state_desired: &FileMetadatas,
+        state_desired: &State<FileMetadatas, Nothing>,
         diff: &TarXStateDiff,
     ) -> Result<OpCheckStatus, TarXError> {
         let op_check_status = match diff {
@@ -52,7 +52,7 @@ where
                 #[cfg(feature = "output_progress")]
                 {
                     let progress_limit =
-                        ProgressLimit::Steps(state_desired.len().try_into().unwrap());
+                        ProgressLimit::Steps(state_desired.logical.len().try_into().unwrap());
                     OpCheckStatus::ExecRequired { progress_limit }
                 }
             }
@@ -65,7 +65,7 @@ where
         _op_ctx: OpCtx<'_>,
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &State<FileMetadatas, Nothing>,
-        _state_desired: &FileMetadatas,
+        _state_desired: &State<FileMetadatas, Nothing>,
         _diff: &TarXStateDiff,
     ) -> Result<Nothing, TarXError> {
         Ok(Nothing)
@@ -76,7 +76,7 @@ where
         _op_ctx: OpCtx<'_>,
         tar_x_data: TarXData<'_, Id>,
         _state_current: &State<FileMetadatas, Nothing>,
-        _state_desired: &FileMetadatas,
+        _state_desired: &State<FileMetadatas, Nothing>,
         diff: &TarXStateDiff,
     ) -> Result<Nothing, TarXError> {
         use futures::stream::{StreamExt, TryStreamExt};
@@ -144,7 +144,7 @@ where
         _op_ctx: OpCtx<'_>,
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &State<FileMetadatas, Nothing>,
-        _state_desired: &FileMetadatas,
+        _state_desired: &State<FileMetadatas, Nothing>,
         _diff: &TarXStateDiff,
     ) -> Result<Nothing, TarXError> {
         todo!()

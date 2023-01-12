@@ -25,7 +25,7 @@ where
     async fn check(
         _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
         _file_state_current: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
-        _file_state_desired: &ShSyncCmdSyncStatus,
+        _file_state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _diff: &ShSyncCmdStateDiff,
     ) -> Result<OpCheckStatus, ShSyncCmdError> {
         todo!();
@@ -35,7 +35,7 @@ where
         _op_ctx: OpCtx<'_>,
         _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
         _state: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
-        _file_state_desired: &ShSyncCmdSyncStatus,
+        _file_state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _diff: &ShSyncCmdStateDiff,
     ) -> Result<ShSyncCmdExecutionRecord, ShSyncCmdError> {
         todo!()
@@ -45,7 +45,7 @@ where
         _op_ctx: OpCtx<'_>,
         _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
         _state: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
-        _file_state_desired: &ShSyncCmdSyncStatus,
+        _file_state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _diff: &ShSyncCmdStateDiff,
     ) -> Result<ShSyncCmdExecutionRecord, ShSyncCmdError> {
         todo!();

@@ -19,9 +19,10 @@ impl StateDiffFnSpec for TarXStateDiffFnSpec {
     async fn exec(
         _: &(),
         state_current: &State<FileMetadatas, Nothing>,
-        state_desired: &FileMetadatas,
+        state_desired: &State<FileMetadatas, Nothing>,
     ) -> Result<Self::StateDiff, TarXError> {
         let state_current = &state_current.logical;
+        let state_desired = &state_desired.logical;
         let mut current_metadata_iter = state_current.iter();
         let mut desired_metadata_iter = state_desired.iter();
 

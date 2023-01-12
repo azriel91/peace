@@ -2,9 +2,8 @@ use std::{io::Cursor, path::PathBuf};
 
 use peace::{
     cfg::{
-        item_spec_id, profile,
-        state::{External, Nothing},
-        CleanOpSpec, EnsureOpSpec, FlowId, ItemSpecId, OpCheckStatus, Profile, State,
+        item_spec_id, profile, state::Nothing, CleanOpSpec, EnsureOpSpec, FlowId, ItemSpecId,
+        OpCheckStatus, Profile, State,
     },
     data::Data,
     resources::states::{StateDiffs, StatesCleaned, StatesCurrent, StatesDesired, StatesEnsured},
@@ -136,7 +135,7 @@ async fn state_desired_returns_file_metadatas_from_tar() -> Result<(), Box<dyn s
     let CmdContext { resources, .. } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
     let states_desired = resources.borrow::<StatesDesired>();
     let state_desired = states_desired
-        .get::<State<FileMetadatas, External>, _>(&TarXTest::ID)
+        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
         .unwrap();
 
     assert_eq!(
@@ -474,7 +473,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
     let states_desired = resources.borrow::<StatesDesired>();
     let state_desired = states_desired
-        .get::<State<FileMetadatas, External>, _>(&TarXTest::ID)
+        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
         .unwrap();
     let state_diffs = resources.borrow::<StateDiffs>();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(&TarXTest::ID).unwrap();
@@ -484,7 +483,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         <TarXEnsureOpSpec::<TarXTest> as EnsureOpSpec>::check(
             <TarXData<TarXTest> as Data>::borrow(&resources),
             state_current,
-            &state_desired.logical,
+            state_desired,
             state_diff
         )
         .await?

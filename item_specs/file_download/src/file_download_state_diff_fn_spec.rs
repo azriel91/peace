@@ -20,8 +20,9 @@ impl StateDiffFnSpec for FileDownloadStateDiffFnSpec {
     async fn exec(
         _: &(),
         state_current: &State<FileDownloadState, Nothing>,
-        file_state_desired: &FileDownloadState,
+        state_desired: &State<FileDownloadState, Nothing>,
     ) -> Result<Self::StateDiff, FileDownloadError> {
+        let file_state_desired = &state_desired.logical;
         let file_state_diff = {
             let file_state_current = &state_current.logical;
             match (file_state_current, file_state_desired) {
