@@ -20,12 +20,14 @@ use crate::{output::CliOutputBuilder, Error};
 #[cfg(feature = "output_colorized")]
 use crate::output::CliColorize;
 
+#[cfg(all(feature = "output_colorized", feature = "output_progress"))]
+use peace_core::progress::ProgressStatus;
+
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_core::progress::{
             ProgressComplete,
             ProgressLimit,
-            ProgressStatus,
             ProgressTracker,
             ProgressUpdate,
             ProgressUpdateAndId,
@@ -287,6 +289,7 @@ where
     fn progress_bar_template(progress_tracker: &ProgressTracker) -> String {
         /// This is used when we are rendering a bar that is not calculated by
         /// `ProgressBar`'s length and current value,
+        #[cfg(feature = "output_colorized")]
         const SOLID_BAR: &str = "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒";
 
         // These are used to tell `indicatif` how to style the computed bar.
@@ -296,14 +299,16 @@ where
         //  32: blue pale (running)
         //  17: blue dark (running background)
         // 222: yellow pale (stalled)
-        //  69: indigo pale (user pending)
+        //  69: indigo pale (user pending, item spec id)
         //  35: green pale (success)
         //  22: green dark (success background)
         // 160: red slightly dim (fail)
         //  88: red dark (fail background)
 
+        #[cfg(feature = "output_colorized")]
         const GRAY_DARK: u8 = 237;
 
+        #[cfg(feature = "output_colorized")]
         let bar = match progress_tracker.progress_status() {
             ProgressStatus::Initialized => console::style(SOLID_BAR).color256(GRAY_DARK),
             ProgressStatus::ExecPending | ProgressStatus::Running => {
@@ -316,6 +321,8 @@ where
                 ProgressComplete::Fail => console::style("{bar:40.160.on_88}"),
             },
         };
+        #[cfg(not(feature = "output_colorized"))]
+        let bar = "{bar:40}";
 
         let units = if let Some(progress_limit) = progress_tracker.progress_limit() {
             match progress_limit {
@@ -327,8 +334,13 @@ where
             ""
         };
 
+        #[cfg(feature = "output_colorized")]
+        let prefix = "{prefix:20.69}";
+        #[cfg(not(feature = "output_colorized"))]
+        let prefix = "{prefix:20}";
+
         // `prefix` is the item spec ID.
-        format!("{{prefix:20}} ▕{bar}▏{units}")
+        format!("{prefix} ▕{bar}▏{units}")
     }
 }
 
