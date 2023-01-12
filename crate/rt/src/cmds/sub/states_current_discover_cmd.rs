@@ -37,8 +37,16 @@ where
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
     ) -> Result<CmdContext<'_, E, O, WithStatesCurrent>, E> {
-        let (workspace, item_spec_graph, output, mut resources, states_type_regs) =
-            cmd_context.into_inner();
+        let CmdContext {
+            workspace,
+            item_spec_graph,
+            output,
+            mut resources,
+            states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            ..
+        } = cmd_context;
         let states = Self::exec_internal(item_spec_graph, &mut resources).await?;
 
         let resources = Resources::<WithStatesCurrent>::from((resources, states));
@@ -49,6 +57,8 @@ where
             output,
             resources,
             states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
         ));
         Ok(cmd_context)
     }
@@ -72,7 +82,7 @@ where
             .try_filter_map(|item_spec| async move {
                 let state = item_spec.state_current_try_exec(resources_ref).await?;
                 Ok(state
-                    .map(|state| (item_spec.id(), state))
+                    .map(|state| (item_spec.id().clone(), state))
                     .map(Result::Ok)
                     .map(futures::future::ready))
             })
@@ -106,7 +116,7 @@ where
             .try_filter_map(|item_spec| async move {
                 let state = item_spec.state_cleaned_try_exec(resources).await?;
                 Ok(state
-                    .map(|state| (item_spec.id(), state))
+                    .map(|state| (item_spec.id().clone(), state))
                     .map(Result::Ok)
                     .map(futures::future::ready))
             })
@@ -139,7 +149,7 @@ where
             .try_filter_map(|item_spec| async move {
                 let state = item_spec.state_cleaned_try_exec(resources_ref).await?;
                 Ok(state
-                    .map(|state| (item_spec.id(), state))
+                    .map(|state| (item_spec.id().clone(), state))
                     .map(Result::Ok)
                     .map(futures::future::ready))
             })

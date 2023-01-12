@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace_cfg::ItemSpecId;
+use peace_cfg::{ItemSpecId, OpCtx};
 use peace_resources::{
     resources::ts::{Ensured, EnsuredDry, SetUp},
     states::{self, States, StatesCurrent, StatesEnsured, StatesEnsuredDry},
@@ -8,11 +8,30 @@ use peace_resources::{
 };
 use peace_rt_model::{
     outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
-    CmdContext, Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt, OutputWrite,
+    output::OutputWrite,
+    CmdContext, Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt,
 };
 use tokio::sync::{mpsc, mpsc::UnboundedSender};
 
 use crate::{cmds::sub::StatesCurrentDiscoverCmd, BUFFERED_FUTURES_MAX};
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use peace_cfg::{
+            progress::{
+                ProgressComplete,
+                ProgressDelta,
+                ProgressSender,
+                ProgressStatus,
+                ProgressUpdate,
+                ProgressUpdateAndId,
+            },
+            OpCheckStatus,
+        };
+        use peace_rt_model::CmdProgressTracker;
+        use tokio::sync::mpsc::Sender;
+    }
+}
 
 #[derive(Debug)]
 pub struct EnsureCmd<E, O>(PhantomData<(E, O)>);
@@ -22,6 +41,10 @@ where
     E: std::error::Error + From<Error> + Send,
     O: OutputWrite<E>,
 {
+    #[cfg(feature = "output_progress")]
+    /// Maximum number of progress messages to buffer.
+    const PROGRESS_COUNT_MAX: usize = 256;
+
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
     /// [`ItemSpec`].
     ///
@@ -49,11 +72,23 @@ where
     pub async fn exec_dry(
         cmd_context: CmdContext<'_, E, O, SetUp>,
     ) -> Result<CmdContext<'_, E, O, EnsuredDry>, E> {
-        let (workspace, item_spec_graph, output, resources, states_type_regs) =
-            cmd_context.into_inner();
+        let CmdContext {
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+            #[cfg(feature = "output_progress")]
+            mut cmd_progress_tracker,
+            ..
+        } = cmd_context;
+
         let resources_result = Self::exec_internal::<EnsuredDry, states::ts::EnsuredDry>(
             item_spec_graph,
+            output,
             resources,
+            #[cfg(feature = "output_progress")]
+            &mut cmd_progress_tracker,
             true,
         )
         .await;
@@ -70,6 +105,8 @@ where
                     output,
                     resources,
                     states_type_regs,
+                    #[cfg(feature = "output_progress")]
+                    cmd_progress_tracker,
                 ));
                 Ok(cmd_context)
             }
@@ -109,13 +146,27 @@ where
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
     ) -> Result<CmdContext<'_, E, O, Ensured>, E> {
-        let (workspace, item_spec_graph, output, resources, states_type_regs) =
-            cmd_context.into_inner();
+        let CmdContext {
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+            #[cfg(feature = "output_progress")]
+            mut cmd_progress_tracker,
+            ..
+        } = cmd_context;
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
-        let resources_result =
-            Self::exec_internal::<Ensured, states::ts::Ensured>(item_spec_graph, resources, false)
-                .await;
+        let resources_result = Self::exec_internal::<Ensured, states::ts::Ensured>(
+            item_spec_graph,
+            output,
+            resources,
+            #[cfg(feature = "output_progress")]
+            &mut cmd_progress_tracker,
+            false,
+        )
+        .await;
 
         match resources_result {
             Ok(resources) => {
@@ -129,6 +180,8 @@ where
                     output,
                     resources,
                     states_type_regs,
+                    #[cfg(feature = "output_progress")]
+                    cmd_progress_tracker,
                 ));
                 Ok(cmd_context)
             }
@@ -149,24 +202,101 @@ where
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     async fn exec_internal<ResourcesTs, StatesTs>(
         item_spec_graph: &ItemSpecGraph<E>,
+        #[cfg(not(feature = "output_progress"))] _output: &mut O,
+        #[cfg(feature = "output_progress")] output: &mut O,
         mut resources: Resources<SetUp>,
+        #[cfg(feature = "output_progress")] cmd_progress_tracker: &mut CmdProgressTracker,
         dry_run: bool,
     ) -> Result<Resources<ResourcesTs>, E>
     where
         for<'resources> States<StatesTs>: From<(StatesCurrent, &'resources Resources<SetUp>)>,
         Resources<ResourcesTs>: From<(Resources<SetUp>, States<StatesTs>)>,
     {
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "output_progress")] {
+                output.progress_begin(cmd_progress_tracker).await;
+
+                let CmdProgressTracker {
+                    multi_progress: _,
+                    progress_trackers,
+                } = cmd_progress_tracker;
+
+                let (progress_tx, mut progress_rx) =
+                    mpsc::channel::<ProgressUpdateAndId>(Self::PROGRESS_COUNT_MAX);
+            }
+        }
+
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemEnsureOutcome<E>>();
 
         let resources_ref = &resources;
         let execution_task = async move {
+            #[cfg(feature = "output_progress")]
+            let progress_tx = &progress_tx;
             let outcomes_tx = &outcomes_tx;
+
+            // It would be ideal if we can pass just the `ProgressBar` through
+            // to `Self::item_ensure_exec`, and not hold the reference to
+            // `progress_trackers` in the closure.
+            //
+            // This would allow us to hold a `&mut ProgressTracker` when
+            // `progress_rx` receives `ProgressUpdateAndId` -- so that we can store
+            // `progress_limit` inside `ProgressTracker`.
+            //
+            // Subsequently we can pass `&ProgressTracker` in
+            // `OutputWrite::progress_update`, so that `OutputWrite`
+            // implementations such as `CliOutput` can read the limit and adjust the
+            // progress bar styling accordingly.
             let (Ok(()) | Err(())) = item_spec_graph
                 .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
-                    Self::item_ensure_exec(resources_ref, outcomes_tx, item_spec, dry_run)
+                    Self::item_ensure_exec(
+                        resources_ref,
+                        #[cfg(feature = "output_progress")]
+                        progress_tx,
+                        outcomes_tx,
+                        item_spec,
+                        dry_run,
+                    )
                 })
                 .await
                 .map_err(|_vec_units: Vec<()>| ());
+
+            // `progress_tx` is dropped here, so `progress_rx` will safely end.
+        };
+
+        #[cfg(feature = "output_progress")]
+        let progress_render_task = async {
+            while let Some(progress_update_and_id) = progress_rx.recv().await {
+                let ProgressUpdateAndId {
+                    item_spec_id,
+                    progress_update,
+                } = &progress_update_and_id;
+
+                let Some(progress_tracker) = progress_trackers.get_mut(item_spec_id) else {
+                    panic!("Expected `progress_tracker` to exist for item spec: `{item_spec_id}`.");
+                };
+                match progress_update {
+                    ProgressUpdate::Limit(progress_limit) => {
+                        progress_tracker.set_progress_limit(*progress_limit);
+                        progress_tracker.set_progress_status(ProgressStatus::ExecPending);
+                    }
+                    ProgressUpdate::Delta(delta) => {
+                        match delta {
+                            ProgressDelta::Tick => progress_tracker.tick(),
+                            ProgressDelta::Inc(unit_count) => progress_tracker.inc(*unit_count),
+                        }
+                        progress_tracker.set_progress_status(ProgressStatus::Running);
+                    }
+                    ProgressUpdate::Complete(progress_complete) => {
+                        progress_tracker.set_progress_status(ProgressStatus::Complete(
+                            progress_complete.clone(),
+                        ));
+                    }
+                }
+
+                output
+                    .progress_update(progress_tracker, &progress_update_and_id)
+                    .await
+            }
         };
 
         let _outcomes_rx_task = async move {
@@ -190,7 +320,15 @@ where
             }
         };
 
-        futures::join!(execution_task);
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "output_progress")] {
+                futures::join!(execution_task, progress_render_task);
+
+                output.progress_end(cmd_progress_tracker).await;
+            } else {
+                futures::join!(execution_task);
+            }
+        }
 
         let states_current =
             StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
@@ -217,11 +355,12 @@ where
     ///     f: F,
     /// ) -> bool
     /// where
-    ///     F: (Fn(&dyn ItemSpecRt<E>, &Resources<SetUp>, &mut ItemEnsureBoxed) -> Fut) + Copy,
+    ///     F: (Fn(&dyn ItemSpecRt<E>, op_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemEnsureBoxed) -> Fut) + Copy,
     ///     Fut: Future<Output = Result<(), E>>,
     /// ```
     async fn item_ensure_exec(
         resources: &Resources<SetUp>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
         outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
         item_spec: &ItemSpecBoxed<E>,
         dry_run: bool,
@@ -233,12 +372,43 @@ where
         };
         match item_spec.ensure_prepare(resources).await {
             Ok(mut item_ensure) => {
-                match f(&**item_spec, resources, &mut item_ensure).await {
+                let item_spec_id = item_spec.id();
+                #[cfg(feature = "output_progress")]
+                let progress_sender = {
+                    match item_ensure.op_check_status() {
+                        #[cfg(not(feature = "output_progress"))]
+                        OpCheckStatus::ExecRequired => {}
+                        #[cfg(feature = "output_progress")]
+                        OpCheckStatus::ExecRequired { progress_limit } => {
+                            // Update `OutputWrite`s with progress limit.
+                            let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                                item_spec_id: item_spec_id.clone(),
+                                progress_update: ProgressUpdate::Limit(progress_limit),
+                            });
+                        }
+                        OpCheckStatus::ExecNotRequired => {}
+                    }
+
+                    ProgressSender::new(item_spec_id, progress_tx)
+                };
+                let op_ctx = OpCtx::new(
+                    item_spec_id,
+                    #[cfg(feature = "output_progress")]
+                    progress_sender,
+                );
+                match f(&**item_spec, op_ctx, resources, &mut item_ensure).await {
                     Ok(()) => {
                         // ensure succeeded
+
+                        #[cfg(feature = "output_progress")]
+                        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                            item_spec_id: item_spec_id.clone(),
+                            progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
+                        });
+
                         outcomes_tx
                             .send(ItemEnsureOutcome::Success {
-                                item_spec_id: item_spec.id(),
+                                item_spec_id: item_spec.id().clone(),
                                 item_ensure,
                             })
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
@@ -247,9 +417,16 @@ where
                     }
                     Err(error) => {
                         // ensure failed
+
+                        #[cfg(feature = "output_progress")]
+                        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                            item_spec_id: item_spec_id.clone(),
+                            progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
+                        });
+
                         outcomes_tx
                             .send(ItemEnsureOutcome::Fail {
-                                item_spec_id: item_spec.id(),
+                                item_spec_id: item_spec.id().clone(),
                                 item_ensure,
                                 error,
                             })
@@ -261,9 +438,15 @@ where
                 }
             }
             Err((error, item_ensure_partial)) => {
+                #[cfg(feature = "output_progress")]
+                let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                    item_spec_id: item_spec.id().clone(),
+                    progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
+                });
+
                 outcomes_tx
                     .send(ItemEnsureOutcome::PrepareFail {
-                        item_spec_id: item_spec.id(),
+                        item_spec_id: item_spec.id().clone(),
                         item_ensure_partial,
                         error,
                     })

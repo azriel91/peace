@@ -62,46 +62,6 @@ From the above table, further thoughts include:
 * Web page output may be large, but mental overload can be avoided by hiding information through interactivity.
 
 
-## Execution Progress
-
-Execution progress output is most useful as it happens. This can consist of the following information:
-
-
-### Progress Status
-
-Whether a task has started, is in-progress, stalled, or completed.
-
-* **Waiting:** Task has not yet started.
-* **Running:** Task is in progress.
-* **Stalled:** Task has not received any progress updates for a given period.
-* **Pending Input:** Task is pending user input.
-* **Ended:** Task has finished running, and cannot be restarted.
-
-The following variant is possible conceptually, but not applicable to the Peace framework:
-
-* **Stopped:** Task is not running, but can be started.
-
-    This is not applicable because Peace uses runtime borrowing to manage state, and a stopped task has potentially altered data non-atomically, so locking the data is not useful, and unlocking the data may cause undefined behaviour due to reasoning over inconsistent state.
-
-    For rate limiting tasks, the task in its entirety would be held back.
-
-
-### Progress Measure
-
-* Unit of measurement: Steps, Bytes, Percentage
-* Units total: Known / Unknown
-* Units completed: Numeric / Unknown
-* Units remaining: Numeric / Unknown
-
-
-### Progress Timings
-
-* Start timestamp
-* Elapsed duration
-* Estimated completion timestamp
-* Completion timestamp
-
-
 ## Outcome
 
 ### Outcome Status

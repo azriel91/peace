@@ -23,11 +23,12 @@ serde = { version = "1.0.152", features = ["derive"] }
 thiserror = "1.0.38"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-tokio = { version = "1.23.0", features = ["net", "time", "rt"] }
+tokio = { workspace = true, features = ["net", "time", "rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-tokio = { version = "1.23.0" }
+tokio = { workspace = true }
 
 [features]
 default = []
 error_reporting = ["peace/error_reporting"]
+output_progress = ["peace/output_progress"]

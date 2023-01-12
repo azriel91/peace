@@ -11,7 +11,7 @@ use peace_resources::{
     states::{StatesCleaned, StatesCleanedDry},
     Resources,
 };
-use peace_rt_model::{CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph, OutputWrite};
+use peace_rt_model::{output::OutputWrite, CmdContext, Error, FnRef, ItemSpecBoxed, ItemSpecGraph};
 
 use crate::cmds::sub::StatesCurrentDiscoverCmd;
 
@@ -50,8 +50,16 @@ where
     pub async fn exec_dry(
         cmd_context: CmdContext<'_, E, O, SetUp>,
     ) -> Result<CmdContext<'_, E, O, CleanedDry>, E> {
-        let (workspace, item_spec_graph, output, resources, states_type_regs) =
-            cmd_context.into_inner();
+        let CmdContext {
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            ..
+        } = cmd_context;
         let resources_result = Self::exec_dry_internal(item_spec_graph, resources).await;
 
         match resources_result {
@@ -66,6 +74,8 @@ where
                     output,
                     resources,
                     states_type_regs,
+                    #[cfg(feature = "output_progress")]
+                    cmd_progress_tracker,
                 ));
                 Ok(cmd_context)
             }
@@ -152,8 +162,16 @@ where
     pub async fn exec(
         cmd_context: CmdContext<'_, E, O, SetUp>,
     ) -> Result<CmdContext<'_, E, O, Cleaned>, E> {
-        let (workspace, item_spec_graph, output, resources, states_type_regs) =
-            cmd_context.into_inner();
+        let CmdContext {
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            ..
+        } = cmd_context;
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
         let resources_result = Self::exec_internal(item_spec_graph, resources).await;
@@ -170,6 +188,8 @@ where
                     output,
                     resources,
                     states_type_regs,
+                    #[cfg(feature = "output_progress")]
+                    cmd_progress_tracker,
                 ));
                 Ok(cmd_context)
             }
@@ -222,7 +242,7 @@ where
             .map(Result::<_, E>::Ok)
             .and_then(|item_spec| async move {
                 let op_check_status = item_spec.clean_op_check(resources).await?;
-                Ok((item_spec.id(), op_check_status))
+                Ok((item_spec.id().clone(), op_check_status))
             })
             .try_collect::<OpCheckStatuses>()
             .await?;
@@ -249,7 +269,7 @@ where
             .stream()
             .filter(|item_spec| {
                 let exec_required = op_check_statuses
-                    .get(&item_spec.id())
+                    .get(item_spec.id())
                     .map(|op_check_status| {
                         matches!(op_check_status, OpCheckStatus::ExecRequired { .. })
                     })

@@ -28,33 +28,33 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let mut output = NoOpOutput;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
 
     let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
 
     let states_current = resources.borrow::<StatesCurrent>();
     let states_desired = resources.borrow::<StatesDesired>();
     let vec_copy_state =
-        states_current.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+        states_current.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     let states_on_disk = {
         let states_saved_file = resources.borrow::<StatesSavedFile>();
         let states_slice = std::fs::read(&*states_saved_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId, BoxDtDisplay>::new_typed();
-        type_reg.register::<State<VecCopyState, Nothing>>(VecCopyItemSpec.id());
+        type_reg.register::<State<VecCopyState, Nothing>>(VecCopyItemSpec.id().clone());
 
         let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
         StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
     };
     let vec_copy_desired_state =
-        states_desired.get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id());
+        states_desired.get::<State<VecCopyState, Placeholder>, _>(VecCopyItemSpec.id());
     let states_desired_on_disk = {
         let states_desired_file = resources.borrow::<StatesDesiredFile>();
         let states_slice = std::fs::read(&*states_desired_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId, BoxDtDisplay>::new_typed();
-        type_reg.register::<State<VecCopyState, Placeholder>>(VecCopyItemSpec.id());
+        type_reg.register::<State<VecCopyState, Placeholder>>(VecCopyItemSpec.id().clone());
 
         let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
         StatesDesired::from(type_reg.deserialize_map(deserializer)?)
@@ -64,16 +64,16 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
         vec_copy_state
     );
     assert_eq!(
-        states_current.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id()),
-        states_on_disk.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        states_current.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id()),
+        states_on_disk.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         vec_copy_desired_state.map(|state_desired| &state_desired.logical)
     );
     assert_eq!(
-        states_desired.get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id()),
-        states_desired_on_disk.get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
+        states_desired.get::<State<VecCopyState, Placeholder>, _>(VecCopyItemSpec.id()),
+        states_desired_on_disk.get::<State<VecCopyState, Placeholder>, _>(VecCopyItemSpec.id())
     );
 
     Ok(())

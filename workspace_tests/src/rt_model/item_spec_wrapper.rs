@@ -2,7 +2,7 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{
         state::{Nothing, Placeholder},
-        OpCheckStatus, ProgressLimit, State,
+        OpCheckStatus, OpCtx, State,
     },
     resources::{
         internal::{StateDiffsMut, StatesMut},
@@ -15,6 +15,12 @@ use peace::{
     },
     rt_model::{ItemSpecRt, ItemSpecWrapper},
 };
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use peace::cfg::progress::{ProgressLimit, ProgressSender};
+        use tokio::sync::mpsc;
+    }
+}
 
 use crate::{
     VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper, VecCopyState,
@@ -26,10 +32,7 @@ async fn deref_to_dyn_item_spec_rt() {
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let item_spec_rt: &dyn ItemSpecRt<_> = &item_spec_wrapper;
 
-    assert_eq!(
-        format!("{:?}", VecCopyItemSpec),
-        format!("{:?}", item_spec_rt)
-    );
+    assert_eq!(format!("{VecCopyItemSpec:?}"), format!("{item_spec_rt:?}"));
 }
 
 #[tokio::test]
@@ -38,10 +41,7 @@ async fn deref_mut_to_dyn_item_spec_rt() {
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let item_spec_rt: &dyn ItemSpecRt<_> = &item_spec_wrapper;
 
-    assert_eq!(
-        format!("{:?}", VecCopyItemSpec),
-        format!("{:?}", item_spec_rt)
-    );
+    assert_eq!(format!("{VecCopyItemSpec:?}"), format!("{item_spec_rt:?}"));
 }
 
 #[tokio::test]
@@ -142,6 +142,9 @@ async fn ensure_prepare() -> Result<(), VecCopyError> {
 
     match <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources).await {
         Ok(item_ensure) => {
+            #[cfg(not(feature = "output_progress"))]
+            assert_eq!(OpCheckStatus::ExecRequired, item_ensure.op_check_status());
+            #[cfg(feature = "output_progress")]
             assert_eq!(
                 OpCheckStatus::ExecRequired {
                     progress_limit: ProgressLimit::Bytes(8)
@@ -164,9 +167,28 @@ async fn ensure_exec_dry() -> Result<(), VecCopyError> {
     let mut item_ensure_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
         .await
         .map_err(|(error, _)| error)?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "output_progress")] {
+            let (progress_tx, _progress_rx) = mpsc::channel(10);
+            let progress_sender = ProgressSender::new(
+                VecCopyItemSpec::ID,
+                &progress_tx,
+            );
+        }
+    }
+    let op_ctx = OpCtx::new(
+        VecCopyItemSpec::ID,
+        #[cfg(feature = "output_progress")]
+        progress_sender,
+    );
 
-    <dyn ItemSpecRt<_>>::ensure_exec_dry(&item_spec_wrapper, &resources, &mut item_ensure_boxed)
-        .await?;
+    <dyn ItemSpecRt<_>>::ensure_exec_dry(
+        &item_spec_wrapper,
+        op_ctx,
+        &resources,
+        &mut item_ensure_boxed,
+    )
+    .await?;
 
     let vec_b = resources.borrow::<VecB>();
     assert_eq!(&[0u8; 0], &*vec_b.0);
@@ -183,9 +205,28 @@ async fn ensure_exec() -> Result<(), VecCopyError> {
     let mut item_ensure_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
         .await
         .map_err(|(error, _)| error)?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "output_progress")] {
+            let (progress_tx, _progress_rx) = mpsc::channel(10);
+            let progress_sender = ProgressSender::new(
+                VecCopyItemSpec::ID,
+                &progress_tx,
+            );
+        }
+    }
+    let op_ctx = OpCtx::new(
+        VecCopyItemSpec::ID,
+        #[cfg(feature = "output_progress")]
+        progress_sender,
+    );
 
-    <dyn ItemSpecRt<_>>::ensure_exec(&item_spec_wrapper, &resources, &mut item_ensure_boxed)
-        .await?;
+    <dyn ItemSpecRt<_>>::ensure_exec(
+        &item_spec_wrapper,
+        op_ctx,
+        &resources,
+        &mut item_ensure_boxed,
+    )
+    .await?;
 
     let vec_b = resources.borrow::<VecB>();
     assert_eq!(&[0u8, 1, 2, 3, 4, 5, 6, 7], &*vec_b.0);
@@ -213,7 +254,10 @@ async fn resources_with_state_current_diffs(
         let state_desired = item_spec_wrapper
             .state_diff_exec_with_states_current(&resources)
             .await?;
-        state_diffs_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper), state_desired);
+        state_diffs_mut.insert_raw(
+            <dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(),
+            state_desired,
+        );
 
         StateDiffs::from(state_diffs_mut)
     };
@@ -231,7 +275,7 @@ async fn resources_with_states_saved_and_desired(
         let state =
             <dyn ItemSpecRt<_>>::state_current_try_exec(item_spec_wrapper, &resources).await?;
         if let Some(state) = state {
-            states_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper), state);
+            states_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(), state);
         }
 
         Into::<StatesSaved>::into(StatesCurrent::from(states_mut))
@@ -242,7 +286,10 @@ async fn resources_with_states_saved_and_desired(
             .state_desired_try_exec(&resources)
             .await?
             .unwrap();
-        states_desired_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper), state_desired);
+        states_desired_mut.insert_raw(
+            <dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(),
+            state_desired,
+        );
 
         StatesDesired::from(states_desired_mut)
     };
@@ -261,7 +308,7 @@ async fn resources_with_states_current_and_desired(
         let state =
             <dyn ItemSpecRt<_>>::state_current_try_exec(item_spec_wrapper, &resources).await?;
         if let Some(state) = state {
-            states_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper), state);
+            states_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(), state);
         }
 
         StatesCurrent::from(states_mut)
@@ -272,7 +319,10 @@ async fn resources_with_states_current_and_desired(
             .state_desired_try_exec(&resources)
             .await?
             .unwrap();
-        states_desired_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper), state_desired);
+        states_desired_mut.insert_raw(
+            <dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(),
+            state_desired,
+        );
 
         StatesDesired::from(states_desired_mut)
     };

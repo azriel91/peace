@@ -12,6 +12,17 @@ use peace_resources::{
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use std::collections::HashMap;
+
+        use indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget};
+        use peace_cfg::progress::ProgressTracker;
+
+        use crate::CmdProgressTracker;
+    }
+}
+
 use crate::{
     cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams},
     CmdContext, Error, ItemSpecGraph, StatesSerializer, StatesTypeRegs, Storage, Workspace,
@@ -37,16 +48,17 @@ use crate::{
 /// # Type Parameters
 ///
 /// * `E`: Consumer provided error type.
-/// * `O`: `OutputWrite` to return values / errors to.
+/// * `O`: [`OutputWrite`] to return values / errors to.
 /// * `WorkspaceParamsK`: `WorkspaceParams` map `K` type parameter.
 /// * `ProfileParamsK`: `ProfileParams` map `K` type parameter.
 /// * `FlowParamsK`: `FlowParams` map `K` type parameter.
 ///
 /// [`Profile`]: peace_cfg::Profile
-/// [`WorkspaceDir`]: peace::resources::paths::WorkspaceDir
-/// [`PeaceDir`]: peace::resources::paths::PeaceDir
-/// [`ProfileDir`]: peace::resources::paths::ProfileDir
-/// [`ProfileHistoryDir`]: peace::resources::paths::ProfileHistoryDir
+/// [`WorkspaceDir`]: peace_resources::paths::WorkspaceDir
+/// [`PeaceDir`]: peace_resources::paths::PeaceDir
+/// [`ProfileDir`]: peace_resources::paths::ProfileDir
+/// [`ProfileHistoryDir`]: peace_resources::paths::ProfileHistoryDir
+/// [`OutputWrite`]: peace_rt_model_core::OutputWrite
 #[derive(Debug)]
 pub struct CmdContextBuilder<
     'ctx,
@@ -64,7 +76,12 @@ pub struct CmdContextBuilder<
     workspace: &'ctx Workspace,
     /// Graph of item specs.
     item_spec_graph: &'ctx ItemSpecGraph<E>,
-    /// `OutputWrite` to return values / errors to.
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     output: &'ctx mut O,
     /// Workspace parameters.
     workspace_params: Option<WorkspaceParams<WorkspaceParamsKMaybe::Key>>,
@@ -111,7 +128,7 @@ where
     ///
     /// * `workspace`: Defines how to discover the workspace.
     /// * `item_spec_graph`: Logic to run in the command.
-    /// * `output`: [`OutputWrite`] to return values or errors.
+    /// * `output`: [`OutputWrite`] to return values or errors. information to.
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     pub fn new(
@@ -223,12 +240,30 @@ where
         // Call each `ItemSpec`'s initialization function.
         let resources = Self::item_spec_graph_setup(item_spec_graph, resources).await?;
 
+        #[cfg(feature = "output_progress")]
+        let cmd_progress_tracker = {
+            let multi_progress = MultiProgress::with_draw_target(ProgressDrawTarget::hidden());
+            let progress_trackers = item_spec_graph.iter_insertion().fold(
+                HashMap::with_capacity(item_spec_graph.node_count()),
+                |mut progress_trackers, item_spec| {
+                    let progress_bar = multi_progress.add(ProgressBar::hidden());
+                    let progress_tracker = ProgressTracker::new(progress_bar);
+                    progress_trackers.insert(item_spec.id().clone(), progress_tracker);
+                    progress_trackers
+                },
+            );
+
+            CmdProgressTracker::new(multi_progress, progress_trackers)
+        };
+
         Ok(CmdContext {
             workspace,
             item_spec_graph,
             output,
             resources,
             states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
             marker: PhantomData,
         })
     }

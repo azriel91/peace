@@ -20,17 +20,17 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
+    let mut output = NoOpOutput;
 
     // Write desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext {
         resources: resources_from_discover,
         ..
     } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext {
         resources: resources_from_read,
         ..
@@ -38,10 +38,10 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
 
     let states_desired_from_discover = resources_from_discover.borrow::<StatesDesired>();
     let vec_copy_state_from_discover =
-        states_desired_from_discover.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+        states_desired_from_discover.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     let states_desired_from_read = resources_from_read.borrow::<StatesDesired>();
     let vec_copy_state_from_read =
-        states_desired_from_read.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+        states_desired_from_read.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
     Ok(())
 }
@@ -59,10 +59,10 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
+    let mut output = NoOpOutput;
 
     // Try and read desired states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let exec_result = StatesDesiredReadCmd::exec(cmd_context).await;
 
     assert!(matches!(

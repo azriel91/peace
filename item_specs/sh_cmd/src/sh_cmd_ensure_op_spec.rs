@@ -1,6 +1,8 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, State};
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressLimit;
+use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx, State};
 
 use crate::{
     ShCmd, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState, ShCmdStateDiff,
@@ -47,9 +49,17 @@ where
             .await
             .and_then(|state| match state.logical {
                 ShCmdState::Some { stdout, .. } => match stdout.trim().lines().rev().next() {
-                    Some("true") => Ok(OpCheckStatus::ExecRequired {
-                        progress_limit: ProgressLimit::Unknown,
-                    }),
+                    Some("true") => {
+                        #[cfg(not(feature = "output_progress"))]
+                        {
+                            Ok(OpCheckStatus::ExecRequired)
+                        }
+
+                        #[cfg(feature = "output_progress")]
+                        Ok(OpCheckStatus::ExecRequired {
+                            progress_limit: ProgressLimit::Unknown,
+                        })
+                    }
                     Some("false") => Ok(OpCheckStatus::ExecNotRequired),
                     _ => Err(ShCmdError::EnsureCheckValueNotBoolean {
                         sh_cmd: ensure_check_sh_cmd.clone(),
@@ -68,6 +78,7 @@ where
     }
 
     async fn exec_dry(
+        _op_ctx: OpCtx<'_>,
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &ShCmdState<Id>,
@@ -96,6 +107,7 @@ where
     }
 
     async fn exec(
+        _op_ctx: OpCtx<'_>,
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &ShCmdState<Id>,

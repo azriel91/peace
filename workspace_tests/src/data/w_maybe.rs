@@ -7,16 +7,16 @@ fn data_borrow_returns_t_when_present() {
     let mut resources = Resources::new();
     resources.insert(1u8);
 
-    let maybe_mut = <WMaybe<'_, u8> as Data>::borrow(&mut resources);
+    let maybe_mut = <WMaybe<'_, u8> as Data>::borrow(&resources);
 
     assert_eq!(Some(1u8), maybe_mut.as_deref().copied())
 }
 
 #[test]
 fn data_borrow_returns_none_when_absent() {
-    let mut resources = Resources::new();
+    let resources = Resources::new();
 
-    let maybe_mut = <WMaybe<'_, u8> as Data>::borrow(&mut resources);
+    let maybe_mut = <WMaybe<'_, u8> as Data>::borrow(&resources);
 
     assert_eq!(None, maybe_mut.as_deref().copied())
 }
@@ -59,7 +59,7 @@ fn data_access_dyn_borrow_muts_returns_t() {
 fn debug() {
     let mut resources = Resources::new();
     resources.insert(1u8);
-    let maybe_mut = <WMaybe<'_, u8> as Data>::borrow(&mut resources);
+    let maybe_mut = <WMaybe<'_, u8> as Data>::borrow(&resources);
 
     assert_eq!(
         r#"WMaybe(Some(RefMut { inner: 1 }))"#,
@@ -71,11 +71,11 @@ fn debug() {
 fn partial_eq() {
     let mut resources = Resources::new();
     resources.insert(1u8);
-    let maybe_mut_0 = <WMaybe<'_, u8> as Data>::borrow(&mut resources);
+    let maybe_mut_0 = <WMaybe<'_, u8> as Data>::borrow(&resources);
 
     let mut resources = Resources::new();
     resources.insert(1u8);
-    let maybe_mut_1 = <WMaybe<'_, u8> as Data>::borrow(&mut resources);
+    let maybe_mut_1 = <WMaybe<'_, u8> as Data>::borrow(&resources);
 
     assert_eq!(maybe_mut_0, maybe_mut_1)
 }

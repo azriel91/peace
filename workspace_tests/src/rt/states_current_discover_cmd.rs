@@ -24,19 +24,19 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let mut output = NoOpOutput;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
 
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesCurrent>();
-    let vec_copy_state = states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+    let vec_copy_state = states.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     let states_on_disk = {
         let states_saved_file = resources.borrow::<StatesSavedFile>();
         let states_slice = std::fs::read(&*states_saved_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId, BoxDtDisplay>::new_typed();
-        type_reg.register::<State<VecCopyState, Nothing>>(VecCopyItemSpec.id());
+        type_reg.register::<State<VecCopyState, Nothing>>(VecCopyItemSpec.id().clone());
 
         let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
         StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
@@ -46,8 +46,8 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
         vec_copy_state
     );
     assert_eq!(
-        states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id()),
-        states_on_disk.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        states.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id()),
+        states_on_disk.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
     );
 
     Ok(())
@@ -66,24 +66,24 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let mut output = NoOpOutput;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
 
     // Writes to states_saved_file.yaml
     StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     // Execute again to ensure StatesSaved is included
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesSaved>();
-    let vec_copy_state = states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+    let vec_copy_state = states.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     let states_on_disk = {
         let states_saved_file = resources.borrow::<StatesSavedFile>();
         let states_slice = std::fs::read(&*states_saved_file)?;
 
         let mut type_reg = TypeReg::<ItemSpecId, BoxDtDisplay>::new_typed();
-        type_reg.register::<State<VecCopyState, Nothing>>(VecCopyItemSpec.id());
+        type_reg.register::<State<VecCopyState, Nothing>>(VecCopyItemSpec.id().clone());
 
         let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
         StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
@@ -93,8 +93,8 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
         vec_copy_state
     );
     assert_eq!(
-        states.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id()),
-        states_on_disk.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id())
+        states.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id()),
+        states_on_disk.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id())
     );
 
     Ok(())

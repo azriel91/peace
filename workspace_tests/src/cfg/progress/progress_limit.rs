@@ -1,4 +1,4 @@
-use peace::cfg::ProgressLimit;
+use peace::cfg::progress::ProgressLimit;
 
 #[test]
 fn defaults_to_unknown() {
@@ -8,7 +8,7 @@ fn defaults_to_unknown() {
 #[test]
 fn clone() {
     let progress_limit_0 = ProgressLimit::Steps(3);
-    let progress_limit_1 = progress_limit_0.clone();
+    let progress_limit_1 = progress_limit_0;
 
     assert_eq!(progress_limit_0, progress_limit_1);
 }
@@ -19,6 +19,22 @@ fn copy() {
     let progress_limit_1 = progress_limit_0;
 
     assert_eq!(progress_limit_0, progress_limit_1);
+}
+
+#[test]
+fn deserialize() {
+    assert_eq!(
+        ProgressLimit::Steps(3),
+        serde_yaml::from_str("!Steps 3\n").unwrap()
+    )
+}
+
+#[test]
+fn serialize() {
+    assert_eq!(
+        "!Steps 3\n",
+        serde_yaml::to_string(&ProgressLimit::Steps(3)).unwrap()
+    )
 }
 
 #[test]

@@ -6,14 +6,17 @@
 
 // Re-exports
 pub use async_trait::async_trait;
-
-pub use crate::{
-    output_format::OutputFormat, output_format_parse_error::OutputFormatParseError,
-    output_write::OutputWrite,
-};
+pub use indicatif;
 
 pub mod cmd_context_params;
+pub mod output;
 
-mod output_format;
-mod output_format_parse_error;
-mod output_write;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        pub use peace_core::progress::ProgressUpdate;
+
+        pub use crate::cmd_progress_tracker::CmdProgressTracker;
+
+        mod cmd_progress_tracker;
+    }
+}

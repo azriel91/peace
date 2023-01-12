@@ -25,54 +25,36 @@ use crate::{
 /// # Type Parameters
 ///
 /// * `E`: Consumer provided error type.
-/// * `O`: `OutputWrite` to return values / errors to.
-/// * `WorkspaceInit`: Parameters to initialize the workspace.
-///
-///     These are parameters common to the workspace. Examples:
-///
-///     - Organization username.
-///     - Repository URL for multiple environments.
-///
-///     This may be `()` if there are no parameters common to the workspace.
-///
-/// * `ProfileInit`: Parameters to initialize the profile.
-///
-///     These are parameters specific to a profile, but common to flows within
-///     that profile. Examples:
-///
-///     - Environment specific credentials.
-///     - URL to publish / download an artifact.
-///
-///     This may be `()` if there are no profile specific parameters.
-///
-/// * `FlowInit`: Parameters to initialize the flow.
-///
-///     These are parameters specific to a flow. Examples:
-///
-///     - Configuration to skip warnings for the particular flow.
-///
-///     This may be `()` if there are no flow specific parameters.
-///
+/// * `O`: [`OutputWrite`] to return values / errors to.
 /// * `TS`: Type state of `Resources`.
 ///
 /// [`Profile`]: peace_cfg::Profile
-/// [`WorkspaceDir`]: peace::resources::paths::WorkspaceDir
-/// [`PeaceDir`]: peace::resources::paths::PeaceDir
-/// [`ProfileDir`]: peace::resources::paths::ProfileDir
-/// [`ProfileHistoryDir`]: peace::resources::paths::ProfileHistoryDir
+/// [`WorkspaceDir`]: peace_resources::paths::WorkspaceDir
+/// [`PeaceDir`]: peace_resources::paths::PeaceDir
+/// [`ProfileDir`]: peace_resources::paths::ProfileDir
+/// [`ProfileHistoryDir`]: peace_resources::paths::ProfileHistoryDir
+/// [`OutputWrite`]: peace_rt_model_core::OutputWrite
 #[derive(Debug)]
 pub struct CmdContext<'ctx, E, O, TS> {
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'ctx Workspace,
     /// Graph of item specs.
     pub item_spec_graph: &'ctx ItemSpecGraph<E>,
-    /// `OutputWrite` to return values / errors to.
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     pub output: &'ctx mut O,
     /// `Resources` in this workspace.
     pub resources: Resources<TS>,
     /// Type registries to deserialize `StatesSavedFile` and
     /// `StatesDesiredFile`.
     pub states_type_regs: StatesTypeRegs,
+    /// Multi-progress to track progress of each operation execution.
+    #[cfg(feature = "output_progress")]
+    pub cmd_progress_tracker: crate::CmdProgressTracker,
     /// Prevents instantiation not through builder.
     pub(crate) marker: PhantomData<()>,
 }
@@ -99,26 +81,39 @@ where
     }
 }
 
+#[cfg(not(feature = "output_progress"))]
+type CmdContextFields<'ctx, E, O, TS> = (
+    &'ctx Workspace,
+    &'ctx ItemSpecGraph<E>,
+    &'ctx mut O,
+    Resources<TS>,
+    StatesTypeRegs,
+);
+
+#[cfg(feature = "output_progress")]
+type CmdContextFields<'ctx, E, O, TS> = (
+    &'ctx Workspace,
+    &'ctx ItemSpecGraph<E>,
+    &'ctx mut O,
+    Resources<TS>,
+    StatesTypeRegs,
+    crate::CmdProgressTracker,
+);
+
 impl<'ctx, E, O, TS> CmdContext<'ctx, E, O, TS>
 where
     E: std::error::Error,
 {
     /// Returns the underlying data.
-    pub fn into_inner(
-        self,
-    ) -> (
-        &'ctx Workspace,
-        &'ctx ItemSpecGraph<E>,
-        &'ctx mut O,
-        Resources<TS>,
-        StatesTypeRegs,
-    ) {
+    pub fn into_inner(self) -> CmdContextFields<'ctx, E, O, TS> {
         let Self {
             workspace,
             item_spec_graph,
             output,
-            states_type_regs,
             resources,
+            states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
             marker: _,
         } = self;
 
@@ -128,6 +123,8 @@ where
             output,
             resources,
             states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
         )
     }
 
@@ -162,23 +159,29 @@ where
     }
 }
 
-impl<'ctx, E, O, TS>
-    From<(
-        &'ctx Workspace,
-        &'ctx ItemSpecGraph<E>,
-        &'ctx mut O,
-        Resources<TS>,
-        StatesTypeRegs,
-    )> for CmdContext<'ctx, E, O, TS>
-{
+impl<'ctx, E, O, TS> From<CmdContextFields<'ctx, E, O, TS>> for CmdContext<'ctx, E, O, TS> {
     fn from(
-        (workspace, item_spec_graph, output, resources, states_type_regs): (
-            &'ctx Workspace,
-            &'ctx ItemSpecGraph<E>,
-            &'ctx mut O,
-            Resources<TS>,
-            StatesTypeRegs,
-        ),
+        #[cfg(not(feature = "output_progress"))]
+        (workspace, item_spec_graph, output, resources, states_type_regs): CmdContextFields<
+            'ctx,
+            E,
+            O,
+            TS,
+        >,
+        #[cfg(feature = "output_progress")]
+        (
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            states_type_regs,
+            cmd_progress_tracker,
+        ): CmdContextFields<
+            'ctx,
+            E,
+            O,
+            TS,
+        >,
     ) -> Self {
         Self {
             workspace,
@@ -186,6 +189,8 @@ impl<'ctx, E, O, TS>
             output,
             resources,
             states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
             marker: PhantomData,
         }
     }
@@ -197,7 +202,11 @@ where
     F: FnOnce(Resources<TS0>) -> Resources<TS1>,
 {
     fn from((cmd_context_ts0, f): (CmdContext<'ctx, E, O, TS0>, F)) -> Self {
+        #[cfg(not(feature = "output_progress"))]
         let (workspace, item_spec_graph, output, resources, states_type_regs) =
+            cmd_context_ts0.into_inner();
+        #[cfg(feature = "output_progress")]
+        let (workspace, item_spec_graph, output, resources, states_type_regs, cmd_progress_tracker) =
             cmd_context_ts0.into_inner();
         let resources: Resources<TS1> = f(resources);
 
@@ -207,6 +216,8 @@ where
             output,
             resources,
             states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
             marker: PhantomData,
         }
     }

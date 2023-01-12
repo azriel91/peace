@@ -1,28 +1,26 @@
 use std::marker::PhantomData;
-#[cfg(target_arch = "wasm32")]
-use std::path::Path;
 
-#[cfg(not(target_arch = "wasm32"))]
-use bytes::Bytes;
-#[cfg(not(target_arch = "wasm32"))]
-use futures::{Stream, StreamExt, TryStreamExt};
-use peace::cfg::state::Nothing;
-#[cfg(not(target_arch = "wasm32"))]
-use tokio::io::AsyncWriteExt;
-#[cfg(not(target_arch = "wasm32"))]
-use tokio::{fs::File, io::BufWriter};
+cfg_if::cfg_if! {
+    if #[cfg(not(target_arch = "wasm32"))] {
+        use bytes::Bytes;
+        use futures::{Stream, StreamExt, TryStreamExt};
+        use tokio::io::AsyncWriteExt;
+        use tokio::{fs::File, io::BufWriter};
 
-#[cfg(target_arch = "wasm32")]
-use peace::rt_model::Storage;
+        use crate::FileDownloadParams;
+    } else if #[cfg(target_arch = "wasm32")] {
+        use std::path::Path;
 
-use peace::{
-    cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, State},
-    diff::Tracked,
-};
+        use peace::rt_model::Storage;
+    }
+}
 
-#[cfg(not(target_arch = "wasm32"))]
-use crate::FileDownloadParams;
+use peace::cfg::{async_trait, state::Nothing, EnsureOpSpec, OpCheckStatus, OpCtx, State};
+
 use crate::{FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
+
+#[cfg(feature = "output_progress")]
+use peace::{cfg::progress::ProgressLimit, diff::Tracked};
 
 /// Ensure OpSpec for the file to download.
 #[derive(Debug)]
@@ -33,6 +31,8 @@ where
     Id: Send + Sync + 'static,
 {
     async fn file_download(
+        #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
+        #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
         file_download_data: FileDownloadData<'_, Id>,
     ) -> Result<(), FileDownloadError> {
         let client = file_download_data.client();
@@ -51,7 +51,13 @@ where
 
         #[cfg(not(target_arch = "wasm32"))]
         {
-            Self::stream_write(params, response.bytes_stream()).await?;
+            Self::stream_write(
+                #[cfg(feature = "output_progress")]
+                op_ctx,
+                params,
+                response.bytes_stream(),
+            )
+            .await?;
         }
 
         // reqwest in wasm doesn't support streams
@@ -59,6 +65,8 @@ where
         #[cfg(target_arch = "wasm32")]
         {
             Self::stream_write(
+                #[cfg(feature = "output_progress")]
+                op_ctx,
                 dest,
                 file_download_data.storage(),
                 params.storage_form(),
@@ -73,6 +81,7 @@ where
     /// Streams the content to disk.
     #[cfg(not(target_arch = "wasm32"))]
     async fn stream_write(
+        #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
         file_download_params: &FileDownloadParams<Id>,
         byte_stream: impl Stream<Item = reqwest::Result<Bytes>>,
     ) -> Result<(), FileDownloadError> {
@@ -155,14 +164,22 @@ where
         })?;
 
         let buffer = BufWriter::new(dest_file);
+        #[cfg(feature = "output_progress")]
+        let progress_sender = &op_ctx.progress_sender;
         let mut buffer = byte_stream
             .map(|bytes_result| bytes_result.map_err(FileDownloadError::ResponseBytesStream))
             .try_fold(buffer, |mut buffer, bytes| async move {
-                // TODO: increment progress by bytes.len()
                 buffer
                     .write_all(&bytes)
                     .await
                     .map_err(FileDownloadError::ResponseFileWrite)?;
+
+                #[cfg(feature = "output_progress")]
+                if let Ok(progress_inc) = u64::try_from(bytes.len()) {
+                    progress_sender.inc(progress_inc)
+                } else {
+                    progress_sender.tick()
+                };
 
                 Ok(buffer)
             })
@@ -177,6 +194,7 @@ where
     /// Streams the content to disk.
     #[cfg(target_arch = "wasm32")]
     async fn stream_write(
+        #[cfg(feature = "output_progress")] _op_ctx: OpCtx<'_>,
         dest_path: &Path,
         storage: &Storage,
         storage_form: crate::StorageForm,
@@ -223,17 +241,29 @@ where
         diff: &FileDownloadStateDiff,
     ) -> Result<OpCheckStatus, FileDownloadError> {
         let op_check_status = match diff {
-            FileDownloadStateDiff::Change { byte_len, .. } => {
-                let progress_limit = match byte_len.to {
-                    Tracked::None => ProgressLimit::Unknown,
-                    Tracked::Known(len) => len
-                        .try_into()
-                        .map(ProgressLimit::Bytes)
-                        .unwrap_or(ProgressLimit::Unknown),
-                    Tracked::Unknown => ProgressLimit::Unknown,
-                };
+            FileDownloadStateDiff::Change {
+                #[cfg(feature = "output_progress")]
+                byte_len,
+                ..
+            } => {
+                #[cfg(not(feature = "output_progress"))]
+                {
+                    OpCheckStatus::ExecRequired
+                }
 
-                OpCheckStatus::ExecRequired { progress_limit }
+                #[cfg(feature = "output_progress")]
+                {
+                    let progress_limit = match byte_len.to {
+                        Tracked::None => ProgressLimit::Unknown,
+                        Tracked::Known(len) => len
+                            .try_into()
+                            .map(ProgressLimit::Bytes)
+                            .unwrap_or(ProgressLimit::Unknown),
+                        Tracked::Unknown => ProgressLimit::Unknown,
+                    };
+
+                    OpCheckStatus::ExecRequired { progress_limit }
+                }
             }
             FileDownloadStateDiff::Deleted { .. } => OpCheckStatus::ExecNotRequired, /* Don't delete */
             // existing file
@@ -244,6 +274,7 @@ where
     }
 
     async fn exec_dry(
+        _op_ctx: OpCtx<'_>,
         _file_download_data: FileDownloadData<'_, Id>,
         _state: &State<FileDownloadState, Nothing>,
         _file_state_desired: &FileDownloadState,
@@ -253,12 +284,13 @@ where
     }
 
     async fn exec(
+        op_ctx: OpCtx<'_>,
         file_download_data: FileDownloadData<'_, Id>,
         _state: &State<FileDownloadState, Nothing>,
         _file_state_desired: &FileDownloadState,
         _diff: &FileDownloadStateDiff,
     ) -> Result<Nothing, FileDownloadError> {
-        Self::file_download(file_download_data).await?;
+        Self::file_download(op_ctx, file_download_data).await?;
         Ok(Nothing)
     }
 }

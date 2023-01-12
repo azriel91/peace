@@ -18,19 +18,19 @@ test = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-peace = { path = "../..", default_features = false }
+peace = { path = "../..", default-features = false }
 peace_item_specs = { path = "../../item_specs", features = ["file_download"] }
 thiserror = "1.0.38"
 url = { version = "2.3.1", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 clap = { version = "4.0.32", features = ["derive"] }
-tokio = { version = "1.23.0", features = ["net", "time", "rt"] }
+tokio = { workspace = true, features = ["net", "time", "rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1.7"
 serde-wasm-bindgen = "0.4.5"
-tokio = { version = "1.23.0" }
+tokio = { workspace = true }
 wasm-bindgen = "0.2.83"
 wasm-bindgen-futures = "0.4.33"
 js-sys = "0.3.60"
@@ -41,3 +41,4 @@ default = []
 error_reporting = ["peace/error_reporting", "peace_item_specs/error_reporting"]
 output_colorized = ["peace/output_colorized"]
 output_json = ["peace/output_json"]
+output_progress = ["peace/output_progress", "peace_item_specs/output_progress"]

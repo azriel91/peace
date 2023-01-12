@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, State};
+use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx, State};
 
 use crate::{
     ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord, ShSyncCmdStateDiff,
@@ -32,6 +32,7 @@ where
     }
 
     async fn exec_dry(
+        _op_ctx: OpCtx<'_>,
         _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
         _state: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _file_state_desired: &ShSyncCmdSyncStatus,
@@ -41,6 +42,7 @@ where
     }
 
     async fn exec(
+        _op_ctx: OpCtx<'_>,
         _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
         _state: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _file_state_desired: &ShSyncCmdSyncStatus,

@@ -6,7 +6,7 @@ use std::{
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{
-    async_trait, state::Placeholder, ItemSpec, ItemSpecId, OpCheckStatus, State, TryFnSpec,
+    async_trait, state::Placeholder, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, State, TryFnSpec,
 };
 use peace_data::Data;
 use peace_resources::{
@@ -194,11 +194,10 @@ where
         let state_diff: StateDiff = {
             let item_spec_id = <IS as ItemSpec>::id(self);
             let states_base = resources.borrow::<States<StatesTs>>();
-            let state_base =
-                states_base.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+            let state_base = states_base.get::<State<StateLogical, StatePhysical>, _>(item_spec_id);
             let states_desired = resources.borrow::<StatesDesired>();
             let state_desired =
-                states_desired.get::<State<StateLogical, Placeholder>, _>(&item_spec_id);
+                states_desired.get::<State<StateLogical, Placeholder>, _>(item_spec_id);
 
             if let (Some(state_base), Some(state_desired)) = (state_base, state_desired) {
                 self.state_diff_exec_with(resources, state_base, state_desired)
@@ -258,6 +257,7 @@ where
 
     async fn ensure_op_exec_dry<ResourcesTs>(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
         state_current: &State<StateLogical, StatePhysical>,
         state_desired: &State<StateLogical, Placeholder>,
@@ -265,6 +265,7 @@ where
     ) -> Result<StatePhysical, E> {
         let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
         <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec_dry(
+            op_ctx,
             data,
             state_current,
             &state_desired.logical,
@@ -276,6 +277,7 @@ where
 
     async fn ensure_op_exec<ResourcesTs>(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
         state_current: &State<StateLogical, StatePhysical>,
         state_desired: &State<StateLogical, Placeholder>,
@@ -283,6 +285,7 @@ where
     ) -> Result<StatePhysical, E> {
         let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
         <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec(
+            op_ctx,
             data,
             state_current,
             &state_desired.logical,
@@ -709,7 +712,7 @@ where
         > + Send
         + Sync,
 {
-    fn id(&self) -> ItemSpecId {
+    fn id(&self) -> &ItemSpecId {
         <IS as ItemSpec>::id(self)
     }
 
@@ -722,11 +725,11 @@ where
     fn state_register(&self, states_type_regs: &mut StatesTypeRegs) {
         states_type_regs
             .states_current_type_reg_mut()
-            .register::<State<StateLogical, StatePhysical>>(<IS as ItemSpec>::id(self));
+            .register::<State<StateLogical, StatePhysical>>(<IS as ItemSpec>::id(self).clone());
 
         states_type_regs
             .states_desired_type_reg_mut()
-            .register::<State<StateLogical, Placeholder>>(<IS as ItemSpec>::id(self));
+            .register::<State<StateLogical, Placeholder>>(<IS as ItemSpec>::id(self).clone());
     }
 
     async fn state_current_try_exec(
@@ -859,12 +862,14 @@ where
 
     async fn ensure_exec_dry(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
         item_ensure_boxed: &mut ItemEnsureBoxed,
     ) -> Result<(), E> {
         let Some(item_ensure) =
             item_ensure_boxed.as_data_type_mut().downcast_mut::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>() else {
-                panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`. This is a bug in the `peace` framework.",
+                panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`.\n\
+                    This is a bug in the Peace framework.",
                     concrete_type = std::any::type_name::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>())
             };
 
@@ -878,9 +883,18 @@ where
         } = item_ensure;
 
         match op_check_status {
+            #[cfg(not(feature = "output_progress"))]
+            OpCheckStatus::ExecRequired => {
+                let state_physical = self
+                    .ensure_op_exec_dry(op_ctx, resources, state_current, state_desired, state_diff)
+                    .await?;
+
+                *state_ensured = Some(State::new(state_desired.logical.clone(), state_physical));
+            }
+            #[cfg(feature = "output_progress")]
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
                 let state_physical = self
-                    .ensure_op_exec_dry(resources, state_current, state_desired, state_diff)
+                    .ensure_op_exec_dry(op_ctx, resources, state_current, state_desired, state_diff)
                     .await?;
 
                 *state_ensured = Some(State::new(state_desired.logical.clone(), state_physical));
@@ -893,12 +907,14 @@ where
 
     async fn ensure_exec(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
         item_ensure_boxed: &mut ItemEnsureBoxed,
     ) -> Result<(), E> {
         let Some(item_ensure) =
             item_ensure_boxed.as_data_type_mut().downcast_mut::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>() else {
-                panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`. This is a bug in the `peace` framework.",
+                panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`.\n\
+                    This is a bug in the Peace framework.",
                     concrete_type = std::any::type_name::<ItemEnsure<StateLogical, StatePhysical, StateDiff>>())
             };
 
@@ -912,9 +928,18 @@ where
         } = item_ensure;
 
         match op_check_status {
+            #[cfg(not(feature = "output_progress"))]
+            OpCheckStatus::ExecRequired => {
+                let state_physical = self
+                    .ensure_op_exec(op_ctx, resources, state_current, state_desired, state_diff)
+                    .await?;
+
+                *state_ensured = Some(State::new(state_desired.logical.clone(), state_physical));
+            }
+            #[cfg(feature = "output_progress")]
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
                 let state_physical = self
-                    .ensure_op_exec(resources, state_current, state_desired, state_diff)
+                    .ensure_op_exec(op_ctx, resources, state_current, state_desired, state_diff)
                     .await?;
 
                 *state_ensured = Some(State::new(state_desired.logical.clone(), state_physical));
@@ -934,7 +959,7 @@ where
                 <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(resources);
             let item_spec_id = <IS as ItemSpec>::id(self);
             let states = resources.borrow::<StatesCurrent>();
-            let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+            let state = states.get::<State<StateLogical, StatePhysical>, _>(item_spec_id);
 
             if let Some(state) = state {
                 <CleanOpSpec as peace_cfg::CleanOpSpec>::check(data, state).await?
@@ -953,7 +978,7 @@ where
         let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(resources);
         let item_spec_id = <IS as ItemSpec>::id(self);
         let states = resources.borrow::<StatesCurrent>();
-        let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+        let state = states.get::<State<StateLogical, StatePhysical>, _>(item_spec_id);
 
         if let Some(state) = state {
             <CleanOpSpec as peace_cfg::CleanOpSpec>::exec_dry(data, state).await?;
@@ -970,7 +995,7 @@ where
         let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(resources);
         let item_spec_id = <IS as ItemSpec>::id(self);
         let states = resources.borrow::<StatesCurrent>();
-        let state = states.get::<State<StateLogical, StatePhysical>, _>(&item_spec_id);
+        let state = states.get::<State<StateLogical, StatePhysical>, _>(item_spec_id);
 
         if let Some(state) = state {
             <CleanOpSpec as peace_cfg::CleanOpSpec>::exec(data, state).await?;

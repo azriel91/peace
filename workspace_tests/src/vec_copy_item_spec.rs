@@ -4,10 +4,12 @@ use std::{
 };
 
 use diff::{Diff, VecDiff, VecDiffType};
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressLimit;
 use peace::{
     cfg::{
         async_trait, item_spec_id, state::Nothing, CleanOpSpec, EnsureOpSpec, ItemSpec, ItemSpecId,
-        OpCheckStatus, ProgressLimit, State, StateDiffFnSpec, TryFnSpec,
+        OpCheckStatus, OpCtx, State, StateDiffFnSpec, TryFnSpec,
     },
     data::{Data, RMaybe, R, W},
     resources::{resources::ts::Empty, states::StatesSaved, Resources},
@@ -33,6 +35,10 @@ pub type VecCopyItemSpecWrapper = ItemSpecWrapper<
 #[derive(Debug)]
 pub struct VecCopyItemSpec;
 
+impl VecCopyItemSpec {
+    pub const ID: &ItemSpecId = &item_spec_id!("vec_copy");
+}
+
 #[async_trait(?Send)]
 impl ItemSpec for VecCopyItemSpec {
     type CleanOpSpec = VecCopyCleanOpSpec;
@@ -45,8 +51,8 @@ impl ItemSpec for VecCopyItemSpec {
     type StateLogical = VecCopyState;
     type StatePhysical = Nothing;
 
-    fn id(&self) -> ItemSpecId {
-        item_spec_id!("vec_copy")
+    fn id(&self) -> &ItemSpecId {
+        Self::ID
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {
@@ -56,7 +62,7 @@ impl ItemSpec for VecCopyItemSpec {
             let states_saved = <RMaybe<'_, StatesSaved> as Data>::borrow(resources);
             let vec_copy_state_saved: Option<&'_ State<VecCopyState, Nothing>> = states_saved
                 .as_ref()
-                .and_then(|states_saved| states_saved.get(&self.id()));
+                .and_then(|states_saved| states_saved.get(self.id()));
             if let Some(vec_copy_state) = vec_copy_state_saved {
                 VecB((*vec_copy_state.logical).clone())
             } else {
@@ -86,11 +92,18 @@ impl CleanOpSpec for VecCopyCleanOpSpec {
         let op_check_status = if vec_b.0.is_empty() {
             OpCheckStatus::ExecNotRequired
         } else {
-            let progress_limit = TryInto::<u64>::try_into(vec_b.0.len())
-                .map(ProgressLimit::Bytes)
-                .unwrap_or(ProgressLimit::Unknown);
+            #[cfg(not(feature = "output_progress"))]
+            {
+                OpCheckStatus::ExecRequired
+            }
+            #[cfg(feature = "output_progress")]
+            {
+                let progress_limit = TryInto::<u64>::try_into(vec_b.0.len())
+                    .map(ProgressLimit::Bytes)
+                    .unwrap_or(ProgressLimit::Unknown);
 
-            OpCheckStatus::ExecRequired { progress_limit }
+                OpCheckStatus::ExecRequired { progress_limit }
+            }
         };
         Ok(op_check_status)
     }
@@ -124,6 +137,15 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     type StateLogical = VecCopyState;
     type StatePhysical = Nothing;
 
+    // Not sure why we can't use this:
+    //
+    // #[cfg(not(feature = "output_progress"))] _state_desired: &VecCopyState,
+    // #[cfg(feature = "output_progress")] state_desired: &VecCopyState,
+    //
+    // There's an error saying lifetime bounds don't match the trait definition.
+    //
+    // Likely an issue with the codegen in `async-trait`.
+    #[allow(unused_variables)]
     async fn check(
         _vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
@@ -133,16 +155,24 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
         let op_check_status = if diff.0.0.is_empty() {
             OpCheckStatus::ExecNotRequired
         } else {
-            let progress_limit = TryInto::<u64>::try_into(state_desired.len())
-                .map(ProgressLimit::Bytes)
-                .unwrap_or(ProgressLimit::Unknown);
+            #[cfg(not(feature = "output_progress"))]
+            {
+                OpCheckStatus::ExecRequired
+            }
+            #[cfg(feature = "output_progress")]
+            {
+                let progress_limit = TryInto::<u64>::try_into(state_desired.len())
+                    .map(ProgressLimit::Bytes)
+                    .unwrap_or(ProgressLimit::Unknown);
 
-            OpCheckStatus::ExecRequired { progress_limit }
+                OpCheckStatus::ExecRequired { progress_limit }
+            }
         };
         Ok(op_check_status)
     }
 
     async fn exec_dry(
+        _op_ctx: OpCtx<'_>,
         _vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         _state_desired: &VecCopyState,
@@ -153,6 +183,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     }
 
     async fn exec(
+        _op_ctx: OpCtx<'_>,
         mut vec_copy_params: VecCopyParams<'_>,
         _state_current: &State<Self::StateLogical, Self::StatePhysical>,
         state_desired: &VecCopyState,
@@ -190,7 +221,7 @@ pub struct VecCopyParams<'op> {
 
 impl<'op> VecCopyParams<'op> {
     pub fn dest_mut(&mut self) -> &mut VecB {
-        &mut *self.dest
+        &mut self.dest
     }
 }
 
@@ -249,7 +280,7 @@ impl StateDiffFnSpec for VecCopyStateDiffFnSpec {
         state_current: &State<VecCopyState, Nothing>,
         state_desired: &VecCopyState,
     ) -> Result<Self::StateDiff, VecCopyError> {
-        Ok(state_current.logical.diff(&state_desired)).map(VecCopyDiff::from)
+        Ok(state_current.logical.diff(state_desired)).map(VecCopyDiff::from)
     }
 }
 

@@ -1,7 +1,7 @@
 use clap::Parser;
 use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
-    rt_model::{CliOutput, WorkspaceSpec},
+    rt_model::{output::CliOutput, WorkspaceSpec},
 };
 use peace_item_specs::file_download::FileDownloadParams;
 
@@ -67,14 +67,13 @@ pub fn run() -> Result<(), DownloadError> {
         let workspace_spec = WorkspaceSpec::WorkingDir;
         let profile = profile!("default");
         let flow_id = flow_id!("file");
-        let mut cli_output = CliOutput::default();
-        if let Some(format) = format {
-            cli_output = cli_output.output_format(format);
-        }
-        #[cfg(feature = "output_colorized")]
-        {
-            cli_output = cli_output.colorized();
-        }
+        let mut cli_output = {
+            let mut builder = CliOutput::builder();
+            if let Some(format) = format {
+                builder = builder.with_outcome_format(format);
+            }
+            builder.build()
+        };
 
         match command {
             DownloadCommand::Init { url, dest } => {

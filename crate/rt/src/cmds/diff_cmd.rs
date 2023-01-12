@@ -7,7 +7,7 @@ use peace_resources::{
     states::StateDiffs,
     Resources,
 };
-use peace_rt_model::{CmdContext, Error, ItemSpecGraph, OutputWrite, StatesTypeRegs};
+use peace_rt_model::{output::OutputWrite, CmdContext, Error, ItemSpecGraph, StatesTypeRegs};
 
 use crate::cmds::sub::{StatesDesiredReadCmd, StatesSavedReadCmd};
 
@@ -39,6 +39,8 @@ where
             output,
             resources,
             states_type_regs,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
             ..
         } = cmd_context;
 
@@ -59,6 +61,8 @@ where
                     output,
                     resources,
                     states_type_regs,
+                    #[cfg(feature = "output_progress")]
+                    cmd_progress_tracker,
                 ));
                 Ok(cmd_context)
             }
@@ -98,7 +102,7 @@ where
                 .map(Result::<_, E>::Ok)
                 .and_then(|item_spec| async move {
                     Ok((
-                        item_spec.id(),
+                        item_spec.id().clone(),
                         item_spec
                             .state_diff_exec_with_states_saved(resources_ref)
                             .await?,

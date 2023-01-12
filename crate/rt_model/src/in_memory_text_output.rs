@@ -2,9 +2,17 @@ use peace_resources::states::{
     StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured, StatesEnsuredDry,
     StatesSaved,
 };
-use peace_rt_model_core::{async_trait, OutputWrite};
+use peace_rt_model_core::{async_trait, output::OutputWrite};
 
 use crate::Error;
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use peace_cfg::progress::{ProgressTracker, ProgressUpdateAndId};
+
+        use crate::CmdProgressTracker;
+    }
+}
 
 /// An `OutputWrite` implementation that writes to the command line.
 ///
@@ -35,6 +43,20 @@ impl<E> OutputWrite<E> for InMemoryTextOutput
 where
     E: std::error::Error + From<Error>,
 {
+    #[cfg(feature = "output_progress")]
+    async fn progress_begin(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
+
+    #[cfg(feature = "output_progress")]
+    async fn progress_update(
+        &mut self,
+        _progress_tracker: &ProgressTracker,
+        _progress_update_and_id: &ProgressUpdateAndId,
+    ) {
+    }
+
+    #[cfg(feature = "output_progress")]
+    async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
+
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         self.buffer = serde_yaml::to_string(states_saved).map_err(Error::StatesSerialize)?;
 

@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use peace::rt_model::OutputWrite;
+use peace::rt_model::output::OutputWrite;
 use peace_item_specs::{file_download::FileDownloadParams, tar_x::TarXParams};
 use semver::Version;
 use url::Url;
@@ -25,6 +25,7 @@ impl AppInitCmd {
         output: &mut O,
         slug: RepoSlug,
         version: Version,
+        url: Option<Url>,
     ) -> Result<(), AppCycleError>
     where
         O: OutputWrite<AppCycleError>,
@@ -44,13 +45,20 @@ impl AppInitCmd {
             // linux:
             // https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.tar
             let src = {
-                let url_candidate = format!(
-                    "https://github.com/{account}/{repo_name}/releases/download/{version}/{repo_name}.{file_ext}"
-                );
-                Url::parse(&url_candidate).map_err(|error| AppCycleError::AppCycleUrlBuild {
-                    url_candidate,
-                    error,
-                })?
+                match url {
+                    Some(url) => url,
+                    None => {
+                        let url_candidate = format!(
+                            "https://github.com/{account}/{repo_name}/releases/download/{version}/{repo_name}.{file_ext}"
+                        );
+                        Url::parse(&url_candidate).map_err(|error| {
+                            AppCycleError::AppCycleUrlBuild {
+                                url_candidate,
+                                error,
+                            }
+                        })?
+                    }
+                }
             };
             let dest = web_app_download_dir.join(format!("{repo_name}.{file_ext}"));
             FileDownloadParams::new(
@@ -62,7 +70,7 @@ impl AppInitCmd {
         };
         let web_app_tar_x_params = {
             let tar_path = web_app_file_download_params.dest().to_path_buf();
-            let dest = web_app_download_dir;
+            let dest = web_app_download_dir.join("extracted");
 
             TarXParams::<WebAppFileId>::new(tar_path, dest)
         };

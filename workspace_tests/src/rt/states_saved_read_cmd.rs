@@ -20,17 +20,17 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
-    let mut no_op_output = NoOpOutput;
+    let mut output = NoOpOutput;
 
     // Write current states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext {
         resources: resources_from_discover,
         ..
     } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let CmdContext {
         resources: resources_from_read,
         ..
@@ -38,10 +38,10 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
 
     let states_from_discover = resources_from_discover.borrow::<StatesCurrent>();
     let vec_copy_state_from_discover =
-        states_from_discover.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+        states_from_discover.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     let states_from_read = resources_from_read.borrow::<StatesSaved>();
     let vec_copy_state_from_read =
-        states_from_read.get::<State<VecCopyState, Nothing>, _>(&VecCopyItemSpec.id());
+        states_from_read.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
     Ok(())
 }
@@ -61,8 +61,8 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     };
 
     // Try and read states from disk.
-    let mut no_op_output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut no_op_output).await?;
+    let mut output = NoOpOutput;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
     let exec_result = StatesSavedReadCmd::exec(cmd_context).await;
 
     assert!(matches!(

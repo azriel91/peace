@@ -23,7 +23,8 @@ where
 
     /// For wasm, we write to web storage through the `Storage` object.
     ///
-    /// Presumably we should be able to use this for `NativeStorage` as well.
+    /// If `rt_model_native::Storage` exposed similar API, then storage
+    /// operations for item spec implementations will be easier.
     #[cfg(target_arch = "wasm32")]
     storage: R<'op, Storage>,
 }

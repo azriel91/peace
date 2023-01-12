@@ -12,7 +12,7 @@ use crate::{Error, WorkspaceSpec};
 
 /// Wrapper to retrieve `web_sys::Storage` on demand.
 #[derive(Clone, Debug)]
-pub struct WebStorage {
+pub struct Storage {
     /// Describes how to store peace automation data.
     workspace_spec: WorkspaceSpec,
 }
@@ -25,8 +25,8 @@ extern "C" {
     fn sessionStorageAvailable() -> bool;
 }
 
-impl WebStorage {
-    /// Returns a new `WebStorage`.
+impl Storage {
+    /// Returns a new `Storage`.
     pub fn new(workspace_spec: WorkspaceSpec) -> Self {
         Self { workspace_spec }
     }
@@ -289,13 +289,13 @@ impl WebStorage {
     ///
     /// ```rust,ignore
     /// # use std::path::PathBuf;
-    /// # use peace_rt_model_web::{WebStorage, WorkspaceSpec, Error};
+    /// # use peace_rt_model_web::{Storage, WorkspaceSpec, Error};
     /// #
     /// # fn main() -> Result<(), Error> {
-    /// let web_storage = WebStorage::new(WorkspaceSpec::SessionStorage);
+    /// let storage = Storage::new(WorkspaceSpec::SessionStorage);
     /// let keys = ["abc", "def"];
     ///
-    /// web_storage.iter_with_storage(keys.into_iter(), |storage, key| {
+    /// storage.iter_with_storage(keys.into_iter(), |storage, key| {
     ///     let value = "something";
     ///     storage
     ///         .set_item(key, value)

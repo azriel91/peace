@@ -2,7 +2,9 @@ use std::marker::PhantomData;
 
 use peace::cfg::state::Nothing;
 
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, ProgressLimit, State};
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressLimit;
+use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx, State};
 
 use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
 
@@ -21,6 +23,15 @@ where
     type StateLogical = FileMetadatas;
     type StatePhysical = Nothing;
 
+    // Not sure why we can't use this:
+    //
+    // #[cfg(not(feature = "output_progress"))] _state_desired: &FileMetadatas,
+    // #[cfg(feature = "output_progress")] state_desired: &FileMetadatas,
+    //
+    // There's an error saying lifetime bounds don't match the trait definition.
+    //
+    // Likely an issue with the codegen in `async-trait`.
+    #[allow(unused_variables)]
     async fn check(
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &State<FileMetadatas, Nothing>,
@@ -34,8 +45,16 @@ where
                 modified: _,
                 removed: _,
             } => {
-                let progress_limit = ProgressLimit::Steps(state_desired.len().try_into().unwrap());
-                OpCheckStatus::ExecRequired { progress_limit }
+                #[cfg(not(feature = "output_progress"))]
+                {
+                    OpCheckStatus::ExecRequired
+                }
+                #[cfg(feature = "output_progress")]
+                {
+                    let progress_limit =
+                        ProgressLimit::Steps(state_desired.len().try_into().unwrap());
+                    OpCheckStatus::ExecRequired { progress_limit }
+                }
             }
         };
 
@@ -43,6 +62,7 @@ where
     }
 
     async fn exec_dry(
+        _op_ctx: OpCtx<'_>,
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &State<FileMetadatas, Nothing>,
         _state_desired: &FileMetadatas,
@@ -53,6 +73,7 @@ where
 
     #[cfg(not(target_arch = "wasm32"))]
     async fn exec(
+        _op_ctx: OpCtx<'_>,
         tar_x_data: TarXData<'_, Id>,
         _state_current: &State<FileMetadatas, Nothing>,
         _state_desired: &FileMetadatas,
@@ -75,6 +96,8 @@ where
         // TODO: Optimize by unpacking only the entries that changed.
         // Probably store entries in `IndexMap`s, then look them up to determine if they
         // need to be unpacked.
+        //
+        // Then we can send proper progress updates via `op_ctx.progress_tx`.
         storage
             .read_with_sync_api(
                 "TarXEnsureOpSpec::exec".to_string(),
@@ -118,6 +141,7 @@ where
 
     #[cfg(target_arch = "wasm32")]
     async fn exec(
+        _op_ctx: OpCtx<'_>,
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &State<FileMetadatas, Nothing>,
         _state_desired: &FileMetadatas,

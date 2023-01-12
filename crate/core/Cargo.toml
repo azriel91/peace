@@ -16,5 +16,14 @@ doctest = true
 test = false
 
 [dependencies]
+cfg-if = { workspace = true }
+chrono = { workspace = true, default-features = false, features = ["clock", "serde"] }
+indicatif = { workspace = true }
 peace_static_check_macros = { path = "../static_check_macros", version = "0.0.5" }
 serde = { version = "1.0.152", features = ["derive"] }
+serde_yaml = { version = "0.9.16", optional = true }
+tokio = { workspace = true, optional = true, features = ["sync"] }
+
+[features]
+default = []
+output_progress = ["dep:serde_yaml", "dep:tokio"]

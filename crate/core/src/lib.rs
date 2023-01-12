@@ -1,4 +1,18 @@
 //! Low level data types for the peace automation framework.
+//!
+//! This crate exists because:
+//!
+//! * `peace_cfg` has a dependency on `peace_resources` for `Resources`, used in
+//!   `ItemSpec::setup`.
+//! * `peace_resources` has a dependency on `ItemSpecId`, as uses
+//!   `TypeMap<ItemSpecId, _>` for the `States` maps.
+//! * `peace_resources` also depends on `progress::ProgressLimit` for
+//!   `OpCheckStatus`, which makes up `OpCheckStatuses`.
+//!
+//!     When [peace#67] is implemented, the `progress` module can be moved out
+//!     of `peace_core` into `peace_cfg`.
+//!
+//! [peace#67]: https://github.com/azriel91/peace/issues/67
 
 // Re-exports
 pub use peace_static_check_macros::{flow_id, item_spec_id, profile};
@@ -8,14 +22,15 @@ pub use crate::{
     item_spec_id::{ItemSpecId, ItemSpecIdInvalidFmt},
     op_check_status::OpCheckStatus,
     profile::{Profile, ProfileInvalidFmt},
-    progress_limit::ProgressLimit,
 };
+
+#[cfg(feature = "output_progress")]
+pub mod progress;
 
 mod flow_id;
 mod item_spec_id;
 mod op_check_status;
 mod profile;
-mod progress_limit;
 
 macro_rules! id_newtype {
     ($ty_name:ident, $ty_err_name:ident, $macro_name:ident) => {

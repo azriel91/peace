@@ -26,6 +26,7 @@
     - [State](technical_concepts/state.md)
         - [Logical State](technical_concepts/state/logical_state.md)
     - [Output](technical_concepts/output.md)
+        - [Execution Progress](technical_concepts/output/execution_progress.md)
 
 - [Reference](reference.md)
     - [Commands](commands.md)
@@ -36,3 +37,4 @@
     - [User Facing Automation - Part 1](learning_material/user_facing_automation_part_1.md)
     - [User Facing Automation - Part 2](learning_material/user_facing_automation_part_2.md)
 - [Ideas](ideas.md)
+    - [Feature Gated Incremental Functionality](ideas/feature_gated_incremental_functionality.md)

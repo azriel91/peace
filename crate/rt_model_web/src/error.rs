@@ -14,6 +14,22 @@ pub enum Error {
     )]
     ErrorSerialize(#[source] serde_yaml::Error),
 
+    /// Failed to serialize progress update.
+    #[error("Failed to serialize progress update.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::progress_update_serialize))
+    )]
+    ProgressUpdateSerialize(#[source] serde_yaml::Error),
+    /// Failed to serialize progress update as JSON.
+    #[cfg(feature = "output_json")]
+    #[error("Failed to serialize progress update.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::progress_update_serialize_json))
+    )]
+    ProgressUpdateSerializeJson(#[source] serde_json::Error),
+
     /// Failed to deserialize states.
     #[error("Failed to deserialize states.")]
     #[cfg_attr(

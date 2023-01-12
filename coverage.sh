@@ -6,7 +6,7 @@ rm -rf ./target/coverage ./target/llvm-cov-target
 mkdir -p ./target/coverage
 
 # See `.config/cargo.toml`
-for i in {0..3}
+for i in {0..4}
 do cargo coverage_$i
 done
 

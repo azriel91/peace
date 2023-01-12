@@ -8,7 +8,7 @@ use app_cycle::{
 use clap::Parser;
 use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
-    rt_model::{CliOutput, WorkspaceSpec},
+    rt_model::{output::CliOutput, WorkspaceSpec},
 };
 
 #[cfg(not(feature = "error_reporting"))]
@@ -46,24 +46,33 @@ pub fn run() -> Result<(), AppCycleError> {
         .build()
         .map_err(AppCycleError::TokioRuntimeInit)?;
 
-    let CliArgs { command, format } = CliArgs::parse();
+    let CliArgs {
+        command,
+        format,
+        #[cfg(feature = "output_colorized")]
+        color,
+    } = CliArgs::parse();
     #[allow(unused_assignments)]
     runtime.block_on(async {
         let _workspace_spec = WorkspaceSpec::WorkingDir;
         let _profile = profile!("default");
         let _flow_id = flow_id!("file");
-        let mut cli_output = CliOutput::default();
-        if let Some(format) = format {
-            cli_output = cli_output.output_format(format);
-        }
-        #[cfg(feature = "output_colorized")]
-        {
-            cli_output = cli_output.colorized();
-        }
+        let mut cli_output = {
+            let mut builder = CliOutput::builder();
+            if let Some(format) = format {
+                builder = builder.with_outcome_format(format);
+            }
+            #[cfg(feature = "output_colorized")]
+            {
+                builder = builder.with_colorize(color);
+            }
+
+            builder.build()
+        };
 
         match command {
-            AppCycleCommand::Init { slug, version } => {
-                AppInitCmd::run(&mut cli_output, slug, version).await?
+            AppCycleCommand::Init { slug, version, url } => {
+                AppInitCmd::run(&mut cli_output, slug, version, url).await?
             }
             AppCycleCommand::Profile { command } => match command {
                 ProfileCommand::Init { name: _, r#type: _ } => todo!(),

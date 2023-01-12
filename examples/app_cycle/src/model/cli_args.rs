@@ -1,8 +1,12 @@
-use clap::{Parser, Subcommand};
-use peace::{cfg::Profile, rt_model::OutputFormat};
+use clap::{Parser, Subcommand, ValueHint};
+use peace::{cfg::Profile, rt_model::output::OutputFormat};
 use semver::Version;
+use url::Url;
 
 use crate::model::{EnvType, RepoSlug};
+
+#[cfg(feature = "output_colorized")]
+use peace::rt_model::output::CliColorizeOpt;
 
 #[derive(Parser)]
 #[clap(
@@ -22,6 +26,14 @@ pub struct CliArgs {
     /// for the argument to be passed in after the subcommand.
     #[clap(long)]
     pub format: Option<OutputFormat>,
+    /// Whether output should be colorized.
+    ///
+    /// * "auto" (default): Colorize when used interactively.
+    /// * "always": Always colorize output.
+    /// * "never": Never colorize output.
+    #[cfg(feature = "output_colorized")]
+    #[clap(long, default_value = "auto")]
+    pub color: CliColorizeOpt,
 }
 
 #[derive(Subcommand)]
@@ -32,6 +44,9 @@ pub enum AppCycleCommand {
         slug: RepoSlug,
         /// Version of the application to download.
         version: Version,
+        /// URL to override the default download URL.
+        #[clap(long, value_hint(ValueHint::Url))]
+        url: Option<Url>,
     },
     /// Shows or initializes the current profile.
     Profile {

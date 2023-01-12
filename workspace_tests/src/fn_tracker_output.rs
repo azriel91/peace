@@ -4,10 +4,19 @@ use peace::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
         StatesEnsuredDry, StatesSaved,
     },
-    rt_model::OutputWrite,
+    rt_model::output::OutputWrite,
 };
 
 use crate::FnInvocation;
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use peace::{
+            cfg::progress::{ProgressTracker, ProgressUpdateAndId},
+            rt_model::CmdProgressTracker,
+        };
+    }
+}
 
 /// An `OutputWrite` implementation that tracks function invocations.
 #[derive(Debug, Default, PartialEq, Eq)]
@@ -33,6 +42,20 @@ impl<E> OutputWrite<E> for FnTrackerOutput
 where
     E: std::error::Error,
 {
+    #[cfg(feature = "output_progress")]
+    async fn progress_begin(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
+
+    #[cfg(feature = "output_progress")]
+    async fn progress_update(
+        &mut self,
+        _progress_tracker: &ProgressTracker,
+        _progress_update_and_id: &ProgressUpdateAndId,
+    ) {
+    }
+
+    #[cfg(feature = "output_progress")]
+    async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
+
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         self.fn_invocations.push(FnInvocation::new(
             "write_states_saved",

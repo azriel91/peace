@@ -5,9 +5,22 @@
 
 // Re-exports
 pub use fn_graph::{self, FnRef, FnRefMut};
-pub use peace_rt_model_core::{
-    cmd_context_params, OutputFormat, OutputFormatParseError, OutputWrite,
-};
+pub use peace_rt_model_core::cmd_context_params;
+#[cfg(feature = "output_progress")]
+pub use peace_rt_model_core::*;
+
+pub mod output {
+    pub use peace_rt_model_core::output::*;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub use peace_rt_model_native::output::*;
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub use peace_rt_model_native::*;
+
+#[cfg(target_arch = "wasm32")]
+pub use peace_rt_model_web::*;
 
 pub use crate::{
     cmd_context::CmdContext, cmd_context_builder::CmdContextBuilder,
@@ -15,18 +28,6 @@ pub use crate::{
     item_spec_graph::ItemSpecGraph, item_spec_graph_builder::ItemSpecGraphBuilder,
     item_spec_rt::ItemSpecRt, item_spec_wrapper::ItemSpecWrapper,
     states_serializer::StatesSerializer, states_type_regs::StatesTypeRegs,
-};
-
-#[cfg(not(target_arch = "wasm32"))]
-pub use peace_rt_model_native::{
-    CliOutput, Error, NativeStorage as Storage, SyncIoBridge, Workspace, WorkspaceDirsBuilder,
-    WorkspaceInitializer, WorkspaceSpec,
-};
-
-#[cfg(target_arch = "wasm32")]
-pub use peace_rt_model_web::{
-    Error, WebStorage as Storage, Workspace, WorkspaceDirsBuilder, WorkspaceInitializer,
-    WorkspaceSpec,
 };
 
 pub mod outcomes;

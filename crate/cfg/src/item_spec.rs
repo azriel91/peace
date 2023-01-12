@@ -249,7 +249,7 @@ pub trait ItemSpec {
     /// instance of the `ItemSpec` should have its own ID.
     ///
     /// [`item_spec_id!`]: peace_static_check_macros::item_spec_id
-    fn id(&self) -> ItemSpecId;
+    fn id(&self) -> &ItemSpecId;
 
     /// Inserts an instance of each data type in [`Resources`].
     ///

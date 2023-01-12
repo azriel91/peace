@@ -60,8 +60,8 @@ where
     type StateLogical = ShCmdState<Id>;
     type StatePhysical = ShCmdExecutionRecord;
 
-    fn id(&self) -> ItemSpecId {
-        self.item_spec_id.clone()
+    fn id(&self) -> &ItemSpecId {
+        &self.item_spec_id
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), ShCmdError> {
