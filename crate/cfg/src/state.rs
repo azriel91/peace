@@ -1,7 +1,7 @@
-pub use self::{nothing::Nothing, placeholder::Placeholder};
+pub use self::{external::External, nothing::Nothing};
 
+mod external;
 mod nothing;
-mod placeholder;
 
 use std::{any::TypeId, fmt};
 

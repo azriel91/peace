@@ -45,7 +45,7 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     // assert_eq!(
     //     Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
     //     states_desired
-    //         .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
+    //         .get::<State<VecCopyState, External>, _>(&VecCopyItemSpec.id())
     //         .map(|state_desired| &state_desired.logical)
     // );
     // ```
@@ -108,7 +108,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     // assert_eq!(
     //     Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
     //     ensured_states_desired
-    //         .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
+    //         .get::<State<VecCopyState, External>, _>(&VecCopyItemSpec.id())
     //         .map(|state_desired| &state_desired.logical)
     // );
     // ```
@@ -187,7 +187,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     // assert_eq!(
     //     Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
     //     ensured_states_desired
-    //         .get::<State<VecCopyState, Placeholder>, _>(&VecCopyItemSpec.id())
+    //         .get::<State<VecCopyState, External>, _>(&VecCopyItemSpec.id())
     //         .map(|state_desired| &state_desired.logical)
     // );
     // ```

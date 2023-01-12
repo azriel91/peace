@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use peace::{
-    cfg::{state::Placeholder, OpCheckStatus, State},
+    cfg::{state::External, OpCheckStatus, State},
     resources::type_reg::untagged::BoxDataTypeDowncast,
     rt_model::outcomes::{ItemEnsurePartial, ItemEnsurePartialBoxed},
 };
@@ -51,7 +51,7 @@ fn debug() {
             State {
                 logical: 3,
                 physical: Tbd(
-                    PhantomData<()>,
+                    (),
                 ),
             },
         ),
@@ -103,7 +103,7 @@ op_check_status: ExecNotRequired
 fn item_ensure_partial() -> ItemEnsurePartial<u32, u32, u32> {
     let mut item_ensure_partial = ItemEnsurePartial::new();
     item_ensure_partial.state_current = Some(State::new(1, 0));
-    item_ensure_partial.state_desired = Some(State::new(3, Placeholder::tbd()));
+    item_ensure_partial.state_desired = Some(State::new(3, External::tbd()));
     item_ensure_partial.state_diff = Some(2);
     item_ensure_partial.op_check_status = Some(OpCheckStatus::ExecNotRequired);
     item_ensure_partial

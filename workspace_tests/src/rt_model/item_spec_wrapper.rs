@@ -1,7 +1,7 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{
-        state::{Nothing, Placeholder},
+        state::{External, Nothing},
         OpCheckStatus, OpCtx, State,
     },
     resources::{
@@ -104,7 +104,7 @@ async fn state_desired_try_exec() -> Result<(), VecCopyError> {
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        BoxDataTypeDowncast::<State<VecCopyState, Placeholder>>::downcast_ref(&state_desired)
+        BoxDataTypeDowncast::<State<VecCopyState, External>>::downcast_ref(&state_desired)
             .map(|state_desired| &state_desired.logical)
     );
 
