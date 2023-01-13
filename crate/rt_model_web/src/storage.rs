@@ -4,6 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use base64::Engine;
 use peace_resources::type_reg::untagged::{DataTypeWrapper, TypeMap, TypeReg};
 use serde::{de::DeserializeOwned, Serialize};
 use wasm_bindgen::prelude::*;
@@ -165,11 +166,13 @@ impl Storage {
         self.get_item_opt(path).and_then(|value| {
             value
                 .map(|value| {
-                    base64::decode(&value).map_err(|error| Error::StorageB64Decode {
-                        path: path.to_path_buf(),
-                        value,
-                        error,
-                    })
+                    base64::engine::general_purpose::STANDARD
+                        .decode(&value)
+                        .map_err(|error| Error::StorageB64Decode {
+                            path: path.to_path_buf(),
+                            value,
+                            error,
+                        })
                 })
                 .transpose()
         })
@@ -183,11 +186,13 @@ impl Storage {
     /// [`get_items`]: Self::get_items
     pub fn get_item_b64(&self, path: &Path) -> Result<Vec<u8>, Error> {
         self.get_item(path).and_then(|value| {
-            base64::decode(&value).map_err(|error| Error::StorageB64Decode {
-                path: path.to_path_buf(),
-                value,
-                error,
-            })
+            base64::engine::general_purpose::STANDARD
+                .decode(&value)
+                .map_err(|error| Error::StorageB64Decode {
+                    path: path.to_path_buf(),
+                    value,
+                    error,
+                })
         })
     }
 
@@ -252,7 +257,7 @@ impl Storage {
     where
         B: AsRef<[u8]>,
     {
-        let value = base64::encode(bytes);
+        let value = base64::engine::general_purpose::STANDARD.encode(bytes);
         self.set_item(path, &value)
     }
 

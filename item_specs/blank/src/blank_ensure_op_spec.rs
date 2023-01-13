@@ -51,7 +51,7 @@ where
         state_desired: &BlankState,
         _diff: &BlankStateDiff,
     ) -> Result<BlankState, BlankError> {
-        Ok(state_desired.clone())
+        Ok(*state_desired)
     }
 
     async fn exec(
@@ -64,6 +64,6 @@ where
         let params = blank_data.params_mut();
         **params.dest_mut() = Some(**params.src());
 
-        Ok(state_desired.clone())
+        Ok(*state_desired)
     }
 }

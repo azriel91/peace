@@ -249,7 +249,7 @@ impl TryFnSpec for VecCopyStateDesiredFnSpec {
     }
 
     async fn exec(vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
-        Ok(vec_a.0.clone()).map(|vec| VecCopyState::from(vec))
+        Ok(vec_a.0.clone()).map(VecCopyState::from)
     }
 }
 
@@ -269,7 +269,7 @@ impl StateDiffFnSpec for VecCopyStateDiffFnSpec {
         state_current: &VecCopyState,
         state_desired: &VecCopyState,
     ) -> Result<Self::StateDiff, VecCopyError> {
-        Ok(state_current.diff(&state_desired)).map(VecCopyDiff::from)
+        Ok(state_current.diff(state_desired)).map(VecCopyDiff::from)
     }
 }
 
