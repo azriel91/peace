@@ -18,14 +18,13 @@ where
 {
     type Data<'op> = ShSyncCmdData<'op, Id>;
     type Error = ShSyncCmdError;
+    type State = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;
     type StateDiff = ShSyncCmdStateDiff;
-    type StateLogical = ShSyncCmdSyncStatus;
-    type StatePhysical = ShSyncCmdExecutionRecord;
 
     async fn check(
         _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
         _file_state_current: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
-        _file_state_desired: &ShSyncCmdSyncStatus,
+        _file_state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _diff: &ShSyncCmdStateDiff,
     ) -> Result<OpCheckStatus, ShSyncCmdError> {
         todo!();
@@ -35,9 +34,9 @@ where
         _op_ctx: OpCtx<'_>,
         _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
         _state: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
-        _file_state_desired: &ShSyncCmdSyncStatus,
+        _file_state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _diff: &ShSyncCmdStateDiff,
-    ) -> Result<ShSyncCmdExecutionRecord, ShSyncCmdError> {
+    ) -> Result<Self::State, ShSyncCmdError> {
         todo!()
     }
 
@@ -45,9 +44,9 @@ where
         _op_ctx: OpCtx<'_>,
         _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
         _state: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
-        _file_state_desired: &ShSyncCmdSyncStatus,
+        _file_state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _diff: &ShSyncCmdStateDiff,
-    ) -> Result<ShSyncCmdExecutionRecord, ShSyncCmdError> {
+    ) -> Result<Self::State, ShSyncCmdError> {
         todo!();
     }
 }

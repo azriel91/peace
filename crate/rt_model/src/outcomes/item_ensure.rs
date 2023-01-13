@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use peace_cfg::{state::Placeholder, OpCheckStatus, State};
+use peace_cfg::OpCheckStatus;
 use peace_resources::type_reg::untagged::{DataType, DataTypeDisplay};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
@@ -11,37 +11,28 @@ use crate::outcomes::{ItemEnsurePartial, ItemEnsureRt};
 /// This is similar to [`ItemEnsurePartial`], with most fields being
 /// non-optional, and the added `state_ensured` field.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct ItemEnsure<StateLogical, StatePhysical, StateDiff> {
+pub struct ItemEnsure<State, StateDiff> {
     /// State saved on disk before the execution.
-    pub state_saved: Option<State<StateLogical, StatePhysical>>,
+    pub state_saved: Option<State>,
     /// Current state discovered during the execution.
-    pub state_current: State<StateLogical, StatePhysical>,
+    pub state_current: State,
     /// Desired state discovered during the execution.
-    pub state_desired: State<StateLogical, Placeholder>,
+    pub state_desired: State,
     /// Diff between current and desired states.
     pub state_diff: StateDiff,
     /// Whether item execution was required.
     pub op_check_status: OpCheckStatus,
     /// The state that was ensured, `None` if execution was not required.
-    pub state_ensured: Option<State<StateLogical, StatePhysical>>,
+    pub state_ensured: Option<State>,
 }
 
-impl<StateLogical, StatePhysical, StateDiff>
-    TryFrom<(
-        ItemEnsurePartial<StateLogical, StatePhysical, StateDiff>,
-        Option<State<StateLogical, StatePhysical>>,
-    )> for ItemEnsure<StateLogical, StatePhysical, StateDiff>
+impl<State, StateDiff> TryFrom<(ItemEnsurePartial<State, StateDiff>, Option<State>)>
+    for ItemEnsure<State, StateDiff>
 {
-    type Error = (
-        ItemEnsurePartial<StateLogical, StatePhysical, StateDiff>,
-        Option<State<StateLogical, StatePhysical>>,
-    );
+    type Error = (ItemEnsurePartial<State, StateDiff>, Option<State>);
 
     fn try_from(
-        (partial, state_ensured): (
-            ItemEnsurePartial<StateLogical, StatePhysical, StateDiff>,
-            Option<State<StateLogical, StatePhysical>>,
-        ),
+        (partial, state_ensured): (ItemEnsurePartial<State, StateDiff>, Option<State>),
     ) -> Result<Self, Self::Error> {
         let ItemEnsurePartial {
             state_saved,
@@ -81,11 +72,9 @@ impl<StateLogical, StatePhysical, StateDiff>
     }
 }
 
-impl<StateLogical, StatePhysical, StateDiff> ItemEnsureRt
-    for ItemEnsure<StateLogical, StatePhysical, StateDiff>
+impl<State, StateDiff> ItemEnsureRt for ItemEnsure<State, StateDiff>
 where
-    StateLogical: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatePhysical: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    State: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
 {
     fn state_saved(&self) -> Option<Box<dyn DataTypeDisplay>> {

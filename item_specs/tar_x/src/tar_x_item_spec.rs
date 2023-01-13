@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, state::Nothing, ItemSpec, ItemSpecId},
+    cfg::{async_trait, ItemSpec, ItemSpecId},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -51,12 +51,11 @@ where
     type CleanOpSpec = TarXCleanOpSpec<Id>;
     type EnsureOpSpec = TarXEnsureOpSpec<Id>;
     type Error = TarXError;
+    type State = FileMetadatas;
     type StateCurrentFnSpec = TarXStateCurrentFnSpec<Id>;
     type StateDesiredFnSpec = TarXStateDesiredFnSpec<Id>;
     type StateDiff = TarXStateDiff;
     type StateDiffFnSpec = TarXStateDiffFnSpec;
-    type StateLogical = FileMetadatas;
-    type StatePhysical = Nothing;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id

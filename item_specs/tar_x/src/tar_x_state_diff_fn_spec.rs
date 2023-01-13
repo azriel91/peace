@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use peace::cfg::{async_trait, state::Nothing, State, StateDiffFnSpec};
+use peace::cfg::{async_trait, StateDiffFnSpec};
 
 use crate::{FileMetadata, FileMetadatas, TarXError, TarXStateDiff};
 
@@ -12,18 +12,16 @@ pub struct TarXStateDiffFnSpec;
 impl StateDiffFnSpec for TarXStateDiffFnSpec {
     type Data<'op> = &'op ();
     type Error = TarXError;
+    type State = FileMetadatas;
     type StateDiff = TarXStateDiff;
-    type StateLogical = FileMetadatas;
-    type StatePhysical = Nothing;
 
     async fn exec(
         _: &(),
-        state_current: &State<FileMetadatas, Nothing>,
-        state_desired: &FileMetadatas,
+        file_metadatas_current: &FileMetadatas,
+        file_metadatas_desired: &FileMetadatas,
     ) -> Result<Self::StateDiff, TarXError> {
-        let state_current = &state_current.logical;
-        let mut current_metadata_iter = state_current.iter();
-        let mut desired_metadata_iter = state_desired.iter();
+        let mut current_metadata_iter = file_metadatas_current.iter();
+        let mut desired_metadata_iter = file_metadatas_desired.iter();
 
         let mut added = Vec::<FileMetadata>::new();
         let mut modified = Vec::<FileMetadata>::new();

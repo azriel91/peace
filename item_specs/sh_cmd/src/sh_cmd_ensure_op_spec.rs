@@ -19,21 +19,20 @@ where
 {
     type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
+    type State = State<ShCmdState<Id>, ShCmdExecutionRecord>;
     type StateDiff = ShCmdStateDiff;
-    type StateLogical = ShCmdState<Id>;
-    type StatePhysical = ShCmdExecutionRecord;
 
     async fn check(
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_desired: &ShCmdState<Id>,
+        state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
     ) -> Result<OpCheckStatus, ShCmdError> {
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_desired_arg = match state_desired {
+        let state_desired_arg = match &state_desired.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
@@ -81,15 +80,15 @@ where
         _op_ctx: OpCtx<'_>,
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_desired: &ShCmdState<Id>,
+        state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
-    ) -> Result<ShCmdExecutionRecord, ShCmdError> {
+    ) -> Result<Self::State, ShCmdError> {
         // TODO: implement properly
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_desired_arg = match state_desired {
+        let state_desired_arg = match &state_desired.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
@@ -101,23 +100,21 @@ where
             .arg(state_desired_arg)
             .arg(&**state_diff);
 
-        ShCmdExecutor::<Id>::exec(&ShCmd::new("echo").arg(format!("{ensure_exec_sh_cmd}")))
-            .await
-            .map(|state| state.physical)
+        ShCmdExecutor::<Id>::exec(&ShCmd::new("echo").arg(format!("{ensure_exec_sh_cmd}"))).await
     }
 
     async fn exec(
         _op_ctx: OpCtx<'_>,
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_desired: &ShCmdState<Id>,
+        state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
-    ) -> Result<ShCmdExecutionRecord, ShCmdError> {
+    ) -> Result<Self::State, ShCmdError> {
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_desired_arg = match state_desired {
+        let state_desired_arg = match &state_desired.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
@@ -129,8 +126,6 @@ where
             .arg(state_desired_arg)
             .arg(&**state_diff);
 
-        ShCmdExecutor::<Id>::exec(&ensure_exec_sh_cmd)
-            .await
-            .map(|state| state.physical)
+        ShCmdExecutor::<Id>::exec(&ensure_exec_sh_cmd).await
     }
 }

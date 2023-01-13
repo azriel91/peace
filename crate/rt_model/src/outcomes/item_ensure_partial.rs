@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use peace_cfg::{state::Placeholder, OpCheckStatus, State};
+use peace_cfg::OpCheckStatus;
 use peace_resources::type_reg::untagged::{DataType, DataTypeDisplay};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
@@ -32,31 +32,27 @@ use crate::outcomes::ItemEnsurePartialRt;
 /// [`EnsureOpSpec::check`]: peace_cfg::ItemSpec::EnsureOpSpec
 /// [`EnsureOpSpec::exec`]: peace_cfg::ItemSpec::EnsureOpSpec
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct ItemEnsurePartial<StateLogical, StatePhysical, StateDiff> {
+pub struct ItemEnsurePartial<State, StateDiff> {
     /// State saved on disk before the execution.
-    pub state_saved: Option<State<StateLogical, StatePhysical>>,
+    pub state_saved: Option<State>,
     /// Current state discovered during the execution.
-    pub state_current: Option<State<StateLogical, StatePhysical>>,
+    pub state_current: Option<State>,
     /// Desired state discovered during the execution.
-    pub state_desired: Option<State<StateLogical, Placeholder>>,
+    pub state_desired: Option<State>,
     /// Diff between current and desired states.
     pub state_diff: Option<StateDiff>,
     /// Whether item execution is required.
     pub op_check_status: Option<OpCheckStatus>,
 }
 
-impl<StateLogical, StatePhysical, StateDiff>
-    ItemEnsurePartial<StateLogical, StatePhysical, StateDiff>
-{
+impl<State, StateDiff> ItemEnsurePartial<State, StateDiff> {
     /// Returns a new `ItemEnsurePartial` with all fields set to `None`.
     pub fn new() -> Self {
         Self::default()
     }
 }
 
-impl<StateLogical, StatePhysical, StateDiff> Default
-    for ItemEnsurePartial<StateLogical, StatePhysical, StateDiff>
-{
+impl<State, StateDiff> Default for ItemEnsurePartial<State, StateDiff> {
     fn default() -> Self {
         Self {
             state_saved: None,
@@ -68,11 +64,9 @@ impl<StateLogical, StatePhysical, StateDiff> Default
     }
 }
 
-impl<StateLogical, StatePhysical, StateDiff> ItemEnsurePartialRt
-    for ItemEnsurePartial<StateLogical, StatePhysical, StateDiff>
+impl<State, StateDiff> ItemEnsurePartialRt for ItemEnsurePartial<State, StateDiff>
 where
-    StateLogical: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatePhysical: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    State: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
 {
     fn state_saved(&self) -> Option<Box<dyn DataTypeDisplay>> {

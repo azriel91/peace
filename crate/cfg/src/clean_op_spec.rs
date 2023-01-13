@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use peace_data::Data;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{OpCheckStatus, State};
+use crate::OpCheckStatus;
 
 /// Defines the logic and data to clean up resources.
 ///
@@ -17,25 +17,18 @@ pub trait CleanOpSpec {
     /// Error returned when any of the functions of this operation err.
     type Error: std::error::Error;
 
-    /// Logical state of the managed item.
+    /// State of the managed item.
     ///
     /// This is the type returned by the [`StateCurrentFnSpec`], and is used by
     /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
     ///
-    /// See [`ItemSpec::StateLogical`] for more detail.
+    /// See [`ItemSpec::State`] for more detail.
     ///
     /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
     /// [`EnsureOpSpec`]: crate::ItemSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
-    /// [`ItemSpec::StateLogical`]: crate::ItemSpec::StateLogical
-    type StateLogical: Clone + Serialize + DeserializeOwned;
-
-    /// Physical state produced by the operation.
-    ///
-    /// See [`ItemSpec::StatePhysical`] for more detail.
-    ///
-    /// [`ItemSpec::StatePhysical`]: crate::ItemSpec::StatePhysical
-    type StatePhysical: Clone + Serialize + DeserializeOwned;
+    /// [`ItemSpec::State`]: crate::ItemSpec::State
+    type State: Clone + Serialize + DeserializeOwned;
 
     /// Data that the operation reads from, or writes to.
     ///
@@ -77,10 +70,8 @@ pub trait CleanOpSpec {
     ///
     /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
     /// [`StatePhysical`]: Self::StatePhysical
-    async fn check(
-        data: Self::Data<'_>,
-        state: &State<Self::StateLogical, Self::StatePhysical>,
-    ) -> Result<OpCheckStatus, Self::Error>;
+    async fn check(data: Self::Data<'_>, state: &Self::State)
+    -> Result<OpCheckStatus, Self::Error>;
 
     /// Dry-run clean up of resources referenced by `StatePhysical`.
     ///
@@ -105,10 +96,7 @@ pub trait CleanOpSpec {
     /// [`exec`]: Self::exec
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
-    async fn exec_dry(
-        data: Self::Data<'_>,
-        state: &State<Self::StateLogical, Self::StatePhysical>,
-    ) -> Result<(), Self::Error>;
+    async fn exec_dry(data: Self::Data<'_>, state: &Self::State) -> Result<(), Self::Error>;
 
     /// Cleans up resources referenced by `StatePhysical`
     ///
@@ -123,8 +111,5 @@ pub trait CleanOpSpec {
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
-    async fn exec(
-        data: Self::Data<'_>,
-        state: &State<Self::StateLogical, Self::StatePhysical>,
-    ) -> Result<(), Self::Error>;
+    async fn exec(data: Self::Data<'_>, state: &Self::State) -> Result<(), Self::Error>;
 }

@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{item_spec_id, profile, state::Placeholder, FlowId, ItemSpecId, Profile, State},
+    cfg::{item_spec_id, profile, FlowId, ItemSpecId, Profile, State},
     resources::states::{StateDiffs, StatesCleaned, StatesCurrent, StatesDesired, StatesEnsured},
     rt::cmds::{
         sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
@@ -174,7 +174,7 @@ async fn state_desired_returns_shell_command_desired_state()
     let CmdContext { resources, .. } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
     let states_desired = resources.borrow::<StatesDesired>();
     let state_desired = states_desired
-        .get::<State<TestFileCreationShCmdStateLogical, Placeholder>, _>(
+        .get::<State<TestFileCreationShCmdStateLogical, ShCmdExecutionRecord>, _>(
             &TestFileCreationShCmdItemSpec::ID,
         )
         .unwrap();

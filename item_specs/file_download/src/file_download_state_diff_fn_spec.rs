@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{async_trait, state::Nothing, State, StateDiffFnSpec},
+    cfg::{async_trait, StateDiffFnSpec},
     diff::{Changeable, Tracked},
 };
 
@@ -13,17 +13,15 @@ pub struct FileDownloadStateDiffFnSpec;
 impl StateDiffFnSpec for FileDownloadStateDiffFnSpec {
     type Data<'op> = &'op ();
     type Error = FileDownloadError;
+    type State = FileDownloadState;
     type StateDiff = FileDownloadStateDiff;
-    type StateLogical = FileDownloadState;
-    type StatePhysical = Nothing;
 
     async fn exec(
         _: &(),
-        state_current: &State<FileDownloadState, Nothing>,
+        file_state_current: &FileDownloadState,
         file_state_desired: &FileDownloadState,
     ) -> Result<Self::StateDiff, FileDownloadError> {
         let file_state_diff = {
-            let file_state_current = &state_current.logical;
             match (file_state_current, file_state_desired) {
                 (
                     FileDownloadState::StringContents { path, .. }

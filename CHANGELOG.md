@@ -6,12 +6,15 @@
 * Implement `TarXItemSpec` for native target. ([#62])
 * Support multiple workspace, profile, and flow parameters. ([#45], [#63])
 * Support progress bars in `CliOutput`. ([#42], [#66])
+* Consolidate `StateLogical` and `StatePhysical` into `ItemSpec::State`. ([#69], [#70])
 
 [#62]: https://github.com/azriel91/peace/pull/62
 [#45]: https://github.com/azriel91/peace/issues/45
 [#63]: https://github.com/azriel91/peace/pull/63
 [#42]: https://github.com/azriel91/peace/issues/42
 [#66]: https://github.com/azriel91/peace/pull/66
+[#69]: https://github.com/azriel91/peace/issues/69
+[#70]: https://github.com/azriel91/peace/pull/70
 
 
 ## 0.0.5 (2022-12-18)

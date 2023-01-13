@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, state::Nothing, CleanOpSpec, OpCheckStatus, State};
+use peace::cfg::{async_trait, CleanOpSpec, OpCheckStatus};
 
 use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
@@ -17,15 +17,11 @@ where
 {
     type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
-    type StateLogical = FileDownloadState;
-    type StatePhysical = Nothing;
+    type State = FileDownloadState;
 
     async fn check(
         _file_download_data: FileDownloadData<'_, Id>,
-        State {
-            logical: file_state,
-            ..
-        }: &State<FileDownloadState, Nothing>,
+        file_state: &FileDownloadState,
     ) -> Result<OpCheckStatus, FileDownloadError> {
         let op_check_status = match file_state {
             FileDownloadState::None { .. } => OpCheckStatus::ExecNotRequired,
@@ -83,7 +79,7 @@ where
 
     async fn exec_dry(
         _file_download_data: FileDownloadData<'_, Id>,
-        _state: &State<FileDownloadState, Nothing>,
+        _state: &FileDownloadState,
     ) -> Result<(), FileDownloadError> {
         Ok(())
     }
@@ -91,10 +87,7 @@ where
     #[cfg(not(target_arch = "wasm32"))]
     async fn exec(
         _file_download_data: FileDownloadData<'_, Id>,
-        State {
-            logical: file_state,
-            ..
-        }: &State<FileDownloadState, Nothing>,
+        file_state: &FileDownloadState,
     ) -> Result<(), FileDownloadError> {
         match file_state {
             FileDownloadState::None { .. } => {}
@@ -112,10 +105,7 @@ where
     #[cfg(target_arch = "wasm32")]
     async fn exec(
         file_download_data: FileDownloadData<'_, Id>,
-        State {
-            logical: file_state,
-            ..
-        }: &State<FileDownloadState, Nothing>,
+        file_state: &FileDownloadState,
     ) -> Result<(), FileDownloadError> {
         match file_state {
             FileDownloadState::None { .. } => {}

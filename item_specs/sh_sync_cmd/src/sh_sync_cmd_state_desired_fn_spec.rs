@@ -1,8 +1,8 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, TryFnSpec};
+use peace::cfg::{async_trait, State, TryFnSpec};
 
-use crate::{ShSyncCmdData, ShSyncCmdError, ShSyncCmdSyncStatus};
+use crate::{ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord, ShSyncCmdSyncStatus};
 
 /// Reads the desired state of the command to execute.
 #[derive(Debug)]
@@ -15,7 +15,7 @@ where
 {
     type Data<'op> = ShSyncCmdData<'op, Id>;
     type Error = ShSyncCmdError;
-    type Output = ShSyncCmdSyncStatus;
+    type Output = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;
 
     async fn try_exec(
         sh_sync_cmd_data: ShSyncCmdData<'_, Id>,

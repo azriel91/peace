@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, state::Nothing, CleanOpSpec, OpCheckStatus, State};
+use peace::cfg::{async_trait, CleanOpSpec, OpCheckStatus};
 
 use crate::{FileMetadatas, TarXData, TarXError};
 
@@ -17,14 +17,12 @@ where
 {
     type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
-    type StateLogical = FileMetadatas;
-    type StatePhysical = Nothing;
+    type State = FileMetadatas;
 
     async fn check(
         _tar_x_data: TarXData<'_, Id>,
-        state_current: &State<FileMetadatas, Nothing>,
+        file_metadatas: &FileMetadatas,
     ) -> Result<OpCheckStatus, TarXError> {
-        let file_metadatas = &state_current.logical;
         let op_check_status = if file_metadatas.is_empty() {
             OpCheckStatus::ExecNotRequired
         } else {
@@ -44,7 +42,7 @@ where
 
     async fn exec_dry(
         _tar_x_data: TarXData<'_, Id>,
-        _state_current: &State<FileMetadatas, Nothing>,
+        _state_current: &FileMetadatas,
     ) -> Result<(), TarXError> {
         Ok(())
     }
@@ -52,13 +50,12 @@ where
     #[cfg(not(target_arch = "wasm32"))]
     async fn exec(
         tar_x_data: TarXData<'_, Id>,
-        state_current: &State<FileMetadatas, Nothing>,
+        file_metadatas: &FileMetadatas,
     ) -> Result<(), TarXError> {
         use futures::stream::{StreamExt, TryStreamExt};
 
         let params = tar_x_data.tar_x_params();
         let dest = params.dest();
-        let file_metadatas = &state_current.logical;
 
         if dest.exists() {
             // Remove files in the destination directory that are tracked by the state.
@@ -86,7 +83,7 @@ where
     #[cfg(target_arch = "wasm32")]
     async fn exec(
         _tar_x_data: TarXData<'_, Id>,
-        _state_current: &State<FileMetadatas, Nothing>,
+        _state_current: &FileMetadatas,
     ) -> Result<(), TarXError> {
         todo!()
     }

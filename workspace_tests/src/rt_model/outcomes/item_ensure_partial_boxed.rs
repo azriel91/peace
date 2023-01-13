@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use peace::{
-    cfg::{state::Placeholder, OpCheckStatus, State},
+    cfg::{state::External, OpCheckStatus, State},
     resources::type_reg::untagged::BoxDataTypeDowncast,
     rt_model::outcomes::{ItemEnsurePartial, ItemEnsurePartialBoxed},
 };
@@ -12,21 +12,21 @@ fn clone() {
     let item_ensure_partial_boxed = ItemEnsurePartialBoxed::from(item_ensure_partial());
     let mut item_ensure_partial_boxed_clone = Clone::clone(&item_ensure_partial_boxed);
 
-    *BoxDataTypeDowncast::<ItemEnsurePartial<u32, u32, u32>>::downcast_mut(
+    *BoxDataTypeDowncast::<ItemEnsurePartial<State<u32, External<u32>>, u32>>::downcast_mut(
         &mut item_ensure_partial_boxed_clone,
     )
     .unwrap() = item_ensure_partial();
 
     assert_eq!(
         Some(item_ensure_partial()),
-        BoxDataTypeDowncast::<ItemEnsurePartial<u32, u32, u32>>::downcast_ref(
+        BoxDataTypeDowncast::<ItemEnsurePartial<State<u32, External<u32>>, u32>>::downcast_ref(
             &item_ensure_partial_boxed
         )
         .cloned()
     );
     assert_eq!(
         Some(item_ensure_partial()),
-        BoxDataTypeDowncast::<ItemEnsurePartial<u32, u32, u32>>::downcast_ref(
+        BoxDataTypeDowncast::<ItemEnsurePartial<State<u32, External<u32>>, u32>>::downcast_ref(
             &item_ensure_partial_boxed_clone
         )
         .cloned()
@@ -44,14 +44,16 @@ fn debug() {
         state_current: Some(
             State {
                 logical: 1,
-                physical: 0,
+                physical: Value(
+                    0,
+                ),
             },
         ),
         state_desired: Some(
             State {
                 logical: 3,
-                physical: Calculated(
-                    PhantomData<()>,
+                physical: Tbd(
+                    (),
                 ),
             },
         ),
@@ -88,10 +90,10 @@ fn serialize() -> Result<(), serde_yaml::Error> {
         r#"state_saved: null
 state_current:
   logical: 1
-  physical: 0
+  physical: !Value 0
 state_desired:
   logical: 3
-  physical: !Calculated null
+  physical: !Tbd null
 state_diff: 2
 op_check_status: ExecNotRequired
 "#,
@@ -100,10 +102,10 @@ op_check_status: ExecNotRequired
     Ok(())
 }
 
-fn item_ensure_partial() -> ItemEnsurePartial<u32, u32, u32> {
+fn item_ensure_partial() -> ItemEnsurePartial<State<u32, External<u32>>, u32> {
     let mut item_ensure_partial = ItemEnsurePartial::new();
-    item_ensure_partial.state_current = Some(State::new(1, 0));
-    item_ensure_partial.state_desired = Some(State::new(3, Placeholder::calculated()));
+    item_ensure_partial.state_current = Some(State::new(1, External::Value(0)));
+    item_ensure_partial.state_desired = Some(State::new(3, External::tbd()));
     item_ensure_partial.state_diff = Some(2);
     item_ensure_partial.op_check_status = Some(OpCheckStatus::ExecNotRequired);
     item_ensure_partial

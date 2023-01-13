@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId},
+    cfg::{async_trait, ItemSpec, ItemSpecId, State},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -46,12 +46,11 @@ where
     type CleanOpSpec = ShSyncCmdCleanOpSpec<Id>;
     type EnsureOpSpec = ShSyncCmdEnsureOpSpec<Id>;
     type Error = ShSyncCmdError;
+    type State = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;
     type StateCurrentFnSpec = ShSyncCmdStateCurrentFnSpec<Id>;
     type StateDesiredFnSpec = ShSyncCmdStateDesiredFnSpec<Id>;
     type StateDiff = ShSyncCmdStateDiff;
     type StateDiffFnSpec = ShSyncCmdStateDiffFnSpec;
-    type StateLogical = ShSyncCmdSyncStatus;
-    type StatePhysical = ShSyncCmdExecutionRecord;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id

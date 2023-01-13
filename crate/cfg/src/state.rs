@@ -1,33 +1,97 @@
-pub use self::{nothing::Nothing, placeholder::Placeholder};
+pub use self::{
+    external::{External, Fetched, Generated, Timestamped},
+    nothing::Nothing,
+};
 
+mod external;
 mod nothing;
-mod placeholder;
 
 use std::{any::TypeId, fmt};
 
 use serde::{Deserialize, Serialize};
 
-/// Controlled and uncontrolled state of the managed item.
+/// Logical and physical states of a managed item.
 ///
-/// The logical state is what is controlled, such as:
+/// This type can be used when the managed item has both logical and physical
+/// states. Otherwise, a type that represents the fully logical / fully physical
+/// state is sufficient.
 ///
-/// * OS image to boot the server.
-/// * Application version to install and run.
+/// In `peace`, [`State`] represents the values of an item, and has the
+/// following usages:
 ///
-/// The physical state is what is not controlled, such as:
+/// * Showing users the state of an item.
+/// * Allowing users to describe the state that an item should be.
+/// * Determining what needs to change between the current state and the desired
+///   state.
 ///
-/// * Virtual machine instance ID.
-/// * Last modification time of configuration.
+/// Therefore, `State` should be:
 ///
-/// This type can be used to represent the current state of the managed item, or
-/// the desired state. The `Diff` between the current and desired state
-/// indicates whether an operation should be executed.
+/// * Serializable
+/// * Displayable in a human readable format
+/// * Relatively lightweight &ndash; e.g. does not necessarily contain file
+///   contents, but a hash of it.
 ///
-/// If there is no separate physical state -- i.e. the state is fully
-/// pre-calculatable and definable in logical state -- the [`Nothing`] type can
-/// be used,
 ///
-/// [`Nothing`]: crate::state::Nothing
+/// ## Logical and Physical State
+///
+/// State can be separated into two parts:
+///
+/// * **Logical state:** Information that is functionally important, and can be
+///   specified by the user ahead of time.
+///
+///     Examples of logical state are:
+///
+///     - File contents
+///     - An application version
+///     - Server operating system version
+///     - Server CPU capacity
+///     - Server RAM capacity
+///
+/// * **Physical state:** Information that is discovered / produced when the
+///   automation is executed.
+///
+///     Examples of physical state are:
+///
+///     - ETag of a downloaded file.
+///     - Execution time of a command.
+///     - Server ID that is generated on launch.
+///     - Server IP address.
+///
+///
+/// ## Defining State
+///
+/// ### Fully Logical
+///
+/// If an item's state can be fully described before the item exists, and can be
+/// made to happen without interacting with an external service, then the state
+/// is fully logical.
+///
+/// For example, copying a file from one directory to another. The state of the
+/// file in the source directory and destination directories are fully
+/// discoverable, and there is no information generated during automation that
+/// is needed to determine if the states are equivalent.
+///
+///
+/// ### Logical and Physical
+///
+/// If an item's desired state can be described before the item exists, but
+/// interacts with an external service which produces additional information to
+/// bring that desired state into existence, then the state has both logical and
+/// physical parts.
+///
+/// For example, launching a server or virtual machine. The operating system,
+/// CPU capacity, and RAM are logical information, and can be determined ahead
+/// of time. However, the server ID and IP address are produced by the virtual
+/// machine service provider, which is physical state.
+///
+///
+/// ### Fully Physical
+///
+/// If an item's desired state is simply, "automation has been executed after these files have been modified", then the state has no logical component.
+///
+/// For example, running a compilation command only if the compilation artifact
+/// doesn't exist, or the source files have changed since the last time the
+/// compilation has been executed.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct State<Logical, Physical> {
     /// Logical state

@@ -25,7 +25,7 @@ See:
 | Symbol | Meaning              |
 |:------:|:---------------------|
 |   🟢   | Works well           |
-|   🟡   | Work in progress     |
+|   🟡   | Partial support      |
 |   ⚫   | Planned              |
 |   🔵   | Compatible by design |
 |   🟣   | Works, "fun idea"    |
@@ -40,15 +40,14 @@ See:
 * 🟢 Idempotence: Multiple executions
 * 🟢 Show state differences
 * 🟢 Namespaced profile directories
-* 🟢 Dry run
 * 🟢 Resource clean up
+* 🟡 Understandable progress ([#42])
 * 🟡 Feature-gated incremental functionality
 * 🟡 Off-the-shelf support for common items
+* 🟡 Dry run
 * 🔵 Understandable error reporting via [`miette`]
 * 🔵 Actionable error messages
 * 🟣 WASM support
-* ⚫ Understandable progress ([#42])
-* ⚫ Informative
 * ⚫ Tutorial for writing a software lifecycle management tool
 * ⚫ Built-in application execution methods -- CLI, web service
 * ⚫ `peace` binary for configuration based workflows

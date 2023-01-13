@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, path::Path};
 
-use peace::cfg::{async_trait, state::Nothing, State, TryFnSpec};
+use peace::cfg::{async_trait, TryFnSpec};
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
 
@@ -100,7 +100,7 @@ where
 {
     type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
-    type Output = State<FileMetadatas, Nothing>;
+    type Output = FileMetadatas;
 
     async fn try_exec(tar_x_data: TarXData<'_, Id>) -> Result<Option<Self::Output>, TarXError> {
         Self::exec(tar_x_data).await.map(Some)
@@ -117,7 +117,7 @@ where
 
         let dest_files = FileMetadatas::from(files_extracted);
 
-        let state = State::new(dest_files, Nothing);
+        let state = dest_files;
 
         Ok(state)
     }

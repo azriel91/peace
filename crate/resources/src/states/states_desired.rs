@@ -2,8 +2,8 @@ use crate::states::{ts::Desired, States};
 
 /// Desired `State`s for all `ItemSpec`s.
 ///
-/// This is typically `TypeMap<ItemSpecId, State<StateLogical, Placeholder>>`,
-/// where [`Placeholder`] is not used in `StateDiff` computations.
+/// This is typically `TypeMap<ItemSpecId, State<StateLogical, External>>`,
+/// where [`External`] is not necessarily used in `StateDiff` computations.
 ///
 /// # Implementors
 ///
@@ -38,7 +38,7 @@ use crate::states::{ts::Desired, States};
 /// is not mutable as `StatesDesired` must remain unchanged so that all
 /// `ItemSpec`s operate over consistent data.
 ///
-/// [`Placeholder`]: peace_cfg::state::Placeholder
+/// [`External`]: peace_cfg::state::External
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
 pub type StatesDesired = States<Desired>;

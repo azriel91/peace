@@ -10,14 +10,13 @@ pub struct ShSyncCmdStateDiffFnSpec;
 impl StateDiffFnSpec for ShSyncCmdStateDiffFnSpec {
     type Data<'op> = &'op ();
     type Error = ShSyncCmdError;
+    type State = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;
     type StateDiff = ShSyncCmdStateDiff;
-    type StateLogical = ShSyncCmdSyncStatus;
-    type StatePhysical = ShSyncCmdExecutionRecord;
 
     async fn exec(
         _: &(),
         _state_current: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
-        _state_desired: &ShSyncCmdSyncStatus,
+        _state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
     ) -> Result<Self::StateDiff, ShSyncCmdError> {
         todo!()
     }

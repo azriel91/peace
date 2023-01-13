@@ -911,7 +911,7 @@ mod color_always {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -969,7 +969,7 @@ mod color_always {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -990,7 +990,7 @@ mod color_always {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1035,7 +1035,7 @@ mod color_always {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1056,7 +1056,7 @@ mod color_always {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1097,7 +1097,7 @@ mod color_always {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1112,7 +1112,7 @@ mod color_always {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1161,7 +1161,7 @@ progress_update: !Delta
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1176,7 +1176,7 @@ progress_update: !Delta
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1258,7 +1258,7 @@ mod color_never {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1316,7 +1316,7 @@ mod color_never {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1337,7 +1337,7 @@ mod color_never {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1382,7 +1382,7 @@ mod color_never {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1403,7 +1403,7 @@ mod color_never {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1444,7 +1444,7 @@ mod color_never {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1459,7 +1459,7 @@ mod color_never {
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1508,7 +1508,7 @@ progress_update: !Delta
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;
@@ -1523,7 +1523,7 @@ progress_update: !Delta
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
-            &progress_tracker,
+            progress_tracker,
             &progress_update_and_id,
         )
         .await;

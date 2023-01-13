@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, state::Nothing, CleanOpSpec, OpCheckStatus, State};
+use peace::cfg::{async_trait, CleanOpSpec, OpCheckStatus};
 
 use crate::{BlankData, BlankError, BlankState};
 
@@ -17,14 +17,12 @@ where
 {
     type Data<'op> = BlankData<'op, Id>;
     type Error = BlankError;
-    type StateLogical = BlankState;
-    type StatePhysical = Nothing;
+    type State = BlankState;
 
     async fn check(
         _blank_data: BlankData<'_, Id>,
-        state_current: &State<BlankState, Nothing>,
+        blank_state: &BlankState,
     ) -> Result<OpCheckStatus, BlankError> {
-        let blank_state = &state_current.logical;
         let op_check_status = if blank_state.is_none() {
             OpCheckStatus::ExecNotRequired
         } else {
@@ -44,14 +42,14 @@ where
 
     async fn exec_dry(
         _blank_data: BlankData<'_, Id>,
-        _state_current: &State<BlankState, Nothing>,
+        _state_current: &BlankState,
     ) -> Result<(), BlankError> {
         Ok(())
     }
 
     async fn exec(
         mut blank_data: BlankData<'_, Id>,
-        _state_current: &State<BlankState, Nothing>,
+        _state_current: &BlankState,
     ) -> Result<(), BlankError> {
         let dest = blank_data.params_mut().dest_mut();
         **dest = None;

@@ -17,20 +17,19 @@ where
 {
     type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
+    type State = State<ShCmdState<Id>, ShCmdExecutionRecord>;
     type StateDiff = ShCmdStateDiff;
-    type StateLogical = ShCmdState<Id>;
-    type StatePhysical = ShCmdExecutionRecord;
 
     async fn exec(
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_desired: &ShCmdState<Id>,
+        state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
     ) -> Result<Self::StateDiff, ShCmdError> {
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_desired_arg = match state_desired {
+        let state_desired_arg = match &state_desired.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
