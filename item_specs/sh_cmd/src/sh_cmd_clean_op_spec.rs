@@ -17,8 +17,7 @@ where
 {
     type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
-    type StateLogical = ShCmdState<Id>;
-    type StatePhysical = ShCmdExecutionRecord;
+    type State = State<ShCmdState<Id>, ShCmdExecutionRecord>;
 
     async fn check(
         sh_cmd_data: ShCmdData<'_, Id>,

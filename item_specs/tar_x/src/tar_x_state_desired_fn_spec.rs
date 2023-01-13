@@ -1,7 +1,7 @@
 use std::{io::Read, marker::PhantomData, path::Path};
 
 use peace::{
-    cfg::{async_trait, state::Nothing, State, TryFnSpec},
+    cfg::{async_trait, TryFnSpec},
     rt_model::Storage,
 };
 use tar::Archive;
@@ -87,7 +87,7 @@ where
 {
     type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
-    type Output = State<FileMetadatas, Nothing>;
+    type Output = FileMetadatas;
 
     async fn try_exec(tar_x_data: TarXData<'_, Id>) -> Result<Option<Self::Output>, TarXError> {
         #[cfg(not(target_arch = "wasm32"))]
@@ -122,7 +122,7 @@ where
             #[cfg(target_arch = "wasm32")]
             let files_in_tar = Self::files_in_tar(storage, tar_path)?;
 
-            Ok(State::new(FileMetadatas::from(files_in_tar), Nothing))
+            Ok(FileMetadatas::from(files_in_tar))
         } else {
             let tar_path = tar_path.to_path_buf();
             Err(TarXError::TarFileNotExists { tar_path })

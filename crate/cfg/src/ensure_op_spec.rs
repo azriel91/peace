@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use peace_data::Data;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{OpCheckStatus, OpCtx, State};
+use crate::{OpCheckStatus, OpCtx};
 
 /// Defines the logic and data of an ensure operation.
 ///
@@ -32,25 +32,18 @@ pub trait EnsureOpSpec {
     /// Error returned when any of the functions of this operation err.
     type Error: std::error::Error;
 
-    /// Logical state of the managed item.
+    /// State of the managed item.
     ///
     /// This is the type returned by the [`StateCurrentFnSpec`], and is used by
     /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
     ///
-    /// See [`ItemSpec::StateLogical`] for more detail.
+    /// See [`ItemSpec::State`] for more detail.
     ///
     /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
     /// [`EnsureOpSpec`]: crate::ItemSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
-    /// [`ItemSpec::StateLogical`]: crate::ItemSpec::StateLogical
-    type StateLogical: Clone + Serialize + DeserializeOwned;
-
-    /// Physical state produced by the operation.
-    ///
-    /// See [`ItemSpec::StatePhysical`] for more detail.
-    ///
-    /// [`ItemSpec::StatePhysical`]: crate::ItemSpec::StatePhysical
-    type StatePhysical: Clone + Serialize + DeserializeOwned;
+    /// [`ItemSpec::State`]: crate::ItemSpec::State
+    type State: Clone + Serialize + DeserializeOwned;
 
     /// State difference produced by [`StateDiffFnSpec`].
     ///
@@ -97,20 +90,19 @@ pub trait EnsureOpSpec {
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`StateCurrentFnSpec`].
-    /// * `state_desired`: Desired [`StateLogical`] of the managed item,
-    ///   returned from [`StateDesiredFnSpec`].
-    /// * `state_diff`: Desired [`StateLogical`] of the managed item, returned
-    ///   from [`StateDiffFnSpec`].
+    /// * `state_desired`: Desired [`State`] of the managed item, returned from
+    ///   [`StateDesiredFnSpec`].
+    /// * `state_diff`: Desired [`State`] of the managed item, returned from
+    ///   [`StateDiffFnSpec`].
     ///
-    /// [`State`]: crate::State
-    /// [`StateLogical`]: Self::StateLogical
+    /// [`State`]: Self::State
     /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: crate::ItemSpec::StateDesiredFnSpec
     /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     async fn check(
         data: Self::Data<'_>,
-        state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        state_desired: &State<Self::StateLogical, Self::StatePhysical>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error>;
 
@@ -137,10 +129,10 @@ pub trait EnsureOpSpec {
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`StateCurrentFnSpec`].
-    /// * `state_desired`: Desired [`StateLogical`] of the managed item,
-    ///   returned from [`StateDesiredFnSpec`].
-    /// * `state_diff`: Desired [`StateLogical`] of the managed item, returned
-    ///   from [`StateDiffFnSpec`].
+    /// * `state_desired`: Desired [`State`] of the managed item, returned from
+    ///   [`StateDesiredFnSpec`].
+    /// * `state_diff`: Desired [`State`] of the managed item, returned from
+    ///   [`StateDiffFnSpec`].
     ///
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
@@ -148,14 +140,14 @@ pub trait EnsureOpSpec {
     /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: crate::ItemSpec::StateDesiredFnSpec
     /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
-    /// [`StateLogical`]: Self::StateLogical
+    /// [`State`]: Self::State
     async fn exec_dry(
         ctx: OpCtx<'_>,
         data: Self::Data<'_>,
-        state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        state_desired: &State<Self::StateLogical, Self::StatePhysical>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
         diff: &Self::StateDiff,
-    ) -> Result<Self::StatePhysical, Self::Error>;
+    ) -> Result<Self::State, Self::Error>;
 
     /// Transforms the current state to the desired state.
     ///
@@ -166,10 +158,10 @@ pub trait EnsureOpSpec {
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`StateCurrentFnSpec`].
-    /// * `state_desired`: Desired [`StateLogical`] of the managed item,
-    ///   returned from [`StateDesiredFnSpec`].
-    /// * `state_diff`: Desired [`StateLogical`] of the managed item, returned
-    ///   from [`StateDiffFnSpec`].
+    /// * `state_desired`: Desired [`State`] of the managed item, returned from
+    ///   [`StateDesiredFnSpec`].
+    /// * `state_diff`: Desired [`State`] of the managed item, returned from
+    ///   [`StateDiffFnSpec`].
     ///
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
@@ -177,12 +169,12 @@ pub trait EnsureOpSpec {
     /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: crate::ItemSpec::StateDesiredFnSpec
     /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
-    /// [`StateLogical`]: Self::StateLogical
+    /// [`State`]: Self::State
     async fn exec(
         ctx: OpCtx<'_>,
         data: Self::Data<'_>,
-        state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        state_desired: &State<Self::StateLogical, Self::StatePhysical>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
         diff: &Self::StateDiff,
-    ) -> Result<Self::StatePhysical, Self::Error>;
+    ) -> Result<Self::State, Self::Error>;
 }

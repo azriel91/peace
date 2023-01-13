@@ -38,7 +38,7 @@ async fn exec(
         '_,
         Self::Data<'_>,
         #[cfg(feature = "state_current")]
-        State<Self::StateLogical, Self::StatePhysical>,
+        Self::State,
         #[cfg(feature = "state_desired")]
         Self::StateLogical,
         #[cfg(feature = "state_diff")]
@@ -70,7 +70,7 @@ pub type EnsureExecParams<'params> = EnsureExecParams<
 pub type EnsureExecParams<'params> = EnsureExecParams<
     'params,
     Self::Data<'params>,
-    State<Self::StateLogical, Self::StatePhysical>,
+    Self::State,
 >
 
 #[cfg(all(
@@ -81,7 +81,7 @@ pub type EnsureExecParams<'params> = EnsureExecParams<
 pub type EnsureExecParams<'params> = EnsureExecParams<
     'params,
     Self::Data<'params>,
-    State<Self::StateLogical, Self::StatePhysical>,
+    Self::State,
     Self::StateLogical,
 >
 
@@ -93,7 +93,7 @@ pub type EnsureExecParams<'params> = EnsureExecParams<
 pub type EnsureExecParams<'params> = EnsureExecParams<
     'params,
     Self::Data<'params>,
-    State<Self::StateLogical, Self::StatePhysical>,
+    Self::State,
     Self::StateLogical,
     Self::StateDiff,
 >

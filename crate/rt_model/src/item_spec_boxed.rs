@@ -16,7 +16,7 @@ use std::{
 };
 
 use fn_graph::{DataAccessDyn, TypeIds};
-use peace_cfg::{ItemSpec, State, TryFnSpec};
+use peace_cfg::{ItemSpec, TryFnSpec};
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{ItemSpecRt, ItemSpecWrapper};
@@ -46,8 +46,7 @@ impl<E> DerefMut for ItemSpecBoxed<E> {
 impl<
     IS,
     E,
-    StateLogical,
-    StatePhysical,
+    State,
     StateDiff,
     StateCurrentFnSpec,
     StateDesiredFnSpec,
@@ -58,8 +57,7 @@ impl<
 where
     IS: Debug
         + ItemSpec<
-            StateLogical = StateLogical,
-            StatePhysical = StatePhysical,
+            State = State,
             StateDiff = StateDiff,
             StateCurrentFnSpec = StateCurrentFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
@@ -77,26 +75,16 @@ where
         + From<<IS as ItemSpec>::Error>
         + From<crate::Error>
         + 'static,
-    StateLogical:
-        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StatePhysical:
-        Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
+    State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec: Debug
-        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
-        + Send
-        + Sync
-        + 'static,
-    StateDesiredFnSpec: Debug
-        + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State<StateLogical, StatePhysical>>
-        + Send
-        + Sync
-        + 'static,
+    StateCurrentFnSpec:
+        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync + 'static,
+    StateDesiredFnSpec:
+        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync + 'static,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             Error = <IS as ItemSpec>::Error,
-            StateLogical = StateLogical,
-            StatePhysical = StatePhysical,
+            State = State,
             StateDiff = StateDiff,
         > + Send
         + Sync
@@ -104,18 +92,14 @@ where
     EnsureOpSpec: Debug
         + peace_cfg::EnsureOpSpec<
             Error = <IS as ItemSpec>::Error,
-            StateLogical = StateLogical,
-            StatePhysical = StatePhysical,
+            State = State,
             StateDiff = StateDiff,
         > + Send
         + Sync
         + 'static,
     CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<
-            Error = <IS as ItemSpec>::Error,
-            StateLogical = StateLogical,
-            StatePhysical = StatePhysical,
-        > + Send
+        + peace_cfg::CleanOpSpec<Error = <IS as ItemSpec>::Error, State = State>
+        + Send
         + Sync
         + 'static,
 {

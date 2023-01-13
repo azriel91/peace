@@ -1,10 +1,8 @@
 use std::marker::PhantomData;
 
-use peace::cfg::state::Nothing;
-
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx, State};
+use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx};
 
 use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
 
@@ -19,9 +17,8 @@ where
 {
     type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
+    type State = FileMetadatas;
     type StateDiff = TarXStateDiff;
-    type StateLogical = FileMetadatas;
-    type StatePhysical = Nothing;
 
     // Not sure why we can't use this:
     //
@@ -34,8 +31,8 @@ where
     #[allow(unused_variables)]
     async fn check(
         _tar_x_data: TarXData<'_, Id>,
-        _state_current: &State<FileMetadatas, Nothing>,
-        state_desired: &State<FileMetadatas, Nothing>,
+        _state_current: &FileMetadatas,
+        state_desired: &FileMetadatas,
         diff: &TarXStateDiff,
     ) -> Result<OpCheckStatus, TarXError> {
         let op_check_status = match diff {
@@ -52,7 +49,7 @@ where
                 #[cfg(feature = "output_progress")]
                 {
                     let progress_limit =
-                        ProgressLimit::Steps(state_desired.logical.len().try_into().unwrap());
+                        ProgressLimit::Steps(state_desired.len().try_into().unwrap());
                     OpCheckStatus::ExecRequired { progress_limit }
                 }
             }
@@ -64,21 +61,21 @@ where
     async fn exec_dry(
         _op_ctx: OpCtx<'_>,
         _tar_x_data: TarXData<'_, Id>,
-        _state_current: &State<FileMetadatas, Nothing>,
-        _state_desired: &State<FileMetadatas, Nothing>,
+        _state_current: &FileMetadatas,
+        state_desired: &FileMetadatas,
         _diff: &TarXStateDiff,
-    ) -> Result<Nothing, TarXError> {
-        Ok(Nothing)
+    ) -> Result<FileMetadatas, TarXError> {
+        Ok(state_desired.clone())
     }
 
     #[cfg(not(target_arch = "wasm32"))]
     async fn exec(
         _op_ctx: OpCtx<'_>,
         tar_x_data: TarXData<'_, Id>,
-        _state_current: &State<FileMetadatas, Nothing>,
-        _state_desired: &State<FileMetadatas, Nothing>,
+        _state_current: &FileMetadatas,
+        state_desired: &FileMetadatas,
         diff: &TarXStateDiff,
-    ) -> Result<Nothing, TarXError> {
+    ) -> Result<FileMetadatas, TarXError> {
         use futures::stream::{StreamExt, TryStreamExt};
 
         let storage = tar_x_data.storage();
@@ -136,17 +133,17 @@ where
                 .await?;
         }
 
-        Ok(Nothing)
+        Ok(state_desired.clone())
     }
 
     #[cfg(target_arch = "wasm32")]
     async fn exec(
         _op_ctx: OpCtx<'_>,
         _tar_x_data: TarXData<'_, Id>,
-        _state_current: &State<FileMetadatas, Nothing>,
-        _state_desired: &State<FileMetadatas, Nothing>,
+        _state_current: &FileMetadatas,
+        _state_desired: &FileMetadatas,
         _diff: &TarXStateDiff,
-    ) -> Result<Nothing, TarXError> {
+    ) -> Result<FileMetadatas, TarXError> {
         todo!()
     }
 }

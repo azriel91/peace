@@ -4,14 +4,13 @@ use crate::outcomes::{ItemEnsure, ItemEnsureRt};
 #[derive(Clone, serde::Serialize)]
 pub struct ItemEnsureBoxed(pub(crate) Box<dyn ItemEnsureRt>);
 
-impl<StateLogical, StatePhysical, StateDiff>
-    From<ItemEnsure<StateLogical, StatePhysical, StateDiff>> for ItemEnsureBoxed
+impl<State, StateDiff> From<ItemEnsure<State, StateDiff>> for ItemEnsureBoxed
 where
-    ItemEnsure<StateLogical, StatePhysical, StateDiff>: ItemEnsureRt,
+    ItemEnsure<State, StateDiff>: ItemEnsureRt,
 {
     /// Returns an `ItemEnsureBoxed` which erases an `ItemEnsure`'s type
     /// parameters.
-    fn from(item_ensure: ItemEnsure<StateLogical, StatePhysical, StateDiff>) -> Self {
+    fn from(item_ensure: ItemEnsure<State, StateDiff>) -> Self {
         Self(Box::new(item_ensure))
     }
 }

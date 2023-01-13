@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Nothing, State, TryFnSpec};
+use peace::cfg::{async_trait, TryFnSpec};
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::{fs::File, io::AsyncReadExt};
 
@@ -89,7 +89,7 @@ where
 {
     type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
-    type Output = State<FileDownloadState, Nothing>;
+    type Output = FileDownloadState;
 
     async fn try_exec(
         file_download_data: FileDownloadData<'_, Id>,
@@ -108,7 +108,7 @@ where
         let file_exists = file_download_data.storage().get_item_opt(dest)?.is_some();
         if !file_exists {
             let path = dest.to_path_buf();
-            return Ok(State::new(FileDownloadState::None { path }, Nothing));
+            return Ok(FileDownloadState::None { path });
         }
 
         // Check file length
@@ -118,6 +118,6 @@ where
         #[cfg(target_arch = "wasm32")]
         let file_state = Self::read_file_contents(dest, file_download_data.storage()).await?;
 
-        Ok(State::new(file_state, Nothing))
+        Ok(file_state)
     }
 }

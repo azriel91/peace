@@ -2,8 +2,6 @@ use async_trait::async_trait;
 use peace_data::Data;
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::State;
-
 /// Defines the logic and data of the `State` diffing function.
 ///
 /// # Design Note
@@ -37,20 +35,13 @@ pub trait StateDiffFnSpec {
     /// This is the type returned by the [`StateCurrentFnSpec`], and is used by
     /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
     ///
-    /// See [`ItemSpec::StateLogical`] for more detail.
+    /// See [`ItemSpec::State`] for more detail.
     ///
     /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
     /// [`EnsureOpSpec`]: crate::ItemSpec::EnsureOpSpec
     /// [`exec`]: Self::exec
-    /// [`ItemSpec::StateLogical`]: crate::ItemSpec::StateLogical
-    type StateLogical: Clone + Serialize + DeserializeOwned;
-
-    /// Physical state produced by the operation.
-    ///
-    /// See [`ItemSpec::StatePhysical`] for more detail.
-    ///
-    /// [`ItemSpec::StatePhysical`]: crate::ItemSpec::StatePhysical
-    type StatePhysical: Clone + Serialize + DeserializeOwned;
+    /// [`ItemSpec::State`]: crate::ItemSpec::State
+    type State: Clone + Serialize + DeserializeOwned;
 
     /// State difference returned by this function.
     ///
@@ -74,7 +65,7 @@ pub trait StateDiffFnSpec {
     /// Executes this function.
     async fn exec(
         data: Self::Data<'_>,
-        state_current: &State<Self::StateLogical, Self::StatePhysical>,
-        state_desired: &State<Self::StateLogical, Self::StatePhysical>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
     ) -> Result<Self::StateDiff, Self::Error>;
 }

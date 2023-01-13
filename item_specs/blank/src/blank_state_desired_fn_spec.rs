@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Nothing, State, TryFnSpec};
+use peace::cfg::{async_trait, TryFnSpec};
 
 use crate::{BlankData, BlankError, BlankState};
 
@@ -15,7 +15,7 @@ where
 {
     type Data<'op> = BlankData<'op, Id>;
     type Error = BlankError;
-    type Output = State<BlankState, Nothing>;
+    type Output = BlankState;
 
     async fn try_exec(blank_data: BlankData<'_, Id>) -> Result<Option<Self::Output>, BlankError> {
         Self::exec(blank_data).await.map(Some)
@@ -23,6 +23,6 @@ where
 
     async fn exec(blank_data: BlankData<'_, Id>) -> Result<Self::Output, BlankError> {
         let params = blank_data.params();
-        Ok(State::new(BlankState(Some(**params.src())), Nothing))
+        Ok(BlankState(Some(**params.src())))
     }
 }

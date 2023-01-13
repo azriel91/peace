@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, state::Nothing, EnsureOpSpec, OpCheckStatus, OpCtx, State};
+use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx};
 
 use crate::{BlankData, BlankError, BlankState, BlankStateDiff};
 
@@ -17,14 +17,13 @@ where
 {
     type Data<'op> = BlankData<'op, Id>;
     type Error = BlankError;
+    type State = BlankState;
     type StateDiff = BlankStateDiff;
-    type StateLogical = BlankState;
-    type StatePhysical = Nothing;
 
     async fn check(
         _blank_data: BlankData<'_, Id>,
-        _state_current: &State<BlankState, Nothing>,
-        _state_desired: &State<BlankState, Nothing>,
+        _state_current: &BlankState,
+        _state_desired: &BlankState,
         diff: &BlankStateDiff,
     ) -> Result<OpCheckStatus, BlankError> {
         let op_check_status = match *diff {
@@ -48,23 +47,23 @@ where
     async fn exec_dry(
         _op_ctx: OpCtx<'_>,
         _blank_data: BlankData<'_, Id>,
-        _state_current: &State<BlankState, Nothing>,
-        _state_desired: &State<BlankState, Nothing>,
+        _state_current: &BlankState,
+        state_desired: &BlankState,
         _diff: &BlankStateDiff,
-    ) -> Result<Nothing, BlankError> {
-        Ok(Nothing)
+    ) -> Result<BlankState, BlankError> {
+        Ok(state_desired.clone())
     }
 
     async fn exec(
         _op_ctx: OpCtx<'_>,
         mut blank_data: BlankData<'_, Id>,
-        _state_current: &State<BlankState, Nothing>,
-        _state_desired: &State<BlankState, Nothing>,
+        _state_current: &BlankState,
+        state_desired: &BlankState,
         _diff: &BlankStateDiff,
-    ) -> Result<Nothing, BlankError> {
+    ) -> Result<BlankState, BlankError> {
         let params = blank_data.params_mut();
         **params.dest_mut() = Some(**params.src());
 
-        Ok(Nothing)
+        Ok(state_desired.clone())
     }
 }

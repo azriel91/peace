@@ -15,7 +15,7 @@ cfg_if::cfg_if! {
     }
 }
 
-use peace::cfg::{async_trait, state::Nothing, EnsureOpSpec, OpCheckStatus, OpCtx, State};
+use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx};
 
 use crate::{FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
 
@@ -230,14 +230,13 @@ where
 {
     type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
+    type State = FileDownloadState;
     type StateDiff = FileDownloadStateDiff;
-    type StateLogical = FileDownloadState;
-    type StatePhysical = Nothing;
 
     async fn check(
         _file_download_data: FileDownloadData<'_, Id>,
-        _file_state_current: &State<FileDownloadState, Nothing>,
-        _file_state_desired: &State<FileDownloadState, Nothing>,
+        _file_download_state_current: &FileDownloadState,
+        _file_download_state_desired: &FileDownloadState,
         diff: &FileDownloadStateDiff,
     ) -> Result<OpCheckStatus, FileDownloadError> {
         let op_check_status = match diff {
@@ -276,21 +275,21 @@ where
     async fn exec_dry(
         _op_ctx: OpCtx<'_>,
         _file_download_data: FileDownloadData<'_, Id>,
-        _state: &State<FileDownloadState, Nothing>,
-        _file_state_desired: &State<FileDownloadState, Nothing>,
+        _file_download_state_current: &FileDownloadState,
+        file_download_state_desired: &FileDownloadState,
         _diff: &FileDownloadStateDiff,
-    ) -> Result<Nothing, FileDownloadError> {
-        Ok(Nothing)
+    ) -> Result<FileDownloadState, FileDownloadError> {
+        Ok(file_download_state_desired.clone())
     }
 
     async fn exec(
         op_ctx: OpCtx<'_>,
         file_download_data: FileDownloadData<'_, Id>,
-        _state: &State<FileDownloadState, Nothing>,
-        _file_state_desired: &State<FileDownloadState, Nothing>,
+        _file_download_state_current: &FileDownloadState,
+        file_download_state_desired: &FileDownloadState,
         _diff: &FileDownloadStateDiff,
-    ) -> Result<Nothing, FileDownloadError> {
+    ) -> Result<FileDownloadState, FileDownloadError> {
         Self::file_download(op_ctx, file_download_data).await?;
-        Ok(Nothing)
+        Ok(file_download_state_desired.clone())
     }
 }

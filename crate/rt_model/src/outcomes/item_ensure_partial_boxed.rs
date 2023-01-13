@@ -4,14 +4,13 @@ use crate::outcomes::{ItemEnsurePartial, ItemEnsurePartialRt};
 #[derive(Clone, serde::Serialize)]
 pub struct ItemEnsurePartialBoxed(pub(crate) Box<dyn ItemEnsurePartialRt>);
 
-impl<StateLogical, StatePhysical, StateDiff>
-    From<ItemEnsurePartial<StateLogical, StatePhysical, StateDiff>> for ItemEnsurePartialBoxed
+impl<State, StateDiff> From<ItemEnsurePartial<State, StateDiff>> for ItemEnsurePartialBoxed
 where
-    ItemEnsurePartial<StateLogical, StatePhysical, StateDiff>: ItemEnsurePartialRt,
+    ItemEnsurePartial<State, StateDiff>: ItemEnsurePartialRt,
 {
     /// Returns an `ItemEnsurePartialBoxed` which erases an
     /// `ItemEnsurePartial`'s type parameters.
-    fn from(item_ensure: ItemEnsurePartial<StateLogical, StatePhysical, StateDiff>) -> Self {
+    fn from(item_ensure: ItemEnsurePartial<State, StateDiff>) -> Self {
         Self(Box::new(item_ensure))
     }
 }

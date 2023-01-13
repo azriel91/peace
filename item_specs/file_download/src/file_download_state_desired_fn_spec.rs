@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Nothing, State, TryFnSpec};
+use peace::cfg::{async_trait, TryFnSpec};
 
 use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
 
@@ -69,7 +69,7 @@ where
 {
     type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
-    type Output = State<FileDownloadState, Nothing>;
+    type Output = FileDownloadState;
 
     async fn try_exec(
         file_download_data: FileDownloadData<'_, Id>,
@@ -82,6 +82,6 @@ where
     ) -> Result<Self::Output, FileDownloadError> {
         let file_state_desired = Self::file_state_desired(&file_download_data).await?;
 
-        Ok(State::new(file_state_desired, Nothing))
+        Ok(file_state_desired)
     }
 }

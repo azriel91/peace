@@ -2,8 +2,8 @@ use std::{io::Cursor, path::PathBuf};
 
 use peace::{
     cfg::{
-        item_spec_id, profile, state::Nothing, CleanOpSpec, EnsureOpSpec, FlowId, ItemSpecId,
-        OpCheckStatus, Profile, State,
+        item_spec_id, profile, CleanOpSpec, EnsureOpSpec, FlowId, ItemSpecId, OpCheckStatus,
+        Profile,
     },
     data::Data,
     resources::states::{StateDiffs, StatesCleaned, StatesCurrent, StatesDesired, StatesEnsured},
@@ -62,10 +62,10 @@ async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_e
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
     let states_current = resources.borrow::<StatesCurrent>();
     let state_current = states_current
-        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .get::<FileMetadatas, _>(&TarXTest::ID)
         .unwrap();
 
-    assert_eq!(FileMetadatas::default(), state_current.logical);
+    assert_eq!(&FileMetadatas::default(), state_current);
 
     Ok(())
 }
@@ -98,15 +98,15 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
     let states_current = resources.borrow::<StatesCurrent>();
     let state_current = states_current
-        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .get::<FileMetadatas, _>(&TarXTest::ID)
         .unwrap();
 
     assert_eq!(
-        FileMetadatas::from(vec![
+        &FileMetadatas::from(vec![
             FileMetadata::new(b_path, TAR_X2_MTIME),
             FileMetadata::new(d_path, TAR_X2_MTIME),
         ]),
-        state_current.logical
+        state_current
     );
 
     Ok(())
@@ -135,15 +135,15 @@ async fn state_desired_returns_file_metadatas_from_tar() -> Result<(), Box<dyn s
     let CmdContext { resources, .. } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
     let states_desired = resources.borrow::<StatesDesired>();
     let state_desired = states_desired
-        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .get::<FileMetadatas, _>(&TarXTest::ID)
         .unwrap();
 
     assert_eq!(
-        FileMetadatas::from(vec![
+        &FileMetadatas::from(vec![
             FileMetadata::new(b_path, TAR_X2_MTIME),
             FileMetadata::new(d_path, TAR_X2_MTIME),
         ]),
-        state_desired.logical
+        state_desired
     );
 
     Ok(())
@@ -464,7 +464,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
     let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
     let states_current = resources.borrow::<StatesCurrent>();
     let state_current = states_current
-        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .get::<FileMetadatas, _>(&TarXTest::ID)
         .unwrap();
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
@@ -473,7 +473,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
     let states_desired = resources.borrow::<StatesDesired>();
     let state_desired = states_desired
-        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .get::<FileMetadatas, _>(&TarXTest::ID)
         .unwrap();
     let state_diffs = resources.borrow::<StateDiffs>();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(&TarXTest::ID).unwrap();
@@ -518,17 +518,17 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
 
     let states_ensured = resources.borrow::<StatesEnsured>();
     let state_ensured = states_ensured
-        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .get::<FileMetadatas, _>(&TarXTest::ID)
         .unwrap();
 
     let b_path = PathBuf::from("b");
     let d_path = PathBuf::from("sub").join("d");
     assert_eq!(
-        FileMetadatas::from(vec![
+        &FileMetadatas::from(vec![
             FileMetadata::new(b_path, TAR_X2_MTIME),
             FileMetadata::new(d_path, TAR_X2_MTIME),
         ]),
-        state_ensured.logical
+        state_ensured
     );
 
     Ok(())
@@ -571,15 +571,15 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
 
     let states_ensured = resources.borrow::<StatesEnsured>();
     let state_ensured = states_ensured
-        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .get::<FileMetadatas, _>(&TarXTest::ID)
         .unwrap();
 
     assert_eq!(
-        FileMetadatas::from(vec![
+        &FileMetadatas::from(vec![
             FileMetadata::new(b_path.clone(), TAR_X2_MTIME),
             FileMetadata::new(d_path.clone(), TAR_X2_MTIME),
         ]),
-        state_ensured.logical
+        state_ensured
     );
 
     // Execute again to check idempotence
@@ -590,15 +590,15 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
 
     let states_ensured = resources.borrow::<StatesEnsured>();
     let state_ensured = states_ensured
-        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .get::<FileMetadatas, _>(&TarXTest::ID)
         .unwrap();
 
     assert_eq!(
-        FileMetadatas::from(vec![
+        &FileMetadatas::from(vec![
             FileMetadata::new(b_path, TAR_X2_MTIME),
             FileMetadata::new(d_path, TAR_X2_MTIME),
         ]),
-        state_ensured.logical
+        state_ensured
     );
 
     Ok(())
@@ -625,7 +625,7 @@ async fn clean_check_returns_exec_not_required_when_dest_empty()
     let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
     let states_current = resources.borrow::<StatesCurrent>();
     let state_current = states_current
-        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .get::<FileMetadatas, _>(&TarXTest::ID)
         .unwrap();
 
     assert_eq!(
@@ -666,10 +666,10 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
 
     let states_cleaned = resources.borrow::<StatesCleaned>();
     let state_cleaned = states_cleaned
-        .get::<State<FileMetadatas, Nothing>, _>(&TarXTest::ID)
+        .get::<FileMetadatas, _>(&TarXTest::ID)
         .unwrap();
 
-    assert_eq!(FileMetadatas::default(), state_cleaned.logical);
+    assert_eq!(&FileMetadatas::default(), state_cleaned);
     assert!(!dest.join("b").exists());
     assert!(!dest.join("sub").join("d").exists());
 

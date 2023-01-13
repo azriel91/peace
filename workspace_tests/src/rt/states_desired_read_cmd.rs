@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{profile, state::Nothing, FlowId, ItemSpec, Profile, State},
+    cfg::{profile, FlowId, ItemSpec, Profile},
     resources::states::StatesDesired,
     rt::cmds::sub::{StatesDesiredDiscoverCmd, StatesDesiredReadCmd},
     rt_model::{CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
@@ -38,10 +38,10 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
 
     let states_desired_from_discover = resources_from_discover.borrow::<StatesDesired>();
     let vec_copy_state_from_discover =
-        states_desired_from_discover.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
+        states_desired_from_discover.get::<VecCopyState, _>(VecCopyItemSpec.id());
     let states_desired_from_read = resources_from_read.borrow::<StatesDesired>();
     let vec_copy_state_from_read =
-        states_desired_from_read.get::<State<VecCopyState, Nothing>, _>(VecCopyItemSpec.id());
+        states_desired_from_read.get::<VecCopyState, _>(VecCopyItemSpec.id());
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
     Ok(())
 }

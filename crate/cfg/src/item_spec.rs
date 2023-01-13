@@ -5,7 +5,7 @@ use peace_core::ItemSpecId;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{CleanOpSpec, EnsureOpSpec, State, StateDiffFnSpec, TryFnSpec};
+use crate::{CleanOpSpec, EnsureOpSpec, StateDiffFnSpec, TryFnSpec};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -56,89 +56,25 @@ pub trait ItemSpec {
     /// Consumer provided error type.
     type Error: std::error::Error;
 
-    /// State of the managed item that is controlled.
+    /// Summary of the managed item's state.
     ///
-    /// Examples are a server boot image, or application configuration version,
-    /// but not virtual machine instance IDs, or file timestamps. For
-    /// those, see [`StatePhysical`].
+    /// **For an extensive explanation of state, and how to define it, please
+    /// see the [state concept] as well as the [`State`] type.**
     ///
-    /// This is intended as a serializable summary of the state, so it should be
-    /// relatively lightweight.
-    ///
-    /// This is returned by [`StateCurrentFnSpec`], and is used by
-    /// [`EnsureOpSpec`] and [`CleanOpSpec`] to determine if their `exec`
-    /// functions need to be run.
+    /// This type is used to represent the current state of the item (if it
+    /// exists), the desired state of the item (what is intended to exist), and
+    /// is used in the *diff* calculation -- what is the difference between the
+    /// current and desired states.
     ///
     /// # Examples
     ///
-    /// ## `ItemSpec` that manages servers:
+    /// * A file's state may be its path, and a hash of its contents.
+    /// * A server's state may be its operating system, CPU and memory capacity,
+    ///   IP address, and ID.
     ///
-    /// `StateLogical` may be the number of server instances, the boot
-    /// image, and their hardware capacity.
-    ///
-    /// * [`StateCurrentFnSpec`] returns this, and it should be renderable in a
-    ///   human readable format.
-    ///
-    /// * [`EnsureOpSpec::check`] should be able to use this to determine if
-    ///   there are enough servers using the desired image.
-    ///   [`EnsureOpSpec::exec`] returns the physical IDs of any launched
-    ///   servers.
-    ///
-    /// * [`CleanOpSpec::check`] should be able to use this to determine if the
-    ///   servers that need to be removed. [`CleanOpSpec::exec`] should be able
-    ///   to remove the servers.
-    ///
-    /// * 🚧 `BackupOpSpec::exec` should produce this as a record of the current
-    ///   state.
-    ///
-    /// * 🚧 `RestoreOpSpec::exec` should be able to read this and launch
-    ///   servers using the recorded image and hardware capacity.
-    ///
-    /// ## `ItemSpec` that manages application configuration:
-    ///
-    /// `StateLogical` is not necessarily the configuration itself, but may
-    /// be a content hash, commit hash or version of the configuration. If
-    /// the configuration is small, then one may consider making that the
-    /// state.
-    ///
-    /// * [`StateCurrentFnSpec`] returns this, and it should be renderable in a
-    ///   human readable format.
-    ///
-    /// * [`EnsureOpSpec::check`] should be able to compare the desired
-    ///   configuration with this to determine if the configuration is already
-    ///   in the correct state or needs to be altered.
-    ///
-    /// * [`CleanOpSpec::check`] should be able to use this to determine if the
-    ///   configuration needs to be undone. [`CleanOpSpec::exec`] should be able
-    ///   to remove the configuration.
-    ///
-    /// * 🚧 `BackupOpSpec::exec` should produce this as a record of the current
-    ///   state.
-    ///
-    /// * 🚧 `RestoreOpSpec::exec` should be able to read this and determine how
-    ///   to alter the system to match this state. If this were a commit hash,
-    ///   then restoring would be applying the configuration at that commit
-    ///   hash.
-    ///
-    /// [`StateCurrentFnSpec`]: Self::StateCurrentFnSpec
-    /// [`StatePhysical`]: Self::StatePhysical
-    type StateLogical: Clone + fmt::Display + Serialize + DeserializeOwned;
-
-    /// State of the managed item that is not controlled.
-    ///
-    /// Examples are virtual machine instance IDs, or generated values.
-    ///
-    /// Physical IDs of *things* produced by the operation will be part of
-    /// `StatePhysical`. Even though they are not controlled, they still matter:
-    ///
-    /// * Environmental configuration: Providing these to servers to communicate
-    ///   with each other.
-    /// * Cleaning up resources: VMs, reserved tokens etcetera.
-    ///
-    /// [`Data`]: crate::EnsureOpSpec::Data
-    /// [`StateLogical`]: Self::StateLogical
-    /// [`EnsureOpSpec::desired`]: crate::EnsureOpSpec::desired
-    type StatePhysical: Clone + fmt::Display + Serialize + DeserializeOwned;
+    /// [state concept]: https://peace.mk/technical_concepts/state.html
+    /// [`State`]: crate::state::State
+    type State: Clone + fmt::Display + Serialize + DeserializeOwned;
 
     /// Diff between the current [`State`] and the desired [`State`].
     ///
@@ -162,10 +98,7 @@ pub trait ItemSpec {
     type StateDiff: Clone + fmt::Display + Serialize + DeserializeOwned;
 
     /// Function that returns the current state of the managed item.
-    type StateCurrentFnSpec: TryFnSpec<
-        Error = Self::Error,
-        Output = State<Self::StateLogical, Self::StatePhysical>,
-    >;
+    type StateCurrentFnSpec: TryFnSpec<Error = Self::Error, Output = Self::State>;
 
     /// Function that returns the desired state of the managed item.
     ///
@@ -176,10 +109,7 @@ pub trait ItemSpec {
     ///
     /// * For a web application service operation, the desired state could be
     ///   the web service is running on the latest version.
-    type StateDesiredFnSpec: TryFnSpec<
-        Error = Self::Error,
-        Output = State<Self::StateLogical, Self::StatePhysical>,
-    >;
+    type StateDesiredFnSpec: TryFnSpec<Error = Self::Error, Output = Self::State>;
 
     /// Returns the difference between the current state and desired state.
     ///
@@ -201,8 +131,7 @@ pub trait ItemSpec {
     ///   the application version changing from 1 to 2.
     type StateDiffFnSpec: StateDiffFnSpec<
         Error = Self::Error,
-        StateLogical = Self::StateLogical,
-        StatePhysical = Self::StatePhysical,
+        State = Self::State,
         StateDiff = Self::StateDiff,
     >;
 
@@ -211,19 +140,14 @@ pub trait ItemSpec {
     /// The output is the IDs of resources produced by the operation.
     type EnsureOpSpec: EnsureOpSpec<
         Error = Self::Error,
-        StateLogical = Self::StateLogical,
-        StatePhysical = Self::StatePhysical,
+        State = Self::State,
         StateDiff = Self::StateDiff,
     >;
 
     /// Specification of the clean operation.
     ///
     /// The output is the IDs of resources cleaned by the operation.
-    type CleanOpSpec: CleanOpSpec<
-        Error = Self::Error,
-        StateLogical = Self::StateLogical,
-        StatePhysical = Self::StatePhysical,
-    >;
+    type CleanOpSpec: CleanOpSpec<Error = Self::Error, State = Self::State>;
 
     /// Returns the ID of this full spec.
     ///

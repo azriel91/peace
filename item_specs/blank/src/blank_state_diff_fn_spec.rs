@@ -1,4 +1,4 @@
-use peace::cfg::{async_trait, state::Nothing, State, StateDiffFnSpec};
+use peace::cfg::{async_trait, StateDiffFnSpec};
 
 use crate::{BlankError, BlankState, BlankStateDiff};
 
@@ -10,24 +10,23 @@ pub struct BlankStateDiffFnSpec;
 impl StateDiffFnSpec for BlankStateDiffFnSpec {
     type Data<'op> = &'op ();
     type Error = BlankError;
+    type State = BlankState;
     type StateDiff = BlankStateDiff;
-    type StateLogical = BlankState;
-    type StatePhysical = Nothing;
 
     async fn exec(
         _: &(),
-        state_current: &State<BlankState, Nothing>,
-        state_desired: &State<BlankState, Nothing>,
+        blank_state_current: &BlankState,
+        blank_state_desired: &BlankState,
     ) -> Result<Self::StateDiff, BlankError> {
-        let diff = match (state_current.logical, state_desired.logical) {
+        let diff = match (blank_state_current, blank_state_desired) {
             (BlankState(Some(current)), BlankState(Some(desired))) if current == desired => {
-                BlankStateDiff::InSync { value: current }
+                BlankStateDiff::InSync { value: *current }
             }
             (BlankState(Some(current)), BlankState(Some(desired))) => BlankStateDiff::OutOfSync {
                 diff: i64::from(desired - current),
             },
             (BlankState(None), BlankState(Some(desired))) => {
-                BlankStateDiff::Added { value: desired }
+                BlankStateDiff::Added { value: *desired }
             }
             (BlankState(_), BlankState(None)) => unreachable!("desired state is always Some"),
         };

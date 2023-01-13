@@ -12,21 +12,21 @@ fn clone() {
     let item_ensure_partial_boxed = ItemEnsurePartialBoxed::from(item_ensure_partial());
     let mut item_ensure_partial_boxed_clone = Clone::clone(&item_ensure_partial_boxed);
 
-    *BoxDataTypeDowncast::<ItemEnsurePartial<u32, External<u32>, u32>>::downcast_mut(
+    *BoxDataTypeDowncast::<ItemEnsurePartial<State<u32, External<u32>>, u32>>::downcast_mut(
         &mut item_ensure_partial_boxed_clone,
     )
     .unwrap() = item_ensure_partial();
 
     assert_eq!(
         Some(item_ensure_partial()),
-        BoxDataTypeDowncast::<ItemEnsurePartial<u32, External<u32>, u32>>::downcast_ref(
+        BoxDataTypeDowncast::<ItemEnsurePartial<State<u32, External<u32>>, u32>>::downcast_ref(
             &item_ensure_partial_boxed
         )
         .cloned()
     );
     assert_eq!(
         Some(item_ensure_partial()),
-        BoxDataTypeDowncast::<ItemEnsurePartial<u32, External<u32>, u32>>::downcast_ref(
+        BoxDataTypeDowncast::<ItemEnsurePartial<State<u32, External<u32>>, u32>>::downcast_ref(
             &item_ensure_partial_boxed_clone
         )
         .cloned()
@@ -102,7 +102,7 @@ op_check_status: ExecNotRequired
     Ok(())
 }
 
-fn item_ensure_partial() -> ItemEnsurePartial<u32, External<u32>, u32> {
+fn item_ensure_partial() -> ItemEnsurePartial<State<u32, External<u32>>, u32> {
     let mut item_ensure_partial = ItemEnsurePartial::new();
     item_ensure_partial.state_current = Some(State::new(1, External::Value(0)));
     item_ensure_partial.state_desired = Some(State::new(3, External::tbd()));
