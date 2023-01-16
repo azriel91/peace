@@ -18,7 +18,7 @@ test = true
 
 [dev-dependencies]
 cfg-if = { workspace = true }
-console = "0.15.4"
+console = "0.15.5"
 diff-struct = "0.5.1"
 peace = { path = "..", version = "0.0.5", default-features = false }
 peace_item_specs = { path = "../item_specs", version = "0.0.5" }
