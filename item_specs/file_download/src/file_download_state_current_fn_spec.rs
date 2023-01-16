@@ -55,7 +55,7 @@ impl<Id> FileDownloadStateCurrentFnSpec<Id> {
                     .bytes()
                     .len()
                     .try_into()
-                    .map(|byte_count| {
+                    .map(|byte_count: u64| {
                         if byte_count > crate::IN_MEMORY_CONTENTS_MAX {
                             FileDownloadState::Unknown {
                                 path: dest.to_path_buf(),

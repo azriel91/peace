@@ -113,12 +113,13 @@ where
         file_download_data: FileDownloadData<'_, Id>,
         State {
             logical: file_state,
-            physical: e_tag,
+            physical: _e_tag,
         }: &State<FileDownloadState, FetchedOpt<ETag>>,
     ) -> Result<(), FileDownloadError> {
         match file_state {
             FileDownloadState::None { .. } => {}
             FileDownloadState::StringContents { path, .. }
+            | FileDownloadState::Length { path, .. }
             | FileDownloadState::Unknown { path } => {
                 file_download_data.storage().remove_item(path)?;
             }
