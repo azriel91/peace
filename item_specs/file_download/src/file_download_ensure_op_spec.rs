@@ -15,9 +15,10 @@ cfg_if::cfg_if! {
     }
 }
 
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{async_trait, state::FetchedOpt, EnsureOpSpec, OpCheckStatus, OpCtx, State};
+use reqwest::header::ETAG;
 
-use crate::{FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
+use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
 
 #[cfg(feature = "output_progress")]
 use peace::{cfg::progress::ProgressLimit, diff::Tracked};
@@ -34,7 +35,7 @@ where
         #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
         #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
         file_download_data: FileDownloadData<'_, Id>,
-    ) -> Result<(), FileDownloadError> {
+    ) -> Result<FetchedOpt<ETag>, FileDownloadError> {
         let client = file_download_data.client();
         let params = file_download_data.file_download_params();
         let src_url = params.src();
@@ -48,6 +49,14 @@ where
 
             file_download_error
         })?;
+
+        let e_tag = response
+            .headers()
+            .get(ETAG)
+            .and_then(|header| header.to_str().ok())
+            .map(|header| ETag::new(header.to_string()))
+            .map(FetchedOpt::Value)
+            .unwrap_or(FetchedOpt::None);
 
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -75,7 +84,7 @@ where
             .await?;
         }
 
-        Ok(())
+        Ok(e_tag)
     }
 
     /// Streams the content to disk.
@@ -230,13 +239,13 @@ where
 {
     type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
-    type State = FileDownloadState;
+    type State = State<FileDownloadState, FetchedOpt<ETag>>;
     type StateDiff = FileDownloadStateDiff;
 
     async fn check(
         _file_download_data: FileDownloadData<'_, Id>,
-        _file_download_state_current: &FileDownloadState,
-        _file_download_state_desired: &FileDownloadState,
+        _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
+        _file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
         diff: &FileDownloadStateDiff,
     ) -> Result<OpCheckStatus, FileDownloadError> {
         let op_check_status = match diff {
@@ -275,21 +284,27 @@ where
     async fn exec_dry(
         _op_ctx: OpCtx<'_>,
         _file_download_data: FileDownloadData<'_, Id>,
-        _file_download_state_current: &FileDownloadState,
-        file_download_state_desired: &FileDownloadState,
+        _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
+        file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
         _diff: &FileDownloadStateDiff,
-    ) -> Result<FileDownloadState, FileDownloadError> {
+    ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
+        // TODO: fetch headers but don't write to file.
+
         Ok(file_download_state_desired.clone())
     }
 
     async fn exec(
         op_ctx: OpCtx<'_>,
         file_download_data: FileDownloadData<'_, Id>,
-        _file_download_state_current: &FileDownloadState,
-        file_download_state_desired: &FileDownloadState,
+        _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
+        file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
         _diff: &FileDownloadStateDiff,
-    ) -> Result<FileDownloadState, FileDownloadError> {
-        Self::file_download(op_ctx, file_download_data).await?;
-        Ok(file_download_state_desired.clone())
+    ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
+        let e_tag = Self::file_download(op_ctx, file_download_data).await?;
+
+        let mut file_download_state_ensured = file_download_state_desired.clone();
+        file_download_state_ensured.physical = e_tag;
+
+        Ok(file_download_state_ensured)
     }
 }

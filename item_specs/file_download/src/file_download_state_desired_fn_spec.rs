@@ -1,8 +1,9 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, TryFnSpec};
+use peace::cfg::{async_trait, state::FetchedOpt, State, TryFnSpec};
+use reqwest::header::ETAG;
 
-use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
+use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState};
 
 /// Reads the desired state of the file to download.
 #[derive(Debug)]
@@ -14,7 +15,7 @@ where
 {
     async fn file_state_desired(
         file_download_data: &FileDownloadData<'_, Id>,
-    ) -> Result<FileDownloadState, FileDownloadError> {
+    ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
         let client = file_download_data.client();
         let file_download_params = file_download_data.file_download_params();
         let dest = file_download_params.dest();
@@ -32,7 +33,15 @@ where
         let status_code = response.status();
         if status_code.is_success() {
             let content_length = response.content_length();
-            if let Some(remote_file_length) = content_length {
+            let e_tag = response
+                .headers()
+                .get(ETAG)
+                .and_then(|header| header.to_str().ok())
+                .map(|header| ETag::new(header.to_string()))
+                .map(FetchedOpt::Value)
+                .unwrap_or(FetchedOpt::None);
+
+            let file_download_state = if let Some(remote_file_length) = content_length {
                 if remote_file_length <= crate::IN_MEMORY_CONTENTS_MAX {
                     // Download it now.
                     let remote_contents = async move {
@@ -40,22 +49,25 @@ where
                         response_text.await.map_err(FileDownloadError::SrcFileRead)
                     }
                     .await?;
-                    Ok(FileDownloadState::StringContents {
+
+                    FileDownloadState::StringContents {
                         path: dest.to_path_buf(),
                         contents: remote_contents,
-                    })
+                    }
                 } else {
                     // Stream it later.
-                    Ok(FileDownloadState::Length {
+                    FileDownloadState::Length {
                         path: dest.to_path_buf(),
                         byte_count: remote_file_length,
-                    })
+                    }
                 }
             } else {
-                Ok(FileDownloadState::Unknown {
+                FileDownloadState::Unknown {
                     path: dest.to_path_buf(),
-                })
-            }
+                }
+            };
+
+            Ok(State::new(file_download_state, e_tag))
         } else {
             Err(FileDownloadError::SrcFileUndetermined { status_code })
         }
@@ -69,7 +81,7 @@ where
 {
     type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
-    type Output = FileDownloadState;
+    type Output = State<FileDownloadState, FetchedOpt<ETag>>;
 
     async fn try_exec(
         file_download_data: FileDownloadData<'_, Id>,

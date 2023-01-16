@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, TryFnSpec};
+use peace::cfg::{async_trait, state::FetchedOpt, State, TryFnSpec};
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::{fs::File, io::AsyncReadExt};
 
 #[cfg(target_arch = "wasm32")]
 use peace::rt_model::Storage;
 
-use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
+use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState};
 
 /// Reads the current state of the file to download.
 #[derive(Debug)]
@@ -26,9 +26,8 @@ impl<Id> FileDownloadStateCurrentFnSpec<Id> {
             .await
             .map_err(FileDownloadError::DestMetadataRead)?;
         let file_state = if metadata.len() > crate::IN_MEMORY_CONTENTS_MAX {
-            FileDownloadState::Length {
+            FileDownloadState::Unknown {
                 path: dest.to_path_buf(),
-                byte_count: metadata.len(),
             }
         } else {
             let mut buffer = String::new();
@@ -58,9 +57,8 @@ impl<Id> FileDownloadStateCurrentFnSpec<Id> {
                     .try_into()
                     .map(|byte_count| {
                         if byte_count > crate::IN_MEMORY_CONTENTS_MAX {
-                            FileDownloadState::Length {
+                            FileDownloadState::Unknown {
                                 path: dest.to_path_buf(),
-                                byte_count,
                             }
                         } else {
                             FileDownloadState::StringContents {
@@ -89,7 +87,7 @@ where
 {
     type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
-    type Output = FileDownloadState;
+    type Output = State<FileDownloadState, FetchedOpt<ETag>>;
 
     async fn try_exec(
         file_download_data: FileDownloadData<'_, Id>,
@@ -108,7 +106,10 @@ where
         let file_exists = file_download_data.storage().get_item_opt(dest)?.is_some();
         if !file_exists {
             let path = dest.to_path_buf();
-            return Ok(FileDownloadState::None { path });
+            return Ok(State::new(
+                FileDownloadState::None { path },
+                FetchedOpt::Tbd,
+            ));
         }
 
         // Check file length
@@ -118,6 +119,18 @@ where
         #[cfg(target_arch = "wasm32")]
         let file_state = Self::read_file_contents(dest, file_download_data.storage()).await?;
 
-        Ok(file_state)
+        let e_tag = file_download_data
+            .state_prev()
+            .get()
+            .map(|state_prev| state_prev.physical.clone())
+            .unwrap_or_else(|| {
+                if let FileDownloadState::None { .. } = &file_state {
+                    FetchedOpt::Tbd
+                } else {
+                    FetchedOpt::None
+                }
+            });
+
+        Ok(State::new(file_state, e_tag))
     }
 }
