@@ -1,9 +1,11 @@
 pub use self::{
     external::{External, Fetched, Generated, Timestamped},
+    external_opt::{ExternalOpt, FetchedOpt, GeneratedOpt, TimestampedOpt},
     nothing::Nothing,
 };
 
 mod external;
+mod external_opt;
 mod nothing;
 
 use std::{any::TypeId, fmt};

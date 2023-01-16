@@ -57,7 +57,7 @@ impl ItemSpec for VecCopyItemSpec {
         resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
         let vec_b = {
-            let states_saved = <RMaybe<'_, StatesSaved> as Data>::borrow(resources);
+            let states_saved = <RMaybe<'_, StatesSaved> as Data>::borrow(Self::ID, resources);
             let vec_copy_state_saved: Option<&'_ VecCopyState> = states_saved
                 .as_ref()
                 .and_then(|states_saved| states_saved.get(self.id()));

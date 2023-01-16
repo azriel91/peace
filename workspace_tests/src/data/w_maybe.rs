@@ -1,13 +1,18 @@
 use std::any::TypeId;
 
-use peace::data::{Data, DataAccess, DataAccessDyn, Resources, TypeIds, WMaybe};
+use peace::{
+    cfg::{item_spec_id, ItemSpecId},
+    data::{Data, DataAccess, DataAccessDyn, Resources, TypeIds, WMaybe},
+};
+
+const ITEM_SPEC_ID_UNUSED: &ItemSpecId = &item_spec_id!("test_item_spec_id");
 
 #[test]
 fn data_borrow_returns_t_when_present() {
     let mut resources = Resources::new();
     resources.insert(1u8);
 
-    let maybe_mut = <WMaybe<'_, u8> as Data>::borrow(&resources);
+    let maybe_mut = <WMaybe<'_, u8> as Data>::borrow(ITEM_SPEC_ID_UNUSED, &resources);
 
     assert_eq!(Some(1u8), maybe_mut.as_deref().copied())
 }
@@ -16,7 +21,7 @@ fn data_borrow_returns_t_when_present() {
 fn data_borrow_returns_none_when_absent() {
     let resources = Resources::new();
 
-    let maybe_mut = <WMaybe<'_, u8> as Data>::borrow(&resources);
+    let maybe_mut = <WMaybe<'_, u8> as Data>::borrow(ITEM_SPEC_ID_UNUSED, &resources);
 
     assert_eq!(None, maybe_mut.as_deref().copied())
 }
@@ -59,7 +64,7 @@ fn data_access_dyn_borrow_muts_returns_t() {
 fn debug() {
     let mut resources = Resources::new();
     resources.insert(1u8);
-    let maybe_mut = <WMaybe<'_, u8> as Data>::borrow(&resources);
+    let maybe_mut = <WMaybe<'_, u8> as Data>::borrow(ITEM_SPEC_ID_UNUSED, &resources);
 
     assert_eq!(
         r#"WMaybe(Some(RefMut { inner: 1 }))"#,
@@ -71,11 +76,11 @@ fn debug() {
 fn partial_eq() {
     let mut resources = Resources::new();
     resources.insert(1u8);
-    let maybe_mut_0 = <WMaybe<'_, u8> as Data>::borrow(&resources);
+    let maybe_mut_0 = <WMaybe<'_, u8> as Data>::borrow(ITEM_SPEC_ID_UNUSED, &resources);
 
     let mut resources = Resources::new();
     resources.insert(1u8);
-    let maybe_mut_1 = <WMaybe<'_, u8> as Data>::borrow(&resources);
+    let maybe_mut_1 = <WMaybe<'_, u8> as Data>::borrow(ITEM_SPEC_ID_UNUSED, &resources);
 
     assert_eq!(maybe_mut_0, maybe_mut_1)
 }

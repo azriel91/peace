@@ -49,9 +49,7 @@ fn debug() {
         },
         state_desired: State {
             logical: 3,
-            physical: Tbd(
-                (),
-            ),
+            physical: Tbd,
         },
         state_diff: 2,
         op_check_status: ExecNotRequired,
@@ -99,7 +97,7 @@ state_ensured: null
 fn item_ensure() -> ItemEnsure<State<u32, External<u32>>, u32> {
     let mut item_ensure_partial = ItemEnsurePartial::new();
     item_ensure_partial.state_current = Some(State::new(1, External::Value(0)));
-    item_ensure_partial.state_desired = Some(State::new(3, External::tbd()));
+    item_ensure_partial.state_desired = Some(State::new(3, External::Tbd));
     item_ensure_partial.state_diff = Some(2);
     item_ensure_partial.op_check_status = Some(OpCheckStatus::ExecNotRequired);
     ItemEnsure::try_from((item_ensure_partial, None)).unwrap()

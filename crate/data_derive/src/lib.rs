@@ -32,12 +32,12 @@ pub fn data_access(input: TokenStream) -> TokenStream {
 fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
     let name = &ast.ident;
 
-    let module_pfx = ast
+    let (peace_data_path, peace_cfg_path) = ast
         .attrs
         .iter()
         .find(peace_internal)
-        .map(|_| quote!(peace_data))
-        .unwrap_or_else(|| quote!(peace::data));
+        .map(|_| (quote!(peace_data), quote!(peace_cfg)))
+        .unwrap_or_else(|| (quote!(peace::data), quote!(peace::cfg)));
 
     let mut generics = ast.generics.clone();
 
@@ -59,26 +59,26 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
 
     quote! {
-        impl #impl_generics #module_pfx::DataAccess
+        impl #impl_generics #peace_data_path::DataAccess
             for #name #ty_generics
             #where_clause
         {
-            fn borrows() -> #module_pfx::TypeIds {
-                let mut r = #module_pfx::TypeIds::new();
+            fn borrows() -> #peace_data_path::TypeIds {
+                let mut r = #peace_data_path::TypeIds::new();
 
                 #( {
-                        let mut borrows = <#tys as #module_pfx::DataAccess>::borrows();
+                        let mut borrows = <#tys as #peace_data_path::DataAccess>::borrows();
                         r.append(&mut borrows);
                     } )*
 
                 r
             }
 
-            fn borrow_muts() -> #module_pfx::TypeIds {
-                let mut r = #module_pfx::TypeIds::new();
+            fn borrow_muts() -> #peace_data_path::TypeIds {
+                let mut r = #peace_data_path::TypeIds::new();
 
                 #( {
-                        let mut borrow_muts = <#tys as #module_pfx::DataAccess>::borrow_muts();
+                        let mut borrow_muts = <#tys as #peace_data_path::DataAccess>::borrow_muts();
                         r.append(&mut borrow_muts);
                     } )*
 
@@ -86,26 +86,26 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
             }
         }
 
-        impl #impl_generics #module_pfx::DataAccessDyn
+        impl #impl_generics #peace_data_path::DataAccessDyn
             for #name #ty_generics
             #where_clause
         {
-            fn borrows(&self) -> #module_pfx::TypeIds {
-                let mut r = #module_pfx::TypeIds::new();
+            fn borrows(&self) -> #peace_data_path::TypeIds {
+                let mut r = #peace_data_path::TypeIds::new();
 
                 #( {
-                        let mut borrows = <#tys as #module_pfx::DataAccessDyn>::borrows(&self.#field_names);
+                        let mut borrows = <#tys as #peace_data_path::DataAccessDyn>::borrows(&self.#field_names);
                         r.append(&mut borrows);
                     } )*
 
                 r
             }
 
-            fn borrow_muts(&self) -> #module_pfx::TypeIds {
-                let mut r = #module_pfx::TypeIds::new();
+            fn borrow_muts(&self) -> #peace_data_path::TypeIds {
+                let mut r = #peace_data_path::TypeIds::new();
 
                 #( {
-                        let mut borrow_muts = <#tys as #module_pfx::DataAccessDyn>::borrow_muts(&self.#field_names);
+                        let mut borrow_muts = <#tys as #peace_data_path::DataAccessDyn>::borrow_muts(&self.#field_names);
                         r.append(&mut borrow_muts);
                     } )*
 
@@ -113,11 +113,11 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
             }
         }
 
-        impl #impl_generics #module_pfx::Data< #impl_borrow_lt >
+        impl #impl_generics #peace_data_path::Data< #impl_borrow_lt >
             for #name #ty_generics
             #where_clause
         {
-            fn borrow(resources: & #impl_borrow_lt #module_pfx::Resources) -> Self {
+            fn borrow(item_spec_id: & #impl_borrow_lt #peace_cfg_path::ItemSpecId, resources: & #impl_borrow_lt #peace_data_path::Resources) -> Self {
                 #borrow_return
             }
         }
@@ -187,7 +187,7 @@ fn gen_from_body(
 
             let borrow_return = quote! {
                 #name {
-                    #( #identifiers: Data::borrow(resources) ),*
+                    #( #identifiers: Data::borrow(item_spec_id, resources) ),*
                 }
             };
 
@@ -200,7 +200,7 @@ fn gen_from_body(
                 .map(|n| quote!(#n))
                 .collect::<Vec<_>>();
 
-            let borrow = vec![quote! { Data::borrow(resources) }; count];
+            let borrow = vec![quote! { Data::borrow(item_spec_id, resources) }; count];
             let borrow_return = quote! {
                 #name ( #( #borrow ),* )
             };

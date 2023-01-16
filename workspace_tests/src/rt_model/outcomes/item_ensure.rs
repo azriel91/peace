@@ -1,5 +1,6 @@
 use peace::{
     cfg::OpCheckStatus,
+    resources::type_reg::untagged::BoxDataTypeDowncast,
     rt_model::outcomes::{ItemEnsure, ItemEnsurePartial, ItemEnsureRt},
 };
 
@@ -203,7 +204,10 @@ fn item_ensure_rt_state_saved_returns_state_saved() -> Result<(), Box<dyn std::e
     let item_ensure = ItemEnsure::try_from((item_ensure_partial, None)).unwrap();
     let state_saved = ItemEnsureRt::state_saved(&item_ensure).unwrap();
 
-    assert_eq!(456u32, *state_saved.downcast::<u32>().unwrap());
+    assert_eq!(
+        456u32,
+        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_saved).unwrap()
+    );
     Ok(())
 }
 
@@ -220,7 +224,10 @@ fn item_ensure_rt_state_current_returns_state_current() -> Result<(), Box<dyn st
     let item_ensure = ItemEnsure::try_from((item_ensure_partial, None)).unwrap();
     let state_current = ItemEnsureRt::state_current(&item_ensure);
 
-    assert_eq!(123u32, *state_current.downcast::<u32>().unwrap());
+    assert_eq!(
+        123u32,
+        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_current).unwrap()
+    );
     Ok(())
 }
 
@@ -237,7 +244,10 @@ fn item_ensure_rt_state_desired_returns_state_desired() -> Result<(), Box<dyn st
     let item_ensure = ItemEnsure::try_from((item_ensure_partial, None)).unwrap();
     let state_desired = ItemEnsureRt::state_desired(&item_ensure);
 
-    assert_eq!(789u32, *state_desired.downcast::<u32>().unwrap());
+    assert_eq!(
+        789u32,
+        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_desired).unwrap()
+    );
     Ok(())
 }
 
@@ -254,7 +264,10 @@ fn item_ensure_rt_state_diff_returns_state_diff() -> Result<(), Box<dyn std::err
     let item_ensure = ItemEnsure::try_from((item_ensure_partial, None)).unwrap();
     let state_diff = ItemEnsureRt::state_diff(&item_ensure);
 
-    assert_eq!(8u8, *state_diff.downcast::<u8>().unwrap());
+    assert_eq!(
+        8u8,
+        *BoxDataTypeDowncast::<u8>::downcast_ref(&state_diff).unwrap()
+    );
     Ok(())
 }
 
@@ -289,7 +302,10 @@ fn item_ensure_rt_state_ensured_returns_state_ensured() -> Result<(), Box<dyn st
     let item_ensure = ItemEnsure::try_from((item_ensure_partial, Some(456u32))).unwrap();
     let state_ensured = ItemEnsureRt::state_ensured(&item_ensure).unwrap();
 
-    assert_eq!(456u32, *state_ensured.downcast::<u32>().unwrap());
+    assert_eq!(
+        456u32,
+        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_ensured).unwrap()
+    );
     Ok(())
 }
 
