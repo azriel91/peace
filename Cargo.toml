@@ -37,7 +37,7 @@ members = [
 cfg-if = "1.0.0"
 chrono = { version = "0.4.23", default-features = false, features = ["clock", "serde"] }
 derivative = "2.2.0"
-indicatif = { version = "0.17.2" }
+indicatif = { version = "0.17.3" }
 miette = { version = "5.5.0" }
 tar = "0.4.38"
 tokio = "1.24.1"
@@ -50,7 +50,3 @@ output_colorized = ["peace_rt_model/output_colorized"]
 output_in_memory = ["peace_rt_model/output_in_memory"]
 output_json = ["peace_rt_model/output_json"]
 output_progress = ["peace_cfg/output_progress", "peace_rt_model/output_progress", "peace_rt/output_progress"]
-
-
-[patch.crates-io]
-indicatif = { git = "https://github.com/console-rs/indicatif.git", branch = "main" }
