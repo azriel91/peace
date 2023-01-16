@@ -353,6 +353,16 @@ where
             }
         }
 
+        // TODO: Should we run `StatesCurrentFnSpec` again?
+        //
+        // i.e. is it part of `EnsureOpSpec::exec`'s contract to return the state.
+        //
+        // * It may be duplication of code.
+        // * `FileDownloadItemSpec` needs to know the ETag from the last request, which:
+        //     - in `StatesCurrentFnSpec` comes from `StatesSaved`
+        //     - in `EnsureCmd` comes from `StatesEnsured`
+        // * `ShCmdItemSpec` doesn't return the state in the ensure script, so in the
+        //   item spec we run the state current script after the ensure exec script.
         let states_ensured = states_ensured_mut.into();
         let resources = Resources::<ResourcesTs>::from((resources, states_ensured));
 
