@@ -1,19 +1,19 @@
 use peace_cfg::OpCheckStatus;
-use peace_resources::type_reg::untagged::{DataType, DataTypeDisplay};
+use peace_resources::type_reg::untagged::{BoxDtDisplay, DataType};
 
 /// Trait to allow inspecting a type-erased `ItemEnsurePartial`.
 pub trait ItemEnsurePartialRt: DataType {
     /// Returns `state_saved` as type-erased data.
-    fn state_saved(&self) -> Option<Box<dyn DataTypeDisplay>>;
+    fn state_saved(&self) -> Option<BoxDtDisplay>;
 
     /// Returns `state_current` as type-erased data.
-    fn state_current(&self) -> Option<Box<dyn DataTypeDisplay>>;
+    fn state_current(&self) -> Option<BoxDtDisplay>;
 
     /// Returns `state_desired` as type-erased data.
-    fn state_desired(&self) -> Option<Box<dyn DataTypeDisplay>>;
+    fn state_desired(&self) -> Option<BoxDtDisplay>;
 
     /// Returns `state_diff` as type-erased data.
-    fn state_diff(&self) -> Option<Box<dyn DataTypeDisplay>>;
+    fn state_diff(&self) -> Option<BoxDtDisplay>;
 
     /// Returns `op_check_status` as type-erased data.
     fn op_check_status(&self) -> Option<OpCheckStatus>;
@@ -28,19 +28,19 @@ pub trait ItemEnsurePartialRt: DataType {
 dyn_clone::clone_trait_object!(ItemEnsurePartialRt);
 
 impl ItemEnsurePartialRt for Box<dyn ItemEnsurePartialRt> {
-    fn state_saved(&self) -> Option<Box<dyn DataTypeDisplay>> {
+    fn state_saved(&self) -> Option<BoxDtDisplay> {
         self.as_ref().state_saved()
     }
 
-    fn state_current(&self) -> Option<Box<dyn DataTypeDisplay>> {
+    fn state_current(&self) -> Option<BoxDtDisplay> {
         self.as_ref().state_current()
     }
 
-    fn state_desired(&self) -> Option<Box<dyn DataTypeDisplay>> {
+    fn state_desired(&self) -> Option<BoxDtDisplay> {
         self.as_ref().state_desired()
     }
 
-    fn state_diff(&self) -> Option<Box<dyn DataTypeDisplay>> {
+    fn state_diff(&self) -> Option<BoxDtDisplay> {
         self.as_ref().state_diff()
     }
 
