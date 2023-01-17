@@ -120,8 +120,10 @@ where
         resources: &Resources<ResourcesTs>,
     ) -> Result<Option<State>, E> {
         let state_current = {
-            let data =
-                <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
+            let data = <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(
+                self.id(),
+                resources,
+            );
             <StateCurrentFnSpec as TryFnSpec>::try_exec(data).await?
         };
 
@@ -133,8 +135,10 @@ where
         resources: &Resources<ResourcesTs>,
     ) -> Result<State, E> {
         let state_current = {
-            let data =
-                <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
+            let data = <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(
+                self.id(),
+                resources,
+            );
             <StateCurrentFnSpec as TryFnSpec>::exec(data).await?
         };
 
@@ -145,16 +149,20 @@ where
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<Option<State>, E> {
-        let data =
-            <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
+        let data = <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(
+            self.id(),
+            resources,
+        );
         let state_desired = <StateDesiredFnSpec as peace_cfg::TryFnSpec>::try_exec(data).await?;
 
         Ok(state_desired)
     }
 
     async fn state_desired_exec(&self, resources: &Resources<SetUp>) -> Result<State, E> {
-        let data =
-            <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(resources);
+        let data = <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(
+            self.id(),
+            resources,
+        );
         let state_desired = <StateDesiredFnSpec as peace_cfg::TryFnSpec>::exec(data).await?;
 
         Ok(state_desired)
@@ -198,6 +206,7 @@ where
     ) -> Result<StateDiff, E> {
         let state_diff: StateDiff = {
             let data = <<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_> as Data>::borrow(
+                self.id(),
                 resources,
             );
             <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(data, state_base, state_desired)
@@ -215,7 +224,10 @@ where
         state_desired: &State,
         state_diff: &StateDiff,
     ) -> Result<OpCheckStatus, E> {
-        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
+        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(
+            self.id(),
+            resources,
+        );
         <EnsureOpSpec as peace_cfg::EnsureOpSpec>::check(
             data,
             state_current,
@@ -234,7 +246,10 @@ where
         state_desired: &State,
         state_diff: &StateDiff,
     ) -> Result<State, E> {
-        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
+        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(
+            self.id(),
+            resources,
+        );
         <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec_dry(
             op_ctx,
             data,
@@ -254,7 +269,10 @@ where
         state_desired: &State,
         state_diff: &StateDiff,
     ) -> Result<State, E> {
-        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(resources);
+        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(
+            self.id(),
+            resources,
+        );
         <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec(
             op_ctx,
             data,
@@ -867,8 +885,10 @@ where
         resources: &Resources<WithStatesCurrent>,
     ) -> Result<OpCheckStatus, E> {
         let op_check_status = {
-            let data =
-                <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(resources);
+            let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(
+                self.id(),
+                resources,
+            );
             let item_spec_id = <IS as ItemSpec>::id(self);
             let states = resources.borrow::<StatesCurrent>();
             let state = states.get::<State, _>(item_spec_id);
@@ -887,7 +907,10 @@ where
     }
 
     async fn clean_op_exec_dry(&self, resources: &Resources<WithStatesCurrent>) -> Result<(), E> {
-        let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(resources);
+        let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(
+            self.id(),
+            resources,
+        );
         let item_spec_id = <IS as ItemSpec>::id(self);
         let states = resources.borrow::<StatesCurrent>();
         let state = states.get::<State, _>(item_spec_id);
@@ -904,7 +927,10 @@ where
     }
 
     async fn clean_op_exec(&self, resources: &Resources<WithStatesCurrent>) -> Result<(), E> {
-        let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(resources);
+        let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(
+            self.id(),
+            resources,
+        );
         let item_spec_id = <IS as ItemSpec>::id(self);
         let states = resources.borrow::<StatesCurrent>();
         let state = states.get::<State, _>(item_spec_id);

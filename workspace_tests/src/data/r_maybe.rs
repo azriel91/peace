@@ -1,13 +1,18 @@
 use std::any::TypeId;
 
-use peace::data::{Data, DataAccess, DataAccessDyn, RMaybe, Resources, TypeIds};
+use peace::{
+    cfg::{item_spec_id, ItemSpecId},
+    data::{Data, DataAccess, DataAccessDyn, RMaybe, Resources, TypeIds},
+};
+
+const ITEM_SPEC_ID_UNUSED: &ItemSpecId = &item_spec_id!("test_item_spec_id");
 
 #[test]
 fn data_borrow_returns_t_when_present() {
     let mut resources = Resources::new();
     resources.insert(1u8);
 
-    let maybe = <RMaybe<'_, u8> as Data>::borrow(&resources);
+    let maybe = <RMaybe<'_, u8> as Data>::borrow(ITEM_SPEC_ID_UNUSED, &resources);
 
     assert_eq!(Some(1u8), maybe.as_deref().copied())
 }
@@ -16,7 +21,7 @@ fn data_borrow_returns_t_when_present() {
 fn data_borrow_returns_none_when_absent() {
     let resources = Resources::new();
 
-    let maybe = <RMaybe<'_, u8> as Data>::borrow(&resources);
+    let maybe = <RMaybe<'_, u8> as Data>::borrow(ITEM_SPEC_ID_UNUSED, &resources);
 
     assert_eq!(None, maybe.as_deref().copied())
 }
@@ -59,7 +64,7 @@ fn data_access_dyn_borrow_muts_returns_t() {
 fn clone() {
     let mut resources = Resources::new();
     resources.insert(1u8);
-    let maybe = <RMaybe<'_, u8> as Data>::borrow(&resources);
+    let maybe = <RMaybe<'_, u8> as Data>::borrow(ITEM_SPEC_ID_UNUSED, &resources);
 
     let maybe_clone = maybe.clone();
 
@@ -70,7 +75,7 @@ fn clone() {
 fn debug() {
     let mut resources = Resources::new();
     resources.insert(1u8);
-    let maybe = <RMaybe<'_, u8> as Data>::borrow(&resources);
+    let maybe = <RMaybe<'_, u8> as Data>::borrow(ITEM_SPEC_ID_UNUSED, &resources);
 
     assert_eq!(r#"RMaybe(Some(Ref { inner: 1 }))"#, format!("{maybe:?}"))
 }

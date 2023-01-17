@@ -60,6 +60,19 @@ impl<TS> States<TS> {
     }
 }
 
+impl<TS> Clone for States<TS> {
+    fn clone(&self) -> Self {
+        let mut clone = Self(TypeMap::with_capacity_typed(self.0.len()), PhantomData);
+        clone.0.extend(
+            self.0
+                .iter()
+                .map(|(item_spec_id, state)| (item_spec_id.clone(), state.clone())),
+        );
+
+        clone
+    }
+}
+
 impl<TS> Default for States<TS> {
     fn default() -> Self {
         Self(TypeMap::default(), PhantomData)

@@ -7,7 +7,9 @@
 * Support multiple workspace, profile, and flow parameters. ([#45], [#63])
 * Support progress bars in `CliOutput`. ([#42], [#66])
 * Consolidate `StateLogical` and `StatePhysical` into `ItemSpec::State`. ([#69], [#70])
+* Use [ETag] to determine if a file needs to be re-downloaded. ([#68], [#71])
 
+[ETag]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag
 [#62]: https://github.com/azriel91/peace/pull/62
 [#45]: https://github.com/azriel91/peace/issues/45
 [#63]: https://github.com/azriel91/peace/pull/63
@@ -15,6 +17,8 @@
 [#66]: https://github.com/azriel91/peace/pull/66
 [#69]: https://github.com/azriel91/peace/issues/69
 [#70]: https://github.com/azriel91/peace/pull/70
+[#68]: https://github.com/azriel91/peace/issues/68
+[#71]: https://github.com/azriel91/peace/pull/71
 
 
 ## 0.0.5 (2022-12-18)

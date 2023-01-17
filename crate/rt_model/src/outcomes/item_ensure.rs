@@ -1,7 +1,7 @@
 use std::fmt::{Debug, Display};
 
 use peace_cfg::OpCheckStatus;
-use peace_resources::type_reg::untagged::{DataType, DataTypeDisplay};
+use peace_resources::type_reg::untagged::{BoxDtDisplay, DataType};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::outcomes::{ItemEnsurePartial, ItemEnsureRt};
@@ -77,32 +77,28 @@ where
     State: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
 {
-    fn state_saved(&self) -> Option<Box<dyn DataTypeDisplay>> {
-        self.state_saved
-            .clone()
-            .map(|state_saved| Box::new(state_saved) as Box<dyn DataTypeDisplay>)
+    fn state_saved(&self) -> Option<BoxDtDisplay> {
+        self.state_saved.clone().map(BoxDtDisplay::new)
     }
 
-    fn state_current(&self) -> Box<dyn DataTypeDisplay> {
-        Box::new(self.state_current.clone())
+    fn state_current(&self) -> BoxDtDisplay {
+        BoxDtDisplay::new(self.state_current.clone())
     }
 
-    fn state_desired(&self) -> Box<dyn DataTypeDisplay> {
-        Box::new(self.state_desired.clone())
+    fn state_desired(&self) -> BoxDtDisplay {
+        BoxDtDisplay::new(self.state_desired.clone())
     }
 
-    fn state_diff(&self) -> Box<dyn DataTypeDisplay> {
-        Box::new(self.state_diff.clone())
+    fn state_diff(&self) -> BoxDtDisplay {
+        BoxDtDisplay::new(self.state_diff.clone())
     }
 
     fn op_check_status(&self) -> OpCheckStatus {
         self.op_check_status
     }
 
-    fn state_ensured(&self) -> Option<Box<dyn DataTypeDisplay>> {
-        self.state_ensured
-            .clone()
-            .map(|state_ensured| Box::new(state_ensured) as Box<dyn DataTypeDisplay>)
+    fn state_ensured(&self) -> Option<BoxDtDisplay> {
+        self.state_ensured.clone().map(BoxDtDisplay::new)
     }
 
     fn as_data_type(&self) -> &dyn DataType {

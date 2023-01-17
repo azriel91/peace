@@ -1,5 +1,6 @@
 use peace::{
     cfg::OpCheckStatus,
+    resources::type_reg::untagged::BoxDataTypeDowncast,
     rt_model::outcomes::{ItemEnsure, ItemEnsurePartial, ItemEnsureRt},
 };
 
@@ -17,7 +18,10 @@ fn state_saved_returns_state_saved() -> Result<(), Box<dyn std::error::Error>> {
     let item_ensure_boxed = Box::new(item_ensure) as Box<dyn ItemEnsureRt>;
     let state_saved = ItemEnsureRt::state_saved(&item_ensure_boxed).unwrap();
 
-    assert_eq!(456u32, *state_saved.downcast::<u32>().unwrap());
+    assert_eq!(
+        456u32,
+        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_saved).unwrap()
+    );
     Ok(())
 }
 
@@ -35,7 +39,10 @@ fn state_current_returns_state_current() -> Result<(), Box<dyn std::error::Error
     let item_ensure_boxed = Box::new(item_ensure) as Box<dyn ItemEnsureRt>;
     let state_current = ItemEnsureRt::state_current(&item_ensure_boxed);
 
-    assert_eq!(123u32, *state_current.downcast::<u32>().unwrap());
+    assert_eq!(
+        123u32,
+        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_current).unwrap()
+    );
     Ok(())
 }
 
@@ -53,7 +60,10 @@ fn state_desired_returns_state_desired() -> Result<(), Box<dyn std::error::Error
     let item_ensure_boxed = Box::new(item_ensure) as Box<dyn ItemEnsureRt>;
     let state_desired = ItemEnsureRt::state_desired(&item_ensure_boxed);
 
-    assert_eq!(789u32, *state_desired.downcast::<u32>().unwrap());
+    assert_eq!(
+        789u32,
+        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_desired).unwrap()
+    );
     Ok(())
 }
 
@@ -71,7 +81,10 @@ fn state_diff_returns_state_diff() -> Result<(), Box<dyn std::error::Error>> {
     let item_ensure_boxed = Box::new(item_ensure) as Box<dyn ItemEnsureRt>;
     let state_diff = ItemEnsureRt::state_diff(&item_ensure_boxed);
 
-    assert_eq!(8u8, *state_diff.downcast::<u8>().unwrap());
+    assert_eq!(
+        8u8,
+        *BoxDataTypeDowncast::<u8>::downcast_ref(&state_diff).unwrap()
+    );
     Ok(())
 }
 
@@ -107,7 +120,10 @@ fn state_ensured_returns_state_ensured() -> Result<(), Box<dyn std::error::Error
     let item_ensure_boxed = Box::new(item_ensure) as Box<dyn ItemEnsureRt>;
     let state_ensured = ItemEnsureRt::state_ensured(&item_ensure_boxed).unwrap();
 
-    assert_eq!(456u32, *state_ensured.downcast::<u32>().unwrap());
+    assert_eq!(
+        456u32,
+        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_ensured).unwrap()
+    );
     Ok(())
 }
 

@@ -126,6 +126,7 @@ where
             .arg(state_desired_arg)
             .arg(&**state_diff);
 
-        ShCmdExecutor::<Id>::exec(&ensure_exec_sh_cmd).await
+        ShCmdExecutor::<Id>::exec(&ensure_exec_sh_cmd).await?;
+        ShCmdExecutor::<Id>::exec(sh_cmd_data.sh_cmd_params().state_current_sh_cmd()).await
     }
 }

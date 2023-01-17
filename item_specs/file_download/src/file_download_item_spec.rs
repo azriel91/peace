@@ -1,12 +1,12 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId},
+    cfg::{async_trait, state::FetchedOpt, ItemSpec, ItemSpecId, State},
     resources::{resources::ts::Empty, Resources},
 };
 
 use crate::{
-    FileDownloadCleanOpSpec, FileDownloadEnsureOpSpec, FileDownloadError, FileDownloadState,
+    ETag, FileDownloadCleanOpSpec, FileDownloadEnsureOpSpec, FileDownloadError, FileDownloadState,
     FileDownloadStateCurrentFnSpec, FileDownloadStateDesiredFnSpec, FileDownloadStateDiff,
     FileDownloadStateDiffFnSpec,
 };
@@ -46,7 +46,7 @@ where
     type CleanOpSpec = FileDownloadCleanOpSpec<Id>;
     type EnsureOpSpec = FileDownloadEnsureOpSpec<Id>;
     type Error = FileDownloadError;
-    type State = FileDownloadState;
+    type State = State<FileDownloadState, FetchedOpt<ETag>>;
     type StateCurrentFnSpec = FileDownloadStateCurrentFnSpec<Id>;
     type StateDesiredFnSpec = FileDownloadStateDesiredFnSpec<Id>;
     type StateDiff = FileDownloadStateDiff;

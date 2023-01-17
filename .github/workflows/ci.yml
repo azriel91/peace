@@ -170,6 +170,7 @@ jobs:
           do wasm-pack build \
             --target web \
             --out-dir "../../doc/src/examples/pkg" \
-             --release \
-            "examples/${example}"
+            --release \
+            "examples/${example}" \
+            --features 'error_reporting output_colorized output_json'
           done

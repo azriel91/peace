@@ -137,7 +137,7 @@ pub enum Error {
     WorkspaceParamsSerialize(#[source] serde_yaml::Error),
 
     /// Failed to deserialize workspace init params.
-    #[error("Failed to serialize workspace init params.")]
+    #[error("Failed to deserialize workspace init params.")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(code(peace_rt_model::workspace_init_params_deserialize))
@@ -153,7 +153,7 @@ pub enum Error {
     ProfileParamsSerialize(#[source] serde_yaml::Error),
 
     /// Failed to deserialize profile init params.
-    #[error("Failed to serialize profile init params.")]
+    #[error("Failed to deserialize profile init params.")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(code(peace_rt_model::profile_init_params_deserialize))
@@ -169,7 +169,7 @@ pub enum Error {
     FlowParamsSerialize(#[source] serde_yaml::Error),
 
     /// Failed to deserialize flow init params.
-    #[error("Failed to serialize flow init params.")]
+    #[error("Failed to deserialize flow init params.")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(code(peace_rt_model::flow_init_params_deserialize))

@@ -51,7 +51,7 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     // ```
 
     assert_eq!(
-        Some(VecCopyState::new()).as_ref(),
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         states_ensured_dry.get::<VecCopyState, _>(VecCopyItemSpec.id())
     ); // states_ensured_dry should be the same as the beginning.
 

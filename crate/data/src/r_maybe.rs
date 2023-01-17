@@ -4,14 +4,15 @@ use fn_graph::{
     resman::{BorrowFail, Ref},
     DataAccess, DataAccessDyn, Resources, TypeIds,
 };
+use peace_core::ItemSpecId;
 
 use crate::Data;
 
 /// A resource that may or may not exist.
 ///
-/// For a mutable version of this, see [`MaybeMut`].
+/// For a mutable version of this, see [`WMaybe`].
 ///
-/// [`MaybeMut`]: crate::MaybeMut
+/// [`WMaybe`]: crate::WMaybe
 #[derive(Clone, Debug, PartialEq)]
 pub struct RMaybe<'borrow, T>(Option<Ref<'borrow, T>>)
 where
@@ -41,7 +42,7 @@ impl<'borrow, T> Data<'borrow> for RMaybe<'borrow, T>
 where
     T: Debug + Send + Sync + 'static,
 {
-    fn borrow(resources: &'borrow Resources) -> Self {
+    fn borrow(_item_spec_id: &'borrow ItemSpecId, resources: &'borrow Resources) -> Self {
         resources
             .try_borrow::<T>()
             .map_err(|borrow_fail| match borrow_fail {

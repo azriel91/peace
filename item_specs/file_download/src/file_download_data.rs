@@ -1,9 +1,12 @@
 #[cfg(target_arch = "wasm32")]
 use peace::rt_model::Storage;
 
-use peace::data::{Data, R};
+use peace::{
+    cfg::{state::FetchedOpt, Saved, State},
+    data::{Data, R},
+};
 
-use crate::FileDownloadParams;
+use crate::{ETag, FileDownloadParams, FileDownloadState};
 
 /// Data used to download a file.
 ///
@@ -21,6 +24,9 @@ where
     /// Url of the file to download.
     file_download_params: R<'op, FileDownloadParams<Id>>,
 
+    /// The previous file download state.
+    state_prev: Saved<'op, State<FileDownloadState, FetchedOpt<ETag>>>,
+
     /// For wasm, we write to web storage through the `Storage` object.
     ///
     /// If `rt_model_native::Storage` exposed similar API, then storage
@@ -33,36 +39,16 @@ impl<'op, Id> FileDownloadData<'op, Id>
 where
     Id: Send + Sync + 'static,
 {
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn new(
-        client: R<'op, reqwest::Client>,
-        file_download_params: R<'op, FileDownloadParams<Id>>,
-    ) -> Self {
-        Self {
-            client,
-            file_download_params,
-        }
-    }
-
-    #[cfg(target_arch = "wasm32")]
-    pub fn new(
-        client: R<'op, reqwest::Client>,
-        file_download_params: R<'op, FileDownloadParams<Id>>,
-        storage: R<'op, Storage>,
-    ) -> Self {
-        Self {
-            client,
-            file_download_params,
-            storage,
-        }
-    }
-
     pub fn client(&self) -> &reqwest::Client {
         &self.client
     }
 
     pub fn file_download_params(&self) -> &FileDownloadParams<Id> {
         &self.file_download_params
+    }
+
+    pub fn state_prev(&self) -> &Saved<'op, State<FileDownloadState, FetchedOpt<ETag>>> {
+        &self.state_prev
     }
 
     #[cfg(target_arch = "wasm32")]

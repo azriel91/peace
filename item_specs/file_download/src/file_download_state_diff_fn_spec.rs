@@ -1,9 +1,9 @@
 use peace::{
-    cfg::{async_trait, StateDiffFnSpec},
+    cfg::{async_trait, state::FetchedOpt, State, StateDiffFnSpec},
     diff::{Changeable, Tracked},
 };
 
-use crate::{FileDownloadError, FileDownloadState, FileDownloadStateDiff};
+use crate::{ETag, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
 
 /// Download status diff function.
 #[derive(Debug)]
@@ -13,14 +13,23 @@ pub struct FileDownloadStateDiffFnSpec;
 impl StateDiffFnSpec for FileDownloadStateDiffFnSpec {
     type Data<'op> = &'op ();
     type Error = FileDownloadError;
-    type State = FileDownloadState;
+    type State = State<FileDownloadState, FetchedOpt<ETag>>;
     type StateDiff = FileDownloadStateDiff;
 
     async fn exec(
         _: &(),
-        file_state_current: &FileDownloadState,
-        file_state_desired: &FileDownloadState,
+        state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
+        state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
     ) -> Result<Self::StateDiff, FileDownloadError> {
+        let State {
+            logical: file_state_current,
+            physical: e_tag_current,
+        } = state_current;
+        let State {
+            logical: file_state_desired,
+            physical: e_tag_desired,
+        } = state_desired;
+
         let file_state_diff = {
             match (file_state_current, file_state_desired) {
                 (
@@ -51,12 +60,25 @@ impl StateDiffFnSpec for FileDownloadStateDiffFnSpec {
                     let (to_bytes, to_content) = to_file_state_diff(file_state_desired);
 
                     match (from_bytes == to_bytes, from_content == to_content) {
-                        (false, false) | (false, true) | (true, false) => {
-                            FileDownloadStateDiff::Change {
-                                path,
-                                byte_len: Changeable::new(from_bytes, to_bytes),
-                                contents: Changeable::new(from_content, to_content),
+                        (_, false) => {
+                            // File contents are either changed, or unknown
+                            match (e_tag_current, e_tag_desired) {
+                                (
+                                    FetchedOpt::Value(e_tag_current),
+                                    FetchedOpt::Value(e_tag_desired),
+                                ) if e_tag_current == e_tag_desired => {
+                                    FileDownloadStateDiff::NoChangeSync { path }
+                                }
+                                _ => FileDownloadStateDiff::Change {
+                                    path,
+                                    byte_len: Changeable::new(from_bytes, to_bytes),
+                                    contents: Changeable::new(from_content, to_content),
+                                },
                             }
+                        }
+                        (false, true) => {
+                            // File contents are the same, length is unknown
+                            FileDownloadStateDiff::NoChangeSync { path }
                         }
                         (true, true) => FileDownloadStateDiff::NoChangeSync { path },
                     }

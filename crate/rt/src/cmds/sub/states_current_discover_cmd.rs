@@ -163,6 +163,7 @@ where
         Ok(states)
     }
 
+    // TODO: This duplicates a bit of code with `EnsureCmd`.
     async fn serialize_internal<TS>(
         resources: &mut Resources<TS>,
         states_current: &StatesCurrent,

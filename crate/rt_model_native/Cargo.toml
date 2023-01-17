@@ -17,7 +17,7 @@ test = false
 
 [dependencies]
 cfg-if = { workspace = true }
-console = { version = "0.15.4", optional = true }
+console = { version = "0.15.5", optional = true }
 futures = "0.3.25"
 is-terminal = { version = "0.4.2", optional = true }
 miette = { workspace = true, optional = true }

@@ -2,18 +2,20 @@ use std::marker::PhantomData;
 
 use peace_cfg::{ItemSpecId, OpCtx};
 use peace_resources::{
+    internal::StatesMut,
+    paths::{FlowDir, StatesSavedFile},
     resources::ts::{Ensured, EnsuredDry, SetUp},
-    states::{self, States, StatesCurrent, StatesEnsured, StatesEnsuredDry},
+    states::{self, States, StatesCurrent, StatesEnsured, StatesEnsuredDry, StatesSaved},
     Resources,
 };
 use peace_rt_model::{
     outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
     output::OutputWrite,
-    CmdContext, Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt,
+    CmdContext, Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt, Storage,
 };
 use tokio::sync::{mpsc, mpsc::UnboundedSender};
 
-use crate::{cmds::sub::StatesCurrentDiscoverCmd, BUFFERED_FUTURES_MAX};
+use crate::BUFFERED_FUTURES_MAX;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -172,6 +174,7 @@ where
             Ok(resources) => {
                 {
                     let states_ensured = resources.borrow::<StatesEnsured>();
+                    Self::serialize_internal(&resources, &states_ensured).await?;
                     output.write_states_ensured(&states_ensured).await?;
                 }
                 let cmd_context = CmdContext::from((
@@ -204,7 +207,7 @@ where
         item_spec_graph: &ItemSpecGraph<E>,
         #[cfg(not(feature = "output_progress"))] _output: &mut O,
         #[cfg(feature = "output_progress")] output: &mut O,
-        mut resources: Resources<SetUp>,
+        resources: Resources<SetUp>,
         #[cfg(feature = "output_progress")] cmd_progress_tracker: &mut CmdProgressTracker,
         dry_run: bool,
     ) -> Result<Resources<ResourcesTs>, E>
@@ -225,6 +228,15 @@ where
                     mpsc::channel::<ProgressUpdateAndId>(Self::PROGRESS_COUNT_MAX);
             }
         }
+
+        // `StatesEnsured` should begin as `StatesSaved`, and be mutated as new states
+        // are read.
+        let mut states_ensured_mut = if let Ok(states_saved) = resources.try_borrow::<StatesSaved>()
+        {
+            StatesMut::<StatesTs>::from((*states_saved).clone().into_inner())
+        } else {
+            StatesMut::<StatesTs>::with_capacity(item_spec_graph.node_count())
+        };
 
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemEnsureOutcome<E>>();
 
@@ -299,7 +311,7 @@ where
             }
         };
 
-        let _outcomes_rx_task = async move {
+        let outcomes_rx_task = async {
             while let Some(outcome) = outcomes_rx.recv().await {
                 match outcome {
                     ItemEnsureOutcome::PrepareFail {
@@ -308,33 +320,50 @@ where
                         error: _,
                     } => todo!(),
                     ItemEnsureOutcome::Success {
-                        item_spec_id: _,
-                        item_ensure: _,
-                    } => todo!(),
+                        item_spec_id,
+                        item_ensure,
+                    } => {
+                        if let Some(state_ensured) = item_ensure.state_ensured() {
+                            states_ensured_mut.insert_raw(item_spec_id, state_ensured);
+                        } else {
+                            // Item was already in the desired state.
+                            // No change to saved state.
+                        }
+                    }
                     ItemEnsureOutcome::Fail {
-                        item_spec_id: _,
-                        item_ensure: _,
-                        error: _,
-                    } => todo!(),
+                        item_spec_id,
+                        item_ensure,
+                        error: _, // TODO: save to report.
+                    } => {
+                        if let Some(state_ensured) = item_ensure.state_ensured() {
+                            states_ensured_mut.insert_raw(item_spec_id, state_ensured);
+                        }
+                    }
                 }
             }
         };
 
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_progress")] {
-                futures::join!(execution_task, progress_render_task);
+                futures::join!(execution_task, progress_render_task, outcomes_rx_task);
 
                 output.progress_end(cmd_progress_tracker).await;
             } else {
-                futures::join!(execution_task);
+                futures::join!(execution_task, outcomes_rx_task);
             }
         }
 
-        let states_current =
-            StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
-                .await?;
-
-        let states_ensured = States::<StatesTs>::from((states_current, &resources));
+        // TODO: Should we run `StatesCurrentFnSpec` again?
+        //
+        // i.e. is it part of `EnsureOpSpec::exec`'s contract to return the state.
+        //
+        // * It may be duplication of code.
+        // * `FileDownloadItemSpec` needs to know the ETag from the last request, which:
+        //     - in `StatesCurrentFnSpec` comes from `StatesSaved`
+        //     - in `EnsureCmd` comes from `StatesEnsured`
+        // * `ShCmdItemSpec` doesn't return the state in the ensure script, so in the
+        //   item spec we run the state current script after the ensure exec script.
+        let states_ensured = states_ensured_mut.into();
         let resources = Resources::<ResourcesTs>::from((resources, states_ensured));
 
         Ok(resources)
@@ -455,6 +484,25 @@ where
                 Err(())
             }
         }
+    }
+
+    // TODO: This duplicates a bit of code with `StatesCurrentDiscoverCmd`.
+    async fn serialize_internal<TS>(
+        resources: &Resources<TS>,
+        states_ensured: &StatesEnsured,
+    ) -> Result<(), E> {
+        use peace_rt_model::StatesSerializer;
+
+        let flow_dir = resources.borrow::<FlowDir>();
+        let storage = resources.borrow::<Storage>();
+        let states_saved_file = StatesSavedFile::from(&*flow_dir);
+
+        StatesSerializer::serialize(&storage, states_ensured, &states_saved_file).await?;
+
+        drop(flow_dir);
+        drop(storage);
+
+        Ok(())
     }
 }
 

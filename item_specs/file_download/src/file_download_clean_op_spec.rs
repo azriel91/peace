@@ -2,9 +2,9 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, CleanOpSpec, OpCheckStatus};
+use peace::cfg::{async_trait, state::FetchedOpt, CleanOpSpec, OpCheckStatus, State};
 
-use crate::{FileDownloadData, FileDownloadError, FileDownloadState};
+use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState};
 
 /// `CleanOpSpec` for the file to download.
 #[derive(Debug, Default)]
@@ -17,11 +17,14 @@ where
 {
     type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
-    type State = FileDownloadState;
+    type State = State<FileDownloadState, FetchedOpt<ETag>>;
 
     async fn check(
         _file_download_data: FileDownloadData<'_, Id>,
-        file_state: &FileDownloadState,
+        State {
+            logical: file_state,
+            physical: _e_tag,
+        }: &State<FileDownloadState, FetchedOpt<ETag>>,
     ) -> Result<OpCheckStatus, FileDownloadError> {
         let op_check_status = match file_state {
             FileDownloadState::None { .. } => OpCheckStatus::ExecNotRequired,
@@ -79,7 +82,7 @@ where
 
     async fn exec_dry(
         _file_download_data: FileDownloadData<'_, Id>,
-        _state: &FileDownloadState,
+        _state: &State<FileDownloadState, FetchedOpt<ETag>>,
     ) -> Result<(), FileDownloadError> {
         Ok(())
     }
@@ -87,7 +90,10 @@ where
     #[cfg(not(target_arch = "wasm32"))]
     async fn exec(
         _file_download_data: FileDownloadData<'_, Id>,
-        file_state: &FileDownloadState,
+        State {
+            logical: file_state,
+            physical: _e_tag,
+        }: &State<FileDownloadState, FetchedOpt<ETag>>,
     ) -> Result<(), FileDownloadError> {
         match file_state {
             FileDownloadState::None { .. } => {}
@@ -105,7 +111,10 @@ where
     #[cfg(target_arch = "wasm32")]
     async fn exec(
         file_download_data: FileDownloadData<'_, Id>,
-        file_state: &FileDownloadState,
+        State {
+            logical: file_state,
+            physical: _e_tag,
+        }: &State<FileDownloadState, FetchedOpt<ETag>>,
     ) -> Result<(), FileDownloadError> {
         match file_state {
             FileDownloadState::None { .. } => {}
