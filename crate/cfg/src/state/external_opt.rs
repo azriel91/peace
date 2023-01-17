@@ -32,10 +32,11 @@ where
     V: Clone + Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let type_name = tynm::type_name::<V>();
         match self {
-            Self::Tbd => "not yet determined".fmt(f),
-            Self::None => "not existent".fmt(f),
-            Self::Value(v) => v.fmt(f),
+            Self::Tbd => write!(f, "{type_name} not yet determined"),
+            Self::None => write!(f, "{type_name} is non-existent"),
+            Self::Value(v) => write!(f, "{type_name}: {v}"),
         }
     }
 }

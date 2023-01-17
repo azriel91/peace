@@ -22,6 +22,7 @@ peace_core = { path = "../core", version = "0.0.5" }
 peace_data = { path = "../data", version = "0.0.5" }
 peace_resources = { path = "../resources", version = "0.0.5" }
 serde = { version = "1.0.152", features = ["derive"] }
+tynm = "0.1.6"
 
 [features]
 default = []

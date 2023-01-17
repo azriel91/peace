@@ -5,3 +5,4 @@ mod profile;
 mod profile_invalid_fmt;
 #[cfg(feature = "output_progress")]
 mod progress;
+mod state;
