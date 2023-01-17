@@ -172,8 +172,9 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
         Ok(state_desired.clone())
     }
 
+    #[allow(unused_variables)]
     async fn exec(
-        _op_ctx: OpCtx<'_>,
+        op_ctx: OpCtx<'_>,
         mut vec_copy_params: VecCopyParams<'_>,
         _state_current: &Self::State,
         state_desired: &Self::State,
@@ -182,6 +183,12 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
         let dest = vec_copy_params.dest_mut();
         dest.0.clear();
         dest.0.extend_from_slice(state_desired.as_slice());
+
+        #[cfg(feature = "output_progress")]
+        if let Ok(n) = state_desired.len().try_into() {
+            op_ctx.progress_sender().inc(n);
+        }
+
         Ok(state_desired.clone())
     }
 }
