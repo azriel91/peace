@@ -19,8 +19,10 @@ impl AppInitCmd {
     ///
     /// # Parameters
     ///
+    /// * `output`: Output to write the execution outcome.
     /// * `slug`: Username and repository of the application to download.
-    /// * `semver`: Version of the application to download.
+    /// * `version`: Version of the application to download.
+    /// * `url`: URL to override where to download the application from.
     pub async fn run<O>(
         output: &mut O,
         slug: RepoSlug,

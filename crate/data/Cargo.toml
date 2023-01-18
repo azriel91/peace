@@ -16,6 +16,6 @@ doctest = false
 test = false
 
 [dependencies]
-fn_graph = { version = "0.8.0", features = ["resman"] }
+fn_graph = { version = "0.8.1", features = ["resman"] }
 peace_core = { path = "../core", version = "0.0.5" }
 peace_data_derive = { path = "../data_derive", version = "0.0.5" }

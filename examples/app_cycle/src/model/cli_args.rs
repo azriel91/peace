@@ -83,8 +83,8 @@ pub enum ProfileCommand {
     /// Initializes a new profile.
     Init {
         /// Name to use for the profile.
-        #[arg(long)]
-        name: Profile,
+        #[arg(long = "name")]
+        profile: Profile,
         /// Type of the profile's deployed environment.
         #[arg(short, long)]
         r#type: EnvType,

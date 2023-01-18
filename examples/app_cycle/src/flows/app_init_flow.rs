@@ -46,6 +46,8 @@ impl AppInitFlow {
                 "web_app_tar_x_params".to_string(),
                 Some(web_app_tar_x_params),
             )
+            // This is a workspace param, as it tells the command context which profile to use.
+            .with_workspace_param("profile".to_string(), None::<Profile>)
             .await?;
         StatesDiscoverCmd::exec(cmd_context).await?;
 
@@ -58,6 +60,8 @@ impl AppInitFlow {
                 "web_app_tar_x_params".to_string(),
                 None::<TarXParams<WebAppFileId>>,
             )
+            // This is a workspace param, as it tells the command context which profile to use.
+            .with_workspace_param("profile".to_string(), None::<Profile>)
             .await?;
         EnsureCmd::exec(cmd_context).await?;
 
