@@ -2,13 +2,14 @@ use peace::{
     cfg::{flow_id, FlowId, Profile},
     rt::cmds::{sub::StatesSavedReadCmd, StatesDiscoverCmd},
     rt_model::{
-        output::OutputWrite, CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, Workspace,
-        WorkspaceSpec,
+        output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
-use peace_item_specs::{file_download::FileDownloadParams, tar_x::TarXParams};
 
-use crate::model::{AppCycleError, EnvType, WebAppFileId};
+use crate::{
+    cmds::CmdCtxBuilder,
+    model::{AppCycleError, EnvType},
+};
 
 /// Flow to initialize and set the default profile.
 #[derive(Debug)]
@@ -40,36 +41,13 @@ impl ProfileInitFlow {
         )?;
         let graph = Self::graph()?;
 
-        let cmd_context = CmdContext::builder(&workspace, &graph, output)
-            // TODO: extract workspace param set up somewhere else
-            .with_workspace_param(
-                "web_app_file_download_params".to_string(),
-                Option::<FileDownloadParams<WebAppFileId>>::None,
-            )
-            .with_workspace_param(
-                "web_app_tar_x_params".to_string(),
-                Option::<TarXParams<WebAppFileId>>::None,
-            )
-            // This is a workspace param, as it tells the command context which profile to use.
-            .with_workspace_param("profile".to_string(), Option::<Profile>::Some(profile))
-            .with_profile_param("env_type".to_string(), Option::<EnvType>::Some(env_type))
+        let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output)
+            .with_profile(profile)
+            .with_env_type(env_type)
             .await?;
         StatesDiscoverCmd::exec(cmd_context).await?;
 
-        let cmd_context = CmdContext::builder(&workspace, &graph, output)
-            // TODO: extract workspace param set up somewhere else
-            .with_workspace_param(
-                "web_app_file_download_params".to_string(),
-                Option::<FileDownloadParams<WebAppFileId>>::None,
-            )
-            .with_workspace_param(
-                "web_app_tar_x_params".to_string(),
-                Option::<TarXParams<WebAppFileId>>::None,
-            )
-            // This is a workspace param, as it tells the command context which profile to use.
-            .with_workspace_param("profile".to_string(), Option::<Profile>::None)
-            .with_profile_param("env_type".to_string(), Option::<EnvType>::None)
-            .await?;
+        let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output).await?;
         StatesSavedReadCmd::exec(cmd_context).await?;
 
         Ok(())

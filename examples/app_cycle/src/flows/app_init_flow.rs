@@ -2,8 +2,7 @@ use peace::{
     cfg::{flow_id, item_spec_id, profile, FlowId, ItemSpecId, Profile},
     rt::cmds::{EnsureCmd, StatesDiscoverCmd},
     rt_model::{
-        output::OutputWrite, CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, Workspace,
-        WorkspaceSpec,
+        output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
 use peace_item_specs::{
@@ -11,7 +10,10 @@ use peace_item_specs::{
     tar_x::{TarXItemSpec, TarXParams},
 };
 
-use crate::model::{AppCycleError, WebAppFileId};
+use crate::{
+    cmds::CmdCtxBuilder,
+    model::{AppCycleError, WebAppFileId},
+};
 
 /// Flow to download a web application.
 #[derive(Debug)]
@@ -37,32 +39,13 @@ impl AppInitFlow {
         )?;
         let graph = Self::graph()?;
 
-        let cmd_context = CmdContext::builder(&workspace, &graph, output)
-            .with_workspace_param(
-                "web_app_file_download_params".to_string(),
-                Some(web_app_file_download_params),
-            )
-            .with_workspace_param(
-                "web_app_tar_x_params".to_string(),
-                Some(web_app_tar_x_params),
-            )
-            // This is a workspace param, as it tells the command context which profile to use.
-            .with_workspace_param("profile".to_string(), None::<Profile>)
+        let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output)
+            .with_web_app_file_download_params(web_app_file_download_params)
+            .with_web_app_tar_x_params(web_app_tar_x_params)
             .await?;
         StatesDiscoverCmd::exec(cmd_context).await?;
 
-        let cmd_context = CmdContext::builder(&workspace, &graph, output)
-            .with_workspace_param(
-                "web_app_file_download_params".to_string(),
-                None::<FileDownloadParams<WebAppFileId>>,
-            )
-            .with_workspace_param(
-                "web_app_tar_x_params".to_string(),
-                None::<TarXParams<WebAppFileId>>,
-            )
-            // This is a workspace param, as it tells the command context which profile to use.
-            .with_workspace_param("profile".to_string(), None::<Profile>)
-            .await?;
+        let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output).await?;
         EnsureCmd::exec(cmd_context).await?;
 
         Ok(())
