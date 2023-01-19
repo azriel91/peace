@@ -2,8 +2,8 @@ use std::{io::Cursor, path::PathBuf};
 
 use peace::{
     cfg::{
-        item_spec_id, profile, CleanOpSpec, EnsureOpSpec, FlowId, ItemSpecId, OpCheckStatus,
-        Profile,
+        app_name, item_spec_id, profile, AppName, CleanOpSpec, EnsureOpSpec, FlowId, ItemSpecId,
+        OpCheckStatus, Profile,
     },
     data::Data,
     resources::states::{StateDiffs, StatesCleaned, StatesCurrent, StatesDesired, StatesEnsured},
@@ -679,6 +679,7 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
 async fn test_env(tar_bytes: &[u8]) -> Result<TestEnv, Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,

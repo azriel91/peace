@@ -12,7 +12,9 @@ fn display() {
 
 #[test]
 fn clone() {
-    assert_eq!(ExternalOpt::<u8>::Tbd, (&ExternalOpt::<u8>::Tbd).clone());
+    let external_opt = &ExternalOpt::<u8>::Tbd;
+
+    assert_eq!(ExternalOpt::<u8>::Tbd, external_opt.clone());
 }
 
 #[test]

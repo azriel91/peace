@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use peace_static_check_macros::profile;
 use serde::{Deserialize, Serialize};
 
 /// Identifier or namespace to distinguish execution environments.
@@ -28,3 +29,11 @@ use serde::{Deserialize, Serialize};
 pub struct Profile(Cow<'static, str>);
 
 crate::id_newtype!(Profile, ProfileInvalidFmt, profile);
+
+impl Profile {
+    /// Profile used by the Peace framework when a command is for initializing
+    /// the workspace.
+    pub const fn workspace_init() -> Self {
+        profile!("workspace_init")
+    }
+}

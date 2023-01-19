@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{item_spec_id, FlowId, ItemSpecId, Profile},
+    cfg::{app_name, item_spec_id, AppName, FlowId, ItemSpecId, Profile},
     resources::{
         resources::ts::{
             Cleaned, CleanedDry, Ensured, EnsuredDry, SetUp, WithStatesCurrentAndDesired,
@@ -43,7 +43,7 @@ pub async fn workspace_and_graph_setup(
     profile: Profile,
     flow_id: FlowId,
 ) -> Result<WorkspaceAndGraph, DownloadError> {
-    let workspace = Workspace::new(workspace_spec, profile, flow_id)?;
+    let workspace = Workspace::new(app_name!(), workspace_spec, profile, flow_id)?;
 
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
@@ -66,7 +66,7 @@ pub async fn workspace_and_graph_setup(
     profile: Profile,
     flow_id: FlowId,
 ) -> Result<WorkspaceAndGraph, DownloadError> {
-    let workspace = Workspace::new(workspace_spec, profile, flow_id)?;
+    let workspace = Workspace::new(app_name!(), workspace_spec, profile, flow_id)?;
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
         item_spec_graph_builder

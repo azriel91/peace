@@ -12,9 +12,10 @@ pub use crate::{
     workspace_spec::WorkspaceSpec,
 };
 
+pub mod workspace;
+
 mod error;
 mod storage;
-mod workspace;
 mod workspace_dirs_builder;
 mod workspace_initializer;
 mod workspace_spec;

@@ -4,7 +4,7 @@ use crate::paths::ProfileDir;
 
 /// Directory to store all data produced by the current profile's execution.
 ///
-/// Typically `$workspace_dir/.peace/$profile/.history`.
+/// Typically `$workspace_dir/.peace/$app/$profile/.history`.
 ///
 /// This directory contains significant command execution summaries.
 ///

@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
-use crate::paths::PeaceDir;
+use crate::paths::PeaceAppDir;
 
 /// Path to the file that stores the workspace initialization parameters.
 ///
-/// Typically `$workspace_dir/.peace/init.yaml`.
+/// Typically `$workspace_dir/.peace/$app/init.yaml`.
 ///
-/// See `WorkspaceParamsFile::from<&PeaceDir>` if you want to construct a
-/// `WorkspaceParamsFile` with the conventional `$peace_dir/init.yaml`
+/// See `WorkspaceParamsFile::from<&PeaceAppDir>` if you want to construct a
+/// `WorkspaceParamsFile` with the conventional `$peace_dir/$app/init.yaml`
 /// path.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WorkspaceParamsFile(PathBuf);
@@ -19,8 +19,8 @@ impl WorkspaceParamsFile {
     pub const NAME: &'static str = "init.yaml";
 }
 
-impl From<&PeaceDir> for WorkspaceParamsFile {
-    fn from(flow_dir: &PeaceDir) -> Self {
+impl From<&PeaceAppDir> for WorkspaceParamsFile {
+    fn from(flow_dir: &PeaceAppDir) -> Self {
         let path = flow_dir.join(Self::NAME);
 
         Self(path)

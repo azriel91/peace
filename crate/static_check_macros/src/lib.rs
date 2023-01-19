@@ -1,6 +1,51 @@
 use proc_macro2::Span;
 use quote::quote;
-use syn::{parse_macro_input, Ident, LitStr};
+use syn::{parse_macro_input, Ident};
+
+use self::lit_str_maybe::LitStrMaybe;
+
+mod lit_str_maybe;
+
+/// Returns a `const AppName` validated at compile time.
+///
+/// # Examples
+///
+/// Instantiate a valid `AppName` at compile time:
+///
+/// ```rust
+/// # use peace_static_check_macros::app_name;
+/// // use peace::cfg::{app_name, AppName};
+///
+/// let _my_flow: AppName = app_name!("valid_id"); // Ok!
+///
+/// # struct AppName(&'static str);
+/// # impl AppName {
+/// #     fn new_unchecked(s: &'static str) -> Self { Self(s) }
+/// # }
+/// ```
+///
+/// If the ID is invalid, a compilation error is produced:
+///
+/// ```rust,compile_fail
+/// # use peace_static_check_macros::app_name;
+/// // use peace::cfg::{app_name, AppName};
+///
+/// let _my_flow: AppName = app_name!("-invalid"); // Compile error
+/// //                     ^^^^^^^^^^^^^^^^^^^^^^^
+/// // error: "-invalid" is not a valid `AppName`.
+/// //        `AppName`s must begin with a letter or underscore, and contain only letters, numbers, or underscores.
+/// #
+/// # struct AppName(&'static str);
+/// # impl AppName {
+/// #     fn new_unchecked(s: &'static str) -> Self { Self(s) }
+/// # }
+/// ```
+#[proc_macro]
+pub fn app_name(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let crate_name = std::env::var("CARGO_PKG_NAME")
+        .expect("Failed to read `CARGO_PKG_NAME` environmental variable to infer `AppName`.");
+    ensure_valid_id(input, "AppName", Some(crate_name))
+}
 
 /// Returns a `const ItemSpecId` validated at compile time.
 ///
@@ -38,7 +83,7 @@ use syn::{parse_macro_input, Ident, LitStr};
 /// ```
 #[proc_macro]
 pub fn item_spec_id(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    ensure_valid_id(input, "ItemSpecId")
+    ensure_valid_id(input, "ItemSpecId", None)
 }
 
 /// Returns a `const Profile` validated at compile time.
@@ -77,7 +122,7 @@ pub fn item_spec_id(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// ```
 #[proc_macro]
 pub fn profile(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    ensure_valid_id(input, "Profile")
+    ensure_valid_id(input, "Profile", None)
 }
 
 /// Returns a `const FlowId` validated at compile time.
@@ -116,18 +161,36 @@ pub fn profile(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// ```
 #[proc_macro]
 pub fn flow_id(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    ensure_valid_id(input, "FlowId")
+    ensure_valid_id(input, "FlowId", None)
 }
 
-fn ensure_valid_id(input: proc_macro::TokenStream, ty_name: &str) -> proc_macro::TokenStream {
-    let proposed_id = parse_macro_input!(input as LitStr).value();
+fn ensure_valid_id(
+    input: proc_macro::TokenStream,
+    ty_name: &str,
+    default: Option<String>,
+) -> proc_macro::TokenStream {
+    let proposed_id = parse_macro_input!(input as LitStrMaybe)
+        .as_ref()
+        .map(|lit_str| lit_str.value())
+        .or(default);
 
-    if is_valid_id(&proposed_id) {
-        let ty_name = Ident::new(ty_name, Span::call_site());
-        quote!( #ty_name ::new_unchecked( #proposed_id )).into()
+    if let Some(proposed_id) = proposed_id.as_deref() {
+        if is_valid_id(proposed_id) {
+            let ty_name = Ident::new(ty_name, Span::call_site());
+            quote!( #ty_name ::new_unchecked( #proposed_id )).into()
+        } else {
+            let message = format!(
+                "\"{proposed_id}\" is not a valid `{ty_name}`.\n\
+                `{ty_name}`s must begin with a letter or underscore, and contain only letters, numbers, or underscores."
+            );
+            quote! {
+                compile_error!(#message)
+            }
+            .into()
+        }
     } else {
         let message = format!(
-            "\"{proposed_id}\" is not a valid `{ty_name}`.\n\
+            "`` is not a valid `{ty_name}`.\n\
             `{ty_name}`s must begin with a letter or underscore, and contain only letters, numbers, or underscores."
         );
         quote! {

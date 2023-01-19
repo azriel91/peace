@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use peace_static_check_macros::flow_id;
 use serde::{Deserialize, Serialize};
 
 /// Identifier or name of a process flow.
@@ -35,3 +36,17 @@ use serde::{Deserialize, Serialize};
 pub struct FlowId(Cow<'static, str>);
 
 crate::id_newtype!(FlowId, FlowIdInvalidFmt, flow_id);
+
+impl FlowId {
+    /// Flow ID used by the Peace framework when a command is for initializing a
+    /// workspace.
+    pub const fn workspace_init() -> Self {
+        flow_id!("workspace_init")
+    }
+
+    /// Flow ID used by the Peace framework when a command is for initializing a
+    /// profile.
+    pub const fn profile_init() -> Self {
+        flow_id!("profile_init")
+    }
+}

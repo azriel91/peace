@@ -1,13 +1,14 @@
 use std::path::Path;
 
 use peace::{
-    cfg::{profile, FlowId, Profile},
+    cfg::{app_name, profile, AppName, FlowId, Profile},
     rt_model::{Error, WorkspaceDirsBuilder, WorkspaceSpec},
 };
 
 #[test]
 fn returns_workspace_dir_from_working_directory() -> Result<(), Box<dyn std::error::Error>> {
     let workspace_dirs = WorkspaceDirsBuilder::build(
+        &app_name!(),
         WorkspaceSpec::WorkingDir,
         &profile!("test_profile"),
         &FlowId::new(crate::fn_name_short!())?,
@@ -26,6 +27,7 @@ fn returns_workspace_dir_from_working_directory() -> Result<(), Box<dyn std::err
 #[test]
 fn returns_workspace_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::error::Error>> {
     let workspace_dirs = WorkspaceDirsBuilder::build(
+        &app_name!(),
         WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
         &profile!("test_profile"),
         &FlowId::new(crate::fn_name_short!())?,
@@ -45,6 +47,7 @@ fn returns_workspace_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::e
 fn returns_workspace_file_not_found_when_workspace_root_file_does_not_exist()
 -> Result<(), Box<dyn std::error::Error>> {
     let workspace_dirs_result = WorkspaceDirsBuilder::build(
+        &app_name!(),
         WorkspaceSpec::FirstDirWithFile("non_existent_file".into()),
         &profile!("test_profile"),
         &FlowId::new(crate::fn_name_short!())?,
@@ -64,6 +67,7 @@ fn returns_workspace_file_not_found_when_workspace_root_file_does_not_exist()
 fn returns_workspace_dir_from_path() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace_dirs = WorkspaceDirsBuilder::build(
+        &app_name!(),
         WorkspaceSpec::Path(Path::new(tempdir.path()).to_path_buf()),
         &profile!("test_profile"),
         &FlowId::new(crate::fn_name_short!())?,
@@ -78,6 +82,7 @@ fn returns_workspace_dir_from_path() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn returns_peace_dir_relative_to_workspace_dir() -> Result<(), Box<dyn std::error::Error>> {
     let workspace_dirs = WorkspaceDirsBuilder::build(
+        &app_name!(),
         WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
         &profile!("test_profile"),
         &FlowId::new(crate::fn_name_short!())?,
@@ -94,9 +99,29 @@ fn returns_peace_dir_relative_to_workspace_dir() -> Result<(), Box<dyn std::erro
 }
 
 #[test]
+fn returns_peace_app_dir_relative_to_peace_dir() -> Result<(), Box<dyn std::error::Error>> {
+    let workspace_dirs = WorkspaceDirsBuilder::build(
+        &app_name!(),
+        WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
+        &profile!("test_profile"),
+        &FlowId::new(crate::fn_name_short!())?,
+    )?;
+
+    let peace_app_dir = workspace_dirs.peace_app_dir();
+
+    assert!(
+        peace_app_dir.ends_with("peace/.peace/workspace_tests"),
+        "Expected `{}` to end with `peace/.peace/workspace_tests`",
+        peace_app_dir.display()
+    );
+    Ok(())
+}
+
+#[test]
 fn returns_profile_history_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::error::Error>>
 {
     let workspace_dirs = WorkspaceDirsBuilder::build(
+        &app_name!(),
         WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
         &profile!("test_profile"),
         &FlowId::new(crate::fn_name_short!())?,
@@ -105,8 +130,8 @@ fn returns_profile_history_dir_from_first_dir_with_file() -> Result<(), Box<dyn 
     let profile_history_dir = workspace_dirs.profile_history_dir();
 
     assert!(
-        profile_history_dir.ends_with("peace/.peace/test_profile/.history"),
-        "Expected `{}` to end with `peace/.peace/test_profile/.history`",
+        profile_history_dir.ends_with("peace/.peace/workspace_tests/test_profile/.history"),
+        "Expected `{}` to end with `peace/.peace/workspace_tests/test_profile/.history`",
         profile_history_dir.display()
     );
     Ok(())
@@ -115,6 +140,7 @@ fn returns_profile_history_dir_from_first_dir_with_file() -> Result<(), Box<dyn 
 #[test]
 fn returns_profile_dir_from_working_directory() -> Result<(), Box<dyn std::error::Error>> {
     let workspace_dirs = WorkspaceDirsBuilder::build(
+        &app_name!(),
         WorkspaceSpec::WorkingDir,
         &profile!("test_profile"),
         &FlowId::new(crate::fn_name_short!())?,
@@ -123,8 +149,10 @@ fn returns_profile_dir_from_working_directory() -> Result<(), Box<dyn std::error
     let profile_dir = workspace_dirs.profile_dir();
 
     assert!(
-        profile_dir.ends_with(Path::new("peace/workspace_tests/.peace/test_profile")),
-        "Expected profile directory `{}` to end with `peace/workspace_tests/.peace/test_profile`",
+        profile_dir.ends_with(Path::new(
+            "peace/workspace_tests/.peace/workspace_tests/test_profile"
+        )),
+        "Expected profile directory `{}` to end with `peace/workspace_tests/.peace/workspace_tests/test_profile`",
         profile_dir.display()
     );
     Ok(())
@@ -133,6 +161,7 @@ fn returns_profile_dir_from_working_directory() -> Result<(), Box<dyn std::error
 #[test]
 fn returns_profile_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::error::Error>> {
     let workspace_dirs = WorkspaceDirsBuilder::build(
+        &app_name!(),
         WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
         &profile!("test_profile"),
         &FlowId::new(crate::fn_name_short!())?,
@@ -141,8 +170,8 @@ fn returns_profile_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::err
     let profile_dir = workspace_dirs.profile_dir();
 
     assert!(
-        profile_dir.ends_with("peace/.peace/test_profile"),
-        "Expected `{}` to end with `peace/.peace/test_profile`",
+        profile_dir.ends_with("peace/.peace/workspace_tests/test_profile"),
+        "Expected `{}` to end with `peace/.peace/workspace_tests/test_profile`",
         profile_dir.display()
     );
     Ok(())

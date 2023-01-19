@@ -15,9 +15,10 @@
 //! [peace#67]: https://github.com/azriel91/peace/issues/67
 
 // Re-exports
-pub use peace_static_check_macros::{flow_id, item_spec_id, profile};
+pub use peace_static_check_macros::{app_name, flow_id, item_spec_id, profile};
 
 pub use crate::{
+    app_name::{AppName, AppNameInvalidFmt},
     flow_id::{FlowId, FlowIdInvalidFmt},
     item_spec_id::{ItemSpecId, ItemSpecIdInvalidFmt},
     op_check_status::OpCheckStatus,
@@ -27,6 +28,7 @@ pub use crate::{
 #[cfg(feature = "output_progress")]
 pub mod progress;
 
+mod app_name;
 mod flow_id;
 mod item_spec_id;
 mod op_check_status;

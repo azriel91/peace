@@ -8,4 +8,5 @@ mod outcomes;
 mod output;
 mod states_serializer;
 mod storage;
+mod workspace;
 mod workspace_dirs_builder;

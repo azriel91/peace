@@ -4,7 +4,7 @@
 //! `peace_rt_model_web` depending on the compilation target architecture.
 
 // Re-exports
-pub use fn_graph::{self, FnRef, FnRefMut};
+pub use fn_graph::{self, FnRef};
 pub use peace_rt_model_core::cmd_context_params;
 #[cfg(feature = "output_progress")]
 pub use peace_rt_model_core::*;
@@ -14,6 +14,16 @@ pub mod output {
 
     #[cfg(not(target_arch = "wasm32"))]
     pub use peace_rt_model_native::output::*;
+}
+
+pub mod workspace {
+    pub use peace_rt_model_core::workspace::*;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub use peace_rt_model_native::workspace::*;
+
+    #[cfg(target_arch = "wasm32")]
+    pub use peace_rt_model_web::workspace::*;
 }
 
 #[cfg(not(target_arch = "wasm32"))]

@@ -1,9 +1,11 @@
 use std::str::FromStr;
 
+use serde::{Deserialize, Serialize};
+
 use crate::model::EnvTypeParseError;
 
 /// Type of environment: development or production.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum EnvType {
     /// Development environment that runs on `localhost`.
     Development,
