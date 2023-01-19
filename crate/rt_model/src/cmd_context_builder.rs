@@ -168,7 +168,7 @@ where
     pub async fn build(mut self) -> Result<CmdContext<'ctx, E, O, SetUp>, E> {
         let dirs = self.workspace.dirs();
         let storage = self.workspace.storage();
-        let workspace_params_file = WorkspaceParamsFile::from(dirs.peace_dir());
+        let workspace_params_file = WorkspaceParamsFile::from(dirs.peace_app_dir());
         let profile_params_file = ProfileParamsFile::from(dirs.profile_dir());
         let flow_params_file = FlowParamsFile::from(dirs.flow_dir());
         let states_saved_file = StatesSavedFile::from(dirs.flow_dir());
@@ -271,11 +271,12 @@ where
     /// Inserts workspace directory resources into the `Resources` map.
     fn workspace_dirs_insert(resources: &mut Resources<Empty>, workspace: &Workspace) {
         let (app_name, workspace_dirs, profile, flow_id, storage) = workspace.clone().into_inner();
-        let (workspace_dir, peace_dir, profile_dir, profile_history_dir, flow_dir) =
+        let (workspace_dir, peace_dir, peace_app_dir, profile_dir, profile_history_dir, flow_dir) =
             workspace_dirs.into_inner();
 
         resources.insert(workspace_dir);
         resources.insert(peace_dir);
+        resources.insert(peace_app_dir);
         resources.insert(profile_dir);
         resources.insert(profile_history_dir);
         resources.insert(flow_dir);

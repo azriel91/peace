@@ -3,7 +3,13 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use peace::resources::{internal::WorkspaceParamsFile, paths::PeaceDir};
+use peace::{
+    cfg::{app_name, AppName},
+    resources::{
+        internal::WorkspaceParamsFile,
+        paths::{PeaceAppDir, PeaceDir},
+    },
+};
 
 #[test]
 pub fn debug() {
@@ -31,11 +37,12 @@ pub fn from_path_buf() {
 }
 
 #[test]
-pub fn from_peace_dir_relative() {
+pub fn from_peace_app_dir_relative() {
     let peace_dir = PeaceDir::from(Path::new(".").to_path_buf());
-    let workspace_params_file = WorkspaceParamsFile::from(&peace_dir);
+    let peace_app_dir = PeaceAppDir::from((&peace_dir, &app_name!()));
+    let workspace_params_file = WorkspaceParamsFile::from(&peace_app_dir);
 
-    let path = PathBuf::from_iter([".", "init.yaml"]);
+    let path = PathBuf::from_iter([".", &**app_name!(), "init.yaml"]);
     assert_eq!(path, &*workspace_params_file);
 }
 

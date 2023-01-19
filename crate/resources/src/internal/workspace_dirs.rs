@@ -1,4 +1,4 @@
-use crate::paths::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
+use crate::paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
 
 /// Directories used during `peace` execution.
 ///
@@ -12,6 +12,8 @@ pub struct WorkspaceDirs {
     workspace_dir: WorkspaceDir,
     /// Peace directory,
     peace_dir: PeaceDir,
+    /// Peace app directory,
+    peace_app_dir: PeaceAppDir,
     /// Directory to store data for the current profile.
     profile_dir: ProfileDir,
     /// Directory to store profile executions' summaries.
@@ -25,6 +27,7 @@ impl WorkspaceDirs {
     pub fn new(
         workspace_dir: WorkspaceDir,
         peace_dir: PeaceDir,
+        peace_app_dir: PeaceAppDir,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
         flow_dir: FlowDir,
@@ -32,6 +35,7 @@ impl WorkspaceDirs {
         Self {
             workspace_dir,
             peace_dir,
+            peace_app_dir,
             profile_dir,
             profile_history_dir,
             flow_dir,
@@ -44,6 +48,7 @@ impl WorkspaceDirs {
     ) -> (
         WorkspaceDir,
         PeaceDir,
+        PeaceAppDir,
         ProfileDir,
         ProfileHistoryDir,
         FlowDir,
@@ -51,6 +56,7 @@ impl WorkspaceDirs {
         let Self {
             workspace_dir,
             peace_dir,
+            peace_app_dir,
             profile_dir,
             profile_history_dir,
             flow_dir,
@@ -59,6 +65,7 @@ impl WorkspaceDirs {
         (
             workspace_dir,
             peace_dir,
+            peace_app_dir,
             profile_dir,
             profile_history_dir,
             flow_dir,
@@ -73,6 +80,11 @@ impl WorkspaceDirs {
     /// Returns a reference to the `.peace` directory.
     pub fn peace_dir(&self) -> &PeaceDir {
         &self.peace_dir
+    }
+
+    /// Returns a reference to the `.peace/$app` directory.
+    pub fn peace_app_dir(&self) -> &PeaceAppDir {
+        &self.peace_app_dir
     }
 
     /// Returns a reference to the profile directory.

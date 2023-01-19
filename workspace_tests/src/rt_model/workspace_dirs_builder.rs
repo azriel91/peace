@@ -99,6 +99,25 @@ fn returns_peace_dir_relative_to_workspace_dir() -> Result<(), Box<dyn std::erro
 }
 
 #[test]
+fn returns_peace_app_dir_relative_to_peace_dir() -> Result<(), Box<dyn std::error::Error>> {
+    let workspace_dirs = WorkspaceDirsBuilder::build(
+        &app_name!(),
+        WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
+        &profile!("test_profile"),
+        &FlowId::new(crate::fn_name_short!())?,
+    )?;
+
+    let peace_app_dir = workspace_dirs.peace_app_dir();
+
+    assert!(
+        peace_app_dir.ends_with("peace/.peace/workspace_tests"),
+        "Expected `{}` to end with `peace/.peace/workspace_tests`",
+        peace_app_dir.display()
+    );
+    Ok(())
+}
+
+#[test]
 fn returns_profile_history_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::error::Error>>
 {
     let workspace_dirs = WorkspaceDirsBuilder::build(

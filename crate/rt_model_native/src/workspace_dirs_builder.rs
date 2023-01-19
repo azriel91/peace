@@ -52,6 +52,7 @@ impl WorkspaceDirsBuilder {
         Ok(WorkspaceDirs::new(
             workspace_dir,
             peace_dir,
+            peace_app_dir,
             profile_dir,
             profile_history_dir,
             flow_dir,

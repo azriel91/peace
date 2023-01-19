@@ -51,6 +51,7 @@ impl WorkspaceInitializer {
         let dirs = [
             AsRef::<Path>::as_ref(dirs.workspace_dir()),
             AsRef::<Path>::as_ref(dirs.peace_dir()),
+            AsRef::<Path>::as_ref(dirs.peace_app_dir()),
             AsRef::<Path>::as_ref(dirs.profile_dir()),
             AsRef::<Path>::as_ref(dirs.profile_history_dir()),
             AsRef::<Path>::as_ref(dirs.flow_dir()),
