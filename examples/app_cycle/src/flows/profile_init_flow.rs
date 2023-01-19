@@ -38,6 +38,7 @@ impl ProfileInitFlow {
             #[cfg(target_arch = "wasm32")]
             WorkspaceSpec::SessionStorage,
         )
+        .with_profile(profile.clone())
         .build()?;
         let graph = Self::graph()?;
 
