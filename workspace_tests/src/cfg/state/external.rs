@@ -8,7 +8,9 @@ fn display() {
 
 #[test]
 fn clone() {
-    assert_eq!(External::<u8>::Tbd, (&External::<u8>::Tbd).clone());
+    let external = &External::<u8>::Tbd;
+
+    assert_eq!(External::<u8>::Tbd, external.clone());
 }
 
 #[test]

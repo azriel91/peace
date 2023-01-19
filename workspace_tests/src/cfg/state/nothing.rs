@@ -2,17 +2,19 @@ use peace::cfg::state::Nothing;
 
 #[test]
 fn display() {
-    assert_eq!("", format!("{}", Nothing));
+    assert_eq!("", format!("{Nothing}"));
 }
 
 #[test]
 fn clone() {
-    assert_eq!(Nothing, (&Nothing).clone());
+    let nothing = &Nothing;
+
+    assert_eq!(Nothing, nothing.clone());
 }
 
 #[test]
 fn debug() {
-    assert_eq!("Nothing", format!("{:?}", Nothing));
+    assert_eq!("Nothing", format!("{Nothing:?}"));
 }
 
 #[test]

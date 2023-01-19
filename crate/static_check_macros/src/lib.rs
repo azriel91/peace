@@ -175,7 +175,7 @@ fn ensure_valid_id(
         .or(default);
 
     if let Some(proposed_id) = proposed_id.as_deref() {
-        if is_valid_id(&proposed_id) {
+        if is_valid_id(proposed_id) {
             let ty_name = Ident::new(ty_name, Span::call_site());
             quote!( #ty_name ::new_unchecked( #proposed_id )).into()
         } else {
