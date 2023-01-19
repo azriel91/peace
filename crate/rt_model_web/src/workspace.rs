@@ -1,7 +1,31 @@
+//! Types that store information about the directories that a command runs in.
+//!
+//! In the Peace framework, a command is run with the following contextual
+//! information:
+//!
+//! * The [`Workspace`] of a project that the command is built for.
+//! * A [`Profile`] (or namespace) for that project.
+//! * A workflow that the command is executing, identified by the [`FlowId`].
+//!
+//! # Implementors
+//!
+//! Sometimes, a command may manage information or items that are used in
+//! different profiles, and as a framework consumer, the profile or flow ID is
+//! not a "project environment profile" or "project workflow".
+//!
+//! In this case, [`Profile::workspace_init`], and [`FlowId::workspace_init`]
+//! and [`FlowId::profile_init`] are defaulted by the [`WorkspaceBuilder`] for
+//! the command's execution.
+
+pub use self::workspace_builder::WorkspaceBuilder;
+
 use peace_core::{FlowId, Profile};
 use peace_resources::internal::WorkspaceDirs;
+use peace_rt_model_core::workspace::ts::WorkspaceCommon;
 
-use crate::{Error, Storage, WorkspaceDirsBuilder, WorkspaceSpec};
+use crate::{Error, Storage, WorkspaceSpec};
+
+mod workspace_builder;
 
 /// Workspace that the `peace` tool runs in.
 #[derive(Clone, Debug)]
@@ -29,15 +53,20 @@ impl Workspace {
         profile: Profile,
         flow_id: FlowId,
     ) -> Result<Self, Error> {
-        let dirs = WorkspaceDirsBuilder::build(workspace_spec, &profile, &flow_id)?;
-        let storage = Storage::new(workspace_spec);
+        WorkspaceBuilder::new(workspace_spec)
+            .with_profile(profile)
+            .with_flow_id(flow_id)
+            .build()
+    }
 
-        Ok(Self {
-            dirs,
-            profile,
-            flow_id,
-            storage,
-        })
+    /// Returns the builder for a Workspace without setting a [`Profile`] or
+    /// [`FlowId`].
+    ///
+    /// # Parameters
+    ///
+    /// * `workspace_spec`: Defines how to discover the workspace.
+    pub fn builder(workspace_spec: WorkspaceSpec) -> WorkspaceBuilder<WorkspaceCommon> {
+        WorkspaceBuilder::new(workspace_spec)
     }
 
     /// Returns the underlying data.

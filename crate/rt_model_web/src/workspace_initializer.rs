@@ -1,4 +1,4 @@
-use std::{fmt::Debug, hash::Hash, iter, path::Path};
+use std::{fmt::Debug, hash::Hash, path::Path};
 
 use peace_resources::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceDirs, WorkspaceParamsFile},
@@ -48,15 +48,15 @@ impl WorkspaceInitializer {
     /// For web storage, this sets empty values at directory paths to emulate
     /// the native storage.
     pub async fn dirs_initialize(storage: &Storage, dirs: &WorkspaceDirs) -> Result<(), Error> {
-        let dirs = iter::once(AsRef::<Path>::as_ref(dirs.workspace_dir()))
-            .chain(iter::once(AsRef::<Path>::as_ref(dirs.peace_dir())))
-            .chain(iter::once(AsRef::<Path>::as_ref(dirs.profile_dir())))
-            .chain(iter::once(AsRef::<Path>::as_ref(
-                dirs.profile_history_dir(),
-            )))
-            .chain(iter::once(AsRef::<Path>::as_ref(dirs.flow_dir())));
+        let dirs = [
+            AsRef::<Path>::as_ref(dirs.workspace_dir()),
+            AsRef::<Path>::as_ref(dirs.peace_dir()),
+            AsRef::<Path>::as_ref(dirs.profile_dir()),
+            AsRef::<Path>::as_ref(dirs.profile_history_dir()),
+            AsRef::<Path>::as_ref(dirs.flow_dir()),
+        ];
 
-        storage.set_items(dirs.map(|dir| (dir, "")))?;
+        storage.set_items(dirs.iter().map(|dir| (*dir, "")))?;
 
         Ok(())
     }

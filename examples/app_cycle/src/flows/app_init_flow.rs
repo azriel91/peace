@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{flow_id, item_spec_id, profile, FlowId, ItemSpecId, Profile},
+    cfg::{item_spec_id, ItemSpecId},
     rt::cmds::{EnsureCmd, StatesDiscoverCmd},
     rt_model::{
         output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
@@ -29,14 +29,13 @@ impl AppInitFlow {
     where
         O: OutputWrite<AppCycleError>,
     {
-        let workspace = Workspace::new(
+        let workspace = Workspace::builder(
             #[cfg(not(target_arch = "wasm32"))]
             WorkspaceSpec::WorkingDir,
             #[cfg(target_arch = "wasm32")]
             WorkspaceSpec::SessionStorage,
-            profile!("workspace_init"),
-            flow_id!("app_init_flow"),
-        )?;
+        )
+        .build()?;
         let graph = Self::graph()?;
 
         let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output)

@@ -16,6 +16,16 @@ pub mod output {
     pub use peace_rt_model_native::output::*;
 }
 
+pub mod workspace {
+    pub use peace_rt_model_core::workspace::*;
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub use peace_rt_model_native::workspace::*;
+
+    #[cfg(target_arch = "wasm32")]
+    pub use peace_rt_model_web::workspace::*;
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 pub use peace_rt_model_native::*;
 
