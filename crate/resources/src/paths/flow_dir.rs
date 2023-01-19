@@ -6,7 +6,7 @@ use crate::paths::ProfileDir;
 
 /// Directory to store all data produced by the current flow's execution.
 ///
-/// Typically `$workspace_dir/.peace/$profile/$flow_id`.
+/// Typically `$workspace_dir/.peace/$app/$profile/$flow_id`.
 ///
 /// This is the directory that contains the information produced and used during
 /// a `peace` tool invocation for a particular flow.

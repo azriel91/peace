@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{profile, FlowId, ItemSpec, Profile},
+    cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
     resources::states::{
         StatesCleaned, StatesCleanedDry, StatesCurrent, StatesEnsured, StatesSaved,
     },
@@ -17,6 +17,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -55,6 +56,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -116,6 +118,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -169,6 +172,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,

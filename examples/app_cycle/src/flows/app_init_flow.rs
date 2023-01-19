@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{item_spec_id, ItemSpecId},
+    cfg::{app_name, item_spec_id, AppName, ItemSpecId},
     rt::cmds::{EnsureCmd, StatesDiscoverCmd},
     rt_model::{
         output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
@@ -30,6 +30,7 @@ impl AppInitFlow {
         O: OutputWrite<AppCycleError>,
     {
         let workspace = Workspace::builder(
+            app_name!(),
             #[cfg(not(target_arch = "wasm32"))]
             WorkspaceSpec::WorkingDir,
             #[cfg(target_arch = "wasm32")]

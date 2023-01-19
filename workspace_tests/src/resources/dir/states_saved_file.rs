@@ -4,8 +4,8 @@ use std::{
 };
 
 use peace::{
-    cfg::{flow_id, profile, FlowId, Profile},
-    resources::paths::{FlowDir, PeaceDir, ProfileDir, StatesSavedFile},
+    cfg::{app_name, flow_id, profile, AppName, FlowId, Profile},
+    resources::paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, StatesSavedFile},
 };
 
 #[test]
@@ -35,13 +35,21 @@ pub fn from_path_buf() {
 
 #[test]
 pub fn from_flow_dir_relative() {
+    let app_name = app_name!();
     let peace_dir = PeaceDir::from(Path::new(".").to_path_buf());
     let profile = profile!("test_profile");
-    let profile_dir = ProfileDir::from((&peace_dir, &profile));
+    let peace_app_dir = PeaceAppDir::from((&peace_dir, &app_name));
+    let profile_dir = ProfileDir::from((&peace_app_dir, &profile));
     let flow_dir = FlowDir::from((&profile_dir, &flow_id!("test_flow")));
     let states_saved_file = StatesSavedFile::from(&flow_dir);
 
-    let path = PathBuf::from_iter([".", "test_profile", "test_flow", "states_saved.yaml"]);
+    let path = PathBuf::from_iter([
+        ".",
+        &**app_name!(),
+        "test_profile",
+        "test_flow",
+        "states_saved.yaml",
+    ]);
     assert_eq!(path, &*states_saved_file);
 }
 

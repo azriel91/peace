@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{profile, FlowId, Profile},
+    cfg::{app_name, profile, AppName, FlowId, Profile},
     resources::paths::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Storage, Workspace, WorkspaceSpec},
 };
@@ -11,6 +11,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().into()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -47,6 +48,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
     let tempdir = tempfile::tempdir()?;
     let temp_path = tempdir.path();
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(temp_path.to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -87,6 +89,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
     tokio::fs::create_dir(&subdir).await?;
     std::env::set_current_dir(&subdir)?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -121,6 +124,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
 async fn init_runs_graph_setup() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().into()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,

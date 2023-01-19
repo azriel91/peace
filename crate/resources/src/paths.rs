@@ -65,12 +65,13 @@
 //! ```
 
 pub use self::{
-    flow_dir::FlowDir, peace_dir::PeaceDir, profile_dir::ProfileDir,
+    flow_dir::FlowDir, peace_app_dir::PeaceAppDir, peace_dir::PeaceDir, profile_dir::ProfileDir,
     profile_history_dir::ProfileHistoryDir, states_desired_file::StatesDesiredFile,
     states_saved_file::StatesSavedFile, workspace_dir::WorkspaceDir,
 };
 
 mod flow_dir;
+mod peace_app_dir;
 mod peace_dir;
 mod profile_dir;
 mod profile_history_dir;

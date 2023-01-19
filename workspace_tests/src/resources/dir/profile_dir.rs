@@ -1,8 +1,8 @@
 use std::{ffi::OsStr, path::Path};
 
 use peace::{
-    cfg::{profile, Profile},
-    resources::paths::{PeaceDir, ProfileDir},
+    cfg::{app_name, profile, AppName, Profile},
+    resources::paths::{PeaceAppDir, PeaceDir, ProfileDir},
 };
 
 #[test]
@@ -29,12 +29,15 @@ pub fn from_path_buf() {
 
 #[test]
 pub fn from_peace_dir_relative() {
+    let app_name = app_name!();
     let peace_dir = PeaceDir::from(Path::new(".").to_path_buf());
-    let profile = profile!("my_profile");
-    let profile_dir = ProfileDir::from((&peace_dir, &profile));
+    let profile = profile!("test_profile");
+    let peace_app_dir = PeaceAppDir::from((&peace_dir, &app_name));
+    let profile_dir = ProfileDir::from((&peace_app_dir, &profile));
 
     let mut path = Path::new(".").to_path_buf();
-    path.push("my_profile");
+    path.push(&**app_name!());
+    path.push("test_profile");
     assert_eq!(path, &*profile_dir);
 }
 

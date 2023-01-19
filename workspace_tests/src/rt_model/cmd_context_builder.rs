@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use peace::{
-    cfg::{profile, FlowId, Profile},
+    cfg::{app_name, profile, AppName, FlowId, Profile},
     resources::internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
     rt_model::{
         CmdContext, CmdContextBuilder, ItemSpecGraph, ItemSpecGraphBuilder, Workspace,
@@ -25,7 +25,8 @@ async fn build_initializes_dirs_using_profile_and_physically_creates_dirs()
     let peace_dir = tempdir
         .path()
         .join(workspace_dirs.peace_dir().file_name().unwrap());
-    let profile_dir = peace_dir.join("test_profile");
+    let peace_app_dir = peace_dir.join(&**app_name!());
+    let profile_dir = peace_app_dir.join("test_profile");
     let profile_history_dir = profile_dir.join(".history");
 
     assert_eq!(
@@ -249,6 +250,7 @@ async fn test_setup() -> Result<
 > {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().into()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,

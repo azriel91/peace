@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use crate::paths::WorkspaceDir;
 
-/// Directory to store all data produced by `peace` tool execution.
+/// Directory to store all data produced by `peace` tools' executions.
 ///
 /// Typically `$workspace_dir/.peace`.
 ///

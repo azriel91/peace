@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{profile, FlowId, ItemSpec, Profile},
+    cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
     resources::states::{StatesEnsured, StatesEnsuredDry, StatesSaved},
     rt::cmds::{sub::StatesSavedReadCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
@@ -11,6 +11,7 @@ use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
 async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -63,6 +64,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -130,6 +132,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,

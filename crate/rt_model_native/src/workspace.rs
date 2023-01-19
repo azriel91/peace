@@ -19,7 +19,7 @@
 
 pub use self::workspace_builder::WorkspaceBuilder;
 
-use peace_core::{FlowId, Profile};
+use peace_core::{AppName, FlowId, Profile};
 use peace_resources::internal::WorkspaceDirs;
 use peace_rt_model_core::workspace::ts::WorkspaceCommon;
 
@@ -30,6 +30,8 @@ mod workspace_builder;
 /// Workspace that the `peace` tool runs in.
 #[derive(Clone, Debug)]
 pub struct Workspace {
+    /// Name of the application that is run by end users.
+    app_name: AppName,
     /// Convention-based directories in this workspace.
     dirs: WorkspaceDirs,
     /// Identifier or namespace to distinguish execution environments.
@@ -49,15 +51,17 @@ impl Workspace {
     ///
     /// # Parameters
     ///
+    /// * `app_name`: Name of the final application.
     /// * `workspace_spec`: Defines how to discover the workspace.
     /// * `profile`: The profile / namespace that the execution is flow.
     /// * `flow_id`: ID of the flow that is being executed.
     pub fn new(
+        app_name: AppName,
         workspace_spec: WorkspaceSpec,
         profile: Profile,
         flow_id: FlowId,
     ) -> Result<Self, Error> {
-        WorkspaceBuilder::new(workspace_spec)
+        WorkspaceBuilder::new(app_name, workspace_spec)
             .with_profile(profile)
             .with_flow_id(flow_id)
             .build()
@@ -68,21 +72,31 @@ impl Workspace {
     ///
     /// # Parameters
     ///
+    /// * `app_name`: Name of the final application.
     /// * `workspace_spec`: Defines how to discover the workspace.
-    pub fn builder(workspace_spec: WorkspaceSpec) -> WorkspaceBuilder<WorkspaceCommon> {
-        WorkspaceBuilder::new(workspace_spec)
+    pub fn builder(
+        app_name: AppName,
+        workspace_spec: WorkspaceSpec,
+    ) -> WorkspaceBuilder<WorkspaceCommon> {
+        WorkspaceBuilder::new(app_name, workspace_spec)
     }
 
     /// Returns the underlying data.
-    pub fn into_inner(self) -> (WorkspaceDirs, Profile, FlowId, Storage) {
+    pub fn into_inner(self) -> (AppName, WorkspaceDirs, Profile, FlowId, Storage) {
         let Self {
+            app_name,
             dirs,
             profile,
             flow_id,
             storage,
         } = self;
 
-        (dirs, profile, flow_id, storage)
+        (app_name, dirs, profile, flow_id, storage)
+    }
+
+    /// Returns a reference to the app name.
+    pub fn app_name(&self) -> &AppName {
+        &self.app_name
     }
 
     /// Returns a reference to the workspace's directories.

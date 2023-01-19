@@ -1,5 +1,5 @@
 use peace::{
-    cfg::Profile,
+    cfg::{app_name, AppName, Profile},
     rt::cmds::{sub::StatesSavedReadCmd, StatesDiscoverCmd},
     rt_model::{
         output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
@@ -32,6 +32,7 @@ impl ProfileInitFlow {
         O: OutputWrite<AppCycleError>,
     {
         let workspace = Workspace::builder(
+            app_name!(),
             #[cfg(not(target_arch = "wasm32"))]
             WorkspaceSpec::WorkingDir,
             #[cfg(target_arch = "wasm32")]

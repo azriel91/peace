@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{item_spec_id, profile, FlowId, ItemSpecId, Profile, State},
+    cfg::{app_name, item_spec_id, profile, AppName, FlowId, ItemSpecId, Profile, State},
     resources::states::{StateDiffs, StatesCleaned, StatesCurrent, StatesDesired, StatesEnsured},
     rt::cmds::{
         sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
@@ -120,6 +120,7 @@ async fn state_current_returns_shell_command_current_state()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -159,6 +160,7 @@ async fn state_desired_returns_shell_command_desired_state()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -199,6 +201,7 @@ async fn state_desired_returns_shell_command_desired_state()
 async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -233,6 +236,7 @@ async fn ensure_when_creation_required_executes_ensure_exec_shell_command()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -276,6 +280,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -333,6 +338,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
 async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,

@@ -3,10 +3,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use peace_core::{FlowId, Profile};
+use peace_core::{AppName, FlowId, Profile};
 use peace_resources::{
     internal::WorkspaceDirs,
-    paths::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir},
+    paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir},
 };
 
 use crate::{Error, WorkspaceSpec};
@@ -18,6 +18,7 @@ pub struct WorkspaceDirsBuilder;
 impl WorkspaceDirsBuilder {
     /// Computes [`WorkspaceDirs`] paths.
     pub fn build(
+        app_name: &AppName,
         workspace_spec: WorkspaceSpec,
         profile: &Profile,
         flow_id: &FlowId,
@@ -43,7 +44,8 @@ impl WorkspaceDirsBuilder {
         };
 
         let peace_dir = PeaceDir::from(&workspace_dir);
-        let profile_dir = ProfileDir::from((&peace_dir, profile));
+        let peace_app_dir = PeaceAppDir::from((&peace_dir, app_name));
+        let profile_dir = ProfileDir::from((&peace_app_dir, profile));
         let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
         let flow_dir = FlowDir::from((&profile_dir, flow_id));
 

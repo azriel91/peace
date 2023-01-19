@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{profile, FlowId, ItemSpec, Profile},
+    cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
     resources::states::StatesDesired,
     rt::cmds::sub::{StatesDesiredDiscoverCmd, StatesDesiredReadCmd},
     rt_model::{CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
@@ -11,6 +11,7 @@ use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
 async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
@@ -50,6 +51,7 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
 async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,

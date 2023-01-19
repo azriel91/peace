@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{profile, FlowId, ItemSpec, ItemSpecId, Profile},
+    cfg::{app_name, profile, AppName, FlowId, ItemSpec, ItemSpecId, Profile},
     resources::{
         paths::StatesDesiredFile,
         states::StatesDesired,
@@ -15,6 +15,7 @@ use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
 async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
+        app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
         profile!("test_profile"),
         FlowId::new(crate::fn_name_short!())?,
