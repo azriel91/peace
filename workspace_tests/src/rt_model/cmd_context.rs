@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{flow_id, profile, FlowId, Profile},
+    cfg::{profile, FlowId, Profile},
     resources::paths::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir},
     rt_model::{CmdContext, ItemSpecGraphBuilder, Storage, Workspace, WorkspaceSpec},
 };
@@ -34,10 +34,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
         resources.try_borrow::<Profile>().as_deref()
     );
     assert_eq!(
-        Ok(flow_id!(
-            "init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_dir"
-        ))
-        .as_ref(),
+        Ok(FlowId::new(crate::fn_name_short!())?).as_ref(),
         resources.try_borrow::<FlowId>().as_deref()
     );
     assert!(resources.try_borrow::<Storage>().is_ok());
@@ -73,10 +70,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
         resources.try_borrow::<Profile>().as_deref()
     );
     assert_eq!(
-        Ok(flow_id!(
-            "init_inserts_workspace_dirs_into_resources_for_workspace_spec_path"
-        ))
-        .as_ref(),
+        Ok(FlowId::new(crate::fn_name_short!())?).as_ref(),
         resources.try_borrow::<FlowId>().as_deref()
     );
     assert!(resources.try_borrow::<Storage>().is_ok());
@@ -116,10 +110,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
         resources.try_borrow::<Profile>().as_deref()
     );
     assert_eq!(
-        Ok(flow_id!(
-            "init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir_with_file"
-        ))
-        .as_ref(),
+        Ok(FlowId::new(crate::fn_name_short!())?).as_ref(),
         resources.try_borrow::<FlowId>().as_deref()
     );
     assert!(resources.try_borrow::<Storage>().is_ok());
