@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace_core::{FlowId, Profile};
+use peace_core::{AppName, FlowId, Profile};
 use peace_rt_model_core::workspace::ts::{FlowIdSelected, ProfileSelected, WorkspaceCommon};
 
 use crate::{workspace::Workspace, Error, Storage, WorkspaceDirsBuilder, WorkspaceSpec};
@@ -8,6 +8,8 @@ use crate::{workspace::Workspace, Error, Storage, WorkspaceDirsBuilder, Workspac
 /// Workspace that the commands run in.
 #[derive(Clone, Debug)]
 pub struct WorkspaceBuilder<TS> {
+    /// Name of the application that is run by end users.
+    app_name: AppName,
     /// Describes how to discover the workspace directory.
     workspace_spec: WorkspaceSpec,
     /// Identifier or namespace to distinguish execution environments.
@@ -23,9 +25,11 @@ impl WorkspaceBuilder<WorkspaceCommon> {
     ///
     /// # Parameters
     ///
+    /// * `app_name`: Name of the final application.
     /// * `workspace_spec`: Defines how to discover the workspace.
-    pub fn new(workspace_spec: WorkspaceSpec) -> Self {
+    pub fn new(app_name: AppName, workspace_spec: WorkspaceSpec) -> Self {
         Self {
+            app_name,
             workspace_spec,
             profile: Profile::workspace_init(),
             flow_id: FlowId::workspace_init(),
@@ -40,6 +44,7 @@ impl WorkspaceBuilder<WorkspaceCommon> {
     /// [`"default"`]: Profile::default
     pub fn with_profile(self, profile: Profile) -> WorkspaceBuilder<ProfileSelected> {
         let WorkspaceBuilder {
+            app_name,
             workspace_spec,
             profile: _,
             flow_id: _,
@@ -47,6 +52,7 @@ impl WorkspaceBuilder<WorkspaceCommon> {
         } = self;
 
         WorkspaceBuilder {
+            app_name,
             workspace_spec,
             profile,
             flow_id: FlowId::profile_init(),
@@ -63,6 +69,7 @@ impl WorkspaceBuilder<ProfileSelected> {
     /// [`"default"`]: FlowId::default
     pub fn with_flow_id(self, flow_id: FlowId) -> WorkspaceBuilder<FlowIdSelected> {
         let WorkspaceBuilder {
+            app_name,
             workspace_spec,
             profile,
             flow_id: _,
@@ -70,6 +77,7 @@ impl WorkspaceBuilder<ProfileSelected> {
         } = self;
 
         WorkspaceBuilder {
+            app_name,
             workspace_spec,
             profile,
             flow_id,
@@ -82,16 +90,18 @@ impl<TS> WorkspaceBuilder<TS> {
     /// Builds and returns the `Workspace`.
     pub fn build(self) -> Result<Workspace, Error> {
         let WorkspaceBuilder {
+            app_name,
             workspace_spec,
             profile,
             flow_id,
             marker: _,
         } = self;
 
-        let dirs = WorkspaceDirsBuilder::build(workspace_spec, &profile, &flow_id)?;
+        let dirs = WorkspaceDirsBuilder::build(&app_name, workspace_spec, &profile, &flow_id)?;
         let storage = Storage::new(workspace_spec);
 
         Ok(Workspace {
+            app_name,
             dirs,
             profile,
             flow_id,
