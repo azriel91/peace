@@ -1,6 +1,6 @@
 [package]
 name = "peace_item_spec_tar_x"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
 description = "Manages extracting a tar file for the peace framework"
@@ -18,7 +18,7 @@ test = false
 [dependencies]
 derivative = { workspace = true }
 miette = { workspace = true, optional = true }
-peace = { path = "../..", version = "0.0.5", default-features = false }
+peace = { path = "../..", version = "0.0.6", default-features = false }
 serde = { version = "1.0.152", features = ["derive"] }
 # We use this instead of tokio-tar, because:
 #
