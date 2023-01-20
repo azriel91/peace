@@ -433,7 +433,7 @@ where
             ProfileSelection::WorkspaceParam(workflow_params_k) => {
                 if let Some(workspace_params) = self.workspace_params.as_ref() {
                     workspace_params
-                        .get::<Profile, _>(&workflow_params_k)
+                        .get::<Profile, _>(workflow_params_k)
                         .ok_or(Error::WorkspaceParamsProfileNone)?
                         .clone()
                 } else {
