@@ -12,7 +12,7 @@ cargo install cargo-nextest
 ## Running Tests
 
 ```bash
-cargo nextest run --workspace --all-targets
+cargo nextest run --workspace --all-features
 
 # To test individual features
 for i in {0..3}; do cargo test_$i || break; done
