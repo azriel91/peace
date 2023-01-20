@@ -124,7 +124,7 @@ jobs:
 
       - uses: taiki-e/install-action@nextest
       - name: 'Build and test'
-        run: cargo nextest run --workspace --all-targets
+        run: cargo nextest run --workspace --all-features
 
   build_and_test_windows:
     name: Build and Test (Windows)
@@ -144,7 +144,7 @@ jobs:
 
       - uses: taiki-e/install-action@nextest
       - name: 'Build and test'
-        run: cargo nextest run --workspace --all-targets
+        run: cargo nextest run --workspace --all-features
 
   build_examples_wasm:
     name: Build examples (WASM)

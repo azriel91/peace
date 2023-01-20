@@ -35,7 +35,7 @@ jobs:
         uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
         with:
           command: nextest
-          args: run --workspace --all-targets
+          args: run --workspace --all-features
 
   build_and_test_windows:
     name: Build and Test (Windows)
@@ -59,7 +59,7 @@ jobs:
         uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
         with:
           command: nextest
-          args: run --workspace --all-targets
+          args: run --workspace --all-features
 
   crates_io_publish:
     name: Publish (crates.io)

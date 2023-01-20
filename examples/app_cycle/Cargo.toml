@@ -1,6 +1,6 @@
 [package]
 name = "app_cycle"
-version = "0.0.5"
+version = "0.0.6"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
 description = "Peace framework web application lifecycle example"
