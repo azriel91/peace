@@ -5,7 +5,9 @@ use peace::{
         sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
         CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd,
     },
-    rt_model::{CmdContext, InMemoryTextOutput, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{
+        cmd::CmdContext, InMemoryTextOutput, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
+    },
 };
 use peace_item_specs::sh_cmd::{
     ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdItemSpec, ShCmdParams, ShCmdState, ShCmdStateDiff,
@@ -122,8 +124,6 @@ async fn state_current_returns_shell_command_current_state()
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<ShCmdError>::new();
@@ -131,7 +131,10 @@ async fn state_current_returns_shell_command_current_state()
         graph_builder.build()
     };
     let mut output = InMemoryTextOutput::new();
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
 
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
     let states_current = resources.borrow::<StatesCurrent>();
@@ -162,8 +165,6 @@ async fn state_desired_returns_shell_command_desired_state()
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<ShCmdError>::new();
@@ -171,7 +172,10 @@ async fn state_desired_returns_shell_command_desired_state()
         graph_builder.build()
     };
     let mut output = InMemoryTextOutput::new();
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
 
     let CmdContext { resources, .. } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
     let states_desired = resources.borrow::<StatesDesired>();
@@ -203,8 +207,6 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<ShCmdError>::new();
@@ -212,13 +214,19 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
         graph_builder.build()
     };
     let mut output = InMemoryTextOutput::new();
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
 
     // Discover states current and desired
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Diff them
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
     let state_diffs = resources.borrow::<StateDiffs>();
@@ -238,8 +246,6 @@ async fn ensure_when_creation_required_executes_ensure_exec_shell_command()
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<ShCmdError>::new();
@@ -247,13 +253,19 @@ async fn ensure_when_creation_required_executes_ensure_exec_shell_command()
         graph_builder.build()
     };
     let mut output = InMemoryTextOutput::new();
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
 
     // Discover states current and desired
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Create the file
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
 
     let states_ensured = resources.borrow::<StatesEnsured>();
@@ -282,8 +294,6 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<ShCmdError>::new();
@@ -291,17 +301,26 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
         graph_builder.build()
     };
     let mut output = InMemoryTextOutput::new();
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
 
     // Discover states current and desired
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Create the file
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     EnsureCmd::exec(cmd_context).await?;
 
     // Diff state after creation
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
     let state_diffs = resources.borrow::<StateDiffs>();
@@ -312,7 +331,10 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
     assert_eq!("nothing to do", state_diff.stderr());
 
     // Run again, for idempotence checck
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
 
     let states_ensured = resources.borrow::<StatesEnsured>();
@@ -340,8 +362,6 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<ShCmdError>::new();
@@ -349,25 +369,37 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
         graph_builder.build()
     };
     let mut output = InMemoryTextOutput::new();
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
 
     // Discover states current and desired
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Create the file
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     EnsureCmd::exec(cmd_context).await?;
 
     assert!(tempdir.path().join("test_file").exists());
 
     // Clean the file
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     CleanCmd::exec(cmd_context).await?;
 
     assert!(!tempdir.path().join("test_file").exists());
 
     // Run again, for idempotence checck
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext { resources, .. } = CleanCmd::exec(cmd_context).await?;
 
     let states_cleaned = resources.borrow::<StatesCleaned>();

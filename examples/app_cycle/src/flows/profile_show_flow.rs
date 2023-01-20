@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, AppName, Profile},
-    rt::cmds::{StatesDiscoverCmd, StatesSavedDisplayCmd},
+    rt::cmds::sub::StatesSavedReadCmd,
     rt_model::{
         output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
@@ -13,9 +13,9 @@ use crate::{
 
 /// Flow to initialize and set the default profile.
 #[derive(Debug)]
-pub struct ProfileInitFlow;
+pub struct ProfileShowFlow;
 
-impl ProfileInitFlow {
+impl ProfileShowFlow {
     /// Stores profile init parameters.
     ///
     /// # Parameters
@@ -23,11 +23,7 @@ impl ProfileInitFlow {
     /// * `output`: Output to write the execution outcome.
     /// * `profile`: Name of the profile to create.
     /// * `type`: Type of the environment.
-    pub async fn run<O>(
-        output: &mut O,
-        profile: Profile,
-        env_type: EnvType,
-    ) -> Result<(), AppCycleError>
+    pub async fn run<O>(output: &mut O) -> Result<(), AppCycleError>
     where
         O: OutputWrite<AppCycleError>,
     {
@@ -41,15 +37,16 @@ impl ProfileInitFlow {
         let graph = Self::graph()?;
 
         let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output)
-            .with_profile(profile)
-            .with_env_type(env_type)
-            .await?;
-        StatesDiscoverCmd::exec(cmd_context).await?;
-
-        let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output)
             .with_profile_from_last_used()
             .await?;
-        StatesSavedDisplayCmd::exec(cmd_context).await?;
+
+        let cmd_context = StatesSavedReadCmd::exec(cmd_context).await?;
+        let resources = &cmd_context.resources;
+        let profile = &*resources.borrow::<Profile>();
+        let env_type = &*resources.borrow::<EnvType>();
+
+        eprintln!("Profile: {profile}");
+        eprintln!("Type: {env_type}");
 
         Ok(())
     }

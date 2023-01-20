@@ -8,7 +8,7 @@ use peace_resources::{
     states::{ts::Desired, StatesDesired},
     Resources,
 };
-use peace_rt_model::{CmdContext, Error, ItemSpecGraph, StatesSerializer, Storage};
+use peace_rt_model::{cmd::CmdContext, Error, ItemSpecGraph, StatesSerializer, Storage};
 
 use crate::BUFFERED_FUTURES_MAX;
 

@@ -3,10 +3,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use peace_core::{AppName, FlowId, Profile};
+use peace_core::AppName;
 use peace_resources::{
     internal::WorkspaceDirs,
-    paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir},
+    paths::{PeaceAppDir, PeaceDir},
 };
 
 use crate::{Error, WorkspaceSpec};
@@ -20,8 +20,6 @@ impl WorkspaceDirsBuilder {
     pub fn build(
         app_name: &AppName,
         workspace_spec: WorkspaceSpec,
-        profile: &Profile,
-        flow_id: &FlowId,
     ) -> Result<WorkspaceDirs, Error> {
         use peace_resources::paths::WorkspaceDir;
 
@@ -45,18 +43,8 @@ impl WorkspaceDirsBuilder {
 
         let peace_dir = PeaceDir::from(&workspace_dir);
         let peace_app_dir = PeaceAppDir::from((&peace_dir, app_name));
-        let profile_dir = ProfileDir::from((&peace_app_dir, profile));
-        let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
-        let flow_dir = FlowDir::from((&profile_dir, flow_id));
 
-        Ok(WorkspaceDirs::new(
-            workspace_dir,
-            peace_dir,
-            peace_app_dir,
-            profile_dir,
-            profile_history_dir,
-            flow_dir,
-        ))
+        Ok(WorkspaceDirs::new(workspace_dir, peace_dir, peace_app_dir))
     }
 
     fn first_dir_with_file(working_dir: &Path, path: &OsStr) -> Option<PathBuf> {

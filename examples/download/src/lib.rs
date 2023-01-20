@@ -12,7 +12,7 @@ use peace::{
         StatesSavedDisplayCmd,
     },
     rt_model::{
-        output::OutputWrite, CmdContext, ItemSpecGraph, ItemSpecGraphBuilder, Workspace,
+        cmd::CmdContext, output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace,
         WorkspaceSpec,
     },
 };
@@ -40,10 +40,8 @@ pub struct WorkspaceAndGraph {
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn workspace_and_graph_setup(
     workspace_spec: WorkspaceSpec,
-    profile: Profile,
-    flow_id: FlowId,
 ) -> Result<WorkspaceAndGraph, DownloadError> {
-    let workspace = Workspace::new(app_name!(), workspace_spec, profile, flow_id)?;
+    let workspace = Workspace::new(app_name!(), workspace_spec)?;
 
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
@@ -63,10 +61,8 @@ pub async fn workspace_and_graph_setup(
 #[cfg(target_arch = "wasm32")]
 pub async fn workspace_and_graph_setup(
     workspace_spec: WorkspaceSpec,
-    profile: Profile,
-    flow_id: FlowId,
 ) -> Result<WorkspaceAndGraph, DownloadError> {
-    let workspace = Workspace::new(app_name!(), workspace_spec, profile, flow_id)?;
+    let workspace = Workspace::new(app_name!(), workspace_spec)?;
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
         item_spec_graph_builder
@@ -84,6 +80,8 @@ pub async fn workspace_and_graph_setup(
 /// Returns a `CmdContext` initialized from the workspace and item spec graph
 pub async fn cmd_context<'ctx, O>(
     workspace_and_graph: &'ctx WorkspaceAndGraph,
+    profile: Profile,
+    flow_id: FlowId,
     output: &'ctx mut O,
     file_download_params: Option<FileDownloadParams<FileId>>,
 ) -> Result<CmdContext<'ctx, DownloadError, O, SetUp>, DownloadError>
@@ -95,6 +93,8 @@ where
         item_spec_graph,
     } = workspace_and_graph;
     CmdContext::builder(workspace, item_spec_graph, output)
+        .with_profile(profile)
+        .with_flow_id(flow_id)
         .with_profile_param("file_download_params".to_string(), file_download_params)
         .await
 }

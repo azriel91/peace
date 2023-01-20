@@ -7,7 +7,7 @@ use peace::{
         sub::{StatesCurrentDiscoverCmd, StatesSavedReadCmd},
         CleanCmd, EnsureCmd, StatesDiscoverCmd,
     },
-    rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{cmd::CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
@@ -19,8 +19,6 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -30,11 +28,17 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
     let mut output = NoOpOutput;
 
     // Write current states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext { resources, .. } = CleanCmd::exec_dry(cmd_context).await?;
 
     let states = resources.borrow::<StatesCurrent>();
@@ -58,8 +62,6 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -69,25 +71,37 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Ensure states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext {
         resources: resources_ensured,
         ..
     } = EnsureCmd::exec(cmd_context).await?;
 
     // Clean states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext {
         resources: resources_cleaned,
         ..
     } = CleanCmd::exec_dry(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext {
         resources: resources_reread,
         ..
@@ -120,8 +134,6 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -131,18 +143,27 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let mut output = NoOpOutput;
 
     // Write current states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     // Clean states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext {
         resources: resources_cleaned,
         ..
     } = CleanCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext {
         resources: resources_reread,
         ..
@@ -174,8 +195,6 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -185,25 +204,37 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Ensure states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext {
         resources: resources_ensured,
         ..
     } = EnsureCmd::exec(cmd_context).await?;
 
     // Clean states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext {
         resources: resources_cleaned,
         ..
     } = CleanCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext {
         resources: resources_reread,
         ..

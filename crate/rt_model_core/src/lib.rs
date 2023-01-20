@@ -10,7 +10,6 @@ pub use indicatif;
 
 pub mod cmd_context_params;
 pub mod output;
-pub mod workspace;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {

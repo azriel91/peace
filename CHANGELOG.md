@@ -8,6 +8,9 @@
 * Support progress bars in `CliOutput`. ([#42], [#66])
 * Consolidate `StateLogical` and `StatePhysical` into `ItemSpec::State`. ([#69], [#70])
 * Use [ETag] to determine if a file needs to be re-downloaded. ([#68], [#71])
+* Add `PeaceAppDir` layer so different Peace tools don't conflict with each other. ([#35], [#72])
+* Move `profile` and `flow_id` parameters to `CmdContextBuilder`. ([#35], [#73])
+* Support reading `Profile` from workspace params. ([#35], [#73])
 
 [ETag]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag
 [#62]: https://github.com/azriel91/peace/pull/62
@@ -19,6 +22,9 @@
 [#70]: https://github.com/azriel91/peace/pull/70
 [#68]: https://github.com/azriel91/peace/issues/68
 [#71]: https://github.com/azriel91/peace/pull/71
+[#35]: https://github.com/azriel91/peace/issues/35
+[#72]: https://github.com/azriel91/peace/pull/72
+[#73]: https://github.com/azriel91/peace/pull/73
 
 
 ## 0.0.5 (2022-12-18)

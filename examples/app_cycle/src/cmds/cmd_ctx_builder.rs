@@ -6,7 +6,7 @@ use std::{
 use peace::{
     cfg::Profile,
     resources::resources::ts::SetUp,
-    rt_model::{output::OutputWrite, CmdContext, ItemSpecGraph, Workspace},
+    rt_model::{cmd::CmdContext, output::OutputWrite, ItemSpecGraph, Workspace},
 };
 use peace_item_specs::{file_download::FileDownloadParams, tar_x::TarXParams};
 
@@ -22,7 +22,7 @@ pub struct CmdCtxBuilder<'ctx, O> {
     output: &'ctx mut O,
     web_app_file_download_params: Option<FileDownloadParams<WebAppFileId>>,
     web_app_tar_x_params: Option<TarXParams<WebAppFileId>>,
-    profile: Option<Profile>,
+    profile_selection: ProfileSelection,
     env_type: Option<EnvType>,
 }
 
@@ -41,7 +41,7 @@ where
             output,
             web_app_file_download_params: None,
             web_app_tar_x_params: None,
-            profile: None,
+            profile_selection: ProfileSelection::None,
             env_type: None,
         }
     }
@@ -63,7 +63,12 @@ where
     }
 
     pub fn with_profile(mut self, profile: Profile) -> Self {
-        self.profile = Some(profile);
+        self.profile_selection = ProfileSelection::Selected(profile);
+        self
+    }
+
+    pub fn with_profile_from_last_used(mut self) -> Self {
+        self.profile_selection = ProfileSelection::FromWorkspaceParams;
         self
     }
 
@@ -80,20 +85,39 @@ where
             output,
             web_app_file_download_params,
             web_app_tar_x_params,
-            profile,
+            profile_selection,
             env_type,
         } = self;
 
-        CmdContext::builder(workspace, graph, output)
+        let cmd_context_builder = CmdContext::builder(workspace, graph, output)
             .with_workspace_param(
                 "web_app_file_download_params".to_string(),
                 web_app_file_download_params,
             )
             .with_workspace_param("web_app_tar_x_params".to_string(), web_app_tar_x_params)
-            // This is a workspace param, as it tells the command context which profile to use.
-            .with_workspace_param("profile".to_string(), profile)
-            .with_profile_param("env_type".to_string(), env_type)
-            .await
+            .with_profile_param("env_type".to_string(), env_type);
+
+        // Profile is a workspace param, as it tells the command context which profile
+        // to use.
+        match profile_selection {
+            ProfileSelection::None => {
+                cmd_context_builder
+                    .with_workspace_param("profile".to_string(), None::<Profile>)
+                    .await
+            }
+            ProfileSelection::Selected(profile) => {
+                cmd_context_builder
+                    .with_workspace_param("profile".to_string(), Some(profile.clone()))
+                    .with_profile(profile)
+                    .await
+            }
+            ProfileSelection::FromWorkspaceParams => {
+                cmd_context_builder
+                    .with_workspace_param("profile".to_string(), None::<Profile>)
+                    .with_profile_from_workspace_params("profile".to_string())
+                    .await
+            }
+        }
     }
 }
 
@@ -119,4 +143,11 @@ where
     fn into_future(self) -> Self::IntoFuture {
         Box::pin(self.build())
     }
+}
+
+#[derive(Debug)]
+enum ProfileSelection {
+    None,
+    Selected(Profile),
+    FromWorkspaceParams,
 }

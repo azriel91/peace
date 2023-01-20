@@ -1,8 +1,8 @@
-//! Type states for [`Workspace`].
+//! Type states for a [`CmdContext`].
 //!
-//! These distinguish how a `Workspace` is prepared for use.
+//! These distinguish how a `CmdContext` is prepared for use.
 //!
-//! [`Workspace`]: crate::workspace::Workspace
+//! [`CmdContext`]: crate::workspace::CmdContext
 
 use serde::{Deserialize, Serialize};
 
@@ -22,7 +22,7 @@ use serde::{Deserialize, Serialize};
 // #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 // pub struct WithoutPeaceDir;
 
-/// Workspace with no profile selected.
+/// CmdContext with no profile selected.
 ///
 /// This is used when a command is run using a shared workspace profile and flow.
 ///
@@ -31,9 +31,9 @@ use serde::{Deserialize, Serialize};
 /// * Downloading a repository or project, used to deploy different profile environments.
 /// * Storing preferences for a user.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
-pub struct WorkspaceCommon;
+pub struct CmdContextCommon;
 
-/// Workspace with a profile selected.
+/// CmdContext with a profile selected.
 ///
 /// This is used when a command is run for a particular profile, and the
 /// information is either not applicable to any flow, or is shared across flows.
@@ -44,7 +44,14 @@ pub struct WorkspaceCommon;
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
 pub struct ProfileSelected;
 
-/// Workspace with a flow selected.
+/// CmdContext with profile selection deferred.
+///
+/// This is used when the profile is evaluated at the point of command context
+/// building, for example when the profile is read from workflow params.
+#[derive(Clone, Copy, Debug, Deserialize, Serialize)]
+pub struct ProfileDeferred;
+
+/// CmdContext with a flow selected.
 ///
 /// This is used when a command is run for a particular flow.
 ///

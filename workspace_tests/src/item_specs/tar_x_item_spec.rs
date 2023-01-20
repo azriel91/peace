@@ -6,13 +6,16 @@ use peace::{
         OpCheckStatus, Profile,
     },
     data::Data,
-    resources::states::{StateDiffs, StatesCleaned, StatesCurrent, StatesDesired, StatesEnsured},
+    resources::{
+        paths::{FlowDir, ProfileDir},
+        states::{StateDiffs, StatesCleaned, StatesCurrent, StatesDesired, StatesEnsured},
+    },
     rt::cmds::{
         sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd},
         CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd,
     },
     rt_model::{
-        CmdContext, InMemoryTextOutput, ItemSpecGraph, ItemSpecGraphBuilder, Workspace,
+        cmd::CmdContext, InMemoryTextOutput, ItemSpecGraph, ItemSpecGraphBuilder, Workspace,
         WorkspaceSpec,
     },
 };
@@ -43,16 +46,20 @@ const TAR_X2_MTIME: u64 = 1671675052;
 #[tokio::test]
 async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_exists()
 -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X2_TAR).await?;
+    } = test_env(&flow_id, TAR_X2_TAR).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -73,14 +80,16 @@ async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_e
 #[tokio::test]
 async fn state_current_returns_file_metadatas_when_extraction_folder_contains_file()
 -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X2_TAR).await?;
+    } = test_env(&flow_id, TAR_X2_TAR).await?;
     let b_path = PathBuf::from("b");
     let d_path = PathBuf::from("sub").join("d");
 
@@ -89,6 +98,8 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -114,18 +125,22 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
 
 #[tokio::test]
 async fn state_desired_returns_file_metadatas_from_tar() -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X2_TAR).await?;
+    } = test_env(&flow_id, TAR_X2_TAR).await?;
     let b_path = PathBuf::from("b");
     let d_path = PathBuf::from("sub").join("d");
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -152,18 +167,22 @@ async fn state_desired_returns_file_metadatas_from_tar() -> Result<(), Box<dyn s
 #[tokio::test]
 async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
 -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X2_TAR).await?;
+    } = test_env(&flow_id, TAR_X2_TAR).await?;
     let b_path = PathBuf::from("b");
     let d_path = PathBuf::from("sub").join("d");
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -172,6 +191,8 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
@@ -196,14 +217,16 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
 #[tokio::test]
 async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file_name_greater()
 -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X2_TAR).await?;
+    } = test_env(&flow_id, TAR_X2_TAR).await?;
     let a_path = PathBuf::from("a");
     let b_path = PathBuf::from("b");
     let c_path = PathBuf::from("sub").join("c");
@@ -214,6 +237,8 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
     tar::Archive::new(Cursor::new(TAR_X1_TAR)).unpack(&dest)?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -222,6 +247,8 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
@@ -249,14 +276,16 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
 #[tokio::test]
 async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_file_name_greater()
 -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X2_TAR).await?;
+    } = test_env(&flow_id, TAR_X2_TAR).await?;
     let a_path = PathBuf::from("a");
     let c_path = PathBuf::from("sub").join("c");
 
@@ -266,6 +295,8 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -274,6 +305,8 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
@@ -299,14 +332,16 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
 #[tokio::test]
 async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_file_name_lesser()
 -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X1_TAR).await?;
+    } = test_env(&flow_id, TAR_X1_TAR).await?;
     let b_path = PathBuf::from("b");
     let d_path = PathBuf::from("sub").join("d");
 
@@ -316,6 +351,8 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -324,6 +361,8 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
@@ -349,14 +388,16 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
 #[tokio::test]
 async fn state_diff_includes_modified_when_dest_mtime_is_different()
 -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X2_TAR).await?;
+    } = test_env(&flow_id, TAR_X2_TAR).await?;
 
     // Create files in the destination.
     let sub_path = dest.join("sub");
@@ -371,6 +412,8 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
     let d_path = PathBuf::from("sub").join("d");
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -379,6 +422,8 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
@@ -406,20 +451,24 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
 #[tokio::test]
 async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
 -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X2_TAR).await?;
+    } = test_env(&flow_id, TAR_X2_TAR).await?;
 
     // Create files in the destination.
     tokio::fs::create_dir(&dest).await?;
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -428,6 +477,8 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
@@ -442,20 +493,24 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
 #[tokio::test]
 async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
 -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X2_TAR).await?;
+    } = test_env(&flow_id, TAR_X2_TAR).await?;
 
     // Create files in the destination.
     tokio::fs::create_dir(&dest).await?;
     tar::Archive::new(Cursor::new(TAR_X2_TAR)).unpack(&dest)?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -468,6 +523,8 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         .unwrap();
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
@@ -494,16 +551,20 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
 
 #[tokio::test]
 async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X2_TAR).await?;
+    } = test_env(&flow_id, TAR_X2_TAR).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -512,6 +573,8 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
@@ -536,14 +599,16 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
 
 #[tokio::test]
 async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X2_TAR).await?;
+    } = test_env(&flow_id, TAR_X2_TAR).await?;
 
     // Create files in the destination.
     let sub_path = dest.join("sub");
@@ -556,6 +621,8 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
     let d_path = PathBuf::from("sub").join("d");
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -565,6 +632,8 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
 
     // Overwrite changed files and remove extra files
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
@@ -584,6 +653,8 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
 
     // Execute again to check idempotence
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
@@ -607,16 +678,20 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
 #[tokio::test]
 async fn clean_check_returns_exec_not_required_when_dest_empty()
 -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X2_TAR).await?;
+    } = test_env(&flow_id, TAR_X2_TAR).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -642,16 +717,20 @@ async fn clean_check_returns_exec_not_required_when_dest_empty()
 
 #[tokio::test]
 async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
         workspace,
+        profile,
         graph,
         mut output,
         tar_path,
         dest,
-    } = test_env(TAR_X2_TAR).await?;
+    } = test_env(&flow_id, TAR_X2_TAR).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest.clone())),
@@ -660,6 +739,8 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
         .with_flow_param("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let CmdContext { resources, .. } = CleanCmd::exec(cmd_context).await?;
@@ -676,15 +757,20 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
-async fn test_env(tar_bytes: &[u8]) -> Result<TestEnv, Box<dyn std::error::Error>> {
+async fn test_env(
+    flow_id: &FlowId,
+    tar_bytes: &[u8],
+) -> Result<TestEnv, Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
-    let flow_dir = workspace.dirs().flow_dir();
+    let profile = profile!("test_profile");
+    let flow_dir = {
+        let profile_dir = ProfileDir::from((workspace.dirs().peace_app_dir(), &profile));
+        FlowDir::from((&profile_dir, flow_id))
+    };
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<TarXError>::new();
         graph_builder.add_fn(TarXItemSpec::<TarXTest>::new(TarXTest::ID.clone()).into());
@@ -693,7 +779,7 @@ async fn test_env(tar_bytes: &[u8]) -> Result<TestEnv, Box<dyn std::error::Error
     let output = InMemoryTextOutput::new();
     let tar_path = {
         let tar_path = flow_dir.join("tar_x.tar");
-        tokio::fs::create_dir_all(flow_dir).await?;
+        tokio::fs::create_dir_all(&flow_dir).await?;
         tokio::fs::write(&tar_path, tar_bytes).await?;
         tar_path
     };
@@ -702,6 +788,7 @@ async fn test_env(tar_bytes: &[u8]) -> Result<TestEnv, Box<dyn std::error::Error
     Ok(TestEnv {
         tempdir,
         workspace,
+        profile,
         graph,
         output,
         tar_path,
@@ -713,6 +800,7 @@ async fn test_env(tar_bytes: &[u8]) -> Result<TestEnv, Box<dyn std::error::Error
 struct TestEnv {
     tempdir: TempDir,
     workspace: Workspace,
+    profile: Profile,
     graph: ItemSpecGraph<TarXError>,
     output: InMemoryTextOutput,
     tar_path: PathBuf,

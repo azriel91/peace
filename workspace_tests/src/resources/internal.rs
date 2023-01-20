@@ -1,3 +1,4 @@
+mod cmd_dirs;
 mod flow_params_file;
 mod profile_params_file;
 mod state_diffs_mut;

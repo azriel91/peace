@@ -6,7 +6,7 @@ use peace::{
         type_reg::untagged::{BoxDtDisplay, TypeReg},
     },
     rt::cmds::sub::StatesCurrentDiscoverCmd,
-    rt_model::{CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{cmd::CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
@@ -17,8 +17,6 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -26,7 +24,10 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
         graph_builder.build()
     };
     let mut output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
 
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
@@ -57,8 +58,6 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -66,13 +65,19 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
         graph_builder.build()
     };
     let mut output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
 
     // Writes to states_saved_file.yaml
     StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     // Execute again to ensure StatesSaved is included
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     let states = resources.borrow::<StatesSaved>();

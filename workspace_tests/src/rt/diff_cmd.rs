@@ -3,7 +3,9 @@ use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
     resources::states::{StateDiffs, StatesDesired, StatesSaved},
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
-    rt_model::{output::CliOutput, CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{
+        cmd::CmdContext, output::CliOutput, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
+    },
 };
 
 use crate::{NoOpOutput, VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyState};
@@ -15,8 +17,6 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -26,11 +26,17 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     StatesDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
 
     let states_saved = resources.borrow::<StatesSaved>();
@@ -63,8 +69,6 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
