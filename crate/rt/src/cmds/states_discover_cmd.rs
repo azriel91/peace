@@ -5,7 +5,7 @@ use peace_resources::{
     resources::ts::{SetUp, WithStatesCurrentAndDesired},
     Resources,
 };
-use peace_rt_model::CmdContext;
+use peace_rt_model::cmd::CmdContext;
 
 use crate::cmds::sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd};
 

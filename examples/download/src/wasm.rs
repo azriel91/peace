@@ -27,22 +27,18 @@ pub struct WorkspaceAndOutput {
 pub async fn wasm_init(url: String, name: String) -> Result<WorkspaceAndOutput, JsValue> {
     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
 
-    let workspace_and_output = workspace_and_graph_setup(
-        WorkspaceSpec::SessionStorage,
-        profile!("default"),
-        flow_id!("file"),
-    )
-    .await
-    .map(|workspace_and_graph| async move {
-        let output = String::new();
+    let workspace_and_output = workspace_and_graph_setup(WorkspaceSpec::SessionStorage)
+        .await
+        .map(|workspace_and_graph| async move {
+            let output = String::new();
 
-        Result::<_, JsValue>::Ok(WorkspaceAndOutput {
-            workspace_and_graph,
-            output,
+            Result::<_, JsValue>::Ok(WorkspaceAndOutput {
+                workspace_and_graph,
+                output,
+            })
         })
-    })
-    .map_err(into_js_err_value)?
-    .await?;
+        .map_err(into_js_err_value)?
+        .await?;
 
     // Store init params in storage.
     let file_download_params = {
@@ -59,6 +55,8 @@ pub async fn wasm_init(url: String, name: String) -> Result<WorkspaceAndOutput, 
     let mut in_memory_text_output = InMemoryTextOutput::new();
     let _cmd_context = cmd_context(
         &workspace_and_graph,
+        profile!("default"),
+        flow_id!("file"),
         &mut in_memory_text_output,
         Some(file_download_params),
     )
@@ -82,9 +80,15 @@ pub async fn wasm_fetch(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
-        .await
-        .map_err(into_js_err_value)?;
+    let cmd_context = cmd_context(
+        &workspace_and_graph,
+        profile!("default"),
+        flow_id!("file"),
+        &mut in_memory_text_output,
+        None,
+    )
+    .await
+    .map_err(into_js_err_value)?;
 
     fetch(cmd_context).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
@@ -104,9 +108,15 @@ pub async fn wasm_status(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
-        .await
-        .map_err(into_js_err_value)?;
+    let cmd_context = cmd_context(
+        &workspace_and_graph,
+        profile!("default"),
+        flow_id!("file"),
+        &mut in_memory_text_output,
+        None,
+    )
+    .await
+    .map_err(into_js_err_value)?;
 
     status(cmd_context).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
@@ -126,9 +136,15 @@ pub async fn wasm_desired(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
-        .await
-        .map_err(into_js_err_value)?;
+    let cmd_context = cmd_context(
+        &workspace_and_graph,
+        profile!("default"),
+        flow_id!("file"),
+        &mut in_memory_text_output,
+        None,
+    )
+    .await
+    .map_err(into_js_err_value)?;
 
     desired(cmd_context).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
@@ -148,9 +164,15 @@ pub async fn wasm_diff(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
-        .await
-        .map_err(into_js_err_value)?;
+    let cmd_context = cmd_context(
+        &workspace_and_graph,
+        profile!("default"),
+        flow_id!("file"),
+        &mut in_memory_text_output,
+        None,
+    )
+    .await
+    .map_err(into_js_err_value)?;
 
     diff(cmd_context).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
@@ -170,9 +192,15 @@ pub async fn wasm_ensure_dry(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
-        .await
-        .map_err(into_js_err_value)?;
+    let cmd_context = cmd_context(
+        &workspace_and_graph,
+        profile!("default"),
+        flow_id!("file"),
+        &mut in_memory_text_output,
+        None,
+    )
+    .await
+    .map_err(into_js_err_value)?;
 
     ensure_dry(cmd_context).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
@@ -192,9 +220,15 @@ pub async fn wasm_ensure(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
-        .await
-        .map_err(into_js_err_value)?;
+    let cmd_context = cmd_context(
+        &workspace_and_graph,
+        profile!("default"),
+        flow_id!("file"),
+        &mut in_memory_text_output,
+        None,
+    )
+    .await
+    .map_err(into_js_err_value)?;
 
     ensure(cmd_context).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
@@ -214,9 +248,15 @@ pub async fn wasm_clean_dry(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
-        .await
-        .map_err(into_js_err_value)?;
+    let cmd_context = cmd_context(
+        &workspace_and_graph,
+        profile!("default"),
+        flow_id!("file"),
+        &mut in_memory_text_output,
+        None,
+    )
+    .await
+    .map_err(into_js_err_value)?;
 
     clean_dry(cmd_context).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
@@ -236,9 +276,15 @@ pub async fn wasm_clean(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(&workspace_and_graph, &mut in_memory_text_output, None)
-        .await
-        .map_err(into_js_err_value)?;
+    let cmd_context = cmd_context(
+        &workspace_and_graph,
+        profile!("default"),
+        flow_id!("file"),
+        &mut in_memory_text_output,
+        None,
+    )
+    .await
+    .map_err(into_js_err_value)?;
 
     clean(cmd_context).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();

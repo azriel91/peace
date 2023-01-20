@@ -2,7 +2,7 @@ use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
     resources::states::StatesDesired,
     rt::cmds::{sub::StatesDesiredDiscoverCmd, StatesDesiredDisplayCmd},
-    rt_model::{CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{cmd::CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{
@@ -15,8 +15,6 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -27,14 +25,20 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
 
     // Write desired states to disk.
     let mut output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext {
         resources: resources_from_discover,
         ..
     } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk in a new set of resources.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut fn_tracker_output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut fn_tracker_output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext {
         resources: resources_from_read,
         ..
@@ -63,8 +67,6 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();

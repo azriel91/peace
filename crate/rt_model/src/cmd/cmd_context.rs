@@ -3,7 +3,8 @@ use std::marker::PhantomData;
 use peace_resources::{resources::ts::SetUp, Resources};
 
 use crate::{
-    cmd_context_builder::KeyUnknown, CmdContextBuilder, ItemSpecGraph, StatesTypeRegs, Workspace,
+    cmd::{cmd_context_builder::KeyUnknown, ts::CmdContextCommon, CmdContextBuilder},
+    ItemSpecGraph, StatesTypeRegs, Workspace,
 };
 
 /// Information needed to execute a command.
@@ -76,7 +77,7 @@ where
         workspace: &'ctx Workspace,
         item_spec_graph: &'ctx ItemSpecGraph<E>,
         output: &'ctx mut O,
-    ) -> CmdContextBuilder<'ctx, E, O, KeyUnknown, KeyUnknown, KeyUnknown> {
+    ) -> CmdContextBuilder<'ctx, E, O, CmdContextCommon, KeyUnknown, KeyUnknown, KeyUnknown> {
         CmdContextBuilder::new(workspace, item_spec_graph, output)
     }
 }

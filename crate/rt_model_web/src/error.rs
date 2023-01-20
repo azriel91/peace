@@ -144,6 +144,22 @@ pub enum Error {
     )]
     WorkspaceParamsDeserialize(#[source] serde_yaml::Error),
 
+    /// Workspace params does not exist, so cannot look up `Profile`.
+    #[error("Workspace params does not exist, so cannot look up `Profile`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::workspace_params_none_for_profile))
+    )]
+    WorkspaceParamsNoneForProfile,
+
+    /// Workspace param for `Profile` does not exist.
+    #[error("Workspace param for `Profile` does not exist.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::workspace_params_profile_none))
+    )]
+    WorkspaceParamsProfileNone,
+
     /// Failed to serialize profile init params.
     #[error("Failed to serialize profile init params.")]
     #[cfg_attr(

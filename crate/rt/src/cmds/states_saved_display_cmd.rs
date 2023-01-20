@@ -4,7 +4,7 @@ use peace_resources::{
     resources::ts::{SetUp, WithStatesSaved},
     Resources,
 };
-use peace_rt_model::{CmdContext, Error};
+use peace_rt_model::{cmd::CmdContext, Error};
 use peace_rt_model_core::output::OutputWrite;
 
 use crate::cmds::sub::StatesSavedReadCmd;

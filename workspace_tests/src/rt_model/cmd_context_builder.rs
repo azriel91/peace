@@ -1,11 +1,12 @@
-use std::path::Path;
-
 use peace::{
-    cfg::{app_name, profile, AppName, FlowId, Profile},
-    resources::internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
+    cfg::{app_name, flow_id, profile, AppName, FlowId, Profile},
+    resources::{
+        internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
+        paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir},
+    },
     rt_model::{
-        CmdContext, CmdContextBuilder, ItemSpecGraph, ItemSpecGraphBuilder, Workspace,
-        WorkspaceSpec,
+        cmd::{CmdContext, CmdContextBuilder},
+        ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
 use pretty_assertions::assert_eq;
@@ -18,7 +19,16 @@ async fn build_initializes_dirs_using_profile_and_physically_creates_dirs()
 -> Result<(), Box<dyn std::error::Error>> {
     let (tempdir, workspace, graph, mut output) = test_setup().await?;
 
-    CmdContextBuilder::new(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContextBuilder::new(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(flow_id!("test_flow"))
+        .await?;
+    let resources = cmd_context.resources();
+    let peace_dir_resource = resources.borrow::<PeaceDir>();
+    let peace_app_dir_resource = resources.borrow::<PeaceAppDir>();
+    let profile_dir_resource = resources.borrow::<ProfileDir>();
+    let profile_history_dir_resource = resources.borrow::<ProfileHistoryDir>();
+    let flow_dir_resource = resources.borrow::<FlowDir>();
 
     let workspace_dirs = workspace.dirs();
     let workspace_dir = tempdir.path();
@@ -28,20 +38,21 @@ async fn build_initializes_dirs_using_profile_and_physically_creates_dirs()
     let peace_app_dir = peace_dir.join(&**app_name!());
     let profile_dir = peace_app_dir.join("test_profile");
     let profile_history_dir = profile_dir.join(".history");
+    let flow_dir = profile_dir.join("test_flow");
 
-    assert_eq!(
-        workspace_dir,
-        AsRef::<Path>::as_ref(workspace_dirs.workspace_dir())
-    );
-    assert_eq!(
-        profile_dir,
-        AsRef::<Path>::as_ref(workspace_dirs.profile_dir())
-    );
+    assert_eq!(peace_dir, **peace_dir_resource);
+    assert_eq!(peace_app_dir, **peace_app_dir_resource);
+    assert_eq!(profile_dir, **profile_dir_resource);
+    assert_eq!(profile_history_dir, **profile_history_dir_resource);
+    assert_eq!(flow_dir, **flow_dir_resource);
+
     [
         workspace_dir,
         &peace_dir,
+        &peace_app_dir,
         &profile_dir,
         &profile_history_dir,
+        &flow_dir,
     ]
     .iter()
     .for_each(|dir| assert!(dir.exists()));
@@ -249,12 +260,7 @@ async fn test_setup() -> Result<
     Box<dyn std::error::Error>,
 > {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::new(
-        app_name!(),
-        WorkspaceSpec::Path(tempdir.path().into()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
-    )?;
+    let workspace = Workspace::new(app_name!(), WorkspaceSpec::Path(tempdir.path().into()))?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());

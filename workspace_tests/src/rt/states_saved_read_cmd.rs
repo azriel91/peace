@@ -2,7 +2,7 @@ use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
     resources::states::{StatesCurrent, StatesSaved},
     rt::cmds::sub::{StatesCurrentDiscoverCmd, StatesSavedReadCmd},
-    rt_model::{CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{cmd::CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
@@ -13,8 +13,6 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -24,14 +22,20 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
     let mut output = NoOpOutput;
 
     // Write current states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext {
         resources: resources_from_discover,
         ..
     } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let CmdContext {
         resources: resources_from_read,
         ..
@@ -52,8 +56,6 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -63,7 +65,10 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 
     // Try and read states from disk.
     let mut output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
     let exec_result = StatesSavedReadCmd::exec(cmd_context).await;
 
     assert!(matches!(

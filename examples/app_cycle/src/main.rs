@@ -1,6 +1,6 @@
 use app_cycle::{
     cmds::AppInitCmd,
-    flows::ProfileInitFlow,
+    flows::{ProfileInitFlow, ProfileShowFlow},
     model::{
         cli_args::{AppCycleCommand, CliArgs, ProfileCommand},
         AppCycleError,
@@ -75,13 +75,16 @@ pub fn run() -> Result<(), AppCycleError> {
             AppCycleCommand::Init { slug, version, url } => {
                 AppInitCmd::run(&mut cli_output, slug, version, url).await?;
             }
-            AppCycleCommand::Profile { command } => match command {
-                ProfileCommand::Init { profile, r#type } => {
-                    ProfileInitFlow::run(&mut cli_output, profile, r#type).await?;
+            AppCycleCommand::Profile { command } => {
+                let command = command.unwrap_or(ProfileCommand::Show);
+                match command {
+                    ProfileCommand::Init { profile, r#type } => {
+                        ProfileInitFlow::run(&mut cli_output, profile, r#type).await?;
+                    }
+                    ProfileCommand::List => todo!(),
+                    ProfileCommand::Show => ProfileShowFlow::run(&mut cli_output).await?,
                 }
-                ProfileCommand::List => todo!(),
-                ProfileCommand::Show => todo!(),
-            },
+            }
             AppCycleCommand::Switch { profile: _ } => todo!(),
             AppCycleCommand::Fetch => todo!(),
             AppCycleCommand::Status => todo!(),

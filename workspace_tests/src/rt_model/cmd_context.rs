@@ -1,7 +1,7 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     resources::paths::{FlowDir, PeaceDir, ProfileDir, ProfileHistoryDir},
-    rt_model::{CmdContext, ItemSpecGraphBuilder, Storage, Workspace, WorkspaceSpec},
+    rt_model::{cmd::CmdContext, ItemSpecGraphBuilder, Storage, Workspace, WorkspaceSpec},
 };
 
 use crate::{NoOpOutput, VecA, VecB, VecCopyError, VecCopyItemSpec};
@@ -10,12 +10,7 @@ use crate::{NoOpOutput, VecA, VecB, VecCopyError, VecCopyItemSpec};
 async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_dir()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::new(
-        app_name!(),
-        WorkspaceSpec::Path(tempdir.path().into()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
-    )?;
+    let workspace = Workspace::new(app_name!(), WorkspaceSpec::Path(tempdir.path().into()))?;
     let graph = {
         let mut builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         builder.add_fn(VecCopyItemSpec.into());
@@ -23,7 +18,10 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_working_d
     };
     let mut output = NoOpOutput;
 
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -47,12 +45,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let temp_path = tempdir.path();
-    let workspace = Workspace::new(
-        app_name!(),
-        WorkspaceSpec::Path(temp_path.to_path_buf()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
-    )?;
+    let workspace = Workspace::new(app_name!(), WorkspaceSpec::Path(temp_path.to_path_buf()))?;
     let graph = {
         let mut builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         builder.add_fn(VecCopyItemSpec.into());
@@ -60,7 +53,10 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_path()
     };
     let mut output = NoOpOutput;
 
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -91,8 +87,6 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::FirstDirWithFile("Cargo.lock".into()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
     )?;
     let graph = {
         let mut builder = ItemSpecGraphBuilder::<VecCopyError>::new();
@@ -101,7 +95,10 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
     };
     let mut output = NoOpOutput;
 
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<PeaceDir>().is_ok());
@@ -123,12 +120,7 @@ async fn init_inserts_workspace_dirs_into_resources_for_workspace_spec_first_dir
 #[tokio::test]
 async fn init_runs_graph_setup() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = Workspace::new(
-        app_name!(),
-        WorkspaceSpec::Path(tempdir.path().into()),
-        profile!("test_profile"),
-        FlowId::new(crate::fn_name_short!())?,
-    )?;
+    let workspace = Workspace::new(app_name!(), WorkspaceSpec::Path(tempdir.path().into()))?;
     let graph = {
         let mut builder = ItemSpecGraphBuilder::<VecCopyError>::new();
         builder.add_fn(VecCopyItemSpec.into());
@@ -136,7 +128,10 @@ async fn init_runs_graph_setup() -> Result<(), Box<dyn std::error::Error>> {
     };
     let mut output = NoOpOutput;
 
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output).await?;
+    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+        .with_profile(profile!("test_profile"))
+        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .await?;
 
     let resources = cmd_context.resources();
     assert!(resources.try_borrow::<VecA>().is_ok());

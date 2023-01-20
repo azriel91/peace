@@ -29,14 +29,13 @@ impl AppInitFlow {
     where
         O: OutputWrite<AppCycleError>,
     {
-        let workspace = Workspace::builder(
+        let workspace = Workspace::new(
             app_name!(),
             #[cfg(not(target_arch = "wasm32"))]
             WorkspaceSpec::WorkingDir,
             #[cfg(target_arch = "wasm32")]
             WorkspaceSpec::SessionStorage,
-        )
-        .build()?;
+        )?;
         let graph = Self::graph()?;
 
         let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output)

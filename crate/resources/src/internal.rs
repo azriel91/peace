@@ -4,11 +4,12 @@
 //! framework). There may be breakage between releases.
 
 pub use self::{
-    flow_params_file::FlowParamsFile, op_check_statuses::OpCheckStatuses,
+    cmd_dirs::CmdDirs, flow_params_file::FlowParamsFile, op_check_statuses::OpCheckStatuses,
     profile_params_file::ProfileParamsFile, state_diffs_mut::StateDiffsMut, states_mut::StatesMut,
     workspace_dirs::WorkspaceDirs, workspace_params_file::WorkspaceParamsFile,
 };
 
+mod cmd_dirs;
 mod flow_params_file;
 mod op_check_statuses;
 mod profile_params_file;

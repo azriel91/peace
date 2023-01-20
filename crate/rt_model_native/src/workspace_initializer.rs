@@ -3,7 +3,7 @@ use std::{fmt::Debug, hash::Hash, path::Path};
 use futures::{stream, StreamExt, TryStreamExt};
 
 use peace_resources::{
-    internal::{FlowParamsFile, ProfileParamsFile, WorkspaceDirs, WorkspaceParamsFile},
+    internal::{CmdDirs, FlowParamsFile, ProfileParamsFile, WorkspaceDirs, WorkspaceParamsFile},
     type_reg::untagged::TypeReg,
 };
 use peace_rt_model_core::cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams};
@@ -46,14 +46,17 @@ pub struct WorkspaceInitializer;
 
 impl WorkspaceInitializer {
     /// Creates directories used by the peace framework.
-    pub async fn dirs_initialize(dirs: &WorkspaceDirs) -> Result<(), Error> {
+    pub async fn dirs_initialize(
+        workspace_dirs: &WorkspaceDirs,
+        cmd_dirs: &CmdDirs,
+    ) -> Result<(), Error> {
         let dirs = [
-            AsRef::<Path>::as_ref(dirs.workspace_dir()),
-            AsRef::<Path>::as_ref(dirs.peace_dir()),
-            AsRef::<Path>::as_ref(dirs.peace_app_dir()),
-            AsRef::<Path>::as_ref(dirs.profile_dir()),
-            AsRef::<Path>::as_ref(dirs.profile_history_dir()),
-            AsRef::<Path>::as_ref(dirs.flow_dir()),
+            AsRef::<Path>::as_ref(workspace_dirs.workspace_dir()),
+            AsRef::<Path>::as_ref(workspace_dirs.peace_dir()),
+            AsRef::<Path>::as_ref(workspace_dirs.peace_app_dir()),
+            AsRef::<Path>::as_ref(cmd_dirs.profile_dir()),
+            AsRef::<Path>::as_ref(cmd_dirs.profile_history_dir()),
+            AsRef::<Path>::as_ref(cmd_dirs.flow_dir()),
         ];
 
         stream::iter(dirs)

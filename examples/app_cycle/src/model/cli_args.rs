@@ -52,7 +52,7 @@ pub enum AppCycleCommand {
     Profile {
         /// Profile command to run.
         #[command(subcommand)]
-        command: ProfileCommand,
+        command: Option<ProfileCommand>,
     },
     /// Switches the current profile.
     ///
