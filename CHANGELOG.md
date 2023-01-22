@@ -1,5 +1,14 @@
 # Changelog
 
+## unreleased
+
+* Add [`cargo-deny`] and [`cargo-about`] CI checks. ([#76])
+
+[`cargo-deny`]: https://github.com/EmbarkStudios/cargo-deny
+[`cargo-about`]: https://github.com/EmbarkStudios/cargo-about
+[#76]: https://github.com/azriel91/peace/pull/76
+
+
 ## 0.0.6 (2023-01-21)
 
 * `FileDownload` item spec now supports base64 storage for WASM target. ([#62])
