@@ -84,31 +84,6 @@ jobs:
           command: clippy
           args: --workspace --all-features -- -D warnings
 
-  coverage:
-    name: Coverage
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v3
-      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
-        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
-        with:
-          profile: minimal
-          toolchain: nightly
-          override: true
-          components: llvm-tools-preview
-
-      - uses: taiki-e/install-action@cargo-llvm-cov
-      - uses: taiki-e/install-action@nextest
-
-      - name: 'Collect coverage'
-        run: ./coverage.sh
-
-      - name: Upload to codecov.io
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./target/coverage/lcov.info
-
   build_and_test_linux:
     name: Build and Test (Linux)
     runs-on: ubuntu-latest
@@ -174,3 +149,89 @@ jobs:
             "examples/${example}" \
             --features 'error_reporting output_colorized output_json'
           done
+
+  coverage_collect:
+    name: Coverage Collect
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        command: ['coverage_0', 'coverage_1', 'coverage_2', 'coverage_3', 'coverage_4']
+    steps:
+      - uses: actions/checkout@v3
+      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
+        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: llvm-tools-preview
+
+      - uses: taiki-e/install-action@cargo-llvm-cov
+      - uses: taiki-e/install-action@nextest
+
+      - name: 'Collect coverage'
+        run: cargo coverage_clean && cargo ${{ matrix.command }}
+
+      - name: Upload coverage to actions.
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.command }}
+          path: ./target/llvm-cov-target/*.profraw
+          if-no-files-found: error
+
+  coverage_upload:
+    name: Coverage Upload
+    needs:
+      - coverage_collect
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
+        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: llvm-tools-preview
+
+      - uses: taiki-e/install-action@cargo-llvm-cov
+
+      - name: Retrieve coverage 0
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage_0
+          path: ./target/llvm-cov-target
+
+      - name: Retrieve coverage 1
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage_1
+          path: ./target/llvm-cov-target
+
+      - name: Retrieve coverage 2
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage_2
+          path: ./target/llvm-cov-target
+
+      - name: Retrieve coverage 3
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage_3
+          path: ./target/llvm-cov-target
+
+      - name: Retrieve coverage 4
+        uses: actions/download-artifact@v3
+        with:
+          name: coverage_4
+          path: ./target/llvm-cov-target
+
+      - name: Generate coverage report
+        run: mkdir -p ./target/coverage; cargo coverage_merge
+
+      - name: Upload to codecov.io
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./target/coverage/lcov.info
