@@ -20,6 +20,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   licenses:
+    name: Licenses
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -43,8 +44,9 @@ jobs:
       run: |
         if test $(git status --porcelain -- license.html | wc -l) -ne 0
         then
-          printf 'Note: license.html is not up to date.\n' 1>&2
-          printf 'Please run the following command to update it:\n\n' 1>&2
+          printf 'Note: license.html is not up to date:\n\n' 1>&2
+          git --no-pager diff -- license.html
+          printf '\nPlease run the following command to update it:\n\n' 1>&2
           printf 'cargo about generate --workspace --all-features about.hbs > license.html\n' 1>&2
         fi
 
