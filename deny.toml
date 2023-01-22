@@ -45,7 +45,7 @@ all-features = true
 no-default-features = false
 # If set, these feature will be enabled when collecting metadata. If `--features`
 # is specified on the cmd line they will take precedence over this option.
-#features = []
+features = ["error_reporting", "output_colorized", "output_json", "output_progress"]
 # When outputting inclusion graphs in diagnostics that include features, this
 # option can be used to specify the depth at which feature edges will be added.
 # This option is included since the graphs can be quite large and the addition
@@ -75,6 +75,11 @@ notice = "warn"
 # output a note when they are encountered.
 ignore = [
     #"RUSTSEC-0000-0000",
+
+    # atty has a soundness issue, depended on by miette
+    # https://github.com/softprops/atty/issues/50
+    # https://github.com/zkat/miette/issues/228
+    "RUSTSEC-2021-0145",
 ]
 # Threshold for security vulnerabilities, any vulnerability with a CVSS score
 # lower than the range specified will be ignored. Note that ignored advisories
@@ -101,8 +106,12 @@ unlicensed = "deny"
 # List of explicitly allowed licenses
 # See https://spdx.org/licenses/ for list of possible licenses
 # [possible values: any SPDX 3.11 short identifier (+ optional exception)].
+
+# Keep in sync with about.toml
 allow = [
     "Apache-2.0",
+    # "BSD-3-Clause", # wasm
+    "ISC",
     "MIT",
     "Unicode-DFS-2016",
 ]
@@ -235,6 +244,11 @@ deny = [
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
     #{ name = "ansi_term", version = "=0.11.0" },
+
+    # miette -> atty -> hermit-abi
+    # Would be resolved by:
+    # # https://github.com/zkat/miette/issues/228
+    { name = "hermit-abi", version = "=0.1.19" },
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate
 # detection. Unlike skip, it also includes the entire tree of transitive
