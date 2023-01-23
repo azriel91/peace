@@ -19,6 +19,37 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+  licenses:
+    name: Licenses
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: EmbarkStudios/cargo-deny-action@v1
+
+    - name: cargo-about cache
+      id: cargo-about-cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.cargo/bin/cargo-about
+        key: cargo-about-${{ runner.os }}
+
+    - name: cargo-about install
+      if: steps.cargo-about-cache.outputs.cache-hit != 'true'
+      run: cargo install --locked cargo-about
+
+    - name: cargo-about generate licenses
+      run: cargo about generate --workspace --all-features about.hbs > license.html
+
+    - name: licenses.html up to date verification
+      run: |
+        if test $(git status --porcelain -- license.html | wc -l) -ne 0
+        then
+          printf 'Note: license.html is not up to date:\n\n' 1>&2
+          git --no-pager diff -- license.html
+          printf '\nPlease run the following command to update it:\n\n' 1>&2
+          printf 'cargo about generate --workspace --all-features about.hbs > license.html\n' 1>&2
+        fi
+
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
