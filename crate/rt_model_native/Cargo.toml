@@ -26,7 +26,7 @@ peace_resources = { path = "../resources", version = "0.0.6" }
 peace_rt_model_core = { path = "../rt_model_core", version = "0.0.6" }
 serde = "1.0.152"
 serde_json = { version = "1.0.91", optional = true }
-serde_yaml = "0.9.16"
+serde_yaml = "0.9.17"
 thiserror = "1.0.38"
 tokio = { workspace = true, features = ["fs", "io-std"] }
 tokio-util = { version = "0.7.4", features = ["io", "io-util"] }

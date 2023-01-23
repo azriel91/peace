@@ -21,7 +21,7 @@ cfg-if = { workspace = true }
 futures = "0.3.25"
 miette = { workspace = true, optional = true }
 peace = { path = "../..", version = "0.0.6", default-features = false }
-reqwest = { version = "0.11.13", features = ["stream"] }
+reqwest = { version = "0.11.14", features = ["stream"] }
 serde = { version = "1.0.152", features = ["derive"] }
 thiserror = "1.0.38"
 url = { version = "2.3.1", features = ["serde"] }

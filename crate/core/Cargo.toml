@@ -21,7 +21,7 @@ chrono = { workspace = true, default-features = false, features = ["clock", "ser
 indicatif = { workspace = true }
 peace_static_check_macros = { path = "../static_check_macros", version = "0.0.6" }
 serde = { version = "1.0.152", features = ["derive"] }
-serde_yaml = { version = "0.9.16", optional = true }
+serde_yaml = { version = "0.9.17", optional = true }
 tokio = { workspace = true, optional = true, features = ["sync"] }
 
 [features]
