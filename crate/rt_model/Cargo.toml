@@ -20,7 +20,7 @@ cfg-if = { workspace = true }
 dyn-clone = "1.0.10"
 erased-serde = "0.3.24"
 fn_graph = { version = "0.8.1", features = ["resman"] }
-futures = "0.3.25"
+futures = "0.3.26"
 indicatif = { workspace = true, features = ["tokio"] }
 miette = { workspace = true, optional = true }
 peace_cfg = { path = "../cfg", version = "0.0.6" }

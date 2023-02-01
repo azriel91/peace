@@ -33,7 +33,7 @@ tar = { workspace = true }
 thiserror = "1.0.38"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-futures = "0.3.25"
+futures = "0.3.26"
 tokio = { workspace = true, features = ["fs"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

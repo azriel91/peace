@@ -17,7 +17,7 @@ test = false
 
 [dependencies]
 cfg-if = { workspace = true }
-futures = "0.3.25"
+futures = "0.3.26"
 miette = { workspace = true, optional = true }
 peace_cfg = { path = "../cfg", version = "0.0.6" }
 peace_resources = { path = "../resources", version = "0.0.6" }
