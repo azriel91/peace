@@ -129,20 +129,12 @@ pub trait ItemSpec {
     ///
     /// * For a web application service operation, the desired state could be
     ///   the application version changing from 1 to 2.
-    type StateDiffFnSpec: StateDiffFnSpec<
-        Error = Self::Error,
-        State = Self::State,
-        StateDiff = Self::StateDiff,
-    >;
+    type StateDiffFnSpec: StateDiffFnSpec<Error = Self::Error, State = Self::State, StateDiff = Self::StateDiff>;
 
     /// Specification of the ensure operation.
     ///
     /// The output is the IDs of resources produced by the operation.
-    type EnsureOpSpec: EnsureOpSpec<
-        Error = Self::Error,
-        State = Self::State,
-        StateDiff = Self::StateDiff,
-    >;
+    type EnsureOpSpec: EnsureOpSpec<Error = Self::Error, State = Self::State, StateDiff = Self::StateDiff>;
 
     /// Specification of the clean operation.
     ///
