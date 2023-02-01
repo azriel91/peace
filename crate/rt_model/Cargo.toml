@@ -20,7 +20,7 @@ cfg-if = { workspace = true }
 dyn-clone = "1.0.10"
 erased-serde = "0.3.24"
 fn_graph = { version = "0.8.1", features = ["resman"] }
-futures = "0.3.25"
+futures = "0.3.26"
 indicatif = { workspace = true, features = ["tokio"] }
 miette = { workspace = true, optional = true }
 peace_cfg = { path = "../cfg", version = "0.0.6" }
@@ -29,7 +29,7 @@ peace_resources = { path = "../resources", version = "0.0.6" }
 peace_rt_model_core = { path = "../rt_model_core", version = "0.0.6" }
 peace_rt_model_hack = { path = "../rt_model_hack", version = "0.0.6", optional = true }
 serde = "1.0.152"
-serde_yaml = "0.9.16"
+serde_yaml = "0.9.17"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 peace_rt_model_native = { path = "../rt_model_native", version = "0.0.6" }

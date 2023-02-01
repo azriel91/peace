@@ -38,17 +38,7 @@ jobs:
       run: cargo install --locked cargo-about
 
     - name: cargo-about generate licenses
-      run: cargo about generate --workspace --all-features about.hbs > license.html
-
-    - name: licenses.html up to date verification
-      run: |
-        if test $(git status --porcelain -- license.html | wc -l) -ne 0
-        then
-          printf 'Note: license.html is not up to date:\n\n' 1>&2
-          git --no-pager diff -- license.html
-          printf '\nPlease run the following command to update it:\n\n' 1>&2
-          printf 'cargo about generate --workspace --all-features about.hbs > license.html\n' 1>&2
-        fi
+      run: cargo about generate --workspace --all-features about.hbs > doc/src/licenses.html
 
   fmt:
     name: Rustfmt

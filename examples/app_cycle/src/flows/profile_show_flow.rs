@@ -11,18 +11,18 @@ use crate::{
     model::{AppCycleError, EnvType},
 };
 
-/// Flow to initialize and set the default profile.
+/// Flow to show the current profile.
 #[derive(Debug)]
 pub struct ProfileShowFlow;
 
 impl ProfileShowFlow {
-    /// Stores profile init parameters.
+    /// Shows the currently active profile.
+    ///
+    /// The active profile is stored in workspace params.
     ///
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    /// * `profile`: Name of the profile to create.
-    /// * `type`: Type of the environment.
     pub async fn run<O>(output: &mut O) -> Result<(), AppCycleError>
     where
         O: OutputWrite<AppCycleError>,
