@@ -67,17 +67,24 @@ Further ideas:
 Examples are run using `--package` instead of `--example`, as each example is organized as its own crate.
 
 ```bash
-cargo run --package $example_name
+cargo run --package $example_name --all-features
 
 # e.g.
-cargo run -q --package download -- init https://ifconfig.me ip.json
+cargo build --package download --all-features
+cargo run -q --package download --all-features -- init https://ifconfig.me ip.json
 
 for cmd in status desired diff ensure diff clean diff
 do
     printf "=== ${cmd} ===\n"
-    cargo run -q --package download -- $cmd
+    cargo run -q --package download --all-features -- $cmd
     printf '\n'
 done
+
+# Look at metadata that Peace has saved
+find .peace -type f -exec bash -c 'echo \# {}; cat {}; echo' \;
+
+# Clean up the metadata directory
+rm -rf .peace
 ```
 
 ### WASM
