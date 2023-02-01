@@ -9,7 +9,8 @@
 
 See:
 
-* [`MOTIVATION.md`](MOTIVATION.md) for the motivation to create this framework.
+* [peace.mk](https://peace.mk) for the project vision.
+* [Background](https://peace.mk/book/background.html) for the motivation to create this framework.
 * [Operations UX](https://azriel.im/ops_ux/) for a book about the dimensions considered during `peace`'s design and development.
 
 
