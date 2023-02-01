@@ -1,10 +1,10 @@
-# Output Presentation
+# Presentation
 
 For human readable output, it is desirable for consumers as well as the framework to be able to:
 
-* output arbitrary types
-* have them formatted by the output implementation
-* without needing the output implementation to know the specific type that is being output.
+* Output arbitrary types.
+* Have them formatted by the output implementation.
+* Not require the output implementation to know the specific type that is being output.
 
 The `OutputWrite` trait was written to handle different output formats &ndash; human-readable vs CI logging vs structured text &ndash; but not how to *present* the output.
 
@@ -18,7 +18,7 @@ Peace should provide two traits:
     - **Web output:** Write JSON.
     - **Native application:** Update a UI component.
 
-* `OutputFormatter`: Maps between the information and the display format, e.g. write this as an ID, or short text, or long text.
+* `Presenter`: Maps between the information and the presentation format, e.g. present this as an ID, short text, long text, a list, etcetera.
 
     Examples:
 
@@ -41,6 +41,7 @@ These methods are specific to `State`s, and if we add methods per type, it doesn
 ## Desired State
 
 To be usable with arbitrary information, `OutputWrite` should have methods to output different *kinds* of information. These information *kinds* are based on the purpose of the information, not on how they should be grouped or presented.
+
 
 ### Information Kinds
 
@@ -67,6 +68,7 @@ Examples:
 * An object may be presented as a list, and the type needs to define which fields that list is built from.
 * When presenting a list of named items, the type needs to define both the name and the description, which allows the names to be styled differently to the descriptions.
 * When presenting a large object, the density of information can be reduced through collapsible sections, and more detail displayed when the sections are expanded.
+
 
 #### Implementation
 
