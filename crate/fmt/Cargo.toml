@@ -1,0 +1,18 @@
+[package]
+name = "peace_fmt"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.6"
+edition = "2021"
+description = "Presentation and formatting support for the peace automation framework."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_fmt/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = true
+test = false
+
+[dependencies]
