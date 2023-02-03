@@ -15,7 +15,10 @@ where
     'output: 'presenter,
 {
     /// Adds an entry to the presented list.
-    pub fn entry(&mut self, entry: &'output dyn Presentable) -> &mut Self {
+    pub fn entry<P>(&mut self, entry: &P) -> &mut Self
+    where
+        P: Presentable + 'output,
+    {
         self.result = self.result.and_then(|()| entry.present(self.presenter));
         self
     }

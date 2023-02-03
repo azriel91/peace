@@ -1,3 +1,5 @@
+use serde::{de::DeserializeOwned, Serialize};
+
 use crate::Presenter;
 
 /// A type that is presentable to a user.
@@ -25,7 +27,7 @@ use crate::Presenter;
 ///     }
 /// }
 /// ```
-pub trait Presentable {
+pub trait Presentable: Serialize + DeserializeOwned {
     /// Presents this data type to the user.
     fn present(&self, presenter: &mut dyn Presenter) -> crate::Result;
 }
