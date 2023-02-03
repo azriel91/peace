@@ -16,3 +16,5 @@ doctest = true
 test = false
 
 [dependencies]
+async-trait = "0.1.64"
+serde = "1.0.152"

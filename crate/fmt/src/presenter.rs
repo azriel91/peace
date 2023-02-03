@@ -19,16 +19,17 @@
 ///            // * Peace to gatekeep how much detail is passed
 ///            //   through, by tracking depth of information.
 /// ```
+#[async_trait::async_trait(?Send)]
 pub trait Presenter<'output> {
     /// Presents a `&str` as an item name.
-    fn name(&mut self, name: &str) -> crate::Result;
+    async fn name(&mut self, name: &str) -> crate::Result;
 
     /// Presents a `&str` as plain text.
-    fn text(&mut self, text: &str) -> crate::Result;
+    async fn text(&mut self, text: &str) -> crate::Result;
 
     /// Presents a `&str` as inline code.
-    fn code_inline(&mut self, text: &str) -> crate::Result;
+    async fn code_inline(&mut self, text: &str) -> crate::Result;
 
     /// Presents a list.
-    fn list(&mut self) -> crate::PresentableList;
+    async fn list(&mut self) -> crate::PresentableList;
 }

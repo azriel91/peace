@@ -4,6 +4,9 @@
 //!
 //! [Output Presentation]: https://peace.mk/book/technical_concepts/output/presentation.html
 
+// Re-exports
+pub use async_trait::async_trait;
+
 pub use crate::{
     error::Error, presentable::Presentable, presentable_list::PresentableList,
     presenter::Presenter, result::Result,
