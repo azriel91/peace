@@ -20,8 +20,15 @@ where
     PR: Presenter<'output>,
     'output: 'presenter,
 {
+    pub fn new(presenter: &'presenter mut PR) -> Self {
+        Self {
+            presenter,
+            result: Ok(()),
+        }
+    }
+
     /// Adds an entry to the presented list.
-    pub async fn entry<P>(mut self, entry: &P) -> PresentableList<'output, 'presenter, PR>
+    pub async fn entry<P>(mut self, entry: &'output P) -> PresentableList<'output, 'presenter, PR>
     where
         P: Presentable + 'output,
     {

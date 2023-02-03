@@ -56,7 +56,7 @@ pub trait Presenter<'output> {
     async fn tag(&mut self, tag: &str) -> Result<(), Self::Error>;
 
     /// Presents a list.
-    async fn list<'f>(&'f mut self) -> crate::PresentableList<'output, 'f, Self>
+    fn list<'f>(&'f mut self) -> crate::PresentableList<'output, 'f, Self>
     where
         Self: Sized;
 }
