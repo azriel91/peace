@@ -27,7 +27,10 @@ use crate::Presenter;
 ///     }
 /// }
 /// ```
+#[async_trait::async_trait(?Send)]
 pub trait Presentable: Serialize + DeserializeOwned {
     /// Presents this data type to the user.
-    fn present(&self, presenter: &mut dyn Presenter) -> crate::Result;
+    async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
+    where
+        PR: Presenter<'output>;
 }

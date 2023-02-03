@@ -8,12 +8,9 @@
 pub use async_trait::async_trait;
 
 pub use crate::{
-    error::Error, presentable::Presentable, presentable_list::PresentableList,
-    presenter::Presenter, result::Result,
+    presentable::Presentable, presentable_list::PresentableList, presenter::Presenter,
 };
 
-mod error;
 mod presentable;
 mod presentable_list;
 mod presenter;
-mod result;
