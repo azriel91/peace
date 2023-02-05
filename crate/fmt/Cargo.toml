@@ -17,7 +17,6 @@ test = false
 
 [dependencies]
 async-trait = "0.1.64"
-futures = "0.3.26"
 serde = "1.0.152"
 
 [dev-dependencies]

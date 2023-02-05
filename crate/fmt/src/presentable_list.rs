@@ -1,5 +1,3 @@
-use futures::stream::{self, TryStreamExt};
-
 use crate::{Presentable, Presenter};
 
 /// A list of presentable items.
@@ -39,49 +37,25 @@ where
     }
 
     /// Adds multiple entries to the presented list.
-    pub async fn entries<P, I>(self, entries: I) -> PresentableList<'output, 'presenter, PR>
+    pub async fn entries<P, I>(mut self, entries: I) -> PresentableList<'output, 'presenter, PR>
     where
         P: Presentable + 'presenter,
         I: IntoIterator<Item = &'presenter P>,
     {
         if self.result.is_ok() {
-            // Hack: async and `&mut self` don't go well together.
+            // Much simpler code than the functional alternative.
             //
-            // This essentially goes:
-            //
-            // ```rust
-            // entries
-            //     .into_iter()
-            //     .for_each(|entry| entry.present(self.presenter))
-            //     .await?;
-            // ```
-            //
-            // But because of compilation requirements, we:
-            //
-            // * have ownership of `self`
-            // * pass it through `try_fold`
-            // * extract `self` back out
-            // * return `self`
-            let (Ok(self_) | Err(self_)) = stream::iter(
-                entries
-                    .into_iter()
-                    .map(Result::<_, PresentableList<'output, 'presenter, PR>>::Ok),
-            )
-            .try_fold(self, |mut self_, entry| async {
-                self_.result = entry.present(self_.presenter).await;
+            // Passing `mut self` through `try_for_each` doesn't work, and through
+            // `try_fold` needs a lot of code wrangling.
+            for entry in entries.into_iter() {
+                self.result = entry.present(self.presenter).await;
 
-                if self_.result.is_ok() {
-                    Ok(self_)
-                } else {
-                    Err(self_)
+                if self.result.is_err() {
+                    break;
                 }
-            })
-            .await;
-
-            self_
-        } else {
-            self
+            }
         }
+        self
     }
 
     /// Finishes presenting and returns any errors encountered.
