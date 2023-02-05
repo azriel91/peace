@@ -16,6 +16,14 @@ pub enum Error {
     )]
     ErrorSerialize(#[source] serde_yaml::Error),
 
+    /// Failed to serialize a presentable type.
+    #[error("Failed to serialize a presentable type.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::presentable_serialize))
+    )]
+    PresentableSerialize(#[source] serde_yaml::Error),
+
     /// Failed to serialize progress update.
     #[error("Failed to serialize progress update.")]
     #[cfg_attr(

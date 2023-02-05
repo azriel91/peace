@@ -1,5 +1,6 @@
 use peace::{
     cfg::async_trait,
+    fmt::Presentable,
     resources::states::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
         StatesEnsuredDry, StatesSaved,
@@ -38,6 +39,13 @@ where
 
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
+
+    async fn present<P>(&mut self, _presentable: &P) -> Result<(), E>
+    where
+        P: Presentable + ?Sized,
+    {
+        Ok(())
+    }
 
     async fn write_states_saved(&mut self, _states_saved: &StatesSaved) -> Result<(), E> {
         Ok(())

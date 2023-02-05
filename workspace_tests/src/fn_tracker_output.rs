@@ -1,10 +1,11 @@
 use peace::{
     cfg::async_trait,
+    fmt::Presentable,
     resources::states::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
         StatesEnsuredDry, StatesSaved,
     },
-    rt_model::output::OutputWrite,
+    rt_model::{self, output::OutputWrite},
 };
 
 use crate::FnInvocation;
@@ -40,7 +41,7 @@ impl FnTrackerOutput {
 #[async_trait(?Send)]
 impl<E> OutputWrite<E> for FnTrackerOutput
 where
-    E: std::error::Error,
+    E: std::error::Error + From<rt_model::Error>,
 {
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
@@ -55,6 +56,20 @@ where
 
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
+
+    async fn present<P>(&mut self, presentable: &P) -> Result<(), E>
+    where
+        P: Presentable + ?Sized,
+    {
+        let presentable_serialized =
+            serde_yaml::to_string(presentable).map_err(rt_model::Error::PresentableSerialize)?;
+        self.fn_invocations.push(FnInvocation::new(
+            "present",
+            vec![Some(format!("{presentable_serialized}"))],
+        ));
+
+        Ok(())
+    }
 
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         self.fn_invocations.push(FnInvocation::new(
