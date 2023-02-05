@@ -11,18 +11,25 @@ use crate::{OwnedDeserialize, Presenter};
 /// # Implementors
 ///
 /// ```rust
-/// # use peace_fmt::{self as fmt, Presentable};
-/// // use peace::fmt::{self, Presentable};
+/// # use peace_fmt::{Presentable, Presenter};
+/// # use serde::{Deserialize, Serialize};
+/// // use peace::fmt::{Presentable, Presenter};
 ///
+/// #[derive(Clone, Deserialize, Serialize)]
 /// struct Item {
 ///     name: String,
 ///     desc: String,
 /// }
 ///
+/// #[async_trait::async_trait(?Send)]
 /// impl Presentable for Item {
-///     fn present(&self, presenter: &mut dyn fmt::Presenter) -> fmt::Result {
-///         presenter.name(&self.name)?;
-///         presenter.text(&self.desc)?;
+///     async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
+///     where
+///         PR: Presenter<'output>,
+///     {
+///         presenter.name(&self.name).await?;
+///         presenter.text(": ").await?;
+///         presenter.text(&self.desc).await?;
 ///         Ok(())
 ///     }
 /// }

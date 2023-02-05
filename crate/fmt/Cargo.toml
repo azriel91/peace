@@ -19,3 +19,6 @@ test = false
 async-trait = "0.1.64"
 futures = "0.3.26"
 serde = "1.0.152"
+
+[dev-dependencies]
+serde = { version = "1.0.152", features = ["derive"] }
