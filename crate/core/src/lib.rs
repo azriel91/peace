@@ -86,6 +86,16 @@ macro_rules! id_newtype {
             }
         }
 
+        #[peace_fmt::async_trait(?Send)]
+        impl peace_fmt::Presentable for $ty_name {
+            async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
+            where
+                PR: peace_fmt::Presenter<'output>
+            {
+                presenter.tag(self).await
+            }
+        }
+
         impl TryFrom<String> for $ty_name {
             type Error = $ty_err_name<'static>;
 
