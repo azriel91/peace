@@ -1,3 +1,4 @@
+use peace_fmt::Presentable;
 use peace_resources::states::{
     StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured, StatesEnsuredDry,
     StatesSaved,
@@ -56,6 +57,15 @@ where
 
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
+
+    async fn present<P>(&mut self, presentable: &P) -> Result<(), E>
+    where
+        P: Presentable + ?Sized,
+    {
+        self.buffer = serde_yaml::to_string(presentable).map_err(Error::StatesSerialize)?;
+
+        Ok(())
+    }
 
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         self.buffer = serde_yaml::to_string(states_saved).map_err(Error::StatesSerialize)?;
