@@ -68,7 +68,7 @@ where
             Ok(resources) => {
                 {
                     let states_cleaned_dry = resources.borrow::<StatesCleanedDry>();
-                    output.write_states_cleaned_dry(&states_cleaned_dry).await?;
+                    output.present(&*states_cleaned_dry).await?;
                 }
                 let cmd_context = CmdContext::from((
                     workspace,
@@ -182,7 +182,7 @@ where
             Ok(resources) => {
                 {
                     let states_cleaned = resources.borrow::<StatesCleaned>();
-                    output.write_states_cleaned(&states_cleaned).await?;
+                    output.present(&*states_cleaned).await?;
                 }
                 let cmd_context = CmdContext::from((
                     workspace,

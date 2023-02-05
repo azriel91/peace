@@ -22,7 +22,6 @@ indicatif = { workspace = true, features = ["tokio"] }
 miette = { workspace = true, optional = true }
 peace_core = { path = "../core", version = "0.0.6", optional = true }
 peace_fmt = { path = "../fmt", version = "0.0.6" }
-peace_resources = { path = "../resources", version = "0.0.6" }
 serde = "1.0.152"
 serde_json = { version = "1.0.91", optional = true }
 type_reg = { workspace = true, features = ["resman"] }

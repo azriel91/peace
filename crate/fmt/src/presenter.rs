@@ -21,6 +21,7 @@
 /// ```
 #[async_trait::async_trait(?Send)]
 pub trait Presenter<'output> {
+    /// Error returned during a presentation failure.
     type Error: std::error::Error;
 
     /// Presents text as an item id.

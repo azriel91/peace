@@ -100,7 +100,7 @@ where
             Ok(resources) => {
                 {
                     let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
-                    output.write_states_ensured_dry(&states_ensured_dry).await?;
+                    output.present(&*states_ensured_dry).await?;
                 }
                 let cmd_context = CmdContext::from((
                     workspace,
@@ -176,7 +176,7 @@ where
                 {
                     let states_ensured = resources.borrow::<StatesEnsured>();
                     Self::serialize_internal(&resources, &states_ensured).await?;
-                    output.write_states_ensured(&states_ensured).await?;
+                    output.present(&*states_ensured).await?;
                 }
                 let cmd_context = CmdContext::from((
                     workspace,

@@ -1,6 +1,7 @@
 use std::ops::Deref;
 
 use peace_core::ItemSpecId;
+use peace_fmt::{Presentable, Presenter};
 use serde::Serialize;
 use type_reg::untagged::{BoxDtDisplay, TypeMap};
 
@@ -55,5 +56,20 @@ impl From<TypeMap<ItemSpecId, BoxDtDisplay>> for StateDiffs {
 impl From<StateDiffsMut> for StateDiffs {
     fn from(states_desired_mut: StateDiffsMut) -> Self {
         Self(states_desired_mut.into_inner())
+    }
+}
+
+#[peace_fmt::async_trait(?Send)]
+impl Presentable for StateDiffs {
+    async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
+    where
+        PR: Presenter<'output>,
+    {
+        let mut presentable_list = presenter.list();
+        for (item_spec_id, state_diff) in self.iter() {
+            let tuple = (item_spec_id, format!("{state_diff}"));
+            presentable_list = presentable_list.entry(&tuple).await;
+        }
+        presentable_list.finish()
     }
 }

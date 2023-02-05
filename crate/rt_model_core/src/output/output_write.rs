@@ -1,9 +1,5 @@
 use async_trait::async_trait;
 use peace_fmt::Presentable;
-use peace_resources::states::{
-    StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured, StatesEnsuredDry,
-    StatesSaved,
-};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -74,51 +70,6 @@ pub trait OutputWrite<E> {
     where
         E: std::error::Error,
         P: Presentable + ?Sized;
-
-    /// Writes current states to the output.
-    async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E>
-    where
-        E: std::error::Error;
-
-    /// Writes desired states to the output.
-    async fn write_states_desired(&mut self, states_desired: &StatesDesired) -> Result<(), E>
-    where
-        E: std::error::Error;
-
-    /// Writes state diffs to the output.
-    async fn write_state_diffs(&mut self, state_diffs: &StateDiffs) -> Result<(), E>
-    where
-        E: std::error::Error;
-
-    /// Writes dry-ensured states to the output.
-    ///
-    /// These are the states that are simulated to be ensured.
-    async fn write_states_ensured_dry(
-        &mut self,
-        states_ensured_dry: &StatesEnsuredDry,
-    ) -> Result<(), E>
-    where
-        E: std::error::Error;
-
-    /// Writes ensured states to the output.
-    async fn write_states_ensured(&mut self, states_ensured: &StatesEnsured) -> Result<(), E>
-    where
-        E: std::error::Error;
-
-    /// Writes dry-cleaned states to the output.
-    ///
-    /// These are the states that are simulated to be cleaned.
-    async fn write_states_cleaned_dry(
-        &mut self,
-        states_cleaned_dry: &StatesCleanedDry,
-    ) -> Result<(), E>
-    where
-        E: std::error::Error;
-
-    /// Writes cleaned states to the output.
-    async fn write_states_cleaned(&mut self, states_cleaned: &StatesCleaned) -> Result<(), E>
-    where
-        E: std::error::Error;
 
     /// Writes an error to the output.
     async fn write_err(&mut self, error: &E) -> Result<(), E>

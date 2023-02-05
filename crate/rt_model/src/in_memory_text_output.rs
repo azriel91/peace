@@ -1,8 +1,4 @@
 use peace_fmt::Presentable;
-use peace_resources::states::{
-    StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured, StatesEnsuredDry,
-    StatesSaved,
-};
 use peace_rt_model_core::{async_trait, output::OutputWrite};
 
 use crate::Error;
@@ -63,54 +59,6 @@ where
         P: Presentable + ?Sized,
     {
         self.buffer = serde_yaml::to_string(presentable).map_err(Error::StatesSerialize)?;
-
-        Ok(())
-    }
-
-    async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
-        self.buffer = serde_yaml::to_string(states_saved).map_err(Error::StatesSerialize)?;
-
-        Ok(())
-    }
-
-    async fn write_states_desired(&mut self, states_desired: &StatesDesired) -> Result<(), E> {
-        self.buffer = serde_yaml::to_string(states_desired).map_err(Error::StatesSerialize)?;
-
-        Ok(())
-    }
-
-    async fn write_state_diffs(&mut self, state_diffs: &StateDiffs) -> Result<(), E> {
-        self.buffer = serde_yaml::to_string(state_diffs).map_err(Error::StateDiffsSerialize)?;
-
-        Ok(())
-    }
-
-    async fn write_states_ensured_dry(
-        &mut self,
-        states_ensured_dry: &StatesEnsuredDry,
-    ) -> Result<(), E> {
-        self.buffer = serde_yaml::to_string(states_ensured_dry).map_err(Error::StatesSerialize)?;
-
-        Ok(())
-    }
-
-    async fn write_states_ensured(&mut self, states_ensured: &StatesEnsured) -> Result<(), E> {
-        self.buffer = serde_yaml::to_string(states_ensured).map_err(Error::StatesSerialize)?;
-
-        Ok(())
-    }
-
-    async fn write_states_cleaned_dry(
-        &mut self,
-        states_cleaned_dry: &StatesCleanedDry,
-    ) -> Result<(), E> {
-        self.buffer = serde_yaml::to_string(states_cleaned_dry).map_err(Error::StatesSerialize)?;
-
-        Ok(())
-    }
-
-    async fn write_states_cleaned(&mut self, states_cleaned: &StatesCleaned) -> Result<(), E> {
-        self.buffer = serde_yaml::to_string(states_cleaned).map_err(Error::StatesSerialize)?;
 
         Ok(())
     }

@@ -103,7 +103,8 @@ where
     where
         PR: Presenter<'output>,
     {
-        self.present(presenter).await
+        // The `*` is important -- without it the `present` will stack overflow.
+        (*self).present(presenter).await
     }
 }
 

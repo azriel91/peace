@@ -43,7 +43,7 @@ where
 
         match states_saved_result {
             Ok(states_saved) => {
-                output.write_states_saved(&states_saved).await?;
+                output.present(&states_saved).await?;
 
                 let cmd_context = CmdContext::from((cmd_context, |resources| {
                     Resources::<WithStatesSaved>::from((resources, states_saved))
