@@ -1,6 +1,7 @@
 use futures::{stream, StreamExt, TryStreamExt};
 
 use peace_core::ItemSpecId;
+use peace_fmt::Presentable;
 use peace_resources::{
     states::{
         StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
@@ -15,7 +16,10 @@ use peace_rt_model_core::{
 use serde::Serialize;
 use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
 
-use crate::{output::CliOutputBuilder, Error};
+use crate::{
+    output::{CliMdPresenter, CliOutputBuilder},
+    Error,
+};
 
 #[cfg(feature = "output_colorized")]
 use crate::output::CliColorize;
@@ -232,10 +236,26 @@ where
         Ok(())
     }
 
+    async fn output_presentable<E, P>(&mut self, presentable: &P) -> Result<(), E>
+    where
+        E: std::error::Error + From<Error>,
+        P: Presentable + ?Sized,
+    {
+        let presenter = &mut CliMdPresenter::new(self);
+        presentable
+            .present(presenter)
+            .await
+            .map_err(Error::CliOutputPresent)?;
+
+        self.writer.flush().await.map_err(Error::CliOutputPresent)?;
+
+        Ok(())
+    }
+
     async fn output_yaml<'f, E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
     where
         E: std::error::Error + From<Error>,
-        T: Serialize,
+        T: Serialize + ?Sized,
         F: FnOnce(serde_yaml::Error) -> Error,
     {
         let t_serialized = serde_yaml::to_string(t).map_err(fn_error)?;
@@ -252,7 +272,7 @@ where
     async fn output_json<'f, E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
     where
         E: std::error::Error + From<Error>,
-        T: Serialize,
+        T: Serialize + ?Sized,
         F: FnOnce(serde_json::Error) -> Error,
     {
         let t_serialized = serde_json::to_string(t).map_err(fn_error)?;
@@ -491,6 +511,21 @@ where
 
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
+
+    async fn present<P>(&mut self, presentable: &P) -> Result<(), E>
+    where
+        P: Presentable + ?Sized,
+    {
+        match self.outcome_format {
+            OutputFormat::Text => self.output_presentable(presentable).await,
+            OutputFormat::Yaml => self.output_yaml(presentable, Error::StatesSerialize).await,
+            #[cfg(feature = "output_json")]
+            OutputFormat::Json => {
+                self.output_json(presentable, Error::StatesSerializeJson)
+                    .await
+            }
+        }
+    }
 
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
         match self.outcome_format {

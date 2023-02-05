@@ -1,5 +1,8 @@
-pub use self::{cli_output::CliOutput, cli_output_builder::CliOutputBuilder};
+pub use self::{
+    cli_md_presenter::CliMdPresenter, cli_output::CliOutput, cli_output_builder::CliOutputBuilder,
+};
 
+mod cli_md_presenter;
 mod cli_output;
 mod cli_output_builder;
 
