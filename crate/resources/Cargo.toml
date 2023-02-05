@@ -18,6 +18,7 @@ test = false
 [dependencies]
 peace_core = { version = "0.0.6", path = "../core" }
 peace_data = { version = "0.0.6", path = "../data" }
+peace_fmt = { version = "0.0.6", path = "../fmt" }
 resman = { version = "0.16.0", features = ["debug"] }
 serde = { version = "1.0.152", features = ["derive"] }
 tokio = { workspace = true, features = ["sync"] }

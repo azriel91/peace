@@ -1,6 +1,8 @@
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 
 use crate::Presenter;
+
+mod tuple_impl;
 
 /// A type that is presentable to a user.
 ///
@@ -87,10 +89,22 @@ use crate::Presenter;
 #[async_trait::async_trait(?Send)]
 pub trait Presentable: Serialize {
     /// Presents this data type to the user.
-    async fn present<'output, 't, PR>(&'t self, presenter: &mut PR) -> Result<(), PR::Error>
+    async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
+    where
+        PR: Presenter<'output>;
+}
+
+#[async_trait::async_trait(?Send)]
+impl<T> Presentable for &T
+where
+    T: Presentable,
+{
+    async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
     where
         PR: Presenter<'output>,
-        't: 'output;
+    {
+        self.present(presenter).await
+    }
 }
 
 #[async_trait::async_trait(?Send)]
@@ -116,12 +130,11 @@ impl Presentable for String {
 #[async_trait::async_trait(?Send)]
 impl<T> Presentable for Vec<T>
 where
-    for<'de> T: Clone + Presentable + Deserialize<'de>,
+    T: Presentable,
 {
-    async fn present<'output, 't, PR>(&'t self, presenter: &mut PR) -> Result<(), PR::Error>
+    async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
     where
         PR: Presenter<'output>,
-        't: 'output,
     {
         presenter.list().entries(self.iter()).await.finish()
     }
@@ -130,12 +143,11 @@ where
 #[async_trait::async_trait(?Send)]
 impl<T> Presentable for [T]
 where
-    for<'de> T: Clone + Presentable + Deserialize<'de>,
+    T: Presentable,
 {
-    async fn present<'output, 't, PR>(&'t self, presenter: &mut PR) -> Result<(), PR::Error>
+    async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
     where
         PR: Presenter<'output>,
-        't: 'output,
     {
         presenter.list().entries(self.iter()).await.finish()
     }

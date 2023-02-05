@@ -28,9 +28,9 @@ where
     }
 
     /// Adds an entry to the presented list.
-    pub async fn entry<P>(mut self, entry: &'output P) -> PresentableList<'output, 'presenter, PR>
+    pub async fn entry<P>(mut self, entry: &P) -> PresentableList<'output, 'presenter, PR>
     where
-        P: Presentable + 'output,
+        P: Presentable + 'presenter,
     {
         if self.result.is_ok() {
             self.result = entry.present(self.presenter).await;
@@ -41,8 +41,8 @@ where
     /// Adds multiple entries to the presented list.
     pub async fn entries<P, I>(self, entries: I) -> PresentableList<'output, 'presenter, PR>
     where
-        P: Presentable + 'output,
-        I: IntoIterator<Item = &'output P>,
+        P: Presentable + 'presenter,
+        I: IntoIterator<Item = &'presenter P>,
     {
         if self.result.is_ok() {
             // Hack: async and `&mut self` don't go well together.

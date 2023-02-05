@@ -11,6 +11,7 @@ pub mod ts;
 use std::{marker::PhantomData, ops::Deref};
 
 use peace_core::ItemSpecId;
+use peace_fmt::{Presentable, Presenter};
 use serde::Serialize;
 use type_reg::untagged::{BoxDtDisplay, TypeMap};
 
@@ -96,5 +97,20 @@ impl<TS> From<TypeMap<ItemSpecId, BoxDtDisplay>> for States<TS> {
 impl<TS> From<StatesMut<TS>> for States<TS> {
     fn from(states_mut: StatesMut<TS>) -> Self {
         Self(states_mut.into_inner(), PhantomData)
+    }
+}
+
+#[peace_fmt::async_trait(?Send)]
+impl<TS> Presentable for States<TS> {
+    async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
+    where
+        PR: Presenter<'output>,
+    {
+        let mut presentable_list = presenter.list();
+        for (item_spec_id, state) in self.iter() {
+            let tuple = (item_spec_id, format!("{state}"));
+            presentable_list = presentable_list.entry(&tuple).await;
+        }
+        presentable_list.finish()
     }
 }
