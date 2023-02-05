@@ -10,6 +10,29 @@ use crate::{OwnedDeserialize, Presenter};
 ///
 /// # Implementors
 ///
+/// Currently it is not possible to store `Box<dyn Presentable>`, because of the
+/// following:
+///
+/// * `Presentable` implies `Serialize`.
+/// * `Presentable::present<'_, PR>` and `Serialize::serialize<S>` are generic
+///   trait methods.
+/// * This means different concrete implementations of `Presentable`/`Serialize`
+///   will have different vtables (with different sizes), and Rust returns the
+///   following compilation error:
+///
+///     ```text
+///     error[E0038]: the trait `Presentable` cannot be made into an object
+///     ```
+///
+///     See <https://doc.rust-lang.org/error_codes/E0038.html>.
+///
+/// It is possible to store `Vec<Box<T>>` for any `T: Presentable` and invoke
+/// `boxed.present()`.
+///
+/// # Examples
+///
+/// Presenting a list item with a name and value:
+///
 /// ```rust
 /// # use peace_fmt::{Presentable, Presenter};
 /// # use serde::{Deserialize, Serialize};
