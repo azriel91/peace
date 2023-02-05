@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use peace_fmt::Presentable;
 use peace_resources::states::{
     StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured, StatesEnsuredDry,
     StatesSaved,
@@ -67,6 +68,12 @@ pub trait OutputWrite<E> {
     /// another call to `OutputWrite::progress_begin`.
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, cmd_progress_tracker: &CmdProgressTracker);
+
+    /// Writes presentable information to the output.
+    async fn present<P>(&mut self, presentable: &P) -> Result<(), E>
+    where
+        E: std::error::Error,
+        P: Presentable + ?Sized;
 
     /// Writes current states to the output.
     async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E>
