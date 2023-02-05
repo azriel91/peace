@@ -65,7 +65,7 @@ where
             serde_yaml::to_string(presentable).map_err(rt_model::Error::PresentableSerialize)?;
         self.fn_invocations.push(FnInvocation::new(
             "present",
-            vec![Some(format!("{presentable_serialized}"))],
+            vec![Some(presentable_serialized)],
         ));
 
         Ok(())
