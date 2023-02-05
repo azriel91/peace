@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{OwnedDeserialize, Presenter};
+use crate::Presenter;
 
 /// A type that is presentable to a user.
 ///
@@ -57,8 +57,35 @@ use crate::{OwnedDeserialize, Presenter};
 ///     }
 /// }
 /// ```
+///
+/// # Design
+///
+/// Previously, this was implemented as `Presentable: Serialize +
+/// OwnedDeserialize`, with `OwnedDeserialize` being the following trait:
+///
+/// ```rust
+/// use serde::de::DeserializeOwned;
+///
+/// /// Marker trait to allow `str` to implement `Presentable`.
+/// ///
+/// /// 1. `str` is not an owned type, so it doesn't `impl DeserializeOwned`.
+/// /// 2. We don't want to relax the constraints such that `Presentable` doesn't
+/// /// imply `DeserializeOwned`.
+/// pub trait OwnedDeserialize {}
+///
+/// impl<T> OwnedDeserialize for T
+/// where
+///     T: ToOwned + ?Sized,
+///     <T as ToOwned>::Owned: DeserializeOwned,
+/// {
+/// }
+/// ```
+///
+/// However, because stateful deserialized types such as `TypeMap` don't
+/// implement `DeserializeOwned`, so any types based on that such as `States`
+/// would not be able to implement `Presentable` with this bound.
 #[async_trait::async_trait(?Send)]
-pub trait Presentable: Serialize + OwnedDeserialize {
+pub trait Presentable: Serialize {
     /// Presents this data type to the user.
     async fn present<'output, 't, PR>(&'t self, presenter: &mut PR) -> Result<(), PR::Error>
     where

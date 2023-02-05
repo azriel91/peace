@@ -8,11 +8,9 @@
 pub use async_trait::async_trait;
 
 pub use crate::{
-    owned_deserialize::OwnedDeserialize, presentable::Presentable,
-    presentable_list::PresentableList, presenter::Presenter,
+    presentable::Presentable, presentable_list::PresentableList, presenter::Presenter,
 };
 
-mod owned_deserialize;
 mod presentable;
 mod presentable_list;
 mod presenter;
