@@ -128,6 +128,7 @@ impl Presentable for String {
     }
 }
 
+/// **Note:** `T` must be `Sized`, as `Vec`s store sized types.
 #[async_trait::async_trait(?Send)]
 impl<T> Presentable for Vec<T>
 where
@@ -141,6 +142,7 @@ where
     }
 }
 
+/// **Note:** `T` must be `Sized`, as arrays store sized types.
 #[async_trait::async_trait(?Send)]
 impl<T> Presentable for [T]
 where
