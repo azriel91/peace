@@ -1,3 +1,5 @@
+use crate::Presentable;
+
 /// Takes a `Presentable` type and presents it to the user.
 ///
 /// # Design
@@ -19,6 +21,21 @@
 ///            // * Peace to gatekeep how much detail is passed
 ///            //   through, by tracking depth of information.
 /// ```
+///
+/// ## List Presentation
+///
+/// For output to be formatted aesthetically, certain formatters require the
+/// presented width of a list's entries to be known.
+///
+/// However, the width of a `Presentable` entry's presentation can only be known
+/// when it is `present`ed, which requires rendering to an in-memory buffer,
+/// tracking the character count, then copying from that buffer to the actual
+/// output.
+///
+/// Currently Peace does not support this staged approach, and instead streams
+/// each entry to the presenter as it is added. The benefit of this approach is
+/// the presentation can be rendered without needing intermediate data to be
+/// held in memory for each entry.
 #[async_trait::async_trait(?Send)]
 pub trait Presenter<'output> {
     /// Error returned during a presentation failure.
@@ -56,8 +73,57 @@ pub trait Presenter<'output> {
     /// * A value used to categorize data, e.g. "stale".
     async fn tag(&mut self, tag: &str) -> Result<(), Self::Error>;
 
-    /// Presents a list.
-    fn list<'f>(&'f mut self) -> crate::PresentableList<'output, 'f, Self>
+    /// Presents a numbered list.
+    ///
+    /// # Purposes
+    ///
+    /// * A list of steps.
+    async fn list_numbered<'f, P, I>(&mut self, iter: I) -> Result<(), Self::Error>
     where
-        Self: Sized;
+        P: Presentable + 'f,
+        I: IntoIterator<Item = &'f P>;
+
+    /// Presents a numbered list, computing the `Presentable` with the provided
+    /// function.
+    ///
+    /// # Purposes
+    ///
+    /// * A list of steps.
+    async fn list_numbered_with<'f, P, I, T, F>(
+        &mut self,
+        iter: I,
+        f: F,
+    ) -> Result<(), Self::Error>
+    where
+        P: Presentable,
+        I: IntoIterator<Item = T>,
+        T: 'f,
+        F: Fn(T) -> P;
+
+    /// Presents a bulleted list.
+    ///
+    /// # Purposes
+    ///
+    /// * A list of items.
+    async fn list_bulleted<'f, P, I>(&mut self, iter: I) -> Result<(), Self::Error>
+    where
+        P: Presentable + 'f,
+        I: IntoIterator<Item = &'f P>;
+
+    /// Presents a bulleted list, computing the `Presentable` with the provided
+    /// function.
+    ///
+    /// # Purposes
+    ///
+    /// * A list of items.
+    async fn list_bulleted_with<'f, P, I, T, F>(
+        &mut self,
+        iter: I,
+        f: F,
+    ) -> Result<(), Self::Error>
+    where
+        P: Presentable,
+        I: IntoIterator<Item = T>,
+        T: 'f,
+        F: Fn(T) -> P;
 }

@@ -106,11 +106,10 @@ impl<TS> Presentable for States<TS> {
     where
         PR: Presenter<'output>,
     {
-        let mut presentable_list = presenter.list();
-        for (item_spec_id, state) in self.iter() {
-            let tuple = (item_spec_id, format!("{state}"));
-            presentable_list = presentable_list.entry(&tuple).await;
-        }
-        presentable_list.finish()
+        presenter
+            .list_numbered_with(self.iter(), |(item_spec_id, state)| {
+                (item_spec_id, format!(": {state}"))
+            })
+            .await
     }
 }

@@ -119,7 +119,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         vec_diff
     );
     assert_eq!(
-        "vec_copy: [(-)3..4, (~)7;1, (+)8;9, ]\n",
+        "1. `vec_copy`: [(-)3..4, (~)7;1, (+)8;9, ]\n",
         String::from_utf8(buffer)?
     );
 

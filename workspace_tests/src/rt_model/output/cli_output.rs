@@ -48,8 +48,8 @@ async fn outputs_states_as_text() -> Result<(), Box<dyn std::error::Error>> {
 
     assert_eq!(
         "\
-        item_0: logical, 1.1\n\
-        item_1: 1, true\n\
+        1. `item_0`: logical, 1.1\n\
+        2. `item_1`: 1, true\n\
         ",
         String::from_utf8(buffer)?
     );
@@ -70,9 +70,10 @@ async fn outputs_state_diffs_as_text() -> Result<(), Box<dyn std::error::Error>>
     <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &state_diffs).await?;
 
     assert_eq!(
-        r#"item_0: need one more server
-item_1: 1
-"#,
+        "\
+        1. `item_0`: need one more server\n\
+        2. `item_1`: 1\n\
+        ",
         String::from_utf8(buffer)?
     );
     Ok(())
@@ -87,8 +88,7 @@ async fn outputs_error_as_text() -> Result<(), Box<dyn std::error::Error>> {
     <CliOutput<_> as OutputWrite<Error>>::write_err(&mut cli_output, &error).await?;
 
     assert_eq!(
-        r#"CliOutputTest display message.
-"#,
+        "CliOutputTest display message.\n",
         String::from_utf8(buffer)?
     );
     Ok(())
@@ -110,14 +110,15 @@ async fn outputs_states_as_text_colorized() -> Result<(), Box<dyn std::error::Er
 
     let output = String::from_utf8(buffer)?;
     assert_eq!(
-        "\u{1b}[38;5;69mitem_0\u{1b}[0m: logical, 1.1\n\
-        \u{1b}[38;5;69mitem_1\u{1b}[0m: 1, true\n",
+        "\
+        1. \u{1b}[38;5;105m`item_0`\u{1b}[0m: logical, 1.1\n\
+        2. \u{1b}[38;5;105m`item_1`\u{1b}[0m: 1, true\n",
         output
     );
     assert_eq!(
         "\
-        item_0: logical, 1.1\n\
-        item_1: 1, true\n\
+        1. `item_0`: logical, 1.1\n\
+        2. `item_1`: 1, true\n\
         ",
         console::strip_ansi_codes(&output)
     );
@@ -140,14 +141,15 @@ async fn outputs_state_diffs_as_text_colorized() -> Result<(), Box<dyn std::erro
 
     let output = String::from_utf8(buffer)?;
     assert_eq!(
-        "\u{1b}[38;5;69mitem_0\u{1b}[0m: need one more server\n\
-        \u{1b}[38;5;69mitem_1\u{1b}[0m: 1\n",
+        "\
+        1. \u{1b}[38;5;105m`item_0`\u{1b}[0m: need one more server\n\
+        2. \u{1b}[38;5;105m`item_1`\u{1b}[0m: 1\n",
         output
     );
     assert_eq!(
         "\
-        item_0: need one more server\n\
-        item_1: 1\n\
+        1. `item_0`: need one more server\n\
+        2. `item_1`: 1\n\
         ",
         console::strip_ansi_codes(&output)
     );
@@ -164,8 +166,7 @@ async fn outputs_error_as_text_colorized() -> Result<(), Box<dyn std::error::Err
     <CliOutput<_> as OutputWrite<Error>>::write_err(&mut cli_output, &error).await?;
 
     assert_eq!(
-        r#"CliOutputTest display message.
-"#,
+        "CliOutputTest display message.\n",
         String::from_utf8(buffer)?
     );
     Ok(())

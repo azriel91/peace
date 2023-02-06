@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Profile(Cow<'static, str>);
 
-crate::id_newtype!(Profile, ProfileInvalidFmt, profile);
+crate::id_newtype!(Profile, ProfileInvalidFmt, profile, tag);
 
 impl Profile {
     /// Profile used by the Peace framework when a command is for initializing

@@ -1,4 +1,4 @@
-use peace_fmt::{async_trait, Presenter};
+use peace_fmt::{async_trait, Presentable, Presenter};
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 
 #[cfg(feature = "output_colorized")]
@@ -45,6 +45,18 @@ where
         }
 
         Ok(())
+    }
+
+    fn number_column_count<I>(iterator: &I) -> usize
+    where
+        I: Iterator,
+    {
+        let (min, max_maybe) = iterator.size_hint();
+        let n = max_maybe.unwrap_or(min);
+        n.checked_ilog10()
+            .and_then(|log10| usize::try_from(log10).ok())
+            .unwrap_or(0)
+            + 1
     }
 }
 
@@ -108,7 +120,7 @@ where
 
     #[cfg(feature = "output_colorized")]
     async fn code_inline(&mut self, code: &str) -> Result<(), Self::Error> {
-        let style = &console::Style::new().color256(247); // grey
+        let style = &console::Style::new().color256(105); // pale blue
         self.colorize_maybe(format!("`{code}`").as_str(), style)
             .await?;
         Ok(())
@@ -122,7 +134,77 @@ where
         Ok(())
     }
 
-    fn list<'f>(&'f mut self) -> peace_fmt::PresentableList<'output, 'f, Self> {
-        peace_fmt::PresentableList::new(self)
+    async fn list_numbered<'f, P, I>(&mut self, iter: I) -> Result<(), Self::Error>
+    where
+        P: Presentable + 'f,
+        I: IntoIterator<Item = &'f P>,
+    {
+        let iterator = iter.into_iter();
+        let number_column_count = Self::number_column_count(&iterator);
+        for (index, entry) in iterator.enumerate() {
+            let n = index + 1;
+            self.output
+                .writer
+                .write_all(format!("{n:>number_column_count$}. ").as_bytes())
+                .await?;
+            entry.present(self).await?;
+            self.output.writer.write_all(b"\n").await?;
+        }
+
+        Ok(())
+    }
+
+    async fn list_numbered_with<'f, P, I, T, F>(&mut self, iter: I, f: F) -> Result<(), Self::Error>
+    where
+        P: Presentable,
+        I: IntoIterator<Item = T>,
+        T: 'f,
+        F: Fn(T) -> P,
+    {
+        let iterator = iter.into_iter();
+        let number_column_count = Self::number_column_count(&iterator);
+        for (index, entry) in iterator.enumerate() {
+            let n = index + 1;
+            self.output
+                .writer
+                .write_all(format!("{n:>number_column_count$}. ").as_bytes())
+                .await?;
+            let presentable = f(entry);
+            presentable.present(self).await?;
+            self.output.writer.write_all(b"\n").await?;
+        }
+
+        Ok(())
+    }
+
+    async fn list_bulleted<'f, P, I>(&mut self, iter: I) -> Result<(), Self::Error>
+    where
+        P: Presentable + 'f,
+        I: IntoIterator<Item = &'f P>,
+    {
+        for entry in iter.into_iter() {
+            self.output.writer.write_all(b"* ").await?;
+            entry.present(self).await?;
+            self.output.writer.write_all(b"\n").await?;
+        }
+
+        Ok(())
+    }
+
+    async fn list_bulleted_with<'f, P, I, T, F>(&mut self, iter: I, f: F) -> Result<(), Self::Error>
+    where
+        P: Presentable,
+        I: IntoIterator<Item = T>,
+        T: 'f,
+        F: Fn(T) -> P,
+    {
+        for entry in iter.into_iter() {
+            self.output.writer.write_all(b"* ").await?;
+            let presentable = f(entry);
+            presentable.present(self).await?;
+            self.output.writer.write_all(b"\n").await?;
+        }
+
+        Ok(())
     }
 }

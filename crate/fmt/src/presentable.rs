@@ -137,7 +137,7 @@ where
     where
         PR: Presenter<'output>,
     {
-        presenter.list().entries(self.iter()).await.finish()
+        presenter.list_numbered(self.iter()).await
     }
 }
 
@@ -150,6 +150,6 @@ where
     where
         PR: Presenter<'output>,
     {
-        presenter.list().entries(self.iter()).await.finish()
+        presenter.list_numbered(self.iter()).await
     }
 }

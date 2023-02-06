@@ -65,11 +65,10 @@ impl Presentable for StateDiffs {
     where
         PR: Presenter<'output>,
     {
-        let mut presentable_list = presenter.list();
-        for (item_spec_id, state_diff) in self.iter() {
-            let tuple = (item_spec_id, format!("{state_diff}"));
-            presentable_list = presentable_list.entry(&tuple).await;
-        }
-        presentable_list.finish()
+        presenter
+            .list_numbered_with(self.iter(), |(item_spec_id, state_diff)| {
+                (item_spec_id, format!(": {state_diff}"))
+            })
+            .await
     }
 }
