@@ -120,7 +120,7 @@ where
 
     #[cfg(feature = "output_colorized")]
     async fn code_inline(&mut self, code: &str) -> Result<(), Self::Error> {
-        let style = &console::Style::new().color256(105); // pale blue
+        let style = &console::Style::new().color256(75); // pale blue
         self.colorize_maybe(format!("`{code}`").as_str(), style)
             .await?;
         Ok(())

@@ -245,7 +245,7 @@ where
                 //  32: blue pale (running)
                 //  17: blue dark (running background)
                 // 222: yellow pale (stalled)
-                //  69: indigo pale (user pending, item spec id)
+                //  75: indigo pale (user pending, item spec id)
                 //  35: green pale (success)
                 //  22: green dark (success background)
                 // 160: red slightly dim (fail)
@@ -261,7 +261,7 @@ where
                                 console::style("{bar:40.32.on_17}")
                             }
                             ProgressStatus::RunningStalled => console::style("{bar:40.222.on_17}"),
-                            ProgressStatus::UserPending => console::style("{bar:40.69.on_17}"),
+                            ProgressStatus::UserPending => console::style("{bar:40.75.on_17}"),
                             ProgressStatus::Complete(progress_complete) => match progress_complete {
                                 ProgressComplete::Success => console::style("{bar:40.35.on_22}"),
                                 ProgressComplete::Fail => console::style("{bar:40.160.on_88}"),
@@ -280,7 +280,7 @@ where
                 };
 
                 let prefix = match self.colorize {
-                    CliColorize::Colored => "{prefix:20.69}",
+                    CliColorize::Colored => "{prefix:20.75}",
                     CliColorize::Uncolored => "{prefix:20}",
                 };
             } else {
