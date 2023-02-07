@@ -7,9 +7,11 @@
 //! `ItemSpec`'s params type.
 
 pub use self::{
-    app_init_cmd::AppInitCmd, cmd_ctx_builder::CmdCtxBuilder, profile_show_cmd::ProfileShowCmd,
+    app_init_cmd::AppInitCmd, cmd_ctx_builder::CmdCtxBuilder, profile_list_cmd::ProfileListCmd,
+    profile_show_cmd::ProfileShowCmd,
 };
 
 mod app_init_cmd;
 mod cmd_ctx_builder;
+mod profile_list_cmd;
 mod profile_show_cmd;
