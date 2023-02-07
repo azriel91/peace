@@ -13,17 +13,17 @@ use peace::{
 
 #[test]
 pub fn debug() {
-    let flow_params_file = FlowParamsFile::from(Path::new("init.yaml").to_path_buf());
+    let flow_params_file = FlowParamsFile::from(Path::new("flow_params.yaml").to_path_buf());
 
     assert_eq!(
-        r#"FlowParamsFile("init.yaml")"#,
+        r#"FlowParamsFile("flow_params.yaml")"#,
         format!("{flow_params_file:?}")
     );
 }
 
 #[test]
 pub fn partial_eq() {
-    let flow_params_file_0 = FlowParamsFile::from(Path::new("init.yaml").to_path_buf());
+    let flow_params_file_0 = FlowParamsFile::from(Path::new("flow_params.yaml").to_path_buf());
     let flow_params_file_1 = flow_params_file_0.clone();
 
     assert_eq!(flow_params_file_0, flow_params_file_1);
@@ -31,9 +31,9 @@ pub fn partial_eq() {
 
 #[test]
 pub fn from_path_buf() {
-    let flow_params_file = FlowParamsFile::from(Path::new("init.yaml").to_path_buf());
+    let flow_params_file = FlowParamsFile::from(Path::new("flow_params.yaml").to_path_buf());
 
-    assert_eq!(Path::new("init.yaml"), &*flow_params_file);
+    assert_eq!(Path::new("flow_params.yaml"), &*flow_params_file);
 }
 
 #[test]
@@ -51,37 +51,37 @@ pub fn from_flow_dir_relative() {
         &**app_name!(),
         "test_profile",
         "test_flow",
-        "init.yaml",
+        "flow_params.yaml",
     ]);
     assert_eq!(path, &*flow_params_file);
 }
 
 #[test]
 pub fn into_inner_returns_path_buf() {
-    let flow_params_file = FlowParamsFile::new(Path::new("init.yaml").to_path_buf());
+    let flow_params_file = FlowParamsFile::new(Path::new("flow_params.yaml").to_path_buf());
 
     assert_eq!(
-        Path::new("init.yaml").to_path_buf(),
+        Path::new("flow_params.yaml").to_path_buf(),
         flow_params_file.into_inner()
     );
 }
 
 #[test]
 pub fn as_ref_os_str() {
-    let flow_params_file = FlowParamsFile::new(Path::new("init.yaml").to_path_buf());
+    let flow_params_file = FlowParamsFile::new(Path::new("flow_params.yaml").to_path_buf());
 
     assert_eq!(
-        OsStr::new("init.yaml"),
+        OsStr::new("flow_params.yaml"),
         <FlowParamsFile as AsRef<OsStr>>::as_ref(&flow_params_file)
     );
 }
 
 #[test]
 pub fn as_ref_path() {
-    let flow_params_file = FlowParamsFile::new(Path::new("init.yaml").to_path_buf());
+    let flow_params_file = FlowParamsFile::new(Path::new("flow_params.yaml").to_path_buf());
 
     assert_eq!(
-        Path::new("init.yaml"),
+        Path::new("flow_params.yaml"),
         <FlowParamsFile as AsRef<Path>>::as_ref(&flow_params_file)
     );
 }

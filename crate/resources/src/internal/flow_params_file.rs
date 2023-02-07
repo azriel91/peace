@@ -4,10 +4,10 @@ use crate::paths::FlowDir;
 
 /// Path to the file that stores the flow initialization parameters.
 ///
-/// Typically `$workspace_dir/.peace/$profile/$flow_id/init.yaml`.
+/// Typically `$workspace_dir/.peace/$app/$profile/$flow_id/flow_params.yaml`.
 ///
 /// See `FlowParamsFile::from<&FlowDir>` if you want to construct a
-/// `FlowParamsFile` with the conventional `$flow_dir/init.yaml`
+/// `FlowParamsFile` with the conventional `$flow_dir/flow_params.yaml`
 /// path.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FlowParamsFile(PathBuf);
@@ -16,7 +16,7 @@ crate::paths::pathbuf_newtype!(FlowParamsFile);
 
 impl FlowParamsFile {
     /// File name of the initialization parameters file.
-    pub const NAME: &'static str = "init.yaml";
+    pub const NAME: &'static str = "flow_params.yaml";
 }
 
 impl From<&FlowDir> for FlowParamsFile {
