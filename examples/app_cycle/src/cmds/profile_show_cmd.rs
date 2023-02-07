@@ -12,11 +12,11 @@ use crate::{
     model::{AppCycleError, EnvType},
 };
 
-/// Flow to show the current profile.
+/// Command to show the current profile.
 #[derive(Debug)]
-pub struct ProfileShowFlow;
+pub struct ProfileShowCmd;
 
-impl ProfileShowFlow {
+impl ProfileShowCmd {
     /// Shows the currently active profile.
     ///
     /// The active profile is stored in workspace params.
@@ -55,7 +55,7 @@ impl ProfileShowFlow {
     fn graph() -> Result<ItemSpecGraph<AppCycleError>, AppCycleError> {
         let graph_builder = ItemSpecGraphBuilder::<AppCycleError>::new();
 
-        // No item specs, as we are just storing profile init params.
+        // No item specs, as we are just reading existing workspace and profile params.
 
         Ok(graph_builder.build())
     }

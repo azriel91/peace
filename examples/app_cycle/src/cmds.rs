@@ -6,7 +6,10 @@
 //! The `*Cmd` types map between the parameters received from users, to each
 //! `ItemSpec`'s params type.
 
-pub use self::{app_init_cmd::AppInitCmd, cmd_ctx_builder::CmdCtxBuilder};
+pub use self::{
+    app_init_cmd::AppInitCmd, cmd_ctx_builder::CmdCtxBuilder, profile_show_cmd::ProfileShowCmd,
+};
 
 mod app_init_cmd;
 mod cmd_ctx_builder;
+mod profile_show_cmd;
