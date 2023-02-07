@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{item_spec_id, ItemSpecId},
+    cfg::{flow_id, item_spec_id, FlowId, ItemSpecId},
     resources::{
         internal::StatesMut, paths::StatesSavedFile, states::StatesSaved,
         type_reg::untagged::TypeReg,
@@ -30,6 +30,7 @@ async fn serialize() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn deserialize_saved() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
+    let flow_id = flow_id!("test_flow");
     let storage = Storage;
     let item_spec_id = item_spec_id!("a");
     let mut states_type_reg = TypeReg::new_typed();
@@ -44,6 +45,7 @@ async fn deserialize_saved() -> Result<(), Box<dyn std::error::Error>> {
     StatesSerializer::<Error>::serialize(&storage, &states, &states_saved_file).await?;
 
     let states_deserialized = StatesSerializer::<Error>::deserialize_saved(
+        &flow_id,
         &storage,
         &states_type_reg,
         &states_saved_file,
@@ -61,6 +63,7 @@ async fn deserialize_saved() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn deserialize_saved_error_maps_byte_indices() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
+    let flow_id = flow_id!("test_flow");
     let storage = Storage;
     let item_spec_id = item_spec_id!("a");
     let mut states_type_reg = TypeReg::new_typed();
@@ -71,6 +74,7 @@ async fn deserialize_saved_error_maps_byte_indices() -> Result<(), Box<dyn std::
     tokio::fs::write(&states_saved_file, contents).await?;
 
     let error = StatesSerializer::<Error>::deserialize_saved(
+        &flow_id,
         &storage,
         &states_type_reg,
         &states_saved_file,
@@ -88,6 +92,7 @@ async fn deserialize_saved_error_maps_byte_indices() -> Result<(), Box<dyn std::
         };
 
         if let Error::StatesDeserialize {
+            flow_id: flow_id_actual,
             states_file_source: _,
             error_span,
             error_message,
@@ -95,6 +100,7 @@ async fn deserialize_saved_error_maps_byte_indices() -> Result<(), Box<dyn std::
             error: _,
         } = error
         {
+            assert_eq!(flow_id, flow_id_actual);
             assert_eq!(error_span_expected, error_span);
             assert_eq!("a: invalid type: sequence, expected u32", error_message);
             assert_eq!(None, context_span);
@@ -104,7 +110,14 @@ async fn deserialize_saved_error_maps_byte_indices() -> Result<(), Box<dyn std::
     }
     #[cfg(not(feature = "error_reporting"))]
     {
-        assert!(matches!(error, Error::StatesDeserialize { error: _ }));
+        assert!(matches!(
+            error,
+            Error::StatesDeserialize {
+                flow_id: flow_id_actual,
+                error: _
+            }
+            if flow_id == flow_id_actual
+        ));
     }
 
     Ok(())

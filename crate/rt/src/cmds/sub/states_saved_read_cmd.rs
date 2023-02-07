@@ -1,6 +1,6 @@
 use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
-use peace_cfg::ItemSpecId;
+use peace_cfg::{FlowId, ItemSpecId};
 use peace_resources::{
     paths::{FlowDir, StatesSavedFile},
     resources::ts::{SetUp, WithStatesSaved},
@@ -63,19 +63,22 @@ where
         resources: &mut Resources<SetUp>,
         states_current_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
     ) -> Result<StatesSaved, E> {
+        let flow_id = resources.borrow::<FlowId>();
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
         let states_saved_file = StatesSavedFile::from(&*flow_dir);
 
         let states_saved = StatesSerializer::deserialize_saved(
+            &flow_id,
             &storage,
             states_current_type_reg,
             &states_saved_file,
         )
         .await?;
 
-        drop(flow_dir);
         drop(storage);
+        drop(flow_dir);
+        drop(flow_id);
 
         resources.insert(states_saved_file);
 

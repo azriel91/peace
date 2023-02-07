@@ -516,14 +516,19 @@ where
             marker: _,
         } = self;
 
-        Self::workspace_dirs_insert(&mut resources, workspace, profile, flow_id, cmd_dirs);
-        resources.insert(workspace_params_file);
-        resources.insert(profile_params_file);
-        resources.insert(flow_params_file);
-
         // Read existing states from storage.
+        //
+        // It is not possible to load saved states does not work when running a
+        // cross-profile command, and the flows have different states.
+        //
+        // e.g. different item spec graphs.
+        //
+        // Most prominent example is workspace initialization, where the states saved
+        // per item spec for workspace initialization are likely different to
+        // application specific flows.
         let states_type_regs = Self::states_type_regs(item_spec_graph);
         let states_saved = StatesSerializer::deserialize_saved_opt(
+            &flow_id,
             storage,
             states_type_regs.states_current_type_reg(),
             &states_saved_file,
@@ -533,6 +538,11 @@ where
         if let Some(states_saved) = states_saved {
             resources.insert(states_saved);
         }
+
+        Self::workspace_dirs_insert(&mut resources, workspace, profile, flow_id, cmd_dirs);
+        resources.insert(workspace_params_file);
+        resources.insert(profile_params_file);
+        resources.insert(flow_params_file);
 
         // Call each `ItemSpec`'s initialization function.
         let resources = Self::item_spec_graph_setup(item_spec_graph, resources).await?;

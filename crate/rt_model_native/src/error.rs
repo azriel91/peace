@@ -1,5 +1,6 @@
 use std::{ffi::OsString, path::PathBuf, sync::Mutex};
 
+use peace_core::FlowId;
 use peace_resources::paths::WorkspaceDir;
 
 // Remember to add common variants to `rt_model_web/src/error.rs`.
@@ -41,12 +42,22 @@ pub enum Error {
     ProgressUpdateSerializeJson(#[source] serde_json::Error),
 
     /// Failed to deserialize states.
-    #[error("Failed to deserialize states.")]
+    #[error("Failed to deserialize states for flow: `{flow_id}`.")]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_rt_model::states_deserialize))
+        diagnostic(
+            code(peace_rt_model::states_deserialize),
+            help(
+                "Make sure that all commands using the `{flow_id}` flow, also use the same item spec graph.\n\
+                This is because all ItemSpecs are used to deserialize state.\n\
+                \n\
+                If the item spec graph is different, it may make sense to use a different flow ID."
+            )
+        )
     )]
     StatesDeserialize {
+        /// Flow ID whose states are being deserialized.
+        flow_id: FlowId,
         /// Source text to be deserialized.
         #[cfg(feature = "error_reporting")]
         #[source_code]
