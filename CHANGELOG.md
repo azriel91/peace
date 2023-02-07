@@ -3,10 +3,14 @@
 ## unreleased
 
 * Add [`cargo-deny`] and [`cargo-about`] CI checks. ([#76])
+* Add [`peace::fmt::{Presentable, Presenter}`] traits. ([#77], [#79])
+* Add [`peace::rt_model::CliMdPresenter`] which is the default for presenting text in `CliOutput`. ([#77], [#79])
 
 [`cargo-deny`]: https://github.com/EmbarkStudios/cargo-deny
 [`cargo-about`]: https://github.com/EmbarkStudios/cargo-about
 [#76]: https://github.com/azriel91/peace/pull/76
+[#77]: https://github.com/azriel91/peace/issues/77
+[#79]: https://github.com/azriel91/peace/pull/79
 
 
 ## 0.0.6 (2023-01-21)

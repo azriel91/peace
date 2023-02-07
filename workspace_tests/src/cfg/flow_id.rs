@@ -1,6 +1,11 @@
 use std::{borrow::Cow, str::FromStr};
 
-use peace::cfg::{FlowId, FlowIdInvalidFmt};
+use peace::{
+    cfg::{FlowId, FlowIdInvalidFmt},
+    fmt::Presentable,
+};
+
+use crate::{FnInvocation, FnTrackerPresenter};
 
 #[test]
 fn from_str_returns_ok_owned_for_valid_id() -> Result<(), FlowIdInvalidFmt<'static>> {
@@ -71,6 +76,23 @@ fn display_returns_inner_str() -> Result<(), FlowIdInvalidFmt<'static>> {
     let flow_id = FlowId::try_from("good_id")?;
 
     assert_eq!("good_id", flow_id.to_string());
+    Ok(())
+}
+
+#[tokio::test]
+async fn present_uses_code_inline() -> Result<(), Box<dyn std::error::Error>> {
+    let mut presenter = FnTrackerPresenter::new();
+    let flow_id = FlowId::try_from("flow_id")?;
+
+    flow_id.present(&mut presenter).await?;
+
+    assert_eq!(
+        vec![FnInvocation::new(
+            "code_inline",
+            vec![Some(r#""flow_id""#.to_string())]
+        )],
+        presenter.fn_invocations()
+    );
     Ok(())
 }
 

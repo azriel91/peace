@@ -72,7 +72,7 @@ pub trait ItemSpec {
     /// * A server's state may be its operating system, CPU and memory capacity,
     ///   IP address, and ID.
     ///
-    /// [state concept]: https://peace.mk/technical_concepts/state.html
+    /// [state concept]: https://peace.mk/book/technical_concepts/state.html
     /// [`State`]: crate::state::State
     type State: Clone + fmt::Display + Serialize + DeserializeOwned;
 

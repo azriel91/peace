@@ -1,10 +1,7 @@
 use peace::{
     cfg::async_trait,
-    resources::states::{
-        StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
-        StatesEnsuredDry, StatesSaved,
-    },
-    rt_model::output::OutputWrite,
+    fmt::Presentable,
+    rt_model::{self, output::OutputWrite},
 };
 
 use crate::FnInvocation;
@@ -40,7 +37,7 @@ impl FnTrackerOutput {
 #[async_trait(?Send)]
 impl<E> OutputWrite<E> for FnTrackerOutput
 where
-    E: std::error::Error,
+    E: std::error::Error + From<rt_model::Error>,
 {
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
@@ -56,65 +53,17 @@ where
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
-    async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
+    async fn present<P>(&mut self, presentable: &P) -> Result<(), E>
+    where
+        P: Presentable + ?Sized,
+    {
+        let presentable_serialized =
+            serde_yaml::to_string(presentable).map_err(rt_model::Error::PresentableSerialize)?;
         self.fn_invocations.push(FnInvocation::new(
-            "write_states_saved",
-            vec![Some(format!("{states_saved:?}"))],
+            "present",
+            vec![Some(presentable_serialized)],
         ));
-        Ok(())
-    }
 
-    async fn write_states_desired(&mut self, states_desired: &StatesDesired) -> Result<(), E> {
-        self.fn_invocations.push(FnInvocation::new(
-            "write_states_desired",
-            vec![Some(format!("{states_desired:?}"))],
-        ));
-        Ok(())
-    }
-
-    async fn write_state_diffs(&mut self, state_diffs: &StateDiffs) -> Result<(), E> {
-        self.fn_invocations.push(FnInvocation::new(
-            "write_state_diffs",
-            vec![Some(format!("{state_diffs:?}"))],
-        ));
-        Ok(())
-    }
-
-    async fn write_states_ensured_dry(
-        &mut self,
-        states_ensured_dry: &StatesEnsuredDry,
-    ) -> Result<(), E> {
-        self.fn_invocations.push(FnInvocation::new(
-            "write_states_ensured_dry",
-            vec![Some(format!("{states_ensured_dry:?}"))],
-        ));
-        Ok(())
-    }
-
-    async fn write_states_ensured(&mut self, states_ensured: &StatesEnsured) -> Result<(), E> {
-        self.fn_invocations.push(FnInvocation::new(
-            "write_states_ensured",
-            vec![Some(format!("{states_ensured:?}"))],
-        ));
-        Ok(())
-    }
-
-    async fn write_states_cleaned_dry(
-        &mut self,
-        states_cleaned_dry: &StatesCleanedDry,
-    ) -> Result<(), E> {
-        self.fn_invocations.push(FnInvocation::new(
-            "write_states_cleaned_dry",
-            vec![Some(format!("{states_cleaned_dry:?}"))],
-        ));
-        Ok(())
-    }
-
-    async fn write_states_cleaned(&mut self, states_cleaned: &StatesCleaned) -> Result<(), E> {
-        self.fn_invocations.push(FnInvocation::new(
-            "write_states_cleaned",
-            vec![Some(format!("{states_cleaned:?}"))],
-        ));
         Ok(())
     }
 

@@ -16,6 +16,14 @@ pub enum Error {
     )]
     ErrorSerialize(#[source] serde_yaml::Error),
 
+    /// Failed to serialize a presentable type.
+    #[error("Failed to serialize a presentable type.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::presentable_serialize))
+    )]
+    PresentableSerialize(#[source] serde_yaml::Error),
+
     /// Failed to serialize progress update.
     #[error("Failed to serialize progress update.")]
     #[cfg_attr(
@@ -205,7 +213,15 @@ pub enum Error {
         path: PathBuf,
     },
 
-    // Native errors.
+    // === Native errors === //
+    /// Failed to present data.
+    #[error("Failed to present data.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model_native::cli_output_present))
+    )]
+    CliOutputPresent(#[source] std::io::Error),
+
     #[error("Failed to set current dir to workspace directory: `{}`", workspace_dir.display())]
     #[cfg_attr(
         feature = "error_reporting",

@@ -1,5 +1,6 @@
 use peace::{
     cfg::{app_name, AppName, Profile},
+    fmt::presentln,
     rt::cmds::sub::StatesSavedReadCmd,
     rt_model::{
         output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
@@ -45,8 +46,8 @@ impl ProfileShowFlow {
         let profile = &*resources.borrow::<Profile>();
         let env_type = &*resources.borrow::<EnvType>();
 
-        eprintln!("Profile: {profile}");
-        eprintln!("Type: {env_type}");
+        presentln!(output, ["Using profile ", profile]);
+        presentln!(output, ["Environment type: ", env_type]);
 
         Ok(())
     }

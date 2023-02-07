@@ -18,7 +18,7 @@ Peace should provide two traits:
     - **Web output:** Write JSON.
     - **Native application:** Update a UI component.
 
-* `Presenter`: Maps between the information and the presentation format, e.g. present this as an ID, short text, long text, a list, etcetera.
+* `Presentable`: Maps between the information and the presentation format, e.g. present this as an ID, short text, long text, a list, etcetera.
 
     Examples:
 
@@ -75,7 +75,7 @@ Examples:
 To achieve this, we can:
 
 * Define a `peace::fmt::Presentable` trait, analogous to `std::fmt::Display`
-* Define a `peace::fmt::Presenter` struct, analogous to `std::fmt::Formatter`
+* Define a `peace::fmt::Presenter` trait, analogous to `std::fmt::Formatter`
 * `Presenter` has methods to format:
 
     - short text descriptions

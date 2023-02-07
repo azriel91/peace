@@ -1,6 +1,11 @@
 use std::{borrow::Cow, str::FromStr};
 
-use peace::cfg::{Profile, ProfileInvalidFmt};
+use peace::{
+    cfg::{Profile, ProfileInvalidFmt},
+    fmt::Presentable,
+};
+
+use crate::{FnInvocation, FnTrackerPresenter};
 
 #[test]
 fn from_str_returns_ok_owned_for_valid_profile_name() -> Result<(), ProfileInvalidFmt<'static>> {
@@ -73,6 +78,23 @@ fn display_returns_inner_str() -> Result<(), ProfileInvalidFmt<'static>> {
     let profile_name = Profile::try_from("good_profile_name")?;
 
     assert_eq!("good_profile_name", profile_name.to_string());
+    Ok(())
+}
+
+#[tokio::test]
+async fn present_uses_tag() -> Result<(), Box<dyn std::error::Error>> {
+    let mut presenter = FnTrackerPresenter::new();
+    let profile = Profile::try_from("profile")?;
+
+    profile.present(&mut presenter).await?;
+
+    assert_eq!(
+        vec![FnInvocation::new(
+            "tag",
+            vec![Some(r#""profile""#.to_string())]
+        )],
+        presenter.fn_invocations()
+    );
     Ok(())
 }
 

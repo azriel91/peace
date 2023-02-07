@@ -1,13 +1,4 @@
-use futures::{stream, StreamExt, TryStreamExt};
-
-use peace_core::ItemSpecId;
-use peace_resources::{
-    states::{
-        StateDiffs, StatesCleaned, StatesCleanedDry, StatesDesired, StatesEnsured,
-        StatesEnsuredDry, StatesSaved,
-    },
-    type_reg::untagged::BoxDtDisplay,
-};
+use peace_fmt::Presentable;
 use peace_rt_model_core::{
     async_trait,
     output::{OutputFormat, OutputWrite},
@@ -15,7 +6,10 @@ use peace_rt_model_core::{
 use serde::Serialize;
 use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
 
-use crate::{output::CliOutputBuilder, Error};
+use crate::{
+    output::{CliMdPresenter, CliOutputBuilder},
+    Error,
+};
 
 #[cfg(feature = "output_colorized")]
 use crate::output::CliColorize;
@@ -168,74 +162,26 @@ where
         self.progress_format
     }
 
-    #[cfg(not(feature = "output_colorized"))]
-    async fn output_display<'f, E, I>(&mut self, iter: I) -> Result<(), E>
+    async fn output_presentable<E, P>(&mut self, presentable: &P) -> Result<(), E>
     where
         E: std::error::Error + From<Error>,
-        I: Iterator<Item = (&'f ItemSpecId, &'f BoxDtDisplay)>,
+        P: Presentable + ?Sized,
     {
-        let writer = &mut self.writer;
-        stream::iter(iter)
-            .map(Result::<_, std::io::Error>::Ok)
-            .try_fold(
-                writer,
-                |writer, (item_spec_id, item_spec_state)| async move {
-                    writer.write_all(item_spec_id.as_bytes()).await?;
-
-                    writer.write_all(b": ").await?;
-
-                    writer
-                        .write_all(format!("{item_spec_state}\n").as_bytes())
-                        .await?;
-                    Ok(writer)
-                },
-            )
+        let presenter = &mut CliMdPresenter::new(self);
+        presentable
+            .present(presenter)
             .await
-            .map_err(Error::StdoutWrite)?;
-        Ok(())
-    }
+            .map_err(Error::CliOutputPresent)?;
 
-    #[cfg(feature = "output_colorized")]
-    async fn output_display<'f, E, I>(&mut self, iter: I) -> Result<(), E>
-    where
-        E: std::error::Error + From<Error>,
-        I: Iterator<Item = (&'f ItemSpecId, &'f BoxDtDisplay)>,
-    {
-        let item_spec_id_style = &console::Style::new().color256(69);
-        let colorized = self.colorize;
+        self.writer.flush().await.map_err(Error::CliOutputPresent)?;
 
-        let writer = &mut self.writer;
-        stream::iter(iter)
-            .map(Result::<_, std::io::Error>::Ok)
-            .try_fold(
-                writer,
-                |writer, (item_spec_id, item_spec_state)| async move {
-                    if colorized == CliColorize::Colored {
-                        let item_spec_id_colorized = item_spec_id_style.apply_to(item_spec_id);
-                        writer
-                            .write_all(format!("{item_spec_id_colorized}").as_bytes())
-                            .await?;
-                    } else {
-                        writer.write_all(item_spec_id.as_bytes()).await?;
-                    }
-
-                    writer.write_all(b": ").await?;
-
-                    writer
-                        .write_all(format!("{item_spec_state}\n").as_bytes())
-                        .await?;
-                    Ok(writer)
-                },
-            )
-            .await
-            .map_err(Error::StdoutWrite)?;
         Ok(())
     }
 
     async fn output_yaml<'f, E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
     where
         E: std::error::Error + From<Error>,
-        T: Serialize,
+        T: Serialize + ?Sized,
         F: FnOnce(serde_yaml::Error) -> Error,
     {
         let t_serialized = serde_yaml::to_string(t).map_err(fn_error)?;
@@ -252,7 +198,7 @@ where
     async fn output_json<'f, E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
     where
         E: std::error::Error + From<Error>,
-        T: Serialize,
+        T: Serialize + ?Sized,
         F: FnOnce(serde_json::Error) -> Error,
     {
         let t_serialized = serde_json::to_string(t).map_err(fn_error)?;
@@ -299,7 +245,7 @@ where
                 //  32: blue pale (running)
                 //  17: blue dark (running background)
                 // 222: yellow pale (stalled)
-                //  69: indigo pale (user pending, item spec id)
+                //  75: indigo pale (user pending, item spec id)
                 //  35: green pale (success)
                 //  22: green dark (success background)
                 // 160: red slightly dim (fail)
@@ -315,7 +261,7 @@ where
                                 console::style("{bar:40.32.on_17}")
                             }
                             ProgressStatus::RunningStalled => console::style("{bar:40.222.on_17}"),
-                            ProgressStatus::UserPending => console::style("{bar:40.69.on_17}"),
+                            ProgressStatus::UserPending => console::style("{bar:40.75.on_17}"),
                             ProgressStatus::Complete(progress_complete) => match progress_complete {
                                 ProgressComplete::Success => console::style("{bar:40.35.on_22}"),
                                 ProgressComplete::Fail => console::style("{bar:40.160.on_88}"),
@@ -334,7 +280,7 @@ where
                 };
 
                 let prefix = match self.colorize {
-                    CliColorize::Colored => "{prefix:20.69}",
+                    CliColorize::Colored => "{prefix:20.75}",
                     CliColorize::Uncolored => "{prefix:20}",
                 };
             } else {
@@ -492,109 +438,16 @@ where
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
-    async fn write_states_saved(&mut self, states_saved: &StatesSaved) -> Result<(), E> {
+    async fn present<P>(&mut self, presentable: &P) -> Result<(), E>
+    where
+        P: Presentable + ?Sized,
+    {
         match self.outcome_format {
-            OutputFormat::Text => self.output_display(states_saved.iter()).await,
-            OutputFormat::Yaml => self.output_yaml(states_saved, Error::StatesSerialize).await,
+            OutputFormat::Text => self.output_presentable(presentable).await,
+            OutputFormat::Yaml => self.output_yaml(presentable, Error::StatesSerialize).await,
             #[cfg(feature = "output_json")]
             OutputFormat::Json => {
-                self.output_json(states_saved, Error::StatesSerializeJson)
-                    .await
-            }
-        }
-    }
-
-    async fn write_states_desired(&mut self, states_desired: &StatesDesired) -> Result<(), E> {
-        match self.outcome_format {
-            OutputFormat::Text => self.output_display(states_desired.iter()).await,
-            OutputFormat::Yaml => {
-                self.output_yaml(states_desired, Error::StatesSerialize)
-                    .await
-            }
-            #[cfg(feature = "output_json")]
-            OutputFormat::Json => {
-                self.output_json(states_desired, Error::StatesSerializeJson)
-                    .await
-            }
-        }
-    }
-
-    async fn write_state_diffs(&mut self, state_diffs: &StateDiffs) -> Result<(), E> {
-        match self.outcome_format {
-            OutputFormat::Text => self.output_display(state_diffs.iter()).await,
-            OutputFormat::Yaml => {
-                self.output_yaml(state_diffs, Error::StateDiffsSerialize)
-                    .await
-            }
-            #[cfg(feature = "output_json")]
-            OutputFormat::Json => {
-                self.output_json(state_diffs, Error::StateDiffsSerializeJson)
-                    .await
-            }
-        }
-    }
-
-    async fn write_states_ensured_dry(
-        &mut self,
-        states_ensured_dry: &StatesEnsuredDry,
-    ) -> Result<(), E> {
-        match self.outcome_format {
-            OutputFormat::Text => self.output_display(states_ensured_dry.iter()).await,
-            OutputFormat::Yaml => {
-                self.output_yaml(states_ensured_dry, Error::StatesSerialize)
-                    .await
-            }
-            #[cfg(feature = "output_json")]
-            OutputFormat::Json => {
-                self.output_json(states_ensured_dry, Error::StatesSerializeJson)
-                    .await
-            }
-        }
-    }
-
-    async fn write_states_ensured(&mut self, states_ensured: &StatesEnsured) -> Result<(), E> {
-        match self.outcome_format {
-            OutputFormat::Text => self.output_display(states_ensured.iter()).await,
-            OutputFormat::Yaml => {
-                self.output_yaml(states_ensured, Error::StatesSerialize)
-                    .await
-            }
-            #[cfg(feature = "output_json")]
-            OutputFormat::Json => {
-                self.output_json(states_ensured, Error::StatesSerializeJson)
-                    .await
-            }
-        }
-    }
-
-    async fn write_states_cleaned_dry(
-        &mut self,
-        states_cleaned_dry: &StatesCleanedDry,
-    ) -> Result<(), E> {
-        match self.outcome_format {
-            OutputFormat::Text => self.output_display(states_cleaned_dry.iter()).await,
-            OutputFormat::Yaml => {
-                self.output_yaml(states_cleaned_dry, Error::StatesSerialize)
-                    .await
-            }
-            #[cfg(feature = "output_json")]
-            OutputFormat::Json => {
-                self.output_json(states_cleaned_dry, Error::StatesSerializeJson)
-                    .await
-            }
-        }
-    }
-
-    async fn write_states_cleaned(&mut self, states_cleaned: &StatesCleaned) -> Result<(), E> {
-        match self.outcome_format {
-            OutputFormat::Text => self.output_display(states_cleaned.iter()).await,
-            OutputFormat::Yaml => {
-                self.output_yaml(states_cleaned, Error::StatesSerialize)
-                    .await
-            }
-            #[cfg(feature = "output_json")]
-            OutputFormat::Json => {
-                self.output_json(states_cleaned, Error::StatesSerializeJson)
+                self.output_json(presentable, Error::StatesSerializeJson)
                     .await
             }
         }

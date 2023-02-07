@@ -53,8 +53,8 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
     assert_eq!(
         vec![FnInvocation::new(
-            "write_states_desired",
-            vec![Some(format!("{states_from_read:?}"))],
+            "present",
+            vec![Some(serde_yaml::to_string(states_from_read)?)],
         )],
         fn_tracker_output.fn_invocations()
     );

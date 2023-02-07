@@ -35,7 +35,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
 pub struct FlowId(Cow<'static, str>);
 
-crate::id_newtype!(FlowId, FlowIdInvalidFmt, flow_id);
+crate::id_newtype!(FlowId, FlowIdInvalidFmt, flow_id, code_inline);
 
 impl FlowId {
     /// Flow ID used by the Peace framework when a command is for initializing a

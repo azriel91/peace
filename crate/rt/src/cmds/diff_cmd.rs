@@ -52,7 +52,7 @@ where
             Ok(resources) => {
                 {
                     let state_diffs = resources.borrow::<StateDiffs>();
-                    output.write_state_diffs(&state_diffs).await?;
+                    output.present(&*state_diffs).await?;
                 }
 
                 let cmd_context = CmdContext::from((
