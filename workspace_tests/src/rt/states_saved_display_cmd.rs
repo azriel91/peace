@@ -103,11 +103,11 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 fn debug() {
     let debug_str = format!(
         "{:?}",
-        StatesSavedDisplayCmd::<VecCopyError, NoOpOutput>::default()
+        StatesSavedDisplayCmd::<VecCopyError, NoOpOutput, (), (), ()>::default()
     );
     assert!(
         debug_str
-            == r#"StatesSavedDisplayCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput)>)"#
+            == r#"StatesSavedDisplayCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput, (), (), ())>)"#
             || debug_str == r#"StatesSavedDisplayCmd(PhantomData)"#
     );
 }

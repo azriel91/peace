@@ -6,11 +6,14 @@ use std::{
 use peace::{
     cfg::Profile,
     resources::resources::ts::SetUp,
-    rt_model::{cmd::CmdContext, output::OutputWrite, ItemSpecGraph, Workspace},
+    rt_model::{output::OutputWrite, ItemSpecGraph, Workspace},
 };
 use peace_item_specs::{file_download::FileDownloadParams, tar_x::TarXParams};
 
-use crate::model::{AppCycleError, EnvType, WebAppFileId};
+use crate::{
+    model::{AppCycleError, EnvType, WebAppFileId},
+    rt_model::CmdContext,
+};
 
 /// Builds a command context for the `app_cycle` example.
 ///
@@ -78,7 +81,7 @@ where
     }
 
     /// Creates the `CmdContext`.
-    pub async fn build(self) -> Result<CmdContext<'ctx, AppCycleError, O, SetUp>, AppCycleError> {
+    pub async fn build(self) -> Result<CmdContext<'ctx, O, SetUp>, AppCycleError> {
         let CmdCtxBuilder {
             workspace,
             graph,
@@ -89,13 +92,14 @@ where
             env_type,
         } = self;
 
-        let cmd_context_builder = CmdContext::builder(workspace, graph, output)
-            .with_workspace_param(
-                "web_app_file_download_params".to_string(),
-                web_app_file_download_params,
-            )
-            .with_workspace_param("web_app_tar_x_params".to_string(), web_app_tar_x_params)
-            .with_profile_param("env_type".to_string(), env_type);
+        let cmd_context_builder =
+            peace::rt_model::cmd::CmdContext::builder(workspace, graph, output)
+                .with_workspace_param(
+                    "web_app_file_download_params".to_string(),
+                    web_app_file_download_params,
+                )
+                .with_workspace_param("web_app_tar_x_params".to_string(), web_app_tar_x_params)
+                .with_profile_param("env_type".to_string(), env_type);
 
         // Profile is a workspace param, as it tells the command context which profile
         // to use.
@@ -126,12 +130,8 @@ where
 /// This is boxed since [TAIT] is not yet available.
 ///
 /// [TAIT]: https://rust-lang.github.io/impl-trait-initiative/explainer/tait.html
-pub type CmdContextFuture<'ctx, O> = Pin<
-    Box<
-        dyn Future<Output = Result<CmdContext<'ctx, AppCycleError, O, SetUp>, AppCycleError>>
-            + 'ctx,
-    >,
->;
+pub type CmdContextFuture<'ctx, O> =
+    Pin<Box<dyn Future<Output = Result<CmdContext<'ctx, O, SetUp>, AppCycleError>> + 'ctx>>;
 
 impl<'ctx, O> IntoFuture for CmdCtxBuilder<'ctx, O>
 where

@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
 use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
@@ -9,15 +9,24 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{cmd::CmdContext, Error, ItemSpecGraph, Storage};
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::BUFFERED_FUTURES_MAX;
 
 #[derive(Debug)]
-pub struct StatesCurrentDiscoverCmd<E, O>(PhantomData<(E, O)>);
+pub struct StatesCurrentDiscoverCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>(
+    PhantomData<(E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK)>,
+);
 
-impl<E, O> StatesCurrentDiscoverCmd<E, O>
+impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+    StatesCurrentDiscoverCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
 where
     E: std::error::Error + From<Error> + Send,
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
     ///
@@ -35,13 +44,19 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesCurrent>, E> {
+        cmd_context: CmdContext<'_, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+    ) -> Result<
+        CmdContext<'_, E, O, WithStatesCurrent, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+        E,
+    > {
         let CmdContext {
             workspace,
             item_spec_graph,
             output,
             mut resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -56,6 +71,9 @@ where
             item_spec_graph,
             output,
             resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -185,7 +203,9 @@ where
     }
 }
 
-impl<E, O> Default for StatesCurrentDiscoverCmd<E, O> {
+impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> Default
+    for StatesCurrentDiscoverCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+{
     fn default() -> Self {
         Self(PhantomData)
     }

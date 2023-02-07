@@ -226,3 +226,16 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
 
     Ok(())
 }
+
+#[test]
+fn debug() {
+    let debug_str = format!(
+        "{:?}",
+        EnsureCmd::<VecCopyError, NoOpOutput, (), (), ()>::default()
+    );
+    assert!(
+        debug_str
+            == r#"EnsureCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput, (), (), ())>)"#
+            || debug_str == r#"EnsureCmd(PhantomData)"#
+    );
+}

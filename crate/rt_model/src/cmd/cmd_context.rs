@@ -1,6 +1,11 @@
-use std::marker::PhantomData;
+use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
-use peace_resources::{resources::ts::SetUp, Resources};
+use peace_resources::{
+    resources::ts::SetUp,
+    type_reg::untagged::{BoxDt, TypeReg},
+    Resources,
+};
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     cmd::{cmd_context_builder::KeyUnknown, ts::CmdContextCommon, CmdContextBuilder},
@@ -36,7 +41,14 @@ use crate::{
 /// [`ProfileHistoryDir`]: peace_resources::paths::ProfileHistoryDir
 /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
 #[derive(Debug)]
-pub struct CmdContext<'ctx, E, O, TS> {
+pub struct CmdContext<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+where
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'ctx Workspace,
     /// Graph of item specs.
@@ -50,6 +62,12 @@ pub struct CmdContext<'ctx, E, O, TS> {
     pub output: &'ctx mut O,
     /// `Resources` in this workspace.
     pub resources: Resources<TS>,
+    /// Type registry for `WorkspaceParams` deserialization.
+    pub workspace_params_type_reg: TypeReg<WorkspaceParamsK, BoxDt>,
+    /// Type registry for `ProfileParams` deserialization.
+    pub profile_params_type_reg: TypeReg<ProfileParamsK, BoxDt>,
+    /// Type registry for `FlowParams` deserialization.
+    pub flow_params_type_reg: TypeReg<FlowParamsK, BoxDt>,
     /// Type registries to deserialize `StatesSavedFile` and
     /// `StatesDesiredFile`.
     pub states_type_regs: StatesTypeRegs,
@@ -60,7 +78,7 @@ pub struct CmdContext<'ctx, E, O, TS> {
     pub(crate) marker: PhantomData<()>,
 }
 
-impl<'ctx, E, O> CmdContext<'ctx, E, O, SetUp>
+impl<'ctx, E, O> CmdContext<'ctx, E, O, SetUp, (), (), ()>
 where
     E: std::error::Error + From<crate::Error>,
 {
@@ -83,35 +101,52 @@ where
 }
 
 #[cfg(not(feature = "output_progress"))]
-type CmdContextFields<'ctx, E, O, TS> = (
+type CmdContextFields<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK> = (
     &'ctx Workspace,
     &'ctx ItemSpecGraph<E>,
     &'ctx mut O,
     Resources<TS>,
+    TypeReg<WorkspaceParamsK, BoxDt>,
+    TypeReg<ProfileParamsK, BoxDt>,
+    TypeReg<FlowParamsK, BoxDt>,
     StatesTypeRegs,
 );
 
 #[cfg(feature = "output_progress")]
-type CmdContextFields<'ctx, E, O, TS> = (
+type CmdContextFields<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK> = (
     &'ctx Workspace,
     &'ctx ItemSpecGraph<E>,
     &'ctx mut O,
     Resources<TS>,
+    TypeReg<WorkspaceParamsK, BoxDt>,
+    TypeReg<ProfileParamsK, BoxDt>,
+    TypeReg<FlowParamsK, BoxDt>,
     StatesTypeRegs,
     crate::CmdProgressTracker,
 );
 
-impl<'ctx, E, O, TS> CmdContext<'ctx, E, O, TS>
+impl<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+    CmdContext<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
 where
     E: std::error::Error,
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     /// Returns the underlying data.
-    pub fn into_inner(self) -> CmdContextFields<'ctx, E, O, TS> {
+    pub fn into_inner(
+        self,
+    ) -> CmdContextFields<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK> {
         let Self {
             workspace,
             item_spec_graph,
             output,
             resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -123,6 +158,9 @@ where
             item_spec_graph,
             output,
             resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -158,37 +196,69 @@ where
     pub fn resources_mut(&mut self) -> &mut Resources<TS> {
         &mut self.resources
     }
+
+    /// Returns a reference to the workspace params type registry
+    pub fn workspace_params_type_reg(&self) -> &TypeReg<WorkspaceParamsK, BoxDt> {
+        &self.workspace_params_type_reg
+    }
+
+    /// Returns a reference to the profile params type registry
+    pub fn profile_params_type_reg(&self) -> &TypeReg<ProfileParamsK, BoxDt> {
+        &self.profile_params_type_reg
+    }
+
+    /// Returns a reference to the flow params type registry
+    pub fn flow_params_type_reg(&self) -> &TypeReg<FlowParamsK, BoxDt> {
+        &self.flow_params_type_reg
+    }
+
+    /// Returns a reference to the states type registries
+    pub fn states_type_regs(&self) -> &StatesTypeRegs {
+        &self.states_type_regs
+    }
 }
 
-impl<'ctx, E, O, TS> From<CmdContextFields<'ctx, E, O, TS>> for CmdContext<'ctx, E, O, TS> {
+impl<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+    From<CmdContextFields<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>>
+    for CmdContext<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+where
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
     fn from(
-        #[cfg(not(feature = "output_progress"))]
-        (workspace, item_spec_graph, output, resources, states_type_regs): CmdContextFields<
-            'ctx,
-            E,
-            O,
-            TS,
-        >,
-        #[cfg(feature = "output_progress")]
-        (
+        #[cfg(not(feature = "output_progress"))] (
             workspace,
             item_spec_graph,
             output,
             resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
+            states_type_regs,
+        ): CmdContextFields<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+        #[cfg(feature = "output_progress")] (
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
             states_type_regs,
             cmd_progress_tracker,
-        ): CmdContextFields<
-            'ctx,
-            E,
-            O,
-            TS,
-        >,
+        ): CmdContextFields<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
     ) -> Self {
         Self {
             workspace,
             item_spec_graph,
             output,
             resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -197,18 +267,49 @@ impl<'ctx, E, O, TS> From<CmdContextFields<'ctx, E, O, TS>> for CmdContext<'ctx,
     }
 }
 
-impl<'ctx, E, O, TS0, TS1, F> From<(CmdContext<'ctx, E, O, TS0>, F)> for CmdContext<'ctx, E, O, TS1>
+impl<'ctx, E, O, TS0, TS1, WorkspaceParamsK, ProfileParamsK, FlowParamsK, F>
+    From<(
+        CmdContext<'ctx, E, O, TS0, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+        F,
+    )> for CmdContext<'ctx, E, O, TS1, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
 where
     E: std::error::Error,
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
     F: FnOnce(Resources<TS0>) -> Resources<TS1>,
 {
-    fn from((cmd_context_ts0, f): (CmdContext<'ctx, E, O, TS0>, F)) -> Self {
+    fn from(
+        (cmd_context_ts0, f): (
+            CmdContext<'ctx, E, O, TS0, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+            F,
+        ),
+    ) -> Self {
         #[cfg(not(feature = "output_progress"))]
-        let (workspace, item_spec_graph, output, resources, states_type_regs) =
-            cmd_context_ts0.into_inner();
+        let (
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
+            states_type_regs,
+        ) = cmd_context_ts0.into_inner();
         #[cfg(feature = "output_progress")]
-        let (workspace, item_spec_graph, output, resources, states_type_regs, cmd_progress_tracker) =
-            cmd_context_ts0.into_inner();
+        let (
+            workspace,
+            item_spec_graph,
+            output,
+            resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
+            states_type_regs,
+            cmd_progress_tracker,
+        ) = cmd_context_ts0.into_inner();
         let resources: Resources<TS1> = f(resources);
 
         Self {
@@ -216,6 +317,9 @@ where
             item_spec_graph,
             output,
             resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,

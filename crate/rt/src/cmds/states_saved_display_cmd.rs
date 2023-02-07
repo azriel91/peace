@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
 use peace_resources::{
     resources::ts::{SetUp, WithStatesSaved},
@@ -6,16 +6,25 @@ use peace_resources::{
 };
 use peace_rt_model::{cmd::CmdContext, Error};
 use peace_rt_model_core::output::OutputWrite;
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::cmds::sub::StatesSavedReadCmd;
 
 /// Displays [`StatesCurrent`]s from storage.
 #[derive(Debug)]
-pub struct StatesSavedDisplayCmd<E, O>(PhantomData<(E, O)>);
+pub struct StatesSavedDisplayCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>(
+    PhantomData<(E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK)>,
+);
 
-impl<E, O> StatesSavedDisplayCmd<E, O>
+impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+    StatesSavedDisplayCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
 where
     E: std::error::Error + From<Error> + Send,
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
     O: OutputWrite<E>,
 {
     /// Displays [`StatesCurrent`]s from storage.
@@ -26,8 +35,11 @@ where
     /// [`StatesCurrentDiscoverCmd`]: crate::StatesCurrentDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesSaved>, E> {
+        mut cmd_context: CmdContext<'_, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+    ) -> Result<
+        CmdContext<'_, E, O, WithStatesSaved, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+        E,
+    > {
         let CmdContext {
             output,
             resources,
@@ -35,9 +47,14 @@ where
             ..
         } = &mut cmd_context;
 
-        let states_saved_result = StatesSavedReadCmd::<E, O>::exec_internal(
-            resources,
-            states_type_regs.states_current_type_reg(),
+        let states_saved_result = StatesSavedReadCmd::<
+            E,
+            O,
+            WorkspaceParamsK,
+            ProfileParamsK,
+            FlowParamsK,
+        >::exec_internal(
+            resources, states_type_regs.states_current_type_reg()
         )
         .await;
 
@@ -58,7 +75,9 @@ where
     }
 }
 
-impl<E, O> Default for StatesSavedDisplayCmd<E, O> {
+impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> Default
+    for StatesSavedDisplayCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+{
     fn default() -> Self {
         Self(PhantomData)
     }
