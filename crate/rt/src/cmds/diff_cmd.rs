@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
 use futures::{StreamExt, TryStreamExt};
 use peace_resources::{
@@ -8,15 +8,24 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{cmd::CmdContext, output::OutputWrite, Error, ItemSpecGraph, StatesTypeRegs};
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::cmds::sub::{StatesDesiredReadCmd, StatesSavedReadCmd};
 
 #[derive(Debug)]
-pub struct DiffCmd<E, O>(PhantomData<(E, O)>);
+pub struct DiffCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>(
+    PhantomData<(E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK)>,
+);
 
-impl<E, O> DiffCmd<E, O>
+impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+    DiffCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
 where
     E: std::error::Error + From<Error> + Send,
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
     O: OutputWrite<E>,
 {
     /// Runs [`StateDiffFnSpec`]` for each [`ItemSpec`].
@@ -31,13 +40,19 @@ where
     /// [`StateDiffFnSpec`]: peace_cfg::ItemSpec::StateDiffFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesSavedDiffs>, E> {
+        cmd_context: CmdContext<'_, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+    ) -> Result<
+        CmdContext<'_, E, O, WithStatesSavedDiffs, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+        E,
+    > {
         let CmdContext {
             workspace,
             item_spec_graph,
             output,
             resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -60,6 +75,9 @@ where
                     item_spec_graph,
                     output,
                     resources,
+                    workspace_params_type_reg,
+                    profile_params_type_reg,
+                    flow_params_type_reg,
                     states_type_regs,
                     #[cfg(feature = "output_progress")]
                     cmd_progress_tracker,
@@ -82,14 +100,19 @@ where
         mut resources: Resources<SetUp>,
         states_type_regs: &StatesTypeRegs,
     ) -> Result<Resources<WithStatesSavedDiffs>, E> {
-        let states_saved = StatesSavedReadCmd::<E, O>::exec_internal(
+        let states_saved = StatesSavedReadCmd::<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>::exec_internal(
             &mut resources,
             states_type_regs.states_current_type_reg(),
         )
         .await?;
-        let states_desired = StatesDesiredReadCmd::<E, O>::exec_internal(
-            &mut resources,
-            states_type_regs.states_desired_type_reg(),
+        let states_desired = StatesDesiredReadCmd::<
+            E,
+            O,
+            WorkspaceParamsK,
+            ProfileParamsK,
+            FlowParamsK,
+        >::exec_internal(
+            &mut resources, states_type_regs.states_desired_type_reg()
         )
         .await?;
 
@@ -116,5 +139,13 @@ where
 
         let resources = Resources::<WithStatesSavedDiffs>::from((resources, state_diffs));
         Ok(resources)
+    }
+}
+
+impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> Default
+    for DiffCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+{
+    fn default() -> Self {
+        Self(PhantomData)
     }
 }

@@ -1,20 +1,28 @@
-use peace_rt_model::Error;
-use std::marker::PhantomData;
+use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
 use peace_resources::{
     resources::ts::{SetUp, WithStatesCurrentAndDesired},
     Resources,
 };
-use peace_rt_model::cmd::CmdContext;
+use peace_rt_model::{cmd::CmdContext, Error};
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::cmds::sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd};
 
 #[derive(Debug)]
-pub struct StatesDiscoverCmd<E, O>(PhantomData<(E, O)>);
+pub struct StatesDiscoverCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>(
+    PhantomData<(E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK)>,
+);
 
-impl<E, O> StatesDiscoverCmd<E, O>
+impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+    StatesDiscoverCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
 where
     E: std::error::Error + From<Error> + Send,
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     /// Runs [`StateCurrentFnSpec`]` and
     /// `[`StateDesiredFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
@@ -30,24 +38,48 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesCurrentAndDesired>, E> {
+        cmd_context: CmdContext<'_, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+    ) -> Result<
+        CmdContext<
+            '_,
+            E,
+            O,
+            WithStatesCurrentAndDesired,
+            WorkspaceParamsK,
+            ProfileParamsK,
+            FlowParamsK,
+        >,
+        E,
+    > {
         let CmdContext {
             workspace,
             item_spec_graph,
             output,
             mut resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
             ..
         } = cmd_context;
-        let states_current =
-            StatesCurrentDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
-                .await?;
-        let states_desired =
-            StatesDesiredDiscoverCmd::<E, O>::exec_internal(item_spec_graph, &mut resources)
-                .await?;
+        let states_current = StatesCurrentDiscoverCmd::<
+            E,
+            O,
+            WorkspaceParamsK,
+            ProfileParamsK,
+            FlowParamsK,
+        >::exec_internal(item_spec_graph, &mut resources)
+        .await?;
+        let states_desired = StatesDesiredDiscoverCmd::<
+            E,
+            O,
+            WorkspaceParamsK,
+            ProfileParamsK,
+            FlowParamsK,
+        >::exec_internal(item_spec_graph, &mut resources)
+        .await?;
 
         let resources = Resources::<WithStatesCurrentAndDesired>::from((
             resources,
@@ -60,6 +92,9 @@ where
             item_spec_graph,
             output,
             resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -68,7 +103,9 @@ where
     }
 }
 
-impl<E, O> Default for StatesDiscoverCmd<E, O> {
+impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> Default
+    for StatesDiscoverCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+{
     fn default() -> Self {
         Self(PhantomData)
     }

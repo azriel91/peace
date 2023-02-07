@@ -59,11 +59,11 @@ async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::erro
 fn debug() {
     let debug_str = format!(
         "{:?}",
-        StatesDesiredDiscoverCmd::<VecCopyError, NoOpOutput>::default()
+        StatesDesiredDiscoverCmd::<VecCopyError, NoOpOutput, (), (), ()>::default()
     );
     assert!(
         debug_str
-            == r#"StatesDesiredDiscoverCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput)>)"#
+            == r#"StatesDesiredDiscoverCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput, (), (), ())>)"#
             || debug_str == r#"StatesDesiredDiscoverCmd(PhantomData)"#
     );
 }

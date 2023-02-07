@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
 use peace_cfg::ItemSpecId;
 use peace_resources::{
@@ -9,14 +9,23 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{cmd::CmdContext, Error, StatesSerializer, Storage};
+use serde::{de::DeserializeOwned, Serialize};
 
 /// Reads [`StatesSaved`]s from storage.
 #[derive(Debug)]
-pub struct StatesSavedReadCmd<E, O>(PhantomData<(E, O)>);
+pub struct StatesSavedReadCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>(
+    PhantomData<(E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK)>,
+);
 
-impl<E, O> StatesSavedReadCmd<E, O>
+impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+    StatesSavedReadCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
 where
     E: std::error::Error + From<Error> + Send,
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     /// Reads [`StatesSaved`]s from storage.
     ///
@@ -26,8 +35,11 @@ where
     /// [`StatesCurrentDiscoverCmd`]: crate::StatesCurrentDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesSaved>, E> {
+        mut cmd_context: CmdContext<'_, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+    ) -> Result<
+        CmdContext<'_, E, O, WithStatesSaved, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+        E,
+    > {
         let CmdContext {
             resources,
             states_type_regs,
@@ -71,7 +83,9 @@ where
     }
 }
 
-impl<E, O> Default for StatesSavedReadCmd<E, O> {
+impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> Default
+    for StatesSavedReadCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+{
     fn default() -> Self {
         Self(PhantomData)
     }

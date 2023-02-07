@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
 use peace_cfg::{ItemSpecId, OpCtx};
 use peace_resources::{
@@ -14,6 +14,7 @@ use peace_rt_model::{
     output::OutputWrite,
     Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt, Storage,
 };
+use serde::{de::DeserializeOwned, Serialize};
 use tokio::sync::{mpsc, mpsc::UnboundedSender};
 
 use crate::BUFFERED_FUTURES_MAX;
@@ -37,11 +38,19 @@ cfg_if::cfg_if! {
 }
 
 #[derive(Debug)]
-pub struct EnsureCmd<E, O>(PhantomData<(E, O)>);
+pub struct EnsureCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>(
+    PhantomData<(E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK)>,
+);
 
-impl<E, O> EnsureCmd<E, O>
+impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+    EnsureCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
 where
     E: std::error::Error + From<Error> + Send,
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
     O: OutputWrite<E>,
 {
     #[cfg(feature = "output_progress")]
@@ -73,13 +82,17 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec_dry(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, EnsuredDry>, E> {
+        cmd_context: CmdContext<'_, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+    ) -> Result<CmdContext<'_, E, O, EnsuredDry, WorkspaceParamsK, ProfileParamsK, FlowParamsK>, E>
+    {
         let CmdContext {
             workspace,
             item_spec_graph,
             output,
             resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             mut cmd_progress_tracker,
@@ -107,6 +120,9 @@ where
                     item_spec_graph,
                     output,
                     resources,
+                    workspace_params_type_reg,
+                    profile_params_type_reg,
+                    flow_params_type_reg,
                     states_type_regs,
                     #[cfg(feature = "output_progress")]
                     cmd_progress_tracker,
@@ -147,13 +163,17 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp>,
-    ) -> Result<CmdContext<'_, E, O, Ensured>, E> {
+        cmd_context: CmdContext<'_, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+    ) -> Result<CmdContext<'_, E, O, Ensured, WorkspaceParamsK, ProfileParamsK, FlowParamsK>, E>
+    {
         let CmdContext {
             workspace,
             item_spec_graph,
             output,
             resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             mut cmd_progress_tracker,
@@ -183,6 +203,9 @@ where
                     item_spec_graph,
                     output,
                     resources,
+                    workspace_params_type_reg,
+                    profile_params_type_reg,
+                    flow_params_type_reg,
                     states_type_regs,
                     #[cfg(feature = "output_progress")]
                     cmd_progress_tracker,
@@ -504,6 +527,14 @@ where
         drop(storage);
 
         Ok(())
+    }
+}
+
+impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> Default
+    for EnsureCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+{
+    fn default() -> Self {
+        Self(PhantomData)
     }
 }
 

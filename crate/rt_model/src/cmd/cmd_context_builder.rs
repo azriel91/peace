@@ -380,7 +380,20 @@ where
     /// * `workspace_params`: Initialization parameters for the workspace.
     /// * `profile_params`: Initialization parameters for the profile.
     /// * `flow_params`: Initialization parameters for the flow.
-    pub async fn build(mut self) -> Result<CmdContext<'ctx, E, O, SetUp>, E> {
+    pub async fn build(
+        mut self,
+    ) -> Result<
+        CmdContext<
+            'ctx,
+            E,
+            O,
+            SetUp,
+            WorkspaceParamsKMaybe::Key,
+            ProfileParamsKMaybe::Key,
+            FlowParamsKMaybe::Key,
+        >,
+        E,
+    > {
         // 1. Load workspace params from workspace_params_file
         // 2. Determine profile from workspace params.
         // 3. Load profile params / flow params.
@@ -495,11 +508,11 @@ where
             profile_selection: _,
             flow_id,
             workspace_params: _,
-            workspace_params_type_reg: _,
+            workspace_params_type_reg,
             profile_params: _,
-            profile_params_type_reg: _,
+            profile_params_type_reg,
             flow_params: _,
-            flow_params_type_reg: _,
+            flow_params_type_reg,
             marker: _,
         } = self;
 
@@ -545,6 +558,9 @@ where
             item_spec_graph,
             output,
             resources,
+            workspace_params_type_reg,
+            profile_params_type_reg,
+            flow_params_type_reg,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -679,8 +695,16 @@ where
 /// This is boxed since [TAIT] is not yet available.
 ///
 /// [TAIT]: https://rust-lang.github.io/impl-trait-initiative/explainer/tait.html
-pub type CmdContextFuture<'ctx, E, O> =
-    Pin<Box<dyn Future<Output = Result<CmdContext<'ctx, E, O, SetUp>, E>> + 'ctx>>;
+pub type CmdContextFuture<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> = Pin<
+    Box<
+        dyn Future<
+                Output = Result<
+                    CmdContext<'ctx, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+                    E,
+                >,
+            > + 'ctx,
+    >,
+>;
 
 impl<'ctx, E, O, TS, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe> IntoFuture
     for CmdContextBuilder<
@@ -699,7 +723,14 @@ where
     ProfileParamsKMaybe: KeyMaybe + 'ctx,
     FlowParamsKMaybe: KeyMaybe + 'ctx,
 {
-    type IntoFuture = CmdContextFuture<'ctx, E, O>;
+    type IntoFuture = CmdContextFuture<
+        'ctx,
+        E,
+        O,
+        WorkspaceParamsKMaybe::Key,
+        ProfileParamsKMaybe::Key,
+        FlowParamsKMaybe::Key,
+    >;
     type Output = <Self::IntoFuture as Future>::Output;
 
     fn into_future(self) -> Self::IntoFuture {

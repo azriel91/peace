@@ -125,3 +125,16 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
 
     Ok(())
 }
+
+#[test]
+fn debug() {
+    let debug_str = format!(
+        "{:?}",
+        DiffCmd::<VecCopyError, NoOpOutput, (), (), ()>::default()
+    );
+    assert!(
+        debug_str
+            == r#"DiffCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput, (), (), ())>)"#
+            || debug_str == r#"DiffCmd(PhantomData)"#
+    );
+}
