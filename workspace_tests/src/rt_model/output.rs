@@ -1,3 +1,4 @@
+mod cli_md_presenter;
 mod cli_output;
 mod cli_output_builder;
 mod output_format;

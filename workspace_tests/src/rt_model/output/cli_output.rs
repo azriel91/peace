@@ -111,8 +111,8 @@ async fn outputs_states_as_text_colorized() -> Result<(), Box<dyn std::error::Er
     let output = String::from_utf8(buffer)?;
     assert_eq!(
         "\
-        1. \u{1b}[38;5;75m`item_0`\u{1b}[0m: logical, 1.1\n\
-        2. \u{1b}[38;5;75m`item_1`\u{1b}[0m: 1, true\n",
+        \u{1b}[38;5;15m1.\u{1b}[0m \u{1b}[38;5;75m`item_0`\u{1b}[0m: logical, 1.1\n\
+        \u{1b}[38;5;15m2.\u{1b}[0m \u{1b}[38;5;75m`item_1`\u{1b}[0m: 1, true\n",
         output
     );
     assert_eq!(
@@ -142,8 +142,8 @@ async fn outputs_state_diffs_as_text_colorized() -> Result<(), Box<dyn std::erro
     let output = String::from_utf8(buffer)?;
     assert_eq!(
         "\
-        1. \u{1b}[38;5;75m`item_0`\u{1b}[0m: need one more server\n\
-        2. \u{1b}[38;5;75m`item_1`\u{1b}[0m: 1\n",
+        \u{1b}[38;5;15m1.\u{1b}[0m \u{1b}[38;5;75m`item_0`\u{1b}[0m: need one more server\n\
+        \u{1b}[38;5;15m2.\u{1b}[0m \u{1b}[38;5;75m`item_1`\u{1b}[0m: 1\n",
         output
     );
     assert_eq!(

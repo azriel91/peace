@@ -58,6 +58,38 @@ where
             .unwrap_or(0)
             + 1
     }
+
+    /// Pedantic: Don't highlight surrounding spaces with white.
+    #[cfg(feature = "output_colorized")]
+    async fn colorize_list_number(
+        &mut self,
+        style: &console::Style,
+        number_column_count: usize,
+        list_number: usize,
+    ) -> Result<(), std::io::Error> {
+        let colorize = self.output.colorize;
+        let writer = &mut self.output.writer;
+
+        let list_number_digits = list_number
+            .checked_ilog10()
+            .and_then(|log10| usize::try_from(log10).ok())
+            .unwrap_or(0)
+            + 1;
+        let leading_space_count: usize = number_column_count.saturating_sub(list_number_digits);
+
+        if colorize == CliColorize::Colored {
+            let list_number_colorized = style.apply_to(format!("{list_number}."));
+            let leading_spaces = " ".repeat(leading_space_count);
+            writer
+                .write_all(format!("{leading_spaces}{list_number_colorized} ").as_bytes())
+                .await?;
+        } else {
+            let list_number_padded = format!("{list_number:>number_column_count$}. ");
+            writer.write_all(list_number_padded.as_bytes()).await?;
+        }
+
+        Ok(())
+    }
 }
 
 #[async_trait(?Send)]
@@ -84,14 +116,17 @@ where
     #[cfg(feature = "output_colorized")]
     async fn name(&mut self, name: &str) -> Result<(), Self::Error> {
         let style = console::Style::new().bold();
-        self.colorize_maybe(name, &style).await?;
+        self.colorize_maybe(format!("**{name}**").as_str(), &style)
+            .await?;
 
         Ok(())
     }
 
     #[cfg(not(feature = "output_colorized"))]
     async fn name(&mut self, name: &str) -> Result<(), Self::Error> {
+        self.output.writer.write_all(b"**").await?;
         self.output.writer.write_all(name.as_bytes()).await?;
+        self.output.writer.write_all(b"**").await?;
         Ok(())
     }
 
@@ -127,9 +162,9 @@ where
     }
 
     #[cfg(not(feature = "output_colorized"))]
-    async fn code_inline(&mut self, text: &str) -> Result<(), Self::Error> {
+    async fn code_inline(&mut self, code: &str) -> Result<(), Self::Error> {
         self.output.writer.write_all(b"`").await?;
-        self.output.writer.write_all(text.as_bytes()).await?;
+        self.output.writer.write_all(code.as_bytes()).await?;
         self.output.writer.write_all(b"`").await?;
         Ok(())
     }
@@ -142,11 +177,24 @@ where
         let iterator = iter.into_iter();
         let number_column_count = Self::number_column_count(&iterator);
         for (index, entry) in iterator.enumerate() {
-            let n = index + 1;
-            self.output
-                .writer
-                .write_all(format!("{n:>number_column_count$}. ").as_bytes())
-                .await?;
+            let list_number = index + 1;
+
+            #[cfg(feature = "output_colorized")]
+            {
+                let style = &console::Style::new().color256(15); // white
+                self.colorize_list_number(style, number_column_count, list_number)
+                    .await?;
+            }
+
+            #[cfg(not(feature = "output_colorized"))]
+            {
+                let list_number_padded = format!("{list_number:>number_column_count$}. ");
+                self.output
+                    .writer
+                    .write_all(list_number_padded.as_bytes())
+                    .await?;
+            }
+
             entry.present(self).await?;
             self.output.writer.write_all(b"\n").await?;
         }
@@ -164,11 +212,24 @@ where
         let iterator = iter.into_iter();
         let number_column_count = Self::number_column_count(&iterator);
         for (index, entry) in iterator.enumerate() {
-            let n = index + 1;
-            self.output
-                .writer
-                .write_all(format!("{n:>number_column_count$}. ").as_bytes())
-                .await?;
+            let list_number = index + 1;
+
+            #[cfg(feature = "output_colorized")]
+            {
+                let style = &console::Style::new().color256(15); // white
+                self.colorize_list_number(style, number_column_count, list_number)
+                    .await?;
+            }
+
+            #[cfg(not(feature = "output_colorized"))]
+            {
+                let list_number_padded = format!("{list_number:>number_column_count$}. ");
+                self.output
+                    .writer
+                    .write_all(list_number_padded.as_bytes())
+                    .await?;
+            }
+
             let presentable = f(entry);
             presentable.present(self).await?;
             self.output.writer.write_all(b"\n").await?;
@@ -183,7 +244,16 @@ where
         I: IntoIterator<Item = &'f P>,
     {
         for entry in iter.into_iter() {
+            #[cfg(feature = "output_colorized")]
+            {
+                let style = &console::Style::new().color256(15); // white
+                self.colorize_maybe("*", style).await?;
+                self.output.writer.write_all(b" ").await?;
+            }
+
+            #[cfg(not(feature = "output_colorized"))]
             self.output.writer.write_all(b"* ").await?;
+
             entry.present(self).await?;
             self.output.writer.write_all(b"\n").await?;
         }
@@ -199,7 +269,16 @@ where
         F: Fn(T) -> P,
     {
         for entry in iter.into_iter() {
+            #[cfg(feature = "output_colorized")]
+            {
+                let style = &console::Style::new().color256(15); // white
+                self.colorize_maybe("*", style).await?;
+                self.output.writer.write_all(b" ").await?;
+            }
+
+            #[cfg(not(feature = "output_colorized"))]
             self.output.writer.write_all(b"* ").await?;
+
             let presentable = f(entry);
             presentable.present(self).await?;
             self.output.writer.write_all(b"\n").await?;
