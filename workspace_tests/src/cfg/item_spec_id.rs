@@ -1,6 +1,11 @@
 use std::{borrow::Cow, str::FromStr};
 
-use peace::cfg::{ItemSpecId, ItemSpecIdInvalidFmt};
+use peace::{
+    cfg::{ItemSpecId, ItemSpecIdInvalidFmt},
+    fmt::Presentable,
+};
+
+use crate::{FnInvocation, FnTrackerPresenter};
 
 #[test]
 fn from_str_returns_ok_owned_for_valid_id() -> Result<(), ItemSpecIdInvalidFmt<'static>> {
@@ -71,6 +76,23 @@ fn display_returns_inner_str() -> Result<(), ItemSpecIdInvalidFmt<'static>> {
     let item_spec_id = ItemSpecId::try_from("good_id")?;
 
     assert_eq!("good_id", item_spec_id.to_string());
+    Ok(())
+}
+
+#[tokio::test]
+async fn present_uses_code_inline() -> Result<(), Box<dyn std::error::Error>> {
+    let mut presenter = FnTrackerPresenter::new();
+    let item_spec_id = ItemSpecId::try_from("item_spec_id")?;
+
+    item_spec_id.present(&mut presenter).await?;
+
+    assert_eq!(
+        vec![FnInvocation::new(
+            "code_inline",
+            vec![Some(r#""item_spec_id""#.to_string())]
+        )],
+        presenter.fn_invocations()
+    );
     Ok(())
 }
 
