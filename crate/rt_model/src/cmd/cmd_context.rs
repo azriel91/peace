@@ -22,24 +22,71 @@ use crate::{
 /// Members of `Workspace` -- where the command should be run -- are
 /// individually stored in `Resources`:
 ///
-/// * [`Profile`]
-/// * [`WorkspaceDir`]
+/// * [`FlowDir`]
 /// * [`PeaceDir`]
+/// * [`Profile`]
 /// * [`ProfileDir`]
 /// * [`ProfileHistoryDir`]
+/// * [`WorkspaceDir`]
 ///
 /// # Type Parameters
 ///
 /// * `E`: Consumer provided error type.
 /// * `O`: [`OutputWrite`] to return values / errors to.
-/// * `TS`: Type state of `Resources`.
+/// * `WorkspaceParamsK`: [`WorkspaceParams`] map `K` type parameter.
+/// * `ProfileParamsK`: [`ProfileParams`] map `K` type parameter.
+/// * `FlowParamsK`: [`FlowParams`] map `K` type parameter.
 ///
-/// [`Profile`]: peace_cfg::Profile
-/// [`WorkspaceDir`]: peace_resources::paths::WorkspaceDir
+/// # Design
+///
+/// * [`WorkspaceParams`], [`ProfileParams`], and [`FlowParams`]' types must be
+///   specified, if they are to be deserialized.
+///
+/// * Notably, [`ProfileParams`] and [`FlowParams`] *may* be different for
+///   different profiles and flows.
+///
+///     If they are different, then it makes it impossible to deserialize them
+///     for a given `CmdContext`. We could constrain the params types to be a
+///     superset of all profile/flow params, which essentially is making them
+///     the same umbrella type.
+///
+///     This should be feasible for [`ProfileParams`], as profiles are intended
+///     to be logically separate copies of the same managed items. Production
+///     profiles may require more parameters, but the parameter type can be the
+///     same.
+///
+///     However, [`FlowParams`] being different per flow is a fair assumption.
+///     This means cross profile inspections of the same flow is achievable --
+///     the same [`FlowParams`] type and [`ItemSpecGraph`] can prepare the
+///     [`TypeReg`]istries to deserialize the [`FlowParamsFile`],
+///     [`StatesSavedFile`], and [`StatesDesiredFile`].
+///
+/// * A [`Profile`] is needed when there are [`ProfileParams`] to store, as it
+///   is used to calculate the [`ProfileDir`] to store the params.
+///
+/// * A [`FlowId`] is needed when there are [`FlowParams`] to store, or an
+///   [`ItemSpecGraph`] to execute, as it is used calculate the [`FlowDir`] to
+///   store the params, or read or write [`States`].
+///
+/// * You should be able to list profiles, read profile params, and list flows,
+///   without needing to have either a profile or a flow.
+///
+/// * For [`States`] from all flows to be deserializable, there must be a type
+///   registry with *all* item specs' `State` registered. This is a maintenance
+///   cost for implementors, but unavoidable if that kind of functionality is
+///   desired.
+///
+/// [`FlowDir`]: peace_resources::paths::FlowDir
+/// [`FlowParams`]: crate::cmd_context_params::FlowParams
+/// [`OutputWrite`]: peace_rt_model_core::OutputWrite
 /// [`PeaceDir`]: peace_resources::paths::PeaceDir
+/// [`Profile`]: peace_cfg::Profile
 /// [`ProfileDir`]: peace_resources::paths::ProfileDir
 /// [`ProfileHistoryDir`]: peace_resources::paths::ProfileHistoryDir
-/// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+/// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+/// [`States`]: peace_resources::States
+/// [`WorkspaceDir`]: peace_resources::paths::WorkspaceDir
+/// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
 #[derive(Debug)]
 pub struct CmdContext<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
 where
@@ -62,11 +109,17 @@ where
     pub output: &'ctx mut O,
     /// `Resources` in this workspace.
     pub resources: Resources<TS>,
-    /// Type registry for `WorkspaceParams` deserialization.
+    /// Type registry for [`WorkspaceParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
     pub workspace_params_type_reg: TypeReg<WorkspaceParamsK, BoxDt>,
-    /// Type registry for `ProfileParams` deserialization.
+    /// Type registry for [`ProfileParams`] deserialization.
+    ///
+    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
     pub profile_params_type_reg: TypeReg<ProfileParamsK, BoxDt>,
-    /// Type registry for `FlowParams` deserialization.
+    /// Type registry for [`FlowParams`] deserialization.
+    ///
+    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
     pub flow_params_type_reg: TypeReg<FlowParamsK, BoxDt>,
     /// Type registries to deserialize `StatesSavedFile` and
     /// `StatesDesiredFile`.
