@@ -241,7 +241,7 @@ where
                 {
                     use miette::NamedSource;
 
-                    let file_contents = std::fs::read_to_string(&states_file_path).unwrap();
+                    let file_contents = std::fs::read_to_string(states_file_path).unwrap();
 
                     let (error_span, error_message, context_span) =
                         Self::error_and_context(&file_contents, &error);
