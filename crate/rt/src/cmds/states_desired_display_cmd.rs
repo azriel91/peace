@@ -1,30 +1,22 @@
-use std::{fmt::Debug, hash::Hash, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData};
 
 use peace_resources::{
     resources::ts::{SetUp, WithStatesDesired},
     Resources,
 };
-use peace_rt_model::{cmd::CmdContext, Error};
+use peace_rt_model::{cmd::CmdContext, cmd_context_params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
-use serde::{de::DeserializeOwned, Serialize};
 
 use crate::cmds::sub::StatesDesiredReadCmd;
 
 /// Displays [`StatesDesired`]s from storage.
 #[derive(Debug)]
-pub struct StatesDesiredDisplayCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>(
-    PhantomData<(E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK)>,
-);
+pub struct StatesDesiredDisplayCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
-impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
-    StatesDesiredDisplayCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+impl<E, O, PKeys> StatesDesiredDisplayCmd<E, O, PKeys>
 where
     E: std::error::Error + From<Error> + Send,
-    WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
     /// Displays [`StatesDesired`]s from storage.
@@ -35,11 +27,8 @@ where
     /// [`StatesDesiredDiscoverCmd`]: crate::StatesDesiredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_context: CmdContext<'_, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
-    ) -> Result<
-        CmdContext<'_, E, O, WithStatesDesired, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
-        E,
-    > {
+        mut cmd_context: CmdContext<'_, E, O, SetUp, PKeys>,
+    ) -> Result<CmdContext<'_, E, O, WithStatesDesired, PKeys>, E> {
         let CmdContext {
             output,
             resources,
@@ -47,14 +36,9 @@ where
             ..
         } = &mut cmd_context;
 
-        let states_desired_result = StatesDesiredReadCmd::<
-            E,
-            O,
-            WorkspaceParamsK,
-            ProfileParamsK,
-            FlowParamsK,
-        >::exec_internal(
-            resources, states_type_regs.states_desired_type_reg()
+        let states_desired_result = StatesDesiredReadCmd::<E, O, PKeys>::exec_internal(
+            resources,
+            states_type_regs.states_desired_type_reg(),
         )
         .await;
 
@@ -75,9 +59,7 @@ where
     }
 }
 
-impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> Default
-    for StatesDesiredDisplayCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
-{
+impl<E, O, PKeys> Default for StatesDesiredDisplayCmd<E, O, PKeys> {
     fn default() -> Self {
         Self(PhantomData)
     }

@@ -1,4 +1,4 @@
-use std::{fmt::Debug, hash::Hash, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData};
 
 use futures::{StreamExt, TryStreamExt};
 use peace_resources::{
@@ -7,25 +7,20 @@ use peace_resources::{
     states::StateDiffs,
     Resources,
 };
-use peace_rt_model::{cmd::CmdContext, output::OutputWrite, Error, ItemSpecGraph, StatesTypeRegs};
-use serde::{de::DeserializeOwned, Serialize};
+use peace_rt_model::{
+    cmd::CmdContext, cmd_context_params::ParamsKeys, output::OutputWrite, Error, ItemSpecGraph,
+    StatesTypeRegs,
+};
 
 use crate::cmds::sub::{StatesDesiredReadCmd, StatesSavedReadCmd};
 
 #[derive(Debug)]
-pub struct DiffCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>(
-    PhantomData<(E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK)>,
-);
+pub struct DiffCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
-impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
-    DiffCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+impl<E, O, PKeys> DiffCmd<E, O, PKeys>
 where
     E: std::error::Error + From<Error> + Send,
-    WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
     /// Runs [`StateDiffFnSpec`]` for each [`ItemSpec`].
@@ -40,19 +35,14 @@ where
     /// [`StateDiffFnSpec`]: peace_cfg::ItemSpec::StateDiffFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
-    ) -> Result<
-        CmdContext<'_, E, O, WithStatesSavedDiffs, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
-        E,
-    > {
+        cmd_context: CmdContext<'_, E, O, SetUp, PKeys>,
+    ) -> Result<CmdContext<'_, E, O, WithStatesSavedDiffs, PKeys>, E> {
         let CmdContext {
             workspace,
             item_spec_graph,
             output,
             resources,
-            workspace_params_type_reg,
-            profile_params_type_reg,
-            flow_params_type_reg,
+            params_type_regs,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -75,9 +65,7 @@ where
                     item_spec_graph,
                     output,
                     resources,
-                    workspace_params_type_reg,
-                    profile_params_type_reg,
-                    flow_params_type_reg,
+                    params_type_regs,
                     states_type_regs,
                     #[cfg(feature = "output_progress")]
                     cmd_progress_tracker,
@@ -100,19 +88,14 @@ where
         mut resources: Resources<SetUp>,
         states_type_regs: &StatesTypeRegs,
     ) -> Result<Resources<WithStatesSavedDiffs>, E> {
-        let states_saved = StatesSavedReadCmd::<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>::exec_internal(
+        let states_saved = StatesSavedReadCmd::<E, O, PKeys>::exec_internal(
             &mut resources,
             states_type_regs.states_current_type_reg(),
         )
         .await?;
-        let states_desired = StatesDesiredReadCmd::<
-            E,
-            O,
-            WorkspaceParamsK,
-            ProfileParamsK,
-            FlowParamsK,
-        >::exec_internal(
-            &mut resources, states_type_regs.states_desired_type_reg()
+        let states_desired = StatesDesiredReadCmd::<E, O, PKeys>::exec_internal(
+            &mut resources,
+            states_type_regs.states_desired_type_reg(),
         )
         .await?;
 
@@ -142,9 +125,7 @@ where
     }
 }
 
-impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> Default
-    for DiffCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
-{
+impl<E, O, PKeys> Default for DiffCmd<E, O, PKeys> {
     fn default() -> Self {
         Self(PhantomData)
     }
