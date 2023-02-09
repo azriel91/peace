@@ -12,7 +12,7 @@ use peace_item_specs::{file_download::FileDownloadParams, tar_x::TarXParams};
 
 use crate::{
     model::{AppCycleError, EnvType, WebAppFileId},
-    rt_model::CmdContext,
+    rt_model::AppCycleCmdContext,
 };
 
 /// Builds a command context for the `app_cycle` example.
@@ -81,7 +81,7 @@ where
     }
 
     /// Creates the `CmdContext`.
-    pub async fn build(self) -> Result<CmdContext<'ctx, O, SetUp>, AppCycleError> {
+    pub async fn build(self) -> Result<AppCycleCmdContext<'ctx, O, SetUp>, AppCycleError> {
         let CmdCtxBuilder {
             workspace,
             graph,
@@ -131,7 +131,7 @@ where
 ///
 /// [TAIT]: https://rust-lang.github.io/impl-trait-initiative/explainer/tait.html
 pub type CmdContextFuture<'ctx, O> =
-    Pin<Box<dyn Future<Output = Result<CmdContext<'ctx, O, SetUp>, AppCycleError>> + 'ctx>>;
+    Pin<Box<dyn Future<Output = Result<AppCycleCmdContext<'ctx, O, SetUp>, AppCycleError>> + 'ctx>>;
 
 impl<'ctx, O> IntoFuture for CmdCtxBuilder<'ctx, O>
 where

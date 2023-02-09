@@ -23,7 +23,7 @@ cfg_if::cfg_if! {
             rt_model::{cmd_context_params::ProfileParams, Storage},
         };
 
-        use crate::rt_model::CmdContext;
+        use crate::rt_model::AppCycleCmdContext;
     }
 }
 
@@ -83,7 +83,7 @@ impl ProfileListCmd {
     /// Lists profiles in the `PeaceAppDir`, and read their environment type.
     #[cfg(not(target_arch = "wasm32"))]
     async fn profiles_list<'ctx, O, TS>(
-        cmd_context: &CmdContext<'ctx, O, TS>,
+        cmd_context: &AppCycleCmdContext<'ctx, O, TS>,
     ) -> Result<Vec<(Profile, EnvType)>, AppCycleError> {
         let resources = cmd_context.resources();
         let peace_app_dir = &*resources.borrow::<PeaceAppDir>();
@@ -129,7 +129,7 @@ impl ProfileListCmd {
                     let profile_dir = ProfileDir::new(entry_path);
                     let env_type = Self::profile_env_type(
                         &profile,
-                        cmd_context.profile_params_type_reg(),
+                        cmd_context.params_type_regs().profile_params_type_reg(),
                         &profile_dir,
                     )
                     .await?;
