@@ -6,10 +6,13 @@ use peace_resources::{
     internal::{CmdDirs, FlowParamsFile, ProfileParamsFile, WorkspaceDirs, WorkspaceParamsFile},
     type_reg::untagged::TypeReg,
 };
-use peace_rt_model_core::cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams};
+use peace_rt_model_core::{
+    cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams},
+    Error, NativeError,
+};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{Error, Storage};
+use crate::Storage;
 
 /// Logic to create peace directories and reads/writes initialization params.
 ///
@@ -64,7 +67,7 @@ impl WorkspaceInitializer {
             .try_for_each(|dir| async move {
                 tokio::fs::create_dir_all(dir).await.map_err(|error| {
                     let path = dir.to_path_buf();
-                    Error::WorkspaceDirCreate { path, error }
+                    Error::Native(NativeError::WorkspaceDirCreate { path, error })
                 })
             })
             .await

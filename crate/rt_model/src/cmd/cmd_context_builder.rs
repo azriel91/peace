@@ -25,6 +25,9 @@ use crate::{
     WorkspaceInitializer,
 };
 
+#[cfg(not(target_arch = "wasm32"))]
+use peace_rt_model_core::NativeError;
+
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use std::collections::HashMap;
@@ -452,9 +455,11 @@ where
         #[cfg(not(target_arch = "wasm32"))]
         {
             let workspace_dir = workspace_dirs.workspace_dir();
-            std::env::set_current_dir(workspace_dir).map_err(|error| Error::CurrentDirSet {
-                workspace_dir: workspace_dir.clone(),
-                error,
+            std::env::set_current_dir(workspace_dir).map_err(|error| {
+                Error::Native(NativeError::CurrentDirSet {
+                    workspace_dir: workspace_dir.clone(),
+                    error,
+                })
             })?;
 
             WorkspaceInitializer::dirs_initialize(workspace_dirs, &cmd_dirs).await?;

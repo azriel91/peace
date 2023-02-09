@@ -5,8 +5,6 @@
 
 // Re-exports
 pub use fn_graph::{self, FnRef};
-pub use peace_rt_model_core::cmd_context_params;
-#[cfg(feature = "output_progress")]
 pub use peace_rt_model_core::*;
 
 pub mod output {

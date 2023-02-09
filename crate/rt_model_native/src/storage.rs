@@ -1,14 +1,13 @@
 use std::{fmt::Debug, hash::Hash, io::Write, path::Path, sync::Mutex};
 
 use peace_resources::type_reg::untagged::{DataTypeWrapper, TypeMap, TypeReg};
+use peace_rt_model_core::{Error, NativeError};
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::{
     fs::File,
     io::{BufReader, BufWriter},
 };
 use tokio_util::io::SyncIoBridge;
-
-use crate::Error;
 
 /// Wrapper around file system operations.
 #[derive(Clone, Debug)]
@@ -104,7 +103,7 @@ impl Storage {
                     let deserializer = serde_yaml::Deserializer::from_reader(file);
                     let type_map = type_reg.deserialize_map(deserializer).map_err(f_map_err)?;
 
-                    Ok(T::from(type_map))
+                    Result::<_, Error>::Ok(T::from(type_map))
                 })
                 .await?;
 
@@ -159,7 +158,7 @@ impl Storage {
     {
         let file = File::open(file_path).await.map_err(|error| {
             let path = file_path.to_path_buf();
-            Error::FileOpen { path, error }
+            Error::Native(NativeError::FileOpen { path, error })
         })?;
         let mut sync_io_bridge = SyncIoBridge::new(BufReader::new(file));
 
@@ -169,10 +168,12 @@ impl Storage {
             std::thread::Builder::new()
                 .name(thread_name)
                 .spawn_scoped(s, move || f(&mut sync_io_bridge))
-                .map_err(Error::StorageSyncThreadSpawn)?
+                .map_err(NativeError::StorageSyncThreadSpawn)
+                .map_err(Error::Native)?
                 .join()
                 .map_err(Mutex::new)
-                .map_err(Error::StorageSyncThreadJoin)?
+                .map_err(NativeError::StorageSyncThreadJoin)
+                .map_err(Error::Native)?
         })?;
 
         Ok(t)
@@ -202,7 +203,7 @@ impl Storage {
     {
         let file = File::create(file_path).await.map_err(|error| {
             let path = file_path.to_path_buf();
-            Error::FileCreate { path, error }
+            NativeError::FileCreate { path, error }
         })?;
         let mut sync_io_bridge = SyncIoBridge::new(BufWriter::new(file));
 
@@ -216,15 +217,17 @@ impl Storage {
 
                     sync_io_bridge.flush().map_err(|error| {
                         let path = file_path.to_path_buf();
-                        Error::FileWrite { path, error }
+                        NativeError::FileWrite { path, error }
                     })?;
 
-                    Ok(t)
+                    Result::<_, Error>::Ok(t)
                 })
-                .map_err(Error::StorageSyncThreadSpawn)?
+                .map_err(NativeError::StorageSyncThreadSpawn)
+                .map_err(Error::Native)?
                 .join()
                 .map_err(Mutex::new)
-                .map_err(Error::StorageSyncThreadJoin)?
+                .map_err(NativeError::StorageSyncThreadJoin)
+                .map_err(Error::Native)?
         })?;
 
         Ok(t)

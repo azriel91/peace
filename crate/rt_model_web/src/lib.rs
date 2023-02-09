@@ -7,14 +7,12 @@
 //! **This crate is intended to be used with `#[cfg(target_arch = "wasm32")]`.**
 
 pub use crate::{
-    error::Error, storage::Storage, workspace::Workspace,
-    workspace_dirs_builder::WorkspaceDirsBuilder, workspace_initializer::WorkspaceInitializer,
-    workspace_spec::WorkspaceSpec,
+    storage::Storage, workspace::Workspace, workspace_dirs_builder::WorkspaceDirsBuilder,
+    workspace_initializer::WorkspaceInitializer, workspace_spec::WorkspaceSpec,
 };
 
 pub mod workspace;
 
-mod error;
 mod storage;
 mod workspace_dirs_builder;
 mod workspace_initializer;
