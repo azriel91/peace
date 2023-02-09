@@ -55,36 +55,42 @@ where
         }
     }
 
+    /// Returns a reference to the workspace params type registry.
     pub fn workspace_params_type_reg(
         &self,
     ) -> &TypeReg<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key, BoxDt> {
         &self.workspace_params_type_reg
     }
 
+    /// Returns a mutable reference to the workspace params type registry.
     pub fn workspace_params_type_reg_mut(
         &mut self,
     ) -> &mut TypeReg<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key, BoxDt> {
         &mut self.workspace_params_type_reg
     }
 
+    /// Returns a reference to the profile params type registry.
     pub fn profile_params_type_reg(
         &self,
     ) -> &TypeReg<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key, BoxDt> {
         &self.profile_params_type_reg
     }
 
+    /// Returns a mutable reference to the profile params type registry.
     pub fn profile_params_type_reg_mut(
         &mut self,
     ) -> &mut TypeReg<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key, BoxDt> {
         &mut self.profile_params_type_reg
     }
 
+    /// Returns a reference to the flow params type registry.
     pub fn flow_params_type_reg(
         &self,
     ) -> &TypeReg<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key, BoxDt> {
         &self.flow_params_type_reg
     }
 
+    /// Returns a mutable reference to the flow params type registry.
     pub fn flow_params_type_reg_mut(
         &mut self,
     ) -> &mut TypeReg<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key, BoxDt> {
