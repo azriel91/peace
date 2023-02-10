@@ -21,7 +21,7 @@ use crate::{
         CmdContext, CmdDirsBuilder,
     },
     cmd_context_params::{FlowParams, ParamsKeys, ParamsKeysImpl, ProfileParams, WorkspaceParams},
-    Error, ItemSpecGraph, StatesSerializer, StatesTypeRegs, Storage, Workspace,
+    Error, Flow, ItemSpecGraph, StatesSerializer, StatesTypeRegs, Storage, Workspace,
     WorkspaceInitializer,
 };
 
@@ -123,8 +123,6 @@ pub struct CmdContextBuilder<
 {
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
-    /// Graph of item specs.
-    item_spec_graph: &'ctx ItemSpecGraph<E>,
     /// Output endpoint to return values / errors, and write progress
     /// information to.
     ///
@@ -141,8 +139,8 @@ pub struct CmdContextBuilder<
     params_type_regs_builder: ParamsTypeRegsBuilder<PKeys>,
     /// Identifier or namespace to distinguish execution environments.
     profile_selection: ProfileSelection<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-    /// Identifier or name of the chosen process flow.
-    flow_id: FlowId,
+    /// Flow to be inspected or executed.
+    flow: Option<&'ctx Flow<E>>,
     /// Workspace parameters.
     workspace_params: Option<WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>>,
     /// Profile parameters.
@@ -169,22 +167,16 @@ where
     /// # Parameters
     ///
     /// * `workspace`: Defines how to discover the workspace.
-    /// * `item_spec_graph`: Logic to run in the command.
     /// * `output`: [`OutputWrite`] to return values or errors. information to.
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    pub fn new(
-        workspace: &'ctx Workspace,
-        item_spec_graph: &'ctx ItemSpecGraph<E>,
-        output: &'ctx mut O,
-    ) -> Self {
+    pub fn new(workspace: &'ctx Workspace, output: &'ctx mut O) -> Self {
         Self {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder: ParamsTypeRegs::builder(),
             profile_selection: ProfileSelection::Selected(Profile::workspace_init()),
-            flow_id: FlowId::workspace_init(),
+            flow: None,
             workspace_params: None,
             profile_params: None,
             flow_params: None,
@@ -209,11 +201,10 @@ where
     ) -> CmdContextBuilder<'ctx, E, O, ProfileSelected, PKeys> {
         let CmdContextBuilder {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder,
             profile_selection: _,
-            flow_id: _,
+            flow,
             workspace_params,
             profile_params,
             flow_params,
@@ -222,11 +213,10 @@ where
 
         CmdContextBuilder {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder,
             profile_selection: ProfileSelection::Selected(profile),
-            flow_id: FlowId::profile_init(),
+            flow,
             workspace_params,
             profile_params,
             flow_params,
@@ -271,11 +261,10 @@ where
     > {
         let CmdContextBuilder {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder,
             profile_selection: _,
-            flow_id: _,
+            flow,
             workspace_params,
             profile_params,
             flow_params,
@@ -284,11 +273,10 @@ where
 
         CmdContextBuilder {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder,
             profile_selection: ProfileSelection::WorkspaceParam(key),
-            flow_id: FlowId::profile_init(),
+            flow,
             workspace_params,
             profile_params,
             flow_params,
@@ -313,11 +301,10 @@ where
     ) -> CmdContextBuilder<'ctx, E, O, FlowIdSelected, PKeys> {
         let CmdContextBuilder {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder,
             profile_selection,
-            flow_id: _,
+            flow,
             workspace_params,
             profile_params,
             flow_params,
@@ -326,11 +313,10 @@ where
 
         CmdContextBuilder {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder,
             profile_selection,
-            flow_id,
+            flow,
             workspace_params,
             profile_params,
             flow_params,
@@ -428,8 +414,11 @@ where
             }
         };
 
-        let cmd_dirs =
-            CmdDirsBuilder::build(workspace_dirs.peace_app_dir(), &profile, &self.flow_id);
+        let cmd_dirs = CmdDirsBuilder::build(
+            workspace_dirs.peace_app_dir(),
+            &profile,
+            self.flow.map(Flow::flow_id),
+        );
 
         let profile_params_file = ProfileParamsFile::from(cmd_dirs.profile_dir());
         let flow_params_file = FlowParamsFile::from(cmd_dirs.flow_dir());
@@ -478,7 +467,6 @@ where
         self.init_params_insert(&mut resources);
         let CmdContextBuilder {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder,
             profile_selection: _,
@@ -540,7 +528,6 @@ where
 
         Ok(CmdContext {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs,
             resources,
@@ -745,11 +732,10 @@ where
     {
         let Self {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder,
             profile_selection,
-            flow_id,
+            flow,
             workspace_params: _,
             profile_params,
             flow_params,
@@ -779,11 +765,10 @@ where
 
         CmdContextBuilder {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder,
             profile_selection,
-            flow_id,
+            flow,
             workspace_params: Some(workspace_params),
             profile_params,
             flow_params,
@@ -888,11 +873,10 @@ where
     {
         let Self {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder,
             profile_selection,
-            flow_id,
+            flow,
             workspace_params,
             profile_params: _,
             flow_params,
@@ -911,11 +895,10 @@ where
 
         CmdContextBuilder {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder,
             profile_selection,
-            flow_id,
+            flow,
             workspace_params,
             profile_params: Some(profile_params),
             flow_params,
@@ -1020,11 +1003,10 @@ where
     {
         let Self {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder,
             profile_selection,
-            flow_id,
+            flow,
             workspace_params,
             profile_params,
             flow_params: _,
@@ -1043,11 +1025,10 @@ where
 
         CmdContextBuilder {
             workspace,
-            item_spec_graph,
             output,
             params_type_regs_builder,
             profile_selection,
-            flow_id,
+            flow,
             workspace_params,
             profile_params,
             flow_params: Some(flow_params),

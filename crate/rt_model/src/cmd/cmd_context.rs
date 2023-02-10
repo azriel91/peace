@@ -129,13 +129,11 @@ where
     /// # Parameters
     ///
     /// * `workspace`: Defines how to discover the workspace.
-    /// * `item_spec_graph`: Logic to run in the command.
     /// * `output`: [`OutputWrite`] to return values or errors.
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     pub fn builder(
         workspace: &'ctx Workspace,
-        item_spec_graph: &'ctx ItemSpecGraph<E>,
         output: &'ctx mut O,
     ) -> CmdContextBuilder<
         'ctx,
@@ -144,7 +142,7 @@ where
         CmdContextCommon,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
-        CmdContextBuilder::new(workspace, item_spec_graph, output)
+        CmdContextBuilder::new(workspace, output)
     }
 }
 
