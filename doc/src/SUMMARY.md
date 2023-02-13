@@ -28,6 +28,7 @@
     - [Output](technical_concepts/output.md)
         - [Execution Progress](technical_concepts/output/execution_progress.md)
         - [Presentation](technical_concepts/output/presentation.md)
+    - [Workspace](technical_concepts/workspace.md)
 
 - [Reference](reference.md)
     - [Commands](commands.md)
