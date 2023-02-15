@@ -1,0 +1,21 @@
+[package]
+name = "peace_cmd"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.6"
+edition = "2021"
+description = "Command structure for the Peace framework."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_cmd/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+
+[features]
+default = []
