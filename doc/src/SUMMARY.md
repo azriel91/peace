@@ -47,8 +47,6 @@
             - [State Apply](technical_concepts/commands/use_cases/state_apply.md)
             - [State Clean](technical_concepts/commands/use_cases/state_clean.md)
 
-- [Reference](reference.md)
-    - [Commands](commands.md)
 
 ---
 
