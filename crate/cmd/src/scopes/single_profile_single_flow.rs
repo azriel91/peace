@@ -1,4 +1,5 @@
 use peace_core::{FlowId, Profile};
+use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
 
 /// A command that works with one profile and one flow.
 ///
@@ -32,27 +33,60 @@ use peace_core::{FlowId, Profile};
 /// * Read or write flow parameters -- see `MultiProfileNoFlow`.
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SingleProfileSingleFlow {
     /// The profile this command operates on.
     profile: Profile,
+    /// Profile directory that stores params and flows.
+    profile_dir: ProfileDir,
+    /// Directory to store profile executions' summaries.
+    profile_history_dir: ProfileHistoryDir,
     /// Identifier or name of the chosen process flow.
     flow_id: FlowId,
+    /// Flow directory that stores params and states.
+    flow_dir: FlowDir,
 }
 
 impl SingleProfileSingleFlow {
     /// Returns a new `SingleProfileSingleFlow` scope.
-    pub fn new(profile: Profile, flow_id: FlowId) -> Self {
-        Self { profile, flow_id }
+    pub fn new(
+        profile: Profile,
+        profile_dir: ProfileDir,
+        profile_history_dir: ProfileHistoryDir,
+        flow_id: FlowId,
+        flow_dir: FlowDir,
+    ) -> Self {
+        Self {
+            profile,
+            profile_dir,
+            profile_history_dir,
+            flow_id,
+            flow_dir,
+        }
     }
 
-    /// Returns a reference to the `Profile`.
+    /// Returns a reference to the profile.
     pub fn profile(&self) -> &Profile {
         &self.profile
+    }
+
+    /// Returns a reference to the profile directory.
+    pub fn profile_dir(&self) -> &ProfileDir {
+        &self.profile_dir
+    }
+
+    /// Returns a reference to the profile history directory.
+    pub fn profile_history_dir(&self) -> &ProfileHistoryDir {
+        &self.profile_history_dir
     }
 
     /// Returns a reference to the flow ID.
     pub fn flow_id(&self) -> &FlowId {
         &self.flow_id
+    }
+
+    /// Returns a reference to the flow directory.
+    pub fn flow_dir(&self) -> &FlowDir {
+        &self.flow_dir
     }
 }

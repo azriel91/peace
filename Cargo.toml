@@ -18,6 +18,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 peace_cfg = { path = "crate/cfg", version = "0.0.6" }
+peace_cmd = { path = "crate/cmd", version = "0.0.6" }
 peace_data = { path = "crate/data", version = "0.0.6" }
 peace_diff = { path = "crate/diff", version = "0.0.6" }
 peace_fmt = { path = "crate/fmt", version = "0.0.6" }

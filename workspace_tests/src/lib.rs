@@ -14,6 +14,7 @@ pub(crate) use crate::{
 
 // `peace` test modules
 mod cfg;
+mod cmd;
 mod data;
 mod diff;
 mod fmt;

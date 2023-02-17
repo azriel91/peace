@@ -20,5 +20,5 @@
 /// * Read or write flow parameters -- see `MultiProfileNoFlow`.
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NoProfileNoFlow;

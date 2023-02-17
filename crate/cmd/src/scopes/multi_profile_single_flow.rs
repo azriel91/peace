@@ -52,7 +52,7 @@ use peace_core::{FlowId, Profile};
 ///
 /// * Read or write flow parameters for different flows.
 /// * Read or write flow state for different flows.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MultiProfileSingleFlow {
     /// The profiles that are accessible by this command.
     profiles: Vec<Profile>,

@@ -35,7 +35,7 @@ use peace_core::Profile;
 ///   `MultiProfileSingleFlow`.
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MultiProfileNoFlow {
     /// The profiles that are accessible by this command.
     profiles: Vec<Profile>,
