@@ -7,6 +7,10 @@ use crate::{
     scopes::{NoProfileNoFlow, SingleProfileSingleFlow},
 };
 
+use super::cmd_ctx_builder::{
+    FlowIdNotSelected, ProfileNotSelected, SingleProfileSingleFlowBuilder,
+};
+
 /// Collects parameters and initializes values relevant to the built [`CmdCtx`].
 #[derive(Debug)]
 pub struct CmdCtx<'ctx, Scope> {
@@ -37,8 +41,10 @@ impl<'ctx> CmdCtx<'ctx, NoProfileNoFlow> {
 
 impl<'ctx> CmdCtx<'ctx, SingleProfileSingleFlow> {
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder(workspace: &'ctx Workspace) -> CmdCtxBuilder<SingleProfileSingleFlow> {
-        CmdCtxBuilder::<SingleProfileSingleFlow>::new(workspace)
+    pub fn builder(
+        workspace: &'ctx Workspace,
+    ) -> CmdCtxBuilder<SingleProfileSingleFlowBuilder<ProfileNotSelected, FlowIdNotSelected>> {
+        CmdCtxBuilder::single_profile_single_flow(workspace)
     }
 
     /// Returns a reference to the workspace directory.

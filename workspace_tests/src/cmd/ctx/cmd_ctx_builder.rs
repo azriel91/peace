@@ -28,8 +28,10 @@ fn builds_single_profile_single_flow() -> Result<(), Box<dyn std::error::Error>>
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
 
-    let cmd_ctx_builder = CmdCtxBuilder::<SingleProfileSingleFlow>::new(&workspace);
-    let cmd_ctx = cmd_ctx_builder.build(profile.clone(), flow_id.clone());
+    let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(&workspace)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
+        .build();
 
     let scope = {
         let peace_app_dir = workspace.dirs().peace_app_dir();

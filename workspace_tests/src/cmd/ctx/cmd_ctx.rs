@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, flow_id, profile, AppName, FlowId, Profile},
-    cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
+    cmd::{ctx::CmdCtxBuilder, scopes::SingleProfileSingleFlow},
     resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
     rt_model::Workspace,
 };
@@ -12,8 +12,10 @@ fn single_profile_single_flow_getters() -> Result<(), Box<dyn std::error::Error>
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
 
-    let cmd_ctx_builder = CmdCtx::<SingleProfileSingleFlow>::builder(&workspace);
-    let cmd_ctx = cmd_ctx_builder.build(profile.clone(), flow_id.clone());
+    let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(&workspace)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
+        .build();
 
     let scope = {
         let peace_app_dir = workspace.dirs().peace_app_dir();
