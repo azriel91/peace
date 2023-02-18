@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 use peace_core::{FlowId, Profile};
 use peace_resources::paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, WorkspaceDir};
 use peace_rt_model::{
