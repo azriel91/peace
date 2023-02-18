@@ -11,7 +11,8 @@ use crate::{
 };
 
 use super::cmd_ctx_builder::{
-    FlowIdNotSelected, ProfileNotSelected, SingleProfileSingleFlowBuilder, WorkspaceParamsNone,
+    FlowIdNotSelected, ProfileNotSelected, ProfileParamsNone, SingleProfileSingleFlowBuilder,
+    WorkspaceParamsNone,
 };
 
 /// Collects parameters and initializes values relevant to the built [`CmdCtx`].
@@ -64,7 +65,12 @@ impl<'ctx>
     pub fn builder_single_profile_single_flow(
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
-        SingleProfileSingleFlowBuilder<ProfileNotSelected, FlowIdNotSelected, WorkspaceParamsNone>,
+        SingleProfileSingleFlowBuilder<
+            ProfileNotSelected,
+            FlowIdNotSelected,
+            WorkspaceParamsNone,
+            ProfileParamsNone,
+        >,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
         CmdCtxBuilder::single_profile_single_flow(workspace)

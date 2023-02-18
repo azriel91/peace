@@ -2,11 +2,15 @@
 
 use std::fmt::Debug;
 
-use peace_resources::{internal::WorkspaceParamsFile, resources::ts::Empty, Resources};
+use peace_resources::{
+    internal::{ProfileParamsFile, WorkspaceParamsFile},
+    resources::ts::Empty,
+    Resources,
+};
 use peace_rt_model::{
     cmd_context_params::{
         KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ParamsTypeRegsBuilder,
-        WorkspaceParams,
+        ProfileParams, WorkspaceParams,
     },
     fn_graph::resman::Resource,
     Error, Storage, Workspace, WorkspaceInitializer,
@@ -16,12 +20,14 @@ use crate::{ctx::CmdCtx, scopes::NoProfileNoFlow};
 
 pub use self::{
     flow_id_selection::{FlowIdNotSelected, FlowIdSelected},
+    profile_params_selection::{ProfileParamsNone, ProfileParamsSome},
     profile_selection::{ProfileFromWorkspaceParam, ProfileNotSelected, ProfileSelected},
     single_profile_single_flow_builder::SingleProfileSingleFlowBuilder,
     workspace_params_selection::{WorkspaceParamsNone, WorkspaceParamsSome},
 };
 
 mod flow_id_selection;
+mod profile_params_selection;
 mod profile_selection;
 mod single_profile_single_flow_builder;
 mod workspace_params_selection;
@@ -82,6 +88,38 @@ where
                     let type_id = Resource::type_id(&*workspace_param);
                     resources.insert_raw(type_id, workspace_param);
                 });
+        }
+    }
+
+    /// Serializes profile params to storage.
+    async fn profile_params_serialize(
+        profile_params: Option<&ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
+        storage: &Storage,
+        profile_params_file: &ProfileParamsFile,
+    ) -> Result<(), Error> {
+        if let Some(profile_params) = profile_params {
+            WorkspaceInitializer::profile_params_serialize(
+                storage,
+                profile_params,
+                profile_params_file,
+            )
+            .await?;
+        }
+
+        Ok(())
+    }
+
+    /// Inserts profile params into the `Resources` map.
+    fn profile_params_insert(
+        mut profile_params: Option<ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
+        resources: &mut Resources<Empty>,
+    ) {
+        if let Some(profile_params) = profile_params.as_mut() {
+            profile_params.drain(..).for_each(|(_key, profile_param)| {
+                let profile_param = profile_param.into_inner().upcast();
+                let type_id = Resource::type_id(&*profile_param);
+                resources.insert_raw(type_id, profile_param);
+            });
         }
     }
 }
