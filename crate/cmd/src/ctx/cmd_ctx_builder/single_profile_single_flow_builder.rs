@@ -470,6 +470,7 @@ where
     > {
         // Values shared by subsequent functions.
         let workspace_dirs = self.workspace.dirs();
+        let storage = self.workspace.storage();
         let workspace_params_file = WorkspaceParamsFile::from(workspace_dirs.peace_app_dir());
 
         self.workspace_params_merge(&workspace_params_file).await?;
@@ -513,7 +514,7 @@ where
         // Serialize params to `PeaceAppDir`.
         Self::workspace_params_serialize(
             workspace_params.as_ref(),
-            workspace.storage(),
+            storage,
             &workspace_params_file,
         )
         .await?;
@@ -573,6 +574,7 @@ where
     > {
         // Values shared by subsequent functions.
         let workspace_dirs = self.workspace.dirs();
+        let storage = self.workspace.storage();
         let workspace_params_file = WorkspaceParamsFile::from(workspace_dirs.peace_app_dir());
 
         self.workspace_params_merge(&workspace_params_file).await?;
@@ -622,7 +624,7 @@ where
         // Serialize params to `PeaceAppDir`.
         Self::workspace_params_serialize(
             workspace_params.as_ref(),
-            workspace.storage(),
+            storage,
             &workspace_params_file,
         )
         .await?;
