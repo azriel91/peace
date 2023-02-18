@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 use std::fmt::Debug;
 
 use peace_resources::{internal::WorkspaceParamsFile, resources::ts::Empty, Resources};

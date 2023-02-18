@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 use crate::ctx::cmd_ctx_builder::{
     flow_id_selection::{FlowIdNotSelected, FlowIdSelected},
     profile_selection::{ProfileFromWorkspaceParam, ProfileNotSelected, ProfileSelected},
