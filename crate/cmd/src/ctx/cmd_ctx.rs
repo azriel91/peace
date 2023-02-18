@@ -1,6 +1,9 @@
 use peace_core::{FlowId, Profile};
 use peace_resources::paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, WorkspaceDir};
-use peace_rt_model::Workspace;
+use peace_rt_model::{
+    cmd_context_params::{KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs},
+    Workspace,
+};
 
 use crate::{
     ctx::CmdCtxBuilder,
@@ -8,19 +11,32 @@ use crate::{
 };
 
 use super::cmd_ctx_builder::{
-    FlowIdNotSelected, ProfileNotSelected, SingleProfileSingleFlowBuilder,
+    FlowIdNotSelected, ProfileNotSelected, SingleProfileSingleFlowBuilder, WorkspaceParamsNone,
 };
 
 /// Collects parameters and initializes values relevant to the built [`CmdCtx`].
 #[derive(Debug)]
-pub struct CmdCtx<'ctx, Scope> {
+pub struct CmdCtx<'ctx, Scope, PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
     /// Workspace that the `peace` tool runs in.
-    pub(crate) workspace: &'ctx Workspace,
+    pub workspace: &'ctx Workspace,
     /// Scope of the command.
-    pub(crate) scope: Scope,
+    pub scope: Scope,
+    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+    /// [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
+    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    pub params_type_regs: ParamsTypeRegs<PKeys>,
 }
 
-impl<'ctx, Scope> CmdCtx<'ctx, Scope> {
+impl<'ctx, Scope, PKeys> CmdCtx<'ctx, Scope, PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
     /// Returns the workspace that the `peace` tool runs in.
     pub fn workspace(&self) -> &Workspace {
         self.workspace
@@ -32,21 +48,33 @@ impl<'ctx, Scope> CmdCtx<'ctx, Scope> {
     }
 }
 
-impl<'ctx> CmdCtx<'ctx, NoProfileNoFlow> {
+impl<'ctx> CmdCtx<'ctx, NoProfileNoFlow, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>> {
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder(workspace: &'ctx Workspace) -> CmdCtxBuilder<NoProfileNoFlow> {
-        CmdCtxBuilder::<NoProfileNoFlow>::new(workspace)
+    pub fn builder_no_profile_no_flow(
+        workspace: &'ctx Workspace,
+    ) -> CmdCtxBuilder<NoProfileNoFlow, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>> {
+        CmdCtxBuilder::no_profile_no_flow(workspace)
     }
 }
 
-impl<'ctx> CmdCtx<'ctx, SingleProfileSingleFlow> {
+impl<'ctx>
+    CmdCtx<'ctx, SingleProfileSingleFlow, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>
+{
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder(
+    pub fn builder_single_profile_single_flow(
         workspace: &'ctx Workspace,
-    ) -> CmdCtxBuilder<SingleProfileSingleFlowBuilder<ProfileNotSelected, FlowIdNotSelected>> {
+    ) -> CmdCtxBuilder<
+        SingleProfileSingleFlowBuilder<ProfileNotSelected, FlowIdNotSelected, WorkspaceParamsNone>,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    > {
         CmdCtxBuilder::single_profile_single_flow(workspace)
     }
+}
 
+impl<'ctx, PKeys> CmdCtx<'ctx, SingleProfileSingleFlow, PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
     /// Returns a reference to the workspace directory.
     pub fn workspace_dir(&self) -> &WorkspaceDir {
         self.workspace.dirs().workspace_dir()

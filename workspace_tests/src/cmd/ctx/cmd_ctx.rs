@@ -5,8 +5,8 @@ use peace::{
     rt_model::Workspace,
 };
 
-#[test]
-fn single_profile_single_flow_getters() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::test]
+async fn single_profile_single_flow_getters() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -15,7 +15,8 @@ fn single_profile_single_flow_getters() -> Result<(), Box<dyn std::error::Error>
     let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(&workspace)
         .with_profile(profile.clone())
         .with_flow_id(flow_id.clone())
-        .build();
+        .build()
+        .await?;
 
     let scope = {
         let peace_app_dir = workspace.dirs().peace_app_dir();

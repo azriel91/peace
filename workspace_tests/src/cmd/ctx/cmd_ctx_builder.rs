@@ -13,7 +13,7 @@ fn builds_no_profile_no_flow() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(tempdir, app_name!("test_no_profile_no_flow"))?;
 
-    let cmd_ctx_builder = CmdCtxBuilder::<NoProfileNoFlow>::new(&workspace);
+    let cmd_ctx_builder = CmdCtxBuilder::no_profile_no_flow(&workspace);
     let cmd_ctx = cmd_ctx_builder.build();
 
     assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
@@ -21,8 +21,8 @@ fn builds_no_profile_no_flow() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[test]
-fn builds_single_profile_single_flow() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::test]
+async fn builds_single_profile_single_flow() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
@@ -31,7 +31,65 @@ fn builds_single_profile_single_flow() -> Result<(), Box<dyn std::error::Error>>
     let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(&workspace)
         .with_profile(profile.clone())
         .with_flow_id(flow_id.clone())
-        .build();
+        .build()
+        .await?;
+
+    let scope = {
+        let peace_app_dir = workspace.dirs().peace_app_dir();
+        let profile_dir = ProfileDir::from((peace_app_dir, &profile));
+        let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
+        let flow_dir = FlowDir::from((&profile_dir, &flow_id));
+
+        SingleProfileSingleFlow::new(profile, profile_dir, profile_history_dir, flow_id, flow_dir)
+    };
+    assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
+    assert_eq!(&scope, cmd_ctx.scope());
+    Ok(())
+}
+
+#[tokio::test]
+async fn builds_single_profile_single_flow_with_workspace_params()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = workspace(tempdir, app_name!("test_single_profile_single_flow"))?;
+    let profile = profile!("test_profile");
+    let flow_id = flow_id!("test_flow_id");
+
+    let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(&workspace)
+        .with_profile(profile.clone())
+        .with_flow_id(flow_id.clone())
+        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .build()
+        .await?;
+
+    let scope = {
+        let peace_app_dir = workspace.dirs().peace_app_dir();
+        let profile_dir = ProfileDir::from((peace_app_dir, &profile));
+        let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
+        let flow_dir = FlowDir::from((&profile_dir, &flow_id));
+
+        SingleProfileSingleFlow::new(profile, profile_dir, profile_history_dir, flow_id, flow_dir)
+    };
+    assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
+    assert_eq!(&scope, cmd_ctx.scope());
+    Ok(())
+}
+
+#[tokio::test]
+async fn builds_single_profile_single_flow_with_workspace_params_with_profile_from_params()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = workspace(tempdir, app_name!("test_single_profile_single_flow"))?;
+    let profile = profile!("test_profile");
+    let flow_id = flow_id!("test_flow_id");
+
+    let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(&workspace)
+        .with_workspace_param(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param(String::from("something_else"), Some("a string".to_string()))
+        .with_profile_from_workspace_param(&String::from("profile"))
+        .with_flow_id(flow_id.clone())
+        .build()
+        .await?;
 
     let scope = {
         let peace_app_dir = workspace.dirs().peace_app_dir();
