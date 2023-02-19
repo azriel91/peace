@@ -35,22 +35,9 @@ use peace_rt_model::NativeError;
 
 /// Data stored by `CmdCtxBuilder` while building a
 /// `CmdCtx<SingleProfileSingleFlow>`.
+#[peace_code_gen::cmd_ctx_builder_impl]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SingleProfileSingleFlowBuilder<
-    ProfileSelection,
-    FlowIdSelection,
-    WorkspaceParamsSelection,
-    ProfileParamsSelection,
-> {
-    /// The profile this command operates on.
-    pub(crate) profile_selection: ProfileSelection,
-    /// Identifier or name of the chosen process flow.
-    pub(crate) flow_id_selection: FlowIdSelection,
-    /// Workspace parameters.
-    pub(crate) workspace_params_selection: WorkspaceParamsSelection,
-    /// Profile parameters.
-    pub(crate) profile_params_selection: ProfileParamsSelection,
-}
+pub struct SingleProfileSingleFlowBuilder;
 
 impl<'ctx>
     CmdCtxBuilder<
