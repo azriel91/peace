@@ -39,35 +39,6 @@ use peace_rt_model::NativeError;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SingleProfileSingleFlowBuilder;
 
-impl<'ctx>
-    CmdCtxBuilder<
-        'ctx,
-        SingleProfileSingleFlowBuilder<
-            ProfileNotSelected,
-            FlowIdNotSelected,
-            WorkspaceParamsNone,
-            ProfileParamsNone,
-        >,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-    >
-{
-    /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn single_profile_single_flow(workspace: &'ctx Workspace) -> Self {
-        let scope_builder = SingleProfileSingleFlowBuilder {
-            profile_selection: ProfileNotSelected,
-            flow_id_selection: FlowIdNotSelected,
-            workspace_params_selection: WorkspaceParamsNone,
-            profile_params_selection: ProfileParamsNone,
-        };
-
-        Self {
-            workspace,
-            scope_builder,
-            params_type_regs_builder: ParamsTypeRegs::builder(),
-        }
-    }
-}
-
 impl<
     'ctx,
     ProfileSelection,
