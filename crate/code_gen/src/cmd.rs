@@ -77,6 +77,7 @@ mod type_parameters {
             type_params.push(Ident::new("ProfileParamsSelection", Span::call_site()));
         }
 
+        #[cfg(test)]
         if scope.flow_params_supported() {
             type_params.push(Ident::new("FlowParamsSelection", Span::call_site()));
         }
@@ -125,6 +126,7 @@ mod fields {
             fields_named.named.extend(fields.named);
         }
 
+        #[cfg(test)]
         if scope.flow_params_supported() {
             let fields: FieldsNamed = parse_quote!({
                 /// Flow parameters.

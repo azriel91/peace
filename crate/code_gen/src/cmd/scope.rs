@@ -48,6 +48,7 @@ impl Scope {
     }
 
     /// Returns whether this scope supports accessing flow params.
+    #[cfg(test)]
     pub fn flow_params_supported(self) -> bool {
         match self.flow_count() {
             FlowCount::None => false,
