@@ -57,7 +57,7 @@ fn impl_with_param_key_unknown(
     };
 
     let impl_scope_type_params_some = {
-        let mut type_params = selection_type_params.clone();
+        let mut type_params = selection_type_params;
         type_parameters_impl::params_selection_some_push(&mut type_params, scope, params_scope);
         type_params
     };
@@ -239,7 +239,7 @@ fn impl_with_param_key_known(
     };
 
     let impl_scope_type_params_some = {
-        let mut type_params = selection_type_params.clone();
+        let mut type_params = selection_type_params;
         type_parameters_impl::params_selection_some_push(&mut type_params, scope, params_scope);
         type_params
     };

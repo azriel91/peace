@@ -70,10 +70,8 @@ pub fn params_selection_maybe_push(
             type_params.push(parse_quote!(WorkspaceParamsSelection));
             type_params.push(parse_quote!(WorkspaceParamsKMaybe));
 
-            if scope.profile_params_supported() {
-                if params_key_known {
-                    type_params.push(parse_quote!(ProfileParamsK));
-                }
+            if scope.profile_params_supported() && params_key_known {
+                type_params.push(parse_quote!(ProfileParamsK));
             }
 
             if scope.flow_params_supported() {
@@ -91,10 +89,8 @@ pub fn params_selection_maybe_push(
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
             }
 
-            if scope.flow_params_supported() {
-                if params_key_known {
-                    type_params.push(parse_quote!(FlowParamsK));
-                }
+            if scope.flow_params_supported() && params_key_known {
+                type_params.push(parse_quote!(FlowParamsK));
             }
         }
     }
