@@ -104,7 +104,6 @@ mod scope_type_params {
             ));
         }
 
-        #[cfg(test)]
         if scope.flow_params_supported() {
             type_params.push(parse_quote!(
                 crate::ctx::cmd_ctx_builder::flow_params_selection::FlowParamsNone
@@ -157,7 +156,6 @@ mod scope_field_values {
             ));
         }
 
-        #[cfg(test)]
         if scope.flow_params_supported() {
             field_values.push(parse_quote!(
                 flow_params_selection:

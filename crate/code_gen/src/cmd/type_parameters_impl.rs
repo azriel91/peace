@@ -28,7 +28,6 @@ pub fn params_selection_push(type_params: &mut Punctuated<Path, Token![,]>, scop
         type_params.push(parse_quote!(ProfileParamsSelection));
     }
 
-    #[cfg(test)]
     if scope.flow_params_supported() {
         type_params.push(parse_quote!(FlowParamsSelection));
     }
@@ -61,7 +60,6 @@ pub fn params_selection_maybe_push(
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsSelection));
                 type_params.push(parse_quote!(FlowParamsKMaybe));
@@ -78,7 +76,6 @@ pub fn params_selection_maybe_push(
                 }
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsSelection));
                 type_params.push(parse_quote!(FlowParamsKMaybe));
@@ -94,7 +91,6 @@ pub fn params_selection_maybe_push(
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 if params_key_known {
                     type_params.push(parse_quote!(FlowParamsK));
@@ -127,7 +123,6 @@ pub fn params_selection_none_push(
                 type_params.push(parse_quote!(ProfileParamsSelection));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsSelection));
             }
@@ -140,7 +135,6 @@ pub fn params_selection_none_push(
                 type_params.push(parse_quote!(ProfileParamsNone));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsSelection));
             }
@@ -153,7 +147,6 @@ pub fn params_selection_none_push(
                 type_params.push(parse_quote!(ProfileParamsSelection));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsNone));
             }
@@ -184,7 +177,6 @@ pub fn params_selection_some_push(
                 type_params.push(parse_quote!(ProfileParamsSelection));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsSelection));
             }
@@ -197,7 +189,6 @@ pub fn params_selection_some_push(
                 type_params.push(parse_quote!(ProfileParamsSome<ProfileParamsK>));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsSelection));
             }
@@ -210,7 +201,6 @@ pub fn params_selection_some_push(
                 type_params.push(parse_quote!(ProfileParamsSelection));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsSome<FlowParamsK>));
             }
@@ -240,7 +230,6 @@ pub fn params_key_unknown_push(
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsKMaybe));
             }
@@ -253,7 +242,6 @@ pub fn params_key_unknown_push(
                 type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsKMaybe));
             }
@@ -266,7 +254,6 @@ pub fn params_key_unknown_push(
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
             }
@@ -299,7 +286,6 @@ pub fn params_key_known_push(
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsKMaybe));
             }
@@ -314,7 +300,6 @@ pub fn params_key_known_push(
                 ));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsKMaybe));
             }
@@ -327,7 +312,6 @@ pub fn params_key_known_push(
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(
                     peace_rt_model::cmd_context_params::KeyKnown<FlowParamsK>

@@ -77,6 +77,15 @@ impl ParamsScope {
         }
     }
 
+    /// Returns the name to use for the `*_params_type_reg_mut` method.
+    pub fn params_type_reg_method_name(self) -> Ident {
+        match self {
+            Self::Workspace => Ident::new("workspace_params_type_reg_mut", Span::call_site()),
+            Self::Profile => Ident::new("profile_params_type_reg_mut", Span::call_site()),
+            Self::Flow => Ident::new("flow_params_type_reg_mut", Span::call_site()),
+        }
+    }
+
     /// Returns the lowercase str: "workspace", "profile", "flow".
     pub fn to_str(self) -> &'static str {
         match self {

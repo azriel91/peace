@@ -100,7 +100,6 @@ mod fields {
             fields_named.named.extend(fields.named);
         }
 
-        #[cfg(test)]
         if scope.flow_params_supported() {
             let fields: FieldsNamed = parse_quote!({
                 /// Flow parameters.

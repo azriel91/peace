@@ -398,7 +398,6 @@ fn param_key_impl_unknown_predicates(
                 });
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 predicates.push(parse_quote! {
                     FlowParamsKMaybe: #params_module::KeyMaybe
@@ -411,7 +410,6 @@ fn param_key_impl_unknown_predicates(
                 WorkspaceParamsKMaybe: #params_module::KeyMaybe
             });
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 predicates.push(parse_quote! {
                     FlowParamsKMaybe: #params_module::KeyMaybe
@@ -455,7 +453,6 @@ fn param_key_impl_known_predicates(
                 });
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 predicates.push(parse_quote! {
                     FlowParamsKMaybe: #params_module::KeyMaybe
@@ -475,7 +472,6 @@ fn param_key_impl_known_predicates(
                 });
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 predicates.push(parse_quote! {
                     FlowParamsKMaybe: #params_module::KeyMaybe
@@ -494,7 +490,6 @@ fn param_key_impl_known_predicates(
                 });
             }
 
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 predicates.push(parse_quote! {
                     FlowParamsK:
@@ -518,7 +513,6 @@ fn scope_builder_fields(scope: Scope, params_scope: ParamsScope) -> Punctuated<F
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(profile_params_selection));
             }
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 field_values.push(parse_quote!(flow_params_selection));
             }
@@ -528,7 +522,6 @@ fn scope_builder_fields(scope: Scope, params_scope: ParamsScope) -> Punctuated<F
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(profile_params_selection));
             }
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 field_values.push(parse_quote!(flow_params_selection));
             }
@@ -538,7 +531,6 @@ fn scope_builder_fields(scope: Scope, params_scope: ParamsScope) -> Punctuated<F
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(profile_params_selection));
             }
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 field_values.push(parse_quote!(flow_params_selection));
             }
@@ -564,7 +556,6 @@ fn scope_builder_fields_params_none(
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(profile_params_selection));
             }
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 field_values.push(parse_quote!(flow_params_selection));
             }
@@ -574,7 +565,6 @@ fn scope_builder_fields_params_none(
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(profile_params_selection: ProfileParamsNone));
             }
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 field_values.push(parse_quote!(flow_params_selection));
             }
@@ -584,7 +574,6 @@ fn scope_builder_fields_params_none(
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(profile_params_selection));
             }
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 field_values.push(parse_quote!(flow_params_selection: FlowParamsNone));
             }
@@ -608,7 +597,6 @@ fn scope_builder_fields_params_some(
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(profile_params_selection));
             }
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 field_values.push(parse_quote!(flow_params_selection));
             }
@@ -618,7 +606,6 @@ fn scope_builder_fields_params_some(
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(mut profile_params_selection));
             }
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 field_values.push(parse_quote!(flow_params_selection));
             }
@@ -628,7 +615,6 @@ fn scope_builder_fields_params_some(
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(profile_params_selection));
             }
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 field_values.push(parse_quote!(mut flow_params_selection));
             }
@@ -657,7 +643,6 @@ fn scope_builder_fields_params_some_new(
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(profile_params_selection));
             }
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 field_values.push(parse_quote!(flow_params_selection));
             }
@@ -672,7 +657,6 @@ fn scope_builder_fields_params_some_new(
                         )
                 });
             }
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 field_values.push(parse_quote!(flow_params_selection));
             }
@@ -682,7 +666,6 @@ fn scope_builder_fields_params_some_new(
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(profile_params_selection));
             }
-            #[cfg(test)]
             if scope.flow_params_supported() {
                 field_values.push(parse_quote! {
                     flow_params_selection:
