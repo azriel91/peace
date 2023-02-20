@@ -8,13 +8,14 @@ use peace_rt_model::{
 };
 
 use crate::{
-    ctx::CmdCtxBuilder,
+    ctx::{
+        cmd_ctx_builder::{
+            FlowIdNotSelected, FlowParamsNone, ProfileNotSelected, ProfileParamsNone,
+            SingleProfileSingleFlowBuilder, WorkspaceParamsNone,
+        },
+        CmdCtxBuilder,
+    },
     scopes::{NoProfileNoFlow, SingleProfileSingleFlow},
-};
-
-use super::cmd_ctx_builder::{
-    FlowIdNotSelected, ProfileNotSelected, ProfileParamsNone, SingleProfileSingleFlowBuilder,
-    WorkspaceParamsNone,
 };
 
 /// Collects parameters and initializes values relevant to the built [`CmdCtx`].
@@ -72,6 +73,7 @@ impl<'ctx>
             FlowIdNotSelected,
             WorkspaceParamsNone,
             ProfileParamsNone,
+            FlowParamsNone,
         >,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {

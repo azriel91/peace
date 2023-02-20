@@ -2,6 +2,7 @@
 
 use crate::ctx::cmd_ctx_builder::{
     flow_id_selection::{FlowIdNotSelected, FlowIdSelected},
+    flow_params_selection::{FlowParamsNone, FlowParamsSome},
     profile_params_selection::{ProfileParamsNone, ProfileParamsSome},
     profile_selection::{ProfileFromWorkspaceParam, ProfileNotSelected, ProfileSelected},
     workspace_params_selection::{WorkspaceParamsNone, WorkspaceParamsSome},
@@ -18,7 +19,7 @@ use peace_resources::{
 use peace_rt_model::{
     cmd::CmdDirsBuilder,
     cmd_context_params::{
-        KeyKnown, KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
+        FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
         WorkspaceParams,
     },
     Error, Workspace, WorkspaceInitializer,
@@ -42,7 +43,73 @@ pub struct SingleProfileSingleFlowBuilder;
 impl<
     'ctx,
     FlowIdSelection,
+    WorkspaceParamsSelection,
     ProfileParamsSelection,
+    FlowParamsSelection,
+    PKeys,
+>
+    CmdCtxBuilder<
+        'ctx,
+        SingleProfileSingleFlowBuilder<
+            ProfileNotSelected,
+            FlowIdSelection,
+            WorkspaceParamsSelection,
+            ProfileParamsSelection,
+            FlowParamsSelection,
+        >,
+        PKeys,
+    >
+where
+    PKeys: ParamsKeys + 'static,
+{
+    pub fn with_profile(
+        self,
+        profile: Profile,
+    ) -> CmdCtxBuilder<
+        'ctx,
+        SingleProfileSingleFlowBuilder<
+            ProfileSelected,
+            FlowIdSelection,
+            WorkspaceParamsSelection,
+            ProfileParamsSelection,
+            FlowParamsSelection,
+        >,
+        PKeys,
+    > {
+        let Self {
+            workspace,
+            scope_builder:
+                SingleProfileSingleFlowBuilder {
+                    profile_selection: _,
+                    flow_id_selection,
+                    workspace_params_selection,
+                    profile_params_selection,
+                    flow_params_selection,
+                },
+            params_type_regs_builder,
+        } = self;
+
+        let scope_builder = SingleProfileSingleFlowBuilder {
+            profile_selection: ProfileSelected(profile),
+            flow_id_selection,
+            workspace_params_selection,
+            profile_params_selection,
+            flow_params_selection,
+        };
+
+        CmdCtxBuilder {
+            workspace,
+            scope_builder,
+            params_type_regs_builder,
+        }
+    }
+}
+
+impl<
+    'ctx,
+    FlowIdSelection,
+    ProfileParamsSelection,
+    FlowParamsSelection,
     WorkspaceParamsK,
     ProfileParamsKMaybe,
     FlowParamsKMaybe,
@@ -54,6 +121,7 @@ impl<
             FlowIdSelection,
             WorkspaceParamsSome<WorkspaceParamsK>,
             ProfileParamsSelection,
+            FlowParamsSelection,
         >,
         ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     >
@@ -73,6 +141,7 @@ where
             FlowIdSelection,
             WorkspaceParamsSome<WorkspaceParamsK>,
             ProfileParamsSelection,
+            FlowParamsSelection,
         >,
         ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     > {
@@ -84,6 +153,7 @@ where
                     flow_id_selection,
                     workspace_params_selection,
                     profile_params_selection,
+                    flow_params_selection,
                 },
             params_type_regs_builder,
         } = self;
@@ -93,6 +163,7 @@ where
             flow_id_selection,
             workspace_params_selection,
             profile_params_selection,
+            flow_params_selection,
         };
 
         CmdCtxBuilder {
@@ -103,7 +174,14 @@ where
     }
 }
 
-impl<'ctx, PKeys, ProfileSelection, WorkspaceParamsSelection, ProfileParamsSelection>
+impl<
+    'ctx,
+    PKeys,
+    ProfileSelection,
+    WorkspaceParamsSelection,
+    ProfileParamsSelection,
+    FlowParamsSelection,
+>
     CmdCtxBuilder<
         'ctx,
         SingleProfileSingleFlowBuilder<
@@ -111,6 +189,7 @@ impl<'ctx, PKeys, ProfileSelection, WorkspaceParamsSelection, ProfileParamsSelec
             FlowIdNotSelected,
             WorkspaceParamsSelection,
             ProfileParamsSelection,
+            FlowParamsSelection,
         >,
         PKeys,
     >
@@ -127,6 +206,7 @@ where
             FlowIdSelected,
             WorkspaceParamsSelection,
             ProfileParamsSelection,
+            FlowParamsSelection,
         >,
         PKeys,
     > {
@@ -138,6 +218,7 @@ where
                     flow_id_selection: _,
                     workspace_params_selection,
                     profile_params_selection,
+                    flow_params_selection,
                 },
             params_type_regs_builder,
         } = self;
@@ -147,6 +228,7 @@ where
             flow_id_selection: FlowIdSelected(flow_id),
             workspace_params_selection,
             profile_params_selection,
+            flow_params_selection,
         };
 
         CmdCtxBuilder {
@@ -165,6 +247,7 @@ impl<'ctx, PKeys>
             FlowIdSelected,
             WorkspaceParamsNone,
             ProfileParamsNone,
+            FlowParamsNone,
         >,
         PKeys,
     >
@@ -197,6 +280,7 @@ where
                     flow_id_selection: FlowIdSelected(flow_id),
                     workspace_params_selection: WorkspaceParamsNone,
                     profile_params_selection: ProfileParamsNone,
+                    flow_params_selection: FlowParamsNone,
                 },
             params_type_regs_builder,
         } = self;
@@ -234,6 +318,7 @@ impl<'ctx, PKeys>
             FlowIdSelected,
             WorkspaceParamsNone,
             ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+            FlowParamsNone,
         >,
         PKeys,
     >
@@ -279,6 +364,7 @@ where
                     flow_id_selection: FlowIdSelected(flow_id),
                     workspace_params_selection: WorkspaceParamsNone,
                     profile_params_selection: ProfileParamsSome(profile_params),
+                    flow_params_selection: FlowParamsNone,
                 },
             params_type_regs_builder,
         } = self;
@@ -340,6 +426,7 @@ impl<'ctx, PKeys>
             FlowIdSelected,
             WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
             ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+            FlowParamsNone,
         >,
         PKeys,
     >
@@ -388,6 +475,7 @@ where
                     flow_id_selection: FlowIdSelected(flow_id),
                     workspace_params_selection: WorkspaceParamsSome(workspace_params),
                     profile_params_selection: ProfileParamsSome(profile_params),
+                    flow_params_selection: FlowParamsNone,
                 },
             params_type_regs_builder,
         } = self;
@@ -456,6 +544,7 @@ impl<'ctx, PKeys>
             FlowIdSelected,
             WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
             ProfileParamsNone,
+            FlowParamsNone,
         >,
         PKeys,
     >
@@ -501,6 +590,7 @@ where
                     flow_id_selection: FlowIdSelected(flow_id),
                     workspace_params_selection: WorkspaceParamsSome(workspace_params),
                     profile_params_selection: ProfileParamsNone,
+                    flow_params_selection: FlowParamsNone,
                 },
             params_type_regs_builder,
         } = self;
@@ -566,6 +656,7 @@ impl<'ctx, 'key, PKeys>
             FlowIdSelected,
             WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
             ProfileParamsNone,
+            FlowParamsNone,
         >,
         PKeys,
     >
@@ -615,6 +706,7 @@ where
                     flow_id_selection: FlowIdSelected(flow_id),
                     workspace_params_selection: WorkspaceParamsSome(workspace_params),
                     profile_params_selection: ProfileParamsNone,
+                    flow_params_selection: FlowParamsNone,
                 },
             params_type_regs_builder,
         } = self;
@@ -682,6 +774,7 @@ impl<'ctx, 'key, PKeys>
             FlowIdSelected,
             WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
             ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+            FlowParamsNone,
         >,
         PKeys,
     >
@@ -740,6 +833,7 @@ where
                     flow_id_selection: FlowIdSelected(flow_id),
                     workspace_params_selection: WorkspaceParamsSome(workspace_params),
                     profile_params_selection: ProfileParamsSome(profile_params),
+                    flow_params_selection: FlowParamsNone,
                 },
             params_type_regs_builder,
         } = self;
@@ -800,7 +894,7 @@ where
     }
 }
 
-impl<'ctx, 'key, PKeys, ProfileSelection, ProfileParamsSelection>
+impl<'ctx, 'key, PKeys, ProfileSelection, ProfileParamsSelection, FlowParamsSelection>
     CmdCtxBuilder<
         'ctx,
         SingleProfileSingleFlowBuilder<
@@ -808,6 +902,7 @@ impl<'ctx, 'key, PKeys, ProfileSelection, ProfileParamsSelection>
             FlowIdSelected,
             WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
             ProfileParamsSelection,
+            FlowParamsSelection,
         >,
         PKeys,
     >
@@ -859,7 +954,7 @@ where
     }
 }
 
-impl<'ctx, 'key, PKeys, ProfileSelection, WorkspaceParamsSelection>
+impl<'ctx, 'key, PKeys, ProfileSelection, WorkspaceParamsSelection, FlowParamsSelection>
     CmdCtxBuilder<
         'ctx,
         SingleProfileSingleFlowBuilder<
@@ -867,6 +962,7 @@ impl<'ctx, 'key, PKeys, ProfileSelection, WorkspaceParamsSelection>
             FlowIdSelected,
             WorkspaceParamsSelection,
             ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+            FlowParamsSelection,
         >,
         PKeys,
     >
