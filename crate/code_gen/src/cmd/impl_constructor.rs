@@ -93,7 +93,7 @@ mod scope_type_params {
     /// Appends workspace / profile / flow params selection type parameters if
     /// applicable to the given scope.
     pub fn params_selection_push(type_params: &mut Punctuated<Path, Token![,]>, scope: Scope) {
-        // Workflow params are supported by all scopes.
+        // Workspace params are supported by all scopes.
         type_params.push(parse_quote!(
             crate::ctx::cmd_ctx_builder::workspace_params_selection::WorkspaceParamsNone
         ));
@@ -144,7 +144,7 @@ mod scope_field_values {
         field_values: &mut Punctuated<FieldValue, Token![,]>,
         scope: Scope,
     ) {
-        // Workflow params are supported by all scopes.
+        // Workspace params are supported by all scopes.
         field_values.push(parse_quote!(
             workspace_params_selection:
                 crate::ctx::cmd_ctx_builder::workspace_params_selection::WorkspaceParamsNone

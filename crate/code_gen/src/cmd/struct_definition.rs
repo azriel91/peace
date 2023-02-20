@@ -1,8 +1,7 @@
-use proc_macro2::Ident;
 use quote::ToTokens;
-use syn::{parse_quote, punctuated::Punctuated, Fields, FieldsNamed, Token};
+use syn::{parse_quote, punctuated::Punctuated, Fields, FieldsNamed, Path, Token};
 
-use crate::cmd::scope_struct::ScopeStruct;
+use crate::cmd::{scope_struct::ScopeStruct, type_parameters_impl};
 
 /// Generates the struct definition for a scope struct builder.
 ///
@@ -39,10 +38,10 @@ pub fn struct_definition(scope_struct: &mut ScopeStruct) -> proc_macro2::TokenSt
     let scope = scope_struct.scope();
 
     scope_struct.item_struct_mut().generics = {
-        let mut type_params = Punctuated::<Ident, Token![,]>::new();
+        let mut type_params = Punctuated::<Path, Token![,]>::new();
 
-        type_parameters::profile_and_flow_selection_push(&mut type_params, scope);
-        type_parameters::params_selection_push(&mut type_params, scope);
+        type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
+        type_parameters_impl::params_selection_push(&mut type_params, scope);
 
         parse_quote!(<#type_params>)
     };
@@ -57,43 +56,6 @@ pub fn struct_definition(scope_struct: &mut ScopeStruct) -> proc_macro2::TokenSt
     };
 
     scope_struct.item_struct().to_token_stream()
-}
-
-mod type_parameters {
-    use proc_macro2::{Ident, Span};
-    use syn::{punctuated::Punctuated, Token};
-
-    use crate::cmd::{FlowCount, ProfileCount, Scope};
-
-    /// Appends profile / flow ID selection type parameters if applicable to the
-    /// given scope.
-    pub fn profile_and_flow_selection_push(
-        type_params: &mut Punctuated<Ident, Token![,]>,
-        scope: Scope,
-    ) {
-        if scope.profile_count() == ProfileCount::One {
-            type_params.push(Ident::new("ProfileSelection", Span::call_site()));
-        }
-        if scope.flow_count() == FlowCount::One {
-            type_params.push(Ident::new("FlowIdSelection", Span::call_site()));
-        }
-    }
-
-    /// Appends workspace / profile / flow params selection type parameters if
-    /// applicable to the given scope.
-    pub fn params_selection_push(type_params: &mut Punctuated<Ident, Token![,]>, scope: Scope) {
-        // Workflow params are supported by all scopes.
-        type_params.push(Ident::new("WorkflowParamsSelection", Span::call_site()));
-
-        if scope.profile_params_supported() {
-            type_params.push(Ident::new("ProfileParamsSelection", Span::call_site()));
-        }
-
-        #[cfg(test)]
-        if scope.flow_params_supported() {
-            type_params.push(Ident::new("FlowParamsSelection", Span::call_site()));
-        }
-    }
 }
 
 mod fields {
@@ -123,10 +85,10 @@ mod fields {
     /// Appends workspace / profile / flow params selection type parameters if
     /// applicable to the given scope.
     pub fn params_selection_push(fields_named: &mut FieldsNamed, scope: Scope) {
-        // Workflow params are supported by all scopes.
+        // Workspace params are supported by all scopes.
         let fields: FieldsNamed = parse_quote!({
             /// Workspace parameters.
-            pub(crate) workspace_params_selection: WorkflowParamsSelection
+            pub(crate) workspace_params_selection: WorkspaceParamsSelection
         });
         fields_named.named.extend(fields.named);
 
