@@ -1,16 +1,7 @@
 #![allow(clippy::type_complexity)]
 
-use crate::ctx::cmd_ctx_builder::{
-    flow_id_selection::{FlowIdNotSelected, FlowIdSelected},
-    flow_params_selection::{FlowParamsNone, FlowParamsSome},
-    profile_params_selection::{ProfileParamsNone, ProfileParamsSome},
-    profile_selection::{ProfileFromWorkspaceParam, ProfileSelected},
-    workspace_params_selection::{WorkspaceParamsNone, WorkspaceParamsSome},
-};
-
 use std::{fmt::Debug, hash::Hash};
 
-use peace_core::FlowId;
 use peace_resources::{
     internal::{ProfileParamsFile, WorkspaceParamsFile},
     paths::{FlowDir, ProfileDir, ProfileHistoryDir},
@@ -24,7 +15,16 @@ use peace_rt_model::{
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    ctx::{CmdCtx, CmdCtxBuilder},
+    ctx::{
+        cmd_ctx_builder::{
+            flow_id_selection::FlowIdSelected,
+            flow_params_selection::{FlowParamsNone, FlowParamsSome},
+            profile_params_selection::{ProfileParamsNone, ProfileParamsSome},
+            profile_selection::{ProfileFromWorkspaceParam, ProfileSelected},
+            workspace_params_selection::{WorkspaceParamsNone, WorkspaceParamsSome},
+        },
+        CmdCtx, CmdCtxBuilder,
+    },
     scopes::SingleProfileSingleFlow,
 };
 
@@ -36,71 +36,6 @@ use peace_rt_model::NativeError;
 #[peace_code_gen::cmd_ctx_builder_impl]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SingleProfileSingleFlowBuilder;
-
-impl<
-    'ctx,
-    PKeys,
-    ProfileSelection,
-    WorkspaceParamsSelection,
-    ProfileParamsSelection,
-    FlowParamsSelection,
->
-    CmdCtxBuilder<
-        'ctx,
-        SingleProfileSingleFlowBuilder<
-            ProfileSelection,
-            FlowIdNotSelected,
-            WorkspaceParamsSelection,
-            ProfileParamsSelection,
-            FlowParamsSelection,
-        >,
-        PKeys,
-    >
-where
-    PKeys: ParamsKeys + 'static,
-{
-    pub fn with_flow_id(
-        self,
-        flow_id: FlowId,
-    ) -> CmdCtxBuilder<
-        'ctx,
-        SingleProfileSingleFlowBuilder<
-            ProfileSelection,
-            FlowIdSelected,
-            WorkspaceParamsSelection,
-            ProfileParamsSelection,
-            FlowParamsSelection,
-        >,
-        PKeys,
-    > {
-        let Self {
-            workspace,
-            scope_builder:
-                SingleProfileSingleFlowBuilder {
-                    profile_selection,
-                    flow_id_selection: _,
-                    workspace_params_selection,
-                    profile_params_selection,
-                    flow_params_selection,
-                },
-            params_type_regs_builder,
-        } = self;
-
-        let scope_builder = SingleProfileSingleFlowBuilder {
-            profile_selection,
-            flow_id_selection: FlowIdSelected(flow_id),
-            workspace_params_selection,
-            profile_params_selection,
-            flow_params_selection,
-        };
-
-        CmdCtxBuilder {
-            workspace,
-            scope_builder,
-            params_type_regs_builder,
-        }
-    }
-}
 
 impl<'ctx, PKeys>
     CmdCtxBuilder<
