@@ -10,7 +10,7 @@ use crate::ctx::cmd_ctx_builder::{
 
 use std::{fmt::Debug, hash::Hash};
 
-use peace_core::{FlowId, Profile};
+use peace_core::FlowId;
 use peace_resources::{
     internal::{ProfileParamsFile, WorkspaceParamsFile},
     paths::{FlowDir, ProfileDir, ProfileHistoryDir},
@@ -39,71 +39,6 @@ use peace_rt_model::NativeError;
 #[peace_code_gen::cmd_ctx_builder_impl]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SingleProfileSingleFlowBuilder;
-
-impl<
-    'ctx,
-    FlowIdSelection,
-    WorkspaceParamsSelection,
-    ProfileParamsSelection,
-    FlowParamsSelection,
-    PKeys,
->
-    CmdCtxBuilder<
-        'ctx,
-        SingleProfileSingleFlowBuilder<
-            ProfileNotSelected,
-            FlowIdSelection,
-            WorkspaceParamsSelection,
-            ProfileParamsSelection,
-            FlowParamsSelection,
-        >,
-        PKeys,
-    >
-where
-    PKeys: ParamsKeys + 'static,
-{
-    pub fn with_profile(
-        self,
-        profile: Profile,
-    ) -> CmdCtxBuilder<
-        'ctx,
-        SingleProfileSingleFlowBuilder<
-            ProfileSelected,
-            FlowIdSelection,
-            WorkspaceParamsSelection,
-            ProfileParamsSelection,
-            FlowParamsSelection,
-        >,
-        PKeys,
-    > {
-        let Self {
-            workspace,
-            scope_builder:
-                SingleProfileSingleFlowBuilder {
-                    profile_selection: _,
-                    flow_id_selection,
-                    workspace_params_selection,
-                    profile_params_selection,
-                    flow_params_selection,
-                },
-            params_type_regs_builder,
-        } = self;
-
-        let scope_builder = SingleProfileSingleFlowBuilder {
-            profile_selection: ProfileSelected(profile),
-            flow_id_selection,
-            workspace_params_selection,
-            profile_params_selection,
-            flow_params_selection,
-        };
-
-        CmdCtxBuilder {
-            workspace,
-            scope_builder,
-            params_type_regs_builder,
-        }
-    }
-}
 
 impl<
     'ctx,
