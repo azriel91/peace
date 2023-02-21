@@ -4,7 +4,7 @@ use crate::ctx::cmd_ctx_builder::{
     flow_id_selection::{FlowIdNotSelected, FlowIdSelected},
     flow_params_selection::{FlowParamsNone, FlowParamsSome},
     profile_params_selection::{ProfileParamsNone, ProfileParamsSome},
-    profile_selection::{ProfileFromWorkspaceParam, ProfileNotSelected, ProfileSelected},
+    profile_selection::{ProfileFromWorkspaceParam, ProfileSelected},
     workspace_params_selection::{WorkspaceParamsNone, WorkspaceParamsSome},
 };
 
@@ -18,10 +18,7 @@ use peace_resources::{
 };
 use peace_rt_model::{
     cmd::CmdDirsBuilder,
-    cmd_context_params::{
-        FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
-        WorkspaceParams,
-    },
+    cmd_context_params::{KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs},
     Error, Workspace, WorkspaceInitializer,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -39,75 +36,6 @@ use peace_rt_model::NativeError;
 #[peace_code_gen::cmd_ctx_builder_impl]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SingleProfileSingleFlowBuilder;
-
-impl<
-    'ctx,
-    FlowIdSelection,
-    ProfileParamsSelection,
-    FlowParamsSelection,
-    WorkspaceParamsK,
-    ProfileParamsKMaybe,
-    FlowParamsKMaybe,
->
-    CmdCtxBuilder<
-        'ctx,
-        SingleProfileSingleFlowBuilder<
-            ProfileNotSelected,
-            FlowIdSelection,
-            WorkspaceParamsSome<WorkspaceParamsK>,
-            ProfileParamsSelection,
-            FlowParamsSelection,
-        >,
-        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
-    >
-where
-    WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    ProfileParamsKMaybe: KeyMaybe,
-    FlowParamsKMaybe: KeyMaybe,
-{
-    pub fn with_profile_from_workspace_param<'key>(
-        self,
-        workspace_param_k: &'key WorkspaceParamsK,
-    ) -> CmdCtxBuilder<
-        'ctx,
-        SingleProfileSingleFlowBuilder<
-            ProfileFromWorkspaceParam<'key, WorkspaceParamsK>,
-            FlowIdSelection,
-            WorkspaceParamsSome<WorkspaceParamsK>,
-            ProfileParamsSelection,
-            FlowParamsSelection,
-        >,
-        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
-    > {
-        let Self {
-            workspace,
-            scope_builder:
-                SingleProfileSingleFlowBuilder {
-                    profile_selection: _,
-                    flow_id_selection,
-                    workspace_params_selection,
-                    profile_params_selection,
-                    flow_params_selection,
-                },
-            params_type_regs_builder,
-        } = self;
-
-        let scope_builder = SingleProfileSingleFlowBuilder {
-            profile_selection: ProfileFromWorkspaceParam(workspace_param_k),
-            flow_id_selection,
-            workspace_params_selection,
-            profile_params_selection,
-            flow_params_selection,
-        };
-
-        CmdCtxBuilder {
-            workspace,
-            scope_builder,
-            params_type_regs_builder,
-        }
-    }
-}
 
 impl<
     'ctx,

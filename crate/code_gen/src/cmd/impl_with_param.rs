@@ -1,9 +1,7 @@
 use quote::quote;
-use syn::{
-    parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Pat, Path, Token, WherePredicate,
-};
+use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Pat, Path, Token};
 
-use crate::cmd::{type_parameters_impl, ParamsScope, Scope, ScopeStruct};
+use crate::cmd::{param_key_impl, type_parameters_impl, ParamsScope, Scope, ScopeStruct};
 
 /// Generates the `with_workspace_param` / `with_profile_param` /
 /// `with_flow_param` methods.
@@ -74,7 +72,7 @@ fn impl_with_param_key_unknown(
         type_params
     };
 
-    let param_key_impl_unknown_predicates = param_key_impl_unknown_predicates(scope, params_scope);
+    let param_key_impl_unknown_predicates = param_key_impl::unknown_predicates(scope, params_scope);
 
     let params_scope_str = params_scope.to_str();
     let with_params_method_name = params_scope.param_method_name();
@@ -184,7 +182,7 @@ fn impl_with_param_key_unknown(
                     .#params_type_reg_method_name()
                     .register::<#param_type_param>(k.clone());
                 // let mut workspace_params = WorkspaceParams::<WorkspaceParam>::new();
-                let mut params_map = #params_map_type::<#params_k_type_param>::new();
+                let mut params_map = #params_module::#params_map_type::<#params_k_type_param>::new();
                 if let Some(#param_name) = #param_name {
                     params_map.insert(k, #param_name);
                 }
@@ -250,7 +248,7 @@ fn impl_with_param_key_known(
         type_params
     };
 
-    let param_key_impl_known_predicates = param_key_impl_known_predicates(scope, params_scope);
+    let param_key_impl_known_predicates = param_key_impl::known_predicates(scope, params_scope);
 
     let params_scope_str = params_scope.to_str();
     let with_params_method_name = params_scope.param_method_name();
@@ -381,125 +379,6 @@ fn impl_with_param_key_known(
             }
         }
     }
-}
-
-fn param_key_impl_unknown_predicates(
-    scope: Scope,
-    params_scope: ParamsScope,
-) -> Punctuated<WherePredicate, Comma> {
-    let mut predicates = Punctuated::<WherePredicate, Token![,]>::new();
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
-
-    match params_scope {
-        ParamsScope::Workspace => {
-            if scope.profile_params_supported() {
-                predicates.push(parse_quote! {
-                    ProfileParamsKMaybe: #params_module::KeyMaybe
-                });
-            }
-
-            if scope.flow_params_supported() {
-                predicates.push(parse_quote! {
-                    FlowParamsKMaybe: #params_module::KeyMaybe
-                });
-            }
-        }
-        ParamsScope::Profile => {
-            // Workspace params are supported by all scopes.
-            predicates.push(parse_quote! {
-                WorkspaceParamsKMaybe: #params_module::KeyMaybe
-            });
-
-            if scope.flow_params_supported() {
-                predicates.push(parse_quote! {
-                    FlowParamsKMaybe: #params_module::KeyMaybe
-                });
-            }
-        }
-        ParamsScope::Flow => {
-            // Workspace params are supported by all scopes.
-            predicates.push(parse_quote! {
-                WorkspaceParamsKMaybe: #params_module::KeyMaybe
-            });
-
-            if scope.profile_params_supported() {
-                predicates.push(parse_quote! {
-                    ProfileParamsKMaybe: #params_module::KeyMaybe
-                });
-            }
-        }
-    }
-
-    predicates
-}
-
-fn param_key_impl_known_predicates(
-    scope: Scope,
-    params_scope: ParamsScope,
-) -> Punctuated<WherePredicate, Comma> {
-    let mut predicates = Punctuated::<WherePredicate, Token![,]>::new();
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
-
-    match params_scope {
-        ParamsScope::Workspace => {
-            predicates.push(parse_quote! {
-                WorkspaceParamsK:
-                    Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static
-            });
-
-            if scope.profile_params_supported() {
-                predicates.push(parse_quote! {
-                    ProfileParamsKMaybe: #params_module::KeyMaybe
-                });
-            }
-
-            if scope.flow_params_supported() {
-                predicates.push(parse_quote! {
-                    FlowParamsKMaybe: #params_module::KeyMaybe
-                });
-            }
-        }
-        ParamsScope::Profile => {
-            // Workspace params are supported by all scopes.
-            predicates.push(parse_quote! {
-                WorkspaceParamsKMaybe: #params_module::KeyMaybe
-            });
-
-            if scope.profile_params_supported() {
-                predicates.push(parse_quote! {
-                    ProfileParamsK:
-                        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static
-                });
-            }
-
-            if scope.flow_params_supported() {
-                predicates.push(parse_quote! {
-                    FlowParamsKMaybe: #params_module::KeyMaybe
-                });
-            }
-        }
-        ParamsScope::Flow => {
-            // Workspace params are supported by all scopes.
-            predicates.push(parse_quote! {
-                WorkspaceParamsKMaybe: #params_module::KeyMaybe
-            });
-
-            if scope.profile_params_supported() {
-                predicates.push(parse_quote! {
-                    ProfileParamsKMaybe: #params_module::KeyMaybe
-                });
-            }
-
-            if scope.flow_params_supported() {
-                predicates.push(parse_quote! {
-                    FlowParamsK:
-                        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static
-                });
-            }
-        }
-    }
-
-    predicates
 }
 
 fn scope_builder_fields(scope: Scope, params_scope: ParamsScope) -> Punctuated<FieldValue, Comma> {
