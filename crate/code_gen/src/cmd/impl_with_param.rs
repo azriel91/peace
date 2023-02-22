@@ -6,9 +6,24 @@ use crate::cmd::{param_key_impl, type_parameters_impl, ParamsScope, Scope, Scope
 /// Generates the `with_workspace_param` / `with_profile_param` /
 /// `with_flow_param` methods.
 pub fn impl_with_param(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
+    let scope = scope_struct.scope();
     ParamsScope::iter().fold(
         proc_macro2::TokenStream::new(),
         |mut impl_tokens, params_scope| {
+            match params_scope {
+                ParamsScope::Workspace => {}
+                ParamsScope::Profile => {
+                    if !scope.profile_params_supported() {
+                        return impl_tokens;
+                    }
+                }
+                ParamsScope::Flow => {
+                    if !scope.flow_params_supported() {
+                        return impl_tokens;
+                    }
+                }
+            }
+
             let impl_with_param_key_unknown =
                 impl_with_param_key_unknown(scope_struct, params_scope);
 
