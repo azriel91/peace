@@ -4,13 +4,14 @@ use syn::parse_macro_input;
 use crate::cmd::scope_struct::ScopeStruct;
 
 pub use self::{
-    flow_count::FlowCount, impl_constructor::impl_constructor,
+    flow_count::FlowCount, impl_build::impl_build, impl_constructor::impl_constructor,
     impl_with_flow_id::impl_with_flow_id, impl_with_param::impl_with_param,
     impl_with_profile::impl_with_profile, params_scope::ParamsScope, profile_count::ProfileCount,
     scope::Scope, struct_definition::struct_definition,
 };
 
 mod flow_count;
+mod impl_build;
 mod impl_constructor;
 mod impl_with_flow_id;
 mod impl_with_param;
@@ -41,9 +42,11 @@ pub fn cmd_ctx_builder_impl(input: proc_macro::TokenStream) -> proc_macro::Token
     let impl_with_flow_id = if scope_struct.scope().flow_count() == FlowCount::One {
         impl_with_flow_id(&scope_struct)
     } else {
-        // `with_profile` is not supported.
+        // `with_flow_id` is not supported.
         proc_macro2::TokenStream::new()
     };
+
+    let impl_build = impl_build(&scope_struct);
 
     let tokens = quote! {
         #struct_definition
@@ -55,6 +58,8 @@ pub fn cmd_ctx_builder_impl(input: proc_macro::TokenStream) -> proc_macro::Token
         #impl_with_profile
 
         #impl_with_flow_id
+
+        #impl_build
     };
 
     tokens.into()

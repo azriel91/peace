@@ -69,6 +69,16 @@ impl WorkspaceInitializer {
         Result::<_, Error>::Ok(())
     }
 
+    /// Creates directories used by the peace framework.
+    pub async fn dirs_create<'f, I>(storage: &Storage, dirs: I) -> Result<(), Error>
+    where
+        I: IntoIterator<Item = &'f Path>,
+    {
+        storage.set_items(dirs.into_iter().map(|dir| (dir, "")))?;
+
+        Result::<_, Error>::Ok(())
+    }
+
     pub async fn workspace_params_serialize<K>(
         storage: &Storage,
         workspace_params: &WorkspaceParams<K>,

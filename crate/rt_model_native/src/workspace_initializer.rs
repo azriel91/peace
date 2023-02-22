@@ -73,6 +73,22 @@ impl WorkspaceInitializer {
             .await
     }
 
+    /// Creates directories used by the peace framework.
+    pub async fn dirs_create<'f, I>(dirs: I) -> Result<(), Error>
+    where
+        I: IntoIterator<Item = &'f Path>,
+    {
+        stream::iter(dirs.into_iter())
+            .map(Result::<_, Error>::Ok)
+            .try_for_each(|dir| async move {
+                tokio::fs::create_dir_all(dir).await.map_err(|error| {
+                    let path = dir.to_path_buf();
+                    Error::Native(NativeError::WorkspaceDirCreate { path, error })
+                })
+            })
+            .await
+    }
+
     pub async fn workspace_params_serialize<K>(
         storage: &Storage,
         workspace_params: &WorkspaceParams<K>,

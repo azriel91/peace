@@ -1,3 +1,5 @@
+use syn::{parse_quote, Path};
+
 use crate::cmd::{FlowCount, ProfileCount};
 
 /// Scope to generate the `CmdCtxBuilder` impl for.
@@ -17,6 +19,21 @@ pub enum Scope {
 }
 
 impl Scope {
+    /// Returns the scope's type for the built command.
+    pub fn type_path(self) -> Path {
+        match self {
+            Scope::MultiProfileNoFlow => parse_quote!(crate::scopes::MultiProfileNoFlow),
+            Scope::MultiProfileSingleFlow => {
+                parse_quote!(crate::scopes::MultiProfileSingleFlow)
+            }
+            Scope::NoProfileNoFlow => parse_quote!(crate::scopes::NoProfileNoFlow),
+            Scope::SingleProfileNoFlow => parse_quote!(crate::scopes::SingleProfileNoFlow),
+            Scope::SingleProfileSingleFlow => {
+                parse_quote!(crate::scopes::SingleProfileSingleFlow)
+            }
+        }
+    }
+
     /// Returns this scope as a snake case `&str`.
     pub fn as_str(self) -> &'static str {
         match self {
