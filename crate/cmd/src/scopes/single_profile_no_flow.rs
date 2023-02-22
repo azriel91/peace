@@ -1,3 +1,6 @@
+use peace_core::Profile;
+use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
+
 /// A command that works with a single profile, without any item specs.
 ///
 /// ```bash
@@ -27,4 +30,41 @@
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SingleProfileNoFlow;
+pub struct SingleProfileNoFlow {
+    /// The profile this command operates on.
+    profile: Profile,
+    /// Profile directory that stores params and flows.
+    profile_dir: ProfileDir,
+    /// Directory to store profile executions' summaries.
+    profile_history_dir: ProfileHistoryDir,
+}
+
+impl SingleProfileNoFlow {
+    /// Returns a new `SingleProfileNoFlow` scope.
+    pub fn new(
+        profile: Profile,
+        profile_dir: ProfileDir,
+        profile_history_dir: ProfileHistoryDir,
+    ) -> Self {
+        Self {
+            profile,
+            profile_dir,
+            profile_history_dir,
+        }
+    }
+
+    /// Returns a reference to the profile.
+    pub fn profile(&self) -> &Profile {
+        &self.profile
+    }
+
+    /// Returns a reference to the profile directory.
+    pub fn profile_dir(&self) -> &ProfileDir {
+        &self.profile_dir
+    }
+
+    /// Returns a reference to the profile history directory.
+    pub fn profile_history_dir(&self) -> &ProfileHistoryDir {
+        &self.profile_history_dir
+    }
+}

@@ -4,6 +4,7 @@ use peace::{
 };
 
 mod no_profile_no_flow_builder;
+mod single_profile_no_flow_builder;
 mod single_profile_single_flow_builder;
 
 fn workspace(

@@ -31,6 +31,7 @@ mod flow_id_selection;
 mod flow_params_selection;
 mod profile_params_selection;
 mod profile_selection;
+mod single_profile_no_flow_builder;
 mod single_profile_single_flow_builder;
 mod workspace_params_selection;
 
