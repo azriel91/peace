@@ -17,6 +17,15 @@ pub fn impl_params_merge(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
     ParamsScope::iter().fold(
         proc_macro2::TokenStream::new(),
         |mut impl_tokens, params_scope| {
+            if (!scope_struct.scope().profile_params_supported()
+                && params_scope == ParamsScope::Profile)
+                || (!scope_struct.scope().flow_params_supported()
+                    && params_scope == ParamsScope::Flow)
+            {
+                // Skip `*_params_merge` implementation if it is not supported.
+                return impl_tokens;
+            }
+
             impl_tokens.extend(impl_params_merge_for(scope_struct, params_scope));
 
             impl_tokens
