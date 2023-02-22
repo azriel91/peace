@@ -232,22 +232,26 @@ pub fn params_key_unknown_push(
 
             if scope.profile_params_supported() {
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
+            } else {
+                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
             }
 
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsKMaybe));
+            } else {
+                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
             }
         }
         ParamsScope::Profile => {
             // Workspace params are supported by all scopes.
             type_params.push(parse_quote!(WorkspaceParamsKMaybe));
 
-            if scope.profile_params_supported() {
-                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
-            }
+            type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
 
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsKMaybe));
+            } else {
+                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
             }
         }
         ParamsScope::Flow => {
@@ -256,11 +260,11 @@ pub fn params_key_unknown_push(
 
             if scope.profile_params_supported() {
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
-            }
-
-            if scope.flow_params_supported() {
+            } else {
                 type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
             }
+
+            type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
         }
     }
 }
@@ -288,10 +292,14 @@ pub fn params_key_known_push(
 
             if scope.profile_params_supported() {
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
+            } else {
+                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
             }
 
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsKMaybe));
+            } else {
+                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
             }
         }
         ParamsScope::Profile => {
@@ -302,10 +310,14 @@ pub fn params_key_known_push(
                 type_params.push(parse_quote!(
                     peace_rt_model::cmd_context_params::KeyKnown<ProfileParamsK>
                 ));
+            } else {
+                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
             }
 
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsKMaybe));
+            } else {
+                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
             }
         }
         ParamsScope::Flow => {
@@ -314,12 +326,16 @@ pub fn params_key_known_push(
 
             if scope.profile_params_supported() {
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
+            } else {
+                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
             }
 
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(
                     peace_rt_model::cmd_context_params::KeyKnown<FlowParamsK>
                 ));
+            } else {
+                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
             }
         }
     }
