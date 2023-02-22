@@ -105,9 +105,9 @@ fn impl_build_for(
         workspace_params_load_save(workspace_params_selection);
 
     let (profile_params_deserialize, profile_params_serialize, profile_params_insert) =
-        profile_params_load_save(profile_params_selection);
+        profile_params_load_save(scope, profile_params_selection);
     let (flow_params_deserialize, flow_params_serialize, flow_params_insert) =
-        flow_params_load_save(flow_params_selection);
+        flow_params_load_save(scope, flow_params_selection);
 
     let profile_from_workspace = profile_from_workspace(profile_selection);
     let profile_ref = profile_ref(profile_selection);
@@ -430,13 +430,15 @@ fn workspace_params_load_save(
 /// Load from `profile_params_file` and serialize when
 /// `ProfileParamsSelection` is `Some`.
 fn profile_params_load_save(
+    scope: Scope,
     profile_params_selection: ProfileParamsSelection,
 ) -> (
     proc_macro2::TokenStream,
     proc_macro2::TokenStream,
     proc_macro2::TokenStream,
 ) {
-    if profile_params_selection == ProfileParamsSelection::Some {
+    if scope.profile_params_supported() && profile_params_selection == ProfileParamsSelection::Some
+    {
         let profile_params_deserialize = quote! {
             let profile_params_file = peace_resources::internal::ProfileParamsFile::from(
                 &profile_dir
@@ -473,13 +475,14 @@ fn profile_params_load_save(
 /// Load from `flow_params_file` and serialize when
 /// `FlowParamsSelection` is `Some`.
 fn flow_params_load_save(
+    scope: Scope,
     flow_params_selection: FlowParamsSelection,
 ) -> (
     proc_macro2::TokenStream,
     proc_macro2::TokenStream,
     proc_macro2::TokenStream,
 ) {
-    if flow_params_selection == FlowParamsSelection::Some {
+    if scope.flow_params_supported() && flow_params_selection == FlowParamsSelection::Some {
         let flow_params_deserialize = quote! {
             let flow_params_file = peace_resources::internal::FlowParamsFile::from(
                 &flow_dir
