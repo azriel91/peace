@@ -48,7 +48,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
             >
         {
             /// Returns a `CmdCtxBuilder` for a single profile and flow.
-            pub fn #constructor_method_name(workspace: &'ctx Workspace) -> Self {
+            pub fn #constructor_method_name(workspace: &'ctx peace_rt_model::Workspace) -> Self {
                 let scope_builder = #scope_builder_name {
                     // profile_selection: ProfileNotSelected,
                     // flow_id_selection: FlowIdNotSelected,
@@ -60,7 +60,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                 Self {
                     workspace,
                     scope_builder,
-                    params_type_regs_builder: ParamsTypeRegs::builder(),
+                    params_type_regs_builder: #params_module::ParamsTypeRegs::builder(),
                 }
             }
         }
@@ -105,9 +105,7 @@ mod scope_type_params {
         }
 
         if scope.flow_params_supported() {
-            type_params.push(parse_quote!(
-                crate::ctx::cmd_ctx_builder::flow_params_selection::FlowParamsNone
-            ));
+            type_params.push(parse_quote!(crate::ctx::cmd_ctx_builder::FlowParamsNone));
         }
     }
 }
@@ -158,8 +156,7 @@ mod scope_field_values {
 
         if scope.flow_params_supported() {
             field_values.push(parse_quote!(
-                flow_params_selection:
-                    crate::ctx::cmd_ctx_builder::flow_params_selection::FlowParamsNone
+                flow_params_selection: crate::ctx::cmd_ctx_builder::FlowParamsNone
             ));
         }
     }

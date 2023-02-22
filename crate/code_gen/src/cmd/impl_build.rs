@@ -167,13 +167,13 @@ fn impl_build_for(
                 crate::ctx::CmdCtx<
                     'ctx,
                     #scope_type_path,
-                    ParamsKeysImpl<
+                    #params_module::ParamsKeysImpl<
                         PKeys::WorkspaceParamsKMaybe,
                         PKeys::ProfileParamsKMaybe,
                         PKeys::FlowParamsKMaybe,
                     >,
                 >,
-                Error,
+                peace_rt_model::Error,
             > {
                 // Values shared by subsequent function calls.
                 // let workspace_dirs = self.workspace.dirs();
@@ -275,7 +275,7 @@ fn impl_build_for(
                 #flow_params_serialize
 
                 // Track items in memory.
-                let mut resources = Resources::new();
+                let mut resources = peace_resources::Resources::new();
                 // Self::workspace_params_insert(workspace_params, &mut resources);
                 #workspace_params_insert
                 // Self::profile_params_insert(profile_params, &mut resources);

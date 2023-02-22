@@ -144,7 +144,7 @@ fn impl_params_merge_for(
                 &mut self,
                 // workspace_params_file: &peace_resources::internal::WorkspaceParamsFile,
                 #params_file_name: &peace_resources::internal::#params_file_type,
-            ) -> Result<(), Error> {
+            ) -> Result<(), peace_rt_model::Error> {
                 let storage = self.workspace.storage();
                 let params_deserialized = peace_rt_model::WorkspaceInitializer::#params_deserialize_method_name::<
                     // <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key,

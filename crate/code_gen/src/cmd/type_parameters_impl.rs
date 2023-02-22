@@ -113,7 +113,9 @@ pub fn params_selection_none_push(
 ) {
     match params_scope {
         ParamsScope::Workspace => {
-            type_params.push(parse_quote!(WorkspaceParamsNone));
+            type_params.push(parse_quote!(
+                crate::ctx::cmd_ctx_builder::WorkspaceParamsNone
+            ));
 
             if scope.profile_params_supported() {
                 type_params.push(parse_quote!(ProfileParamsSelection));
@@ -128,7 +130,7 @@ pub fn params_selection_none_push(
             type_params.push(parse_quote!(WorkspaceParamsSelection));
 
             if scope.profile_params_supported() {
-                type_params.push(parse_quote!(ProfileParamsNone));
+                type_params.push(parse_quote!(crate::ctx::cmd_ctx_builder::ProfileParamsNone));
             }
 
             if scope.flow_params_supported() {
@@ -144,7 +146,7 @@ pub fn params_selection_none_push(
             }
 
             if scope.flow_params_supported() {
-                type_params.push(parse_quote!(FlowParamsNone));
+                type_params.push(parse_quote!(crate::ctx::cmd_ctx_builder::FlowParamsNone));
             }
         }
     }
@@ -167,7 +169,9 @@ pub fn params_selection_some_push(
 ) {
     match params_scope {
         ParamsScope::Workspace => {
-            type_params.push(parse_quote!(WorkspaceParamsSome<WorkspaceParamsK>));
+            type_params.push(parse_quote!(
+                crate::ctx::cmd_ctx_builder::WorkspaceParamsSome<WorkspaceParamsK>
+            ));
 
             if scope.profile_params_supported() {
                 type_params.push(parse_quote!(ProfileParamsSelection));
@@ -182,7 +186,9 @@ pub fn params_selection_some_push(
             type_params.push(parse_quote!(WorkspaceParamsSelection));
 
             if scope.profile_params_supported() {
-                type_params.push(parse_quote!(ProfileParamsSome<ProfileParamsK>));
+                type_params.push(parse_quote!(
+                    crate::ctx::cmd_ctx_builder::ProfileParamsSome<ProfileParamsK>
+                ));
             }
 
             if scope.flow_params_supported() {
@@ -198,7 +204,9 @@ pub fn params_selection_some_push(
             }
 
             if scope.flow_params_supported() {
-                type_params.push(parse_quote!(FlowParamsSome<FlowParamsK>));
+                type_params.push(parse_quote!(
+                    crate::ctx::cmd_ctx_builder::FlowParamsSome<FlowParamsK>
+                ));
             }
         }
     }
