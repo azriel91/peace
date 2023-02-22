@@ -1,4 +1,5 @@
 use proc_macro2::{Ident, Span};
+use syn::{parse_quote, TypePath};
 
 /// Workspace, profile, or flow params.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -19,6 +20,24 @@ impl ParamsScope {
             Self::Workspace => Ident::new("WorkspaceParam", Span::call_site()),
             Self::Profile => Ident::new("ProfileParam", Span::call_site()),
             Self::Flow => Ident::new("FlowParam", Span::call_site()),
+        }
+    }
+
+    /// Returns the `*_params_file` variable name.
+    pub fn params_file_name(self) -> Ident {
+        match self {
+            Self::Workspace => Ident::new("workspace_params_file", Span::call_site()),
+            Self::Profile => Ident::new("profile_params_file", Span::call_site()),
+            Self::Flow => Ident::new("flow_params_file", Span::call_site()),
+        }
+    }
+
+    /// Returns the `*ParamsFile` type name.
+    pub fn params_file_type(self) -> Ident {
+        match self {
+            Self::Workspace => Ident::new("WorkspaceParamsFile", Span::call_site()),
+            Self::Profile => Ident::new("ProfileParamsFile", Span::call_site()),
+            Self::Flow => Ident::new("FlowParamsFile", Span::call_site()),
         }
     }
 
@@ -50,6 +69,26 @@ impl ParamsScope {
         }
     }
 
+    /// Returns the name of the `*_params_merge` method to register the key
+    /// type.
+    pub fn params_merge_method_name(self) -> Ident {
+        match self {
+            Self::Workspace => Ident::new("workspace_params_merge", Span::call_site()),
+            Self::Profile => Ident::new("profile_params_merge", Span::call_site()),
+            Self::Flow => Ident::new("flow_params_merge", Span::call_site()),
+        }
+    }
+
+    /// Returns the name of the `*_params_deserialize` method to register the
+    /// key type.
+    pub fn params_deserialize_method_name(self) -> Ident {
+        match self {
+            Self::Workspace => Ident::new("workspace_params_deserialize", Span::call_site()),
+            Self::Profile => Ident::new("profile_params_deserialize", Span::call_site()),
+            Self::Flow => Ident::new("flow_params_deserialize", Span::call_site()),
+        }
+    }
+
     /// Returns the name to use for the `with_*_param` method.
     pub fn param_method_name(self) -> Ident {
         match self {
@@ -68,7 +107,7 @@ impl ParamsScope {
         }
     }
 
-    /// Returns the name to use for the `*_param` variable.
+    /// Returns the name to use for the `*_params_selection` variable.
     pub fn params_selection_name(self) -> Ident {
         match self {
             Self::Workspace => Ident::new("workspace_params_selection", Span::call_site()),
@@ -77,12 +116,36 @@ impl ParamsScope {
         }
     }
 
-    /// Returns the name to use for the `*_params_type_reg_mut` method.
+    /// Returns the name to use for the `*_params_type_reg` method.
     pub fn params_type_reg_method_name(self) -> Ident {
+        match self {
+            Self::Workspace => Ident::new("workspace_params_type_reg", Span::call_site()),
+            Self::Profile => Ident::new("profile_params_type_reg", Span::call_site()),
+            Self::Flow => Ident::new("flow_params_type_reg", Span::call_site()),
+        }
+    }
+
+    /// Returns the name to use for the `*_params_type_reg_mut` method.
+    pub fn params_type_reg_mut_method_name(self) -> Ident {
         match self {
             Self::Workspace => Ident::new("workspace_params_type_reg_mut", Span::call_site()),
             Self::Profile => Ident::new("profile_params_type_reg_mut", Span::call_site()),
             Self::Flow => Ident::new("flow_params_type_reg_mut", Span::call_site()),
+        }
+    }
+
+    /// Returns the `<PKeys::*ParamsKMaybe as KeyMaybe>::Key` associated type.
+    pub fn p_keys_key_maybe_key(self) -> TypePath {
+        match self {
+            Self::Workspace => parse_quote!(
+                <PKeys::WorkspaceParamsKMaybe as peace_rt_model::cmd_context_params::KeyMaybe>::Key
+            ),
+            Self::Profile => parse_quote!(
+                <PKeys::ProfileParamsKMaybe as peace_rt_model::cmd_context_params::KeyMaybe>::Key
+            ),
+            Self::Flow => parse_quote!(
+                <PKeys::FlowParamsKMaybe as peace_rt_model::cmd_context_params::KeyMaybe>::Key
+            ),
         }
     }
 

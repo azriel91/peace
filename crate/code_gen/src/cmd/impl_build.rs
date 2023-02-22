@@ -1,7 +1,13 @@
 use quote::quote;
 use syn::{parse_quote, punctuated::Punctuated, FieldValue, Pat, Path, Token};
 
-use crate::cmd::{FlowCount, ProfileCount, Scope, ScopeStruct};
+use crate::cmd::{
+    type_params_selection::{
+        FlowIdSelection, FlowParamsSelection, ProfileParamsSelection, ProfileSelection,
+        WorkspaceParamsSelection,
+    },
+    FlowCount, ProfileCount, Scope, ScopeStruct,
+};
 
 /// Generates the `CmdCtxBuilder::build` methods for each type param selection.
 ///
@@ -100,6 +106,8 @@ fn impl_build_for(
 
     let (profile_params_deserialize, profile_params_serialize, profile_params_insert) =
         profile_params_load_save(profile_params_selection);
+    let (flow_params_deserialize, flow_params_serialize, flow_params_insert) =
+        flow_params_load_save(flow_params_selection);
 
     let profile_from_workspace = profile_from_workspace(profile_selection);
     let profile_ref = profile_ref(profile_selection);
@@ -206,6 +214,10 @@ fn impl_build_for(
                 // self.profile_params_merge(&profile_params_file).await?;
                 #profile_params_deserialize
 
+                // let flow_params_file = ProfileParamsFile::from(&flow_dir);
+                // self.flow_params_merge(&flow_params_file).await?;
+                #flow_params_deserialize
+
                 // Create directories and write init parameters to storage.
                 #[cfg(target_arch = "wasm32")]
                 peace_rt_model::WorkspaceInitializer::dirs_create(storage, dirs_to_create).await?;
@@ -254,12 +266,22 @@ fn impl_build_for(
                 // .await?;
                 #profile_params_serialize
 
+                // Self::flow_params_serialize(
+                //     flow_params.as_ref(),
+                //     storage,
+                //     &flow_params_file
+                // )
+                // .await?;
+                #flow_params_serialize
+
                 // Track items in memory.
                 let mut resources = Resources::new();
                 // Self::workspace_params_insert(workspace_params, &mut resources);
                 #workspace_params_insert
                 // Self::profile_params_insert(profile_params, &mut resources);
                 #profile_params_insert
+                // Self::flow_params_insert(profile_params, &mut resources);
+                #flow_params_insert
 
                 let scope = #scope_type_path::new(
                     // profile,
@@ -448,6 +470,49 @@ fn profile_params_load_save(
     }
 }
 
+/// Load from `flow_params_file` and serialize when
+/// `FlowParamsSelection` is `Some`.
+fn flow_params_load_save(
+    flow_params_selection: FlowParamsSelection,
+) -> (
+    proc_macro2::TokenStream,
+    proc_macro2::TokenStream,
+    proc_macro2::TokenStream,
+) {
+    if flow_params_selection == FlowParamsSelection::Some {
+        let flow_params_deserialize = quote! {
+            let flow_params_file = peace_resources::internal::FlowParamsFile::from(
+                &flow_dir
+            );
+
+            self.flow_params_merge(&flow_params_file).await?;
+        };
+        let flow_params_serialize = quote! {
+            Self::flow_params_serialize(
+                flow_params.as_ref(),
+                storage,
+                &flow_params_file,
+            )
+            .await?;
+        };
+        let flow_params_insert = quote! {
+            Self::flow_params_insert(flow_params, &mut resources);
+        };
+
+        (
+            flow_params_deserialize,
+            flow_params_serialize,
+            flow_params_insert,
+        )
+    } else {
+        (
+            proc_macro2::TokenStream::new(),
+            proc_macro2::TokenStream::new(),
+            proc_macro2::TokenStream::new(),
+        )
+    }
+}
+
 fn profile_from_workspace(profile_selection: ProfileSelection) -> proc_macro2::TokenStream {
     if profile_selection == ProfileSelection::FromWorkspaceParam {
         quote! {
@@ -514,155 +579,4 @@ fn dirs_to_create(scope: Scope) -> proc_macro2::TokenStream {
     }
 
     dirs_tokens
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum ProfileSelection {
-    Selected,
-    FromWorkspaceParam,
-}
-
-impl ProfileSelection {
-    fn iter() -> std::array::IntoIter<Self, 2> {
-        [Self::Selected, Self::FromWorkspaceParam].into_iter()
-    }
-
-    fn type_param(self) -> Path {
-        match self {
-            Self::Selected => parse_quote!(crate::ctx::cmd_ctx_builder::ProfileSelected),
-            Self::FromWorkspaceParam => parse_quote!(
-                crate::ctx::cmd_ctx_builder::ProfileFromWorkspaceParam<
-                    'key,
-                    <
-                        PKeys::WorkspaceParamsKMaybe as
-                        peace_rt_model::cmd_context_params::KeyMaybe
-                    >::Key
-                >
-            ),
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum FlowIdSelection {
-    Selected,
-}
-
-impl FlowIdSelection {
-    fn iter() -> std::array::IntoIter<Self, 1> {
-        [Self::Selected].into_iter()
-    }
-
-    fn type_param(&self) -> Path {
-        match self {
-            Self::Selected => parse_quote!(crate::ctx::cmd_ctx_builder::FlowIdSelected),
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum WorkspaceParamsSelection {
-    None,
-    Some,
-}
-
-impl WorkspaceParamsSelection {
-    fn iter() -> std::array::IntoIter<Self, 2> {
-        [Self::None, Self::Some].into_iter()
-    }
-
-    fn type_param(&self) -> Path {
-        match self {
-            Self::None => parse_quote!(crate::ctx::cmd_ctx_builder::WorkspaceParamsNone),
-            Self::Some => parse_quote! {
-                crate::ctx::cmd_ctx_builder::WorkspaceParamsSome<
-                    <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key
-                >
-            },
-        }
-    }
-
-    fn deconstruct(self) -> FieldValue {
-        match self {
-            Self::None => parse_quote!(
-                workspace_params_selection: crate::ctx::cmd_ctx_builder::WorkspaceParamsNone
-            ),
-            Self::Some => parse_quote! {
-                workspace_params_selection:
-                    crate::ctx::cmd_ctx_builder::WorkspaceParamsSome(workspace_params)
-            },
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum ProfileParamsSelection {
-    None,
-    Some,
-}
-
-impl ProfileParamsSelection {
-    fn iter() -> std::array::IntoIter<Self, 2> {
-        [Self::None, Self::Some].into_iter()
-    }
-
-    fn type_param(&self) -> Path {
-        match self {
-            Self::None => parse_quote!(crate::ctx::cmd_ctx_builder::ProfileParamsNone),
-            Self::Some => parse_quote! {
-                crate::ctx::cmd_ctx_builder::ProfileParamsSome<
-                    <PKeys::ProfileParamsKMaybe as KeyMaybe>::Key
-                >
-            },
-        }
-    }
-
-    fn deconstruct(self) -> FieldValue {
-        match self {
-            Self::None => parse_quote!(
-                profile_params_selection: crate::ctx::cmd_ctx_builder::ProfileParamsNone
-            ),
-            Self::Some => parse_quote! {
-                profile_params_selection:
-                    crate::ctx::cmd_ctx_builder::ProfileParamsSome(profile_params)
-            },
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum FlowParamsSelection {
-    None,
-    Some,
-}
-
-impl FlowParamsSelection {
-    fn iter() -> std::array::IntoIter<Self, 2> {
-        [Self::None, Self::Some].into_iter()
-    }
-
-    fn type_param(&self) -> Path {
-        match self {
-            Self::None => {
-                parse_quote!(crate::ctx::cmd_ctx_builder::FlowParamsNone)
-            }
-            Self::Some => parse_quote! {
-                crate::ctx::cmd_ctx_builder::FlowParamsSome<
-                    <PKeys::FlowParamsKMaybe as KeyMaybe>::Key
-                >
-            },
-        }
-    }
-
-    fn deconstruct(self) -> FieldValue {
-        match self {
-            Self::None => {
-                parse_quote!(flow_params_selection: crate::ctx::cmd_ctx_builder::FlowParamsNone)
-            }
-            Self::Some => parse_quote! {
-                flow_params_selection:
-                    crate::ctx::cmd_ctx_builder::FlowParamsSome(flow_params)
-            },
-        }
-    }
 }

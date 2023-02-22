@@ -85,7 +85,7 @@ fn impl_with_param_key_unknown(
     let scope_builder_fields_params_none = scope_builder_fields_params_none(scope, params_scope);
     let scope_builder_fields_params_some_new =
         scope_builder_fields_params_some_new(scope, params_scope);
-    let params_type_reg_method_name = params_scope.params_type_reg_method_name();
+    let params_type_reg_mut_method_name = params_scope.params_type_reg_mut_method_name();
 
     let doc_summary = format!("Adds a {params_scope_str} parameter.");
     let doc_param = format!("* `{param_name_str}`: The {params_scope_str} parameter to register.");
@@ -179,7 +179,7 @@ fn impl_with_param_key_unknown(
                 let mut params_type_regs_builder =
                     params_type_regs_builder.#params_k_method_name::<#params_k_type_param>();
                 params_type_regs_builder
-                    .#params_type_reg_method_name()
+                    .#params_type_reg_mut_method_name()
                     .register::<#param_type_param>(k.clone());
                 // let mut workspace_params = WorkspaceParams::<WorkspaceParam>::new();
                 let mut params_map = #params_module::#params_map_type::<#params_k_type_param>::new();
@@ -259,7 +259,7 @@ fn impl_with_param_key_known(
     let params_selection_name = params_scope.params_selection_name();
     let scope_builder_fields_params_some = scope_builder_fields_params_some(scope, params_scope);
     let scope_builder_fields = scope_builder_fields(scope, params_scope);
-    let params_type_reg_method_name = params_scope.params_type_reg_method_name();
+    let params_type_reg_method_name = params_scope.params_type_reg_mut_method_name();
 
     let doc_summary = format!("Adds a {params_scope_str} parameter.");
     let doc_param = format!("* `{param_name_str}`: The {params_scope_str} parameter to register.");

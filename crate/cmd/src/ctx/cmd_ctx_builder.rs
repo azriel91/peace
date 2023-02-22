@@ -3,14 +3,14 @@
 use std::fmt::Debug;
 
 use peace_resources::{
-    internal::{ProfileParamsFile, WorkspaceParamsFile},
+    internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
     resources::ts::Empty,
     Resources,
 };
 use peace_rt_model::{
     cmd_context_params::{
-        KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ParamsTypeRegsBuilder,
-        ProfileParams, WorkspaceParams,
+        FlowParams, KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs,
+        ParamsTypeRegsBuilder, ProfileParams, WorkspaceParams,
     },
     fn_graph::resman::Resource,
     Error, Storage, Workspace, WorkspaceInitializer,
@@ -121,6 +121,34 @@ where
                 let profile_param = profile_param.into_inner().upcast();
                 let type_id = Resource::type_id(&*profile_param);
                 resources.insert_raw(type_id, profile_param);
+            });
+        }
+    }
+
+    /// Serializes flow params to storage.
+    async fn flow_params_serialize(
+        flow_params: Option<&FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
+        storage: &Storage,
+        flow_params_file: &FlowParamsFile,
+    ) -> Result<(), Error> {
+        if let Some(flow_params) = flow_params {
+            WorkspaceInitializer::flow_params_serialize(storage, flow_params, flow_params_file)
+                .await?;
+        }
+
+        Ok(())
+    }
+
+    /// Inserts flow params into the `Resources` map.
+    fn flow_params_insert(
+        mut flow_params: Option<FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
+        resources: &mut Resources<Empty>,
+    ) {
+        if let Some(flow_params) = flow_params.as_mut() {
+            flow_params.drain(..).for_each(|(_key, flow_param)| {
+                let flow_param = flow_param.into_inner().upcast();
+                let type_id = Resource::type_id(&*flow_param);
+                resources.insert_raw(type_id, flow_param);
             });
         }
     }
