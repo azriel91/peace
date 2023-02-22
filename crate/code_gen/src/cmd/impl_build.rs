@@ -43,6 +43,13 @@ pub fn impl_build(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                                 FlowParamsSelection::iter().fold(
                                     tokens,
                                     |mut tokens, flow_params_selection| {
+                                        if !scope_struct.scope().flow_params_supported()
+                                            && flow_params_selection == FlowParamsSelection::Some
+                                        {
+                                            // Skip FlowParamsSome when it isn't supported.
+                                            return tokens;
+                                        }
+
                                         let next_build_tokens = impl_build_for(
                                             scope_struct,
                                             profile_selection,
