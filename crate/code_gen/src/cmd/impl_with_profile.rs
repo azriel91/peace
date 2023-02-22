@@ -255,7 +255,9 @@ fn scope_builder_fields_profile_not_selected(scope: Scope) -> Punctuated<FieldVa
     field_values.push(parse_quote!(
         profile_selection: crate::ctx::cmd_ctx_builder::profile_selection::ProfileNotSelected
     ));
-    field_values.push(parse_quote!(flow_id_selection));
+    if scope.flow_count() == FlowCount::One {
+        field_values.push(parse_quote!(flow_id_selection));
+    }
     field_values.push(parse_quote!(workspace_params_selection));
     if scope.profile_params_supported() {
         field_values.push(parse_quote!(profile_params_selection));
@@ -272,7 +274,9 @@ fn scope_builder_fields_profile_selected(scope: Scope) -> Punctuated<FieldValue,
     field_values.push(parse_quote!(
         profile_selection: crate::ctx::cmd_ctx_builder::profile_selection::ProfileSelected(profile)
     ));
-    field_values.push(parse_quote!(flow_id_selection));
+    if scope.flow_count() == FlowCount::One {
+        field_values.push(parse_quote!(flow_id_selection));
+    }
     field_values.push(parse_quote!(workspace_params_selection));
     if scope.profile_params_supported() {
         field_values.push(parse_quote!(profile_params_selection));
@@ -292,7 +296,9 @@ fn scope_builder_fields_profile_from_workspace(scope: Scope) -> Punctuated<Field
                 workspace_param_k,
             )
     ));
-    field_values.push(parse_quote!(flow_id_selection));
+    if scope.flow_count() == FlowCount::One {
+        field_values.push(parse_quote!(flow_id_selection));
+    }
     field_values.push(parse_quote!(workspace_params_selection));
     if scope.profile_params_supported() {
         field_values.push(parse_quote!(profile_params_selection));
