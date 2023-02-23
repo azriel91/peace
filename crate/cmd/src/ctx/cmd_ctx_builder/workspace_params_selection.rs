@@ -9,9 +9,7 @@ pub struct WorkspaceParamsNone;
 
 /// The application has workspace parameters.
 #[derive(Debug)]
-pub struct WorkspaceParamsSome<WorkspaceParamsK>(
-    pub(crate) Option<WorkspaceParams<WorkspaceParamsK>>,
-)
+pub struct WorkspaceParamsSome<WorkspaceParamsK>(pub(crate) WorkspaceParams<WorkspaceParamsK>)
 where
     WorkspaceParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static;

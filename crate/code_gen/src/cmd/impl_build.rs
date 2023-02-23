@@ -202,8 +202,6 @@ fn impl_build_for(
                 //     .scope_builder
                 //     .workspace_params_selection
                 //     .0
-                //     .as_ref()
-                //     .ok_or(Error::WorkspaceParamsNoneForProfile)?
                 //     .get(self.scope_builder.profile_selection.0)
                 //     .cloned()
                 //     .ok_or(Error::WorkspaceParamsProfileNone)?;
@@ -265,7 +263,7 @@ fn impl_build_for(
                 // Serialize params to `PeaceAppDir`.
 
                 // Self::workspace_params_serialize(
-                //     workspace_params.as_ref(),
+                //     &workspace_params,
                 //     storage,
                 //     &workspace_params_file,
                 // )
@@ -273,7 +271,7 @@ fn impl_build_for(
                 #workspace_params_serialize
 
                 // Self::profile_params_serialize(
-                //     profile_params.as_ref(),
+                //     &profile_params,
                 //     storage,
                 //     &profile_params_file
                 // )
@@ -281,7 +279,7 @@ fn impl_build_for(
                 #profile_params_serialize
 
                 // Self::flow_params_serialize(
-                //     flow_params.as_ref(),
+                //     &flow_params,
                 //     storage,
                 //     &flow_params_file
                 // )
@@ -417,7 +415,7 @@ fn workspace_params_load_save(
         };
         let workspace_params_serialize = quote! {
             Self::workspace_params_serialize(
-                workspace_params.as_ref(),
+                &workspace_params,
                 storage,
                 &workspace_params_file,
             )
@@ -462,7 +460,7 @@ fn profile_params_load_save(
         };
         let profile_params_serialize = quote! {
             Self::profile_params_serialize(
-                profile_params.as_ref(),
+                &profile_params,
                 storage,
                 &profile_params_file,
             )
@@ -506,7 +504,7 @@ fn flow_params_load_save(
         };
         let flow_params_serialize = quote! {
             Self::flow_params_serialize(
-                flow_params.as_ref(),
+                &flow_params,
                 storage,
                 &flow_params_file,
             )
@@ -537,8 +535,6 @@ fn profile_from_workspace(profile_selection: ProfileSelection) -> proc_macro2::T
                 .scope_builder
                 .workspace_params_selection
                 .0
-                .as_ref()
-                .ok_or(peace_rt_model::Error::WorkspaceParamsNoneForProfile)?
                 .get(self.scope_builder.profile_selection.0)
                 .cloned()
                 .ok_or(peace_rt_model::Error::WorkspaceParamsProfileNone)?;

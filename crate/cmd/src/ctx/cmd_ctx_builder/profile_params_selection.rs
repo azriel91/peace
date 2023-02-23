@@ -9,7 +9,7 @@ pub struct ProfileParamsNone;
 
 /// The application has profile parameters.
 #[derive(Debug)]
-pub struct ProfileParamsSome<ProfileParamsK>(pub(crate) Option<ProfileParams<ProfileParamsK>>)
+pub struct ProfileParamsSome<ProfileParamsK>(pub(crate) ProfileParams<ProfileParamsK>)
 where
     ProfileParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static;

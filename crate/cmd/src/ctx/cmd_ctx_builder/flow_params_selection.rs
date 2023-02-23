@@ -9,6 +9,6 @@ pub struct FlowParamsNone;
 
 /// The application has flow parameters.
 #[derive(Debug)]
-pub struct FlowParamsSome<FlowParamsK>(pub(crate) Option<FlowParams<FlowParamsK>>)
+pub struct FlowParamsSome<FlowParamsK>(pub(crate) FlowParams<FlowParamsK>)
 where
     FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static;

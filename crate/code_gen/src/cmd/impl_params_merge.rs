@@ -165,30 +165,29 @@ fn impl_params_merge_for(
                     #params_file_name,
                 )
                 .await?;
-                match (
-                    self.scope_builder.#params_selection_name.0.as_mut(),
-                    params_deserialized,
-                ) {
-                    (Some(params), Some(params_deserialized)) => {
+                match params_deserialized {
+                    Some(params_deserialized) => {
                         // Merge `params` on top of `params_deserialized`.
                         // or, copy `params_deserialized` to `params` where
                         // there isn't a value.
 
-                        params_deserialized
-                            .into_inner()
-                            .into_inner()
-                            .into_iter()
-                            .for_each(|(key, param)| {
-                                if !params.contains_key(&key) {
-                                    params.insert_raw(key, param);
-                                }
-                            });
+                        let params = &mut self.scope_builder.#params_selection_name.0;
+                        if params.is_empty() {
+                            *params = params_deserialized;
+                        } else {
+                            params_deserialized
+                                .into_inner()
+                                .into_inner()
+                                .into_iter()
+                                .for_each(|(key, param)| {
+                                    if !params.contains_key(&key) {
+                                        params.insert_raw(key, param);
+                                    }
+                                });
+                        }
+
                     }
-                    (None, Some(params_deserialized)) => {
-                        self.scope_builder.#params_selection_name.0 = Some(params_deserialized)
-                    }
-                    (Some(_), None) => {}
-                    (None, None) => {}
+                    None => {}
                 }
 
                 Ok(())

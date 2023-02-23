@@ -60,98 +60,83 @@ where
 {
     /// Serializes workspace params to storage.
     async fn workspace_params_serialize(
-        workspace_params: Option<&WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>>,
+        workspace_params: &WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         storage: &Storage,
         workspace_params_file: &WorkspaceParamsFile,
     ) -> Result<(), Error> {
-        if let Some(workspace_params) = workspace_params {
-            WorkspaceInitializer::workspace_params_serialize(
-                storage,
-                workspace_params,
-                workspace_params_file,
-            )
-            .await?;
-        }
+        WorkspaceInitializer::workspace_params_serialize(
+            storage,
+            workspace_params,
+            workspace_params_file,
+        )
+        .await?;
 
         Ok(())
     }
 
     /// Inserts workspace params into the `Resources` map.
     fn workspace_params_insert(
-        mut workspace_params: Option<
-            WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-        >,
+        mut workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         resources: &mut Resources<Empty>,
     ) {
-        if let Some(workspace_params) = workspace_params.as_mut() {
-            workspace_params
-                .drain(..)
-                .for_each(|(_key, workspace_param)| {
-                    let workspace_param = workspace_param.into_inner().upcast();
-                    let type_id = Resource::type_id(&*workspace_param);
-                    resources.insert_raw(type_id, workspace_param);
-                });
-        }
+        workspace_params
+            .drain(..)
+            .for_each(|(_key, workspace_param)| {
+                let workspace_param = workspace_param.into_inner().upcast();
+                let type_id = Resource::type_id(&*workspace_param);
+                resources.insert_raw(type_id, workspace_param);
+            });
     }
 
     /// Serializes profile params to storage.
     async fn profile_params_serialize(
-        profile_params: Option<&ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
+        profile_params: &ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
         storage: &Storage,
         profile_params_file: &ProfileParamsFile,
     ) -> Result<(), Error> {
-        if let Some(profile_params) = profile_params {
-            WorkspaceInitializer::profile_params_serialize(
-                storage,
-                profile_params,
-                profile_params_file,
-            )
-            .await?;
-        }
+        WorkspaceInitializer::profile_params_serialize(
+            storage,
+            profile_params,
+            profile_params_file,
+        )
+        .await?;
 
         Ok(())
     }
 
     /// Inserts profile params into the `Resources` map.
     fn profile_params_insert(
-        mut profile_params: Option<ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
+        mut profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
         resources: &mut Resources<Empty>,
     ) {
-        if let Some(profile_params) = profile_params.as_mut() {
-            profile_params.drain(..).for_each(|(_key, profile_param)| {
-                let profile_param = profile_param.into_inner().upcast();
-                let type_id = Resource::type_id(&*profile_param);
-                resources.insert_raw(type_id, profile_param);
-            });
-        }
+        profile_params.drain(..).for_each(|(_key, profile_param)| {
+            let profile_param = profile_param.into_inner().upcast();
+            let type_id = Resource::type_id(&*profile_param);
+            resources.insert_raw(type_id, profile_param);
+        });
     }
 
     /// Serializes flow params to storage.
     async fn flow_params_serialize(
-        flow_params: Option<&FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
+        flow_params: &FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
         storage: &Storage,
         flow_params_file: &FlowParamsFile,
     ) -> Result<(), Error> {
-        if let Some(flow_params) = flow_params {
-            WorkspaceInitializer::flow_params_serialize(storage, flow_params, flow_params_file)
-                .await?;
-        }
+        WorkspaceInitializer::flow_params_serialize(storage, flow_params, flow_params_file).await?;
 
         Ok(())
     }
 
     /// Inserts flow params into the `Resources` map.
     fn flow_params_insert(
-        mut flow_params: Option<FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
+        mut flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
         resources: &mut Resources<Empty>,
     ) {
-        if let Some(flow_params) = flow_params.as_mut() {
-            flow_params.drain(..).for_each(|(_key, flow_param)| {
-                let flow_param = flow_param.into_inner().upcast();
-                let type_id = Resource::type_id(&*flow_param);
-                resources.insert_raw(type_id, flow_param);
-            });
-        }
+        flow_params.drain(..).for_each(|(_key, flow_param)| {
+            let flow_param = flow_param.into_inner().upcast();
+            let type_id = Resource::type_id(&*flow_param);
+            resources.insert_raw(type_id, flow_param);
+        });
     }
 }
 
