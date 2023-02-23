@@ -48,10 +48,6 @@ pub fn cmd_ctx_builder_impl(input: proc_macro::TokenStream) -> proc_macro::Token
 
     let impl_build = impl_build(&scope_struct);
 
-    if scope_struct.scope().profile_count() == ProfileCount::Multiple {
-        eprintln!("{impl_build}");
-    }
-
     let impl_params_deserialize = impl_params_deserialize(&scope_struct);
     let impl_params_merge = impl_params_merge(&scope_struct);
 
