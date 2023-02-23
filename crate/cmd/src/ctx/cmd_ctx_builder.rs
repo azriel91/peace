@@ -19,11 +19,13 @@ use peace_rt_model::{
 use crate::{ctx::CmdCtx, scopes::NoProfileNoFlow};
 
 pub use self::{
+    multi_profile_no_flow_builder::MultiProfileNoFlowBuilder,
     multi_profile_single_flow_builder::MultiProfileSingleFlowBuilder,
     single_profile_no_flow_builder::SingleProfileNoFlowBuilder,
     single_profile_single_flow_builder::SingleProfileSingleFlowBuilder,
 };
 
+mod multi_profile_no_flow_builder;
 mod multi_profile_single_flow_builder;
 mod single_profile_no_flow_builder;
 mod single_profile_single_flow_builder;

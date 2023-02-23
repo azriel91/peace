@@ -94,8 +94,23 @@ impl MultiProfileSingleFlow {
         self.profiles.as_ref()
     }
 
-    /// Returns a reference to the flow ID.
+    /// Returns the profile directories keyed by each profile.
+    pub fn profile_dirs(&self) -> &IndexMap<Profile, ProfileDir> {
+        &self.profile_dirs
+    }
+
+    /// Returns the profile history directories keyed by each profile.
+    pub fn profile_history_dirs(&self) -> &IndexMap<Profile, ProfileHistoryDir> {
+        &self.profile_history_dirs
+    }
+
+    /// Returns the flow ID.
     pub fn flow_id(&self) -> &FlowId {
         &self.flow_id
+    }
+
+    /// Returns the flow directories keyed by each profile.
+    pub fn flow_dirs(&self) -> &IndexMap<Profile, FlowDir> {
+        &self.flow_dirs
     }
 }

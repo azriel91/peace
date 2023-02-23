@@ -1,4 +1,6 @@
+use indexmap::IndexMap;
 use peace_core::Profile;
+use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
 
 /// A command that works with multiple profiles, without any item specs.
 ///
@@ -39,11 +41,24 @@ use peace_core::Profile;
 pub struct MultiProfileNoFlow {
     /// The profiles that are accessible by this command.
     profiles: Vec<Profile>,
+    /// Profile directories that store params and flows.
+    profile_dirs: IndexMap<Profile, ProfileDir>,
+    /// Directories of each profile's execution history.
+    profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
 }
 
 impl MultiProfileNoFlow {
-    pub fn new(profiles: Vec<Profile>) -> Self {
-        Self { profiles }
+    /// Returns a new `MultiProfileNoFlow` scope.
+    pub fn new(
+        profiles: Vec<Profile>,
+        profile_dirs: IndexMap<Profile, ProfileDir>,
+        profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
+    ) -> Self {
+        Self {
+            profiles,
+            profile_dirs,
+            profile_history_dirs,
+        }
     }
 
     /// Returns the accessible profiles.
@@ -52,5 +67,15 @@ impl MultiProfileNoFlow {
     /// provided.
     pub fn profiles(&self) -> &[Profile] {
         self.profiles.as_ref()
+    }
+
+    /// Returns the profile directories keyed by each profile.
+    pub fn profile_dirs(&self) -> &IndexMap<Profile, ProfileDir> {
+        &self.profile_dirs
+    }
+
+    /// Returns the profile history directories keyed by each profile.
+    pub fn profile_history_dirs(&self) -> &IndexMap<Profile, ProfileHistoryDir> {
+        &self.profile_history_dirs
     }
 }
