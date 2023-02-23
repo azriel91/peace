@@ -398,8 +398,11 @@ fn impl_with_param_key_known(
 
 fn scope_builder_fields(scope: Scope, params_scope: ParamsScope) -> Punctuated<FieldValue, Comma> {
     let mut field_values = Punctuated::<FieldValue, Token![,]>::new();
-    if scope.profile_count() == ProfileCount::One {
-        field_values.push(parse_quote!(profile_selection));
+    match scope.profile_count() {
+        ProfileCount::None => {}
+        ProfileCount::One | ProfileCount::Multiple => {
+            field_values.push(parse_quote!(profile_selection));
+        }
     }
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(flow_id_selection));
@@ -443,8 +446,11 @@ fn scope_builder_fields_params_none(
     params_scope: ParamsScope,
 ) -> Punctuated<FieldValue, Comma> {
     let mut field_values = Punctuated::<FieldValue, Token![,]>::new();
-    if scope.profile_count() == ProfileCount::One {
-        field_values.push(parse_quote!(profile_selection));
+    match scope.profile_count() {
+        ProfileCount::None => {}
+        ProfileCount::One | ProfileCount::Multiple => {
+            field_values.push(parse_quote!(profile_selection));
+        }
     }
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(flow_id_selection));
@@ -494,8 +500,11 @@ fn scope_builder_fields_params_some(
     params_scope: ParamsScope,
 ) -> Punctuated<Pat, Comma> {
     let mut field_values = Punctuated::<Pat, Token![,]>::new();
-    if scope.profile_count() == ProfileCount::One {
-        field_values.push(parse_quote!(profile_selection));
+    match scope.profile_count() {
+        ProfileCount::None => {}
+        ProfileCount::One | ProfileCount::Multiple => {
+            field_values.push(parse_quote!(profile_selection));
+        }
     }
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(flow_id_selection));
@@ -539,8 +548,11 @@ fn scope_builder_fields_params_some_new(
     params_scope: ParamsScope,
 ) -> Punctuated<FieldValue, Comma> {
     let mut field_values = Punctuated::<FieldValue, Token![,]>::new();
-    if scope.profile_count() == ProfileCount::One {
-        field_values.push(parse_quote!(profile_selection));
+    match scope.profile_count() {
+        ProfileCount::None => {}
+        ProfileCount::One | ProfileCount::Multiple => {
+            field_values.push(parse_quote!(profile_selection));
+        }
     }
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(flow_id_selection));
