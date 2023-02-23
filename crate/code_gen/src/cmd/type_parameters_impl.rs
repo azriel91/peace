@@ -114,7 +114,7 @@ pub fn params_selection_none_push(
     match params_scope {
         ParamsScope::Workspace => {
             type_params.push(parse_quote!(
-                crate::ctx::cmd_ctx_builder::WorkspaceParamsNone
+                crate::scopes::type_params::WorkspaceParamsNone
             ));
 
             if scope.profile_params_supported() {
@@ -130,7 +130,7 @@ pub fn params_selection_none_push(
             type_params.push(parse_quote!(WorkspaceParamsSelection));
 
             if scope.profile_params_supported() {
-                type_params.push(parse_quote!(crate::ctx::cmd_ctx_builder::ProfileParamsNone));
+                type_params.push(parse_quote!(crate::scopes::type_params::ProfileParamsNone));
             }
 
             if scope.flow_params_supported() {
@@ -146,7 +146,7 @@ pub fn params_selection_none_push(
             }
 
             if scope.flow_params_supported() {
-                type_params.push(parse_quote!(crate::ctx::cmd_ctx_builder::FlowParamsNone));
+                type_params.push(parse_quote!(crate::scopes::type_params::FlowParamsNone));
             }
         }
     }
@@ -170,7 +170,7 @@ pub fn params_selection_some_push(
     match params_scope {
         ParamsScope::Workspace => {
             type_params.push(parse_quote!(
-                crate::ctx::cmd_ctx_builder::WorkspaceParamsSome<WorkspaceParamsK>
+                crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
             ));
 
             if scope.profile_params_supported() {
@@ -187,7 +187,7 @@ pub fn params_selection_some_push(
 
             if scope.profile_params_supported() {
                 type_params.push(parse_quote!(
-                    crate::ctx::cmd_ctx_builder::ProfileParamsSome<ProfileParamsK>
+                    crate::scopes::type_params::ProfileParamsSome<ProfileParamsK>
                 ));
             }
 
@@ -205,7 +205,7 @@ pub fn params_selection_some_push(
 
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(
-                    crate::ctx::cmd_ctx_builder::FlowParamsSome<FlowParamsK>
+                    crate::scopes::type_params::FlowParamsSome<FlowParamsK>
                 ));
             }
         }

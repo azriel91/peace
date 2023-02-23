@@ -13,9 +13,9 @@ impl ProfileSelection {
 
     pub(crate) fn type_param(self) -> Path {
         match self {
-            Self::Selected => parse_quote!(crate::ctx::cmd_ctx_builder::ProfileSelected),
+            Self::Selected => parse_quote!(crate::scopes::type_params::ProfileSelected),
             Self::FromWorkspaceParam => parse_quote!(
-                crate::ctx::cmd_ctx_builder::ProfileFromWorkspaceParam<
+                crate::scopes::type_params::ProfileFromWorkspaceParam<
                     'key,
                     <
                         PKeys::WorkspaceParamsKMaybe as
@@ -39,7 +39,7 @@ impl FlowIdSelection {
 
     pub(crate) fn type_param(&self) -> Path {
         match self {
-            Self::Selected => parse_quote!(crate::ctx::cmd_ctx_builder::FlowIdSelected),
+            Self::Selected => parse_quote!(crate::scopes::type_params::FlowIdSelected),
         }
     }
 }
@@ -57,9 +57,9 @@ impl WorkspaceParamsSelection {
 
     pub(crate) fn type_param(&self) -> Path {
         match self {
-            Self::None => parse_quote!(crate::ctx::cmd_ctx_builder::WorkspaceParamsNone),
+            Self::None => parse_quote!(crate::scopes::type_params::WorkspaceParamsNone),
             Self::Some => parse_quote! {
-                crate::ctx::cmd_ctx_builder::WorkspaceParamsSome<
+                crate::scopes::type_params::WorkspaceParamsSome<
                     <
                         PKeys::WorkspaceParamsKMaybe
                         as peace_rt_model::cmd_context_params::KeyMaybe
@@ -72,11 +72,11 @@ impl WorkspaceParamsSelection {
     pub(crate) fn deconstruct(self) -> FieldValue {
         match self {
             Self::None => parse_quote!(
-                workspace_params_selection: crate::ctx::cmd_ctx_builder::WorkspaceParamsNone
+                workspace_params_selection: crate::scopes::type_params::WorkspaceParamsNone
             ),
             Self::Some => parse_quote! {
                 workspace_params_selection:
-                    crate::ctx::cmd_ctx_builder::WorkspaceParamsSome(workspace_params)
+                    crate::scopes::type_params::WorkspaceParamsSome(workspace_params)
             },
         }
     }
@@ -95,9 +95,9 @@ impl ProfileParamsSelection {
 
     pub(crate) fn type_param(&self) -> Path {
         match self {
-            Self::None => parse_quote!(crate::ctx::cmd_ctx_builder::ProfileParamsNone),
+            Self::None => parse_quote!(crate::scopes::type_params::ProfileParamsNone),
             Self::Some => parse_quote! {
-                crate::ctx::cmd_ctx_builder::ProfileParamsSome<
+                crate::scopes::type_params::ProfileParamsSome<
                     <
                         PKeys::ProfileParamsKMaybe
                         as peace_rt_model::cmd_context_params::KeyMaybe
@@ -109,12 +109,14 @@ impl ProfileParamsSelection {
 
     pub(crate) fn deconstruct(self) -> FieldValue {
         match self {
-            Self::None => parse_quote!(
-                profile_params_selection: crate::ctx::cmd_ctx_builder::ProfileParamsNone
-            ),
+            Self::None => {
+                parse_quote!(
+                    profile_params_selection: crate::scopes::type_params::ProfileParamsNone
+                )
+            }
             Self::Some => parse_quote! {
                 profile_params_selection:
-                    crate::ctx::cmd_ctx_builder::ProfileParamsSome(profile_params)
+                    crate::scopes::type_params::ProfileParamsSome(profile_params)
             },
         }
     }
@@ -134,10 +136,10 @@ impl FlowParamsSelection {
     pub(crate) fn type_param(&self) -> Path {
         match self {
             Self::None => {
-                parse_quote!(crate::ctx::cmd_ctx_builder::FlowParamsNone)
+                parse_quote!(crate::scopes::type_params::FlowParamsNone)
             }
             Self::Some => parse_quote! {
-                crate::ctx::cmd_ctx_builder::FlowParamsSome<
+                crate::scopes::type_params::FlowParamsSome<
                     <
                         PKeys::FlowParamsKMaybe
                         as peace_rt_model::cmd_context_params::KeyMaybe
@@ -150,11 +152,11 @@ impl FlowParamsSelection {
     pub(crate) fn deconstruct(self) -> FieldValue {
         match self {
             Self::None => {
-                parse_quote!(flow_params_selection: crate::ctx::cmd_ctx_builder::FlowParamsNone)
+                parse_quote!(flow_params_selection: crate::scopes::type_params::FlowParamsNone)
             }
             Self::Some => parse_quote! {
                 flow_params_selection:
-                    crate::ctx::cmd_ctx_builder::FlowParamsSome(flow_params)
+                    crate::scopes::type_params::FlowParamsSome(flow_params)
             },
         }
     }

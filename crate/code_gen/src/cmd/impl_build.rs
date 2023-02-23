@@ -292,7 +292,7 @@ fn impl_build_for(
                 #workspace_params_insert
                 // Self::profile_params_insert(profile_params, &mut resources);
                 #profile_params_insert
-                // Self::flow_params_insert(profile_params, &mut resources);
+                // Self::flow_params_insert(flow_params, &mut resources);
                 #flow_params_insert
 
                 let scope = #scope_type_path::new(
@@ -332,11 +332,11 @@ fn scope_builder_deconstruct(
         match profile_selection {
             ProfileSelection::Selected => scope_builder_fields.push(parse_quote! {
                 profile_selection:
-                    crate::ctx::cmd_ctx_builder::ProfileSelected(profile)
+                    crate::scopes::type_params::ProfileSelected(profile)
             }),
             ProfileSelection::FromWorkspaceParam => scope_builder_fields.push(parse_quote! {
                 profile_selection:
-                    crate::ctx::cmd_ctx_builder::ProfileFromWorkspaceParam(
+                    crate::scopes::type_params::ProfileFromWorkspaceParam(
                         _workspace_params_k
                     )
             }),
@@ -346,7 +346,7 @@ fn scope_builder_deconstruct(
     if scope.flow_count() == FlowCount::One {
         match flow_id_selection {
             FlowIdSelection::Selected => scope_builder_fields.push(parse_quote! {
-                flow_id_selection: crate::ctx::cmd_ctx_builder::FlowIdSelected(flow_id)
+                flow_id_selection: crate::scopes::type_params::FlowIdSelected(flow_id)
             }),
         }
     }

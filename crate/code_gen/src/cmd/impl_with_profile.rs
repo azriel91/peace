@@ -37,7 +37,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
-                    crate::ctx::cmd_ctx_builder::profile_selection::ProfileNotSelected,
+                    crate::scopes::type_params::ProfileNotSelected,
                     // FlowIdSelection,
                     // WorkspaceParamsSelection,
                     // ProfileParamsSelection,
@@ -55,7 +55,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
-                    crate::ctx::cmd_ctx_builder::profile_selection::ProfileSelected,
+                    crate::scopes::type_params::ProfileSelected,
                     // FlowIdSelection,
                     // WorkspaceParamsSelection,
                     // ProfileParamsSelection,
@@ -138,7 +138,7 @@ pub fn impl_with_profile_from_workspace_param(
             type_params.push(parse_quote!(FlowIdSelection));
         }
         type_params.push(parse_quote! {
-            crate::ctx::cmd_ctx_builder::workspace_params_selection::WorkspaceParamsSome<WorkspaceParamsK>
+            crate::scopes::type_params::WorkspaceParamsSome<WorkspaceParamsK>
         });
         if scope.profile_params_supported() {
             type_params.push(parse_quote!(ProfileParamsSelection));
@@ -180,7 +180,7 @@ pub fn impl_with_profile_from_workspace_param(
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
-                    crate::ctx::cmd_ctx_builder::profile_selection::ProfileNotSelected,
+                    crate::scopes::type_params::ProfileNotSelected,
                     // FlowIdSelection,
                     // WorkspaceParamsSome<WorkspaceParamsK>,
                     // ProfileParamsSelection,
@@ -205,7 +205,7 @@ pub fn impl_with_profile_from_workspace_param(
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
-                    crate::ctx::cmd_ctx_builder::profile_selection::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>,
+                    crate::scopes::type_params::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>,
                     // FlowIdSelection,
                     // WorkspaceParamsSome<WorkspaceParamsK>,
                     // ProfileParamsSelection,
@@ -253,7 +253,7 @@ pub fn impl_with_profile_from_workspace_param(
 fn scope_builder_fields_profile_not_selected(scope: Scope) -> Punctuated<FieldValue, Comma> {
     let mut field_values = Punctuated::<FieldValue, Token![,]>::new();
     field_values.push(parse_quote!(
-        profile_selection: crate::ctx::cmd_ctx_builder::profile_selection::ProfileNotSelected
+        profile_selection: crate::scopes::type_params::ProfileNotSelected
     ));
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(flow_id_selection));
@@ -272,7 +272,7 @@ fn scope_builder_fields_profile_not_selected(scope: Scope) -> Punctuated<FieldVa
 fn scope_builder_fields_profile_selected(scope: Scope) -> Punctuated<FieldValue, Comma> {
     let mut field_values = Punctuated::<FieldValue, Token![,]>::new();
     field_values.push(parse_quote!(
-        profile_selection: crate::ctx::cmd_ctx_builder::profile_selection::ProfileSelected(profile)
+        profile_selection: crate::scopes::type_params::ProfileSelected(profile)
     ));
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(flow_id_selection));
@@ -291,10 +291,7 @@ fn scope_builder_fields_profile_selected(scope: Scope) -> Punctuated<FieldValue,
 fn scope_builder_fields_profile_from_workspace(scope: Scope) -> Punctuated<FieldValue, Comma> {
     let mut field_values = Punctuated::<FieldValue, Token![,]>::new();
     field_values.push(parse_quote!(
-        profile_selection:
-            crate::ctx::cmd_ctx_builder::profile_selection::ProfileFromWorkspaceParam(
-                workspace_param_k,
-            )
+        profile_selection: crate::scopes::type_params::ProfileFromWorkspaceParam(workspace_param_k)
     ));
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(flow_id_selection));

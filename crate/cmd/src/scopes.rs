@@ -4,6 +4,8 @@ pub use self::{
     single_profile_single_flow::SingleProfileSingleFlow,
 };
 
+pub mod type_params;
+
 mod multi_profile_no_flow;
 mod multi_profile_single_flow;
 mod no_profile_no_flow;

@@ -79,14 +79,10 @@ mod scope_type_params {
         scope: Scope,
     ) {
         if scope.profile_count() == ProfileCount::One {
-            type_params.push(parse_quote!(
-                crate::ctx::cmd_ctx_builder::profile_selection::ProfileNotSelected
-            ));
+            type_params.push(parse_quote!(crate::scopes::type_params::ProfileNotSelected));
         }
         if scope.flow_count() == FlowCount::One {
-            type_params.push(parse_quote!(
-                crate::ctx::cmd_ctx_builder::flow_id_selection::FlowIdNotSelected
-            ));
+            type_params.push(parse_quote!(crate::scopes::type_params::FlowIdNotSelected));
         }
     }
 
@@ -95,17 +91,15 @@ mod scope_type_params {
     pub fn params_selection_push(type_params: &mut Punctuated<Path, Token![,]>, scope: Scope) {
         // Workspace params are supported by all scopes.
         type_params.push(parse_quote!(
-            crate::ctx::cmd_ctx_builder::workspace_params_selection::WorkspaceParamsNone
+            crate::scopes::type_params::WorkspaceParamsNone
         ));
 
         if scope.profile_params_supported() {
-            type_params.push(parse_quote!(
-                crate::ctx::cmd_ctx_builder::profile_params_selection::ProfileParamsNone
-            ));
+            type_params.push(parse_quote!(crate::scopes::type_params::ProfileParamsNone));
         }
 
         if scope.flow_params_supported() {
-            type_params.push(parse_quote!(crate::ctx::cmd_ctx_builder::FlowParamsNone));
+            type_params.push(parse_quote!(crate::scopes::type_params::FlowParamsNone));
         }
     }
 }
@@ -123,14 +117,12 @@ mod scope_field_values {
     ) {
         if scope.profile_count() == ProfileCount::One {
             field_values.push(parse_quote!(
-                profile_selection:
-                    crate::ctx::cmd_ctx_builder::profile_selection::ProfileNotSelected
+                profile_selection: crate::scopes::type_params::ProfileNotSelected
             ));
         }
         if scope.flow_count() == FlowCount::One {
             field_values.push(parse_quote!(
-                flow_id_selection:
-                    crate::ctx::cmd_ctx_builder::flow_id_selection::FlowIdNotSelected
+                flow_id_selection: crate::scopes::type_params::FlowIdNotSelected
             ));
         }
     }
@@ -143,20 +135,18 @@ mod scope_field_values {
     ) {
         // Workspace params are supported by all scopes.
         field_values.push(parse_quote!(
-            workspace_params_selection:
-                crate::ctx::cmd_ctx_builder::workspace_params_selection::WorkspaceParamsNone
+            workspace_params_selection: crate::scopes::type_params::WorkspaceParamsNone
         ));
 
         if scope.profile_params_supported() {
             field_values.push(parse_quote!(
-                profile_params_selection:
-                    crate::ctx::cmd_ctx_builder::profile_params_selection::ProfileParamsNone
+                profile_params_selection: crate::scopes::type_params::ProfileParamsNone
             ));
         }
 
         if scope.flow_params_supported() {
             field_values.push(parse_quote!(
-                flow_params_selection: crate::ctx::cmd_ctx_builder::FlowParamsNone
+                flow_params_selection: crate::scopes::type_params::FlowParamsNone
             ));
         }
     }

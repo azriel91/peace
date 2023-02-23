@@ -453,7 +453,7 @@ fn scope_builder_fields_params_none(
     match params_scope {
         ParamsScope::Workspace => {
             field_values.push(parse_quote!(
-                workspace_params_selection: crate::ctx::cmd_ctx_builder::WorkspaceParamsNone
+                workspace_params_selection: crate::scopes::type_params::WorkspaceParamsNone
             ));
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(profile_params_selection));
@@ -466,7 +466,7 @@ fn scope_builder_fields_params_none(
             field_values.push(parse_quote!(workspace_params_selection));
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(
-                    profile_params_selection: crate::ctx::cmd_ctx_builder::ProfileParamsNone
+                    profile_params_selection: crate::scopes::type_params::ProfileParamsNone
                 ));
             }
             if scope.flow_params_supported() {
@@ -480,7 +480,7 @@ fn scope_builder_fields_params_none(
             }
             if scope.flow_params_supported() {
                 field_values.push(parse_quote!(
-                    flow_params_selection: crate::ctx::cmd_ctx_builder::FlowParamsNone
+                    flow_params_selection: crate::scopes::type_params::FlowParamsNone
                 ));
             }
         }
@@ -550,7 +550,7 @@ fn scope_builder_fields_params_some_new(
         ParamsScope::Workspace => {
             field_values.push(parse_quote! {
                 workspace_params_selection:
-                    crate::ctx::cmd_ctx_builder::WorkspaceParamsSome(params_map)
+                    crate::scopes::type_params::WorkspaceParamsSome(params_map)
             });
             if scope.profile_params_supported() {
                 field_values.push(parse_quote!(profile_params_selection));
@@ -564,7 +564,7 @@ fn scope_builder_fields_params_some_new(
             if scope.profile_params_supported() {
                 field_values.push(parse_quote! {
                     profile_params_selection:
-                        crate::ctx::cmd_ctx_builder::ProfileParamsSome(params_map)
+                        crate::scopes::type_params::ProfileParamsSome(params_map)
                 });
             }
             if scope.flow_params_supported() {
@@ -579,7 +579,7 @@ fn scope_builder_fields_params_some_new(
             if scope.flow_params_supported() {
                 field_values.push(parse_quote! {
                     flow_params_selection:
-                        crate::ctx::cmd_ctx_builder::FlowParamsSome(params_map)
+                        crate::scopes::type_params::FlowParamsSome(params_map)
                 });
             }
         }
