@@ -149,19 +149,19 @@ fn impl_params_deserialize_for(
             #[doc = #doc_summary]
             // async fn workspace_params_deserialize
             async fn #params_deserialize_method_name(
-                &mut self,
+                storage: &peace_rt_model::Storage,
+                params_type_regs_builder: &#params_module::ParamsTypeRegsBuilder<PKeys>,
                 // workspace_params_file: &peace_resources::internal::WorkspaceParamsFile,
                 #params_file_name: &peace_resources::internal::#params_file_type,
             // ) -> Result<Option<WorkspaceParams<K>, peace_rt_model::Error> {
             ) -> Result<Option<#params_module::#params_map_type<#p_keys_key_maybe_key>>, peace_rt_model::Error> {
-                let storage = self.workspace.storage();
                 let params_deserialized = peace_rt_model::WorkspaceInitializer::#params_deserialize_method_name::<
                     // <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key,
                     #p_keys_key_maybe_key
                 >(
                     storage,
                     // self.params_type_regs_builder.workspace_params_type_reg(),
-                    self.params_type_regs_builder.#params_type_reg_method_name(),
+                    params_type_regs_builder.#params_type_reg_method_name(),
                     #params_file_name,
                 )
                 .await?;

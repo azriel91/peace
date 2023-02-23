@@ -185,8 +185,8 @@ where
 pub(crate) async fn profiles_from_peace_app_dir(
     peace_app_dir: &peace_resources::paths::PeaceAppDir,
     profiles_filter_fn: Option<&dyn Fn(&peace_core::Profile) -> bool>,
-) -> Vec<peace_core::Profile> {
-    use std::ffi::OsStr;
+) -> Result<Vec<peace_core::Profile>, peace_rt_model::Error> {
+    use std::{ffi::OsStr, str::FromStr};
 
     let mut profiles = Vec::new();
     let mut peace_app_read_dir = tokio::fs::read_dir(peace_app_dir).await.map_err(|error| {
@@ -225,7 +225,7 @@ pub(crate) async fn profiles_from_peace_app_dir(
                 })?;
 
                 if let Some(profiles_filter_fn) = profiles_filter_fn {
-                    if !profiles_filter_fn(profile) {
+                    if !profiles_filter_fn(&profile) {
                         // Exclude any profiles that do not pass the filter
                         continue;
                     }
@@ -237,4 +237,6 @@ pub(crate) async fn profiles_from_peace_app_dir(
             // Assume non-UTF8 file names are not profile directories
         }
     } // while
+
+    Ok(profiles)
 } // let profiles

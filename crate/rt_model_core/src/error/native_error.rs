@@ -1,5 +1,6 @@
 use std::{ffi::OsString, path::PathBuf, sync::Mutex};
 
+use peace_core::ProfileInvalidFmt;
 use peace_resources::paths::WorkspaceDir;
 
 /// Peace runtime errors.
@@ -111,6 +112,21 @@ pub enum NativeError {
         /// Underlying IO error.
         #[source]
         error: std::io::Error,
+    },
+
+    /// Profile directory name is not a valid profile name.
+    #[error("Profile directory name is not a valid profile name: {}, path: {}", dir_name, path.display())]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model_native::profile_dir_invalid_name))
+    )]
+    ProfileDirInvalidName {
+        /// Name of the directory attempted to be parsed as a `Profile`.
+        dir_name: String,
+        /// Path to the profile directory.
+        path: PathBuf,
+        /// Underlying error,
+        error: ProfileInvalidFmt<'static>,
     },
 
     /// Failed to write to stdout.
