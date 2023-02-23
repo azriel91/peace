@@ -27,6 +27,8 @@
 //! * Force remove: applicable to `clean`
 
 pub use self::{
+    cmd_params::CmdParams,
+    cmd_params_builder::CmdParamsBuilder,
     flow_params::FlowParams,
     params_keys::{KeyKnown, KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl},
     params_type_regs::ParamsTypeRegs,
@@ -35,6 +37,8 @@ pub use self::{
     workspace_params::WorkspaceParams,
 };
 
+mod cmd_params;
+mod cmd_params_builder;
 mod flow_params;
 mod params_keys;
 mod params_type_regs;
