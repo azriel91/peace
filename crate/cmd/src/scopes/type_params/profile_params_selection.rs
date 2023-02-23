@@ -1,7 +1,5 @@
 use std::{fmt::Debug, hash::Hash};
 
-use indexmap::IndexMap;
-use peace_core::Profile;
 use peace_rt_model::cmd_context_params::ProfileParams;
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -12,15 +10,6 @@ pub struct ProfileParamsNone;
 /// The application has profile parameters.
 #[derive(Debug)]
 pub struct ProfileParamsSome<ProfileParamsK>(pub(crate) ProfileParams<ProfileParamsK>)
-where
-    ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static;
-
-/// The application has profile parameters from multiple profiles.
-#[derive(Debug)]
-pub struct ProfileParamsSomeMulti<ProfileParamsK>(
-    pub(crate) IndexMap<Profile, ProfileParams<ProfileParamsK>>,
-)
 where
     ProfileParamsK:
         Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static;
