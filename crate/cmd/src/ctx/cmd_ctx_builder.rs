@@ -239,4 +239,17 @@ pub(crate) async fn profiles_from_peace_app_dir(
     } // while
 
     Ok(profiles)
-} // let profiles
+}
+
+#[cfg(target_arch = "wasm32")]
+pub(crate) async fn profiles_from_peace_app_dir(
+    _peace_app_dir: &peace_resources::paths::PeaceAppDir,
+    _profiles_filter_fn: Option<&dyn Fn(&peace_core::Profile) -> bool>,
+) -> Result<Vec<peace_core::Profile>, peace_rt_model::Error> {
+    let profiles = Vec::new();
+
+    // Not supported yet -- needs a `Storage` abstraction over both native an web
+    // assembly.
+
+    Ok(profiles)
+}
