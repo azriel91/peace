@@ -34,34 +34,44 @@ use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SingleProfileSingleFlow {
+pub struct SingleProfileSingleFlow<ProfileParamsSelection, FlowParamsSelection> {
     /// The profile this command operates on.
     profile: Profile,
     /// Profile directory that stores params and flows.
     profile_dir: ProfileDir,
     /// Directory to store profile execution history.
     profile_history_dir: ProfileHistoryDir,
+    /// Profile params for the profile.
+    profile_params_selection: ProfileParamsSelection,
     /// Identifier or name of the chosen process flow.
     flow_id: FlowId,
     /// Flow directory that stores params and states.
     flow_dir: FlowDir,
+    /// Flow params for the selected flow.
+    flow_params_selection: FlowParamsSelection,
 }
 
-impl SingleProfileSingleFlow {
+impl<ProfileParamsSelection, FlowParamsSelection>
+    SingleProfileSingleFlow<ProfileParamsSelection, FlowParamsSelection>
+{
     /// Returns a new `SingleProfileSingleFlow` scope.
     pub fn new(
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
+        profile_params_selection: ProfileParamsSelection,
         flow_id: FlowId,
         flow_dir: FlowDir,
+        flow_params_selection: FlowParamsSelection,
     ) -> Self {
         Self {
             profile,
             profile_dir,
             profile_history_dir,
+            profile_params_selection,
             flow_id,
             flow_dir,
+            flow_params_selection,
         }
     }
 

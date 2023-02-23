@@ -55,34 +55,44 @@ use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
 /// * Read or write flow parameters for different flows.
 /// * Read or write flow state for different flows.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct MultiProfileSingleFlow {
+pub struct MultiProfileSingleFlow<ProfileParamsSelection, FlowParamsSelection> {
     /// The profiles that are accessible by this command.
     profiles: Vec<Profile>,
     /// Profile directories that store params and flows.
     profile_dirs: IndexMap<Profile, ProfileDir>,
     /// Directories of each profile's execution history.
     profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
+    /// Profile params for each profile.
+    profile_params_selection: ProfileParamsSelection,
     /// Identifier or name of the chosen process flow.
     flow_id: FlowId,
     /// Flow directory that stores params and states.
     flow_dirs: IndexMap<Profile, FlowDir>,
+    /// Flow params for the selected flow for each profile.
+    flow_params_selection: FlowParamsSelection,
 }
 
-impl MultiProfileSingleFlow {
+impl<ProfileParamsSelection, FlowParamsSelection>
+    MultiProfileSingleFlow<ProfileParamsSelection, FlowParamsSelection>
+{
     /// Returns a new `MultiProfileSingleFlow` scope.
     pub fn new(
         profiles: Vec<Profile>,
         profile_dirs: IndexMap<Profile, ProfileDir>,
         profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
+        profile_params_selection: ProfileParamsSelection,
         flow_id: FlowId,
         flow_dirs: IndexMap<Profile, FlowDir>,
+        flow_params_selection: FlowParamsSelection,
     ) -> Self {
         Self {
             profiles,
             profile_dirs,
             profile_history_dirs,
+            profile_params_selection,
             flow_id,
             flow_dirs,
+            flow_params_selection,
         }
     }
 

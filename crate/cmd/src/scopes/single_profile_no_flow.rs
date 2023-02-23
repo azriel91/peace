@@ -30,26 +30,30 @@ use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SingleProfileNoFlow {
+pub struct SingleProfileNoFlow<ProfileParamsSelection> {
     /// The profile this command operates on.
     profile: Profile,
     /// Profile directory that stores params and flows.
     profile_dir: ProfileDir,
     /// Directory to store profile executions' summaries.
     profile_history_dir: ProfileHistoryDir,
+    /// Profile params for the profile.
+    profile_params_selection: ProfileParamsSelection,
 }
 
-impl SingleProfileNoFlow {
+impl<ProfileParamsSelection> SingleProfileNoFlow<ProfileParamsSelection> {
     /// Returns a new `SingleProfileNoFlow` scope.
     pub fn new(
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
+        profile_params_selection: ProfileParamsSelection,
     ) -> Self {
         Self {
             profile,
             profile_dir,
             profile_history_dir,
+            profile_params_selection,
         }
     }
 

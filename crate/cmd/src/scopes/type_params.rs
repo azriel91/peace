@@ -3,7 +3,7 @@
 pub use self::{
     flow_id_selection::{FlowIdNotSelected, FlowIdSelected},
     flow_params_selection::{FlowParamsNone, FlowParamsSome},
-    profile_params_selection::{ProfileParamsNone, ProfileParamsSome},
+    profile_params_selection::{ProfileParamsNone, ProfileParamsSome, ProfileParamsSomeMulti},
     profile_selection::{
         ProfileFromWorkspaceParam, ProfileNotSelected, ProfileSelected, ProfilesFilterFunction,
     },
