@@ -78,8 +78,11 @@ mod scope_type_params {
         type_params: &mut Punctuated<Path, Token![,]>,
         scope: Scope,
     ) {
-        if scope.profile_count() == ProfileCount::One {
-            type_params.push(parse_quote!(crate::scopes::type_params::ProfileNotSelected));
+        match scope.profile_count() {
+            ProfileCount::None => {}
+            ProfileCount::One | ProfileCount::Multiple => {
+                type_params.push(parse_quote!(crate::scopes::type_params::ProfileNotSelected));
+            }
         }
         if scope.flow_count() == FlowCount::One {
             type_params.push(parse_quote!(crate::scopes::type_params::FlowIdNotSelected));
@@ -115,10 +118,16 @@ mod scope_field_values {
         field_values: &mut Punctuated<FieldValue, Token![,]>,
         scope: Scope,
     ) {
-        if scope.profile_count() == ProfileCount::One {
-            field_values.push(parse_quote!(
-                profile_selection: crate::scopes::type_params::ProfileNotSelected
-            ));
+        if scope.profile_count() == ProfileCount::One {}
+        match scope.profile_count() {
+            ProfileCount::None => {}
+            ProfileCount::One | ProfileCount::Multiple => {
+                // Even for `ProfileCount::Multiple`, we will store the filter function in
+                // the profile selection.
+                field_values.push(parse_quote!(
+                    profile_selection: crate::scopes::type_params::ProfileNotSelected
+                ));
+            }
         }
         if scope.flow_count() == FlowCount::One {
             field_values.push(parse_quote!(

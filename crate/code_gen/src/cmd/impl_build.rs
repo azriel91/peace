@@ -6,7 +6,7 @@ use crate::cmd::{
         FlowIdSelection, FlowParamsSelection, ProfileParamsSelection, ProfileSelection,
         WorkspaceParamsSelection,
     },
-    FlowCount, ProfileCount, Scope, ScopeStruct,
+    FlowCount, ParamsScope, ProfileCount, Scope, ScopeStruct,
 };
 
 /// Generates the `CmdCtxBuilder::build` methods for each type param selection.
@@ -160,10 +160,17 @@ fn impl_build_for(
 
         match scope.flow_count() {
             FlowCount::None => {}
-            FlowCount::One => {
-                scope_fields.push(parse_quote!(flow_id));
-                scope_fields.push(parse_quote!(flow_dir));
-            }
+            FlowCount::One => match scope.profile_count() {
+                ProfileCount::None => {}
+                ProfileCount::One => {
+                    scope_fields.push(parse_quote!(flow_id));
+                    scope_fields.push(parse_quote!(flow_dir));
+                }
+                ProfileCount::Multiple => {
+                    scope_fields.push(parse_quote!(flow_id));
+                    scope_fields.push(parse_quote!(flow_dirs));
+                }
+            },
         }
 
         scope_fields
@@ -279,18 +286,71 @@ fn impl_build_for(
                     // AsRef::<std::path::Path>::as_ref(workspace_dirs.workspace_dir()),
                     // AsRef::<std::path::Path>::as_ref(workspace_dirs.peace_dir()),
                     // AsRef::<std::path::Path>::as_ref(workspace_dirs.peace_app_dir()),
+
+                    // === Profile === //
+                    // --- Single --- //
                     // AsRef::<std::path::Path>::as_ref(&profile_dir),
                     // AsRef::<std::path::Path>::as_ref(&profile_history_dir),
+                    // === Flow ID === //
+                    // --- Single --- //
                     // AsRef::<std::path::Path>::as_ref(&flow_dir),
                     #dirs_to_create
                 ];
 
+                // === Profile Params === //
+                // --- Single --- //
                 // let profile_params_file = ProfileParamsFile::from(&profile_dir);
                 // self.profile_params_merge(&profile_params_file).await?;
+                // --- Multi --- //
+                // let profile_to_profile_params = futures::stream::iter(
+                //         profile_dirs
+                //             .iter()
+                //             .map(Result::<_, peace_rt_model::Error>::Ok)
+                //         )
+                //         .and_then(|(profile, profile_dir)| async move {
+                //             let profile_params_file =
+                //                 peace_resources::internal::ProfileParamsFile::from(
+                //                     &profile_dir
+                //                 );
+                //
+                //             let profile_params = self.#params_deserialize_method_name.await?;
+                //
+                //             (profile.clone(), profile_params)
+                //         })
+                //         .try_collect::<
+                //             indexmap::IndexMap<
+                //                 peace_core::Profile,
+                //                 peace_rt_model::cmd_context_params::ProfileParams
+                //             >
+                //         >()
+                //         .await?;
                 #profile_params_deserialize
 
+                // === Flow Params === //
+                // --- Single --- //
                 // let flow_params_file = ProfileParamsFile::from(&flow_dir);
                 // self.flow_params_merge(&flow_params_file).await?;
+                // --- Multi --- //
+                // let profile_to_flow_params = futures::stream::iter(
+                //         flow_dirs
+                //             .iter()
+                //             .map(Result::<_, peace_rt_model::Error>::Ok)
+                //         )
+                //         .and_then(|(profile, flow_dir)| async move {
+                //             let flow_params_file =
+                //                 peace_resources::internal::FlowParamsFile::from(&flow_dir);
+                //
+                //             let flow_params = self.#params_deserialize_method_name.await?;
+                //
+                //             (profile.clone(), flow_params)
+                //         })
+                //         .try_collect::<
+                //             indexmap::IndexMap<
+                //                 peace_core::Profile,
+                //                 peace_rt_model::cmd_context_params::FlowParams
+                //             >
+                //         >()
+                //         .await?;
                 #flow_params_deserialize
 
                 // Create directories and write init parameters to storage.
@@ -376,6 +436,9 @@ fn impl_build_for(
                     // --- Single --- //
                     // flow_id,
                     // flow_dir,
+                    // --- Multi --- //
+                    // flow_id,
+                    // flow_dirs,
 
                     #scope_fields
                 );
@@ -533,30 +596,77 @@ fn profile_params_load_save(
 ) {
     if scope.profile_params_supported() && profile_params_selection == ProfileParamsSelection::Some
     {
-        let profile_params_deserialize = quote! {
-            let profile_params_file = peace_resources::internal::ProfileParamsFile::from(
-                &profile_dir
-            );
+        match scope.profile_count() {
+            ProfileCount::None => {
+                unreachable!("ProfileParams are not supported on `ProfileCount::None`.")
+            }
+            ProfileCount::One => {
+                let profile_params_deserialize = quote! {
+                    let profile_params_file = peace_resources::internal::ProfileParamsFile::from(
+                        &profile_dir
+                    );
 
-            self.profile_params_merge(&profile_params_file).await?;
-        };
-        let profile_params_serialize = quote! {
-            Self::profile_params_serialize(
-                &profile_params,
-                storage,
-                &profile_params_file,
-            )
-            .await?;
-        };
-        let profile_params_insert = quote! {
-            Self::profile_params_insert(profile_params, &mut resources);
-        };
+                    self.profile_params_merge(&profile_params_file).await?;
+                };
+                let profile_params_serialize = quote! {
+                    Self::profile_params_serialize(
+                        &profile_params,
+                        storage,
+                        &profile_params_file,
+                    )
+                    .await?;
+                };
+                let profile_params_insert = quote! {
+                    Self::profile_params_insert(profile_params, &mut resources);
+                };
 
-        (
-            profile_params_deserialize,
-            profile_params_serialize,
-            profile_params_insert,
-        )
+                (
+                    profile_params_deserialize,
+                    profile_params_serialize,
+                    profile_params_insert,
+                )
+            }
+            ProfileCount::Multiple => {
+                let params_deserialize_method_name =
+                    ParamsScope::Profile.params_deserialize_method_name();
+                let profile_params_deserialize = quote! {
+                    let profile_to_profile_params = futures::stream::iter(
+                        profile_dirs
+                            .iter()
+                            .map(Result::<_, peace_rt_model::Error>::Ok)
+                        )
+                        .and_then(|(profile, profile_dir)| async move {
+                            let profile_params_file =
+                                peace_resources::internal::ProfileParamsFile::from(
+                                    &profile_dir
+                                );
+
+                            let profile_params = self.#params_deserialize_method_name.await?;
+
+                            (profile.clone(), profile_params)
+                        })
+                        .try_collect::<
+                            indexmap::IndexMap<
+                                peace_core::Profile,
+                                peace_rt_model::cmd_context_params::ProfileParams
+                            >
+                        >()
+                        .await?;
+                };
+
+                // Storage is not supported.
+                let profile_params_serialize = proc_macro2::TokenStream::new();
+
+                // Insertion into resources is not supported.
+                let profile_params_insert = proc_macro2::TokenStream::new();
+
+                (
+                    profile_params_deserialize,
+                    profile_params_serialize,
+                    profile_params_insert,
+                )
+            }
+        }
     } else {
         (
             proc_macro2::TokenStream::new(),
@@ -577,30 +687,75 @@ fn flow_params_load_save(
     proc_macro2::TokenStream,
 ) {
     if scope.flow_params_supported() && flow_params_selection == FlowParamsSelection::Some {
-        let flow_params_deserialize = quote! {
-            let flow_params_file = peace_resources::internal::FlowParamsFile::from(
-                &flow_dir
-            );
+        match scope.profile_count() {
+            ProfileCount::None => {
+                unreachable!("FlowParams are not supported on `ProfileCount::None`.")
+            }
+            ProfileCount::One => {
+                let flow_params_deserialize = quote! {
+                    let flow_params_file = peace_resources::internal::FlowParamsFile::from(
+                        &flow_dir
+                    );
 
-            self.flow_params_merge(&flow_params_file).await?;
-        };
-        let flow_params_serialize = quote! {
-            Self::flow_params_serialize(
-                &flow_params,
-                storage,
-                &flow_params_file,
-            )
-            .await?;
-        };
-        let flow_params_insert = quote! {
-            Self::flow_params_insert(flow_params, &mut resources);
-        };
+                    self.flow_params_merge(&flow_params_file).await?;
+                };
+                let flow_params_serialize = quote! {
+                    Self::flow_params_serialize(
+                        &flow_params,
+                        storage,
+                        &flow_params_file,
+                    )
+                    .await?;
+                };
+                let flow_params_insert = quote! {
+                    Self::flow_params_insert(flow_params, &mut resources);
+                };
 
-        (
-            flow_params_deserialize,
-            flow_params_serialize,
-            flow_params_insert,
-        )
+                (
+                    flow_params_deserialize,
+                    flow_params_serialize,
+                    flow_params_insert,
+                )
+            }
+            ProfileCount::Multiple => {
+                let params_deserialize_method_name =
+                    ParamsScope::Flow.params_deserialize_method_name();
+                let flow_params_deserialize = quote! {
+                    let profile_to_flow_params = futures::stream::iter(
+                        flow_dirs
+                            .iter()
+                            .map(Result::<_, peace_rt_model::Error>::Ok)
+                        )
+                        .and_then(|(profile, flow_dir)| async move {
+                            let flow_params_file =
+                                peace_resources::internal::FlowParamsFile::from(&flow_dir);
+
+                            let flow_params = self.#params_deserialize_method_name.await?;
+
+                            (profile.clone(), flow_params)
+                        })
+                        .try_collect::<
+                            indexmap::IndexMap<
+                                peace_core::Profile,
+                                peace_rt_model::cmd_context_params::FlowParams
+                            >
+                        >()
+                        .await?;
+                };
+
+                // Storage is not supported.
+                let flow_params_serialize = proc_macro2::TokenStream::new();
+
+                // Insertion into resources is not supported.
+                let flow_params_insert = proc_macro2::TokenStream::new();
+
+                (
+                    flow_params_deserialize,
+                    flow_params_serialize,
+                    flow_params_insert,
+                )
+            }
+        }
     } else {
         (
             proc_macro2::TokenStream::new(),
@@ -732,9 +887,33 @@ fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
     }
 
     if scope.flow_count() == FlowCount::One {
-        dirs_tokens.extend(quote! {
-            let flow_dir = peace_resources::paths::FlowDir::from((&profile_dir, &self.scope_builder.flow_id_selection.0));
-        });
+        match scope.profile_count() {
+            ProfileCount::None => {}
+            ProfileCount::One => {
+                dirs_tokens.extend(quote! {
+                    let flow_dir = peace_resources::paths::FlowDir::from((&profile_dir, &self.scope_builder.flow_id_selection.0));
+                });
+            }
+            ProfileCount::Multiple => {
+                dirs_tokens.extend(quote! {
+                    let flow_dirs = {
+                        profile_dirs
+                            .iter()
+                            .fold(indexmap::IndexMap::<
+                                    peace_core::Profile,
+                                    peace_resources::paths::ProfileDir
+                                >::with_capacity(profile_s_ref.len()
+                            ), |mut flow_dirs, (profile, profile_dir)| {
+                                let flow_dir = peace_resources::paths::FlowDir::from((&profile_dir, &self.scope_builder.flow_id_selection.0));
+
+                                flow_dirs.insert(profile.clone(), flow_dir);
+
+                                flow_dirs
+                            });
+                    };
+                });
+            }
+        }
     }
 
     dirs_tokens
@@ -747,17 +926,31 @@ fn dirs_to_create(scope: Scope) -> proc_macro2::TokenStream {
         AsRef::<std::path::Path>::as_ref(workspace_dirs.peace_app_dir()),
     };
 
-    if scope.profile_count() == ProfileCount::One {
-        dirs_tokens.extend(quote! {
-            AsRef::<std::path::Path>::as_ref(&profile_dir),
-            AsRef::<std::path::Path>::as_ref(&profile_history_dir),
-        });
+    match scope.profile_count() {
+        ProfileCount::None => {}
+        ProfileCount::One => {
+            dirs_tokens.extend(quote! {
+                AsRef::<std::path::Path>::as_ref(&profile_dir),
+                AsRef::<std::path::Path>::as_ref(&profile_history_dir),
+            });
+        }
+        ProfileCount::Multiple => {
+            // Don't create any directories
+        }
     }
 
     if scope.flow_count() == FlowCount::One {
-        dirs_tokens.extend(quote! {
-            AsRef::<std::path::Path>::as_ref(&flow_dir),
-        });
+        match scope.profile_count() {
+            ProfileCount::None => {}
+            ProfileCount::One => {
+                dirs_tokens.extend(quote! {
+                    AsRef::<std::path::Path>::as_ref(&flow_dir),
+                });
+            }
+            ProfileCount::Multiple => {
+                // Don't create any directories
+            }
+        }
     }
 
     dirs_tokens

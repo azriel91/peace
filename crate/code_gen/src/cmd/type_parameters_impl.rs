@@ -10,8 +10,11 @@ pub fn profile_and_flow_selection_push(
     type_params: &mut Punctuated<Path, Token![,]>,
     scope: Scope,
 ) {
-    if scope.profile_count() == ProfileCount::One {
-        type_params.push(parse_quote!(ProfileSelection));
+    match scope.profile_count() {
+        ProfileCount::None => {}
+        ProfileCount::One | ProfileCount::Multiple => {
+            type_params.push(parse_quote!(ProfileSelection));
+        }
     }
     if scope.flow_count() == FlowCount::One {
         type_params.push(parse_quote!(FlowIdSelection));

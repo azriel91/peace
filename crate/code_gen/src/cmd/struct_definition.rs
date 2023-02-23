@@ -66,12 +66,15 @@ mod fields {
     /// Appends profile / flow ID selection type parameters if applicable to the
     /// given scope.
     pub fn profile_and_flow_selection_push(fields_named: &mut FieldsNamed, scope: Scope) {
-        if scope.profile_count() == ProfileCount::One {
-            let fields: FieldsNamed = parse_quote!({
-                /// The profile this command operates on.
-                pub(crate) profile_selection: ProfileSelection
-            });
-            fields_named.named.extend(fields.named);
+        match scope.profile_count() {
+            ProfileCount::None => {}
+            ProfileCount::One | ProfileCount::Multiple => {
+                let fields: FieldsNamed = parse_quote!({
+                    /// The profile this command operates on.
+                    pub(crate) profile_selection: ProfileSelection
+                });
+                fields_named.named.extend(fields.named);
+            }
         }
         if scope.flow_count() == FlowCount::One {
             let fields: FieldsNamed = parse_quote!({
