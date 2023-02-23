@@ -12,3 +12,7 @@ pub struct ProfileSelected(pub(crate) Profile);
 /// during command context build.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ProfileFromWorkspaceParam<'key, WorkspaceParamsK>(pub(crate) &'key WorkspaceParamsK);
+
+/// Filter function for `MultiProfile` scopes.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ProfilesFilterFunction(pub(crate) Box<dyn Fn(&Profile) -> bool>);

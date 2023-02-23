@@ -39,7 +39,7 @@ pub struct SingleProfileSingleFlow {
     profile: Profile,
     /// Profile directory that stores params and flows.
     profile_dir: ProfileDir,
-    /// Directory to store profile executions' summaries.
+    /// Directory to store profile execution history.
     profile_history_dir: ProfileHistoryDir,
     /// Identifier or name of the chosen process flow.
     flow_id: FlowId,

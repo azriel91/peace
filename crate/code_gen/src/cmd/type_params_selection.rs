@@ -2,17 +2,27 @@ use syn::{parse_quote, FieldValue, Path};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum ProfileSelection {
+    NotSelected,
     Selected,
     FromWorkspaceParam,
+    /// Only applicable to MultiProfile scopes.
+    FilterFunction,
 }
 
 impl ProfileSelection {
-    pub(crate) fn iter() -> std::array::IntoIter<Self, 2> {
-        [Self::Selected, Self::FromWorkspaceParam].into_iter()
+    pub(crate) fn iter() -> std::array::IntoIter<Self, 4> {
+        [
+            Self::NotSelected,
+            Self::Selected,
+            Self::FromWorkspaceParam,
+            Self::FilterFunction,
+        ]
+        .into_iter()
     }
 
     pub(crate) fn type_param(self) -> Path {
         match self {
+            Self::NotSelected => parse_quote!(crate::scopes::type_params::ProfileNotSelected),
             Self::Selected => parse_quote!(crate::scopes::type_params::ProfileSelected),
             Self::FromWorkspaceParam => parse_quote!(
                 crate::scopes::type_params::ProfileFromWorkspaceParam<
@@ -23,6 +33,9 @@ impl ProfileSelection {
                     >::Key
                 >
             ),
+            Self::FilterFunction => {
+                parse_quote!(crate::scopes::type_params::ProfilesFilterFunction)
+            }
         }
     }
 }

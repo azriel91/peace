@@ -1,4 +1,6 @@
+use indexmap::IndexMap;
 use peace_core::{FlowId, Profile};
+use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
 
 /// A command that works with multiple profiles, and a single flow.
 ///
@@ -56,14 +58,32 @@ use peace_core::{FlowId, Profile};
 pub struct MultiProfileSingleFlow {
     /// The profiles that are accessible by this command.
     profiles: Vec<Profile>,
+    /// Profile directories that store params and flows.
+    profile_dirs: IndexMap<Profile, ProfileDir>,
+    /// Directories of each profile's execution history.
+    profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
     /// Identifier or name of the chosen process flow.
     flow_id: FlowId,
+    /// Flow directory that stores params and states.
+    flow_dirs: IndexMap<Profile, FlowDir>,
 }
 
 impl MultiProfileSingleFlow {
     /// Returns a new `MultiProfileSingleFlow` scope.
-    pub fn new(profiles: Vec<Profile>, flow_id: FlowId) -> Self {
-        Self { profiles, flow_id }
+    pub fn new(
+        profiles: Vec<Profile>,
+        profile_dirs: IndexMap<Profile, ProfileDir>,
+        profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
+        flow_id: FlowId,
+        flow_dirs: IndexMap<Profile, FlowDir>,
+    ) -> Self {
+        Self {
+            profiles,
+            profile_dirs,
+            profile_history_dirs,
+            flow_id,
+            flow_dirs,
+        }
     }
 
     /// Returns the accessible profiles.

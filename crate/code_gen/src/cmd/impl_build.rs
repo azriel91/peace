@@ -25,6 +25,19 @@ pub fn impl_build(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     ProfileSelection::iter().fold(
         proc_macro2::TokenStream::new(),
         |tokens, profile_selection| {
+            match (profile_selection, scope_struct.scope().profile_count()) {
+                // It doesn't make sense to have `NotSelected` or `FilterFunction`
+                // when profile is single.
+                (ProfileSelection::NotSelected | ProfileSelection::FilterFunction, ProfileCount::One) |
+                // It doesn't make sense to have `profile_from_workpace_param`
+                // when profile is none or multi.
+                (
+                    ProfileSelection::Selected | ProfileSelection::FromWorkspaceParam,
+                    ProfileCount::None | ProfileCount::Multiple
+                ) => return tokens,
+                _ => {} // impl build
+            }
+
             FlowIdSelection::iter().fold(tokens, |tokens, flow_id_selection| {
                 WorkspaceParamsSelection::iter().fold(
                     tokens,
@@ -124,21 +137,33 @@ fn impl_build_for(
         flow_params_load_save(scope, flow_params_selection);
 
     let profile_from_workspace = profile_from_workspace(profile_selection);
-    let profile_ref = profile_ref(profile_selection);
-    let cmd_dirs = cmd_dirs(scope, &profile_ref);
+    let profiles_from_peace_app_dir = profiles_from_peace_app_dir(scope, profile_selection);
+    let profile_s_ref = profile_s_ref(scope, profile_selection);
+    let cmd_dirs = cmd_dirs(scope);
     let dirs_to_create = dirs_to_create(scope);
     let scope_fields = {
         let mut scope_fields = Punctuated::<Pat, Token![,]>::new();
 
-        if scope.profile_count() == ProfileCount::One {
-            scope_fields.push(parse_quote!(profile));
-            scope_fields.push(parse_quote!(profile_dir));
-            scope_fields.push(parse_quote!(profile_history_dir));
+        match scope.profile_count() {
+            ProfileCount::None => {}
+            ProfileCount::One => {
+                scope_fields.push(parse_quote!(profile));
+                scope_fields.push(parse_quote!(profile_dir));
+                scope_fields.push(parse_quote!(profile_history_dir));
+            }
+            ProfileCount::Multiple => {
+                scope_fields.push(parse_quote!(profiles));
+                scope_fields.push(parse_quote!(profile_dirs));
+                scope_fields.push(parse_quote!(profile_history_dirs));
+            }
         }
 
-        if scope.flow_count() == FlowCount::One {
-            scope_fields.push(parse_quote!(flow_id));
-            scope_fields.push(parse_quote!(flow_dir));
+        match scope.flow_count() {
+            FlowCount::None => {}
+            FlowCount::One => {
+                scope_fields.push(parse_quote!(flow_id));
+                scope_fields.push(parse_quote!(flow_dir));
+            }
         }
 
         scope_fields
@@ -207,8 +232,46 @@ fn impl_build_for(
                 //     .ok_or(Error::WorkspaceParamsProfileNone)?;
                 #profile_from_workspace
 
-                // let profile_dir = ProfileDir::from((workspace_dirs.peace_app_dir(), #profile_ref));
+                // MultiProfile
+                #profiles_from_peace_app_dir
+
+                // === Profile(s) ref === //
+                // --- Single --- //
+                // let profile_s_ref = &profile;
+                // let profile_s_ref = &self.scope_builder.profile_selection.0;
+                // --- Multi --- //
+                // let profile_s_ref = &profiles;
+                #profile_s_ref
+
+                // === Cmd dirs === //
+                // --- Single Profile --- //
+                // let profile_dir = ProfileDir::from((workspace_dirs.peace_app_dir(), profile_s_ref));
                 // let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
+                // --- Multi Profile --- //
+                // let (profile_dirs, profile_history_dirs) = {
+                //     profile_s_ref
+                //         .iter()
+                //         .fold((
+                //             indexmap::IndexMap::<
+                //                 peace_core::Profile,
+                //                 peace_resources::paths::ProfileDir
+                //             >::with_capacity(profile_s_ref.len()),
+                //             indexmap::IndexMap::<
+                //                 peace_core::Profile,
+                //                 peace_resources::paths::ProfileHistoryDir
+                //             >::with_capacity(profile_s_ref.len())
+                //         ), |(mut profile_dirs, mut profile_history_dirs), profile| {
+                //             let profile_dir = peace_resources::paths::ProfileDir::from(
+                //                 (workspace_dirs.peace_app_dir(), profile)
+                //             );
+                //             let profile_history_dir = peace_resources::paths::ProfileHistoryDir::from(&profile_dir);
+                //
+                //             profile_dirs.insert(profile.clone(), profile_dir);
+                //             profile_history_dirs.insert(profile.clone(), profile_history_dir);
+                //
+                //             (profile_dirs, profile_history_dirs)
+                //         });
+                // --- Single Flow --- //
                 // let flow_dir = FlowDir::from((&profile_dir, &self.scope_builder.flow_id_selection.0));
                 #cmd_dirs
 
@@ -250,7 +313,10 @@ fn impl_build_for(
                 //     workspace,
                 //     scope_builder:
                 //         #scope_builder_name {
-                //             profile_selection: ProfileFromWorkspaceParam(_workspace_params_k),
+                //             profile_selection: ProfileSelected(profile)
+                //                             // ProfileFromWorkspaceParam(_workspace_params_k),
+                //                             // ProfilesFilterFunction(profiles_filter_fn)
+                //
                 //             flow_id_selection: FlowIdSelected(flow_id),
                 //             workspace_params_selection: WorkspaceParamsSome(workspace_params),
                 //             profile_params_selection: ProfileParamsSome(profile_params),
@@ -296,11 +362,21 @@ fn impl_build_for(
                 #flow_params_insert
 
                 let scope = #scope_type_path::new(
+                    // === Profile === //
+                    // --- Single --- //
                     // profile,
                     // profile_dir,
                     // profile_history_dir,
+                    // --- Multi --- //
+                    // profiles,
+                    // profile_dirs,
+                    // profile_history_dirs,
+
+                    // === Flow ID === //
+                    // --- Single --- //
                     // flow_id,
                     // flow_dir,
+
                     #scope_fields
                 );
 
@@ -330,15 +406,21 @@ fn scope_builder_deconstruct(
 
     if scope.profile_count() == ProfileCount::One {
         match profile_selection {
+            ProfileSelection::NotSelected => scope_builder_fields.push(parse_quote! {
+                profile_selection: crate::scopes::type_params::ProfileNotSelected
+            }),
             ProfileSelection::Selected => scope_builder_fields.push(parse_quote! {
-                profile_selection:
-                    crate::scopes::type_params::ProfileSelected(profile)
+                profile_selection: crate::scopes::type_params::ProfileSelected(profile)
             }),
             ProfileSelection::FromWorkspaceParam => scope_builder_fields.push(parse_quote! {
                 profile_selection:
                     crate::scopes::type_params::ProfileFromWorkspaceParam(
                         _workspace_params_k
                     )
+            }),
+            ProfileSelection::FilterFunction => scope_builder_fields.push(parse_quote! {
+                profile_selection:
+                    crate::scopes::type_params::ProfilesFilterFunction(profiles_filter_fn)
             }),
         }
     }
@@ -544,22 +626,109 @@ fn profile_from_workspace(profile_selection: ProfileSelection) -> proc_macro2::T
     }
 }
 
-fn profile_ref(profile_selection: ProfileSelection) -> proc_macro2::TokenStream {
-    if profile_selection == ProfileSelection::FromWorkspaceParam {
-        quote!(&profile)
-    } else {
-        quote!(&self.scope_builder.profile_selection.0)
+fn profiles_from_peace_app_dir(
+    scope: Scope,
+    profile_selection: ProfileSelection,
+) -> proc_macro2::TokenStream {
+    match scope.profile_count() {
+        ProfileCount::None | ProfileCount::One => proc_macro2::TokenStream::new(),
+        ProfileCount::Multiple => match profile_selection {
+            ProfileSelection::NotSelected => quote! {
+                let profiles = crate::ctx::cmd_ctx_builder::profiles_from_peace_app_dir(
+                    workspace_dirs.peace_app_dir(),
+                    None,
+                );
+            },
+            ProfileSelection::Selected | ProfileSelection::FromWorkspaceParam => unreachable!(
+                "Multiple profiles should not reach `ProfileSelection::Single` | \
+                `ProfileSelection::FromWorkspaceParam`."
+            ),
+            ProfileSelection::FilterFunction => quote! {
+                let profiles = crate::ctx::cmd_ctx_builder::profiles_from_peace_app_dir(
+                    workspace_dirs.peace_app_dir(),
+                    Some(profiles_filter_fn.as_ref()),
+                );
+            },
+        },
     }
 }
 
-fn cmd_dirs(scope: Scope, profile_ref: &proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+fn profile_s_ref(scope: Scope, profile_selection: ProfileSelection) -> proc_macro2::TokenStream {
+    match scope.profile_count() {
+        ProfileCount::None => proc_macro2::TokenStream::new(),
+        ProfileCount::One => {
+            if profile_selection == ProfileSelection::FromWorkspaceParam {
+                quote!(let profile_s_ref = &profile;)
+            } else {
+                quote!(let profile_s_ref = &self.scope_builder.profile_selection.0;)
+            }
+        }
+        ProfileCount::Multiple => quote!(let profile_s_ref = &profiles;),
+    }
+}
+
+/// * SingleProfile:
+///
+///     `profile_s_ref` is expected to be a `&Profile`.
+///
+///     ```rust,ignore
+///     profile_dir
+///     profile_history_dir
+///     ```
+///
+/// * MultiProfile:
+///
+///     `profile_s_ref` is expected to be a `&Vec<Profile>`.
+///
+///     ```rust,ignore
+///     profile_dirs
+///     profile_history_dirs
+///     ```
+///
+/// * SingleFlow:
+///
+///     ```rust,ignore
+///     flow_dir
+///     ```
+fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
     let mut dirs_tokens = proc_macro2::TokenStream::new();
 
-    if scope.profile_count() == ProfileCount::One {
-        dirs_tokens.extend(quote! {
-            let profile_dir = peace_resources::paths::ProfileDir::from((workspace_dirs.peace_app_dir(), #profile_ref));
-            let profile_history_dir = peace_resources::paths::ProfileHistoryDir::from(&profile_dir);
-        });
+    match scope.profile_count() {
+        ProfileCount::None => {}
+        ProfileCount::One => {
+            dirs_tokens.extend(quote! {
+                let profile_dir = peace_resources::paths::ProfileDir::from((workspace_dirs.peace_app_dir(), profile_s_ref));
+                let profile_history_dir = peace_resources::paths::ProfileHistoryDir::from(&profile_dir);
+            });
+        }
+        ProfileCount::Multiple => {
+            dirs_tokens.extend(quote! {
+                let (profile_dirs, profile_history_dirs) = {
+                    profile_s_ref
+                        .iter()
+                        .fold((
+                            indexmap::IndexMap::<
+                                peace_core::Profile,
+                                peace_resources::paths::ProfileDir
+                            >::with_capacity(profile_s_ref.len()),
+                            indexmap::IndexMap::<
+                                peace_core::Profile,
+                                peace_resources::paths::ProfileHistoryDir
+                            >::with_capacity(profile_s_ref.len())
+                        ), |(mut profile_dirs, mut profile_history_dirs), profile| {
+                            let profile_dir = peace_resources::paths::ProfileDir::from(
+                                (workspace_dirs.peace_app_dir(), profile)
+                            );
+                            let profile_history_dir = peace_resources::paths::ProfileHistoryDir::from(&profile_dir);
+
+                            profile_dirs.insert(profile.clone(), profile_dir);
+                            profile_history_dirs.insert(profile.clone(), profile_history_dir);
+
+                            (profile_dirs, profile_history_dirs)
+                        });
+                };
+            });
+        }
     }
 
     if scope.flow_count() == FlowCount::One {

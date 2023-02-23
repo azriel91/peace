@@ -19,10 +19,12 @@ use peace_rt_model::{
 use crate::{ctx::CmdCtx, scopes::NoProfileNoFlow};
 
 pub use self::{
+    multi_profile_single_flow_builder::MultiProfileSingleFlowBuilder,
     single_profile_no_flow_builder::SingleProfileNoFlowBuilder,
     single_profile_single_flow_builder::SingleProfileSingleFlowBuilder,
 };
 
+mod multi_profile_single_flow_builder;
 mod single_profile_no_flow_builder;
 mod single_profile_single_flow_builder;
 
@@ -178,3 +180,61 @@ where
         }
     }
 }
+
+#[cfg(not(target_arch = "wasm32"))]
+pub(crate) async fn profiles_from_peace_app_dir(
+    peace_app_dir: &peace_resources::paths::PeaceAppDir,
+    profiles_filter_fn: Option<&dyn Fn(&peace_core::Profile) -> bool>,
+) -> Vec<peace_core::Profile> {
+    use std::ffi::OsStr;
+
+    let mut profiles = Vec::new();
+    let mut peace_app_read_dir = tokio::fs::read_dir(peace_app_dir).await.map_err(|error| {
+        peace_rt_model::Error::Native(peace_rt_model::NativeError::PeaceAppDirRead {
+            peace_app_dir: peace_app_dir.to_path_buf(),
+            error,
+        })
+    })?;
+    while let Some(entry) = peace_app_read_dir.next_entry().await.map_err(|error| {
+        peace_rt_model::Error::Native(peace_rt_model::NativeError::PeaceAppDirEntryRead {
+            peace_app_dir: peace_app_dir.to_path_buf(),
+            error,
+        })
+    })? {
+        let file_type = entry.file_type().await.map_err(|error| {
+            peace_rt_model::Error::Native(
+                peace_rt_model::NativeError::PeaceAppDirEntryFileTypeRead {
+                    path: entry.path(),
+                    error,
+                },
+            )
+        })?;
+
+        if file_type.is_dir() {
+            let entry_path = entry.path();
+            if let Some(dir_name) = entry_path.file_name().and_then(OsStr::to_str) {
+                // Assume this is a profile directory
+                let profile = peace_core::Profile::from_str(dir_name).map_err(|error| {
+                    peace_rt_model::Error::Native(
+                        peace_rt_model::NativeError::ProfileDirInvalidName {
+                            dir_name: dir_name.to_string(),
+                            path: entry_path.to_path_buf(),
+                            error,
+                        },
+                    )
+                })?;
+
+                if let Some(profiles_filter_fn) = profiles_filter_fn {
+                    if !profiles_filter_fn(profile) {
+                        // Exclude any profiles that do not pass the filter
+                        continue;
+                    }
+                }
+
+                profiles.push(profile)
+            }
+
+            // Assume non-UTF8 file names are not profile directories
+        }
+    } // while
+} // let profiles

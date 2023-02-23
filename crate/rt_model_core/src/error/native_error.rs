@@ -83,6 +83,36 @@ pub enum NativeError {
         error: std::io::Error,
     },
 
+    /// Failed to list entries in `PeaceAppDir`.
+    #[error("Failed to list entries in `PeaceAppDir`: {}", peace_app_dir.display())]
+    PeaceAppDirRead {
+        /// Path to the `PeaceAppDir`.
+        peace_app_dir: PathBuf,
+        /// Underlying IO error.
+        #[source]
+        error: std::io::Error,
+    },
+
+    /// Failed to read entry in `PeaceAppDir`.
+    #[error("Failed to read entry in `PeaceAppDir`: {}", peace_app_dir.display())]
+    PeaceAppDirEntryRead {
+        /// Path to the `PeaceAppDir`.
+        peace_app_dir: PathBuf,
+        /// Underlying IO error.
+        #[source]
+        error: std::io::Error,
+    },
+
+    /// Failed to read entry file type in `PeaceAppDir`.
+    #[error("Failed to read entry file type in `PeaceAppDir`: {}", path.display())]
+    PeaceAppDirEntryFileTypeRead {
+        /// Path to the entry within `PeaceAppDir`.
+        path: PathBuf,
+        /// Underlying IO error.
+        #[source]
+        error: std::io::Error,
+    },
+
     /// Failed to write to stdout.
     #[error("Failed to write to stdout.")]
     #[cfg_attr(
