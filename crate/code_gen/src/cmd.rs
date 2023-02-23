@@ -44,12 +44,7 @@ pub fn cmd_ctx_builder_impl(input: proc_macro::TokenStream) -> proc_macro::Token
         proc_macro2::TokenStream::new()
     };
 
-    let impl_with_flow_id = if scope_struct.scope().flow_count() == FlowCount::One {
-        impl_with_flow_id(&scope_struct)
-    } else {
-        // `with_flow_id` is not supported.
-        proc_macro2::TokenStream::new()
-    };
+    let impl_with_flow_id = impl_with_flow_id(&scope_struct);
 
     let impl_build = impl_build(&scope_struct);
 

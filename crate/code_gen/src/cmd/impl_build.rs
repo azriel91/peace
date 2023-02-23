@@ -108,8 +108,11 @@ fn impl_build_for(
 
     let scope_type_params = {
         let mut type_params = Punctuated::<Path, Token![,]>::new();
-        if scope.profile_count() == ProfileCount::One {
-            type_params.push(profile_selection.type_param());
+        match scope.profile_count() {
+            ProfileCount::None => {}
+            ProfileCount::One | ProfileCount::Multiple => {
+                type_params.push(profile_selection.type_param());
+            }
         }
         if scope.flow_count() == FlowCount::One {
             type_params.push(flow_id_selection.type_param());
@@ -467,8 +470,9 @@ fn scope_builder_deconstruct(
     let scope_builder_name = &scope_struct.item_struct().ident;
     let mut scope_builder_fields = Punctuated::<FieldValue, Token![,]>::new();
 
-    if scope.profile_count() == ProfileCount::One {
-        match profile_selection {
+    match scope.profile_count() {
+        ProfileCount::None => {}
+        ProfileCount::One | ProfileCount::Multiple => match profile_selection {
             ProfileSelection::NotSelected => scope_builder_fields.push(parse_quote! {
                 profile_selection: crate::scopes::type_params::ProfileNotSelected
             }),
@@ -485,7 +489,7 @@ fn scope_builder_deconstruct(
                 profile_selection:
                     crate::scopes::type_params::ProfilesFilterFunction(profiles_filter_fn)
             }),
-        }
+        },
     }
 
     if scope.flow_count() == FlowCount::One {
