@@ -834,9 +834,10 @@ fn profiles_from_peace_app_dir(
                 `ProfileSelection::FromWorkspaceParam`."
             ),
             ProfileSelection::FilterFunction => quote! {
+                let profiles_filter_fn = self.scope_builder.profile_selection.0.as_ref();
                 let profiles = crate::ctx::cmd_ctx_builder::profiles_from_peace_app_dir(
                     workspace_dirs.peace_app_dir(),
-                    Some(profiles_filter_fn.as_ref()),
+                    Some(profiles_filter_fn),
                 ).await?;
             },
         },
