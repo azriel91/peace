@@ -1,6 +1,11 @@
+use std::{fmt::Debug, hash::Hash};
+
 use peace_core::Profile;
 use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
-use peace_rt_model::cmd_context_params::{KeyMaybe, ParamsKeys, ProfileParams, WorkspaceParams};
+use peace_rt_model::cmd_context_params::{
+    KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ProfileParams, WorkspaceParams,
+};
+use serde::{de::DeserializeOwned, Serialize};
 
 /// A command that works with a single profile, without any item specs.
 ///
@@ -81,5 +86,37 @@ where
     /// Returns a reference to the profile history directory.
     pub fn profile_history_dir(&self) -> &ProfileHistoryDir {
         &self.profile_history_dir
+    }
+}
+
+impl<WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    SingleProfileNoFlow<
+        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
+    >
+where
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsKMaybe: KeyMaybe,
+    FlowParamsKMaybe: KeyMaybe,
+{
+    /// Returns the workspace params.
+    pub fn workspace_params(&self) -> &WorkspaceParams<WorkspaceParamsK> {
+        &self.workspace_params
+    }
+}
+
+impl<WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+    SingleProfileNoFlow<
+        ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
+    >
+where
+    WorkspaceParamsKMaybe: KeyMaybe,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsKMaybe: KeyMaybe,
+{
+    /// Returns the profile params.
+    pub fn profile_params(&self) -> &ProfileParams<ProfileParamsK> {
+        &self.profile_params
     }
 }

@@ -1,4 +1,9 @@
-use peace_rt_model::cmd_context_params::{KeyMaybe, ParamsKeys, WorkspaceParams};
+use std::{fmt::Debug, hash::Hash};
+
+use peace_rt_model::cmd_context_params::{
+    KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, WorkspaceParams,
+};
+use serde::{de::DeserializeOwned, Serialize};
 
 /// A command that only works with workspace parameters.
 ///
@@ -39,5 +44,21 @@ where
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     ) -> Self {
         Self { workspace_params }
+    }
+}
+
+impl<WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    NoProfileNoFlow<
+        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
+    >
+where
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsKMaybe: KeyMaybe,
+    FlowParamsKMaybe: KeyMaybe,
+{
+    /// Returns the workspace params.
+    pub fn workspace_params(&self) -> &WorkspaceParams<WorkspaceParamsK> {
+        &self.workspace_params
     }
 }

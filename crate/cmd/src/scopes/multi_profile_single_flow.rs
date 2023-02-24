@@ -1,9 +1,12 @@
+use std::{fmt::Debug, hash::Hash};
+
 use indexmap::IndexMap;
 use peace_core::{FlowId, Profile};
 use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
 use peace_rt_model::cmd_context_params::{
-    FlowParams, KeyMaybe, ParamsKeys, ProfileParams, WorkspaceParams,
+    FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ProfileParams, WorkspaceParams,
 };
+use serde::{de::DeserializeOwned, Serialize};
 
 /// A command that works with multiple profiles, and a single flow.
 ///
@@ -141,5 +144,52 @@ where
     /// Returns the flow directories keyed by each profile.
     pub fn flow_dirs(&self) -> &IndexMap<Profile, FlowDir> {
         &self.flow_dirs
+    }
+}
+
+impl<WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    MultiProfileSingleFlow<
+        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
+    >
+where
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsKMaybe: KeyMaybe,
+    FlowParamsKMaybe: KeyMaybe,
+{
+    /// Returns the workspace params.
+    pub fn workspace_params(&self) -> &WorkspaceParams<WorkspaceParamsK> {
+        &self.workspace_params
+    }
+}
+
+impl<WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+    MultiProfileSingleFlow<
+        ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
+    >
+where
+    WorkspaceParamsKMaybe: KeyMaybe,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsKMaybe: KeyMaybe,
+{
+    /// Returns the profile params for each profile.
+    pub fn profile_to_profile_params(&self) -> &IndexMap<Profile, ProfileParams<ProfileParamsK>> {
+        &self.profile_to_profile_params
+    }
+}
+
+impl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+    MultiProfileSingleFlow<
+        ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
+    >
+where
+    WorkspaceParamsKMaybe: KeyMaybe,
+    ProfileParamsKMaybe: KeyMaybe,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    /// Returns the flow params for the selected flow for each profile.
+    pub fn profile_to_flow_params(&self) -> &IndexMap<Profile, FlowParams<FlowParamsK>> {
+        &self.profile_to_flow_params
     }
 }

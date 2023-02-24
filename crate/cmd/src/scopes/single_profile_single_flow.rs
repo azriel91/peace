@@ -1,8 +1,12 @@
+use peace_rt_model::cmd_context_params::{KeyKnown, ParamsKeysImpl};
+use std::{fmt::Debug, hash::Hash};
+
 use peace_core::{FlowId, Profile};
 use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
 use peace_rt_model::cmd_context_params::{
     FlowParams, KeyMaybe, ParamsKeys, ProfileParams, WorkspaceParams,
 };
+use serde::{de::DeserializeOwned, Serialize};
 
 /// A command that works with one profile and one flow.
 ///
@@ -109,5 +113,52 @@ where
     /// Returns a reference to the flow directory.
     pub fn flow_dir(&self) -> &FlowDir {
         &self.flow_dir
+    }
+}
+
+impl<WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+    SingleProfileSingleFlow<
+        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
+    >
+where
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    ProfileParamsKMaybe: KeyMaybe,
+    FlowParamsKMaybe: KeyMaybe,
+{
+    /// Returns the workspace params.
+    pub fn workspace_params(&self) -> &WorkspaceParams<WorkspaceParamsK> {
+        &self.workspace_params
+    }
+}
+
+impl<WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+    SingleProfileSingleFlow<
+        ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
+    >
+where
+    WorkspaceParamsKMaybe: KeyMaybe,
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsKMaybe: KeyMaybe,
+{
+    /// Returns the profile params.
+    pub fn profile_params(&self) -> &ProfileParams<ProfileParamsK> {
+        &self.profile_params
+    }
+}
+
+impl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+    SingleProfileSingleFlow<
+        ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
+    >
+where
+    WorkspaceParamsKMaybe: KeyMaybe,
+    ProfileParamsKMaybe: KeyMaybe,
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    /// Returns the flow params for the selected flow.
+    pub fn flow_params(&self) -> &FlowParams<FlowParamsK> {
+        &self.flow_params
     }
 }
