@@ -1,6 +1,9 @@
 use indexmap::IndexMap;
 use peace_core::Profile;
 use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
+use peace_rt_model::cmd_context_params::{
+    FlowParams, KeyMaybe, ParamsKeys, ProfileParams, WorkspaceParams,
+};
 
 /// A command that works with multiple profiles, without any item specs.
 ///
@@ -37,31 +40,45 @@ use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
 ///   `MultiProfileSingleFlow`.
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct MultiProfileNoFlow<ProfileParamsSelection> {
+#[derive(Debug)]
+pub struct MultiProfileNoFlow<PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
     /// The profiles that are accessible by this command.
     profiles: Vec<Profile>,
     /// Profile directories that store params and flows.
     profile_dirs: IndexMap<Profile, ProfileDir>,
     /// Directories of each profile's execution history.
     profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
-    /// Profile params for each profile.
-    profile_params_selection: ProfileParamsSelection,
+    /// Workspace params.
+    workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    /// Profile params for the profile.
+    profile_to_profile_params:
+        IndexMap<Profile, ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
 }
 
-impl<ProfileParamsSelection> MultiProfileNoFlow<ProfileParamsSelection> {
+impl<PKeys> MultiProfileNoFlow<PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
     /// Returns a new `MultiProfileNoFlow` scope.
     pub fn new(
         profiles: Vec<Profile>,
         profile_dirs: IndexMap<Profile, ProfileDir>,
         profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
-        profile_params_selection: ProfileParamsSelection,
+        workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+        profile_to_profile_params: IndexMap<
+            Profile,
+            ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+        >,
     ) -> Self {
         Self {
             profiles,
             profile_dirs,
             profile_history_dirs,
-            profile_params_selection,
+            workspace_params,
+            profile_to_profile_params,
         }
     }
 

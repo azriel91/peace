@@ -1,5 +1,6 @@
 use peace_core::Profile;
 use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
+use peace_rt_model::cmd_context_params::{KeyMaybe, ParamsKeys, ProfileParams, WorkspaceParams};
 
 /// A command that works with a single profile, without any item specs.
 ///
@@ -29,31 +30,41 @@ use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
 ///   `MultiProfileSingleFlow`.
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SingleProfileNoFlow<ProfileParamsSelection> {
+#[derive(Debug)]
+pub struct SingleProfileNoFlow<PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
     /// The profile this command operates on.
     profile: Profile,
     /// Profile directory that stores params and flows.
     profile_dir: ProfileDir,
     /// Directory to store profile executions' summaries.
     profile_history_dir: ProfileHistoryDir,
+    /// Workspace params.
+    workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     /// Profile params for the profile.
-    profile_params_selection: ProfileParamsSelection,
+    profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
 }
 
-impl<ProfileParamsSelection> SingleProfileNoFlow<ProfileParamsSelection> {
+impl<PKeys> SingleProfileNoFlow<PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
     /// Returns a new `SingleProfileNoFlow` scope.
     pub fn new(
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
-        profile_params_selection: ProfileParamsSelection,
+        workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+        profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
     ) -> Self {
         Self {
             profile,
             profile_dir,
             profile_history_dir,
-            profile_params_selection,
+            workspace_params,
+            profile_params,
         }
     }
 

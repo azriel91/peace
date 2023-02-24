@@ -1,3 +1,5 @@
+use peace_rt_model::cmd_context_params::{KeyMaybe, ParamsKeys, WorkspaceParams};
+
 /// A command that only works with workspace parameters.
 ///
 /// ```bash
@@ -20,5 +22,22 @@
 /// * Read or write flow parameters -- see `MultiProfileNoFlow`.
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct NoProfileNoFlow;
+#[derive(Debug)]
+pub struct NoProfileNoFlow<PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
+    /// Workspace params.
+    workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+}
+
+impl<PKeys> NoProfileNoFlow<PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
+    pub fn new(
+        workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    ) -> Self {
+        Self { workspace_params }
+    }
+}

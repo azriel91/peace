@@ -136,19 +136,23 @@ where
 }
 
 impl<'ctx>
-    CmdCtxBuilder<'ctx, NoProfileNoFlow, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>
+    CmdCtxBuilder<
+        'ctx,
+        NoProfileNoFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    >
 {
     /// Returns a `CmdCtxBuilder` for no profile.
     pub fn no_profile_no_flow(workspace: &'ctx Workspace) -> Self {
         Self {
             workspace,
-            scope_builder: NoProfileNoFlow,
+            scope_builder: NoProfileNoFlow::new(Default::default()),
             params_type_regs_builder: ParamsTypeRegs::builder(),
         }
     }
 }
 
-impl<'ctx, PKeys> CmdCtxBuilder<'ctx, NoProfileNoFlow, PKeys>
+impl<'ctx, PKeys> CmdCtxBuilder<'ctx, NoProfileNoFlow<PKeys>, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -160,7 +164,7 @@ where
         self,
     ) -> CmdCtx<
         'ctx,
-        NoProfileNoFlow,
+        NoProfileNoFlow<PKeys>,
         ParamsKeysImpl<
             PKeys::WorkspaceParamsKMaybe,
             PKeys::ProfileParamsKMaybe,
@@ -174,6 +178,8 @@ where
         } = self;
 
         let params_type_regs = params_type_regs_builder.build();
+
+        // TODO: create `NoProfileNoFlowBuilder`
 
         CmdCtx {
             workspace,

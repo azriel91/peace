@@ -52,17 +52,30 @@ where
     }
 }
 
-impl<'ctx> CmdCtx<'ctx, NoProfileNoFlow, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>> {
+impl<'ctx>
+    CmdCtx<
+        'ctx,
+        NoProfileNoFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    >
+{
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
     pub fn builder_no_profile_no_flow(
         workspace: &'ctx Workspace,
-    ) -> CmdCtxBuilder<NoProfileNoFlow, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>> {
+    ) -> CmdCtxBuilder<
+        NoProfileNoFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    > {
         CmdCtxBuilder::no_profile_no_flow(workspace)
     }
 }
 
 impl<'ctx>
-    CmdCtx<'ctx, SingleProfileSingleFlow, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>
+    CmdCtx<
+        'ctx,
+        SingleProfileSingleFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    >
 {
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
     pub fn builder_single_profile_single_flow(
@@ -81,7 +94,7 @@ impl<'ctx>
     }
 }
 
-impl<'ctx, PKeys> CmdCtx<'ctx, SingleProfileSingleFlow, PKeys>
+impl<'ctx, PKeys> CmdCtx<'ctx, SingleProfileSingleFlow<PKeys>, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {

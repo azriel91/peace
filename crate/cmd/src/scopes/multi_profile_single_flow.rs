@@ -1,6 +1,9 @@
 use indexmap::IndexMap;
 use peace_core::{FlowId, Profile};
 use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
+use peace_rt_model::cmd_context_params::{
+    FlowParams, KeyMaybe, ParamsKeys, ProfileParams, WorkspaceParams,
+};
 
 /// A command that works with multiple profiles, and a single flow.
 ///
@@ -54,45 +57,61 @@ use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
 ///
 /// * Read or write flow parameters for different flows.
 /// * Read or write flow state for different flows.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct MultiProfileSingleFlow<ProfileParamsSelection, FlowParamsSelection> {
+#[derive(Debug)]
+pub struct MultiProfileSingleFlow<PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
     /// The profiles that are accessible by this command.
     profiles: Vec<Profile>,
     /// Profile directories that store params and flows.
     profile_dirs: IndexMap<Profile, ProfileDir>,
     /// Directories of each profile's execution history.
     profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
-    /// Profile params for each profile.
-    profile_params_selection: ProfileParamsSelection,
     /// Identifier or name of the chosen process flow.
     flow_id: FlowId,
     /// Flow directory that stores params and states.
     flow_dirs: IndexMap<Profile, FlowDir>,
-    /// Flow params for the selected flow for each profile.
-    flow_params_selection: FlowParamsSelection,
+    /// Workspace params.
+    workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    /// Profile params for the profile.
+    profile_to_profile_params:
+        IndexMap<Profile, ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
+    /// Flow params for the selected flow.
+    profile_to_flow_params:
+        IndexMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
 }
 
-impl<ProfileParamsSelection, FlowParamsSelection>
-    MultiProfileSingleFlow<ProfileParamsSelection, FlowParamsSelection>
+impl<PKeys> MultiProfileSingleFlow<PKeys>
+where
+    PKeys: ParamsKeys + 'static,
 {
     /// Returns a new `MultiProfileSingleFlow` scope.
     pub fn new(
         profiles: Vec<Profile>,
         profile_dirs: IndexMap<Profile, ProfileDir>,
         profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
-        profile_params_selection: ProfileParamsSelection,
         flow_id: FlowId,
         flow_dirs: IndexMap<Profile, FlowDir>,
-        flow_params_selection: FlowParamsSelection,
+        workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+        profile_to_profile_params: IndexMap<
+            Profile,
+            ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+        >,
+        profile_to_flow_params: IndexMap<
+            Profile,
+            FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+        >,
     ) -> Self {
         Self {
             profiles,
             profile_dirs,
             profile_history_dirs,
-            profile_params_selection,
             flow_id,
             flow_dirs,
-            flow_params_selection,
+            workspace_params,
+            profile_to_profile_params,
+            profile_to_flow_params,
         }
     }
 

@@ -1,5 +1,8 @@
 use peace_core::{FlowId, Profile};
 use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
+use peace_rt_model::cmd_context_params::{
+    FlowParams, KeyMaybe, ParamsKeys, ProfileParams, WorkspaceParams,
+};
 
 /// A command that works with one profile and one flow.
 ///
@@ -33,45 +36,53 @@ use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
 /// * Read or write flow parameters -- see `MultiProfileNoFlow`.
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SingleProfileSingleFlow<ProfileParamsSelection, FlowParamsSelection> {
+#[derive(Debug)]
+pub struct SingleProfileSingleFlow<PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
     /// The profile this command operates on.
     profile: Profile,
     /// Profile directory that stores params and flows.
     profile_dir: ProfileDir,
     /// Directory to store profile execution history.
     profile_history_dir: ProfileHistoryDir,
-    /// Profile params for the profile.
-    profile_params_selection: ProfileParamsSelection,
     /// Identifier or name of the chosen process flow.
     flow_id: FlowId,
     /// Flow directory that stores params and states.
     flow_dir: FlowDir,
+    /// Workspace params.
+    workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    /// Profile params for the profile.
+    profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
     /// Flow params for the selected flow.
-    flow_params_selection: FlowParamsSelection,
+    flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
 }
 
-impl<ProfileParamsSelection, FlowParamsSelection>
-    SingleProfileSingleFlow<ProfileParamsSelection, FlowParamsSelection>
+impl<PKeys> SingleProfileSingleFlow<PKeys>
+where
+    PKeys: ParamsKeys + 'static,
 {
     /// Returns a new `SingleProfileSingleFlow` scope.
     pub fn new(
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
-        profile_params_selection: ProfileParamsSelection,
         flow_id: FlowId,
         flow_dir: FlowDir,
-        flow_params_selection: FlowParamsSelection,
+        workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+        profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+        flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
     ) -> Self {
         Self {
             profile,
             profile_dir,
             profile_history_dir,
-            profile_params_selection,
             flow_id,
             flow_dir,
-            flow_params_selection,
+            workspace_params,
+            profile_params,
+            flow_params,
         }
     }
 
