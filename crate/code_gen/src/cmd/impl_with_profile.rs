@@ -2,7 +2,7 @@ use quote::quote;
 use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Path, Token};
 
 use crate::cmd::{
-    param_key_impl, type_parameters_impl, FlowCount, ParamsScope, Scope, ScopeStruct,
+    param_key_impl, type_parameters_impl, FlowCount, ParamsScope, ProfileCount, Scope, ScopeStruct,
 };
 
 /// Generates the `with_profile` method for the command context builder.
@@ -10,6 +10,11 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
     let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
+
+    if scope_struct.scope().profile_count() != ProfileCount::One {
+        // `with_profile` is not supported.
+        return proc_macro2::TokenStream::new();
+    };
 
     let scope_params = {
         let mut type_params = Punctuated::<Path, Token![,]>::new();

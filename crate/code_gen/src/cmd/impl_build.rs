@@ -439,7 +439,7 @@ fn impl_build_for(
                 //         #scope_builder_name {
                 //             profile_selection: ProfileSelected(profile)
                 //                             // ProfileFromWorkspaceParam(_workspace_params_k),
-                //                             // ProfilesFilterFunction(profiles_filter_fn)
+                //                             // ProfileFilterFn(profiles_filter_fn)
                 //
                 //             flow_id_selection: FlowIdSelected(flow_id),
                 //             workspace_params_selection: WorkspaceParamsSome(workspace_params),
@@ -558,7 +558,7 @@ fn scope_builder_deconstruct(
             }),
             ProfileSelection::FilterFunction => scope_builder_fields.push(parse_quote! {
                 profile_selection:
-                    crate::scopes::type_params::ProfilesFilterFunction(profiles_filter_fn)
+                    crate::scopes::type_params::ProfileFilterFn(profiles_filter_fn)
             }),
         },
     }

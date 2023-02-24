@@ -5,7 +5,7 @@ pub use self::{
     flow_params_selection::{FlowParamsNone, FlowParamsSome},
     profile_params_selection::{ProfileParamsNone, ProfileParamsSome, ProfileParamsSomeMulti},
     profile_selection::{
-        ProfileFromWorkspaceParam, ProfileNotSelected, ProfileSelected, ProfilesFilterFunction,
+        ProfileFilterFn, ProfileFromWorkspaceParam, ProfileNotSelected, ProfileSelected,
     },
     workspace_params_selection::{WorkspaceParamsNone, WorkspaceParamsSome},
 };

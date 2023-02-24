@@ -20,6 +20,7 @@ test = true
 cfg-if = { workspace = true }
 console = "0.15.5"
 diff-struct = "0.5.1"
+futures = "0.3.26"
 peace = { path = "..", version = "0.0.6", default-features = false }
 peace_item_specs = { path = "../item_specs", version = "0.0.6" }
 pretty_assertions = "1.3.0"
