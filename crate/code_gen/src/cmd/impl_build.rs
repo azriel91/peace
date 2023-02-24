@@ -613,41 +613,48 @@ fn workspace_params_load_save(
     proc_macro2::TokenStream,
     proc_macro2::TokenStream,
 ) {
-    if workspace_params_selection == WorkspaceParamsSelection::Some {
-        let workspace_params_deserialize = quote! {
-            let workspace_params_file = peace_resources::internal::WorkspaceParamsFile::from(
-                workspace_dirs.peace_app_dir()
-            );
-
-            self.workspace_params_merge(&workspace_params_file).await?;
-        };
-        let workspace_params_serialize = quote! {
-            Self::workspace_params_serialize(
-                &workspace_params,
-                storage,
-                &workspace_params_file,
+    match workspace_params_selection {
+        WorkspaceParamsSelection::None => {
+            let workspace_params_deserialize = quote! {
+                let workspace_params = peace_rt_model::cmd_context_params::WorkspaceParams::<
+                    <
+                        PKeys::WorkspaceParamsKMaybe
+                        as peace_rt_model::cmd_context_params::KeyMaybe
+                    >::Key
+                >::new();
+            };
+            (
+                workspace_params_deserialize,
+                proc_macro2::TokenStream::new(),
+                proc_macro2::TokenStream::new(),
             )
-            .await?;
-        };
-        let workspace_params_insert = quote! {
-            Self::workspace_params_insert(workspace_params.clone(), &mut resources);
-        };
+        }
+        WorkspaceParamsSelection::Some => {
+            let workspace_params_deserialize = quote! {
+                let workspace_params_file = peace_resources::internal::WorkspaceParamsFile::from(
+                    workspace_dirs.peace_app_dir()
+                );
 
-        (
-            workspace_params_deserialize,
-            workspace_params_serialize,
-            workspace_params_insert,
-        )
-    } else {
-        let workspace_params_deserialize = quote! {
-            let workspace_params = peace_rt_model::cmd_context_params::WorkspaceParams::new();
-        };
+                self.workspace_params_merge(&workspace_params_file).await?;
+            };
+            let workspace_params_serialize = quote! {
+                Self::workspace_params_serialize(
+                    &workspace_params,
+                    storage,
+                    &workspace_params_file,
+                )
+                .await?;
+            };
+            let workspace_params_insert = quote! {
+                Self::workspace_params_insert(workspace_params.clone(), &mut resources);
+            };
 
-        (
-            workspace_params_deserialize,
-            proc_macro2::TokenStream::new(),
-            proc_macro2::TokenStream::new(),
-        )
+            (
+                workspace_params_deserialize,
+                workspace_params_serialize,
+                workspace_params_insert,
+            )
+        }
     }
 }
 
@@ -670,7 +677,12 @@ fn profile_params_load_save(
         ProfileCount::One => match profile_params_selection {
             ProfileParamsSelection::None => {
                 let profile_params_deserialize = quote! {
-                    let profile_params = peace_rt_model::cmd_context_params::ProfileParams::new();
+                    let profile_params = peace_rt_model::cmd_context_params::ProfileParams::<
+                        <
+                            PKeys::ProfileParamsKMaybe
+                            as peace_rt_model::cmd_context_params::KeyMaybe
+                        >::Key
+                    >::new();
                 };
                 (
                     profile_params_deserialize,
@@ -710,7 +722,12 @@ fn profile_params_load_save(
                 ProfileParamsSelection::None => quote! {
                     let profile_to_profile_params = indexmap::IndexMap::<
                         peace_core::Profile,
-                        peace_rt_model::cmd_context_params::ProfileParams<_>
+                        peace_rt_model::cmd_context_params::ProfileParams<
+                            <
+                                PKeys::ProfileParamsKMaybe as
+                                peace_rt_model::cmd_context_params::KeyMaybe
+                            >::Key
+                        >
                     >::new();
                 },
                 ProfileParamsSelection::Some => {
@@ -742,7 +759,12 @@ fn profile_params_load_save(
                             .try_collect::<
                                 indexmap::IndexMap<
                                     peace_core::Profile,
-                                    peace_rt_model::cmd_context_params::ProfileParams<_>
+                                    peace_rt_model::cmd_context_params::ProfileParams<
+                                        <
+                                            PKeys::ProfileParamsKMaybe as
+                                            peace_rt_model::cmd_context_params::KeyMaybe
+                                        >::Key
+                                    >
                                 >
                             >()
                             .await?;
@@ -784,7 +806,12 @@ fn flow_params_load_save(
         ProfileCount::One => match flow_params_selection {
             FlowParamsSelection::None => {
                 let flow_params_deserialize = quote! {
-                    let flow_params = peace_rt_model::cmd_context_params::FlowParams::new();
+                    let flow_params = peace_rt_model::cmd_context_params::FlowParams::<
+                        <
+                            PKeys::FlowParamsKMaybe as
+                            peace_rt_model::cmd_context_params::KeyMaybe
+                        >::Key
+                    >::new();
                 };
                 (
                     flow_params_deserialize,
@@ -824,7 +851,12 @@ fn flow_params_load_save(
                 FlowParamsSelection::None => quote! {
                     let profile_to_flow_params = indexmap::IndexMap::<
                         peace_core::Profile,
-                        peace_rt_model::cmd_context_params::FlowParams<_>
+                        peace_rt_model::cmd_context_params::FlowParams<
+                            <
+                                PKeys::FlowParamsKMaybe as
+                                peace_rt_model::cmd_context_params::KeyMaybe
+                            >::Key
+                        >
                     >::new();
                 },
                 FlowParamsSelection::Some => {
@@ -855,7 +887,12 @@ fn flow_params_load_save(
                             .try_collect::<
                                 indexmap::IndexMap<
                                     peace_core::Profile,
-                                    peace_rt_model::cmd_context_params::FlowParams<_>
+                                    peace_rt_model::cmd_context_params::FlowParams<
+                                        <
+                                            PKeys::FlowParamsKMaybe as
+                                            peace_rt_model::cmd_context_params::KeyMaybe
+                                        >::Key
+                                    >
                                 >
                             >()
                             .await?;
