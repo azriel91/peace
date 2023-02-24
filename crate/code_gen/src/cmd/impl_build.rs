@@ -667,8 +667,18 @@ fn profile_params_load_save(
             proc_macro2::TokenStream::new(),
             proc_macro2::TokenStream::new(),
         ),
-        ProfileCount::One => {
-            if profile_params_selection == ProfileParamsSelection::Some {
+        ProfileCount::One => match profile_params_selection {
+            ProfileParamsSelection::None => {
+                let profile_params_deserialize = quote! {
+                    let profile_params = peace_rt_model::cmd_context_params::ProfileParams::new();
+                };
+                (
+                    profile_params_deserialize,
+                    proc_macro2::TokenStream::new(),
+                    proc_macro2::TokenStream::new(),
+                )
+            }
+            ProfileParamsSelection::Some => {
                 let profile_params_deserialize = quote! {
                     let profile_params_file = peace_resources::internal::ProfileParamsFile::from(
                         &profile_dir
@@ -693,14 +703,8 @@ fn profile_params_load_save(
                     profile_params_serialize,
                     profile_params_insert,
                 )
-            } else {
-                (
-                    proc_macro2::TokenStream::new(),
-                    proc_macro2::TokenStream::new(),
-                    proc_macro2::TokenStream::new(),
-                )
             }
-        }
+        },
         ProfileCount::Multiple => {
             let profile_params_deserialize = match profile_params_selection {
                 ProfileParamsSelection::None => quote! {
@@ -778,11 +782,16 @@ fn flow_params_load_save(
             proc_macro2::TokenStream::new(),
         ),
         ProfileCount::One => match flow_params_selection {
-            FlowParamsSelection::None => (
-                proc_macro2::TokenStream::new(),
-                proc_macro2::TokenStream::new(),
-                proc_macro2::TokenStream::new(),
-            ),
+            FlowParamsSelection::None => {
+                let flow_params_deserialize = quote! {
+                    let flow_params = peace_rt_model::cmd_context_params::FlowParams::new();
+                };
+                (
+                    flow_params_deserialize,
+                    proc_macro2::TokenStream::new(),
+                    proc_macro2::TokenStream::new(),
+                )
+            }
             FlowParamsSelection::Some => {
                 let flow_params_deserialize = quote! {
                     let flow_params_file = peace_resources::internal::FlowParamsFile::from(
