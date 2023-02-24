@@ -1,8 +1,8 @@
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Pat, Path, Token};
+use syn::{parse_quote, punctuated::Punctuated, Path, Token};
 
 use crate::cmd::{
-    param_key_impl, type_parameters_impl, FlowCount, ParamsScope, ProfileCount, Scope, ScopeStruct,
+    param_key_impl, scope_builder_fields, type_parameters_impl, ParamsScope, Scope, ScopeStruct,
 };
 
 /// Generates the `with_workspace_param` / `with_profile_param` /
@@ -99,9 +99,9 @@ fn impl_with_param_key_unknown(
     let params_k_type_param = params_scope.params_k_type_param();
     let param_name = params_scope.param_name();
     let param_name_str = param_name.to_string();
-    let scope_builder_fields_params_none = scope_builder_fields_params_none(scope, params_scope);
+    let scope_builder_fields_params_none = scope_builder_fields::params_none(scope, params_scope);
     let scope_builder_fields_params_some_new =
-        scope_builder_fields_params_some_new(scope, params_scope);
+        scope_builder_fields::params_some_new(scope, params_scope);
     let params_type_reg_mut_method_name = params_scope.params_type_reg_mut_method_name();
 
     let doc_summary = format!("Adds a {params_scope_str} parameter.");
@@ -274,8 +274,8 @@ fn impl_with_param_key_known(
     let param_name = params_scope.param_name();
     let param_name_str = param_name.to_string();
     let params_selection_name = params_scope.params_selection_name();
-    let scope_builder_fields_params_some = scope_builder_fields_params_some(scope, params_scope);
-    let scope_builder_fields = scope_builder_fields(scope, params_scope);
+    let scope_builder_fields_params_some = scope_builder_fields::params_some(scope, params_scope);
+    let scope_builder_fields_passthrough = scope_builder_fields::passthrough(scope, params_scope);
     let params_type_reg_method_name = params_scope.params_type_reg_mut_method_name();
 
     let doc_summary = format!("Adds a {params_scope_str} parameter.");
@@ -383,7 +383,7 @@ fn impl_with_param_key_known(
                     // profile_params_selection,
                     // flow_params_selection,
 
-                    #scope_builder_fields
+                    #scope_builder_fields_passthrough
                 };
 
                 crate::ctx::CmdCtxBuilder {
@@ -394,208 +394,4 @@ fn impl_with_param_key_known(
             }
         }
     }
-}
-
-fn scope_builder_fields(scope: Scope, params_scope: ParamsScope) -> Punctuated<FieldValue, Comma> {
-    let mut field_values = Punctuated::<FieldValue, Token![,]>::new();
-    match scope.profile_count() {
-        ProfileCount::None => {}
-        ProfileCount::One | ProfileCount::Multiple => {
-            field_values.push(parse_quote!(profile_selection));
-        }
-    }
-    if scope.flow_count() == FlowCount::One {
-        field_values.push(parse_quote!(flow_id_selection));
-    }
-
-    match params_scope {
-        ParamsScope::Workspace => {
-            field_values.push(parse_quote!(workspace_params_selection));
-            if scope.profile_params_supported() {
-                field_values.push(parse_quote!(profile_params_selection));
-            }
-            if scope.flow_params_supported() {
-                field_values.push(parse_quote!(flow_params_selection));
-            }
-        }
-        ParamsScope::Profile => {
-            field_values.push(parse_quote!(workspace_params_selection));
-            if scope.profile_params_supported() {
-                field_values.push(parse_quote!(profile_params_selection));
-            }
-            if scope.flow_params_supported() {
-                field_values.push(parse_quote!(flow_params_selection));
-            }
-        }
-        ParamsScope::Flow => {
-            field_values.push(parse_quote!(workspace_params_selection));
-            if scope.profile_params_supported() {
-                field_values.push(parse_quote!(profile_params_selection));
-            }
-            if scope.flow_params_supported() {
-                field_values.push(parse_quote!(flow_params_selection));
-            }
-        }
-    }
-
-    field_values
-}
-
-fn scope_builder_fields_params_none(
-    scope: Scope,
-    params_scope: ParamsScope,
-) -> Punctuated<FieldValue, Comma> {
-    let mut field_values = Punctuated::<FieldValue, Token![,]>::new();
-    match scope.profile_count() {
-        ProfileCount::None => {}
-        ProfileCount::One | ProfileCount::Multiple => {
-            field_values.push(parse_quote!(profile_selection));
-        }
-    }
-    if scope.flow_count() == FlowCount::One {
-        field_values.push(parse_quote!(flow_id_selection));
-    }
-
-    match params_scope {
-        ParamsScope::Workspace => {
-            field_values.push(parse_quote!(
-                workspace_params_selection: crate::scopes::type_params::WorkspaceParamsNone
-            ));
-            if scope.profile_params_supported() {
-                field_values.push(parse_quote!(profile_params_selection));
-            }
-            if scope.flow_params_supported() {
-                field_values.push(parse_quote!(flow_params_selection));
-            }
-        }
-        ParamsScope::Profile => {
-            field_values.push(parse_quote!(workspace_params_selection));
-            if scope.profile_params_supported() {
-                field_values.push(parse_quote!(
-                    profile_params_selection: crate::scopes::type_params::ProfileParamsNone
-                ));
-            }
-            if scope.flow_params_supported() {
-                field_values.push(parse_quote!(flow_params_selection));
-            }
-        }
-        ParamsScope::Flow => {
-            field_values.push(parse_quote!(workspace_params_selection));
-            if scope.profile_params_supported() {
-                field_values.push(parse_quote!(profile_params_selection));
-            }
-            if scope.flow_params_supported() {
-                field_values.push(parse_quote!(
-                    flow_params_selection: crate::scopes::type_params::FlowParamsNone
-                ));
-            }
-        }
-    }
-
-    field_values
-}
-
-fn scope_builder_fields_params_some(
-    scope: Scope,
-    params_scope: ParamsScope,
-) -> Punctuated<Pat, Comma> {
-    let mut field_values = Punctuated::<Pat, Token![,]>::new();
-    match scope.profile_count() {
-        ProfileCount::None => {}
-        ProfileCount::One | ProfileCount::Multiple => {
-            field_values.push(parse_quote!(profile_selection));
-        }
-    }
-    if scope.flow_count() == FlowCount::One {
-        field_values.push(parse_quote!(flow_id_selection));
-    }
-
-    match params_scope {
-        ParamsScope::Workspace => {
-            field_values.push(parse_quote!(mut workspace_params_selection));
-            if scope.profile_params_supported() {
-                field_values.push(parse_quote!(profile_params_selection));
-            }
-            if scope.flow_params_supported() {
-                field_values.push(parse_quote!(flow_params_selection));
-            }
-        }
-        ParamsScope::Profile => {
-            field_values.push(parse_quote!(workspace_params_selection));
-            if scope.profile_params_supported() {
-                field_values.push(parse_quote!(mut profile_params_selection));
-            }
-            if scope.flow_params_supported() {
-                field_values.push(parse_quote!(flow_params_selection));
-            }
-        }
-        ParamsScope::Flow => {
-            field_values.push(parse_quote!(workspace_params_selection));
-            if scope.profile_params_supported() {
-                field_values.push(parse_quote!(profile_params_selection));
-            }
-            if scope.flow_params_supported() {
-                field_values.push(parse_quote!(mut flow_params_selection));
-            }
-        }
-    }
-
-    field_values
-}
-
-fn scope_builder_fields_params_some_new(
-    scope: Scope,
-    params_scope: ParamsScope,
-) -> Punctuated<FieldValue, Comma> {
-    let mut field_values = Punctuated::<FieldValue, Token![,]>::new();
-    match scope.profile_count() {
-        ProfileCount::None => {}
-        ProfileCount::One | ProfileCount::Multiple => {
-            field_values.push(parse_quote!(profile_selection));
-        }
-    }
-    if scope.flow_count() == FlowCount::One {
-        field_values.push(parse_quote!(flow_id_selection));
-    }
-
-    match params_scope {
-        ParamsScope::Workspace => {
-            field_values.push(parse_quote! {
-                workspace_params_selection:
-                    crate::scopes::type_params::WorkspaceParamsSome(params_map)
-            });
-            if scope.profile_params_supported() {
-                field_values.push(parse_quote!(profile_params_selection));
-            }
-            if scope.flow_params_supported() {
-                field_values.push(parse_quote!(flow_params_selection));
-            }
-        }
-        ParamsScope::Profile => {
-            field_values.push(parse_quote!(workspace_params_selection));
-            if scope.profile_params_supported() {
-                field_values.push(parse_quote! {
-                    profile_params_selection:
-                        crate::scopes::type_params::ProfileParamsSome(params_map)
-                });
-            }
-            if scope.flow_params_supported() {
-                field_values.push(parse_quote!(flow_params_selection));
-            }
-        }
-        ParamsScope::Flow => {
-            field_values.push(parse_quote!(workspace_params_selection));
-            if scope.profile_params_supported() {
-                field_values.push(parse_quote!(profile_params_selection));
-            }
-            if scope.flow_params_supported() {
-                field_values.push(parse_quote! {
-                    flow_params_selection:
-                        crate::scopes::type_params::FlowParamsSome(params_map)
-                });
-            }
-        }
-    }
-
-    field_values
 }
