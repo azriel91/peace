@@ -1,9 +1,7 @@
 use indexmap::IndexMap;
 use peace_core::Profile;
 use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
-use peace_rt_model::cmd_context_params::{
-    FlowParams, KeyMaybe, ParamsKeys, ProfileParams, WorkspaceParams,
-};
+use peace_rt_model::cmd_context_params::{KeyMaybe, ParamsKeys, ProfileParams, WorkspaceParams};
 
 /// A command that works with multiple profiles, without any item specs.
 ///

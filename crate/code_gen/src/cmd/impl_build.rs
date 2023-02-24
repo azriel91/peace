@@ -155,15 +155,11 @@ fn impl_build_for(
                 scope_fields.push(parse_quote!(profile));
                 scope_fields.push(parse_quote!(profile_dir));
                 scope_fields.push(parse_quote!(profile_history_dir));
-                scope_fields.push(parse_quote!(workspace_params));
-                scope_fields.push(parse_quote!(profile_params));
             }
             ProfileCount::Multiple => {
                 scope_fields.push(parse_quote!(profiles));
                 scope_fields.push(parse_quote!(profile_dirs));
                 scope_fields.push(parse_quote!(profile_history_dirs));
-                scope_fields.push(parse_quote!(workspace_params));
-                scope_fields.push(parse_quote!(profile_to_profile_params));
             }
         }
 
@@ -174,11 +170,37 @@ fn impl_build_for(
                 ProfileCount::One => {
                     scope_fields.push(parse_quote!(flow_id));
                     scope_fields.push(parse_quote!(flow_dir));
-                    scope_fields.push(parse_quote!(flow_params));
                 }
                 ProfileCount::Multiple => {
                     scope_fields.push(parse_quote!(flow_id));
                     scope_fields.push(parse_quote!(flow_dirs));
+                }
+            },
+        }
+
+        // Cmd Params
+        match scope.profile_count() {
+            ProfileCount::None => {
+                scope_fields.push(parse_quote!(workspace_params));
+            }
+            ProfileCount::One => {
+                scope_fields.push(parse_quote!(workspace_params));
+                scope_fields.push(parse_quote!(profile_params));
+            }
+            ProfileCount::Multiple => {
+                scope_fields.push(parse_quote!(workspace_params));
+                scope_fields.push(parse_quote!(profile_to_profile_params));
+            }
+        }
+
+        match scope.flow_count() {
+            FlowCount::None => {}
+            FlowCount::One => match scope.profile_count() {
+                ProfileCount::None => {}
+                ProfileCount::One => {
+                    scope_fields.push(parse_quote!(flow_params));
+                }
+                ProfileCount::Multiple => {
                     scope_fields.push(parse_quote!(profile_to_flow_params));
                 }
             },
@@ -749,12 +771,19 @@ fn flow_params_load_save(
     proc_macro2::TokenStream,
     proc_macro2::TokenStream,
 ) {
-    if scope.flow_params_supported() && flow_params_selection == FlowParamsSelection::Some {
-        match scope.profile_count() {
-            ProfileCount::None => {
-                unreachable!("FlowParams are not supported on `ProfileCount::None`.")
-            }
-            ProfileCount::One => {
+    match scope.profile_count() {
+        ProfileCount::None => (
+            proc_macro2::TokenStream::new(),
+            proc_macro2::TokenStream::new(),
+            proc_macro2::TokenStream::new(),
+        ),
+        ProfileCount::One => match flow_params_selection {
+            FlowParamsSelection::None => (
+                proc_macro2::TokenStream::new(),
+                proc_macro2::TokenStream::new(),
+                proc_macro2::TokenStream::new(),
+            ),
+            FlowParamsSelection::Some => {
                 let flow_params_deserialize = quote! {
                     let flow_params_file = peace_resources::internal::FlowParamsFile::from(
                         &flow_dir
@@ -780,58 +809,62 @@ fn flow_params_load_save(
                     flow_params_insert,
                 )
             }
-            ProfileCount::Multiple => {
-                let params_deserialize_method_name =
-                    ParamsScope::Flow.params_deserialize_method_name();
-                let flow_params_deserialize = quote! {
-                    let storage = self.workspace.storage();
-                    let params_type_regs_builder = &self.params_type_regs_builder;
-                    let profile_to_flow_params = futures::stream::iter(
-                        flow_dirs
-                            .iter()
-                            .map(Result::<_, peace_rt_model::Error>::Ok)
-                        )
-                        .and_then(|(profile, flow_dir)| async move {
-                            let flow_params_file =
-                                peace_resources::internal::FlowParamsFile::from(flow_dir);
-
-                            let flow_params = Self::#params_deserialize_method_name(
-                                storage,
-                                params_type_regs_builder,
-                                &flow_params_file
+        },
+        ProfileCount::Multiple => {
+            let flow_params_deserialize = match flow_params_selection {
+                FlowParamsSelection::None => quote! {
+                    let profile_to_flow_params = indexmap::IndexMap::<
+                        peace_core::Profile,
+                        peace_rt_model::cmd_context_params::FlowParams<_>
+                    >::new();
+                },
+                FlowParamsSelection::Some => {
+                    let params_deserialize_method_name =
+                        ParamsScope::Flow.params_deserialize_method_name();
+                    quote! {
+                        let storage = self.workspace.storage();
+                        let params_type_regs_builder = &self.params_type_regs_builder;
+                        let profile_to_flow_params = futures::stream::iter(
+                            flow_dirs
+                                .iter()
+                                .map(Result::<_, peace_rt_model::Error>::Ok)
                             )
+                            .and_then(|(profile, flow_dir)| async move {
+                                let flow_params_file =
+                                    peace_resources::internal::FlowParamsFile::from(flow_dir);
+
+                                let flow_params = Self::#params_deserialize_method_name(
+                                    storage,
+                                    params_type_regs_builder,
+                                    &flow_params_file
+                                )
+                                .await?
+                                .unwrap_or_default();
+
+                                Ok((profile.clone(), flow_params))
+                            })
+                            .try_collect::<
+                                indexmap::IndexMap<
+                                    peace_core::Profile,
+                                    peace_rt_model::cmd_context_params::FlowParams<_>
+                                >
+                            >()
                             .await?;
+                    }
+                }
+            };
+            // Storage is not supported.
+            let flow_params_serialize = proc_macro2::TokenStream::new();
 
-                            Ok((profile.clone(), flow_params))
-                        })
-                        .try_collect::<
-                            indexmap::IndexMap<
-                                peace_core::Profile,
-                                _ // peace_rt_model::cmd_context_params::FlowParams<K>
-                            >
-                        >()
-                        .await?;
-                };
+            // Insertion into resources is not supported.
+            let flow_params_insert = proc_macro2::TokenStream::new();
 
-                // Storage is not supported.
-                let flow_params_serialize = proc_macro2::TokenStream::new();
-
-                // Insertion into resources is not supported.
-                let flow_params_insert = proc_macro2::TokenStream::new();
-
-                (
-                    flow_params_deserialize,
-                    flow_params_serialize,
-                    flow_params_insert,
-                )
-            }
+            (
+                flow_params_deserialize,
+                flow_params_serialize,
+                flow_params_insert,
+            )
         }
-    } else {
-        (
-            proc_macro2::TokenStream::new(),
-            proc_macro2::TokenStream::new(),
-            proc_macro2::TokenStream::new(),
-        )
     }
 }
 
