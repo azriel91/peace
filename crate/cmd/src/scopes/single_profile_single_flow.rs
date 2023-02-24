@@ -68,7 +68,8 @@ where
     PKeys: ParamsKeys + 'static,
 {
     /// Returns a new `SingleProfileSingleFlow` scope.
-    pub fn new(
+    #[allow(clippy::too_many_arguments)] // Constructed by proc macro
+    pub(crate) fn new(
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,

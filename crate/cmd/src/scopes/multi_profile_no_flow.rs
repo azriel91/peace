@@ -66,7 +66,7 @@ where
     PKeys: ParamsKeys + 'static,
 {
     /// Returns a new `MultiProfileNoFlow` scope.
-    pub fn new(
+    pub(crate) fn new(
         profiles: Vec<Profile>,
         profile_dirs: IndexMap<Profile, ProfileDir>,
         profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,

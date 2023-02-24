@@ -40,7 +40,7 @@ impl<PKeys> NoProfileNoFlow<PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
-    pub fn new(
+    pub(crate) fn new(
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     ) -> Self {
         Self { workspace_params }

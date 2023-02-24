@@ -57,7 +57,7 @@ where
     PKeys: ParamsKeys + 'static,
 {
     /// Returns a new `SingleProfileNoFlow` scope.
-    pub fn new(
+    pub(crate) fn new(
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
