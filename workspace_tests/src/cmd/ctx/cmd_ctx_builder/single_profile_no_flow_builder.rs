@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, profile, AppName, Profile},
-    cmd::ctx::CmdCtxBuilder,
+    cmd::ctx::CmdCtx,
     resources::paths::{ProfileDir, ProfileHistoryDir},
 };
 
@@ -12,7 +12,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = workspace(tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let cmd_ctx = CmdCtxBuilder::single_profile_no_flow(&workspace)
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow(&workspace)
         .with_profile(profile.clone())
         .build()
         .await?;
@@ -36,7 +36,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let workspace = workspace(tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let cmd_ctx = CmdCtxBuilder::single_profile_no_flow(&workspace)
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow(&workspace)
         .with_profile(profile.clone())
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
         .with_workspace_param(String::from("something_else"), Some("a string".to_string()))
@@ -68,7 +68,7 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = workspace(tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let cmd_ctx = CmdCtxBuilder::single_profile_no_flow(&workspace)
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow(&workspace)
         .with_profile_param(String::from("profile_param"), Some(1u32))
         .with_profile_param(String::from("profile_param_other"), Some(2u64))
         .with_profile(profile.clone())
@@ -98,7 +98,7 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     let workspace = workspace(tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let cmd_ctx = CmdCtxBuilder::single_profile_no_flow(&workspace)
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow(&workspace)
         .with_profile(profile.clone())
         .with_profile_param(String::from("profile_param"), Some(1u32))
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
@@ -136,7 +136,7 @@ async fn build_with_workspace_params_with_profile_from_params()
     let workspace = workspace(tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let cmd_ctx = CmdCtxBuilder::single_profile_no_flow(&workspace)
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow(&workspace)
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
         .with_workspace_param(String::from("something_else"), Some("a string".to_string()))
         .with_profile_from_workspace_param(&String::from("profile"))
@@ -169,7 +169,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
     let workspace = workspace(tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let cmd_ctx = CmdCtxBuilder::single_profile_no_flow(&workspace)
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow(&workspace)
         .with_profile_param(String::from("profile_param"), Some(1u32))
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
         .with_profile_param(String::from("profile_param_other"), Some(2u64))
