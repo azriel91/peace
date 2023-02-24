@@ -5,9 +5,9 @@ use crate::cmd::{
     param_key_impl, scope_builder_fields, type_parameters_impl, ParamsScope, Scope, ScopeStruct,
 };
 
-/// Generates the `with_workspace_param` / `with_profile_param` /
-/// `with_flow_param` methods.
-pub fn impl_with_param(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
+/// Generates the `with_workspace_params_k` / `with_profile_params_k` /
+/// `with_flow_params_k` methods.
+pub fn impl_with_params_k(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     ParamsScope::iter().fold(
         proc_macro2::TokenStream::new(),
@@ -15,49 +15,47 @@ pub fn impl_with_param(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             match params_scope {
                 ParamsScope::Workspace => {}
                 ParamsScope::Profile => {
-                    match scope {
-                        // Multi profile commands may read, but not write profile params.
-                        Scope::MultiProfileNoFlow |
-                        Scope::MultiProfileSingleFlow |
-                        // No profile commands do not support profile params.
-                        Scope::NoProfileNoFlow => return impl_tokens,
-
-                        Scope::SingleProfileNoFlow |
-                        Scope::SingleProfileSingleFlow => {
-                            // implement method
-                        }
+                    if !scope.profile_params_supported() {
+                        return impl_tokens;
                     }
                 }
                 ParamsScope::Flow => {
-                    match scope {
-                        // Multi profile commands may read, but not write flow params.
-                        Scope::MultiProfileNoFlow |
-                        Scope::MultiProfileSingleFlow |
-                        // No flow commands do not support flow params.
-                        Scope::SingleProfileNoFlow |
-                        Scope::NoProfileNoFlow => return impl_tokens,
-
-                        Scope::SingleProfileSingleFlow => {
-                            // implement method
-                        }
+                    if !scope.flow_params_supported() {
+                        return impl_tokens;
                     }
                 }
             }
 
-            let impl_with_param_key_unknown =
-                impl_with_param_key_unknown(scope_struct, params_scope);
+            let impl_with_params_k_key_unknown =
+                impl_with_params_k_key_unknown(scope_struct, params_scope);
 
-            let impl_with_param_key_known = impl_with_param_key_known(scope_struct, params_scope);
+            impl_tokens.extend(impl_with_params_k_key_unknown);
 
-            impl_tokens.extend(impl_with_param_key_unknown);
-            impl_tokens.extend(impl_with_param_key_known);
+            match scope {
+                // Single profile params will have `with_*_param` implemented in the `impl_with_param` module.
+                Scope::SingleProfileNoFlow |
+                Scope::SingleProfileSingleFlow |
+                // No profile commands do not support profile params.
+                Scope::NoProfileNoFlow => {}
+
+                // Multi profile commands need to register the type of each profile param.
+                Scope::MultiProfileNoFlow |
+                Scope::MultiProfileSingleFlow => {
+                    // Workspace params are always writeable, so we only implement
+                    // `with_*_param` when `params_scope` is not `Workspace`.
+                    if params_scope != ParamsScope::Workspace {
+                        let impl_with_param_key_known = impl_with_param_key_known(scope_struct, params_scope);
+                        impl_tokens.extend(impl_with_param_key_known);
+                    }
+                }
+            }
 
             impl_tokens
         },
     )
 }
 
-fn impl_with_param_key_unknown(
+fn impl_with_params_k_key_unknown(
     scope_struct: &ScopeStruct,
     params_scope: ParamsScope,
 ) -> proc_macro2::TokenStream {
@@ -110,20 +108,15 @@ fn impl_with_param_key_unknown(
     let param_key_impl_unknown_predicates = param_key_impl::unknown_predicates(scope, params_scope);
 
     let params_scope_str = params_scope.to_str();
-    let with_params_method_name = params_scope.param_method_name();
+    let with_params_k_method_name = params_scope.params_k_method_name();
     let params_map_type = params_scope.params_map_type();
-    let param_type_param = params_scope.param_type_param();
     let params_k_method_name = params_scope.params_k_method_name();
     let params_k_type_param = params_scope.params_k_type_param();
-    let param_name = params_scope.param_name();
-    let param_name_str = param_name.to_string();
     let scope_builder_fields_params_none = scope_builder_fields::params_none(scope, params_scope);
     let scope_builder_fields_params_some_new =
         scope_builder_fields::params_some_new(scope, params_scope);
-    let params_type_reg_mut_method_name = params_scope.params_type_reg_mut_method_name();
 
-    let doc_summary = format!("Adds a {params_scope_str} parameter.");
-    let doc_param = format!("* `{param_name_str}`: The {params_scope_str} parameter to register.");
+    let doc_summary = format!("Registers a {params_scope_str} parameter type.");
 
     quote! {
         impl<
@@ -159,20 +152,11 @@ fn impl_with_param_key_unknown(
         {
             #[doc = #doc_summary]
             ///
-            /// Currently there is no means in code to deliberately unset any previously
-            /// stored value. This can be made possibly by defining a `*ParamsBuilder`
-            /// that determines a `None` value as a deliberate erasure of any previous
-            /// value.
+            /// This is necessary to deserialize previously stored parameters.
             ///
-            /// # Parameters
-            ///
-            /// * `k`: Key to store the parameter with.
-            #[doc = #doc_param]
-            // pub fn with_workspace_params<WorkspaceParamsK, WorkspaceParam>
-            pub fn #with_params_method_name<#params_k_type_param, #param_type_param>(
+            // pub fn with_workspace_params_k<WorkspaceParamsK>
+            pub fn #with_params_k_method_name<#params_k_type_param>(
                 self,
-                k: #params_k_type_param,
-                #param_name: Option<#param_type_param>,
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
@@ -192,7 +176,6 @@ fn impl_with_param_key_unknown(
             where
                 #params_k_type_param:
                     Clone + std::fmt::Debug + Eq + std::hash::Hash + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + 'static,
-                #param_type_param: Clone + std::fmt::Debug + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + 'static,
             {
                 let Self {
                     workspace,
@@ -213,14 +196,9 @@ fn impl_with_param_key_unknown(
                 //     params_type_regs_builder.with_workspace_params_k::<WorkspaceParamsK>();
                 let mut params_type_regs_builder =
                     params_type_regs_builder.#params_k_method_name::<#params_k_type_param>();
-                params_type_regs_builder
-                    .#params_type_reg_mut_method_name()
-                    .register::<#param_type_param>(k.clone());
+
                 // let mut workspace_params = WorkspaceParams::<WorkspaceParam>::new();
-                let mut params_map = #params_module::#params_map_type::<#params_k_type_param>::new();
-                if let Some(#param_name) = #param_name {
-                    params_map.insert(k, #param_name);
-                }
+                let params_map = #params_module::#params_map_type::<#params_k_type_param>::new();
 
                 let scope_builder = #scope_builder_name {
                     // profile_selection,
@@ -289,15 +267,11 @@ fn impl_with_param_key_known(
     let with_params_method_name = params_scope.param_method_name();
     let param_type_param = params_scope.param_type_param();
     let params_k_type_param = params_scope.params_k_type_param();
-    let param_name = params_scope.param_name();
-    let param_name_str = param_name.to_string();
-    let params_selection_name = params_scope.params_selection_name();
     let scope_builder_fields_params_some = scope_builder_fields::params_some(scope, params_scope);
     let scope_builder_fields_passthrough = scope_builder_fields::passthrough(scope, params_scope);
     let params_type_reg_method_name = params_scope.params_type_reg_mut_method_name();
 
     let doc_summary = format!("Adds a {params_scope_str} parameter.");
-    let doc_param = format!("* `{param_name_str}`: The {params_scope_str} parameter to register.");
 
     quote! {
         impl<
@@ -345,12 +319,10 @@ fn impl_with_param_key_known(
             /// # Parameters
             ///
             /// * `k`: Key to store the parameter with.
-            #[doc = #doc_param]
             // pub fn with_workspace_params<WorkspaceParam>
             pub fn #with_params_method_name<#param_type_param>(
                 self,
                 k: #params_k_type_param,
-                #param_name: Option<#param_type_param>,
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
@@ -388,11 +360,6 @@ fn impl_with_param_key_known(
                 params_type_regs_builder
                     .#params_type_reg_method_name()
                     .register::<#param_type_param>(k.clone());
-                // let workspace_params = &mut workspace_params_selection.0;
-                let params_map = &mut #params_selection_name.0;
-                if let Some(#param_name) = #param_name {
-                    params_map.insert(k, #param_name);
-                }
 
                 let scope_builder = #scope_builder_name {
                     // profile_selection,

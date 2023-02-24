@@ -7,9 +7,9 @@ pub use self::{
     flow_count::FlowCount, impl_build::impl_build, impl_constructor::impl_constructor,
     impl_params_deserialize::impl_params_deserialize, impl_params_merge::impl_params_merge,
     impl_with_flow_id::impl_with_flow_id, impl_with_param::impl_with_param,
-    impl_with_profile::impl_with_profile, impl_with_profile_filter::impl_with_profile_filter,
-    params_scope::ParamsScope, profile_count::ProfileCount, scope::Scope,
-    struct_definition::struct_definition,
+    impl_with_params_k::impl_with_params_k, impl_with_profile::impl_with_profile,
+    impl_with_profile_filter::impl_with_profile_filter, params_scope::ParamsScope,
+    profile_count::ProfileCount, scope::Scope, struct_definition::struct_definition,
 };
 
 mod flow_count;
@@ -19,6 +19,7 @@ mod impl_params_deserialize;
 mod impl_params_merge;
 mod impl_with_flow_id;
 mod impl_with_param;
+mod impl_with_params_k;
 mod impl_with_profile;
 mod impl_with_profile_filter;
 mod param_key_impl;
@@ -29,6 +30,7 @@ mod scope_struct;
 mod struct_definition;
 mod type_parameters_impl;
 
+pub(crate) mod scope_builder_fields;
 pub(crate) mod type_params_selection;
 
 /// Generates the command context builder implementation for the given scope.
@@ -38,6 +40,7 @@ pub fn cmd_ctx_builder_impl(input: proc_macro::TokenStream) -> proc_macro::Token
     let struct_definition = struct_definition(&mut scope_struct);
     let impl_constructor = impl_constructor(&scope_struct);
     let impl_with_param = impl_with_param(&scope_struct);
+    let impl_with_params_k = impl_with_params_k(&scope_struct);
 
     let impl_with_profile = impl_with_profile(&scope_struct);
     let impl_with_profile_filter = impl_with_profile_filter(&scope_struct);
@@ -55,6 +58,8 @@ pub fn cmd_ctx_builder_impl(input: proc_macro::TokenStream) -> proc_macro::Token
         #impl_constructor
 
         #impl_with_param
+
+        #impl_with_params_k
 
         #impl_with_profile
 
