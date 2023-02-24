@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 use std::ops::Deref;
 
 use peace_resources::paths::{PeaceAppDir, PeaceDir, WorkspaceDir};
