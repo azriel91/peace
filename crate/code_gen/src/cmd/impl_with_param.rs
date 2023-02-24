@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, Path, Token};
+use syn::{parse_quote, punctuated::Punctuated, GenericArgument, Path, Token};
 
 use crate::cmd::{
     param_key_impl, scope_builder_fields, type_parameters_impl, ParamsScope, Scope, ScopeStruct,
@@ -67,7 +67,7 @@ fn impl_with_param_key_unknown(
 
     // ProfileSelection, FlowIdSelection
     let selection_type_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
         type_params
     };
@@ -96,13 +96,13 @@ fn impl_with_param_key_unknown(
     };
 
     let impl_params_key_unknown_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::params_key_unknown_push(&mut type_params, scope, params_scope);
         type_params
     };
 
     let impl_params_key_known_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::params_key_known_push(&mut type_params, scope, params_scope);
         type_params
     };
@@ -252,13 +252,13 @@ fn impl_with_param_key_known(
 
     // ProfileSelection, FlowIdSelection
     let selection_type_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
         type_params
     };
 
     let impl_type_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
 
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
         type_parameters_impl::params_selection_maybe_push(
@@ -278,7 +278,7 @@ fn impl_with_param_key_known(
     };
 
     let impl_params_key_known_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::params_key_known_push(&mut type_params, scope, params_scope);
         type_params
     };

@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, FieldValue, Pat, Path, Token};
+use syn::{parse_quote, punctuated::Punctuated, FieldValue, GenericArgument, Pat, Path, Token};
 
 use crate::cmd::{
     type_params_selection::{
@@ -120,7 +120,7 @@ fn impl_build_for(
     let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
 
     let scope_type_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         match scope.profile_count() {
             ProfileCount::None => {}
             ProfileCount::One | ProfileCount::Multiple => {

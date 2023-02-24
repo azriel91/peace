@@ -1,5 +1,7 @@
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Path, Token};
+use syn::{
+    parse_quote, punctuated::Punctuated, token::Comma, FieldValue, GenericArgument, Path, Token,
+};
 
 use crate::cmd::{type_parameters_impl, FlowCount, ProfileCount, Scope, ScopeStruct};
 
@@ -15,7 +17,7 @@ pub fn impl_with_flow_id(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
     };
 
     let impl_type_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         match scope.profile_count() {
             ProfileCount::None => {
                 unreachable!("FlowId is not specifiable when there are no profiles.")
@@ -28,7 +30,7 @@ pub fn impl_with_flow_id(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
         type_params
     };
     let scope_type_params_flow_id_not_selected = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         match scope.profile_count() {
             ProfileCount::None => {
                 unreachable!("FlowId is not specifiable when there are no profiles.")
@@ -42,7 +44,7 @@ pub fn impl_with_flow_id(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
         type_params
     };
     let scope_type_params_flow_id_selected = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         match scope.profile_count() {
             ProfileCount::None => {
                 unreachable!("FlowId is not specifiable when there are no profiles.")

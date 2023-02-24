@@ -1,5 +1,7 @@
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Path, Token};
+use syn::{
+    parse_quote, punctuated::Punctuated, token::Comma, FieldValue, GenericArgument, Path, Token,
+};
 
 use crate::cmd::{type_parameters_impl, FlowCount, ProfileCount, Scope, ScopeStruct};
 
@@ -15,7 +17,7 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
     };
 
     let scope_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         if scope.flow_count() == FlowCount::One {
             type_params.push(parse_quote!(FlowIdSelection));
         }

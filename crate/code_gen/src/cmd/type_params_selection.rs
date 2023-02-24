@@ -1,4 +1,4 @@
-use syn::{parse_quote, FieldValue, Path};
+use syn::{parse_quote, FieldValue, GenericArgument};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum ProfileSelection {
@@ -20,7 +20,7 @@ impl ProfileSelection {
         .into_iter()
     }
 
-    pub(crate) fn type_param(self) -> Path {
+    pub(crate) fn type_param(self) -> GenericArgument {
         match self {
             Self::NotSelected => parse_quote!(crate::scopes::type_params::ProfileNotSelected),
             Self::Selected => parse_quote!(crate::scopes::type_params::ProfileSelected),
@@ -50,7 +50,7 @@ impl FlowIdSelection {
         [Self::Selected].into_iter()
     }
 
-    pub(crate) fn type_param(&self) -> Path {
+    pub(crate) fn type_param(&self) -> GenericArgument {
         match self {
             Self::Selected => parse_quote!(crate::scopes::type_params::FlowIdSelected),
         }
@@ -68,7 +68,7 @@ impl WorkspaceParamsSelection {
         [Self::None, Self::Some].into_iter()
     }
 
-    pub(crate) fn type_param(&self) -> Path {
+    pub(crate) fn type_param(&self) -> GenericArgument {
         match self {
             Self::None => parse_quote!(crate::scopes::type_params::WorkspaceParamsNone),
             Self::Some => parse_quote! {
@@ -106,7 +106,7 @@ impl ProfileParamsSelection {
         [Self::None, Self::Some].into_iter()
     }
 
-    pub(crate) fn type_param(&self) -> Path {
+    pub(crate) fn type_param(&self) -> GenericArgument {
         match self {
             Self::None => parse_quote!(crate::scopes::type_params::ProfileParamsNone),
             Self::Some => parse_quote! {
@@ -146,7 +146,7 @@ impl FlowParamsSelection {
         [Self::None, Self::Some].into_iter()
     }
 
-    pub(crate) fn type_param(&self) -> Path {
+    pub(crate) fn type_param(&self) -> GenericArgument {
         match self {
             Self::None => {
                 parse_quote!(crate::scopes::type_params::FlowParamsNone)

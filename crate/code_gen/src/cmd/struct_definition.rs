@@ -1,5 +1,5 @@
 use quote::ToTokens;
-use syn::{parse_quote, punctuated::Punctuated, Fields, FieldsNamed, Path, Token};
+use syn::{parse_quote, punctuated::Punctuated, Fields, FieldsNamed, GenericArgument, Token};
 
 use crate::cmd::{scope_struct::ScopeStruct, type_parameters_impl};
 
@@ -38,7 +38,7 @@ pub fn struct_definition(scope_struct: &mut ScopeStruct) -> proc_macro2::TokenSt
     let scope = scope_struct.scope();
 
     scope_struct.item_struct_mut().generics = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
 
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
         type_parameters_impl::params_selection_push(&mut type_params, scope);

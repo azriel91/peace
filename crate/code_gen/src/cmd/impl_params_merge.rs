@@ -1,5 +1,5 @@
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, Path, Token};
+use syn::{parse_quote, punctuated::Punctuated, GenericArgument, Path, Token};
 
 use crate::cmd::{
     type_parameters_impl,
@@ -61,7 +61,7 @@ fn impl_params_merge_for(
         };
 
     let impl_type_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
 
         match params_scope {
@@ -93,7 +93,7 @@ fn impl_params_merge_for(
         type_params
     };
     let scope_type_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
 
         type_params.push(workspace_params_selection);

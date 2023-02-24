@@ -1,6 +1,6 @@
 use proc_macro2::{Ident, Span};
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, FieldValue, Path, Token};
+use syn::{parse_quote, punctuated::Punctuated, FieldValue, GenericArgument, Path, Token};
 
 use crate::cmd::ScopeStruct;
 
@@ -12,7 +12,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
     let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
 
     let scope_type_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
 
         scope_type_params::profile_and_flow_selection_push(&mut type_params, scope);
         scope_type_params::params_selection_push(&mut type_params, scope);
@@ -68,14 +68,14 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
 }
 
 mod scope_type_params {
-    use syn::{parse_quote, punctuated::Punctuated, Path, Token};
+    use syn::{parse_quote, punctuated::Punctuated, GenericArgument, Token};
 
     use crate::cmd::{FlowCount, ProfileCount, Scope};
 
     /// Appends profile / flow ID selection type parameters if applicable to the
     /// given scope.
     pub fn profile_and_flow_selection_push(
-        type_params: &mut Punctuated<Path, Token![,]>,
+        type_params: &mut Punctuated<GenericArgument, Token![,]>,
         scope: Scope,
     ) {
         match scope.profile_count() {
@@ -91,7 +91,10 @@ mod scope_type_params {
 
     /// Appends workspace / profile / flow params selection type parameters if
     /// applicable to the given scope.
-    pub fn params_selection_push(type_params: &mut Punctuated<Path, Token![,]>, scope: Scope) {
+    pub fn params_selection_push(
+        type_params: &mut Punctuated<GenericArgument, Token![,]>,
+        scope: Scope,
+    ) {
         // Workspace params are supported by all scopes.
         type_params.push(parse_quote!(
             crate::scopes::type_params::WorkspaceParamsNone

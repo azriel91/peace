@@ -1,4 +1,4 @@
-use syn::{parse_quote, punctuated::Punctuated, Path, Token};
+use syn::{parse_quote, punctuated::Punctuated, GenericArgument, Token};
 
 use crate::cmd::{FlowCount, ProfileCount, Scope};
 
@@ -7,7 +7,7 @@ use super::ParamsScope;
 /// Appends profile / flow ID selection type parameters if applicable to the
 /// given scope.
 pub fn profile_and_flow_selection_push(
-    type_params: &mut Punctuated<Path, Token![,]>,
+    type_params: &mut Punctuated<GenericArgument, Token![,]>,
     scope: Scope,
 ) {
     match scope.profile_count() {
@@ -23,7 +23,10 @@ pub fn profile_and_flow_selection_push(
 
 /// Appends workspace / profile / flow params selection type parameters if
 /// applicable to the given scope.
-pub fn params_selection_push(type_params: &mut Punctuated<Path, Token![,]>, scope: Scope) {
+pub fn params_selection_push(
+    type_params: &mut Punctuated<GenericArgument, Token![,]>,
+    scope: Scope,
+) {
     // Workspace params are supported by all scopes.
     type_params.push(parse_quote!(WorkspaceParamsSelection));
 
@@ -47,7 +50,7 @@ pub fn params_selection_push(type_params: &mut Punctuated<Path, Token![,]>, scop
 ///   selection.
 /// * `FlowParamsKMaybe`: To retain the key for existing flow params selection.
 pub fn params_selection_maybe_push(
-    type_params: &mut Punctuated<Path, Token![,]>,
+    type_params: &mut Punctuated<GenericArgument, Token![,]>,
     scope: Scope,
     params_scope: ParamsScope,
     params_key_known: bool,
@@ -110,7 +113,7 @@ pub fn params_selection_maybe_push(
 /// * `ProfileParamsSelection`: To retain any existing profile params selection.
 /// * `FlowParamsSelection`: To retain any existing flow params selection.
 pub fn params_selection_none_push(
-    type_params: &mut Punctuated<Path, Token![,]>,
+    type_params: &mut Punctuated<GenericArgument, Token![,]>,
     scope: Scope,
     params_scope: ParamsScope,
 ) {
@@ -166,7 +169,7 @@ pub fn params_selection_none_push(
 /// * `ProfileParamsSelection`: To retain any existing profile params selection.
 /// * `FlowParamsSelection`: To retain any existing flow params selection.
 pub fn params_selection_some_push(
-    type_params: &mut Punctuated<Path, Token![,]>,
+    type_params: &mut Punctuated<GenericArgument, Token![,]>,
     scope: Scope,
     params_scope: ParamsScope,
 ) {
@@ -225,7 +228,7 @@ pub fn params_selection_some_push(
 /// * `ProfileParamsKMaybe`: To retain any existing profile params key.
 /// * `FlowParamsKMaybe`: To retain any existing flow params key.
 pub fn params_key_unknown_push(
-    type_params: &mut Punctuated<Path, Token![,]>,
+    type_params: &mut Punctuated<GenericArgument, Token![,]>,
     scope: Scope,
     params_scope: ParamsScope,
 ) {
@@ -283,7 +286,7 @@ pub fn params_key_unknown_push(
 /// * `ProfileParamsKMaybe`: To retain any existing profile params key.
 /// * `FlowParamsKMaybe`: To retain any existing flow params key.
 pub fn params_key_known_push(
-    type_params: &mut Punctuated<Path, Token![,]>,
+    type_params: &mut Punctuated<GenericArgument, Token![,]>,
     scope: Scope,
     params_scope: ParamsScope,
 ) {

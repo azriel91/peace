@@ -1,5 +1,7 @@
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, token::Comma, FieldValue, Path, Token};
+use syn::{
+    parse_quote, punctuated::Punctuated, token::Comma, FieldValue, GenericArgument, Path, Token,
+};
 
 use crate::cmd::{
     param_key_impl, type_parameters_impl, FlowCount, ParamsScope, ProfileCount, Scope, ScopeStruct,
@@ -17,7 +19,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
     };
 
     let scope_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         if scope.flow_count() == FlowCount::One {
             type_params.push(parse_quote!(FlowIdSelection));
         }
@@ -115,7 +117,7 @@ pub fn impl_with_profile_from_workspace_param(
     let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
 
     let impl_params_with_workspace_params_k = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         if scope.flow_count() == FlowCount::One {
             type_params.push(parse_quote!(FlowIdSelection));
         }
@@ -138,7 +140,7 @@ pub fn impl_with_profile_from_workspace_param(
     };
 
     let scope_params_with_workspace_params_k = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         if scope.flow_count() == FlowCount::One {
             type_params.push(parse_quote!(FlowIdSelection));
         }
@@ -155,7 +157,7 @@ pub fn impl_with_profile_from_workspace_param(
     };
 
     let impl_params_key_known_params = {
-        let mut type_params = Punctuated::<Path, Token![,]>::new();
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::params_key_known_push(
             &mut type_params,
             scope,
