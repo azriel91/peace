@@ -9,24 +9,23 @@ use peace_resources::{
 };
 use peace_rt_model::{
     cmd_context_params::{
-        FlowParams, KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs,
-        ParamsTypeRegsBuilder, ProfileParams, WorkspaceParams,
+        FlowParams, KeyMaybe, ParamsKeys, ParamsTypeRegsBuilder, ProfileParams, WorkspaceParams,
     },
     fn_graph::resman::Resource,
     Error, Storage, Workspace, WorkspaceInitializer,
 };
 
-use crate::{ctx::CmdCtx, scopes::NoProfileNoFlow};
-
 pub use self::{
     multi_profile_no_flow_builder::MultiProfileNoFlowBuilder,
     multi_profile_single_flow_builder::MultiProfileSingleFlowBuilder,
+    no_profile_no_flow_builder::NoProfileNoFlowBuilder,
     single_profile_no_flow_builder::SingleProfileNoFlowBuilder,
     single_profile_single_flow_builder::SingleProfileSingleFlowBuilder,
 };
 
 mod multi_profile_no_flow_builder;
 mod multi_profile_single_flow_builder;
+mod no_profile_no_flow_builder;
 mod single_profile_no_flow_builder;
 mod single_profile_single_flow_builder;
 
@@ -132,60 +131,6 @@ where
             let type_id = Resource::type_id(&*flow_param);
             resources.insert_raw(type_id, flow_param);
         });
-    }
-}
-
-impl<'ctx>
-    CmdCtxBuilder<
-        'ctx,
-        NoProfileNoFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-    >
-{
-    /// Returns a `CmdCtxBuilder` for no profile.
-    pub fn no_profile_no_flow(workspace: &'ctx Workspace) -> Self {
-        Self {
-            workspace,
-            scope_builder: NoProfileNoFlow::new(Default::default()),
-            params_type_regs_builder: ParamsTypeRegs::builder(),
-        }
-    }
-}
-
-impl<'ctx, PKeys> CmdCtxBuilder<'ctx, NoProfileNoFlow<PKeys>, PKeys>
-where
-    PKeys: ParamsKeys + 'static,
-{
-    /// Builds the command context.
-    ///
-    /// This includes creating directories and deriving values based on the
-    /// given parameters.
-    pub fn build(
-        self,
-    ) -> CmdCtx<
-        'ctx,
-        NoProfileNoFlow<PKeys>,
-        ParamsKeysImpl<
-            PKeys::WorkspaceParamsKMaybe,
-            PKeys::ProfileParamsKMaybe,
-            PKeys::FlowParamsKMaybe,
-        >,
-    > {
-        let CmdCtxBuilder {
-            workspace,
-            scope_builder: scope,
-            params_type_regs_builder,
-        } = self;
-
-        let params_type_regs = params_type_regs_builder.build();
-
-        // TODO: create `NoProfileNoFlowBuilder`
-
-        CmdCtx {
-            workspace,
-            scope,
-            params_type_regs,
-        }
     }
 }
 

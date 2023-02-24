@@ -8,13 +8,19 @@ use peace_rt_model::{
 };
 
 use crate::{
-    ctx::{cmd_ctx_builder::SingleProfileSingleFlowBuilder, CmdCtxBuilder},
+    ctx::{
+        cmd_ctx_builder::{
+            MultiProfileNoFlowBuilder, MultiProfileSingleFlowBuilder, NoProfileNoFlowBuilder,
+            SingleProfileNoFlowBuilder, SingleProfileSingleFlowBuilder,
+        },
+        CmdCtxBuilder,
+    },
     scopes::{
         type_params::{
             FlowIdNotSelected, FlowParamsNone, ProfileNotSelected, ProfileParamsNone,
             WorkspaceParamsNone,
         },
-        NoProfileNoFlow, SingleProfileSingleFlow,
+        MultiProfileSingleFlow, NoProfileNoFlow, SingleProfileSingleFlow,
     },
 };
 
@@ -59,14 +65,74 @@ impl<'ctx>
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     >
 {
-    /// Returns a `CmdCtxBuilder` for a single profile and flow.
+    /// Returns a `CmdCtxBuilder` for a single profile and no flow.
     pub fn builder_no_profile_no_flow(
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
-        NoProfileNoFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        NoProfileNoFlowBuilder<WorkspaceParamsNone>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
         CmdCtxBuilder::no_profile_no_flow(workspace)
+    }
+}
+
+impl<'ctx>
+    CmdCtx<
+        'ctx,
+        MultiProfileSingleFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    >
+{
+    /// Returns a `CmdCtxBuilder` for multiple profiles and no flow.
+    pub fn builder_multi_profile_no_flow(
+        workspace: &'ctx Workspace,
+    ) -> CmdCtxBuilder<
+        MultiProfileNoFlowBuilder<ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    > {
+        CmdCtxBuilder::multi_profile_no_flow(workspace)
+    }
+}
+
+impl<'ctx>
+    CmdCtx<
+        'ctx,
+        MultiProfileSingleFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    >
+{
+    /// Returns a `CmdCtxBuilder` for multiple profiles and one flow.
+    pub fn builder_multi_profile_single_flow(
+        workspace: &'ctx Workspace,
+    ) -> CmdCtxBuilder<
+        MultiProfileSingleFlowBuilder<
+            ProfileNotSelected,
+            FlowIdNotSelected,
+            WorkspaceParamsNone,
+            ProfileParamsNone,
+            FlowParamsNone,
+        >,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    > {
+        CmdCtxBuilder::multi_profile_single_flow(workspace)
+    }
+}
+
+impl<'ctx>
+    CmdCtx<
+        'ctx,
+        SingleProfileSingleFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    >
+{
+    /// Returns a `CmdCtxBuilder` for a single profile and flow.
+    pub fn builder_single_profile_no_flow(
+        workspace: &'ctx Workspace,
+    ) -> CmdCtxBuilder<
+        SingleProfileNoFlowBuilder<ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    > {
+        CmdCtxBuilder::single_profile_no_flow(workspace)
     }
 }
 

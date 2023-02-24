@@ -25,15 +25,28 @@ pub fn impl_build(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     ProfileSelection::iter().fold(
         proc_macro2::TokenStream::new(),
         |tokens, profile_selection| {
-            match (profile_selection, scope_struct.scope().profile_count()) {
+            match (scope_struct.scope().profile_count(), profile_selection) {
+                // For `ProfileCount::None` it only makes sense to have `ProfileSelection::NotSelected`
+                (
+                    ProfileCount::None,
+                    ProfileSelection::Selected
+                    | ProfileSelection::FromWorkspaceParam
+                    | ProfileSelection::FilterFunction
+                ) |
+
                 // It doesn't make sense to have `NotSelected` or `FilterFunction`
                 // when profile is single.
-                (ProfileSelection::NotSelected | ProfileSelection::FilterFunction, ProfileCount::One) |
+                (
+                    ProfileCount::One,
+                    ProfileSelection::NotSelected
+                    | ProfileSelection::FilterFunction
+                ) |
+
                 // It doesn't make sense to have `profile_from_workpace_param`
                 // when profile is none or multi.
                 (
-                    ProfileSelection::Selected | ProfileSelection::FromWorkspaceParam,
-                    ProfileCount::None | ProfileCount::Multiple
+                    ProfileCount::Multiple,
+                    ProfileSelection::Selected | ProfileSelection::FromWorkspaceParam
                 ) => return tokens,
                 _ => {} // impl build
             }
@@ -147,10 +160,9 @@ fn impl_build_for(
     let scope_fields = {
         let mut scope_fields = Punctuated::<Pat, Token![,]>::new();
 
+        // Profile, Flow, and dir fields
         match scope.profile_count() {
-            ProfileCount::None => {
-                scope_fields.push(parse_quote!(workspace_params));
-            }
+            ProfileCount::None => {}
             ProfileCount::One => {
                 scope_fields.push(parse_quote!(profile));
                 scope_fields.push(parse_quote!(profile_dir));
@@ -592,16 +604,19 @@ fn workspace_dirs_and_storage_borrow(
     scope: Scope,
     workspace_params_selection: WorkspaceParamsSelection,
 ) -> proc_macro2::TokenStream {
+    let mut tokens = quote! {
+        let workspace_dirs = self.workspace.dirs();
+    };
+
     if scope.profile_count() != ProfileCount::None
         || workspace_params_selection == WorkspaceParamsSelection::Some
     {
-        quote! {
-            let workspace_dirs = self.workspace.dirs();
+        tokens.extend(quote! {
             let storage = self.workspace.storage();
-        }
-    } else {
-        proc_macro2::TokenStream::new()
+        });
     }
+
+    tokens
 }
 
 /// Load from `workspace_params_file` and serialize when
