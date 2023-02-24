@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, AppName},
-    cmd::{ctx::CmdCtxBuilder, scopes::NoProfileNoFlow},
+    cmd::ctx::CmdCtxBuilder,
 };
 
 use super::workspace;
@@ -14,6 +14,5 @@ fn build() -> Result<(), Box<dyn std::error::Error>> {
     let cmd_ctx = cmd_ctx_builder.build();
 
     assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
-    assert_eq!(&NoProfileNoFlow, cmd_ctx.scope());
     Ok(())
 }

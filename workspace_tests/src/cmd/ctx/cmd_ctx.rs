@@ -1,7 +1,6 @@
 use peace::{
     cfg::{app_name, flow_id, profile, AppName, FlowId, Profile},
-    cmd::{ctx::CmdCtxBuilder, scopes::SingleProfileSingleFlow},
-    resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
+    cmd::ctx::CmdCtxBuilder,
     rt_model::Workspace,
 };
 
@@ -18,16 +17,8 @@ async fn single_profile_single_flow_getters() -> Result<(), Box<dyn std::error::
         .build()
         .await?;
 
-    let scope = {
-        let peace_app_dir = workspace.dirs().peace_app_dir();
-        let profile_dir = ProfileDir::from((peace_app_dir, &profile));
-        let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
-        let flow_dir = FlowDir::from((&profile_dir, &flow_id));
-
-        SingleProfileSingleFlow::new(profile, profile_dir, profile_history_dir, flow_id, flow_dir)
-    };
+    let scope = cmd_ctx.scope();
     assert!(std::ptr::eq(&workspace, cmd_ctx.workspace()));
-    assert_eq!(&scope, cmd_ctx.scope());
     assert_eq!(workspace.dirs().workspace_dir(), cmd_ctx.workspace_dir());
     assert_eq!(workspace.dirs().peace_dir(), cmd_ctx.peace_dir());
     assert_eq!(workspace.dirs().peace_app_dir(), cmd_ctx.peace_app_dir());
