@@ -142,8 +142,10 @@ fn impl_build_for(
         type_params
     };
 
-    let workspace_dirs_and_storage_borrow =
-        workspace_dirs_and_storage_borrow(scope, workspace_params_selection);
+    let workspace_dirs_and_storage_borrow = quote! {
+        let workspace_dirs = self.workspace.dirs();
+        let storage = self.workspace.storage();
+    };
     let (workspace_params_deserialize, workspace_params_serialize, workspace_params_insert) =
         workspace_params_load_save(workspace_params_selection);
 
@@ -594,29 +596,6 @@ fn scope_builder_deconstruct(
             params_type_regs_builder,
         } = self;
     }
-}
-
-/// Borrow `workspace_dirs` when either:
-///
-/// * there is at least one profile
-/// * there are workspace params
-fn workspace_dirs_and_storage_borrow(
-    scope: Scope,
-    workspace_params_selection: WorkspaceParamsSelection,
-) -> proc_macro2::TokenStream {
-    let mut tokens = quote! {
-        let workspace_dirs = self.workspace.dirs();
-    };
-
-    if scope.profile_count() != ProfileCount::None
-        || workspace_params_selection == WorkspaceParamsSelection::Some
-    {
-        tokens.extend(quote! {
-            let storage = self.workspace.storage();
-        });
-    }
-
-    tokens
 }
 
 /// Load from `workspace_params_file` and serialize when
