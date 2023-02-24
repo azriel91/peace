@@ -1,6 +1,5 @@
-use std::{fmt::Debug, hash::Hash};
+use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
 
-use indexmap::IndexMap;
 use peace_core::Profile;
 use peace_rt_model::cmd_context_params::ProfileParams;
 use serde::{de::DeserializeOwned, Serialize};
@@ -19,7 +18,7 @@ where
 /// The application has profile parameters from multiple profiles.
 #[derive(Debug)]
 pub struct ProfileParamsSomeMulti<ProfileParamsK>(
-    pub(crate) IndexMap<Profile, ProfileParams<ProfileParamsK>>,
+    pub(crate) BTreeMap<Profile, ProfileParams<ProfileParamsK>>,
 )
 where
     ProfileParamsK:

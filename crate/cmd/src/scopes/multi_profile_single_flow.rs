@@ -1,6 +1,5 @@
-use std::{fmt::Debug, hash::Hash};
+use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
 
-use indexmap::IndexMap;
 use peace_core::{FlowId, Profile};
 use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
 use peace_rt_model::cmd_context_params::{
@@ -68,21 +67,21 @@ where
     /// The profiles that are accessible by this command.
     profiles: Vec<Profile>,
     /// Profile directories that store params and flows.
-    profile_dirs: IndexMap<Profile, ProfileDir>,
+    profile_dirs: BTreeMap<Profile, ProfileDir>,
     /// Directories of each profile's execution history.
-    profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
+    profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
     /// Identifier or name of the chosen process flow.
     flow_id: FlowId,
     /// Flow directory that stores params and states.
-    flow_dirs: IndexMap<Profile, FlowDir>,
+    flow_dirs: BTreeMap<Profile, FlowDir>,
     /// Workspace params.
     workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     /// Profile params for the profile.
     profile_to_profile_params:
-        IndexMap<Profile, ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
+        BTreeMap<Profile, ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
     /// Flow params for the selected flow.
     profile_to_flow_params:
-        IndexMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
+        BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
 }
 
 impl<PKeys> MultiProfileSingleFlow<PKeys>
@@ -93,16 +92,16 @@ where
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
         profiles: Vec<Profile>,
-        profile_dirs: IndexMap<Profile, ProfileDir>,
-        profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
+        profile_dirs: BTreeMap<Profile, ProfileDir>,
+        profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
         flow_id: FlowId,
-        flow_dirs: IndexMap<Profile, FlowDir>,
+        flow_dirs: BTreeMap<Profile, FlowDir>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-        profile_to_profile_params: IndexMap<
+        profile_to_profile_params: BTreeMap<
             Profile,
             ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
         >,
-        profile_to_flow_params: IndexMap<
+        profile_to_flow_params: BTreeMap<
             Profile,
             FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
         >,
@@ -128,12 +127,12 @@ where
     }
 
     /// Returns the profile directories keyed by each profile.
-    pub fn profile_dirs(&self) -> &IndexMap<Profile, ProfileDir> {
+    pub fn profile_dirs(&self) -> &BTreeMap<Profile, ProfileDir> {
         &self.profile_dirs
     }
 
     /// Returns the profile history directories keyed by each profile.
-    pub fn profile_history_dirs(&self) -> &IndexMap<Profile, ProfileHistoryDir> {
+    pub fn profile_history_dirs(&self) -> &BTreeMap<Profile, ProfileHistoryDir> {
         &self.profile_history_dirs
     }
 
@@ -143,7 +142,7 @@ where
     }
 
     /// Returns the flow directories keyed by each profile.
-    pub fn flow_dirs(&self) -> &IndexMap<Profile, FlowDir> {
+    pub fn flow_dirs(&self) -> &BTreeMap<Profile, FlowDir> {
         &self.flow_dirs
     }
 }
@@ -175,7 +174,7 @@ where
     FlowParamsKMaybe: KeyMaybe,
 {
     /// Returns the profile params for each profile.
-    pub fn profile_to_profile_params(&self) -> &IndexMap<Profile, ProfileParams<ProfileParamsK>> {
+    pub fn profile_to_profile_params(&self) -> &BTreeMap<Profile, ProfileParams<ProfileParamsK>> {
         &self.profile_to_profile_params
     }
 }
@@ -190,7 +189,7 @@ where
     FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     /// Returns the flow params for the selected flow for each profile.
-    pub fn profile_to_flow_params(&self) -> &IndexMap<Profile, FlowParams<FlowParamsK>> {
+    pub fn profile_to_flow_params(&self) -> &BTreeMap<Profile, FlowParams<FlowParamsK>> {
         &self.profile_to_flow_params
     }
 }

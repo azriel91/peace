@@ -1,6 +1,5 @@
-use std::{fmt::Debug, hash::Hash};
+use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
 
-use indexmap::IndexMap;
 use peace_core::Profile;
 use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
 use peace_rt_model::cmd_context_params::{
@@ -51,14 +50,14 @@ where
     /// The profiles that are accessible by this command.
     profiles: Vec<Profile>,
     /// Profile directories that store params and flows.
-    profile_dirs: IndexMap<Profile, ProfileDir>,
+    profile_dirs: BTreeMap<Profile, ProfileDir>,
     /// Directories of each profile's execution history.
-    profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
+    profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
     /// Workspace params.
     workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     /// Profile params for the profile.
     profile_to_profile_params:
-        IndexMap<Profile, ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
+        BTreeMap<Profile, ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
 }
 
 impl<PKeys> MultiProfileNoFlow<PKeys>
@@ -68,10 +67,10 @@ where
     /// Returns a new `MultiProfileNoFlow` scope.
     pub(crate) fn new(
         profiles: Vec<Profile>,
-        profile_dirs: IndexMap<Profile, ProfileDir>,
-        profile_history_dirs: IndexMap<Profile, ProfileHistoryDir>,
+        profile_dirs: BTreeMap<Profile, ProfileDir>,
+        profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-        profile_to_profile_params: IndexMap<
+        profile_to_profile_params: BTreeMap<
             Profile,
             ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
         >,
@@ -94,12 +93,12 @@ where
     }
 
     /// Returns the profile directories keyed by each profile.
-    pub fn profile_dirs(&self) -> &IndexMap<Profile, ProfileDir> {
+    pub fn profile_dirs(&self) -> &BTreeMap<Profile, ProfileDir> {
         &self.profile_dirs
     }
 
     /// Returns the profile history directories keyed by each profile.
-    pub fn profile_history_dirs(&self) -> &IndexMap<Profile, ProfileHistoryDir> {
+    pub fn profile_history_dirs(&self) -> &BTreeMap<Profile, ProfileHistoryDir> {
         &self.profile_history_dirs
     }
 }
@@ -131,7 +130,7 @@ where
     FlowParamsKMaybe: KeyMaybe,
 {
     /// Returns the profile params for each profile.
-    pub fn profile_to_profile_params(&self) -> &IndexMap<Profile, ProfileParams<ProfileParamsK>> {
+    pub fn profile_to_profile_params(&self) -> &BTreeMap<Profile, ProfileParams<ProfileParamsK>> {
         &self.profile_to_profile_params
     }
 }

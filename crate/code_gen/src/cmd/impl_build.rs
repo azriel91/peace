@@ -305,14 +305,14 @@ fn impl_build_for(
                 // let (profile_dirs, profile_history_dirs) = profile_s_ref
                 //     .iter()
                 //     .fold((
-                //         indexmap::IndexMap::<
+                //         std::collections::BTreeMap::<
                 //             peace_core::Profile,
                 //             peace_resources::paths::ProfileDir
-                //         >::with_capacity(profile_s_ref.len()),
-                //         indexmap::IndexMap::<
+                //         >::new(),
+                //         std::collections::BTreeMap::<
                 //             peace_core::Profile,
                 //             peace_resources::paths::ProfileHistoryDir
-                //         >::with_capacity(profile_s_ref.len())
+                //         >::new()
                 //     ), |(mut profile_dirs, mut profile_history_dirs), profile| {
                 //         let profile_dir = peace_resources::paths::ProfileDir::from(
                 //             (workspace_dirs.peace_app_dir(), profile)
@@ -330,10 +330,10 @@ fn impl_build_for(
                 // dirs_tokens.extend(quote! {
                 //     let flow_dirs = profile_dirs
                 //         .iter()
-                //         .fold(indexmap::IndexMap::<
+                //         .fold(std::collections::BTreeMap::<
                 //                 peace_core::Profile,
                 //                 peace_resources::paths::ProfileDir
-                //             >::with_capacity(profile_s_ref.len()
+                //             >::new(
                 //         ), |mut flow_dirs, (profile, profile_dir)| {
                 //             let flow_dir = peace_resources::paths::FlowDir::from((profile_dir, &self.scope_builder.flow_id_selection.0));
                 //
@@ -380,7 +380,7 @@ fn impl_build_for(
                 //             Ok((profile.clone(), profile_params))
                 //         })
                 //         .try_collect::<
-                //             indexmap::IndexMap<
+                //             std::collections::BTreeMap<
                 //                 peace_core::Profile,
                 //                 _ // peace_rt_model::cmd_context_params::ProfileParams<K>
                 //             >
@@ -409,7 +409,7 @@ fn impl_build_for(
                 //             Ok((profile.clone(), flow_params))
                 //         })
                 //         .try_collect::<
-                //             indexmap::IndexMap<
+                //             std::collections::BTreeMap<
                 //                 peace_core::Profile,
                 //                 _ // peace_rt_model::cmd_context_params::FlowParams<K>
                 //             >
@@ -735,7 +735,7 @@ fn profile_params_load_save(
         ProfileCount::Multiple => {
             let profile_params_deserialize = match profile_params_selection {
                 ProfileParamsSelection::None => quote! {
-                    let profile_to_profile_params = indexmap::IndexMap::<
+                    let profile_to_profile_params = std::collections::BTreeMap::<
                         peace_core::Profile,
                         peace_rt_model::cmd_context_params::ProfileParams<
                             <
@@ -772,7 +772,7 @@ fn profile_params_load_save(
                                 Ok((profile.clone(), profile_params))
                             })
                             .try_collect::<
-                                indexmap::IndexMap<
+                                std::collections::BTreeMap<
                                     peace_core::Profile,
                                     peace_rt_model::cmd_context_params::ProfileParams<
                                         <
@@ -864,7 +864,7 @@ fn flow_params_load_save(
         ProfileCount::Multiple => {
             let flow_params_deserialize = match flow_params_selection {
                 FlowParamsSelection::None => quote! {
-                    let profile_to_flow_params = indexmap::IndexMap::<
+                    let profile_to_flow_params = std::collections::BTreeMap::<
                         peace_core::Profile,
                         peace_rt_model::cmd_context_params::FlowParams<
                             <
@@ -900,7 +900,7 @@ fn flow_params_load_save(
                                 Ok((profile.clone(), flow_params))
                             })
                             .try_collect::<
-                                indexmap::IndexMap<
+                                std::collections::BTreeMap<
                                     peace_core::Profile,
                                     peace_rt_model::cmd_context_params::FlowParams<
                                         <
@@ -1026,14 +1026,14 @@ fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
                 let (profile_dirs, profile_history_dirs) = profile_s_ref
                     .iter()
                     .fold((
-                        indexmap::IndexMap::<
+                        std::collections::BTreeMap::<
                             peace_core::Profile,
                             peace_resources::paths::ProfileDir
-                        >::with_capacity(profile_s_ref.len()),
-                        indexmap::IndexMap::<
+                        >::new(),
+                        std::collections::BTreeMap::<
                             peace_core::Profile,
                             peace_resources::paths::ProfileHistoryDir
-                        >::with_capacity(profile_s_ref.len())
+                        >::new()
                     ), |(mut profile_dirs, mut profile_history_dirs), profile| {
                         let profile_dir = peace_resources::paths::ProfileDir::from(
                             (workspace_dirs.peace_app_dir(), profile)
@@ -1061,10 +1061,10 @@ fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
                 dirs_tokens.extend(quote! {
                     let flow_dirs = profile_dirs
                         .iter()
-                        .fold(indexmap::IndexMap::<
+                        .fold(std::collections::BTreeMap::<
                                 peace_core::Profile,
                                 peace_resources::paths::FlowDir
-                            >::with_capacity(profile_s_ref.len()
+                            >::new(
                         ), |mut flow_dirs, (profile, profile_dir)| {
                             let flow_dir = peace_resources::paths::FlowDir::from((profile_dir, &self.scope_builder.flow_id_selection.0));
 

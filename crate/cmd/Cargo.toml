@@ -16,7 +16,6 @@ doctest = false
 test = false
 
 [dependencies]
-indexmap = { workspace = true }
 futures = "0.3.26"
 peace_code_gen = { path = "../code_gen", version = "0.0.6" }
 peace_core = { path = "../core", version = "0.0.6" }

@@ -1,6 +1,5 @@
-use std::{fmt::Debug, hash::Hash};
+use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
 
-use indexmap::IndexMap;
 use peace_core::Profile;
 use peace_rt_model::cmd_context_params::FlowParams;
 use serde::{de::DeserializeOwned, Serialize};
@@ -17,6 +16,6 @@ where
 
 /// The application has flow parameters from multiple profiles.
 #[derive(Debug)]
-pub struct FlowParamsSomeMulti<FlowParamsK>(pub(crate) IndexMap<Profile, FlowParams<FlowParamsK>>)
+pub struct FlowParamsSomeMulti<FlowParamsK>(pub(crate) BTreeMap<Profile, FlowParams<FlowParamsK>>)
 where
     FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static;

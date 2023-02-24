@@ -189,7 +189,10 @@ pub(crate) async fn profiles_from_peace_app_dir(
 
             // Assume non-UTF8 file names are not profile directories
         }
-    } // while
+    }
+
+    // Ensure profiles are in a consistent, sensible order.
+    profiles.sort();
 
     Ok(profiles)
 }

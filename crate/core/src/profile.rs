@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 /// let _camel = profile!("camelCase");
 /// let _pascal = profile!("PascalCase");
 /// ```
-#[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq, Deserialize, Serialize, PartialOrd, Ord)]
 pub struct Profile(Cow<'static, str>);
 
 crate::id_newtype!(Profile, ProfileInvalidFmt, profile, tag);
