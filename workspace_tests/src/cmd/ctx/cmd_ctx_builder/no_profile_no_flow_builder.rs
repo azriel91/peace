@@ -8,7 +8,7 @@ use super::workspace;
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(tempdir, app_name!("test_no_profile_no_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_no_profile_no_flow"))?;
 
     let cmd_ctx = CmdCtx::builder_no_profile_no_flow(&workspace)
         .build()
@@ -21,7 +21,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(tempdir, app_name!("test_no_profile_no_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_no_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
     let cmd_ctx = CmdCtx::builder_no_profile_no_flow(&workspace)

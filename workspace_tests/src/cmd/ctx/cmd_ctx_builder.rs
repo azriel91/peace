@@ -17,7 +17,7 @@ mod single_profile_no_flow_builder;
 mod single_profile_single_flow_builder;
 
 fn workspace(
-    tempdir: tempfile::TempDir,
+    tempdir: &tempfile::TempDir,
     app_name: AppName,
 ) -> Result<Workspace, Box<dyn std::error::Error>> {
     let workspace = {
@@ -28,7 +28,7 @@ fn workspace(
 }
 
 async fn workspace_with(
-    tempdir: tempfile::TempDir,
+    tempdir: &tempfile::TempDir,
     app_name: AppName,
     profiles_existing: &[Profile],
     flow_id: Option<&FlowId>,

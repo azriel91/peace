@@ -9,7 +9,7 @@ use super::workspace;
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
 
@@ -38,7 +38,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
 
@@ -75,7 +75,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
 #[tokio::test]
 async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
 
@@ -106,7 +106,7 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
 
@@ -147,7 +147,7 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
 async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn std::error::Error>>
 {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
 
@@ -190,7 +190,7 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
 async fn build_with_workspace_params_with_profile_params_with_flow_params()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
 
@@ -244,7 +244,7 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
 async fn build_with_workspace_params_with_profile_from_params()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
 
@@ -282,7 +282,7 @@ async fn build_with_workspace_params_with_profile_from_params()
 async fn build_with_workspace_params_with_profile_params_with_profile_from_params()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
-    let workspace = workspace(tempdir, app_name!("test_single_profile_single_flow"))?;
+    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
 
