@@ -13,7 +13,7 @@ async fn single_profile_single_flow_getters() -> Result<(), Box<dyn std::error::
 
     let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(&workspace)
         .with_profile(profile.clone())
-        .with_flow_id(flow_id.clone())
+        .with_flow(flow_id.clone())
         .build()
         .await?;
 

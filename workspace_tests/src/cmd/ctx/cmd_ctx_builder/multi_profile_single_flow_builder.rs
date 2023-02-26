@@ -23,7 +23,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&workspace)
-        .with_flow_id(flow_id.clone())
+        .with_flow(flow_id.clone())
         .build()
         .await?;
 
@@ -79,7 +79,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     .await?;
 
     let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&workspace)
-        .with_flow_id(flow_id.clone())
+        .with_flow(flow_id.clone())
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
         .with_workspace_param(String::from("something_else"), Some("a string".to_string()))
         .build()
@@ -146,7 +146,7 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
         .with_profile_params_k::<String>()
         .with_profile_param::<u32>(String::from("profile_param"))
         .with_profile_param::<u64>(String::from("profile_param_other"))
-        .with_flow_id(flow_id.clone())
+        .with_flow(flow_id.clone())
         .build()
         .await?;
 
@@ -202,7 +202,7 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&workspace)
-        .with_flow_id(flow_id.clone())
+        .with_flow(flow_id.clone())
         .with_flow_params_k::<String>()
         .with_flow_param::<String>(String::from("flow_param"))
         .with_flow_param::<u32>(String::from("flow_param_other"))
@@ -271,7 +271,7 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     .await?;
 
     let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&workspace)
-        .with_flow_id(flow_id.clone())
+        .with_flow(flow_id.clone())
         .with_profile_params_k::<String>()
         .with_profile_param::<u32>(String::from("profile_param"))
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
@@ -345,7 +345,7 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
     .await?;
 
     let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&workspace)
-        .with_flow_id(flow_id.clone())
+        .with_flow(flow_id.clone())
         .with_profile_params_k::<String>()
         .with_profile_param::<u32>(String::from("profile_param"))
         .with_flow_params_k::<String>()
@@ -434,7 +434,7 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
         .with_workspace_param(String::from("something_else"), Some("a string".to_string()))
         .with_profile_filter(|profile| **profile == "test_profile")
-        .with_flow_id(flow_id.clone())
+        .with_flow(flow_id.clone())
         .build()
         .await?;
 
@@ -499,7 +499,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
         .with_flow_param::<String>(String::from("flow_param"))
         .with_profile_filter(|profile| **profile == "test_profile")
         .with_flow_param::<u32>(String::from("flow_param_other"))
-        .with_flow_id(flow_id.clone())
+        .with_flow(flow_id.clone())
         .build()
         .await?;
 

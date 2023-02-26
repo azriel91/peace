@@ -5,14 +5,14 @@ use syn::{
 
 use crate::cmd::{type_parameters_impl, FlowCount, ProfileCount, Scope, ScopeStruct};
 
-/// Generates the `with_flow_id` method for the command context builder.
-pub fn impl_with_flow_id(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
+/// Generates the `with_flow` method for the command context builder.
+pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
     let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
 
     if scope.profile_count() == ProfileCount::None || scope.flow_count() == FlowCount::None {
-        // `with_flow_id` is not supported.
+        // `with_flow` is not supported.
         return proc_macro2::TokenStream::new();
     };
 
@@ -87,7 +87,7 @@ pub fn impl_with_flow_id(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
         where
             PKeys: #params_module::ParamsKeys + 'static,
         {
-            pub fn with_flow_id(
+            pub fn with_flow(
                 self,
                 flow_id: peace_core::FlowId,
             ) -> crate::ctx::CmdCtxBuilder<
