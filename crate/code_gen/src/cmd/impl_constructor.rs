@@ -35,7 +35,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                 'ctx,
                 // SingleProfileSingleFlowBuilder<
                 //     ProfileNotSelected,
-                //     FlowIdNotSelected,
+                //     FlowNotSelected,
                 //     WorkspaceParamsNone,
                 //     ProfileParamsNone,
                 // >
@@ -51,7 +51,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
             pub fn #constructor_method_name(workspace: &'ctx peace_rt_model::Workspace) -> Self {
                 let scope_builder = #scope_builder_name {
                     // profile_selection: ProfileNotSelected,
-                    // flow_id_selection: FlowIdNotSelected,
+                    // flow_selection: FlowNotSelected,
                     // workspace_params_selection: WorkspaceParamsNone,
                     // profile_params_selection: ProfileParamsNone,
                     #scope_field_values
@@ -85,7 +85,7 @@ mod scope_type_params {
             }
         }
         if scope.flow_count() == FlowCount::One {
-            type_params.push(parse_quote!(crate::scopes::type_params::FlowIdNotSelected));
+            type_params.push(parse_quote!(crate::scopes::type_params::FlowNotSelected));
         }
     }
 
@@ -134,7 +134,7 @@ mod scope_field_values {
         }
         if scope.flow_count() == FlowCount::One {
             field_values.push(parse_quote!(
-                flow_id_selection: crate::scopes::type_params::FlowIdNotSelected
+                flow_selection: crate::scopes::type_params::FlowNotSelected
             ));
         }
     }

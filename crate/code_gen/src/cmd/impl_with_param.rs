@@ -65,7 +65,7 @@ fn impl_with_param_key_unknown(
     let scope_builder_name = &scope_struct.item_struct().ident;
     let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
 
-    // ProfileSelection, FlowIdSelection
+    // ProfileSelection, FlowSelection
     let selection_type_params = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
@@ -129,7 +129,7 @@ fn impl_with_param_key_unknown(
         impl<
             'ctx,
             // ProfileSelection,
-            // FlowIdSelection,
+            // FlowSelection,
             // ProfileParamsSelection,
             // ProfileParamsKMaybe,
             // FlowParamsKMaybe,
@@ -140,7 +140,7 @@ fn impl_with_param_key_unknown(
                 'ctx,
                 #scope_builder_name<
                     // ProfileSelection,
-                    // FlowIdSelection,
+                    // FlowSelection,
                     // WorkspaceParamsNone,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
@@ -177,7 +177,7 @@ fn impl_with_param_key_unknown(
                 'ctx,
                 #scope_builder_name<
                     // ProfileSelection,
-                    // FlowIdSelection,
+                    // FlowSelection,
                     // WorkspaceParamsSome<#params_k_type_param>,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
@@ -199,7 +199,7 @@ fn impl_with_param_key_unknown(
                     scope_builder:
                         #scope_builder_name {
                             // profile_selection,
-                            // flow_id_selection,
+                            // flow_selection,
                             // workspace_params_selection: WorkspaceParamsNone,
                             // profile_params_selection,
                             // flow_params_selection,
@@ -224,7 +224,7 @@ fn impl_with_param_key_unknown(
 
                 let scope_builder = #scope_builder_name {
                     // profile_selection,
-                    // flow_id_selection,
+                    // flow_selection,
                     // workspace_params_selection: WorkspaceParamsSome(params_map),
                     // profile_params_selection,
                     // flow_params_selection,
@@ -250,7 +250,7 @@ fn impl_with_param_key_known(
     let scope_builder_name = &scope_struct.item_struct().ident;
     let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
 
-    // ProfileSelection, FlowIdSelection
+    // ProfileSelection, FlowSelection
     let selection_type_params = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
@@ -303,7 +303,7 @@ fn impl_with_param_key_known(
         impl<
             'ctx,
             // ProfileSelection,
-            // FlowIdSelection,
+            // FlowSelection,
             // ProfileParamsSelection,
             // WorkspaceParamsK,
             // ProfileParamsKMaybe,
@@ -315,7 +315,7 @@ fn impl_with_param_key_known(
                 'ctx,
                 #scope_builder_name<
                     // ProfileSelection,
-                    // FlowIdSelection,
+                    // FlowSelection,
                     // WorkspaceParamsSome<WorkspaceParamsK>,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
@@ -355,7 +355,7 @@ fn impl_with_param_key_known(
                 'ctx,
                 #scope_builder_name<
                     // ProfileSelection,
-                    // FlowIdSelection,
+                    // FlowSelection,
                     // WorkspaceParamsSome<WorkspaceParamsK>,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
@@ -375,7 +375,7 @@ fn impl_with_param_key_known(
                     scope_builder:
                         #scope_builder_name {
                             // profile_selection,
-                            // flow_id_selection,
+                            // flow_selection,
                             // mut workspace_params_selection,
                             // profile_params_selection,
                             // flow_params_selection,
@@ -396,7 +396,7 @@ fn impl_with_param_key_known(
 
                 let scope_builder = #scope_builder_name {
                     // profile_selection,
-                    // flow_id_selection,
+                    // flow_selection,
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,

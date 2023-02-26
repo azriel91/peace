@@ -3,7 +3,7 @@ use syn::{parse_quote, punctuated::Punctuated, FieldValue, GenericArgument, Pat,
 
 use crate::cmd::{
     type_params_selection::{
-        FlowIdSelection, FlowParamsSelection, ProfileParamsSelection, ProfileSelection,
+        FlowParamsSelection, FlowSelection, ProfileParamsSelection, ProfileSelection,
         WorkspaceParamsSelection,
     },
     FlowCount, ParamsScope, ProfileCount, Scope, ScopeStruct,
@@ -11,13 +11,13 @@ use crate::cmd::{
 
 /// Generates the `CmdCtxBuilder::build` methods for each type param selection.
 ///
-/// For a command with `ProfileSelection`, `FlowIdSelection`, and
+/// For a command with `ProfileSelection`, `FlowSelection`, and
 /// `*ParamsSelection`s type parameters, `2 * 1 * 2 * 2 * 2` = 16 variations of
 /// the `build` method need to be generated, which is tedious to keep
 /// consistently correct by hand:
 ///
 /// * `ProfileSelected`, `ProfileFromWorkspaceParams`
-/// * `FlowIdSelected`
+/// * `FlowSelected`
 /// * `WorkspaceParamsNone`, `WorkspaceParamsSome`
 /// * `ProfileParamsNone`, `ProfileParamsSome`
 /// * `FlowParamsNone`, `FlowParamsSome`
@@ -51,7 +51,7 @@ pub fn impl_build(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                 _ => {} // impl build
             }
 
-            FlowIdSelection::iter().fold(tokens, |tokens, flow_id_selection| {
+            FlowSelection::iter().fold(tokens, |tokens, flow_selection| {
                 WorkspaceParamsSelection::iter().fold(
                     tokens,
                     |tokens, workspace_params_selection| {
@@ -86,7 +86,7 @@ pub fn impl_build(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                                         let next_build_tokens = impl_build_for(
                                             scope_struct,
                                             profile_selection,
-                                            flow_id_selection,
+                                            flow_selection,
                                             workspace_params_selection,
                                             profile_params_selection,
                                             flow_params_selection,
@@ -109,7 +109,7 @@ pub fn impl_build(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
 fn impl_build_for(
     scope_struct: &ScopeStruct,
     profile_selection: ProfileSelection,
-    flow_id_selection: FlowIdSelection,
+    flow_selection: FlowSelection,
     workspace_params_selection: WorkspaceParamsSelection,
     profile_params_selection: ProfileParamsSelection,
     flow_params_selection: FlowParamsSelection,
@@ -128,7 +128,7 @@ fn impl_build_for(
             }
         }
         if scope.flow_count() == FlowCount::One {
-            type_params.push(flow_id_selection.type_param());
+            type_params.push(flow_selection.type_param());
         }
 
         type_params.push(workspace_params_selection.type_param());
@@ -227,7 +227,7 @@ fn impl_build_for(
         scope_struct,
         scope,
         profile_selection,
-        flow_id_selection,
+        flow_selection,
         workspace_params_selection,
         profile_params_selection,
         flow_params_selection,
@@ -239,7 +239,7 @@ fn impl_build_for(
                 'ctx,
                 #scope_builder_name<
                     // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // FlowIdSelected,
+                    // FlowSelected,
                     // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
                     // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
                     // FlowParamsNone,
@@ -327,7 +327,7 @@ fn impl_build_for(
                 //         (profile_dirs, profile_history_dirs)
                 //     });
                 // --- Single Profile Single Flow --- //
-                // let flow_dir = FlowDir::from((&profile_dir, &self.scope_builder.flow_id_selection.0));
+                // let flow_dir = FlowDir::from((&profile_dir, &self.scope_builder.flow_selection.0));
                 // --- Multi Profile Single Flow --- //
                 // dirs_tokens.extend(quote! {
                 //     let flow_dirs = profile_dirs
@@ -337,7 +337,7 @@ fn impl_build_for(
                 //                 peace_resources::paths::ProfileDir
                 //             >::new(
                 //         ), |mut flow_dirs, (profile, profile_dir)| {
-                //             let flow_dir = peace_resources::paths::FlowDir::from((profile_dir, &self.scope_builder.flow_id_selection.0));
+                //             let flow_dir = peace_resources::paths::FlowDir::from((profile_dir, &self.scope_builder.flow_selection.0));
                 //
                 //             flow_dirs.insert(profile.clone(), flow_dir);
                 //
@@ -443,7 +443,7 @@ fn impl_build_for(
                 //                             // ProfileFromWorkspaceParam(_workspace_params_k),
                 //                             // ProfileFilterFn(profiles_filter_fn)
                 //
-                //             flow_id_selection: FlowIdSelected(flow_id),
+                //             flow_selection: FlowSelected(flow_id),
                 //             workspace_params_selection: WorkspaceParamsSome(workspace_params),
                 //             profile_params_selection: ProfileParamsSome(profile_params),
                 //             flow_params_selection: FlowParamsNone,
@@ -535,7 +535,7 @@ fn scope_builder_deconstruct(
     scope_struct: &ScopeStruct,
     scope: Scope,
     profile_selection: ProfileSelection,
-    flow_id_selection: FlowIdSelection,
+    flow_selection: FlowSelection,
     workspace_params_selection: WorkspaceParamsSelection,
     profile_params_selection: ProfileParamsSelection,
     flow_params_selection: FlowParamsSelection,
@@ -566,9 +566,9 @@ fn scope_builder_deconstruct(
     }
 
     if scope.flow_count() == FlowCount::One {
-        match flow_id_selection {
-            FlowIdSelection::Selected => scope_builder_fields.push(parse_quote! {
-                flow_id_selection: crate::scopes::type_params::FlowIdSelected(flow_id)
+        match flow_selection {
+            FlowSelection::Selected => scope_builder_fields.push(parse_quote! {
+                flow_selection: crate::scopes::type_params::FlowSelected(flow_id)
             }),
         }
     }
@@ -587,7 +587,7 @@ fn scope_builder_deconstruct(
             scope_builder:
                 #scope_builder_name {
                     // profile_selection: ProfileSelected(profile),
-                    // flow_id_selection: FlowIdSelected(flow_id),
+                    // flow_selection: FlowSelected(flow_id),
                     // workspace_params_selection: WorkspaceParamsSome(workspace_params),
                     // profile_params_selection: ProfileParamsSome(profile_params),
                     // flow_params_selection: FlowParamsNone,
@@ -1033,7 +1033,7 @@ fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
             ProfileCount::None => {}
             ProfileCount::One => {
                 dirs_tokens.extend(quote! {
-                    let flow_dir = peace_resources::paths::FlowDir::from((&profile_dir, &self.scope_builder.flow_id_selection.0));
+                    let flow_dir = peace_resources::paths::FlowDir::from((&profile_dir, &self.scope_builder.flow_selection.0));
                 });
             }
             ProfileCount::Multiple => {
@@ -1045,7 +1045,7 @@ fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
                                 peace_resources::paths::FlowDir
                             >::new(
                         ), |mut flow_dirs, (profile, profile_dir)| {
-                            let flow_dir = peace_resources::paths::FlowDir::from((profile_dir, &self.scope_builder.flow_id_selection.0));
+                            let flow_dir = peace_resources::paths::FlowDir::from((profile_dir, &self.scope_builder.flow_selection.0));
 
                             flow_dirs.insert(profile.clone(), flow_dir);
 

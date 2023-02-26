@@ -18,7 +18,7 @@ use crate::{
     },
     scopes::{
         type_params::{
-            FlowIdNotSelected, FlowParamsNone, ProfileNotSelected, ProfileParamsNone,
+            FlowNotSelected, FlowParamsNone, ProfileNotSelected, ProfileParamsNone,
             WorkspaceParamsNone,
         },
         MultiProfileSingleFlow, NoProfileNoFlow, SingleProfileSingleFlow,
@@ -133,7 +133,7 @@ impl<'ctx>
     ) -> CmdCtxBuilder<
         MultiProfileSingleFlowBuilder<
             ProfileNotSelected,
-            FlowIdNotSelected,
+            FlowNotSelected,
             WorkspaceParamsNone,
             ProfileParamsNone,
             FlowParamsNone,
@@ -175,7 +175,7 @@ impl<'ctx>
     ) -> CmdCtxBuilder<
         SingleProfileSingleFlowBuilder<
             ProfileNotSelected,
-            FlowIdNotSelected,
+            FlowNotSelected,
             WorkspaceParamsNone,
             ProfileParamsNone,
             FlowParamsNone,

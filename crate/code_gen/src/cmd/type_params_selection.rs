@@ -41,18 +41,18 @@ impl ProfileSelection {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum FlowIdSelection {
+pub(crate) enum FlowSelection {
     Selected,
 }
 
-impl FlowIdSelection {
+impl FlowSelection {
     pub(crate) fn iter() -> std::array::IntoIter<Self, 1> {
         [Self::Selected].into_iter()
     }
 
     pub(crate) fn type_param(&self) -> GenericArgument {
         match self {
-            Self::Selected => parse_quote!(crate::scopes::type_params::FlowIdSelected),
+            Self::Selected => parse_quote!(crate::scopes::type_params::FlowSelected),
         }
     }
 }

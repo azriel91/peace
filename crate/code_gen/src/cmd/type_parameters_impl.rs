@@ -17,7 +17,7 @@ pub fn profile_and_flow_selection_push(
         }
     }
     if scope.flow_count() == FlowCount::One {
-        type_params.push(parse_quote!(FlowIdSelection));
+        type_params.push(parse_quote!(FlowSelection));
     }
 }
 

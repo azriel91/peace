@@ -17,7 +17,7 @@ use crate::cmd::{scope_struct::ScopeStruct, type_parameters_impl};
 /// ```rust,ignore
 /// pub struct SingleProfileSingleFlowBuilder<
 ///     ProfileSelection,
-///     FlowIdSelection,
+///     FlowSelection,
 ///     WorkspaceParamsSelection,
 ///     ProfileParamsSelection,
 ///     FlowParamsSelection,
@@ -25,7 +25,7 @@ use crate::cmd::{scope_struct::ScopeStruct, type_parameters_impl};
 ///     /// The profile this command operates on.
 ///     pub(crate) profile_selection: ProfileSelection,
 ///     /// Identifier or name of the chosen process flow.
-///     pub(crate) flow_id_selection: FlowIdSelection,
+///     pub(crate) flow_selection: FlowSelection,
 ///     /// Workspace parameters.
 ///     pub(crate) workspace_params_selection: WorkspaceParamsSelection,
 ///     /// Profile parameters.
@@ -79,7 +79,7 @@ mod fields {
         if scope.flow_count() == FlowCount::One {
             let fields: FieldsNamed = parse_quote!({
                 /// Identifier or name of the chosen process flow.
-                pub(crate) flow_id_selection: FlowIdSelection
+                pub(crate) flow_selection: FlowSelection
             });
             fields_named.named.extend(fields.named);
         }
