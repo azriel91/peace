@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
+use std::{collections::BTreeMap, fmt::Debug, hash::Hash, marker::PhantomData};
 
 use peace_core::Profile;
 use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
@@ -43,7 +43,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct MultiProfileNoFlow<PKeys>
+pub struct MultiProfileNoFlow<E, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -58,9 +58,11 @@ where
     /// Profile params for the profile.
     profile_to_profile_params:
         BTreeMap<Profile, ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
+    /// Marker.
+    marker: PhantomData<E>,
 }
 
-impl<PKeys> MultiProfileNoFlow<PKeys>
+impl<E, PKeys> MultiProfileNoFlow<E, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -81,6 +83,7 @@ where
             profile_history_dirs,
             workspace_params,
             profile_to_profile_params,
+            marker: PhantomData,
         }
     }
 
@@ -103,8 +106,9 @@ where
     }
 }
 
-impl<WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<E, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
     MultiProfileNoFlow<
+        E,
         ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     >
 where
@@ -119,8 +123,9 @@ where
     }
 }
 
-impl<WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+impl<E, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
     MultiProfileNoFlow<
+        E,
         ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
     >
 where

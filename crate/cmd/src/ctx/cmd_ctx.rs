@@ -85,10 +85,10 @@ where
     }
 }
 
-impl<'ctx>
+impl<'ctx, E>
     CmdCtx<
         'ctx,
-        NoProfileNoFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        NoProfileNoFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     >
 {
@@ -103,10 +103,10 @@ impl<'ctx>
     }
 }
 
-impl<'ctx>
+impl<'ctx, E>
     CmdCtx<
         'ctx,
-        MultiProfileNoFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        MultiProfileNoFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     >
 {
@@ -145,10 +145,10 @@ impl<'ctx, E>
     }
 }
 
-impl<'ctx>
+impl<'ctx, E>
     CmdCtx<
         'ctx,
-        SingleProfileNoFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        SingleProfileNoFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     >
 {

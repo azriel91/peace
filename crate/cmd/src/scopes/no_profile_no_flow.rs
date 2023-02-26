@@ -1,4 +1,4 @@
-use std::{fmt::Debug, hash::Hash};
+use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
 use peace_rt_model::cmd_context_params::{
     KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, WorkspaceParams,
@@ -28,27 +28,33 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct NoProfileNoFlow<PKeys>
+pub struct NoProfileNoFlow<E, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
     /// Workspace params.
     workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    /// Marker.
+    marker: PhantomData<E>,
 }
 
-impl<PKeys> NoProfileNoFlow<PKeys>
+impl<E, PKeys> NoProfileNoFlow<E, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
     pub(crate) fn new(
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     ) -> Self {
-        Self { workspace_params }
+        Self {
+            workspace_params,
+            marker: PhantomData,
+        }
     }
 }
 
-impl<WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<E, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
     NoProfileNoFlow<
+        E,
         ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     >
 where
