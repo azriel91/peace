@@ -2,8 +2,11 @@ use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
 
 use peace_core::{FlowId, Profile};
 use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
-use peace_rt_model::cmd_context_params::{
-    FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ProfileParams, WorkspaceParams,
+use peace_rt_model::{
+    cmd_context_params::{
+        FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ProfileParams, WorkspaceParams,
+    },
+    Flow,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -60,7 +63,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write flow parameters for different flows.
 /// * Read or write flow state for different flows.
 #[derive(Debug)]
-pub struct MultiProfileSingleFlow<PKeys>
+pub struct MultiProfileSingleFlow<E, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -70,8 +73,8 @@ where
     profile_dirs: BTreeMap<Profile, ProfileDir>,
     /// Directories of each profile's execution history.
     profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
-    /// Identifier or name of the chosen process flow.
-    flow_id: FlowId,
+    /// The chosen process flow.
+    flow: Flow<E>,
     /// Flow directory that stores params and states.
     flow_dirs: BTreeMap<Profile, FlowDir>,
     /// Workspace params.
@@ -84,7 +87,7 @@ where
         BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
 }
 
-impl<PKeys> MultiProfileSingleFlow<PKeys>
+impl<E, PKeys> MultiProfileSingleFlow<E, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -94,7 +97,7 @@ where
         profiles: Vec<Profile>,
         profile_dirs: BTreeMap<Profile, ProfileDir>,
         profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
-        flow_id: FlowId,
+        flow: Flow<E>,
         flow_dirs: BTreeMap<Profile, FlowDir>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         profile_to_profile_params: BTreeMap<
@@ -110,7 +113,7 @@ where
             profiles,
             profile_dirs,
             profile_history_dirs,
-            flow_id,
+            flow,
             flow_dirs,
             workspace_params,
             profile_to_profile_params,
@@ -147,8 +150,9 @@ where
     }
 }
 
-impl<WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<E, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
     MultiProfileSingleFlow<
+        E,
         ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     >
 where
@@ -163,8 +167,9 @@ where
     }
 }
 
-impl<WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+impl<E, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
     MultiProfileSingleFlow<
+        E,
         ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
     >
 where
@@ -179,8 +184,9 @@ where
     }
 }
 
-impl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+impl<E, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
     MultiProfileSingleFlow<
+        E,
         ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
     >
 where

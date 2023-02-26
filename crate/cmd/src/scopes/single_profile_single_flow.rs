@@ -1,10 +1,11 @@
 use peace_rt_model::cmd_context_params::{KeyKnown, ParamsKeysImpl};
 use std::{fmt::Debug, hash::Hash};
 
-use peace_core::{FlowId, Profile};
+use peace_core::Profile;
 use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
-use peace_rt_model::cmd_context_params::{
-    FlowParams, KeyMaybe, ParamsKeys, ProfileParams, WorkspaceParams,
+use peace_rt_model::{
+    cmd_context_params::{FlowParams, KeyMaybe, ParamsKeys, ProfileParams, WorkspaceParams},
+    Flow,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -41,7 +42,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct SingleProfileSingleFlow<PKeys>
+pub struct SingleProfileSingleFlow<E, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -51,8 +52,8 @@ where
     profile_dir: ProfileDir,
     /// Directory to store profile execution history.
     profile_history_dir: ProfileHistoryDir,
-    /// Identifier or name of the chosen process flow.
-    flow_id: FlowId,
+    /// The chosen process flow.
+    flow: Flow<E>,
     /// Flow directory that stores params and states.
     flow_dir: FlowDir,
     /// Workspace params.
@@ -63,7 +64,7 @@ where
     flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
 }
 
-impl<PKeys> SingleProfileSingleFlow<PKeys>
+impl<E, PKeys> SingleProfileSingleFlow<E, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -73,7 +74,7 @@ where
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
-        flow_id: FlowId,
+        flow: Flow<E>,
         flow_dir: FlowDir,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
@@ -83,7 +84,7 @@ where
             profile,
             profile_dir,
             profile_history_dir,
-            flow_id,
+            flow,
             flow_dir,
             workspace_params,
             profile_params,
@@ -106,9 +107,9 @@ where
         &self.profile_history_dir
     }
 
-    /// Returns a reference to the flow ID.
-    pub fn flow_id(&self) -> &FlowId {
-        &self.flow_id
+    /// Returns a reference to the flow.
+    pub fn flow(&self) -> &Flow<E> {
+        &self.flow
     }
 
     /// Returns a reference to the flow directory.
@@ -117,8 +118,9 @@ where
     }
 }
 
-impl<WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<E, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
     SingleProfileSingleFlow<
+        E,
         ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     >
 where
@@ -133,8 +135,9 @@ where
     }
 }
 
-impl<WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+impl<E, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
     SingleProfileSingleFlow<
+        E,
         ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
     >
 where
@@ -149,8 +152,9 @@ where
     }
 }
 
-impl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+impl<E, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
     SingleProfileSingleFlow<
+        E,
         ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
     >
 where

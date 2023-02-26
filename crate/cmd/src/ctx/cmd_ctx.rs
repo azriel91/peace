@@ -21,7 +21,8 @@ use crate::{
             FlowNotSelected, FlowParamsNone, ProfileNotSelected, ProfileParamsNone,
             WorkspaceParamsNone,
         },
-        MultiProfileSingleFlow, NoProfileNoFlow, SingleProfileSingleFlow,
+        MultiProfileNoFlow, MultiProfileSingleFlow, NoProfileNoFlow, SingleProfileNoFlow,
+        SingleProfileSingleFlow,
     },
 };
 
@@ -105,7 +106,7 @@ impl<'ctx>
 impl<'ctx>
     CmdCtx<
         'ctx,
-        MultiProfileSingleFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        MultiProfileNoFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     >
 {
@@ -120,10 +121,10 @@ impl<'ctx>
     }
 }
 
-impl<'ctx>
+impl<'ctx, E>
     CmdCtx<
         'ctx,
-        MultiProfileSingleFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        MultiProfileSingleFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     >
 {
@@ -147,7 +148,7 @@ impl<'ctx>
 impl<'ctx>
     CmdCtx<
         'ctx,
-        SingleProfileSingleFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        SingleProfileNoFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     >
 {
@@ -162,10 +163,10 @@ impl<'ctx>
     }
 }
 
-impl<'ctx>
+impl<'ctx, E>
     CmdCtx<
         'ctx,
-        SingleProfileSingleFlow<ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        SingleProfileSingleFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     >
 {
