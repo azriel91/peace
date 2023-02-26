@@ -20,7 +20,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         match scope.profile_count() {
             ProfileCount::None => {
-                unreachable!("FlowId is not specifiable when there are no profiles.")
+                unreachable!("Flow is not specifiable when there are no profiles.")
             }
             ProfileCount::One | ProfileCount::Multiple => {
                 type_params.push(parse_quote!(ProfileSelection));
@@ -33,7 +33,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         match scope.profile_count() {
             ProfileCount::None => {
-                unreachable!("FlowId is not specifiable when there are no profiles.")
+                unreachable!("Flow is not specifiable when there are no profiles.")
             }
             ProfileCount::One | ProfileCount::Multiple => {
                 type_params.push(parse_quote!(ProfileSelection));
@@ -47,13 +47,13 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         match scope.profile_count() {
             ProfileCount::None => {
-                unreachable!("FlowId is not specifiable when there are no profiles.")
+                unreachable!("Flow is not specifiable when there are no profiles.")
             }
             ProfileCount::One | ProfileCount::Multiple => {
                 type_params.push(parse_quote!(ProfileSelection));
             }
         }
-        type_params.push(parse_quote!(crate::scopes::type_params::FlowSelected));
+        type_params.push(parse_quote!(crate::scopes::type_params::FlowSelected<E>));
         type_parameters_impl::params_selection_push(&mut type_params, scope);
         type_params
     };
@@ -64,6 +64,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     quote! {
         impl<
             'ctx,
+            E,
             PKeys,
             // ProfileSelection,
             // WorkspaceParamsSelection,
@@ -74,6 +75,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
+                    E,
                     // ProfileSelection,
                     // FlowNotSelected,
                     // WorkspaceParamsSelection,
@@ -88,10 +90,11 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         {
             pub fn with_flow(
                 self,
-                flow_id: peace_core::FlowId,
+                flow: peace_rt_model::Flow<E>,
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
+                    E,
                     // ProfileSelection,
                     // FlowSelected,
                     // WorkspaceParamsSelection,
@@ -117,7 +120,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
 
                 let scope_builder = #scope_builder_name {
                     // profile_selection,
-                    // flow_selection: FlowSelected(flow_id),
+                    // flow_selection: FlowSelected(flow),
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,
@@ -155,7 +158,7 @@ fn scope_builder_fields_flow_selected(scope: Scope) -> Punctuated<FieldValue, Co
     let mut field_values = Punctuated::<FieldValue, Token![,]>::new();
     field_values.push(parse_quote!(profile_selection));
     field_values.push(parse_quote!(
-        flow_selection: crate::scopes::type_params::FlowSelected(flow_id)
+        flow_selection: crate::scopes::type_params::FlowSelected(flow)
     ));
     field_values.push(parse_quote!(workspace_params_selection));
     if scope.profile_params_supported() {

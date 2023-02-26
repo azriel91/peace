@@ -96,7 +96,7 @@ impl<'ctx, E>
     pub fn builder_no_profile_no_flow(
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
-        NoProfileNoFlowBuilder<WorkspaceParamsNone>,
+        NoProfileNoFlowBuilder<E, WorkspaceParamsNone>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
         CmdCtxBuilder::no_profile_no_flow(workspace)
@@ -114,7 +114,7 @@ impl<'ctx, E>
     pub fn builder_multi_profile_no_flow(
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
-        MultiProfileNoFlowBuilder<ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
+        MultiProfileNoFlowBuilder<E, ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
         CmdCtxBuilder::multi_profile_no_flow(workspace)
@@ -133,6 +133,7 @@ impl<'ctx, E>
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         MultiProfileSingleFlowBuilder<
+            E,
             ProfileNotSelected,
             FlowNotSelected,
             WorkspaceParamsNone,
@@ -156,7 +157,7 @@ impl<'ctx, E>
     pub fn builder_single_profile_no_flow(
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
-        SingleProfileNoFlowBuilder<ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
+        SingleProfileNoFlowBuilder<E, ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
         CmdCtxBuilder::single_profile_no_flow(workspace)
@@ -175,6 +176,7 @@ impl<'ctx, E>
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         SingleProfileSingleFlowBuilder<
+            E,
             ProfileNotSelected,
             FlowNotSelected,
             WorkspaceParamsNone,

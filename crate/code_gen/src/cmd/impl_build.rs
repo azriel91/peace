@@ -17,7 +17,7 @@ use crate::cmd::{
 /// consistently correct by hand:
 ///
 /// * `ProfileSelected`, `ProfileFromWorkspaceParams`
-/// * `FlowSelected`
+/// * `FlowSelected<E>`
 /// * `WorkspaceParamsNone`, `WorkspaceParamsSome`
 /// * `ProfileParamsNone`, `ProfileParamsSome`
 /// * `FlowParamsNone`, `FlowParamsSome`
@@ -182,11 +182,11 @@ fn impl_build_for(
             FlowCount::One => match scope.profile_count() {
                 ProfileCount::None => {}
                 ProfileCount::One => {
-                    scope_fields.push(parse_quote!(flow_id));
+                    scope_fields.push(parse_quote!(flow));
                     scope_fields.push(parse_quote!(flow_dir));
                 }
                 ProfileCount::Multiple => {
-                    scope_fields.push(parse_quote!(flow_id));
+                    scope_fields.push(parse_quote!(flow));
                     scope_fields.push(parse_quote!(flow_dirs));
                 }
             },
@@ -234,12 +234,13 @@ fn impl_build_for(
     );
 
     quote! {
-        impl<'ctx, 'key, PKeys>
+        impl<'ctx, 'key, E, PKeys>
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
+                    E,
                     // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // FlowSelected,
+                    // FlowSelected<E>,
                     // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
                     // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
                     // FlowParamsNone,
@@ -443,7 +444,7 @@ fn impl_build_for(
                 //                             // ProfileFromWorkspaceParam(_workspace_params_k),
                 //                             // ProfileFilterFn(profiles_filter_fn)
                 //
-                //             flow_selection: FlowSelected(flow_id),
+                //             flow_selection: FlowSelected(flow),
                 //             workspace_params_selection: WorkspaceParamsSome(workspace_params),
                 //             profile_params_selection: ProfileParamsSome(profile_params),
                 //             flow_params_selection: FlowParamsNone,
@@ -508,11 +509,11 @@ fn impl_build_for(
 
                     // === Flow ID === //
                     // --- Single --- //
-                    // flow_id,
+                    // flow,
                     // flow_dir,
                     // flow_params,
                     // --- Multi --- //
-                    // flow_id,
+                    // flow,
                     // flow_dirs,
                     // profile_to_flow_params,
 
@@ -568,7 +569,7 @@ fn scope_builder_deconstruct(
     if scope.flow_count() == FlowCount::One {
         match flow_selection {
             FlowSelection::Selected => scope_builder_fields.push(parse_quote! {
-                flow_selection: crate::scopes::type_params::FlowSelected(flow_id)
+                flow_selection: crate::scopes::type_params::FlowSelected(flow)
             }),
         }
     }
@@ -587,7 +588,7 @@ fn scope_builder_deconstruct(
             scope_builder:
                 #scope_builder_name {
                     // profile_selection: ProfileSelected(profile),
-                    // flow_selection: FlowSelected(flow_id),
+                    // flow_selection: FlowSelected(flow),
                     // workspace_params_selection: WorkspaceParamsSome(workspace_params),
                     // profile_params_selection: ProfileParamsSome(profile_params),
                     // flow_params_selection: FlowParamsNone,

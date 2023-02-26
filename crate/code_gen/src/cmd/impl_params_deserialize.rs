@@ -134,6 +134,7 @@ fn impl_params_deserialize_for(
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
+                    E,
                     // ProfileSelection,
                     // FlowSelection,
                     // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,

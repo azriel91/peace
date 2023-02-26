@@ -1,9 +1,9 @@
-use peace_core::FlowId;
+use peace_rt_model::Flow;
 
-/// A `FlowId` is not yet selected.
+/// A `Flow` is not yet selected.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FlowNotSelected;
 
-/// A `FlowId` is selected.
+/// A `Flow` is selected.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct FlowSelected(pub(crate) FlowId);
+pub struct FlowSelected<E>(pub(crate) Flow<E>);

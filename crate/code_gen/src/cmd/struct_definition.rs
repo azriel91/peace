@@ -40,6 +40,7 @@ pub fn struct_definition(scope_struct: &mut ScopeStruct) -> proc_macro2::TokenSt
     scope_struct.item_struct_mut().generics = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
 
+        type_params.push(parse_quote!(E));
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
         type_parameters_impl::params_selection_push(&mut type_params, scope);
 
@@ -51,6 +52,7 @@ pub fn struct_definition(scope_struct: &mut ScopeStruct) -> proc_macro2::TokenSt
 
         fields::profile_and_flow_selection_push(&mut fields, scope);
         fields::params_selection_push(&mut fields, scope);
+        fields::marker_push(&mut fields);
 
         Fields::from(fields)
     };
@@ -110,5 +112,14 @@ mod fields {
             });
             fields_named.named.extend(fields.named);
         }
+    }
+
+    /// Appends a `marker: PhantomData` field to the given fields..
+    pub fn marker_push(fields_named: &mut FieldsNamed) {
+        let fields_marker: FieldsNamed = parse_quote!({
+            /// Marker.
+            pub(crate) marker: std::marker::PhantomData
+        });
+        fields_named.named.extend(fields_marker.named);
     }
 }

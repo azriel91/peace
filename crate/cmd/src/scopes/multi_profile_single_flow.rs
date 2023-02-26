@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
 
-use peace_core::{FlowId, Profile};
+use peace_core::Profile;
 use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
 use peace_rt_model::{
     cmd_context_params::{
@@ -139,9 +139,9 @@ where
         &self.profile_history_dirs
     }
 
-    /// Returns the flow ID.
-    pub fn flow_id(&self) -> &FlowId {
-        &self.flow_id
+    /// Returns the flow.
+    pub fn flow(&self) -> &Flow<E> {
+        &self.flow
     }
 
     /// Returns the flow directories keyed by each profile.
