@@ -1,4 +1,4 @@
-use syn::{parse_quote, Path};
+use syn::{parse_quote, punctuated::Punctuated, token::Comma, GenericArgument, Path};
 
 use crate::cmd::{FlowCount, ProfileCount};
 
@@ -31,6 +31,14 @@ impl Scope {
             Scope::SingleProfileSingleFlow => {
                 parse_quote!(crate::scopes::SingleProfileSingleFlow)
             }
+        }
+    }
+
+    /// Returns the type params for the scope builder.
+    pub fn type_params(self) -> Punctuated<GenericArgument, Comma> {
+        match self.flow_count() {
+            FlowCount::None => parse_quote!(PKeys),
+            FlowCount::One => parse_quote!(E, PKeys),
         }
     }
 

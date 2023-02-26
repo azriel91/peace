@@ -83,13 +83,13 @@ fn impl_with_param_key_unknown(
         type_params
     };
 
-    let impl_scope_type_params_none = {
+    let impl_scope_builder_type_params_none = {
         let mut type_params = selection_type_params.clone();
         type_parameters_impl::params_selection_none_push(&mut type_params, scope, params_scope);
         type_params
     };
 
-    let impl_scope_type_params_some = {
+    let impl_scope_builder_type_params_some = {
         let mut type_params = selection_type_params;
         type_parameters_impl::params_selection_some_push(&mut type_params, scope, params_scope);
         type_params
@@ -145,7 +145,7 @@ fn impl_with_param_key_unknown(
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
 
-                    #impl_scope_type_params_none
+                    #impl_scope_builder_type_params_none
                 >,
                 #params_module::ParamsKeysImpl<
                     // KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe
@@ -182,7 +182,7 @@ fn impl_with_param_key_unknown(
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
 
-                    #impl_scope_type_params_some
+                    #impl_scope_builder_type_params_some
                 >,
                 #params_module::ParamsKeysImpl<
                     // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
@@ -271,7 +271,7 @@ fn impl_with_param_key_known(
         type_params
     };
 
-    let impl_scope_type_params_some = {
+    let impl_scope_builder_type_params_some = {
         let mut type_params = selection_type_params;
         type_parameters_impl::params_selection_some_push(&mut type_params, scope, params_scope);
         type_params
@@ -320,7 +320,7 @@ fn impl_with_param_key_known(
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
 
-                    #impl_scope_type_params_some
+                    #impl_scope_builder_type_params_some
                 >,
                 #params_module::ParamsKeysImpl<
                     // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
@@ -360,7 +360,7 @@ fn impl_with_param_key_known(
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
 
-                    #impl_scope_type_params_some
+                    #impl_scope_builder_type_params_some
                 >,
                 #params_module::ParamsKeysImpl<
                     // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe

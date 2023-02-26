@@ -117,9 +117,10 @@ fn impl_build_for(
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
     let scope_type_path = scope.type_path();
+    let scope_type_params = scope.type_params();
     let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
 
-    let scope_type_params = {
+    let scope_builder_type_params = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         match scope.profile_count() {
             ProfileCount::None => {}
@@ -243,7 +244,7 @@ fn impl_build_for(
                     // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
                     // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
                     // FlowParamsNone,
-                    #scope_type_params
+                    #scope_builder_type_params
                 >,
                 PKeys,
             >
@@ -259,7 +260,11 @@ fn impl_build_for(
             ) -> Result<
                 crate::ctx::CmdCtx<
                     'ctx,
-                    #scope_type_path<PKeys>,
+                    #scope_type_path<
+                        // E // only if FlowCount::One
+                        // PKeys
+                        #scope_type_params
+                    >,
                     #params_module::ParamsKeysImpl<
                         PKeys::WorkspaceParamsKMaybe,
                         PKeys::ProfileParamsKMaybe,

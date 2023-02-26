@@ -11,11 +11,11 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
     let constructor_method_name = Ident::new(scope.as_str(), Span::call_site());
     let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
 
-    let scope_type_params = {
+    let scope_builder_type_params = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
 
-        scope_type_params::profile_and_flow_selection_push(&mut type_params, scope);
-        scope_type_params::params_selection_push(&mut type_params, scope);
+        scope_builder_type_params::profile_and_flow_selection_push(&mut type_params, scope);
+        scope_builder_type_params::params_selection_push(&mut type_params, scope);
 
         type_params
     };
@@ -39,7 +39,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                 //     WorkspaceParamsNone,
                 //     ProfileParamsNone,
                 // >
-                #scope_builder_name < #scope_type_params >,
+                #scope_builder_name < #scope_builder_type_params >,
                 #params_module::ParamsKeysImpl<
                     #params_module::KeyUnknown,
                     #params_module::KeyUnknown,
@@ -67,7 +67,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
     }
 }
 
-mod scope_type_params {
+mod scope_builder_type_params {
     use syn::{parse_quote, punctuated::Punctuated, GenericArgument, Token};
 
     use crate::cmd::{FlowCount, ProfileCount, Scope};

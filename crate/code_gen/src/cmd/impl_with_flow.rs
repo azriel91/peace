@@ -29,7 +29,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         type_parameters_impl::params_selection_push(&mut type_params, scope);
         type_params
     };
-    let scope_type_params_flow_id_not_selected = {
+    let scope_builder_type_params_flow_not_selected = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         match scope.profile_count() {
             ProfileCount::None => {
@@ -43,7 +43,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         type_parameters_impl::params_selection_push(&mut type_params, scope);
         type_params
     };
-    let scope_type_params_flow_id_selected = {
+    let scope_builder_type_params_flow_selected = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         match scope.profile_count() {
             ProfileCount::None => {
@@ -58,9 +58,8 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         type_params
     };
 
-    let scope_builder_fields_flow_id_not_selected =
-        scope_builder_fields_flow_id_not_selected(scope);
-    let scope_builder_fields_flow_id_selected = scope_builder_fields_flow_id_selected(scope);
+    let scope_builder_fields_flow_not_selected = scope_builder_fields_flow_not_selected(scope);
+    let scope_builder_fields_flow_selected = scope_builder_fields_flow_selected(scope);
 
     quote! {
         impl<
@@ -80,7 +79,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                     // WorkspaceParamsSelection,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
-                    #scope_type_params_flow_id_not_selected
+                    #scope_builder_type_params_flow_not_selected
                 >,
                 PKeys,
             >
@@ -98,7 +97,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                     // WorkspaceParamsSelection,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
-                    #scope_type_params_flow_id_selected
+                    #scope_builder_type_params_flow_selected
                 >,
                 PKeys,
             > {
@@ -111,7 +110,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                             // workspace_params_selection,
                             // profile_params_selection,
                             // flow_params_selection,
-                            #scope_builder_fields_flow_id_not_selected
+                            #scope_builder_fields_flow_not_selected
                         },
                     params_type_regs_builder,
                 } = self;
@@ -122,7 +121,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,
-                    #scope_builder_fields_flow_id_selected
+                    #scope_builder_fields_flow_selected
                 };
 
                 crate::ctx::CmdCtxBuilder {
@@ -135,7 +134,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     }
 }
 
-fn scope_builder_fields_flow_id_not_selected(scope: Scope) -> Punctuated<FieldValue, Comma> {
+fn scope_builder_fields_flow_not_selected(scope: Scope) -> Punctuated<FieldValue, Comma> {
     let mut field_values = Punctuated::<FieldValue, Token![,]>::new();
     field_values.push(parse_quote!(profile_selection));
     field_values.push(parse_quote!(
@@ -152,7 +151,7 @@ fn scope_builder_fields_flow_id_not_selected(scope: Scope) -> Punctuated<FieldVa
     field_values
 }
 
-fn scope_builder_fields_flow_id_selected(scope: Scope) -> Punctuated<FieldValue, Comma> {
+fn scope_builder_fields_flow_selected(scope: Scope) -> Punctuated<FieldValue, Comma> {
     let mut field_values = Punctuated::<FieldValue, Token![,]>::new();
     field_values.push(parse_quote!(profile_selection));
     field_values.push(parse_quote!(

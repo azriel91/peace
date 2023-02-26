@@ -92,7 +92,7 @@ fn impl_params_merge_for(
 
         type_params
     };
-    let scope_type_params = {
+    let scope_builder_type_params = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
 
@@ -140,7 +140,7 @@ fn impl_params_merge_for(
                     // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
-                    #scope_type_params
+                    #scope_builder_type_params
                 >,
                 PKeys,
             >
