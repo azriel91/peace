@@ -3,9 +3,8 @@ use peace::{
     cmd::ctx::CmdCtx,
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
-use peace_item_specs::{file_download::FileDownloadParams, tar_x::TarXParams};
 
-use crate::model::{AppCycleError, EnvType, WebAppFileId};
+use crate::model::{AppCycleError, EnvType};
 
 /// Command to list initialized profiles.
 #[derive(Debug)]
@@ -33,19 +32,10 @@ impl ProfileListCmd {
 
         // new CmdCtx
         let profile_workspace_init = Profile::workspace_init();
-        let cmd_ctx = CmdCtx::builder_multi_profile_no_flow::<AppCycleError>(&workspace)
-            .with_workspace_params_k::<String>()
-            .with_workspace_param::<Profile>(String::from("profile"), None)
-            .with_workspace_param::<FileDownloadParams<WebAppFileId>>(
-                String::from("web_app_file_download_params"),
-                None,
-            )
-            .with_workspace_param::<TarXParams<WebAppFileId>>(
-                String::from("web_app_tar_x_params"),
-                None,
-            )
-            .with_profile_params_k::<String>()
-            .with_profile_param::<EnvType>(String::from("env_type"))
+        let cmd_ctx_builder = CmdCtx::builder_multi_profile_no_flow::<AppCycleError>(&workspace);
+        crate::cmds::params_augment!(cmd_ctx_builder);
+
+        let cmd_ctx = cmd_ctx_builder
             .with_profile_filter(|profile| profile != &profile_workspace_init)
             .build()
             .await?;
