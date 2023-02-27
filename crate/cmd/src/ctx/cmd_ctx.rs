@@ -21,7 +21,6 @@ use crate::{
             FlowNotSelected, FlowParamsNone, ProfileNotSelected, ProfileParamsNone,
             WorkspaceParamsNone,
         },
-        MultiProfileNoFlow, MultiProfileSingleFlow, NoProfileNoFlow, SingleProfileNoFlow,
         SingleProfileSingleFlow,
     },
 };
@@ -85,15 +84,9 @@ where
     }
 }
 
-impl<'ctx, E>
-    CmdCtx<
-        'ctx,
-        NoProfileNoFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-    >
-{
+impl<'ctx> CmdCtx<'ctx, (), ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>> {
     /// Returns a `CmdCtxBuilder` for a single profile and no flow.
-    pub fn builder_no_profile_no_flow(
+    pub fn builder_no_profile_no_flow<E>(
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         NoProfileNoFlowBuilder<E, WorkspaceParamsNone>,
@@ -101,17 +94,9 @@ impl<'ctx, E>
     > {
         CmdCtxBuilder::no_profile_no_flow(workspace)
     }
-}
 
-impl<'ctx, E>
-    CmdCtx<
-        'ctx,
-        MultiProfileNoFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-    >
-{
     /// Returns a `CmdCtxBuilder` for multiple profiles and no flow.
-    pub fn builder_multi_profile_no_flow(
+    pub fn builder_multi_profile_no_flow<E>(
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         MultiProfileNoFlowBuilder<E, ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
@@ -119,17 +104,9 @@ impl<'ctx, E>
     > {
         CmdCtxBuilder::multi_profile_no_flow(workspace)
     }
-}
 
-impl<'ctx, E>
-    CmdCtx<
-        'ctx,
-        MultiProfileSingleFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-    >
-{
     /// Returns a `CmdCtxBuilder` for multiple profiles and one flow.
-    pub fn builder_multi_profile_single_flow(
+    pub fn builder_multi_profile_single_flow<E>(
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         MultiProfileSingleFlowBuilder<
@@ -144,17 +121,9 @@ impl<'ctx, E>
     > {
         CmdCtxBuilder::multi_profile_single_flow(workspace)
     }
-}
 
-impl<'ctx, E>
-    CmdCtx<
-        'ctx,
-        SingleProfileNoFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-    >
-{
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_no_flow(
+    pub fn builder_single_profile_no_flow<E>(
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
         SingleProfileNoFlowBuilder<E, ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,

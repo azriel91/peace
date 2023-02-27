@@ -2,6 +2,7 @@ use peace::{
     cfg::{app_name, flow_id, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
     resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
+    rt_model::{Flow, ItemSpecGraphBuilder},
 };
 
 use super::workspace;
@@ -12,10 +13,14 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
+    let flow = Flow::<Box<dyn std::error::Error>>::new(
+        flow_id.clone(),
+        ItemSpecGraphBuilder::new().build(),
+    );
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
         .with_profile(profile.clone())
-        .with_flow(flow_id.clone())
+        .with_flow(flow)
         .build()
         .await?;
 
@@ -30,7 +35,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(&profile, scope.profile());
     assert_eq!(&profile_dir, scope.profile_dir());
     assert_eq!(&profile_history_dir, scope.profile_history_dir());
-    assert_eq!(&flow_id, scope.flow_id());
+    assert_eq!(&flow_id, scope.flow().flow_id());
     assert_eq!(&flow_dir, scope.flow_dir());
     Ok(())
 }
@@ -41,10 +46,14 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
+    let flow = Flow::<Box<dyn std::error::Error>>::new(
+        flow_id.clone(),
+        ItemSpecGraphBuilder::new().build(),
+    );
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
         .with_profile(profile.clone())
-        .with_flow(flow_id.clone())
+        .with_flow(flow)
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
         .with_workspace_param(String::from("something_else"), Some("a string".to_string()))
         .build()
@@ -62,7 +71,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     assert_eq!(&profile, scope.profile());
     assert_eq!(&profile_dir, scope.profile_dir());
     assert_eq!(&profile_history_dir, scope.profile_history_dir());
-    assert_eq!(&flow_id, scope.flow_id());
+    assert_eq!(&flow_id, scope.flow().flow_id());
     assert_eq!(&flow_dir, scope.flow_dir());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
@@ -78,12 +87,16 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
+    let flow = Flow::<Box<dyn std::error::Error>>::new(
+        flow_id.clone(),
+        ItemSpecGraphBuilder::new().build(),
+    );
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
         .with_profile_param(String::from("profile_param"), Some(1u32))
         .with_profile_param(String::from("profile_param_other"), Some(2u64))
         .with_profile(profile.clone())
-        .with_flow(flow_id.clone())
+        .with_flow(flow)
         .build()
         .await?;
 
@@ -98,7 +111,7 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(&profile, scope.profile());
     assert_eq!(&profile_dir, scope.profile_dir());
     assert_eq!(&profile_history_dir, scope.profile_history_dir());
-    assert_eq!(&flow_id, scope.flow_id());
+    assert_eq!(&flow_id, scope.flow().flow_id());
     assert_eq!(&flow_dir, scope.flow_dir());
     Ok(())
 }
@@ -109,10 +122,14 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
+    let flow = Flow::<Box<dyn std::error::Error>>::new(
+        flow_id.clone(),
+        ItemSpecGraphBuilder::new().build(),
+    );
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
         .with_profile(profile.clone())
-        .with_flow(flow_id.clone())
+        .with_flow(flow)
         .with_flow_param(
             String::from("flow_param"),
             Some("flow param value".to_string()),
@@ -133,7 +150,7 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(&profile, scope.profile());
     assert_eq!(&profile_dir, scope.profile_dir());
     assert_eq!(&profile_history_dir, scope.profile_history_dir());
-    assert_eq!(&flow_id, scope.flow_id());
+    assert_eq!(&flow_id, scope.flow().flow_id());
     assert_eq!(&flow_dir, scope.flow_dir());
     assert_eq!(
         Some(&"flow param value".to_string()),
@@ -150,10 +167,14 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
+    let flow = Flow::<Box<dyn std::error::Error>>::new(
+        flow_id.clone(),
+        ItemSpecGraphBuilder::new().build(),
+    );
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
         .with_profile(profile.clone())
-        .with_flow(flow_id.clone())
+        .with_flow(flow)
         .with_profile_param(String::from("profile_param"), Some(1u32))
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
         .with_profile_param(String::from("profile_param_other"), Some(2u64))
@@ -174,7 +195,7 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     assert_eq!(&profile, scope.profile());
     assert_eq!(&profile_dir, scope.profile_dir());
     assert_eq!(&profile_history_dir, scope.profile_history_dir());
-    assert_eq!(&flow_id, scope.flow_id());
+    assert_eq!(&flow_id, scope.flow().flow_id());
     assert_eq!(&flow_dir, scope.flow_dir());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
@@ -193,10 +214,14 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
+    let flow = Flow::<Box<dyn std::error::Error>>::new(
+        flow_id.clone(),
+        ItemSpecGraphBuilder::new().build(),
+    );
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
         .with_profile(profile.clone())
-        .with_flow(flow_id.clone())
+        .with_flow(flow)
         .with_profile_param(String::from("profile_param"), Some(1u32))
         .with_flow_param(
             String::from("flow_param"),
@@ -223,7 +248,7 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
     assert_eq!(&profile, scope.profile());
     assert_eq!(&profile_dir, scope.profile_dir());
     assert_eq!(&profile_history_dir, scope.profile_history_dir());
-    assert_eq!(&flow_id, scope.flow_id());
+    assert_eq!(&flow_id, scope.flow().flow_id());
     assert_eq!(&flow_dir, scope.flow_dir());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
@@ -247,12 +272,16 @@ async fn build_with_workspace_params_with_profile_from_params()
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
+    let flow = Flow::<Box<dyn std::error::Error>>::new(
+        flow_id.clone(),
+        ItemSpecGraphBuilder::new().build(),
+    );
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
         .with_workspace_param(String::from("profile"), Some(profile.clone()))
         .with_workspace_param(String::from("something_else"), Some("a string".to_string()))
         .with_profile_from_workspace_param(&String::from("profile"))
-        .with_flow(flow_id.clone())
+        .with_flow(flow)
         .build()
         .await?;
 
@@ -268,7 +297,7 @@ async fn build_with_workspace_params_with_profile_from_params()
     assert_eq!(&profile, scope.profile());
     assert_eq!(&profile_dir, scope.profile_dir());
     assert_eq!(&profile_history_dir, scope.profile_history_dir());
-    assert_eq!(&flow_id, scope.flow_id());
+    assert_eq!(&flow_id, scope.flow().flow_id());
     assert_eq!(&flow_dir, scope.flow_dir());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
@@ -285,6 +314,10 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
+    let flow = Flow::<Box<dyn std::error::Error>>::new(
+        flow_id.clone(),
+        ItemSpecGraphBuilder::new().build(),
+    );
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
         .with_profile_param(String::from("profile_param"), Some(1u32))
@@ -297,7 +330,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
         )
         .with_profile_from_workspace_param(&String::from("profile"))
         .with_flow_param(String::from("flow_param_other"), Some(456u32))
-        .with_flow(flow_id.clone())
+        .with_flow(flow)
         .build()
         .await?;
 
@@ -315,7 +348,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
     assert_eq!(&profile, scope.profile());
     assert_eq!(&profile_dir, scope.profile_dir());
     assert_eq!(&profile_history_dir, scope.profile_history_dir());
-    assert_eq!(&flow_id, scope.flow_id());
+    assert_eq!(&flow_id, scope.flow().flow_id());
     assert_eq!(&flow_dir, scope.flow_dir());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
