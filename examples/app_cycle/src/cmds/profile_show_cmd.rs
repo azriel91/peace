@@ -1,16 +1,12 @@
 use peace::{
     cfg::{app_name, AppName, Profile},
+    cmd::ctx::CmdCtx,
     fmt::presentln,
-    rt::cmds::sub::StatesSavedReadCmd,
-    rt_model::{
-        output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
-    },
+    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
+use peace_item_specs::{file_download::FileDownloadParams, tar_x::TarXParams};
 
-use crate::{
-    cmds::CmdCtxBuilder,
-    model::{AppCycleError, EnvType},
-};
+use crate::model::{AppCycleError, EnvType, WebAppFileId};
 
 /// Command to show the current profile.
 #[derive(Debug)]
@@ -35,28 +31,36 @@ impl ProfileShowCmd {
             #[cfg(target_arch = "wasm32")]
             WorkspaceSpec::SessionStorage,
         )?;
-        let graph = Self::graph()?;
 
-        let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output)
-            .with_profile_from_last_used()
+        // new CmdCtx
+        let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<AppCycleError>(&workspace)
+            .with_workspace_params_k::<String>()
+            .with_workspace_param::<Profile>(String::from("profile"), None)
+            .with_workspace_param::<FileDownloadParams<WebAppFileId>>(
+                String::from("web_app_file_download_params"),
+                None,
+            )
+            .with_workspace_param::<TarXParams<WebAppFileId>>(
+                String::from("web_app_tar_x_params"),
+                None,
+            )
+            .with_profile_params_k::<String>()
+            .with_profile_param::<EnvType>(String::from("env_type"), None)
+            .with_profile_from_workspace_param(&String::from("profile"))
+            .build()
             .await?;
 
-        let cmd_context = StatesSavedReadCmd::exec(cmd_context).await?;
-        let resources = &cmd_context.resources;
-        let profile = &*resources.borrow::<Profile>();
-        let env_type = &*resources.borrow::<EnvType>();
+        let workspace_params = cmd_ctx.workspace_params();
+        let profile_params = cmd_ctx.profile_params();
 
-        presentln!(output, ["Using profile ", profile]);
-        presentln!(output, ["Environment type: ", env_type]);
+        let profile = workspace_params.get::<Profile, _>("profile");
+        let env_type = profile_params.get::<EnvType, _>("env_type");
+
+        if let Some((profile, env_type)) = profile.zip(env_type) {
+            presentln!(output, ["Using profile ", profile]);
+            presentln!(output, ["Environment type: ", env_type]);
+        }
 
         Ok(())
-    }
-
-    fn graph() -> Result<ItemSpecGraph<AppCycleError>, AppCycleError> {
-        let graph_builder = ItemSpecGraphBuilder::<AppCycleError>::new();
-
-        // No item specs, as we are just reading existing workspace and profile params.
-
-        Ok(graph_builder.build())
     }
 }

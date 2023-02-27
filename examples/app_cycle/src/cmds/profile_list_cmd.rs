@@ -33,23 +33,22 @@ impl ProfileListCmd {
 
         // new CmdCtx
         let profile_workspace_init = Profile::workspace_init();
-        let cmd_ctx =
-            CmdCtx::builder_multi_profile_no_flow::<Box<dyn std::error::Error>>(&workspace)
-                .with_workspace_params_k::<String>()
-                .with_workspace_param::<Profile>(String::from("profile"), None)
-                .with_workspace_param::<FileDownloadParams<WebAppFileId>>(
-                    String::from("web_app_file_download_params"),
-                    None,
-                )
-                .with_workspace_param::<TarXParams<WebAppFileId>>(
-                    String::from("web_app_tar_x_params"),
-                    None,
-                )
-                .with_profile_params_k::<String>()
-                .with_profile_param::<EnvType>(String::from("env_type"))
-                .with_profile_filter(|profile| profile != &profile_workspace_init)
-                .build()
-                .await?;
+        let cmd_ctx = CmdCtx::builder_multi_profile_no_flow::<AppCycleError>(&workspace)
+            .with_workspace_params_k::<String>()
+            .with_workspace_param::<Profile>(String::from("profile"), None)
+            .with_workspace_param::<FileDownloadParams<WebAppFileId>>(
+                String::from("web_app_file_download_params"),
+                None,
+            )
+            .with_workspace_param::<TarXParams<WebAppFileId>>(
+                String::from("web_app_tar_x_params"),
+                None,
+            )
+            .with_profile_params_k::<String>()
+            .with_profile_param::<EnvType>(String::from("env_type"))
+            .with_profile_filter(|profile| profile != &profile_workspace_init)
+            .build()
+            .await?;
 
         output.present("# Profiles\n\n").await?;
 
