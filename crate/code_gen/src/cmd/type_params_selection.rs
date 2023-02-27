@@ -34,7 +34,7 @@ impl ProfileSelection {
                 >
             ),
             Self::FilterFunction => {
-                parse_quote!(crate::scopes::type_params::ProfileFilterFn)
+                parse_quote!(crate::scopes::type_params::ProfileFilterFn<'ctx>)
             }
         }
     }

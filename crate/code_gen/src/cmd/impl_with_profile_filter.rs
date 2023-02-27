@@ -63,7 +63,7 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
                 'ctx,
                 #scope_builder_name<
                     E,
-                    crate::scopes::type_params::ProfileFilterFn,
+                    crate::scopes::type_params::ProfileFilterFn<'ctx>,
                     // FlowSelection,
                     // WorkspaceParamsSelection,
                     // ProfileParamsSelection,
@@ -73,7 +73,7 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
                 PKeys,
             >
             where
-                F: (Fn(&peace_core::Profile) -> bool) + 'static
+                F: (Fn(&peace_core::Profile) -> bool) + 'ctx
             {
                 let Self {
                     workspace,
