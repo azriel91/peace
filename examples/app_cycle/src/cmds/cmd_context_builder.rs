@@ -19,7 +19,7 @@ use crate::{
 ///
 /// This registers the types for workspace, profile, and flow params.
 #[derive(Debug)]
-pub struct CmdCtxBuilder<'ctx, O> {
+pub struct CmdContextBuilder<'ctx, O> {
     workspace: &'ctx Workspace,
     graph: &'ctx ItemSpecGraph<AppCycleError>,
     output: &'ctx mut O,
@@ -29,7 +29,7 @@ pub struct CmdCtxBuilder<'ctx, O> {
     env_type: Option<EnvType>,
 }
 
-impl<'ctx, O> CmdCtxBuilder<'ctx, O>
+impl<'ctx, O> CmdContextBuilder<'ctx, O>
 where
     O: OutputWrite<AppCycleError>,
 {
@@ -82,7 +82,7 @@ where
 
     /// Creates the `CmdContext`.
     pub async fn build(self) -> Result<AppCycleCmdContext<'ctx, O, SetUp>, AppCycleError> {
-        let CmdCtxBuilder {
+        let CmdContextBuilder {
             workspace,
             graph,
             output,
@@ -133,7 +133,7 @@ where
 pub type CmdContextFuture<'ctx, O> =
     Pin<Box<dyn Future<Output = Result<AppCycleCmdContext<'ctx, O, SetUp>, AppCycleError>> + 'ctx>>;
 
-impl<'ctx, O> IntoFuture for CmdCtxBuilder<'ctx, O>
+impl<'ctx, O> IntoFuture for CmdContextBuilder<'ctx, O>
 where
     O: OutputWrite<AppCycleError>,
 {

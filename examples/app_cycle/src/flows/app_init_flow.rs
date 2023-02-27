@@ -11,7 +11,7 @@ use peace_item_specs::{
 };
 
 use crate::{
-    cmds::CmdCtxBuilder,
+    cmds::CmdContextBuilder,
     model::{AppCycleError, WebAppFileId},
 };
 
@@ -38,13 +38,13 @@ impl AppInitFlow {
         )?;
         let graph = Self::graph()?;
 
-        let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output)
+        let cmd_context = CmdContextBuilder::new(&workspace, &graph, output)
             .with_web_app_file_download_params(web_app_file_download_params)
             .with_web_app_tar_x_params(web_app_tar_x_params)
             .await?;
         StatesDiscoverCmd::exec(cmd_context).await?;
 
-        let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output).await?;
+        let cmd_context = CmdContextBuilder::new(&workspace, &graph, output).await?;
         EnsureCmd::exec(cmd_context).await?;
 
         Ok(())
