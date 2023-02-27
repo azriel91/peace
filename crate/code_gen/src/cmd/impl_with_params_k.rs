@@ -32,21 +32,21 @@ pub fn impl_with_params_k(scope_struct: &ScopeStruct) -> proc_macro2::TokenStrea
             impl_tokens.extend(impl_with_params_k_key_unknown);
 
             match scope {
-                // Single profile params will have `with_*_param` implemented in the `impl_with_param` module.
-                Scope::SingleProfileNoFlow |
-                Scope::SingleProfileSingleFlow |
                 // No profile commands do not support profile params.
                 Scope::NoProfileNoFlow => {}
 
+                // Single profile params technically don't need this, but it is convenient to
+                // have a common `with_*_param` registration for each param type.
+                //
+                // Single profile params will also have `with_*_param_value` from the
+                // `impl_with_param_value` module.
+                Scope::SingleProfileNoFlow |
+                Scope::SingleProfileSingleFlow |
                 // Multi profile commands need to register the type of each profile param.
                 Scope::MultiProfileNoFlow |
                 Scope::MultiProfileSingleFlow => {
-                    // Workspace params are always writeable, so we only implement
-                    // `with_*_param` when `params_scope` is not `Workspace`.
-                    if params_scope != ParamsScope::Workspace {
-                        let impl_with_param_key_known = impl_with_param_key_known(scope_struct, params_scope);
-                        impl_tokens.extend(impl_with_param_key_known);
-                    }
+                    let impl_with_param_key_known = impl_with_param_key_known(scope_struct, params_scope);
+                    impl_tokens.extend(impl_with_param_key_known);
                 }
             }
 
@@ -269,14 +269,17 @@ fn impl_with_param_key_known(
     let param_key_impl_known_predicates = param_key_impl::known_predicates(scope, params_scope);
 
     let params_scope_str = params_scope.to_str();
-    let with_params_method_name = params_scope.param_method_name();
+    let with_param_method_name = params_scope.with_param_method_name();
+    let with_param_value_method_name = params_scope.with_param_value_method_name();
     let param_type_param = params_scope.param_type_param();
     let params_k_type_param = params_scope.params_k_type_param();
     let scope_builder_fields_params_some = scope_builder_fields::params_some(scope, params_scope);
     let scope_builder_fields_passthrough = scope_builder_fields::passthrough(scope, params_scope);
     let params_type_reg_method_name = params_scope.params_type_reg_mut_method_name();
 
-    let doc_summary = format!("Adds a {params_scope_str} parameter.");
+    let doc_summary = format!("Registers a {params_scope_str} parameter type.");
+    let doc_body =
+        format!("See the `{with_param_value_method_name}` method if you want to specify a value.");
 
     quote! {
         impl<
@@ -318,16 +321,13 @@ fn impl_with_param_key_known(
         {
             #[doc = #doc_summary]
             ///
-            /// Currently there is no means in code to deliberately unset any previously
-            /// stored value. This can be made possibly by defining a `*ParamsBuilder`
-            /// that determines a `None` value as a deliberate erasure of any previous
-            /// value.
+            #[doc = #doc_body]
             ///
             /// # Parameters
             ///
             /// * `k`: Key to store the parameter with.
             // pub fn with_workspace_params<WorkspaceParam>
-            pub fn #with_params_method_name<#param_type_param>(
+            pub fn #with_param_method_name<#param_type_param>(
                 self,
                 k: #params_k_type_param,
             ) -> crate::ctx::CmdCtxBuilder<

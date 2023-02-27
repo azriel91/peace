@@ -5,8 +5,8 @@ use crate::cmd::{
     param_key_impl, scope_builder_fields, type_parameters_impl, ParamsScope, Scope, ScopeStruct,
 };
 
-/// Generates the `with_workspace_param` / `with_profile_param` /
-/// `with_flow_param` methods.
+/// Generates the `with_workspace_param_value` / `with_profile_param_value` /
+/// `with_flow_param_value` methods.
 pub fn impl_with_param(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     ParamsScope::iter().fold(
@@ -110,7 +110,7 @@ fn impl_with_param_key_unknown(
     let param_key_impl_unknown_predicates = param_key_impl::unknown_predicates(scope, params_scope);
 
     let params_scope_str = params_scope.to_str();
-    let with_params_method_name = params_scope.param_method_name();
+    let with_param_value_method_name = params_scope.with_param_value_method_name();
     let params_map_type = params_scope.params_map_type();
     let param_type_param = params_scope.param_type_param();
     let params_k_method_name = params_scope.params_k_method_name();
@@ -171,7 +171,7 @@ fn impl_with_param_key_unknown(
             /// * `k`: Key to store the parameter with.
             #[doc = #doc_param]
             // pub fn with_workspace_params<WorkspaceParamsK, WorkspaceParam>
-            pub fn #with_params_method_name<#params_k_type_param, #param_type_param>(
+            pub fn #with_param_value_method_name<#params_k_type_param, #param_type_param>(
                 self,
                 k: #params_k_type_param,
                 #param_name: Option<#param_type_param>,
@@ -291,7 +291,7 @@ fn impl_with_param_key_known(
     let param_key_impl_known_predicates = param_key_impl::known_predicates(scope, params_scope);
 
     let params_scope_str = params_scope.to_str();
-    let with_params_method_name = params_scope.param_method_name();
+    let with_param_value_method_name = params_scope.with_param_value_method_name();
     let param_type_param = params_scope.param_type_param();
     let params_k_type_param = params_scope.params_k_type_param();
     let param_name = params_scope.param_name();
@@ -354,7 +354,7 @@ fn impl_with_param_key_known(
             /// * `k`: Key to store the parameter with.
             #[doc = #doc_param]
             // pub fn with_workspace_params<WorkspaceParam>
-            pub fn #with_params_method_name<#param_type_param>(
+            pub fn #with_param_value_method_name<#param_type_param>(
                 self,
                 k: #params_k_type_param,
                 #param_name: Option<#param_type_param>,

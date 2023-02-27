@@ -25,8 +25,8 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let profile = profile!("test_profile");
 
     let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<Box<dyn std::error::Error>>(&workspace)
-        .with_workspace_param(String::from("profile"), Some(profile.clone()))
-        .with_workspace_param(String::from("something_else"), Some("a string".to_string()))
+        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param_value(String::from("something_else"), Some("a string".to_string()))
         .build()
         .await?;
 

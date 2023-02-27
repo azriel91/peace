@@ -90,11 +90,20 @@ impl ParamsScope {
     }
 
     /// Returns the name to use for the `with_*_param` method.
-    pub fn param_method_name(self) -> Ident {
+    pub fn with_param_method_name(self) -> Ident {
         match self {
             Self::Workspace => Ident::new("with_workspace_param", Span::call_site()),
             Self::Profile => Ident::new("with_profile_param", Span::call_site()),
             Self::Flow => Ident::new("with_flow_param", Span::call_site()),
+        }
+    }
+
+    /// Returns the name to use for the `with_*_param_value` method.
+    pub fn with_param_value_method_name(self) -> Ident {
+        match self {
+            Self::Workspace => Ident::new("with_workspace_param_value", Span::call_site()),
+            Self::Profile => Ident::new("with_profile_param_value", Span::call_site()),
+            Self::Flow => Ident::new("with_flow_param_value", Span::call_site()),
         }
     }
 
