@@ -1,3 +1,4 @@
+#[rustfmt::skip] // https://github.com/rust-lang/rustfmt/issues/4609
 #[macro_export]
 macro_rules! params_augment {
     ($cmd_ctx_builder:ident) => {
