@@ -5,5 +5,5 @@ use peace_rt_model::Flow;
 pub struct FlowNotSelected;
 
 /// A `Flow` is selected.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Debug)]
 pub struct FlowSelected<E>(pub(crate) Flow<E>);

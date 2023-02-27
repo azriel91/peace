@@ -328,7 +328,10 @@ fn impl_build_for(
                 //         (profile_dirs, profile_history_dirs)
                 //     });
                 // --- Single Profile Single Flow --- //
-                // let flow_dir = FlowDir::from((&profile_dir, &self.scope_builder.flow_selection.0));
+                // let flow_dir = FlowDir::from((
+                //     &profile_dir,
+                //     self.scope_builder.flow_selection.0.flow_id()
+                // ));
                 // --- Multi Profile Single Flow --- //
                 // dirs_tokens.extend(quote! {
                 //     let flow_dirs = profile_dirs
@@ -338,7 +341,10 @@ fn impl_build_for(
                 //                 peace_resources::paths::ProfileDir
                 //             >::new(
                 //         ), |mut flow_dirs, (profile, profile_dir)| {
-                //             let flow_dir = peace_resources::paths::FlowDir::from((profile_dir, &self.scope_builder.flow_selection.0));
+                //             let flow_dir = peace_resources::paths::FlowDir::from((
+                //                 profile_dir,
+                //                 self.scope_builder.flow_selection.0.flow_id()
+                //             ));
                 //
                 //             flow_dirs.insert(profile.clone(), flow_dir);
                 //
@@ -448,6 +454,7 @@ fn impl_build_for(
                 //             workspace_params_selection: WorkspaceParamsSome(workspace_params),
                 //             profile_params_selection: ProfileParamsSome(profile_params),
                 //             flow_params_selection: FlowParamsNone,
+                //             marker: std::marker::PhantomData,
                 //         },
                 //     params_type_regs_builder,
                 // } = self;
@@ -582,6 +589,10 @@ fn scope_builder_deconstruct(
         scope_builder_fields.push(flow_params_selection.deconstruct());
     }
 
+    scope_builder_fields.push(parse_quote! {
+        marker: std::marker::PhantomData
+    });
+
     quote! {
         let crate::ctx::CmdCtxBuilder {
             workspace,
@@ -592,6 +603,7 @@ fn scope_builder_deconstruct(
                     // workspace_params_selection: WorkspaceParamsSome(workspace_params),
                     // profile_params_selection: ProfileParamsSome(profile_params),
                     // flow_params_selection: FlowParamsNone,
+                    // marker: std::marker::PhantomData,
                     #scope_builder_fields,
                 },
             params_type_regs_builder,
@@ -1034,7 +1046,10 @@ fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
             ProfileCount::None => {}
             ProfileCount::One => {
                 dirs_tokens.extend(quote! {
-                    let flow_dir = peace_resources::paths::FlowDir::from((&profile_dir, &self.scope_builder.flow_selection.0));
+                    let flow_dir = peace_resources::paths::FlowDir::from((
+                        &profile_dir,
+                        self.scope_builder.flow_selection.0.flow_id()
+                    ));
                 });
             }
             ProfileCount::Multiple => {
@@ -1046,7 +1061,10 @@ fn cmd_dirs(scope: Scope) -> proc_macro2::TokenStream {
                                 peace_resources::paths::FlowDir
                             >::new(
                         ), |mut flow_dirs, (profile, profile_dir)| {
-                            let flow_dir = peace_resources::paths::FlowDir::from((profile_dir, &self.scope_builder.flow_selection.0));
+                            let flow_dir = peace_resources::paths::FlowDir::from((
+                                profile_dir,
+                                self.scope_builder.flow_selection.0.flow_id()
+                            ));
 
                             flow_dirs.insert(profile.clone(), flow_dir);
 

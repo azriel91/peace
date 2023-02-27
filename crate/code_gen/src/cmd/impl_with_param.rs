@@ -128,6 +128,7 @@ fn impl_with_param_key_unknown(
     quote! {
         impl<
             'ctx,
+            E,
             // ProfileSelection,
             // FlowSelection,
             // ProfileParamsSelection,
@@ -306,6 +307,7 @@ fn impl_with_param_key_known(
     quote! {
         impl<
             'ctx,
+            E,
             // ProfileSelection,
             // FlowSelection,
             // ProfileParamsSelection,

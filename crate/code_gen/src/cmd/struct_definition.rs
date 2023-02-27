@@ -118,7 +118,7 @@ mod fields {
     pub fn marker_push(fields_named: &mut FieldsNamed) {
         let fields_marker: FieldsNamed = parse_quote!({
             /// Marker.
-            pub(crate) marker: std::marker::PhantomData
+            pub(crate) marker: std::marker::PhantomData<E>
         });
         fields_named.named.extend(fields_marker.named);
     }

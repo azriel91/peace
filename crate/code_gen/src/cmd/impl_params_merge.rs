@@ -125,6 +125,7 @@ fn impl_params_merge_for(
         impl<
             'ctx,
             'key,
+            E,
             PKeys,
             // ProfileSelection,
             // FlowSelection,

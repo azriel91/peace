@@ -34,6 +34,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
     let mut tokens = quote! {
         impl<
             'ctx,
+            E,
             // FlowSelection,
             // WorkspaceParamsSelection,
             // ProfileParamsSelection,
@@ -44,6 +45,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
+                    E,
                     crate::scopes::type_params::ProfileNotSelected,
                     // FlowSelection,
                     // WorkspaceParamsSelection,
@@ -62,6 +64,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
+                    E,
                     crate::scopes::type_params::ProfileSelected,
                     // FlowSelection,
                     // WorkspaceParamsSelection,
@@ -80,6 +83,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
                             // workspace_params_selection,
                             // profile_params_selection,
                             // flow_params_selection,
+                            // marker: std::marker::PhantomData,
                             #scope_builder_fields_profile_not_selected
                         },
                     params_type_regs_builder,
@@ -91,6 +95,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,
+                    // marker: std::marker::PhantomData,
                     #scope_builder_fields_profile_selected
                 };
 
@@ -176,6 +181,7 @@ pub fn impl_with_profile_from_workspace_param(
     quote! {
         impl<
             'ctx,
+            E,
             // FlowSelection,
             // ProfileParamsSelection,
             // FlowParamsSelection,
@@ -187,6 +193,7 @@ pub fn impl_with_profile_from_workspace_param(
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
+                    E,
                     crate::scopes::type_params::ProfileNotSelected,
                     // FlowSelection,
                     // WorkspaceParamsSome<WorkspaceParamsK>,
@@ -212,6 +219,7 @@ pub fn impl_with_profile_from_workspace_param(
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 #scope_builder_name<
+                    E,
                     crate::scopes::type_params::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>,
                     // FlowSelection,
                     // WorkspaceParamsSome<WorkspaceParamsK>,
@@ -233,6 +241,7 @@ pub fn impl_with_profile_from_workspace_param(
                             // workspace_params_selection,
                             // profile_params_selection,
                             // flow_params_selection,
+                            // marker: std::marker::PhantomData,
                             #scope_builder_fields_profile_not_selected
                         },
                     params_type_regs_builder,
@@ -244,6 +253,7 @@ pub fn impl_with_profile_from_workspace_param(
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,
+                    // marker: std::marker::PhantomData,
                     #scope_builder_fields_profile_from_workspace
                 };
 
@@ -272,6 +282,7 @@ fn scope_builder_fields_profile_not_selected(scope: Scope) -> Punctuated<FieldVa
     if scope.flow_params_supported() {
         field_values.push(parse_quote!(flow_params_selection));
     }
+    field_values.push(parse_quote!(marker: std::marker::PhantomData));
 
     field_values
 }
@@ -291,6 +302,7 @@ fn scope_builder_fields_profile_selected(scope: Scope) -> Punctuated<FieldValue,
     if scope.flow_params_supported() {
         field_values.push(parse_quote!(flow_params_selection));
     }
+    field_values.push(parse_quote!(marker: std::marker::PhantomData));
 
     field_values
 }
@@ -310,6 +322,7 @@ fn scope_builder_fields_profile_from_workspace(scope: Scope) -> Punctuated<Field
     if scope.flow_params_supported() {
         field_values.push(parse_quote!(flow_params_selection));
     }
+    field_values.push(parse_quote!(marker: std::marker::PhantomData));
 
     field_values
 }

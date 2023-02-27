@@ -124,6 +124,7 @@ fn impl_params_deserialize_for(
         impl<
             'ctx,
             'key,
+            E,
             PKeys,
             // ProfileSelection,
             // FlowSelection,

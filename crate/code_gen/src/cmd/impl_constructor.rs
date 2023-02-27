@@ -25,21 +25,24 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
 
         scope_field_values::profile_and_flow_selection_push(&mut type_params, scope);
         scope_field_values::params_selection_push(&mut type_params, scope);
+        type_params.push(parse_quote!(marker: std::marker::PhantomData));
 
         type_params
     };
 
     quote! {
-        impl<'ctx>
+        impl<'ctx, E>
             crate::ctx::CmdCtxBuilder<
                 'ctx,
                 // SingleProfileSingleFlowBuilder<
-                //     ProfileNotSelected,
-                //     FlowNotSelected,
-                //     WorkspaceParamsNone,
-                //     ProfileParamsNone,
-                // >
-                #scope_builder_name < #scope_builder_type_params >,
+                #scope_builder_name<
+                    E,
+                    // ProfileNotSelected,
+                    // FlowNotSelected,
+                    // WorkspaceParamsNone,
+                    // ProfileParamsNone,
+                    #scope_builder_type_params
+                >,
                 #params_module::ParamsKeysImpl<
                     #params_module::KeyUnknown,
                     #params_module::KeyUnknown,
@@ -54,6 +57,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                     // flow_selection: FlowNotSelected,
                     // workspace_params_selection: WorkspaceParamsNone,
                     // profile_params_selection: ProfileParamsNone,
+                    // marker: std::marker::PhantomData,
                     #scope_field_values
                 };
 
