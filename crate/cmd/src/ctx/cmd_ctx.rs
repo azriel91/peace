@@ -2,7 +2,10 @@
 
 use std::ops::Deref;
 
-use peace_resources::paths::{PeaceAppDir, PeaceDir, WorkspaceDir};
+use peace_resources::{
+    paths::{PeaceAppDir, PeaceDir, WorkspaceDir},
+    resources::ts::SetUp,
+};
 use peace_rt_model::{
     cmd_context_params::{KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs},
     Workspace,
@@ -25,7 +28,11 @@ use crate::{
     },
 };
 
-/// Collects parameters and initializes values relevant to the built [`CmdCtx`].
+/// Information needed to execute a command.
+///
+/// Importantly, as commands have different purposes, different command scopes
+/// exist to cater for each kind of command. This means the data available in a
+/// command context differs per scope, to accurately reflect what is available.
 #[derive(Debug)]
 pub struct CmdCtx<'ctx, Scope, PKeys>
 where
@@ -136,7 +143,7 @@ impl<'ctx> CmdCtx<'ctx, (), ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>> 
 impl<'ctx, E>
     CmdCtx<
         'ctx,
-        SingleProfileSingleFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
+        SingleProfileSingleFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>, SetUp>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     >
 {

@@ -8,6 +8,7 @@ use peace::{
 };
 
 use super::workspace_with;
+use crate::PeaceTestError;
 
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
@@ -15,10 +16,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<Box<dyn std::error::Error>>::new(
-        flow_id.clone(),
-        ItemSpecGraphBuilder::new().build(),
-    );
+    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -27,11 +25,10 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<Box<dyn std::error::Error>>(&workspace)
-            .with_flow(flow)
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_flow(flow)
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -76,10 +73,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<Box<dyn std::error::Error>>::new(
-        flow_id.clone(),
-        ItemSpecGraphBuilder::new().build(),
-    );
+    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -88,16 +82,12 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     )
     .await?;
 
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<Box<dyn std::error::Error>>(&workspace)
-            .with_flow(flow)
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_workspace_param_value(
-                String::from("something_else"),
-                Some("a string".to_string()),
-            )
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_flow(flow)
+        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param_value(String::from("something_else"), Some("a string".to_string()))
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -148,10 +138,7 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<Box<dyn std::error::Error>>::new(
-        flow_id.clone(),
-        ItemSpecGraphBuilder::new().build(),
-    );
+    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -160,14 +147,13 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<Box<dyn std::error::Error>>(&workspace)
-            .with_profile_params_k::<String>()
-            .with_profile_param::<u32>(String::from("profile_param"))
-            .with_profile_param::<u64>(String::from("profile_param_other"))
-            .with_flow(flow)
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_profile_params_k::<String>()
+        .with_profile_param::<u32>(String::from("profile_param"))
+        .with_profile_param::<u64>(String::from("profile_param_other"))
+        .with_flow(flow)
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -212,10 +198,7 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<Box<dyn std::error::Error>>::new(
-        flow_id.clone(),
-        ItemSpecGraphBuilder::new().build(),
-    );
+    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -224,14 +207,13 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<Box<dyn std::error::Error>>(&workspace)
-            .with_flow(flow)
-            .with_flow_params_k::<String>()
-            .with_flow_param::<String>(String::from("flow_param"))
-            .with_flow_param::<u32>(String::from("flow_param_other"))
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_flow(flow)
+        .with_flow_params_k::<String>()
+        .with_flow_param::<String>(String::from("flow_param"))
+        .with_flow_param::<u32>(String::from("flow_param_other"))
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -286,10 +268,7 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<Box<dyn std::error::Error>>::new(
-        flow_id.clone(),
-        ItemSpecGraphBuilder::new().build(),
-    );
+    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -298,19 +277,15 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     )
     .await?;
 
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<Box<dyn std::error::Error>>(&workspace)
-            .with_flow(flow)
-            .with_profile_params_k::<String>()
-            .with_profile_param::<u32>(String::from("profile_param"))
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_profile_param::<u64>(String::from("profile_param_other"))
-            .with_workspace_param_value(
-                String::from("something_else"),
-                Some("a string".to_string()),
-            )
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_flow(flow)
+        .with_profile_params_k::<String>()
+        .with_profile_param::<u32>(String::from("profile_param"))
+        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+        .with_profile_param::<u64>(String::from("profile_param_other"))
+        .with_workspace_param_value(String::from("something_else"), Some("a string".to_string()))
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -368,10 +343,7 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<Box<dyn std::error::Error>>::new(
-        flow_id.clone(),
-        ItemSpecGraphBuilder::new().build(),
-    );
+    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -380,22 +352,18 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
     )
     .await?;
 
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<Box<dyn std::error::Error>>(&workspace)
-            .with_flow(flow)
-            .with_profile_params_k::<String>()
-            .with_profile_param::<u32>(String::from("profile_param"))
-            .with_flow_params_k::<String>()
-            .with_flow_param::<String>(String::from("flow_param"))
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_flow_param::<u32>(String::from("flow_param_other"))
-            .with_profile_param::<u64>(String::from("profile_param_other"))
-            .with_workspace_param_value(
-                String::from("something_else"),
-                Some("a string".to_string()),
-            )
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_flow(flow)
+        .with_profile_params_k::<String>()
+        .with_profile_param::<u32>(String::from("profile_param"))
+        .with_flow_params_k::<String>()
+        .with_flow_param::<String>(String::from("flow_param"))
+        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+        .with_flow_param::<u32>(String::from("flow_param_other"))
+        .with_profile_param::<u64>(String::from("profile_param_other"))
+        .with_workspace_param_value(String::from("something_else"), Some("a string".to_string()))
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -462,10 +430,7 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<Box<dyn std::error::Error>>::new(
-        flow_id.clone(),
-        ItemSpecGraphBuilder::new().build(),
-    );
+    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -474,17 +439,13 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
     )
     .await?;
 
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<Box<dyn std::error::Error>>(&workspace)
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_workspace_param_value(
-                String::from("something_else"),
-                Some("a string".to_string()),
-            )
-            .with_profile_filter(|profile| **profile == "test_profile")
-            .with_flow(flow)
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param_value(String::from("something_else"), Some("a string".to_string()))
+        .with_profile_filter(|profile| **profile == "test_profile")
+        .with_flow(flow)
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -529,10 +490,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<Box<dyn std::error::Error>>::new(
-        flow_id.clone(),
-        ItemSpecGraphBuilder::new().build(),
-    );
+    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -541,23 +499,19 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
     )
     .await?;
 
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<Box<dyn std::error::Error>>(&workspace)
-            .with_profile_params_k::<String>()
-            .with_profile_param::<u32>(String::from("profile_param"))
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_profile_param::<u64>(String::from("profile_param_other"))
-            .with_workspace_param_value(
-                String::from("something_else"),
-                Some("a string".to_string()),
-            )
-            .with_flow_params_k::<String>()
-            .with_flow_param::<String>(String::from("flow_param"))
-            .with_profile_filter(|profile| **profile == "test_profile")
-            .with_flow_param::<u32>(String::from("flow_param_other"))
-            .with_flow(flow)
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_profile_params_k::<String>()
+        .with_profile_param::<u32>(String::from("profile_param"))
+        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+        .with_profile_param::<u64>(String::from("profile_param_other"))
+        .with_workspace_param_value(String::from("something_else"), Some("a string".to_string()))
+        .with_flow_params_k::<String>()
+        .with_flow_param::<String>(String::from("flow_param"))
+        .with_profile_filter(|profile| **profile == "test_profile")
+        .with_flow_param::<u32>(String::from("flow_param_other"))
+        .with_flow(flow)
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {

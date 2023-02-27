@@ -2,9 +2,10 @@
 
 use std::fmt::Debug;
 
+use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
-    resources::ts::Empty,
+    resources::ts::{Empty, SetUp},
     Resources,
 };
 use peace_rt_model::{
@@ -12,7 +13,7 @@ use peace_rt_model::{
         FlowParams, KeyMaybe, ParamsKeys, ParamsTypeRegsBuilder, ProfileParams, WorkspaceParams,
     },
     fn_graph::resman::Resource,
-    Error, Storage, Workspace, WorkspaceInitializer,
+    Error, ItemSpecGraph, StatesTypeRegs, Storage, Workspace, WorkspaceInitializer,
 };
 
 pub use self::{
@@ -208,4 +209,34 @@ pub(crate) async fn profiles_from_peace_app_dir(
     // assembly.
 
     Ok(profiles)
+}
+
+/// Registers each item spec's `State` and `StateLogical` for deserialization.
+fn states_type_regs<E>(item_spec_graph: &ItemSpecGraph<E>) -> StatesTypeRegs {
+    item_spec_graph
+        .iter()
+        .fold(StatesTypeRegs::new(), |mut states_type_regs, item_spec| {
+            item_spec.state_register(&mut states_type_regs);
+
+            states_type_regs
+        })
+}
+
+async fn item_spec_graph_setup<E>(
+    item_spec_graph: &ItemSpecGraph<E>,
+    resources: Resources<Empty>,
+) -> Result<Resources<SetUp>, E>
+where
+    E: std::error::Error,
+{
+    let resources = item_spec_graph
+        .stream()
+        .map(Ok::<_, E>)
+        .try_fold(resources, |mut resources, item_spec| async move {
+            item_spec.setup(&mut resources).await?;
+            Ok(resources)
+        })
+        .await?;
+
+    Ok(Resources::<SetUp>::from(resources))
 }

@@ -1,7 +1,11 @@
 use std::{fmt::Debug, hash::Hash};
 
 use peace_core::Profile;
-use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
+use peace_resources::{
+    paths::{FlowDir, ProfileDir, ProfileHistoryDir},
+    resources::ts::SetUp,
+    Resources,
+};
 use peace_rt_model::{
     cmd_context_params::{
         FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ProfileParams, WorkspaceParams,
@@ -43,7 +47,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct SingleProfileSingleFlow<E, PKeys>
+pub struct SingleProfileSingleFlow<E, PKeys, TS>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -63,9 +67,11 @@ where
     profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
     /// Flow params for the selected flow.
     flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+    /// `Resources` for flow execution.
+    resources: Resources<TS>,
 }
 
-impl<E, PKeys> SingleProfileSingleFlow<E, PKeys>
+impl<E, PKeys> SingleProfileSingleFlow<E, PKeys, SetUp>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -80,6 +86,7 @@ where
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
         flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+        resources: Resources<SetUp>,
     ) -> Self {
         Self {
             profile,
@@ -90,9 +97,15 @@ where
             workspace_params,
             profile_params,
             flow_params,
+            resources,
         }
     }
+}
 
+impl<E, PKeys, TS> SingleProfileSingleFlow<E, PKeys, TS>
+where
+    PKeys: ParamsKeys + 'static,
+{
     /// Returns a reference to the profile.
     pub fn profile(&self) -> &Profile {
         &self.profile
@@ -117,12 +130,23 @@ where
     pub fn flow_dir(&self) -> &FlowDir {
         &self.flow_dir
     }
+
+    /// Returns a reference to the `Resources` for flow execution.
+    pub fn resources(&self) -> &Resources<TS> {
+        &self.resources
+    }
+
+    /// Returns a reference to the `Resources` for flow execution.
+    pub fn resources_mut(&mut self) -> &mut Resources<TS> {
+        &mut self.resources
+    }
 }
 
-impl<E, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<E, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe, TS>
     SingleProfileSingleFlow<
         E,
         ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
+        TS,
     >
 where
     WorkspaceParamsK:
@@ -136,10 +160,11 @@ where
     }
 }
 
-impl<E, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+impl<E, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe, TS>
     SingleProfileSingleFlow<
         E,
         ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
+        TS,
     >
 where
     WorkspaceParamsKMaybe: KeyMaybe,
@@ -153,10 +178,11 @@ where
     }
 }
 
-impl<E, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+impl<E, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK, TS>
     SingleProfileSingleFlow<
         E,
         ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
+        TS,
     >
 where
     WorkspaceParamsKMaybe: KeyMaybe,

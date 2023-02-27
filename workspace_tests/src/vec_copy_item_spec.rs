@@ -196,7 +196,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
 #[cfg(feature = "error_reporting")]
 use peace::miette;
 
-/// Error while managing a file download.
+/// Error while executing a VecCopy.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 pub enum VecCopyError {

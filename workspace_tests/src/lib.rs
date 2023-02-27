@@ -6,6 +6,7 @@ pub(crate) use crate::{
     fn_tracker_output::FnTrackerOutput,
     fn_tracker_presenter::FnTrackerPresenter,
     no_op_output::NoOpOutput,
+    peace_test_error::PeaceTestError,
     vec_copy_item_spec::{
         VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper,
         VecCopyState,
@@ -32,4 +33,5 @@ mod fn_name;
 mod fn_tracker_output;
 mod fn_tracker_presenter;
 mod no_op_output;
+mod peace_test_error;
 mod vec_copy_item_spec;

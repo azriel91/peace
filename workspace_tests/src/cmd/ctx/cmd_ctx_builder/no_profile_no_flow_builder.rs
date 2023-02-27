@@ -4,13 +4,14 @@ use peace::{
 };
 
 use super::workspace;
+use crate::PeaceTestError;
 
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_no_profile_no_flow"))?;
 
-    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<Box<dyn std::error::Error>>(&workspace)
+    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<PeaceTestError>(&workspace)
         .build()
         .await?;
 
@@ -24,7 +25,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let workspace = workspace(&tempdir, app_name!("test_no_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<Box<dyn std::error::Error>>(&workspace)
+    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<PeaceTestError>(&workspace)
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
         .with_workspace_param_value(String::from("something_else"), Some("a string".to_string()))
         .build()

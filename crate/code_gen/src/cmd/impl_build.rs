@@ -1,5 +1,8 @@
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, FieldValue, GenericArgument, Pat, Path, Token};
+use syn::{
+    parse_quote, punctuated::Punctuated, token::Comma, FieldValue, GenericArgument, Pat, Path,
+    Token,
+};
 
 use crate::cmd::{
     type_params_selection::{
@@ -141,6 +144,15 @@ fn impl_build_for(
 
         type_params
     };
+    let scope_type_params = {
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
+
+        if let (ProfileCount::One, FlowCount::One) = (scope.profile_count(), scope.flow_count()) {
+            type_params.push(parse_quote!(peace_resources::resources::ts::SetUp));
+        }
+
+        type_params
+    };
 
     let workspace_dirs_and_storage_borrow = quote! {
         let workspace_dirs = self.workspace.dirs();
@@ -159,69 +171,8 @@ fn impl_build_for(
     let profile_s_ref = profile_s_ref(scope, profile_selection);
     let cmd_dirs = cmd_dirs(scope);
     let dirs_to_create = dirs_to_create(scope);
-    let scope_fields = {
-        let mut scope_fields = Punctuated::<Pat, Token![,]>::new();
-
-        // Profile, Flow, and dir fields
-        match scope.profile_count() {
-            ProfileCount::None => {}
-            ProfileCount::One => {
-                scope_fields.push(parse_quote!(profile));
-                scope_fields.push(parse_quote!(profile_dir));
-                scope_fields.push(parse_quote!(profile_history_dir));
-            }
-            ProfileCount::Multiple => {
-                scope_fields.push(parse_quote!(profiles));
-                scope_fields.push(parse_quote!(profile_dirs));
-                scope_fields.push(parse_quote!(profile_history_dirs));
-            }
-        }
-
-        match scope.flow_count() {
-            FlowCount::None => {}
-            FlowCount::One => match scope.profile_count() {
-                ProfileCount::None => {}
-                ProfileCount::One => {
-                    scope_fields.push(parse_quote!(flow));
-                    scope_fields.push(parse_quote!(flow_dir));
-                }
-                ProfileCount::Multiple => {
-                    scope_fields.push(parse_quote!(flow));
-                    scope_fields.push(parse_quote!(flow_dirs));
-                }
-            },
-        }
-
-        // Cmd Params
-        match scope.profile_count() {
-            ProfileCount::None => {
-                scope_fields.push(parse_quote!(workspace_params));
-            }
-            ProfileCount::One => {
-                scope_fields.push(parse_quote!(workspace_params));
-                scope_fields.push(parse_quote!(profile_params));
-            }
-            ProfileCount::Multiple => {
-                scope_fields.push(parse_quote!(workspace_params));
-                scope_fields.push(parse_quote!(profile_to_profile_params));
-            }
-        }
-
-        match scope.flow_count() {
-            FlowCount::None => {}
-            FlowCount::One => match scope.profile_count() {
-                ProfileCount::None => {}
-                ProfileCount::One => {
-                    scope_fields.push(parse_quote!(flow_params));
-                }
-                ProfileCount::Multiple => {
-                    scope_fields.push(parse_quote!(profile_to_flow_params));
-                }
-            },
-        }
-
-        scope_fields
-    };
+    let scope_fields = scope_fields(scope);
+    let resources_set_up = resources_set_up(scope);
 
     let scope_builder_deconstruct = scope_builder_deconstruct(
         scope_struct,
@@ -249,6 +200,7 @@ fn impl_build_for(
                 PKeys,
             >
         where
+            E: std::error::Error + From<peace_rt_model::Error>,
             PKeys: #params_module::ParamsKeys + 'static,
         {
             /// Builds the command context.
@@ -260,14 +212,21 @@ fn impl_build_for(
             ) -> Result<
                 crate::ctx::CmdCtx<
                     'ctx,
-                    #scope_type_path<E, PKeys>,
+                    #scope_type_path<
+                        E,
+                        PKeys,
+
+                        // SingleProfileSingleFlow
+                        // peace_resources::resources::ts::SetUp
+                        #scope_type_params
+                    >,
                     #params_module::ParamsKeysImpl<
                         PKeys::WorkspaceParamsKMaybe,
                         PKeys::ProfileParamsKMaybe,
                         PKeys::FlowParamsKMaybe,
                     >,
                 >,
-                peace_rt_model::Error,
+                E,
             > {
                 use futures::stream::TryStreamExt;
 
@@ -294,8 +253,10 @@ fn impl_build_for(
 
                 // === Profile(s) ref === //
                 // --- Single --- //
-                // let profile_s_ref = &profile;
+                // // ProfileSelected
                 // let profile_s_ref = &self.scope_builder.profile_selection.0;
+                // // ProfileFromWorkspaceParam
+                // let profile_s_ref = &profile;
                 // --- Multi --- //
                 // let profile_s_ref = &profiles;
                 #profile_s_ref
@@ -333,24 +294,22 @@ fn impl_build_for(
                 //     self.scope_builder.flow_selection.0.flow_id()
                 // ));
                 // --- Multi Profile Single Flow --- //
-                // dirs_tokens.extend(quote! {
-                //     let flow_dirs = profile_dirs
-                //         .iter()
-                //         .fold(std::collections::BTreeMap::<
-                //                 peace_core::Profile,
-                //                 peace_resources::paths::ProfileDir
-                //             >::new(
-                //         ), |mut flow_dirs, (profile, profile_dir)| {
-                //             let flow_dir = peace_resources::paths::FlowDir::from((
-                //                 profile_dir,
-                //                 self.scope_builder.flow_selection.0.flow_id()
-                //             ));
+                // let flow_dirs = profile_dirs
+                //     .iter()
+                //     .fold(std::collections::BTreeMap::<
+                //             peace_core::Profile,
+                //             peace_resources::paths::ProfileDir
+                //         >::new(
+                //     ), |mut flow_dirs, (profile, profile_dir)| {
+                //         let flow_dir = peace_resources::paths::FlowDir::from((
+                //             profile_dir,
+                //             self.scope_builder.flow_selection.0.flow_id()
+                //         ));
                 //
-                //             flow_dirs.insert(profile.clone(), flow_dir);
+                //         flow_dirs.insert(profile.clone(), flow_dir);
                 //
-                //             flow_dirs
-                //         });
-                // });
+                //         flow_dirs
+                //     });
                 #cmd_dirs
 
                 let dirs_to_create = [
@@ -497,6 +456,10 @@ fn impl_build_for(
                 // Self::flow_params_insert(flow_params, &mut resources);
                 #flow_params_insert
 
+                // === SingleProfileSingleFlow === //
+                // Set up resources for the flow's item spec graph
+                #resources_set_up
+
                 let scope = #scope_type_path::new(
                     // workspace_params
 
@@ -523,6 +486,9 @@ fn impl_build_for(
                     // flow,
                     // flow_dirs,
                     // profile_to_flow_params,
+
+                    // === SingleProfileSingleFlow === //
+                    // resources,
 
                     #scope_fields
                 );
@@ -1113,4 +1079,108 @@ fn dirs_to_create(scope: Scope) -> proc_macro2::TokenStream {
     }
 
     dirs_tokens
+}
+
+fn scope_fields(scope: Scope) -> Punctuated<Pat, Comma> {
+    let mut scope_fields = Punctuated::<Pat, Token![,]>::new();
+    match scope.profile_count() {
+        ProfileCount::None => {}
+        ProfileCount::One => {
+            scope_fields.push(parse_quote!(profile));
+            scope_fields.push(parse_quote!(profile_dir));
+            scope_fields.push(parse_quote!(profile_history_dir));
+        }
+        ProfileCount::Multiple => {
+            scope_fields.push(parse_quote!(profiles));
+            scope_fields.push(parse_quote!(profile_dirs));
+            scope_fields.push(parse_quote!(profile_history_dirs));
+        }
+    }
+    match scope.flow_count() {
+        FlowCount::None => {}
+        FlowCount::One => match scope.profile_count() {
+            ProfileCount::None => {}
+            ProfileCount::One => {
+                scope_fields.push(parse_quote!(flow));
+                scope_fields.push(parse_quote!(flow_dir));
+            }
+            ProfileCount::Multiple => {
+                scope_fields.push(parse_quote!(flow));
+                scope_fields.push(parse_quote!(flow_dirs));
+            }
+        },
+    }
+    match scope.profile_count() {
+        ProfileCount::None => {
+            scope_fields.push(parse_quote!(workspace_params));
+        }
+        ProfileCount::One => {
+            scope_fields.push(parse_quote!(workspace_params));
+            scope_fields.push(parse_quote!(profile_params));
+        }
+        ProfileCount::Multiple => {
+            scope_fields.push(parse_quote!(workspace_params));
+            scope_fields.push(parse_quote!(profile_to_profile_params));
+        }
+    }
+    match scope.flow_count() {
+        FlowCount::None => {}
+        FlowCount::One => match scope.profile_count() {
+            ProfileCount::None => {}
+            ProfileCount::One => {
+                scope_fields.push(parse_quote!(flow_params));
+            }
+            ProfileCount::Multiple => {
+                scope_fields.push(parse_quote!(profile_to_flow_params));
+            }
+        },
+    }
+    if let (ProfileCount::One, FlowCount::One) = (scope.profile_count(), scope.flow_count()) {
+        scope_fields.push(parse_quote!(resources));
+    }
+    scope_fields
+}
+
+fn resources_set_up(scope: Scope) -> proc_macro2::TokenStream {
+    if let (ProfileCount::One, FlowCount::One) = (scope.profile_count(), scope.flow_count()) {
+        // Reads and inserts previously saved states, and sets up resources using the
+        // flow graph.
+        //
+        // It is not possible to load saved states when running a command with multiple
+        // flows, as the flows will have different item specs and their state
+        // (type)s will be different.
+        //
+        // An example is workspace initialization, where the states saved per item spec
+        // for workspace initialization are likely different to application specific
+        // flows.
+        //
+        // We currently don't support inserting resources for MultiProfileSingleFlow
+        // commands. That would require either multiple `Resources` maps, or a
+        // `Resources` map that contains `Map<Profile, _>`.
+        //
+        // It also requires multiple item spec graph setups to work without conflicting
+        // with each other.
+        quote! {
+            let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
+            let states_type_regs = crate::ctx::cmd_ctx_builder::states_type_regs(flow.graph());
+            let states_saved = peace_rt_model::StatesSerializer::deserialize_saved_opt(
+                flow.flow_id(),
+                storage,
+                states_type_regs.states_current_type_reg(),
+                &states_saved_file,
+            )
+            .await?
+            .map(Into::<peace_resources::states::StatesSaved>::into);
+            if let Some(states_saved) = states_saved {
+                resources.insert(states_saved);
+            }
+
+            // Call each `ItemSpec`'s initialization function.
+            let resources = crate::ctx::cmd_ctx_builder::item_spec_graph_setup(flow.graph(), resources).await?;
+
+            // TODO: output_progress CmdProgressTracker initialization
+        }
+    } else {
+        proc_macro2::TokenStream::new()
+    }
 }
