@@ -7,7 +7,7 @@ use peace::{
 };
 
 use crate::{
-    cmds::CmdCtxBuilder,
+    cmds::CmdContextBuilder,
     model::{AppCycleError, EnvType},
 };
 
@@ -40,13 +40,13 @@ impl ProfileInitFlow {
         )?;
         let graph = Self::graph()?;
 
-        let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output)
+        let cmd_context = CmdContextBuilder::new(&workspace, &graph, output)
             .with_profile(profile)
             .with_env_type(env_type)
             .await?;
         StatesDiscoverCmd::exec(cmd_context).await?;
 
-        let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output)
+        let cmd_context = CmdContextBuilder::new(&workspace, &graph, output)
             .with_profile_from_last_used()
             .await?;
         StatesSavedDisplayCmd::exec(cmd_context).await?;

@@ -28,9 +28,25 @@
     - [Output](technical_concepts/output.md)
         - [Execution Progress](technical_concepts/output/execution_progress.md)
         - [Presentation](technical_concepts/output/presentation.md)
+    - [Workspace](technical_concepts/workspace.md)
+    - [Commands](technical_concepts/commands.md)
+        - [Scopes](technical_concepts/commands/scopes.md)
+            - [No Profile No Flow](technical_concepts/commands/scopes/no_profile_no_flow.md)
+            - [Single Profile No Flow](technical_concepts/commands/scopes/single_profile_no_flow.md)
+            - [Single Profile Single Flow](technical_concepts/commands/scopes/single_profile_single_flow.md)
+            - [Multi Profile No Flow](technical_concepts/commands/scopes/multi_profile_no_flow.md)
+            - [Multi Profile Single Flow](technical_concepts/commands/scopes/multi_profile_single_flow.md)
+        - [Use Cases](technical_concepts/commands/use_cases.md)
+            - [Workspace Initialization](technical_concepts/commands/use_cases/workspace_initialization.md)
+            - [Profile List](technical_concepts/commands/use_cases/profile_list.md)
+            - [Workspace Stored Active Profile](technical_concepts/commands/use_cases/workspace_stored_active_profile.md)
+            - [Workspace Active Profile Switch](technical_concepts/commands/use_cases/workspace_active_profile_switch.md)
+            - [State Discovery and Display](technical_concepts/commands/use_cases/state_discovery_and_display.md)
+            - [State Read and Display](technical_concepts/commands/use_cases/state_read_and_display.md)
+            - [State Diff](technical_concepts/commands/use_cases/state_diff.md)
+            - [State Apply](technical_concepts/commands/use_cases/state_apply.md)
+            - [State Clean](technical_concepts/commands/use_cases/state_clean.md)
 
-- [Reference](reference.md)
-    - [Commands](commands.md)
 
 ---
 

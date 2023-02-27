@@ -18,7 +18,7 @@ use type_reg::untagged::{BoxDt, TypeMap};
 /// # Type Parameters
 ///
 /// * `K`: Type of key for the `FlowParams` map.
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(transparent)] // Needed to serialize as a map instead of a list.
 pub struct FlowParams<K>(TypeMap<K, BoxDt>, PhantomData<K>)
 where

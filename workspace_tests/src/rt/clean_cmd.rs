@@ -267,13 +267,10 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
 
 #[test]
 fn debug() {
-    let debug_str = format!(
-        "{:?}",
-        CleanCmd::<VecCopyError, NoOpOutput, (), (), ()>::default()
-    );
+    let debug_str = format!("{:?}", CleanCmd::<VecCopyError, NoOpOutput, ()>::default());
     assert!(
         debug_str
-            == r#"CleanCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput, (), (), ())>)"#
+            == r#"CleanCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#
             || debug_str == r#"CleanCmd(PhantomData)"#
     );
 }

@@ -6,7 +6,8 @@ use crate::paths::ProfileDir;
 ///
 /// Typically `$workspace_dir/.peace/$app/$profile/.history`.
 ///
-/// This directory contains significant command execution summaries.
+/// This directory is intended to contain significant command execution
+/// summaries. Currently it is not written to yet.
 ///
 /// See `ProfileHistoryDir::from<&ProfileDir>` if you want to construct a
 /// `ProfileHistoryDir` with the conventional `$profile_dir/.history` path.

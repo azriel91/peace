@@ -6,10 +6,11 @@ use std::{
 
 use base64::Engine;
 use peace_resources::type_reg::untagged::{DataTypeWrapper, TypeMap, TypeReg};
+use peace_rt_model_core::{Error, WebError};
 use serde::{de::DeserializeOwned, Serialize};
 use wasm_bindgen::prelude::*;
 
-use crate::{Error, WorkspaceSpec};
+use crate::WorkspaceSpec;
 
 /// Wrapper to retrieve `web_sys::Storage` on demand.
 #[derive(Clone, Debug)]
@@ -41,27 +42,29 @@ impl Storage {
     /// As a compromise, we provide this function to fetch the storage when it
     /// needs to be accessed.
     pub fn get(&self) -> Result<web_sys::Storage, Error> {
-        let window = web_sys::window().ok_or(Error::WindowNone)?;
+        let window = web_sys::window().ok_or(WebError::WindowNone)?;
         let storage = match self.workspace_spec {
             WorkspaceSpec::LocalStorage => {
                 if !localStorageAvailable() {
-                    return Err(Error::LocalStorageUnavailable);
+                    return Err(Error::Web(WebError::LocalStorageUnavailable));
                 }
                 window
                     .local_storage()
                     .map_err(crate::stringify_js_value)
-                    .map_err(Error::LocalStorageGet)?
-                    .ok_or(Error::LocalStorageNone)?
+                    .map_err(WebError::LocalStorageGet)
+                    .map_err(Error::Web)?
+                    .ok_or(Error::Web(WebError::LocalStorageNone))?
             }
             WorkspaceSpec::SessionStorage => {
                 if !sessionStorageAvailable() {
-                    return Err(Error::SessionStorageUnavailable);
+                    return Err(Error::Web(WebError::SessionStorageUnavailable));
                 }
                 window
                     .session_storage()
                     .map_err(crate::stringify_js_value)
-                    .map_err(Error::SessionStorageGet)?
-                    .ok_or(Error::SessionStorageNone)?
+                    .map_err(WebError::SessionStorageGet)
+                    .map_err(Error::Web)?
+                    .ok_or(Error::Web(WebError::SessionStorageNone))?
             }
         };
 
@@ -87,12 +90,12 @@ impl Storage {
     pub fn get_item_opt(&self, path: &Path) -> Result<Option<String>, Error> {
         let storage = self.get()?;
         let key = path.to_string_lossy();
-        storage
-            .get_item(key.as_ref())
-            .map_err(|js_value| Error::StorageGetItem {
+        storage.get_item(key.as_ref()).map_err(|js_value| {
+            Error::Web(WebError::StorageGetItem {
                 path: path.to_path_buf(),
                 error: crate::stringify_js_value(js_value),
             })
+        })
     }
 
     /// Gets multiple items in the web storage.
@@ -120,9 +123,11 @@ impl Storage {
             storage
                 .get_item(key.as_ref())
                 .map(|value| (path, value))
-                .map_err(|js_value| Error::StorageGetItem {
-                    path: path.to_path_buf(),
-                    error: crate::stringify_js_value(js_value),
+                .map_err(|js_value| {
+                    Error::Web(WebError::StorageGetItem {
+                        path: path.to_path_buf(),
+                        error: crate::stringify_js_value(js_value),
+                    })
                 })
         });
 
@@ -145,9 +150,11 @@ impl Storage {
         let key = path.to_string_lossy();
         storage
             .get_item(key.as_ref())
-            .map_err(|js_value| Error::StorageGetItem {
-                path: path.to_path_buf(),
-                error: crate::stringify_js_value(js_value),
+            .map_err(|js_value| {
+                Error::Web(WebError::StorageGetItem {
+                    path: path.to_path_buf(),
+                    error: crate::stringify_js_value(js_value),
+                })
             })
             .and_then(|value| {
                 value.ok_or_else(|| Error::ItemNotExists {
@@ -168,10 +175,12 @@ impl Storage {
                 .map(|value| {
                     base64::engine::general_purpose::STANDARD
                         .decode(&value)
-                        .map_err(|error| Error::StorageB64Decode {
-                            path: path.to_path_buf(),
-                            value,
-                            error,
+                        .map_err(|error| {
+                            Error::Web(WebError::StorageB64Decode {
+                                path: path.to_path_buf(),
+                                value,
+                                error,
+                            })
                         })
                 })
                 .transpose()
@@ -188,10 +197,12 @@ impl Storage {
         self.get_item(path).and_then(|value| {
             base64::engine::general_purpose::STANDARD
                 .decode(&value)
-                .map_err(|error| Error::StorageB64Decode {
-                    path: path.to_path_buf(),
-                    value,
-                    error,
+                .map_err(|error| {
+                    Error::Web(WebError::StorageB64Decode {
+                        path: path.to_path_buf(),
+                        value,
+                        error,
+                    })
                 })
         })
     }
@@ -220,9 +231,11 @@ impl Storage {
             let key = path.to_string_lossy();
             storage
                 .get_item(key.as_ref())
-                .map_err(|js_value| Error::StorageGetItem {
-                    path: path.to_path_buf(),
-                    error: crate::stringify_js_value(js_value),
+                .map_err(|js_value| {
+                    Error::Web(WebError::StorageGetItem {
+                        path: path.to_path_buf(),
+                        error: crate::stringify_js_value(js_value),
+                    })
                 })
                 .and_then(|value| {
                     value.ok_or_else(|| Error::ItemNotExists {
@@ -243,13 +256,13 @@ impl Storage {
     pub fn set_item(&self, path: &Path, value: &str) -> Result<(), Error> {
         let storage = self.get()?;
         let key = path.to_string_lossy();
-        storage
-            .set_item(key.as_ref(), value)
-            .map_err(|js_value| Error::StorageSetItem {
+        storage.set_item(key.as_ref(), value).map_err(|js_value| {
+            Error::Web(WebError::StorageSetItem {
                 path: path.to_path_buf(),
                 value: value.to_string(),
                 error: crate::stringify_js_value(js_value),
             })
+        })
     }
 
     /// Base64 encodes and sets a value in the web storage.
@@ -274,13 +287,13 @@ impl Storage {
 
         iter.try_for_each(|(path, value)| {
             let key = path.to_string_lossy();
-            storage
-                .set_item(key.as_ref(), value)
-                .map_err(|js_value| Error::StorageSetItem {
+            storage.set_item(key.as_ref(), value).map_err(|js_value| {
+                Error::Web(WebError::StorageSetItem {
                     path: path.to_path_buf(),
                     value: value.to_string(),
                     error: crate::stringify_js_value(js_value),
                 })
+            })
         })
     }
 
@@ -318,10 +331,12 @@ impl Storage {
         let storage = self.get()?;
 
         iter.try_for_each(|t| {
-            f(&storage, t).map_err(|(path, value, js_value)| Error::StorageSetItem {
-                path,
-                value,
-                error: crate::stringify_js_value(js_value),
+            f(&storage, t).map_err(|(path, value, js_value)| {
+                Error::Web(WebError::StorageSetItem {
+                    path,
+                    value,
+                    error: crate::stringify_js_value(js_value),
+                })
             })
         })
     }
@@ -402,11 +417,11 @@ impl Storage {
     pub fn remove_item(&self, path: &Path) -> Result<(), Error> {
         let storage = self.get()?;
         let key = path.to_string_lossy();
-        storage
-            .remove_item(key.as_ref())
-            .map_err(|js_value| Error::StorageRemoveItem {
+        storage.remove_item(key.as_ref()).map_err(|js_value| {
+            Error::Web(WebError::StorageRemoveItem {
                 path: path.to_path_buf(),
                 error: crate::stringify_js_value(js_value),
             })
+        })
     }
 }

@@ -12,8 +12,10 @@ use peace::{
         StatesSavedDisplayCmd,
     },
     rt_model::{
-        cmd::CmdContext, output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace,
-        WorkspaceSpec,
+        cmd::CmdContext,
+        cmd_context_params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
+        output::OutputWrite,
+        ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
 use peace_item_specs::file_download::{FileDownloadItemSpec, FileDownloadParams};
@@ -77,6 +79,14 @@ pub async fn workspace_and_graph_setup(
     Ok(workspace_and_graph)
 }
 
+pub type DownloadCmdContext<'ctx, O> = CmdContext<
+    'ctx,
+    DownloadError,
+    O,
+    SetUp,
+    ParamsKeysImpl<KeyUnknown, KeyKnown<String>, KeyUnknown>,
+>;
+
 /// Returns a `CmdContext` initialized from the workspace and item spec graph
 pub async fn cmd_context<'ctx, O>(
     workspace_and_graph: &'ctx WorkspaceAndGraph,
@@ -84,7 +94,7 @@ pub async fn cmd_context<'ctx, O>(
     flow_id: FlowId,
     output: &'ctx mut O,
     file_download_params: Option<FileDownloadParams<FileId>>,
-) -> Result<CmdContext<'ctx, DownloadError, O, SetUp, (), String, ()>, DownloadError>
+) -> Result<DownloadCmdContext<'ctx, O>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
@@ -100,7 +110,7 @@ where
 }
 
 pub async fn fetch<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp, (), String, ()>,
+    cmd_context: DownloadCmdContext<'_, O>,
 ) -> Result<Resources<WithStatesCurrentAndDesired>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
@@ -110,7 +120,7 @@ where
 }
 
 pub async fn status<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp, (), String, ()>,
+    cmd_context: DownloadCmdContext<'_, O>,
 ) -> Result<Resources<WithStatesSaved>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
@@ -120,7 +130,7 @@ where
 }
 
 pub async fn desired<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp, (), String, ()>,
+    cmd_context: DownloadCmdContext<'_, O>,
 ) -> Result<Resources<WithStatesDesired>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
@@ -130,7 +140,7 @@ where
 }
 
 pub async fn diff<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp, (), String, ()>,
+    cmd_context: DownloadCmdContext<'_, O>,
 ) -> Result<Resources<WithStatesSavedDiffs>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
@@ -140,7 +150,7 @@ where
 }
 
 pub async fn ensure_dry<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp, (), String, ()>,
+    cmd_context: DownloadCmdContext<'_, O>,
 ) -> Result<Resources<EnsuredDry>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
@@ -150,7 +160,7 @@ where
 }
 
 pub async fn ensure<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp, (), String, ()>,
+    cmd_context: DownloadCmdContext<'_, O>,
 ) -> Result<Resources<Ensured>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
@@ -160,7 +170,7 @@ where
 }
 
 pub async fn clean_dry<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp, (), String, ()>,
+    cmd_context: DownloadCmdContext<'_, O>,
 ) -> Result<Resources<CleanedDry>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
@@ -170,7 +180,7 @@ where
 }
 
 pub async fn clean<O>(
-    cmd_context: CmdContext<'_, DownloadError, O, SetUp, (), String, ()>,
+    cmd_context: DownloadCmdContext<'_, O>,
 ) -> Result<Resources<Cleaned>, DownloadError>
 where
     O: OutputWrite<DownloadError>,

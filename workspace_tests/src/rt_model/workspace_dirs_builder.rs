@@ -2,7 +2,7 @@ use std::path::Path;
 
 use peace::{
     cfg::{app_name, AppName},
-    rt_model::{Error, WorkspaceDirsBuilder, WorkspaceSpec},
+    rt_model::{Error, NativeError, WorkspaceDirsBuilder, WorkspaceSpec},
 };
 
 #[test]
@@ -46,10 +46,10 @@ fn returns_workspace_file_not_found_when_workspace_root_file_does_not_exist()
 
     assert!(matches!(
         workspace_dirs_result,
-        Err(Error::WorkspaceFileNotFound {
+        Err(Error::Native(NativeError::WorkspaceFileNotFound {
             working_dir: _,
             file_name,
-        }) if file_name == Path::new("non_existent_file")
+        })) if file_name == Path::new("non_existent_file")
     ));
     Ok(())
 }

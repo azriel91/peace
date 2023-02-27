@@ -1,6 +1,6 @@
-use std::{fmt::Debug, hash::Hash, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cfg::ItemSpecId;
+use peace_cfg::{FlowId, ItemSpecId};
 use peace_resources::{
     paths::{FlowDir, StatesSavedFile},
     resources::ts::{SetUp, WithStatesSaved},
@@ -8,24 +8,18 @@ use peace_resources::{
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     Resources,
 };
-use peace_rt_model::{cmd::CmdContext, Error, StatesSerializer, Storage};
-use serde::{de::DeserializeOwned, Serialize};
+use peace_rt_model::{
+    cmd::CmdContext, cmd_context_params::ParamsKeys, Error, StatesSerializer, Storage,
+};
 
 /// Reads [`StatesSaved`]s from storage.
 #[derive(Debug)]
-pub struct StatesSavedReadCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>(
-    PhantomData<(E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK)>,
-);
+pub struct StatesSavedReadCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
-impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
-    StatesSavedReadCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+impl<E, O, PKeys> StatesSavedReadCmd<E, O, PKeys>
 where
     E: std::error::Error + From<Error> + Send,
-    WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    PKeys: ParamsKeys + 'static,
 {
     /// Reads [`StatesSaved`]s from storage.
     ///
@@ -35,11 +29,8 @@ where
     /// [`StatesCurrentDiscoverCmd`]: crate::StatesCurrentDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_context: CmdContext<'_, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
-    ) -> Result<
-        CmdContext<'_, E, O, WithStatesSaved, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
-        E,
-    > {
+        mut cmd_context: CmdContext<'_, E, O, SetUp, PKeys>,
+    ) -> Result<CmdContext<'_, E, O, WithStatesSaved, PKeys>, E> {
         let CmdContext {
             resources,
             states_type_regs,
@@ -63,19 +54,22 @@ where
         resources: &mut Resources<SetUp>,
         states_current_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
     ) -> Result<StatesSaved, E> {
+        let flow_id = resources.borrow::<FlowId>();
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
         let states_saved_file = StatesSavedFile::from(&*flow_dir);
 
         let states_saved = StatesSerializer::deserialize_saved(
+            &flow_id,
             &storage,
             states_current_type_reg,
             &states_saved_file,
         )
         .await?;
 
-        drop(flow_dir);
         drop(storage);
+        drop(flow_dir);
+        drop(flow_id);
 
         resources.insert(states_saved_file);
 
@@ -83,9 +77,7 @@ where
     }
 }
 
-impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> Default
-    for StatesSavedReadCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
-{
+impl<E, O, PKeys> Default for StatesSavedReadCmd<E, O, PKeys> {
     fn default() -> Self {
         Self(PhantomData)
     }

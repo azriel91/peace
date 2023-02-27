@@ -99,11 +99,39 @@ jobs:
           override: true
           components: clippy
 
-      - # FIXME: Switch back when actions-rs/cargo#217 gets merged
-        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
-        with:
-          command: clippy
-          args: --workspace --all-features -- -D warnings
+      - name: 'Run clippy'
+        run: |
+          cargo clippy \
+            --workspace \
+            --all-features \
+            --fix \
+            --exclude peace_rt_model_web \
+            -- -D warnings
+
+        # Ideally we'd also run it for WASM, but:
+        #
+        # * `workspace_tests` is only coded for native targets.
+        # * There is little benefit running it for everything again.
+        #
+        # The command that we *would* use is:
+        #
+        # ```bash
+        # cargo clippy \
+        #   --workspace \
+        #   --target wasm32-unknown-unknown \
+        #   --no-default-features \
+        #   --features "error_reporting output_colorized output_json" \
+        #   --fix \
+        #   --exclude peace_rt_model_native \
+        #   --exclude peace_item_spec_sh_cmd \
+        #   --exclude peace_item_spec_sh_sync_cmd \
+        #   --exclude peace_item_spec_tar_x \
+        #   --exclude peace_item_specs \
+        #   --exclude workspace_tests \
+        #   --exclude app_cycle \
+        #   --exclude download \
+        #   -- -D warnings
+        # ```
 
   coverage:
     name: Coverage

@@ -5,8 +5,6 @@
 
 // Re-exports
 pub use fn_graph::{self, FnRef};
-pub use peace_rt_model_core::cmd_context_params;
-#[cfg(feature = "output_progress")]
 pub use peace_rt_model_core::*;
 
 pub mod output {
@@ -23,7 +21,7 @@ pub use peace_rt_model_native::*;
 pub use peace_rt_model_web::*;
 
 pub use crate::{
-    in_memory_text_output::InMemoryTextOutput, item_spec_boxed::ItemSpecBoxed,
+    flow::Flow, in_memory_text_output::InMemoryTextOutput, item_spec_boxed::ItemSpecBoxed,
     item_spec_graph::ItemSpecGraph, item_spec_graph_builder::ItemSpecGraphBuilder,
     item_spec_rt::ItemSpecRt, item_spec_wrapper::ItemSpecWrapper,
     states_serializer::StatesSerializer, states_type_regs::StatesTypeRegs,
@@ -32,6 +30,7 @@ pub use crate::{
 pub mod cmd;
 pub mod outcomes;
 
+mod flow;
 mod in_memory_text_output;
 mod item_spec_boxed;
 mod item_spec_graph;

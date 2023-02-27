@@ -1,5 +1,5 @@
 //! Runtime data types for the AppCycle example
 
-pub use self::cmd_context::CmdContext;
+pub use self::app_cycle_cmd_context::AppCycleCmdContext;
 
-mod cmd_context;
+mod app_cycle_cmd_context;

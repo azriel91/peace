@@ -8,8 +8,9 @@ use peace_resources::{
     internal::WorkspaceDirs,
     paths::{PeaceAppDir, PeaceDir},
 };
+use peace_rt_model_core::{Error, NativeError};
 
-use crate::{Error, WorkspaceSpec};
+use crate::WorkspaceSpec;
 
 /// Computes paths of well-known directories for a workspace.
 #[derive(Debug)]
@@ -24,16 +25,18 @@ impl WorkspaceDirsBuilder {
         use peace_resources::paths::WorkspaceDir;
 
         let workspace_dir = {
-            let working_dir = std::env::current_dir().map_err(Error::WorkingDirRead)?;
+            let working_dir = std::env::current_dir()
+                .map_err(NativeError::WorkingDirRead)
+                .map_err(Error::Native)?;
             let workspace_dir = match workspace_spec {
                 WorkspaceSpec::WorkingDir => working_dir,
                 WorkspaceSpec::Path(path) => path,
                 WorkspaceSpec::FirstDirWithFile(file_name) => {
                     Self::first_dir_with_file(&working_dir, &file_name).ok_or({
-                        Error::WorkspaceFileNotFound {
+                        Error::Native(NativeError::WorkspaceFileNotFound {
                             working_dir,
                             file_name,
-                        }
+                        })
                     })?
                 }
             };

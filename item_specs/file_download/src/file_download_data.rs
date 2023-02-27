@@ -53,6 +53,6 @@ where
 
     #[cfg(target_arch = "wasm32")]
     pub fn storage(&self) -> &Storage {
-        &*self.storage
+        &self.storage
     }
 }

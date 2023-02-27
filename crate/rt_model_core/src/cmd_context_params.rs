@@ -27,9 +27,21 @@
 //! * Force remove: applicable to `clean`
 
 pub use self::{
-    flow_params::FlowParams, profile_params::ProfileParams, workspace_params::WorkspaceParams,
+    cmd_params::CmdParams,
+    cmd_params_builder::CmdParamsBuilder,
+    flow_params::FlowParams,
+    params_keys::{KeyKnown, KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl},
+    params_type_regs::ParamsTypeRegs,
+    params_type_regs_builder::ParamsTypeRegsBuilder,
+    profile_params::ProfileParams,
+    workspace_params::WorkspaceParams,
 };
 
+mod cmd_params;
+mod cmd_params_builder;
 mod flow_params;
+mod params_keys;
+mod params_type_regs;
+mod params_type_regs_builder;
 mod profile_params;
 mod workspace_params;

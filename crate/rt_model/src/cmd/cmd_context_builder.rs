@@ -8,20 +8,25 @@ use peace_resources::{
     paths::StatesSavedFile,
     resources::ts::{Empty, SetUp},
     states::StatesSaved,
-    type_reg::untagged::{BoxDt, TypeReg},
     Resources,
 };
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use peace_rt_model_core::cmd_context_params::{
+    KeyKnown, KeyMaybe, KeyUnknown, ParamsTypeRegs, ParamsTypeRegsBuilder,
+};
+use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     cmd::{
         ts::{CmdContextCommon, FlowIdSelected, ProfileSelected},
         CmdContext, CmdDirsBuilder,
     },
-    cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams},
+    cmd_context_params::{FlowParams, ParamsKeys, ParamsKeysImpl, ProfileParams, WorkspaceParams},
     Error, ItemSpecGraph, StatesSerializer, StatesTypeRegs, Storage, Workspace,
     WorkspaceInitializer,
 };
+
+#[cfg(not(target_arch = "wasm32"))]
+use peace_rt_model_core::NativeError;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -44,39 +49,77 @@ cfg_if::cfg_if! {
 /// Members of `Workspace` -- where the command should be run -- are
 /// individually stored in `Resources`:
 ///
-/// * [`Profile`]
-/// * [`WorkspaceDir`]
+/// * [`FlowDir`]
 /// * [`PeaceDir`]
+/// * [`Profile`]
 /// * [`ProfileDir`]
 /// * [`ProfileHistoryDir`]
+/// * [`WorkspaceDir`]
 ///
 /// # Type Parameters
 ///
 /// * `E`: Consumer provided error type.
 /// * `O`: [`OutputWrite`] to return values / errors to.
-/// * `WorkspaceParamsK`: `WorkspaceParams` map `K` type parameter.
-/// * `ProfileParamsK`: `ProfileParams` map `K` type parameter.
-/// * `FlowParamsK`: `FlowParams` map `K` type parameter.
+/// * `WorkspaceParamsK`: [`WorkspaceParams`] map `K` type parameter.
+/// * `ProfileParamsK`: [`ProfileParams`] map `K` type parameter.
+/// * `FlowParamsK`: [`FlowParams`] map `K` type parameter.
 ///
-/// [`Profile`]: peace_cfg::Profile
-/// [`WorkspaceDir`]: peace_resources::paths::WorkspaceDir
+/// # Design
+///
+/// * [`WorkspaceParams`], [`ProfileParams`], and [`FlowParams`]' types must be
+///   specified, if they are to be deserialized.
+///
+/// * Notably, [`ProfileParams`] and [`FlowParams`] *may* be different for
+///   different profiles and flows.
+///
+///     If they are different, then it makes it impossible to deserialize them
+///     for a given `CmdContext`. We could constrain the params types to be a
+///     superset of all profile/flow params, which essentially is making them
+///     the same umbrella type.
+///
+///     This should be feasible for [`ProfileParams`], as profiles are intended
+///     to be logically separate copies of the same managed items. Production
+///     profiles may require more parameters, but the parameter type can be the
+///     same.
+///
+///     However, [`FlowParams`] being different per flow is a fair assumption.
+///     This means cross profile inspections of the same flow is achievable --
+///     the same [`FlowParams`] type and [`ItemSpecGraph`] can prepare the
+///     [`TypeReg`]istries to deserialize the [`FlowParamsFile`],
+///     [`StatesSavedFile`], and [`StatesDesiredFile`].
+///
+/// * A [`Profile`] is needed when there are [`ProfileParams`] to store, as it
+///   is used to calculate the [`ProfileDir`] to store the params.
+///
+/// * A [`FlowId`] is needed when there are [`FlowParams`] to store, or an
+///   [`ItemSpecGraph`] to execute, as it is used calculate the [`FlowDir`] to
+///   store the params, or read or write [`States`].
+///
+/// * You should be able to list profiles, read profile params, and list flows,
+///   without needing to have either a profile or a flow.
+///
+/// * For [`States`] from all flows to be deserializable, there must be a type
+///   registry with *all* item specs' `State` registered. This is a maintenance
+///   cost for implementors, but unavoidable if that kind of functionality is
+///   desired.
+///
+/// [`FlowDir`]: peace_resources::paths::FlowDir
+/// [`OutputWrite`]: peace_rt_model_core::OutputWrite
 /// [`PeaceDir`]: peace_resources::paths::PeaceDir
+/// [`Profile`]: peace_cfg::Profile
 /// [`ProfileDir`]: peace_resources::paths::ProfileDir
 /// [`ProfileHistoryDir`]: peace_resources::paths::ProfileHistoryDir
-/// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+/// [`States`]: peace_resources::States
+/// [`WorkspaceDir`]: peace_resources::paths::WorkspaceDir
 #[derive(Debug)]
 pub struct CmdContextBuilder<
     'ctx,
     E,
     O,
     TS,
-    WorkspaceParamsKMaybe = KeyUnknown,
-    ProfileParamsKMaybe = KeyUnknown,
-    FlowParamsKMaybe = KeyUnknown,
+    PKeys = ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
 > where
-    WorkspaceParamsKMaybe: KeyMaybe,
-    ProfileParamsKMaybe: KeyMaybe,
-    FlowParamsKMaybe: KeyMaybe,
+    PKeys: ParamsKeys + 'static,
 {
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
@@ -89,48 +132,35 @@ pub struct CmdContextBuilder<
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
     output: &'ctx mut O,
+    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+    /// [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
+    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    params_type_regs_builder: ParamsTypeRegsBuilder<PKeys>,
     /// Identifier or namespace to distinguish execution environments.
-    profile_selection: ProfileSelection<WorkspaceParamsKMaybe::Key>,
+    profile_selection: ProfileSelection<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     /// Identifier or name of the chosen process flow.
     flow_id: FlowId,
     /// Workspace parameters.
-    workspace_params: Option<WorkspaceParams<WorkspaceParamsKMaybe::Key>>,
-    /// Type registry for `WorkspaceParams` deserialization.
-    workspace_params_type_reg: TypeReg<WorkspaceParamsKMaybe::Key, BoxDt>,
+    workspace_params: Option<WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>>,
     /// Profile parameters.
-    profile_params: Option<ProfileParams<ProfileParamsKMaybe::Key>>,
-    /// Type registry for `ProfileParams` deserialization.
-    profile_params_type_reg: TypeReg<ProfileParamsKMaybe::Key, BoxDt>,
+    profile_params: Option<ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
     /// Flow parameters.
-    flow_params: Option<FlowParams<FlowParamsKMaybe::Key>>,
-    /// Type registry for `FlowParams` deserialization.
-    flow_params_type_reg: TypeReg<FlowParamsKMaybe::Key, BoxDt>,
+    flow_params: Option<FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
     /// Marker.
     marker: PhantomData<TS>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub struct KeyUnknown;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Deserialize, Serialize)]
-pub struct KeyKnown<K>(PhantomData<K>);
-
-pub trait KeyMaybe {
-    type Key: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static;
-}
-
-impl KeyMaybe for KeyUnknown {
-    type Key = ();
-}
-
-impl<K> KeyMaybe for KeyKnown<K>
-where
-    K: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-{
-    type Key = K;
-}
-
-impl<'ctx, E, O> CmdContextBuilder<'ctx, E, O, CmdContextCommon, KeyUnknown, KeyUnknown, KeyUnknown>
+impl<'ctx, E, O>
+    CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        CmdContextCommon,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    >
 where
     E: std::error::Error + From<Error>,
 {
@@ -152,34 +182,21 @@ where
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder: ParamsTypeRegs::builder(),
             profile_selection: ProfileSelection::Selected(Profile::workspace_init()),
             flow_id: FlowId::workspace_init(),
             workspace_params: None,
-            workspace_params_type_reg: TypeReg::new(),
             profile_params: None,
-            profile_params_type_reg: TypeReg::new(),
             flow_params: None,
-            flow_params_type_reg: TypeReg::new(),
             marker: PhantomData,
         }
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
-    CmdContextBuilder<
-        'ctx,
-        E,
-        O,
-        CmdContextCommon,
-        WorkspaceParamsKMaybe,
-        ProfileParamsKMaybe,
-        FlowParamsKMaybe,
-    >
+impl<'ctx, E, O, PKeys> CmdContextBuilder<'ctx, E, O, CmdContextCommon, PKeys>
 where
     E: std::error::Error + From<Error>,
-    WorkspaceParamsKMaybe: KeyMaybe,
-    ProfileParamsKMaybe: KeyMaybe,
-    FlowParamsKMaybe: KeyMaybe,
+    PKeys: ParamsKeys + 'static,
 {
     /// Sets the profile for the command execution.
     ///
@@ -189,27 +206,17 @@ where
     pub fn with_profile(
         self,
         profile: Profile,
-    ) -> CmdContextBuilder<
-        'ctx,
-        E,
-        O,
-        ProfileSelected,
-        WorkspaceParamsKMaybe,
-        ProfileParamsKMaybe,
-        FlowParamsKMaybe,
-    > {
+    ) -> CmdContextBuilder<'ctx, E, O, ProfileSelected, PKeys> {
         let CmdContextBuilder {
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder,
             profile_selection: _,
             flow_id: _,
             workspace_params,
-            workspace_params_type_reg,
             profile_params,
-            profile_params_type_reg,
             flow_params,
-            flow_params_type_reg,
             marker: _,
         } = self;
 
@@ -217,14 +224,12 @@ where
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder,
             profile_selection: ProfileSelection::Selected(profile),
             flow_id: FlowId::profile_init(),
             workspace_params,
-            workspace_params_type_reg,
             profile_params,
-            profile_params_type_reg,
             flow_params,
-            flow_params_type_reg,
             marker: PhantomData,
         }
     }
@@ -236,9 +241,7 @@ impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
         E,
         O,
         CmdContextCommon,
-        KeyKnown<WorkspaceParamsK>,
-        ProfileParamsKMaybe,
-        FlowParamsKMaybe,
+        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     >
 where
     E: std::error::Error + From<Error>,
@@ -264,22 +267,18 @@ where
         E,
         O,
         ProfileSelected,
-        KeyKnown<WorkspaceParamsK>,
-        ProfileParamsKMaybe,
-        FlowParamsKMaybe,
+        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     > {
         let CmdContextBuilder {
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder,
             profile_selection: _,
             flow_id: _,
             workspace_params,
-            workspace_params_type_reg,
             profile_params,
-            profile_params_type_reg,
             flow_params,
-            flow_params_type_reg,
             marker: _,
         } = self;
 
@@ -287,34 +286,21 @@ where
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder,
             profile_selection: ProfileSelection::WorkspaceParam(key),
             flow_id: FlowId::profile_init(),
             workspace_params,
-            workspace_params_type_reg,
             profile_params,
-            profile_params_type_reg,
             flow_params,
-            flow_params_type_reg,
             marker: PhantomData,
         }
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
-    CmdContextBuilder<
-        'ctx,
-        E,
-        O,
-        ProfileSelected,
-        WorkspaceParamsKMaybe,
-        ProfileParamsKMaybe,
-        FlowParamsKMaybe,
-    >
+impl<'ctx, E, O, PKeys> CmdContextBuilder<'ctx, E, O, ProfileSelected, PKeys>
 where
     E: std::error::Error + From<Error>,
-    WorkspaceParamsKMaybe: KeyMaybe,
-    ProfileParamsKMaybe: KeyMaybe,
-    FlowParamsKMaybe: KeyMaybe,
+    PKeys: ParamsKeys + 'static,
 {
     /// Selects the flow ID for the workspace.
     ///
@@ -324,27 +310,17 @@ where
     pub fn with_flow_id(
         self,
         flow_id: FlowId,
-    ) -> CmdContextBuilder<
-        'ctx,
-        E,
-        O,
-        FlowIdSelected,
-        WorkspaceParamsKMaybe,
-        ProfileParamsKMaybe,
-        FlowParamsKMaybe,
-    > {
+    ) -> CmdContextBuilder<'ctx, E, O, FlowIdSelected, PKeys> {
         let CmdContextBuilder {
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder,
             profile_selection,
             flow_id: _,
             workspace_params,
-            workspace_params_type_reg,
             profile_params,
-            profile_params_type_reg,
             flow_params,
-            flow_params_type_reg,
             marker: _,
         } = self;
 
@@ -352,26 +328,21 @@ where
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder,
             profile_selection,
             flow_id,
             workspace_params,
-            workspace_params_type_reg,
             profile_params,
-            profile_params_type_reg,
             flow_params,
-            flow_params_type_reg,
             marker: PhantomData,
         }
     }
 }
 
-impl<'ctx, E, O, TS, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
-    CmdContextBuilder<'ctx, E, O, TS, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<'ctx, E, O, TS, PKeys> CmdContextBuilder<'ctx, E, O, TS, PKeys>
 where
     E: std::error::Error + From<Error>,
-    WorkspaceParamsKMaybe: KeyMaybe,
-    ProfileParamsKMaybe: KeyMaybe,
-    FlowParamsKMaybe: KeyMaybe,
+    PKeys: ParamsKeys + 'static,
 {
     /// Prepares a workspace to run commands in.
     ///
@@ -388,9 +359,11 @@ where
             E,
             O,
             SetUp,
-            WorkspaceParamsKMaybe::Key,
-            ProfileParamsKMaybe::Key,
-            FlowParamsKMaybe::Key,
+            ParamsKeysImpl<
+                PKeys::WorkspaceParamsKMaybe,
+                PKeys::ProfileParamsKMaybe,
+                PKeys::FlowParamsKMaybe,
+            >,
         >,
         E,
     > {
@@ -406,7 +379,7 @@ where
             ($params:ident, $params_type_reg:ident, $params_deserialize_fn:ident, $init_file:expr) => {
                 let params_deserialized = WorkspaceInitializer::$params_deserialize_fn(
                     storage,
-                    &self.$params_type_reg,
+                    &self.params_type_regs_builder.$params_type_reg(),
                     $init_file,
                 )
                 .await?;
@@ -482,9 +455,11 @@ where
         #[cfg(not(target_arch = "wasm32"))]
         {
             let workspace_dir = workspace_dirs.workspace_dir();
-            std::env::set_current_dir(workspace_dir).map_err(|error| Error::CurrentDirSet {
-                workspace_dir: workspace_dir.clone(),
-                error,
+            std::env::set_current_dir(workspace_dir).map_err(|error| {
+                Error::Native(NativeError::CurrentDirSet {
+                    workspace_dir: workspace_dir.clone(),
+                    error,
+                })
             })?;
 
             WorkspaceInitializer::dirs_initialize(workspace_dirs, &cmd_dirs).await?;
@@ -505,25 +480,28 @@ where
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder,
             profile_selection: _,
             flow_id,
             workspace_params: _,
-            workspace_params_type_reg,
             profile_params: _,
-            profile_params_type_reg,
             flow_params: _,
-            flow_params_type_reg,
             marker: _,
         } = self;
 
-        Self::workspace_dirs_insert(&mut resources, workspace, profile, flow_id, cmd_dirs);
-        resources.insert(workspace_params_file);
-        resources.insert(profile_params_file);
-        resources.insert(flow_params_file);
-
         // Read existing states from storage.
+        //
+        // It is not possible to load saved states does not work when running a
+        // cross-profile command, and the flows have different states.
+        //
+        // e.g. different item spec graphs.
+        //
+        // Most prominent example is workspace initialization, where the states saved
+        // per item spec for workspace initialization are likely different to
+        // application specific flows.
         let states_type_regs = Self::states_type_regs(item_spec_graph);
         let states_saved = StatesSerializer::deserialize_saved_opt(
+            &flow_id,
             storage,
             states_type_regs.states_current_type_reg(),
             &states_saved_file,
@@ -533,6 +511,11 @@ where
         if let Some(states_saved) = states_saved {
             resources.insert(states_saved);
         }
+
+        Self::workspace_dirs_insert(&mut resources, workspace, profile, flow_id, cmd_dirs);
+        resources.insert(workspace_params_file);
+        resources.insert(profile_params_file);
+        resources.insert(flow_params_file);
 
         // Call each `ItemSpec`'s initialization function.
         let resources = Self::item_spec_graph_setup(item_spec_graph, resources).await?;
@@ -553,14 +536,14 @@ where
             CmdProgressTracker::new(multi_progress, progress_trackers)
         };
 
+        let params_type_regs = params_type_regs_builder.build();
+
         Ok(CmdContext {
             workspace,
             item_spec_graph,
             output,
+            params_type_regs,
             resources,
-            workspace_params_type_reg,
-            profile_params_type_reg,
-            flow_params_type_reg,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -653,13 +636,10 @@ where
     }
 }
 
-impl<'ctx, E, O, TS, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
-    CmdContextBuilder<'ctx, E, O, TS, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<'ctx, E, O, TS, PKeys> CmdContextBuilder<'ctx, E, O, TS, PKeys>
 where
     E: std::error::Error,
-    WorkspaceParamsKMaybe: KeyMaybe,
-    ProfileParamsKMaybe: KeyMaybe,
-    FlowParamsKMaybe: KeyMaybe,
+    PKeys: ParamsKeys + 'static,
 {
     /// Registers each item spec's `State` and `StateLogical` for
     /// deserialization.
@@ -695,41 +675,24 @@ where
 /// This is boxed since [TAIT] is not yet available.
 ///
 /// [TAIT]: https://rust-lang.github.io/impl-trait-initiative/explainer/tait.html
-pub type CmdContextFuture<'ctx, E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> = Pin<
-    Box<
-        dyn Future<
-                Output = Result<
-                    CmdContext<'ctx, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
-                    E,
-                >,
-            > + 'ctx,
-    >,
->;
+pub type CmdContextFuture<'ctx, E, O, PKeys> =
+    Pin<Box<dyn Future<Output = Result<CmdContext<'ctx, E, O, SetUp, PKeys>, E>> + 'ctx>>;
 
-impl<'ctx, E, O, TS, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsKMaybe> IntoFuture
-    for CmdContextBuilder<
-        'ctx,
-        E,
-        O,
-        TS,
-        WorkspaceParamsKMaybe,
-        ProfileParamsKMaybe,
-        FlowParamsKMaybe,
-    >
+impl<'ctx, E, O, TS, PKeys> IntoFuture for CmdContextBuilder<'ctx, E, O, TS, PKeys>
 where
     E: std::error::Error + From<Error>,
     TS: 'static,
-    WorkspaceParamsKMaybe: KeyMaybe + 'ctx,
-    ProfileParamsKMaybe: KeyMaybe + 'ctx,
-    FlowParamsKMaybe: KeyMaybe + 'ctx,
+    PKeys: ParamsKeys + 'static,
 {
     type IntoFuture = CmdContextFuture<
         'ctx,
         E,
         O,
-        WorkspaceParamsKMaybe::Key,
-        ProfileParamsKMaybe::Key,
-        FlowParamsKMaybe::Key,
+        ParamsKeysImpl<
+            PKeys::WorkspaceParamsKMaybe,
+            PKeys::ProfileParamsKMaybe,
+            PKeys::FlowParamsKMaybe,
+        >,
     >;
     type Output = <Self::IntoFuture as Future>::Output;
 
@@ -741,13 +704,24 @@ where
 // Crazy stuff for ergonomic API usage
 
 impl<'ctx, E, O, TS, ProfileParamsKMaybe, FlowParamsKMaybe>
-    CmdContextBuilder<'ctx, E, O, TS, KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe>
+    CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        TS,
+        ParamsKeysImpl<KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe>,
+    >
 where
     E: std::error::Error + From<Error>,
     ProfileParamsKMaybe: KeyMaybe,
     FlowParamsKMaybe: KeyMaybe,
 {
     /// Adds a workspace parameter.
+    ///
+    /// Currently there is no means in code to deliberately unset any previously
+    /// stored value. This can be made possibly by defining a
+    /// `WorkspaceParamsBuilder` that determines a `None` value as a deliberate
+    /// erasure of any previous value.
     ///
     /// # Parameters
     ///
@@ -762,9 +736,7 @@ where
         E,
         O,
         TS,
-        KeyKnown<WorkspaceParamsK>,
-        ProfileParamsKMaybe,
-        FlowParamsKMaybe,
+        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     >
     where
         WorkspaceParamsK:
@@ -775,19 +747,20 @@ where
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder,
             profile_selection,
             flow_id,
             workspace_params: _,
-            workspace_params_type_reg: _,
             profile_params,
-            profile_params_type_reg,
             flow_params,
-            flow_params_type_reg,
             marker: _,
         } = self;
 
-        let mut workspace_params_type_reg = TypeReg::<WorkspaceParamsK, BoxDt>::new();
-        workspace_params_type_reg.register::<WorkspaceParam>(k.clone());
+        let mut params_type_regs_builder =
+            params_type_regs_builder.with_workspace_params_k::<WorkspaceParamsK>();
+        params_type_regs_builder
+            .workspace_params_type_reg_mut()
+            .register::<WorkspaceParam>(k.clone());
         let mut workspace_params = WorkspaceParams::<WorkspaceParamsK>::new();
         if let Some(workspace_param) = workspace_param {
             workspace_params.insert(k, workspace_param);
@@ -808,14 +781,12 @@ where
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder,
             profile_selection,
             flow_id,
             workspace_params: Some(workspace_params),
-            workspace_params_type_reg,
             profile_params,
-            profile_params_type_reg,
             flow_params,
-            flow_params_type_reg,
             marker: PhantomData,
         }
     }
@@ -827,9 +798,7 @@ impl<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
         E,
         O,
         TS,
-        KeyKnown<WorkspaceParamsK>,
-        ProfileParamsKMaybe,
-        FlowParamsKMaybe,
+        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     >
 where
     E: std::error::Error + From<Error>,
@@ -839,6 +808,11 @@ where
     FlowParamsKMaybe: KeyMaybe,
 {
     /// Adds a workspace parameter.
+    ///
+    /// Currently there is no means in code to deliberately unset any previously
+    /// stored value. This can be made possibly by defining a
+    /// `WorkspaceParamsBuilder` that determines a `None` value as a deliberate
+    /// erasure of any previous value.
     ///
     /// # Parameters
     ///
@@ -853,18 +827,18 @@ where
         E,
         O,
         TS,
-        KeyKnown<WorkspaceParamsK>,
-        ProfileParamsKMaybe,
-        FlowParamsKMaybe,
+        ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     >
     where
         WorkspaceParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
     {
-        self.workspace_params_type_reg
+        self.params_type_regs_builder
+            .workspace_params_type_reg_mut()
             .register::<WorkspaceParam>(k.clone());
-        if let (Some(workspace_params), Some(workspace_param)) =
-            (self.workspace_params.as_mut(), workspace_param)
-        {
+        let Some(workspace_params) = self.workspace_params.as_mut() else {
+            unreachable!("This is set to `Some` in `Self::with_params_type_regs_builder`");
+        };
+        if let Some(workspace_param) = workspace_param {
             workspace_params.insert(k, workspace_param);
         }
 
@@ -873,13 +847,24 @@ where
 }
 
 impl<'ctx, E, O, TS, WorkflowParamsKMaybe, FlowParamsKMaybe>
-    CmdContextBuilder<'ctx, E, O, TS, WorkflowParamsKMaybe, KeyUnknown, FlowParamsKMaybe>
+    CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        TS,
+        ParamsKeysImpl<WorkflowParamsKMaybe, KeyUnknown, FlowParamsKMaybe>,
+    >
 where
     E: std::error::Error + From<Error>,
     WorkflowParamsKMaybe: KeyMaybe,
     FlowParamsKMaybe: KeyMaybe,
 {
     /// Adds a profile parameter.
+    ///
+    /// Currently there is no means in code to deliberately unset any previously
+    /// stored value. This can be made possibly by defining a
+    /// `ProfileParamsBuilder` that determines a `None` value as a deliberate
+    /// erasure of any previous value.
     ///
     /// # Parameters
     ///
@@ -894,9 +879,7 @@ where
         E,
         O,
         TS,
-        WorkflowParamsKMaybe,
-        KeyKnown<ProfileParamsK>,
-        FlowParamsKMaybe,
+        ParamsKeysImpl<WorkflowParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
     >
     where
         ProfileParamsK:
@@ -907,19 +890,20 @@ where
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder,
             profile_selection,
             flow_id,
             workspace_params,
-            workspace_params_type_reg,
             profile_params: _,
-            profile_params_type_reg: _,
             flow_params,
-            flow_params_type_reg,
             marker: _,
         } = self;
 
-        let mut profile_params_type_reg = TypeReg::<ProfileParamsK, BoxDt>::new();
-        profile_params_type_reg.register::<ProfileParam>(k.clone());
+        let mut params_type_regs_builder =
+            params_type_regs_builder.with_profile_params_k::<ProfileParamsK>();
+        params_type_regs_builder
+            .profile_params_type_reg_mut()
+            .register::<ProfileParam>(k.clone());
         let mut profile_params = ProfileParams::<ProfileParamsK>::new();
         if let Some(profile_param) = profile_param {
             profile_params.insert(k, profile_param);
@@ -929,14 +913,12 @@ where
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder,
             profile_selection,
             flow_id,
             workspace_params,
-            workspace_params_type_reg,
             profile_params: Some(profile_params),
-            profile_params_type_reg,
             flow_params,
-            flow_params_type_reg,
             marker: PhantomData,
         }
     }
@@ -948,9 +930,7 @@ impl<'ctx, E, O, TS, WorkflowParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
         E,
         O,
         TS,
-        WorkflowParamsKMaybe,
-        KeyKnown<ProfileParamsK>,
-        FlowParamsKMaybe,
+        ParamsKeysImpl<WorkflowParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
     >
 where
     E: std::error::Error + From<Error>,
@@ -960,6 +940,11 @@ where
     FlowParamsKMaybe: KeyMaybe,
 {
     /// Adds a profile parameter.
+    ///
+    /// Currently there is no means in code to deliberately unset any previously
+    /// stored value. This can be made possibly by defining a
+    /// `ProfileParamsBuilder` that determines a `None` value as a deliberate
+    /// erasure of any previous value.
     ///
     /// # Parameters
     ///
@@ -974,18 +959,18 @@ where
         E,
         O,
         TS,
-        WorkflowParamsKMaybe,
-        KeyKnown<ProfileParamsK>,
-        FlowParamsKMaybe,
+        ParamsKeysImpl<WorkflowParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
     >
     where
         ProfileParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
     {
-        self.profile_params_type_reg
+        self.params_type_regs_builder
+            .profile_params_type_reg_mut()
             .register::<ProfileParam>(k.clone());
-        if let (Some(profile_params), Some(profile_param)) =
-            (self.profile_params.as_mut(), profile_param)
-        {
+        let Some(profile_params) = self.profile_params.as_mut() else {
+            unreachable!("This is set to `Some` in `Self::with_params_type_regs_builder`");
+        };
+        if let Some(profile_param) = profile_param {
             profile_params.insert(k, profile_param);
         }
 
@@ -993,14 +978,25 @@ where
     }
 }
 
-impl<'ctx, E, O, TS, WorkflowParamsKMaybe, ProfileParamsKMaybe>
-    CmdContextBuilder<'ctx, E, O, TS, WorkflowParamsKMaybe, ProfileParamsKMaybe, KeyUnknown>
+impl<'ctx, E, O, TS, WorkspaceParamsKMaybe, ProfileParamsKMaybe>
+    CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        TS,
+        ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyUnknown>,
+    >
 where
     E: std::error::Error + From<Error>,
-    WorkflowParamsKMaybe: KeyMaybe,
     ProfileParamsKMaybe: KeyMaybe,
+    WorkspaceParamsKMaybe: KeyMaybe,
 {
     /// Adds a flow parameter.
+    ///
+    /// Currently there is no means in code to deliberately unset any previously
+    /// stored value. This can be made possibly by defining a
+    /// `FlowParamsBuilder` that determines a `None` value as a deliberate
+    /// erasure of any previous value.
     ///
     /// # Parameters
     ///
@@ -1015,9 +1011,7 @@ where
         E,
         O,
         TS,
-        WorkflowParamsKMaybe,
-        ProfileParamsKMaybe,
-        KeyKnown<FlowParamsK>,
+        ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
     >
     where
         FlowParamsK:
@@ -1028,19 +1022,20 @@ where
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder,
             profile_selection,
             flow_id,
             workspace_params,
-            workspace_params_type_reg,
             profile_params,
-            profile_params_type_reg,
             flow_params: _,
-            flow_params_type_reg: _,
             marker: _,
         } = self;
 
-        let mut flow_params_type_reg = TypeReg::<FlowParamsK, BoxDt>::new();
-        flow_params_type_reg.register::<FlowParam>(k.clone());
+        let mut params_type_regs_builder =
+            params_type_regs_builder.with_flow_params_k::<FlowParamsK>();
+        params_type_regs_builder
+            .flow_params_type_reg_mut()
+            .register::<FlowParam>(k.clone());
         let mut flow_params = FlowParams::<FlowParamsK>::new();
         if let Some(flow_param) = flow_param {
             flow_params.insert(k, flow_param);
@@ -1050,14 +1045,12 @@ where
             workspace,
             item_spec_graph,
             output,
+            params_type_regs_builder,
             profile_selection,
             flow_id,
             workspace_params,
-            workspace_params_type_reg,
             profile_params,
-            profile_params_type_reg,
             flow_params: Some(flow_params),
-            flow_params_type_reg,
             marker: PhantomData,
         }
     }
@@ -1069,9 +1062,7 @@ impl<'ctx, E, O, TS, WorkflowParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
         E,
         O,
         TS,
-        WorkflowParamsKMaybe,
-        ProfileParamsKMaybe,
-        KeyKnown<FlowParamsK>,
+        ParamsKeysImpl<WorkflowParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
     >
 where
     E: std::error::Error + From<Error>,
@@ -1080,6 +1071,11 @@ where
     FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
     /// Adds a flow parameter.
+    ///
+    /// Currently there is no means in code to deliberately unset any previously
+    /// stored value. This can be made possibly by defining a
+    /// `FlowParamsBuilder` that determines a `None` value as a deliberate
+    /// erasure of any previous value.
     ///
     /// # Parameters
     ///
@@ -1094,15 +1090,18 @@ where
         E,
         O,
         TS,
-        WorkflowParamsKMaybe,
-        ProfileParamsKMaybe,
-        KeyKnown<FlowParamsK>,
+        ParamsKeysImpl<WorkflowParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
     >
     where
         FlowParam: Clone + Debug + DeserializeOwned + Serialize + Send + Sync + 'static,
     {
-        self.flow_params_type_reg.register::<FlowParam>(k.clone());
-        if let (Some(flow_params), Some(flow_param)) = (self.flow_params.as_mut(), flow_param) {
+        self.params_type_regs_builder
+            .flow_params_type_reg_mut()
+            .register::<FlowParam>(k.clone());
+        let Some(flow_params) = self.flow_params.as_mut() else {
+            unreachable!("This is set to `Some` in `Self::with_params_type_regs_builder`");
+        };
+        if let Some(flow_param) = flow_param {
             flow_params.insert(k, flow_param);
         }
 

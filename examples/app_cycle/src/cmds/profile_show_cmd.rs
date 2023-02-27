@@ -1,16 +1,11 @@
 use peace::{
     cfg::{app_name, AppName, Profile},
+    cmd::ctx::CmdCtx,
     fmt::presentln,
-    rt::cmds::sub::StatesSavedReadCmd,
-    rt_model::{
-        output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
-    },
+    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
-use crate::{
-    cmds::CmdCtxBuilder,
-    model::{AppCycleError, EnvType},
-};
+use crate::model::{AppCycleError, EnvType};
 
 /// Command to show the current profile.
 #[derive(Debug)]
@@ -35,28 +30,27 @@ impl ProfileShowCmd {
             #[cfg(target_arch = "wasm32")]
             WorkspaceSpec::SessionStorage,
         )?;
-        let graph = Self::graph()?;
 
-        let cmd_context = CmdCtxBuilder::new(&workspace, &graph, output)
-            .with_profile_from_last_used()
+        // new CmdCtx
+        let cmd_ctx_builder = CmdCtx::builder_single_profile_no_flow::<AppCycleError>(&workspace);
+        crate::cmds::params_augment!(cmd_ctx_builder);
+
+        let cmd_ctx = cmd_ctx_builder
+            .with_profile_from_workspace_param(&String::from("profile"))
+            .build()
             .await?;
 
-        let cmd_context = StatesSavedReadCmd::exec(cmd_context).await?;
-        let resources = &cmd_context.resources;
-        let profile = &*resources.borrow::<Profile>();
-        let env_type = &*resources.borrow::<EnvType>();
+        let workspace_params = cmd_ctx.workspace_params();
+        let profile_params = cmd_ctx.profile_params();
 
-        presentln!(output, ["Using profile ", profile]);
-        presentln!(output, ["Environment type: ", env_type]);
+        let profile = workspace_params.get::<Profile, _>("profile");
+        let env_type = profile_params.get::<EnvType, _>("env_type");
+
+        if let Some((profile, env_type)) = profile.zip(env_type) {
+            presentln!(output, ["Using profile ", profile]);
+            presentln!(output, ["Environment type: ", env_type]);
+        }
 
         Ok(())
-    }
-
-    fn graph() -> Result<ItemSpecGraph<AppCycleError>, AppCycleError> {
-        let graph_builder = ItemSpecGraphBuilder::<AppCycleError>::new();
-
-        // No item specs, as we are just reading existing workspace and profile params.
-
-        Ok(graph_builder.build())
     }
 }

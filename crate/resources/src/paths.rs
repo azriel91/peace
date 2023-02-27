@@ -13,7 +13,7 @@
 //!         |   |- ..
 //!         |   |- CmdExecutionN
 //!         |
-//!         |- ProfileInit
+//!         |- ProfileParams
 //!         |
 //!         |- FlowDir  # "flow_name", multiple
 //!             |- StatesMeta
@@ -40,28 +40,33 @@
 //!     |   |- .meta.yaml  # Store the last discovered time so we can inform the user.
 //!     |   |              # Should time be stored per item spec, or per invocation?
 //!     |   |
-//!     |   |- init.yaml  # Parameters used to initialize this profile
-//!     |   |             # We write to this so that each time the user re-`init`s,
-//!     |   |             # if they version control it, they can rediscover the
-//!     |   |             # states from previous inits, and clean them up.
-//!     |   |
 //!     |   |- dev_env  # flow name
-//!     |   |   |- states.yaml
 //!     |   |   |- states_desired.yaml
+//!     |   |   |- states_saved.yaml
 //!     |   |
 //!     |   |- artifact
-//!     |       |- states.yaml
-//!     |       |- states_desired.yaml
+//!     |   |   |- states_desired.yaml
+//!     |   |   |- states_saved.yaml
+//!     |   |
+//!     |   |- profile_params.yaml  # Parameters used to initialize this profile
+//!     |                           # We write to this so that each time the user re-`init`s,
+//!     |                           # if they version control it, they can rediscover the
+//!     |                           # states from previous inits, and clean them up.
 //!     |
-//!     |- profile2
-//!         |- .history
-//!         |   |- 00000000_2022-08-21T20_48_02_init.yaml
-//!         |   |- 00000001_2022-08-21T20_48_07_discover.yaml
-//!         |
-//!         |- .meta.yaml
-//!         |- init.yaml
-//!         |- states.yaml
-//!         |- states_desired.yaml
+//!     |- production
+//!     |   |- .history
+//!     |   |   |- 00000000_2022-08-21T20_48_02_init.yaml
+//!     |   |   |- 00000001_2022-08-21T20_48_07_discover.yaml
+//!     |   |
+//!     |   |- customer_one
+//!     |   |   |- flow_params.yaml
+//!     |   |   |- states_desired.yaml
+//!     |   |   |- states_saved.yaml
+//!     |   |
+//!     |   |- .meta.yaml
+//!     |   |- profile_params.yaml
+//!     |
+//!     |- workspace_params.yaml
 //! ```
 
 pub use self::{

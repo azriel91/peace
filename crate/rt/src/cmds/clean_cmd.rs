@@ -1,4 +1,4 @@
-use std::{fmt::Debug, hash::Hash, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData};
 
 use futures::{
     stream::{StreamExt, TryStreamExt},
@@ -12,26 +12,19 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{
-    cmd::CmdContext, output::OutputWrite, Error, FnRef, ItemSpecBoxed, ItemSpecGraph,
+    cmd::CmdContext, cmd_context_params::ParamsKeys, output::OutputWrite, Error, FnRef,
+    ItemSpecBoxed, ItemSpecGraph,
 };
-use serde::{de::DeserializeOwned, Serialize};
 
 use crate::cmds::sub::StatesCurrentDiscoverCmd;
 
 #[derive(Debug)]
-pub struct CleanCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>(
-    PhantomData<(E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK)>,
-);
+pub struct CleanCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
-impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
-    CleanCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+impl<E, O, PKeys> CleanCmd<E, O, PKeys>
 where
     E: std::error::Error + From<Error> + Send,
-    WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
     /// Conditionally runs [`CleanOpSpec`]`::`[`exec_dry`] for each
@@ -59,17 +52,14 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
     pub async fn exec_dry(
-        cmd_context: CmdContext<'_, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
-    ) -> Result<CmdContext<'_, E, O, CleanedDry, WorkspaceParamsK, ProfileParamsK, FlowParamsK>, E>
-    {
+        cmd_context: CmdContext<'_, E, O, SetUp, PKeys>,
+    ) -> Result<CmdContext<'_, E, O, CleanedDry, PKeys>, E> {
         let CmdContext {
             workspace,
             item_spec_graph,
             output,
             resources,
-            workspace_params_type_reg,
-            profile_params_type_reg,
-            flow_params_type_reg,
+            params_type_regs,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -88,9 +78,7 @@ where
                     item_spec_graph,
                     output,
                     resources,
-                    workspace_params_type_reg,
-                    profile_params_type_reg,
-                    flow_params_type_reg,
+                    params_type_regs,
                     states_type_regs,
                     #[cfg(feature = "output_progress")]
                     cmd_progress_tracker,
@@ -119,27 +107,19 @@ where
     ) -> Result<Resources<CleanedDry>, E> {
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
-        let states_current = StatesCurrentDiscoverCmd::<
-            E,
-            O,
-            WorkspaceParamsK,
-            ProfileParamsK,
-            FlowParamsK,
-        >::exec_internal(item_spec_graph, &mut resources)
-        .await?;
+        let states_current =
+            StatesCurrentDiscoverCmd::<E, O, PKeys>::exec_internal(item_spec_graph, &mut resources)
+                .await?;
         let resources = Resources::<WithStatesCurrent>::from((resources, states_current));
         let op_check_statuses = Self::clean_op_spec_check(item_spec_graph, &resources).await?;
         Self::clean_op_spec_exec_dry(item_spec_graph, &resources, &op_check_statuses).await?;
 
         // TODO: This fetches the real state, whereas for a dry run, it would be useful
         // to show the imagined altered state.
-        let states_current = StatesCurrentDiscoverCmd::<
-            E,
-            O,
-            WorkspaceParamsK,
-            ProfileParamsK,
-            FlowParamsK,
-        >::exec_internal_for_clean_dry(item_spec_graph, &resources)
+        let states_current = StatesCurrentDiscoverCmd::<E, O, PKeys>::exec_internal_for_clean_dry(
+            item_spec_graph,
+            &resources,
+        )
         .await?;
 
         let states_cleaned_dry = StatesCleanedDry::from((states_current, &resources));
@@ -186,17 +166,14 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
-    ) -> Result<CmdContext<'_, E, O, Cleaned, WorkspaceParamsK, ProfileParamsK, FlowParamsK>, E>
-    {
+        cmd_context: CmdContext<'_, E, O, SetUp, PKeys>,
+    ) -> Result<CmdContext<'_, E, O, Cleaned, PKeys>, E> {
         let CmdContext {
             workspace,
             item_spec_graph,
             output,
             resources,
-            workspace_params_type_reg,
-            profile_params_type_reg,
-            flow_params_type_reg,
+            params_type_regs,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -217,9 +194,7 @@ where
                     item_spec_graph,
                     output,
                     resources,
-                    workspace_params_type_reg,
-                    profile_params_type_reg,
-                    flow_params_type_reg,
+                    params_type_regs,
                     states_type_regs,
                     #[cfg(feature = "output_progress")]
                     cmd_progress_tracker,
@@ -248,19 +223,16 @@ where
         // https://github.com/rust-lang/rust-clippy/issues/9111
         #[allow(clippy::needless_borrow)]
         let states =
-            StatesCurrentDiscoverCmd::<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>::exec_internal(item_spec_graph, &mut resources)
+            StatesCurrentDiscoverCmd::<E, O, PKeys>::exec_internal(item_spec_graph, &mut resources)
                 .await?;
         let mut resources = Resources::<WithStatesCurrent>::from((resources, states));
         let op_check_statuses = Self::clean_op_spec_check(item_spec_graph, &resources).await?;
         Self::clean_op_spec_exec(item_spec_graph, &resources, &op_check_statuses).await?;
 
-        let states_current = StatesCurrentDiscoverCmd::<
-            E,
-            O,
-            WorkspaceParamsK,
-            ProfileParamsK,
-            FlowParamsK,
-        >::exec_internal_for_clean(item_spec_graph, &mut resources)
+        let states_current = StatesCurrentDiscoverCmd::<E, O, PKeys>::exec_internal_for_clean(
+            item_spec_graph,
+            &mut resources,
+        )
         .await?;
 
         let states_cleaned = StatesCleaned::from((states_current, &resources));
@@ -317,9 +289,7 @@ where
     }
 }
 
-impl<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK> Default
-    for CleanCmd<E, O, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
-{
+impl<E, O, PKeys> Default for CleanCmd<E, O, PKeys> {
     fn default() -> Self {
         Self(PhantomData)
     }

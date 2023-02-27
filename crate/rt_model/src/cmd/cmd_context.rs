@@ -1,14 +1,12 @@
-use std::{fmt::Debug, hash::Hash, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData};
 
-use peace_resources::{
-    resources::ts::SetUp,
-    type_reg::untagged::{BoxDt, TypeReg},
-    Resources,
+use peace_resources::{resources::ts::SetUp, Resources};
+use peace_rt_model_core::cmd_context_params::{
+    KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs,
 };
-use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    cmd::{cmd_context_builder::KeyUnknown, ts::CmdContextCommon, CmdContextBuilder},
+    cmd::{ts::CmdContextCommon, CmdContextBuilder},
     ItemSpecGraph, StatesTypeRegs, Workspace,
 };
 
@@ -22,32 +20,75 @@ use crate::{
 /// Members of `Workspace` -- where the command should be run -- are
 /// individually stored in `Resources`:
 ///
-/// * [`Profile`]
-/// * [`WorkspaceDir`]
+/// * [`FlowDir`]
 /// * [`PeaceDir`]
+/// * [`Profile`]
 /// * [`ProfileDir`]
 /// * [`ProfileHistoryDir`]
+/// * [`WorkspaceDir`]
 ///
 /// # Type Parameters
 ///
 /// * `E`: Consumer provided error type.
 /// * `O`: [`OutputWrite`] to return values / errors to.
-/// * `TS`: Type state of `Resources`.
+/// * `WorkspaceParamsK`: [`WorkspaceParams`] map `K` type parameter.
+/// * `ProfileParamsK`: [`ProfileParams`] map `K` type parameter.
+/// * `FlowParamsK`: [`FlowParams`] map `K` type parameter.
 ///
-/// [`Profile`]: peace_cfg::Profile
-/// [`WorkspaceDir`]: peace_resources::paths::WorkspaceDir
+/// # Design
+///
+/// * [`WorkspaceParams`], [`ProfileParams`], and [`FlowParams`]' types must be
+///   specified, if they are to be deserialized.
+///
+/// * Notably, [`ProfileParams`] and [`FlowParams`] *may* be different for
+///   different profiles and flows.
+///
+///     If they are different, then it makes it impossible to deserialize them
+///     for a given `CmdContext`. We could constrain the params types to be a
+///     superset of all profile/flow params, which essentially is making them
+///     the same umbrella type.
+///
+///     This should be feasible for [`ProfileParams`], as profiles are intended
+///     to be logically separate copies of the same managed items. Production
+///     profiles may require more parameters, but the parameter type can be the
+///     same.
+///
+///     However, [`FlowParams`] being different per flow is a fair assumption.
+///     This means cross profile inspections of the same flow is achievable --
+///     the same [`FlowParams`] type and [`ItemSpecGraph`] can prepare the
+///     [`TypeReg`]istries to deserialize the [`FlowParamsFile`],
+///     [`StatesSavedFile`], and [`StatesDesiredFile`].
+///
+/// * A [`Profile`] is needed when there are [`ProfileParams`] to store, as it
+///   is used to calculate the [`ProfileDir`] to store the params.
+///
+/// * A [`FlowId`] is needed when there are [`FlowParams`] to store, or an
+///   [`ItemSpecGraph`] to execute, as it is used calculate the [`FlowDir`] to
+///   store the params, or read or write [`States`].
+///
+/// * You should be able to list profiles, read profile params, and list flows,
+///   without needing to have either a profile or a flow.
+///
+/// * For [`States`] from all flows to be deserializable, there must be a type
+///   registry with *all* item specs' `State` registered. This is a maintenance
+///   cost for implementors, but unavoidable if that kind of functionality is
+///   desired.
+///
+/// [`FlowDir`]: peace_resources::paths::FlowDir
+/// [`FlowParams`]: crate::cmd_context_params::FlowParams
+/// [`OutputWrite`]: peace_rt_model_core::OutputWrite
 /// [`PeaceDir`]: peace_resources::paths::PeaceDir
+/// [`Profile`]: peace_cfg::Profile
 /// [`ProfileDir`]: peace_resources::paths::ProfileDir
 /// [`ProfileHistoryDir`]: peace_resources::paths::ProfileHistoryDir
-/// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+/// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+/// [`States`]: peace_resources::States
+/// [`WorkspaceDir`]: peace_resources::paths::WorkspaceDir
+/// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
 #[derive(Debug)]
-pub struct CmdContext<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+pub struct CmdContext<'ctx, E, O, TS, PKeys>
 where
-    WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    PKeys: ParamsKeys + 'static,
 {
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'ctx Workspace,
@@ -62,12 +103,13 @@ where
     pub output: &'ctx mut O,
     /// `Resources` in this workspace.
     pub resources: Resources<TS>,
-    /// Type registry for `WorkspaceParams` deserialization.
-    pub workspace_params_type_reg: TypeReg<WorkspaceParamsK, BoxDt>,
-    /// Type registry for `ProfileParams` deserialization.
-    pub profile_params_type_reg: TypeReg<ProfileParamsK, BoxDt>,
-    /// Type registry for `FlowParams` deserialization.
-    pub flow_params_type_reg: TypeReg<FlowParamsK, BoxDt>,
+    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+    /// [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
+    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    pub params_type_regs: ParamsTypeRegs<PKeys>,
     /// Type registries to deserialize `StatesSavedFile` and
     /// `StatesDesiredFile`.
     pub states_type_regs: StatesTypeRegs,
@@ -78,7 +120,7 @@ where
     pub(crate) marker: PhantomData<()>,
 }
 
-impl<'ctx, E, O> CmdContext<'ctx, E, O, SetUp, (), (), ()>
+impl<'ctx, E, O> CmdContext<'ctx, E, O, SetUp, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>
 where
     E: std::error::Error + From<crate::Error>,
 {
@@ -95,58 +137,51 @@ where
         workspace: &'ctx Workspace,
         item_spec_graph: &'ctx ItemSpecGraph<E>,
         output: &'ctx mut O,
-    ) -> CmdContextBuilder<'ctx, E, O, CmdContextCommon, KeyUnknown, KeyUnknown, KeyUnknown> {
+    ) -> CmdContextBuilder<
+        'ctx,
+        E,
+        O,
+        CmdContextCommon,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+    > {
         CmdContextBuilder::new(workspace, item_spec_graph, output)
     }
 }
 
 #[cfg(not(feature = "output_progress"))]
-type CmdContextFields<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK> = (
+type CmdContextFields<'ctx, E, O, TS, PKeys> = (
     &'ctx Workspace,
     &'ctx ItemSpecGraph<E>,
     &'ctx mut O,
     Resources<TS>,
-    TypeReg<WorkspaceParamsK, BoxDt>,
-    TypeReg<ProfileParamsK, BoxDt>,
-    TypeReg<FlowParamsK, BoxDt>,
+    ParamsTypeRegs<PKeys>,
     StatesTypeRegs,
 );
 
 #[cfg(feature = "output_progress")]
-type CmdContextFields<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK> = (
+type CmdContextFields<'ctx, E, O, TS, PKeys> = (
     &'ctx Workspace,
     &'ctx ItemSpecGraph<E>,
     &'ctx mut O,
     Resources<TS>,
-    TypeReg<WorkspaceParamsK, BoxDt>,
-    TypeReg<ProfileParamsK, BoxDt>,
-    TypeReg<FlowParamsK, BoxDt>,
+    ParamsTypeRegs<PKeys>,
     StatesTypeRegs,
     crate::CmdProgressTracker,
 );
 
-impl<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
-    CmdContext<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+impl<'ctx, E, O, TS, PKeys> CmdContext<'ctx, E, O, TS, PKeys>
 where
     E: std::error::Error,
-    WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    PKeys: ParamsKeys + 'static,
 {
     /// Returns the underlying data.
-    pub fn into_inner(
-        self,
-    ) -> CmdContextFields<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK> {
+    pub fn into_inner(self) -> CmdContextFields<'ctx, E, O, TS, PKeys> {
         let Self {
             workspace,
             item_spec_graph,
             output,
             resources,
-            workspace_params_type_reg,
-            profile_params_type_reg,
-            flow_params_type_reg,
+            params_type_regs,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -158,9 +193,7 @@ where
             item_spec_graph,
             output,
             resources,
-            workspace_params_type_reg,
-            profile_params_type_reg,
-            flow_params_type_reg,
+            params_type_regs,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -197,19 +230,9 @@ where
         &mut self.resources
     }
 
-    /// Returns a reference to the workspace params type registry
-    pub fn workspace_params_type_reg(&self) -> &TypeReg<WorkspaceParamsK, BoxDt> {
-        &self.workspace_params_type_reg
-    }
-
-    /// Returns a reference to the profile params type registry
-    pub fn profile_params_type_reg(&self) -> &TypeReg<ProfileParamsK, BoxDt> {
-        &self.profile_params_type_reg
-    }
-
-    /// Returns a reference to the flow params type registry
-    pub fn flow_params_type_reg(&self) -> &TypeReg<FlowParamsK, BoxDt> {
-        &self.flow_params_type_reg
+    /// Returns a reference to the params type registries
+    pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
+        &self.params_type_regs
     }
 
     /// Returns a reference to the states type registries
@@ -218,15 +241,10 @@ where
     }
 }
 
-impl<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
-    From<CmdContextFields<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>>
-    for CmdContext<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+impl<'ctx, E, O, TS, PKeys> From<CmdContextFields<'ctx, E, O, TS, PKeys>>
+    for CmdContext<'ctx, E, O, TS, PKeys>
 where
-    WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    PKeys: ParamsKeys + 'static,
 {
     fn from(
         #[cfg(not(feature = "output_progress"))] (
@@ -234,31 +252,25 @@ where
             item_spec_graph,
             output,
             resources,
-            workspace_params_type_reg,
-            profile_params_type_reg,
-            flow_params_type_reg,
+            params_type_regs,
             states_type_regs,
-        ): CmdContextFields<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+        ): CmdContextFields<'ctx, E, O, TS, PKeys>,
         #[cfg(feature = "output_progress")] (
             workspace,
             item_spec_graph,
             output,
             resources,
-            workspace_params_type_reg,
-            profile_params_type_reg,
-            flow_params_type_reg,
+            params_type_regs,
             states_type_regs,
             cmd_progress_tracker,
-        ): CmdContextFields<'ctx, E, O, TS, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
+        ): CmdContextFields<'ctx, E, O, TS, PKeys>,
     ) -> Self {
         Self {
             workspace,
             item_spec_graph,
             output,
             resources,
-            workspace_params_type_reg,
-            profile_params_type_reg,
-            flow_params_type_reg,
+            params_type_regs,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
@@ -267,46 +279,24 @@ where
     }
 }
 
-impl<'ctx, E, O, TS0, TS1, WorkspaceParamsK, ProfileParamsK, FlowParamsK, F>
-    From<(
-        CmdContext<'ctx, E, O, TS0, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
-        F,
-    )> for CmdContext<'ctx, E, O, TS1, WorkspaceParamsK, ProfileParamsK, FlowParamsK>
+impl<'ctx, E, O, TS0, TS1, PKeys, F> From<(CmdContext<'ctx, E, O, TS0, PKeys>, F)>
+    for CmdContext<'ctx, E, O, TS1, PKeys>
 where
     E: std::error::Error,
-    WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
-    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    PKeys: ParamsKeys + 'static,
     F: FnOnce(Resources<TS0>) -> Resources<TS1>,
 {
-    fn from(
-        (cmd_context_ts0, f): (
-            CmdContext<'ctx, E, O, TS0, WorkspaceParamsK, ProfileParamsK, FlowParamsK>,
-            F,
-        ),
-    ) -> Self {
+    fn from((cmd_context_ts0, f): (CmdContext<'ctx, E, O, TS0, PKeys>, F)) -> Self {
         #[cfg(not(feature = "output_progress"))]
-        let (
-            workspace,
-            item_spec_graph,
-            output,
-            resources,
-            workspace_params_type_reg,
-            profile_params_type_reg,
-            flow_params_type_reg,
-            states_type_regs,
-        ) = cmd_context_ts0.into_inner();
+        let (workspace, item_spec_graph, output, resources, params_type_regs, states_type_regs) =
+            cmd_context_ts0.into_inner();
         #[cfg(feature = "output_progress")]
         let (
             workspace,
             item_spec_graph,
             output,
             resources,
-            workspace_params_type_reg,
-            profile_params_type_reg,
-            flow_params_type_reg,
+            params_type_regs,
             states_type_regs,
             cmd_progress_tracker,
         ) = cmd_context_ts0.into_inner();
@@ -317,9 +307,7 @@ where
             item_spec_graph,
             output,
             resources,
-            workspace_params_type_reg,
-            profile_params_type_reg,
-            flow_params_type_reg,
+            params_type_regs,
             states_type_regs,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,

@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, path::Path};
 
-use peace_cfg::ItemSpecId;
+use peace_cfg::{FlowId, ItemSpecId};
 use peace_resources::{
     paths::{StatesDesiredFile, StatesSavedFile},
     states::{
@@ -62,6 +62,7 @@ where
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     pub async fn deserialize_saved(
+        flow_id: &FlowId,
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
         states_saved_file: &StatesSavedFile,
@@ -69,6 +70,7 @@ where
         let states = Self::deserialize_internal::<Saved>(
             #[cfg(not(target_arch = "wasm32"))]
             "StatesSerializer::deserialize_saved".to_string(),
+            flow_id,
             storage,
             states_type_reg,
             states_saved_file,
@@ -90,6 +92,7 @@ where
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     pub async fn deserialize_desired(
+        flow_id: &FlowId,
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
         states_desired_file: &StatesDesiredFile,
@@ -97,6 +100,7 @@ where
         let states = Self::deserialize_internal::<Desired>(
             #[cfg(not(target_arch = "wasm32"))]
             "StatesSerializer::deserialize_desired".to_string(),
+            flow_id,
             storage,
             states_type_reg,
             states_desired_file,
@@ -118,6 +122,7 @@ where
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     pub async fn deserialize_saved_opt(
+        flow_id: &FlowId,
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
         states_saved_file: &StatesSavedFile,
@@ -125,6 +130,7 @@ where
         Self::deserialize_internal(
             #[cfg(not(target_arch = "wasm32"))]
             "StatesSerializer::deserialize_saved_opt".to_string(),
+            flow_id,
             storage,
             states_type_reg,
             states_saved_file,
@@ -152,6 +158,7 @@ where
     #[cfg(not(target_arch = "wasm32"))]
     async fn deserialize_internal<TS>(
         thread_name: String,
+        flow_id: &FlowId,
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
         states_file_path: &Path,
@@ -163,7 +170,10 @@ where
             .serialized_typemap_read_opt(thread_name, states_type_reg, states_file_path, |error| {
                 #[cfg(not(feature = "error_reporting"))]
                 {
-                    Error::StatesDeserialize { error }
+                    Error::StatesDeserialize {
+                        flow_id: flow_id.clone(),
+                        error,
+                    }
                 }
                 #[cfg(feature = "error_reporting")]
                 {
@@ -177,6 +187,7 @@ where
                         NamedSource::new(states_file_path.to_string_lossy(), file_contents);
 
                     Error::StatesDeserialize {
+                        flow_id: flow_id.clone(),
                         states_file_source,
                         error_span,
                         error_message,
@@ -209,6 +220,7 @@ where
     /// [`ts::Saved`]: peace_resources::states::ts::Saved
     #[cfg(target_arch = "wasm32")]
     async fn deserialize_internal<TS>(
+        flow_id: &FlowId,
         storage: &Storage,
         states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
         states_file_path: &Path,
@@ -220,13 +232,16 @@ where
             .serialized_typemap_read_opt(states_type_reg, states_file_path, |error| {
                 #[cfg(not(feature = "error_reporting"))]
                 {
-                    Error::StatesDeserialize { error }
+                    Error::StatesDeserialize {
+                        flow_id: flow_id.clone(),
+                        error,
+                    }
                 }
                 #[cfg(feature = "error_reporting")]
                 {
                     use miette::NamedSource;
 
-                    let file_contents = std::fs::read_to_string(&states_file_path).unwrap();
+                    let file_contents = std::fs::read_to_string(states_file_path).unwrap();
 
                     let (error_span, error_message, context_span) =
                         Self::error_and_context(&file_contents, &error);
@@ -234,6 +249,7 @@ where
                         NamedSource::new(states_file_path.to_string_lossy(), file_contents);
 
                     Error::StatesDeserialize {
+                        flow_id: flow_id.clone(),
                         states_file_source,
                         error_span,
                         error_message,

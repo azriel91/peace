@@ -19,8 +19,9 @@
 
 use peace_core::AppName;
 use peace_resources::internal::WorkspaceDirs;
+use peace_rt_model_core::Error;
 
-use crate::{Error, Storage, WorkspaceDirsBuilder, WorkspaceSpec};
+use crate::{Storage, WorkspaceDirsBuilder, WorkspaceSpec};
 
 /// Workspace that the `peace` tool runs in.
 #[derive(Clone, Debug)]

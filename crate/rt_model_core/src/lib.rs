@@ -11,6 +11,10 @@ pub use indicatif;
 pub mod cmd_context_params;
 pub mod output;
 
+pub use crate::error::Error;
+
+mod error;
+
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         pub use peace_core::progress::ProgressUpdate;
@@ -18,5 +22,13 @@ cfg_if::cfg_if! {
         pub use crate::cmd_progress_tracker::CmdProgressTracker;
 
         mod cmd_progress_tracker;
+    }
+}
+
+cfg_if::cfg_if! {
+    if #[cfg(not(target_arch = "wasm32"))] {
+        pub use crate::error::NativeError;
+    } else {
+        pub use crate::error::WebError;
     }
 }

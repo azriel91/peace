@@ -2,14 +2,12 @@ use peace_fmt::Presentable;
 use peace_rt_model_core::{
     async_trait,
     output::{OutputFormat, OutputWrite},
+    Error, NativeError,
 };
 use serde::Serialize;
 use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
 
-use crate::{
-    output::{CliMdPresenter, CliOutputBuilder},
-    Error,
-};
+use crate::output::{CliMdPresenter, CliOutputBuilder};
 
 #[cfg(feature = "output_colorized")]
 use crate::output::CliColorize;
@@ -171,9 +169,14 @@ where
         presentable
             .present(presenter)
             .await
-            .map_err(Error::CliOutputPresent)?;
+            .map_err(NativeError::CliOutputPresent)
+            .map_err(Error::Native)?;
 
-        self.writer.flush().await.map_err(Error::CliOutputPresent)?;
+        self.writer
+            .flush()
+            .await
+            .map_err(NativeError::CliOutputPresent)
+            .map_err(Error::Native)?;
 
         Ok(())
     }
@@ -189,7 +192,8 @@ where
         self.writer
             .write_all(t_serialized.as_bytes())
             .await
-            .map_err(Error::StdoutWrite)?;
+            .map_err(NativeError::StdoutWrite)
+            .map_err(Error::Native)?;
 
         Ok(())
     }
@@ -206,7 +210,8 @@ where
         self.writer
             .write_all(t_serialized.as_bytes())
             .await
-            .map_err(Error::StdoutWrite)?;
+            .map_err(NativeError::StdoutWrite)
+            .map_err(Error::Native)?;
 
         Ok(())
     }
@@ -459,7 +464,8 @@ where
                 self.writer
                     .write_all(format!("{error}\n").as_bytes())
                     .await
-                    .map_err(Error::StdoutWrite)?;
+                    .map_err(NativeError::StdoutWrite)
+                    .map_err(Error::Native)?;
             }
             OutputFormat::Yaml => {
                 // TODO: proper parsable structure with error code.
@@ -468,7 +474,8 @@ where
                 self.writer
                     .write_all(error_serialized.as_bytes())
                     .await
-                    .map_err(Error::StdoutWrite)?;
+                    .map_err(NativeError::StdoutWrite)
+                    .map_err(Error::Native)?;
             }
             #[cfg(feature = "output_json")]
             OutputFormat::Json => {
@@ -478,7 +485,8 @@ where
                 self.writer
                     .write_all(error_serialized.as_bytes())
                     .await
-                    .map_err(Error::StdoutWrite)?;
+                    .map_err(NativeError::StdoutWrite)
+                    .map_err(Error::Native)?;
             }
         }
 

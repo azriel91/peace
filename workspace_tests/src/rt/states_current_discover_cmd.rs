@@ -105,11 +105,11 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
 fn debug() {
     let debug_str = format!(
         "{:?}",
-        StatesCurrentDiscoverCmd::<VecCopyError, NoOpOutput, (), (), ()>::default()
+        StatesCurrentDiscoverCmd::<VecCopyError, NoOpOutput, ()>::default()
     );
     assert!(
         debug_str
-            == r#"StatesCurrentDiscoverCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput, (), (), ())>)"#
+            == r#"StatesCurrentDiscoverCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#
             || debug_str == r#"StatesCurrentDiscoverCmd(PhantomData)"#
     );
 }

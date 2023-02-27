@@ -5,8 +5,9 @@ use peace_resources::{
     internal::WorkspaceDirs,
     paths::{PeaceAppDir, PeaceDir},
 };
+use peace_rt_model_core::Error;
 
-use crate::{Error, WorkspaceSpec};
+use crate::WorkspaceSpec;
 
 /// Computes paths of well-known directories for a workspace.
 #[derive(Debug)]

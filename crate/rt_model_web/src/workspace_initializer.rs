@@ -4,10 +4,13 @@ use peace_resources::{
     internal::{CmdDirs, FlowParamsFile, ProfileParamsFile, WorkspaceDirs, WorkspaceParamsFile},
     type_reg::untagged::TypeReg,
 };
-use peace_rt_model_core::cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams};
+use peace_rt_model_core::{
+    cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams},
+    Error,
+};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{Error, Storage};
+use crate::Storage;
 
 /// Logic to create peace directories and reads/writes initialization params.
 ///
@@ -63,7 +66,17 @@ impl WorkspaceInitializer {
 
         storage.set_items(dirs.iter().map(|dir| (*dir, "")))?;
 
-        Ok(())
+        Result::<_, Error>::Ok(())
+    }
+
+    /// Creates directories used by the peace framework.
+    pub async fn dirs_create<'f, I>(storage: &Storage, dirs: I) -> Result<(), Error>
+    where
+        I: IntoIterator<Item = &'f Path>,
+    {
+        storage.set_items(dirs.into_iter().map(|dir| (dir, "")))?;
+
+        Result::<_, Error>::Ok(())
     }
 
     pub async fn workspace_params_serialize<K>(

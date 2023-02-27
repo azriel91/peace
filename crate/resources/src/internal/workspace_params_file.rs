@@ -4,19 +4,19 @@ use crate::paths::PeaceAppDir;
 
 /// Path to the file that stores the workspace initialization parameters.
 ///
-/// Typically `$workspace_dir/.peace/$app/init.yaml`.
+/// Typically `$workspace_dir/.peace/$app/workspace_params.yaml`.
 ///
 /// See `WorkspaceParamsFile::from<&PeaceAppDir>` if you want to construct a
-/// `WorkspaceParamsFile` with the conventional `$peace_dir/$app/init.yaml`
-/// path.
+/// `WorkspaceParamsFile` with the conventional
+/// `$peace_dir/$app/workspace_params.yaml` path.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct WorkspaceParamsFile(PathBuf);
 
 crate::paths::pathbuf_newtype!(WorkspaceParamsFile);
 
 impl WorkspaceParamsFile {
-    /// File name of the initialization parameters file.
-    pub const NAME: &'static str = "init.yaml";
+    /// File name of the workspace parameters file.
+    pub const NAME: &'static str = "workspace_params.yaml";
 }
 
 impl From<&PeaceAppDir> for WorkspaceParamsFile {
