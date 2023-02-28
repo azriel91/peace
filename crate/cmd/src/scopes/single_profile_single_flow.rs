@@ -51,6 +51,9 @@ pub struct SingleProfileSingleFlow<E, PKeys, TS>
 where
     PKeys: ParamsKeys + 'static,
 {
+    /// Tracks progress of each operation execution.
+    #[cfg(feature = "output_progress")]
+    cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
     /// The profile this command operates on.
     profile: Profile,
     /// Profile directory that stores params and flows.
@@ -84,6 +87,8 @@ where
     /// Returns a new `SingleProfileSingleFlow` scope.
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
+        #[cfg(feature = "output_progress")]
+        cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
@@ -96,6 +101,8 @@ where
         resources: Resources<SetUp>,
     ) -> Self {
         Self {
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
             profile,
             profile_dir,
             profile_history_dir,
@@ -114,6 +121,19 @@ impl<E, PKeys, TS> SingleProfileSingleFlow<E, PKeys, TS>
 where
     PKeys: ParamsKeys + 'static,
 {
+    /// Returns the progress tracker for all operations' executions.
+    #[cfg(feature = "output_progress")]
+    pub fn cmd_progress_tracker(&self) -> &peace_rt_model::CmdProgressTracker {
+        &self.cmd_progress_tracker
+    }
+
+    /// Returns a mutable reference to the progress tracker for all operations'
+    /// executions.
+    #[cfg(feature = "output_progress")]
+    pub fn cmd_progress_tracker_mut(&mut self) -> &mut peace_rt_model::CmdProgressTracker {
+        &mut self.cmd_progress_tracker
+    }
+
     /// Returns a reference to the profile.
     pub fn profile(&self) -> &Profile {
         &self.profile

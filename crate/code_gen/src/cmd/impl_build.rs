@@ -1,7 +1,6 @@
 use quote::quote;
 use syn::{
-    parse_quote, punctuated::Punctuated, token::Comma, FieldValue, GenericArgument, Pat, Path,
-    Token,
+    parse_quote, punctuated::Punctuated, token::Comma, FieldValue, GenericArgument, Path, Token,
 };
 
 use crate::cmd::{
@@ -172,7 +171,7 @@ fn impl_build_for(
     let cmd_dirs = cmd_dirs(scope);
     let dirs_to_create = dirs_to_create(scope);
     let scope_fields = scope_fields(scope);
-    let states_saved_read = states_saved_read(scope);
+    let states_saved_read_and_pg_init = states_saved_read_and_pg_init(scope);
 
     let scope_builder_deconstruct = scope_builder_deconstruct(
         scope_struct,
@@ -518,9 +517,32 @@ fn impl_build_for(
                 //     resources
                 // )
                 // .await?;
-                #states_saved_read
+                //
+                // // output_progress CmdProgressTracker initialization
+                // #[cfg(feature = "output_progress")]
+                // let cmd_progress_tracker = {
+                //     let multi_progress = indicatif::MultiProgress::with_draw_target(
+                //         indicatif::ProgressDrawTarget::hidden()
+                //     );
+                //     let progress_trackers = item_spec_graph.iter_insertion().fold(
+                //         std::collections::HashMap::with_capacity(item_spec_graph.node_count()),
+                //         |mut progress_trackers, item_spec| {
+                //             let progress_bar = multi_progress.add(indicatif::ProgressBar::hidden());
+                //             let progress_tracker = indicatif::style::ProgressTracker::new(progress_bar);
+                //             progress_trackers.insert(item_spec.id().clone(), progress_tracker);
+                //             progress_trackers
+                //         },
+                //     );
+                //
+                //     peace_rt_model::CmdProgressTracker::new(multi_progress, progress_trackers)
+                // };
+                #states_saved_read_and_pg_init
 
                 let scope = #scope_type_path::new(
+                    // === SingleProfileSingleFlow === //
+                    // #[cfg(feature = "output_progress")]
+                    // cmd_progress_tracker,
+
                     // workspace_params
 
                     // === Profile === //
@@ -1147,8 +1169,23 @@ fn dirs_to_create(scope: Scope) -> proc_macro2::TokenStream {
     dirs_tokens
 }
 
-fn scope_fields(scope: Scope) -> Punctuated<Pat, Comma> {
-    let mut scope_fields = Punctuated::<Pat, Token![,]>::new();
+fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
+    let mut scope_fields = Punctuated::<FieldValue, Token![,]>::new();
+
+    // progress tracker
+    match scope {
+        Scope::MultiProfileNoFlow
+        | Scope::NoProfileNoFlow
+        | Scope::SingleProfileNoFlow
+        | Scope::MultiProfileSingleFlow => {}
+        Scope::SingleProfileSingleFlow => {
+            scope_fields.push(parse_quote! {
+                #[cfg(feature = "output_progress")]
+                cmd_progress_tracker
+            });
+        }
+    }
+
     match scope.profile_count() {
         ProfileCount::None => {}
         ProfileCount::One => {
@@ -1213,10 +1250,11 @@ fn scope_fields(scope: Scope) -> Punctuated<Pat, Comma> {
             scope_fields.push(parse_quote!(resources));
         }
     }
+
     scope_fields
 }
 
-fn states_saved_read(scope: Scope) -> proc_macro2::TokenStream {
+fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
     match scope {
         Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {
             proc_macro2::TokenStream::new()
@@ -1278,10 +1316,13 @@ fn states_saved_read(scope: Scope) -> proc_macro2::TokenStream {
             quote! {
                 let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
                 let states_type_regs = crate::ctx::cmd_ctx_builder::states_type_regs(flow.graph());
+                let states_current_type_reg = states_type_regs.states_current_type_reg();
+                let flow_id = flow.flow_id();
+                let item_spec_graph = flow.graph();
                 let states_saved = peace_rt_model::StatesSerializer::<peace_rt_model::Error>::deserialize_saved_opt(
-                    flow.flow_id(),
+                    flow_id,
                     storage,
-                    states_type_regs.states_current_type_reg(),
+                    states_current_type_reg,
                     &states_saved_file,
                 )
                 .await?
@@ -1292,12 +1333,29 @@ fn states_saved_read(scope: Scope) -> proc_macro2::TokenStream {
 
                 // Call each `ItemSpec`'s initialization function.
                 let resources = crate::ctx::cmd_ctx_builder::item_spec_graph_setup(
-                    flow.graph(),
+                    item_spec_graph,
                     resources
                 )
                 .await?;
 
-                // TODO: output_progress CmdProgressTracker initialization
+                // output_progress CmdProgressTracker initialization
+                #[cfg(feature = "output_progress")]
+                let cmd_progress_tracker = {
+                    let multi_progress = indicatif::MultiProgress::with_draw_target(
+                        indicatif::ProgressDrawTarget::hidden()
+                    );
+                    let progress_trackers = item_spec_graph.iter_insertion().fold(
+                        std::collections::HashMap::with_capacity(item_spec_graph.node_count()),
+                        |mut progress_trackers, item_spec| {
+                            let progress_bar = multi_progress.add(indicatif::ProgressBar::hidden());
+                            let progress_tracker = peace_core::progress::ProgressTracker::new(progress_bar);
+                            progress_trackers.insert(item_spec.id().clone(), progress_tracker);
+                            progress_trackers
+                        },
+                    );
+
+                    peace_rt_model::CmdProgressTracker::new(multi_progress, progress_trackers)
+                };
             }
         }
     }
