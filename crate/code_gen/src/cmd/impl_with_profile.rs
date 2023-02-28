@@ -35,6 +35,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
         impl<
             'ctx,
             E,
+            O,
             // FlowSelection,
             // WorkspaceParamsSelection,
             // ProfileParamsSelection,
@@ -44,6 +45,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
         >
             crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     crate::scopes::type_params::ProfileNotSelected,
@@ -63,6 +65,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
                 profile: peace_core::Profile,
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     crate::scopes::type_params::ProfileSelected,
@@ -75,6 +78,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
                 PKeys,
             > {
                 let Self {
+                    output,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -100,6 +104,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
                 };
 
                 crate::ctx::CmdCtxBuilder {
+                    output,
                     workspace,
                     scope_builder,
                     params_type_regs_builder,
@@ -182,6 +187,7 @@ pub fn impl_with_profile_from_workspace_param(
         impl<
             'ctx,
             E,
+            O,
             // FlowSelection,
             // ProfileParamsSelection,
             // FlowParamsSelection,
@@ -192,6 +198,7 @@ pub fn impl_with_profile_from_workspace_param(
         >
             crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     crate::scopes::type_params::ProfileNotSelected,
@@ -218,6 +225,7 @@ pub fn impl_with_profile_from_workspace_param(
                 workspace_param_k: &'key WorkspaceParamsK,
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     crate::scopes::type_params::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>,
@@ -233,6 +241,7 @@ pub fn impl_with_profile_from_workspace_param(
                 >,
             > {
                 let Self {
+                    output,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -258,6 +267,7 @@ pub fn impl_with_profile_from_workspace_param(
                 };
 
                 crate::ctx::CmdCtxBuilder {
+                    output,
                     workspace,
                     scope_builder,
                     params_type_regs_builder,

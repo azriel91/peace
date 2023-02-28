@@ -185,9 +185,10 @@ fn impl_build_for(
     );
 
     quote! {
-        impl<'ctx, 'key, E, PKeys>
+        impl<'ctx, 'key, E, O, PKeys>
             crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
@@ -212,6 +213,7 @@ fn impl_build_for(
             ) -> Result<
                 crate::ctx::CmdCtx<
                     'ctx,
+                    O,
                     #scope_type_path<
                         E,
                         PKeys,
@@ -402,6 +404,7 @@ fn impl_build_for(
                 }
 
                 // let crate::ctx::CmdCtxBuilder {
+                //     output,
                 //     workspace,
                 //     scope_builder:
                 //         #scope_builder_name {
@@ -518,6 +521,7 @@ fn impl_build_for(
                 let params_type_regs = params_type_regs_builder.build();
 
                 Ok(crate::ctx::CmdCtx {
+                    output,
                     workspace,
                     scope,
                     params_type_regs,
@@ -583,6 +587,7 @@ fn scope_builder_deconstruct(
 
     quote! {
         let crate::ctx::CmdCtxBuilder {
+            output,
             workspace,
             scope_builder:
                 #scope_builder_name {

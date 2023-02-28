@@ -126,6 +126,7 @@ fn impl_params_merge_for(
             'ctx,
             'key,
             E,
+            O,
             PKeys,
             // ProfileSelection,
             // FlowSelection,
@@ -135,6 +136,7 @@ fn impl_params_merge_for(
         >
             crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,

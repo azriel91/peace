@@ -9,6 +9,7 @@ use crate::{
     cmd::ctx::cmd_ctx_builder::{
         assert_flow_params, assert_profile_params, assert_workspace_params, workspace,
     },
+    no_op_output::NoOpOutput,
     PeaceTestError,
 };
 
@@ -20,7 +21,8 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
 
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(flow)
         .build()
@@ -50,7 +52,8 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
 
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(flow)
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
@@ -96,7 +99,8 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
 
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
         .with_profile_param_value(String::from("profile_param_1"), Some(2u64))
         .with_profile(profile.clone())
@@ -131,7 +135,8 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
 
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(flow)
         .with_flow_param_value(String::from("flow_param_0"), Some(true))
@@ -170,7 +175,8 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
 
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(flow)
         .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
@@ -223,7 +229,8 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
 
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(flow)
         .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
@@ -282,7 +289,8 @@ async fn build_with_workspace_params_with_profile_from_params()
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
 
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
         .with_workspace_param_value(
             String::from("ws_param_1"),
@@ -329,7 +337,8 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
 
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
         .with_profile_param_value(String::from("profile_param_1"), Some(2u64))

@@ -125,6 +125,7 @@ fn impl_params_deserialize_for(
             'ctx,
             'key,
             E,
+            O,
             PKeys,
             // ProfileSelection,
             // FlowSelection,
@@ -134,6 +135,7 @@ fn impl_params_deserialize_for(
         >
             crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
