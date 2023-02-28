@@ -31,10 +31,9 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
     };
 
     quote! {
-        impl<'ctx, E, O>
+        impl<'ctx, E>
             crate::ctx::CmdCtxBuilder<
                 'ctx,
-                O,
                 // SingleProfileSingleFlowBuilder<
                 #scope_builder_name<
                     E,
@@ -47,16 +46,12 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                 #params_module::ParamsKeysImpl<
                     #params_module::KeyUnknown,
                     #params_module::KeyUnknown,
-                    #params_module::KeyUnknown,
+                    #params_module::KeyUnknown
                 >,
             >
         {
             /// Returns a `CmdCtxBuilder` for a single profile and flow.
-            pub fn #constructor_method_name(
-                output: &'ctx mut O,
-                workspace: &'ctx peace_rt_model::Workspace,
-            ) -> Self
-            {
+            pub fn #constructor_method_name(workspace: &'ctx peace_rt_model::Workspace) -> Self {
                 let scope_builder = #scope_builder_name {
                     // profile_selection: ProfileNotSelected,
                     // flow_selection: FlowNotSelected,
@@ -67,7 +62,6 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                 };
 
                 Self {
-                    output,
                     workspace,
                     scope_builder,
                     params_type_regs_builder: #params_module::ParamsTypeRegs::builder(),

@@ -129,7 +129,6 @@ fn impl_with_param_key_unknown(
         impl<
             'ctx,
             E,
-            O,
             // ProfileSelection,
             // FlowSelection,
             // ProfileParamsSelection,
@@ -140,7 +139,6 @@ fn impl_with_param_key_unknown(
         >
             crate::ctx::CmdCtxBuilder<
                 'ctx,
-                O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -179,7 +177,6 @@ fn impl_with_param_key_unknown(
                 #param_name: Option<#param_type_param>,
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
-                O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -201,7 +198,6 @@ fn impl_with_param_key_unknown(
                 #param_type_param: Clone + std::fmt::Debug + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + 'static,
             {
                 let Self {
-                    output,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -242,7 +238,6 @@ fn impl_with_param_key_unknown(
                 };
 
                 crate::ctx::CmdCtxBuilder {
-                    output,
                     workspace,
                     scope_builder,
                     params_type_regs_builder,
@@ -313,7 +308,6 @@ fn impl_with_param_key_known(
         impl<
             'ctx,
             E,
-            O,
             // ProfileSelection,
             // FlowSelection,
             // ProfileParamsSelection,
@@ -325,7 +319,6 @@ fn impl_with_param_key_known(
         >
             crate::ctx::CmdCtxBuilder<
                 'ctx,
-                O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -367,7 +360,6 @@ fn impl_with_param_key_known(
                 #param_name: Option<#param_type_param>,
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
-                O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -387,7 +379,6 @@ fn impl_with_param_key_known(
                 #param_type_param: Clone + std::fmt::Debug + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + 'static,
             {
                 let Self {
-                    output,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -424,7 +415,6 @@ fn impl_with_param_key_known(
                 };
 
                 crate::ctx::CmdCtxBuilder {
-                    output,
                     workspace,
                     scope_builder,
                     params_type_regs_builder,

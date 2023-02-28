@@ -7,7 +7,7 @@ use peace::{
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
 
-use crate::{cmd::ctx::cmd_ctx_builder::workspace_with, no_op_output::NoOpOutput, PeaceTestError};
+use crate::{cmd::ctx::cmd_ctx_builder::workspace_with, PeaceTestError};
 
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
@@ -24,12 +24,10 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_flow(flow)
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_flow(flow)
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -83,17 +81,15 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_flow(flow)
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_workspace_param_value(
-                String::from("ws_param_1"),
-                Some("ws_param_1_value".to_string()),
-            )
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_flow(flow)
+        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param_value(
+            String::from("ws_param_1"),
+            Some("ws_param_1_value".to_string()),
+        )
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -153,15 +149,13 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_profile_params_k::<String>()
-            .with_profile_param::<u32>(String::from("profile_param_0"))
-            .with_profile_param::<u64>(String::from("profile_param_1"))
-            .with_flow(flow)
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_profile_params_k::<String>()
+        .with_profile_param::<u32>(String::from("profile_param_0"))
+        .with_profile_param::<u64>(String::from("profile_param_1"))
+        .with_flow(flow)
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -215,15 +209,13 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_flow(flow)
-            .with_flow_params_k::<String>()
-            .with_flow_param::<bool>(String::from("flow_param_0"))
-            .with_flow_param::<u16>(String::from("flow_param_1"))
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_flow(flow)
+        .with_flow_params_k::<String>()
+        .with_flow_param::<bool>(String::from("flow_param_0"))
+        .with_flow_param::<u16>(String::from("flow_param_1"))
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -284,20 +276,18 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_flow(flow)
-            .with_profile_params_k::<String>()
-            .with_profile_param::<u32>(String::from("profile_param_0"))
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_profile_param::<u64>(String::from("profile_param_1"))
-            .with_workspace_param_value(
-                String::from("ws_param_1"),
-                Some("ws_param_1_value".to_string()),
-            )
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_flow(flow)
+        .with_profile_params_k::<String>()
+        .with_profile_param::<u32>(String::from("profile_param_0"))
+        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+        .with_profile_param::<u64>(String::from("profile_param_1"))
+        .with_workspace_param_value(
+            String::from("ws_param_1"),
+            Some("ws_param_1_value".to_string()),
+        )
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -364,23 +354,21 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_flow(flow)
-            .with_profile_params_k::<String>()
-            .with_profile_param::<u32>(String::from("profile_param_0"))
-            .with_flow_params_k::<String>()
-            .with_flow_param::<bool>(String::from("flow_param_0"))
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_flow_param::<u16>(String::from("flow_param_1"))
-            .with_profile_param::<u64>(String::from("profile_param_1"))
-            .with_workspace_param_value(
-                String::from("ws_param_1"),
-                Some("ws_param_1_value".to_string()),
-            )
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_flow(flow)
+        .with_profile_params_k::<String>()
+        .with_profile_param::<u32>(String::from("profile_param_0"))
+        .with_flow_params_k::<String>()
+        .with_flow_param::<bool>(String::from("flow_param_0"))
+        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+        .with_flow_param::<u16>(String::from("flow_param_1"))
+        .with_profile_param::<u64>(String::from("profile_param_1"))
+        .with_workspace_param_value(
+            String::from("ws_param_1"),
+            Some("ws_param_1_value".to_string()),
+        )
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -453,18 +441,16 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_workspace_param_value(
-                String::from("ws_param_1"),
-                Some("ws_param_1_value".to_string()),
-            )
-            .with_profile_filter(|profile| **profile == "test_profile")
-            .with_flow(flow)
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+        .with_workspace_param_value(
+            String::from("ws_param_1"),
+            Some("ws_param_1_value".to_string()),
+        )
+        .with_profile_filter(|profile| **profile == "test_profile")
+        .with_flow(flow)
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {
@@ -518,24 +504,22 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
     )
     .await?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_profile_params_k::<String>()
-            .with_profile_param::<u32>(String::from("profile_param_0"))
-            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-            .with_profile_param::<u64>(String::from("profile_param_1"))
-            .with_workspace_param_value(
-                String::from("ws_param_1"),
-                Some("ws_param_1_value".to_string()),
-            )
-            .with_flow_params_k::<String>()
-            .with_flow_param::<bool>(String::from("flow_param_0"))
-            .with_profile_filter(|profile| **profile == "test_profile")
-            .with_flow_param::<u16>(String::from("flow_param_1"))
-            .with_flow(flow)
-            .build()
-            .await?;
+    let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
+        .with_profile_params_k::<String>()
+        .with_profile_param::<u32>(String::from("profile_param_0"))
+        .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+        .with_profile_param::<u64>(String::from("profile_param_1"))
+        .with_workspace_param_value(
+            String::from("ws_param_1"),
+            Some("ws_param_1_value".to_string()),
+        )
+        .with_flow_params_k::<String>()
+        .with_flow_param::<bool>(String::from("flow_param_0"))
+        .with_profile_filter(|profile| **profile == "test_profile")
+        .with_flow_param::<u16>(String::from("flow_param_1"))
+        .with_flow(flow)
+        .build()
+        .await?;
 
     let peace_app_dir = workspace.dirs().peace_app_dir();
     let (profile_dirs, profile_history_dirs, flow_dirs) = {

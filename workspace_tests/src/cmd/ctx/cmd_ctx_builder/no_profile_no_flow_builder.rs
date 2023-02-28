@@ -3,15 +3,14 @@ use peace::{
     cmd::ctx::CmdCtx,
 };
 
-use crate::{cmd::ctx::cmd_ctx_builder::workspace, no_op_output::NoOpOutput, PeaceTestError};
+use crate::{cmd::ctx::cmd_ctx_builder::workspace, PeaceTestError};
 
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_no_profile_no_flow"))?;
 
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<PeaceTestError>(&mut output, &workspace)
+    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<PeaceTestError>(&workspace)
         .build()
         .await?;
 
@@ -25,8 +24,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let workspace = workspace(&tempdir, app_name!("test_no_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<PeaceTestError>(&mut output, &workspace)
+    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<PeaceTestError>(&workspace)
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
         .with_workspace_param_value(
             String::from("ws_param_1"),

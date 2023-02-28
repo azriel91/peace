@@ -33,7 +33,6 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
         impl<
             'ctx,
             E,
-            O,
             // FlowSelection,
             // WorkspaceParamsSelection,
             // ProfileParamsSelection,
@@ -43,7 +42,6 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
         >
             crate::ctx::CmdCtxBuilder<
                 'ctx,
-                O,
                 #scope_builder_name<
                     E,
                     crate::scopes::type_params::ProfileNotSelected,
@@ -63,7 +61,6 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
                 profile_filter_fn: F,
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
-                O,
                 #scope_builder_name<
                     E,
                     crate::scopes::type_params::ProfileFilterFn<'ctx>,
@@ -79,7 +76,6 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
                 F: (Fn(&peace_core::Profile) -> bool) + 'ctx
             {
                 let Self {
-                    output,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -105,7 +101,6 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
                 };
 
                 crate::ctx::CmdCtxBuilder {
-                    output,
                     workspace,
                     scope_builder,
                     params_type_regs_builder,
