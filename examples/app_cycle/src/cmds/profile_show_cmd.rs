@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, AppName, Profile},
-    cmd::ctx::CmdCtx,
+    cmd::ctx::{CmdCtx, CmdCtxView},
     fmt::presentln,
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
@@ -32,16 +32,18 @@ impl ProfileShowCmd {
         )?;
 
         // new CmdCtx
-        let cmd_ctx_builder = CmdCtx::builder_single_profile_no_flow::<AppCycleError>(&workspace);
+        let cmd_ctx_builder =
+            CmdCtx::builder_single_profile_no_flow::<AppCycleError>(output, &workspace);
         crate::cmds::params_augment!(cmd_ctx_builder);
 
-        let cmd_ctx = cmd_ctx_builder
+        let mut cmd_ctx = cmd_ctx_builder
             .with_profile_from_workspace_param(&String::from("profile"))
             .build()
             .await?;
+        let CmdCtxView { output, scope, .. } = cmd_ctx.view();
 
-        let workspace_params = cmd_ctx.workspace_params();
-        let profile_params = cmd_ctx.profile_params();
+        let workspace_params = scope.workspace_params();
+        let profile_params = scope.profile_params();
 
         let profile = workspace_params.get::<Profile, _>("profile");
         let env_type = profile_params.get::<EnvType, _>("env_type");

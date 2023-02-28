@@ -58,10 +58,59 @@ where
     pub(crate) params_type_regs: ParamsTypeRegs<PKeys>,
 }
 
+/// Information needed to execute a command.
+///
+/// Importantly, as commands have different purposes, different command scopes
+/// exist to cater for each kind of command. This means the data available in a
+/// command context differs per scope, to accurately reflect what is available.
+#[derive(Debug)]
+pub struct CmdCtxView<'view: 'ctx, 'ctx, O, Scope, PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    pub output: &'ctx mut O,
+    /// Workspace that the `peace` tool runs in.
+    pub workspace: &'ctx Workspace,
+    /// Scope of the command.
+    pub scope: &'view Scope,
+    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+    /// [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
+    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    pub params_type_regs: &'view ParamsTypeRegs<PKeys>,
+}
+
 impl<'ctx, O, Scope, PKeys> CmdCtx<'ctx, O, Scope, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
+    /// Returns a view struct of this command context.
+    ///
+    /// This allows the output and scope data to be borrowed concurrently.
+    pub fn view<'view>(&'view mut self) -> CmdCtxView<'view, 'ctx, O, Scope, PKeys> {
+        let Self {
+            output,
+            workspace,
+            scope,
+            params_type_regs,
+        } = self;
+
+        CmdCtxView {
+            output,
+            workspace,
+            scope,
+            params_type_regs,
+        }
+    }
+
     /// Returns a reference to the output.
     pub fn output(&self) -> &O {
         self.output

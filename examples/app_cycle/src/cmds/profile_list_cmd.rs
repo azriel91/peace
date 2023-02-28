@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, AppName, Profile},
-    cmd::ctx::CmdCtx,
+    cmd::ctx::{CmdCtx, CmdCtxView},
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
@@ -32,17 +32,19 @@ impl ProfileListCmd {
 
         // new CmdCtx
         let profile_workspace_init = Profile::workspace_init();
-        let cmd_ctx_builder = CmdCtx::builder_multi_profile_no_flow::<AppCycleError>(&workspace);
+        let cmd_ctx_builder =
+            CmdCtx::builder_multi_profile_no_flow::<AppCycleError>(output, &workspace);
         crate::cmds::params_augment!(cmd_ctx_builder);
 
-        let cmd_ctx = cmd_ctx_builder
+        let mut cmd_ctx = cmd_ctx_builder
             .with_profile_filter(|profile| profile != &profile_workspace_init)
             .build()
             .await?;
+        let CmdCtxView { output, scope, .. } = cmd_ctx.view();
 
         output.present("# Profiles\n\n").await?;
 
-        let profiles_presentable = cmd_ctx
+        let profiles_presentable = scope
             .profile_to_profile_params()
             .iter()
             .filter_map(|(profile, profile_params)| {
