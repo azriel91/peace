@@ -6,8 +6,7 @@ use peace::{
     resources::paths::{ProfileDir, ProfileHistoryDir},
 };
 
-use super::workspace_with;
-use crate::PeaceTestError;
+use crate::{cmd::ctx::cmd_ctx_builder::workspace_with, PeaceTestError};
 
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {

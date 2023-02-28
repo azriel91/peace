@@ -7,8 +7,7 @@ use peace::{
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
 
-use super::workspace_with;
-use crate::PeaceTestError;
+use crate::{cmd::ctx::cmd_ctx_builder::workspace_with, PeaceTestError};
 
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
@@ -213,8 +212,8 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     let cmd_ctx = CmdCtx::builder_multi_profile_single_flow::<PeaceTestError>(&workspace)
         .with_flow(flow)
         .with_flow_params_k::<String>()
-        .with_flow_param::<String>(String::from("flow_param_0"))
-        .with_flow_param::<u32>(String::from("flow_param_1"))
+        .with_flow_param::<bool>(String::from("flow_param_0"))
+        .with_flow_param::<u16>(String::from("flow_param_1"))
         .build()
         .await?;
 
@@ -256,11 +255,8 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
     assert_eq!(&flow_id, scope.flow().flow_id());
     assert_eq!(&flow_dirs, scope.flow_dirs());
-    assert_eq!(
-        Some(&"flow_param_0_value".to_string()),
-        flow_params.get("flow_param_0")
-    );
-    assert_eq!(Some(&456u32), flow_params.get("flow_param_1"));
+    assert_eq!(Some(true), flow_params.get("flow_param_0").copied());
+    assert_eq!(Some(&456u16), flow_params.get("flow_param_1"));
     Ok(())
 }
 
@@ -363,9 +359,9 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
         .with_profile_params_k::<String>()
         .with_profile_param::<u32>(String::from("profile_param_0"))
         .with_flow_params_k::<String>()
-        .with_flow_param::<String>(String::from("flow_param_0"))
+        .with_flow_param::<bool>(String::from("flow_param_0"))
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-        .with_flow_param::<u32>(String::from("flow_param_1"))
+        .with_flow_param::<u16>(String::from("flow_param_1"))
         .with_profile_param::<u64>(String::from("profile_param_1"))
         .with_workspace_param_value(
             String::from("ws_param_1"),
@@ -424,11 +420,8 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
     );
     assert_eq!(Some(&1u32), profile_params.get("profile_param_0"));
     assert_eq!(Some(&2u64), profile_params.get("profile_param_1"));
-    assert_eq!(
-        Some(&"flow_param_0_value".to_string()),
-        flow_params.get("flow_param_0")
-    );
-    assert_eq!(Some(&456u32), flow_params.get("flow_param_1"));
+    assert_eq!(Some(true), flow_params.get("flow_param_0").copied());
+    assert_eq!(Some(&456u16), flow_params.get("flow_param_1"));
     Ok(())
 }
 
@@ -521,9 +514,9 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
             Some("ws_param_1_value".to_string()),
         )
         .with_flow_params_k::<String>()
-        .with_flow_param::<String>(String::from("flow_param_0"))
+        .with_flow_param::<bool>(String::from("flow_param_0"))
         .with_profile_filter(|profile| **profile == "test_profile")
-        .with_flow_param::<u32>(String::from("flow_param_1"))
+        .with_flow_param::<u16>(String::from("flow_param_1"))
         .with_flow(flow)
         .build()
         .await?;
@@ -571,10 +564,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
     );
     assert_eq!(Some(&1u32), profile_params.get("profile_param_0"));
     assert_eq!(Some(&2u64), profile_params.get("profile_param_1"));
-    assert_eq!(
-        Some(&"flow_param_0_value".to_string()),
-        flow_params.get("flow_param_0")
-    );
-    assert_eq!(Some(&456u32), flow_params.get("flow_param_1"));
+    assert_eq!(Some(true), flow_params.get("flow_param_0").copied());
+    assert_eq!(Some(&456u16), flow_params.get("flow_param_1"));
     Ok(())
 }

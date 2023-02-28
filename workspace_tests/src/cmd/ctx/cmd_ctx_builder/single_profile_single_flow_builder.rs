@@ -1,15 +1,16 @@
 use peace::{
     cfg::{app_name, flow_id, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
-    resources::{
-        internal::{ProfileParamsFile, WorkspaceParamsFile},
-        paths::{FlowDir, ProfileDir, ProfileHistoryDir},
-    },
+    resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
 
-use super::workspace;
-use crate::PeaceTestError;
+use crate::{
+    cmd::ctx::cmd_ctx_builder::{
+        assert_flow_params, assert_profile_params, assert_workspace_params, workspace,
+    },
+    PeaceTestError,
+};
 
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
@@ -79,6 +80,11 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
         Some(&"ws_param_1_value".to_string()),
         workspace_params.get("ws_param_1")
     );
+
+    let resources = cmd_ctx.resources();
+    let res_profile = &*resources.borrow::<Profile>();
+    assert_eq!(&profile, res_profile);
+    assert_workspace_params(resources).await?;
     Ok(())
 }
 
@@ -111,6 +117,9 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(&profile_history_dir, scope.profile_history_dir());
     assert_eq!(&flow_id, scope.flow().flow_id());
     assert_eq!(&flow_dir, scope.flow_dir());
+
+    let resources = cmd_ctx.resources();
+    assert_profile_params(resources).await?;
     Ok(())
 }
 
@@ -125,11 +134,8 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&workspace)
         .with_profile(profile.clone())
         .with_flow(flow)
-        .with_flow_param_value(
-            String::from("flow_param_0"),
-            Some("flow_param_0_value".to_string()),
-        )
-        .with_flow_param_value(String::from("flow_param_1"), Some(456u32))
+        .with_flow_param_value(String::from("flow_param_0"), Some(true))
+        .with_flow_param_value(String::from("flow_param_1"), Some(456u16))
         .build()
         .await?;
 
@@ -147,11 +153,11 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(&profile_history_dir, scope.profile_history_dir());
     assert_eq!(&flow_id, scope.flow().flow_id());
     assert_eq!(&flow_dir, scope.flow_dir());
-    assert_eq!(
-        Some(&"flow_param_0_value".to_string()),
-        flow_params.get("flow_param_0")
-    );
-    assert_eq!(Some(&456u32), flow_params.get("flow_param_1"));
+    assert_eq!(Some(true), flow_params.get("flow_param_0").copied());
+    assert_eq!(Some(&456u16), flow_params.get("flow_param_1"));
+
+    let resources = cmd_ctx.resources();
+    assert_flow_params(resources).await?;
     Ok(())
 }
 
@@ -199,6 +205,12 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     );
     assert_eq!(Some(&1u32), profile_params.get("profile_param_0"));
     assert_eq!(Some(&2u64), profile_params.get("profile_param_1"));
+
+    let resources = cmd_ctx.resources();
+    let res_profile = &*resources.borrow::<Profile>();
+    assert_eq!(&profile, res_profile);
+    assert_workspace_params(resources).await?;
+    assert_profile_params(resources).await?;
     Ok(())
 }
 
@@ -215,12 +227,9 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
         .with_profile(profile.clone())
         .with_flow(flow)
         .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
-        .with_flow_param_value(
-            String::from("flow_param_0"),
-            Some("flow_param_0_value".to_string()),
-        )
+        .with_flow_param_value(String::from("flow_param_0"), Some(true))
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-        .with_flow_param_value(String::from("flow_param_1"), Some(456u32))
+        .with_flow_param_value(String::from("flow_param_1"), Some(456u16))
         .with_profile_param_value(String::from("profile_param_1"), Some(2u64))
         .with_workspace_param_value(
             String::from("ws_param_1"),
@@ -252,11 +261,15 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
     );
     assert_eq!(Some(&1u32), profile_params.get("profile_param_0"));
     assert_eq!(Some(&2u64), profile_params.get("profile_param_1"));
-    assert_eq!(
-        Some(&"flow_param_0_value".to_string()),
-        flow_params.get("flow_param_0")
-    );
-    assert_eq!(Some(&456u32), flow_params.get("flow_param_1"));
+    assert_eq!(Some(true), flow_params.get("flow_param_0").copied());
+    assert_eq!(Some(&456u16), flow_params.get("flow_param_1"));
+
+    let resources = cmd_ctx.resources();
+    let res_profile = &*resources.borrow::<Profile>();
+    assert_eq!(&profile, res_profile);
+    assert_workspace_params(resources).await?;
+    assert_profile_params(resources).await?;
+    assert_flow_params(resources).await?;
     Ok(())
 }
 
@@ -299,6 +312,11 @@ async fn build_with_workspace_params_with_profile_from_params()
         Some(&"ws_param_1_value".to_string()),
         workspace_params.get("ws_param_1")
     );
+
+    let resources = cmd_ctx.resources();
+    let res_profile = &*resources.borrow::<Profile>();
+    assert_eq!(&profile, res_profile);
+    assert_workspace_params(resources).await?;
     Ok(())
 }
 
@@ -319,12 +337,9 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
             String::from("ws_param_1"),
             Some("ws_param_1_value".to_string()),
         )
-        .with_flow_param_value(
-            String::from("flow_param_0"),
-            Some("flow_param_0_value".to_string()),
-        )
+        .with_flow_param_value(String::from("flow_param_0"), Some(true))
         .with_profile_from_workspace_param(&String::from("profile"))
-        .with_flow_param_value(String::from("flow_param_1"), Some(456u32))
+        .with_flow_param_value(String::from("flow_param_1"), Some(456u16))
         .with_flow(flow)
         .build()
         .await?;
@@ -352,10 +367,14 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
     );
     assert_eq!(Some(&1u32), profile_params.get("profile_param_0"));
     assert_eq!(Some(&2u64), profile_params.get("profile_param_1"));
-    assert_eq!(
-        Some(&"flow_param_0_value".to_string()),
-        flow_params.get("flow_param_0")
-    );
-    assert_eq!(Some(&456u32), flow_params.get("flow_param_1"));
+    assert_eq!(Some(true), flow_params.get("flow_param_0").copied());
+    assert_eq!(Some(&456u16), flow_params.get("flow_param_1"));
+
+    let resources = cmd_ctx.resources();
+    let res_profile = &*resources.borrow::<Profile>();
+    assert_eq!(&profile, res_profile);
+    assert_workspace_params(resources).await?;
+    assert_profile_params(resources).await?;
+    assert_flow_params(resources).await?;
     Ok(())
 }

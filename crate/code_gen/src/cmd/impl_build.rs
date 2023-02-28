@@ -447,17 +447,39 @@ fn impl_build_for(
 
                 // Track items in memory.
                 let mut resources = peace_resources::Resources::new();
+                // === WorkspaceParamsSelected === //
                 // Self::workspace_params_insert(workspace_params, &mut resources);
+                // resources.insert(workspace_params_file);
                 #workspace_params_insert
+
                 // === Single Profile === //
                 // Self::profile_params_insert(profile_params, &mut resources);
+                // resources.insert(profile_params_file);
                 #profile_params_insert
+
                 // === Single Flow === //
                 // Self::flow_params_insert(flow_params, &mut resources);
+                // resources.insert(flow_params_file);
                 #flow_params_insert
 
                 // === SingleProfileSingleFlow === //
-                // Set up resources for the flow's item spec graph
+                // // Set up resources for the flow's item spec graph
+                // let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
+                // let states_type_regs = crate::ctx::cmd_ctx_builder::states_type_regs(flow.graph());
+                // let states_saved = peace_rt_model::StatesSerializer::deserialize_saved_opt(
+                //     flow.flow_id(),
+                //     storage,
+                //     states_type_regs.states_current_type_reg(),
+                //     &states_saved_file,
+                // )
+                // .await?
+                // .map(Into::<peace_resources::states::StatesSaved>::into);
+                // if let Some(states_saved) = states_saved {
+                //     resources.insert(states_saved);
+                // }
+                //
+                // // Call each `ItemSpec`'s initialization function.
+                // let resources = crate::ctx::cmd_ctx_builder::item_spec_graph_setup(flow.graph(), resources).await?;
                 #resources_set_up
 
                 let scope = #scope_type_path::new(
@@ -620,6 +642,7 @@ fn workspace_params_load_save(
             };
             let workspace_params_insert = quote! {
                 Self::workspace_params_insert(workspace_params.clone(), &mut resources);
+                resources.insert(workspace_params_file);
             };
 
             (
@@ -681,6 +704,7 @@ fn profile_params_load_save(
                 };
                 let profile_params_insert = quote! {
                     Self::profile_params_insert(profile_params.clone(), &mut resources);
+                    resources.insert(profile_params_file);
                 };
 
                 (
@@ -810,6 +834,7 @@ fn flow_params_load_save(
                 };
                 let flow_params_insert = quote! {
                     Self::flow_params_insert(flow_params.clone(), &mut resources);
+                    resources.insert(flow_params_file);
                 };
 
                 (
