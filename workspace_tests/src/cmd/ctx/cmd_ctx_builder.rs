@@ -45,7 +45,7 @@ async fn workspace_with(
     let workspace_params_file = WorkspaceParamsFile::from(peace_app_dir);
     let mut workspace_params = WorkspaceParams::new();
     workspace_params.insert(String::from("profile"), profiles_existing[0].clone());
-    workspace_params.insert(String::from("something_else"), String::from("a string"));
+    workspace_params.insert(String::from("ws_param_1"), String::from("ws_param_1_value"));
 
     Storage
         .serialized_write(
@@ -66,8 +66,8 @@ async fn workspace_with(
 
             let profile_params_file = ProfileParamsFile::from(&profile_dir);
             let mut profile_params = ProfileParams::new();
-            profile_params.insert(String::from("profile_param"), 1u32);
-            profile_params.insert(String::from("profile_param_other"), 2u64);
+            profile_params.insert(String::from("profile_param_0"), 1u32);
+            profile_params.insert(String::from("profile_param_1"), 2u64);
 
             Storage
                 .serialized_write(
@@ -84,8 +84,11 @@ async fn workspace_with(
 
                 let flow_params_file = FlowParamsFile::from(&flow_dir);
                 let mut flow_params = FlowParams::new();
-                flow_params.insert(String::from("flow_param"), String::from("flow param value"));
-                flow_params.insert(String::from("flow_param_other"), 456u32);
+                flow_params.insert(
+                    String::from("flow_param_0"),
+                    String::from("flow_param_0_value"),
+                );
+                flow_params.insert(String::from("flow_param_1"), 456u32);
 
                 Storage
                     .serialized_write(

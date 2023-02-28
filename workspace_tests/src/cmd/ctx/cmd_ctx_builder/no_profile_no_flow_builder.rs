@@ -27,7 +27,10 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
 
     let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<PeaceTestError>(&workspace)
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
-        .with_workspace_param_value(String::from("something_else"), Some("a string".to_string()))
+        .with_workspace_param_value(
+            String::from("ws_param_1"),
+            Some("ws_param_1_value".to_string()),
+        )
         .build()
         .await?;
 
@@ -39,8 +42,8 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     assert_eq!(peace_app_dir, cmd_ctx.workspace().dirs().peace_app_dir());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
-        Some(&"a string".to_string()),
-        workspace_params.get("something_else")
+        Some(&"ws_param_1_value".to_string()),
+        workspace_params.get("ws_param_1")
     );
     Ok(())
 }
