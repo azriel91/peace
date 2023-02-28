@@ -29,12 +29,12 @@ tokio = { workspace = true, features = ["sync"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { workspace = true, features = ["fs", "io-util"] }
-tokio-util = { version = "0.7.4", features = ["io", "io-util"] }
+tokio-util = { version = "0.7.7", features = ["io", "io-util"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 peace_rt_model_web = { path = "../rt_model_web", version = "0.0.6" }
-wasm-bindgen = { version = "0.2.83", features = ["serde-serialize"] }
-web-sys = { version = "0.3.60", features = ["Storage", "Window"] }
+wasm-bindgen = { version = "0.2.84", features = ["serde-serialize"] }
+web-sys = { version = "0.3.61", features = ["Storage", "Window"] }
 
 [features]
 default = []

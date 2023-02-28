@@ -19,18 +19,18 @@ test = false
 cfg-if = { workspace = true }
 console = { version = "0.15.5", optional = true }
 futures = "0.3.26"
-is-terminal = { version = "0.4.2", optional = true }
+is-terminal = { version = "0.4.4", optional = true }
 miette = { workspace = true, optional = true }
 peace_core = { path = "../core", version = "0.0.6" }
 peace_fmt = { path = "../fmt", version = "0.0.6" }
 peace_resources = { path = "../resources", version = "0.0.6" }
 peace_rt_model_core = { path = "../rt_model_core", version = "0.0.6" }
 serde = "1.0.152"
-serde_json = { version = "1.0.91", optional = true }
+serde_json = { version = "1.0.93", optional = true }
 serde_yaml = "0.9.17"
 thiserror = "1.0.38"
 tokio = { workspace = true, features = ["fs", "io-std"] }
-tokio-util = { version = "0.7.4", features = ["io", "io-util"] }
+tokio-util = { version = "0.7.7", features = ["io", "io-util"] }
 
 [features]
 default = []
