@@ -1,12 +1,15 @@
 use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
 
 use peace_core::Profile;
-use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
+use peace_resources::{
+    paths::{FlowDir, ProfileDir, ProfileHistoryDir},
+    states::StatesSaved,
+};
 use peace_rt_model::{
     cmd_context_params::{
         FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ProfileParams, WorkspaceParams,
     },
-    Flow,
+    Flow, StatesTypeRegs,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -85,6 +88,14 @@ where
     /// Flow params for the selected flow.
     profile_to_flow_params:
         BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
+    /// Type registries to deserialize [`StatesSavedFile`] and
+    /// [`StatesDesiredFile`].
+    ///
+    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
+    states_type_regs: StatesTypeRegs,
+    /// Saved states for each profile for the selected flow.
+    profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
 }
 
 impl<E, PKeys> MultiProfileSingleFlow<E, PKeys>
@@ -108,6 +119,8 @@ where
             Profile,
             FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
         >,
+        states_type_regs: StatesTypeRegs,
+        profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
     ) -> Self {
         Self {
             profiles,
@@ -118,6 +131,8 @@ where
             workspace_params,
             profile_to_profile_params,
             profile_to_flow_params,
+            states_type_regs,
+            profile_to_states_saved,
         }
     }
 
@@ -147,6 +162,20 @@ where
     /// Returns the flow directories keyed by each profile.
     pub fn flow_dirs(&self) -> &BTreeMap<Profile, FlowDir> {
         &self.flow_dirs
+    }
+
+    /// Returns the type registries to deserialize [`StatesSavedFile`] and
+    /// [`StatesDesiredFile`].
+    ///
+    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
+    pub fn states_type_regs(&self) -> &StatesTypeRegs {
+        &self.states_type_regs
+    }
+
+    /// Returns the saved states for each profile for the selected flow.
+    pub fn profile_to_states_saved(&self) -> &BTreeMap<Profile, Option<StatesSaved>> {
+        &self.profile_to_states_saved
     }
 }
 

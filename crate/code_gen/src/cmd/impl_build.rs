@@ -172,7 +172,7 @@ fn impl_build_for(
     let cmd_dirs = cmd_dirs(scope);
     let dirs_to_create = dirs_to_create(scope);
     let scope_fields = scope_fields(scope);
-    let resources_set_up = resources_set_up(scope);
+    let states_saved_read = states_saved_read(scope);
 
     let scope_builder_deconstruct = scope_builder_deconstruct(
         scope_struct,
@@ -333,27 +333,27 @@ fn impl_build_for(
                 // self.profile_params_merge(&profile_params_file).await?;
                 // --- Multi --- //
                 // let profile_to_profile_params = futures::stream::iter(
-                //         profile_dirs
-                //             .iter()
-                //             .map(Result::<_, peace_rt_model::Error>::Ok)
-                //         )
-                //         .and_then(|(profile, profile_dir)| async move {
-                //             let profile_params_file =
-                //                 peace_resources::internal::ProfileParamsFile::from(profile_dir);
+                //     profile_dirs
+                //         .iter()
+                //         .map(Result::<_, peace_rt_model::Error>::Ok)
+                //     )
+                //     .and_then(|(profile, profile_dir)| async move {
+                //         let profile_params_file =
+                //             peace_resources::internal::ProfileParamsFile::from(profile_dir);
                 //
-                //             let profile_params = self
-                //                 .#params_deserialize_method_name(&profile_params_file)
-                //                 .await?;
+                //         let profile_params = self
+                //             .#params_deserialize_method_name(&profile_params_file)
+                //             .await?;
                 //
-                //             Ok((profile.clone(), profile_params))
-                //         })
-                //         .try_collect::<
-                //             std::collections::BTreeMap<
-                //                 peace_core::Profile,
-                //                 _ // peace_rt_model::cmd_context_params::ProfileParams<K>
-                //             >
-                //         >()
-                //         .await?;
+                //         Ok((profile.clone(), profile_params))
+                //     })
+                //     .try_collect::<
+                //         std::collections::BTreeMap<
+                //             peace_core::Profile,
+                //             _ // peace_rt_model::cmd_context_params::ProfileParams<K>
+                //         >
+                //     >()
+                //     .await?;
                 #profile_params_deserialize
 
                 // === Flow Params === //
@@ -362,27 +362,27 @@ fn impl_build_for(
                 // self.flow_params_merge(&flow_params_file).await?;
                 // --- Multi --- //
                 // let profile_to_flow_params = futures::stream::iter(
-                //         flow_dirs
-                //             .iter()
-                //             .map(Result::<_, peace_rt_model::Error>::Ok)
-                //         )
-                //         .and_then(|(profile, flow_dir)| async move {
-                //             let flow_params_file =
-                //                 peace_resources::internal::FlowParamsFile::from(flow_dir);
+                //     flow_dirs
+                //         .iter()
+                //         .map(Result::<_, peace_rt_model::Error>::Ok)
+                //     )
+                //     .and_then(|(profile, flow_dir)| async move {
+                //         let flow_params_file =
+                //             peace_resources::internal::FlowParamsFile::from(flow_dir);
                 //
-                //             let flow_params = self
-                //                 .#params_deserialize_method_name(&flow_params_file)
-                //                 .await?;
+                //         let flow_params = self
+                //             .#params_deserialize_method_name(&flow_params_file)
+                //             .await?;
                 //
-                //             Ok((profile.clone(), flow_params))
-                //         })
-                //         .try_collect::<
-                //             std::collections::BTreeMap<
-                //                 peace_core::Profile,
-                //                 _ // peace_rt_model::cmd_context_params::FlowParams<K>
-                //             >
-                //         >()
-                //         .await?;
+                //         Ok((profile.clone(), flow_params))
+                //     })
+                //     .try_collect::<
+                //         std::collections::BTreeMap<
+                //             peace_core::Profile,
+                //             _ // peace_rt_model::cmd_context_params::FlowParams<K>
+                //         >
+                //     >()
+                //     .await?;
                 #flow_params_deserialize
 
                 // Create directories and write init parameters to storage.
@@ -462,11 +462,42 @@ fn impl_build_for(
                 // resources.insert(flow_params_file);
                 #flow_params_insert
 
+                // === MultiProfileSingleFlow === //
+                // let states_type_regs = crate::ctx::cmd_ctx_builder::states_type_regs(flow.graph());
+                // let states_current_type_reg = states_type_regs.states_current_type_reg();
+                // let flow_id = flow.flow_id();
+                // let profile_to_states_saved = futures::stream::iter(
+                //     flow_dirs
+                //         .iter()
+                //         .map(Result::<_, peace_rt_model::Error>::Ok)
+                //     )
+                //     .and_then(|(profile, flow_dir)| async move {
+                //         let states_saved_file = peace_resources::paths::StatesSavedFile::from(flow_dir);
+                //
+                //         let states_saved = peace_rt_model::StatesSerializer::<peace_rt_model::Error>::deserialize_saved_opt(
+                //             flow_id,
+                //             storage,
+                //             states_current_type_reg,
+                //             &states_saved_file,
+                //         )
+                //         .await?
+                //         .map(Into::<peace_resources::states::StatesSaved>::into);
+                //
+                //         Ok((profile.clone(), states_saved))
+                //     })
+                //     .try_collect::<
+                //         std::collections::BTreeMap<
+                //             peace_core::Profile,
+                //             Option<peace_resources::states::StatesSaved>
+                //         >
+                //     >()
+                //     .await?;
+                //
                 // === SingleProfileSingleFlow === //
                 // // Set up resources for the flow's item spec graph
                 // let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
                 // let states_type_regs = crate::ctx::cmd_ctx_builder::states_type_regs(flow.graph());
-                // let states_saved = peace_rt_model::StatesSerializer::deserialize_saved_opt(
+                // let states_saved = peace_rt_model::StatesSerializer::<peace_rt_model::Error>::deserialize_saved_opt(
                 //     flow.flow_id(),
                 //     storage,
                 //     states_type_regs.states_current_type_reg(),
@@ -479,8 +510,12 @@ fn impl_build_for(
                 // }
                 //
                 // // Call each `ItemSpec`'s initialization function.
-                // let resources = crate::ctx::cmd_ctx_builder::item_spec_graph_setup(flow.graph(), resources).await?;
-                #resources_set_up
+                // let resources = crate::ctx::cmd_ctx_builder::item_spec_graph_setup(
+                //     flow.graph(),
+                //     resources
+                // )
+                // .await?;
+                #states_saved_read
 
                 let scope = #scope_type_path::new(
                     // workspace_params
@@ -1161,53 +1196,104 @@ fn scope_fields(scope: Scope) -> Punctuated<Pat, Comma> {
             }
         },
     }
-    if scope == Scope::SingleProfileSingleFlow {
-        scope_fields.push(parse_quote!(states_type_regs));
-        scope_fields.push(parse_quote!(resources));
+
+    match scope {
+        Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {}
+        Scope::MultiProfileSingleFlow => {
+            scope_fields.push(parse_quote!(states_type_regs));
+            scope_fields.push(parse_quote!(profile_to_states_saved));
+        }
+        Scope::SingleProfileSingleFlow => {
+            scope_fields.push(parse_quote!(states_type_regs));
+            scope_fields.push(parse_quote!(resources));
+        }
     }
     scope_fields
 }
 
-fn resources_set_up(scope: Scope) -> proc_macro2::TokenStream {
-    if scope == Scope::SingleProfileSingleFlow {
-        // Reads and inserts previously saved states, and sets up resources using the
-        // flow graph.
-        //
-        // It is not possible to load saved states when running a command with multiple
-        // flows, as the flows will have different item specs and their state
-        // (type)s will be different.
-        //
-        // An example is workspace initialization, where the states saved per item spec
-        // for workspace initialization are likely different to application specific
-        // flows.
-        //
-        // We currently don't support inserting resources for MultiProfileSingleFlow
-        // commands. That would require either multiple `Resources` maps, or a
-        // `Resources` map that contains `Map<Profile, _>`.
-        //
-        // It also requires multiple item spec graph setups to work without conflicting
-        // with each other.
-        quote! {
-            let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
-            let states_type_regs = crate::ctx::cmd_ctx_builder::states_type_regs(flow.graph());
-            let states_saved = peace_rt_model::StatesSerializer::deserialize_saved_opt(
-                flow.flow_id(),
-                storage,
-                states_type_regs.states_current_type_reg(),
-                &states_saved_file,
-            )
-            .await?
-            .map(Into::<peace_resources::states::StatesSaved>::into);
-            if let Some(states_saved) = states_saved {
-                resources.insert(states_saved);
-            }
-
-            // Call each `ItemSpec`'s initialization function.
-            let resources = crate::ctx::cmd_ctx_builder::item_spec_graph_setup(flow.graph(), resources).await?;
-
-            // TODO: output_progress CmdProgressTracker initialization
+fn states_saved_read(scope: Scope) -> proc_macro2::TokenStream {
+    match scope {
+        Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {
+            proc_macro2::TokenStream::new()
         }
-    } else {
-        proc_macro2::TokenStream::new()
+        Scope::MultiProfileSingleFlow => {
+            // Reads previously saved states and stores them in a Map<Profile,
+            // StatesSaved>. These are then saved in the scope for easy use by
+            // consumers.
+            quote! {
+                let states_type_regs = crate::ctx::cmd_ctx_builder::states_type_regs(flow.graph());
+                let states_current_type_reg = states_type_regs.states_current_type_reg();
+                let flow_id = flow.flow_id();
+                let profile_to_states_saved = futures::stream::iter(
+                    flow_dirs
+                        .iter()
+                        .map(Result::<_, peace_rt_model::Error>::Ok)
+                    )
+                    .and_then(|(profile, flow_dir)| async move {
+                        let states_saved_file = peace_resources::paths::StatesSavedFile::from(flow_dir);
+
+                        let states_saved = peace_rt_model::StatesSerializer::<peace_rt_model::Error>::deserialize_saved_opt(
+                            flow_id,
+                            storage,
+                            states_current_type_reg,
+                            &states_saved_file,
+                        )
+                        .await?
+                        .map(Into::<peace_resources::states::StatesSaved>::into);
+
+                        Ok((profile.clone(), states_saved))
+                    })
+                    .try_collect::<
+                        std::collections::BTreeMap<
+                            peace_core::Profile,
+                            Option<peace_resources::states::StatesSaved>
+                        >
+                    >()
+                    .await?;
+            }
+        }
+        Scope::SingleProfileSingleFlow => {
+            // Reads and inserts previously saved states, and sets up resources using the
+            // flow graph.
+            //
+            // It is not possible to insert saved states into resources when running a
+            // command with multiple flows, as the flows will have different
+            // item specs and their state (type)s will be different.
+            //
+            // An example is workspace initialization, where the states saved per item spec
+            // for workspace initialization are likely different to application specific
+            // flows.
+            //
+            // We currently don't support inserting resources for MultiProfileSingleFlow
+            // commands. That would require either multiple `Resources` maps, or a
+            // `Resources` map that contains `Map<Profile, _>`.
+            //
+            // It also requires multiple item spec graph setups to work without conflicting
+            // with each other.
+            quote! {
+                let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
+                let states_type_regs = crate::ctx::cmd_ctx_builder::states_type_regs(flow.graph());
+                let states_saved = peace_rt_model::StatesSerializer::<peace_rt_model::Error>::deserialize_saved_opt(
+                    flow.flow_id(),
+                    storage,
+                    states_type_regs.states_current_type_reg(),
+                    &states_saved_file,
+                )
+                .await?
+                .map(Into::<peace_resources::states::StatesSaved>::into);
+                if let Some(states_saved) = states_saved {
+                    resources.insert(states_saved);
+                }
+
+                // Call each `ItemSpec`'s initialization function.
+                let resources = crate::ctx::cmd_ctx_builder::item_spec_graph_setup(
+                    flow.graph(),
+                    resources
+                )
+                .await?;
+
+                // TODO: output_progress CmdProgressTracker initialization
+            }
+        }
     }
 }
