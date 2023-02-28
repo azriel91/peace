@@ -34,10 +34,17 @@ use crate::{
 /// exist to cater for each kind of command. This means the data available in a
 /// command context differs per scope, to accurately reflect what is available.
 #[derive(Debug)]
-pub struct CmdCtx<'ctx, Scope, PKeys>
+pub struct CmdCtx<'ctx, O, Scope, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    pub(crate) output: &'ctx mut O,
     /// Workspace that the `peace` tool runs in.
     pub(crate) workspace: &'ctx Workspace,
     /// Scope of the command.
@@ -51,10 +58,20 @@ where
     pub(crate) params_type_regs: ParamsTypeRegs<PKeys>,
 }
 
-impl<'ctx, Scope, PKeys> CmdCtx<'ctx, Scope, PKeys>
+impl<'ctx, O, Scope, PKeys> CmdCtx<'ctx, O, Scope, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
+    /// Returns a reference to the output.
+    pub fn output(&self) -> &O {
+        self.output
+    }
+
+    /// Returns a mutable reference to the output.
+    pub fn output_mut(&mut self) -> &mut O {
+        self.output
+    }
+
     /// Returns the workspace that the `peace` tool runs in.
     pub fn workspace(&self) -> &Workspace {
         self.workspace
@@ -91,31 +108,40 @@ where
     }
 }
 
-impl<'ctx> CmdCtx<'ctx, (), ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>> {
+impl<'ctx, O> CmdCtx<'ctx, O, (), ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>> {
     /// Returns a `CmdCtxBuilder` for a single profile and no flow.
     pub fn builder_no_profile_no_flow<E>(
+        output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
+        'ctx,
+        O,
         NoProfileNoFlowBuilder<E, WorkspaceParamsNone>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
-        CmdCtxBuilder::no_profile_no_flow(workspace)
+        CmdCtxBuilder::no_profile_no_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and no flow.
     pub fn builder_multi_profile_no_flow<E>(
+        output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
+        'ctx,
+        O,
         MultiProfileNoFlowBuilder<E, ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
-        CmdCtxBuilder::multi_profile_no_flow(workspace)
+        CmdCtxBuilder::multi_profile_no_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and one flow.
     pub fn builder_multi_profile_single_flow<E>(
+        output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
+        'ctx,
+        O,
         MultiProfileSingleFlowBuilder<
             E,
             ProfileNotSelected,
@@ -126,31 +152,38 @@ impl<'ctx> CmdCtx<'ctx, (), ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>> 
         >,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
-        CmdCtxBuilder::multi_profile_single_flow(workspace)
+        CmdCtxBuilder::multi_profile_single_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
     pub fn builder_single_profile_no_flow<E>(
+        output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
+        'ctx,
+        O,
         SingleProfileNoFlowBuilder<E, ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
-        CmdCtxBuilder::single_profile_no_flow(workspace)
+        CmdCtxBuilder::single_profile_no_flow(output, workspace)
     }
 }
 
-impl<'ctx, E>
+impl<'ctx, E, O>
     CmdCtx<
         'ctx,
+        O,
         SingleProfileSingleFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>, SetUp>,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     >
 {
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
     pub fn builder_single_profile_single_flow(
+        output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
+        'ctx,
+        O,
         SingleProfileSingleFlowBuilder<
             E,
             ProfileNotSelected,
@@ -161,11 +194,11 @@ impl<'ctx, E>
         >,
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
-        CmdCtxBuilder::single_profile_single_flow(workspace)
+        CmdCtxBuilder::single_profile_single_flow(output, workspace)
     }
 }
 
-impl<'ctx, Scope, PKeys> Deref for CmdCtx<'ctx, Scope, PKeys>
+impl<'ctx, O, Scope, PKeys> Deref for CmdCtx<'ctx, O, Scope, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {

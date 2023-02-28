@@ -32,12 +32,19 @@ mod single_profile_single_flow_builder;
 
 /// Collects parameters and initializes values relevant to the built [`CmdCtx`].
 #[derive(Debug)]
-pub struct CmdCtxBuilder<'ctx, ScopeBuilder, PKeys>
+pub struct CmdCtxBuilder<'ctx, O, ScopeBuilder, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    output: &'ctx mut O,
     /// Data held while building `CmdCtx`.
     scope_builder: ScopeBuilder,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -49,7 +56,7 @@ where
     params_type_regs_builder: ParamsTypeRegsBuilder<PKeys>,
 }
 
-impl<'ctx, ScopeBuilder, PKeys> CmdCtxBuilder<'ctx, ScopeBuilder, PKeys>
+impl<'ctx, O, ScopeBuilder, PKeys> CmdCtxBuilder<'ctx, O, ScopeBuilder, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {

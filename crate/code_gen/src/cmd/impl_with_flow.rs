@@ -65,6 +65,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         impl<
             'ctx,
             E,
+            O,
             PKeys,
             // ProfileSelection,
             // WorkspaceParamsSelection,
@@ -74,6 +75,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         >
             crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -93,6 +95,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                 flow: peace_rt_model::Flow<E>,
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
@@ -105,6 +108,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                 PKeys,
             > {
                 let Self {
+                    output,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
@@ -130,6 +134,7 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                 };
 
                 crate::ctx::CmdCtxBuilder {
+                    output,
                     workspace,
                     scope_builder,
                     params_type_regs_builder,

@@ -4,7 +4,7 @@ use peace::{
     resources::paths::{ProfileDir, ProfileHistoryDir},
 };
 
-use crate::{cmd::ctx::cmd_ctx_builder::workspace, PeaceTestError};
+use crate::{cmd::ctx::cmd_ctx_builder::workspace, no_op_output::NoOpOutput, PeaceTestError};
 
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
@@ -12,7 +12,8 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError>(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError>(&mut output, &workspace)
         .with_profile(profile.clone())
         .build()
         .await?;
@@ -36,7 +37,8 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError>(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError>(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
         .with_workspace_param_value(
@@ -71,7 +73,8 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError>(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError>(&mut output, &workspace)
         .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
         .with_profile_param_value(String::from("profile_param_1"), Some(2u64))
         .with_profile(profile.clone())
@@ -101,7 +104,8 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError>(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError>(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
@@ -142,7 +146,8 @@ async fn build_with_workspace_params_with_profile_from_params()
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError>(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError>(&mut output, &workspace)
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
         .with_workspace_param_value(
             String::from("ws_param_1"),
@@ -178,7 +183,8 @@ async fn build_with_workspace_params_with_profile_params_with_profile_from_param
     let workspace = workspace(&tempdir, app_name!("test_single_profile_no_flow"))?;
     let profile = profile!("test_profile");
 
-    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError>(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtx::builder_single_profile_no_flow::<PeaceTestError>(&mut output, &workspace)
         .with_profile_param_value(String::from("profile_param_0"), Some(1u32))
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
         .with_profile_param_value(String::from("profile_param_1"), Some(2u64))

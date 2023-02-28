@@ -4,7 +4,7 @@ use peace::{
     rt_model::{Flow, ItemSpecGraphBuilder, Workspace},
 };
 
-use crate::PeaceTestError;
+use crate::{no_op_output::NoOpOutput, PeaceTestError};
 
 #[tokio::test]
 async fn single_profile_single_flow_getters() -> Result<(), Box<dyn std::error::Error>> {
@@ -14,7 +14,8 @@ async fn single_profile_single_flow_getters() -> Result<(), Box<dyn std::error::
     let flow_id = flow_id!("test_flow_id");
     let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
 
-    let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(&workspace)
+    let mut output = NoOpOutput;
+    let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(flow)
         .build()
