@@ -147,7 +147,7 @@ async fn assert_flow_params(resources: &Resources<SetUp>) -> Result<(), std::io:
         flow_param_1: 456\n",
         tokio::fs::read_to_string(&*flow_params_file).await?
     );
-    assert_eq!(true, *res_flow_param_0);
+    assert!(*res_flow_param_0);
     assert_eq!(456u16, *res_flow_param_1);
 
     Ok(())
