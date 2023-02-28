@@ -10,7 +10,7 @@ use peace_rt_model::{
     cmd_context_params::{
         FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ProfileParams, WorkspaceParams,
     },
-    Flow,
+    Flow, StatesTypeRegs,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -67,6 +67,12 @@ where
     profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
     /// Flow params for the selected flow.
     flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+    /// Type registries to deserialize [`StatesSavedFile`] and
+    /// [`StatesDesiredFile`].
+    ///
+    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
+    states_type_regs: StatesTypeRegs,
     /// `Resources` for flow execution.
     resources: Resources<TS>,
 }
@@ -86,6 +92,7 @@ where
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
         flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+        states_type_regs: StatesTypeRegs,
         resources: Resources<SetUp>,
     ) -> Self {
         Self {
@@ -97,6 +104,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
+            states_type_regs,
             resources,
         }
     }
@@ -129,6 +137,15 @@ where
     /// Returns a reference to the flow directory.
     pub fn flow_dir(&self) -> &FlowDir {
         &self.flow_dir
+    }
+
+    /// Returns the type registries to deserialize [`StatesSavedFile`] and
+    /// [`StatesDesiredFile`].
+    ///
+    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
+    pub fn states_type_regs(&self) -> &StatesTypeRegs {
+        &self.states_type_regs
     }
 
     /// Returns a reference to the `Resources` for flow execution.

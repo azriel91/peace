@@ -147,7 +147,7 @@ fn impl_build_for(
     let scope_type_params = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
 
-        if let (ProfileCount::One, FlowCount::One) = (scope.profile_count(), scope.flow_count()) {
+        if scope == Scope::SingleProfileSingleFlow {
             type_params.push(parse_quote!(peace_resources::resources::ts::SetUp));
         }
 
@@ -511,6 +511,7 @@ fn impl_build_for(
 
                     // === SingleProfileSingleFlow === //
                     // resources,
+                    // states_type_regs,
 
                     #scope_fields
                 );
@@ -1160,14 +1161,15 @@ fn scope_fields(scope: Scope) -> Punctuated<Pat, Comma> {
             }
         },
     }
-    if let (ProfileCount::One, FlowCount::One) = (scope.profile_count(), scope.flow_count()) {
+    if scope == Scope::SingleProfileSingleFlow {
+        scope_fields.push(parse_quote!(states_type_regs));
         scope_fields.push(parse_quote!(resources));
     }
     scope_fields
 }
 
 fn resources_set_up(scope: Scope) -> proc_macro2::TokenStream {
-    if let (ProfileCount::One, FlowCount::One) = (scope.profile_count(), scope.flow_count()) {
+    if scope == Scope::SingleProfileSingleFlow {
         // Reads and inserts previously saved states, and sets up resources using the
         // flow graph.
         //
