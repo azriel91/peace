@@ -1,8 +1,9 @@
 use peace::{
-    cfg::{app_name, item_spec_id, AppName, ItemSpecId},
+    cfg::{app_name, item_spec_id, AppName, FlowId, ItemSpecId, Profile},
+    cmd::ctx::CmdCtx,
     rt::cmds::{EnsureCmd, StatesDiscoverCmd},
     rt_model::{
-        output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
+        output::OutputWrite, Flow, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
 use peace_item_specs::{
@@ -10,10 +11,7 @@ use peace_item_specs::{
     tar_x::{TarXItemSpec, TarXParams},
 };
 
-use crate::{
-    cmds::CmdContextBuilder,
-    model::{AppCycleError, WebAppFileId},
-};
+use crate::model::{AppCycleError, WebAppFileId};
 
 /// Flow to download a web application.
 #[derive(Debug)]
@@ -38,14 +36,32 @@ impl AppInitFlow {
         )?;
         let graph = Self::graph()?;
 
-        let cmd_context = CmdContextBuilder::new(&workspace, &graph, output)
-            .with_web_app_file_download_params(web_app_file_download_params)
-            .with_web_app_tar_x_params(web_app_tar_x_params)
+        let cmd_ctx_builder =
+            CmdCtx::builder_single_profile_single_flow::<AppCycleError>(output, &workspace);
+        crate::cmds::params_augment!(cmd_ctx_builder);
+        let cmd_ctx = cmd_ctx_builder
+            .with_workspace_param_value(
+                String::from("web_app_file_download_params"),
+                Some(web_app_file_download_params),
+            )
+            .with_workspace_param_value(
+                String::from("web_app_tar_x_params"),
+                Some(web_app_tar_x_params),
+            )
+            .with_profile(Profile::workspace_init())
+            .with_flow(Flow::new(FlowId::workspace_init(), graph.clone()))
             .await?;
-        StatesDiscoverCmd::exec(cmd_context).await?;
 
-        let cmd_context = CmdContextBuilder::new(&workspace, &graph, output).await?;
-        EnsureCmd::exec(cmd_context).await?;
+        StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+
+        let cmd_ctx_builder =
+            CmdCtx::builder_single_profile_single_flow::<AppCycleError>(output, &workspace);
+        crate::cmds::params_augment!(cmd_ctx_builder);
+        let cmd_ctx = cmd_ctx_builder
+            .with_profile(Profile::workspace_init())
+            .with_flow(Flow::new(FlowId::workspace_init(), graph))
+            .await?;
+        EnsureCmd::exec_v2(cmd_ctx).await?;
 
         Ok(())
     }

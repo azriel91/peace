@@ -1,15 +1,13 @@
 use peace::{
-    cfg::{app_name, AppName, Profile},
+    cfg::{app_name, AppName, FlowId, Profile},
+    cmd::ctx::CmdCtx,
     rt::cmds::{StatesDiscoverCmd, StatesSavedDisplayCmd},
     rt_model::{
-        output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
+        output::OutputWrite, Flow, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
 
-use crate::{
-    cmds::CmdContextBuilder,
-    model::{AppCycleError, EnvType},
-};
+use crate::model::{AppCycleError, EnvType};
 
 /// Flow to initialize and set the default profile.
 #[derive(Debug)]
@@ -40,16 +38,26 @@ impl ProfileInitFlow {
         )?;
         let graph = Self::graph()?;
 
-        let cmd_context = CmdContextBuilder::new(&workspace, &graph, output)
+        let cmd_ctx_builder =
+            CmdCtx::builder_single_profile_single_flow::<AppCycleError>(output, &workspace);
+        crate::cmds::params_augment!(cmd_ctx_builder);
+        let cmd_ctx = cmd_ctx_builder
+            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+            .with_profile_param_value(String::from("env_type"), Some(env_type))
             .with_profile(profile)
-            .with_env_type(env_type)
+            .with_flow(Flow::new(FlowId::profile_init(), graph.clone()))
             .await?;
-        StatesDiscoverCmd::exec(cmd_context).await?;
+        StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
 
-        let cmd_context = CmdContextBuilder::new(&workspace, &graph, output)
-            .with_profile_from_last_used()
+        let cmd_ctx_builder =
+            CmdCtx::builder_single_profile_single_flow::<AppCycleError>(output, &workspace);
+        crate::cmds::params_augment!(cmd_ctx_builder);
+        let profile_key = String::from("profile");
+        let cmd_ctx = cmd_ctx_builder
+            .with_profile_from_workspace_param(&profile_key)
+            .with_flow(Flow::new(FlowId::profile_init(), graph.clone()))
             .await?;
-        StatesSavedDisplayCmd::exec(cmd_context).await?;
+        StatesSavedDisplayCmd::exec_v2(cmd_ctx).await?;
 
         Ok(())
     }
