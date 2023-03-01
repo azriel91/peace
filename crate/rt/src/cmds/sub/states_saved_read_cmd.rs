@@ -1,6 +1,10 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cfg::{FlowId, ItemSpecId};
+use peace_cmd::{
+    ctx::CmdCtx,
+    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+};
 use peace_resources::{
     paths::{FlowDir, StatesSavedFile},
     resources::ts::{SetUp, WithStatesSaved},
@@ -21,6 +25,30 @@ where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
 {
+    /// Reads [`StatesSaved`]s from storage.
+    ///
+    /// Either [`StatesSavedDiscoverCmd`] or [`StatesDiscoverCmd`] must have
+    /// run prior to this command to read the state.
+    ///
+    /// [`StatesSavedDiscoverCmd`]: crate::StatesSavedDiscoverCmd
+    /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
+    pub async fn exec_v2(
+        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
+    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesSaved>, PKeys>, E> {
+        let SingleProfileSingleFlowView {
+            states_type_regs,
+            resources,
+            ..
+        } = cmd_ctx.scope_mut().view();
+        let states_saved =
+            Self::exec_internal(resources, states_type_regs.states_current_type_reg()).await?;
+
+        let cmd_ctx = cmd_ctx.resources_update(|resources| {
+            Resources::<WithStatesSaved>::from((resources, states_saved))
+        });
+        Ok(cmd_ctx)
+    }
+
     /// Reads [`StatesSaved`]s from storage.
     ///
     /// Either [`StatesCurrentDiscoverCmd`] or [`StatesDiscoverCmd`] must have
