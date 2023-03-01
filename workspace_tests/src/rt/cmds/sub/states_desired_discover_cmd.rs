@@ -31,7 +31,7 @@ async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::erro
             .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
             .await?;
 
-    let cmd_ctx = StatesDesiredDiscoverCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesDesiredDiscoverCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let states_desired = resources.borrow::<StatesDesired>();

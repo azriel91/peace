@@ -31,7 +31,7 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
                 graph.clone(),
             ))
             .await?;
-    let cmd_ctx = StatesDesiredDiscoverCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesDesiredDiscoverCmd::exec(cmd_ctx).await?;
     let resources_from_discover = cmd_ctx.resources();
 
     // Re-read states from disk.
@@ -41,7 +41,7 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
             .with_profile(profile!("test_profile"))
             .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
             .await?;
-    let cmd_ctx = StatesDesiredReadCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesDesiredReadCmd::exec(cmd_ctx).await?;
     let resources_from_read = cmd_ctx.resources();
 
     let states_desired_from_discover = resources_from_discover.borrow::<StatesDesired>();
@@ -74,7 +74,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
             .with_profile(profile!("test_profile"))
             .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
             .await?;
-    let exec_result = StatesDesiredReadCmd::exec_v2(cmd_ctx).await;
+    let exec_result = StatesDesiredReadCmd::exec(cmd_ctx).await;
 
     assert!(matches!(
         exec_result,

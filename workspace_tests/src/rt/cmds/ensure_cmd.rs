@@ -31,7 +31,7 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
                 graph.clone(),
             ))
             .await?;
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Re-read states from disk.
     let cmd_ctx =
@@ -39,7 +39,7 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
             .with_profile(profile!("test_profile"))
             .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
             .await?;
-    let cmd_ctx = EnsureCmd::exec_dry_v2(cmd_ctx).await?;
+    let cmd_ctx = EnsureCmd::exec_dry(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
@@ -94,7 +94,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
                 graph.clone(),
             ))
             .await?;
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Alter states.
     let mut output = NoOpOutput;
@@ -106,7 +106,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
                 graph.clone(),
             ))
             .await?;
-    let cmd_ctx = EnsureCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
     let resources_ensured = cmd_ctx.resources();
 
     // Re-read states from disk.
@@ -116,7 +116,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
             .with_profile(profile!("test_profile"))
             .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
             .await?;
-    let cmd_ctx = StatesSavedReadCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesSavedReadCmd::exec(cmd_ctx).await?;
     let resources_reread = cmd_ctx.resources();
 
     let ensured_states_ensured = resources_ensured.borrow::<StatesEnsured>();
@@ -176,7 +176,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
                 graph.clone(),
             ))
             .await?;
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Alter states.
     let mut output = NoOpOutput;
@@ -188,7 +188,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
                 graph.clone(),
             ))
             .await?;
-    let cmd_ctx = EnsureCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
     let resources_ensured = cmd_ctx.resources();
 
     // Dry ensure states.
@@ -201,7 +201,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
                 graph.clone(),
             ))
             .await?;
-    let cmd_ctx = EnsureCmd::exec_dry_v2(cmd_ctx).await?;
+    let cmd_ctx = EnsureCmd::exec_dry(cmd_ctx).await?;
     let resources_ensured_dry = cmd_ctx.resources();
 
     // Re-read states from disk.
@@ -211,7 +211,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
             .with_profile(profile!("test_profile"))
             .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
             .await?;
-    let cmd_ctx = StatesSavedReadCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesSavedReadCmd::exec(cmd_ctx).await?;
     let resources_reread = cmd_ctx.resources();
 
     let ensured_states_ensured = resources_ensured.borrow::<StatesEnsured>();

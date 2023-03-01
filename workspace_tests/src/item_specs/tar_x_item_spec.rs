@@ -66,7 +66,7 @@ async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_e
         )
         .await?;
 
-    let cmd_ctx = StatesCurrentDiscoverCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let states_current = resources.borrow::<StatesCurrent>();
     let state_current = states_current
@@ -107,7 +107,7 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
         )
         .await?;
 
-    let cmd_ctx = StatesCurrentDiscoverCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let states_current = resources.borrow::<StatesCurrent>();
     let state_current = states_current
@@ -149,7 +149,7 @@ async fn state_desired_returns_file_metadatas_from_tar() -> Result<(), Box<dyn s
         )
         .await?;
 
-    let cmd_ctx = StatesDesiredDiscoverCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesDesiredDiscoverCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let states_desired = resources.borrow::<StatesDesired>();
     let state_desired = states_desired
@@ -191,14 +191,14 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(Flow::new(flow_id.clone(), graph.clone()))
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
-    let cmd_ctx = DiffCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let state_diffs = resources.borrow::<StateDiffs>();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
@@ -248,14 +248,14 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(Flow::new(flow_id.clone(), graph.clone()))
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
-    let cmd_ctx = DiffCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let state_diffs = resources.borrow::<StateDiffs>();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
@@ -307,14 +307,14 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(Flow::new(flow_id.clone(), graph.clone()))
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
-    let cmd_ctx = DiffCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let state_diffs = resources.borrow::<StateDiffs>();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
@@ -364,14 +364,14 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(Flow::new(flow_id.clone(), graph.clone()))
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
-    let cmd_ctx = DiffCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let state_diffs = resources.borrow::<StateDiffs>();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
@@ -426,14 +426,14 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(Flow::new(flow_id.clone(), graph.clone()))
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
-    let cmd_ctx = DiffCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let state_diffs = resources.borrow::<StateDiffs>();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
@@ -482,14 +482,14 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(Flow::new(flow_id.clone(), graph.clone()))
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
-    let cmd_ctx = DiffCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let state_diffs = resources.borrow::<StateDiffs>();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
@@ -525,7 +525,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    let cmd_ctx = StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesDiscoverCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let states_current = resources.borrow::<StatesCurrent>();
     let state_current = states_current
@@ -538,7 +538,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         .with_flow(Flow::new(flow_id.clone(), graph.clone()))
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
-    let cmd_ctx = DiffCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let states_desired = resources.borrow::<StatesDesired>();
     let state_desired = states_desired
@@ -582,14 +582,14 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(Flow::new(flow_id.clone(), graph.clone()))
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
-    let cmd_ctx = EnsureCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let states_ensured = resources.borrow::<StatesEnsured>();
@@ -641,7 +641,7 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Overwrite changed files and remove extra files
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -649,7 +649,7 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
         .with_flow(Flow::new(flow_id.clone(), graph.clone()))
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
-    let cmd_ctx = EnsureCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let states_ensured = resources.borrow::<StatesEnsured>();
@@ -672,7 +672,7 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
         .with_flow(Flow::new(flow_id.clone(), graph.clone()))
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
-    let cmd_ctx = EnsureCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let states_ensured = resources.borrow::<StatesEnsured>();
@@ -713,7 +713,7 @@ async fn clean_check_returns_exec_not_required_when_dest_empty()
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    let cmd_ctx = StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesDiscoverCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let states_current = resources.borrow::<StatesCurrent>();
     let state_current = states_current
@@ -753,14 +753,14 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
             Some(TarXParams::<TarXTest>::new(tar_path, dest.clone())),
         )
         .await?;
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(Flow::new(flow_id.clone(), graph.clone()))
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
-    let cmd_ctx = CleanCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = CleanCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let states_cleaned = resources.borrow::<StatesCleaned>();

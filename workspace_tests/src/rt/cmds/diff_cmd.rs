@@ -36,7 +36,7 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
                 graph.clone(),
             ))
             .await?;
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Re-read states from disk.
     let cmd_ctx =
@@ -44,7 +44,7 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
             .with_profile(profile!("test_profile"))
             .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
             .await?;
-    let cmd_ctx = DiffCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let states_saved = resources.borrow::<StatesSaved>();
@@ -100,7 +100,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     #[rustfmt::skip]
     resources.insert(VecA(vec![0, 1, 2,    4, 5, 6, 8, 9]));
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Re-read states from disk.
     let cmd_ctx =
@@ -108,7 +108,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
             .with_profile(profile!("test_profile"))
             .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
             .await?;
-    let cmd_ctx = DiffCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     // Separate scope drops borrowed resources.

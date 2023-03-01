@@ -52,7 +52,7 @@ impl AppInitFlow {
             .with_flow(Flow::new(FlowId::workspace_init(), graph.clone()))
             .await?;
 
-        StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+        StatesDiscoverCmd::exec(cmd_ctx).await?;
 
         let cmd_ctx_builder =
             CmdCtx::builder_single_profile_single_flow::<AppCycleError>(output, &workspace);
@@ -61,7 +61,7 @@ impl AppInitFlow {
             .with_profile(Profile::workspace_init())
             .with_flow(Flow::new(FlowId::workspace_init(), graph))
             .await?;
-        EnsureCmd::exec_v2(cmd_ctx).await?;
+        EnsureCmd::exec(cmd_ctx).await?;
 
         Ok(())
     }

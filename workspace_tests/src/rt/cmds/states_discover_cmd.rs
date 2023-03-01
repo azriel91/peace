@@ -31,7 +31,7 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
             .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
             .await?;
 
-    let cmd_ctx = StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesDiscoverCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let states_current = resources.borrow::<StatesCurrent>();

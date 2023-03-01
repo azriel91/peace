@@ -77,7 +77,7 @@ where
     /// [`EnsureOpSpec::exec_dry`]: peace_cfg::EnsureOpSpec::exec_dry
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    pub async fn exec_dry_v2(
+    pub async fn exec_dry(
         mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
     ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, EnsuredDry>, PKeys>, E> {
         let CmdCtxView { output, scope, .. } = cmd_ctx.view();
@@ -90,7 +90,7 @@ where
         } = scope.view();
         let item_spec_graph = flow.graph();
 
-        let states_ensured_dry = Self::exec_internal_v2(
+        let states_ensured_dry = Self::exec_internal(
             item_spec_graph,
             output,
             resources,
@@ -137,7 +137,7 @@ where
     /// [`EnsureOpSpec::exec`]: peace_cfg::EnsureOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    pub async fn exec_v2(
+    pub async fn exec(
         mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
     ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, Ensured>, PKeys>, E> {
         let CmdCtxView { output, scope, .. } = cmd_ctx.view();
@@ -150,7 +150,7 @@ where
         } = scope.view();
         let item_spec_graph = flow.graph();
 
-        let states_ensured = Self::exec_internal_v2(
+        let states_ensured = Self::exec_internal(
             item_spec_graph,
             output,
             resources,
@@ -181,7 +181,7 @@ where
     /// [`exec`]: peace_cfg::EnsureOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    async fn exec_internal_v2<StatesTs>(
+    async fn exec_internal<StatesTs>(
         item_spec_graph: &ItemSpecGraph<E>,
         #[cfg(not(feature = "output_progress"))] _output: &mut O,
         #[cfg(feature = "output_progress")] output: &mut O,

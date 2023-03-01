@@ -35,7 +35,7 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
                 graph.clone(),
             ))
             .await?;
-    let cmd_ctx = StatesCurrentDiscoverCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
     let resources_from_discover = cmd_ctx.resources();
 
     // Re-read states from disk in a new set of resources.
@@ -46,7 +46,7 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
     .with_profile(profile!("test_profile"))
     .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
     .await?;
-    let cmd_ctx = StatesSavedDisplayCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesSavedDisplayCmd::exec(cmd_ctx).await?;
     let resources_from_read = cmd_ctx.resources();
     let fn_tracker_output = cmd_ctx.output();
 
@@ -89,7 +89,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     .with_profile(profile!("test_profile"))
     .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
     .await?;
-    let exec_result = StatesSavedDisplayCmd::exec_v2(cmd_ctx).await;
+    let exec_result = StatesSavedDisplayCmd::exec(cmd_ctx).await;
 
     assert!(matches!(
         exec_result,

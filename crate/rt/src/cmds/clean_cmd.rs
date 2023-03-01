@@ -54,10 +54,10 @@ where
     /// [`CleanOpSpec::exec_dry`]: peace_cfg::CleanOpSpec::exec_dry
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
-    pub async fn exec_dry_v2(
+    pub async fn exec_dry(
         cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
     ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, CleanedDry>, PKeys>, E> {
-        let cmd_ctx_result = Self::exec_dry_internal_v2(cmd_ctx).await;
+        let cmd_ctx_result = Self::exec_dry_internal(cmd_ctx).await;
         match cmd_ctx_result {
             Ok(mut cmd_ctx) => {
                 {
@@ -82,7 +82,7 @@ where
     /// [`exec_dry`]: peace_cfg::CleanOpSpec::exec_dry
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
-    pub(crate) async fn exec_dry_internal_v2(
+    pub(crate) async fn exec_dry_internal(
         mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
     ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, CleanedDry>, PKeys>, E> {
         let SingleProfileSingleFlowView {
@@ -160,10 +160,10 @@ where
     /// [`CleanOpSpec::exec`]: peace_cfg::CleanOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
-    pub async fn exec_v2(
+    pub async fn exec(
         cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
     ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, Cleaned>, PKeys>, E> {
-        let cmd_ctx_result = Self::exec_internal_v2(cmd_ctx).await;
+        let cmd_ctx_result = Self::exec_internal(cmd_ctx).await;
         match cmd_ctx_result {
             Ok(mut cmd_ctx) => {
                 {
@@ -187,7 +187,7 @@ where
     /// [`exec`]: peace_cfg::CleanOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
-    pub(crate) async fn exec_internal_v2(
+    pub(crate) async fn exec_internal(
         mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
     ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, Cleaned>, PKeys>, E> {
         let SingleProfileSingleFlowView {

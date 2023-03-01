@@ -110,7 +110,7 @@ pub async fn fetch<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), Download
 where
     O: OutputWrite<DownloadError>,
 {
-    StatesDiscoverCmd::exec_v2(cmd_context).await?;
+    StatesDiscoverCmd::exec(cmd_context).await?;
     Ok(())
 }
 
@@ -118,7 +118,7 @@ pub async fn status<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), Downloa
 where
     O: OutputWrite<DownloadError>,
 {
-    StatesSavedDisplayCmd::exec_v2(cmd_context).await?;
+    StatesSavedDisplayCmd::exec(cmd_context).await?;
     Ok(())
 }
 
@@ -126,7 +126,7 @@ pub async fn desired<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), Downlo
 where
     O: OutputWrite<DownloadError>,
 {
-    StatesDesiredDisplayCmd::exec_v2(cmd_context).await?;
+    StatesDesiredDisplayCmd::exec(cmd_context).await?;
     Ok(())
 }
 
@@ -134,7 +134,7 @@ pub async fn diff<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), DownloadE
 where
     O: OutputWrite<DownloadError>,
 {
-    DiffCmd::exec_v2(cmd_context).await?;
+    DiffCmd::exec(cmd_context).await?;
     Ok(())
 }
 
@@ -142,7 +142,7 @@ pub async fn ensure_dry<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), Dow
 where
     O: OutputWrite<DownloadError>,
 {
-    EnsureCmd::exec_dry_v2(cmd_context).await?;
+    EnsureCmd::exec_dry(cmd_context).await?;
     Ok(())
 }
 
@@ -150,7 +150,7 @@ pub async fn ensure<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), Downloa
 where
     O: OutputWrite<DownloadError>,
 {
-    EnsureCmd::exec_v2(cmd_context).await?;
+    EnsureCmd::exec(cmd_context).await?;
     Ok(())
 }
 
@@ -158,7 +158,7 @@ pub async fn clean_dry<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), Down
 where
     O: OutputWrite<DownloadError>,
 {
-    CleanCmd::exec_dry_v2(cmd_context).await?;
+    CleanCmd::exec_dry(cmd_context).await?;
     Ok(())
 }
 
@@ -166,6 +166,6 @@ pub async fn clean<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), Download
 where
     O: OutputWrite<DownloadError>,
 {
-    CleanCmd::exec_v2(cmd_context).await?;
+    CleanCmd::exec(cmd_context).await?;
     Ok(())
 }

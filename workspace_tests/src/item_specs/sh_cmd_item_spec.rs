@@ -138,7 +138,7 @@ async fn state_current_returns_shell_command_current_state()
         ))
         .await?;
 
-    let cmd_ctx = StatesCurrentDiscoverCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let states_current = resources.borrow::<StatesCurrent>();
     let state_current = states_current
@@ -183,7 +183,7 @@ async fn state_desired_returns_shell_command_desired_state()
         ))
         .await?;
 
-    let cmd_ctx = StatesDesiredDiscoverCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = StatesDesiredDiscoverCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
     let states_desired = resources.borrow::<StatesDesired>();
     let state_desired = states_desired
@@ -230,7 +230,7 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
         .await?;
 
     // Discover states current and desired
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Diff them
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -240,7 +240,7 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
             graph.clone(),
         ))
         .await?;
-    let cmd_ctx = DiffCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let state_diffs = resources.borrow::<StateDiffs>();
@@ -276,7 +276,7 @@ async fn ensure_when_creation_required_executes_ensure_exec_shell_command()
         .await?;
 
     // Discover states current and desired
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Create the file
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -286,7 +286,7 @@ async fn ensure_when_creation_required_executes_ensure_exec_shell_command()
             graph.clone(),
         ))
         .await?;
-    let cmd_ctx = EnsureCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let states_ensured = resources.borrow::<StatesEnsured>();
@@ -331,7 +331,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
         .await?;
 
     // Discover states current and desired
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Create the file
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -341,7 +341,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
             graph.clone(),
         ))
         .await?;
-    EnsureCmd::exec_v2(cmd_ctx).await?;
+    EnsureCmd::exec(cmd_ctx).await?;
 
     // Diff state after creation
     let mut output = InMemoryTextOutput::new();
@@ -352,7 +352,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
             graph.clone(),
         ))
         .await?;
-    let cmd_ctx = DiffCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let state_diffs = resources.borrow::<StateDiffs>();
@@ -371,7 +371,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
             graph.clone(),
         ))
         .await?;
-    let cmd_ctx = EnsureCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let states_ensured = resources.borrow::<StatesEnsured>();
@@ -415,7 +415,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
         .await?;
 
     // Discover states current and desired
-    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+    StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Create the file
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
@@ -425,7 +425,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
             graph.clone(),
         ))
         .await?;
-    EnsureCmd::exec_v2(cmd_ctx).await?;
+    EnsureCmd::exec(cmd_ctx).await?;
 
     assert!(tempdir.path().join("test_file").exists());
 
@@ -437,7 +437,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
             graph.clone(),
         ))
         .await?;
-    CleanCmd::exec_v2(cmd_ctx).await?;
+    CleanCmd::exec(cmd_ctx).await?;
 
     assert!(!tempdir.path().join("test_file").exists());
 
@@ -449,7 +449,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
             graph.clone(),
         ))
         .await?;
-    let cmd_ctx = CleanCmd::exec_v2(cmd_ctx).await?;
+    let cmd_ctx = CleanCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let states_cleaned = resources.borrow::<StatesCleaned>();

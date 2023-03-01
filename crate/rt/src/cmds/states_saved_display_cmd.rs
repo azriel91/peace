@@ -30,7 +30,7 @@ where
     ///
     /// [`StatesSavedDiscoverCmd`]: crate::StatesSavedDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
-    pub async fn exec_v2(
+    pub async fn exec(
         mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
     ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesSaved>, PKeys>, E> {
         let CmdCtxView { output, scope, .. } = cmd_ctx.view();

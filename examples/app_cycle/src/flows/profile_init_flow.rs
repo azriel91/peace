@@ -47,7 +47,7 @@ impl ProfileInitFlow {
             .with_profile(profile)
             .with_flow(Flow::new(FlowId::profile_init(), graph.clone()))
             .await?;
-        StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
+        StatesDiscoverCmd::exec(cmd_ctx).await?;
 
         let cmd_ctx_builder =
             CmdCtx::builder_single_profile_single_flow::<AppCycleError>(output, &workspace);
@@ -57,7 +57,7 @@ impl ProfileInitFlow {
             .with_profile_from_workspace_param(&profile_key)
             .with_flow(Flow::new(FlowId::profile_init(), graph.clone()))
             .await?;
-        StatesSavedDisplayCmd::exec_v2(cmd_ctx).await?;
+        StatesSavedDisplayCmd::exec(cmd_ctx).await?;
 
         Ok(())
     }
