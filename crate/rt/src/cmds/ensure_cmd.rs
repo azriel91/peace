@@ -1,6 +1,10 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cfg::{ItemSpecId, OpCtx};
+use peace_cmd::{
+    ctx::{CmdCtx, CmdCtxView},
+    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+};
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesSavedFile},
@@ -69,7 +73,67 @@ where
     /// State cannot be fetched interleaved with `exec_dry` as it may use
     /// different `Data`.
     ///
-    /// [`exec_dry`]: peace_cfg::EnsureOpSpec::exec
+    /// [`exec_dry`]: peace_cfg::EnsureOpSpec::exec_dry
+    /// [`EnsureOpSpec::check`]: peace_cfg::EnsureOpSpec::check
+    /// [`EnsureOpSpec::exec_dry`]: peace_cfg::EnsureOpSpec::exec_dry
+    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
+    pub async fn exec_dry_v2(
+        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
+    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, EnsuredDry>, PKeys>, E> {
+        let CmdCtxView { output, scope, .. } = cmd_ctx.view();
+        let SingleProfileSingleFlowView {
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            flow,
+            resources,
+            ..
+        } = scope.view();
+        let item_spec_graph = flow.graph();
+
+        let states_ensured_dry = Self::exec_internal_v2(
+            item_spec_graph,
+            output,
+            resources,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            true,
+        )
+        .await?;
+        let mut cmd_ctx = cmd_ctx.resources_update(|resources| {
+            Resources::<EnsuredDry>::from((resources, states_ensured_dry))
+        });
+
+        {
+            let CmdCtxView { output, scope, .. } = cmd_ctx.view();
+            let resources = scope.resources();
+            let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
+            output.present(&*states_ensured_dry).await?;
+        }
+
+        Ok(cmd_ctx)
+    }
+
+    /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
+    /// [`ItemSpec`].
+    ///
+    /// In practice this runs [`EnsureOpSpec::check`], and only runs
+    /// [`exec_dry`] if execution is required.
+    ///
+    /// # Note
+    ///
+    /// To only make changes when they are *all* likely to work, we execute the
+    /// functions as homogeneous groups instead of interleaving the functions
+    /// together per `ItemSpec`:
+    ///
+    /// 1. Run [`EnsureOpSpec::check`] for all `ItemSpec`s.
+    /// 2. Run [`EnsureOpSpec::exec_dry`] for all `ItemSpec`s.
+    /// 3. Fetch `StatesCurrent` again, and compare.
+    ///
+    /// State cannot be fetched interleaved with `exec_dry` as it may use
+    /// different `Data`.
+    ///
+    /// [`exec_dry`]: peace_cfg::EnsureOpSpec::exec_dry
     /// [`EnsureOpSpec::check`]: peace_cfg::EnsureOpSpec::check
     /// [`EnsureOpSpec::exec_dry`]: peace_cfg::EnsureOpSpec::exec_dry
     /// [`ItemSpec`]: peace_cfg::ItemSpec
@@ -122,6 +186,66 @@ where
                 Err(e)
             }
         }
+    }
+
+    /// Conditionally runs [`EnsureOpSpec`]`::`[`exec`] for each
+    /// [`ItemSpec`].
+    ///
+    /// In practice this runs [`EnsureOpSpec::check`], and only runs
+    /// [`exec`] if execution is required.
+    ///
+    /// # Note
+    ///
+    /// To only make changes when they are *all* likely to work, we execute the
+    /// functions as homogeneous groups instead of interleaving the functions
+    /// together per `ItemSpec`:
+    ///
+    /// 1. Run [`EnsureOpSpec::check`] for all `ItemSpec`s.
+    /// 2. Run [`EnsureOpSpec::exec`] for all `ItemSpec`s.
+    /// 3. Fetch `StatesCurrent` again, and compare.
+    ///
+    /// State cannot be fetched interleaved with `exec` as it may use
+    /// different `Data`.
+    ///
+    /// [`exec`]: peace_cfg::EnsureOpSpec::exec
+    /// [`EnsureOpSpec::check`]: peace_cfg::EnsureOpSpec::check
+    /// [`EnsureOpSpec::exec`]: peace_cfg::EnsureOpSpec::exec
+    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
+    pub async fn exec_v2(
+        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
+    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, Ensured>, PKeys>, E> {
+        let CmdCtxView { output, scope, .. } = cmd_ctx.view();
+        let SingleProfileSingleFlowView {
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            flow,
+            resources,
+            ..
+        } = scope.view();
+        let item_spec_graph = flow.graph();
+
+        let states_ensured = Self::exec_internal_v2(
+            item_spec_graph,
+            output,
+            resources,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            false,
+        )
+        .await?;
+        let mut cmd_ctx = cmd_ctx
+            .resources_update(|resources| Resources::<Ensured>::from((resources, states_ensured)));
+
+        {
+            let CmdCtxView { output, scope, .. } = cmd_ctx.view();
+            let resources = scope.resources();
+            let states_ensured = resources.borrow::<StatesEnsured>();
+            Self::serialize_internal(resources, &states_ensured).await?;
+            output.present(&*states_ensured).await?;
+        }
+
+        Ok(cmd_ctx)
     }
 
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec`] for each [`ItemSpec`].
@@ -200,6 +324,178 @@ where
                 Err(e)
             }
         }
+    }
+
+    /// Conditionally runs [`EnsureOpSpec`]`::`[`exec`] for each [`ItemSpec`].
+    ///
+    /// Same as [`Self::exec`], but does not change the type state, and returns
+    /// [`StatesEnsured`].
+    ///
+    /// [`exec`]: peace_cfg::EnsureOpSpec::exec
+    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
+    async fn exec_internal_v2<StatesTs>(
+        item_spec_graph: &ItemSpecGraph<E>,
+        #[cfg(not(feature = "output_progress"))] _output: &mut O,
+        #[cfg(feature = "output_progress")] output: &mut O,
+        resources: &mut Resources<SetUp>,
+        #[cfg(feature = "output_progress")] cmd_progress_tracker: &mut CmdProgressTracker,
+        dry_run: bool,
+    ) -> Result<States<StatesTs>, E>
+    where
+        for<'resources> States<StatesTs>: From<(StatesCurrent, &'resources Resources<SetUp>)>,
+    {
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "output_progress")] {
+                output.progress_begin(cmd_progress_tracker).await;
+
+                let CmdProgressTracker {
+                    multi_progress: _,
+                    progress_trackers,
+                } = cmd_progress_tracker;
+
+                let (progress_tx, mut progress_rx) =
+                    mpsc::channel::<ProgressUpdateAndId>(Self::PROGRESS_COUNT_MAX);
+            }
+        }
+
+        // `StatesEnsured` should begin as `StatesSaved`, and be mutated as new states
+        // are read.
+        let mut states_ensured_mut = if let Ok(states_saved) = resources.try_borrow::<StatesSaved>()
+        {
+            StatesMut::<StatesTs>::from((*states_saved).clone().into_inner())
+        } else {
+            StatesMut::<StatesTs>::with_capacity(item_spec_graph.node_count())
+        };
+
+        let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemEnsureOutcome<E>>();
+
+        let resources_ref = &*resources;
+        let execution_task = async move {
+            #[cfg(feature = "output_progress")]
+            let progress_tx = &progress_tx;
+            let outcomes_tx = &outcomes_tx;
+
+            // It would be ideal if we can pass just the `ProgressBar` through
+            // to `Self::item_ensure_exec`, and not hold the reference to
+            // `progress_trackers` in the closure.
+            //
+            // This would allow us to hold a `&mut ProgressTracker` when
+            // `progress_rx` receives `ProgressUpdateAndId` -- so that we can store
+            // `progress_limit` inside `ProgressTracker`.
+            //
+            // Subsequently we can pass `&ProgressTracker` in
+            // `OutputWrite::progress_update`, so that `OutputWrite`
+            // implementations such as `CliOutput` can read the limit and adjust the
+            // progress bar styling accordingly.
+            let (Ok(()) | Err(())) = item_spec_graph
+                .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
+                    Self::item_ensure_exec(
+                        resources_ref,
+                        #[cfg(feature = "output_progress")]
+                        progress_tx,
+                        outcomes_tx,
+                        item_spec,
+                        dry_run,
+                    )
+                })
+                .await
+                .map_err(|_vec_units: Vec<()>| ());
+
+            // `progress_tx` is dropped here, so `progress_rx` will safely end.
+        };
+
+        #[cfg(feature = "output_progress")]
+        let progress_render_task = async {
+            while let Some(progress_update_and_id) = progress_rx.recv().await {
+                let ProgressUpdateAndId {
+                    item_spec_id,
+                    progress_update,
+                } = &progress_update_and_id;
+
+                let Some(progress_tracker) = progress_trackers.get_mut(item_spec_id) else {
+                    panic!("Expected `progress_tracker` to exist for item spec: `{item_spec_id}`.");
+                };
+                match progress_update {
+                    ProgressUpdate::Limit(progress_limit) => {
+                        progress_tracker.set_progress_limit(*progress_limit);
+                        progress_tracker.set_progress_status(ProgressStatus::ExecPending);
+                    }
+                    ProgressUpdate::Delta(delta) => {
+                        match delta {
+                            ProgressDelta::Tick => progress_tracker.tick(),
+                            ProgressDelta::Inc(unit_count) => progress_tracker.inc(*unit_count),
+                        }
+                        progress_tracker.set_progress_status(ProgressStatus::Running);
+                    }
+                    ProgressUpdate::Complete(progress_complete) => {
+                        progress_tracker.set_progress_status(ProgressStatus::Complete(
+                            progress_complete.clone(),
+                        ));
+                    }
+                }
+
+                output
+                    .progress_update(progress_tracker, &progress_update_and_id)
+                    .await
+            }
+        };
+
+        let outcomes_rx_task = async {
+            while let Some(outcome) = outcomes_rx.recv().await {
+                match outcome {
+                    ItemEnsureOutcome::PrepareFail {
+                        item_spec_id: _,
+                        item_ensure_partial: _,
+                        error: _,
+                    } => todo!(),
+                    ItemEnsureOutcome::Success {
+                        item_spec_id,
+                        item_ensure,
+                    } => {
+                        if let Some(state_ensured) = item_ensure.state_ensured() {
+                            states_ensured_mut.insert_raw(item_spec_id, state_ensured);
+                        } else {
+                            // Item was already in the desired state.
+                            // No change to saved state.
+                        }
+                    }
+                    ItemEnsureOutcome::Fail {
+                        item_spec_id,
+                        item_ensure,
+                        error: _, // TODO: save to report.
+                    } => {
+                        if let Some(state_ensured) = item_ensure.state_ensured() {
+                            states_ensured_mut.insert_raw(item_spec_id, state_ensured);
+                        }
+                    }
+                }
+            }
+        };
+
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "output_progress")] {
+                futures::join!(execution_task, progress_render_task, outcomes_rx_task);
+
+                output.progress_end(cmd_progress_tracker).await;
+            } else {
+                futures::join!(execution_task, outcomes_rx_task);
+            }
+        }
+
+        // TODO: Should we run `StatesCurrentFnSpec` again?
+        //
+        // i.e. is it part of `EnsureOpSpec::exec`'s contract to return the state.
+        //
+        // * It may be duplication of code.
+        // * `FileDownloadItemSpec` needs to know the ETag from the last request, which:
+        //     - in `StatesCurrentFnSpec` comes from `StatesSaved`
+        //     - in `EnsureCmd` comes from `StatesEnsured`
+        // * `ShCmdItemSpec` doesn't return the state in the ensure script, so in the
+        //   item spec we run the state current script after the ensure exec script.
+        let states_ensured = states_ensured_mut.into();
+
+        Ok(states_ensured)
     }
 
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec`] for each [`ItemSpec`].
