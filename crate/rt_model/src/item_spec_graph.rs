@@ -10,6 +10,14 @@ use crate::ItemSpecBoxed;
 #[derive(Debug)]
 pub struct ItemSpecGraph<E>(FnGraph<ItemSpecBoxed<E>>);
 
+// Manual implementation because derive requires `E` to be `Clone`,
+// which causes `graph.clone()` to call `FnGraph::clone`.
+impl<E> Clone for ItemSpecGraph<E> {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
+
 impl<E> ItemSpecGraph<E> {
     /// Returns the inner [`FnGraph`].
     pub fn into_inner(self) -> FnGraph<ItemSpecBoxed<E>> {

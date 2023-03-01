@@ -17,6 +17,7 @@ test = false
 
 [dependencies]
 async-trait = "0.1.64"
+dyn-clone = "1.0.11"
 enser = "0.1.3"
 peace_core = { path = "../core", version = "0.0.6" }
 peace_data = { path = "../data", version = "0.0.6" }

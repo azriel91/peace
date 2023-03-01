@@ -29,6 +29,16 @@ pub struct ShCmdItemSpec<Id> {
     marker: PhantomData<Id>,
 }
 
+impl<Id> Clone for ShCmdItemSpec<Id> {
+    fn clone(&self) -> Self {
+        Self {
+            item_spec_id: self.item_spec_id.clone(),
+            sh_cmd_params: self.sh_cmd_params.clone(),
+            marker: PhantomData,
+        }
+    }
+}
+
 impl<Id> ShCmdItemSpec<Id> {
     /// Returns a new `ShCmdItemSpec`.
     ///

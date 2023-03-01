@@ -37,6 +37,15 @@ impl<Id> BlankItemSpec<Id> {
     }
 }
 
+impl<Id> Clone for BlankItemSpec<Id> {
+    fn clone(&self) -> Self {
+        Self {
+            item_spec_id: self.item_spec_id.clone(),
+            marker: PhantomData,
+        }
+    }
+}
+
 #[async_trait(?Send)]
 impl<Id> ItemSpec for BlankItemSpec<Id>
 where

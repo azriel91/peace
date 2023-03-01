@@ -59,6 +59,36 @@ impl<
     StateDiffFnSpec,
     EnsureOpSpec,
     CleanOpSpec,
+> Clone
+    for ItemSpecWrapper<
+        IS,
+        E,
+        State,
+        StateDiff,
+        StateCurrentFnSpec,
+        StateDesiredFnSpec,
+        StateDiffFnSpec,
+        EnsureOpSpec,
+        CleanOpSpec,
+    >
+where
+    IS: Clone,
+{
+    fn clone(&self) -> Self {
+        Self(self.0.clone(), PhantomData)
+    }
+}
+
+impl<
+    IS,
+    E,
+    State,
+    StateDiff,
+    StateCurrentFnSpec,
+    StateDesiredFnSpec,
+    StateDiffFnSpec,
+    EnsureOpSpec,
+    CleanOpSpec,
 >
     ItemSpecWrapper<
         IS,
@@ -600,7 +630,8 @@ impl<
         CleanOpSpec,
     >
 where
-    IS: Debug
+    IS: Clone
+        + Debug
         + ItemSpec<
             State = State,
             StateDiff = StateDiff,

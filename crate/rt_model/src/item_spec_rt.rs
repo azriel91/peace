@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use dyn_clone::DynClone;
 use fn_graph::{DataAccess, DataAccessDyn};
 use peace_cfg::{async_trait, ItemSpecId, OpCheckStatus, OpCtx};
 use peace_resources::{
@@ -23,7 +24,7 @@ use crate::{
 ///
 /// [`ItemSpec`]: peace_cfg::ItemSpec
 #[async_trait(?Send)]
-pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn {
+pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// Returns the ID of this item spec.
     ///
     /// See [`ItemSpec::id`];

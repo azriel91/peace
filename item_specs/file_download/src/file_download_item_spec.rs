@@ -28,6 +28,15 @@ pub struct FileDownloadItemSpec<Id> {
     marker: PhantomData<Id>,
 }
 
+impl<Id> Clone for FileDownloadItemSpec<Id> {
+    fn clone(&self) -> Self {
+        Self {
+            item_spec_id: self.item_spec_id.clone(),
+            marker: PhantomData,
+        }
+    }
+}
+
 impl<Id> FileDownloadItemSpec<Id> {
     /// Returns a new `FileDownloadItemSpec`.
     pub fn new(item_spec_id: ItemSpecId) -> Self {

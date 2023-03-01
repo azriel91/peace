@@ -1,6 +1,7 @@
 use std::fmt;
 
 use async_trait::async_trait;
+use dyn_clone::DynClone;
 use peace_core::ItemSpecId;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
@@ -52,7 +53,7 @@ use crate::{CleanOpSpec, EnsureOpSpec, StateDiffFnSpec, TryFnSpec};
 ///
 /// [`Data`]: crate::CleanOpSpec::Data
 #[async_trait(?Send)]
-pub trait ItemSpec {
+pub trait ItemSpec: DynClone {
     /// Consumer provided error type.
     type Error: std::error::Error;
 
