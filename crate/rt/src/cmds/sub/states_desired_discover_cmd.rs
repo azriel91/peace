@@ -1,6 +1,10 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::stream::{StreamExt, TryStreamExt};
+use peace_cmd::{
+    ctx::CmdCtx,
+    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+};
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesDesiredFile},
@@ -23,6 +27,37 @@ where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
 {
+    /// Runs [`StateDesiredFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
+    ///
+    /// At the end of this function, [`Resources`] will be populated with
+    /// [`StatesDesired`], and will be serialized to
+    /// `$flow_dir/states_desired.yaml`.
+    ///
+    /// If any `StateDesiredFnSpec` needs to read the `State` from a previous
+    /// `ItemSpec`, the predecessor should insert a copy / clone of their
+    /// desired state into `Resources`, and the successor should references
+    /// it in their [`Data`].
+    ///
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
+    /// [`Data`]: peace_cfg::TryFnSpec::Data
+    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`StatesDesired`]: peace_resources::StatesDesired
+    /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
+    pub async fn exec_v2(
+        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
+    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesDesired>, PKeys>, E> {
+        let SingleProfileSingleFlowView {
+            flow, resources, ..
+        } = cmd_ctx.scope_mut().view();
+        let item_spec_graph = flow.graph();
+        let states_desired = Self::exec_internal(item_spec_graph, resources).await?;
+
+        let cmd_ctx = cmd_ctx.resources_update(|resources| {
+            Resources::<WithStatesDesired>::from((resources, states_desired))
+        });
+        Ok(cmd_ctx)
+    }
+
     /// Runs [`StateDesiredFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
