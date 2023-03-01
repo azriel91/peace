@@ -13,8 +13,7 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{
-    cmd::CmdContext, cmd_context_params::ParamsKeys, Error, ItemSpecGraph, StatesSerializer,
-    Storage,
+    cmd_context_params::ParamsKeys, Error, ItemSpecGraph, StatesSerializer, Storage,
 };
 
 use crate::BUFFERED_FUTURES_MAX;
@@ -56,53 +55,6 @@ where
             Resources::<WithStatesDesired>::from((resources, states_desired))
         });
         Ok(cmd_ctx)
-    }
-
-    /// Runs [`StateDesiredFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
-    ///
-    /// At the end of this function, [`Resources`] will be populated with
-    /// [`StatesDesired`], and will be serialized to
-    /// `$flow_dir/states_desired.yaml`.
-    ///
-    /// If any `StateDesiredFnSpec` needs to read the `State` from a previous
-    /// `ItemSpec`, the predecessor should insert a copy / clone of their
-    /// desired state into `Resources`, and the successor should references
-    /// it in their [`Data`].
-    ///
-    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
-    /// [`Data`]: peace_cfg::TryFnSpec::Data
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StatesDesired`]: peace_resources::StatesDesired
-    /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp, PKeys>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesDesired, PKeys>, E> {
-        let CmdContext {
-            workspace,
-            item_spec_graph,
-            output,
-            mut resources,
-            params_type_regs,
-            states_type_regs,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            ..
-        } = cmd_context;
-        let states_desired = Self::exec_internal(item_spec_graph, &mut resources).await?;
-
-        let resources = Resources::<WithStatesDesired>::from((resources, states_desired));
-
-        let cmd_context = CmdContext::from((
-            workspace,
-            item_spec_graph,
-            output,
-            resources,
-            params_type_regs,
-            states_type_regs,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-        ));
-        Ok(cmd_context)
     }
 
     /// Runs [`StateDesiredFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].

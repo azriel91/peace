@@ -7,13 +7,11 @@
 //! `ItemSpec`'s params type.
 
 pub use self::{
-    app_init_cmd::AppInitCmd, cmd_context_builder::CmdContextBuilder,
-    cmd_ctx_builder::params_augment, profile_list_cmd::ProfileListCmd,
+    app_init_cmd::AppInitCmd, cmd_ctx_builder::params_augment, profile_list_cmd::ProfileListCmd,
     profile_show_cmd::ProfileShowCmd,
 };
 
 mod app_init_cmd;
-mod cmd_context_builder;
 mod cmd_ctx_builder;
 mod profile_list_cmd;
 mod profile_show_cmd;

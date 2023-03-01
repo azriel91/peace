@@ -3,7 +3,7 @@ use std::{fmt::Debug, hash::Hash, path::Path};
 use futures::{stream, StreamExt, TryStreamExt};
 
 use peace_resources::{
-    internal::{CmdDirs, FlowParamsFile, ProfileParamsFile, WorkspaceDirs, WorkspaceParamsFile},
+    internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
     type_reg::untagged::TypeReg,
 };
 use peace_rt_model_core::{
@@ -48,31 +48,6 @@ use crate::Storage;
 pub struct WorkspaceInitializer;
 
 impl WorkspaceInitializer {
-    /// Creates directories used by the peace framework.
-    pub async fn dirs_initialize(
-        workspace_dirs: &WorkspaceDirs,
-        cmd_dirs: &CmdDirs,
-    ) -> Result<(), Error> {
-        let dirs = [
-            AsRef::<Path>::as_ref(workspace_dirs.workspace_dir()),
-            AsRef::<Path>::as_ref(workspace_dirs.peace_dir()),
-            AsRef::<Path>::as_ref(workspace_dirs.peace_app_dir()),
-            AsRef::<Path>::as_ref(cmd_dirs.profile_dir()),
-            AsRef::<Path>::as_ref(cmd_dirs.profile_history_dir()),
-            AsRef::<Path>::as_ref(cmd_dirs.flow_dir()),
-        ];
-
-        stream::iter(dirs)
-            .map(Result::<_, Error>::Ok)
-            .try_for_each(|dir| async move {
-                tokio::fs::create_dir_all(dir).await.map_err(|error| {
-                    let path = dir.to_path_buf();
-                    Error::Native(NativeError::WorkspaceDirCreate { path, error })
-                })
-            })
-            .await
-    }
-
     /// Creates directories used by the peace framework.
     pub async fn dirs_create<'f, I>(dirs: I) -> Result<(), Error>
     where

@@ -12,9 +12,7 @@ use peace_resources::{
     states::{ts::Current, StatesCurrent},
     Resources,
 };
-use peace_rt_model::{
-    cmd::CmdContext, cmd_context_params::ParamsKeys, Error, ItemSpecGraph, Storage,
-};
+use peace_rt_model::{cmd_context_params::ParamsKeys, Error, ItemSpecGraph, Storage};
 
 use crate::BUFFERED_FUTURES_MAX;
 
@@ -53,52 +51,6 @@ where
             Resources::<WithStatesCurrent>::from((resources, states))
         });
         Ok(cmd_ctx)
-    }
-
-    /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
-    ///
-    /// At the end of this function, [`Resources`] will be populated with
-    /// [`StatesCurrent`], and will be serialized to
-    /// `$flow_dir/states_saved.yaml`.
-    ///
-    /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
-    /// `ItemSpec`, the predecessor should insert a copy / clone of their state
-    /// into `Resources`, and the successor should references it in their
-    /// [`Data`].
-    ///
-    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
-    /// [`Data`]: peace_cfg::TryFnSpec::Data
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp, PKeys>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesCurrent, PKeys>, E> {
-        let CmdContext {
-            workspace,
-            item_spec_graph,
-            output,
-            mut resources,
-            params_type_regs,
-            states_type_regs,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            ..
-        } = cmd_context;
-        let states = Self::exec_internal(item_spec_graph, &mut resources).await?;
-
-        let resources = Resources::<WithStatesCurrent>::from((resources, states));
-
-        let cmd_context = CmdContext::from((
-            workspace,
-            item_spec_graph,
-            output,
-            resources,
-            params_type_regs,
-            states_type_regs,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-        ));
-        Ok(cmd_context)
     }
 
     /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].

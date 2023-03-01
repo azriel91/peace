@@ -12,9 +12,7 @@ use peace_resources::{
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     Resources,
 };
-use peace_rt_model::{
-    cmd::CmdContext, cmd_context_params::ParamsKeys, Error, StatesSerializer, Storage,
-};
+use peace_rt_model::{cmd_context_params::ParamsKeys, Error, StatesSerializer, Storage};
 
 /// Reads [`StatesDesired`]s from storage.
 #[derive(Debug)]
@@ -47,32 +45,6 @@ where
             Resources::<WithStatesDesired>::from((resources, states_desired))
         });
         Ok(cmd_ctx)
-    }
-
-    /// Reads [`StatesDesired`]s from storage.
-    ///
-    /// Either [`StatesDesiredDiscoverCmd`] or [`StatesDiscoverCmd`] must have
-    /// run prior to this command to read the state.
-    ///
-    /// [`StatesDesiredDiscoverCmd`]: crate::StatesDesiredDiscoverCmd
-    /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
-    pub async fn exec(
-        mut cmd_context: CmdContext<'_, E, O, SetUp, PKeys>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesDesired, PKeys>, E> {
-        let CmdContext {
-            resources,
-            states_type_regs,
-            ..
-        } = &mut cmd_context;
-
-        let states_desired =
-            Self::exec_internal(resources, states_type_regs.states_desired_type_reg()).await?;
-
-        let cmd_context = CmdContext::from((cmd_context, |resources| {
-            Resources::<WithStatesDesired>::from((resources, states_desired))
-        }));
-
-        Ok(cmd_context)
     }
 
     /// Returns [`StatesDesired`] of all [`ItemSpec`]s if it exists on disk.
