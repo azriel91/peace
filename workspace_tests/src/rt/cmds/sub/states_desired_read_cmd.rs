@@ -1,11 +1,12 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
+    cmd::ctx::CmdCtx,
     resources::states::StatesDesired,
     rt::cmds::sub::{StatesDesiredDiscoverCmd, StatesDesiredReadCmd},
-    rt_model::{cmd::CmdContext, Error, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{Error, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
+use crate::{NoOpOutput, PeaceTestError, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
@@ -15,31 +16,33 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
     let mut output = NoOpOutput;
 
     // Write desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    let CmdContext {
-        resources: resources_from_discover,
-        ..
-    } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
+    let cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(Flow::new(
+                FlowId::new(crate::fn_name_short!())?,
+                graph.clone(),
+            ))
+            .await?;
+    let cmd_ctx = StatesDesiredDiscoverCmd::exec_v2(cmd_ctx).await?;
+    let resources_from_discover = cmd_ctx.resources();
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    let CmdContext {
-        resources: resources_from_read,
-        ..
-    } = StatesDesiredReadCmd::exec(cmd_context).await?;
+    let mut output = NoOpOutput;
+    let cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+            .await?;
+    let cmd_ctx = StatesDesiredReadCmd::exec_v2(cmd_ctx).await?;
+    let resources_from_read = cmd_ctx.resources();
 
     let states_desired_from_discover = resources_from_discover.borrow::<StatesDesired>();
     let vec_copy_state_from_discover =
@@ -59,22 +62,23 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
     let mut output = NoOpOutput;
 
     // Try and read desired states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    let exec_result = StatesDesiredReadCmd::exec(cmd_context).await;
+    let cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+            .await?;
+    let exec_result = StatesDesiredReadCmd::exec_v2(cmd_ctx).await;
 
     assert!(matches!(
         exec_result,
-        Err(VecCopyError::PeaceRtError(
+        Err(PeaceTestError::PeaceRtError(
             Error::StatesDesiredDiscoverRequired
         ))
     ));

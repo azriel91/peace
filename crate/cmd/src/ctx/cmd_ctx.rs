@@ -1,6 +1,6 @@
 #![allow(clippy::type_complexity)]
 
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
 use peace_resources::{
     paths::{PeaceAppDir, PeaceDir, WorkspaceDir},
@@ -282,5 +282,14 @@ where
 
     fn deref(&self) -> &Self::Target {
         &self.scope
+    }
+}
+
+impl<'ctx, O, Scope, PKeys> DerefMut for CmdCtx<'ctx, O, Scope, PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.scope
     }
 }

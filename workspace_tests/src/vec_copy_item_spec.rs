@@ -31,7 +31,7 @@ pub type VecCopyItemSpecWrapper = ItemSpecWrapper<
 >;
 
 /// Copies bytes from `VecA` to `VecB`.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct VecCopyItemSpec;
 
 impl VecCopyItemSpec {

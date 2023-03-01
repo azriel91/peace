@@ -1,11 +1,12 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
+    cmd::ctx::CmdCtx,
     resources::states::{StatesEnsured, StatesEnsuredDry, StatesSaved},
     rt::cmds::{sub::StatesSavedReadCmd, EnsureCmd, StatesDiscoverCmd},
-    rt_model::{cmd::CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
+use crate::{NoOpOutput, PeaceTestError, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std::error::Error>> {
@@ -15,25 +16,31 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    StatesDiscoverCmd::exec(cmd_context).await?;
+    let cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(Flow::new(
+                FlowId::new(crate::fn_name_short!())?,
+                graph.clone(),
+            ))
+            .await?;
+    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    let CmdContext { resources, .. } = EnsureCmd::exec_dry(cmd_context).await?;
+    let cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+            .await?;
+    let cmd_ctx = EnsureCmd::exec_dry_v2(cmd_ctx).await?;
+    let resources = cmd_ctx.resources();
 
     let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
 
@@ -72,38 +79,45 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    StatesDiscoverCmd::exec(cmd_context).await?;
+    let cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(Flow::new(
+                FlowId::new(crate::fn_name_short!())?,
+                graph.clone(),
+            ))
+            .await?;
+    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
 
     // Alter states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    let CmdContext {
-        resources: resources_ensured,
-        ..
-    } = EnsureCmd::exec(cmd_context).await?;
+    let mut output = NoOpOutput;
+    let cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(Flow::new(
+                FlowId::new(crate::fn_name_short!())?,
+                graph.clone(),
+            ))
+            .await?;
+    let cmd_ctx = EnsureCmd::exec_v2(cmd_ctx).await?;
+    let resources_ensured = cmd_ctx.resources();
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    let CmdContext {
-        resources: resources_reread,
-        ..
-    } = StatesSavedReadCmd::exec(cmd_context).await?;
+    let mut output = NoOpOutput;
+    let cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+            .await?;
+    let cmd_ctx = StatesSavedReadCmd::exec_v2(cmd_ctx).await?;
+    let resources_reread = cmd_ctx.resources();
 
     let ensured_states_ensured = resources_ensured.borrow::<StatesEnsured>();
     let states_saved = resources_reread.borrow::<StatesSaved>();
@@ -147,48 +161,58 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    StatesDiscoverCmd::exec(cmd_context).await?;
+    let cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(Flow::new(
+                FlowId::new(crate::fn_name_short!())?,
+                graph.clone(),
+            ))
+            .await?;
+    StatesDiscoverCmd::exec_v2(cmd_ctx).await?;
 
     // Alter states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    let CmdContext {
-        resources: resources_ensured,
-        ..
-    } = EnsureCmd::exec(cmd_context).await?;
+    let mut output = NoOpOutput;
+    let cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(Flow::new(
+                FlowId::new(crate::fn_name_short!())?,
+                graph.clone(),
+            ))
+            .await?;
+    let cmd_ctx = EnsureCmd::exec_v2(cmd_ctx).await?;
+    let resources_ensured = cmd_ctx.resources();
 
     // Dry ensure states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    let CmdContext {
-        resources: resources_ensured_dry,
-        ..
-    } = EnsureCmd::exec_dry(cmd_context).await?;
+    let mut output = NoOpOutput;
+    let cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(Flow::new(
+                FlowId::new(crate::fn_name_short!())?,
+                graph.clone(),
+            ))
+            .await?;
+    let cmd_ctx = EnsureCmd::exec_dry_v2(cmd_ctx).await?;
+    let resources_ensured_dry = cmd_ctx.resources();
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    let CmdContext {
-        resources: resources_reread,
-        ..
-    } = StatesSavedReadCmd::exec(cmd_context).await?;
+    let mut output = NoOpOutput;
+    let cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+            .await?;
+    let cmd_ctx = StatesSavedReadCmd::exec_v2(cmd_ctx).await?;
+    let resources_reread = cmd_ctx.resources();
 
     let ensured_states_ensured = resources_ensured.borrow::<StatesEnsured>();
     let ensured_states_ensured_dry = resources_ensured_dry.borrow::<StatesEnsuredDry>();

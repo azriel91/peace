@@ -9,6 +9,15 @@ use peace::miette;
 #[derive(Debug, thiserror::Error)]
 pub enum PeaceTestError {
     /// A `peace` runtime error occurred.
+    #[error("A VecCopy item spec error occurred.")]
+    VecCopyError(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        crate::VecCopyError,
+    ),
+
+    /// A `peace` runtime error occurred.
     #[error("A `peace` runtime error occurred.")]
     PeaceRtError(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
