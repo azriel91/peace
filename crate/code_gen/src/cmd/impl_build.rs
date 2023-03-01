@@ -172,6 +172,7 @@ fn impl_build_for(
     let dirs_to_create = dirs_to_create(scope);
     let scope_fields = scope_fields(scope);
     let states_saved_read_and_pg_init = states_saved_read_and_pg_init(scope);
+    let resources_insert = resources_insert(scope);
 
     let scope_builder_deconstruct = scope_builder_deconstruct(
         scope_struct,
@@ -464,6 +465,26 @@ fn impl_build_for(
                 // Self::flow_params_insert(flow_params, &mut resources);
                 // resources.insert(flow_params_file);
                 #flow_params_insert
+
+                // Insert resources
+                //
+                // === SingleProfileSingleFlow === //
+                // {
+                //     let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
+                //     let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
+                //
+                //     resources.insert(app_name);
+                //     resources.insert(storage);
+                //     resources.insert(workspace_dir);
+                //     resources.insert(peace_dir);
+                //     resources.insert(peace_app_dir);
+                //     resources.insert(profile_dir.clone());
+                //     resources.insert(profile_history_dir.clone());
+                //     resources.insert(profile.clone());
+                //     resources.insert(flow_dir.clone());
+                //     resources.insert(flow.flow_id().clone());
+                // }
+                #resources_insert
 
                 // === MultiProfileSingleFlow === //
                 // let states_type_regs = crate::ctx::cmd_ctx_builder::states_type_regs(flow.graph());
@@ -1418,5 +1439,29 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                 };
             }
         }
+    }
+}
+
+fn resources_insert(scope: Scope) -> proc_macro2::TokenStream {
+    if scope == Scope::SingleProfileSingleFlow {
+        quote! {
+            {
+                let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
+                let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
+
+                resources.insert(app_name);
+                resources.insert(storage);
+                resources.insert(workspace_dir);
+                resources.insert(peace_dir);
+                resources.insert(peace_app_dir);
+                resources.insert(profile_dir.clone());
+                resources.insert(profile_history_dir.clone());
+                resources.insert(profile.clone());
+                resources.insert(flow_dir.clone());
+                resources.insert(flow.flow_id().clone());
+            }
+        }
+    } else {
+        proc_macro2::TokenStream::new()
     }
 }
