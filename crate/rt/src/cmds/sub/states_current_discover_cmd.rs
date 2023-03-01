@@ -1,6 +1,10 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::stream::{StreamExt, TryStreamExt};
+use peace_cmd::{
+    ctx::CmdCtx,
+    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+};
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesSavedFile},
@@ -19,9 +23,38 @@ pub struct StatesCurrentDiscoverCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
 impl<E, O, PKeys> StatesCurrentDiscoverCmd<E, O, PKeys>
 where
-    E: std::error::Error + From<Error> + Send,
+    E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
 {
+    /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
+    ///
+    /// At the end of this function, [`Resources`] will be populated with
+    /// [`StatesCurrent`], and will be serialized to
+    /// `$flow_dir/states_saved.yaml`.
+    ///
+    /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
+    /// `ItemSpec`, the predecessor should insert a copy / clone of their state
+    /// into `Resources`, and the successor should references it in their
+    /// [`Data`].
+    ///
+    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
+    /// [`Data`]: peace_cfg::TryFnSpec::Data
+    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    pub async fn exec_v2(
+        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
+    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesCurrent>, PKeys>, E> {
+        let SingleProfileSingleFlowView {
+            flow, resources, ..
+        } = cmd_ctx.scope_mut().view();
+
+        let states = Self::exec_internal(flow.graph(), resources).await?;
+        let cmd_ctx = cmd_ctx.resources_update(|resources| {
+            Resources::<WithStatesCurrent>::from((resources, states))
+        });
+        Ok(cmd_ctx)
+    }
+
     /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with

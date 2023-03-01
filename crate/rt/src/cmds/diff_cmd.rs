@@ -19,7 +19,7 @@ pub struct DiffCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
 impl<E, O, PKeys> DiffCmd<E, O, PKeys>
 where
-    E: std::error::Error + From<Error> + Send,
+    E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {

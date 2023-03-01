@@ -18,7 +18,7 @@ pub struct StatesSavedReadCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
 impl<E, O, PKeys> StatesSavedReadCmd<E, O, PKeys>
 where
-    E: std::error::Error + From<Error> + Send,
+    E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
 {
     /// Reads [`StatesSaved`]s from storage.

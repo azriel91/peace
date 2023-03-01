@@ -20,6 +20,7 @@ cfg-if = { workspace = true }
 futures = "0.3.26"
 miette = { workspace = true, optional = true }
 peace_cfg = { path = "../cfg", version = "0.0.6" }
+peace_cmd = { path = "../cmd", version = "0.0.6" }
 peace_resources = { path = "../resources", version = "0.0.6" }
 peace_rt_model = { path = "../rt_model", version = "0.0.6" }
 peace_rt_model_core = { path = "../rt_model_core", version = "0.0.6" }
@@ -41,6 +42,7 @@ default = []
 error_reporting = ["dep:miette", "peace_rt_model/error_reporting"]
 output_progress = [
     "peace_cfg/output_progress",
+    "peace_cmd/output_progress",
     "peace_rt_model/output_progress",
     "peace_rt_model_core/output_progress",
 ]

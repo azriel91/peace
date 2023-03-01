@@ -20,7 +20,7 @@ pub struct StatesDesiredDiscoverCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
 impl<E, O, PKeys> StatesDesiredDiscoverCmd<E, O, PKeys>
 where
-    E: std::error::Error + From<Error> + Send,
+    E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
 {
     /// Runs [`StateDesiredFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].

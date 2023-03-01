@@ -4,7 +4,7 @@ use std::ops::Deref;
 
 use peace_resources::{
     paths::{PeaceAppDir, PeaceDir, WorkspaceDir},
-    resources::ts::SetUp,
+    Resources,
 };
 use peace_rt_model::{
     cmd_context_params::{KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs},
@@ -64,7 +64,7 @@ where
 /// exist to cater for each kind of command. This means the data available in a
 /// command context differs per scope, to accurately reflect what is available.
 #[derive(Debug)]
-pub struct CmdCtxView<'view: 'ctx, 'ctx, O, Scope, PKeys>
+pub struct CmdCtxView<'view, O, Scope, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -74,11 +74,11 @@ where
     /// See [`OutputWrite`].
     ///
     /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    pub output: &'ctx mut O,
+    pub output: &'view mut O,
     /// Workspace that the `peace` tool runs in.
-    pub workspace: &'ctx Workspace,
+    pub workspace: &'view Workspace,
     /// Scope of the command.
-    pub scope: &'view Scope,
+    pub scope: &'view mut Scope,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
     /// [`FlowParams`] deserialization.
     ///
@@ -95,7 +95,7 @@ where
     /// Returns a view struct of this command context.
     ///
     /// This allows the output and scope data to be borrowed concurrently.
-    pub fn view<'view>(&'view mut self) -> CmdCtxView<'view, 'ctx, O, Scope, PKeys> {
+    pub fn view(&mut self) -> CmdCtxView<'_, O, Scope, PKeys> {
         let Self {
             output,
             workspace,
@@ -129,6 +129,11 @@ where
     /// Returns the scope of the command.
     pub fn scope(&self) -> &Scope {
         &self.scope
+    }
+
+    /// Returns a mutable reference to the scope of the command.
+    pub fn scope_mut(&mut self) -> &mut Scope {
+        &mut self.scope
     }
 
     /// Returns the type registries for [`WorkspaceParams`], [`ProfileParams`],
@@ -216,18 +221,9 @@ impl<'ctx, O> CmdCtx<'ctx, O, (), ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnkn
     > {
         CmdCtxBuilder::single_profile_no_flow(output, workspace)
     }
-}
 
-impl<'ctx, E, O>
-    CmdCtx<
-        'ctx,
-        O,
-        SingleProfileSingleFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>, SetUp>,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-    >
-{
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_single_flow(
+    pub fn builder_single_profile_single_flow<E>(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
@@ -244,6 +240,37 @@ impl<'ctx, E, O>
         ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
         CmdCtxBuilder::single_profile_single_flow(output, workspace)
+    }
+}
+
+impl<'ctx, E, O, PKeys, ResTs0> CmdCtx<'ctx, O, SingleProfileSingleFlow<E, PKeys, ResTs0>, PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
+    /// Updates `resources` to a different type state based on the given
+    /// function.
+    pub fn resources_update<ResTs1, F>(
+        self,
+        f: F,
+    ) -> CmdCtx<'ctx, O, SingleProfileSingleFlow<E, PKeys, ResTs1>, PKeys>
+    where
+        F: FnOnce(Resources<ResTs0>) -> Resources<ResTs1>,
+    {
+        let CmdCtx {
+            output,
+            workspace,
+            scope,
+            params_type_regs,
+        } = self;
+
+        let scope = scope.resources_update(f);
+
+        CmdCtx {
+            output,
+            workspace,
+            scope,
+            params_type_regs,
+        }
     }
 }
 
