@@ -36,9 +36,9 @@ impl ProfileShowCmd {
             CmdCtx::builder_single_profile_no_flow::<AppCycleError>(output, &workspace);
         crate::cmds::params_augment!(cmd_ctx_builder);
 
+        let profile_key = String::from("profile");
         let mut cmd_ctx = cmd_ctx_builder
-            .with_profile_from_workspace_param(&String::from("profile"))
-            .build()
+            .with_profile_from_workspace_param(&profile_key)
             .await?;
         let CmdCtxView { output, scope, .. } = cmd_ctx.view();
 

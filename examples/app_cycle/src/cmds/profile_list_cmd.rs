@@ -38,7 +38,6 @@ impl ProfileListCmd {
 
         let mut cmd_ctx = cmd_ctx_builder
             .with_profile_filter(|profile| profile != &profile_workspace_init)
-            .build()
             .await?;
         let CmdCtxView { output, scope, .. } = cmd_ctx.view();
 

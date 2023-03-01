@@ -228,7 +228,8 @@ fn impl_build_for(
                     >,
                 >,
                 E,
-            > {
+            >
+            {
                 use futures::stream::TryStreamExt;
 
                 // Values shared by subsequent function calls.
@@ -586,6 +587,65 @@ fn impl_build_for(
                 })
             }
         }
+
+        impl<'ctx, 'key: 'ctx, E, O, PKeys> std::future::IntoFuture
+        for crate::ctx::CmdCtxBuilder<
+                'ctx,
+                O,
+                #scope_builder_name<
+                    E,
+                    // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+                    // FlowSelected<E>,
+                    // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+                    // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
+                    // FlowParamsNone,
+                    #scope_builder_type_params
+                >,
+                PKeys,
+            >
+        where
+            E: std::error::Error + From<peace_rt_model::Error> + 'static,
+            PKeys: #params_module::ParamsKeys + 'static,
+        {
+            /// Future that returns the `CmdCtx`.
+            ///
+            /// This is boxed since [TAIT] is not yet available.
+            ///
+            /// [TAIT]: https://rust-lang.github.io/impl-trait-initiative/explainer/tait.html
+            type IntoFuture = std::pin::Pin<
+                Box<
+                    dyn std::future::Future<
+                        Output = Result<
+                            crate::ctx::CmdCtx<
+                                'ctx,
+                                O,
+                                #scope_type_path<
+                                    E,
+                                    PKeys,
+
+                                    // SingleProfileSingleFlow
+                                    // peace_resources::resources::ts::SetUp
+                                    #scope_type_params
+                                >,
+                                #params_module::ParamsKeysImpl<
+                                    PKeys::WorkspaceParamsKMaybe,
+                                    PKeys::ProfileParamsKMaybe,
+                                    PKeys::FlowParamsKMaybe,
+                                >,
+                            >,
+                            E,
+                        >
+                    >
+                    + 'ctx,
+                >,
+            >;
+            type Output = <Self::IntoFuture as std::future::Future>::Output;
+
+            fn into_future(self) -> Self::IntoFuture {
+                Box::pin(self.build())
+            }
+        }
+
     }
 }
 
