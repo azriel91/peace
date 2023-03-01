@@ -1,5 +1,9 @@
 use std::{fmt::Debug, marker::PhantomData};
 
+use peace_cmd::{
+    ctx::{CmdCtx, CmdCtxView},
+    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+};
 use peace_resources::{
     resources::ts::{SetUp, WithStatesDesired},
     Resources,
@@ -19,6 +23,45 @@ where
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
+    /// Displays [`StatesDesired`]s from storage.
+    ///
+    /// Either [`StatesDesiredDiscoverCmd`] or [`StatesDiscoverCmd`] must have
+    /// run prior to this command to read the state.
+    ///
+    /// [`StatesDesiredDiscoverCmd`]: crate::StatesDesiredDiscoverCmd
+    /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
+    pub async fn exec_v2(
+        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
+    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesDesired>, PKeys>, E> {
+        let CmdCtxView { output, scope, .. } = cmd_ctx.view();
+        let SingleProfileSingleFlowView {
+            states_type_regs,
+            resources,
+            ..
+        } = scope.view();
+
+        let states_desired_result = StatesDesiredReadCmd::<E, O, PKeys>::exec_internal(
+            resources,
+            states_type_regs.states_desired_type_reg(),
+        )
+        .await;
+
+        match states_desired_result {
+            Ok(states_desired) => {
+                output.present(&states_desired).await?;
+
+                let cmd_ctx = cmd_ctx.resources_update(|resources| {
+                    Resources::<WithStatesDesired>::from((resources, states_desired))
+                });
+                Ok(cmd_ctx)
+            }
+            Err(e) => {
+                output.write_err(&e).await?;
+                Err(e)
+            }
+        }
+    }
+
     /// Displays [`StatesDesired`]s from storage.
     ///
     /// Either [`StatesDesiredDiscoverCmd`] or [`StatesDiscoverCmd`] must have
