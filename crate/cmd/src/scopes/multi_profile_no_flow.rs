@@ -1,9 +1,13 @@
 use std::{collections::BTreeMap, fmt::Debug, hash::Hash, marker::PhantomData};
 
 use peace_core::Profile;
-use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
-use peace_rt_model::params::{
-    KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams, WorkspaceParams,
+use peace_resources::paths::{PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir};
+use peace_rt_model::{
+    params::{
+        KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
+        WorkspaceParams,
+    },
+    Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -43,10 +47,19 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct MultiProfileNoFlow<E, PKeys>
+pub struct MultiProfileNoFlow<'ctx, E, O, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    output: &'ctx mut O,
+    /// Workspace that the `peace` tool runs in.
+    workspace: &'ctx Workspace,
     /// The profiles that are accessible by this command.
     profiles: Vec<Profile>,
     /// Profile directories that store params and flows.
@@ -69,12 +82,14 @@ where
     marker: PhantomData<E>,
 }
 
-impl<E, PKeys> MultiProfileNoFlow<E, PKeys>
+impl<'ctx, E, O, PKeys> MultiProfileNoFlow<'ctx, E, O, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
     /// Returns a new `MultiProfileNoFlow` scope.
     pub(crate) fn new(
+        output: &'ctx mut O,
+        workspace: &'ctx Workspace,
         profiles: Vec<Profile>,
         profile_dirs: BTreeMap<Profile, ProfileDir>,
         profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
@@ -86,6 +101,8 @@ where
         >,
     ) -> Self {
         Self {
+            output,
+            workspace,
             profiles,
             profile_dirs,
             profile_history_dirs,
@@ -94,6 +111,36 @@ where
             profile_to_profile_params,
             marker: PhantomData,
         }
+    }
+
+    /// Returns a reference to the output.
+    pub fn output(&self) -> &O {
+        self.output
+    }
+
+    /// Returns a mutable reference to the output.
+    pub fn output_mut(&mut self) -> &mut O {
+        self.output
+    }
+
+    /// Returns the workspace that the `peace` tool runs in.
+    pub fn workspace(&self) -> &Workspace {
+        self.workspace
+    }
+
+    /// Returns a reference to the workspace directory.
+    pub fn workspace_dir(&self) -> &WorkspaceDir {
+        self.workspace.dirs().workspace_dir()
+    }
+
+    /// Returns a reference to the `.peace` directory.
+    pub fn peace_dir(&self) -> &PeaceDir {
+        self.workspace.dirs().peace_dir()
+    }
+
+    /// Returns a reference to the `.peace/$app` directory.
+    pub fn peace_app_dir(&self) -> &PeaceAppDir {
+        self.workspace.dirs().peace_app_dir()
     }
 
     /// Returns the accessible profiles.
@@ -125,9 +172,11 @@ where
     }
 }
 
-impl<E, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
     MultiProfileNoFlow<
+        'ctx,
         E,
+        O,
         ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     >
 where
@@ -142,9 +191,11 @@ where
     }
 }
 
-impl<E, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
     MultiProfileNoFlow<
+        'ctx,
         E,
+        O,
         ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
     >
 where

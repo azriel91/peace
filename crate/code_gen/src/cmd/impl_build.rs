@@ -214,9 +214,10 @@ fn impl_build_for(
             ) -> Result<
                 crate::ctx::CmdCtx<
                     'ctx,
-                    O,
                     #scope_type_path<
+                        'ctx,
                         E,
+                        O,
                         #params_module::ParamsKeysImpl<
                             PKeys::WorkspaceParamsKMaybe,
                             PKeys::ProfileParamsKMaybe,
@@ -563,6 +564,9 @@ fn impl_build_for(
                 let params_type_regs = params_type_regs_builder.build();
 
                 let scope = #scope_type_path::new(
+                    // output,
+                    // workspace,
+
                     // === SingleProfileSingleFlow === //
                     // #[cfg(feature = "output_progress")]
                     // cmd_progress_tracker,
@@ -603,9 +607,8 @@ fn impl_build_for(
                 );
 
                 Ok(crate::ctx::CmdCtx {
-                    output,
-                    workspace,
                     scope,
+                    marker: std::marker::PhantomData,
                 })
             }
         }
@@ -640,9 +643,10 @@ fn impl_build_for(
                         Output = Result<
                             crate::ctx::CmdCtx<
                                 'ctx,
-                                O,
                                 #scope_type_path<
+                                    'ctx,
                                     E,
+                                    O,
                                     #params_module::ParamsKeysImpl<
                                         PKeys::WorkspaceParamsKMaybe,
                                         PKeys::ProfileParamsKMaybe,
@@ -1252,6 +1256,9 @@ fn dirs_to_create(scope: Scope) -> proc_macro2::TokenStream {
 
 fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
     let mut scope_fields = Punctuated::<FieldValue, Token![,]>::new();
+
+    scope_fields.push(parse_quote!(output));
+    scope_fields.push(parse_quote!(workspace));
 
     // progress tracker
     match scope {

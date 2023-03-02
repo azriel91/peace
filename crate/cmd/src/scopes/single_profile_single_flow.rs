@@ -2,7 +2,7 @@ use std::{fmt::Debug, hash::Hash};
 
 use peace_core::Profile;
 use peace_resources::{
-    paths::{FlowDir, ProfileDir, ProfileHistoryDir},
+    paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
     resources::ts::SetUp,
     Resources,
 };
@@ -11,7 +11,7 @@ use peace_rt_model::{
         FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
         WorkspaceParams,
     },
-    Flow, StatesTypeRegs,
+    Flow, StatesTypeRegs, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -48,10 +48,19 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct SingleProfileSingleFlow<E, PKeys, TS>
+pub struct SingleProfileSingleFlow<'ctx, E, O, PKeys, TS>
 where
     PKeys: ParamsKeys + 'static,
 {
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    output: &'ctx mut O,
+    /// Workspace that the `peace` tool runs in.
+    workspace: &'ctx Workspace,
     /// Tracks progress of each operation execution.
     #[cfg(feature = "output_progress")]
     cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
@@ -121,10 +130,19 @@ where
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct SingleProfileSingleFlowView<'view, E, PKeys, TS>
+pub struct SingleProfileSingleFlowView<'view, E, O, PKeys, TS>
 where
     PKeys: ParamsKeys + 'static,
 {
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    pub output: &'view mut O,
+    /// Workspace that the `peace` tool runs in.
+    pub workspace: &'view Workspace,
     /// Tracks progress of each operation execution.
     #[cfg(feature = "output_progress")]
     pub cmd_progress_tracker: &'view mut peace_rt_model::CmdProgressTracker,
@@ -161,13 +179,15 @@ where
     pub resources: &'view mut Resources<TS>,
 }
 
-impl<E, PKeys> SingleProfileSingleFlow<E, PKeys, SetUp>
+impl<'ctx, E, O, PKeys> SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>
 where
     PKeys: ParamsKeys + 'static,
 {
     /// Returns a new `SingleProfileSingleFlow` scope.
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
+        output: &'ctx mut O,
+        workspace: &'ctx Workspace,
         #[cfg(feature = "output_progress")]
         cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
         profile: Profile,
@@ -183,6 +203,8 @@ where
         resources: Resources<SetUp>,
     ) -> Self {
         Self {
+            output,
+            workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
             profile,
@@ -200,15 +222,17 @@ where
     }
 }
 
-impl<E, PKeys, TS> SingleProfileSingleFlow<E, PKeys, TS>
+impl<'ctx, E, O, PKeys, TS> SingleProfileSingleFlow<'ctx, E, O, PKeys, TS>
 where
     PKeys: ParamsKeys + 'static,
 {
     /// Returns a view struct of this scope.
     ///
     /// This allows the flow and resources to be borrowed concurrently.
-    pub fn view(&mut self) -> SingleProfileSingleFlowView<'_, E, PKeys, TS> {
+    pub fn view(&mut self) -> SingleProfileSingleFlowView<'_, E, O, PKeys, TS> {
         let Self {
+            output,
+            workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
             profile,
@@ -225,6 +249,8 @@ where
         } = self;
 
         SingleProfileSingleFlowView {
+            output,
+            workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
             profile,
@@ -239,6 +265,36 @@ where
             states_type_regs,
             resources,
         }
+    }
+
+    /// Returns a reference to the output.
+    pub fn output(&self) -> &O {
+        self.output
+    }
+
+    /// Returns a mutable reference to the output.
+    pub fn output_mut(&mut self) -> &mut O {
+        self.output
+    }
+
+    /// Returns the workspace that the `peace` tool runs in.
+    pub fn workspace(&self) -> &Workspace {
+        self.workspace
+    }
+
+    /// Returns a reference to the workspace directory.
+    pub fn workspace_dir(&self) -> &WorkspaceDir {
+        self.workspace.dirs().workspace_dir()
+    }
+
+    /// Returns a reference to the `.peace` directory.
+    pub fn peace_dir(&self) -> &PeaceDir {
+        self.workspace.dirs().peace_dir()
+    }
+
+    /// Returns a reference to the `.peace/$app` directory.
+    pub fn peace_app_dir(&self) -> &PeaceAppDir {
+        self.workspace.dirs().peace_app_dir()
     }
 
     /// Returns the progress tracker for all operations' executions.
@@ -310,11 +366,16 @@ where
 
     /// Updates `resources` to a different type state based on the given
     /// function.
-    pub fn resources_update<ResTs1, F>(self, f: F) -> SingleProfileSingleFlow<E, PKeys, ResTs1>
+    pub fn resources_update<ResTs1, F>(
+        self,
+        f: F,
+    ) -> SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs1>
     where
         F: FnOnce(Resources<TS>) -> Resources<ResTs1>,
     {
         let SingleProfileSingleFlow {
+            output,
+            workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
             profile,
@@ -333,6 +394,8 @@ where
         let resources = f(resources);
 
         SingleProfileSingleFlow {
+            output,
+            workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
             profile,
@@ -350,9 +413,11 @@ where
     }
 }
 
-impl<E, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe, TS>
+impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe, TS>
     SingleProfileSingleFlow<
+        'ctx,
         E,
+        O,
         ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
         TS,
     >
@@ -368,9 +433,11 @@ where
     }
 }
 
-impl<E, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe, TS>
+impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe, TS>
     SingleProfileSingleFlow<
+        'ctx,
         E,
+        O,
         ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
         TS,
     >
@@ -386,9 +453,11 @@ where
     }
 }
 
-impl<E, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK, TS>
+impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK, TS>
     SingleProfileSingleFlow<
+        'ctx,
         E,
+        O,
         ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
         TS,
     >

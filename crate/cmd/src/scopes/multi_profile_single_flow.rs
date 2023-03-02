@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
 
 use peace_core::Profile;
 use peace_resources::{
-    paths::{FlowDir, ProfileDir, ProfileHistoryDir},
+    paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
     states::StatesSaved,
 };
 use peace_rt_model::{
@@ -10,7 +10,7 @@ use peace_rt_model::{
         FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
         WorkspaceParams,
     },
-    Flow, StatesTypeRegs,
+    Flow, StatesTypeRegs, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -67,10 +67,19 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write flow parameters for different flows.
 /// * Read or write flow state for different flows.
 #[derive(Debug)]
-pub struct MultiProfileSingleFlow<E, PKeys>
+pub struct MultiProfileSingleFlow<'ctx, E, O, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    output: &'ctx mut O,
+    /// Workspace that the `peace` tool runs in.
+    workspace: &'ctx Workspace,
     /// The profiles that are accessible by this command.
     profiles: Vec<Profile>,
     /// Profile directories that store params and flows.
@@ -106,13 +115,15 @@ where
     profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
 }
 
-impl<E, PKeys> MultiProfileSingleFlow<E, PKeys>
+impl<'ctx, E, O, PKeys> MultiProfileSingleFlow<'ctx, E, O, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
     /// Returns a new `MultiProfileSingleFlow` scope.
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
+        output: &'ctx mut O,
+        workspace: &'ctx Workspace,
         profiles: Vec<Profile>,
         profile_dirs: BTreeMap<Profile, ProfileDir>,
         profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
@@ -132,6 +143,8 @@ where
         profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
     ) -> Self {
         Self {
+            output,
+            workspace,
             profiles,
             profile_dirs,
             profile_history_dirs,
@@ -144,6 +157,36 @@ where
             states_type_regs,
             profile_to_states_saved,
         }
+    }
+
+    /// Returns a reference to the output.
+    pub fn output(&self) -> &O {
+        self.output
+    }
+
+    /// Returns a mutable reference to the output.
+    pub fn output_mut(&mut self) -> &mut O {
+        self.output
+    }
+
+    /// Returns the workspace that the `peace` tool runs in.
+    pub fn workspace(&self) -> &Workspace {
+        self.workspace
+    }
+
+    /// Returns a reference to the workspace directory.
+    pub fn workspace_dir(&self) -> &WorkspaceDir {
+        self.workspace.dirs().workspace_dir()
+    }
+
+    /// Returns a reference to the `.peace` directory.
+    pub fn peace_dir(&self) -> &PeaceDir {
+        self.workspace.dirs().peace_dir()
+    }
+
+    /// Returns a reference to the `.peace/$app` directory.
+    pub fn peace_app_dir(&self) -> &PeaceAppDir {
+        self.workspace.dirs().peace_app_dir()
     }
 
     /// Returns the accessible profiles.
@@ -199,9 +242,11 @@ where
     }
 }
 
-impl<E, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
     MultiProfileSingleFlow<
+        'ctx,
         E,
+        O,
         ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     >
 where
@@ -216,9 +261,11 @@ where
     }
 }
 
-impl<E, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
     MultiProfileSingleFlow<
+        'ctx,
         E,
+        O,
         ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
     >
 where
@@ -233,9 +280,11 @@ where
     }
 }
 
-impl<E, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
     MultiProfileSingleFlow<
+        'ctx,
         E,
+        O,
         ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
     >
 where
