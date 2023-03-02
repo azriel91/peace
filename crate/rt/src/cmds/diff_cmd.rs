@@ -36,9 +36,8 @@ where
     /// [`StateDiffFnSpec`]: peace_cfg::ItemSpec::StateDiffFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesSavedDiffs>, PKeys>, E>
-    {
+        cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesSavedDiffs>>, E> {
         let cmd_ctx_result = Self::exec_internal_with_states_saved(cmd_ctx).await;
         match cmd_ctx_result {
             Ok(mut cmd_ctx) => {
@@ -60,9 +59,8 @@ where
     /// This also updates `Resources` from `SetUp` to
     /// `WithStatesCurrentAndDesired`.
     pub(crate) async fn exec_internal_with_states_saved(
-        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesSavedDiffs>, PKeys>, E>
-    {
+        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesSavedDiffs>>, E> {
         let SingleProfileSingleFlowView {
             resources,
             states_type_regs,

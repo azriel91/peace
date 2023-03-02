@@ -31,8 +31,8 @@ where
     /// [`StatesDesiredDiscoverCmd`]: crate::StatesDesiredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesDesired>, PKeys>, E> {
+        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesDesired>>, E> {
         let SingleProfileSingleFlowView {
             states_type_regs,
             resources,

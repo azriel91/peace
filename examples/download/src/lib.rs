@@ -81,7 +81,6 @@ pub type DownloadCmdCtx<'ctx, O> = CmdCtx<
         ParamsKeysImpl<KeyUnknown, KeyKnown<String>, KeyUnknown>,
         SetUp,
     >,
-    ParamsKeysImpl<KeyUnknown, KeyKnown<String>, KeyUnknown>,
 >;
 
 /// Returns a `CmdCtx` initialized from the workspace and item spec graph

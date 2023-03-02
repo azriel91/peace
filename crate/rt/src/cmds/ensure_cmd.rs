@@ -78,8 +78,8 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec_dry(
-        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, EnsuredDry>, PKeys>, E> {
+        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, EnsuredDry>>, E> {
         let CmdCtxView { output, scope, .. } = cmd_ctx.view();
         let SingleProfileSingleFlowView {
             #[cfg(feature = "output_progress")]
@@ -138,8 +138,8 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec(
-        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>, PKeys>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, Ensured>, PKeys>, E> {
+        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, Ensured>>, E> {
         let CmdCtxView { output, scope, .. } = cmd_ctx.view();
         let SingleProfileSingleFlowView {
             #[cfg(feature = "output_progress")]

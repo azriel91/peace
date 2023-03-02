@@ -14,5 +14,4 @@ pub type AppCycleCmdCtx<'ctx, O, TS> = peace::cmd::ctx::CmdCtx<
         ParamsKeysImpl<KeyKnown<String>, KeyKnown<String>, KeyUnknown>,
         TS,
     >,
-    ParamsKeysImpl<KeyKnown<String>, KeyKnown<String>, KeyUnknown>,
 >;
