@@ -37,6 +37,7 @@ impl ProfileInitFlow {
             WorkspaceSpec::SessionStorage,
         )?;
         let graph = Self::graph()?;
+        let flow = Flow::new(FlowId::profile_init(), graph);
 
         let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow(output, &workspace);
         crate::cmds::params_augment!(cmd_ctx_builder);
@@ -44,7 +45,7 @@ impl ProfileInitFlow {
             .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
             .with_profile_param_value(String::from("env_type"), Some(env_type))
             .with_profile(profile)
-            .with_flow(Flow::new(FlowId::profile_init(), graph.clone()))
+            .with_flow(&flow)
             .await?;
         StatesDiscoverCmd::exec(cmd_ctx).await?;
 
@@ -53,7 +54,7 @@ impl ProfileInitFlow {
         let profile_key = String::from("profile");
         let cmd_ctx = cmd_ctx_builder
             .with_profile_from_workspace_param(&profile_key)
-            .with_flow(Flow::new(FlowId::profile_init(), graph.clone()))
+            .with_flow(&flow)
             .await?;
         StatesSavedDisplayCmd::exec(cmd_ctx).await?;
 

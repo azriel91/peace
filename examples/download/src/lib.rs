@@ -9,7 +9,7 @@ use peace::{
     rt_model::{
         output::OutputWrite,
         params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
-        Flow, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
+        Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
 use peace_item_specs::file_download::{FileDownloadItemSpec, FileDownloadParams};
@@ -27,16 +27,17 @@ mod file_id;
 mod wasm;
 
 #[derive(Debug)]
-pub struct WorkspaceAndGraph {
+pub struct WorkspaceAndFlow {
     workspace: Workspace,
-    item_spec_graph: ItemSpecGraph<DownloadError>,
+    flow: Flow<DownloadError>,
 }
 
 /// Returns a default workspace and the Download item spec graph.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn workspace_and_graph_setup(
+pub async fn workspace_and_flow_setup(
     workspace_spec: WorkspaceSpec,
-) -> Result<WorkspaceAndGraph, DownloadError> {
+    flow_id: FlowId,
+) -> Result<WorkspaceAndFlow, DownloadError> {
     let workspace = Workspace::new(app_name!(), workspace_spec)?;
 
     let item_spec_graph = {
@@ -45,19 +46,18 @@ pub async fn workspace_and_graph_setup(
             .add_fn(FileDownloadItemSpec::<FileId>::new(item_spec_id!("file")).into());
         item_spec_graph_builder.build()
     };
+    let flow = Flow::new(flow_id, item_spec_graph);
 
-    let workspace_and_graph = WorkspaceAndGraph {
-        workspace,
-        item_spec_graph,
-    };
-    Ok(workspace_and_graph)
+    let workspace_and_flow = WorkspaceAndFlow { workspace, flow };
+    Ok(workspace_and_flow)
 }
 
 /// Returns a default workspace and the Download item spec graph.
 #[cfg(target_arch = "wasm32")]
-pub async fn workspace_and_graph_setup(
+pub async fn workspace_and_flow_setup(
     workspace_spec: WorkspaceSpec,
-) -> Result<WorkspaceAndGraph, DownloadError> {
+    flow_id: FlowId,
+) -> Result<WorkspaceAndFlow, DownloadError> {
     let workspace = Workspace::new(app_name!(), workspace_spec)?;
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
@@ -65,12 +65,10 @@ pub async fn workspace_and_graph_setup(
             .add_fn(FileDownloadItemSpec::<FileId>::new(item_spec_id!("file")).into());
         item_spec_graph_builder.build()
     };
+    let flow = Flow::new(flow_id, item_spec_graph);
 
-    let workspace_and_graph = WorkspaceAndGraph {
-        workspace,
-        item_spec_graph,
-    };
-    Ok(workspace_and_graph)
+    let workspace_and_flow = WorkspaceAndFlow { workspace, flow };
+    Ok(workspace_and_flow)
 }
 
 pub type DownloadCmdCtx<'ctx, O> = CmdCtx<
@@ -86,22 +84,18 @@ pub type DownloadCmdCtx<'ctx, O> = CmdCtx<
 
 /// Returns a `CmdCtx` initialized from the workspace and item spec graph
 pub async fn cmd_context<'ctx, O>(
-    workspace_and_graph: &'ctx WorkspaceAndGraph,
+    workspace_and_flow: &'ctx WorkspaceAndFlow,
     profile: Profile,
-    flow_id: FlowId,
     output: &'ctx mut O,
     file_download_params: Option<FileDownloadParams<FileId>>,
 ) -> Result<DownloadCmdCtx<'ctx, O>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    let WorkspaceAndGraph {
-        workspace,
-        item_spec_graph,
-    } = workspace_and_graph;
+    let WorkspaceAndFlow { workspace, flow } = workspace_and_flow;
     CmdCtx::builder_single_profile_single_flow(output, workspace)
         .with_profile(profile)
-        .with_flow(Flow::new(flow_id, item_spec_graph.clone()))
+        .with_flow(flow)
         .with_profile_param_value("file_download_params".to_string(), file_download_params)
         .await
 }

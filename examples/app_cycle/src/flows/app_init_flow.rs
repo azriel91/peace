@@ -35,6 +35,7 @@ impl AppInitFlow {
             WorkspaceSpec::SessionStorage,
         )?;
         let graph = Self::graph()?;
+        let flow = Flow::new(FlowId::workspace_init(), graph.clone());
 
         let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow(output, &workspace);
         crate::cmds::params_augment!(cmd_ctx_builder);
@@ -48,7 +49,7 @@ impl AppInitFlow {
                 Some(web_app_tar_x_params),
             )
             .with_profile(Profile::workspace_init())
-            .with_flow(Flow::new(FlowId::workspace_init(), graph.clone()))
+            .with_flow(&flow)
             .await?;
 
         StatesDiscoverCmd::exec(cmd_ctx).await?;
@@ -57,7 +58,7 @@ impl AppInitFlow {
         crate::cmds::params_augment!(cmd_ctx_builder);
         let cmd_ctx = cmd_ctx_builder
             .with_profile(Profile::workspace_init())
-            .with_flow(Flow::new(FlowId::workspace_init(), graph))
+            .with_flow(&flow)
             .await?;
         EnsureCmd::exec(cmd_ctx).await?;
 

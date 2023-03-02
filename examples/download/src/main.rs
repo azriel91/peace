@@ -7,7 +7,7 @@ use peace_item_specs::file_download::FileDownloadParams;
 
 use download::{
     clean, clean_dry, cmd_context, desired, diff, ensure, ensure_dry, fetch, status,
-    workspace_and_graph_setup, DownloadArgs, DownloadCommand, DownloadError,
+    workspace_and_flow_setup, DownloadArgs, DownloadCommand, DownloadError,
 };
 
 #[cfg(not(feature = "error_reporting"))]
@@ -77,11 +77,10 @@ pub fn run() -> Result<(), DownloadError> {
 
         match command {
             DownloadCommand::Init { url, dest } => {
-                let workspace_and_graph = workspace_and_graph_setup(workspace_spec).await?;
+                let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
                 let cmd_context = cmd_context(
-                    &workspace_and_graph,
+                    &workspace_and_flow,
                     profile,
-                    flow_id,
                     &mut cli_output,
                     Some(FileDownloadParams::new(url, dest)),
                 )
@@ -89,99 +88,51 @@ pub fn run() -> Result<(), DownloadError> {
                 fetch(cmd_context).await?;
             }
             DownloadCommand::Fetch => {
-                let workspace_and_graph = workspace_and_graph_setup(workspace_spec).await?;
-                let cmd_context = cmd_context(
-                    &workspace_and_graph,
-                    profile,
-                    flow_id,
-                    &mut cli_output,
-                    None,
-                )
-                .await?;
+                let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
+                let cmd_context =
+                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
                 fetch(cmd_context).await?;
             }
             DownloadCommand::Status => {
-                let workspace_and_graph = workspace_and_graph_setup(workspace_spec).await?;
-                let cmd_context = cmd_context(
-                    &workspace_and_graph,
-                    profile,
-                    flow_id,
-                    &mut cli_output,
-                    None,
-                )
-                .await?;
+                let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
+                let cmd_context =
+                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
                 status(cmd_context).await?;
             }
             DownloadCommand::Desired => {
-                let workspace_and_graph = workspace_and_graph_setup(workspace_spec).await?;
-                let cmd_context = cmd_context(
-                    &workspace_and_graph,
-                    profile,
-                    flow_id,
-                    &mut cli_output,
-                    None,
-                )
-                .await?;
+                let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
+                let cmd_context =
+                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
                 desired(cmd_context).await?;
             }
             DownloadCommand::Diff => {
-                let workspace_and_graph = workspace_and_graph_setup(workspace_spec).await?;
-                let cmd_context = cmd_context(
-                    &workspace_and_graph,
-                    profile,
-                    flow_id,
-                    &mut cli_output,
-                    None,
-                )
-                .await?;
+                let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
+                let cmd_context =
+                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
                 diff(cmd_context).await?;
             }
             DownloadCommand::EnsureDry => {
-                let workspace_and_graph = workspace_and_graph_setup(workspace_spec).await?;
-                let cmd_context = cmd_context(
-                    &workspace_and_graph,
-                    profile,
-                    flow_id,
-                    &mut cli_output,
-                    None,
-                )
-                .await?;
+                let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
+                let cmd_context =
+                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
                 ensure_dry(cmd_context).await?;
             }
             DownloadCommand::Ensure => {
-                let workspace_and_graph = workspace_and_graph_setup(workspace_spec).await?;
-                let cmd_context = cmd_context(
-                    &workspace_and_graph,
-                    profile,
-                    flow_id,
-                    &mut cli_output,
-                    None,
-                )
-                .await?;
+                let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
+                let cmd_context =
+                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
                 ensure(cmd_context).await?;
             }
             DownloadCommand::CleanDry => {
-                let workspace_and_graph = workspace_and_graph_setup(workspace_spec).await?;
-                let cmd_context = cmd_context(
-                    &workspace_and_graph,
-                    profile,
-                    flow_id,
-                    &mut cli_output,
-                    None,
-                )
-                .await?;
+                let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
+                let cmd_context =
+                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
                 clean_dry(cmd_context).await?;
             }
             DownloadCommand::Clean => {
-                let workspace_and_graph = workspace_and_graph_setup(workspace_spec).await?;
-                let cmd_context = cmd_context(
-                    &workspace_and_graph,
-                    profile,
-                    flow_id,
-                    &mut cli_output,
-                    None,
-                )
-                .await?;
+                let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
+                let cmd_context =
+                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
                 clean(cmd_context).await?;
             }
         }
