@@ -75,9 +75,10 @@ pub async fn workspace_and_graph_setup(
 
 pub type DownloadCmdCtx<'ctx, O> = CmdCtx<
     'ctx,
-    O,
     SingleProfileSingleFlow<
+        'ctx,
         DownloadError,
+        O,
         ParamsKeysImpl<KeyUnknown, KeyKnown<String>, KeyUnknown>,
         SetUp,
     >,

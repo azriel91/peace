@@ -38,8 +38,7 @@ impl ProfileInitFlow {
         )?;
         let graph = Self::graph()?;
 
-        let cmd_ctx_builder =
-            CmdCtx::builder_single_profile_single_flow::<AppCycleError>(output, &workspace);
+        let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow(output, &workspace);
         crate::cmds::params_augment!(cmd_ctx_builder);
         let cmd_ctx = cmd_ctx_builder
             .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
@@ -49,8 +48,7 @@ impl ProfileInitFlow {
             .await?;
         StatesDiscoverCmd::exec(cmd_ctx).await?;
 
-        let cmd_ctx_builder =
-            CmdCtx::builder_single_profile_single_flow::<AppCycleError>(output, &workspace);
+        let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow(output, &workspace);
         crate::cmds::params_augment!(cmd_ctx_builder);
         let profile_key = String::from("profile");
         let cmd_ctx = cmd_ctx_builder
