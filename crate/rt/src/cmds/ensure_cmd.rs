@@ -2,7 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cfg::{ItemSpecId, OpCtx};
 use peace_cmd::{
-    ctx::{CmdCtx, CmdCtxView},
+    ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
 use peace_resources::{
@@ -77,17 +77,17 @@ where
     /// [`EnsureOpSpec::exec_dry`]: peace_cfg::EnsureOpSpec::exec_dry
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    pub async fn exec_dry(
-        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, EnsuredDry>>, E> {
-        let CmdCtxView { output, scope, .. } = cmd_ctx.view();
+    pub async fn exec_dry<'ctx>(
+        mut cmd_ctx: CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, EnsuredDry>>, E> {
         let SingleProfileSingleFlowView {
+            output,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
             flow,
             resources,
             ..
-        } = scope.view();
+        } = cmd_ctx.view();
         let item_spec_graph = flow.graph();
 
         let states_ensured_dry = Self::exec_internal(
@@ -104,8 +104,9 @@ where
         });
 
         {
-            let CmdCtxView { output, scope, .. } = cmd_ctx.view();
-            let resources = scope.resources();
+            let SingleProfileSingleFlowView {
+                output, resources, ..
+            } = cmd_ctx.view();
             let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
             output.present(&*states_ensured_dry).await?;
         }
@@ -137,17 +138,17 @@ where
     /// [`EnsureOpSpec::exec`]: peace_cfg::EnsureOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    pub async fn exec(
-        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, Ensured>>, E> {
-        let CmdCtxView { output, scope, .. } = cmd_ctx.view();
+    pub async fn exec<'ctx>(
+        mut cmd_ctx: CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, Ensured>>, E> {
         let SingleProfileSingleFlowView {
+            output,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
             flow,
             resources,
             ..
-        } = scope.view();
+        } = cmd_ctx.view();
         let item_spec_graph = flow.graph();
 
         let states_ensured = Self::exec_internal(
@@ -163,8 +164,9 @@ where
             .resources_update(|resources| Resources::<Ensured>::from((resources, states_ensured)));
 
         {
-            let CmdCtxView { output, scope, .. } = cmd_ctx.view();
-            let resources = scope.resources();
+            let SingleProfileSingleFlowView {
+                output, resources, ..
+            } = cmd_ctx.view();
             let states_ensured = resources.borrow::<StatesEnsured>();
             Self::serialize_internal(resources, &states_ensured).await?;
             output.present(&*states_ensured).await?;
@@ -363,7 +365,7 @@ where
     ///     F: (Fn(&dyn ItemSpecRt<E>, op_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemEnsureBoxed) -> Fut) + Copy,
     ///     Fut: Future<Output = Result<(), E>>,
     /// ```
-    async fn item_ensure_exec(
+    async fn item_ensure_exec<'ctx>(
         resources: &Resources<SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
         outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,

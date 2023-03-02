@@ -30,9 +30,10 @@ where
     ///
     /// [`StatesDesiredDiscoverCmd`]: crate::StatesDesiredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
-    pub async fn exec(
-        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesDesired>>, E> {
+    pub async fn exec<'ctx>(
+        mut cmd_ctx: CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, WithStatesDesired>>, E>
+    {
         let SingleProfileSingleFlowView {
             states_type_regs,
             resources,
@@ -50,7 +51,7 @@ where
     /// Returns [`StatesDesired`] of all [`ItemSpec`]s if it exists on disk.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    pub(crate) async fn exec_internal(
+    pub(crate) async fn exec_internal<'ctx>(
         resources: &mut Resources<SetUp>,
         states_desired_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
     ) -> Result<StatesDesired, E> {
@@ -59,7 +60,7 @@ where
         Ok(states)
     }
 
-    async fn deserialize_internal(
+    async fn deserialize_internal<'ctx>(
         resources: &mut Resources<SetUp>,
         states_desired_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
     ) -> Result<StatesDesired, E> {

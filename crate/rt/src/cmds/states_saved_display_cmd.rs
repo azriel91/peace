@@ -1,7 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cmd::{
-    ctx::{CmdCtx, CmdCtxView},
+    ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
 use peace_resources::{
@@ -30,15 +30,15 @@ where
     ///
     /// [`StatesSavedDiscoverCmd`]: crate::StatesSavedDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
-    pub async fn exec(
-        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesSaved>>, E> {
-        let CmdCtxView { output, scope, .. } = cmd_ctx.view();
+    pub async fn exec<'ctx>(
+        mut cmd_ctx: CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, WithStatesSaved>>, E> {
         let SingleProfileSingleFlowView {
+            output,
             states_type_regs,
             resources,
             ..
-        } = scope.view();
+        } = cmd_ctx.view();
 
         let states_saved_result = StatesSavedReadCmd::<E, O, PKeys>::exec_internal(
             resources,

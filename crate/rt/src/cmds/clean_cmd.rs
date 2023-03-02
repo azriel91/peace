@@ -6,7 +6,7 @@ use futures::{
 };
 use peace_cfg::OpCheckStatus;
 use peace_cmd::{
-    ctx::{CmdCtx, CmdCtxView},
+    ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
 use peace_resources::{
@@ -54,15 +54,16 @@ where
     /// [`CleanOpSpec::exec_dry`]: peace_cfg::CleanOpSpec::exec_dry
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
-    pub async fn exec_dry(
-        cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, CleanedDry>>, E> {
+    pub async fn exec_dry<'ctx>(
+        cmd_ctx: CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, CleanedDry>>, E> {
         let cmd_ctx_result = Self::exec_dry_internal(cmd_ctx).await;
         match cmd_ctx_result {
             Ok(mut cmd_ctx) => {
                 {
-                    let CmdCtxView { output, scope, .. } = cmd_ctx.view();
-                    let resources = scope.resources();
+                    let SingleProfileSingleFlowView {
+                        output, resources, ..
+                    } = cmd_ctx.view();
                     let states_cleaned_dry = resources.borrow::<StatesCleanedDry>();
                     output.present(&*states_cleaned_dry).await?;
                 }
@@ -82,9 +83,9 @@ where
     /// [`exec_dry`]: peace_cfg::CleanOpSpec::exec_dry
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
-    pub(crate) async fn exec_dry_internal(
-        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, CleanedDry>>, E> {
+    pub(crate) async fn exec_dry_internal<'ctx>(
+        mut cmd_ctx: CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, CleanedDry>>, E> {
         let SingleProfileSingleFlowView {
             flow, resources, ..
         } = cmd_ctx.scope_mut().view();
@@ -123,7 +124,7 @@ where
         Ok(cmd_ctx)
     }
 
-    async fn clean_op_spec_exec_dry(
+    async fn clean_op_spec_exec_dry<'ctx>(
         item_spec_graph: &ItemSpecGraph<E>,
         resources: &Resources<WithStatesCurrent>,
         op_check_statuses: &OpCheckStatuses,
@@ -160,15 +161,16 @@ where
     /// [`CleanOpSpec::exec`]: peace_cfg::CleanOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
-    pub async fn exec(
-        cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, Cleaned>>, E> {
+    pub async fn exec<'ctx>(
+        cmd_ctx: CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, Cleaned>>, E> {
         let cmd_ctx_result = Self::exec_internal(cmd_ctx).await;
         match cmd_ctx_result {
             Ok(mut cmd_ctx) => {
                 {
-                    let CmdCtxView { output, scope, .. } = cmd_ctx.view();
-                    let resources = scope.resources();
+                    let SingleProfileSingleFlowView {
+                        output, resources, ..
+                    } = cmd_ctx.view();
                     let states_cleaned = resources.borrow::<StatesCleaned>();
                     output.present(&*states_cleaned).await?;
                 }
@@ -187,9 +189,9 @@ where
     /// [`exec`]: peace_cfg::CleanOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
-    pub(crate) async fn exec_internal(
-        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, Cleaned>>, E> {
+    pub(crate) async fn exec_internal<'ctx>(
+        mut cmd_ctx: CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, Cleaned>>, E> {
         let SingleProfileSingleFlowView {
             flow, resources, ..
         } = cmd_ctx.scope_mut().view();
@@ -242,7 +244,7 @@ where
         Ok(op_check_statuses)
     }
 
-    async fn clean_op_spec_exec(
+    async fn clean_op_spec_exec<'ctx>(
         item_spec_graph: &ItemSpecGraph<E>,
         resources: &Resources<WithStatesCurrent>,
         op_check_statuses: &OpCheckStatuses,

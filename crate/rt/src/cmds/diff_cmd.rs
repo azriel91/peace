@@ -2,7 +2,7 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use futures::{StreamExt, TryStreamExt};
 use peace_cmd::{
-    ctx::{CmdCtx, CmdCtxView},
+    ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
 use peace_resources::{
@@ -35,15 +35,17 @@ where
     /// [`StatesRw`]: peace_resources::StatesRw
     /// [`StateDiffFnSpec`]: peace_cfg::ItemSpec::StateDiffFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    pub async fn exec(
-        cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesSavedDiffs>>, E> {
+    pub async fn exec<'ctx>(
+        cmd_ctx: CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, WithStatesSavedDiffs>>, E>
+    {
         let cmd_ctx_result = Self::exec_internal_with_states_saved(cmd_ctx).await;
         match cmd_ctx_result {
             Ok(mut cmd_ctx) => {
                 {
-                    let CmdCtxView { output, scope, .. } = cmd_ctx.view();
-                    let resources = scope.resources();
+                    let SingleProfileSingleFlowView {
+                        output, resources, ..
+                    } = cmd_ctx.view();
                     let state_diffs = resources.borrow::<StateDiffs>();
                     output.present(&*state_diffs).await?;
                 }
@@ -58,9 +60,10 @@ where
     ///
     /// This also updates `Resources` from `SetUp` to
     /// `WithStatesCurrentAndDesired`.
-    pub(crate) async fn exec_internal_with_states_saved(
-        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesSavedDiffs>>, E> {
+    pub(crate) async fn exec_internal_with_states_saved<'ctx>(
+        mut cmd_ctx: CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, WithStatesSavedDiffs>>, E>
+    {
         let SingleProfileSingleFlowView {
             resources,
             states_type_regs,

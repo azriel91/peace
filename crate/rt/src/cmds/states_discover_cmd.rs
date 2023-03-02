@@ -33,10 +33,12 @@ where
     /// [`StatesDesired`]: peace_resources::StatesDesired
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    pub async fn exec(
-        mut cmd_ctx: CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<'_, O, SingleProfileSingleFlow<E, PKeys, WithStatesCurrentAndDesired>>, E>
-    {
+    pub async fn exec<'ctx>(
+        mut cmd_ctx: CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
+    ) -> Result<
+        CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, WithStatesCurrentAndDesired>>,
+        E,
+    > {
         let SingleProfileSingleFlowView {
             flow, resources, ..
         } = cmd_ctx.scope_mut().view();
