@@ -15,18 +15,18 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
         &[profile.clone(), profile_other.clone()],
-        Some(&flow_id),
+        Some(flow.flow_id()),
     )
     .await?;
 
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
-        .with_flow(flow)
+        .with_flow(&flow)
         .build()
         .await?;
 
@@ -38,11 +38,11 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
 
         let profile_dir = ProfileDir::from((peace_app_dir, &profile));
         let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
-        let profile_flow_dir = FlowDir::from((&profile_dir, &flow_id));
+        let profile_flow_dir = FlowDir::from((&profile_dir, flow.flow_id()));
 
         let profile_other_dir = ProfileDir::from((peace_app_dir, &profile_other));
         let profile_other_history_dir = ProfileHistoryDir::from(&profile_other_dir);
-        let profile_other_flow_dir = FlowDir::from((&profile_other_dir, &flow_id));
+        let profile_other_flow_dir = FlowDir::from((&profile_other_dir, flow.flow_id()));
 
         profile_dirs.insert(profile.clone(), profile_dir);
         profile_dirs.insert(profile_other.clone(), profile_other_dir);
@@ -62,7 +62,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(&[profile.clone(), profile_other], scope.profiles());
     assert_eq!(&profile_dirs, scope.profile_dirs());
     assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(&flow_id, scope.flow().flow_id());
+    assert_eq!(flow.flow_id(), scope.flow().flow_id());
     assert_eq!(&flow_dirs, scope.flow_dirs());
     Ok(())
 }
@@ -73,18 +73,18 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
         &[profile.clone(), profile_other.clone()],
-        Some(&flow_id),
+        Some(flow.flow_id()),
     )
     .await?;
 
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
-        .with_flow(flow)
+        .with_flow(&flow)
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
         .with_workspace_param_value(
             String::from("ws_param_1"),
@@ -101,11 +101,11 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
 
         let profile_dir = ProfileDir::from((peace_app_dir, &profile));
         let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
-        let profile_flow_dir = FlowDir::from((&profile_dir, &flow_id));
+        let profile_flow_dir = FlowDir::from((&profile_dir, flow.flow_id()));
 
         let profile_other_dir = ProfileDir::from((peace_app_dir, &profile_other));
         let profile_other_history_dir = ProfileHistoryDir::from(&profile_other_dir);
-        let profile_other_flow_dir = FlowDir::from((&profile_other_dir, &flow_id));
+        let profile_other_flow_dir = FlowDir::from((&profile_other_dir, flow.flow_id()));
 
         profile_dirs.insert(profile.clone(), profile_dir);
         profile_dirs.insert(profile_other.clone(), profile_other_dir);
@@ -126,7 +126,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     assert_eq!(&[profile.clone(), profile_other], scope.profiles());
     assert_eq!(&profile_dirs, scope.profile_dirs());
     assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(&flow_id, scope.flow().flow_id());
+    assert_eq!(flow.flow_id(), scope.flow().flow_id());
     assert_eq!(&flow_dirs, scope.flow_dirs());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
@@ -142,12 +142,12 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
         &[profile.clone(), profile_other.clone()],
-        Some(&flow_id),
+        Some(flow.flow_id()),
     )
     .await?;
 
@@ -156,7 +156,7 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
         .with_profile_params_k::<String>()
         .with_profile_param::<u32>(String::from("profile_param_0"))
         .with_profile_param::<u64>(String::from("profile_param_1"))
-        .with_flow(flow)
+        .with_flow(&flow)
         .build()
         .await?;
 
@@ -168,11 +168,11 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
 
         let profile_dir = ProfileDir::from((peace_app_dir, &profile));
         let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
-        let profile_flow_dir = FlowDir::from((&profile_dir, &flow_id));
+        let profile_flow_dir = FlowDir::from((&profile_dir, flow.flow_id()));
 
         let profile_other_dir = ProfileDir::from((peace_app_dir, &profile_other));
         let profile_other_history_dir = ProfileHistoryDir::from(&profile_other_dir);
-        let profile_other_flow_dir = FlowDir::from((&profile_other_dir, &flow_id));
+        let profile_other_flow_dir = FlowDir::from((&profile_other_dir, flow.flow_id()));
 
         profile_dirs.insert(profile.clone(), profile_dir);
         profile_dirs.insert(profile_other.clone(), profile_other_dir);
@@ -192,7 +192,7 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(&[profile.clone(), profile_other], scope.profiles());
     assert_eq!(&profile_dirs, scope.profile_dirs());
     assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(&flow_id, scope.flow().flow_id());
+    assert_eq!(flow.flow_id(), scope.flow().flow_id());
     assert_eq!(&flow_dirs, scope.flow_dirs());
     Ok(())
 }
@@ -203,18 +203,18 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
         &[profile.clone(), profile_other.clone()],
-        Some(&flow_id),
+        Some(flow.flow_id()),
     )
     .await?;
 
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
-        .with_flow(flow)
+        .with_flow(&flow)
         .with_flow_params_k::<String>()
         .with_flow_param::<bool>(String::from("flow_param_0"))
         .with_flow_param::<u16>(String::from("flow_param_1"))
@@ -229,11 +229,11 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
 
         let profile_dir = ProfileDir::from((peace_app_dir, &profile));
         let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
-        let profile_flow_dir = FlowDir::from((&profile_dir, &flow_id));
+        let profile_flow_dir = FlowDir::from((&profile_dir, flow.flow_id()));
 
         let profile_other_dir = ProfileDir::from((peace_app_dir, &profile_other));
         let profile_other_history_dir = ProfileHistoryDir::from(&profile_other_dir);
-        let profile_other_flow_dir = FlowDir::from((&profile_other_dir, &flow_id));
+        let profile_other_flow_dir = FlowDir::from((&profile_other_dir, flow.flow_id()));
 
         profile_dirs.insert(profile.clone(), profile_dir);
         profile_dirs.insert(profile_other.clone(), profile_other_dir);
@@ -257,7 +257,7 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(&[profile.clone(), profile_other], scope.profiles());
     assert_eq!(&profile_dirs, scope.profile_dirs());
     assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(&flow_id, scope.flow().flow_id());
+    assert_eq!(flow.flow_id(), scope.flow().flow_id());
     assert_eq!(&flow_dirs, scope.flow_dirs());
     assert_eq!(Some(true), flow_params.get("flow_param_0").copied());
     assert_eq!(Some(&456u16), flow_params.get("flow_param_1"));
@@ -271,18 +271,18 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
         &[profile.clone(), profile_other.clone()],
-        Some(&flow_id),
+        Some(flow.flow_id()),
     )
     .await?;
 
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
-        .with_flow(flow)
+        .with_flow(&flow)
         .with_profile_params_k::<String>()
         .with_profile_param::<u32>(String::from("profile_param_0"))
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
@@ -302,11 +302,11 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
 
         let profile_dir = ProfileDir::from((peace_app_dir, &profile));
         let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
-        let profile_flow_dir = FlowDir::from((&profile_dir, &flow_id));
+        let profile_flow_dir = FlowDir::from((&profile_dir, flow.flow_id()));
 
         let profile_other_dir = ProfileDir::from((peace_app_dir, &profile_other));
         let profile_other_history_dir = ProfileHistoryDir::from(&profile_other_dir);
-        let profile_other_flow_dir = FlowDir::from((&profile_other_dir, &flow_id));
+        let profile_other_flow_dir = FlowDir::from((&profile_other_dir, flow.flow_id()));
 
         profile_dirs.insert(profile.clone(), profile_dir);
         profile_dirs.insert(profile_other.clone(), profile_other_dir);
@@ -331,7 +331,7 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     assert_eq!(&[profile.clone(), profile_other], scope.profiles());
     assert_eq!(&profile_dirs, scope.profile_dirs());
     assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(&flow_id, scope.flow().flow_id());
+    assert_eq!(flow.flow_id(), scope.flow().flow_id());
     assert_eq!(&flow_dirs, scope.flow_dirs());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
@@ -350,18 +350,18 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
         &[profile.clone(), profile_other.clone()],
-        Some(&flow_id),
+        Some(flow.flow_id()),
     )
     .await?;
 
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
-        .with_flow(flow)
+        .with_flow(&flow)
         .with_profile_params_k::<String>()
         .with_profile_param::<u32>(String::from("profile_param_0"))
         .with_flow_params_k::<String>()
@@ -384,11 +384,11 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
 
         let profile_dir = ProfileDir::from((peace_app_dir, &profile));
         let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
-        let profile_flow_dir = FlowDir::from((&profile_dir, &flow_id));
+        let profile_flow_dir = FlowDir::from((&profile_dir, flow.flow_id()));
 
         let profile_other_dir = ProfileDir::from((peace_app_dir, &profile_other));
         let profile_other_history_dir = ProfileHistoryDir::from(&profile_other_dir);
-        let profile_other_flow_dir = FlowDir::from((&profile_other_dir, &flow_id));
+        let profile_other_flow_dir = FlowDir::from((&profile_other_dir, flow.flow_id()));
 
         profile_dirs.insert(profile.clone(), profile_dir);
         profile_dirs.insert(profile_other.clone(), profile_other_dir);
@@ -417,7 +417,7 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
     assert_eq!(&[profile.clone(), profile_other], scope.profiles());
     assert_eq!(&profile_dirs, scope.profile_dirs());
     assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(&flow_id, scope.flow().flow_id());
+    assert_eq!(flow.flow_id(), scope.flow().flow_id());
     assert_eq!(&flow_dirs, scope.flow_dirs());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
@@ -438,12 +438,12 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
         &[profile.clone(), profile_other.clone()],
-        Some(&flow_id),
+        Some(flow.flow_id()),
     )
     .await?;
 
@@ -455,7 +455,7 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
             Some("ws_param_1_value".to_string()),
         )
         .with_profile_filter(|profile| **profile == "test_profile")
-        .with_flow(flow)
+        .with_flow(&flow)
         .build()
         .await?;
 
@@ -467,7 +467,7 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
 
         let profile_dir = ProfileDir::from((peace_app_dir, &profile));
         let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
-        let profile_flow_dir = FlowDir::from((&profile_dir, &flow_id));
+        let profile_flow_dir = FlowDir::from((&profile_dir, flow.flow_id()));
 
         profile_dirs.insert(profile.clone(), profile_dir);
 
@@ -485,7 +485,7 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
     assert_eq!(&[profile.clone()], scope.profiles());
     assert_eq!(&profile_dirs, scope.profile_dirs());
     assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(&flow_id, scope.flow().flow_id());
+    assert_eq!(flow.flow_id(), scope.flow().flow_id());
     assert_eq!(&flow_dirs, scope.flow_dirs());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(
@@ -502,12 +502,12 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
         &[profile.clone(), profile_other.clone()],
-        Some(&flow_id),
+        Some(flow.flow_id()),
     )
     .await?;
 
@@ -525,7 +525,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
         .with_flow_param::<bool>(String::from("flow_param_0"))
         .with_profile_filter(|profile| **profile == "test_profile")
         .with_flow_param::<u16>(String::from("flow_param_1"))
-        .with_flow(flow)
+        .with_flow(&flow)
         .build()
         .await?;
 
@@ -537,7 +537,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
 
         let profile_dir = ProfileDir::from((peace_app_dir, &profile));
         let profile_history_dir = ProfileHistoryDir::from(&profile_dir);
-        let profile_flow_dir = FlowDir::from((&profile_dir, &flow_id));
+        let profile_flow_dir = FlowDir::from((&profile_dir, flow.flow_id()));
 
         profile_dirs.insert(profile.clone(), profile_dir);
 
@@ -563,7 +563,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
     assert_eq!(&[profile.clone()], scope.profiles());
     assert_eq!(&profile_dirs, scope.profile_dirs());
     assert_eq!(&profile_history_dirs, scope.profile_history_dirs());
-    assert_eq!(&flow_id, scope.flow().flow_id());
+    assert_eq!(flow.flow_id(), scope.flow().flow_id());
     assert_eq!(&flow_dirs, scope.flow_dirs());
     assert_eq!(Some(&profile), workspace_params.get("profile"));
     assert_eq!(

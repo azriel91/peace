@@ -129,13 +129,11 @@ async fn state_current_returns_shell_command_current_state()
         graph_builder.add_fn(TestFileCreationShCmdItemSpec::new().into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = InMemoryTextOutput::new();
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
 
     let cmd_ctx = StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
@@ -174,13 +172,11 @@ async fn state_desired_returns_shell_command_desired_state()
         graph_builder.add_fn(TestFileCreationShCmdItemSpec::new().into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = InMemoryTextOutput::new();
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
 
     let cmd_ctx = StatesDesiredDiscoverCmd::exec(cmd_ctx).await?;
@@ -220,13 +216,11 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
         graph_builder.add_fn(TestFileCreationShCmdItemSpec::new().into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = InMemoryTextOutput::new();
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
 
     // Discover states current and desired
@@ -235,10 +229,7 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
     // Diff them
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
@@ -266,13 +257,11 @@ async fn ensure_when_creation_required_executes_ensure_exec_shell_command()
         graph_builder.add_fn(TestFileCreationShCmdItemSpec::new().into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = InMemoryTextOutput::new();
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
 
     // Discover states current and desired
@@ -281,10 +270,7 @@ async fn ensure_when_creation_required_executes_ensure_exec_shell_command()
     // Create the file
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
@@ -321,13 +307,11 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
         graph_builder.add_fn(TestFileCreationShCmdItemSpec::new().into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = InMemoryTextOutput::new();
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
 
     // Discover states current and desired
@@ -336,10 +320,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
     // Create the file
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     EnsureCmd::exec(cmd_ctx).await?;
 
@@ -347,10 +328,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
     let mut output = InMemoryTextOutput::new();
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
@@ -366,10 +344,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
     let mut output = InMemoryTextOutput::new();
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
@@ -405,13 +380,11 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
         graph_builder.add_fn(TestFileCreationShCmdItemSpec::new().into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = InMemoryTextOutput::new();
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
 
     // Discover states current and desired
@@ -420,10 +393,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
     // Create the file
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     EnsureCmd::exec(cmd_ctx).await?;
 
@@ -432,10 +402,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
     // Clean the file
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     CleanCmd::exec(cmd_ctx).await?;
 
@@ -444,10 +411,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
     // Run again, for idempotence checck
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = CleanCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();

@@ -24,10 +24,11 @@ async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::erro
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .with_flow(&flow)
         .await?;
 
     let cmd_ctx = StatesDesiredDiscoverCmd::exec(cmd_ctx).await?;

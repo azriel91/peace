@@ -71,7 +71,7 @@ where
     /// Directory to store profile execution history.
     profile_history_dir: ProfileHistoryDir,
     /// The chosen process flow.
-    flow: Flow<E>,
+    flow: &'ctx Flow<E>,
     /// Flow directory that stores params and states.
     flow_dir: FlowDir,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -193,7 +193,7 @@ where
         profile: Profile,
         profile_dir: ProfileDir,
         profile_history_dir: ProfileHistoryDir,
-        flow: Flow<E>,
+        flow: &'ctx Flow<E>,
         flow_dir: FlowDir,
         params_type_regs: ParamsTypeRegs<PKeys>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
@@ -327,7 +327,7 @@ where
 
     /// Returns a reference to the flow.
     pub fn flow(&self) -> &Flow<E> {
-        &self.flow
+        self.flow
     }
 
     /// Returns a reference to the flow directory.

@@ -25,22 +25,20 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Re-read states from disk.
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
@@ -81,16 +79,14 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut buffer = Vec::with_capacity(256);
     let mut cli_output = CliOutput::new_with_writer(&mut buffer);
 
     // Write current and desired states to disk.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut cli_output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     // overwrite initial state
     let resources = cmd_ctx.resources_mut();
@@ -102,7 +98,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     // Re-read states from disk.
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut cli_output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();

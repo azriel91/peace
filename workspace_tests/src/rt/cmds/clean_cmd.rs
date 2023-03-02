@@ -26,22 +26,21 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
     // Write current states to disk.
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
 
     // Re-read states from disk.
+    let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = CleanCmd::exec_dry(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
@@ -73,25 +72,21 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Ensure states.
+    let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
     let resources_ensured = cmd_ctx.resources();
@@ -100,10 +95,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = CleanCmd::exec_dry(cmd_ctx).await?;
     let resources_cleaned = cmd_ctx.resources();
@@ -112,7 +104,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = StatesSavedReadCmd::exec(cmd_ctx).await?;
     let resources_reread = cmd_ctx.resources();
@@ -150,15 +142,13 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
     // Write current states to disk.
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
 
@@ -166,10 +156,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = CleanCmd::exec(cmd_ctx).await?;
     let resources_cleaned = cmd_ctx.resources();
@@ -178,7 +165,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = StatesSavedReadCmd::exec(cmd_ctx).await?;
     let resources_reread = cmd_ctx.resources();
@@ -215,15 +202,13 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     StatesDiscoverCmd::exec(cmd_ctx).await?;
 
@@ -231,10 +216,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
     let resources_ensured = cmd_ctx.resources();
@@ -243,10 +225,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = CleanCmd::exec(cmd_ctx).await?;
     let resources_cleaned = cmd_ctx.resources();
@@ -255,7 +234,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = StatesSavedReadCmd::exec(cmd_ctx).await?;
     let resources_reread = cmd_ctx.resources();

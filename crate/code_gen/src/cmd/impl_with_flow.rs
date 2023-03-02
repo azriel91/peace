@@ -53,7 +53,9 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                 type_params.push(parse_quote!(ProfileSelection));
             }
         }
-        type_params.push(parse_quote!(crate::scopes::type_params::FlowSelected<E>));
+        type_params.push(parse_quote!(
+            crate::scopes::type_params::FlowSelected<'ctx, E>
+        ));
         type_parameters_impl::params_selection_push(&mut type_params, scope);
         type_params
     };
@@ -92,14 +94,14 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         {
             pub fn with_flow(
                 self,
-                flow: peace_rt_model::Flow<E>,
+                flow: &'ctx peace_rt_model::Flow<E>,
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
                 O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
-                    // FlowSelected,
+                    // FlowSelected<'ctx, E>,
                     // PKeys,
                     // WorkspaceParamsSelection,
                     // ProfileParamsSelection,

@@ -56,10 +56,11 @@ async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_e
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -91,6 +92,7 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
     let b_path = PathBuf::from("b");
     let d_path = PathBuf::from("sub").join("d");
 
@@ -100,7 +102,7 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -137,12 +139,13 @@ async fn state_desired_returns_file_metadatas_from_tar() -> Result<(), Box<dyn s
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
     let b_path = PathBuf::from("b");
     let d_path = PathBuf::from("sub").join("d");
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -180,12 +183,13 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
     let b_path = PathBuf::from("b");
     let d_path = PathBuf::from("sub").join("d");
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -195,7 +199,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
@@ -231,6 +235,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
     let a_path = PathBuf::from("a");
     let b_path = PathBuf::from("b");
     let c_path = PathBuf::from("sub").join("c");
@@ -242,7 +247,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -252,7 +257,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
@@ -291,6 +296,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
     let a_path = PathBuf::from("a");
     let c_path = PathBuf::from("sub").join("c");
 
@@ -301,7 +307,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -311,7 +317,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
@@ -348,6 +354,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X1_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
     let b_path = PathBuf::from("b");
     let d_path = PathBuf::from("sub").join("d");
 
@@ -358,7 +365,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -368,7 +375,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
@@ -405,6 +412,7 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
 
     // Create files in the destination.
     let sub_path = dest.join("sub");
@@ -420,7 +428,7 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -430,7 +438,7 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
@@ -469,6 +477,7 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
 
     // Create files in the destination.
     tokio::fs::create_dir(&dest).await?;
@@ -476,7 +485,7 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -486,7 +495,7 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
@@ -512,6 +521,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
 
     // Create files in the destination.
     tokio::fs::create_dir(&dest).await?;
@@ -519,7 +529,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -535,7 +545,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
     let mut output = InMemoryTextOutput::new();
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
@@ -573,10 +583,11 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -586,7 +597,7 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
@@ -622,6 +633,7 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
 
     // Create files in the destination.
     let sub_path = dest.join("sub");
@@ -635,7 +647,7 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -646,7 +658,7 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
     // Overwrite changed files and remove extra files
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
@@ -669,7 +681,7 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
     let mut output = InMemoryTextOutput::new();
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
@@ -704,10 +716,11 @@ async fn clean_check_returns_exec_not_required_when_dest_empty()
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
@@ -744,10 +757,11 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
         tar_path,
         dest,
     } = test_env(&flow_id, TAR_X2_TAR).await?;
+    let flow = Flow::new(flow_id, graph);
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value(
             "param".to_string(),
             Some(TarXParams::<TarXTest>::new(tar_path, dest.clone())),
@@ -757,7 +771,7 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
 
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(Flow::new(flow_id.clone(), graph.clone()))
+        .with_flow(&flow)
         .with_flow_param_value("param".to_string(), None::<TarXParams<TarXTest>>)
         .await?;
     let cmd_ctx = CleanCmd::exec(cmd_ctx).await?;

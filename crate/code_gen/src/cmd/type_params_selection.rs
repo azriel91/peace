@@ -49,7 +49,7 @@ impl FlowSelection {
 
     pub(crate) fn type_param(&self) -> GenericArgument {
         match self {
-            Self::Selected => parse_quote!(crate::scopes::type_params::FlowSelected<E>),
+            Self::Selected => parse_quote!(crate::scopes::type_params::FlowSelected<'ctx, E>),
         }
     }
 }

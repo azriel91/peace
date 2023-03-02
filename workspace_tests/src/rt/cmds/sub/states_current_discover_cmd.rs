@@ -24,10 +24,11 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .with_flow(&flow)
         .await?;
 
     let cmd_ctx = StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
@@ -66,13 +67,11 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(
-            FlowId::new(crate::fn_name_short!())?,
-            graph.clone(),
-        ))
+        .with_flow(&flow)
         .await?;
 
     // Writes to states_saved_file.yaml
@@ -81,7 +80,7 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
     // Execute again to ensure StatesSaved is included
     let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .with_flow(&flow)
         .await?;
     let cmd_ctx = StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();

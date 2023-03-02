@@ -17,7 +17,7 @@ async fn single_profile_single_flow_getters() -> Result<(), Box<dyn std::error::
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
-        .with_flow(flow)
+        .with_flow(&flow)
         .build()
         .await?;
 

@@ -87,7 +87,7 @@ where
     /// Directories of each profile's execution history.
     profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
     /// The chosen process flow.
-    flow: Flow<E>,
+    flow: &'ctx Flow<E>,
     /// Flow directory that stores params and states.
     flow_dirs: BTreeMap<Profile, FlowDir>,
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
@@ -127,7 +127,7 @@ where
         profiles: Vec<Profile>,
         profile_dirs: BTreeMap<Profile, ProfileDir>,
         profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
-        flow: Flow<E>,
+        flow: &'ctx Flow<E>,
         flow_dirs: BTreeMap<Profile, FlowDir>,
         params_type_regs: ParamsTypeRegs<PKeys>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
@@ -209,7 +209,7 @@ where
 
     /// Returns the flow.
     pub fn flow(&self) -> &Flow<E> {
-        &self.flow
+        self.flow
     }
 
     /// Returns the flow directories keyed by each profile.

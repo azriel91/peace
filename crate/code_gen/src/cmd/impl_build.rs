@@ -19,7 +19,7 @@ use crate::cmd::{
 /// consistently correct by hand:
 ///
 /// * `ProfileSelected`, `ProfileFromWorkspaceParams`
-/// * `FlowSelected<E>`
+/// * `FlowSelected<'ctx, E>`
 /// * `WorkspaceParamsNone`, `WorkspaceParamsSome`
 /// * `ProfileParamsNone`, `ProfileParamsSome`
 /// * `FlowParamsNone`, `FlowParamsSome`
@@ -193,7 +193,7 @@ fn impl_build_for(
                 #scope_builder_name<
                     E,
                     // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // FlowSelected<E>,
+                    // FlowSelected<'ctx, E>,
                     // PKeys,
                     // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
                     // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
@@ -620,7 +620,7 @@ fn impl_build_for(
                 #scope_builder_name<
                     E,
                     // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-                    // FlowSelected<E>,
+                    // FlowSelected<'ctx, E>,
                     // PKeys,
                     // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
                     // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
