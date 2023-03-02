@@ -8,7 +8,7 @@ use peace_resources::{
     resources::ts::{SetUp, WithStatesCurrentAndDesired},
     Resources,
 };
-use peace_rt_model::{cmd_context_params::ParamsKeys, Error};
+use peace_rt_model::{params::ParamsKeys, Error};
 
 use crate::cmds::sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd};
 

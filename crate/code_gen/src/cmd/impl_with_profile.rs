@@ -11,7 +11,7 @@ use crate::cmd::{
 pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
+    let params_module: Path = parse_quote!(peace_rt_model::params);
 
     if scope_struct.scope().profile_count() != ProfileCount::One {
         // `with_profile` is not supported.
@@ -164,7 +164,7 @@ pub fn impl_with_profile_from_workspace_param(
             type_params
         };
         type_params.push(parse_quote! {
-            peace_rt_model::cmd_context_params::ParamsKeysImpl<
+            peace_rt_model::params::ParamsKeysImpl<
                 // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
                 #impl_params_key_known_params
             >
@@ -211,7 +211,7 @@ pub fn impl_with_profile_from_workspace_param(
                     crate::scopes::type_params::ProfileNotSelected,
                     // FlowSelection,
 
-                    // peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                    // peace_rt_model::params::ParamsKeysImpl<
                     //     KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
                     // >,
 
@@ -239,7 +239,7 @@ pub fn impl_with_profile_from_workspace_param(
                     crate::scopes::type_params::ProfileFromWorkspaceParam<'key, WorkspaceParamsK>,
                     // FlowSelection,
 
-                    // peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                    // peace_rt_model::params::ParamsKeysImpl<
                     //     KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
                     // >,
 

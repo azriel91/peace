@@ -16,7 +16,7 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{
-    cmd_context_params::ParamsKeys, output::OutputWrite, Error, FnRef, ItemSpecBoxed, ItemSpecGraph,
+    output::OutputWrite, params::ParamsKeys, Error, FnRef, ItemSpecBoxed, ItemSpecGraph,
 };
 
 use crate::cmds::sub::StatesCurrentDiscoverCmd;

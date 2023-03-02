@@ -29,9 +29,9 @@ use crate::cmd::{scope_struct::ScopeStruct, type_parameters_impl};
 ///     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
 ///     /// [`FlowParams`] deserialization.
 ///     ///
-///     /// [`WorkspaceParams`]: peace_rt_model::cmd_context_params::WorkspaceParams
-///     /// [`ProfileParams`]: peace_rt_model::cmd_context_params::ProfileParams
-///     /// [`FlowParams`]: peace_rt_model::cmd_context_params::FlowParams
+///     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
+///     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
+///     /// [`FlowParams`]: peace_rt_model::params::FlowParams
 ///     pub(crate) params_type_regs_builder: ParamsTypeRegsBuilder<PKeys>,
 ///     /// Workspace parameters.
 ///     pub(crate) workspace_params_selection: WorkspaceParamsSelection,
@@ -70,7 +70,7 @@ pub fn struct_definition(scope_struct: &mut ScopeStruct) -> proc_macro2::TokenSt
     };
     scope_struct.item_struct_mut().generics.where_clause = Some(parse_quote! {
         where
-            PKeys: peace_rt_model::cmd_context_params::ParamsKeys + 'static,
+            PKeys: peace_rt_model::params::ParamsKeys + 'static,
     });
 
     scope_struct.item_struct_mut().fields = {
@@ -121,11 +121,11 @@ mod fields {
             /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
             /// [`FlowParams`] deserialization.
             ///
-            /// [`WorkspaceParams`]: peace_rt_model::cmd_context_params::WorkspaceParams
-            /// [`ProfileParams`]: peace_rt_model::cmd_context_params::ProfileParams
-            /// [`FlowParams`]: peace_rt_model::cmd_context_params::FlowParams
+            /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
+            /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
+            /// [`FlowParams`]: peace_rt_model::params::FlowParams
             pub(crate) params_type_regs_builder:
-                peace_rt_model::cmd_context_params::ParamsTypeRegsBuilder<PKeys>
+                peace_rt_model::params::ParamsTypeRegsBuilder<PKeys>
         });
         fields_named.named.extend(fields.named);
 

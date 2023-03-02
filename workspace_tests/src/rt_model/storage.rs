@@ -1,6 +1,6 @@
 use peace::{
     resources::type_reg::untagged::TypeReg,
-    rt_model::{cmd_context_params::WorkspaceParams, Error, Storage},
+    rt_model::{params::WorkspaceParams, Error, Storage},
 };
 use serde::{Deserialize, Serialize};
 

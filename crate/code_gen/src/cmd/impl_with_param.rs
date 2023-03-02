@@ -63,7 +63,7 @@ fn impl_with_param_key_unknown(
 ) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
+    let params_module: Path = parse_quote!(peace_rt_model::params);
 
     // ProfileSelection, FlowSelection
     let selection_type_params = {
@@ -134,7 +134,7 @@ fn impl_with_param_key_unknown(
                     // ProfileSelection,
                     // FlowSelection,
 
-                    // peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                    // peace_rt_model::params::ParamsKeysImpl<
                     //     KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe
                     // >,
 
@@ -174,7 +174,7 @@ fn impl_with_param_key_unknown(
                     // ProfileSelection,
                     // FlowSelection,
 
-                    // peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                    // peace_rt_model::params::ParamsKeysImpl<
                     //     KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
                     // >,
 
@@ -314,7 +314,7 @@ fn impl_with_param_key_known(
                     // ProfileSelection,
                     // FlowSelection,
 
-                    // peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                    // peace_rt_model::params::ParamsKeysImpl<
                     //     KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
                     // >,
 
@@ -357,7 +357,7 @@ fn impl_with_param_key_known(
                     // ProfileSelection,
                     // FlowSelection,
 
-                    // peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                    // peace_rt_model::params::ParamsKeysImpl<
                     //     KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
                     // >,
 

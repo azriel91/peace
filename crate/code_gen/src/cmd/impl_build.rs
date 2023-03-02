@@ -119,7 +119,7 @@ fn impl_build_for(
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
     let scope_type_path = scope.type_path();
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
+    let params_module: Path = parse_quote!(peace_rt_model::params);
 
     let scope_builder_type_params = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
@@ -353,7 +353,7 @@ fn impl_build_for(
                 //     .try_collect::<
                 //         std::collections::BTreeMap<
                 //             peace_core::Profile,
-                //             _ // peace_rt_model::cmd_context_params::ProfileParams<K>
+                //             _ // peace_rt_model::params::ProfileParams<K>
                 //         >
                 //     >()
                 //     .await?;
@@ -382,7 +382,7 @@ fn impl_build_for(
                 //     .try_collect::<
                 //         std::collections::BTreeMap<
                 //             peace_core::Profile,
-                //             _ // peace_rt_model::cmd_context_params::FlowParams<K>
+                //             _ // peace_rt_model::params::FlowParams<K>
                 //         >
                 //     >()
                 //     .await?;
@@ -755,10 +755,10 @@ fn workspace_params_load_save(
     match workspace_params_selection {
         WorkspaceParamsSelection::None => {
             let workspace_params_deserialize = quote! {
-                let workspace_params = peace_rt_model::cmd_context_params::WorkspaceParams::<
+                let workspace_params = peace_rt_model::params::WorkspaceParams::<
                     <
                         PKeys::WorkspaceParamsKMaybe
-                        as peace_rt_model::cmd_context_params::KeyMaybe
+                        as peace_rt_model::params::KeyMaybe
                     >::Key
                 >::new();
             };
@@ -817,10 +817,10 @@ fn profile_params_load_save(
         ProfileCount::One => match profile_params_selection {
             ProfileParamsSelection::None => {
                 let profile_params_deserialize = quote! {
-                    let profile_params = peace_rt_model::cmd_context_params::ProfileParams::<
+                    let profile_params = peace_rt_model::params::ProfileParams::<
                         <
                             PKeys::ProfileParamsKMaybe
-                            as peace_rt_model::cmd_context_params::KeyMaybe
+                            as peace_rt_model::params::KeyMaybe
                         >::Key
                     >::new();
                 };
@@ -863,10 +863,10 @@ fn profile_params_load_save(
                 ProfileParamsSelection::None => quote! {
                     let profile_to_profile_params = std::collections::BTreeMap::<
                         peace_core::Profile,
-                        peace_rt_model::cmd_context_params::ProfileParams<
+                        peace_rt_model::params::ProfileParams<
                             <
                                 PKeys::ProfileParamsKMaybe as
-                                peace_rt_model::cmd_context_params::KeyMaybe
+                                peace_rt_model::params::KeyMaybe
                             >::Key
                         >
                     >::new();
@@ -900,10 +900,10 @@ fn profile_params_load_save(
                             .try_collect::<
                                 std::collections::BTreeMap<
                                     peace_core::Profile,
-                                    peace_rt_model::cmd_context_params::ProfileParams<
+                                    peace_rt_model::params::ProfileParams<
                                         <
                                             PKeys::ProfileParamsKMaybe as
-                                            peace_rt_model::cmd_context_params::KeyMaybe
+                                            peace_rt_model::params::KeyMaybe
                                         >::Key
                                     >
                                 >
@@ -947,10 +947,10 @@ fn flow_params_load_save(
         ProfileCount::One => match flow_params_selection {
             FlowParamsSelection::None => {
                 let flow_params_deserialize = quote! {
-                    let flow_params = peace_rt_model::cmd_context_params::FlowParams::<
+                    let flow_params = peace_rt_model::params::FlowParams::<
                         <
                             PKeys::FlowParamsKMaybe as
-                            peace_rt_model::cmd_context_params::KeyMaybe
+                            peace_rt_model::params::KeyMaybe
                         >::Key
                     >::new();
                 };
@@ -993,10 +993,10 @@ fn flow_params_load_save(
                 FlowParamsSelection::None => quote! {
                     let profile_to_flow_params = std::collections::BTreeMap::<
                         peace_core::Profile,
-                        peace_rt_model::cmd_context_params::FlowParams<
+                        peace_rt_model::params::FlowParams<
                             <
                                 PKeys::FlowParamsKMaybe as
-                                peace_rt_model::cmd_context_params::KeyMaybe
+                                peace_rt_model::params::KeyMaybe
                             >::Key
                         >
                     >::new();
@@ -1029,10 +1029,10 @@ fn flow_params_load_save(
                             .try_collect::<
                                 std::collections::BTreeMap<
                                     peace_core::Profile,
-                                    peace_rt_model::cmd_context_params::FlowParams<
+                                    peace_rt_model::params::FlowParams<
                                         <
                                             PKeys::FlowParamsKMaybe as
-                                            peace_rt_model::cmd_context_params::KeyMaybe
+                                            peace_rt_model::params::KeyMaybe
                                         >::Key
                                     >
                                 >

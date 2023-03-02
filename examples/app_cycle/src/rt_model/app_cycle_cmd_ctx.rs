@@ -1,6 +1,6 @@
 use peace::{
     cmd::scopes::SingleProfileSingleFlow,
-    rt_model::cmd_context_params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
+    rt_model::params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
 };
 
 use crate::model::AppCycleError;

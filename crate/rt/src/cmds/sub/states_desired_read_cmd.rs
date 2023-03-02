@@ -12,7 +12,7 @@ use peace_resources::{
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     Resources,
 };
-use peace_rt_model::{cmd_context_params::ParamsKeys, Error, StatesSerializer, Storage};
+use peace_rt_model::{params::ParamsKeys, Error, StatesSerializer, Storage};
 
 /// Reads [`StatesDesired`]s from storage.
 #[derive(Debug)]

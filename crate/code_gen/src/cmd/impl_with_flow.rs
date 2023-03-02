@@ -9,7 +9,7 @@ use crate::cmd::{type_parameters_impl, FlowCount, ProfileCount, Scope, ScopeStru
 pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
+    let params_module: Path = parse_quote!(peace_rt_model::params);
 
     if scope.profile_count() == ProfileCount::None || scope.flow_count() == FlowCount::None {
         // `with_flow` is not supported.

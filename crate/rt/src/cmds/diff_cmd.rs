@@ -11,7 +11,7 @@ use peace_resources::{
     states::StateDiffs,
     Resources,
 };
-use peace_rt_model::{cmd_context_params::ParamsKeys, output::OutputWrite, Error};
+use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error};
 
 use crate::cmds::sub::{StatesDesiredReadCmd, StatesSavedReadCmd};
 

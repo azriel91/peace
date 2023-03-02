@@ -39,7 +39,7 @@ fn impl_params_merge_for(
 ) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
+    let params_module: Path = parse_quote!(peace_rt_model::params);
 
     let (workspace_params_selection, profile_params_selection, flow_params_selection) =
         match params_scope {

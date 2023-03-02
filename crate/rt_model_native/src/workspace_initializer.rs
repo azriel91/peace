@@ -7,7 +7,7 @@ use peace_resources::{
     type_reg::untagged::TypeReg,
 };
 use peace_rt_model_core::{
-    cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams},
+    params::{FlowParams, ProfileParams, WorkspaceParams},
     Error, NativeError,
 };
 use serde::{de::DeserializeOwned, Serialize};

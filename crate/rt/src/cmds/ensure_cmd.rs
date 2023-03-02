@@ -13,9 +13,9 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{
-    cmd_context_params::ParamsKeys,
     outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
     output::OutputWrite,
+    params::ParamsKeys,
     Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt, Storage,
 };
 use tokio::sync::{mpsc, mpsc::UnboundedSender};

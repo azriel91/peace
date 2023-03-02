@@ -8,7 +8,7 @@ use peace::{
         Resources,
     },
     rt_model::{
-        cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams},
+        params::{FlowParams, ProfileParams, WorkspaceParams},
         Error, Storage, Workspace, WorkspaceSpec,
     },
 };

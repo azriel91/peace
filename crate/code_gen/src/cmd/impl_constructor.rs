@@ -39,10 +39,10 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                     E,
                     // ProfileNotSelected,
                     // FlowNotSelected,
-                    // peace_rt_model::cmd_context_params::ParamsKeysImpl<
-                    //     peace_rt_model::cmd_context_params::KeyUnknown,
-                    //     peace_rt_model::cmd_context_params::KeyUnknown,
-                    //     peace_rt_model::cmd_context_params::KeyUnknown,
+                    // peace_rt_model::params::ParamsKeysImpl<
+                    //     peace_rt_model::params::KeyUnknown,
+                    //     peace_rt_model::params::KeyUnknown,
+                    //     peace_rt_model::params::KeyUnknown,
                     // >,
                     // WorkspaceParamsNone,
                     // ProfileParamsNone,
@@ -60,11 +60,11 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                     // profile_selection: ProfileNotSelected,
                     // flow_selection: FlowNotSelected,
                     // params_type_regs_builder:
-                    //     peace_rt_model::cmd_context_params::ParamsTypeRegsBuilder::<
-                    //         peace_rt_model::cmd_context_params::ParamsKeysImpl<
-                    //             peace_rt_model::cmd_context_params::KeyUnknown,
-                    //             peace_rt_model::cmd_context_params::KeyUnknown,
-                    //             peace_rt_model::cmd_context_params::KeyUnknown,
+                    //     peace_rt_model::params::ParamsTypeRegsBuilder::<
+                    //         peace_rt_model::params::ParamsKeysImpl<
+                    //             peace_rt_model::params::KeyUnknown,
+                    //             peace_rt_model::params::KeyUnknown,
+                    //             peace_rt_model::params::KeyUnknown,
                     //         >
                     //     >::new(),
                     // workspace_params_selection: WorkspaceParamsNone,
@@ -113,10 +113,10 @@ mod scope_builder_type_params {
     ) {
         // Always collect PKeys
         type_params.push(parse_quote! {
-            peace_rt_model::cmd_context_params::ParamsKeysImpl<
-                peace_rt_model::cmd_context_params::KeyUnknown,
-                peace_rt_model::cmd_context_params::KeyUnknown,
-                peace_rt_model::cmd_context_params::KeyUnknown,
+            peace_rt_model::params::ParamsKeysImpl<
+                peace_rt_model::params::KeyUnknown,
+                peace_rt_model::params::KeyUnknown,
+                peace_rt_model::params::KeyUnknown,
             >
         });
 
@@ -173,11 +173,11 @@ mod scope_field_values {
         // Workspace params are supported by all scopes.
         field_values.push(parse_quote! {
             params_type_regs_builder:
-                peace_rt_model::cmd_context_params::ParamsTypeRegsBuilder::<
-                    peace_rt_model::cmd_context_params::ParamsKeysImpl<
-                        peace_rt_model::cmd_context_params::KeyUnknown,
-                        peace_rt_model::cmd_context_params::KeyUnknown,
-                        peace_rt_model::cmd_context_params::KeyUnknown,
+                peace_rt_model::params::ParamsTypeRegsBuilder::<
+                    peace_rt_model::params::ParamsKeysImpl<
+                        peace_rt_model::params::KeyUnknown,
+                        peace_rt_model::params::KeyUnknown,
+                        peace_rt_model::params::KeyUnknown,
                     >
                 >::new()
         });

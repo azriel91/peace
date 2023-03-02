@@ -1,11 +1,9 @@
-use crate::cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams};
+use crate::params::{FlowParams, ProfileParams, WorkspaceParams};
 use std::{fmt::Debug, hash::Hash};
 
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::cmd_context_params::{
-    CmdParams, KeyKnown, KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl,
-};
+use crate::params::{CmdParams, KeyKnown, KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl};
 
 /// Maps of parameters stored for the workspace, profile, and flow.
 #[derive(Debug)]

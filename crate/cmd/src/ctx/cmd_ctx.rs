@@ -7,7 +7,7 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{
-    cmd_context_params::{KeyUnknown, ParamsKeys, ParamsKeysImpl},
+    params::{KeyUnknown, ParamsKeys, ParamsKeysImpl},
     Workspace,
 };
 

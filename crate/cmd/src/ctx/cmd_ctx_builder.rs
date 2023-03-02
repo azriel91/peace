@@ -9,8 +9,8 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{
-    cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams},
     fn_graph::resman::Resource,
+    params::{FlowParams, ProfileParams, WorkspaceParams},
     Error, ItemSpecGraph, StatesTypeRegs, Storage, Workspace, WorkspaceInitializer,
 };
 use serde::{de::DeserializeOwned, Serialize};

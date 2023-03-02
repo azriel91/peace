@@ -127,7 +127,7 @@ pub fn params_selection_none_push(
     };
 
     type_params.push(parse_quote! {
-        peace_rt_model::cmd_context_params::ParamsKeysImpl<
+        peace_rt_model::params::ParamsKeysImpl<
             // KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe
             #impl_params_key_unknown_params
         >
@@ -196,7 +196,7 @@ pub fn params_selection_some_push(
     };
 
     type_params.push(parse_quote! {
-        peace_rt_model::cmd_context_params::ParamsKeysImpl<
+        peace_rt_model::params::ParamsKeysImpl<
             // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
             #impl_params_key_known_params
         >
@@ -263,30 +263,30 @@ pub fn params_key_unknown_push(
 ) {
     match params_scope {
         ParamsScope::Workspace => {
-            type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
+            type_params.push(parse_quote!(peace_rt_model::params::KeyUnknown));
 
             if scope.profile_params_supported() {
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
             } else {
-                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
+                type_params.push(parse_quote!(peace_rt_model::params::KeyUnknown));
             }
 
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsKMaybe));
             } else {
-                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
+                type_params.push(parse_quote!(peace_rt_model::params::KeyUnknown));
             }
         }
         ParamsScope::Profile => {
             // Workspace params are supported by all scopes.
             type_params.push(parse_quote!(WorkspaceParamsKMaybe));
 
-            type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
+            type_params.push(parse_quote!(peace_rt_model::params::KeyUnknown));
 
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsKMaybe));
             } else {
-                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
+                type_params.push(parse_quote!(peace_rt_model::params::KeyUnknown));
             }
         }
         ParamsScope::Flow => {
@@ -296,10 +296,10 @@ pub fn params_key_unknown_push(
             if scope.profile_params_supported() {
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
             } else {
-                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
+                type_params.push(parse_quote!(peace_rt_model::params::KeyUnknown));
             }
 
-            type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
+            type_params.push(parse_quote!(peace_rt_model::params::KeyUnknown));
         }
     }
 }
@@ -322,19 +322,19 @@ pub fn params_key_known_push(
     match params_scope {
         ParamsScope::Workspace => {
             type_params.push(parse_quote!(
-                peace_rt_model::cmd_context_params::KeyKnown<WorkspaceParamsK>
+                peace_rt_model::params::KeyKnown<WorkspaceParamsK>
             ));
 
             if scope.profile_params_supported() {
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
             } else {
-                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
+                type_params.push(parse_quote!(peace_rt_model::params::KeyUnknown));
             }
 
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsKMaybe));
             } else {
-                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
+                type_params.push(parse_quote!(peace_rt_model::params::KeyUnknown));
             }
         }
         ParamsScope::Profile => {
@@ -343,16 +343,16 @@ pub fn params_key_known_push(
 
             if scope.profile_params_supported() {
                 type_params.push(parse_quote!(
-                    peace_rt_model::cmd_context_params::KeyKnown<ProfileParamsK>
+                    peace_rt_model::params::KeyKnown<ProfileParamsK>
                 ));
             } else {
-                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
+                type_params.push(parse_quote!(peace_rt_model::params::KeyUnknown));
             }
 
             if scope.flow_params_supported() {
                 type_params.push(parse_quote!(FlowParamsKMaybe));
             } else {
-                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
+                type_params.push(parse_quote!(peace_rt_model::params::KeyUnknown));
             }
         }
         ParamsScope::Flow => {
@@ -362,15 +362,13 @@ pub fn params_key_known_push(
             if scope.profile_params_supported() {
                 type_params.push(parse_quote!(ProfileParamsKMaybe));
             } else {
-                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
+                type_params.push(parse_quote!(peace_rt_model::params::KeyUnknown));
             }
 
             if scope.flow_params_supported() {
-                type_params.push(parse_quote!(
-                    peace_rt_model::cmd_context_params::KeyKnown<FlowParamsK>
-                ));
+                type_params.push(parse_quote!(peace_rt_model::params::KeyKnown<FlowParamsK>));
             } else {
-                type_params.push(parse_quote!(peace_rt_model::cmd_context_params::KeyUnknown));
+                type_params.push(parse_quote!(peace_rt_model::params::KeyUnknown));
             }
         }
     }

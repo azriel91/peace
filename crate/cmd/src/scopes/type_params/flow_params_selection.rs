@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
 
 use peace_core::Profile;
-use peace_rt_model::cmd_context_params::FlowParams;
+use peace_rt_model::params::FlowParams;
 use serde::{de::DeserializeOwned, Serialize};
 
 /// The application does not use any flow parameters.

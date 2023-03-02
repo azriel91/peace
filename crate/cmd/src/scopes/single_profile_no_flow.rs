@@ -2,7 +2,7 @@ use std::{fmt::Debug, hash::Hash, marker::PhantomData};
 
 use peace_core::Profile;
 use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
-use peace_rt_model::cmd_context_params::{
+use peace_rt_model::params::{
     KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams, WorkspaceParams,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -49,9 +49,9 @@ where
     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
     /// [`FlowParams`] deserialization.
     ///
-    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
-    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
-    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
+    /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
+    /// [`FlowParams`]: peace_rt_model::params::FlowParams
     params_type_regs: ParamsTypeRegs<PKeys>,
     /// Workspace params.
     workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
@@ -103,9 +103,9 @@ where
     /// Returns the type registries for [`WorkspaceParams`], [`ProfileParams`],
     /// and [`FlowParams`] deserialization.
     ///
-    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
-    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
-    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
+    /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
+    /// [`FlowParams`]: peace_rt_model::params::FlowParams
     pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
         &self.params_type_regs
     }
