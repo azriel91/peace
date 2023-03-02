@@ -66,8 +66,8 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             'ctx,
             E,
             O,
-            PKeys,
             // ProfileSelection,
+            // PKeys,
             // WorkspaceParamsSelection,
             // ProfileParamsSelection,
             // FlowParamsSelection,
@@ -80,12 +80,12 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                     E,
                     // ProfileSelection,
                     // FlowNotSelected,
+                    // PKeys,
                     // WorkspaceParamsSelection,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
                     #scope_builder_type_params_flow_not_selected
                 >,
-                PKeys,
             >
         where
             PKeys: #params_module::ParamsKeys + 'static,
@@ -100,12 +100,12 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                     E,
                     // ProfileSelection,
                     // FlowSelected,
+                    // PKeys,
                     // WorkspaceParamsSelection,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
                     #scope_builder_type_params_flow_selected
                 >,
-                PKeys,
             > {
                 let Self {
                     output,

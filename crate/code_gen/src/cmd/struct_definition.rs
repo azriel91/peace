@@ -44,6 +44,21 @@ pub fn struct_definition(scope_struct: &mut ScopeStruct) -> proc_macro2::TokenSt
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
         type_parameters_impl::params_selection_push(&mut type_params, scope);
 
+        // <
+        //     E,
+        //
+        //     // SingleProfile / MultiProfile
+        //     ProfileSelection,
+        //     // SingleFlow
+        //     FlowSelection,
+        //
+        //     PKeys,
+        //     WorkspaceParamsSelection,
+        //     // SingleProfile / MultiProfile
+        //     ProfileParamsSelection,
+        //     // SingleFlow
+        //     FlowParamsSelection,
+        // >
         parse_quote!(<#type_params>)
     };
 
@@ -90,6 +105,20 @@ mod fields {
     /// Appends workspace / profile / flow params selection type parameters if
     /// applicable to the given scope.
     pub fn params_selection_push(fields_named: &mut FieldsNamed, scope: Scope) {
+        // Workspace params are supported by all scopes.
+        let fields: FieldsNamed = parse_quote!({
+            /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+            /// [`FlowParams`] deserialization.
+            ///
+            /// [`WorkspaceParams`]: peace_rt_model::cmd_context_params::WorkspaceParams
+            /// [`ProfileParams`]: peace_rt_model::cmd_context_params::ProfileParams
+            /// [`FlowParams`]: peace_rt_model::cmd_context_params::FlowParams
+            params_type_regs_builder: peace_rt_model::cmd_context_params::ParamsTypeRegsBuilder<
+                PKeys
+            >,
+        });
+        fields_named.named.extend(fields.named);
+
         // Workspace params are supported by all scopes.
         let fields: FieldsNamed = parse_quote!({
             /// Workspace parameters.

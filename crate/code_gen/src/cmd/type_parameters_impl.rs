@@ -27,6 +27,9 @@ pub fn params_selection_push(
     type_params: &mut Punctuated<GenericArgument, Token![,]>,
     scope: Scope,
 ) {
+    // Always collect PKeys.
+    type_params.push(parse_quote!(PKeys));
+
     // Workspace params are supported by all scopes.
     type_params.push(parse_quote!(WorkspaceParamsSelection));
 
@@ -117,6 +120,19 @@ pub fn params_selection_none_push(
     scope: Scope,
     params_scope: ParamsScope,
 ) {
+    let impl_params_key_unknown_params = {
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
+        params_key_unknown_push(&mut type_params, scope, params_scope);
+        type_params
+    };
+
+    type_params.push(parse_quote! {
+        peace_rt_model::cmd_context_params::ParamsKeysImpl<
+            // KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe
+            #impl_params_key_unknown_params
+        >
+    });
+
     match params_scope {
         ParamsScope::Workspace => {
             type_params.push(parse_quote!(
@@ -173,6 +189,19 @@ pub fn params_selection_some_push(
     scope: Scope,
     params_scope: ParamsScope,
 ) {
+    let impl_params_key_known_params = {
+        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
+        params_key_known_push(&mut type_params, scope, params_scope);
+        type_params
+    };
+
+    type_params.push(parse_quote! {
+        peace_rt_model::cmd_context_params::ParamsKeysImpl<
+            // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
+            #impl_params_key_known_params
+        >
+    });
+
     match params_scope {
         ParamsScope::Workspace => {
             type_params.push(parse_quote!(

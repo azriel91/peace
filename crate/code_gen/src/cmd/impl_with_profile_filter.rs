@@ -35,11 +35,11 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
             E,
             O,
             // FlowSelection,
+            // PKeys,
             // WorkspaceParamsSelection,
             // ProfileParamsSelection,
             // FlowParamsSelection,
             #scope_params,
-            PKeys,
         >
             crate::ctx::CmdCtxBuilder<
                 'ctx,
@@ -48,12 +48,12 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
                     E,
                     crate::scopes::type_params::ProfileNotSelected,
                     // FlowSelection,
+                    // PKeys,
                     // WorkspaceParamsSelection,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
                     #scope_params
                 >,
-                PKeys,
             >
         where
             PKeys: #params_module::ParamsKeys + 'static,
@@ -68,12 +68,12 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
                     E,
                     crate::scopes::type_params::ProfileFilterFn<'ctx>,
                     // FlowSelection,
+                    // PKeys,
                     // WorkspaceParamsSelection,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
                     #scope_params
                 >,
-                PKeys,
             >
             where
                 F: (Fn(&peace_core::Profile) -> bool) + 'ctx

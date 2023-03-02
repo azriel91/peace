@@ -93,18 +93,6 @@ fn impl_with_params_k_key_unknown(
         type_params
     };
 
-    let impl_params_key_unknown_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        type_parameters_impl::params_key_unknown_push(&mut type_params, scope, params_scope);
-        type_params
-    };
-
-    let impl_params_key_known_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        type_parameters_impl::params_key_known_push(&mut type_params, scope, params_scope);
-        type_params
-    };
-
     let param_key_impl_unknown_predicates = param_key_impl::unknown_predicates(scope, params_scope);
 
     let params_scope_str = params_scope.to_str();
@@ -138,15 +126,16 @@ fn impl_with_params_k_key_unknown(
                     E,
                     // ProfileSelection,
                     // FlowSelection,
+
+                    // peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                    //     KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe
+                    // >,
+
                     // WorkspaceParamsNone,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
 
                     #impl_scope_builder_type_params_none
-                >,
-                #params_module::ParamsKeysImpl<
-                    // KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe
-                    #impl_params_key_unknown_params
                 >,
             >
         where
@@ -168,15 +157,16 @@ fn impl_with_params_k_key_unknown(
                     E,
                     // ProfileSelection,
                     // FlowSelection,
+
+                    // peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                    //     KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
+                    // >,
+
                     // WorkspaceParamsSome<#params_k_type_param>,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
 
                     #impl_scope_builder_type_params_some
-                >,
-                #params_module::ParamsKeysImpl<
-                    // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
-                    #impl_params_key_known_params
                 >,
             >
             where
@@ -236,7 +226,6 @@ fn impl_with_param_key_known(
 ) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
 
     // ProfileSelection, FlowSelection
     let selection_type_params = {
@@ -262,12 +251,6 @@ fn impl_with_param_key_known(
     let impl_scope_builder_type_params_some = {
         let mut type_params = selection_type_params;
         type_parameters_impl::params_selection_some_push(&mut type_params, scope, params_scope);
-        type_params
-    };
-
-    let impl_params_key_known_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        type_parameters_impl::params_key_known_push(&mut type_params, scope, params_scope);
         type_params
     };
 
@@ -307,15 +290,16 @@ fn impl_with_param_key_known(
                     E,
                     // ProfileSelection,
                     // FlowSelection,
+
+                    // peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                    //     KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
+                    // >,
+
                     // WorkspaceParamsSome<WorkspaceParamsK>,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
 
                     #impl_scope_builder_type_params_some
-                >,
-                #params_module::ParamsKeysImpl<
-                    // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
-                    #impl_params_key_known_params
                 >,
             >
         where
@@ -344,15 +328,16 @@ fn impl_with_param_key_known(
                     E,
                     // ProfileSelection,
                     // FlowSelection,
+
+                    // peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                    //     KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
+                    // >,
+
                     // WorkspaceParamsSome<WorkspaceParamsK>,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
 
                     #impl_scope_builder_type_params_some
-                >,
-                #params_module::ParamsKeysImpl<
-                    // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
-                    #impl_params_key_known_params
                 >,
             >
             where

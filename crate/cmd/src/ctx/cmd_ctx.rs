@@ -34,10 +34,7 @@ use crate::{
 /// exist to cater for each kind of command. This means the data available in a
 /// command context differs per scope, to accurately reflect what is available.
 #[derive(Debug)]
-pub struct CmdCtx<'ctx, O, Scope, PKeys>
-where
-    PKeys: ParamsKeys + 'static,
-{
+pub struct CmdCtx<'ctx, O, Scope> {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
     ///
@@ -49,13 +46,6 @@ where
     pub(crate) workspace: &'ctx Workspace,
     /// Scope of the command.
     pub(crate) scope: Scope,
-    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
-    /// [`FlowParams`] deserialization.
-    ///
-    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
-    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
-    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
-    pub(crate) params_type_regs: ParamsTypeRegs<PKeys>,
 }
 
 /// Information needed to execute a command.
@@ -64,10 +54,7 @@ where
 /// exist to cater for each kind of command. This means the data available in a
 /// command context differs per scope, to accurately reflect what is available.
 #[derive(Debug)]
-pub struct CmdCtxView<'view, O, Scope, PKeys>
-where
-    PKeys: ParamsKeys + 'static,
-{
+pub struct CmdCtxView<'view, O, Scope> {
     /// Output endpoint to return values / errors, and write progress
     /// information to.
     ///
@@ -79,35 +66,23 @@ where
     pub workspace: &'view Workspace,
     /// Scope of the command.
     pub scope: &'view mut Scope,
-    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
-    /// [`FlowParams`] deserialization.
-    ///
-    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
-    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
-    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
-    pub params_type_regs: &'view ParamsTypeRegs<PKeys>,
 }
 
-impl<'ctx, O, Scope, PKeys> CmdCtx<'ctx, O, Scope, PKeys>
-where
-    PKeys: ParamsKeys + 'static,
-{
+impl<'ctx, O, Scope> CmdCtx<'ctx, O, Scope> {
     /// Returns a view struct of this command context.
     ///
     /// This allows the output and scope data to be borrowed concurrently.
-    pub fn view(&mut self) -> CmdCtxView<'_, O, Scope, PKeys> {
+    pub fn view(&mut self) -> CmdCtxView<'_, O, Scope> {
         let Self {
             output,
             workspace,
             scope,
-            params_type_regs,
         } = self;
 
         CmdCtxView {
             output,
             workspace,
             scope,
-            params_type_regs,
         }
     }
 
@@ -136,16 +111,6 @@ where
         &mut self.scope
     }
 
-    /// Returns the type registries for [`WorkspaceParams`], [`ProfileParams`],
-    /// and [`FlowParams`] deserialization.
-    ///
-    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
-    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
-    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
-    pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
-        &self.params_type_regs
-    }
-
     /// Returns a reference to the workspace directory.
     pub fn workspace_dir(&self) -> &WorkspaceDir {
         self.workspace.dirs().workspace_dir()
@@ -162,17 +127,12 @@ where
     }
 }
 
-impl<'ctx, O> CmdCtx<'ctx, O, (), ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>> {
+impl<'ctx, O> CmdCtx<'ctx, O, ()> {
     /// Returns a `CmdCtxBuilder` for a single profile and no flow.
     pub fn builder_no_profile_no_flow<E>(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
-    ) -> CmdCtxBuilder<
-        'ctx,
-        O,
-        NoProfileNoFlowBuilder<E, WorkspaceParamsNone>,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-    > {
+    ) -> CmdCtxBuilder<'ctx, O, NoProfileNoFlowBuilder<E, WorkspaceParamsNone>> {
         CmdCtxBuilder::no_profile_no_flow(output, workspace)
     }
 
@@ -184,7 +144,6 @@ impl<'ctx, O> CmdCtx<'ctx, O, (), ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnkn
         'ctx,
         O,
         MultiProfileNoFlowBuilder<E, ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
         CmdCtxBuilder::multi_profile_no_flow(output, workspace)
     }
@@ -204,7 +163,6 @@ impl<'ctx, O> CmdCtx<'ctx, O, (), ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnkn
             ProfileParamsNone,
             FlowParamsNone,
         >,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
         CmdCtxBuilder::multi_profile_single_flow(output, workspace)
     }
@@ -217,7 +175,6 @@ impl<'ctx, O> CmdCtx<'ctx, O, (), ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnkn
         'ctx,
         O,
         SingleProfileNoFlowBuilder<E, ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
         CmdCtxBuilder::single_profile_no_flow(output, workspace)
     }
@@ -237,13 +194,12 @@ impl<'ctx, O> CmdCtx<'ctx, O, (), ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnkn
             ProfileParamsNone,
             FlowParamsNone,
         >,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
         CmdCtxBuilder::single_profile_single_flow(output, workspace)
     }
 }
 
-impl<'ctx, E, O, PKeys, ResTs0> CmdCtx<'ctx, O, SingleProfileSingleFlow<E, PKeys, ResTs0>, PKeys>
+impl<'ctx, E, O, PKeys, ResTs0> CmdCtx<'ctx, O, SingleProfileSingleFlow<E, PKeys, ResTs0>>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -252,7 +208,7 @@ where
     pub fn resources_update<ResTs1, F>(
         self,
         f: F,
-    ) -> CmdCtx<'ctx, O, SingleProfileSingleFlow<E, PKeys, ResTs1>, PKeys>
+    ) -> CmdCtx<'ctx, O, SingleProfileSingleFlow<E, PKeys, ResTs1>>
     where
         F: FnOnce(Resources<ResTs0>) -> Resources<ResTs1>,
     {
@@ -260,7 +216,6 @@ where
             output,
             workspace,
             scope,
-            params_type_regs,
         } = self;
 
         let scope = scope.resources_update(f);
@@ -269,15 +224,11 @@ where
             output,
             workspace,
             scope,
-            params_type_regs,
         }
     }
 }
 
-impl<'ctx, O, Scope, PKeys> Deref for CmdCtx<'ctx, O, Scope, PKeys>
-where
-    PKeys: ParamsKeys + 'static,
-{
+impl<'ctx, O, Scope> Deref for CmdCtx<'ctx, O, Scope> {
     type Target = Scope;
 
     fn deref(&self) -> &Self::Target {
@@ -285,10 +236,7 @@ where
     }
 }
 
-impl<'ctx, O, Scope, PKeys> DerefMut for CmdCtx<'ctx, O, Scope, PKeys>
-where
-    PKeys: ParamsKeys + 'static,
-{
+impl<'ctx, O, Scope> DerefMut for CmdCtx<'ctx, O, Scope> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.scope
     }

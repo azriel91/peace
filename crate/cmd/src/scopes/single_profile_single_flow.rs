@@ -8,7 +8,8 @@ use peace_resources::{
 };
 use peace_rt_model::{
     cmd_context_params::{
-        FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ProfileParams, WorkspaceParams,
+        FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
+        WorkspaceParams,
     },
     Flow, StatesTypeRegs,
 };
@@ -64,6 +65,13 @@ where
     flow: Flow<E>,
     /// Flow directory that stores params and states.
     flow_dir: FlowDir,
+    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+    /// [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
+    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    params_type_regs: ParamsTypeRegs<PKeys>,
     /// Workspace params.
     workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     /// Profile params for the profile.
@@ -130,6 +138,13 @@ where
     pub flow: &'view Flow<E>,
     /// Flow directory that stores params and states.
     pub flow_dir: &'view FlowDir,
+    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+    /// [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
+    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    pub params_type_regs: &'view ParamsTypeRegs<PKeys>,
     /// Workspace params.
     pub workspace_params: &'view WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     /// Profile params for the profile.
@@ -160,6 +175,7 @@ where
         profile_history_dir: ProfileHistoryDir,
         flow: Flow<E>,
         flow_dir: FlowDir,
+        params_type_regs: ParamsTypeRegs<PKeys>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
         flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
@@ -174,6 +190,7 @@ where
             profile_history_dir,
             flow,
             flow_dir,
+            params_type_regs,
             workspace_params,
             profile_params,
             flow_params,
@@ -199,6 +216,7 @@ where
             profile_history_dir,
             flow,
             flow_dir,
+            params_type_regs,
             workspace_params,
             profile_params,
             flow_params,
@@ -214,6 +232,7 @@ where
             profile_history_dir,
             flow,
             flow_dir,
+            params_type_regs,
             workspace_params,
             profile_params,
             flow_params,
@@ -260,6 +279,16 @@ where
         &self.flow_dir
     }
 
+    /// Returns the type registries for [`WorkspaceParams`], [`ProfileParams`],
+    /// and [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
+    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
+        &self.params_type_regs
+    }
+
     /// Returns the type registries to deserialize [`StatesSavedFile`] and
     /// [`StatesDesiredFile`].
     ///
@@ -293,6 +322,7 @@ where
             profile_history_dir,
             flow,
             flow_dir,
+            params_type_regs,
             workspace_params,
             profile_params,
             flow_params,
@@ -310,6 +340,7 @@ where
             profile_history_dir,
             flow,
             flow_dir,
+            params_type_regs,
             workspace_params,
             profile_params,
             flow_params,

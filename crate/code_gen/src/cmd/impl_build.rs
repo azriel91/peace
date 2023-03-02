@@ -133,6 +133,7 @@ fn impl_build_for(
             type_params.push(flow_selection.type_param());
         }
 
+        type_params.push(parse_quote!(PKeys));
         type_params.push(workspace_params_selection.type_param());
         if scope.profile_params_supported() {
             type_params.push(profile_params_selection.type_param());
@@ -193,12 +194,12 @@ fn impl_build_for(
                     E,
                     // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
                     // FlowSelected<E>,
+                    // PKeys,
                     // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
                     // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
                     // FlowParamsNone,
                     #scope_builder_type_params
                 >,
-                PKeys,
             >
         where
             E: std::error::Error + From<peace_rt_model::Error>,
@@ -221,11 +222,6 @@ fn impl_build_for(
                         // SingleProfileSingleFlow
                         // peace_resources::resources::ts::SetUp
                         #scope_type_params
-                    >,
-                    #params_module::ParamsKeysImpl<
-                        PKeys::WorkspaceParamsKMaybe,
-                        PKeys::ProfileParamsKMaybe,
-                        PKeys::FlowParamsKMaybe,
                     >,
                 >,
                 E,
@@ -425,7 +421,7 @@ fn impl_build_for(
 
                 // Serialize params to `PeaceAppDir`.
 
-                // Self::workspace_params_serialize(
+                // crate::ctx::cmd_ctx_builder::workspace_params_serialize(
                 //     &workspace_params,
                 //     storage,
                 //     &workspace_params_file,
@@ -433,7 +429,7 @@ fn impl_build_for(
                 // .await?;
                 #workspace_params_serialize
 
-                // Self::profile_params_serialize(
+                // crate::ctx::cmd_ctx_builder::profile_params_serialize(
                 //     &profile_params,
                 //     storage,
                 //     &profile_params_file
@@ -441,7 +437,7 @@ fn impl_build_for(
                 // .await?;
                 #profile_params_serialize
 
-                // Self::flow_params_serialize(
+                // crate::ctx::cmd_ctx_builder::flow_params_serialize(
                 //     &flow_params,
                 //     storage,
                 //     &flow_params_file
@@ -452,17 +448,17 @@ fn impl_build_for(
                 // Track items in memory.
                 let mut resources = peace_resources::Resources::new();
                 // === WorkspaceParamsSelected === //
-                // Self::workspace_params_insert(workspace_params, &mut resources);
+                // crate::ctx::cmd_ctx_builder::workspace_params_insert(workspace_params, &mut resources);
                 // resources.insert(workspace_params_file);
                 #workspace_params_insert
 
                 // === Single Profile === //
-                // Self::profile_params_insert(profile_params, &mut resources);
+                // crate::ctx::cmd_ctx_builder::profile_params_insert(profile_params, &mut resources);
                 // resources.insert(profile_params_file);
                 #profile_params_insert
 
                 // === Single Flow === //
-                // Self::flow_params_insert(flow_params, &mut resources);
+                // crate::ctx::cmd_ctx_builder::flow_params_insert(flow_params, &mut resources);
                 // resources.insert(flow_params_file);
                 #flow_params_insert
 
@@ -617,12 +613,12 @@ fn impl_build_for(
                     E,
                     // ProfileFromWorkspaceParam<'key, <PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
                     // FlowSelected<E>,
+                    // PKeys,
                     // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
                     // ProfileParamsSome<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
                     // FlowParamsNone,
                     #scope_builder_type_params
                 >,
-                PKeys,
             >
         where
             E: std::error::Error + From<peace_rt_model::Error> + 'static,
@@ -642,16 +638,15 @@ fn impl_build_for(
                                 O,
                                 #scope_type_path<
                                     E,
-                                    PKeys,
+                                    #params_module::ParamsKeysImpl<
+                                        PKeys::WorkspaceParamsKMaybe,
+                                        PKeys::ProfileParamsKMaybe,
+                                        PKeys::FlowParamsKMaybe,
+                                    >,
 
                                     // SingleProfileSingleFlow
                                     // peace_resources::resources::ts::SetUp
                                     #scope_type_params
-                                >,
-                                #params_module::ParamsKeysImpl<
-                                    PKeys::WorkspaceParamsKMaybe,
-                                    PKeys::ProfileParamsKMaybe,
-                                    PKeys::FlowParamsKMaybe,
                                 >,
                             >,
                             E,
@@ -777,7 +772,7 @@ fn workspace_params_load_save(
                 self.workspace_params_merge(&workspace_params_file).await?;
             };
             let workspace_params_serialize = quote! {
-                Self::workspace_params_serialize(
+                crate::ctx::cmd_ctx_builder::workspace_params_serialize(
                     &workspace_params,
                     storage,
                     &workspace_params_file,
@@ -785,7 +780,7 @@ fn workspace_params_load_save(
                 .await?;
             };
             let workspace_params_insert = quote! {
-                Self::workspace_params_insert(workspace_params.clone(), &mut resources);
+                crate::ctx::cmd_ctx_builder::workspace_params_insert(workspace_params.clone(), &mut resources);
                 resources.insert(workspace_params_file);
             };
 
@@ -839,7 +834,7 @@ fn profile_params_load_save(
                     self.profile_params_merge(&profile_params_file).await?;
                 };
                 let profile_params_serialize = quote! {
-                    Self::profile_params_serialize(
+                    crate::ctx::cmd_ctx_builder::profile_params_serialize(
                         &profile_params,
                         storage,
                         &profile_params_file,
@@ -847,7 +842,7 @@ fn profile_params_load_save(
                     .await?;
                 };
                 let profile_params_insert = quote! {
-                    Self::profile_params_insert(profile_params.clone(), &mut resources);
+                    crate::ctx::cmd_ctx_builder::profile_params_insert(profile_params.clone(), &mut resources);
                     resources.insert(profile_params_file);
                 };
 
@@ -969,7 +964,7 @@ fn flow_params_load_save(
                     self.flow_params_merge(&flow_params_file).await?;
                 };
                 let flow_params_serialize = quote! {
-                    Self::flow_params_serialize(
+                    crate::ctx::cmd_ctx_builder::flow_params_serialize(
                         &flow_params,
                         storage,
                         &flow_params_file,
@@ -977,7 +972,7 @@ fn flow_params_load_save(
                     .await?;
                 };
                 let flow_params_insert = quote! {
-                    Self::flow_params_insert(flow_params.clone(), &mut resources);
+                    crate::ctx::cmd_ctx_builder::flow_params_insert(flow_params.clone(), &mut resources);
                     resources.insert(flow_params_file);
                 };
 

@@ -64,6 +64,8 @@ fn impl_params_merge_for(
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
 
+        type_params.push(parse_quote!(PKeys));
+
         match params_scope {
             ParamsScope::Workspace => {
                 if scope.profile_params_supported() {
@@ -96,6 +98,8 @@ fn impl_params_merge_for(
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
 
+        type_params.push(parse_quote!(PKeys));
+
         type_params.push(workspace_params_selection);
         if scope.profile_params_supported() {
             type_params.push(profile_params_selection);
@@ -127,9 +131,9 @@ fn impl_params_merge_for(
             'key,
             E,
             O,
-            PKeys,
             // ProfileSelection,
             // FlowSelection,
+            // PKeys,
             // ProfileParamsSelection,
             // FlowParamsSelection,
             #impl_type_params
@@ -141,12 +145,12 @@ fn impl_params_merge_for(
                     E,
                     // ProfileSelection,
                     // FlowSelection,
+                    // PKeys,
                     // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
                     #scope_builder_type_params
                 >,
-                PKeys,
             >
         where
             PKeys: #params_module::ParamsKeys + 'static,

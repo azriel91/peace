@@ -40,14 +40,14 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                     E,
                     // ProfileNotSelected,
                     // FlowNotSelected,
+                    // peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                    //     peace_rt_model::cmd_context_params::KeyUnknown,
+                    //     peace_rt_model::cmd_context_params::KeyUnknown,
+                    //     peace_rt_model::cmd_context_params::KeyUnknown,
+                    // >,
                     // WorkspaceParamsNone,
                     // ProfileParamsNone,
                     #scope_builder_type_params
-                >,
-                #params_module::ParamsKeysImpl<
-                    #params_module::KeyUnknown,
-                    #params_module::KeyUnknown,
-                    #params_module::KeyUnknown,
                 >,
             >
         {
@@ -105,6 +105,15 @@ mod scope_builder_type_params {
         type_params: &mut Punctuated<GenericArgument, Token![,]>,
         scope: Scope,
     ) {
+        // Always collect PKeys
+        type_params.push(parse_quote! {
+            peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                peace_rt_model::cmd_context_params::KeyUnknown,
+                peace_rt_model::cmd_context_params::KeyUnknown,
+                peace_rt_model::cmd_context_params::KeyUnknown,
+            >
+        });
+
         // Workspace params are supported by all scopes.
         type_params.push(parse_quote!(
             crate::scopes::type_params::WorkspaceParamsNone

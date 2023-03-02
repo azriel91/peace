@@ -3,7 +3,7 @@ use std::{collections::BTreeMap, fmt::Debug, hash::Hash, marker::PhantomData};
 use peace_core::Profile;
 use peace_resources::paths::{ProfileDir, ProfileHistoryDir};
 use peace_rt_model::cmd_context_params::{
-    KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ProfileParams, WorkspaceParams,
+    KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams, WorkspaceParams,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -53,6 +53,13 @@ where
     profile_dirs: BTreeMap<Profile, ProfileDir>,
     /// Directories of each profile's execution history.
     profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
+    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+    /// [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
+    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    params_type_regs: ParamsTypeRegs<PKeys>,
     /// Workspace params.
     workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     /// Profile params for the profile.
@@ -71,6 +78,7 @@ where
         profiles: Vec<Profile>,
         profile_dirs: BTreeMap<Profile, ProfileDir>,
         profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
+        params_type_regs: ParamsTypeRegs<PKeys>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         profile_to_profile_params: BTreeMap<
             Profile,
@@ -81,6 +89,7 @@ where
             profiles,
             profile_dirs,
             profile_history_dirs,
+            params_type_regs,
             workspace_params,
             profile_to_profile_params,
             marker: PhantomData,
@@ -103,6 +112,16 @@ where
     /// Returns the profile history directories keyed by each profile.
     pub fn profile_history_dirs(&self) -> &BTreeMap<Profile, ProfileHistoryDir> {
         &self.profile_history_dirs
+    }
+
+    /// Returns the type registries for [`WorkspaceParams`], [`ProfileParams`],
+    /// and [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
+    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
+        &self.params_type_regs
     }
 }
 

@@ -7,7 +7,8 @@ use peace_resources::{
 };
 use peace_rt_model::{
     cmd_context_params::{
-        FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ProfileParams, WorkspaceParams,
+        FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
+        WorkspaceParams,
     },
     Flow, StatesTypeRegs,
 };
@@ -80,6 +81,13 @@ where
     flow: Flow<E>,
     /// Flow directory that stores params and states.
     flow_dirs: BTreeMap<Profile, FlowDir>,
+    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+    /// [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
+    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    params_type_regs: ParamsTypeRegs<PKeys>,
     /// Workspace params.
     workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     /// Profile params for the profile.
@@ -110,6 +118,7 @@ where
         profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
         flow: Flow<E>,
         flow_dirs: BTreeMap<Profile, FlowDir>,
+        params_type_regs: ParamsTypeRegs<PKeys>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         profile_to_profile_params: BTreeMap<
             Profile,
@@ -128,6 +137,7 @@ where
             profile_history_dirs,
             flow,
             flow_dirs,
+            params_type_regs,
             workspace_params,
             profile_to_profile_params,
             profile_to_flow_params,
@@ -162,6 +172,16 @@ where
     /// Returns the flow directories keyed by each profile.
     pub fn flow_dirs(&self) -> &BTreeMap<Profile, FlowDir> {
         &self.flow_dirs
+    }
+
+    /// Returns the type registries for [`WorkspaceParams`], [`ProfileParams`],
+    /// and [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
+    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
+        &self.params_type_regs
     }
 
     /// Returns the type registries to deserialize [`StatesSavedFile`] and
