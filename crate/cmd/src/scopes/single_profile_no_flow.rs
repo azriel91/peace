@@ -140,6 +140,7 @@ where
     PKeys: ParamsKeys + 'static,
 {
     /// Returns a new `SingleProfileNoFlow` scope.
+    #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
