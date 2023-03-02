@@ -168,8 +168,8 @@ fn impl_params_merge_for(
                     #p_keys_key_maybe_key
                 >(
                     storage,
-                    // self.params_type_regs_builder.workspace_params_type_reg(),
-                    self.params_type_regs_builder.#params_type_reg_method_name(),
+                    // self.scope_builder.params_type_regs_builder.workspace_params_type_reg(),
+                    self.scope_builder.params_type_regs_builder.#params_type_reg_method_name(),
                     #params_file_name,
                 )
                 .await?;

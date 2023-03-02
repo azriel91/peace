@@ -114,18 +114,19 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                         #scope_builder_name {
                             // profile_selection,
                             // flow_selection: FlowNotSelected,
+                            // params_type_regs_builder,
                             // workspace_params_selection,
                             // profile_params_selection,
                             // flow_params_selection,
                             // marker: std::marker::PhantomData,
                             #scope_builder_fields_flow_not_selected
                         },
-                    params_type_regs_builder,
                 } = self;
 
                 let scope_builder = #scope_builder_name {
                     // profile_selection,
                     // flow_selection: FlowSelected(flow),
+                    // params_type_regs_builder,
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,
@@ -137,7 +138,6 @@ pub fn impl_with_flow(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                     output,
                     workspace,
                     scope_builder,
-                    params_type_regs_builder,
                 }
             }
         }
@@ -150,6 +150,7 @@ fn scope_builder_fields_flow_not_selected(scope: Scope) -> Punctuated<FieldValue
     field_values.push(parse_quote!(
         flow_selection: crate::scopes::type_params::FlowNotSelected
     ));
+    field_values.push(parse_quote!(params_type_regs_builder));
     field_values.push(parse_quote!(workspace_params_selection));
     if scope.profile_params_supported() {
         field_values.push(parse_quote!(profile_params_selection));
@@ -168,6 +169,7 @@ fn scope_builder_fields_flow_selected(scope: Scope) -> Punctuated<FieldValue, Co
     field_values.push(parse_quote!(
         flow_selection: crate::scopes::type_params::FlowSelected(flow)
     ));
+    field_values.push(parse_quote!(params_type_regs_builder));
     field_values.push(parse_quote!(workspace_params_selection));
     if scope.profile_params_supported() {
         field_values.push(parse_quote!(profile_params_selection));

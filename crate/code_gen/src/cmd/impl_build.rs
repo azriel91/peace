@@ -217,7 +217,11 @@ fn impl_build_for(
                     O,
                     #scope_type_path<
                         E,
-                        PKeys,
+                        #params_module::ParamsKeysImpl<
+                            PKeys::WorkspaceParamsKMaybe,
+                            PKeys::ProfileParamsKMaybe,
+                            PKeys::FlowParamsKMaybe,
+                        >,
 
                         // SingleProfileSingleFlow
                         // peace_resources::resources::ts::SetUp
@@ -409,13 +413,13 @@ fn impl_build_for(
                 //                             // ProfileFromWorkspaceParam(_workspace_params_k),
                 //                             // ProfileFilterFn(profiles_filter_fn)
                 //
-                //             flow_selection: FlowSelected(flow),
-                //             workspace_params_selection: WorkspaceParamsSome(workspace_params),
-                //             profile_params_selection: ProfileParamsSome(profile_params),
-                //             flow_params_selection: FlowParamsNone,
-                //             marker: std::marker::PhantomData,
-                //         },
-                //     params_type_regs_builder,
+                //         flow_selection: FlowSelected(flow),
+                //         params_type_regs_builder,
+                //         workspace_params_selection: WorkspaceParamsSome(workspace_params),
+                //         profile_params_selection: ProfileParamsSome(profile_params),
+                //         flow_params_selection: FlowParamsNone,
+                //         marker: std::marker::PhantomData,
+                //     },
                 // } = self;
                 #scope_builder_deconstruct
 
@@ -556,10 +560,14 @@ fn impl_build_for(
                 // };
                 #states_saved_read_and_pg_init
 
+                let params_type_regs = params_type_regs_builder.build();
+
                 let scope = #scope_type_path::new(
                     // === SingleProfileSingleFlow === //
                     // #[cfg(feature = "output_progress")]
                     // cmd_progress_tracker,
+
+                    // params_type_regs,
 
                     // workspace_params
 
@@ -594,13 +602,10 @@ fn impl_build_for(
                     #scope_fields
                 );
 
-                let params_type_regs = params_type_regs_builder.build();
-
                 Ok(crate::ctx::CmdCtx {
                     output,
                     workspace,
                     scope,
-                    params_type_regs,
                 })
             }
         }
@@ -707,6 +712,7 @@ fn scope_builder_deconstruct(
         }
     }
 
+    scope_builder_fields.push(parse_quote!(params_type_regs_builder));
     scope_builder_fields.push(workspace_params_selection.deconstruct());
     if scope.profile_params_supported() {
         scope_builder_fields.push(profile_params_selection.deconstruct());
@@ -723,17 +729,16 @@ fn scope_builder_deconstruct(
         let crate::ctx::CmdCtxBuilder {
             output,
             workspace,
-            scope_builder:
-                #scope_builder_name {
-                    // profile_selection: ProfileSelected(profile),
-                    // flow_selection: FlowSelected(flow),
-                    // workspace_params_selection: WorkspaceParamsSome(workspace_params),
-                    // profile_params_selection: ProfileParamsSome(profile_params),
-                    // flow_params_selection: FlowParamsNone,
-                    // marker: std::marker::PhantomData,
-                    #scope_builder_fields,
-                },
-            params_type_regs_builder,
+            scope_builder: #scope_builder_name {
+                // profile_selection: ProfileSelected(profile),
+                // flow_selection: FlowSelected(flow),
+                // params_type_regs_builder,
+                // workspace_params_selection: WorkspaceParamsSome(workspace_params),
+                // profile_params_selection: ProfileParamsSome(profile_params),
+                // flow_params_selection: FlowParamsNone,
+                // marker: std::marker::PhantomData,
+                #scope_builder_fields,
+            },
         } = self;
     }
 }
@@ -872,7 +877,7 @@ fn profile_params_load_save(
 
                     quote! {
                         let storage = self.workspace.storage();
-                        let params_type_regs_builder = &self.params_type_regs_builder;
+                        let params_type_regs_builder = &self.scope_builder.params_type_regs_builder;
                         let profile_to_profile_params = futures::stream::iter(
                             profile_dirs
                                 .iter()
@@ -1001,7 +1006,7 @@ fn flow_params_load_save(
                         ParamsScope::Flow.params_deserialize_method_name();
                     quote! {
                         let storage = self.workspace.storage();
-                        let params_type_regs_builder = &self.params_type_regs_builder;
+                        let params_type_regs_builder = &self.scope_builder.params_type_regs_builder;
                         let profile_to_flow_params = futures::stream::iter(
                             flow_dirs
                                 .iter()
@@ -1289,6 +1294,9 @@ fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
             }
         },
     }
+
+    scope_fields.push(parse_quote!(params_type_regs));
+
     match scope.profile_count() {
         ProfileCount::None => {
             scope_fields.push(parse_quote!(workspace_params));

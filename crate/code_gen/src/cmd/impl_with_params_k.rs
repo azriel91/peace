@@ -180,6 +180,7 @@ fn impl_with_params_k_key_unknown(
                         #scope_builder_name {
                             // profile_selection,
                             // flow_selection,
+                            // params_type_regs_builder,
                             // workspace_params_selection: WorkspaceParamsNone,
                             // profile_params_selection,
                             // flow_params_selection,
@@ -187,7 +188,6 @@ fn impl_with_params_k_key_unknown(
 
                             #scope_builder_fields_params_none
                         },
-                    params_type_regs_builder,
                 } = self;
 
                 // let mut params_type_regs_builder =
@@ -201,6 +201,7 @@ fn impl_with_params_k_key_unknown(
                 let scope_builder = #scope_builder_name {
                     // profile_selection,
                     // flow_selection,
+                    // params_type_regs_builder,
                     // workspace_params_selection: WorkspaceParamsSome(params_map),
                     // profile_params_selection,
                     // flow_params_selection,
@@ -213,7 +214,6 @@ fn impl_with_params_k_key_unknown(
                     output,
                     workspace,
                     scope_builder,
-                    params_type_regs_builder,
                 }
             }
         }
@@ -350,6 +350,7 @@ fn impl_with_param_key_known(
                         #scope_builder_name {
                             // profile_selection,
                             // flow_selection,
+                            // mut params_type_regs_builder,
                             // mut workspace_params_selection,
                             // profile_params_selection,
                             // flow_params_selection,
@@ -357,7 +358,6 @@ fn impl_with_param_key_known(
 
                             #scope_builder_fields_params_some
                         },
-                    mut params_type_regs_builder,
                 } = self;
 
                 params_type_regs_builder
@@ -367,6 +367,7 @@ fn impl_with_param_key_known(
                 let scope_builder = #scope_builder_name {
                     // profile_selection,
                     // flow_selection,
+                    // params_type_regs_builder,
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,
@@ -379,7 +380,6 @@ fn impl_with_param_key_known(
                     output,
                     workspace,
                     scope_builder,
-                    params_type_regs_builder,
                 }
             }
         }

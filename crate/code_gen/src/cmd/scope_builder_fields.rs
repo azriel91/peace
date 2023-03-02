@@ -17,6 +17,8 @@ pub(crate) fn passthrough(
         field_values.push(parse_quote!(flow_selection));
     }
 
+    field_values.push(parse_quote!(params_type_regs_builder));
+
     match params_scope {
         ParamsScope::Workspace => {
             field_values.push(parse_quote!(workspace_params_selection));
@@ -66,6 +68,8 @@ pub(crate) fn params_none(
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(flow_selection));
     }
+
+    field_values.push(parse_quote!(params_type_regs_builder));
 
     match params_scope {
         ParamsScope::Workspace => {
@@ -120,6 +124,8 @@ pub(crate) fn params_some(scope: Scope, params_scope: ParamsScope) -> Punctuated
         field_values.push(parse_quote!(flow_selection));
     }
 
+    field_values.push(parse_quote!(mut params_type_regs_builder));
+
     match params_scope {
         ParamsScope::Workspace => {
             field_values.push(parse_quote!(mut workspace_params_selection));
@@ -169,6 +175,8 @@ pub(crate) fn params_some_new(
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(flow_selection));
     }
+
+    field_values.push(parse_quote!(params_type_regs_builder));
 
     match params_scope {
         ParamsScope::Workspace => {

@@ -1,6 +1,6 @@
 use proc_macro2::{Ident, Span};
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, FieldValue, GenericArgument, Path, Token};
+use syn::{parse_quote, punctuated::Punctuated, FieldValue, GenericArgument, Token};
 
 use crate::cmd::ScopeStruct;
 
@@ -9,7 +9,6 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
     let constructor_method_name = Ident::new(scope.as_str(), Span::call_site());
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
 
     let scope_builder_type_params = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
@@ -60,6 +59,14 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                 let scope_builder = #scope_builder_name {
                     // profile_selection: ProfileNotSelected,
                     // flow_selection: FlowNotSelected,
+                    // params_type_regs_builder:
+                    //     peace_rt_model::cmd_context_params::ParamsTypeRegsBuilder::<
+                    //         peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                    //             peace_rt_model::cmd_context_params::KeyUnknown,
+                    //             peace_rt_model::cmd_context_params::KeyUnknown,
+                    //             peace_rt_model::cmd_context_params::KeyUnknown,
+                    //         >
+                    //     >::new(),
                     // workspace_params_selection: WorkspaceParamsNone,
                     // profile_params_selection: ProfileParamsNone,
                     // marker: std::marker::PhantomData,
@@ -70,7 +77,6 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                     output,
                     workspace,
                     scope_builder,
-                    params_type_regs_builder: #params_module::ParamsTypeRegs::builder(),
                 }
             }
         }
@@ -164,6 +170,18 @@ mod scope_field_values {
         field_values: &mut Punctuated<FieldValue, Token![,]>,
         scope: Scope,
     ) {
+        // Workspace params are supported by all scopes.
+        field_values.push(parse_quote! {
+            params_type_regs_builder:
+                peace_rt_model::cmd_context_params::ParamsTypeRegsBuilder::<
+                    peace_rt_model::cmd_context_params::ParamsKeysImpl<
+                        peace_rt_model::cmd_context_params::KeyUnknown,
+                        peace_rt_model::cmd_context_params::KeyUnknown,
+                        peace_rt_model::cmd_context_params::KeyUnknown,
+                    >
+                >::new()
+        });
+
         // Workspace params are supported by all scopes.
         field_values.push(parse_quote!(
             workspace_params_selection: crate::scopes::type_params::WorkspaceParamsNone

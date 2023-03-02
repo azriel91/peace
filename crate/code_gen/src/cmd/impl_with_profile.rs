@@ -84,18 +84,19 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
                         #scope_builder_name {
                             // profile_selection: ProfileNotSelected,
                             // flow_selection,
+                            // params_type_regs_builder,
                             // workspace_params_selection,
                             // profile_params_selection,
                             // flow_params_selection,
                             // marker: std::marker::PhantomData,
                             #scope_builder_fields_profile_not_selected
                         },
-                    params_type_regs_builder,
                 } = self;
 
                 let scope_builder = #scope_builder_name {
                     // profile_selection: ProfileSelected(profile),
                     // flow_selection,
+                    // params_type_regs_builder,
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,
@@ -107,7 +108,6 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
                     output,
                     workspace,
                     scope_builder,
-                    params_type_regs_builder,
                 }
             }
         }
@@ -167,7 +167,7 @@ pub fn impl_with_profile_from_workspace_param(
             peace_rt_model::cmd_context_params::ParamsKeysImpl<
                 // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
                 #impl_params_key_known_params
-            >,
+            >
         });
 
         type_params.push(parse_quote! {
@@ -256,18 +256,19 @@ pub fn impl_with_profile_from_workspace_param(
                         #scope_builder_name {
                             // profile_selection: ProfileNotSelected,
                             // flow_selection,
+                            // params_type_regs_builder,
                             // workspace_params_selection,
                             // profile_params_selection,
                             // flow_params_selection,
                             // marker: std::marker::PhantomData,
                             #scope_builder_fields_profile_not_selected
                         },
-                    params_type_regs_builder,
                 } = self;
 
                 let scope_builder = #scope_builder_name {
                     // profile_selection: ProfileFromWorkspaceParam(workspace_param_k),
                     // flow_selection,
+                    // params_type_regs_builder,
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,
@@ -279,7 +280,6 @@ pub fn impl_with_profile_from_workspace_param(
                     output,
                     workspace,
                     scope_builder,
-                    params_type_regs_builder,
                 }
             }
         }
@@ -294,6 +294,7 @@ fn scope_builder_fields_profile_not_selected(scope: Scope) -> Punctuated<FieldVa
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(flow_selection));
     }
+    field_values.push(parse_quote!(params_type_regs_builder));
     field_values.push(parse_quote!(workspace_params_selection));
     if scope.profile_params_supported() {
         field_values.push(parse_quote!(profile_params_selection));
@@ -314,6 +315,7 @@ fn scope_builder_fields_profile_selected(scope: Scope) -> Punctuated<FieldValue,
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(flow_selection));
     }
+    field_values.push(parse_quote!(params_type_regs_builder));
     field_values.push(parse_quote!(workspace_params_selection));
     if scope.profile_params_supported() {
         field_values.push(parse_quote!(profile_params_selection));
@@ -334,6 +336,7 @@ fn scope_builder_fields_profile_from_workspace(scope: Scope) -> Punctuated<Field
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(flow_selection));
     }
+    field_values.push(parse_quote!(params_type_regs_builder));
     field_values.push(parse_quote!(workspace_params_selection));
     if scope.profile_params_supported() {
         field_values.push(parse_quote!(profile_params_selection));

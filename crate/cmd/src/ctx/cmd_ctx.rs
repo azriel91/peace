@@ -7,7 +7,7 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{
-    cmd_context_params::{KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs},
+    cmd_context_params::{KeyUnknown, ParamsKeys, ParamsKeysImpl},
     Workspace,
 };
 
@@ -132,7 +132,15 @@ impl<'ctx, O> CmdCtx<'ctx, O, ()> {
     pub fn builder_no_profile_no_flow<E>(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
-    ) -> CmdCtxBuilder<'ctx, O, NoProfileNoFlowBuilder<E, WorkspaceParamsNone>> {
+    ) -> CmdCtxBuilder<
+        'ctx,
+        O,
+        NoProfileNoFlowBuilder<
+            E,
+            ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+            WorkspaceParamsNone,
+        >,
+    > {
         CmdCtxBuilder::no_profile_no_flow(output, workspace)
     }
 
@@ -143,7 +151,13 @@ impl<'ctx, O> CmdCtx<'ctx, O, ()> {
     ) -> CmdCtxBuilder<
         'ctx,
         O,
-        MultiProfileNoFlowBuilder<E, ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
+        MultiProfileNoFlowBuilder<
+            E,
+            ProfileNotSelected,
+            ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+            WorkspaceParamsNone,
+            ProfileParamsNone,
+        >,
     > {
         CmdCtxBuilder::multi_profile_no_flow(output, workspace)
     }
@@ -159,6 +173,7 @@ impl<'ctx, O> CmdCtx<'ctx, O, ()> {
             E,
             ProfileNotSelected,
             FlowNotSelected,
+            ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
             WorkspaceParamsNone,
             ProfileParamsNone,
             FlowParamsNone,
@@ -174,7 +189,13 @@ impl<'ctx, O> CmdCtx<'ctx, O, ()> {
     ) -> CmdCtxBuilder<
         'ctx,
         O,
-        SingleProfileNoFlowBuilder<E, ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
+        SingleProfileNoFlowBuilder<
+            E,
+            ProfileNotSelected,
+            ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+            WorkspaceParamsNone,
+            ProfileParamsNone,
+        >,
     > {
         CmdCtxBuilder::single_profile_no_flow(output, workspace)
     }
@@ -190,6 +211,7 @@ impl<'ctx, O> CmdCtx<'ctx, O, ()> {
             E,
             ProfileNotSelected,
             FlowNotSelected,
+            ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
             WorkspaceParamsNone,
             ProfileParamsNone,
             FlowParamsNone,
