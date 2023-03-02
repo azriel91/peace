@@ -28,22 +28,20 @@ async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn 
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_profile(profile!("test_profile"))
-            .with_flow(Flow::new(
-                FlowId::new(crate::fn_name_short!())?,
-                graph.clone(),
-            ))
-            .await?;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(Flow::new(
+            FlowId::new(crate::fn_name_short!())?,
+            graph.clone(),
+        ))
+        .await?;
     StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Re-read states from disk.
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_profile(profile!("test_profile"))
-            .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
-            .await?;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .await?;
     let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
@@ -87,14 +85,13 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     let mut cli_output = CliOutput::new_with_writer(&mut buffer);
 
     // Write current and desired states to disk.
-    let mut cmd_ctx =
-        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut cli_output, &workspace)
-            .with_profile(profile!("test_profile"))
-            .with_flow(Flow::new(
-                FlowId::new(crate::fn_name_short!())?,
-                graph.clone(),
-            ))
-            .await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut cli_output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(Flow::new(
+            FlowId::new(crate::fn_name_short!())?,
+            graph.clone(),
+        ))
+        .await?;
     // overwrite initial state
     let resources = cmd_ctx.resources_mut();
     #[rustfmt::skip]
@@ -103,11 +100,10 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     StatesDiscoverCmd::exec(cmd_ctx).await?;
 
     // Re-read states from disk.
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut cli_output, &workspace)
-            .with_profile(profile!("test_profile"))
-            .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
-            .await?;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut cli_output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .await?;
     let cmd_ctx = DiffCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 

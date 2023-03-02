@@ -11,7 +11,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let workspace = workspace(&tempdir, app_name!("test_no_profile_no_flow"))?;
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<PeaceTestError>(&mut output, &workspace)
+    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<PeaceTestError, _>(&mut output, &workspace)
         .build()
         .await?;
 
@@ -26,7 +26,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let profile = profile!("test_profile");
 
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<PeaceTestError>(&mut output, &workspace)
+    let cmd_ctx = CmdCtx::builder_no_profile_no_flow::<PeaceTestError, _>(&mut output, &workspace)
         .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
         .with_workspace_param_value(
             String::from("ws_param_1"),

@@ -23,24 +23,22 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
     let mut output = NoOpOutput;
 
     // Write current states to disk.
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_profile(profile!("test_profile"))
-            .with_flow(Flow::new(
-                FlowId::new(crate::fn_name_short!())?,
-                graph.clone(),
-            ))
-            .await?;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(Flow::new(
+            FlowId::new(crate::fn_name_short!())?,
+            graph.clone(),
+        ))
+        .await?;
     let cmd_ctx = StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
     let resources_from_discover = cmd_ctx.resources();
 
     // Re-read states from disk.
     let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_profile(profile!("test_profile"))
-            .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
-            .await?;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .await?;
     let cmd_ctx = StatesSavedReadCmd::exec(cmd_ctx).await?;
     let resources_from_read = cmd_ctx.resources();
 
@@ -68,11 +66,10 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 
     // Try and read states from disk.
     let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_profile(profile!("test_profile"))
-            .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
-            .await?;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .await?;
     let exec_result = StatesSavedReadCmd::exec(cmd_ctx).await;
 
     assert!(matches!(

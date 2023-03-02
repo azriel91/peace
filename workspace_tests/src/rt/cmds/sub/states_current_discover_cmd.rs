@@ -25,11 +25,10 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
         graph_builder.build()
     };
     let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_profile(profile!("test_profile"))
-            .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
-            .await?;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .await?;
 
     let cmd_ctx = StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
@@ -68,24 +67,22 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
         graph_builder.build()
     };
     let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_profile(profile!("test_profile"))
-            .with_flow(Flow::new(
-                FlowId::new(crate::fn_name_short!())?,
-                graph.clone(),
-            ))
-            .await?;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(Flow::new(
+            FlowId::new(crate::fn_name_short!())?,
+            graph.clone(),
+        ))
+        .await?;
 
     // Writes to states_saved_file.yaml
     StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
 
     // Execute again to ensure StatesSaved is included
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_profile(profile!("test_profile"))
-            .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
-            .await?;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .await?;
     let cmd_ctx = StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 

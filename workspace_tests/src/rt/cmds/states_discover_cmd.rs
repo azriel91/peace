@@ -25,11 +25,10 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
         graph_builder.build()
     };
     let mut output = NoOpOutput;
-    let cmd_ctx =
-        CmdCtx::builder_single_profile_single_flow::<PeaceTestError>(&mut output, &workspace)
-            .with_profile(profile!("test_profile"))
-            .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
-            .await?;
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(Flow::new(FlowId::new(crate::fn_name_short!())?, graph))
+        .await?;
 
     let cmd_ctx = StatesDiscoverCmd::exec(cmd_ctx).await?;
     let resources = cmd_ctx.resources();
