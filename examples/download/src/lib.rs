@@ -72,7 +72,6 @@ pub async fn workspace_and_flow_setup(
 }
 
 pub type DownloadCmdCtx<'ctx, O> = CmdCtx<
-    'ctx,
     SingleProfileSingleFlow<
         'ctx,
         DownloadError,

@@ -1,9 +1,6 @@
 #![allow(clippy::type_complexity)]
 
-use std::{
-    marker::PhantomData,
-    ops::{Deref, DerefMut},
-};
+use std::ops::{Deref, DerefMut};
 
 use peace_resources::Resources;
 use peace_rt_model::{
@@ -34,14 +31,12 @@ use crate::{
 /// exist to cater for each kind of command. This means the data available in a
 /// command context differs per scope, to accurately reflect what is available.
 #[derive(Debug)]
-pub struct CmdCtx<'ctx, Scope> {
+pub struct CmdCtx<Scope> {
     /// Scope of the command.
     pub(crate) scope: Scope,
-    /// Marker.
-    pub(crate) marker: PhantomData<&'ctx ()>,
 }
 
-impl<'ctx, Scope> CmdCtx<'ctx, Scope> {
+impl<Scope> CmdCtx<Scope> {
     /// Returns the scope of the command.
     pub fn scope(&self) -> &Scope {
         &self.scope
@@ -53,9 +48,9 @@ impl<'ctx, Scope> CmdCtx<'ctx, Scope> {
     }
 }
 
-impl<'ctx> CmdCtx<'ctx, ()> {
+impl CmdCtx<()> {
     /// Returns a `CmdCtxBuilder` for a single profile and no flow.
-    pub fn builder_no_profile_no_flow<E, O>(
+    pub fn builder_no_profile_no_flow<'ctx, E, O>(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
@@ -71,7 +66,7 @@ impl<'ctx> CmdCtx<'ctx, ()> {
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and no flow.
-    pub fn builder_multi_profile_no_flow<E, O>(
+    pub fn builder_multi_profile_no_flow<'ctx, E, O>(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
@@ -89,7 +84,7 @@ impl<'ctx> CmdCtx<'ctx, ()> {
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and one flow.
-    pub fn builder_multi_profile_single_flow<E, O>(
+    pub fn builder_multi_profile_single_flow<'ctx, E, O>(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
@@ -109,7 +104,7 @@ impl<'ctx> CmdCtx<'ctx, ()> {
     }
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_no_flow<E, O>(
+    pub fn builder_single_profile_no_flow<'ctx, E, O>(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
@@ -127,7 +122,7 @@ impl<'ctx> CmdCtx<'ctx, ()> {
     }
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_single_flow<E, O>(
+    pub fn builder_single_profile_single_flow<'ctx, E, O>(
         output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
@@ -147,7 +142,7 @@ impl<'ctx> CmdCtx<'ctx, ()> {
     }
 }
 
-impl<'ctx, E, O, PKeys, ResTs0> CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs0>>
+impl<'ctx, E, O, PKeys, ResTs0> CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs0>>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -156,25 +151,19 @@ where
     pub fn resources_update<ResTs1, F>(
         self,
         f: F,
-    ) -> CmdCtx<'ctx, SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs1>>
+    ) -> CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs1>>
     where
         F: FnOnce(Resources<ResTs0>) -> Resources<ResTs1>,
     {
-        let CmdCtx {
-            scope,
-            marker: PhantomData,
-        } = self;
+        let CmdCtx { scope } = self;
 
         let scope = scope.resources_update(f);
 
-        CmdCtx {
-            scope,
-            marker: PhantomData,
-        }
+        CmdCtx { scope }
     }
 }
 
-impl<'ctx, Scope> Deref for CmdCtx<'ctx, Scope> {
+impl<Scope> Deref for CmdCtx<Scope> {
     type Target = Scope;
 
     fn deref(&self) -> &Self::Target {
@@ -182,7 +171,7 @@ impl<'ctx, Scope> Deref for CmdCtx<'ctx, Scope> {
     }
 }
 
-impl<'ctx, Scope> DerefMut for CmdCtx<'ctx, Scope> {
+impl<Scope> DerefMut for CmdCtx<Scope> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.scope
     }
