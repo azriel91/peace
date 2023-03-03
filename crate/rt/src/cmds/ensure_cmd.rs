@@ -225,18 +225,6 @@ where
             let progress_tx = &progress_tx;
             let outcomes_tx = &outcomes_tx;
 
-            // It would be ideal if we can pass just the `ProgressBar` through
-            // to `Self::item_ensure_exec`, and not hold the reference to
-            // `progress_trackers` in the closure.
-            //
-            // This would allow us to hold a `&mut ProgressTracker` when
-            // `progress_rx` receives `ProgressUpdateAndId` -- so that we can store
-            // `progress_limit` inside `ProgressTracker`.
-            //
-            // Subsequently we can pass `&ProgressTracker` in
-            // `OutputWrite::progress_update`, so that `OutputWrite`
-            // implementations such as `CliOutput` can read the limit and adjust the
-            // progress bar styling accordingly.
             let (Ok(()) | Err(())) = item_spec_graph
                 .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
                     Self::item_ensure_exec(
