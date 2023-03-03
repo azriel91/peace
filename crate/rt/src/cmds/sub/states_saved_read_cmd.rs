@@ -30,9 +30,9 @@ where
     ///
     /// [`StatesSavedDiscoverCmd`]: crate::StatesSavedDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
-    pub async fn exec<'ctx>(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, WithStatesSaved>>, E> {
+    pub async fn exec(
+        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, WithStatesSaved>>, E> {
         let SingleProfileSingleFlowView {
             states_type_regs,
             resources,
@@ -50,7 +50,7 @@ where
     /// Returns [`StatesSaved`] of all [`ItemSpec`]s if it exists on disk.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    pub(crate) async fn exec_internal<'ctx>(
+    pub(crate) async fn exec_internal(
         resources: &mut Resources<SetUp>,
         states_current_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
     ) -> Result<StatesSaved, E> {

@@ -40,9 +40,9 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StatesDesired`]: peace_resources::StatesDesired
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    pub async fn exec<'ctx>(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, WithStatesDesired>>, E> {
+    pub async fn exec(
+        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, WithStatesDesired>>, E> {
         let SingleProfileSingleFlowView {
             flow, resources, ..
         } = cmd_ctx.scope_mut().view();
@@ -62,7 +62,7 @@ where
     /// [`exec`]: peace_cfg::StateDesiredFnSpec::try_exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    pub(crate) async fn exec_internal<'ctx>(
+    pub(crate) async fn exec_internal(
         item_spec_graph: &ItemSpecGraph<E>,
         resources: &mut Resources<SetUp>,
     ) -> Result<StatesDesired, E> {
@@ -87,7 +87,7 @@ where
         Ok(states_desired)
     }
 
-    pub(crate) async fn serialize_internal<'ctx>(
+    pub(crate) async fn serialize_internal(
         resources: &mut Resources<SetUp>,
         states_desired: &StatesDesired,
     ) -> Result<(), E> {

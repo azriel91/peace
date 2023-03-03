@@ -39,9 +39,9 @@ where
     /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    pub async fn exec<'ctx>(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, WithStatesCurrent>>, E> {
+    pub async fn exec(
+        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, WithStatesCurrent>>, E> {
         let SingleProfileSingleFlowView {
             flow, resources, ..
         } = cmd_ctx.scope_mut().view();
@@ -61,7 +61,7 @@ where
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    pub(crate) async fn exec_internal<'ctx>(
+    pub(crate) async fn exec_internal(
         item_spec_graph: &ItemSpecGraph<E>,
         resources: &mut Resources<SetUp>,
     ) -> Result<StatesCurrent, E> {

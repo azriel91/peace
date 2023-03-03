@@ -77,9 +77,9 @@ where
     /// [`EnsureOpSpec::exec_dry`]: peace_cfg::EnsureOpSpec::exec_dry
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    pub async fn exec_dry<'ctx>(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, EnsuredDry>>, E> {
+    pub async fn exec_dry(
+        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, EnsuredDry>>, E> {
         let SingleProfileSingleFlowView {
             output,
             #[cfg(feature = "output_progress")]
@@ -138,9 +138,9 @@ where
     /// [`EnsureOpSpec::exec`]: peace_cfg::EnsureOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    pub async fn exec<'ctx>(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, Ensured>>, E> {
+    pub async fn exec(
+        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, Ensured>>, E> {
         let SingleProfileSingleFlowView {
             output,
             #[cfg(feature = "output_progress")]
@@ -353,7 +353,7 @@ where
     ///     F: (Fn(&dyn ItemSpecRt<E>, op_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemEnsureBoxed) -> Fut) + Copy,
     ///     Fut: Future<Output = Result<(), E>>,
     /// ```
-    async fn item_ensure_exec<'ctx>(
+    async fn item_ensure_exec(
         resources: &Resources<SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
         outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
