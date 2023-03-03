@@ -1,12 +1,9 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{
-    ctx::CmdCtx,
-    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
-};
+use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
 use peace_resources::{
-    resources::ts::{SetUp, WithStatesCurrentAndDesired},
-    Resources,
+    resources::ts::SetUp,
+    states::{StatesCurrent, StatesDesired},
 };
 use peace_rt_model::{params::ParamsKeys, Error};
 
@@ -34,29 +31,12 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, WithStatesCurrentAndDesired>>, E>
-    {
-        let SingleProfileSingleFlowView {
-            flow, resources, ..
-        } = cmd_ctx.scope_mut().view();
-        let item_spec_graph = flow.graph();
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<(StatesCurrent, StatesDesired), E> {
+        let states_current = StatesCurrentDiscoverCmd::<E, O, PKeys>::exec(cmd_ctx).await?;
+        let states_desired = StatesDesiredDiscoverCmd::<E, O, PKeys>::exec(cmd_ctx).await?;
 
-        let states_current =
-            StatesCurrentDiscoverCmd::<E, O, PKeys>::exec_internal(item_spec_graph, resources)
-                .await?;
-        let states_desired =
-            StatesDesiredDiscoverCmd::<E, O, PKeys>::exec_internal(item_spec_graph, resources)
-                .await?;
-
-        let cmd_ctx = cmd_ctx.resources_update(|resources| {
-            Resources::<WithStatesCurrentAndDesired>::from((
-                resources,
-                states_current,
-                states_desired,
-            ))
-        });
-        Ok(cmd_ctx)
+        Ok((states_current, states_desired))
     }
 }
 

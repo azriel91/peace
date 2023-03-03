@@ -8,7 +8,7 @@ use peace_cmd::{
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesSavedFile},
-    resources::ts::{Ensured, EnsuredDry, SetUp},
+    resources::ts::SetUp,
     states::{States, StatesCurrent, StatesEnsured, StatesEnsuredDry, StatesSaved},
     Resources,
 };
@@ -78,8 +78,8 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec_dry(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, EnsuredDry>>, E> {
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<StatesEnsuredDry, E> {
         let SingleProfileSingleFlowView {
             output,
             #[cfg(feature = "output_progress")]
@@ -99,19 +99,8 @@ where
             true,
         )
         .await?;
-        let mut cmd_ctx = cmd_ctx.resources_update(|resources| {
-            Resources::<EnsuredDry>::from((resources, states_ensured_dry))
-        });
 
-        {
-            let SingleProfileSingleFlowView {
-                output, resources, ..
-            } = cmd_ctx.view();
-            let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
-            output.present(&*states_ensured_dry).await?;
-        }
-
-        Ok(cmd_ctx)
+        Ok(states_ensured_dry)
     }
 
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec`] for each
@@ -139,8 +128,8 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, Ensured>>, E> {
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<StatesEnsured, E> {
         let SingleProfileSingleFlowView {
             output,
             #[cfg(feature = "output_progress")]
@@ -160,19 +149,9 @@ where
             false,
         )
         .await?;
-        let mut cmd_ctx = cmd_ctx
-            .resources_update(|resources| Resources::<Ensured>::from((resources, states_ensured)));
+        Self::serialize_internal(resources, &states_ensured).await?;
 
-        {
-            let SingleProfileSingleFlowView {
-                output, resources, ..
-            } = cmd_ctx.view();
-            let states_ensured = resources.borrow::<StatesEnsured>();
-            Self::serialize_internal(resources, &states_ensured).await?;
-            output.present(&*states_ensured).await?;
-        }
-
-        Ok(cmd_ctx)
+        Ok(states_ensured)
     }
 
     /// Conditionally runs [`EnsureOpSpec`]`::`[`exec`] for each [`ItemSpec`].
@@ -453,8 +432,8 @@ where
     }
 
     // TODO: This duplicates a bit of code with `StatesCurrentDiscoverCmd`.
-    async fn serialize_internal<TS>(
-        resources: &Resources<TS>,
+    async fn serialize_internal(
+        resources: &Resources<SetUp>,
         states_ensured: &StatesEnsured,
     ) -> Result<(), E> {
         use peace_rt_model::StatesSerializer;

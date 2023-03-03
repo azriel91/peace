@@ -8,11 +8,11 @@ use peace_cmd::{
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesDesiredFile},
-    resources::ts::{SetUp, WithStatesDesired},
+    resources::ts::SetUp,
     states::{ts::Desired, StatesDesired},
     Resources,
 };
-use peace_rt_model::{params::ParamsKeys, Error, ItemSpecGraph, StatesSerializer, Storage};
+use peace_rt_model::{params::ParamsKeys, Error, StatesSerializer, Storage};
 
 use crate::BUFFERED_FUTURES_MAX;
 
@@ -41,31 +41,13 @@ where
     /// [`StatesDesired`]: peace_resources::StatesDesired
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, WithStatesDesired>>, E> {
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<StatesDesired, E> {
         let SingleProfileSingleFlowView {
             flow, resources, ..
         } = cmd_ctx.scope_mut().view();
         let item_spec_graph = flow.graph();
-        let states_desired = Self::exec_internal(item_spec_graph, resources).await?;
 
-        let cmd_ctx = cmd_ctx.resources_update(|resources| {
-            Resources::<WithStatesDesired>::from((resources, states_desired))
-        });
-        Ok(cmd_ctx)
-    }
-
-    /// Runs [`StateDesiredFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
-    ///
-    /// Same as [`Self::exec`], but does not change the type state.
-    ///
-    /// [`exec`]: peace_cfg::StateDesiredFnSpec::try_exec
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    pub(crate) async fn exec_internal(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: &mut Resources<SetUp>,
-    ) -> Result<StatesDesired, E> {
         let resources_ref = &*resources;
         let states_desired_mut = item_spec_graph
             .stream()

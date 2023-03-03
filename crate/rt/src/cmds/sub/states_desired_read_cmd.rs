@@ -7,7 +7,7 @@ use peace_cmd::{
 };
 use peace_resources::{
     paths::{FlowDir, StatesDesiredFile},
-    resources::ts::{SetUp, WithStatesDesired},
+    resources::ts::SetUp,
     states::StatesDesired,
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     Resources,
@@ -31,35 +31,22 @@ where
     /// [`StatesDesiredDiscoverCmd`]: crate::StatesDesiredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, WithStatesDesired>>, E> {
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<StatesDesired, E> {
         let SingleProfileSingleFlowView {
             states_type_regs,
             resources,
             ..
         } = cmd_ctx.scope_mut().view();
+
         let states_desired =
-            Self::exec_internal(resources, states_type_regs.states_desired_type_reg()).await?;
+            Self::deserialize_internal(resources, states_type_regs.states_desired_type_reg())
+                .await?;
 
-        let cmd_ctx = cmd_ctx.resources_update(|resources| {
-            Resources::<WithStatesDesired>::from((resources, states_desired))
-        });
-        Ok(cmd_ctx)
+        Ok(states_desired)
     }
 
-    /// Returns [`StatesDesired`] of all [`ItemSpec`]s if it exists on disk.
-    ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    pub(crate) async fn exec_internal(
-        resources: &mut Resources<SetUp>,
-        states_desired_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
-    ) -> Result<StatesDesired, E> {
-        let states = Self::deserialize_internal(resources, states_desired_type_reg).await?;
-
-        Ok(states)
-    }
-
-    async fn deserialize_internal(
+    pub(crate) async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
         states_desired_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
     ) -> Result<StatesDesired, E> {

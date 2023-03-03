@@ -11,8 +11,8 @@ use peace_cmd::{
 };
 use peace_resources::{
     internal::OpCheckStatuses,
-    resources::ts::{Cleaned, CleanedDry, SetUp, WithStatesCurrent},
-    states::{StatesCleaned, StatesCleanedDry},
+    resources::ts::SetUp,
+    states::{StatesCleaned, StatesCleanedDry, StatesCurrent},
     Resources,
 };
 use peace_rt_model::{
@@ -55,82 +55,44 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
     pub async fn exec_dry(
-        cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, CleanedDry>>, E> {
-        let cmd_ctx_result = Self::exec_dry_internal(cmd_ctx).await;
-        match cmd_ctx_result {
-            Ok(mut cmd_ctx) => {
-                {
-                    let SingleProfileSingleFlowView {
-                        output, resources, ..
-                    } = cmd_ctx.view();
-                    let states_cleaned_dry = resources.borrow::<StatesCleanedDry>();
-                    output.present(&*states_cleaned_dry).await?;
-                }
-
-                Ok(cmd_ctx)
-            }
-            Err(e) => Err(e),
-        }
-    }
-
-    /// Conditionally runs [`CleanOpSpec`]`::`[`exec_dry`] for each
-    /// [`ItemSpec`].
-    ///
-    /// Same as [`Self::exec_dry`], but does not change the type state, and
-    /// returns [`StatesCleaned`].
-    ///
-    /// [`exec_dry`]: peace_cfg::CleanOpSpec::exec_dry
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
-    pub(crate) async fn exec_dry_internal(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, CleanedDry>>, E> {
-        let SingleProfileSingleFlowView {
-            flow, resources, ..
-        } = cmd_ctx.scope_mut().view();
-        let item_spec_graph = flow.graph();
-
-        // https://github.com/rust-lang/rust-clippy/issues/9111
-        #[allow(clippy::needless_borrow)]
-        let states_current =
-            StatesCurrentDiscoverCmd::<E, O, PKeys>::exec_internal(item_spec_graph, resources)
-                .await?;
-        let mut cmd_ctx = cmd_ctx.resources_update(|resources| {
-            Resources::<WithStatesCurrent>::from((resources, states_current))
-        });
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<StatesCleanedDry, E> {
+        let states_current = StatesCurrentDiscoverCmd::<E, O, PKeys>::exec(cmd_ctx).await?;
 
         let SingleProfileSingleFlowView {
             flow, resources, ..
         } = cmd_ctx.scope_mut().view();
         let item_spec_graph = flow.graph();
 
-        let op_check_statuses = Self::clean_op_spec_check(item_spec_graph, resources).await?;
-        Self::clean_op_spec_exec_dry(item_spec_graph, resources, &op_check_statuses).await?;
-
-        // TODO: This fetches the real state, whereas for a dry run, it would be useful
-        // to show the imagined altered state.
-        let states_current = StatesCurrentDiscoverCmd::<E, O, PKeys>::exec_internal_for_clean_dry(
+        let op_check_statuses =
+            Self::clean_op_spec_check(item_spec_graph, resources, &states_current).await?;
+        Self::clean_op_spec_exec_dry(
             item_spec_graph,
             resources,
+            &states_current,
+            &op_check_statuses,
         )
         .await?;
 
-        let states_cleaned_dry = StatesCleanedDry::from((states_current, &*resources));
-        let cmd_ctx = cmd_ctx.resources_update(|resources| {
-            Resources::<CleanedDry>::from((resources, states_cleaned_dry))
-        });
+        // TODO: This fetches the real state, whereas for a dry run, it would be useful
+        // to show the imagined altered state.
+        let states_current = StatesCurrentDiscoverCmd::<E, O, PKeys>::exec(cmd_ctx).await?;
 
-        Ok(cmd_ctx)
+        let states_cleaned_dry = StatesCleanedDry::from(states_current);
+
+        Ok(states_cleaned_dry)
     }
 
     async fn clean_op_spec_exec_dry(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStatesCurrent>,
+        resources: &Resources<SetUp>,
+        states_current: &StatesCurrent,
         op_check_statuses: &OpCheckStatuses,
     ) -> Result<(), E> {
         Self::clean_op_spec_stream(item_spec_graph, op_check_statuses)
-            .try_for_each(|item_spec| async move { item_spec.clean_op_exec_dry(resources).await })
+            .try_for_each(|item_spec| async move {
+                item_spec.clean_op_exec_dry(resources, states_current).await
+            })
             .await?;
         Ok(())
     }
@@ -162,80 +124,42 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
     pub async fn exec(
-        cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, Cleaned>>, E> {
-        let cmd_ctx_result = Self::exec_internal(cmd_ctx).await;
-        match cmd_ctx_result {
-            Ok(mut cmd_ctx) => {
-                {
-                    let SingleProfileSingleFlowView {
-                        output, resources, ..
-                    } = cmd_ctx.view();
-                    let states_cleaned = resources.borrow::<StatesCleaned>();
-                    output.present(&*states_cleaned).await?;
-                }
-
-                Ok(cmd_ctx)
-            }
-            Err(e) => Err(e),
-        }
-    }
-
-    /// Conditionally runs [`CleanOpSpec`]`::`[`exec`] for each [`ItemSpec`].
-    ///
-    /// Same as [`Self::exec`], but does not change the type state, and returns
-    /// [`StatesCleaned`].
-    ///
-    /// [`exec`]: peace_cfg::CleanOpSpec::exec
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
-    pub(crate) async fn exec_internal(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, Cleaned>>, E> {
-        let SingleProfileSingleFlowView {
-            flow, resources, ..
-        } = cmd_ctx.scope_mut().view();
-        let item_spec_graph = flow.graph();
-
-        // https://github.com/rust-lang/rust-clippy/issues/9111
-        #[allow(clippy::needless_borrow)]
-        let states_current =
-            StatesCurrentDiscoverCmd::<E, O, PKeys>::exec_internal(item_spec_graph, resources)
-                .await?;
-        let mut cmd_ctx = cmd_ctx.resources_update(|resources| {
-            Resources::<WithStatesCurrent>::from((resources, states_current))
-        });
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<StatesCleaned, E> {
+        let states_current = StatesCurrentDiscoverCmd::<E, O, PKeys>::exec(cmd_ctx).await?;
 
         let SingleProfileSingleFlowView {
             flow, resources, ..
         } = cmd_ctx.scope_mut().view();
         let item_spec_graph = flow.graph();
 
-        let op_check_statuses = Self::clean_op_spec_check(item_spec_graph, resources).await?;
-        Self::clean_op_spec_exec(item_spec_graph, resources, &op_check_statuses).await?;
-
-        let states_current = StatesCurrentDiscoverCmd::<E, O, PKeys>::exec_internal_for_clean(
+        let op_check_statuses =
+            Self::clean_op_spec_check(item_spec_graph, resources, &states_current).await?;
+        Self::clean_op_spec_exec(
             item_spec_graph,
             resources,
+            &states_current,
+            &op_check_statuses,
         )
         .await?;
 
-        let states_cleaned = StatesCleaned::from((states_current, &*resources));
-        let cmd_ctx = cmd_ctx
-            .resources_update(|resources| Resources::<Cleaned>::from((resources, states_cleaned)));
+        let states_current = StatesCurrentDiscoverCmd::<E, O, PKeys>::exec(cmd_ctx).await?;
 
-        Ok(cmd_ctx)
+        let states_cleaned = StatesCleaned::from(states_current);
+
+        Ok(states_cleaned)
     }
 
     async fn clean_op_spec_check(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStatesCurrent>,
+        resources: &Resources<SetUp>,
+        states_current: &StatesCurrent,
     ) -> Result<OpCheckStatuses, E> {
         let op_check_statuses = item_spec_graph
             .stream()
             .map(Result::<_, E>::Ok)
             .and_then(|item_spec| async move {
-                let op_check_status = item_spec.clean_op_check(resources).await?;
+                let op_check_status = item_spec.clean_op_check(resources, states_current).await?;
                 Ok((item_spec.id().clone(), op_check_status))
             })
             .try_collect::<OpCheckStatuses>()
@@ -246,11 +170,14 @@ where
 
     async fn clean_op_spec_exec(
         item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStatesCurrent>,
+        resources: &Resources<SetUp>,
+        states_current: &StatesCurrent,
         op_check_statuses: &OpCheckStatuses,
     ) -> Result<(), E> {
         Self::clean_op_spec_stream(item_spec_graph, op_check_statuses)
-            .try_for_each(|item_spec| async move { item_spec.clean_op_exec(resources).await })
+            .try_for_each(|item_spec| async move {
+                item_spec.clean_op_exec(resources, states_current).await
+            })
             .await?;
         Ok(())
     }

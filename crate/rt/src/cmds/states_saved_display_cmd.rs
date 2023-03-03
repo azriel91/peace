@@ -31,8 +31,8 @@ where
     /// [`StatesSavedDiscoverCmd`]: crate::StatesSavedDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, WithStatesSaved>>, E> {
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<(), E> {
         let SingleProfileSingleFlowView {
             output,
             states_type_regs,
@@ -40,7 +40,7 @@ where
             ..
         } = cmd_ctx.view();
 
-        let states_saved_result = StatesSavedReadCmd::<E, O, PKeys>::exec_internal(
+        let states_saved_result = StatesSavedReadCmd::<E, O, PKeys>::deserialize_internal(
             resources,
             states_type_regs.states_current_type_reg(),
         )
@@ -49,11 +49,7 @@ where
         match states_saved_result {
             Ok(states_saved) => {
                 output.present(&states_saved).await?;
-
-                let cmd_ctx = cmd_ctx.resources_update(|resources| {
-                    Resources::<WithStatesSaved>::from((resources, states_saved))
-                });
-                Ok(cmd_ctx)
+                Ok(())
             }
             Err(e) => {
                 output.write_err(&e).await?;

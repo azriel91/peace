@@ -4,10 +4,7 @@ use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
-use peace_resources::{
-    resources::ts::{SetUp, WithStatesDesired},
-    Resources,
-};
+use peace_resources::resources::ts::SetUp;
 use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
 
@@ -31,8 +28,8 @@ where
     /// [`StatesDesiredDiscoverCmd`]: crate::StatesDesiredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_ctx: CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, WithStatesDesired>>, E> {
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<(), E> {
         let SingleProfileSingleFlowView {
             output,
             states_type_regs,
@@ -40,20 +37,16 @@ where
             ..
         } = cmd_ctx.view();
 
-        let states_desired_result = StatesDesiredReadCmd::<E, O, PKeys>::exec_internal(
+        let states_saved_result = StatesDesiredReadCmd::<E, O, PKeys>::deserialize_internal(
             resources,
             states_type_regs.states_desired_type_reg(),
         )
         .await;
 
-        match states_desired_result {
-            Ok(states_desired) => {
-                output.present(&states_desired).await?;
-
-                let cmd_ctx = cmd_ctx.resources_update(|resources| {
-                    Resources::<WithStatesDesired>::from((resources, states_desired))
-                });
-                Ok(cmd_ctx)
+        match states_saved_result {
+            Ok(states_saved) => {
+                output.present(&states_saved).await?;
+                Ok(())
             }
             Err(e) => {
                 output.write_err(&e).await?;

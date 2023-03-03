@@ -8,11 +8,8 @@ use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, TryFnSpec};
 use peace_data::Data;
 use peace_resources::{
-    resources::ts::{
-        Empty, SetUp, WithStatesCurrent, WithStatesCurrentAndDesired, WithStatesCurrentDiffs,
-        WithStatesSavedAndDesired,
-    },
-    states::{self, States, StatesCurrent, StatesDesired},
+    resources::ts::{Empty, SetUp},
+    states::{StateDiffs, States, StatesCurrent, StatesDesired, StatesSaved},
     type_reg::untagged::BoxDtDisplay,
     Resources,
 };
@@ -201,15 +198,15 @@ where
     async fn state_diff_exec<ResourcesTs, StatesTs>(
         &self,
         resources: &Resources<ResourcesTs>,
+        states_base: &States<StatesTs>,
+        states_desired: &StatesDesired,
     ) -> Result<StateDiff, E>
     where
         StatesTs: Debug + Send + Sync + 'static,
     {
         let state_diff: StateDiff = {
             let item_spec_id = <IS as ItemSpec>::id(self);
-            let states_base = resources.borrow::<States<StatesTs>>();
             let state_base = states_base.get::<State, _>(item_spec_id);
-            let states_desired = resources.borrow::<StatesDesired>();
             let state_desired = states_desired.get::<State, _>(item_spec_id);
 
             if let (Some(state_base), Some(state_desired)) = (state_base, state_desired) {
@@ -711,20 +708,34 @@ where
             .map_err(Into::<E>::into)
     }
 
+    /// `states_current` and `state_diffs` are not needed by the discovery, but
+    /// are here as markers that this method should be called after the caller
+    /// has previously diffed the desired states to states discovered in the
+    /// current execution.
     async fn state_ensured_exec(
         &self,
-        resources: &Resources<WithStatesCurrentDiffs>,
+        resources: &Resources<SetUp>,
+        _states_current: &StatesCurrent,
+        _state_diffs: &StateDiffs,
     ) -> Result<BoxDtDisplay, E> {
+        // The ensured state is the current state re-discovered
+        // after `EnsureOpSpec::exec` has run.
         self.state_current_exec(resources)
             .await
             .map(BoxDtDisplay::new)
             .map_err(Into::<E>::into)
     }
 
+    /// `states_current` is not needed by the discovery, but is here as a marker
+    /// that this method should be called after the caller has previously saved
+    /// the state of the item.
     async fn state_cleaned_try_exec(
         &self,
-        resources: &Resources<WithStatesCurrent>,
+        resources: &Resources<SetUp>,
+        _states_current: &StatesCurrent,
     ) -> Result<Option<BoxDtDisplay>, E> {
+        // The cleaned state is the current state re-discovered
+        // after `CleanOpSpec::exec` has run.
         self.state_current_try_exec(resources)
             .await
             .map(|state_current| state_current.map(BoxDtDisplay::new))
@@ -750,9 +761,11 @@ where
 
     async fn state_diff_exec_with_states_saved(
         &self,
-        resources: &Resources<WithStatesSavedAndDesired>,
+        resources: &Resources<SetUp>,
+        states_saved: &StatesSaved,
+        states_desired: &StatesDesired,
     ) -> Result<BoxDtDisplay, E> {
-        self.state_diff_exec::<_, states::ts::Saved>(resources)
+        self.state_diff_exec(resources, states_saved, states_desired)
             .await
             .map(BoxDtDisplay::new)
             .map_err(Into::<E>::into)
@@ -760,9 +773,11 @@ where
 
     async fn state_diff_exec_with_states_current(
         &self,
-        resources: &Resources<WithStatesCurrentAndDesired>,
+        resources: &Resources<SetUp>,
+        states_current: &StatesCurrent,
+        states_desired: &StatesDesired,
     ) -> Result<BoxDtDisplay, E> {
-        self.state_diff_exec::<_, states::ts::Current>(resources)
+        self.state_diff_exec(resources, states_current, states_desired)
             .await
             .map(BoxDtDisplay::new)
             .map_err(Into::<E>::into)
@@ -913,7 +928,8 @@ where
 
     async fn clean_op_check(
         &self,
-        resources: &Resources<WithStatesCurrent>,
+        resources: &Resources<SetUp>,
+        states_current: &StatesCurrent,
     ) -> Result<OpCheckStatus, E> {
         let op_check_status = {
             let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(
@@ -921,8 +937,7 @@ where
                 resources,
             );
             let item_spec_id = <IS as ItemSpec>::id(self);
-            let states = resources.borrow::<StatesCurrent>();
-            let state = states.get::<State, _>(item_spec_id);
+            let state = states_current.get::<State, _>(item_spec_id);
 
             if let Some(state) = state {
                 <CleanOpSpec as peace_cfg::CleanOpSpec>::check(data, state).await?
@@ -937,14 +952,17 @@ where
         Ok(op_check_status)
     }
 
-    async fn clean_op_exec_dry(&self, resources: &Resources<WithStatesCurrent>) -> Result<(), E> {
+    async fn clean_op_exec_dry(
+        &self,
+        resources: &Resources<SetUp>,
+        states_current: &StatesCurrent,
+    ) -> Result<(), E> {
         let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(
             self.id(),
             resources,
         );
         let item_spec_id = <IS as ItemSpec>::id(self);
-        let states = resources.borrow::<StatesCurrent>();
-        let state = states.get::<State, _>(item_spec_id);
+        let state = states_current.get::<State, _>(item_spec_id);
 
         if let Some(state) = state {
             <CleanOpSpec as peace_cfg::CleanOpSpec>::exec_dry(data, state).await?;
@@ -957,14 +975,17 @@ where
         Ok(())
     }
 
-    async fn clean_op_exec(&self, resources: &Resources<WithStatesCurrent>) -> Result<(), E> {
+    async fn clean_op_exec(
+        &self,
+        resources: &Resources<SetUp>,
+        states_current: &StatesCurrent,
+    ) -> Result<(), E> {
         let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(
             self.id(),
             resources,
         );
         let item_spec_id = <IS as ItemSpec>::id(self);
-        let states = resources.borrow::<StatesCurrent>();
-        let state = states.get::<State, _>(item_spec_id);
+        let state = states_current.get::<State, _>(item_spec_id);
 
         if let Some(state) = state {
             <CleanOpSpec as peace_cfg::CleanOpSpec>::exec(data, state).await?;
