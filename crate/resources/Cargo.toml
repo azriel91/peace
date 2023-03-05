@@ -1,7 +1,7 @@
 [package]
 name = "peace_resources"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
-version = "0.0.6"
+version = "0.0.7"
 edition = "2021"
 description = "Runtime resources for the peace automation framework."
 repository = "https://github.com/azriel91/peace"
@@ -16,9 +16,9 @@ doctest = true
 test = false
 
 [dependencies]
-peace_core = { version = "0.0.6", path = "../core" }
-peace_data = { version = "0.0.6", path = "../data" }
-peace_fmt = { version = "0.0.6", path = "../fmt" }
+peace_core = { version = "0.0.7", path = "../core" }
+peace_data = { version = "0.0.7", path = "../data" }
+peace_fmt = { version = "0.0.7", path = "../fmt" }
 resman = { version = "0.16.0", features = ["debug"] }
 serde = { version = "1.0.152", features = ["derive"] }
 tokio = { workspace = true, features = ["sync"] }
