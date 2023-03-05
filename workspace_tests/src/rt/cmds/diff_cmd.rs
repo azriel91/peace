@@ -3,7 +3,10 @@ use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
     cmd::ctx::CmdCtx,
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
-    rt_model::{output::CliOutput, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{
+        output::{CliOutput, OutputWrite},
+        Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
+    },
 };
 
 use crate::{
@@ -87,6 +90,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
 
     // Re-read states from disk.
     let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
+    <_ as OutputWrite<PeaceTestError>>::present(cmd_ctx.output_mut(), &state_diffs).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec.id());
     assert_eq!(
@@ -111,6 +115,10 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         ])))
         .as_ref(),
         vec_diff
+    );
+    assert_eq!(
+        "1. `vec_copy`: [(-)3..4, (~)7;1, (+)8;9, ]\n",
+        String::from_utf8(buffer)?
     );
 
     Ok(())
