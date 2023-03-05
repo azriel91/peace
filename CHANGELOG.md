@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.0.7 (2023-03-06)
 
 * Add [`cargo-deny`] and [`cargo-about`] CI checks. ([#76])
 * Add [`peace::fmt::{Presentable, Presenter}`] traits. ([#77], [#79])
