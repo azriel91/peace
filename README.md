@@ -42,7 +42,7 @@ See:
 * 🟢 Show state differences
 * 🟢 Namespaced profile directories
 * 🟢 Resource clean up
-* 🟢 Understandable progress ([#42])
+* 🟢 Understandable progress
 * 🟡 Feature-gated incremental functionality
 * 🟡 Off-the-shelf support for common items
 * 🟡 Dry run
