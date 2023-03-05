@@ -1,7 +1,7 @@
 [package]
 name = "peace_rt_model_hack"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
-version = "0.0.6"
+version = "0.0.7"
 edition = "2021"
 description = "Hack to selectively enable features in target specific crates."
 repository = "https://github.com/azriel91/peace"
@@ -33,10 +33,10 @@ test = false
 # <https://github.com/rust-lang/cargo/issues/1197#issuecomment-268203727>
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-peace_rt_model_native = { path = "../rt_model_native", version = "0.0.6" }
+peace_rt_model_native = { path = "../rt_model_native", version = "0.0.7" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-peace_rt_model_web = { path = "../rt_model_web", version = "0.0.6" }
+peace_rt_model_web = { path = "../rt_model_web", version = "0.0.7" }
 
 [features]
 default = []
