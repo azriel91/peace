@@ -1,10 +1,11 @@
 use std::{fmt::Debug, marker::PhantomData};
 
+use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
 use peace_resources::{
-    resources::ts::{SetUp, WithStatesCurrentAndDesired},
-    Resources,
+    resources::ts::SetUp,
+    states::{StatesCurrent, StatesDesired},
 };
-use peace_rt_model::{cmd::CmdContext, cmd_context_params::ParamsKeys, Error};
+use peace_rt_model::{params::ParamsKeys, Error};
 
 use crate::cmds::sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd};
 
@@ -13,7 +14,7 @@ pub struct StatesDiscoverCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
 impl<E, O, PKeys> StatesDiscoverCmd<E, O, PKeys>
 where
-    E: std::error::Error + From<Error> + Send,
+    E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
 {
     /// Runs [`StateCurrentFnSpec`]` and
@@ -30,43 +31,12 @@ where
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp, PKeys>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesCurrentAndDesired, PKeys>, E> {
-        let CmdContext {
-            workspace,
-            item_spec_graph,
-            output,
-            mut resources,
-            params_type_regs,
-            states_type_regs,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            ..
-        } = cmd_context;
-        let states_current =
-            StatesCurrentDiscoverCmd::<E, O, PKeys>::exec_internal(item_spec_graph, &mut resources)
-                .await?;
-        let states_desired =
-            StatesDesiredDiscoverCmd::<E, O, PKeys>::exec_internal(item_spec_graph, &mut resources)
-                .await?;
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<(StatesCurrent, StatesDesired), E> {
+        let states_current = StatesCurrentDiscoverCmd::<E, O, PKeys>::exec(cmd_ctx).await?;
+        let states_desired = StatesDesiredDiscoverCmd::<E, O, PKeys>::exec(cmd_ctx).await?;
 
-        let resources = Resources::<WithStatesCurrentAndDesired>::from((
-            resources,
-            states_current,
-            states_desired,
-        ));
-
-        let cmd_context = CmdContext::from((
-            workspace,
-            item_spec_graph,
-            output,
-            resources,
-            params_type_regs,
-            states_type_regs,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-        ));
-        Ok(cmd_context)
+        Ok((states_current, states_desired))
     }
 }
 

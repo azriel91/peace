@@ -1,19 +1,19 @@
 #![allow(clippy::type_complexity)]
 
-use std::fmt::Debug;
+use std::{fmt::Debug, hash::Hash};
 
+use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
-    resources::ts::Empty,
+    resources::ts::{Empty, SetUp},
     Resources,
 };
 use peace_rt_model::{
-    cmd_context_params::{
-        FlowParams, KeyMaybe, ParamsKeys, ParamsTypeRegsBuilder, ProfileParams, WorkspaceParams,
-    },
     fn_graph::resman::Resource,
-    Error, Storage, Workspace, WorkspaceInitializer,
+    params::{FlowParams, ProfileParams, WorkspaceParams},
+    Error, ItemSpecGraph, StatesTypeRegs, Storage, Workspace, WorkspaceInitializer,
 };
+use serde::{de::DeserializeOwned, Serialize};
 
 pub use self::{
     multi_profile_no_flow_builder::MultiProfileNoFlowBuilder,
@@ -31,107 +31,114 @@ mod single_profile_single_flow_builder;
 
 /// Collects parameters and initializes values relevant to the built [`CmdCtx`].
 #[derive(Debug)]
-pub struct CmdCtxBuilder<'ctx, ScopeBuilder, PKeys>
-where
-    PKeys: ParamsKeys + 'static,
-{
+pub struct CmdCtxBuilder<'ctx, O, ScopeBuilder> {
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    output: &'ctx mut O,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
     /// Data held while building `CmdCtx`.
     scope_builder: ScopeBuilder,
-    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
-    /// [`FlowParams`] deserialization.
-    ///
-    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
-    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
-    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
-    params_type_regs_builder: ParamsTypeRegsBuilder<PKeys>,
 }
 
-impl<'ctx, ScopeBuilder, PKeys> CmdCtxBuilder<'ctx, ScopeBuilder, PKeys>
+/// Serializes workspace params to storage.
+async fn workspace_params_serialize<WorkspaceParamsK>(
+    workspace_params: &WorkspaceParams<WorkspaceParamsK>,
+    storage: &Storage,
+    workspace_params_file: &WorkspaceParamsFile,
+) -> Result<(), Error>
 where
-    PKeys: ParamsKeys + 'static,
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
 {
-    /// Serializes workspace params to storage.
-    async fn workspace_params_serialize(
-        workspace_params: &WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-        storage: &Storage,
-        workspace_params_file: &WorkspaceParamsFile,
-    ) -> Result<(), Error> {
-        WorkspaceInitializer::workspace_params_serialize(
-            storage,
-            workspace_params,
-            workspace_params_file,
-        )
+    WorkspaceInitializer::workspace_params_serialize(
+        storage,
+        workspace_params,
+        workspace_params_file,
+    )
+    .await?;
+
+    Ok(())
+}
+
+/// Inserts workspace params into the `Resources` map.
+fn workspace_params_insert<WorkspaceParamsK>(
+    mut workspace_params: WorkspaceParams<WorkspaceParamsK>,
+    resources: &mut Resources<Empty>,
+) where
+    WorkspaceParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    workspace_params
+        .drain(..)
+        .for_each(|(_key, workspace_param)| {
+            let workspace_param = workspace_param.into_inner().upcast();
+            let type_id = Resource::type_id(&*workspace_param);
+            resources.insert_raw(type_id, workspace_param);
+        });
+}
+
+/// Serializes profile params to storage.
+async fn profile_params_serialize<ProfileParamsK>(
+    profile_params: &ProfileParams<ProfileParamsK>,
+    storage: &Storage,
+    profile_params_file: &ProfileParamsFile,
+) -> Result<(), Error>
+where
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    WorkspaceInitializer::profile_params_serialize(storage, profile_params, profile_params_file)
         .await?;
 
-        Ok(())
-    }
+    Ok(())
+}
 
-    /// Inserts workspace params into the `Resources` map.
-    fn workspace_params_insert(
-        mut workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
-        resources: &mut Resources<Empty>,
-    ) {
-        workspace_params
-            .drain(..)
-            .for_each(|(_key, workspace_param)| {
-                let workspace_param = workspace_param.into_inner().upcast();
-                let type_id = Resource::type_id(&*workspace_param);
-                resources.insert_raw(type_id, workspace_param);
-            });
-    }
+/// Inserts profile params into the `Resources` map.
+fn profile_params_insert<ProfileParamsK>(
+    mut profile_params: ProfileParams<ProfileParamsK>,
+    resources: &mut Resources<Empty>,
+) where
+    ProfileParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    profile_params.drain(..).for_each(|(_key, profile_param)| {
+        let profile_param = profile_param.into_inner().upcast();
+        let type_id = Resource::type_id(&*profile_param);
+        resources.insert_raw(type_id, profile_param);
+    });
+}
 
-    /// Serializes profile params to storage.
-    async fn profile_params_serialize(
-        profile_params: &ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
-        storage: &Storage,
-        profile_params_file: &ProfileParamsFile,
-    ) -> Result<(), Error> {
-        WorkspaceInitializer::profile_params_serialize(
-            storage,
-            profile_params,
-            profile_params_file,
-        )
-        .await?;
+/// Serializes flow params to storage.
+async fn flow_params_serialize<FlowParamsK>(
+    flow_params: &FlowParams<FlowParamsK>,
+    storage: &Storage,
+    flow_params_file: &FlowParamsFile,
+) -> Result<(), Error>
+where
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    WorkspaceInitializer::flow_params_serialize(storage, flow_params, flow_params_file).await?;
 
-        Ok(())
-    }
+    Ok(())
+}
 
-    /// Inserts profile params into the `Resources` map.
-    fn profile_params_insert(
-        mut profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
-        resources: &mut Resources<Empty>,
-    ) {
-        profile_params.drain(..).for_each(|(_key, profile_param)| {
-            let profile_param = profile_param.into_inner().upcast();
-            let type_id = Resource::type_id(&*profile_param);
-            resources.insert_raw(type_id, profile_param);
-        });
-    }
-
-    /// Serializes flow params to storage.
-    async fn flow_params_serialize(
-        flow_params: &FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
-        storage: &Storage,
-        flow_params_file: &FlowParamsFile,
-    ) -> Result<(), Error> {
-        WorkspaceInitializer::flow_params_serialize(storage, flow_params, flow_params_file).await?;
-
-        Ok(())
-    }
-
-    /// Inserts flow params into the `Resources` map.
-    fn flow_params_insert(
-        mut flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
-        resources: &mut Resources<Empty>,
-    ) {
-        flow_params.drain(..).for_each(|(_key, flow_param)| {
-            let flow_param = flow_param.into_inner().upcast();
-            let type_id = Resource::type_id(&*flow_param);
-            resources.insert_raw(type_id, flow_param);
-        });
-    }
+/// Inserts flow params into the `Resources` map.
+fn flow_params_insert<FlowParamsK>(
+    mut flow_params: FlowParams<FlowParamsK>,
+    resources: &mut Resources<Empty>,
+) where
+    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+{
+    flow_params.drain(..).for_each(|(_key, flow_param)| {
+        let flow_param = flow_param.into_inner().upcast();
+        let type_id = Resource::type_id(&*flow_param);
+        resources.insert_raw(type_id, flow_param);
+    });
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -208,4 +215,34 @@ pub(crate) async fn profiles_from_peace_app_dir(
     // assembly.
 
     Ok(profiles)
+}
+
+/// Registers each item spec's `State` and `StateLogical` for deserialization.
+fn states_type_regs<E>(item_spec_graph: &ItemSpecGraph<E>) -> StatesTypeRegs {
+    item_spec_graph
+        .iter()
+        .fold(StatesTypeRegs::new(), |mut states_type_regs, item_spec| {
+            item_spec.state_register(&mut states_type_regs);
+
+            states_type_regs
+        })
+}
+
+async fn item_spec_graph_setup<E>(
+    item_spec_graph: &ItemSpecGraph<E>,
+    resources: Resources<Empty>,
+) -> Result<Resources<SetUp>, E>
+where
+    E: std::error::Error,
+{
+    let resources = item_spec_graph
+        .stream()
+        .map(Ok::<_, E>)
+        .try_fold(resources, |mut resources, item_spec| async move {
+            item_spec.setup(&mut resources).await?;
+            Ok(resources)
+        })
+        .await?;
+
+    Ok(Resources::<SetUp>::from(resources))
 }

@@ -1,10 +1,11 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_resources::{
-    resources::ts::{SetUp, WithStatesSaved},
-    Resources,
+use peace_cmd::{
+    ctx::CmdCtx,
+    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
-use peace_rt_model::{cmd::CmdContext, cmd_context_params::ParamsKeys, Error};
+use peace_resources::{resources::ts::SetUp, states::StatesSaved};
+use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
 
 use crate::cmds::sub::StatesSavedReadCmd;
@@ -15,28 +16,28 @@ pub struct StatesSavedDisplayCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
 impl<E, O, PKeys> StatesSavedDisplayCmd<E, O, PKeys>
 where
-    E: std::error::Error + From<Error> + Send,
+    E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
-    /// Displays [`StatesCurrent`]s from storage.
+    /// Displays [`StatesSaved`]s from storage.
     ///
-    /// Either [`StatesCurrentDiscoverCmd`] or [`StatesDiscoverCmd`] must have
+    /// Either [`StatesSavedDiscoverCmd`] or [`StatesDiscoverCmd`] must have
     /// run prior to this command to read the state.
     ///
-    /// [`StatesCurrentDiscoverCmd`]: crate::StatesCurrentDiscoverCmd
+    /// [`StatesSavedDiscoverCmd`]: crate::StatesSavedDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_context: CmdContext<'_, E, O, SetUp, PKeys>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesSaved, PKeys>, E> {
-        let CmdContext {
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<StatesSaved, E> {
+        let SingleProfileSingleFlowView {
             output,
-            resources,
             states_type_regs,
+            resources,
             ..
-        } = &mut cmd_context;
+        } = cmd_ctx.view();
 
-        let states_saved_result = StatesSavedReadCmd::<E, O, PKeys>::exec_internal(
+        let states_saved_result = StatesSavedReadCmd::<E, O, PKeys>::deserialize_internal(
             resources,
             states_type_regs.states_current_type_reg(),
         )
@@ -45,11 +46,7 @@ where
         match states_saved_result {
             Ok(states_saved) => {
                 output.present(&states_saved).await?;
-
-                let cmd_context = CmdContext::from((cmd_context, |resources| {
-                    Resources::<WithStatesSaved>::from((resources, states_saved))
-                }));
-                Ok(cmd_context)
+                Ok(states_saved)
             }
             Err(e) => {
                 output.write_err(&e).await?;

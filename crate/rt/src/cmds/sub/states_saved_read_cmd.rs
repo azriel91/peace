@@ -1,16 +1,18 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cfg::{FlowId, ItemSpecId};
+use peace_cmd::{
+    ctx::CmdCtx,
+    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+};
 use peace_resources::{
     paths::{FlowDir, StatesSavedFile},
-    resources::ts::{SetUp, WithStatesSaved},
+    resources::ts::SetUp,
     states::StatesSaved,
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     Resources,
 };
-use peace_rt_model::{
-    cmd::CmdContext, cmd_context_params::ParamsKeys, Error, StatesSerializer, Storage,
-};
+use peace_rt_model::{params::ParamsKeys, Error, StatesSerializer, Storage};
 
 /// Reads [`StatesSaved`]s from storage.
 #[derive(Debug)]
@@ -18,39 +20,33 @@ pub struct StatesSavedReadCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
 impl<E, O, PKeys> StatesSavedReadCmd<E, O, PKeys>
 where
-    E: std::error::Error + From<Error> + Send,
+    E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
 {
     /// Reads [`StatesSaved`]s from storage.
     ///
-    /// Either [`StatesCurrentDiscoverCmd`] or [`StatesDiscoverCmd`] must have
+    /// Either [`StatesSavedDiscoverCmd`] or [`StatesDiscoverCmd`] must have
     /// run prior to this command to read the state.
     ///
-    /// [`StatesCurrentDiscoverCmd`]: crate::StatesCurrentDiscoverCmd
+    /// [`StatesSavedDiscoverCmd`]: crate::StatesSavedDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
-        mut cmd_context: CmdContext<'_, E, O, SetUp, PKeys>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesSaved, PKeys>, E> {
-        let CmdContext {
-            resources,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    ) -> Result<StatesSaved, E> {
+        let SingleProfileSingleFlowView {
             states_type_regs,
+            resources,
             ..
-        } = &mut cmd_context;
+        } = cmd_ctx.scope_mut().view();
 
         let states_saved =
-            Self::exec_internal(resources, states_type_regs.states_current_type_reg()).await?;
+            Self::deserialize_internal(resources, states_type_regs.states_current_type_reg())
+                .await?;
 
-        let cmd_context = CmdContext::from((cmd_context, |resources| {
-            Resources::<WithStatesSaved>::from((resources, states_saved))
-        }));
-
-        Ok(cmd_context)
+        Ok(states_saved)
     }
 
-    /// Returns [`StatesSaved`] of all [`ItemSpec`]s if it exists on disk.
-    ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    pub(crate) async fn exec_internal(
+    pub(crate) async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
         states_current_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
     ) -> Result<StatesSaved, E> {

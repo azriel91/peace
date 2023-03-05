@@ -26,6 +26,13 @@ use crate::cmd::{scope_struct::ScopeStruct, type_parameters_impl};
 ///     pub(crate) profile_selection: ProfileSelection,
 ///     /// Identifier or name of the chosen process flow.
 ///     pub(crate) flow_selection: FlowSelection,
+///     /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+///     /// [`FlowParams`] deserialization.
+///     ///
+///     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
+///     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
+///     /// [`FlowParams`]: peace_rt_model::params::FlowParams
+///     pub(crate) params_type_regs_builder: ParamsTypeRegsBuilder<PKeys>,
 ///     /// Workspace parameters.
 ///     pub(crate) workspace_params_selection: WorkspaceParamsSelection,
 ///     /// Profile parameters.
@@ -44,8 +51,27 @@ pub fn struct_definition(scope_struct: &mut ScopeStruct) -> proc_macro2::TokenSt
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
         type_parameters_impl::params_selection_push(&mut type_params, scope);
 
+        // <
+        //     E,
+        //
+        //     // SingleProfile / MultiProfile
+        //     ProfileSelection,
+        //     // SingleFlow
+        //     FlowSelection,
+        //
+        //     PKeys,
+        //     WorkspaceParamsSelection,
+        //     // SingleProfile / MultiProfile
+        //     ProfileParamsSelection,
+        //     // SingleFlow
+        //     FlowParamsSelection,
+        // >
         parse_quote!(<#type_params>)
     };
+    scope_struct.item_struct_mut().generics.where_clause = Some(parse_quote! {
+        where
+            PKeys: peace_rt_model::params::ParamsKeys + 'static,
+    });
 
     scope_struct.item_struct_mut().fields = {
         let mut fields: FieldsNamed = parse_quote!({});
@@ -90,6 +116,19 @@ mod fields {
     /// Appends workspace / profile / flow params selection type parameters if
     /// applicable to the given scope.
     pub fn params_selection_push(fields_named: &mut FieldsNamed, scope: Scope) {
+        // Workspace params are supported by all scopes.
+        let fields: FieldsNamed = parse_quote!({
+            /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+            /// [`FlowParams`] deserialization.
+            ///
+            /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
+            /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
+            /// [`FlowParams`]: peace_rt_model::params::FlowParams
+            pub(crate) params_type_regs_builder:
+                peace_rt_model::params::ParamsTypeRegsBuilder<PKeys>
+        });
+        fields_named.named.extend(fields.named);
+
         // Workspace params are supported by all scopes.
         let fields: FieldsNamed = parse_quote!({
             /// Workspace parameters.

@@ -29,6 +29,12 @@ use crate::{ItemSpecRt, ItemSpecWrapper};
 #[derive(Debug)]
 pub struct ItemSpecBoxed<E>(Box<dyn ItemSpecRt<E>>);
 
+impl<E> Clone for ItemSpecBoxed<E> {
+    fn clone(&self) -> Self {
+        Self(dyn_clone::clone_box(self.0.as_ref()))
+    }
+}
+
 impl<E> Deref for ItemSpecBoxed<E> {
     type Target = dyn ItemSpecRt<E>;
 
@@ -55,7 +61,8 @@ impl<
     CleanOpSpec,
 > From<IS> for ItemSpecBoxed<E>
 where
-    IS: Debug
+    IS: Clone
+        + Debug
         + ItemSpec<
             State = State,
             StateDiff = StateDiff,

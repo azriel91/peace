@@ -1,10 +1,10 @@
 #![allow(clippy::type_complexity)]
 
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut};
 
-use peace_resources::paths::{PeaceAppDir, PeaceDir, WorkspaceDir};
+use peace_resources::Resources;
 use peace_rt_model::{
-    cmd_context_params::{KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs},
+    params::{KeyUnknown, ParamsKeys, ParamsKeysImpl},
     Workspace,
 };
 
@@ -25,146 +25,154 @@ use crate::{
     },
 };
 
-/// Collects parameters and initializes values relevant to the built [`CmdCtx`].
+/// Information needed to execute a command.
+///
+/// Importantly, as commands have different purposes, different command scopes
+/// exist to cater for each kind of command. This means the data available in a
+/// command context differs per scope, to accurately reflect what is available.
 #[derive(Debug)]
-pub struct CmdCtx<'ctx, Scope, PKeys>
-where
-    PKeys: ParamsKeys + 'static,
-{
-    /// Workspace that the `peace` tool runs in.
-    pub(crate) workspace: &'ctx Workspace,
+pub struct CmdCtx<Scope> {
     /// Scope of the command.
     pub(crate) scope: Scope,
-    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
-    /// [`FlowParams`] deserialization.
-    ///
-    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
-    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
-    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
-    pub(crate) params_type_regs: ParamsTypeRegs<PKeys>,
 }
 
-impl<'ctx, Scope, PKeys> CmdCtx<'ctx, Scope, PKeys>
-where
-    PKeys: ParamsKeys + 'static,
-{
-    /// Returns the workspace that the `peace` tool runs in.
-    pub fn workspace(&self) -> &Workspace {
-        self.workspace
-    }
-
+impl<Scope> CmdCtx<Scope> {
     /// Returns the scope of the command.
     pub fn scope(&self) -> &Scope {
         &self.scope
     }
 
-    /// Returns the type registries for [`WorkspaceParams`], [`ProfileParams`],
-    /// and [`FlowParams`] deserialization.
-    ///
-    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
-    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
-    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
-    pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
-        &self.params_type_regs
-    }
-
-    /// Returns a reference to the workspace directory.
-    pub fn workspace_dir(&self) -> &WorkspaceDir {
-        self.workspace.dirs().workspace_dir()
-    }
-
-    /// Returns a reference to the `.peace` directory.
-    pub fn peace_dir(&self) -> &PeaceDir {
-        self.workspace.dirs().peace_dir()
-    }
-
-    /// Returns a reference to the `.peace/$app` directory.
-    pub fn peace_app_dir(&self) -> &PeaceAppDir {
-        self.workspace.dirs().peace_app_dir()
+    /// Returns a mutable reference to the scope of the command.
+    pub fn scope_mut(&mut self) -> &mut Scope {
+        &mut self.scope
     }
 }
 
-impl<'ctx> CmdCtx<'ctx, (), ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>> {
+impl CmdCtx<()> {
     /// Returns a `CmdCtxBuilder` for a single profile and no flow.
-    pub fn builder_no_profile_no_flow<E>(
+    pub fn builder_no_profile_no_flow<'ctx, E, O>(
+        output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
-        NoProfileNoFlowBuilder<E, WorkspaceParamsNone>,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+        'ctx,
+        O,
+        NoProfileNoFlowBuilder<
+            E,
+            ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+            WorkspaceParamsNone,
+        >,
     > {
-        CmdCtxBuilder::no_profile_no_flow(workspace)
+        CmdCtxBuilder::no_profile_no_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and no flow.
-    pub fn builder_multi_profile_no_flow<E>(
+    pub fn builder_multi_profile_no_flow<'ctx, E, O>(
+        output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
-        MultiProfileNoFlowBuilder<E, ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+        'ctx,
+        O,
+        MultiProfileNoFlowBuilder<
+            E,
+            ProfileNotSelected,
+            ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+            WorkspaceParamsNone,
+            ProfileParamsNone,
+        >,
     > {
-        CmdCtxBuilder::multi_profile_no_flow(workspace)
+        CmdCtxBuilder::multi_profile_no_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for multiple profiles and one flow.
-    pub fn builder_multi_profile_single_flow<E>(
+    pub fn builder_multi_profile_single_flow<'ctx, E, O>(
+        output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
+        'ctx,
+        O,
         MultiProfileSingleFlowBuilder<
             E,
             ProfileNotSelected,
             FlowNotSelected,
+            ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
             WorkspaceParamsNone,
             ProfileParamsNone,
             FlowParamsNone,
         >,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
-        CmdCtxBuilder::multi_profile_single_flow(workspace)
+        CmdCtxBuilder::multi_profile_single_flow(output, workspace)
     }
 
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_no_flow<E>(
+    pub fn builder_single_profile_no_flow<'ctx, E, O>(
+        output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
-        SingleProfileNoFlowBuilder<E, ProfileNotSelected, WorkspaceParamsNone, ProfileParamsNone>,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-    > {
-        CmdCtxBuilder::single_profile_no_flow(workspace)
-    }
-}
-
-impl<'ctx, E>
-    CmdCtx<
         'ctx,
-        SingleProfileSingleFlow<E, ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>>,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-    >
-{
+        O,
+        SingleProfileNoFlowBuilder<
+            E,
+            ProfileNotSelected,
+            ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+            WorkspaceParamsNone,
+            ProfileParamsNone,
+        >,
+    > {
+        CmdCtxBuilder::single_profile_no_flow(output, workspace)
+    }
+
     /// Returns a `CmdCtxBuilder` for a single profile and flow.
-    pub fn builder_single_profile_single_flow(
+    pub fn builder_single_profile_single_flow<'ctx, E, O>(
+        output: &'ctx mut O,
         workspace: &'ctx Workspace,
     ) -> CmdCtxBuilder<
+        'ctx,
+        O,
         SingleProfileSingleFlowBuilder<
             E,
             ProfileNotSelected,
             FlowNotSelected,
+            ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
             WorkspaceParamsNone,
             ProfileParamsNone,
             FlowParamsNone,
         >,
-        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
     > {
-        CmdCtxBuilder::single_profile_single_flow(workspace)
+        CmdCtxBuilder::single_profile_single_flow(output, workspace)
     }
 }
 
-impl<'ctx, Scope, PKeys> Deref for CmdCtx<'ctx, Scope, PKeys>
+impl<'ctx, E, O, PKeys, ResTs0> CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs0>>
 where
     PKeys: ParamsKeys + 'static,
 {
+    /// Updates `resources` to a different type state based on the given
+    /// function.
+    pub fn resources_update<ResTs1, F>(
+        self,
+        f: F,
+    ) -> CmdCtx<SingleProfileSingleFlow<'ctx, E, O, PKeys, ResTs1>>
+    where
+        F: FnOnce(Resources<ResTs0>) -> Resources<ResTs1>,
+    {
+        let CmdCtx { scope } = self;
+
+        let scope = scope.resources_update(f);
+
+        CmdCtx { scope }
+    }
+}
+
+impl<Scope> Deref for CmdCtx<Scope> {
     type Target = Scope;
 
     fn deref(&self) -> &Self::Target {
         &self.scope
+    }
+}
+
+impl<Scope> DerefMut for CmdCtx<Scope> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.scope
     }
 }

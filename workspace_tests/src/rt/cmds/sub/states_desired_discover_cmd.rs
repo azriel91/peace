@@ -1,15 +1,16 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, ItemSpecId, Profile},
+    cmd::ctx::CmdCtx,
     resources::{
         paths::StatesDesiredFile,
         states::StatesDesired,
         type_reg::untagged::{BoxDtDisplay, TypeReg},
     },
     rt::cmds::sub::StatesDesiredDiscoverCmd,
-    rt_model::{cmd::CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
+use crate::{NoOpOutput, PeaceTestError, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>> {
@@ -19,19 +20,20 @@ async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::erro
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .with_flow(&flow)
         .await?;
 
-    let CmdContext { resources, .. } = StatesDesiredDiscoverCmd::exec(cmd_context).await?;
+    let states_desired = StatesDesiredDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let resources = cmd_ctx.resources();
 
-    let states_desired = resources.borrow::<StatesDesired>();
     let vec_copy_desired_state = states_desired.get::<VecCopyState, _>(VecCopyItemSpec.id());
     let states_desired_on_disk = {
         let states_desired_file = resources.borrow::<StatesDesiredFile>();

@@ -1,15 +1,13 @@
 use peace::{
-    cfg::{app_name, AppName, Profile},
-    rt::cmds::{StatesDiscoverCmd, StatesSavedDisplayCmd},
+    cfg::{app_name, AppName, FlowId, Profile},
+    cmd::ctx::CmdCtx,
+    rt::cmds::StatesDiscoverCmd,
     rt_model::{
-        output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
+        output::OutputWrite, Flow, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
 
-use crate::{
-    cmds::CmdContextBuilder,
-    model::{AppCycleError, EnvType},
-};
+use crate::model::{AppCycleError, EnvType};
 
 /// Flow to initialize and set the default profile.
 #[derive(Debug)]
@@ -39,17 +37,18 @@ impl ProfileInitFlow {
             WorkspaceSpec::SessionStorage,
         )?;
         let graph = Self::graph()?;
+        let flow = Flow::new(FlowId::profile_init(), graph);
 
-        let cmd_context = CmdContextBuilder::new(&workspace, &graph, output)
+        let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow(output, &workspace);
+        crate::cmds::params_augment!(cmd_ctx_builder);
+        let mut cmd_ctx = cmd_ctx_builder
+            .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
+            .with_profile_param_value(String::from("env_type"), Some(env_type))
             .with_profile(profile)
-            .with_env_type(env_type)
+            .with_flow(&flow)
             .await?;
-        StatesDiscoverCmd::exec(cmd_context).await?;
-
-        let cmd_context = CmdContextBuilder::new(&workspace, &graph, output)
-            .with_profile_from_last_used()
-            .await?;
-        StatesSavedDisplayCmd::exec(cmd_context).await?;
+        let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+        cmd_ctx.output_mut().present(&states_current).await?;
 
         Ok(())
     }

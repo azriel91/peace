@@ -39,7 +39,7 @@ fn impl_params_merge_for(
 ) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
+    let params_module: Path = parse_quote!(peace_rt_model::params);
 
     let (workspace_params_selection, profile_params_selection, flow_params_selection) =
         match params_scope {
@@ -63,6 +63,8 @@ fn impl_params_merge_for(
     let impl_type_params = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
+
+        type_params.push(parse_quote!(PKeys));
 
         match params_scope {
             ParamsScope::Workspace => {
@@ -96,6 +98,8 @@ fn impl_params_merge_for(
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
         type_parameters_impl::profile_and_flow_selection_push(&mut type_params, scope);
 
+        type_params.push(parse_quote!(PKeys));
+
         type_params.push(workspace_params_selection);
         if scope.profile_params_supported() {
             type_params.push(profile_params_selection);
@@ -126,25 +130,27 @@ fn impl_params_merge_for(
             'ctx,
             'key,
             E,
-            PKeys,
+            O,
             // ProfileSelection,
             // FlowSelection,
+            // PKeys,
             // ProfileParamsSelection,
             // FlowParamsSelection,
             #impl_type_params
         >
             crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
                     // FlowSelection,
+                    // PKeys,
                     // WorkspaceParamsSome<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
                     #scope_builder_type_params
                 >,
-                PKeys,
             >
         where
             PKeys: #params_module::ParamsKeys + 'static,
@@ -162,8 +168,8 @@ fn impl_params_merge_for(
                     #p_keys_key_maybe_key
                 >(
                     storage,
-                    // self.params_type_regs_builder.workspace_params_type_reg(),
-                    self.params_type_regs_builder.#params_type_reg_method_name(),
+                    // self.scope_builder.params_type_regs_builder.workspace_params_type_reg(),
+                    self.scope_builder.params_type_regs_builder.#params_type_reg_method_name(),
                     #params_file_name,
                 )
                 .await?;

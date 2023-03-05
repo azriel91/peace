@@ -63,7 +63,7 @@ fn impl_with_param_key_unknown(
 ) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
+    let params_module: Path = parse_quote!(peace_rt_model::params);
 
     // ProfileSelection, FlowSelection
     let selection_type_params = {
@@ -95,18 +95,6 @@ fn impl_with_param_key_unknown(
         type_params
     };
 
-    let impl_params_key_unknown_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        type_parameters_impl::params_key_unknown_push(&mut type_params, scope, params_scope);
-        type_params
-    };
-
-    let impl_params_key_known_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        type_parameters_impl::params_key_known_push(&mut type_params, scope, params_scope);
-        type_params
-    };
-
     let param_key_impl_unknown_predicates = param_key_impl::unknown_predicates(scope, params_scope);
 
     let params_scope_str = params_scope.to_str();
@@ -129,6 +117,7 @@ fn impl_with_param_key_unknown(
         impl<
             'ctx,
             E,
+            O,
             // ProfileSelection,
             // FlowSelection,
             // ProfileParamsSelection,
@@ -139,19 +128,21 @@ fn impl_with_param_key_unknown(
         >
             crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
                     // FlowSelection,
+
+                    // peace_rt_model::params::ParamsKeysImpl<
+                    //     KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe
+                    // >,
+
                     // WorkspaceParamsNone,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
 
                     #impl_scope_builder_type_params_none
-                >,
-                #params_module::ParamsKeysImpl<
-                    // KeyUnknown, ProfileParamsKMaybe, FlowParamsKMaybe
-                    #impl_params_key_unknown_params
                 >,
             >
         where
@@ -177,19 +168,21 @@ fn impl_with_param_key_unknown(
                 #param_name: Option<#param_type_param>,
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
                     // FlowSelection,
+
+                    // peace_rt_model::params::ParamsKeysImpl<
+                    //     KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
+                    // >,
+
                     // WorkspaceParamsSome<#params_k_type_param>,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
 
                     #impl_scope_builder_type_params_some
-                >,
-                #params_module::ParamsKeysImpl<
-                    // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
-                    #impl_params_key_known_params
                 >,
             >
             where
@@ -198,11 +191,13 @@ fn impl_with_param_key_unknown(
                 #param_type_param: Clone + std::fmt::Debug + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + 'static,
             {
                 let Self {
+                    output,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
                             // profile_selection,
                             // flow_selection,
+                            // params_type_regs_builder,
                             // workspace_params_selection: WorkspaceParamsNone,
                             // profile_params_selection,
                             // flow_params_selection,
@@ -210,7 +205,6 @@ fn impl_with_param_key_unknown(
 
                             #scope_builder_fields_params_none
                         },
-                    params_type_regs_builder,
                 } = self;
 
                 // let mut params_type_regs_builder =
@@ -229,6 +223,7 @@ fn impl_with_param_key_unknown(
                 let scope_builder = #scope_builder_name {
                     // profile_selection,
                     // flow_selection,
+                    // params_type_regs_builder,
                     // workspace_params_selection: WorkspaceParamsSome(params_map),
                     // profile_params_selection,
                     // flow_params_selection,
@@ -238,9 +233,9 @@ fn impl_with_param_key_unknown(
                 };
 
                 crate::ctx::CmdCtxBuilder {
+                    output,
                     workspace,
                     scope_builder,
-                    params_type_regs_builder,
                 }
             }
         }
@@ -253,7 +248,6 @@ fn impl_with_param_key_known(
 ) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
 
     // ProfileSelection, FlowSelection
     let selection_type_params = {
@@ -282,12 +276,6 @@ fn impl_with_param_key_known(
         type_params
     };
 
-    let impl_params_key_known_params = {
-        let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
-        type_parameters_impl::params_key_known_push(&mut type_params, scope, params_scope);
-        type_params
-    };
-
     let param_key_impl_known_predicates = param_key_impl::known_predicates(scope, params_scope);
 
     let params_scope_str = params_scope.to_str();
@@ -308,6 +296,7 @@ fn impl_with_param_key_known(
         impl<
             'ctx,
             E,
+            O,
             // ProfileSelection,
             // FlowSelection,
             // ProfileParamsSelection,
@@ -319,19 +308,21 @@ fn impl_with_param_key_known(
         >
             crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
                     // FlowSelection,
+
+                    // peace_rt_model::params::ParamsKeysImpl<
+                    //     KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
+                    // >,
+
                     // WorkspaceParamsSome<WorkspaceParamsK>,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
 
                     #impl_scope_builder_type_params_some
-                >,
-                #params_module::ParamsKeysImpl<
-                    // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
-                    #impl_params_key_known_params
                 >,
             >
         where
@@ -360,30 +351,34 @@ fn impl_with_param_key_known(
                 #param_name: Option<#param_type_param>,
             ) -> crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 #scope_builder_name<
                     E,
                     // ProfileSelection,
                     // FlowSelection,
+
+                    // peace_rt_model::params::ParamsKeysImpl<
+                    //     KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
+                    // >,
+
                     // WorkspaceParamsSome<WorkspaceParamsK>,
                     // ProfileParamsSelection,
                     // FlowParamsSelection,
 
                     #impl_scope_builder_type_params_some
                 >,
-                #params_module::ParamsKeysImpl<
-                    // KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe
-                    #impl_params_key_known_params
-                >,
             >
             where
                 #param_type_param: Clone + std::fmt::Debug + serde::de::DeserializeOwned + serde::Serialize + Send + Sync + 'static,
             {
                 let Self {
+                    output,
                     workspace,
                     scope_builder:
                         #scope_builder_name {
                             // profile_selection,
                             // flow_selection,
+                            // mut params_type_regs_builder,
                             // mut workspace_params_selection,
                             // profile_params_selection,
                             // flow_params_selection,
@@ -391,7 +386,6 @@ fn impl_with_param_key_known(
 
                             #scope_builder_fields_params_some
                         },
-                    mut params_type_regs_builder,
                 } = self;
 
                 params_type_regs_builder
@@ -406,6 +400,7 @@ fn impl_with_param_key_known(
                 let scope_builder = #scope_builder_name {
                     // profile_selection,
                     // flow_selection,
+                    // params_type_regs_builder,
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,
@@ -415,9 +410,9 @@ fn impl_with_param_key_known(
                 };
 
                 crate::ctx::CmdCtxBuilder {
+                    output,
                     workspace,
                     scope_builder,
-                    params_type_regs_builder,
                 }
             }
         }

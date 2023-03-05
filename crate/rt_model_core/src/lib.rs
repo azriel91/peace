@@ -8,8 +8,8 @@
 pub use async_trait::async_trait;
 pub use indicatif;
 
-pub mod cmd_context_params;
 pub mod output;
+pub mod params;
 
 pub use crate::error::Error;
 

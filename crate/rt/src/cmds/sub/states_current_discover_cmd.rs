@@ -1,16 +1,18 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::stream::{StreamExt, TryStreamExt};
+use peace_cmd::{
+    ctx::CmdCtx,
+    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+};
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesSavedFile},
-    resources::ts::{SetUp, WithStatesCurrent},
+    resources::ts::SetUp,
     states::{ts::Current, StatesCurrent},
     Resources,
 };
-use peace_rt_model::{
-    cmd::CmdContext, cmd_context_params::ParamsKeys, Error, ItemSpecGraph, Storage,
-};
+use peace_rt_model::{params::ParamsKeys, Error, Storage};
 
 use crate::BUFFERED_FUTURES_MAX;
 
@@ -19,7 +21,7 @@ pub struct StatesCurrentDiscoverCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
 impl<E, O, PKeys> StatesCurrentDiscoverCmd<E, O, PKeys>
 where
-    E: std::error::Error + From<Error> + Send,
+    E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
 {
     /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
@@ -38,50 +40,15 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp, PKeys>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesCurrent, PKeys>, E> {
-        let CmdContext {
-            workspace,
-            item_spec_graph,
-            output,
-            mut resources,
-            params_type_regs,
-            states_type_regs,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            ..
-        } = cmd_context;
-        let states = Self::exec_internal(item_spec_graph, &mut resources).await?;
-
-        let resources = Resources::<WithStatesCurrent>::from((resources, states));
-
-        let cmd_context = CmdContext::from((
-            workspace,
-            item_spec_graph,
-            output,
-            resources,
-            params_type_regs,
-            states_type_regs,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-        ));
-        Ok(cmd_context)
-    }
-
-    /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
-    ///
-    /// Same as [`Self::exec`], but does not change the type state, and returns
-    /// [`StatesCurrent`].
-    ///
-    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    pub(crate) async fn exec_internal(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: &mut Resources<SetUp>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StatesCurrent, E> {
+        let SingleProfileSingleFlowView {
+            flow, resources, ..
+        } = cmd_ctx.scope_mut().view();
+
         let resources_ref = &*resources;
-        let states_mut = item_spec_graph
+        let states_mut = flow
+            .graph()
             .stream()
             .map(Result::<_, E>::Ok)
             .try_filter_map(|item_spec| async move {
@@ -97,80 +64,15 @@ where
             .try_collect::<StatesMut<Current>>()
             .await?;
 
-        let states = StatesCurrent::from(states_mut);
-        Self::serialize_internal(resources, &states).await?;
+        let states_current = StatesCurrent::from(states_mut);
+        Self::serialize_internal(resources, &states_current).await?;
 
-        Ok(states)
-    }
-
-    /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
-    ///
-    /// Same as [`Self::exec`], but does not change the type state, and returns
-    /// [`StatesCurrent`].
-    ///
-    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    pub(crate) async fn exec_internal_for_clean_dry(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: &Resources<WithStatesCurrent>,
-    ) -> Result<StatesCurrent, E> {
-        let states_mut = item_spec_graph
-            .stream()
-            .map(Result::<_, E>::Ok)
-            .try_filter_map(|item_spec| async move {
-                let state = item_spec.state_cleaned_try_exec(resources).await?;
-                Ok(state
-                    .map(|state| (item_spec.id().clone(), state))
-                    .map(Result::Ok)
-                    .map(futures::future::ready))
-            })
-            .try_buffer_unordered(BUFFERED_FUTURES_MAX)
-            .try_collect::<StatesMut<Current>>()
-            .await?;
-
-        let states = StatesCurrent::from(states_mut);
-        // We don't serialize states to disk as this is for a dry run.
-
-        Ok(states)
-    }
-
-    /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
-    ///
-    /// Same as [`Self::exec`], but does not change the type state, and returns
-    /// [`StatesCurrent`].
-    ///
-    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    pub(crate) async fn exec_internal_for_clean(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: &mut Resources<WithStatesCurrent>,
-    ) -> Result<StatesCurrent, E> {
-        let resources_ref = &*resources;
-        let states_mut = item_spec_graph
-            .stream()
-            .map(Result::<_, E>::Ok)
-            .try_filter_map(|item_spec| async move {
-                let state = item_spec.state_cleaned_try_exec(resources_ref).await?;
-                Ok(state
-                    .map(|state| (item_spec.id().clone(), state))
-                    .map(Result::Ok)
-                    .map(futures::future::ready))
-            })
-            .try_buffer_unordered(BUFFERED_FUTURES_MAX)
-            .try_collect::<StatesMut<Current>>()
-            .await?;
-
-        let states = StatesCurrent::from(states_mut);
-        Self::serialize_internal(resources, &states).await?;
-
-        Ok(states)
+        Ok(states_current)
     }
 
     // TODO: This duplicates a bit of code with `EnsureCmd`.
-    async fn serialize_internal<TS>(
-        resources: &mut Resources<TS>,
+    async fn serialize_internal(
+        resources: &mut Resources<SetUp>,
         states_current: &StatesCurrent,
     ) -> Result<(), E> {
         use peace_rt_model::StatesSerializer;

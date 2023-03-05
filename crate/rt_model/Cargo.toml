@@ -17,7 +17,7 @@ test = false
 
 [dependencies]
 cfg-if = { workspace = true }
-dyn-clone = "1.0.10"
+dyn-clone = "1.0.11"
 erased-serde = "0.3.24"
 fn_graph = { version = "0.8.1", features = ["resman"] }
 futures = "0.3.26"

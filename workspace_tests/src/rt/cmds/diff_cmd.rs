@@ -1,51 +1,48 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
-    resources::states::{StateDiffs, StatesDesired, StatesSaved},
+    cmd::ctx::CmdCtx,
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{
-        cmd::CmdContext, output::CliOutput, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
+        output::{CliOutput, OutputWrite},
+        Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
 
-use crate::{NoOpOutput, VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyState};
+use crate::{
+    NoOpOutput, PeaceTestError, VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec,
+    VecCopyState,
+};
 
 #[tokio::test]
-async fn contains_state_logical_diff_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>>
-{
+async fn contains_state_diff_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .with_flow(&flow)
         .await?;
-    StatesDiscoverCmd::exec(cmd_context).await?;
+    let (states_current, states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
+    let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
 
-    let states_saved = resources.borrow::<StatesSaved>();
-    let states_desired = resources.borrow::<StatesDesired>();
-    let state_diffs = resources.borrow::<StateDiffs>();
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec.id());
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
-        states_saved.get::<VecCopyState, _>(VecCopyItemSpec.id())
+        states_current.get::<VecCopyState, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
@@ -71,33 +68,34 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut buffer = Vec::with_capacity(256);
     let mut cli_output = CliOutput::new_with_writer(&mut buffer);
 
     // Write current and desired states to disk.
-    let mut cmd_context = CmdContext::builder(&workspace, &graph, &mut cli_output).await?;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut cli_output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .await?;
     // overwrite initial state
-    let resources = cmd_context.resources_mut();
+    let resources = cmd_ctx.resources_mut();
     #[rustfmt::skip]
     resources.insert(VecA(vec![0, 1, 2,    4, 5, 6, 8, 9]));
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-    StatesDiscoverCmd::exec(cmd_context).await?;
+    let (states_current, states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut cli_output).await?;
-    let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
+    let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
+    <_ as OutputWrite<PeaceTestError>>::present(cmd_ctx.output_mut(), &state_diffs).await?;
 
-    let states_saved = resources.borrow::<StatesSaved>();
-    let states_desired = resources.borrow::<StatesDesired>();
-    let state_diffs = resources.borrow::<StateDiffs>();
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec.id());
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7]),).as_ref(),
-        states_saved.get::<VecCopyState, _>(VecCopyItemSpec.id())
+        states_current.get::<VecCopyState, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 4, 5, 6, 8, 9])).as_ref(),

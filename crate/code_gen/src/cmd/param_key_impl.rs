@@ -7,7 +7,7 @@ pub fn unknown_predicates(
     params_scope: ParamsScope,
 ) -> Punctuated<WherePredicate, Comma> {
     let mut predicates = Punctuated::<WherePredicate, Token![,]>::new();
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
+    let params_module: Path = parse_quote!(peace_rt_model::params);
 
     match params_scope {
         ParamsScope::Workspace => {
@@ -57,7 +57,7 @@ pub fn known_predicates(
     params_scope: ParamsScope,
 ) -> Punctuated<WherePredicate, Comma> {
     let mut predicates = Punctuated::<WherePredicate, Token![,]>::new();
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
+    let params_module: Path = parse_quote!(peace_rt_model::params);
 
     match params_scope {
         ParamsScope::Workspace => {

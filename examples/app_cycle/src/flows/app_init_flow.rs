@@ -1,8 +1,10 @@
 use peace::{
-    cfg::{app_name, item_spec_id, AppName, ItemSpecId},
+    cfg::{app_name, item_spec_id, AppName, FlowId, ItemSpecId, Profile},
+    cmd::ctx::CmdCtx,
+    resources::states::StatesSaved,
     rt::cmds::{EnsureCmd, StatesDiscoverCmd},
     rt_model::{
-        output::OutputWrite, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
+        output::OutputWrite, Flow, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
 use peace_item_specs::{
@@ -10,10 +12,7 @@ use peace_item_specs::{
     tar_x::{TarXItemSpec, TarXParams},
 };
 
-use crate::{
-    cmds::CmdContextBuilder,
-    model::{AppCycleError, WebAppFileId},
-};
+use crate::model::{AppCycleError, WebAppFileId};
 
 /// Flow to download a web application.
 #[derive(Debug)]
@@ -37,15 +36,28 @@ impl AppInitFlow {
             WorkspaceSpec::SessionStorage,
         )?;
         let graph = Self::graph()?;
+        let flow = Flow::new(FlowId::workspace_init(), graph.clone());
 
-        let cmd_context = CmdContextBuilder::new(&workspace, &graph, output)
-            .with_web_app_file_download_params(web_app_file_download_params)
-            .with_web_app_tar_x_params(web_app_tar_x_params)
+        let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow(output, &workspace);
+        crate::cmds::params_augment!(cmd_ctx_builder);
+        let mut cmd_ctx = cmd_ctx_builder
+            .with_workspace_param_value(
+                String::from("web_app_file_download_params"),
+                Some(web_app_file_download_params),
+            )
+            .with_workspace_param_value(
+                String::from("web_app_tar_x_params"),
+                Some(web_app_tar_x_params),
+            )
+            .with_profile(Profile::workspace_init())
+            .with_flow(&flow)
             .await?;
-        StatesDiscoverCmd::exec(cmd_context).await?;
 
-        let cmd_context = CmdContextBuilder::new(&workspace, &graph, output).await?;
-        EnsureCmd::exec(cmd_context).await?;
+        let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+        let states_saved = StatesSaved::from(states_current);
+
+        let states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+        cmd_ctx.output_mut().present(&states_ensured).await?;
 
         Ok(())
     }

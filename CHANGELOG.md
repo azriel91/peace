@@ -7,6 +7,8 @@
 * Add [`peace::rt_model::CliMdPresenter`] which is the default for presenting text in `CliOutput`. ([#77], [#79])
 * Hold `WorkspaceParams`, `ProfileParams`, and `FlowParams` type registries in `CmdContext`. ([#35], [#80])
 * Add new `CmdCtx` that contains workspace / profile / flow scoped information. ([#81], [#82])
+* Update examples to use `CmdCtx`. ([#83], [#85])
+* Remove the old `CmdContext`. ([#83], [#85])
 
 [`cargo-deny`]: https://github.com/EmbarkStudios/cargo-deny
 [`cargo-about`]: https://github.com/EmbarkStudios/cargo-about
@@ -16,6 +18,8 @@
 [#80]: https://github.com/azriel91/peace/pull/80
 [#81]: https://github.com/azriel91/peace/issues/81
 [#82]: https://github.com/azriel91/peace/pull/82
+[#83]: https://github.com/azriel91/peace/issues/83
+[#85]: https://github.com/azriel91/peace/pull/85
 
 
 ## 0.0.6 (2023-01-21)

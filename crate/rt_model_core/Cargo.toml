@@ -24,7 +24,7 @@ peace_core = { path = "../core", version = "0.0.6" }
 peace_fmt = { path = "../fmt", version = "0.0.6" }
 peace_resources = { path = "../resources", version = "0.0.6" }
 serde = "1.0.152"
-serde_json = { version = "1.0.91", optional = true }
+serde_json = { version = "1.0.93", optional = true }
 serde_yaml = "0.9.17"
 thiserror = "1.0.38"
 type_reg = { workspace = true, features = ["resman"] }

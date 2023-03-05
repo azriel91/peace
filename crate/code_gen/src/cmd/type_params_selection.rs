@@ -27,10 +27,7 @@ impl ProfileSelection {
             Self::FromWorkspaceParam => parse_quote!(
                 crate::scopes::type_params::ProfileFromWorkspaceParam<
                     'key,
-                    <
-                        PKeys::WorkspaceParamsKMaybe as
-                        peace_rt_model::cmd_context_params::KeyMaybe
-                    >::Key
+                    <PKeys::WorkspaceParamsKMaybe as peace_rt_model::params::KeyMaybe>::Key,
                 >
             ),
             Self::FilterFunction => {
@@ -52,7 +49,7 @@ impl FlowSelection {
 
     pub(crate) fn type_param(&self) -> GenericArgument {
         match self {
-            Self::Selected => parse_quote!(crate::scopes::type_params::FlowSelected<E>),
+            Self::Selected => parse_quote!(crate::scopes::type_params::FlowSelected<'ctx, E>),
         }
     }
 }
@@ -75,7 +72,7 @@ impl WorkspaceParamsSelection {
                 crate::scopes::type_params::WorkspaceParamsSome<
                     <
                         PKeys::WorkspaceParamsKMaybe
-                        as peace_rt_model::cmd_context_params::KeyMaybe
+                        as peace_rt_model::params::KeyMaybe
                     >::Key
                 >
             },
@@ -113,7 +110,7 @@ impl ProfileParamsSelection {
                 crate::scopes::type_params::ProfileParamsSome<
                     <
                         PKeys::ProfileParamsKMaybe
-                        as peace_rt_model::cmd_context_params::KeyMaybe
+                        as peace_rt_model::params::KeyMaybe
                     >::Key
                 >
             },
@@ -155,7 +152,7 @@ impl FlowParamsSelection {
                 crate::scopes::type_params::FlowParamsSome<
                     <
                         PKeys::FlowParamsKMaybe
-                        as peace_rt_model::cmd_context_params::KeyMaybe
+                        as peace_rt_model::params::KeyMaybe
                     >::Key
                 >
             },

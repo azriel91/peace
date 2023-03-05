@@ -28,6 +28,15 @@ pub struct ShSyncCmdItemSpec<Id> {
     marker: PhantomData<Id>,
 }
 
+impl<Id> Clone for ShSyncCmdItemSpec<Id> {
+    fn clone(&self) -> Self {
+        Self {
+            item_spec_id: self.item_spec_id.clone(),
+            marker: PhantomData,
+        }
+    }
+}
+
 impl<Id> ShSyncCmdItemSpec<Id> {
     /// Returns a new `ShSyncCmdItemSpec`.
     pub fn new(item_spec_id: ItemSpecId) -> Self {

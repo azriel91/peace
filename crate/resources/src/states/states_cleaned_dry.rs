@@ -1,10 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{
-    resources::ts::WithStatesCurrent,
-    states::{ts::CleanedDry, States, StatesCurrent},
-    Resources,
-};
+use crate::states::{ts::CleanedDry, States, StatesCurrent};
 
 /// Dry-run ensured `State`s for all `ItemSpec`s.
 ///
@@ -19,10 +15,8 @@ use crate::{
 /// [`Data`]: peace_data::Data
 pub type StatesCleanedDry = States<CleanedDry>;
 
-/// `Resources` is not used, but is present to signal this type should only be
-/// constructed by `CleanCmd`.
-impl From<(StatesCurrent, &Resources<WithStatesCurrent>)> for StatesCleanedDry {
-    fn from((states, _resources): (StatesCurrent, &Resources<WithStatesCurrent>)) -> Self {
+impl From<StatesCurrent> for StatesCleanedDry {
+    fn from(states: StatesCurrent) -> Self {
         Self(states.into_inner(), PhantomData)
     }
 }

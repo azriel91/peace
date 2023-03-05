@@ -1,12 +1,16 @@
 use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
 
 use peace_core::Profile;
-use peace_resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir};
+use peace_resources::{
+    paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
+    states::StatesSaved,
+};
 use peace_rt_model::{
-    cmd_context_params::{
-        FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ProfileParams, WorkspaceParams,
+    params::{
+        FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
+        WorkspaceParams,
     },
-    Flow,
+    Flow, StatesTypeRegs, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -63,10 +67,19 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write flow parameters for different flows.
 /// * Read or write flow state for different flows.
 #[derive(Debug)]
-pub struct MultiProfileSingleFlow<E, PKeys>
+pub struct MultiProfileSingleFlow<'ctx, E, O, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    output: &'ctx mut O,
+    /// Workspace that the `peace` tool runs in.
+    workspace: &'ctx Workspace,
     /// The profiles that are accessible by this command.
     profiles: Vec<Profile>,
     /// Profile directories that store params and flows.
@@ -74,9 +87,16 @@ where
     /// Directories of each profile's execution history.
     profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
     /// The chosen process flow.
-    flow: Flow<E>,
+    flow: &'ctx Flow<E>,
     /// Flow directory that stores params and states.
     flow_dirs: BTreeMap<Profile, FlowDir>,
+    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+    /// [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
+    /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
+    /// [`FlowParams`]: peace_rt_model::params::FlowParams
+    params_type_regs: ParamsTypeRegs<PKeys>,
     /// Workspace params.
     workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
     /// Profile params for the profile.
@@ -85,20 +105,31 @@ where
     /// Flow params for the selected flow.
     profile_to_flow_params:
         BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
+    /// Type registries to deserialize [`StatesSavedFile`] and
+    /// [`StatesDesiredFile`].
+    ///
+    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
+    states_type_regs: StatesTypeRegs,
+    /// Saved states for each profile for the selected flow.
+    profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
 }
 
-impl<E, PKeys> MultiProfileSingleFlow<E, PKeys>
+impl<'ctx, E, O, PKeys> MultiProfileSingleFlow<'ctx, E, O, PKeys>
 where
     PKeys: ParamsKeys + 'static,
 {
     /// Returns a new `MultiProfileSingleFlow` scope.
     #[allow(clippy::too_many_arguments)] // Constructed by proc macro
     pub(crate) fn new(
+        output: &'ctx mut O,
+        workspace: &'ctx Workspace,
         profiles: Vec<Profile>,
         profile_dirs: BTreeMap<Profile, ProfileDir>,
         profile_history_dirs: BTreeMap<Profile, ProfileHistoryDir>,
-        flow: Flow<E>,
+        flow: &'ctx Flow<E>,
         flow_dirs: BTreeMap<Profile, FlowDir>,
+        params_type_regs: ParamsTypeRegs<PKeys>,
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         profile_to_profile_params: BTreeMap<
             Profile,
@@ -108,17 +139,54 @@ where
             Profile,
             FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
         >,
+        states_type_regs: StatesTypeRegs,
+        profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
     ) -> Self {
         Self {
+            output,
+            workspace,
             profiles,
             profile_dirs,
             profile_history_dirs,
             flow,
             flow_dirs,
+            params_type_regs,
             workspace_params,
             profile_to_profile_params,
             profile_to_flow_params,
+            states_type_regs,
+            profile_to_states_saved,
         }
+    }
+
+    /// Returns a reference to the output.
+    pub fn output(&self) -> &O {
+        self.output
+    }
+
+    /// Returns a mutable reference to the output.
+    pub fn output_mut(&mut self) -> &mut O {
+        self.output
+    }
+
+    /// Returns the workspace that the `peace` tool runs in.
+    pub fn workspace(&self) -> &Workspace {
+        self.workspace
+    }
+
+    /// Returns a reference to the workspace directory.
+    pub fn workspace_dir(&self) -> &WorkspaceDir {
+        self.workspace.dirs().workspace_dir()
+    }
+
+    /// Returns a reference to the `.peace` directory.
+    pub fn peace_dir(&self) -> &PeaceDir {
+        self.workspace.dirs().peace_dir()
+    }
+
+    /// Returns a reference to the `.peace/$app` directory.
+    pub fn peace_app_dir(&self) -> &PeaceAppDir {
+        self.workspace.dirs().peace_app_dir()
     }
 
     /// Returns the accessible profiles.
@@ -141,18 +209,44 @@ where
 
     /// Returns the flow.
     pub fn flow(&self) -> &Flow<E> {
-        &self.flow
+        self.flow
     }
 
     /// Returns the flow directories keyed by each profile.
     pub fn flow_dirs(&self) -> &BTreeMap<Profile, FlowDir> {
         &self.flow_dirs
     }
+
+    /// Returns the type registries for [`WorkspaceParams`], [`ProfileParams`],
+    /// and [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
+    /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
+    /// [`FlowParams`]: peace_rt_model::params::FlowParams
+    pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
+        &self.params_type_regs
+    }
+
+    /// Returns the type registries to deserialize [`StatesSavedFile`] and
+    /// [`StatesDesiredFile`].
+    ///
+    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
+    pub fn states_type_regs(&self) -> &StatesTypeRegs {
+        &self.states_type_regs
+    }
+
+    /// Returns the saved states for each profile for the selected flow.
+    pub fn profile_to_states_saved(&self) -> &BTreeMap<Profile, Option<StatesSaved>> {
+        &self.profile_to_states_saved
+    }
 }
 
-impl<E, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
     MultiProfileSingleFlow<
+        'ctx,
         E,
+        O,
         ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     >
 where
@@ -167,9 +261,11 @@ where
     }
 }
 
-impl<E, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
     MultiProfileSingleFlow<
+        'ctx,
         E,
+        O,
         ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
     >
 where
@@ -184,9 +280,11 @@ where
     }
 }
 
-impl<E, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
     MultiProfileSingleFlow<
+        'ctx,
         E,
+        O,
         ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
     >
 where

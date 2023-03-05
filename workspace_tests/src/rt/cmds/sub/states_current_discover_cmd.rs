@@ -1,15 +1,16 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, ItemSpecId, Profile},
+    cmd::ctx::CmdCtx,
     resources::{
         paths::StatesSavedFile,
         states::{StatesCurrent, StatesSaved},
         type_reg::untagged::{BoxDtDisplay, TypeReg},
     },
     rt::cmds::sub::StatesCurrentDiscoverCmd,
-    rt_model::{cmd::CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
+use crate::{NoOpOutput, PeaceTestError, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>> {
@@ -19,20 +20,21 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .with_flow(&flow)
         .await?;
 
-    let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
+    let states_current = StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let resources = cmd_ctx.resources();
 
-    let states = resources.borrow::<StatesCurrent>();
-    let vec_copy_state = states.get::<VecCopyState, _>(VecCopyItemSpec.id());
+    let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItemSpec.id());
     let states_on_disk = {
         let states_saved_file = resources.borrow::<StatesSavedFile>();
         let states_slice = std::fs::read(&*states_saved_file)?;
@@ -45,7 +47,7 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
     };
     assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
     assert_eq!(
-        states.get::<VecCopyState, _>(VecCopyItemSpec.id()),
+        states_current.get::<VecCopyState, _>(VecCopyItemSpec.id()),
         states_on_disk.get::<VecCopyState, _>(VecCopyItemSpec.id())
     );
 
@@ -60,25 +62,27 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .with_flow(&flow)
         .await?;
 
     // Writes to states_saved_file.yaml
-    StatesCurrentDiscoverCmd::exec(cmd_context).await?;
+    StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
 
     // Execute again to ensure StatesSaved is included
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .with_flow(&flow)
         .await?;
-    let CmdContext { resources, .. } = StatesCurrentDiscoverCmd::exec(cmd_context).await?;
+    StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let resources = cmd_ctx.resources();
 
     let states = resources.borrow::<StatesSaved>();
     let vec_copy_state = states.get::<VecCopyState, _>(VecCopyItemSpec.id());

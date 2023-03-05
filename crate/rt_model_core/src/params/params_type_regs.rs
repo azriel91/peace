@@ -2,9 +2,7 @@ use std::fmt::Debug;
 
 use type_reg::untagged::{BoxDt, TypeReg};
 
-use crate::cmd_context_params::{
-    KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsTypeRegsBuilder,
-};
+use crate::params::{KeyMaybe, KeyUnknown, ParamsKeys, ParamsKeysImpl, ParamsTypeRegsBuilder};
 
 /// Type registries to deserialize [`WorkspaceParamsFile`],
 /// [`ProfileParamsFile`] and [`FlowParamsFile`].
@@ -19,15 +17,15 @@ where
 {
     /// Type registry for [`WorkspaceParams`] deserialization.
     ///
-    /// [`WorkspaceParams`]: crate::cmd_context_params::WorkspaceParams
+    /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
     workspace_params_type_reg: TypeReg<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key, BoxDt>,
     /// Type registry for [`ProfileParams`] deserialization.
     ///
-    /// [`ProfileParams`]: crate::cmd_context_params::ProfileParams
+    /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     profile_params_type_reg: TypeReg<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key, BoxDt>,
     /// Type registry for [`FlowParams`] deserialization.
     ///
-    /// [`FlowParams`]: crate::cmd_context_params::FlowParams
+    /// [`FlowParams`]: peace_rt_model::params::FlowParams
     flow_params_type_reg: TypeReg<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key, BoxDt>,
 }
 

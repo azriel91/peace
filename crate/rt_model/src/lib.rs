@@ -27,7 +27,6 @@ pub use crate::{
     states_serializer::StatesSerializer, states_type_regs::StatesTypeRegs,
 };
 
-pub mod cmd;
 pub mod outcomes;
 
 mod flow;

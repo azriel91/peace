@@ -33,6 +33,15 @@ pub struct TarXItemSpec<Id> {
     marker: PhantomData<Id>,
 }
 
+impl<Id> Clone for TarXItemSpec<Id> {
+    fn clone(&self) -> Self {
+        Self {
+            item_spec_id: self.item_spec_id.clone(),
+            marker: PhantomData,
+        }
+    }
+}
+
 impl<Id> TarXItemSpec<Id> {
     /// Returns a new `TarXItemSpec`.
     pub fn new(item_spec_id: ItemSpecId) -> Self {

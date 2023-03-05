@@ -1,17 +1,18 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::stream::{StreamExt, TryStreamExt};
+use peace_cmd::{
+    ctx::CmdCtx,
+    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+};
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesDesiredFile},
-    resources::ts::{SetUp, WithStatesDesired},
+    resources::ts::SetUp,
     states::{ts::Desired, StatesDesired},
     Resources,
 };
-use peace_rt_model::{
-    cmd::CmdContext, cmd_context_params::ParamsKeys, Error, ItemSpecGraph, StatesSerializer,
-    Storage,
-};
+use peace_rt_model::{params::ParamsKeys, Error, StatesSerializer, Storage};
 
 use crate::BUFFERED_FUTURES_MAX;
 
@@ -20,7 +21,7 @@ pub struct StatesDesiredDiscoverCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
 impl<E, O, PKeys> StatesDesiredDiscoverCmd<E, O, PKeys>
 where
-    E: std::error::Error + From<Error> + Send,
+    E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
 {
     /// Runs [`StateDesiredFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
@@ -40,47 +41,13 @@ where
     /// [`StatesDesired`]: peace_resources::StatesDesired
     /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     pub async fn exec(
-        cmd_context: CmdContext<'_, E, O, SetUp, PKeys>,
-    ) -> Result<CmdContext<'_, E, O, WithStatesDesired, PKeys>, E> {
-        let CmdContext {
-            workspace,
-            item_spec_graph,
-            output,
-            mut resources,
-            params_type_regs,
-            states_type_regs,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            ..
-        } = cmd_context;
-        let states_desired = Self::exec_internal(item_spec_graph, &mut resources).await?;
-
-        let resources = Resources::<WithStatesDesired>::from((resources, states_desired));
-
-        let cmd_context = CmdContext::from((
-            workspace,
-            item_spec_graph,
-            output,
-            resources,
-            params_type_regs,
-            states_type_regs,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-        ));
-        Ok(cmd_context)
-    }
-
-    /// Runs [`StateDesiredFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
-    ///
-    /// Same as [`Self::exec`], but does not change the type state.
-    ///
-    /// [`exec`]: peace_cfg::StateDesiredFnSpec::try_exec
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    pub(crate) async fn exec_internal(
-        item_spec_graph: &ItemSpecGraph<E>,
-        resources: &mut Resources<SetUp>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StatesDesired, E> {
+        let SingleProfileSingleFlowView {
+            flow, resources, ..
+        } = cmd_ctx.scope_mut().view();
+        let item_spec_graph = flow.graph();
+
         let resources_ref = &*resources;
         let states_desired_mut = item_spec_graph
             .stream()

@@ -1,11 +1,12 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
-    resources::states::{StatesEnsured, StatesEnsuredDry, StatesSaved},
+    cmd::ctx::CmdCtx,
+    resources::states::StatesSaved,
     rt::cmds::{sub::StatesSavedReadCmd, EnsureCmd, StatesDiscoverCmd},
-    rt_model::{cmd::CmdContext, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, VecCopyError, VecCopyItemSpec, VecCopyState};
+use crate::{NoOpOutput, PeaceTestError, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std::error::Error>> {
@@ -15,27 +16,25 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .with_flow(&flow)
         .await?;
-    StatesDiscoverCmd::exec(cmd_context).await?;
+    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_saved = StatesSaved::from(states_current);
 
-    // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    let CmdContext { resources, .. } = EnsureCmd::exec_dry(cmd_context).await?;
-
-    let states_ensured_dry = resources.borrow::<StatesEnsuredDry>();
+    // Dry-ensured states.
+    // The returned states are currently the same as `StatesSaved`, but it would be
+    // useful to return simulated ensured states.
+    let states_ensured_dry = EnsureCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
 
     // TODO: When EnsureCmd returns the execution report, assert on the state that
     // was discovered.
@@ -72,41 +71,36 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .with_flow(&flow)
         .await?;
-    StatesDiscoverCmd::exec(cmd_context).await?;
+    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_saved = StatesSaved::from(states_current);
 
     // Alter states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+    let mut output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .with_flow(&flow)
         .await?;
-    let CmdContext {
-        resources: resources_ensured,
-        ..
-    } = EnsureCmd::exec(cmd_context).await?;
+    let ensured_states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+    let mut output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .with_flow(&flow)
         .await?;
-    let CmdContext {
-        resources: resources_reread,
-        ..
-    } = StatesSavedReadCmd::exec(cmd_context).await?;
-
-    let ensured_states_ensured = resources_ensured.borrow::<StatesEnsured>();
-    let states_saved = resources_reread.borrow::<StatesSaved>();
+    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
 
     // TODO: When EnsureCmd returns the execution report, assert on the state that
     // was discovered.
@@ -147,59 +141,47 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<VecCopyError>::new();
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItemSpec.into());
         graph_builder.build()
     };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .with_flow(&flow)
         .await?;
-    StatesDiscoverCmd::exec(cmd_context).await?;
+    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_saved = StatesSaved::from(states_current);
 
     // Alter states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
-        .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
-        .await?;
-    let CmdContext {
-        resources: resources_ensured,
-        ..
-    } = EnsureCmd::exec(cmd_context).await?;
+    let ensured_states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
 
     // Dry ensure states.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+    let mut output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .with_flow(&flow)
         .await?;
-    let CmdContext {
-        resources: resources_ensured_dry,
-        ..
-    } = EnsureCmd::exec_dry(cmd_context).await?;
+    let ensured_states_ensured_dry = EnsureCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
 
     // Re-read states from disk.
-    let cmd_context = CmdContext::builder(&workspace, &graph, &mut output)
+    let mut output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
-        .with_flow_id(FlowId::new(crate::fn_name_short!())?)
+        .with_flow(&flow)
         .await?;
-    let CmdContext {
-        resources: resources_reread,
-        ..
-    } = StatesSavedReadCmd::exec(cmd_context).await?;
-
-    let ensured_states_ensured = resources_ensured.borrow::<StatesEnsured>();
-    let ensured_states_ensured_dry = resources_ensured_dry.borrow::<StatesEnsuredDry>();
-    let states_saved = resources_reread.borrow::<StatesSaved>();
+    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
 
     // TODO: When EnsureCmd returns the execution report, assert on the state that
     // was discovered.
     //
     // ```rust,ignore
-    // let ensured_states_before = resources_ensured.borrow::<StatesCurrent>();
-    // let ensured_states_desired = resources_ensured.borrow::<StatesDesired>();
+    // let ensured_states_before = // StatesCurrent passed in(?) to EnsureCmd
+    // let ensured_states_desired = // StatesDesired passed in(?) to EnsureCmd
     // assert_eq!(
     //     Some(VecCopyState::new()).as_ref(),
     //     ensured_states_before.get::<VecCopyState,

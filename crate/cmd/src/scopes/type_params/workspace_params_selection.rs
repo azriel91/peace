@@ -1,6 +1,6 @@
 use std::{fmt::Debug, hash::Hash};
 
-use peace_rt_model::cmd_context_params::WorkspaceParams;
+use peace_rt_model::params::WorkspaceParams;
 use serde::{de::DeserializeOwned, Serialize};
 
 /// The application does not use any workspace parameters.

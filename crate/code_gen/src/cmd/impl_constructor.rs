@@ -1,6 +1,6 @@
 use proc_macro2::{Ident, Span};
 use quote::quote;
-use syn::{parse_quote, punctuated::Punctuated, FieldValue, GenericArgument, Path, Token};
+use syn::{parse_quote, punctuated::Punctuated, FieldValue, GenericArgument, Token};
 
 use crate::cmd::ScopeStruct;
 
@@ -9,7 +9,6 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
     let constructor_method_name = Ident::new(scope.as_str(), Span::call_site());
-    let params_module: Path = parse_quote!(peace_rt_model::cmd_context_params);
 
     let scope_builder_type_params = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
@@ -31,30 +30,43 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
     };
 
     quote! {
-        impl<'ctx, E>
+        impl<'ctx, E, O>
             crate::ctx::CmdCtxBuilder<
                 'ctx,
+                O,
                 // SingleProfileSingleFlowBuilder<
                 #scope_builder_name<
                     E,
                     // ProfileNotSelected,
                     // FlowNotSelected,
+                    // peace_rt_model::params::ParamsKeysImpl<
+                    //     peace_rt_model::params::KeyUnknown,
+                    //     peace_rt_model::params::KeyUnknown,
+                    //     peace_rt_model::params::KeyUnknown,
+                    // >,
                     // WorkspaceParamsNone,
                     // ProfileParamsNone,
                     #scope_builder_type_params
                 >,
-                #params_module::ParamsKeysImpl<
-                    #params_module::KeyUnknown,
-                    #params_module::KeyUnknown,
-                    #params_module::KeyUnknown
-                >,
             >
         {
             /// Returns a `CmdCtxBuilder` for a single profile and flow.
-            pub fn #constructor_method_name(workspace: &'ctx peace_rt_model::Workspace) -> Self {
+            pub fn #constructor_method_name(
+                output: &'ctx mut O,
+                workspace: &'ctx peace_rt_model::Workspace,
+            ) -> Self
+            {
                 let scope_builder = #scope_builder_name {
                     // profile_selection: ProfileNotSelected,
                     // flow_selection: FlowNotSelected,
+                    // params_type_regs_builder:
+                    //     peace_rt_model::params::ParamsTypeRegsBuilder::<
+                    //         peace_rt_model::params::ParamsKeysImpl<
+                    //             peace_rt_model::params::KeyUnknown,
+                    //             peace_rt_model::params::KeyUnknown,
+                    //             peace_rt_model::params::KeyUnknown,
+                    //         >
+                    //     >::new(),
                     // workspace_params_selection: WorkspaceParamsNone,
                     // profile_params_selection: ProfileParamsNone,
                     // marker: std::marker::PhantomData,
@@ -62,9 +74,9 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                 };
 
                 Self {
+                    output,
                     workspace,
                     scope_builder,
-                    params_type_regs_builder: #params_module::ParamsTypeRegs::builder(),
                 }
             }
         }
@@ -99,6 +111,15 @@ mod scope_builder_type_params {
         type_params: &mut Punctuated<GenericArgument, Token![,]>,
         scope: Scope,
     ) {
+        // Always collect PKeys
+        type_params.push(parse_quote! {
+            peace_rt_model::params::ParamsKeysImpl<
+                peace_rt_model::params::KeyUnknown,
+                peace_rt_model::params::KeyUnknown,
+                peace_rt_model::params::KeyUnknown,
+            >
+        });
+
         // Workspace params are supported by all scopes.
         type_params.push(parse_quote!(
             crate::scopes::type_params::WorkspaceParamsNone
@@ -149,6 +170,18 @@ mod scope_field_values {
         field_values: &mut Punctuated<FieldValue, Token![,]>,
         scope: Scope,
     ) {
+        // Workspace params are supported by all scopes.
+        field_values.push(parse_quote! {
+            params_type_regs_builder:
+                peace_rt_model::params::ParamsTypeRegsBuilder::<
+                    peace_rt_model::params::ParamsKeysImpl<
+                        peace_rt_model::params::KeyUnknown,
+                        peace_rt_model::params::KeyUnknown,
+                        peace_rt_model::params::KeyUnknown,
+                    >
+                >::new()
+        });
+
         // Workspace params are supported by all scopes.
         field_values.push(parse_quote!(
             workspace_params_selection: crate::scopes::type_params::WorkspaceParamsNone

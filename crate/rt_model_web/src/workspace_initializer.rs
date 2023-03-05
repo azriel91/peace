@@ -1,11 +1,11 @@
 use std::{fmt::Debug, hash::Hash, path::Path};
 
 use peace_resources::{
-    internal::{CmdDirs, FlowParamsFile, ProfileParamsFile, WorkspaceDirs, WorkspaceParamsFile},
+    internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
     type_reg::untagged::TypeReg,
 };
 use peace_rt_model_core::{
-    cmd_context_params::{FlowParams, ProfileParams, WorkspaceParams},
+    params::{FlowParams, ProfileParams, WorkspaceParams},
     Error,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -46,29 +46,6 @@ use crate::Storage;
 pub struct WorkspaceInitializer;
 
 impl WorkspaceInitializer {
-    /// Creates directories used by the peace framework.
-    ///
-    /// For web storage, this sets empty values at directory paths to emulate
-    /// the native storage.
-    pub async fn dirs_initialize(
-        storage: &Storage,
-        workspace_dirs: &WorkspaceDirs,
-        cmd_dirs: &CmdDirs,
-    ) -> Result<(), Error> {
-        let dirs = [
-            AsRef::<Path>::as_ref(workspace_dirs.workspace_dir()),
-            AsRef::<Path>::as_ref(workspace_dirs.peace_dir()),
-            AsRef::<Path>::as_ref(workspace_dirs.peace_app_dir()),
-            AsRef::<Path>::as_ref(cmd_dirs.profile_dir()),
-            AsRef::<Path>::as_ref(cmd_dirs.profile_history_dir()),
-            AsRef::<Path>::as_ref(cmd_dirs.flow_dir()),
-        ];
-
-        storage.set_items(dirs.iter().map(|dir| (*dir, "")))?;
-
-        Result::<_, Error>::Ok(())
-    }
-
     /// Creates directories used by the peace framework.
     pub async fn dirs_create<'f, I>(storage: &Storage, dirs: I) -> Result<(), Error>
     where

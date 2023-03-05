@@ -1,21 +1,15 @@
 use peace::{
     cfg::{app_name, item_spec_id, AppName, FlowId, ItemSpecId, Profile},
-    resources::{
-        resources::ts::{
-            Cleaned, CleanedDry, Ensured, EnsuredDry, SetUp, WithStatesCurrentAndDesired,
-            WithStatesDesired, WithStatesSaved, WithStatesSavedDiffs,
-        },
-        Resources,
-    },
+    cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
+    resources::resources::ts::SetUp,
     rt::cmds::{
-        CleanCmd, DiffCmd, EnsureCmd, StatesDesiredDisplayCmd, StatesDiscoverCmd,
-        StatesSavedDisplayCmd,
+        sub::StatesSavedReadCmd, CleanCmd, DiffCmd, EnsureCmd, StatesDesiredDisplayCmd,
+        StatesDiscoverCmd, StatesSavedDisplayCmd,
     },
     rt_model::{
-        cmd::CmdContext,
-        cmd_context_params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
         output::OutputWrite,
-        ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
+        params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
+        Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
 use peace_item_specs::file_download::{FileDownloadItemSpec, FileDownloadParams};
@@ -33,16 +27,17 @@ mod file_id;
 mod wasm;
 
 #[derive(Debug)]
-pub struct WorkspaceAndGraph {
+pub struct WorkspaceAndFlow {
     workspace: Workspace,
-    item_spec_graph: ItemSpecGraph<DownloadError>,
+    flow: Flow<DownloadError>,
 }
 
 /// Returns a default workspace and the Download item spec graph.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn workspace_and_graph_setup(
+pub async fn workspace_and_flow_setup(
     workspace_spec: WorkspaceSpec,
-) -> Result<WorkspaceAndGraph, DownloadError> {
+    flow_id: FlowId,
+) -> Result<WorkspaceAndFlow, DownloadError> {
     let workspace = Workspace::new(app_name!(), workspace_spec)?;
 
     let item_spec_graph = {
@@ -51,19 +46,18 @@ pub async fn workspace_and_graph_setup(
             .add_fn(FileDownloadItemSpec::<FileId>::new(item_spec_id!("file")).into());
         item_spec_graph_builder.build()
     };
+    let flow = Flow::new(flow_id, item_spec_graph);
 
-    let workspace_and_graph = WorkspaceAndGraph {
-        workspace,
-        item_spec_graph,
-    };
-    Ok(workspace_and_graph)
+    let workspace_and_flow = WorkspaceAndFlow { workspace, flow };
+    Ok(workspace_and_flow)
 }
 
 /// Returns a default workspace and the Download item spec graph.
 #[cfg(target_arch = "wasm32")]
-pub async fn workspace_and_graph_setup(
+pub async fn workspace_and_flow_setup(
     workspace_spec: WorkspaceSpec,
-) -> Result<WorkspaceAndGraph, DownloadError> {
+    flow_id: FlowId,
+) -> Result<WorkspaceAndFlow, DownloadError> {
     let workspace = Workspace::new(app_name!(), workspace_spec)?;
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
@@ -71,120 +65,109 @@ pub async fn workspace_and_graph_setup(
             .add_fn(FileDownloadItemSpec::<FileId>::new(item_spec_id!("file")).into());
         item_spec_graph_builder.build()
     };
+    let flow = Flow::new(flow_id, item_spec_graph);
 
-    let workspace_and_graph = WorkspaceAndGraph {
-        workspace,
-        item_spec_graph,
-    };
-    Ok(workspace_and_graph)
+    let workspace_and_flow = WorkspaceAndFlow { workspace, flow };
+    Ok(workspace_and_flow)
 }
 
-pub type DownloadCmdContext<'ctx, O> = CmdContext<
-    'ctx,
-    DownloadError,
-    O,
-    SetUp,
-    ParamsKeysImpl<KeyUnknown, KeyKnown<String>, KeyUnknown>,
+pub type DownloadCmdCtx<'ctx, O> = CmdCtx<
+    SingleProfileSingleFlow<
+        'ctx,
+        DownloadError,
+        O,
+        ParamsKeysImpl<KeyUnknown, KeyKnown<String>, KeyUnknown>,
+        SetUp,
+    >,
 >;
 
-/// Returns a `CmdContext` initialized from the workspace and item spec graph
-pub async fn cmd_context<'ctx, O>(
-    workspace_and_graph: &'ctx WorkspaceAndGraph,
+/// Returns a `CmdCtx` initialized from the workspace and item spec graph
+pub async fn cmd_ctx<'ctx, O>(
+    workspace_and_flow: &'ctx WorkspaceAndFlow,
     profile: Profile,
-    flow_id: FlowId,
     output: &'ctx mut O,
     file_download_params: Option<FileDownloadParams<FileId>>,
-) -> Result<DownloadCmdContext<'ctx, O>, DownloadError>
+) -> Result<DownloadCmdCtx<'ctx, O>, DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    let WorkspaceAndGraph {
-        workspace,
-        item_spec_graph,
-    } = workspace_and_graph;
-    CmdContext::builder(workspace, item_spec_graph, output)
+    let WorkspaceAndFlow { workspace, flow } = workspace_and_flow;
+    CmdCtx::builder_single_profile_single_flow(output, workspace)
         .with_profile(profile)
-        .with_flow_id(flow_id)
-        .with_profile_param("file_download_params".to_string(), file_download_params)
+        .with_flow(flow)
+        .with_profile_param_value("file_download_params".to_string(), file_download_params)
         .await
 }
 
-pub async fn fetch<O>(
-    cmd_context: DownloadCmdContext<'_, O>,
-) -> Result<Resources<WithStatesCurrentAndDesired>, DownloadError>
+pub async fn fetch<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdContext { resources, .. } = StatesDiscoverCmd::exec(cmd_context).await?;
-    Ok(resources)
+    let (_states_current, _states_desired) = StatesDiscoverCmd::exec(cmd_ctx).await?;
+    Ok(())
 }
 
-pub async fn status<O>(
-    cmd_context: DownloadCmdContext<'_, O>,
-) -> Result<Resources<WithStatesSaved>, DownloadError>
+pub async fn status<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdContext { resources, .. } = StatesSavedDisplayCmd::exec(cmd_context).await?;
-    Ok(resources)
+    // Already displayed by the command
+    let _states_saved = StatesSavedDisplayCmd::exec(cmd_ctx).await?;
+    Ok(())
 }
 
-pub async fn desired<O>(
-    cmd_context: DownloadCmdContext<'_, O>,
-) -> Result<Resources<WithStatesDesired>, DownloadError>
+pub async fn desired<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdContext { resources, .. } = StatesDesiredDisplayCmd::exec(cmd_context).await?;
-    Ok(resources)
+    // Already displayed by the command
+    let _states_desired = StatesDesiredDisplayCmd::exec(cmd_ctx).await?;
+    Ok(())
 }
 
-pub async fn diff<O>(
-    cmd_context: DownloadCmdContext<'_, O>,
-) -> Result<Resources<WithStatesSavedDiffs>, DownloadError>
+pub async fn diff<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdContext { resources, .. } = DiffCmd::exec(cmd_context).await?;
-    Ok(resources)
+    let states_diff = DiffCmd::exec(cmd_ctx).await?;
+    cmd_ctx.output_mut().present(&states_diff).await?;
+    Ok(())
 }
 
-pub async fn ensure_dry<O>(
-    cmd_context: DownloadCmdContext<'_, O>,
-) -> Result<Resources<EnsuredDry>, DownloadError>
+pub async fn ensure_dry<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdContext { resources, .. } = EnsureCmd::exec_dry(cmd_context).await?;
-    Ok(resources)
+    let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
+    let states_ensured_dry = EnsureCmd::exec_dry(cmd_ctx, &states_saved).await?;
+    cmd_ctx.output_mut().present(&states_ensured_dry).await?;
+    Ok(())
 }
 
-pub async fn ensure<O>(
-    cmd_context: DownloadCmdContext<'_, O>,
-) -> Result<Resources<Ensured>, DownloadError>
+pub async fn ensure<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdContext { resources, .. } = EnsureCmd::exec(cmd_context).await?;
-    Ok(resources)
+    let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
+    let states_ensured = EnsureCmd::exec(cmd_ctx, &states_saved).await?;
+    cmd_ctx.output_mut().present(&states_ensured).await?;
+    Ok(())
 }
 
-pub async fn clean_dry<O>(
-    cmd_context: DownloadCmdContext<'_, O>,
-) -> Result<Resources<CleanedDry>, DownloadError>
+pub async fn clean_dry<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdContext { resources, .. } = CleanCmd::exec_dry(cmd_context).await?;
-    Ok(resources)
+    let states_cleaned_dry = CleanCmd::exec_dry(cmd_ctx).await?;
+    cmd_ctx.output_mut().present(&states_cleaned_dry).await?;
+    Ok(())
 }
 
-pub async fn clean<O>(
-    cmd_context: DownloadCmdContext<'_, O>,
-) -> Result<Resources<Cleaned>, DownloadError>
+pub async fn clean<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    let CmdContext { resources, .. } = CleanCmd::exec(cmd_context).await?;
-    Ok(resources)
+    let states_cleaned = CleanCmd::exec(cmd_ctx).await?;
+    cmd_ctx.output_mut().present(&states_cleaned).await?;
+    Ok(())
 }
