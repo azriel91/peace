@@ -4,7 +4,7 @@ use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
-use peace_resources::resources::ts::SetUp;
+use peace_resources::{resources::ts::SetUp, states::StatesDesired};
 use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
 
@@ -29,7 +29,7 @@ where
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<(), E> {
+    ) -> Result<StatesDesired, E> {
         let SingleProfileSingleFlowView {
             output,
             states_type_regs,
@@ -37,16 +37,16 @@ where
             ..
         } = cmd_ctx.view();
 
-        let states_saved_result = StatesDesiredReadCmd::<E, O, PKeys>::deserialize_internal(
+        let states_desired_result = StatesDesiredReadCmd::<E, O, PKeys>::deserialize_internal(
             resources,
             states_type_regs.states_desired_type_reg(),
         )
         .await;
 
-        match states_saved_result {
-            Ok(states_saved) => {
-                output.present(&states_saved).await?;
-                Ok(())
+        match states_desired_result {
+            Ok(states_desired) => {
+                output.present(&states_desired).await?;
+                Ok(states_desired)
             }
             Err(e) => {
                 output.write_err(&e).await?;

@@ -26,16 +26,15 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
 
-    let cmd_ctx = StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
+    let states_current = StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
-    let states = resources.borrow::<StatesCurrent>();
-    let vec_copy_state = states.get::<VecCopyState, _>(VecCopyItemSpec.id());
+    let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItemSpec.id());
     let states_on_disk = {
         let states_saved_file = resources.borrow::<StatesSavedFile>();
         let states_slice = std::fs::read(&*states_saved_file)?;
@@ -48,7 +47,7 @@ async fn runs_state_current_for_each_item_spec() -> Result<(), Box<dyn std::erro
     };
     assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
     assert_eq!(
-        states.get::<VecCopyState, _>(VecCopyItemSpec.id()),
+        states_current.get::<VecCopyState, _>(VecCopyItemSpec.id()),
         states_on_disk.get::<VecCopyState, _>(VecCopyItemSpec.id())
     );
 
@@ -69,20 +68,20 @@ async fn inserts_states_saved_from_states_saved_file() -> Result<(), Box<dyn std
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
 
     // Writes to states_saved_file.yaml
-    StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
+    StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
 
     // Execute again to ensure StatesSaved is included
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let cmd_ctx = StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
+    StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let states = resources.borrow::<StatesSaved>();

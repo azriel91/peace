@@ -1,7 +1,6 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
     cmd::ctx::CmdCtx,
-    resources::states::{StatesCurrent, StatesSaved},
     rt::cmds::sub::{StatesCurrentDiscoverCmd, StatesSavedReadCmd},
     rt_model::{Error, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -24,27 +23,24 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
     let mut output = NoOpOutput;
 
     // Write current states to disk.
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let cmd_ctx = StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
-    let resources_from_discover = cmd_ctx.resources();
+    let states_current_from_discover = StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
 
     // Re-read states from disk.
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let cmd_ctx = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let resources_from_read = cmd_ctx.resources();
+    let states_saved_from_read = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
 
-    let states_from_discover = resources_from_discover.borrow::<StatesCurrent>();
     let vec_copy_state_from_discover =
-        states_from_discover.get::<VecCopyState, _>(VecCopyItemSpec.id());
-    let states_from_read = resources_from_read.borrow::<StatesSaved>();
-    let vec_copy_state_from_read = states_from_read.get::<VecCopyState, _>(VecCopyItemSpec.id());
+        states_current_from_discover.get::<VecCopyState, _>(VecCopyItemSpec.id());
+    let vec_copy_state_from_read =
+        states_saved_from_read.get::<VecCopyState, _>(VecCopyItemSpec.id());
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
     Ok(())
 }
@@ -65,11 +61,11 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 
     // Try and read states from disk.
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let exec_result = StatesSavedReadCmd::exec(cmd_ctx).await;
+    let exec_result = StatesSavedReadCmd::exec(&mut cmd_ctx).await;
 
     assert!(matches!(
         exec_result,

@@ -76,9 +76,8 @@ where
 
         // TODO: This fetches the real state, whereas for a dry run, it would be useful
         // to show the imagined altered state.
-        let states_current = StatesCurrentDiscoverCmd::<E, O, PKeys>::exec(cmd_ctx).await?;
-
-        let states_cleaned_dry = StatesCleanedDry::from(states_current);
+        let states_cleaned_dry =
+            StatesCleanedDry::from(StatesCurrentDiscoverCmd::<E, O, PKeys>::exec(cmd_ctx).await?);
 
         Ok(states_cleaned_dry)
     }
@@ -126,6 +125,7 @@ where
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StatesCleaned, E> {
+        // TODO: pass in and confirm that `StatesSaved` matches `StatesCurrent`.
         let states_current = StatesCurrentDiscoverCmd::<E, O, PKeys>::exec(cmd_ctx).await?;
 
         let SingleProfileSingleFlowView {
@@ -143,9 +143,8 @@ where
         )
         .await?;
 
-        let states_current = StatesCurrentDiscoverCmd::<E, O, PKeys>::exec(cmd_ctx).await?;
-
-        let states_cleaned = StatesCleaned::from(states_current);
+        let states_cleaned =
+            StatesCleaned::from(StatesCurrentDiscoverCmd::<E, O, PKeys>::exec(cmd_ctx).await?);
 
         Ok(states_cleaned)
     }

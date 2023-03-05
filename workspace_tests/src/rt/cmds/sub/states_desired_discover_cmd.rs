@@ -26,15 +26,14 @@ async fn runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn std::erro
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
 
-    let cmd_ctx = StatesDesiredDiscoverCmd::exec(cmd_ctx).await?;
+    let states_desired = StatesDesiredDiscoverCmd::exec(&mut cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
-    let states_desired = resources.borrow::<StatesDesired>();
     let vec_copy_desired_state = states_desired.get::<VecCopyState, _>(VecCopyItemSpec.id());
     let states_desired_on_disk = {
         let states_desired_file = resources.borrow::<StatesDesiredFile>();

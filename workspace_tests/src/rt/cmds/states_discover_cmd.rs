@@ -26,16 +26,14 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
 
-    let cmd_ctx = StatesDiscoverCmd::exec(cmd_ctx).await?;
+    let (states_current, states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
-    let states_current = resources.borrow::<StatesCurrent>();
-    let states_desired = resources.borrow::<StatesDesired>();
     let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItemSpec.id());
     let states_on_disk = {
         let states_saved_file = resources.borrow::<StatesSavedFile>();

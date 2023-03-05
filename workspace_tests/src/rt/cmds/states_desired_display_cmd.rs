@@ -1,7 +1,6 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
     cmd::ctx::CmdCtx,
-    resources::states::StatesDesired,
     rt::cmds::{sub::StatesDesiredDiscoverCmd, StatesDesiredDisplayCmd},
     rt_model::{Error, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -28,33 +27,31 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
 
     // Write desired states to disk.
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let cmd_ctx = StatesDesiredDiscoverCmd::exec(cmd_ctx).await?;
-    let resources_from_discover = cmd_ctx.resources();
+    let states_desired_from_discover = StatesDesiredDiscoverCmd::exec(&mut cmd_ctx).await?;
 
     // Re-read states from disk in a new set of resources.
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut fn_tracker_output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .await?;
-    let cmd_ctx = StatesDesiredDisplayCmd::exec(cmd_ctx).await?;
-    let resources_from_read = cmd_ctx.resources();
+    let mut cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow(&mut fn_tracker_output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(&flow)
+            .await?;
+    let states_desired_from_read = StatesDesiredDisplayCmd::exec(&mut cmd_ctx).await?;
     let fn_tracker_output = cmd_ctx.output();
 
-    let states_from_discover = resources_from_discover.borrow::<StatesDesired>();
     let vec_copy_state_from_discover =
-        states_from_discover.get::<VecCopyState, _>(VecCopyItemSpec.id());
-    let states_from_read = resources_from_read.borrow::<StatesDesired>();
-    let states_from_read = &*states_from_read;
-    let vec_copy_state_from_read = states_from_read.get::<VecCopyState, _>(VecCopyItemSpec.id());
+        states_desired_from_discover.get::<VecCopyState, _>(VecCopyItemSpec.id());
+    let states_desired_from_read = &*states_desired_from_read;
+    let vec_copy_state_from_read =
+        states_desired_from_read.get::<VecCopyState, _>(VecCopyItemSpec.id());
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
     assert_eq!(
         vec![FnInvocation::new(
             "present",
-            vec![Some(serde_yaml::to_string(states_from_read)?)],
+            vec![Some(serde_yaml::to_string(states_desired_from_read)?)],
         )],
         fn_tracker_output.fn_invocations()
     );
@@ -77,11 +74,12 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     let mut fn_tracker_output = FnTrackerOutput::new();
 
     // Try and display states from disk.
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut fn_tracker_output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .await?;
-    let exec_result = StatesDesiredDisplayCmd::exec(cmd_ctx).await;
+    let mut cmd_ctx =
+        CmdCtx::builder_single_profile_single_flow(&mut fn_tracker_output, &workspace)
+            .with_profile(profile!("test_profile"))
+            .with_flow(&flow)
+            .await?;
+    let exec_result = StatesDesiredDisplayCmd::exec(&mut cmd_ctx).await;
 
     assert!(matches!(
         exec_result,

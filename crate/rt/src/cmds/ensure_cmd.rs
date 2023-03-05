@@ -16,7 +16,7 @@ use peace_rt_model::{
     outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
     output::OutputWrite,
     params::ParamsKeys,
-    Error, ItemSpecBoxed, ItemSpecGraph, ItemSpecRt, Storage,
+    Error, ItemSpecBoxed, ItemSpecRt, Storage,
 };
 use tokio::sync::{mpsc, mpsc::UnboundedSender};
 
@@ -79,26 +79,9 @@ where
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+        states_saved: &StatesSaved,
     ) -> Result<StatesEnsuredDry, E> {
-        let SingleProfileSingleFlowView {
-            output,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            flow,
-            resources,
-            ..
-        } = cmd_ctx.view();
-        let item_spec_graph = flow.graph();
-
-        let states_ensured_dry = Self::exec_internal(
-            item_spec_graph,
-            output,
-            resources,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            true,
-        )
-        .await?;
+        let states_ensured_dry = Self::exec_internal(cmd_ctx, states_saved, true).await?;
 
         Ok(states_ensured_dry)
     }
@@ -108,6 +91,11 @@ where
     ///
     /// In practice this runs [`EnsureOpSpec::check`], and only runs
     /// [`exec`] if execution is required.
+    ///
+    /// This function takes in a `StatesSaved`, but if you retrieve the state
+    /// within the same execution, and have a `StatesCurrent`, you can turn this
+    /// into `StatesSaved` by using `StatesSaved::from(states_current)` or
+    /// calling the `.into()` method.
     ///
     /// # Note
     ///
@@ -129,27 +117,10 @@ where
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+        states_saved: &StatesSaved,
     ) -> Result<StatesEnsured, E> {
-        let SingleProfileSingleFlowView {
-            output,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            flow,
-            resources,
-            ..
-        } = cmd_ctx.view();
-        let item_spec_graph = flow.graph();
-
-        let states_ensured = Self::exec_internal(
-            item_spec_graph,
-            output,
-            resources,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            false,
-        )
-        .await?;
-        Self::serialize_internal(resources, &states_ensured).await?;
+        let states_ensured = Self::exec_internal(cmd_ctx, states_saved, false).await?;
+        Self::serialize_internal(cmd_ctx.resources(), &states_ensured).await?;
 
         Ok(states_ensured)
     }
@@ -163,16 +134,24 @@ where
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
     async fn exec_internal<StatesTs>(
-        item_spec_graph: &ItemSpecGraph<E>,
-        #[cfg(not(feature = "output_progress"))] _output: &mut O,
-        #[cfg(feature = "output_progress")] output: &mut O,
-        resources: &mut Resources<SetUp>,
-        #[cfg(feature = "output_progress")] cmd_progress_tracker: &mut CmdProgressTracker,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+        states_saved: &StatesSaved,
         dry_run: bool,
     ) -> Result<States<StatesTs>, E>
     where
         for<'resources> States<StatesTs>: From<(StatesCurrent, &'resources Resources<SetUp>)>,
     {
+        let SingleProfileSingleFlowView {
+            #[cfg(feature = "output_progress")]
+            output,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            flow,
+            resources,
+            ..
+        } = cmd_ctx.view();
+        let item_spec_graph = flow.graph();
+
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_progress")] {
                 output.progress_begin(cmd_progress_tracker).await;
@@ -187,14 +166,16 @@ where
             }
         }
 
-        // `StatesEnsured` should begin as `StatesSaved`, and be mutated as new states
-        // are read.
-        let mut states_ensured_mut = if let Ok(states_saved) = resources.try_borrow::<StatesSaved>()
-        {
-            StatesMut::<StatesTs>::from((*states_saved).clone().into_inner())
-        } else {
-            StatesMut::<StatesTs>::with_capacity(item_spec_graph.node_count())
-        };
+        // `StatesEnsured` represents the states of items *after* this cmd has run,
+        // even if no change occurs. This means it should begin as `StatesSaved` or
+        // `StatesCurrent`, and updated when a new state has been applied and
+        // re-discovered.
+        //
+        // Notably, the initial `StatesSaved` / `StatesCurrent` may not contain a state
+        // for item specs whose state cannot be discovered, e.g. a file on a remote
+        // server, when the remote server doesn't exist.
+        let mut states_ensured_mut =
+            StatesMut::<StatesTs>::from((*states_saved).clone().into_inner());
 
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemEnsureOutcome<E>>();
 

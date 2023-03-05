@@ -1,9 +1,7 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
     cmd::ctx::CmdCtx,
-    resources::states::{
-        StatesCleaned, StatesCleanedDry, StatesCurrent, StatesEnsured, StatesSaved,
-    },
+    resources::states::StatesSaved,
     rt::cmds::{
         sub::{StatesCurrentDiscoverCmd, StatesSavedReadCmd},
         CleanCmd, EnsureCmd, StatesDiscoverCmd,
@@ -30,26 +28,18 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
     let mut output = NoOpOutput;
 
     // Write current states to disk.
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
+    let states_current = StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
 
     // Re-read states from disk.
-    let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile"))
-        .with_flow(&flow)
-        .await?;
-    let cmd_ctx = CleanCmd::exec_dry(cmd_ctx).await?;
-    let resources = cmd_ctx.resources();
+    let states_cleaned_dry = CleanCmd::exec_dry(&mut cmd_ctx).await?;
 
-    let states = resources.borrow::<StatesCurrent>();
-    let states_cleaned_dry = resources.borrow::<StatesCleanedDry>();
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
-        states.get::<VecCopyState, _>(VecCopyItemSpec.id())
+        states_current.get::<VecCopyState, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
@@ -76,50 +66,46 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    StatesDiscoverCmd::exec(cmd_ctx).await?;
+    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_saved = StatesSaved::from(states_current);
 
     // Ensure states.
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
-    let resources_ensured = cmd_ctx.resources();
+    let states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     // Clean states.
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let cmd_ctx = CleanCmd::exec_dry(cmd_ctx).await?;
-    let resources_cleaned = cmd_ctx.resources();
+    CleanCmd::exec_dry(&mut cmd_ctx).await?;
 
     // Re-read states from disk.
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let cmd_ctx = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let resources_reread = cmd_ctx.resources();
-
-    let ensured_states = resources_ensured.borrow::<StatesEnsured>();
-    let cleaned_states_before = resources_cleaned.borrow::<StatesCurrent>();
-    let states_saved = resources_reread.borrow::<StatesSaved>();
+    CleanCmd::exec_dry(&mut cmd_ctx).await?;
+    let states_current = StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        ensured_states.get::<VecCopyState, _>(VecCopyItemSpec.id())
+        states_ensured.get::<VecCopyState, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        cleaned_states_before.get::<VecCopyState, _>(VecCopyItemSpec.id())
+        states_current.get::<VecCopyState, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
@@ -146,37 +132,28 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let mut output = NoOpOutput;
 
     // Write current states to disk.
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    StatesCurrentDiscoverCmd::exec(cmd_ctx).await?;
+    StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
 
     // Clean states.
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let cmd_ctx = CleanCmd::exec(cmd_ctx).await?;
-    let resources_cleaned = cmd_ctx.resources();
+    let cleaned_states_cleaned = CleanCmd::exec(&mut cmd_ctx).await?;
 
     // Re-read states from disk.
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let cmd_ctx = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let resources_reread = cmd_ctx.resources();
+    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
 
-    let cleaned_states = resources_cleaned.borrow::<StatesCurrent>();
-    let cleaned_states_cleaned = resources_cleaned.borrow::<StatesCleaned>();
-    let states_saved = resources_reread.borrow::<StatesSaved>();
-    assert_eq!(
-        Some(VecCopyState::new()).as_ref(),
-        cleaned_states.get::<VecCopyState, _>(VecCopyItemSpec.id())
-    );
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
         cleaned_states_cleaned.get::<VecCopyState, _>(VecCopyItemSpec.id())
@@ -206,51 +183,40 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let mut output = NoOpOutput;
 
     // Write current and desired states to disk.
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    StatesDiscoverCmd::exec(cmd_ctx).await?;
+    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_saved = StatesSaved::from(states_current);
 
     // Ensure states.
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let cmd_ctx = EnsureCmd::exec(cmd_ctx).await?;
-    let resources_ensured = cmd_ctx.resources();
+    let states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     // Clean states.
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let cmd_ctx = CleanCmd::exec(cmd_ctx).await?;
-    let resources_cleaned = cmd_ctx.resources();
+    let cleaned_states_cleaned = CleanCmd::exec(&mut cmd_ctx).await?;
 
     // Re-read states from disk.
     let mut output = NoOpOutput;
-    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let cmd_ctx = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let resources_reread = cmd_ctx.resources();
-
-    let ensured_states = resources_ensured.borrow::<StatesEnsured>();
-    let cleaned_states_before = resources_cleaned.borrow::<StatesCurrent>();
-    let cleaned_states_cleaned = resources_cleaned.borrow::<StatesCleaned>();
-    let states_saved = resources_reread.borrow::<StatesSaved>();
+    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7]),).as_ref(),
-        ensured_states.get::<VecCopyState, _>(VecCopyItemSpec.id())
-    );
-    assert_eq!(
-        Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7]),).as_ref(),
-        cleaned_states_before.get::<VecCopyState, _>(VecCopyItemSpec.id())
+        states_ensured.get::<VecCopyState, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
