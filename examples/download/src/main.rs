@@ -6,7 +6,7 @@ use peace::{
 use peace_item_specs::file_download::FileDownloadParams;
 
 use download::{
-    clean, clean_dry, cmd_context, desired, diff, ensure, ensure_dry, fetch, status,
+    clean, clean_dry, cmd_ctx, desired, diff, ensure, ensure_dry, fetch, status,
     workspace_and_flow_setup, DownloadArgs, DownloadCommand, DownloadError,
 };
 
@@ -78,62 +78,62 @@ pub fn run() -> Result<(), DownloadError> {
         match command {
             DownloadCommand::Init { url, dest } => {
                 let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
-                let cmd_context = cmd_context(
+                let mut cmd_ctx = cmd_ctx(
                     &workspace_and_flow,
                     profile,
                     &mut cli_output,
                     Some(FileDownloadParams::new(url, dest)),
                 )
                 .await?;
-                fetch(cmd_context).await?;
+                fetch(&mut cmd_ctx).await?;
             }
             DownloadCommand::Fetch => {
                 let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
-                let cmd_context =
-                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
-                fetch(cmd_context).await?;
+                let mut cmd_ctx =
+                    cmd_ctx(&workspace_and_flow, profile, &mut cli_output, None).await?;
+                fetch(&mut cmd_ctx).await?;
             }
             DownloadCommand::Status => {
                 let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
-                let cmd_context =
-                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
-                status(cmd_context).await?;
+                let mut cmd_ctx =
+                    cmd_ctx(&workspace_and_flow, profile, &mut cli_output, None).await?;
+                status(&mut cmd_ctx).await?;
             }
             DownloadCommand::Desired => {
                 let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
-                let cmd_context =
-                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
-                desired(cmd_context).await?;
+                let mut cmd_ctx =
+                    cmd_ctx(&workspace_and_flow, profile, &mut cli_output, None).await?;
+                desired(&mut cmd_ctx).await?;
             }
             DownloadCommand::Diff => {
                 let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
-                let cmd_context =
-                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
-                diff(cmd_context).await?;
+                let mut cmd_ctx =
+                    cmd_ctx(&workspace_and_flow, profile, &mut cli_output, None).await?;
+                diff(&mut cmd_ctx).await?;
             }
             DownloadCommand::EnsureDry => {
                 let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
-                let cmd_context =
-                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
-                ensure_dry(cmd_context).await?;
+                let mut cmd_ctx =
+                    cmd_ctx(&workspace_and_flow, profile, &mut cli_output, None).await?;
+                ensure_dry(&mut cmd_ctx).await?;
             }
             DownloadCommand::Ensure => {
                 let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
-                let cmd_context =
-                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
-                ensure(cmd_context).await?;
+                let mut cmd_ctx =
+                    cmd_ctx(&workspace_and_flow, profile, &mut cli_output, None).await?;
+                ensure(&mut cmd_ctx).await?;
             }
             DownloadCommand::CleanDry => {
                 let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
-                let cmd_context =
-                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
-                clean_dry(cmd_context).await?;
+                let mut cmd_ctx =
+                    cmd_ctx(&workspace_and_flow, profile, &mut cli_output, None).await?;
+                clean_dry(&mut cmd_ctx).await?;
             }
             DownloadCommand::Clean => {
                 let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
-                let cmd_context =
-                    cmd_context(&workspace_and_flow, profile, &mut cli_output, None).await?;
-                clean(cmd_context).await?;
+                let mut cmd_ctx =
+                    cmd_ctx(&workspace_and_flow, profile, &mut cli_output, None).await?;
+                clean(&mut cmd_ctx).await?;
             }
         }
 

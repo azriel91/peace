@@ -7,7 +7,7 @@ use url::Url;
 use wasm_bindgen::prelude::*;
 
 pub use crate::{
-    clean, clean_dry, cmd_context, desired, diff, ensure, ensure_dry, fetch, status,
+    clean, clean_dry, cmd_ctx, desired, diff, ensure, ensure_dry, fetch, status,
     workspace_and_flow_setup, DownloadError, WorkspaceAndFlow,
 };
 
@@ -54,7 +54,7 @@ pub async fn wasm_init(url: String, name: String) -> Result<WorkspaceAndOutput, 
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let _cmd_context = cmd_context(
+    let _cmd_ctx = cmd_ctx(
         &workspace_and_flow,
         profile!("default"),
         &mut in_memory_text_output,
@@ -80,7 +80,7 @@ pub async fn wasm_fetch(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(
+    let mut cmd_ctx = cmd_ctx(
         &workspace_and_flow,
         profile!("default"),
         &mut in_memory_text_output,
@@ -89,7 +89,7 @@ pub async fn wasm_fetch(
     .await
     .map_err(into_js_err_value)?;
 
-    fetch(cmd_context).await.map_err(into_js_err_value)?;
+    fetch(&mut cmd_ctx).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
 
     Ok(WorkspaceAndOutput {
@@ -107,7 +107,7 @@ pub async fn wasm_status(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(
+    let mut cmd_ctx = cmd_ctx(
         &workspace_and_flow,
         profile!("default"),
         &mut in_memory_text_output,
@@ -116,7 +116,7 @@ pub async fn wasm_status(
     .await
     .map_err(into_js_err_value)?;
 
-    status(cmd_context).await.map_err(into_js_err_value)?;
+    status(&mut cmd_ctx).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
 
     Ok(WorkspaceAndOutput {
@@ -134,7 +134,7 @@ pub async fn wasm_desired(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(
+    let mut cmd_ctx = cmd_ctx(
         &workspace_and_flow,
         profile!("default"),
         &mut in_memory_text_output,
@@ -143,7 +143,7 @@ pub async fn wasm_desired(
     .await
     .map_err(into_js_err_value)?;
 
-    desired(cmd_context).await.map_err(into_js_err_value)?;
+    desired(&mut cmd_ctx).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
 
     Ok(WorkspaceAndOutput {
@@ -161,7 +161,7 @@ pub async fn wasm_diff(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(
+    let mut cmd_ctx = cmd_ctx(
         &workspace_and_flow,
         profile!("default"),
         &mut in_memory_text_output,
@@ -170,7 +170,7 @@ pub async fn wasm_diff(
     .await
     .map_err(into_js_err_value)?;
 
-    diff(cmd_context).await.map_err(into_js_err_value)?;
+    diff(&mut cmd_ctx).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
 
     Ok(WorkspaceAndOutput {
@@ -188,7 +188,7 @@ pub async fn wasm_ensure_dry(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(
+    let mut cmd_ctx = cmd_ctx(
         &workspace_and_flow,
         profile!("default"),
         &mut in_memory_text_output,
@@ -197,7 +197,7 @@ pub async fn wasm_ensure_dry(
     .await
     .map_err(into_js_err_value)?;
 
-    ensure_dry(cmd_context).await.map_err(into_js_err_value)?;
+    ensure_dry(&mut cmd_ctx).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
 
     Ok(WorkspaceAndOutput {
@@ -215,7 +215,7 @@ pub async fn wasm_ensure(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(
+    let mut cmd_ctx = cmd_ctx(
         &workspace_and_flow,
         profile!("default"),
         &mut in_memory_text_output,
@@ -224,7 +224,7 @@ pub async fn wasm_ensure(
     .await
     .map_err(into_js_err_value)?;
 
-    ensure(cmd_context).await.map_err(into_js_err_value)?;
+    ensure(&mut cmd_ctx).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
 
     Ok(WorkspaceAndOutput {
@@ -242,7 +242,7 @@ pub async fn wasm_clean_dry(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(
+    let mut cmd_ctx = cmd_ctx(
         &workspace_and_flow,
         profile!("default"),
         &mut in_memory_text_output,
@@ -251,7 +251,7 @@ pub async fn wasm_clean_dry(
     .await
     .map_err(into_js_err_value)?;
 
-    clean_dry(cmd_context).await.map_err(into_js_err_value)?;
+    clean_dry(&mut cmd_ctx).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
 
     Ok(WorkspaceAndOutput {
@@ -269,7 +269,7 @@ pub async fn wasm_clean(
         output: _,
     } = workspace_and_output;
     let mut in_memory_text_output = InMemoryTextOutput::new();
-    let cmd_context = cmd_context(
+    let mut cmd_ctx = cmd_ctx(
         &workspace_and_flow,
         profile!("default"),
         &mut in_memory_text_output,
@@ -278,7 +278,7 @@ pub async fn wasm_clean(
     .await
     .map_err(into_js_err_value)?;
 
-    clean(cmd_context).await.map_err(into_js_err_value)?;
+    clean(&mut cmd_ctx).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
 
     Ok(WorkspaceAndOutput {

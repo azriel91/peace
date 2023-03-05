@@ -3,8 +3,8 @@ use peace::{
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
     resources::resources::ts::SetUp,
     rt::cmds::{
-        CleanCmd, DiffCmd, EnsureCmd, StatesDesiredDisplayCmd, StatesDiscoverCmd,
-        StatesSavedDisplayCmd,
+        sub::StatesSavedReadCmd, CleanCmd, DiffCmd, EnsureCmd, StatesDesiredDisplayCmd,
+        StatesDiscoverCmd, StatesSavedDisplayCmd,
     },
     rt_model::{
         output::OutputWrite,
@@ -82,7 +82,7 @@ pub type DownloadCmdCtx<'ctx, O> = CmdCtx<
 >;
 
 /// Returns a `CmdCtx` initialized from the workspace and item spec graph
-pub async fn cmd_context<'ctx, O>(
+pub async fn cmd_ctx<'ctx, O>(
     workspace_and_flow: &'ctx WorkspaceAndFlow,
     profile: Profile,
     output: &'ctx mut O,
@@ -99,66 +99,75 @@ where
         .await
 }
 
-pub async fn fetch<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
+pub async fn fetch<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    StatesDiscoverCmd::exec(cmd_context).await?;
+    let (_states_current, _states_desired) = StatesDiscoverCmd::exec(cmd_ctx).await?;
     Ok(())
 }
 
-pub async fn status<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
+pub async fn status<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    StatesSavedDisplayCmd::exec(cmd_context).await?;
+    // Already displayed by the command
+    let _states_saved = StatesSavedDisplayCmd::exec(cmd_ctx).await?;
     Ok(())
 }
 
-pub async fn desired<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
+pub async fn desired<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    StatesDesiredDisplayCmd::exec(cmd_context).await?;
+    // Already displayed by the command
+    let _states_desired = StatesDesiredDisplayCmd::exec(cmd_ctx).await?;
     Ok(())
 }
 
-pub async fn diff<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
+pub async fn diff<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    DiffCmd::exec(cmd_context).await?;
+    let states_diff = DiffCmd::exec(cmd_ctx).await?;
+    cmd_ctx.output_mut().present(&states_diff).await?;
     Ok(())
 }
 
-pub async fn ensure_dry<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
+pub async fn ensure_dry<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    EnsureCmd::exec_dry(cmd_context).await?;
+    let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
+    let states_ensured_dry = EnsureCmd::exec_dry(cmd_ctx, &states_saved).await?;
+    cmd_ctx.output_mut().present(&states_ensured_dry).await?;
     Ok(())
 }
 
-pub async fn ensure<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
+pub async fn ensure<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    EnsureCmd::exec(cmd_context).await?;
+    let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
+    let states_ensured = EnsureCmd::exec(cmd_ctx, &states_saved).await?;
+    cmd_ctx.output_mut().present(&states_ensured).await?;
     Ok(())
 }
 
-pub async fn clean_dry<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
+pub async fn clean_dry<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    CleanCmd::exec_dry(cmd_context).await?;
+    let states_cleaned_dry = CleanCmd::exec_dry(cmd_ctx).await?;
+    cmd_ctx.output_mut().present(&states_cleaned_dry).await?;
     Ok(())
 }
 
-pub async fn clean<O>(cmd_context: DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
+pub async fn clean<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
-    CleanCmd::exec(cmd_context).await?;
+    let states_cleaned = CleanCmd::exec(cmd_ctx).await?;
+    cmd_ctx.output_mut().present(&states_cleaned).await?;
     Ok(())
 }

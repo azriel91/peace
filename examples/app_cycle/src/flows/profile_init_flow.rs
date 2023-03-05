@@ -1,7 +1,7 @@
 use peace::{
     cfg::{app_name, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
-    rt::cmds::{StatesDiscoverCmd, StatesSavedDisplayCmd},
+    rt::cmds::StatesDiscoverCmd,
     rt_model::{
         output::OutputWrite, Flow, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
@@ -41,22 +41,14 @@ impl ProfileInitFlow {
 
         let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow(output, &workspace);
         crate::cmds::params_augment!(cmd_ctx_builder);
-        let cmd_ctx = cmd_ctx_builder
+        let mut cmd_ctx = cmd_ctx_builder
             .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
             .with_profile_param_value(String::from("env_type"), Some(env_type))
             .with_profile(profile)
             .with_flow(&flow)
             .await?;
-        StatesDiscoverCmd::exec(cmd_ctx).await?;
-
-        let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow(output, &workspace);
-        crate::cmds::params_augment!(cmd_ctx_builder);
-        let profile_key = String::from("profile");
-        let cmd_ctx = cmd_ctx_builder
-            .with_profile_from_workspace_param(&profile_key)
-            .with_flow(&flow)
-            .await?;
-        StatesSavedDisplayCmd::exec(cmd_ctx).await?;
+        let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+        cmd_ctx.output_mut().present(&states_current).await?;
 
         Ok(())
     }
