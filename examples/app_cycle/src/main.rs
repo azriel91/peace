@@ -1,9 +1,8 @@
 use app_cycle::{
-    cmds::{AppInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd},
-    flows::ProfileInitFlow,
+    cmds::{AppInitCmd, ProfileInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd},
     model::{
         cli_args::{AppCycleCommand, CliArgs, ProfileCommand},
-        AppCycleError,
+        AppCycleError, ProfileSwitch,
     },
 };
 use clap::Parser;
@@ -79,14 +78,27 @@ pub fn run() -> Result<(), AppCycleError> {
                 let command = command.unwrap_or(ProfileCommand::Show);
                 match command {
                     ProfileCommand::Init { profile, r#type } => {
-                        ProfileInitFlow::run(&mut cli_output, profile, r#type).await?;
+                        ProfileInitCmd::run(&mut cli_output, profile, r#type).await?;
                     }
                     ProfileCommand::List => ProfileListCmd::run(&mut cli_output).await?,
                     ProfileCommand::Show => ProfileShowCmd::run(&mut cli_output).await?,
                 }
             }
-            AppCycleCommand::Switch { profile } => {
-                ProfileSwitchCmd::run(&mut cli_output, &profile).await?
+            AppCycleCommand::Switch {
+                profile,
+                create,
+                r#type,
+            } => {
+                let profile_switch = if create {
+                    let Some(env_type) = r#type else {
+                        unreachable!("`clap` should prevent the `type` parameter from being \
+                            `None` when `create` is `true`.");
+                    };
+                    ProfileSwitch::CreateNew { profile, env_type }
+                } else {
+                    ProfileSwitch::ToExisting { profile }
+                };
+                ProfileSwitchCmd::run(&mut cli_output, profile_switch).await?
             }
             AppCycleCommand::Fetch => todo!(),
             AppCycleCommand::Status => todo!(),

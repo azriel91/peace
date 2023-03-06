@@ -9,6 +9,7 @@
 pub use self::{
     app_init_cmd::AppInitCmd,
     cmd_ctx_builder::{ws_and_profile_params_augment, ws_params_augment},
+    profile_init_cmd::ProfileInitCmd,
     profile_list_cmd::ProfileListCmd,
     profile_show_cmd::ProfileShowCmd,
     profile_switch_cmd::ProfileSwitchCmd,
@@ -16,6 +17,7 @@ pub use self::{
 
 mod app_init_cmd;
 mod cmd_ctx_builder;
+mod profile_init_cmd;
 mod profile_list_cmd;
 mod profile_show_cmd;
 mod profile_switch_cmd;

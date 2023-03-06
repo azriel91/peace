@@ -1,19 +1,16 @@
 use peace::{
-    cfg::{app_name, AppName, FlowId, Profile},
+    cfg::{app_name, AppName, Profile},
     cmd::ctx::CmdCtx,
-    rt::cmds::StatesDiscoverCmd,
-    rt_model::{
-        output::OutputWrite, Flow, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
-    },
+    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
 use crate::model::{AppCycleError, EnvType};
 
 /// Flow to initialize and set the default profile.
 #[derive(Debug)]
-pub struct ProfileInitFlow;
+pub struct ProfileInitCmd;
 
-impl ProfileInitFlow {
+impl ProfileInitCmd {
     /// Stores profile init parameters.
     ///
     /// # Parameters
@@ -36,28 +33,19 @@ impl ProfileInitFlow {
             #[cfg(target_arch = "wasm32")]
             WorkspaceSpec::SessionStorage,
         )?;
-        let graph = Self::graph()?;
-        let flow = Flow::new(FlowId::profile_init(), graph);
 
-        let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow(output, &workspace);
+        let cmd_ctx_builder =
+            CmdCtx::builder_single_profile_no_flow::<AppCycleError, _>(output, &workspace);
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
-        let mut cmd_ctx = cmd_ctx_builder
+
+        // Creating the `CmdCtx` writes the workspace and profile params.
+        // We don't need to run any flows with it.
+        let _cmd_ctx = cmd_ctx_builder
             .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
             .with_profile_param_value(String::from("env_type"), Some(env_type))
             .with_profile(profile)
-            .with_flow(&flow)
             .await?;
-        let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
-        cmd_ctx.output_mut().present(&states_current).await?;
 
         Ok(())
-    }
-
-    fn graph() -> Result<ItemSpecGraph<AppCycleError>, AppCycleError> {
-        let graph_builder = ItemSpecGraphBuilder::<AppCycleError>::new();
-
-        // No item specs, as we are just storing profile init params.
-
-        Ok(graph_builder.build())
     }
 }
