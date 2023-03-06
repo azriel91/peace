@@ -8,6 +8,8 @@ mod lit_str_maybe;
 
 /// Returns a `const AppName` validated at compile time.
 ///
+/// This defaults to the crate name.
+///
 /// # Examples
 ///
 /// Instantiate a valid `AppName` at compile time:

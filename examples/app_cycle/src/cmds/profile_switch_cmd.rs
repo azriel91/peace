@@ -23,6 +23,7 @@ impl ProfileSwitchCmd {
     where
         O: OutputWrite<AppCycleError>,
     {
+        let app_name = app_name!();
         let workspace = Workspace::new(
             app_name!(),
             #[cfg(not(target_arch = "wasm32"))]
@@ -51,7 +52,10 @@ impl ProfileSwitchCmd {
                 profile: profile_to_switch_to,
             } => {
                 if !profiles.contains(&profile_to_switch_to) {
-                    // TODO: return error
+                    return Err(AppCycleError::ProfileSwitchToNonExistent {
+                        profile_to_switch_to,
+                        app_name,
+                    });
                 } else {
                     let cmd_ctx_builder =
                         CmdCtx::builder_no_profile_no_flow::<AppCycleError, _>(output, workspace);
@@ -77,11 +81,7 @@ impl ProfileSwitchCmd {
                 profile: profile_to_create,
                 env_type,
             } => {
-                if profiles.contains(&profile_to_create) {
-                    // TODO: return error
-                } else {
-                    ProfileInitCmd::run(output, profile_to_create.clone(), env_type).await?;
-                }
+                ProfileInitCmd::run(output, profile_to_create.clone(), env_type).await?;
 
                 output
                     .present(&(

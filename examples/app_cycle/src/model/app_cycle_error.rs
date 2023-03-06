@@ -1,7 +1,10 @@
 #[cfg(feature = "error_reporting")]
 use peace::miette;
 
-use peace::rt_model::fn_graph::{Edge, WouldCycle};
+use peace::{
+    cfg::{AppName, Profile},
+    rt_model::fn_graph::{Edge, WouldCycle},
+};
 
 /// Error while managing a web application.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
@@ -31,6 +34,46 @@ pub enum AppCycleError {
         #[from]
         crate::model::EnvTypeParseError,
     ),
+
+    /// User tried to switch to a profile that doesn't exist.
+    #[error("Profile to switch to does not exist.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(app_cycle::profile_switch_to_non_existent),
+            help(
+                "The `{profile_to_switch_to}` profile does not exist.\n\
+                You can create it by passing the `--create --type development` parameters\n\
+                or run `{app_name} profile list` to see profiles you can switch to."
+            )
+        )
+    )]
+    ProfileSwitchToNonExistent {
+        /// The profile that the user tried to switch to.
+        profile_to_switch_to: Profile,
+        /// Name of this app.
+        app_name: AppName,
+    },
+
+    /// User tried to create a profile that already exists.
+    #[error("Profile to create already exists.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(app_cycle::profile_to_create_exists),
+            help(
+                "The `{profile_to_create}` profile already exists.\n\
+                You may switch to the profile using `{app_name} switch {profile_to_create}`\n\
+                or create a profile with a different name."
+            )
+        )
+    )]
+    ProfileToCreateExists {
+        /// The profile that the user tried to create.
+        profile_to_create: Profile,
+        /// Name of this app.
+        app_name: AppName,
+    },
 
     // === Item Spec errors === //
     /// A `FileDownload` item spec error occurred.
