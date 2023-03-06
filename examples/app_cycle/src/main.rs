@@ -1,5 +1,5 @@
 use app_cycle::{
-    cmds::{AppInitCmd, ProfileListCmd, ProfileShowCmd},
+    cmds::{AppInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd},
     flows::ProfileInitFlow,
     model::{
         cli_args::{AppCycleCommand, CliArgs, ProfileCommand},
@@ -85,7 +85,9 @@ pub fn run() -> Result<(), AppCycleError> {
                     ProfileCommand::Show => ProfileShowCmd::run(&mut cli_output).await?,
                 }
             }
-            AppCycleCommand::Switch { profile: _ } => todo!(),
+            AppCycleCommand::Switch { profile } => {
+                ProfileSwitchCmd::run(&mut cli_output, &profile).await?
+            }
             AppCycleCommand::Fetch => todo!(),
             AppCycleCommand::Status => todo!(),
             AppCycleCommand::Desired => todo!(),

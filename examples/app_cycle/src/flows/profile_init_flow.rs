@@ -40,7 +40,7 @@ impl ProfileInitFlow {
         let flow = Flow::new(FlowId::profile_init(), graph);
 
         let cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow(output, &workspace);
-        crate::cmds::params_augment!(cmd_ctx_builder);
+        crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
         let mut cmd_ctx = cmd_ctx_builder
             .with_workspace_param_value(String::from("profile"), Some(profile.clone()))
             .with_profile_param_value(String::from("env_type"), Some(env_type))

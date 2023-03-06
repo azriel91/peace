@@ -32,9 +32,6 @@ pub fn impl_with_params_k(scope_struct: &ScopeStruct) -> proc_macro2::TokenStrea
             impl_tokens.extend(impl_with_params_k_key_unknown);
 
             match scope {
-                // No profile commands do not support profile params.
-                Scope::NoProfileNoFlow => {}
-
                 // Single profile params technically don't need this, but it is convenient to
                 // have a common `with_*_param` registration for each param type.
                 //
@@ -48,6 +45,12 @@ pub fn impl_with_params_k(scope_struct: &ScopeStruct) -> proc_macro2::TokenStrea
                     let impl_with_param_key_known = impl_with_param_key_known(scope_struct, params_scope);
                     impl_tokens.extend(impl_with_param_key_known);
                 }
+                Scope::NoProfileNoFlow if params_scope == ParamsScope::Workspace => {
+                    let impl_with_param_key_known = impl_with_param_key_known(scope_struct, params_scope);
+                    impl_tokens.extend(impl_with_param_key_known);
+                }
+                // No profile commands do not support profile params.
+                Scope::NoProfileNoFlow => {}
             }
 
             impl_tokens

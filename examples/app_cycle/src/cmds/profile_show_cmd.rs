@@ -31,10 +31,9 @@ impl ProfileShowCmd {
             WorkspaceSpec::SessionStorage,
         )?;
 
-        // new CmdCtx
         let cmd_ctx_builder =
             CmdCtx::builder_single_profile_no_flow::<AppCycleError, _>(output, &workspace);
-        crate::cmds::params_augment!(cmd_ctx_builder);
+        crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         let profile_key = String::from("profile");
         let mut cmd_ctx = cmd_ctx_builder

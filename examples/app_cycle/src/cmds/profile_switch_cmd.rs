@@ -4,19 +4,19 @@ use peace::{
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
-use crate::model::{AppCycleError, EnvType};
+use crate::model::AppCycleError;
 
-/// Command to list initialized profiles.
+/// Command to switch between profiles.
 #[derive(Debug)]
-pub struct ProfileListCmd;
+pub struct ProfileSwitchCmd;
 
-impl ProfileListCmd {
-    /// Lists all profiles.
+impl ProfileSwitchCmd {
+    /// Switches to another profile.
     ///
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    pub async fn run<O>(output: &mut O) -> Result<(), AppCycleError>
+    pub async fn run<O>(output: &mut O, profile_to_switch_to: &Profile) -> Result<(), AppCycleError>
     where
         O: OutputWrite<AppCycleError>,
     {
@@ -38,20 +38,33 @@ impl ProfileListCmd {
             .await?;
         let MultiProfileNoFlowView {
             output,
-            profile_to_profile_params,
+            workspace,
+            profiles,
             ..
         } = cmd_ctx.view();
 
-        output.present("# Profiles\n\n").await?;
+        if !profiles.contains(profile_to_switch_to) {
+            // TODO: return error
+        } else {
+            let cmd_ctx_builder =
+                CmdCtx::builder_no_profile_no_flow::<AppCycleError, _>(output, &workspace);
+            crate::cmds::ws_params_augment!(cmd_ctx_builder);
+            cmd_ctx_builder
+                .with_workspace_param_value(
+                    String::from("profile"),
+                    Some(profile_to_switch_to.clone()),
+                )
+                .build()
+                .await?;
+        }
 
-        let profiles_presentable = profile_to_profile_params
-            .iter()
-            .filter_map(|(profile, profile_params)| {
-                let env_type = profile_params.get::<EnvType, _>("env_type");
-                env_type.map(|env_type| (profile, " - type: ".to_string(), env_type))
-            })
-            .collect::<Vec<_>>();
-        output.present(&profiles_presentable).await?;
+        output
+            .present(&(
+                String::from("Switched to profile: "),
+                profile_to_switch_to,
+                String::from("\n"),
+            ))
+            .await?;
 
         Ok(())
     }
