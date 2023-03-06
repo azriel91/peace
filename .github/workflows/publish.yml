@@ -100,12 +100,15 @@ jobs:
           command: login
           args: ${{ secrets.CRATES_IO_API_TOKEN }}
 
+      # allow-branch HEAD is because GitHub actions switches
+      # to the tag while building, which is a detached head
       - name: "cargo release publish (native)"
         run: |-
           cargo release \
             publish \
             --workspace \
             --all-features \
+            --allow-branch HEAD \
             --no-confirm \
             --execute \
             --exclude peace_rt_model_web
