@@ -161,7 +161,7 @@ fn impl_with_param_key_unknown(
             ///
             /// * `k`: Key to store the parameter with.
             #[doc = #doc_param]
-            // pub fn with_workspace_params<WorkspaceParamsK, WorkspaceParam>
+            // pub fn with_workspace_param_value<WorkspaceParamsK, WorkspaceParam>
             pub fn #with_param_value_method_name<#params_k_type_param, #param_type_param>(
                 self,
                 k: #params_k_type_param,
@@ -344,7 +344,7 @@ fn impl_with_param_key_known(
             ///
             /// * `k`: Key to store the parameter with.
             #[doc = #doc_param]
-            // pub fn with_workspace_params<WorkspaceParam>
+            // pub fn with_workspace_param_value<WorkspaceParam>
             pub fn #with_param_value_method_name<#param_type_param>(
                 self,
                 k: #params_k_type_param,

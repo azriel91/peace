@@ -11,9 +11,7 @@ use crate::model::{AppCycleError, EnvType};
 pub struct ProfileListCmd;
 
 impl ProfileListCmd {
-    /// Shows the currently active profile.
-    ///
-    /// The active profile is stored in workspace params.
+    /// Lists all profiles.
     ///
     /// # Parameters
     ///
@@ -30,11 +28,10 @@ impl ProfileListCmd {
             WorkspaceSpec::SessionStorage,
         )?;
 
-        // new CmdCtx
         let profile_workspace_init = Profile::workspace_init();
         let cmd_ctx_builder =
             CmdCtx::builder_multi_profile_no_flow::<AppCycleError, _>(output, &workspace);
-        crate::cmds::params_augment!(cmd_ctx_builder);
+        crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         let mut cmd_ctx = cmd_ctx_builder
             .with_profile_filter(|profile| profile != &profile_workspace_init)

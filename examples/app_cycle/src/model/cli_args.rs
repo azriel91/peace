@@ -60,6 +60,17 @@ pub enum AppCycleCommand {
     Switch {
         /// Profile name to switch to.
         profile: Profile,
+        /// Whether or not to create the profile.
+        ///
+        /// * If this flag is specified, and the profile already exists, then
+        ///   the switch does not happen.
+        /// * If this flag is not specified, and the profile does not exist,
+        ///   then the switch does not happen.
+        #[clap(short, long)]
+        create: bool,
+        /// Type of the profile's deployed environment.
+        #[arg(short, long, required_if_eq("create", "true"))]
+        r#type: Option<EnvType>,
     },
     /// Fetches the state of the environment.
     Fetch,
