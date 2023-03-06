@@ -79,19 +79,19 @@ jobs:
           toolchain: stable
           override: true
 
-      - name: workspaces Cache
-        id: workspaces_cache
+      - name: cargo-release Cache
+        id: cargo_release_cache
         uses: actions/cache@v3
         with:
-          path: ~/.cargo/bin/cargo-workspaces
-          key: ${{ runner.os }}-cargo-workspaces
+          path: ~/.cargo/bin/cargo-release
+          key: ${{ runner.os }}-cargo-release
 
       - # FIXME: Switch back when actions-rs/cargo#217 gets merged
         uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
-        if: steps.workspaces_cache.outputs.cache-hit != 'true'
+        if: steps.cargo_release_cache.outputs.cache-hit != 'true'
         with:
           command: install
-          args: cargo-workspaces
+          args: cargo-release
 
       - name: cargo login
         # FIXME: Switch back when actions-rs/cargo#217 gets merged
@@ -100,13 +100,22 @@ jobs:
           command: login
           args: ${{ secrets.CRATES_IO_API_TOKEN }}
 
-      - # FIXME: Switch back when actions-rs/cargo#217 gets merged
-        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
-        with:
-          command: workspaces
-          args: >
-            publish
-            --from-git
-            --allow-branch main
-            --force '*'
-            --no-git-tag
+      - name: "cargo release publish (native)"
+        run: |-
+          cargo release \
+            publish \
+            --workspace \
+            --all-features \
+            --no-confirm \
+            --execute \
+            --exclude peace_rt_model_web
+
+      - name: "cargo release publish (web)"
+        run: |-
+          cargo release \
+            publish \
+            --package peace_rt_model_web \
+            --all-features \
+            --no-confirm \
+            --execute \
+            --target wasm32-unknown-unknown
