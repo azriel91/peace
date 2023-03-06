@@ -102,7 +102,20 @@ jobs:
 
       # allow-branch HEAD is because GitHub actions switches
       # to the tag while building, which is a detached head
-      - name: "cargo release publish (native)"
+
+      # Publishing is currently messy, because:
+      #
+      # * `peace_rt_model_core` exports `NativeError` or `WebError` depending on the target.
+      # * `peace_rt_model_web` fails to build when publishing the workspace for a native target.
+      # * `peace_rt_model_web` still needs its dependencies to be published before it can be
+      #    published.
+      # * `peace_rt_model_hack` needs `peace_rt_model_web` to be published before it can be
+      #    published.
+      #
+      # We *could* pass through `--no-verify` so `cargo` doesn't build the crate before publishing,
+      # which is reasonable, since this job only runs after the Linux, Windows, and WASM builds
+      # have passed.
+      - name: "cargo release publish"
         run: |-
           cargo release \
             publish \
@@ -110,15 +123,5 @@ jobs:
             --all-features \
             --allow-branch HEAD \
             --no-confirm \
-            --execute \
-            --exclude peace_rt_model_web
-
-      - name: "cargo release publish (web)"
-        run: |-
-          cargo release \
-            publish \
-            --package peace_rt_model_web \
-            --all-features \
-            --no-confirm \
-            --execute \
-            --target wasm32-unknown-unknown
+            --no-verify \
+            --execute
