@@ -61,7 +61,10 @@ impl StatusCmd {
         let env_type = profile_params.get::<EnvType, _>("env_type");
 
         if let Some((profile, env_type)) = profile.zip(env_type) {
-            presentln!(output, ["Using profile ", profile, " (", env_type, ")\n"]);
+            presentln!(
+                output,
+                ["Using profile ", profile, " -- type ", env_type, "\n"]
+            );
         }
         presentln!(output, [&states_saved]);
 
