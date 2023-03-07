@@ -38,8 +38,13 @@ pub struct CliArgs {
 
 #[derive(Subcommand)]
 pub enum AppCycleCommand {
-    /// Downloads the web application to run.
+    /// Initializes a profile to deploy a web application.
     Init {
+        /// Name to use for the profile.
+        profile: Profile,
+        /// Type of the profile's deployed environment.
+        #[arg(short, long)]
+        r#type: EnvType,
         /// Username and repository of the application to download.
         slug: RepoSlug,
         /// Version of the application to download.
@@ -100,21 +105,6 @@ pub enum AppCycleCommand {
 
 #[derive(Subcommand)]
 pub enum ProfileCommand {
-    /// Initializes a new profile.
-    Init {
-        /// Name to use for the profile.
-        profile: Profile,
-        /// Type of the profile's deployed environment.
-        #[arg(short, long)]
-        r#type: EnvType,
-        /// Username and repository of the application to download.
-        slug: RepoSlug,
-        /// Version of the application to download.
-        version: Version,
-        /// URL to override the default download URL.
-        #[arg(long, value_hint(ValueHint::Url))]
-        url: Option<Url>,
-    },
     /// Lists available profiles.
     List,
     /// Shows the current profile, if any.

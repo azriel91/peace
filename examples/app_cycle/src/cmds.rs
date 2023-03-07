@@ -7,7 +7,6 @@
 //! `ItemSpec`'s params type.
 
 pub use self::{
-    app_init_cmd::AppInitCmd,
     cmd_ctx_builder::{
         ws_and_profile_params_augment, ws_params_augment, ws_profile_and_flow_params_augment,
     },
@@ -17,7 +16,6 @@ pub use self::{
     profile_switch_cmd::ProfileSwitchCmd,
 };
 
-mod app_init_cmd;
 mod cmd_ctx_builder;
 mod profile_init_cmd;
 mod profile_list_cmd;

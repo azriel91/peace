@@ -1,5 +1,5 @@
 use app_cycle::{
-    cmds::{AppInitCmd, ProfileInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd},
+    cmds::{ProfileInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd},
     model::{
         cli_args::{AppCycleCommand, CliArgs, ProfileCommand},
         AppCycleError, ProfileSwitch,
@@ -71,22 +71,18 @@ pub fn run() -> Result<(), AppCycleError> {
         };
 
         match command {
-            AppCycleCommand::Init { slug, version, url } => {
-                AppInitCmd::run(&mut cli_output, &slug, &version, url).await?;
+            AppCycleCommand::Init {
+                profile,
+                r#type,
+                slug,
+                version,
+                url,
+            } => {
+                ProfileInitCmd::run(&mut cli_output, profile, r#type, &slug, &version, url).await?;
             }
             AppCycleCommand::Profile { command } => {
                 let command = command.unwrap_or(ProfileCommand::Show);
                 match command {
-                    ProfileCommand::Init {
-                        profile,
-                        r#type,
-                        slug,
-                        version,
-                        url,
-                    } => {
-                        ProfileInitCmd::run(&mut cli_output, profile, r#type, &slug, &version, url)
-                            .await?;
-                    }
                     ProfileCommand::List => ProfileListCmd::run(&mut cli_output).await?,
                     ProfileCommand::Show => ProfileShowCmd::run(&mut cli_output).await?,
                 }
