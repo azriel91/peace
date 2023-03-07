@@ -50,25 +50,28 @@ impl ProfileInitCmd {
             CmdCtx::builder_multi_profile_no_flow::<AppCycleError, _>(output, &workspace);
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
-        let mut cmd_ctx = cmd_ctx_builder
+        let cmd_ctx_result = cmd_ctx_builder
             .with_profile_filter(|profile| profile != &profile_workspace_init)
-            .await?;
-        let MultiProfileNoFlowView {
-            output,
-            workspace,
-            profiles,
-            ..
-        } = cmd_ctx.view();
+            .await;
+        match cmd_ctx_result {
+            Ok(mut cmd_ctx) => {
+                let MultiProfileNoFlowView { profiles, .. } = cmd_ctx.view();
 
-        if profiles.contains(&profile_to_create) {
-            return Err(AppCycleError::ProfileToCreateExists {
-                profile_to_create,
-                app_name,
-            });
+                if profiles.contains(&profile_to_create) {
+                    return Err(AppCycleError::ProfileToCreateExists {
+                        profile_to_create,
+                        app_name,
+                    });
+                }
+            }
+            Err(_e) => {
+                // On first invocation, the `.peace` app dir will not exist, so
+                // we won't be able to list any profiles.
+            }
         }
 
         let cmd_ctx_builder =
-            CmdCtx::builder_single_profile_no_flow::<AppCycleError, _>(output, workspace);
+            CmdCtx::builder_single_profile_no_flow::<AppCycleError, _>(output, &workspace);
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         // Creating the `CmdCtx` writes the workspace and profile params.
