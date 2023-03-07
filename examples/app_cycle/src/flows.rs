@@ -1,5 +1,5 @@
 //! Flows that users can invoke.
 
-pub use self::app_init_flow::AppInitFlow;
+pub use self::env_deploy_flow::EnvDeployFlow;
 
-mod app_init_flow;
+mod env_deploy_flow;

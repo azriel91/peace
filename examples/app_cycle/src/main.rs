@@ -72,7 +72,7 @@ pub fn run() -> Result<(), AppCycleError> {
 
         match command {
             AppCycleCommand::Init { slug, version, url } => {
-                AppInitCmd::run(&mut cli_output, slug, version, url).await?;
+                AppInitCmd::run(&mut cli_output, &slug, &version, url).await?;
             }
             AppCycleCommand::Profile { command } => {
                 let command = command.unwrap_or(ProfileCommand::Show);
