@@ -8,7 +8,9 @@
 
 pub use self::{
     app_init_cmd::AppInitCmd,
-    cmd_ctx_builder::{ws_and_profile_params_augment, ws_params_augment},
+    cmd_ctx_builder::{
+        ws_and_profile_params_augment, ws_params_augment, ws_profile_and_flow_params_augment,
+    },
     profile_init_cmd::ProfileInitCmd,
     profile_list_cmd::ProfileListCmd,
     profile_show_cmd::ProfileShowCmd,

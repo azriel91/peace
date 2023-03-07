@@ -1,8 +1,8 @@
 use peace::{
-    cfg::{app_name, AppName, Profile},
+    cfg::{app_name, profile, AppName, Profile},
     cmd::ctx::CmdCtx,
-    resources::states::StatesSaved,
-    rt::cmds::{EnsureCmd, StatesDiscoverCmd},
+    fmt::{presentable::CodeInline, presentln},
+    rt::cmds::StatesDiscoverCmd,
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 use semver::Version;
@@ -10,8 +10,11 @@ use url::Url;
 
 use crate::{
     flows::EnvDeployFlow,
-    model::{AppCycleError, RepoSlug},
+    model::{AppCycleError, EnvType, RepoSlug},
 };
+
+/// Default development profile.
+const DEV_PROFILE: Profile = profile!("dev");
 
 /// Takes app init parameters and runs the [`AppInitFlow`].
 #[derive(Debug)]
@@ -35,8 +38,6 @@ impl AppInitCmd {
     where
         O: OutputWrite<AppCycleError>,
     {
-        let (web_app_file_download_params, web_app_tar_x_params) =
-            EnvDeployFlow::params(slug, version, url)?;
         let workspace = Workspace::new(
             app_name!(),
             #[cfg(not(target_arch = "wasm32"))]
@@ -44,32 +45,65 @@ impl AppInitCmd {
             #[cfg(target_arch = "wasm32")]
             WorkspaceSpec::SessionStorage,
         )?;
+
+        Self::dev_profile_init(output, &workspace).await?;
+
+        let (web_app_file_download_params, web_app_tar_x_params) =
+            EnvDeployFlow::params(slug, version, url)?;
         let flow = EnvDeployFlow::flow().await?;
+        let profile_key = String::from("profile");
 
         let mut cmd_ctx = {
             let cmd_ctx_builder =
                 CmdCtx::builder_single_profile_single_flow::<AppCycleError, _>(output, &workspace);
-            crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
+            crate::cmds::ws_profile_and_flow_params_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder
-                .with_profile(Profile::workspace_init())
+                .with_profile_from_workspace_param(&profile_key)
                 .with_flow(&flow)
-                .with_workspace_param_value(
+                .with_flow_param_value(
                     String::from("web_app_file_download_params"),
                     Some(web_app_file_download_params),
                 )
-                .with_workspace_param_value(
+                .with_flow_param_value(
                     String::from("web_app_tar_x_params"),
                     Some(web_app_tar_x_params),
                 )
                 .await?
         };
 
-        let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
-        let states_saved = StatesSaved::from(states_current);
+        let (_states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+        presentln!(
+            output,
+            [
+                "Initialized profile ",
+                &DEV_PROFILE,
+                " using ",
+                &CodeInline::new(format!("{slug}@{version}").into()),
+                "."
+            ]
+        );
 
-        let states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
-        cmd_ctx.output_mut().present(&states_ensured).await?;
+        Ok(())
+    }
+
+    async fn dev_profile_init<O>(output: &mut O, workspace: &Workspace) -> Result<(), AppCycleError>
+    where
+        O: OutputWrite<AppCycleError>,
+    {
+        // Set workspace default profile to dev, and initialize the dev profile to be a
+        // `development` environment type.
+        let _cmd_ctx = {
+            let cmd_ctx_builder =
+                CmdCtx::builder_single_profile_no_flow::<AppCycleError, _>(output, workspace);
+            crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
+
+            cmd_ctx_builder
+                .with_workspace_param_value(String::from("profile"), Some(DEV_PROFILE))
+                .with_profile(DEV_PROFILE)
+                .with_profile_param_value(String::from("env_type"), Some(EnvType::Development))
+                .await?
+        };
 
         Ok(())
     }

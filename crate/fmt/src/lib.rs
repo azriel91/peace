@@ -9,7 +9,7 @@ pub use async_trait::async_trait;
 
 pub use crate::{presentable::Presentable, presenter::Presenter};
 
-mod presentable;
+pub mod presentable;
 mod presenter;
 
 /// Ergonomically present multiple [`Presentable`]s.
