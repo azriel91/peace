@@ -71,6 +71,15 @@ pub enum AppCycleCommand {
         /// Type of the profile's deployed environment.
         #[arg(short, long, required_if_eq("create", "true"))]
         r#type: Option<EnvType>,
+        /// Username and repository of the application to download.
+        #[arg(required_if_eq("create", "true"))]
+        slug: Option<RepoSlug>,
+        /// Version of the application to download.
+        #[arg(required_if_eq("create", "true"))]
+        version: Option<Version>,
+        /// URL to override the default download URL.
+        #[arg(short, long, value_hint(ValueHint::Url))]
+        url: Option<Url>,
     },
     /// Fetches the state of the environment.
     Fetch,
@@ -99,6 +108,13 @@ pub enum ProfileCommand {
         /// Type of the profile's deployed environment.
         #[arg(short, long)]
         r#type: EnvType,
+        /// Username and repository of the application to download.
+        slug: RepoSlug,
+        /// Version of the application to download.
+        version: Version,
+        /// URL to override the default download URL.
+        #[clap(long, value_hint(ValueHint::Url))]
+        url: Option<Url>,
     },
     /// Lists available profiles.
     List,
