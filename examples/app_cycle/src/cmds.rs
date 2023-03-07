@@ -14,6 +14,7 @@ pub use self::{
     profile_list_cmd::ProfileListCmd,
     profile_show_cmd::ProfileShowCmd,
     profile_switch_cmd::ProfileSwitchCmd,
+    status_cmd::StatusCmd,
 };
 
 mod cmd_ctx_builder;
@@ -21,3 +22,4 @@ mod profile_init_cmd;
 mod profile_list_cmd;
 mod profile_show_cmd;
 mod profile_switch_cmd;
+mod status_cmd;
