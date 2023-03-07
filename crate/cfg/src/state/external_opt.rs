@@ -35,7 +35,7 @@ where
         let type_name = tynm::type_name::<V>();
         match self {
             Self::Tbd => write!(f, "{type_name} not yet determined"),
-            Self::None => write!(f, "{type_name} is non-existent"),
+            Self::None => write!(f, "{type_name} does not exist on source"),
             Self::Value(v) => write!(f, "{type_name}: {v}"),
         }
     }
