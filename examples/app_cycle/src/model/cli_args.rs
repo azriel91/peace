@@ -24,7 +24,7 @@ pub struct CliArgs {
     /// At this level, this needs to be specified before the subcommand.
     /// <https://github.com/clap-rs/clap/issues/3002> needs to be implemented
     /// for the argument to be passed in after the subcommand.
-    #[clap(long)]
+    #[arg(long)]
     pub format: Option<OutputFormat>,
     /// Whether output should be colorized.
     ///
@@ -32,20 +32,25 @@ pub struct CliArgs {
     /// * "always": Always colorize output.
     /// * "never": Never colorize output.
     #[cfg(feature = "output_colorized")]
-    #[clap(long, default_value = "auto")]
+    #[arg(long, default_value = "auto")]
     pub color: CliColorizeOpt,
 }
 
 #[derive(Subcommand)]
 pub enum AppCycleCommand {
-    /// Downloads the web application to run.
+    /// Initializes a profile to deploy a web application.
     Init {
+        /// Name to use for the profile.
+        profile: Profile,
+        /// Type of the profile's deployed environment.
+        #[arg(short, long)]
+        r#type: EnvType,
         /// Username and repository of the application to download.
         slug: RepoSlug,
         /// Version of the application to download.
         version: Version,
         /// URL to override the default download URL.
-        #[clap(long, value_hint(ValueHint::Url))]
+        #[arg(long, value_hint(ValueHint::Url))]
         url: Option<Url>,
     },
     /// Shows or initializes the current profile.
@@ -66,11 +71,20 @@ pub enum AppCycleCommand {
         ///   the switch does not happen.
         /// * If this flag is not specified, and the profile does not exist,
         ///   then the switch does not happen.
-        #[clap(short, long)]
+        #[arg(short, long)]
         create: bool,
         /// Type of the profile's deployed environment.
         #[arg(short, long, required_if_eq("create", "true"))]
         r#type: Option<EnvType>,
+        /// Username and repository of the application to download.
+        #[arg(required_if_eq("create", "true"))]
+        slug: Option<RepoSlug>,
+        /// Version of the application to download.
+        #[arg(required_if_eq("create", "true"))]
+        version: Option<Version>,
+        /// URL to override the default download URL.
+        #[arg(short, long, value_hint(ValueHint::Url))]
+        url: Option<Url>,
     },
     /// Fetches the state of the environment.
     Fetch,
@@ -91,15 +105,6 @@ pub enum AppCycleCommand {
 
 #[derive(Subcommand)]
 pub enum ProfileCommand {
-    /// Initializes a new profile.
-    Init {
-        /// Name to use for the profile.
-        #[arg(long = "name")]
-        profile: Profile,
-        /// Type of the profile's deployed environment.
-        #[arg(short, long)]
-        r#type: EnvType,
-    },
     /// Lists available profiles.
     List,
     /// Shows the current profile, if any.

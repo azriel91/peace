@@ -1,37 +1,54 @@
 use std::path::PathBuf;
 
-use peace::rt_model::output::OutputWrite;
-use peace_item_specs::{file_download::FileDownloadParams, tar_x::TarXParams};
+use peace::{
+    cfg::{flow_id, item_spec_id, FlowId, ItemSpecId},
+    rt_model::{Flow, ItemSpecGraphBuilder},
+};
+use peace_item_specs::{
+    file_download::{FileDownloadItemSpec, FileDownloadParams},
+    tar_x::{TarXItemSpec, TarXParams},
+};
 use semver::Version;
 use url::Url;
 
-use crate::{
-    flows::AppInitFlow,
-    model::{AppCycleError, RepoSlug, WebAppFileId},
-};
+use crate::model::{AppCycleError, RepoSlug, WebAppFileId};
 
-/// Takes app init parameters and runs the [`AppInitFlow`].
+/// Flow to deploy a web application.
 #[derive(Debug)]
-pub struct AppInitCmd;
+pub struct EnvDeployFlow;
 
-impl AppInitCmd {
-    /// Takes app init parameters and runs the [`AppInitFlow`].
-    ///
-    /// # Parameters
-    ///
-    /// * `output`: Output to write the execution outcome.
-    /// * `slug`: Username and repository of the application to download.
-    /// * `version`: Version of the application to download.
-    /// * `url`: URL to override where to download the application from.
-    pub async fn run<O>(
-        output: &mut O,
-        slug: RepoSlug,
-        version: Version,
+impl EnvDeployFlow {
+    /// Returns the `Flow` graph.
+    pub async fn flow() -> Result<Flow<AppCycleError>, AppCycleError> {
+        let flow = {
+            let flow_id = flow_id!("env_deploy");
+            let graph = {
+                let mut graph_builder = ItemSpecGraphBuilder::<AppCycleError>::new();
+
+                let web_app_download_id = graph_builder.add_fn(
+                    FileDownloadItemSpec::<WebAppFileId>::new(item_spec_id!("web_app_download"))
+                        .into(),
+                );
+                let web_app_extract_id = graph_builder.add_fn(
+                    TarXItemSpec::<WebAppFileId>::new(item_spec_id!("web_app_extract")).into(),
+                );
+
+                graph_builder.add_edge(web_app_download_id, web_app_extract_id)?;
+                graph_builder.build()
+            };
+
+            Flow::new(flow_id, graph)
+        };
+
+        Ok(flow)
+    }
+
+    /// Returns the params needed for this flow.
+    pub fn params(
+        slug: &RepoSlug,
+        version: &Version,
         url: Option<Url>,
-    ) -> Result<(), AppCycleError>
-    where
-        O: OutputWrite<AppCycleError>,
-    {
+    ) -> Result<(FileDownloadParams<WebAppFileId>, TarXParams<WebAppFileId>), AppCycleError> {
         let account = slug.account();
         let repo_name = slug.repo_name();
         let web_app_download_dir = PathBuf::from_iter([account, repo_name, &format!("{version}")]);
@@ -77,6 +94,6 @@ impl AppInitCmd {
             TarXParams::<WebAppFileId>::new(tar_path, dest)
         };
 
-        AppInitFlow::run(output, web_app_file_download_params, web_app_tar_x_params).await
+        Ok((web_app_file_download_params, web_app_tar_x_params))
     }
 }

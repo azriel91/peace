@@ -1,5 +1,5 @@
 use app_cycle::{
-    cmds::{AppInitCmd, ProfileInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd},
+    cmds::{ProfileInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd, StatusCmd},
     model::{
         cli_args::{AppCycleCommand, CliArgs, ProfileCommand},
         AppCycleError, ProfileSwitch,
@@ -71,15 +71,18 @@ pub fn run() -> Result<(), AppCycleError> {
         };
 
         match command {
-            AppCycleCommand::Init { slug, version, url } => {
-                AppInitCmd::run(&mut cli_output, slug, version, url).await?;
+            AppCycleCommand::Init {
+                profile,
+                r#type,
+                slug,
+                version,
+                url,
+            } => {
+                ProfileInitCmd::run(&mut cli_output, profile, r#type, &slug, &version, url).await?;
             }
             AppCycleCommand::Profile { command } => {
                 let command = command.unwrap_or(ProfileCommand::Show);
                 match command {
-                    ProfileCommand::Init { profile, r#type } => {
-                        ProfileInitCmd::run(&mut cli_output, profile, r#type).await?;
-                    }
                     ProfileCommand::List => ProfileListCmd::run(&mut cli_output).await?,
                     ProfileCommand::Show => ProfileShowCmd::run(&mut cli_output).await?,
                 }
@@ -88,20 +91,29 @@ pub fn run() -> Result<(), AppCycleError> {
                 profile,
                 create,
                 r#type,
+                slug,
+                version,
+                url,
             } => {
                 let profile_switch = if create {
-                    let Some(env_type) = r#type else {
-                        unreachable!("`clap` should prevent the `type` parameter from being \
-                            `None` when `create` is `true`.");
+                    let Some(((env_type, slug), version)) = r#type.zip(slug).zip(version) else {
+                        unreachable!("`clap` should ensure `env_type`, `slug`, and `version` are \
+                            `Some` when `create` is `true`.");
                     };
-                    ProfileSwitch::CreateNew { profile, env_type }
+                    ProfileSwitch::CreateNew {
+                        profile,
+                        env_type,
+                        slug,
+                        version,
+                        url,
+                    }
                 } else {
                     ProfileSwitch::ToExisting { profile }
                 };
                 ProfileSwitchCmd::run(&mut cli_output, profile_switch).await?
             }
             AppCycleCommand::Fetch => todo!(),
-            AppCycleCommand::Status => todo!(),
+            AppCycleCommand::Status => StatusCmd::run(&mut cli_output).await?,
             AppCycleCommand::Desired => todo!(),
             AppCycleCommand::Diff => todo!(),
             AppCycleCommand::Push => todo!(),

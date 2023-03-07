@@ -14,19 +14,12 @@
 //! Example commands:
 //!
 //! ```bash
-//! ## Download the application
-//! app_cycle init azriel91/web_app 0.1.0
-//!
 //! ## Initialize different deployment environments
 //! ## Local development
-//! app_cycle profile init \
-//!   --name dev \
-//!   --type development
+//! app_cycle init dev --type development azriel91/web_app 0.1.1
 //!
 //! ## AWS -- defaults to reading ~/.aws/credentials
-//! app_cycle profile init \
-//!   --name demo \
-//!   --type production
+//! app_cycle init demo --type production azriel91/web_app 0.1.1
 //!
 //! ## Shows current environment
 //! app_cycle profile

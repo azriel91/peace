@@ -6,7 +6,10 @@ fn display() {
         "u8 not yet determined",
         format!("{}", ExternalOpt::<u8>::Tbd)
     );
-    assert_eq!("u8 is non-existent", format!("{}", ExternalOpt::<u8>::None));
+    assert_eq!(
+        "u8 does not exist on source",
+        format!("{}", ExternalOpt::<u8>::None)
+    );
     assert_eq!("u8: 123", format!("{}", ExternalOpt::<u8>::Value(123)));
 }
 

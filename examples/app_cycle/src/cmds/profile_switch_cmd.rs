@@ -80,8 +80,19 @@ impl ProfileSwitchCmd {
             ProfileSwitch::CreateNew {
                 profile: profile_to_create,
                 env_type,
+                slug,
+                version,
+                url,
             } => {
-                ProfileInitCmd::run(output, profile_to_create.clone(), env_type).await?;
+                ProfileInitCmd::run(
+                    output,
+                    profile_to_create.clone(),
+                    env_type,
+                    &slug,
+                    &version,
+                    url,
+                )
+                .await?;
 
                 output
                     .present(&(

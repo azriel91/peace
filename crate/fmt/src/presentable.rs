@@ -1,7 +1,10 @@
+pub use self::code_inline::CodeInline;
+
 use serde::Serialize;
 
 use crate::Presenter;
 
+mod code_inline;
 mod tuple_impl;
 
 /// A type that is presentable to a user.
