@@ -13,9 +13,9 @@ use crate::{
 
 /// Shows the current state of the environment.
 #[derive(Debug)]
-pub struct StatusCmd;
+pub struct EnvStatusCmd;
 
-impl StatusCmd {
+impl EnvStatusCmd {
     /// Shows the current state of the environment.
     ///
     /// # Parameters
