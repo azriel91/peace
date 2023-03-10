@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// [`ExternalOpt`]: crate::state::ExternalOpt
 #[enser::enser]
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum External<V> {
     /// Placeholder indicating this value is not yet defined.
     Tbd,

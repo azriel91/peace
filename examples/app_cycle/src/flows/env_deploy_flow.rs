@@ -1,9 +1,11 @@
 use std::path::PathBuf;
 
 use peace::{
-    cfg::{flow_id, item_spec_id, FlowId, ItemSpecId},
+    cfg::{flow_id, item_spec_id, FlowId, ItemSpecId, Profile},
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
+use peace_aws_iam_policy::{IamPolicyItemSpec, IamPolicyParams};
+use peace_aws_iam_role::{IamRoleItemSpec, IamRoleParams};
 use peace_item_specs::{
     file_download::{FileDownloadItemSpec, FileDownloadParams},
     tar_x::{TarXItemSpec, TarXParams},
@@ -33,6 +35,13 @@ impl EnvDeployFlow {
                     TarXItemSpec::<WebAppFileId>::new(item_spec_id!("web_app_extract")).into(),
                 );
 
+                let _iam_role_item_spec_id = graph_builder
+                    .add_fn(IamRoleItemSpec::<WebAppFileId>::new(item_spec_id!("iam_role")).into());
+
+                let _iam_policy_item_spec_id = graph_builder.add_fn(
+                    IamPolicyItemSpec::<WebAppFileId>::new(item_spec_id!("iam_policy")).into(),
+                );
+
                 graph_builder.add_edge(web_app_download_id, web_app_extract_id)?;
                 graph_builder.build()
             };
@@ -45,10 +54,11 @@ impl EnvDeployFlow {
 
     /// Returns the params needed for this flow.
     pub fn params(
+        profile: &Profile,
         slug: &RepoSlug,
         version: &Version,
         url: Option<Url>,
-    ) -> Result<(FileDownloadParams<WebAppFileId>, TarXParams<WebAppFileId>), AppCycleError> {
+    ) -> Result<EnvDeployFlowParams, AppCycleError> {
         let account = slug.account();
         let repo_name = slug.repo_name();
         let web_app_download_dir = PathBuf::from_iter([account, repo_name, &format!("{version}")]);
@@ -94,6 +104,38 @@ impl EnvDeployFlow {
             TarXParams::<WebAppFileId>::new(tar_path, dest)
         };
 
-        Ok((web_app_file_download_params, web_app_tar_x_params))
+        let iam_policy_name = profile.to_string();
+        let iam_role_name = profile.to_string();
+        let bucket_name = profile.to_string();
+        let path = String::from("/");
+
+        let iam_policy_params = {
+            let ec2_to_s3_bucket_policy = format!(
+                include_str!("ec2_to_s3_bucket_policy.json"),
+                bucket_name = bucket_name
+            );
+            IamPolicyParams::<WebAppFileId>::new(
+                iam_policy_name,
+                path.clone(),
+                ec2_to_s3_bucket_policy,
+            )
+        };
+
+        let iam_role_params = IamRoleParams::<WebAppFileId>::new(iam_role_name, path);
+
+        Ok(EnvDeployFlowParams {
+            web_app_file_download_params,
+            web_app_tar_x_params,
+            iam_policy_params,
+            iam_role_params,
+        })
     }
+}
+
+#[derive(Debug)]
+pub struct EnvDeployFlowParams {
+    pub web_app_file_download_params: FileDownloadParams<WebAppFileId>,
+    pub web_app_tar_x_params: TarXParams<WebAppFileId>,
+    pub iam_policy_params: IamPolicyParams<WebAppFileId>,
+    pub iam_role_params: IamRoleParams<WebAppFileId>,
 }

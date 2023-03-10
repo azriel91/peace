@@ -92,6 +92,22 @@ pub enum AppCycleError {
         #[from]
         peace_item_specs::tar_x::TarXError,
     ),
+    /// An `IamPolicy` item spec error occurred.
+    #[error("An `IamPolicy` item spec error occurred.")]
+    IamPolicyItemSpec(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        peace_aws_iam_policy::IamPolicyError,
+    ),
+    /// An `IamPolicy` item spec error occurred.
+    #[error("An `IamPolicy` item spec error occurred.")]
+    IamRoleItemSpec(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        peace_aws_iam_role::IamRoleError,
+    ),
 
     // === Framework errors === //
     /// A `peace` runtime error occurred.

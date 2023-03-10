@@ -9,7 +9,7 @@ use semver::Version;
 use url::Url;
 
 use crate::{
-    flows::EnvDeployFlow,
+    flows::{EnvDeployFlow, EnvDeployFlowParams},
     model::{AppCycleError, EnvType, RepoSlug},
 };
 
@@ -84,8 +84,12 @@ impl ProfileInitCmd {
 
         // --- //
 
-        let (web_app_file_download_params, web_app_tar_x_params) =
-            EnvDeployFlow::params(slug, version, url)?;
+        let EnvDeployFlowParams {
+            web_app_file_download_params,
+            web_app_tar_x_params,
+            iam_policy_params,
+            iam_role_params,
+        } = EnvDeployFlow::params(&profile_to_create, slug, version, url)?;
         let flow = EnvDeployFlow::flow().await?;
         let profile_key = String::from("profile");
 
@@ -105,6 +109,8 @@ impl ProfileInitCmd {
                     String::from("web_app_tar_x_params"),
                     Some(web_app_tar_x_params),
                 )
+                .with_flow_param_value(String::from("iam_policy_params"), Some(iam_policy_params))
+                .with_flow_param_value(String::from("iam_role_params"), Some(iam_role_params))
                 .await?
         };
 
