@@ -11,6 +11,7 @@ pub use self::{
         ws_and_profile_params_augment, ws_params_augment, ws_profile_and_flow_params_augment,
     },
     env_cmd::EnvCmd,
+    env_desired_cmd::EnvDesiredCmd,
     env_status_cmd::EnvStatusCmd,
     profile_init_cmd::ProfileInitCmd,
     profile_list_cmd::ProfileListCmd,
@@ -20,6 +21,7 @@ pub use self::{
 
 mod cmd_ctx_builder;
 mod env_cmd;
+mod env_desired_cmd;
 mod env_status_cmd;
 mod profile_init_cmd;
 mod profile_list_cmd;
