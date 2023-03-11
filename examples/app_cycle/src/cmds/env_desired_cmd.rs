@@ -1,5 +1,5 @@
 use futures::FutureExt;
-use peace::{rt::cmds::sub::StatesDesiredDiscoverCmd, rt_model::output::OutputWrite};
+use peace::{rt::cmds::sub::StatesDesiredReadCmd, rt_model::output::OutputWrite};
 
 use crate::{cmds::EnvCmd, model::AppCycleError};
 
@@ -20,9 +20,6 @@ impl EnvDesiredCmd {
     where
         O: OutputWrite<AppCycleError> + Send,
     {
-        EnvCmd::run(output, |ctx| {
-            StatesDesiredDiscoverCmd::exec(ctx).boxed_local()
-        })
-        .await
+        EnvCmd::run(output, |ctx| StatesDesiredReadCmd::exec(ctx).boxed_local()).await
     }
 }
