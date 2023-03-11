@@ -12,6 +12,7 @@ pub use self::{
     },
     env_cmd::EnvCmd,
     env_desired_cmd::EnvDesiredCmd,
+    env_discover_cmd::EnvDiscoverCmd,
     env_status_cmd::EnvStatusCmd,
     profile_init_cmd::ProfileInitCmd,
     profile_list_cmd::ProfileListCmd,
@@ -22,6 +23,7 @@ pub use self::{
 mod cmd_ctx_builder;
 mod env_cmd;
 mod env_desired_cmd;
+mod env_discover_cmd;
 mod env_status_cmd;
 mod profile_init_cmd;
 mod profile_list_cmd;

@@ -30,10 +30,10 @@
 //! app_cycle diff
 //! app_cycle push
 //! ## make config changes on server / locally
-//! app_cycle fetch
+//! app_cycle discover
 //! app_cycle diff
 //! app_cycle push # ensure compliance
-//! app_cycle fetch
+//! app_cycle discover
 //! app_cycle diff
 //! app_cycle pull # store changes
 //! app_cycle clean
