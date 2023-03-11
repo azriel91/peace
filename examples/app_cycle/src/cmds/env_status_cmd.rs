@@ -20,6 +20,6 @@ impl EnvStatusCmd {
     where
         O: OutputWrite<AppCycleError> + Send,
     {
-        EnvCmd::run(output, |ctx| StatesSavedReadCmd::exec(ctx).boxed_local()).await
+        EnvCmd::run_and_present(output, |ctx| StatesSavedReadCmd::exec(ctx).boxed_local()).await
     }
 }

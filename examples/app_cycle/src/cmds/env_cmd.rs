@@ -24,7 +24,7 @@ use crate::{
 pub struct EnvCmd;
 
 impl EnvCmd {
-    /// Shows the desired state of the environment.
+    /// Runs a command on the environment and presents the returned information.
     ///
     /// # Parameters
     ///
@@ -32,7 +32,7 @@ impl EnvCmd {
     /// * `slug`: Username and repository of the application to download.
     /// * `version`: Version of the application to download.
     /// * `url`: URL to override where to download the application from.
-    pub async fn run<O, T, F>(output: &mut O, f: F) -> Result<(), AppCycleError>
+    pub async fn run_and_present<O, T, F>(output: &mut O, f: F) -> Result<(), AppCycleError>
     where
         O: OutputWrite<AppCycleError>,
         for<'fn_once> F: FnOnce(

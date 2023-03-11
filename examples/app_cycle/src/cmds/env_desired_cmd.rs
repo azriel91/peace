@@ -20,6 +20,6 @@ impl EnvDesiredCmd {
     where
         O: OutputWrite<AppCycleError> + Send,
     {
-        EnvCmd::run(output, |ctx| StatesDesiredReadCmd::exec(ctx).boxed_local()).await
+        EnvCmd::run_and_present(output, |ctx| StatesDesiredReadCmd::exec(ctx).boxed_local()).await
     }
 }
