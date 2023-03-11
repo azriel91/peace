@@ -1,6 +1,6 @@
 use app_cycle::{
     cmds::{
-        EnvDesiredCmd, EnvDiscoverCmd, EnvStatusCmd, ProfileInitCmd, ProfileListCmd,
+        EnvDesiredCmd, EnvDiffCmd, EnvDiscoverCmd, EnvStatusCmd, ProfileInitCmd, ProfileListCmd,
         ProfileShowCmd, ProfileSwitchCmd,
     },
     model::{
@@ -118,7 +118,7 @@ pub fn run() -> Result<(), AppCycleError> {
             AppCycleCommand::Discover => EnvDiscoverCmd::run(&mut cli_output).await?,
             AppCycleCommand::Status => EnvStatusCmd::run(&mut cli_output).await?,
             AppCycleCommand::Desired => EnvDesiredCmd::run(&mut cli_output).await?,
-            AppCycleCommand::Diff => todo!(),
+            AppCycleCommand::Diff => EnvDiffCmd::run(&mut cli_output).await?,
             AppCycleCommand::Push => todo!(),
             AppCycleCommand::Pull => todo!(),
             AppCycleCommand::Clean => todo!(),

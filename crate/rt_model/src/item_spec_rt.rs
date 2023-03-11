@@ -121,7 +121,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
         resources: &Resources<SetUp>,
         states_saved: &StatesSaved,
         states_desired: &StatesDesired,
-    ) -> Result<BoxDtDisplay, E>
+    ) -> Result<Option<BoxDtDisplay>, E>
     where
         E: Debug + std::error::Error;
 
@@ -133,7 +133,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
         resources: &Resources<SetUp>,
         states_current: &StatesCurrent,
         states_desired: &StatesDesired,
-    ) -> Result<BoxDtDisplay, E>
+    ) -> Result<Option<BoxDtDisplay>, E>
     where
         E: Debug + std::error::Error;
 
