@@ -95,10 +95,8 @@ pub enum AppCycleCommand {
     /// Shows the diff between the current and desired states of the
     /// environment.
     Diff,
-    /// Pushes changes to the environment.
-    Push,
-    /// Pulls changes from the environment.
-    Pull,
+    /// Deploys / updates the environment.
+    Deploy,
     /// Cleans the current environment.
     Clean,
 }

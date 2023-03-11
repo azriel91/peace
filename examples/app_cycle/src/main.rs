@@ -1,7 +1,7 @@
 use app_cycle::{
     cmds::{
-        EnvCleanCmd, EnvDesiredCmd, EnvDiffCmd, EnvDiscoverCmd, EnvStatusCmd, ProfileInitCmd,
-        ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd,
+        EnvCleanCmd, EnvDeployCmd, EnvDesiredCmd, EnvDiffCmd, EnvDiscoverCmd, EnvStatusCmd,
+        ProfileInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd,
     },
     model::{
         cli_args::{AppCycleCommand, CliArgs, ProfileCommand},
@@ -119,8 +119,7 @@ pub fn run() -> Result<(), AppCycleError> {
             AppCycleCommand::Status => EnvStatusCmd::run(&mut cli_output).await?,
             AppCycleCommand::Desired => EnvDesiredCmd::run(&mut cli_output).await?,
             AppCycleCommand::Diff => EnvDiffCmd::run(&mut cli_output).await?,
-            AppCycleCommand::Push => todo!(),
-            AppCycleCommand::Pull => todo!(),
+            AppCycleCommand::Deploy => EnvDeployCmd::run(&mut cli_output).await?,
             AppCycleCommand::Clean => EnvCleanCmd::run(&mut cli_output).await?,
         }
 

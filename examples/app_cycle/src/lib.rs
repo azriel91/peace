@@ -28,20 +28,18 @@
 //! app_cycle status
 //! app_cycle desired
 //! app_cycle diff
-//! app_cycle push
+//! app_cycle deploy
 //! ## make config changes on server / locally
 //! app_cycle discover
 //! app_cycle diff
-//! app_cycle push # ensure compliance
-//! app_cycle discover
+//! app_cycle deploy # ensure compliance
 //! app_cycle diff
-//! app_cycle pull # store changes
 //! app_cycle clean
 //!
 //! app_cycle switch demo
 //! app_cycle status
 //! app_cycle desired
-//! app_cycle push
+//! app_cycle deploy
 //! app_cycle clean
 //!
 //! ## `diff` defaults to current profile, current and desired state.
