@@ -186,7 +186,7 @@ where
         op_check_statuses: &'f OpCheckStatuses,
     ) -> impl TryStream<Ok = FnRef<'f, ItemSpecBoxed<E>>, Error = E> {
         item_spec_graph
-            .stream()
+            .stream_rev()
             .filter(|item_spec| {
                 let exec_required = op_check_statuses
                     .get(item_spec.id())
