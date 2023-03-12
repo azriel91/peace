@@ -41,8 +41,6 @@ impl Workspace {
     ///
     /// * `app_name`: Name of the final application.
     /// * `workspace_spec`: Defines how to discover the workspace.
-    /// * `profile`: The profile / namespace that the execution is flow.
-    /// * `flow_id`: ID of the flow that is being executed.
     pub fn new(app_name: AppName, workspace_spec: WorkspaceSpec) -> Result<Self, Error> {
         let dirs = WorkspaceDirsBuilder::build(&app_name, workspace_spec)?;
         let storage = Storage;
