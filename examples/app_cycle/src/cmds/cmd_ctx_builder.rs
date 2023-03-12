@@ -49,7 +49,13 @@ macro_rules! ws_profile_and_flow_params_augment {
                 peace_aws_iam_role::IamRoleParams<
                     $crate::model::WebAppFileId
                 >
-            >(String::from("iam_role_params"));
+            >(String::from("iam_role_params"))
+            .with_flow_param::<
+                peace_aws_instance_profile::InstanceProfileParams<
+                    $crate::model::WebAppFileId
+                >
+            >(String::from("instance_profile_params"))
+            ;
     };
 }
 

@@ -6,6 +6,7 @@ use peace::{
 };
 use peace_aws_iam_policy::{IamPolicyItemSpec, IamPolicyParams};
 use peace_aws_iam_role::{IamRoleItemSpec, IamRoleParams};
+use peace_aws_instance_profile::{InstanceProfileItemSpec, InstanceProfileParams};
 use peace_item_specs::{
     file_download::{FileDownloadItemSpec, FileDownloadParams},
     tar_x::{TarXItemSpec, TarXParams},
@@ -35,14 +36,20 @@ impl EnvDeployFlow {
                     TarXItemSpec::<WebAppFileId>::new(item_spec_id!("web_app_extract")).into(),
                 );
 
-                let _iam_role_item_spec_id = graph_builder
+                let iam_role_item_spec_id = graph_builder
                     .add_fn(IamRoleItemSpec::<WebAppFileId>::new(item_spec_id!("iam_role")).into());
 
                 let _iam_policy_item_spec_id = graph_builder.add_fn(
                     IamPolicyItemSpec::<WebAppFileId>::new(item_spec_id!("iam_policy")).into(),
                 );
 
+                let instance_profile_item_spec_id = graph_builder.add_fn(
+                    InstanceProfileItemSpec::<WebAppFileId>::new(item_spec_id!("instance_profile"))
+                        .into(),
+                );
+
                 graph_builder.add_edge(web_app_download_id, web_app_extract_id)?;
+                graph_builder.add_edge(iam_role_item_spec_id, instance_profile_item_spec_id)?;
                 graph_builder.build()
             };
 
@@ -106,6 +113,7 @@ impl EnvDeployFlow {
 
         let iam_policy_name = profile.to_string();
         let iam_role_name = profile.to_string();
+        let instance_profile_name = profile.to_string();
         let bucket_name = profile.to_string();
         let path = String::from("/");
 
@@ -121,13 +129,16 @@ impl EnvDeployFlow {
             )
         };
 
-        let iam_role_params = IamRoleParams::<WebAppFileId>::new(iam_role_name, path);
+        let iam_role_params = IamRoleParams::<WebAppFileId>::new(iam_role_name, path.clone());
+        let instance_profile_params =
+            InstanceProfileParams::<WebAppFileId>::new(instance_profile_name, path, true);
 
         Ok(EnvDeployFlowParams {
             web_app_file_download_params,
             web_app_tar_x_params,
             iam_policy_params,
             iam_role_params,
+            instance_profile_params,
         })
     }
 }
@@ -138,4 +149,5 @@ pub struct EnvDeployFlowParams {
     pub web_app_tar_x_params: TarXParams<WebAppFileId>,
     pub iam_policy_params: IamPolicyParams<WebAppFileId>,
     pub iam_role_params: IamRoleParams<WebAppFileId>,
+    pub instance_profile_params: InstanceProfileParams<WebAppFileId>,
 }

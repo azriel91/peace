@@ -23,6 +23,7 @@ cfg-if = { workspace = true }
 futures = "0.3.26"
 peace = { path = "../..", default-features = false }
 peace_item_specs = { path = "../../item_specs", features = ["file_download", "tar_x"] }
+peace_aws_instance_profile = { path = "../../../peace_aws_instance_profile" }
 peace_aws_iam_policy = { path = "../../../peace_aws_iam_policy" }
 peace_aws_iam_role = { path = "../../../peace_aws_iam_role" }
 semver = "1.0.16"
@@ -49,6 +50,7 @@ error_reporting = [
     "peace_item_specs/error_reporting",
     "peace_aws_iam_policy/error_reporting",
     "peace_aws_iam_role/error_reporting",
+    "peace_aws_instance_profile/error_reporting",
 ]
 output_colorized = ["peace/output_colorized"]
 output_json = ["peace/output_json"]
@@ -57,4 +59,5 @@ output_progress = [
     "peace_item_specs/output_progress",
     "peace_aws_iam_policy/output_progress",
     "peace_aws_iam_role/output_progress",
+    "peace_aws_instance_profile/output_progress",
 ]
