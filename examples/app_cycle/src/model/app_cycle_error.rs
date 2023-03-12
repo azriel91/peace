@@ -108,8 +108,8 @@ pub enum AppCycleError {
         #[from]
         peace_aws_iam_policy::IamPolicyError,
     ),
-    /// An `IamPolicy` item spec error occurred.
-    #[error("An `IamPolicy` item spec error occurred.")]
+    /// An `IamRole` item spec error occurred.
+    #[error("An `IamRole` item spec error occurred.")]
     IamRoleItemSpec(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
