@@ -44,9 +44,12 @@ jobs:
           command: install
           args: mdbook-graphviz --version 0.1.4
 
+      # When updating this, also update ci.yml
       - name: 'Build examples'
+        # The following no longer works, because the AWS SDK uses tokio with UDP features enabled:
+        # for example in $(ls examples)
         run: |
-          for example in $(ls examples)
+          for example in download
           do wasm-pack build \
             --target web \
             --out-dir "../../doc/src/examples/pkg" \
