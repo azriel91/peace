@@ -88,6 +88,8 @@ where
         states_current: &StatesCurrent,
         op_check_statuses: &OpCheckStatuses,
     ) -> Result<(), E> {
+        // false positive: https://github.com/rust-lang/rust-clippy/issues/10482
+        #[allow(clippy::redundant_async_block)]
         Self::clean_op_spec_stream(item_spec_graph, op_check_statuses)
             .try_for_each(|item_spec| async move {
                 item_spec.clean_op_exec_dry(resources, states_current).await
@@ -173,6 +175,8 @@ where
         states_current: &StatesCurrent,
         op_check_statuses: &OpCheckStatuses,
     ) -> Result<(), E> {
+        // false positive: https://github.com/rust-lang/rust-clippy/issues/10482
+        #[allow(clippy::redundant_async_block)]
         Self::clean_op_spec_stream(item_spec_graph, op_check_statuses)
             .try_for_each(|item_spec| async move {
                 item_spec.clean_op_exec(resources, states_current).await

@@ -74,11 +74,7 @@ where
                         });
                     }
                 },
-                SdkError::ConstructionFailure(_)
-                | SdkError::TimeoutError(_)
-                | SdkError::DispatchFailure(_)
-                | SdkError::ResponseError(_)
-                | _ => {
+                _ => {
                     return Err(IamRoleError::RoleGetError {
                         role_name: name.to_string(),
                         error,

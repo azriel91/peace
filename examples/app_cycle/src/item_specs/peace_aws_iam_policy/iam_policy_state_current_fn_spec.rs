@@ -134,11 +134,7 @@ where
                             });
                         }
                     },
-                    SdkError::ConstructionFailure(_)
-                    | SdkError::TimeoutError(_)
-                    | SdkError::DispatchFailure(_)
-                    | SdkError::ResponseError(_)
-                    | _ => {
+                    _ => {
                         return Err(IamPolicyError::PolicyGetError {
                             policy_name: name.to_string(),
                             policy_path: path.to_string(),

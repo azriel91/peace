@@ -96,11 +96,7 @@ where
                         });
                     }
                 },
-                SdkError::ConstructionFailure(_)
-                | SdkError::TimeoutError(_)
-                | SdkError::DispatchFailure(_)
-                | SdkError::ResponseError(_)
-                | _ => {
+                _ => {
                     return Err(InstanceProfileError::InstanceProfileGetError {
                         instance_profile_name: name.to_string(),
                         instance_profile_path: path.to_string(),

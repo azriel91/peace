@@ -41,17 +41,17 @@ macro_rules! ws_profile_and_flow_params_augment {
                 >
             >(String::from("web_app_tar_x_params"))
             .with_flow_param::<
-                crate::item_specs::peace_aws_iam_policy::IamPolicyParams<
+                $crate::item_specs::peace_aws_iam_policy::IamPolicyParams<
                     $crate::model::WebAppFileId
                 >
             >(String::from("iam_policy_params"))
             .with_flow_param::<
-                crate::item_specs::peace_aws_iam_role::IamRoleParams<
+                $crate::item_specs::peace_aws_iam_role::IamRoleParams<
                     $crate::model::WebAppFileId
                 >
             >(String::from("iam_role_params"))
             .with_flow_param::<
-                crate::item_specs::peace_aws_instance_profile::InstanceProfileParams<
+                $crate::item_specs::peace_aws_instance_profile::InstanceProfileParams<
                     $crate::model::WebAppFileId
                 >
             >(String::from("instance_profile_params"))
