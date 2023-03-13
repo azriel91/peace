@@ -114,6 +114,8 @@ allow = [
     "ISC",
     "MIT",
     "Unicode-DFS-2016",
+    "NOASSERTION",
+    "OpenSSL",
 ]
 # List of explicitly disallowed licenses
 # See https://spdx.org/licenses/ for list of possible licenses
