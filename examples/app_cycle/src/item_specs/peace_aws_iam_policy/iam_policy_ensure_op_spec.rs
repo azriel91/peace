@@ -8,6 +8,8 @@ use crate::item_specs::peace_aws_iam_policy::{
     model::PolicyIdArnVersion, IamPolicyData, IamPolicyError, IamPolicyState, IamPolicyStateDiff,
 };
 
+use super::model::ManagedPolicyArn;
+
 /// Ensure OpSpec for the instance profile state.
 #[derive(Debug)]
 pub struct IamPolicyEnsureOpSpec<Id>(PhantomData<Id>);
@@ -75,7 +77,7 @@ where
 
     async fn exec(
         _op_ctx: OpCtx<'_>,
-        data: IamPolicyData<'_, Id>,
+        mut data: IamPolicyData<'_, Id>,
         state_current: &IamPolicyState,
         state_desired: &IamPolicyState,
         diff: &IamPolicyStateDiff,
@@ -127,6 +129,12 @@ where
                             when create_policy is successful.",
                         )
                         .to_string();
+
+                    // Hack: Remove this when referential param values is implemented.
+                    let _ = data
+                        .managed_policy_arn_mut()
+                        .insert(ManagedPolicyArn::new(policy_arn.clone()));
+
                     let policy_id_arn_version =
                         PolicyIdArnVersion::new(policy_id, policy_arn, policy_version);
 

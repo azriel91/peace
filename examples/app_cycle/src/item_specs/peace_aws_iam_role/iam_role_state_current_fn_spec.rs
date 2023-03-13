@@ -22,6 +22,11 @@ where
     type Output = IamRoleState;
 
     async fn try_exec(data: IamRoleData<'_, Id>) -> Result<Option<Self::Output>, IamRoleError> {
+        // Hack: Remove this when referential param values is implemented.
+        if data.managed_policy_arn().is_none() {
+            return Ok(None);
+        }
+
         Self::exec(data).await.map(Some)
     }
 
@@ -29,7 +34,10 @@ where
         let client = data.client();
         let name = data.params().name();
         let path = data.params().path();
-        let managed_policy_arn = data.params().managed_policy_arn();
+        let managed_policy_arn = data
+            .managed_policy_arn()
+            // Hack: Remove this when referential param values is implemented.
+            .expect("IAM Role item spec: Expected ManagedPolicyArn to be Some.");
 
         let get_role_result = client.get_role().role_name(name).send().await;
         let role_opt = match get_role_result {
@@ -99,7 +107,7 @@ where
                 attached_policies.iter().find_map(|attached_policy| {
                     attached_policy
                         .policy_arn()
-                        .map(|policy_arn| policy_arn == managed_policy_arn)
+                        .map(|policy_arn| policy_arn == managed_policy_arn.arn())
                 })
             })
             .unwrap_or(false);

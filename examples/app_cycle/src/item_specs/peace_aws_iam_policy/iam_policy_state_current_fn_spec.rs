@@ -7,6 +7,8 @@ use crate::item_specs::peace_aws_iam_policy::{
     model::PolicyIdArnVersion, IamPolicyData, IamPolicyError, IamPolicyState,
 };
 
+use super::model::ManagedPolicyArn;
+
 /// Reads the current state of the instance profile state.
 #[derive(Debug)]
 pub struct IamPolicyStateCurrentFnSpec<Id>(PhantomData<Id>);
@@ -70,7 +72,7 @@ where
         Self::exec(data).await.map(Some)
     }
 
-    async fn exec(data: IamPolicyData<'_, Id>) -> Result<Self::Output, IamPolicyError> {
+    async fn exec(mut data: IamPolicyData<'_, Id>) -> Result<Self::Output, IamPolicyError> {
         let client = data.client();
         let name = data.params().name();
         let path = data.params().path();
@@ -171,6 +173,11 @@ where
                         })
                 })
                 .expect("Expected policy version document to exist.")?;
+
+            // Hack: Remove this when referential param values is implemented.
+            let _ = data.managed_policy_arn_mut().insert(ManagedPolicyArn::new(
+                policy_id_arn_version.arn().to_string(),
+            ));
 
             let state_current = IamPolicyState::Some {
                 name: policy_name,

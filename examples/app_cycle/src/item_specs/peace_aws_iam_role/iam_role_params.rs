@@ -28,8 +28,9 @@ pub struct IamRoleParams<Id> {
     /// e.g. `/demo/`
     #[serde(default = "path_default")]
     path: String,
-    /// Managed policy ARN to attach to the role.
-    managed_policy_arn: String,
+    // TODO: Uncomment once referential values are implemented.
+    // /// Managed policy ARN to attach to the role.
+    // managed_policy_arn: String,
     /// Marker for unique instance profile parameters type.
     marker: PhantomData<Id>,
 }
@@ -39,11 +40,10 @@ fn path_default() -> String {
 }
 
 impl<Id> IamRoleParams<Id> {
-    pub fn new(name: String, path: String, managed_policy_arn: String) -> Self {
+    pub fn new(name: String, path: String) -> Self {
         Self {
             name,
             path,
-            managed_policy_arn,
             marker: PhantomData,
         }
     }
@@ -62,10 +62,5 @@ impl<Id> IamRoleParams<Id> {
     /// e.g. `/demo/`
     pub fn path(&self) -> &str {
         self.path.as_ref()
-    }
-
-    /// Returns the managed policy ARN to attach to the role.
-    pub fn managed_policy_arn(&self) -> &str {
-        self.managed_policy_arn.as_ref()
     }
 }

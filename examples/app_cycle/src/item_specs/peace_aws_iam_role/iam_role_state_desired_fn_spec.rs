@@ -19,18 +19,26 @@ where
     type Error = IamRoleError;
     type Output = IamRoleState;
 
-    async fn try_exec(
-        iam_role_data: IamRoleData<'_, Id>,
-    ) -> Result<Option<Self::Output>, IamRoleError> {
-        Self::exec(iam_role_data).await.map(Some)
+    async fn try_exec(data: IamRoleData<'_, Id>) -> Result<Option<Self::Output>, IamRoleError> {
+        // Hack: Remove this when referential param values is implemented.
+        if data.managed_policy_arn().is_none() {
+            return Ok(None);
+        }
+
+        Self::exec(data).await.map(Some)
     }
 
-    async fn exec(iam_role_data: IamRoleData<'_, Id>) -> Result<Self::Output, IamRoleError> {
-        let params = iam_role_data.params();
+    async fn exec(data: IamRoleData<'_, Id>) -> Result<Self::Output, IamRoleError> {
+        let params = data.params();
         let name = params.name().to_string();
         let path = params.path().to_string();
-        let managed_policy_attachment =
-            ManagedPolicyAttachment::new(params.managed_policy_arn().to_string(), true);
+        let managed_policy_attachment = ManagedPolicyAttachment::new(
+            data.managed_policy_arn()
+                // Hack: Remove this when referential param values is implemented.
+                .expect("IAM Role item spec: Expected ManagedPolicyArn to be Some.")
+                .to_string(),
+            true,
+        );
         let role_id_and_arn = Generated::Tbd;
 
         Ok(IamRoleState::Some {
