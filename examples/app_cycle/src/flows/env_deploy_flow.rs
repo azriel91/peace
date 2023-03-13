@@ -43,7 +43,7 @@ impl EnvDeployFlow {
                 let iam_role_item_spec_id = graph_builder
                     .add_fn(IamRoleItemSpec::<WebAppFileId>::new(item_spec_id!("iam_role")).into());
 
-                let _iam_policy_item_spec_id = graph_builder.add_fn(
+                let iam_policy_item_spec_id = graph_builder.add_fn(
                     IamPolicyItemSpec::<WebAppFileId>::new(item_spec_id!("iam_policy")).into(),
                 );
 
@@ -53,6 +53,7 @@ impl EnvDeployFlow {
                 );
 
                 graph_builder.add_edge(web_app_download_id, web_app_extract_id)?;
+                graph_builder.add_edge(iam_policy_item_spec_id, iam_role_item_spec_id)?;
                 graph_builder.add_edge(iam_role_item_spec_id, instance_profile_item_spec_id)?;
                 graph_builder.build()
             };
