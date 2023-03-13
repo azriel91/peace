@@ -1,5 +1,5 @@
 [files]
-extend-exclude = ["doc/book/*"]
+extend-exclude = ["doc/book/*", "doc/src/licenses.html"]
 
 [default.extend-words]
 # HTML tag is incorrectly identified.
