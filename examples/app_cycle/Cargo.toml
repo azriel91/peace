@@ -19,17 +19,17 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 aws-config = "0.54.1"
+aws-sdk-iam = "0.24.0"
 cfg-if = { workspace = true }
+derivative = { workspace = true }
 futures = "0.3.26"
 peace = { path = "../..", default-features = false }
 peace_item_specs = { path = "../../item_specs", features = ["file_download", "tar_x"] }
-peace_aws_instance_profile = { path = "../../../peace_aws_instance_profile" }
-peace_aws_iam_policy = { path = "../../../peace_aws_iam_policy" }
-peace_aws_iam_role = { path = "../../../peace_aws_iam_role" }
 semver = "1.0.16"
 serde = { version = "1.0.152", features = ["derive"] }
 thiserror = "1.0.38"
 url = { version = "2.3.1", features = ["serde"] }
+urlencoding = "2.1.2"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 clap = { version = "4.1.8", features = ["derive"] }
@@ -48,16 +48,10 @@ default = []
 error_reporting = [
     "peace/error_reporting",
     "peace_item_specs/error_reporting",
-    "peace_aws_iam_policy/error_reporting",
-    "peace_aws_iam_role/error_reporting",
-    "peace_aws_instance_profile/error_reporting",
 ]
 output_colorized = ["peace/output_colorized"]
 output_json = ["peace/output_json"]
 output_progress = [
     "peace/output_progress",
     "peace_item_specs/output_progress",
-    "peace_aws_iam_policy/output_progress",
-    "peace_aws_iam_role/output_progress",
-    "peace_aws_instance_profile/output_progress",
 ]

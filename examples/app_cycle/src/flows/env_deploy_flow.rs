@@ -4,9 +4,6 @@ use peace::{
     cfg::{flow_id, item_spec_id, FlowId, ItemSpecId, Profile},
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
-use peace_aws_iam_policy::{IamPolicyItemSpec, IamPolicyParams};
-use peace_aws_iam_role::{IamRoleItemSpec, IamRoleParams};
-use peace_aws_instance_profile::{InstanceProfileItemSpec, InstanceProfileParams};
 use peace_item_specs::{
     file_download::{FileDownloadItemSpec, FileDownloadParams},
     tar_x::{TarXItemSpec, TarXParams},
@@ -14,7 +11,14 @@ use peace_item_specs::{
 use semver::Version;
 use url::Url;
 
-use crate::model::{AppCycleError, RepoSlug, WebAppFileId};
+use crate::{
+    item_specs::{
+        peace_aws_iam_policy::{IamPolicyItemSpec, IamPolicyParams},
+        peace_aws_iam_role::{IamRoleItemSpec, IamRoleParams},
+        peace_aws_instance_profile::{InstanceProfileItemSpec, InstanceProfileParams},
+    },
+    model::{AppCycleError, RepoSlug, WebAppFileId},
+};
 
 /// Flow to deploy a web application.
 #[derive(Debug)]
