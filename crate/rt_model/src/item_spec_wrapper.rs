@@ -943,10 +943,13 @@ where
             if let Some(state) = state {
                 <CleanOpSpec as peace_cfg::CleanOpSpec>::check(data, state).await?
             } else {
-                panic!(
-                    "`ItemSpecWrapper::clean_op_check` must only be called with `StatesCurrent`, `StatesDesired`, and \
-                    `StateDiffs` populated using `DiffCmd`."
-                );
+                // When we reach here, one of the following is true:
+                //
+                // * The current state cannot be retrieved, due to a predecessor's state not
+                //   existing.
+                // * A bug exists, e.g. the state is stored against the wrong type parameter.
+
+                OpCheckStatus::ExecNotRequired
             }
         };
 
@@ -968,9 +971,12 @@ where
         if let Some(state) = state {
             <CleanOpSpec as peace_cfg::CleanOpSpec>::exec_dry(data, state).await?;
         } else {
-            panic!(
-                "`ItemSpecWrapper::clean_op_exec_dry` must only be called with `StatesCurrent` populated using `StatesCurrentDiscoverCmd`."
-            );
+            // When we reach here, one of the following is true:
+            //
+            // * The current state cannot be retrieved, due to a predecessor's
+            //   state not existing.
+            // * A bug exists, e.g. the state is stored against the wrong type
+            //   parameter.
         }
 
         Ok(())
@@ -991,9 +997,12 @@ where
         if let Some(state) = state {
             <CleanOpSpec as peace_cfg::CleanOpSpec>::exec(data, state).await?;
         } else {
-            panic!(
-                "`ItemSpecWrapper::clean_op_exec` must only be called with `StatesCurrent` populated using `StatesCurrentDiscoverCmd`."
-            );
+            // When we reach here, one of the following is true:
+            //
+            // * The current state cannot be retrieved, due to a predecessor's
+            //   state not existing.
+            // * A bug exists, e.g. the state is stored against the wrong type
+            //   parameter.
         }
 
         Ok(())
