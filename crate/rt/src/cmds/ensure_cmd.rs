@@ -242,10 +242,18 @@ where
             while let Some(outcome) = outcomes_rx.recv().await {
                 match outcome {
                     ItemEnsureOutcome::PrepareFail {
-                        item_spec_id: _,
+                        item_spec_id,
                         item_ensure_partial: _,
-                        error: _,
-                    } => todo!(),
+                        error,
+                    } => {
+                        eprintln!("{item_spec_id}:");
+                        let mut error = error.source();
+                        while let Some(source) = error {
+                            eprintln!("  caused by: {source}");
+                            error = source.source();
+                        }
+                        todo!();
+                    }
                     ItemEnsureOutcome::Success {
                         item_spec_id,
                         item_ensure,

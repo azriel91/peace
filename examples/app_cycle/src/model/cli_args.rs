@@ -86,8 +86,8 @@ pub enum AppCycleCommand {
         #[arg(short, long, value_hint(ValueHint::Url))]
         url: Option<Url>,
     },
-    /// Fetches the state of the environment.
-    Fetch,
+    /// Discovers the state of the environment.
+    Discover,
     /// Shows the state of the environment.
     Status,
     /// Shows the desired state of the environment.
@@ -95,10 +95,8 @@ pub enum AppCycleCommand {
     /// Shows the diff between the current and desired states of the
     /// environment.
     Diff,
-    /// Pushes changes to the environment.
-    Push,
-    /// Pulls changes from the environment.
-    Pull,
+    /// Deploys / updates the environment.
+    Deploy,
     /// Cleans the current environment.
     Clean,
 }

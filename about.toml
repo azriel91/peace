@@ -4,4 +4,6 @@ accepted = [
     "ISC",
     "MIT",
     "Unicode-DFS-2016",
+    "NOASSERTION",
+    "OpenSSL",
 ]

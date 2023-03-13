@@ -122,7 +122,8 @@ async fn state_diff_exec_with_states_saved() -> Result<(), VecCopyError> {
 
     let state_diff = item_spec_wrapper
         .state_diff_exec_with_states_saved(&resources, &states_saved, &states_desired)
-        .await?;
+        .await?
+        .expect("Expected state_diff to be Some when state_saved and state_desired both exist.");
 
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
@@ -256,7 +257,10 @@ async fn resources_with_state_current_diffs(
         let mut state_diffs_mut = StateDiffsMut::new();
         let state_desired = item_spec_wrapper
             .state_diff_exec_with_states_current(&resources, &states_current, &states_desired)
-            .await?;
+            .await?
+            .expect(
+                "Expected state_diff to be Some when state_saved and state_desired both exist.",
+            );
         state_diffs_mut.insert_raw(
             <dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(),
             state_desired,

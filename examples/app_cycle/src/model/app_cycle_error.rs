@@ -92,6 +92,30 @@ pub enum AppCycleError {
         #[from]
         peace_item_specs::tar_x::TarXError,
     ),
+    /// An `InstanceProfile` item spec error occurred.
+    #[error("An `InstanceProfile` item spec error occurred.")]
+    InstanceProfileItemSpec(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        crate::item_specs::peace_aws_instance_profile::InstanceProfileError,
+    ),
+    /// An `IamPolicy` item spec error occurred.
+    #[error("An `IamPolicy` item spec error occurred.")]
+    IamPolicyItemSpec(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        crate::item_specs::peace_aws_iam_policy::IamPolicyError,
+    ),
+    /// An `IamRole` item spec error occurred.
+    #[error("An `IamRole` item spec error occurred.")]
+    IamRoleItemSpec(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        crate::item_specs::peace_aws_iam_role::IamRoleError,
+    ),
 
     // === Framework errors === //
     /// A `peace` runtime error occurred.

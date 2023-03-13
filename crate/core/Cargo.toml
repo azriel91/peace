@@ -21,8 +21,8 @@ chrono = { workspace = true, default-features = false, features = ["clock", "ser
 indicatif = { workspace = true }
 peace_fmt = { path = "../fmt", version = "0.0.7" }
 peace_static_check_macros = { path = "../static_check_macros", version = "0.0.7" }
-serde = { version = "1.0.152", features = ["derive"] }
-serde_yaml = { version = "0.9.17", optional = true }
+serde = { version = "1.0.155", features = ["derive"] }
+serde_yaml = { version = "0.9.19", optional = true }
 tokio = { workspace = true, optional = true, features = ["sync"] }
 
 [features]

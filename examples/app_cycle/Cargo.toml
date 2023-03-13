@@ -18,21 +18,25 @@ test = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+aws-config = "0.54.1"
+aws-sdk-iam = "0.24.0"
 cfg-if = { workspace = true }
-futures = "0.3.26"
+derivative = { workspace = true }
+futures = "0.3.27"
 peace = { path = "../..", default-features = false }
 peace_item_specs = { path = "../../item_specs", features = ["file_download", "tar_x"] }
-semver = "1.0.16"
-serde = { version = "1.0.152", features = ["derive"] }
-thiserror = "1.0.38"
+semver = "1.0.17"
+serde = { version = "1.0.155", features = ["derive"] }
+thiserror = "1.0.39"
 url = { version = "2.3.1", features = ["serde"] }
+urlencoding = "2.1.2"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 clap = { version = "4.1.8", features = ["derive"] }
 tokio = { workspace = true, features = ["rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-serde-wasm-bindgen = "0.4.5"
+serde-wasm-bindgen = "0.5.0"
 tokio = { workspace = true }
 wasm-bindgen = "0.2.84"
 wasm-bindgen-futures = "0.4.34"
@@ -41,7 +45,13 @@ web-sys = "0.3.61"
 
 [features]
 default = []
-error_reporting = ["peace/error_reporting", "peace_item_specs/error_reporting"]
+error_reporting = [
+    "peace/error_reporting",
+    "peace_item_specs/error_reporting",
+]
 output_colorized = ["peace/output_colorized"]
 output_json = ["peace/output_json"]
-output_progress = ["peace/output_progress", "peace_item_specs/output_progress"]
+output_progress = [
+    "peace/output_progress",
+    "peace_item_specs/output_progress",
+]

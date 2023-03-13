@@ -200,29 +200,30 @@ where
         resources: &Resources<ResourcesTs>,
         states_base: &States<StatesTs>,
         states_desired: &StatesDesired,
-    ) -> Result<StateDiff, E>
+    ) -> Result<Option<StateDiff>, E>
     where
         StatesTs: Debug + Send + Sync + 'static,
     {
-        let state_diff: StateDiff = {
-            let item_spec_id = <IS as ItemSpec>::id(self);
-            let state_base = states_base.get::<State, _>(item_spec_id);
-            let state_desired = states_desired.get::<State, _>(item_spec_id);
+        let item_spec_id = <IS as ItemSpec>::id(self);
+        let state_base = states_base.get::<State, _>(item_spec_id);
+        let state_desired = states_desired.get::<State, _>(item_spec_id);
 
-            if let (Some(state_base), Some(state_desired)) = (state_base, state_desired) {
-                self.state_diff_exec_with(resources, state_base, state_desired)
-                    .await?
-            } else {
-                panic!(
-                    "`ItemSpecWrapper::state_diff_exec<{StatesTs}>` must be called after \
-                    `States<{StatesTs}>` and `StatesDesired` are populated, e.g. using `StatesSavedReadCmd` and \
-                    `StatesDesiredDiscoverCmd`.",
-                    StatesTs = std::any::type_name::<StatesTs>()
-                );
-            }
-        };
+        if let Some((state_base, state_desired)) = state_base.zip(state_desired) {
+            let state_diff: StateDiff = self
+                .state_diff_exec_with(resources, state_base, state_desired)
+                .await?;
+            Ok(Some(state_diff))
+        } else {
+            // When we reach here, one of the following is true:
+            //
+            // * The current state cannot be retrieved, due to a predecessor's state not
+            //   existing.
+            // * The desired state cannot be retrieved, due to a predecessor's state not
+            //   existing.
+            // * A bug exists, e.g. the state is stored against the wrong type parameter.
 
-        Ok(state_diff)
+            Ok(None)
+        }
     }
 
     async fn state_diff_exec_with<ResourcesTs>(
@@ -764,10 +765,10 @@ where
         resources: &Resources<SetUp>,
         states_saved: &StatesSaved,
         states_desired: &StatesDesired,
-    ) -> Result<BoxDtDisplay, E> {
+    ) -> Result<Option<BoxDtDisplay>, E> {
         self.state_diff_exec(resources, states_saved, states_desired)
             .await
-            .map(BoxDtDisplay::new)
+            .map(|state_diff_opt| state_diff_opt.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
     }
 
@@ -776,10 +777,10 @@ where
         resources: &Resources<SetUp>,
         states_current: &StatesCurrent,
         states_desired: &StatesDesired,
-    ) -> Result<BoxDtDisplay, E> {
+    ) -> Result<Option<BoxDtDisplay>, E> {
         self.state_diff_exec(resources, states_current, states_desired)
             .await
-            .map(BoxDtDisplay::new)
+            .map(|state_diff_opt| state_diff_opt.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
     }
 
@@ -942,10 +943,13 @@ where
             if let Some(state) = state {
                 <CleanOpSpec as peace_cfg::CleanOpSpec>::check(data, state).await?
             } else {
-                panic!(
-                    "`ItemSpecWrapper::clean_op_check` must only be called with `StatesCurrent`, `StatesDesired`, and \
-                    `StateDiffs` populated using `DiffCmd`."
-                );
+                // When we reach here, one of the following is true:
+                //
+                // * The current state cannot be retrieved, due to a predecessor's state not
+                //   existing.
+                // * A bug exists, e.g. the state is stored against the wrong type parameter.
+
+                OpCheckStatus::ExecNotRequired
             }
         };
 
@@ -967,9 +971,12 @@ where
         if let Some(state) = state {
             <CleanOpSpec as peace_cfg::CleanOpSpec>::exec_dry(data, state).await?;
         } else {
-            panic!(
-                "`ItemSpecWrapper::clean_op_exec_dry` must only be called with `StatesCurrent` populated using `StatesCurrentDiscoverCmd`."
-            );
+            // When we reach here, one of the following is true:
+            //
+            // * The current state cannot be retrieved, due to a predecessor's
+            //   state not existing.
+            // * A bug exists, e.g. the state is stored against the wrong type
+            //   parameter.
         }
 
         Ok(())
@@ -990,9 +997,12 @@ where
         if let Some(state) = state {
             <CleanOpSpec as peace_cfg::CleanOpSpec>::exec(data, state).await?;
         } else {
-            panic!(
-                "`ItemSpecWrapper::clean_op_exec` must only be called with `StatesCurrent` populated using `StatesCurrentDiscoverCmd`."
-            );
+            // When we reach here, one of the following is true:
+            //
+            // * The current state cannot be retrieved, due to a predecessor's
+            //   state not existing.
+            // * A bug exists, e.g. the state is stored against the wrong type
+            //   parameter.
         }
 
         Ok(())

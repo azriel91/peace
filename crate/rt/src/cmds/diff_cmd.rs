@@ -48,17 +48,16 @@ where
             let state_diffs_mut = item_spec_graph
                 .stream()
                 .map(Result::<_, E>::Ok)
-                .and_then(|item_spec| async move {
-                    Ok((
-                        item_spec.id().clone(),
-                        item_spec
-                            .state_diff_exec_with_states_saved(
-                                resources_ref,
-                                states_saved_ref,
-                                states_desired_ref,
-                            )
-                            .await?,
-                    ))
+                .try_filter_map(|item_spec| async move {
+                    let state_diff_opt = item_spec
+                        .state_diff_exec_with_states_saved(
+                            resources_ref,
+                            states_saved_ref,
+                            states_desired_ref,
+                        )
+                        .await?;
+
+                    Ok(state_diff_opt.map(|state_diff| (item_spec.id().clone(), state_diff)))
                 })
                 .try_collect::<StateDiffsMut>()
                 .await?;

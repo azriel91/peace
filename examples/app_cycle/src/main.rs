@@ -1,5 +1,8 @@
 use app_cycle::{
-    cmds::{ProfileInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd, StatusCmd},
+    cmds::{
+        EnvCleanCmd, EnvDeployCmd, EnvDesiredCmd, EnvDiffCmd, EnvDiscoverCmd, EnvStatusCmd,
+        ProfileInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd,
+    },
     model::{
         cli_args::{AppCycleCommand, CliArgs, ProfileCommand},
         AppCycleError, ProfileSwitch,
@@ -112,13 +115,12 @@ pub fn run() -> Result<(), AppCycleError> {
                 };
                 ProfileSwitchCmd::run(&mut cli_output, profile_switch).await?
             }
-            AppCycleCommand::Fetch => todo!(),
-            AppCycleCommand::Status => StatusCmd::run(&mut cli_output).await?,
-            AppCycleCommand::Desired => todo!(),
-            AppCycleCommand::Diff => todo!(),
-            AppCycleCommand::Push => todo!(),
-            AppCycleCommand::Pull => todo!(),
-            AppCycleCommand::Clean => todo!(),
+            AppCycleCommand::Discover => EnvDiscoverCmd::run(&mut cli_output).await?,
+            AppCycleCommand::Status => EnvStatusCmd::run(&mut cli_output).await?,
+            AppCycleCommand::Desired => EnvDesiredCmd::run(&mut cli_output).await?,
+            AppCycleCommand::Diff => EnvDiffCmd::run(&mut cli_output).await?,
+            AppCycleCommand::Deploy => EnvDeployCmd::run(&mut cli_output).await?,
+            AppCycleCommand::Clean => EnvCleanCmd::run(&mut cli_output).await?,
         }
 
         Ok::<_, AppCycleError>(())
