@@ -20,7 +20,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 peace = { path = "../..", default-features = false }
 peace_item_specs = { path = "../../item_specs", features = ["file_download"] }
-thiserror = "1.0.38"
+thiserror = "1.0.39"
 url = { version = "2.3.1", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
@@ -29,7 +29,7 @@ tokio = { workspace = true, features = ["net", "time", "rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1.7"
-serde-wasm-bindgen = "0.4.5"
+serde-wasm-bindgen = "0.5.0"
 tokio = { workspace = true }
 wasm-bindgen = "0.2.84"
 wasm-bindgen-futures = "0.4.34"

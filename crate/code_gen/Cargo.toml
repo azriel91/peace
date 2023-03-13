@@ -18,5 +18,5 @@ test = false
 
 [dependencies]
 syn = { version = "1.0.109", features = ["full"] }
-quote = "1.0.23"
-proc-macro2 = "1.0.51"
+quote = "1.0.25"
+proc-macro2 = "1.0.52"

@@ -20,6 +20,6 @@ peace_core = { version = "0.0.7", path = "../core" }
 peace_data = { version = "0.0.7", path = "../data" }
 peace_fmt = { version = "0.0.7", path = "../fmt" }
 resman = { version = "0.16.0", features = ["debug"] }
-serde = { version = "1.0.152", features = ["derive"] }
+serde = { version = "1.0.155", features = ["derive"] }
 tokio = { workspace = true, features = ["sync"] }
 type_reg = { workspace = true }

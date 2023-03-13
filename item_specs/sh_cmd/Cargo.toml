@@ -16,12 +16,12 @@ doctest = true
 test = false
 
 [dependencies]
-chrono = { version = "0.4.23", default-features = false, features = ["clock", "serde"] }
+chrono = { version = "0.4.24", default-features = false, features = ["clock", "serde"] }
 derivative = { workspace = true }
 miette = { workspace = true, optional = true }
 peace = { path = "../..", version = "0.0.7", default-features = false }
-serde = { version = "1.0.152", features = ["derive"] }
-thiserror = "1.0.38"
+serde = { version = "1.0.155", features = ["derive"] }
+thiserror = "1.0.39"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { workspace = true, features = ["process"] }

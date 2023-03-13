@@ -21,11 +21,11 @@ miette = { workspace = true, optional = true }
 peace_core = { path = "../core", version = "0.0.7" }
 peace_resources = { path = "../resources", version = "0.0.7" }
 peace_rt_model_core = { path = "../rt_model_core", version = "0.0.7" }
-serde = "1.0.152"
-serde-wasm-bindgen = "0.4.5"
-serde_json = { version = "1.0.93", optional = true }
-serde_yaml = "0.9.17"
-thiserror = "1.0.38"
+serde = "1.0.155"
+serde-wasm-bindgen = "0.5.0"
+serde_json = { version = "1.0.94", optional = true }
+serde_yaml = "0.9.19"
+thiserror = "1.0.39"
 wasm-bindgen = "0.2.84"
 web-sys = { version = "0.3.61", features = ["Storage", "Window"] }
 
