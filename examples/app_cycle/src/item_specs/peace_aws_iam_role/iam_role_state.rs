@@ -3,9 +3,9 @@ use std::fmt;
 use peace::cfg::state::Generated;
 use serde::{Deserialize, Serialize};
 
-use crate::item_specs::peace_aws_iam_role::model::RoleIdAndArn;
+use crate::item_specs::peace_aws_iam_role::model::{ManagedPolicyAttachment, RoleIdAndArn};
 
-/// Instance profile state.
+/// IAM role state.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub enum IamRoleState {
     /// Instance profile does not exist.
@@ -27,6 +27,8 @@ pub enum IamRoleState {
         path: String,
         /// The stable and unique IDs identifying the role.
         role_id_and_arn: Generated<RoleIdAndArn>,
+        /// Managed policy to attach to the role.
+        managed_policy_attachment: ManagedPolicyAttachment,
     },
 }
 
@@ -42,6 +44,7 @@ impl fmt::Display for IamRoleState {
                 name,
                 path,
                 role_id_and_arn,
+                managed_policy_attachment,
             } => {
                 let role_exists = match role_id_and_arn {
                     Generated::Tbd => String::from("should exist"),
@@ -50,8 +53,16 @@ impl fmt::Display for IamRoleState {
                         format!("exists with id {role_id}")
                     }
                 };
+                let managed_policy_attached = if managed_policy_attachment.attached() {
+                    "attached with same named managed policy"
+                } else {
+                    "but managed policy not attached"
+                };
 
-                write!(f, "{path}{name} role {role_exists}")
+                write!(
+                    f,
+                    "{path}{name} role {role_exists}, {managed_policy_attached}"
+                )
             }
         }
     }

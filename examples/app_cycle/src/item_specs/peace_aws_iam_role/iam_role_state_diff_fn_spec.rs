@@ -27,11 +27,13 @@ impl StateDiffFnSpec for IamRoleStateDiffFnSpec {
                     name: name_current,
                     path: path_current,
                     role_id_and_arn: _,
+                    managed_policy_attachment: managed_policy_attachment_current,
                 },
                 IamRoleState::Some {
                     name: name_desired,
                     path: path_desired,
                     role_id_and_arn: _,
+                    managed_policy_attachment: managed_policy_attachment_desired,
                 },
             ) => {
                 let name_diff = if name_current != name_desired {
@@ -47,9 +49,13 @@ impl StateDiffFnSpec for IamRoleStateDiffFnSpec {
                 };
 
                 if name_diff.is_none() && path_diff.is_none() {
-                    IamRoleStateDiff::InSyncExists
+                    if managed_policy_attachment_current != managed_policy_attachment_desired {
+                        todo!();
+                    } else {
+                        IamRoleStateDiff::InSyncExists
+                    }
                 } else {
-                    IamRoleStateDiff::Modified {
+                    IamRoleStateDiff::NameOrPathModified {
                         name_diff,
                         path_diff,
                     }

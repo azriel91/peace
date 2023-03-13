@@ -2,7 +2,10 @@
 use peace::miette;
 
 use aws_sdk_iam::{
-    error::{CreateRoleError, DeleteRoleError, GetRoleError},
+    error::{
+        AttachRolePolicyError, CreateRoleError, DeleteRoleError, DetachRolePolicyError,
+        GetRoleError, ListAttachedRolePoliciesError,
+    },
     types::SdkError,
 };
 
@@ -10,6 +13,15 @@ use aws_sdk_iam::{
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 pub enum IamRoleError {
+    /// Role name or path was attempted to be modified.
+    #[error("Role name or path modification is not supported.")]
+    NameOrPathModificationNotSupported {
+        /// Whether the name has been changed.
+        name_diff: Option<(String, String)>,
+        /// Whether the path has been changed.
+        path_diff: Option<(String, String)>,
+    },
+
     /// A `peace` runtime error occurred.
     #[error("A `peace` runtime error occurred.")]
     PeaceRtError(
@@ -18,6 +30,44 @@ pub enum IamRoleError {
         #[from]
         peace::rt_model::Error,
     ),
+
+    /// Failed to attach managed policy.
+    #[error("Failed to attach managed policy.")]
+    ManagedPolicyAttachError {
+        /// Role friendly name.
+        role_name: String,
+        /// Role path.
+        role_path: String,
+        /// ARN of the managed policy.
+        managed_policy_arn: String,
+        /// Underlying error.
+        #[source]
+        error: SdkError<AttachRolePolicyError>,
+    },
+
+    /// Failed to detach managed policy.
+    #[error("Failed to detach managed policy.")]
+    ManagedPolicyDetachError {
+        /// Role friendly name.
+        role_name: String,
+        /// Role path.
+        role_path: String,
+        /// Underlying error.
+        #[source]
+        error: SdkError<DetachRolePolicyError>,
+    },
+
+    /// Failed to list managed policies for role.
+    #[error("Failed to list managed policies for role.")]
+    ManagedPoliciesListError {
+        /// Role friendly name.
+        role_name: String,
+        /// Role path.
+        role_path: String,
+        /// Underlying error.
+        #[source]
+        error: SdkError<ListAttachedRolePoliciesError>,
+    },
 
     /// Failed to create role.
     #[error("Failed to create role.")]

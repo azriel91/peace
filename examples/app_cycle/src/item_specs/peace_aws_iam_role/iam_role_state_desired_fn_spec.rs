@@ -2,7 +2,9 @@ use std::marker::PhantomData;
 
 use peace::cfg::{async_trait, state::Generated, TryFnSpec};
 
-use crate::item_specs::peace_aws_iam_role::{IamRoleData, IamRoleError, IamRoleState};
+use crate::item_specs::peace_aws_iam_role::{
+    model::ManagedPolicyAttachment, IamRoleData, IamRoleError, IamRoleState,
+};
 
 /// Reads the desired state of the instance profile state.
 #[derive(Debug)]
@@ -27,12 +29,15 @@ where
         let params = iam_role_data.params();
         let name = params.name().to_string();
         let path = params.path().to_string();
+        let managed_policy_attachment =
+            ManagedPolicyAttachment::new(params.managed_policy_arn().to_string(), true);
         let role_id_and_arn = Generated::Tbd;
 
         Ok(IamRoleState::Some {
             name,
             path,
             role_id_and_arn,
+            managed_policy_attachment,
         })
     }
 }

@@ -4,7 +4,8 @@ use aws_sdk_iam::{error::GetRoleErrorKind, types::SdkError};
 use peace::cfg::{async_trait, state::Generated, TryFnSpec};
 
 use crate::item_specs::peace_aws_iam_role::{
-    model::RoleIdAndArn, IamRoleData, IamRoleError, IamRoleState,
+    model::{ManagedPolicyAttachment, RoleIdAndArn},
+    IamRoleData, IamRoleError, IamRoleState,
 };
 
 /// Reads the current state of the instance profile state.
@@ -28,6 +29,7 @@ where
         let client = data.client();
         let name = data.params().name();
         let path = data.params().path();
+        let managed_policy_arn = data.params().managed_policy_arn();
 
         let get_role_result = client.get_role().role_name(name).send().await;
         let role_opt = match get_role_result {
@@ -80,6 +82,30 @@ where
             },
         };
 
+        let list_attached_role_policies_output = client
+            .list_attached_role_policies()
+            .role_name(name)
+            .path_prefix(path)
+            .send()
+            .await
+            .map_err(|error| IamRoleError::ManagedPoliciesListError {
+                role_name: name.to_string(),
+                role_path: path.to_string(),
+                error,
+            })?;
+        let attached = list_attached_role_policies_output
+            .attached_policies()
+            .and_then(|attached_policies| {
+                attached_policies.iter().find_map(|attached_policy| {
+                    attached_policy
+                        .policy_arn()
+                        .map(|policy_arn| policy_arn == managed_policy_arn)
+                })
+            })
+            .unwrap_or(false);
+        let managed_policy_attachment =
+            ManagedPolicyAttachment::new(managed_policy_arn.to_string(), attached);
+
         match role_opt {
             None => Ok(IamRoleState::None),
             Some((role_name, role_path, role_id_and_arn)) => {
@@ -90,6 +116,7 @@ where
                     name: name.to_string(),
                     path: path.to_string(),
                     role_id_and_arn: Generated::Value(role_id_and_arn),
+                    managed_policy_attachment,
                 };
 
                 Ok(state_current)

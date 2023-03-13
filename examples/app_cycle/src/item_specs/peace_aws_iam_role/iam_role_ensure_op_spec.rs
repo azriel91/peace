@@ -5,7 +5,8 @@ use peace::cfg::progress::ProgressLimit;
 use peace::cfg::{async_trait, state::Generated, EnsureOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
-    model::RoleIdAndArn, IamRoleData, IamRoleError, IamRoleState, IamRoleStateDiff,
+    model::RoleIdAndArn, IamRoleCleanOpSpec, IamRoleData, IamRoleError, IamRoleState,
+    IamRoleStateDiff,
 };
 
 /// Ensure OpSpec for the instance profile state.
@@ -37,7 +38,7 @@ where
                     }
                     #[cfg(feature = "output_progress")]
                     {
-                        let progress_limit = ProgressLimit::Steps(3);
+                        let progress_limit = ProgressLimit::Steps(2);
                         OpCheckStatus::ExecRequired { progress_limit }
                     }
                 };
@@ -50,7 +51,24 @@ where
                     An ensure should never remove an instance profile."
                 );
             }
-            IamRoleStateDiff::Modified {
+            IamRoleStateDiff::ManagedPolicyAttachmentModified { .. } => {
+                let op_check_status = {
+                    #[cfg(not(feature = "output_progress"))]
+                    {
+                        OpCheckStatus::ExecRequired
+                    }
+                    #[cfg(feature = "output_progress")]
+                    {
+                        // Technically could be 2, if we detach an existing before attaching
+                        // another.
+                        let progress_limit = ProgressLimit::Steps(1);
+                        OpCheckStatus::ExecRequired { progress_limit }
+                    }
+                };
+
+                Ok(op_check_status)
+            }
+            IamRoleStateDiff::NameOrPathModified {
                 name_diff,
                 path_diff,
             } => Err(IamRoleError::RoleModificationNotSupported {
@@ -89,11 +107,12 @@ where
                     name,
                     path,
                     role_id_and_arn: _,
+                    managed_policy_attachment,
                 } => {
                     let assume_role_policy_document =
                         include_str!("ec2_assume_role_policy_document.json");
-                    let role_create_output = data
-                        .client()
+                    let client = data.client();
+                    let role_create_output = client
                         .create_role()
                         .role_name(name)
                         .path(path)
@@ -115,6 +134,19 @@ where
                         .arn()
                         .expect("Expected role ARN to be Some when created.");
 
+                    client
+                        .attach_role_policy()
+                        .role_name(name)
+                        .policy_arn(managed_policy_attachment.arn())
+                        .send()
+                        .await
+                        .map_err(|error| IamRoleError::ManagedPolicyAttachError {
+                            role_name: name.clone(),
+                            role_path: path.clone(),
+                            managed_policy_arn: managed_policy_attachment.arn().to_string(),
+                            error,
+                        })?;
+
                     let state_ensured = IamRoleState::Some {
                         name: name.to_string(),
                         path: path.clone(),
@@ -122,6 +154,7 @@ where
                             role_id.to_string(),
                             role_arn.to_string(),
                         )),
+                        managed_policy_attachment: managed_policy_attachment.clone(),
                     };
 
                     Ok(state_ensured)
@@ -138,9 +171,56 @@ where
                     "`IamRoleEnsureOpSpec::exec` should never be called when state is in sync."
                 );
             }
-            IamRoleStateDiff::Modified { .. } => {
-                panic!("Name or path modification is not supported.");
+            IamRoleStateDiff::ManagedPolicyAttachmentModified {
+                managed_policy_attachment_current,
+                managed_policy_attachment_desired,
+            } => {
+                let IamRoleState::Some {
+                        name,
+                        path,
+                        role_id_and_arn: _,
+                        managed_policy_attachment,
+                    } = state_desired else {
+                        panic!("`IamRoleEnsureOpSpec::exec` called with state_desired being None.");
+                    };
+
+                let client = data.client();
+                if managed_policy_attachment_current.attached() {
+                    // Detach it.
+                    IamRoleCleanOpSpec::<Id>::managed_policy_detach(
+                        client,
+                        name,
+                        path,
+                        managed_policy_attachment.arn(),
+                    )
+                    .await?;
+                }
+
+                if managed_policy_attachment_desired.attached() {
+                    client
+                        .attach_role_policy()
+                        .role_name(name)
+                        .policy_arn(managed_policy_attachment.arn())
+                        .send()
+                        .await
+                        .map_err(|error| IamRoleError::ManagedPolicyAttachError {
+                            role_name: name.clone(),
+                            role_path: path.clone(),
+                            managed_policy_arn: managed_policy_attachment.arn().to_string(),
+                            error,
+                        })?;
+                }
+
+                let state_ensured = state_desired.clone();
+                Ok(state_ensured)
             }
+            IamRoleStateDiff::NameOrPathModified {
+                name_diff,
+                path_diff,
+            } => Err(IamRoleError::NameOrPathModificationNotSupported {
+                name_diff: name_diff.clone(),
+                path_diff: path_diff.clone(),
+            }),
         }
     }
 }
