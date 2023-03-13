@@ -134,10 +134,13 @@ where
                         .arn()
                         .expect("Expected role ARN to be Some when created.");
 
+                    let Generated::Value(managed_policy_arn) = managed_policy_attachment.arn() else {
+                        unreachable!("Impossible to have an attached managed policy without an ARN.");
+                    };
                     client
                         .attach_role_policy()
                         .role_name(name)
-                        .policy_arn(managed_policy_attachment.arn())
+                        .policy_arn(managed_policy_arn)
                         .send()
                         .await
                         .map_err(|error| IamRoleError::ManagedPolicyAttachError {
@@ -187,20 +190,26 @@ where
                 let client = data.client();
                 if managed_policy_attachment_current.attached() {
                     // Detach it.
+                    let Generated::Value(managed_policy_arn) = managed_policy_attachment_current.arn() else {
+                        unreachable!("Impossible to have an attached managed policy without an ARN.");
+                    };
                     IamRoleCleanOpSpec::<Id>::managed_policy_detach(
                         client,
                         name,
                         path,
-                        managed_policy_attachment.arn(),
+                        managed_policy_arn,
                     )
                     .await?;
                 }
 
                 if managed_policy_attachment_desired.attached() {
+                    let Generated::Value(managed_policy_arn) = managed_policy_attachment_desired.arn() else {
+                        unreachable!("Impossible to have an attached managed policy without an ARN.");
+                    };
                     client
                         .attach_role_policy()
                         .role_name(name)
-                        .policy_arn(managed_policy_attachment.arn())
+                        .policy_arn(managed_policy_arn)
                         .send()
                         .await
                         .map_err(|error| IamRoleError::ManagedPolicyAttachError {

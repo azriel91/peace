@@ -106,13 +106,10 @@ where
             } => {
                 let client = data.client();
                 if managed_policy_attachment.attached() {
-                    Self::managed_policy_detach(
-                        client,
-                        name,
-                        path,
-                        managed_policy_attachment.arn(),
-                    )
-                    .await?;
+                    let Generated::Value(managed_policy_arn) = managed_policy_attachment.arn() else {
+                        unreachable!("Impossible to have an attached managed policy without an ARN.");
+                    };
+                    Self::managed_policy_detach(client, name, path, managed_policy_arn).await?;
                 }
                 if let Generated::Value(role_id_and_arn) = role_id_and_arn {
                     client

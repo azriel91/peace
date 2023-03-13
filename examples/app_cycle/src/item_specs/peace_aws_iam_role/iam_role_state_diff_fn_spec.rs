@@ -50,7 +50,12 @@ impl StateDiffFnSpec for IamRoleStateDiffFnSpec {
 
                 if name_diff.is_none() && path_diff.is_none() {
                     if managed_policy_attachment_current != managed_policy_attachment_desired {
-                        todo!();
+                        IamRoleStateDiff::ManagedPolicyAttachmentModified {
+                            managed_policy_attachment_current: managed_policy_attachment_current
+                                .clone(),
+                            managed_policy_attachment_desired: managed_policy_attachment_desired
+                                .clone(),
+                        }
                     } else {
                         IamRoleStateDiff::InSyncExists
                     }

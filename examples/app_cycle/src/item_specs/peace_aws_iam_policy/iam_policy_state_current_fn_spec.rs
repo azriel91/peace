@@ -175,7 +175,7 @@ where
                 .expect("Expected policy version document to exist.")?;
 
             // Hack: Remove this when referential param values is implemented.
-            let _ = data.managed_policy_arn_mut().insert(ManagedPolicyArn::new(
+            **data.managed_policy_arn_mut() = Some(ManagedPolicyArn::new(
                 policy_id_arn_version.arn().to_string(),
             ));
 

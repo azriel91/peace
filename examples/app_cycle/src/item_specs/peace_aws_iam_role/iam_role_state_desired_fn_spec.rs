@@ -35,8 +35,8 @@ where
         let managed_policy_attachment = ManagedPolicyAttachment::new(
             data.managed_policy_arn()
                 // Hack: Remove this when referential param values is implemented.
-                .expect("IAM Role item spec: Expected ManagedPolicyArn to be Some.")
-                .to_string(),
+                .map(|managed_policy_arn| Generated::Value(managed_policy_arn.to_string()))
+                .unwrap_or(Generated::Tbd),
             true,
         );
         let role_id_and_arn = Generated::Tbd;
