@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use peace::{
-    cfg::{flow_id, item_spec_id, FlowId, ItemSpecId, Profile},
+    cfg::{app_name, flow_id, item_spec_id, AppName, FlowId, ItemSpecId, Profile},
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
 use peace_item_specs::{
@@ -124,7 +124,11 @@ impl EnvDeployFlow {
         let iam_policy_name = profile.to_string();
         let iam_role_name = profile.to_string();
         let instance_profile_name = profile.to_string();
-        let bucket_name = profile.to_string();
+        let bucket_name = {
+            let username = whoami::username();
+            let app_name = app_name!();
+            format!("{username}-peace-{app_name}-{profile}").replace('_', "-")
+        };
         let path = String::from("/");
 
         let iam_policy_params = {

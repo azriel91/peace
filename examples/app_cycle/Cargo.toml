@@ -31,6 +31,7 @@ serde = { version = "1.0.155", features = ["derive"] }
 thiserror = "1.0.39"
 url = { version = "2.3.1", features = ["serde"] }
 urlencoding = "2.1.2"
+whoami = "1.4.0"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 clap = { version = "4.1.8", features = ["derive"] }
