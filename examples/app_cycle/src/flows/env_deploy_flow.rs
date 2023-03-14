@@ -16,6 +16,7 @@ use crate::{
         peace_aws_iam_policy::{IamPolicyItemSpec, IamPolicyParams},
         peace_aws_iam_role::{IamRoleItemSpec, IamRoleParams},
         peace_aws_instance_profile::{InstanceProfileItemSpec, InstanceProfileParams},
+        peace_aws_s3_bucket::{S3BucketItemSpec, S3BucketParams},
     },
     model::{AppCycleError, RepoSlug, WebAppFileId},
 };
@@ -40,16 +41,20 @@ impl EnvDeployFlow {
                     TarXItemSpec::<WebAppFileId>::new(item_spec_id!("web_app_extract")).into(),
                 );
 
-                let iam_role_item_spec_id = graph_builder
-                    .add_fn(IamRoleItemSpec::<WebAppFileId>::new(item_spec_id!("iam_role")).into());
-
                 let iam_policy_item_spec_id = graph_builder.add_fn(
                     IamPolicyItemSpec::<WebAppFileId>::new(item_spec_id!("iam_policy")).into(),
                 );
 
+                let iam_role_item_spec_id = graph_builder
+                    .add_fn(IamRoleItemSpec::<WebAppFileId>::new(item_spec_id!("iam_role")).into());
+
                 let instance_profile_item_spec_id = graph_builder.add_fn(
                     InstanceProfileItemSpec::<WebAppFileId>::new(item_spec_id!("instance_profile"))
                         .into(),
+                );
+
+                let _s3_bucket_id = graph_builder.add_fn(
+                    S3BucketItemSpec::<WebAppFileId>::new(item_spec_id!("s3_bucket")).into(),
                 );
 
                 graph_builder.add_edge(web_app_download_id, web_app_extract_id)?;
@@ -138,12 +143,15 @@ impl EnvDeployFlow {
         let instance_profile_params =
             InstanceProfileParams::<WebAppFileId>::new(instance_profile_name, path, true);
 
+        let s3_bucket_params = S3BucketParams::<WebAppFileId>::new(bucket_name);
+
         Ok(EnvDeployFlowParams {
             web_app_file_download_params,
             web_app_tar_x_params,
             iam_policy_params,
             iam_role_params,
             instance_profile_params,
+            s3_bucket_params,
         })
     }
 }
@@ -155,4 +163,5 @@ pub struct EnvDeployFlowParams {
     pub iam_policy_params: IamPolicyParams<WebAppFileId>,
     pub iam_role_params: IamRoleParams<WebAppFileId>,
     pub instance_profile_params: InstanceProfileParams<WebAppFileId>,
+    pub s3_bucket_params: S3BucketParams<WebAppFileId>,
 }

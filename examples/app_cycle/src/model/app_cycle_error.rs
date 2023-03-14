@@ -116,6 +116,14 @@ pub enum AppCycleError {
         #[from]
         crate::item_specs::peace_aws_iam_role::IamRoleError,
     ),
+    /// An `S3Bucket` item spec error occurred.
+    #[error("An `S3Bucket` item spec error occurred.")]
+    S3BucketItemSpec(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        crate::item_specs::peace_aws_s3_bucket::S3BucketError,
+    ),
 
     // === Framework errors === //
     /// A `peace` runtime error occurred.
