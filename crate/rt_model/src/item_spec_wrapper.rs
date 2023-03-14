@@ -6,7 +6,10 @@ use std::{
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, TryFnSpec};
-use peace_data::Data;
+use peace_data::{
+    marker::{Current, Desired},
+    Data,
+};
 use peace_resources::{
     resources::ts::{Empty, SetUp},
     states::{StateDiffs, States, StatesCurrent, StatesDesired, StatesSaved},
@@ -677,6 +680,12 @@ where
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E> {
+        // Insert `Current<State>` and `Desired<State>` to create entries in
+        // `Resources`. This is used for referential param values (#94)
+        resources.insert(Current::<State>(None));
+        resources.insert(Desired::<State>(None));
+
+        // Run user defined setup.
         <IS as ItemSpec>::setup(self, resources)
             .await
             .map_err(Into::<E>::into)

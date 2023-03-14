@@ -1,10 +1,11 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{OpCheckStatus, OpCtx},
+    data::marker::{Current, Desired},
     resources::{
         internal::{StateDiffsMut, StatesMut},
         resources::ts::SetUp,
-        states::{ts::Desired, StateDiffs, StatesCurrent, StatesDesired, StatesSaved},
+        states::{self, StateDiffs, StatesCurrent, StatesDesired, StatesSaved},
         type_reg::untagged::BoxDataTypeDowncast,
         Resources,
     },
@@ -47,6 +48,11 @@ async fn setup() -> Result<(), Box<dyn std::error::Error>> {
     <dyn ItemSpecRt<_>>::setup(&item_spec_wrapper, &mut resources).await?;
 
     assert!(resources.try_borrow::<VecA>().is_ok());
+    // automatic `Current<State>` and `Desired<State>` insertion.
+    assert!(resources.try_borrow::<Current<VecCopyState>>().is_ok());
+    assert!(resources.borrow::<Current<VecCopyState>>().is_none());
+    assert!(resources.try_borrow::<Desired<VecCopyState>>().is_ok());
+    assert!(resources.borrow::<Desired<VecCopyState>>().is_none());
 
     Ok(())
 }
@@ -287,7 +293,7 @@ async fn resources_and_states_saved_and_desired(
         Into::<StatesSaved>::into(StatesCurrent::from(states_mut))
     };
     let states_desired = {
-        let mut states_desired_mut = StatesMut::<Desired>::new();
+        let mut states_desired_mut = StatesMut::<states::ts::Desired>::new();
         let state_desired = item_spec_wrapper
             .state_desired_try_exec(&resources)
             .await?
@@ -318,7 +324,7 @@ async fn resources_and_states_current_and_desired(
         StatesCurrent::from(states_mut)
     };
     let states_desired = {
-        let mut states_desired_mut = StatesMut::<Desired>::new();
+        let mut states_desired_mut = StatesMut::<states::ts::Desired>::new();
         let state_desired = item_spec_wrapper
             .state_desired_try_exec(&resources)
             .await?

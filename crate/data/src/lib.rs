@@ -7,5 +7,6 @@ pub use peace_data_derive::Data;
 pub use crate::data::Data;
 
 pub mod accessors;
+pub mod marker;
 
 mod data;

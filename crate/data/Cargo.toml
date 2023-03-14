@@ -19,3 +19,4 @@ test = false
 fn_graph = { version = "0.8.1", features = ["resman"] }
 peace_core = { path = "../core", version = "0.0.7" }
 peace_data_derive = { path = "../data_derive", version = "0.0.7" }
+serde = { version = "1.0.155", features = ["derive"] }
