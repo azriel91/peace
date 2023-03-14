@@ -96,6 +96,23 @@ The trade off may not be worthwhile.
 </div>
 </details>
 
+<details>
+<summary>8. Adding / removing / modifying item specs in flows</summary>
+<div>
+
+Implementors may add/remove/modify item specs in flows.
+
+Peace needs to be designed such that these changes do not cause already-existent flows to not be loadable, i.e. when:
+
+* `states_*.yaml` contains state for which an item spec no longer exists in the flow.
+* `states_*.yaml` does not contain state for an item spec that is newly added to the flow.
+* `states_*.yaml` contains state whose fields are different to a new version of an item spec.
+
+    This one can be addressed by having `State` be an enum, with versioned variants.
+
+</div>
+</details>
+
 
 ## Notes
 
