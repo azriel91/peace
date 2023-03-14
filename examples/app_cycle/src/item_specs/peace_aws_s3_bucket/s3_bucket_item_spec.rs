@@ -6,9 +6,9 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_s3_bucket::{
-    S3BucketCleanOpSpec, S3BucketEnsureOpSpec, S3BucketError,
-    S3BucketState, S3BucketStateCurrentFnSpec, S3BucketStateDesiredFnSpec,
-    S3BucketStateDiff, S3BucketStateDiffFnSpec,
+    S3BucketCleanOpSpec, S3BucketEnsureOpSpec, S3BucketError, S3BucketState,
+    S3BucketStateCurrentFnSpec, S3BucketStateDesiredFnSpec, S3BucketStateDiff,
+    S3BucketStateDiffFnSpec,
 };
 
 /// Item spec to create an IAM S3 bucket and IAM role.
@@ -24,8 +24,8 @@ use crate::item_specs::peace_aws_s3_bucket::{
 ///
 /// # Type Parameters
 ///
-/// * `Id`: A zero-sized type used to distinguish different S3 bucket
-///   parameters from each other.
+/// * `Id`: A zero-sized type used to distinguish different S3 bucket parameters
+///   from each other.
 #[derive(Debug)]
 pub struct S3BucketItemSpec<Id> {
     /// ID of the S3 bucket item spec.

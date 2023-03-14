@@ -3,7 +3,7 @@ use peace::miette;
 
 use aws_sdk_s3::{
     self,
-    error::{CreateBucketError, DeleteBucketError, HeadBucketError},
+    error::{CreateBucketError, DeleteBucketError, HeadBucketError, ListBucketsError},
     types::SdkError,
 };
 
@@ -29,21 +29,18 @@ pub enum S3BucketError {
         peace::rt_model::Error,
     ),
 
-    /// Failed to decode URL-encoded S3 bucket document.
-    #[error("Failed to decode URL-encoded s3_bucket document.")]
-    S3BucketDocumentNonUtf8 {
+    /// Failed to list S3 buckets.
+    #[error("Failed to list S3 buckets to discover: `{s3_bucket_name}`.")]
+    S3BucketListError {
         /// S3Bucket friendly name.
         s3_bucket_name: String,
-        /// The URL encoded document from the AWS `get_s3_bucket_version`
-        /// call.
-        url_encoded_document: String,
         /// Underlying error.
         #[source]
-        error: std::string::FromUtf8Error,
+        error: SdkError<ListBucketsError>,
     },
 
     /// Failed to create S3 bucket.
-    #[error("Failed to create S3 bucket.")]
+    #[error("Failed to create S3 bucket: `{s3_bucket_name}`.")]
     S3BucketCreateError {
         /// S3Bucket friendly name.
         s3_bucket_name: String,
@@ -53,7 +50,7 @@ pub enum S3BucketError {
     },
 
     /// Failed to discover S3 bucket.
-    #[error("Failed to discover S3 bucket.")]
+    #[error("Failed to discover S3 bucket: `{s3_bucket_name}`.")]
     S3BucketGetError {
         /// Expected S3 bucket friendly name.
         s3_bucket_name: String,
@@ -62,16 +59,8 @@ pub enum S3BucketError {
         error: SdkError<HeadBucketError>,
     },
 
-    /// S3Bucket existed when listing policies, but did not exist when
-    /// retrieving details.
-    #[error("S3Bucket details failed to be retrieved.")]
-    S3BucketNotFoundAfterList {
-        /// Expected S3 bucket friendly name.
-        s3_bucket_name: String,
-    },
-
     /// Failed to delete S3 bucket.
-    #[error("Failed to delete S3 bucket.")]
+    #[error("Failed to delete S3 bucket: `{s3_bucket_name}`.")]
     S3BucketDeleteError {
         /// S3Bucket friendly name.
         s3_bucket_name: String,
@@ -82,7 +71,9 @@ pub enum S3BucketError {
 
     /// User changed the S3 bucket name, but AWS does not support
     /// changing this.
-    #[error("S3Bucket name cannot be modified, as it is not supported by AWS.")]
+    #[error(
+        "S3Bucket name cannot be modified, as it is not supported by AWS: current: `{s3_bucket_name_current}`, desired: `{s3_bucket_name_desired}`."
+    )]
     S3BucketModificationNotSupported {
         /// Current name of the s3 bucket.
         s3_bucket_name_current: String,
