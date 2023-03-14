@@ -2,7 +2,10 @@
 mod tests {
     use std::any::TypeId;
 
-    use peace::data::{Data, DataAccess, TypeIds, R, W};
+    use peace::data::{
+        accessors::{R, W},
+        Data, DataAccess, TypeIds,
+    };
 
     #[test]
     fn data_named_fields_borrows() {

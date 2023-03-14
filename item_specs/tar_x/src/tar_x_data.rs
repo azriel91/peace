@@ -1,5 +1,5 @@
 use peace::{
-    data::{Data, R},
+    data::{accessors::R, Data},
     rt_model::Storage,
 };
 

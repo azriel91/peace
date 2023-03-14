@@ -1,4 +1,4 @@
-use peace::data::{Data, W};
+use peace::data::{accessors::W, Data};
 
 use crate::BlankParams;
 

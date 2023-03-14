@@ -1,7 +1,7 @@
 use std::any::TypeId;
 
 use peace::{
-    cfg::{item_spec_id, ItemSpecId, Saved},
+    cfg::{accessors::Saved, item_spec_id, ItemSpecId},
     data::{fn_graph::Resources, Data, DataAccess, DataAccessDyn, TypeIds},
     resources::{internal::StatesMut, states::StatesSaved},
 };

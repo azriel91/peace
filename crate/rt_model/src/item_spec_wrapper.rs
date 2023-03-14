@@ -6,7 +6,10 @@ use std::{
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, TryFnSpec};
-use peace_data::Data;
+use peace_data::{
+    marker::{Current, Desired},
+    Data,
+};
 use peace_resources::{
     resources::ts::{Empty, SetUp},
     states::{StateDiffs, States, StatesCurrent, StatesDesired, StatesSaved},
@@ -153,6 +156,9 @@ where
             );
             <StateCurrentFnSpec as TryFnSpec>::try_exec(data).await?
         };
+        if let Some(state_current) = state_current.as_ref() {
+            resources.borrow_mut::<Current<State>>().0 = Some(state_current.clone());
+        }
 
         Ok(state_current)
     }
@@ -168,6 +174,7 @@ where
             );
             <StateCurrentFnSpec as TryFnSpec>::exec(data).await?
         };
+        resources.borrow_mut::<Current<State>>().0 = Some(state_current.clone());
 
         Ok(state_current)
     }
@@ -181,6 +188,9 @@ where
             resources,
         );
         let state_desired = <StateDesiredFnSpec as peace_cfg::TryFnSpec>::try_exec(data).await?;
+        if let Some(state_desired) = state_desired.as_ref() {
+            resources.borrow_mut::<Desired<State>>().0 = Some(state_desired.clone());
+        }
 
         Ok(state_desired)
     }
@@ -191,6 +201,7 @@ where
             resources,
         );
         let state_desired = <StateDesiredFnSpec as peace_cfg::TryFnSpec>::exec(data).await?;
+        resources.borrow_mut::<Desired<State>>().0 = Some(state_desired.clone());
 
         Ok(state_desired)
     }
@@ -278,7 +289,7 @@ where
             self.id(),
             resources,
         );
-        <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec_dry(
+        let state_ensured_dry = <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec_dry(
             op_ctx,
             data,
             state_current,
@@ -286,7 +297,11 @@ where
             state_diff,
         )
         .await
-        .map_err(Into::<E>::into)
+        .map_err(Into::<E>::into)?;
+
+        resources.borrow_mut::<Current<State>>().0 = Some(state_ensured_dry.clone());
+
+        Ok(state_ensured_dry)
     }
 
     async fn ensure_op_exec<ResourcesTs>(
@@ -301,7 +316,7 @@ where
             self.id(),
             resources,
         );
-        <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec(
+        let state_ensured = <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec(
             op_ctx,
             data,
             state_current,
@@ -309,7 +324,11 @@ where
             state_diff,
         )
         .await
-        .map_err(Into::<E>::into)
+        .map_err(Into::<E>::into)?;
+
+        resources.borrow_mut::<Current<State>>().0 = Some(state_ensured.clone());
+
+        Ok(state_ensured)
     }
 }
 
@@ -677,6 +696,12 @@ where
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E> {
+        // Insert `Current<State>` and `Desired<State>` to create entries in
+        // `Resources`. This is used for referential param values (#94)
+        resources.insert(Current::<State>(None));
+        resources.insert(Desired::<State>(None));
+
+        // Run user defined setup.
         <IS as ItemSpec>::setup(self, resources)
             .await
             .map_err(Into::<E>::into)

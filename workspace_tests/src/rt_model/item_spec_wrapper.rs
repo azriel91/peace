@@ -1,10 +1,11 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{OpCheckStatus, OpCtx},
+    data::marker::{Current, Desired},
     resources::{
         internal::{StateDiffsMut, StatesMut},
         resources::ts::SetUp,
-        states::{ts::Desired, StateDiffs, StatesCurrent, StatesDesired, StatesSaved},
+        states::{self, StateDiffs, StatesCurrent, StatesDesired, StatesSaved},
         type_reg::untagged::BoxDataTypeDowncast,
         Resources,
     },
@@ -47,6 +48,11 @@ async fn setup() -> Result<(), Box<dyn std::error::Error>> {
     <dyn ItemSpecRt<_>>::setup(&item_spec_wrapper, &mut resources).await?;
 
     assert!(resources.try_borrow::<VecA>().is_ok());
+    // Automatic `Current<State>` and `Desired<State>` insertion.
+    assert!(resources.try_borrow::<Current<VecCopyState>>().is_ok());
+    assert!(resources.borrow::<Current<VecCopyState>>().is_none());
+    assert!(resources.try_borrow::<Desired<VecCopyState>>().is_ok());
+    assert!(resources.borrow::<Desired<VecCopyState>>().is_none());
 
     Ok(())
 }
@@ -65,6 +71,11 @@ async fn state_current_try_exec() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
         BoxDataTypeDowncast::<VecCopyState>::downcast_ref(&state)
+    );
+    // Automatic `Current<State>` insertion.
+    assert_eq!(
+        Some(VecCopyState::new()).as_ref(),
+        resources.borrow::<Current<VecCopyState>>().as_ref()
     );
 
     Ok(())
@@ -89,6 +100,11 @@ async fn state_ensured_exec() -> Result<(), Box<dyn std::error::Error>> {
         Some(VecCopyState::new()).as_ref(),
         BoxDataTypeDowncast::<VecCopyState>::downcast_ref(&state)
     );
+    // Automatic `Current<State>` insertion.
+    assert_eq!(
+        Some(VecCopyState::new()).as_ref(),
+        resources.borrow::<Current<VecCopyState>>().as_ref()
+    );
 
     Ok(())
 }
@@ -107,6 +123,11 @@ async fn state_desired_try_exec() -> Result<(), VecCopyError> {
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         BoxDataTypeDowncast::<VecCopyState>::downcast_ref(&state_desired)
+    );
+    // Automatic `Desired<State>` insertion.
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        resources.borrow::<Desired<VecCopyState>>().as_ref()
     );
 
     Ok(())
@@ -196,6 +217,17 @@ async fn ensure_exec_dry() -> Result<(), VecCopyError> {
     let vec_b = resources.borrow::<VecB>();
     assert_eq!(&[0u8; 0], &*vec_b.0);
 
+    // Automatic `Current<State>` insertion.
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        resources.borrow::<Current<VecCopyState>>().as_ref()
+    );
+    // Desired should also exist.
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        resources.borrow::<Desired<VecCopyState>>().as_ref()
+    );
+
     Ok(())
 }
 
@@ -233,6 +265,17 @@ async fn ensure_exec() -> Result<(), VecCopyError> {
 
     let vec_b = resources.borrow::<VecB>();
     assert_eq!(&[0u8, 1, 2, 3, 4, 5, 6, 7], &*vec_b.0);
+
+    // Automatic `Current<State>` insertion.
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        resources.borrow::<Current<VecCopyState>>().as_ref()
+    );
+    // Desired should also exist.
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        resources.borrow::<Desired<VecCopyState>>().as_ref()
+    );
 
     Ok(())
 }
@@ -287,7 +330,7 @@ async fn resources_and_states_saved_and_desired(
         Into::<StatesSaved>::into(StatesCurrent::from(states_mut))
     };
     let states_desired = {
-        let mut states_desired_mut = StatesMut::<Desired>::new();
+        let mut states_desired_mut = StatesMut::<states::ts::Desired>::new();
         let state_desired = item_spec_wrapper
             .state_desired_try_exec(&resources)
             .await?
@@ -318,7 +361,7 @@ async fn resources_and_states_current_and_desired(
         StatesCurrent::from(states_mut)
     };
     let states_desired = {
-        let mut states_desired_mut = StatesMut::<Desired>::new();
+        let mut states_desired_mut = StatesMut::<states::ts::Desired>::new();
         let state_desired = item_spec_wrapper
             .state_desired_try_exec(&resources)
             .await?

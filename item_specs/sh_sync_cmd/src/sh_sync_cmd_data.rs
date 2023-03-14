@@ -1,5 +1,8 @@
 use peace::{
-    data::{Data, RMaybe, R},
+    data::{
+        accessors::{RMaybe, R},
+        Data,
+    },
     resources::states::StatesSaved,
 };
 

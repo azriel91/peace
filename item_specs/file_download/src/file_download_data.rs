@@ -2,8 +2,8 @@
 use peace::rt_model::Storage;
 
 use peace::{
-    cfg::{state::FetchedOpt, Saved, State},
-    data::{Data, R},
+    cfg::{accessors::Saved, state::FetchedOpt, State},
+    data::{accessors::R, Data},
 };
 
 use crate::{ETag, FileDownloadParams, FileDownloadState};
