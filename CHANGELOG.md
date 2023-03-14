@@ -1,5 +1,15 @@
 # Changelog
 
+## unreleased
+
+* Move `R, W, ROpt, WOpt, RMaybe, WMaybe` to `peace_data::accessors`. ([#94], [#95])
+* Automatically insert `Current<ItemSpec::State>` after state current and ensure exec executions. ([#94], [#95])
+* Automatically insert `Desired<ItemSpec::State>` after state desired discover execution. ([#94], [#95])
+
+[#94]: https://github.com/azriel91/peace/issues/94
+[#95]: https://github.com/azriel91/peace/pull/95
+
+
 ## 0.0.7 (2023-03-06)
 
 * Add [`cargo-deny`] and [`cargo-about`] CI checks. ([#76])
