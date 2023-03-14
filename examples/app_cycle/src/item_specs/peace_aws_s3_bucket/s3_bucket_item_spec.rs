@@ -74,6 +74,7 @@ where
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), S3BucketError> {
         if !resources.contains::<aws_sdk_s3::Client>() {
             let sdk_config = aws_config::load_from_env().await;
+            resources.insert(sdk_config.region().cloned());
             let client = aws_sdk_s3::Client::new(&sdk_config);
             resources.insert(client);
         }

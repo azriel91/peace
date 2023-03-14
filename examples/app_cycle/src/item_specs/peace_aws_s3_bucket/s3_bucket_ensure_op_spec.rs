@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use aws_sdk_s3::model::{BucketLocationConstraint, CreateBucketConfiguration};
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
 use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx};
@@ -87,19 +88,25 @@ where
                 }
                 S3BucketState::Some { name } => {
                     let client = data.client();
-                    let _create_bucket_output = client
-                        .create_bucket()
-                        .bucket(name)
-                        .send()
-                        .await
-                        .map_err(|error| {
-                            let s3_bucket_name = name.to_string();
+                    let mut create_bucket = client.create_bucket().bucket(name);
 
-                            S3BucketError::S3BucketCreateError {
-                                s3_bucket_name,
-                                error,
-                            }
-                        })?;
+                    if let Some(region) = data.region().as_ref() {
+                        create_bucket = create_bucket.create_bucket_configuration(
+                            CreateBucketConfiguration::builder()
+                                .location_constraint(BucketLocationConstraint::from(
+                                    region.as_ref(),
+                                ))
+                                .build(),
+                        );
+                    }
+                    let _create_bucket_output = create_bucket.send().await.map_err(|error| {
+                        let s3_bucket_name = name.to_string();
+
+                        S3BucketError::S3BucketCreateError {
+                            s3_bucket_name,
+                            error,
+                        }
+                    })?;
 
                     let state_ensured = S3BucketState::Some {
                         name: name.to_string(),

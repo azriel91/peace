@@ -1,5 +1,5 @@
 use peace::data::{
-    accessors::{R, W},
+    accessors::{ROpt, R, W},
     Data,
 };
 
@@ -9,8 +9,8 @@ use crate::item_specs::peace_aws_s3_bucket::S3BucketParams;
 ///
 /// # Type Parameters
 ///
-/// * `Id`: A zero-sized type used to distinguish different S3 bucket
-///   parameters from each other.
+/// * `Id`: A zero-sized type used to distinguish different S3 bucket parameters
+///   from each other.
 #[derive(Data, Debug)]
 pub struct S3BucketData<'op, Id>
 where
@@ -20,6 +20,8 @@ where
     params: W<'op, S3BucketParams<Id>>,
     /// IAM client to communicate with AWS.
     client: R<'op, aws_sdk_s3::Client>,
+    /// Region to use to constrain S3 bucket.
+    region: ROpt<'op, aws_sdk_s3::Region>,
 }
 
 impl<'op, Id> S3BucketData<'op, Id>
@@ -36,5 +38,9 @@ where
 
     pub fn client(&self) -> &R<'op, aws_sdk_s3::Client> {
         &self.client
+    }
+
+    pub fn region(&self) -> &ROpt<'op, aws_sdk_s3::Region> {
+        &self.region
     }
 }
