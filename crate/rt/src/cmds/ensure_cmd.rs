@@ -246,7 +246,7 @@ where
                         item_ensure_partial: _,
                         error,
                     } => {
-                        eprintln!("{item_spec_id}:");
+                        eprintln!("{item_spec_id} Prepare failed:");
                         let mut error = error.source();
                         while let Some(source) = error {
                             eprintln!("  caused by: {source}");
@@ -268,8 +268,15 @@ where
                     ItemEnsureOutcome::Fail {
                         item_spec_id,
                         item_ensure,
-                        error: _, // TODO: save to report.
+                        error, // TODO: save to report.
                     } => {
+                        eprintln!("{item_spec_id} Failed:");
+                        dbg!(&error);
+                        let mut error = error.source();
+                        while let Some(source) = error {
+                            eprintln!("  caused by: {source}");
+                            error = source.source();
+                        }
                         if let Some(state_ensured) = item_ensure.state_ensured() {
                             states_ensured_mut.insert_raw(item_spec_id, state_ensured);
                         }
