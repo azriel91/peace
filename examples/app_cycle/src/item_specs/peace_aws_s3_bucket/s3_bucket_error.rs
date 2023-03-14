@@ -3,7 +3,10 @@ use peace::miette;
 
 use aws_sdk_s3::{
     self,
-    error::{CreateBucketError, DeleteBucketError, HeadBucketError, ListBucketsError},
+    error::{
+        BucketAlreadyExists, BucketAlreadyOwnedByYou, CreateBucketError, DeleteBucketError,
+        HeadBucketError, ListBucketsError,
+    },
     types::SdkError,
 };
 
@@ -37,6 +40,28 @@ pub enum S3BucketError {
         /// Underlying error.
         #[source]
         error: SdkError<ListBucketsError>,
+    },
+
+    /// Failed to create S3 bucket as someone else owns the name.
+    #[error("Failed to create S3 bucket as someone else owns the name: `{s3_bucket_name}`.")]
+    S3BucketOwnedBySomeoneElseError {
+        /// S3Bucket friendly name.
+        s3_bucket_name: String,
+        /// Underlying error.
+        #[source]
+        error: BucketAlreadyExists,
+    },
+
+    /// Failed to create S3 bucket as you already have one with the same name.
+    #[error(
+        "Failed to create S3 bucket as you already have one with the same name: `{s3_bucket_name}`."
+    )]
+    S3BucketOwnedByYouError {
+        /// S3Bucket friendly name.
+        s3_bucket_name: String,
+        /// Underlying error.
+        #[source]
+        error: BucketAlreadyOwnedByYou,
     },
 
     /// Failed to create S3 bucket.
