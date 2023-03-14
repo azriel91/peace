@@ -1,6 +1,6 @@
-use peace::{
-    cfg::ROpt,
-    data::{Data, R, W},
+use peace::data::{
+    accessors::{ROpt, R, W},
+    Data,
 };
 
 use crate::item_specs::{

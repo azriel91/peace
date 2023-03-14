@@ -1,4 +1,7 @@
-use peace::data::{Data, R, W};
+use peace::data::{
+    accessors::{R, W},
+    Data,
+};
 
 use crate::item_specs::peace_aws_instance_profile::InstanceProfileParams;
 

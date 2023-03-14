@@ -2,7 +2,7 @@ use std::any::TypeId;
 
 use peace::{
     cfg::{item_spec_id, ItemSpecId},
-    data::{Data, DataAccess, DataAccessDyn, Resources, TypeIds, WMaybe},
+    data::{accessors::WMaybe, Data, DataAccess, DataAccessDyn, Resources, TypeIds},
 };
 
 const ITEM_SPEC_ID_UNUSED: &ItemSpecId = &item_spec_id!("test_item_spec_id");

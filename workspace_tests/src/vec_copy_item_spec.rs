@@ -11,7 +11,10 @@ use peace::{
         async_trait, item_spec_id, CleanOpSpec, EnsureOpSpec, ItemSpec, ItemSpecId, OpCheckStatus,
         OpCtx, StateDiffFnSpec, TryFnSpec,
     },
-    data::{Data, RMaybe, R, W},
+    data::{
+        accessors::{RMaybe, R, W},
+        Data,
+    },
     resources::{resources::ts::Empty, states::StatesSaved, Resources},
     rt_model::ItemSpecWrapper,
 };

@@ -1,6 +1,6 @@
-use peace::{
-    cfg::WOpt,
-    data::{Data, R, W},
+use peace::data::{
+    accessors::{WOpt, R, W},
+    Data,
 };
 
 use crate::item_specs::peace_aws_iam_policy::{model::ManagedPolicyArn, IamPolicyParams};
