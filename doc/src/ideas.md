@@ -113,6 +113,19 @@ Peace needs to be designed such that these changes do not cause already-existent
 </div>
 </details>
 
+<details>
+<summary>9. Item expiry</summary>
+<div>
+
+For items that cost, it is useful to have an expiry time that causes it to be deleted.
+
+* This would have to be supported by the service that hosts the item.
+* There should be a way to notify the user of items that are about to expire.
+* There should also be a way to extend the item expiry times easily.
+
+</div>
+</details>
+
 
 ## Notes
 
