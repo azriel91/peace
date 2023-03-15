@@ -90,6 +90,7 @@ impl ProfileInitCmd {
             iam_policy_params,
             iam_role_params,
             instance_profile_params,
+            s3_bucket_params,
         } = EnvDeployFlow::params(&profile_to_create, slug, version, url)?;
         let flow = EnvDeployFlow::flow().await?;
         let profile_key = String::from("profile");
@@ -116,6 +117,7 @@ impl ProfileInitCmd {
                     String::from("instance_profile_params"),
                     Some(instance_profile_params),
                 )
+                .with_flow_param_value(String::from("s3_bucket_params"), Some(s3_bucket_params))
                 .await?
         };
 

@@ -20,6 +20,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 aws-config = "0.54.1"
 aws-sdk-iam = "0.24.0"
+aws-sdk-s3 = "0.24.0"
 cfg-if = { workspace = true }
 derivative = { workspace = true }
 futures = "0.3.27"
@@ -30,6 +31,7 @@ serde = { version = "1.0.155", features = ["derive"] }
 thiserror = "1.0.39"
 url = { version = "2.3.1", features = ["serde"] }
 urlencoding = "2.1.2"
+whoami = "1.4.0"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 clap = { version = "4.1.8", features = ["derive"] }

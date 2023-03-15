@@ -96,6 +96,23 @@ The trade off may not be worthwhile.
 </div>
 </details>
 
+<details>
+<summary>8. Adding / removing / modifying item specs in flows</summary>
+<div>
+
+Implementors may add/remove/modify item specs in flows.
+
+Peace needs to be designed such that these changes do not cause already-existent flows to not be loadable, i.e. when:
+
+* `states_*.yaml` contains state for which an item spec no longer exists in the flow.
+* `states_*.yaml` does not contain state for an item spec that is newly added to the flow.
+* `states_*.yaml` contains state whose fields are different to a new version of an item spec.
+
+    This one can be addressed by having `State` be an enum, with versioned variants.
+
+</div>
+</details>
+
 
 ## Notes
 
@@ -110,75 +127,21 @@ The trade off may not be worthwhile.
 </details>
 
 <details>
-<summary>2. Referential lookup of values in state / item spec params</summary>
+<summary>2. Learnings from app_cycle end-to-end implementation.</summary>
 <div>
 
-Since `State` must be serializable, not sure if it is a good idea to store `!Ref $id`s as serialized values. If we did that, then reading the states desired YAML file would need the user to trace through the refs.
+1. Referential lookup of values in state / item spec params. ([#94])
+2. AWS SDK is not WASM ready -- includes `mio` unconditionally through `tokio` (calls UDP). ([aws-sdk-rust#59])
+3. AWS SDK does not always include error detail -- S3 `head_object`. ([aws-sdk-rust#227])
+4. Progress output should enable-able for state current / desired discover / clean functions.
+5. Flow params are annoying to register every time we add another item spec.
+6. Blank item spec needs a lot of rework to be easier to implement an item spec. ([67], [#96])
 
-Item spec params needs:
-
-* To be named differently / easily distinguished from workspace/profile/flow params.
-* To have static values able to be specified (already possible).
-* To be able to reference other item specs' values, likely through a lookup function.
-
-
-Maybe:
-
-1. Somehow have the item spec params take in `T`.
-
-    Derive a builder for the item spec params struct:
-
-    - **Consumers:** When creating a flow and inserting flow params, call:
-
-        ```rust
-        ItemSpecParams::builder()
-            .with_x("value")
-            .with_x_ref::<T>()
-            .with_x_from::<T, U>(|t| t.u())
-            .build()
-        ```
-
-    - **Implementors:** For each field have a `with_x`, `with_x_ref::<T>()`, and `with_x_from::<T, U>(|t| -> U {})`
-
-        ```rust
-        #[derive(Params)]
-        pub struct Params {
-            /// ID of something generated.
-            id_to_attach: String,
-        }
-        ```
-
-    - **Peace:**
-
-        1. Hold `&mut Resources` and insert `State`s into it as they are finished.
-        2. Or should we use the existing Resources? -- likely, some things write to `W<'op, T>`
-        3. Whenever we run an any function exec (state current / ensure op spec exec / etcetera all apply), we take `ItemSpec::Params`, and run `ItemSpecParamsBuilder::build_from(resources)`, which will use the static value / fetched and mapped values to return `ItemSpecParams`.
-        4. Somehow that gets injected into the exec function -- not sure if we put a separate parameter whether that's nice or not, or if we can merge the `ItemSpecParams` type into the `Data`.
-
-            Maybe instead of `W<'_, Params>`, we have a `P<'_, Params'>`, whose implementation does step 4.
-
-        Still need to work out how to insert state into `Resources`. Do we silently include a `W<'_, State>` alongside every item spec's data writes? Maybe.
-
-        ```rust
-        params.fields()
-            .iter()
-            .map(|field_rt| field_rt.value(resources));
-
-        impl FieldRt for Field<T, U> {
-            fn fetch(resources: &Resources) -> Ref<'_, T> {
-                match field {
-                    FieldParam::Value(value) => value,
-                    FieldParam::Ref => resources.borrow::<T>(),
-                    FieldParam::From => {
-                        let t = resources.borrow::<T>();
-                        U::from(t)
-                    }
-                }
-            }
-        }
-        ```
-2. Then the item spec's data accessed includes `R<'op, T>` for data dependency calculation.
-3. Item spec functions will be given the params with the values read from `Resources`.
+[#67]: https://github.com/azriel91/peace/issues/67
+[#94]: https://github.com/azriel91/peace/issues/94
+[#96]: https://github.com/azriel91/peace/issues/96
+[aws-sdk-rust#59]: https://github.com/awslabs/aws-sdk-rust/issues/59
+[aws-sdk-rust#227]: https://github.com/awslabs/aws-sdk-rust/issues/227
 
 </div>
 </details>
