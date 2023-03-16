@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_s3_object::{
-    S3ObjectApplyOpSpec, S3ObjectCleanOpSpec, S3ObjectError, S3ObjectState,
+    S3ObjectApplyOpSpec, S3ObjectCleanOpSpec, S3ObjectData, S3ObjectError, S3ObjectState,
     S3ObjectStateCurrentFnSpec, S3ObjectStateDesiredFnSpec, S3ObjectStateDiff,
     S3ObjectStateDiffFnSpec,
 };
@@ -60,6 +60,7 @@ where
 {
     type ApplyOpSpec = S3ObjectApplyOpSpec<Id>;
     type CleanOpSpec = S3ObjectCleanOpSpec<Id>;
+    type Data<'op> = S3ObjectData<'op, Id>;
     type Error = S3ObjectError;
     type State = S3ObjectState;
     type StateCurrentFnSpec = S3ObjectStateCurrentFnSpec<Id>;
@@ -79,5 +80,9 @@ where
             resources.insert(client);
         }
         Ok(())
+    }
+
+    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, S3ObjectError> {
+        Ok(S3ObjectState::None)
     }
 }

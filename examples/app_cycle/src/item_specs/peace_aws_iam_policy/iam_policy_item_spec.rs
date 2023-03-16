@@ -6,12 +6,10 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_iam_policy::{
-    IamPolicyApplyOpSpec, IamPolicyCleanOpSpec, IamPolicyError, IamPolicyState,
-    IamPolicyStateCurrentFnSpec, IamPolicyStateDesiredFnSpec, IamPolicyStateDiff,
-    IamPolicyStateDiffFnSpec,
+    model::ManagedPolicyArn, IamPolicyApplyOpSpec, IamPolicyCleanOpSpec, IamPolicyData,
+    IamPolicyError, IamPolicyState, IamPolicyStateCurrentFnSpec, IamPolicyStateDesiredFnSpec,
+    IamPolicyStateDiff, IamPolicyStateDiffFnSpec,
 };
-
-use super::model::ManagedPolicyArn;
 
 /// Item spec to create an IAM instance profile and IAM role.
 ///
@@ -62,6 +60,7 @@ where
 {
     type ApplyOpSpec = IamPolicyApplyOpSpec<Id>;
     type CleanOpSpec = IamPolicyCleanOpSpec<Id>;
+    type Data<'op> = IamPolicyData<'op, Id>;
     type Error = IamPolicyError;
     type State = IamPolicyState;
     type StateCurrentFnSpec = IamPolicyStateCurrentFnSpec<Id>;
@@ -82,5 +81,9 @@ where
         // Hack: Remove this when referential param values is implemented.
         resources.insert(Option::<ManagedPolicyArn<Id>>::None);
         Ok(())
+    }
+
+    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, IamPolicyError> {
+        Ok(IamPolicyState::None)
     }
 }

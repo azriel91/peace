@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    FileMetadatas, TarXApplyOpSpec, TarXCleanOpSpec, TarXError, TarXStateCurrentFnSpec,
+    FileMetadatas, TarXApplyOpSpec, TarXCleanOpSpec, TarXData, TarXError, TarXStateCurrentFnSpec,
     TarXStateDesiredFnSpec, TarXStateDiff, TarXStateDiffFnSpec,
 };
 
@@ -59,6 +59,7 @@ where
 {
     type ApplyOpSpec = TarXApplyOpSpec<Id>;
     type CleanOpSpec = TarXCleanOpSpec<Id>;
+    type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
     type State = FileMetadatas;
     type StateCurrentFnSpec = TarXStateCurrentFnSpec<Id>;
@@ -72,5 +73,9 @@ where
 
     async fn setup(&self, _resources: &mut Resources<Empty>) -> Result<(), TarXError> {
         Ok(())
+    }
+
+    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, TarXError> {
+        Ok(FileMetadatas::default())
     }
 }

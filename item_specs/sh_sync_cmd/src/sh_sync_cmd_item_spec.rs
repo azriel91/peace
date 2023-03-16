@@ -6,9 +6,9 @@ use peace::{
 };
 
 use crate::{
-    ShSyncCmdApplyOpSpec, ShSyncCmdCleanOpSpec, ShSyncCmdError, ShSyncCmdExecutionRecord,
-    ShSyncCmdStateCurrentFnSpec, ShSyncCmdStateDesiredFnSpec, ShSyncCmdStateDiff,
-    ShSyncCmdStateDiffFnSpec, ShSyncCmdSyncStatus,
+    ShSyncCmdApplyOpSpec, ShSyncCmdCleanOpSpec, ShSyncCmdData, ShSyncCmdError,
+    ShSyncCmdExecutionRecord, ShSyncCmdStateCurrentFnSpec, ShSyncCmdStateDesiredFnSpec,
+    ShSyncCmdStateDiff, ShSyncCmdStateDiffFnSpec, ShSyncCmdSyncStatus,
 };
 
 /// Item spec for executing a shell command.
@@ -54,6 +54,7 @@ where
 {
     type ApplyOpSpec = ShSyncCmdApplyOpSpec<Id>;
     type CleanOpSpec = ShSyncCmdCleanOpSpec<Id>;
+    type Data<'op> = ShSyncCmdData<'op, Id>;
     type Error = ShSyncCmdError;
     type State = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;
     type StateCurrentFnSpec = ShSyncCmdStateCurrentFnSpec<Id>;
@@ -67,5 +68,13 @@ where
 
     async fn setup(&self, _resources: &mut Resources<Empty>) -> Result<(), ShSyncCmdError> {
         Ok(())
+    }
+
+    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, ShSyncCmdError> {
+        let state = State::new(
+            ShSyncCmdSyncStatus::NotExecuted,
+            ShSyncCmdExecutionRecord::None,
+        );
+        Ok(state)
     }
 }

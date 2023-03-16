@@ -45,6 +45,7 @@ impl VecCopyItemSpec {
 impl ItemSpec for VecCopyItemSpec {
     type ApplyOpSpec = VecCopyApplyOpSpec;
     type CleanOpSpec = VecCopyCleanOpSpec;
+    type Data<'op> = VecCopyParams<'op>;
     type Error = VecCopyError;
     type State = VecCopyState;
     type StateCurrentFnSpec = VecCopyStateCurrentFnSpec;
@@ -54,6 +55,10 @@ impl ItemSpec for VecCopyItemSpec {
 
     fn id(&self) -> &ItemSpecId {
         Self::ID
+    }
+
+    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, VecCopyError> {
+        Ok(VecCopyState::new())
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {
