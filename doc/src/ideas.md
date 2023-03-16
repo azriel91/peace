@@ -126,6 +126,20 @@ For items that cost, it is useful to have an expiry time that causes it to be de
 </div>
 </details>
 
+<details>
+<summary>10. Interrupt / cancel safety</summary>
+<div>
+
+The [`tokio-graceful-shutdown`] library can be used to introduce interrupt safety into item spec executions. This is particularly useful for write operations.
+
+See the [`is_shutdown_requested`] method in particular.
+
+[`tokio-graceful-shutdown`]: https://github.com/Finomnis/tokio-graceful-shutdown
+[`is_shutdown_requested`]: https://docs.rs/tokio-graceful-shutdown/latest/tokio_graceful_shutdown/struct.SubsystemHandle.html#method.is_shutdown_requested
+
+</div>
+</details>
+
 
 ## Notes
 
