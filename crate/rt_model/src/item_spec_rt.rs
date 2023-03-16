@@ -41,6 +41,13 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// `StatesDesiredFile`.
     fn state_register(&self, states_type_regs: &mut StatesTypeRegs);
 
+    /// Runs [`ItemSpec::state_clean`].
+    ///
+    /// [`ItemSpec::state_clean`]: peace_cfg::ItemSpec::state_clean
+    async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
+    where
+        E: Debug + std::error::Error;
+
     /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`try_exec`].
     ///
     /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec

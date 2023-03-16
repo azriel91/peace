@@ -145,6 +145,19 @@ where
         + Send
         + Sync,
 {
+    async fn state_clean<ResourcesTs>(
+        &self,
+        resources: &Resources<ResourcesTs>,
+    ) -> Result<State, E> {
+        let state_clean = {
+            let data =
+                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
+            <IS as peace_cfg::ItemSpec>::state_clean(data).await?
+        };
+
+        Ok(state_clean)
+    }
+
     async fn state_current_try_exec<ResourcesTs>(
         &self,
         resources: &Resources<ResourcesTs>,
@@ -715,6 +728,13 @@ where
         states_type_regs
             .states_desired_type_reg_mut()
             .register::<State>(<IS as ItemSpec>::id(self).clone());
+    }
+
+    async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
+        self.state_clean(resources)
+            .await
+            .map(BoxDtDisplay::new)
+            .map_err(Into::<E>::into)
     }
 
     async fn state_current_try_exec(
