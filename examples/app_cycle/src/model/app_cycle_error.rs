@@ -124,6 +124,14 @@ pub enum AppCycleError {
         #[from]
         crate::item_specs::peace_aws_s3_bucket::S3BucketError,
     ),
+    /// An `S3Object` item spec error occurred.
+    #[error("An `S3Object` item spec error occurred.")]
+    S3ObjectItemSpec(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        crate::item_specs::peace_aws_s3_object::S3ObjectError,
+    ),
 
     // === Framework errors === //
     /// A `peace` runtime error occurred.

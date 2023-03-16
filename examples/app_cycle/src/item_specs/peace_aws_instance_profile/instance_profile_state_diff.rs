@@ -60,9 +60,16 @@ impl fmt::Display for InstanceProfileStateDiff {
                         This is a bug."
                     )
                 }
-                (None, Some(_)) => todo!(),
-                (Some(_), None) => todo!(),
-                (Some(_), Some(_)) => todo!(),
+                (None, Some((path_current, path_desired))) => {
+                    write!(f, "path changed from {path_current} to {path_desired}")
+                }
+                (Some((name_current, name_desired)), None) => {
+                    write!(f, "name changed from {name_current} to {name_desired}")
+                }
+                (Some((name_current, name_desired)), Some((path_current, path_desired))) => write!(
+                    f,
+                    "name and path changed from {name_current}:{path_current} to {name_desired}:{path_desired}"
+                ),
             },
             InstanceProfileStateDiff::InSyncExists => {
                 write!(f, "exists and is up to date.")

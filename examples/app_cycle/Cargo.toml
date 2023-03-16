@@ -21,9 +21,12 @@ crate-type = ["cdylib", "rlib"]
 aws-config = "0.54.1"
 aws-sdk-iam = "0.24.0"
 aws-sdk-s3 = "0.24.0"
+aws-smithy-http = "0.54.4" # used to reference error type, otherwise not recommended for direct usage
+base64 = "0.21.0"
 cfg-if = { workspace = true }
 derivative = { workspace = true }
 futures = "0.3.27"
+md5-rs = "0.1.5"  # WASM compatible, and reads bytes as stream
 peace = { path = "../..", default-features = false }
 peace_item_specs = { path = "../../item_specs", features = ["file_download", "tar_x"] }
 semver = "1.0.17"

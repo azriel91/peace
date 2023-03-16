@@ -17,6 +17,7 @@ use crate::{
         peace_aws_iam_role::{IamRoleItemSpec, IamRoleParams},
         peace_aws_instance_profile::{InstanceProfileItemSpec, InstanceProfileParams},
         peace_aws_s3_bucket::{S3BucketItemSpec, S3BucketParams},
+        peace_aws_s3_object::{S3ObjectItemSpec, S3ObjectParams},
     },
     model::{AppCycleError, RepoSlug, WebAppFileId},
 };
@@ -53,13 +54,23 @@ impl EnvDeployFlow {
                         .into(),
                 );
 
-                let _s3_bucket_id = graph_builder.add_fn(
+                let s3_bucket_id = graph_builder.add_fn(
                     S3BucketItemSpec::<WebAppFileId>::new(item_spec_id!("s3_bucket")).into(),
                 );
+                let web_app_s3_object_id = graph_builder.add_fn(
+                    S3ObjectItemSpec::<WebAppFileId>::new(item_spec_id!("web_app_s3_object"))
+                        .into(),
+                );
 
-                graph_builder.add_edge(web_app_download_id, web_app_extract_id)?;
-                graph_builder.add_edge(iam_policy_item_spec_id, iam_role_item_spec_id)?;
-                graph_builder.add_edge(iam_role_item_spec_id, instance_profile_item_spec_id)?;
+                graph_builder.add_edges([
+                    (web_app_download_id, web_app_extract_id),
+                    (iam_policy_item_spec_id, iam_role_item_spec_id),
+                    (iam_role_item_spec_id, instance_profile_item_spec_id),
+                    // Download the file before uploading it.
+                    (web_app_download_id, web_app_s3_object_id),
+                    // Create the bucket before uploading to it.
+                    (s3_bucket_id, web_app_s3_object_id),
+                ])?;
                 graph_builder.build()
             };
 
@@ -90,7 +101,7 @@ impl EnvDeployFlow {
             //
             // linux:
             // https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.tar
-            let src = {
+            let web_app_file_url = {
                 match url {
                     Some(url) => url,
                     None => {
@@ -106,10 +117,10 @@ impl EnvDeployFlow {
                     }
                 }
             };
-            let dest = web_app_download_dir.join(format!("{repo_name}.{file_ext}"));
+            let web_app_path_local = web_app_download_dir.join(format!("{repo_name}.{file_ext}"));
             FileDownloadParams::new(
-                src,
-                dest,
+                web_app_file_url,
+                web_app_path_local,
                 #[cfg(target_arch = "wasm32")]
                 peace_item_specs::file_download::StorageForm::Base64,
             )
@@ -147,7 +158,17 @@ impl EnvDeployFlow {
         let instance_profile_params =
             InstanceProfileParams::<WebAppFileId>::new(instance_profile_name, path, true);
 
-        let s3_bucket_params = S3BucketParams::<WebAppFileId>::new(bucket_name);
+        let s3_bucket_params = S3BucketParams::<WebAppFileId>::new(bucket_name.clone());
+        let web_app_s3_object_params = {
+            let web_app_path_local = web_app_file_download_params.dest().to_path_buf();
+            let object_key = web_app_path_local
+                .file_name()
+                .expect("Expected web app file name to exist.")
+                .to_string_lossy()
+                .to_string();
+
+            S3ObjectParams::<WebAppFileId>::new(web_app_path_local, bucket_name, object_key)
+        };
 
         Ok(EnvDeployFlowParams {
             web_app_file_download_params,
@@ -156,6 +177,7 @@ impl EnvDeployFlow {
             iam_role_params,
             instance_profile_params,
             s3_bucket_params,
+            web_app_s3_object_params,
         })
     }
 }
@@ -168,4 +190,5 @@ pub struct EnvDeployFlowParams {
     pub iam_role_params: IamRoleParams<WebAppFileId>,
     pub instance_profile_params: InstanceProfileParams<WebAppFileId>,
     pub s3_bucket_params: S3BucketParams<WebAppFileId>,
+    pub web_app_s3_object_params: S3ObjectParams<WebAppFileId>,
 }
