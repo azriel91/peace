@@ -60,6 +60,11 @@ macro_rules! ws_profile_and_flow_params_augment {
                     $crate::model::WebAppFileId
                 >
             >(String::from("s3_bucket_params"))
+            .with_flow_param::<
+                $crate::item_specs::peace_aws_s3_object::S3ObjectParams<
+                    $crate::model::WebAppFileId
+                >
+            >(String::from("web_app_s3_object_params"))
             ;
     };
 }
