@@ -22,6 +22,20 @@ pub enum S3ObjectError {
         bucket_name_desired: String,
     },
 
+    /// Failed to check file to upload existence.
+    #[error("Failed to check file to upload existence: {}.", file_path.display())]
+    ObjectFileExists {
+        /// Path to the file to be uploaded.
+        file_path: PathBuf,
+        /// S3 bucket name.
+        bucket_name: String,
+        /// S3 object key.
+        object_key: String,
+        /// Underlying error.
+        #[source]
+        error: std::io::Error,
+    },
+
     /// Failed to open file to upload.
     #[error("Failed to open file to upload.")]
     ObjectFileOpen {
@@ -48,6 +62,20 @@ pub enum S3ObjectError {
         /// Underlying error.
         #[source]
         error: std::io::Error,
+    },
+
+    /// Error occurred opening file to stream.
+    #[error("Error occurred opening file to stream.")]
+    ObjectFileStream {
+        /// Path to the file to be uploaded.
+        file_path: PathBuf,
+        /// S3 bucket name.
+        bucket_name: String,
+        /// S3 object key.
+        object_key: String,
+        /// Underlying error.
+        #[source]
+        error: aws_smithy_http::byte_stream::error::Error,
     },
 
     /// Content MD5 hex string failed to be parsed as bytes.

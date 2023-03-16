@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use aws_sdk_s3::types::ByteStream;
 use base64::Engine;
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
@@ -102,6 +103,7 @@ where
                         content_md5_hexstr,
                     } => {
                         let client = data.client();
+                        let file_path = data.params().file_path();
                         let content_md5_b64 = {
                             let bytes = (0..content_md5_hexstr.len())
                                 .step_by(2)
@@ -119,7 +121,7 @@ where
                                     },
                                 )
                                 .map_err(|error| {
-                                    let file_path = data.params().file_path().to_path_buf();
+                                    let file_path = file_path.to_path_buf();
                                     let bucket_name = bucket_name.clone();
                                     let object_key = object_key.clone();
                                     let content_md5_hexstr = content_md5_hexstr.clone();
@@ -134,12 +136,23 @@ where
                                 })?;
                             base64::engine::general_purpose::STANDARD.encode(bytes)
                         };
-                        dbg!(&content_md5_b64);
-                        let put_object_output = client
+                        let _put_object_output = client
                             .put_object()
                             .bucket(bucket_name)
                             .key(object_key)
                             .content_md5(content_md5_b64)
+                            .body(ByteStream::from_path(file_path).await.map_err(|error| {
+                                let file_path = file_path.to_path_buf();
+                                let bucket_name = bucket_name.clone();
+                                let object_key = object_key.clone();
+
+                                S3ObjectError::ObjectFileStream {
+                                    file_path,
+                                    bucket_name,
+                                    object_key,
+                                    error,
+                                }
+                            })?)
                             .send()
                             .await
                             .map_err(|error| {
@@ -151,8 +164,6 @@ where
                                     error,
                                 }
                             })?;
-
-                        dbg!(put_object_output.e_tag());
 
                         let state_ensured = state_desired.clone();
 

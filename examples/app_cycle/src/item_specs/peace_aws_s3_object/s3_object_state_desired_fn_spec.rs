@@ -20,14 +20,31 @@ where
     async fn try_exec(
         s3_object_data: S3ObjectData<'_, Id>,
     ) -> Result<Option<Self::Output>, S3ObjectError> {
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let params = s3_object_data.params();
+            let file_path = params.file_path();
+            let bucket_name = params.bucket_name();
+            let object_key = params.object_key();
+            if !tokio::fs::try_exists(file_path).await.map_err(|error| {
+                S3ObjectError::ObjectFileExists {
+                    file_path: file_path.to_path_buf(),
+                    bucket_name: bucket_name.to_string(),
+                    object_key: object_key.to_string(),
+                    error,
+                }
+            })? {
+                return Ok(None);
+            }
+        }
         Self::exec(s3_object_data).await.map(Some)
     }
 
     async fn exec(s3_object_data: S3ObjectData<'_, Id>) -> Result<Self::Output, S3ObjectError> {
         let params = s3_object_data.params();
+        let file_path = params.file_path();
         let bucket_name = params.bucket_name().to_string();
         let object_key = params.object_key().to_string();
-        let file_path = params.file_path();
 
         #[cfg(not(target_arch = "wasm32"))]
         let content_md5_bytes = {
@@ -61,8 +78,6 @@ where
                 }
             }
         };
-
-        dbg!(content_md5_bytes);
 
         let content_md5_hexstr = content_md5_bytes
             .iter()

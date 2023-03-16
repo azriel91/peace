@@ -21,6 +21,7 @@ crate-type = ["cdylib", "rlib"]
 aws-config = "0.54.1"
 aws-sdk-iam = "0.24.0"
 aws-sdk-s3 = "0.24.0"
+aws-smithy-http = "0.54.4" # used to reference error type, otherwise not recommended for direct usage
 base64 = "0.21.0"
 cfg-if = { workspace = true }
 derivative = { workspace = true }

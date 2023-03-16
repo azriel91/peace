@@ -45,24 +45,15 @@ where
                 Some(content_md5_b64)
             }
             Err(error) => match &error {
-                SdkError::ServiceError(service_error) => {
-                    dbg!(&service_error);
-
-                    // If your user does not have permissions, AWS SDK Rust does not return an
-                    // access denied error. It just returns "Error"
-                    // with no other information.
-                    // https://github.com/awslabs/aws-sdk-rust/issues/227
-
-                    match service_error.err().kind {
-                        HeadObjectErrorKind::NotFound(_) => None,
-                        _ => {
-                            return Err(S3ObjectError::S3ObjectGetError {
-                                object_key: object_key.to_string(),
-                                error,
-                            });
-                        }
+                SdkError::ServiceError(service_error) => match service_error.err().kind {
+                    HeadObjectErrorKind::NotFound(_) => None,
+                    _ => {
+                        return Err(S3ObjectError::S3ObjectGetError {
+                            object_key: object_key.to_string(),
+                            error,
+                        });
                     }
-                }
+                },
                 _ => {
                     return Err(S3ObjectError::S3ObjectGetError {
                         object_key: object_key.to_string(),

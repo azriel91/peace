@@ -17,7 +17,7 @@ use crate::{
         peace_aws_iam_role::{IamRoleItemSpec, IamRoleParams},
         peace_aws_instance_profile::{InstanceProfileItemSpec, InstanceProfileParams},
         peace_aws_s3_bucket::{S3BucketItemSpec, S3BucketParams},
-        peace_aws_s3_object::S3ObjectParams,
+        peace_aws_s3_object::{S3ObjectItemSpec, S3ObjectParams},
     },
     model::{AppCycleError, RepoSlug, WebAppFileId},
 };
@@ -58,7 +58,7 @@ impl EnvDeployFlow {
                     S3BucketItemSpec::<WebAppFileId>::new(item_spec_id!("s3_bucket")).into(),
                 );
                 let web_app_s3_object_id = graph_builder.add_fn(
-                    S3BucketItemSpec::<WebAppFileId>::new(item_spec_id!("web_app_s3_object"))
+                    S3ObjectItemSpec::<WebAppFileId>::new(item_spec_id!("web_app_s3_object"))
                         .into(),
                 );
 
