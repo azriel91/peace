@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, TryFnSpec};
+use peace::cfg::{async_trait, state::Generated, TryFnSpec};
 
 use crate::item_specs::peace_aws_s3_object::{S3ObjectData, S3ObjectError, S3ObjectState};
 
@@ -87,7 +87,8 @@ where
         Ok(S3ObjectState::Some {
             bucket_name,
             object_key,
-            content_md5_hexstr,
+            content_md5_hexstr: Some(content_md5_hexstr),
+            e_tag: Generated::Tbd,
         })
     }
 }

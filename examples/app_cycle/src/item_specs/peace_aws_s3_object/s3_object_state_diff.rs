@@ -31,9 +31,9 @@ pub enum S3ObjectStateDiff {
     /// S3 object content has changed.
     ObjectContentModified {
         /// Current MD5 hex string of object content.
-        content_md5_hexstr_current: String,
+        content_md5_hexstr_current: Option<String>,
         /// Desired MD5 hex string of object content.
-        content_md5_hexstr_desired: String,
+        content_md5_hexstr_desired: Option<String>,
     },
     /// S3 object exists and is up to date.
     InSyncExists,
@@ -67,10 +67,17 @@ impl fmt::Display for S3ObjectStateDiff {
             S3ObjectStateDiff::ObjectContentModified {
                 content_md5_hexstr_current,
                 content_md5_hexstr_desired,
-            } => write!(
-                f,
-                "object content has changed from {content_md5_hexstr_current} to {content_md5_hexstr_desired}"
-            ),
+            } => {
+                let content_md5_hexstr_current =
+                    content_md5_hexstr_current.as_deref().unwrap_or("<none>");
+                let content_md5_hexstr_desired =
+                    content_md5_hexstr_desired.as_deref().unwrap_or("<none>");
+
+                write!(
+                    f,
+                    "object content has changed from {content_md5_hexstr_current} to {content_md5_hexstr_desired}"
+                )
+            }
             S3ObjectStateDiff::InSyncExists => {
                 write!(f, "exists and is up to date.")
             }

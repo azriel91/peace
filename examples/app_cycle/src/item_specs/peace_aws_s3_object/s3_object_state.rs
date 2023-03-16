@@ -1,5 +1,6 @@
 use std::fmt;
 
+use peace::cfg::state::Generated;
 use serde::{Deserialize, Serialize};
 
 /// S3 object state.
@@ -14,7 +15,9 @@ pub enum S3ObjectState {
         /// S3 object key.
         object_key: String,
         /// MD5 hex string of the content.
-        content_md5_hexstr: String,
+        content_md5_hexstr: Option<String>,
+        /// ETag served by S3.
+        e_tag: Generated<String>,
     },
 }
 
@@ -26,11 +29,16 @@ impl fmt::Display for S3ObjectState {
                 bucket_name,
                 object_key,
                 content_md5_hexstr,
+                e_tag: _,
             } => {
-                write!(
-                    f,
-                    "{bucket_name}/{object_key} with base64 MD5: {content_md5_hexstr}"
-                )
+                if let Some(content_md5_hexstr) = content_md5_hexstr {
+                    write!(
+                        f,
+                        "{bucket_name}/{object_key} with MD5 sum: {content_md5_hexstr}"
+                    )
+                } else {
+                    write!(f, "{bucket_name}/{object_key} (MD5 unknown)")
+                }
             }
         }
     }

@@ -4,7 +4,7 @@ use aws_sdk_s3::types::ByteStream;
 use base64::Engine;
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{async_trait, state::Generated, EnsureOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_s3_object::{
     S3ObjectData, S3ObjectError, S3ObjectState, S3ObjectStateDiff,
@@ -101,9 +101,13 @@ where
                         bucket_name,
                         object_key,
                         content_md5_hexstr,
+                        e_tag: _,
                     } => {
                         let client = data.client();
                         let file_path = data.params().file_path();
+                        let Some(content_md5_hexstr) = content_md5_hexstr else {
+                            panic!("Content MD5 must be Some as this is calculated from an existent local file.");
+                        };
                         let content_md5_b64 = {
                             let bytes = (0..content_md5_hexstr.len())
                                 .step_by(2)
@@ -136,11 +140,12 @@ where
                                 })?;
                             base64::engine::general_purpose::STANDARD.encode(bytes)
                         };
-                        let _put_object_output = client
+                        let put_object_output = client
                             .put_object()
                             .bucket(bucket_name)
                             .key(object_key)
                             .content_md5(content_md5_b64)
+                            .metadata("content_md5_hexstr", content_md5_hexstr)
                             .body(ByteStream::from_path(file_path).await.map_err(|error| {
                                 let file_path = file_path.to_path_buf();
                                 let bucket_name = bucket_name.clone();
@@ -164,8 +169,17 @@ where
                                     error,
                                 }
                             })?;
+                        let e_tag = put_object_output
+                            .e_tag()
+                            .expect("Expected ETag to be some when put_object is successful.")
+                            .to_string();
 
-                        let state_ensured = state_desired.clone();
+                        let state_ensured = S3ObjectState::Some {
+                            bucket_name: bucket_name.clone(),
+                            object_key: object_key.clone(),
+                            content_md5_hexstr: Some(content_md5_hexstr.clone()),
+                            e_tag: Generated::Value(e_tag),
+                        };
 
                         Ok(state_ensured)
                     }

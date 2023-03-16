@@ -2,8 +2,7 @@ use std::marker::PhantomData;
 
 use aws_sdk_iam::types::SdkError;
 use aws_sdk_s3::error::HeadObjectErrorKind;
-use base64::Engine;
-use peace::cfg::{async_trait, TryFnSpec};
+use peace::cfg::{async_trait, state::Generated, TryFnSpec};
 
 use crate::item_specs::peace_aws_s3_object::{S3ObjectData, S3ObjectError, S3ObjectState};
 
@@ -35,14 +34,20 @@ where
             .key(object_key)
             .send()
             .await;
-        let content_md5_b64 = match head_object_result {
+        let content_md5_and_e_tag = match head_object_result {
             Ok(head_object_output) => {
-                let content_md5_b64 = head_object_output
+                let content_md5_hexstr = head_object_output
+                    .metadata()
+                    .and_then(|metadata| metadata.get("content_md5_hexstr"))
+                    .cloned();
+
+                let e_tag = head_object_output
                     .e_tag()
                     .expect("Expected S3 object e_tag to be Some when head_object is successful.")
+                    .trim_matches('"')
                     .to_string();
 
-                Some(content_md5_b64)
+                Some((content_md5_hexstr, e_tag))
             }
             Err(error) => match &error {
                 SdkError::ServiceError(service_error) => match service_error.err().kind {
@@ -63,23 +68,12 @@ where
             },
         };
 
-        if let Some(content_md5_b64) = content_md5_b64 {
-            let content_md5_bytes = base64::engine::general_purpose::STANDARD
-                .decode(&content_md5_b64)
-                .map_err(|error| S3ObjectError::ObjectETagB64Decode {
-                    bucket_name: bucket_name.to_string(),
-                    object_key: object_key.to_string(),
-                    content_md5_b64,
-                    error,
-                })?;
-            let content_md5_hexstr = content_md5_bytes
-                .iter()
-                .map(|x| format!("{:02x}", x))
-                .collect::<String>();
+        if let Some((content_md5_hexstr, e_tag)) = content_md5_and_e_tag {
             let state_current = S3ObjectState::Some {
                 bucket_name: bucket_name.to_string(),
                 object_key: object_key.to_string(),
                 content_md5_hexstr,
+                e_tag: Generated::Value(e_tag),
             };
 
             Ok(state_current)

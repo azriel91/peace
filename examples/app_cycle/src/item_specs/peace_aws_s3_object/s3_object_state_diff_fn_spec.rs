@@ -27,11 +27,13 @@ impl StateDiffFnSpec for S3ObjectStateDiffFnSpec {
                     bucket_name: bucket_name_current,
                     object_key: object_key_current,
                     content_md5_hexstr: content_md5_hexstr_current,
+                    e_tag: _e_tag_current,
                 },
                 S3ObjectState::Some {
                     bucket_name: bucket_name_desired,
                     object_key: object_key_desired,
                     content_md5_hexstr: content_md5_hexstr_desired,
+                    e_tag: _e_tag_desired,
                 },
             ) => {
                 if bucket_name_current != bucket_name_desired {
@@ -46,8 +48,8 @@ impl StateDiffFnSpec for S3ObjectStateDiffFnSpec {
                     }
                 } else if content_md5_hexstr_current != content_md5_hexstr_desired {
                     S3ObjectStateDiff::ObjectContentModified {
-                        content_md5_hexstr_current: content_md5_hexstr_current.to_string(),
-                        content_md5_hexstr_desired: content_md5_hexstr_desired.to_string(),
+                        content_md5_hexstr_current: content_md5_hexstr_current.clone(),
+                        content_md5_hexstr_desired: content_md5_hexstr_desired.clone(),
                     }
                 } else {
                     S3ObjectStateDiff::InSyncExists

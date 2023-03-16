@@ -29,6 +29,7 @@ where
                 bucket_name: _,
                 object_key: _,
                 content_md5_hexstr: _,
+                e_tag: _,
             } => {
                 #[cfg(not(feature = "output_progress"))]
                 {
@@ -63,6 +64,7 @@ where
                 bucket_name,
                 object_key,
                 content_md5_hexstr: _,
+                e_tag: _,
             } => {
                 let client = data.client();
                 client
