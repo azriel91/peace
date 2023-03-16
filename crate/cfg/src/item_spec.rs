@@ -3,6 +3,7 @@ use std::fmt;
 use async_trait::async_trait;
 use dyn_clone::DynClone;
 use peace_core::ItemSpecId;
+use peace_data::Data;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -98,6 +99,14 @@ pub trait ItemSpec: DynClone {
     /// [`StatePhysical`]: Self::StatePhysical
     type StateDiff: Clone + fmt::Display + Serialize + DeserializeOwned;
 
+    /// Data that the function reads from, or writes to.
+    ///
+    /// These may be parameters to the function, or information calculated from
+    /// previous functions.
+    type Data<'op>: Data<'op>
+    where
+        Self: 'op;
+
     /// Function that returns the current state of the managed item.
     type StateCurrentFnSpec: TryFnSpec<Error = Self::Error, Output = Self::State>;
 
@@ -182,4 +191,14 @@ pub trait ItemSpec: DynClone {
     /// [`check`]: crate::ApplyOpSpec::check
     /// [`exec`]: crate::ApplyOpSpec::exec
     async fn setup(&self, data: &mut Resources<Empty>) -> Result<(), Self::Error>;
+
+    /// Returns the representation of a clean `State`.
+    ///
+    /// # Implementors
+    ///
+    /// This should return essentially the `None` concept of the item spec
+    /// state. The diff between this and the current state will be shown to the
+    /// user when they want to see what would be cleaned up by the clean
+    /// command.
+    async fn state_clean(data: Self::Data<'_>) -> Result<Self::State, Self::Error>;
 }
