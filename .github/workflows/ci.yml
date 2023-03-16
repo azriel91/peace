@@ -178,7 +178,7 @@ jobs:
   build_and_test_windows:
     name: Build and Test (Windows)
     runs-on: windows-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - name: Prepare symlink configuration
         run: git config --global core.symlinks true
