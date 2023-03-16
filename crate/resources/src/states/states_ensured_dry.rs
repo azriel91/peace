@@ -8,7 +8,7 @@ use crate::{
 
 /// Dry-run ensured `State`s for all `ItemSpec`s.
 ///
-/// These are the `State`s collected after `EnsureOpSpec::exec_dry` has been
+/// These are the `State`s collected after `ApplyOpSpec::exec_dry` has been
 /// run.
 ///
 /// # Implementors

@@ -15,7 +15,7 @@ cfg_if::cfg_if! {
     }
 }
 
-use peace::cfg::{async_trait, state::FetchedOpt, EnsureOpSpec, OpCheckStatus, OpCtx, State};
+use peace::cfg::{async_trait, state::FetchedOpt, ApplyOpSpec, OpCheckStatus, OpCtx, State};
 use reqwest::header::ETAG;
 
 use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
@@ -23,11 +23,11 @@ use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState, FileDo
 #[cfg(feature = "output_progress")]
 use peace::{cfg::progress::ProgressLimit, diff::Tracked};
 
-/// Ensure OpSpec for the file to download.
+/// ApplyOpSpec for the file to download.
 #[derive(Debug)]
-pub struct FileDownloadEnsureOpSpec<Id>(PhantomData<Id>);
+pub struct FileDownloadApplyOpSpec<Id>(PhantomData<Id>);
 
-impl<Id> FileDownloadEnsureOpSpec<Id>
+impl<Id> FileDownloadApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -233,7 +233,7 @@ where
 }
 
 #[async_trait(?Send)]
-impl<Id> EnsureOpSpec for FileDownloadEnsureOpSpec<Id>
+impl<Id> ApplyOpSpec for FileDownloadApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {

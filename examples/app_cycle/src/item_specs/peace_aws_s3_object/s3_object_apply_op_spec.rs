@@ -4,18 +4,18 @@ use aws_sdk_s3::types::ByteStream;
 use base64::Engine;
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, state::Generated, EnsureOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_s3_object::{
     S3ObjectData, S3ObjectError, S3ObjectState, S3ObjectStateDiff,
 };
 
-/// Ensure OpSpec for the S3 object state.
+/// ApplyOpSpec for the S3 object state.
 #[derive(Debug)]
-pub struct S3ObjectEnsureOpSpec<Id>(PhantomData<Id>);
+pub struct S3ObjectApplyOpSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-impl<Id> EnsureOpSpec for S3ObjectEnsureOpSpec<Id>
+impl<Id> ApplyOpSpec for S3ObjectApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -48,7 +48,7 @@ where
             }
             S3ObjectStateDiff::Removed => {
                 panic!(
-                    "`S3ObjectEnsureOpSpec::check` called with `S3ObjectStateDiff::Removed`.\n\
+                    "`S3ObjectApplyOpSpec::check` called with `S3ObjectStateDiff::Removed`.\n\
                     An ensure should never remove a object."
                 );
             }
@@ -93,9 +93,7 @@ where
             S3ObjectStateDiff::Added | S3ObjectStateDiff::ObjectContentModified { .. } => {
                 match state_desired {
                     S3ObjectState::None => {
-                        panic!(
-                            "`S3ObjectEnsureOpSpec::exec` called with state_desired being None."
-                        );
+                        panic!("`S3ObjectApplyOpSpec::exec` called with state_desired being None.");
                     }
                     S3ObjectState::Some {
                         bucket_name,
@@ -187,13 +185,13 @@ where
             }
             S3ObjectStateDiff::Removed => {
                 panic!(
-                    "`S3ObjectEnsureOpSpec::exec` called with `S3ObjectStateDiff::Removed`.\n\
+                    "`S3ObjectApplyOpSpec::exec` called with `S3ObjectStateDiff::Removed`.\n\
                     An ensure should never remove a object."
                 );
             }
             S3ObjectStateDiff::InSyncExists | S3ObjectStateDiff::InSyncDoesNotExist => {
                 unreachable!(
-                    "`S3ObjectEnsureOpSpec::exec` should never be called when state is in sync."
+                    "`S3ObjectApplyOpSpec::exec` should never be called when state is in sync."
                 );
             }
             S3ObjectStateDiff::BucketNameModified {
@@ -208,7 +206,7 @@ where
                 object_key_desired,
             } => {
                 let S3ObjectState::Some {bucket_name, ..} = state_desired else {
-                    panic!("`S3ObjectEnsureOpSpec::exec` called with state_desired being None.");
+                    panic!("`S3ObjectApplyOpSpec::exec` called with state_desired being None.");
                 };
 
                 Err(S3ObjectError::ObjectKeyModificationNotSupported {

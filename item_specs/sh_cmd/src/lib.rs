@@ -14,8 +14,8 @@
 //! * Clean execution.
 
 pub use crate::{
-    sh_cmd::ShCmd, sh_cmd_clean_op_spec::ShCmdCleanOpSpec, sh_cmd_data::ShCmdData,
-    sh_cmd_ensure_op_spec::ShCmdEnsureOpSpec, sh_cmd_error::ShCmdError,
+    sh_cmd::ShCmd, sh_cmd_apply_op_spec::ShCmdApplyOpSpec, sh_cmd_clean_op_spec::ShCmdCleanOpSpec,
+    sh_cmd_data::ShCmdData, sh_cmd_error::ShCmdError,
     sh_cmd_execution_record::ShCmdExecutionRecord, sh_cmd_item_spec::ShCmdItemSpec,
     sh_cmd_params::ShCmdParams, sh_cmd_state::ShCmdState,
     sh_cmd_state_current_fn_spec::ShCmdStateCurrentFnSpec,
@@ -26,9 +26,9 @@ pub use crate::{
 pub(crate) use sh_cmd_executor::ShCmdExecutor;
 
 mod sh_cmd;
+mod sh_cmd_apply_op_spec;
 mod sh_cmd_clean_op_spec;
 mod sh_cmd_data;
-mod sh_cmd_ensure_op_spec;
 mod sh_cmd_error;
 mod sh_cmd_execution_record;
 mod sh_cmd_executor;

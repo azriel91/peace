@@ -1,18 +1,18 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx, State};
+use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx, State};
 
 use crate::{
     ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord, ShSyncCmdStateDiff,
     ShSyncCmdSyncStatus,
 };
 
-/// Ensure OpSpec for the command to execute.
+/// ApplyOpSpec for the command to execute.
 #[derive(Debug)]
-pub struct ShSyncCmdEnsureOpSpec<Id>(PhantomData<Id>);
+pub struct ShSyncCmdApplyOpSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-impl<Id> EnsureOpSpec for ShSyncCmdEnsureOpSpec<Id>
+impl<Id> ApplyOpSpec for ShSyncCmdApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {

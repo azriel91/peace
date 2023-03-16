@@ -15,8 +15,8 @@ use crate::outcomes::ItemEnsurePartialRt;
 ///     - [`StateCurrentFnSpec::exec`]
 ///     - [`StateDesiredFnSpec::exec`]
 ///     - [`StateDiffFnSpec::exec`]
-///     - [`EnsureOpSpec::check`]
-///     - [`EnsureOpSpec::exec`]
+///     - [`ApplyOpSpec::check`]
+///     - [`ApplyOpSpec::exec`]
 ///     - [`StateCurrentFnSpec::exec`]
 ///
 /// 2. Each function call *may* fail.
@@ -29,8 +29,8 @@ use crate::outcomes::ItemEnsurePartialRt;
 /// [`StateCurrentFnSpec::exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
 /// [`StateDesiredFnSpec::exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
 /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
-/// [`EnsureOpSpec::check`]: peace_cfg::ItemSpec::EnsureOpSpec
-/// [`EnsureOpSpec::exec`]: peace_cfg::ItemSpec::EnsureOpSpec
+/// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
+/// [`ApplyOpSpec::exec`]: peace_cfg::ItemSpec::ApplyOpSpec
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct ItemEnsurePartial<State, StateDiff> {
     /// State saved on disk before the execution.

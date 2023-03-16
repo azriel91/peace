@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, state::Generated, EnsureOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_iam_policy::{
     model::PolicyIdArnVersion, IamPolicyData, IamPolicyError, IamPolicyState, IamPolicyStateDiff,
@@ -10,12 +10,12 @@ use crate::item_specs::peace_aws_iam_policy::{
 
 use super::model::ManagedPolicyArn;
 
-/// Ensure OpSpec for the instance profile state.
+/// ApplyOpSpec for the instance profile state.
 #[derive(Debug)]
-pub struct IamPolicyEnsureOpSpec<Id>(PhantomData<Id>);
+pub struct IamPolicyApplyOpSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-impl<Id> EnsureOpSpec for IamPolicyEnsureOpSpec<Id>
+impl<Id> ApplyOpSpec for IamPolicyApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -48,7 +48,7 @@ where
             }
             IamPolicyStateDiff::Removed => {
                 panic!(
-                    "`IamPolicyEnsureOpSpec::check` called with `IamPolicyStateDiff::Removed`.\n\
+                    "`IamPolicyApplyOpSpec::check` called with `IamPolicyStateDiff::Removed`.\n\
                     An ensure should never remove an instance profile."
                 );
             }
@@ -97,7 +97,7 @@ where
         match diff {
             IamPolicyStateDiff::Added => match state_desired {
                 IamPolicyState::None => {
-                    panic!("`IamPolicyEnsureOpSpec::exec` called with state_desired being None.");
+                    panic!("`IamPolicyApplyOpSpec::exec` called with state_desired being None.");
                 }
                 IamPolicyState::Some {
                     name,
@@ -161,13 +161,13 @@ where
             },
             IamPolicyStateDiff::Removed => {
                 panic!(
-                    "`IamPolicyEnsureOpSpec::exec` called with `IamPolicyStateDiff::Removed`.\n\
+                    "`IamPolicyApplyOpSpec::exec` called with `IamPolicyStateDiff::Removed`.\n\
                     An ensure should never remove an instance profile."
                 );
             }
             IamPolicyStateDiff::DocumentModified { .. } => match state_desired {
                 IamPolicyState::None => {
-                    panic!("`IamPolicyEnsureOpSpec::exec` called with state_desired being None.");
+                    panic!("`IamPolicyApplyOpSpec::exec` called with state_desired being None.");
                 }
                 IamPolicyState::Some {
                     name,
@@ -225,7 +225,7 @@ where
             },
             IamPolicyStateDiff::InSyncExists | IamPolicyStateDiff::InSyncDoesNotExist => {
                 unreachable!(
-                    "`IamPolicyEnsureOpSpec::exec` should never be called when state is in sync."
+                    "`IamPolicyApplyOpSpec::exec` should never be called when state is in sync."
                 );
             }
             IamPolicyStateDiff::NameOrPathModified {

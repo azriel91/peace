@@ -45,7 +45,7 @@ use crate::states::{
 /// }
 /// ```
 ///
-/// You may reference [`StatesSaved`] in `EnsureOpSpec::Data` for reading. It
+/// You may reference [`StatesSaved`] in `ApplyOpSpec::Data` for reading. It
 /// is not mutable as `StatesSaved` must remain unchanged so that all
 /// `ItemSpec`s operate over consistent data.
 ///

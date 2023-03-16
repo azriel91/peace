@@ -89,7 +89,7 @@ When an item spec ensure does multiple writes, there is a possibility of not all
 
 In the last case, we cannot safely write state to disk, so a `StateCurrent` discover is needed to bring `StatesSaved` up to date. However, the previous two cases, it is possible for `ItemSpec`s to return `State` that has been partially ensured, without making any further outgoing calls -- i.e. infer `StatesEnsured` based on the successful writes so far.
 
-Note that this places a burden on the `ItemSpec` implementor to return the partial state ensured (which may conflict with keeping the `State` simple), as well as make the `EnsureOpSpec::exec` return value more complex.
+Note that this places a burden on the `ItemSpec` implementor to return the partial state ensured (which may conflict with keeping the `State` simple), as well as make the `ApplyOpSpec::exec` return value more complex.
 
 The trade off may not be worthwhile.
 

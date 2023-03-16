@@ -2,18 +2,18 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, state::Generated, EnsureOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_instance_profile::{
     model::InstanceProfileIdAndArn, InstanceProfileCleanOpSpec, InstanceProfileData,
     InstanceProfileError, InstanceProfileState, InstanceProfileStateDiff,
 };
 
-/// Ensure OpSpec for the instance profile state.
+/// ApplyOpSpec for the instance profile state.
 #[derive(Debug)]
-pub struct InstanceProfileEnsureOpSpec<Id>(PhantomData<Id>);
+pub struct InstanceProfileApplyOpSpec<Id>(PhantomData<Id>);
 
-impl<Id> InstanceProfileEnsureOpSpec<Id> {
+impl<Id> InstanceProfileApplyOpSpec<Id> {
     async fn role_associate(
         client: &aws_sdk_iam::Client,
         name: &str,
@@ -43,7 +43,7 @@ impl<Id> InstanceProfileEnsureOpSpec<Id> {
 }
 
 #[async_trait(?Send)]
-impl<Id> EnsureOpSpec for InstanceProfileEnsureOpSpec<Id>
+impl<Id> ApplyOpSpec for InstanceProfileApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -77,7 +77,7 @@ where
             }
             InstanceProfileStateDiff::Removed => {
                 panic!(
-                    "`InstanceProfileEnsureOpSpec::check` called with `InstanceProfileStateDiff::Removed`.\n\
+                    "`InstanceProfileApplyOpSpec::check` called with `InstanceProfileStateDiff::Removed`.\n\
                     An ensure should never remove an instance profile."
                 );
             }
@@ -116,7 +116,7 @@ where
             InstanceProfileStateDiff::Added => match state_desired {
                 InstanceProfileState::None => {
                     panic!(
-                        "`InstanceProfileEnsureOpSpec::exec` called with state_desired being None."
+                        "`InstanceProfileApplyOpSpec::exec` called with state_desired being None."
                     );
                 }
                 InstanceProfileState::Some {
@@ -170,14 +170,14 @@ where
             },
             InstanceProfileStateDiff::Removed => {
                 panic!(
-                    "`InstanceProfileEnsureOpSpec::exec` called with `InstanceProfileStateDiff::Removed`.\n\
+                    "`InstanceProfileApplyOpSpec::exec` called with `InstanceProfileStateDiff::Removed`.\n\
                     An ensure should never remove an instance profile."
                 );
             }
             InstanceProfileStateDiff::InSyncExists
             | InstanceProfileStateDiff::InSyncDoesNotExist => {
                 unreachable!(
-                    "`InstanceProfileEnsureOpSpec::exec` should never be called when state is in sync."
+                    "`InstanceProfileApplyOpSpec::exec` should never be called when state is in sync."
                 );
             }
             InstanceProfileStateDiff::NameOrPathModified {
@@ -194,7 +194,7 @@ where
                 let (name, path) = match state_desired {
                     InstanceProfileState::None => {
                         panic!(
-                            "`InstanceProfileEnsureOpSpec::exec` called with state_desired being None."
+                            "`InstanceProfileApplyOpSpec::exec` called with state_desired being None."
                         );
                     }
                     InstanceProfileState::Some {

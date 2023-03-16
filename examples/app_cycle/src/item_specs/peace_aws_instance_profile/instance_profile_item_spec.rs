@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_instance_profile::{
-    InstanceProfileCleanOpSpec, InstanceProfileEnsureOpSpec, InstanceProfileError,
+    InstanceProfileApplyOpSpec, InstanceProfileCleanOpSpec, InstanceProfileError,
     InstanceProfileState, InstanceProfileStateCurrentFnSpec, InstanceProfileStateDesiredFnSpec,
     InstanceProfileStateDiff, InstanceProfileStateDiffFnSpec,
 };
@@ -58,8 +58,8 @@ impl<Id> ItemSpec for InstanceProfileItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
+    type ApplyOpSpec = InstanceProfileApplyOpSpec<Id>;
     type CleanOpSpec = InstanceProfileCleanOpSpec<Id>;
-    type EnsureOpSpec = InstanceProfileEnsureOpSpec<Id>;
     type Error = InstanceProfileError;
     type State = InstanceProfileState;
     type StateCurrentFnSpec = InstanceProfileStateCurrentFnSpec<Id>;

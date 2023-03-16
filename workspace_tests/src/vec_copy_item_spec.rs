@@ -8,7 +8,7 @@ use diff::{Diff, VecDiff, VecDiffType};
 use peace::cfg::progress::ProgressLimit;
 use peace::{
     cfg::{
-        async_trait, item_spec_id, CleanOpSpec, EnsureOpSpec, ItemSpec, ItemSpecId, OpCheckStatus,
+        async_trait, item_spec_id, ApplyOpSpec, CleanOpSpec, ItemSpec, ItemSpecId, OpCheckStatus,
         OpCtx, StateDiffFnSpec, TryFnSpec,
     },
     data::{
@@ -29,7 +29,7 @@ pub type VecCopyItemSpecWrapper = ItemSpecWrapper<
     VecCopyStateCurrentFnSpec,
     VecCopyStateDesiredFnSpec,
     VecCopyStateDiffFnSpec,
-    VecCopyEnsureOpSpec,
+    VecCopyApplyOpSpec,
     VecCopyCleanOpSpec,
 >;
 
@@ -43,8 +43,8 @@ impl VecCopyItemSpec {
 
 #[async_trait(?Send)]
 impl ItemSpec for VecCopyItemSpec {
+    type ApplyOpSpec = VecCopyApplyOpSpec;
     type CleanOpSpec = VecCopyCleanOpSpec;
-    type EnsureOpSpec = VecCopyEnsureOpSpec;
     type Error = VecCopyError;
     type State = VecCopyState;
     type StateCurrentFnSpec = VecCopyStateCurrentFnSpec;
@@ -119,12 +119,12 @@ impl CleanOpSpec for VecCopyCleanOpSpec {
     }
 }
 
-/// `EnsureOpSpec` for the vec to copy.
+/// `ApplyOpSpec` for the vec to copy.
 #[derive(Debug)]
-pub struct VecCopyEnsureOpSpec;
+pub struct VecCopyApplyOpSpec;
 
 #[async_trait(?Send)]
-impl EnsureOpSpec for VecCopyEnsureOpSpec {
+impl ApplyOpSpec for VecCopyApplyOpSpec {
     type Data<'op> = VecCopyParams<'op>;
     type Error = VecCopyError;
     type State = VecCopyState;

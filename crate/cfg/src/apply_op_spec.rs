@@ -4,7 +4,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{OpCheckStatus, OpCtx};
 
-/// Defines the logic and data of an ensure operation.
+/// Defines the logic and data of an apply operation.
 ///
 /// This includes:
 ///
@@ -28,19 +28,19 @@ use crate::{OpCheckStatus, OpCtx};
 /// [`exec_dry`]: Self::exec_dry
 /// [`exec`]: Self::exec
 #[async_trait(?Send)]
-pub trait EnsureOpSpec {
+pub trait ApplyOpSpec {
     /// Error returned when any of the functions of this operation err.
     type Error: std::error::Error;
 
     /// State of the managed item.
     ///
     /// This is the type returned by the [`StateCurrentFnSpec`], and is used by
-    /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
+    /// [`ApplyOpSpec`] to determine if [`exec`] needs to be run.
     ///
     /// See [`ItemSpec::State`] for more detail.
     ///
     /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
-    /// [`EnsureOpSpec`]: crate::ItemSpec::EnsureOpSpec
+    /// [`ApplyOpSpec`]: crate::ItemSpec::ApplyOpSpec
     /// [`exec`]: Self::exec
     /// [`ItemSpec::State`]: crate::ItemSpec::State
     type State: Clone + Serialize + DeserializeOwned;

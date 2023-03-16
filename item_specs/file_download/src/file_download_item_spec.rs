@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    ETag, FileDownloadCleanOpSpec, FileDownloadEnsureOpSpec, FileDownloadError, FileDownloadState,
+    ETag, FileDownloadApplyOpSpec, FileDownloadCleanOpSpec, FileDownloadError, FileDownloadState,
     FileDownloadStateCurrentFnSpec, FileDownloadStateDesiredFnSpec, FileDownloadStateDiff,
     FileDownloadStateDiffFnSpec,
 };
@@ -52,8 +52,8 @@ impl<Id> ItemSpec for FileDownloadItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
+    type ApplyOpSpec = FileDownloadApplyOpSpec<Id>;
     type CleanOpSpec = FileDownloadCleanOpSpec<Id>;
-    type EnsureOpSpec = FileDownloadEnsureOpSpec<Id>;
     type Error = FileDownloadError;
     type State = State<FileDownloadState, FetchedOpt<ETag>>;
     type StateCurrentFnSpec = FileDownloadStateCurrentFnSpec<Id>;

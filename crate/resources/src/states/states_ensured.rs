@@ -8,7 +8,7 @@ use crate::{
 
 /// Ensured `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
 ///
-/// These are the `State`s collected after `EnsureOpSpec::exec` has been run.
+/// These are the `State`s collected after `ApplyOpSpec::exec` has been run.
 ///
 /// # Implementors
 ///

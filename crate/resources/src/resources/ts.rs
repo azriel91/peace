@@ -1,7 +1,7 @@
 //! Type states for [`Resources`].
 //!
 //! This allows compile time checking that [`Resources`] is in the correct state
-//! before a particular `TryFnSpec`, `EnsureOpSpec`, or `CleanOpSpec`
+//! before a particular `TryFnSpec`, `ApplyOpSpec`, or `CleanOpSpec`
 //! is executed with it.
 //!
 //! [`Resources`]: crate::Resources

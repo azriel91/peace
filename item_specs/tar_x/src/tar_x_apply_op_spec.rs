@@ -2,16 +2,16 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
 
-/// Ensure OpSpec for the tar to extract.
+/// ApplyOpSpec for the tar to extract.
 #[derive(Debug)]
-pub struct TarXEnsureOpSpec<Id>(PhantomData<Id>);
+pub struct TarXApplyOpSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-impl<Id> EnsureOpSpec for TarXEnsureOpSpec<Id>
+impl<Id> ApplyOpSpec for TarXApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -97,7 +97,7 @@ where
         // Then we can send proper progress updates via `op_ctx.progress_tx`.
         storage
             .read_with_sync_api(
-                "TarXEnsureOpSpec::exec".to_string(),
+                "TarXApplyOpSpec::exec".to_string(),
                 tar_path,
                 |sync_io_bridge| {
                     tar::Archive::new(sync_io_bridge)

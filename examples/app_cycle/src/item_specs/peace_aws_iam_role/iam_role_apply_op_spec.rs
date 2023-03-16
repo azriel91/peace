@@ -2,19 +2,19 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, state::Generated, EnsureOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
     model::RoleIdAndArn, IamRoleCleanOpSpec, IamRoleData, IamRoleError, IamRoleState,
     IamRoleStateDiff,
 };
 
-/// Ensure OpSpec for the instance profile state.
+/// ApplyOpSpec for the instance profile state.
 #[derive(Debug)]
-pub struct IamRoleEnsureOpSpec<Id>(PhantomData<Id>);
+pub struct IamRoleApplyOpSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-impl<Id> EnsureOpSpec for IamRoleEnsureOpSpec<Id>
+impl<Id> ApplyOpSpec for IamRoleApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -47,7 +47,7 @@ where
             }
             IamRoleStateDiff::Removed => {
                 panic!(
-                    "`IamRoleEnsureOpSpec::check` called with `IamRoleStateDiff::Removed`.\n\
+                    "`IamRoleApplyOpSpec::check` called with `IamRoleStateDiff::Removed`.\n\
                     An ensure should never remove an instance profile."
                 );
             }
@@ -101,7 +101,7 @@ where
         match diff {
             IamRoleStateDiff::Added => match state_desired {
                 IamRoleState::None => {
-                    panic!("`IamRoleEnsureOpSpec::exec` called with state_desired being None.");
+                    panic!("`IamRoleApplyOpSpec::exec` called with state_desired being None.");
                 }
                 IamRoleState::Some {
                     name,
@@ -165,13 +165,13 @@ where
             },
             IamRoleStateDiff::Removed => {
                 panic!(
-                    "`IamRoleEnsureOpSpec::exec` called with `IamRoleStateDiff::Removed`.\n\
+                    "`IamRoleApplyOpSpec::exec` called with `IamRoleStateDiff::Removed`.\n\
                     An ensure should never remove an instance profile."
                 );
             }
             IamRoleStateDiff::InSyncExists | IamRoleStateDiff::InSyncDoesNotExist => {
                 unreachable!(
-                    "`IamRoleEnsureOpSpec::exec` should never be called when state is in sync."
+                    "`IamRoleApplyOpSpec::exec` should never be called when state is in sync."
                 );
             }
             IamRoleStateDiff::ManagedPolicyAttachmentModified {
@@ -184,7 +184,7 @@ where
                         role_id_and_arn: _,
                         managed_policy_attachment,
                     } = state_desired else {
-                        panic!("`IamRoleEnsureOpSpec::exec` called with state_desired being None.");
+                        panic!("`IamRoleApplyOpSpec::exec` called with state_desired being None.");
                     };
 
                 let client = data.client();

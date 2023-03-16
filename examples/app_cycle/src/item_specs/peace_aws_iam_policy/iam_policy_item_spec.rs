@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_iam_policy::{
-    IamPolicyCleanOpSpec, IamPolicyEnsureOpSpec, IamPolicyError, IamPolicyState,
+    IamPolicyApplyOpSpec, IamPolicyCleanOpSpec, IamPolicyError, IamPolicyState,
     IamPolicyStateCurrentFnSpec, IamPolicyStateDesiredFnSpec, IamPolicyStateDiff,
     IamPolicyStateDiffFnSpec,
 };
@@ -60,8 +60,8 @@ impl<Id> ItemSpec for IamPolicyItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
+    type ApplyOpSpec = IamPolicyApplyOpSpec<Id>;
     type CleanOpSpec = IamPolicyCleanOpSpec<Id>;
-    type EnsureOpSpec = IamPolicyEnsureOpSpec<Id>;
     type Error = IamPolicyError;
     type State = IamPolicyState;
     type StateCurrentFnSpec = IamPolicyStateCurrentFnSpec<Id>;

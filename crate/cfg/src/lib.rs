@@ -11,15 +11,15 @@ pub use peace_core::progress;
 pub use peace_core::*;
 
 pub use crate::{
-    clean_op_spec::CleanOpSpec, ensure_op_spec::EnsureOpSpec, item_spec::ItemSpec, op_ctx::OpCtx,
+    apply_op_spec::ApplyOpSpec, clean_op_spec::CleanOpSpec, item_spec::ItemSpec, op_ctx::OpCtx,
     state::State, state_diff_fn_spec::StateDiffFnSpec, try_fn_spec::TryFnSpec,
 };
 
 pub mod accessors;
 pub mod state;
 
+mod apply_op_spec;
 mod clean_op_spec;
-mod ensure_op_spec;
 mod item_spec;
 mod op_ctx;
 mod state_diff_fn_spec;

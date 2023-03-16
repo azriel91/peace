@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    FileMetadatas, TarXCleanOpSpec, TarXEnsureOpSpec, TarXError, TarXStateCurrentFnSpec,
+    FileMetadatas, TarXApplyOpSpec, TarXCleanOpSpec, TarXError, TarXStateCurrentFnSpec,
     TarXStateDesiredFnSpec, TarXStateDiff, TarXStateDiffFnSpec,
 };
 
@@ -57,8 +57,8 @@ impl<Id> ItemSpec for TarXItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
+    type ApplyOpSpec = TarXApplyOpSpec<Id>;
     type CleanOpSpec = TarXCleanOpSpec<Id>;
-    type EnsureOpSpec = TarXEnsureOpSpec<Id>;
     type Error = TarXError;
     type State = FileMetadatas;
     type StateCurrentFnSpec = TarXStateCurrentFnSpec<Id>;

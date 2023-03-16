@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    ShSyncCmdCleanOpSpec, ShSyncCmdEnsureOpSpec, ShSyncCmdError, ShSyncCmdExecutionRecord,
+    ShSyncCmdApplyOpSpec, ShSyncCmdCleanOpSpec, ShSyncCmdError, ShSyncCmdExecutionRecord,
     ShSyncCmdStateCurrentFnSpec, ShSyncCmdStateDesiredFnSpec, ShSyncCmdStateDiff,
     ShSyncCmdStateDiffFnSpec, ShSyncCmdSyncStatus,
 };
@@ -52,8 +52,8 @@ impl<Id> ItemSpec for ShSyncCmdItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
+    type ApplyOpSpec = ShSyncCmdApplyOpSpec<Id>;
     type CleanOpSpec = ShSyncCmdCleanOpSpec<Id>;
-    type EnsureOpSpec = ShSyncCmdEnsureOpSpec<Id>;
     type Error = ShSyncCmdError;
     type State = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;
     type StateCurrentFnSpec = ShSyncCmdStateCurrentFnSpec<Id>;

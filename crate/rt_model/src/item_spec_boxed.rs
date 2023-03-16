@@ -57,7 +57,7 @@ impl<
     StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
-    EnsureOpSpec,
+    ApplyOpSpec,
     CleanOpSpec,
 > From<IS> for ItemSpecBoxed<E>
 where
@@ -69,7 +69,7 @@ where
             StateCurrentFnSpec = StateCurrentFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
-            EnsureOpSpec = EnsureOpSpec,
+            ApplyOpSpec = ApplyOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync
@@ -96,8 +96,8 @@ where
         > + Send
         + Sync
         + 'static,
-    EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<
+    ApplyOpSpec: Debug
+        + peace_cfg::ApplyOpSpec<
             Error = <IS as ItemSpec>::Error,
             State = State,
             StateDiff = StateDiff,

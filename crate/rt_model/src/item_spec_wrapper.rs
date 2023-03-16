@@ -33,7 +33,7 @@ pub struct ItemSpecWrapper<
     StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
-    EnsureOpSpec,
+    ApplyOpSpec,
     CleanOpSpec,
 >(
     IS,
@@ -44,7 +44,7 @@ pub struct ItemSpecWrapper<
         StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
-        EnsureOpSpec,
+        ApplyOpSpec,
         CleanOpSpec,
     )>,
 );
@@ -57,7 +57,7 @@ impl<
     StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
-    EnsureOpSpec,
+    ApplyOpSpec,
     CleanOpSpec,
 > Clone
     for ItemSpecWrapper<
@@ -68,7 +68,7 @@ impl<
         StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
-        EnsureOpSpec,
+        ApplyOpSpec,
         CleanOpSpec,
     >
 where
@@ -87,7 +87,7 @@ impl<
     StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
-    EnsureOpSpec,
+    ApplyOpSpec,
     CleanOpSpec,
 >
     ItemSpecWrapper<
@@ -98,7 +98,7 @@ impl<
         StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
-        EnsureOpSpec,
+        ApplyOpSpec,
         CleanOpSpec,
     >
 where
@@ -109,7 +109,7 @@ where
             StateCurrentFnSpec = StateCurrentFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
-            EnsureOpSpec = EnsureOpSpec,
+            ApplyOpSpec = ApplyOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
@@ -133,8 +133,8 @@ where
             StateDiff = StateDiff,
         > + Send
         + Sync,
-    EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<
+    ApplyOpSpec: Debug
+        + peace_cfg::ApplyOpSpec<
             Error = <IS as ItemSpec>::Error,
             State = State,
             StateDiff = StateDiff,
@@ -256,18 +256,18 @@ where
         Ok(state_diff)
     }
 
-    async fn ensure_op_check<ResourcesTs>(
+    async fn apply_op_check<ResourcesTs>(
         &self,
         resources: &Resources<ResourcesTs>,
         state_current: &State,
         state_desired: &State,
         state_diff: &StateDiff,
     ) -> Result<OpCheckStatus, E> {
-        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(
+        let data = <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as Data>::borrow(
             self.id(),
             resources,
         );
-        <EnsureOpSpec as peace_cfg::EnsureOpSpec>::check(
+        <ApplyOpSpec as peace_cfg::ApplyOpSpec>::check(
             data,
             state_current,
             state_desired,
@@ -277,7 +277,7 @@ where
         .map_err(Into::<E>::into)
     }
 
-    async fn ensure_op_exec_dry<ResourcesTs>(
+    async fn apply_op_exec_dry<ResourcesTs>(
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
@@ -285,11 +285,11 @@ where
         state_desired: &State,
         state_diff: &StateDiff,
     ) -> Result<State, E> {
-        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(
+        let data = <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as Data>::borrow(
             self.id(),
             resources,
         );
-        let state_ensured_dry = <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec_dry(
+        let state_ensured_dry = <ApplyOpSpec as peace_cfg::ApplyOpSpec>::exec_dry(
             op_ctx,
             data,
             state_current,
@@ -304,7 +304,7 @@ where
         Ok(state_ensured_dry)
     }
 
-    async fn ensure_op_exec<ResourcesTs>(
+    async fn apply_op_exec<ResourcesTs>(
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
@@ -312,11 +312,11 @@ where
         state_desired: &State,
         state_diff: &StateDiff,
     ) -> Result<State, E> {
-        let data = <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as Data>::borrow(
+        let data = <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as Data>::borrow(
             self.id(),
             resources,
         );
-        let state_ensured = <EnsureOpSpec as peace_cfg::EnsureOpSpec>::exec(
+        let state_ensured = <ApplyOpSpec as peace_cfg::ApplyOpSpec>::exec(
             op_ctx,
             data,
             state_current,
@@ -340,7 +340,7 @@ impl<
     StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
-    EnsureOpSpec,
+    ApplyOpSpec,
     CleanOpSpec,
 > Debug
     for ItemSpecWrapper<
@@ -351,7 +351,7 @@ impl<
         StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
-        EnsureOpSpec,
+        ApplyOpSpec,
         CleanOpSpec,
     >
 where
@@ -370,7 +370,7 @@ impl<
     StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
-    EnsureOpSpec,
+    ApplyOpSpec,
     CleanOpSpec,
 > Deref
     for ItemSpecWrapper<
@@ -381,7 +381,7 @@ impl<
         StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
-        EnsureOpSpec,
+        ApplyOpSpec,
         CleanOpSpec,
     >
 {
@@ -400,7 +400,7 @@ impl<
     StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
-    EnsureOpSpec,
+    ApplyOpSpec,
     CleanOpSpec,
 > DerefMut
     for ItemSpecWrapper<
@@ -411,7 +411,7 @@ impl<
         StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
-        EnsureOpSpec,
+        ApplyOpSpec,
         CleanOpSpec,
     >
 {
@@ -428,7 +428,7 @@ impl<
     StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
-    EnsureOpSpec,
+    ApplyOpSpec,
     CleanOpSpec,
 > From<IS>
     for ItemSpecWrapper<
@@ -439,7 +439,7 @@ impl<
         StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
-        EnsureOpSpec,
+        ApplyOpSpec,
         CleanOpSpec,
     >
 where
@@ -450,7 +450,7 @@ where
             StateCurrentFnSpec = StateCurrentFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
-            EnsureOpSpec = EnsureOpSpec,
+            ApplyOpSpec = ApplyOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
@@ -468,8 +468,8 @@ where
             StateDiff = StateDiff,
         > + Send
         + Sync,
-    EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<
+    ApplyOpSpec: Debug
+        + peace_cfg::ApplyOpSpec<
             Error = <IS as ItemSpec>::Error,
             State = State,
             StateDiff = StateDiff,
@@ -493,7 +493,7 @@ impl<
     StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
-    EnsureOpSpec,
+    ApplyOpSpec,
     CleanOpSpec,
 > DataAccess
     for ItemSpecWrapper<
@@ -504,7 +504,7 @@ impl<
         StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
-        EnsureOpSpec,
+        ApplyOpSpec,
         CleanOpSpec,
     >
 where
@@ -515,7 +515,7 @@ where
             StateCurrentFnSpec = StateCurrentFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
-            EnsureOpSpec = EnsureOpSpec,
+            ApplyOpSpec = ApplyOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
@@ -533,8 +533,8 @@ where
             StateDiff = StateDiff,
         > + Send
         + Sync,
-    EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<
+    ApplyOpSpec: Debug
+        + peace_cfg::ApplyOpSpec<
             Error = <IS as ItemSpec>::Error,
             State = State,
             StateDiff = StateDiff,
@@ -546,11 +546,11 @@ where
         + Sync,
 {
     fn borrows() -> TypeIds {
-        <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as DataAccess>::borrows()
+        <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as DataAccess>::borrows()
     }
 
     fn borrow_muts() -> TypeIds {
-        <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as DataAccess>::borrow_muts()
+        <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as DataAccess>::borrow_muts()
     }
 }
 
@@ -562,7 +562,7 @@ impl<
     StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
-    EnsureOpSpec,
+    ApplyOpSpec,
     CleanOpSpec,
 > DataAccessDyn
     for ItemSpecWrapper<
@@ -573,7 +573,7 @@ impl<
         StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
-        EnsureOpSpec,
+        ApplyOpSpec,
         CleanOpSpec,
     >
 where
@@ -584,7 +584,7 @@ where
             StateCurrentFnSpec = StateCurrentFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
-            EnsureOpSpec = EnsureOpSpec,
+            ApplyOpSpec = ApplyOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
@@ -602,8 +602,8 @@ where
             StateDiff = StateDiff,
         > + Send
         + Sync,
-    EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<
+    ApplyOpSpec: Debug
+        + peace_cfg::ApplyOpSpec<
             Error = <IS as ItemSpec>::Error,
             State = State,
             StateDiff = StateDiff,
@@ -615,11 +615,11 @@ where
         + Sync,
 {
     fn borrows(&self) -> TypeIds {
-        <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as DataAccess>::borrows()
+        <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as DataAccess>::borrows()
     }
 
     fn borrow_muts(&self) -> TypeIds {
-        <<EnsureOpSpec as peace_cfg::EnsureOpSpec>::Data<'_> as DataAccess>::borrow_muts()
+        <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as DataAccess>::borrow_muts()
     }
 }
 
@@ -632,7 +632,7 @@ impl<
     StateCurrentFnSpec,
     StateDesiredFnSpec,
     StateDiffFnSpec,
-    EnsureOpSpec,
+    ApplyOpSpec,
     CleanOpSpec,
 > ItemSpecRt<E>
     for ItemSpecWrapper<
@@ -643,7 +643,7 @@ impl<
         StateCurrentFnSpec,
         StateDesiredFnSpec,
         StateDiffFnSpec,
-        EnsureOpSpec,
+        ApplyOpSpec,
         CleanOpSpec,
     >
 where
@@ -655,7 +655,7 @@ where
             StateCurrentFnSpec = StateCurrentFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
-            EnsureOpSpec = EnsureOpSpec,
+            ApplyOpSpec = ApplyOpSpec,
             CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
@@ -679,8 +679,8 @@ where
             StateDiff = StateDiff,
         > + Send
         + Sync,
-    EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<
+    ApplyOpSpec: Debug
+        + peace_cfg::ApplyOpSpec<
             Error = <IS as ItemSpec>::Error,
             State = State,
             StateDiff = StateDiff,
@@ -745,7 +745,7 @@ where
         _state_diffs: &StateDiffs,
     ) -> Result<BoxDtDisplay, E> {
         // The ensured state is the current state re-discovered
-        // after `EnsureOpSpec::exec` has run.
+        // after `ApplyOpSpec::exec` has run.
         self.state_current_exec(resources)
             .await
             .map(BoxDtDisplay::new)
@@ -850,7 +850,7 @@ where
         };
 
         match self
-            .ensure_op_check(resources, state_current, state_desired, state_diff)
+            .apply_op_check(resources, state_current, state_desired, state_diff)
             .await
         {
             Ok(op_check_status) => item_ensure_partial.op_check_status = Some(op_check_status),
@@ -888,7 +888,7 @@ where
             #[cfg(not(feature = "output_progress"))]
             OpCheckStatus::ExecRequired => {
                 let state_ensured_dry = self
-                    .ensure_op_exec_dry(op_ctx, resources, state_current, state_desired, state_diff)
+                    .apply_op_exec_dry(op_ctx, resources, state_current, state_desired, state_diff)
                     .await?;
 
                 *state_ensured = Some(state_ensured_dry);
@@ -896,7 +896,7 @@ where
             #[cfg(feature = "output_progress")]
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
                 let state_ensured_dry = self
-                    .ensure_op_exec_dry(op_ctx, resources, state_current, state_desired, state_diff)
+                    .apply_op_exec_dry(op_ctx, resources, state_current, state_desired, state_diff)
                     .await?;
 
                 *state_ensured = Some(state_ensured_dry);
@@ -933,7 +933,7 @@ where
             #[cfg(not(feature = "output_progress"))]
             OpCheckStatus::ExecRequired => {
                 let state_ensured_next = self
-                    .ensure_op_exec(op_ctx, resources, state_current, state_desired, state_diff)
+                    .apply_op_exec(op_ctx, resources, state_current, state_desired, state_diff)
                     .await?;
 
                 *state_ensured = Some(state_ensured_next);
@@ -941,7 +941,7 @@ where
             #[cfg(feature = "output_progress")]
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
                 let state_ensured_next = self
-                    .ensure_op_exec(op_ctx, resources, state_current, state_desired, state_diff)
+                    .apply_op_exec(op_ctx, resources, state_current, state_desired, state_diff)
                     .await?;
 
                 *state_ensured = Some(state_ensured_next);

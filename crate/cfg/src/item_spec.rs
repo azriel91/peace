@@ -6,7 +6,7 @@ use peace_core::ItemSpecId;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{CleanOpSpec, EnsureOpSpec, StateDiffFnSpec, TryFnSpec};
+use crate::{ApplyOpSpec, CleanOpSpec, StateDiffFnSpec, TryFnSpec};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -132,10 +132,10 @@ pub trait ItemSpec: DynClone {
     ///   the application version changing from 1 to 2.
     type StateDiffFnSpec: StateDiffFnSpec<Error = Self::Error, State = Self::State, StateDiff = Self::StateDiff>;
 
-    /// Specification of the ensure operation.
+    /// Specification of the apply operation.
     ///
     /// The output is the IDs of resources produced by the operation.
-    type EnsureOpSpec: EnsureOpSpec<Error = Self::Error, State = Self::State, StateDiff = Self::StateDiff>;
+    type ApplyOpSpec: ApplyOpSpec<Error = Self::Error, State = Self::State, StateDiff = Self::StateDiff>;
 
     /// Specification of the clean operation.
     ///
@@ -179,7 +179,7 @@ pub trait ItemSpec: DynClone {
     /// must be inserted into the map so that the [`check`] and [`exec`]
     /// functions of each operation can borrow the instance of that type.
     ///
-    /// [`check`]: crate::EnsureOpSpec::check
-    /// [`exec`]: crate::EnsureOpSpec::exec
+    /// [`check`]: crate::ApplyOpSpec::check
+    /// [`exec`]: crate::ApplyOpSpec::exec
     async fn setup(&self, data: &mut Resources<Empty>) -> Result<(), Self::Error>;
 }

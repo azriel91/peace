@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_s3_bucket::{
-    S3BucketCleanOpSpec, S3BucketEnsureOpSpec, S3BucketError, S3BucketState,
+    S3BucketApplyOpSpec, S3BucketCleanOpSpec, S3BucketError, S3BucketState,
     S3BucketStateCurrentFnSpec, S3BucketStateDesiredFnSpec, S3BucketStateDiff,
     S3BucketStateDiffFnSpec,
 };
@@ -58,8 +58,8 @@ impl<Id> ItemSpec for S3BucketItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
+    type ApplyOpSpec = S3BucketApplyOpSpec<Id>;
     type CleanOpSpec = S3BucketCleanOpSpec<Id>;
-    type EnsureOpSpec = S3BucketEnsureOpSpec<Id>;
     type Error = S3BucketError;
     type State = S3BucketState;
     type StateCurrentFnSpec = S3BucketStateCurrentFnSpec<Id>;

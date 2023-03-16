@@ -43,7 +43,7 @@ pub struct ShCmdParams<Id> {
     /// The command's stderr is used as the human readable description of the
     /// state difference. This must be output as a single line.
     state_diff_sh_cmd: ShCmd,
-    /// Shell command to run in `EnsureOpSpec::check`.
+    /// Shell command to run in `ApplyOpSpec::check`.
     ///
     /// The command will be passed the following as three separate arguments:
     ///
@@ -52,12 +52,12 @@ pub struct ShCmdParams<Id> {
     /// * State diff string
     ///
     /// If the shell command returns the string `true` as its final line, then
-    /// it is taken to mean `EnsureOpSpec::exec` needs to be run.
+    /// it is taken to mean `ApplyOpSpec::exec` needs to be run.
     ///
     /// If the shell command returns the string `false` as its final line, then
-    /// it is taken to mean `EnsureOpSpec::exec` does not need to be run.
+    /// it is taken to mean `ApplyOpSpec::exec` does not need to be run.
     ensure_check_sh_cmd: ShCmd,
-    /// Shell command to run in `EnsureOpSpec::exec`.
+    /// Shell command to run in `ApplyOpSpec::exec`.
     ///
     /// The command will be passed the following as three separate arguments:
     ///
@@ -145,7 +145,7 @@ impl<Id> ShCmdParams<Id> {
         &self.state_diff_sh_cmd
     }
 
-    /// Returns the shell command to run in `EnsureOpSpec::check`.
+    /// Returns the shell command to run in `ApplyOpSpec::check`.
     ///
     /// The command will be passed the following as three separate arguments:
     ///
@@ -154,15 +154,15 @@ impl<Id> ShCmdParams<Id> {
     /// * State diff string
     ///
     /// If the shell command returns the string `true` as its final line, then
-    /// it is taken to mean `EnsureOpSpec::exec` needs to be run.
+    /// it is taken to mean `ApplyOpSpec::exec` needs to be run.
     ///
     /// If the shell command returns the string `false` as its final line, then
-    /// it is taken to mean `EnsureOpSpec::exec` does not need to be run.
+    /// it is taken to mean `ApplyOpSpec::exec` does not need to be run.
     pub fn ensure_check_sh_cmd(&self) -> &ShCmd {
         &self.ensure_check_sh_cmd
     }
 
-    /// Returns the shell command to run in `EnsureOpSpec::exec`.
+    /// Returns the shell command to run in `ApplyOpSpec::exec`.
     ///
     /// The command will be passed the following as three separate arguments:
     ///

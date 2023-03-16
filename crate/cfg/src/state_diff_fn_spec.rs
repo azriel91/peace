@@ -33,12 +33,12 @@ pub trait StateDiffFnSpec {
     /// Logical state of the managed item.
     ///
     /// This is the type returned by the [`StateCurrentFnSpec`], and is used by
-    /// [`EnsureOpSpec`] to determine if [`exec`] needs to be run.
+    /// [`ApplyOpSpec`] to determine if [`exec`] needs to be run.
     ///
     /// See [`ItemSpec::State`] for more detail.
     ///
     /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
-    /// [`EnsureOpSpec`]: crate::ItemSpec::EnsureOpSpec
+    /// [`ApplyOpSpec`]: crate::ItemSpec::ApplyOpSpec
     /// [`exec`]: Self::exec
     /// [`ItemSpec::State`]: crate::ItemSpec::State
     type State: Clone + Serialize + DeserializeOwned;

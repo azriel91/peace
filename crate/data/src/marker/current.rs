@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Note: A successor's desired state is dependent on the predecessor's desired
 /// state, which should be in sync with its current state after
-/// `EnsureOpSpec::exec` has been executed.
+/// `ApplyOpSpec::exec` has been executed.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Current<T>(pub Option<T>);
 

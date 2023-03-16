@@ -1,11 +1,11 @@
 # Feature Gated Incremental Functionality
 
-Tried the following parameter type for `EnsureOpSpec::exec`:
+Tried the following parameter type for `ApplyOpSpec::exec`:
 
 ```rust ,ignore
 use std::marker::PhantomData;
 
-/// Parameters to `EnsureOpSpec::exec`.
+/// Parameters to `ApplyOpSpec::exec`.
 #[derive(Debug)]
 pub struct EnsureExecParams<
     'params,
@@ -14,7 +14,7 @@ pub struct EnsureExecParams<
     #[cfg(feature = "state_desired")] StateDesired,
     #[cfg(feature = "state_diff")] StateDiff,
 > {
-    /// Data accessed by the ensure op spec.
+    /// Data accessed by the apply op spec.
     pub data: Data,
     /// Current state of the item.
     #[cfg(feature = "state_current")]

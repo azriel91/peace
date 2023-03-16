@@ -144,12 +144,12 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// * [`StateCurrentFnSpec::try_exec`]
     /// * [`StateDesiredFnSpec::try_exec`]
     /// * [`StateDiffFnSpec::exec`]
-    /// * [`EnsureOpSpec::check`]
+    /// * [`ApplyOpSpec::check`]
     ///
     /// [`StateCurrentFnSpec::try_exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec::try_exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
-    /// [`EnsureOpSpec::check`]: peace_cfg::ItemSpec::EnsureOpSpec
+    /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
     async fn ensure_prepare(
         &self,
         resources: &Resources<SetUp>,
@@ -164,8 +164,8 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// * [`StateCurrentFnSpec::try_exec`]
     /// * [`StateDesiredFnSpec::try_exec`]
     /// * [`StateDiffFnSpec::exec`]
-    /// * [`EnsureOpSpec::check`]
-    /// * [`EnsureOpSpec::exec_dry`]
+    /// * [`ApplyOpSpec::check`]
+    /// * [`ApplyOpSpec::exec_dry`]
     ///
     /// # Parameters
     ///
@@ -175,8 +175,8 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`StateCurrentFnSpec::try_exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec::try_exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
-    /// [`EnsureOpSpec::check`]: peace_cfg::ItemSpec::EnsureOpSpec
-    /// [`EnsureOpSpec::exec_dry`]: peace_cfg::ItemSpec::EnsureOpSpec
+    /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
+    /// [`ApplyOpSpec::exec_dry`]: peace_cfg::ItemSpec::ApplyOpSpec
     async fn ensure_exec_dry(
         &self,
         op_ctx: OpCtx<'_>,
@@ -193,14 +193,14 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// * [`StateCurrentFnSpec::exec`]
     /// * [`StateDesiredFnSpec::exec`]
     /// * [`StateDiffFnSpec::exec`]
-    /// * [`EnsureOpSpec::check`]
-    /// * [`EnsureOpSpec::exec`]
+    /// * [`ApplyOpSpec::check`]
+    /// * [`ApplyOpSpec::exec`]
     ///
     /// [`StateCurrentFnSpec::exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec::exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
-    /// [`EnsureOpSpec::check`]: peace_cfg::ItemSpec::EnsureOpSpec
-    /// [`EnsureOpSpec::exec`]: peace_cfg::ItemSpec::EnsureOpSpec
+    /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
+    /// [`ApplyOpSpec::exec`]: peace_cfg::ItemSpec::ApplyOpSpec
     async fn ensure_exec(
         &self,
         op_ctx: OpCtx<'_>,

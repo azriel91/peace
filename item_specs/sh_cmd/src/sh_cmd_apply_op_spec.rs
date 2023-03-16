@@ -2,18 +2,18 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx, State};
+use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx, State};
 
 use crate::{
     ShCmd, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState, ShCmdStateDiff,
 };
 
-/// Ensure OpSpec for the command to execute.
+/// ApplyOpSpec for the command to execute.
 #[derive(Debug)]
-pub struct ShCmdEnsureOpSpec<Id>(PhantomData<Id>);
+pub struct ShCmdApplyOpSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-impl<Id> EnsureOpSpec for ShCmdEnsureOpSpec<Id>
+impl<Id> ApplyOpSpec for ShCmdApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {

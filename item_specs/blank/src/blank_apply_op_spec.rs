@@ -2,16 +2,16 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::{BlankData, BlankError, BlankState, BlankStateDiff};
 
-/// Ensure OpSpec for the blank state.
+/// ApplyOpSpec for the blank state.
 #[derive(Debug)]
-pub struct BlankEnsureOpSpec<Id>(PhantomData<Id>);
+pub struct BlankApplyOpSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-impl<Id> EnsureOpSpec for BlankEnsureOpSpec<Id>
+impl<Id> ApplyOpSpec for BlankApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {

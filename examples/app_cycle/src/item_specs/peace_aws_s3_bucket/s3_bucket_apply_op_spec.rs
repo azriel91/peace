@@ -7,18 +7,18 @@ use aws_sdk_s3::{
 };
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, EnsureOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_s3_bucket::{
     S3BucketData, S3BucketError, S3BucketState, S3BucketStateDiff,
 };
 
-/// Ensure OpSpec for the S3 bucket state.
+/// ApplyOpSpec for the S3 bucket state.
 #[derive(Debug)]
-pub struct S3BucketEnsureOpSpec<Id>(PhantomData<Id>);
+pub struct S3BucketApplyOpSpec<Id>(PhantomData<Id>);
 
 #[async_trait(?Send)]
-impl<Id> EnsureOpSpec for S3BucketEnsureOpSpec<Id>
+impl<Id> ApplyOpSpec for S3BucketApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -51,7 +51,7 @@ where
             }
             S3BucketStateDiff::Removed => {
                 panic!(
-                    "`S3BucketEnsureOpSpec::check` called with `S3BucketStateDiff::Removed`.\n\
+                    "`S3BucketApplyOpSpec::check` called with `S3BucketStateDiff::Removed`.\n\
                     An ensure should never remove a bucket."
                 );
             }
@@ -88,7 +88,7 @@ where
         match diff {
             S3BucketStateDiff::Added => match state_desired {
                 S3BucketState::None => {
-                    panic!("`S3BucketEnsureOpSpec::exec` called with state_desired being None.");
+                    panic!("`S3BucketApplyOpSpec::exec` called with state_desired being None.");
                 }
                 S3BucketState::Some { name } => {
                     let client = data.client();
@@ -143,13 +143,13 @@ where
             },
             S3BucketStateDiff::Removed => {
                 panic!(
-                    "`S3BucketEnsureOpSpec::exec` called with `S3BucketStateDiff::Removed`.\n\
+                    "`S3BucketApplyOpSpec::exec` called with `S3BucketStateDiff::Removed`.\n\
                     An ensure should never remove a bucket."
                 );
             }
             S3BucketStateDiff::InSyncExists | S3BucketStateDiff::InSyncDoesNotExist => {
                 unreachable!(
-                    "`S3BucketEnsureOpSpec::exec` should never be called when state is in sync."
+                    "`S3BucketApplyOpSpec::exec` should never be called when state is in sync."
                 );
             }
             S3BucketStateDiff::NameModified {

@@ -53,10 +53,10 @@ where
     /// Maximum number of progress messages to buffer.
     const PROGRESS_COUNT_MAX: usize = 256;
 
-    /// Conditionally runs [`EnsureOpSpec`]`::`[`exec_dry`] for each
+    /// Conditionally runs [`ApplyOpSpec`]`::`[`exec_dry`] for each
     /// [`ItemSpec`].
     ///
-    /// In practice this runs [`EnsureOpSpec::check`], and only runs
+    /// In practice this runs [`ApplyOpSpec::check`], and only runs
     /// [`exec_dry`] if execution is required.
     ///
     /// # Note
@@ -65,18 +65,18 @@ where
     /// functions as homogeneous groups instead of interleaving the functions
     /// together per `ItemSpec`:
     ///
-    /// 1. Run [`EnsureOpSpec::check`] for all `ItemSpec`s.
-    /// 2. Run [`EnsureOpSpec::exec_dry`] for all `ItemSpec`s.
+    /// 1. Run [`ApplyOpSpec::check`] for all `ItemSpec`s.
+    /// 2. Run [`ApplyOpSpec::exec_dry`] for all `ItemSpec`s.
     /// 3. Fetch `StatesCurrent` again, and compare.
     ///
     /// State cannot be fetched interleaved with `exec_dry` as it may use
     /// different `Data`.
     ///
-    /// [`exec_dry`]: peace_cfg::EnsureOpSpec::exec_dry
-    /// [`EnsureOpSpec::check`]: peace_cfg::EnsureOpSpec::check
-    /// [`EnsureOpSpec::exec_dry`]: peace_cfg::EnsureOpSpec::exec_dry
+    /// [`exec_dry`]: peace_cfg::ApplyOpSpec::exec_dry
+    /// [`ApplyOpSpec::check`]: peace_cfg::ApplyOpSpec::check
+    /// [`ApplyOpSpec::exec_dry`]: peace_cfg::ApplyOpSpec::exec_dry
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
+    /// [`ApplyOpSpec`]: peace_cfg::ItemSpec::ApplyOpSpec
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
@@ -86,10 +86,10 @@ where
         Ok(states_ensured_dry)
     }
 
-    /// Conditionally runs [`EnsureOpSpec`]`::`[`exec`] for each
+    /// Conditionally runs [`ApplyOpSpec`]`::`[`exec`] for each
     /// [`ItemSpec`].
     ///
-    /// In practice this runs [`EnsureOpSpec::check`], and only runs
+    /// In practice this runs [`ApplyOpSpec::check`], and only runs
     /// [`exec`] if execution is required.
     ///
     /// This function takes in a `StatesSaved`, but if you retrieve the state
@@ -103,18 +103,18 @@ where
     /// functions as homogeneous groups instead of interleaving the functions
     /// together per `ItemSpec`:
     ///
-    /// 1. Run [`EnsureOpSpec::check`] for all `ItemSpec`s.
-    /// 2. Run [`EnsureOpSpec::exec`] for all `ItemSpec`s.
+    /// 1. Run [`ApplyOpSpec::check`] for all `ItemSpec`s.
+    /// 2. Run [`ApplyOpSpec::exec`] for all `ItemSpec`s.
     /// 3. Fetch `StatesCurrent` again, and compare.
     ///
     /// State cannot be fetched interleaved with `exec` as it may use
     /// different `Data`.
     ///
-    /// [`exec`]: peace_cfg::EnsureOpSpec::exec
-    /// [`EnsureOpSpec::check`]: peace_cfg::EnsureOpSpec::check
-    /// [`EnsureOpSpec::exec`]: peace_cfg::EnsureOpSpec::exec
+    /// [`exec`]: peace_cfg::ApplyOpSpec::exec
+    /// [`ApplyOpSpec::check`]: peace_cfg::ApplyOpSpec::check
+    /// [`ApplyOpSpec::exec`]: peace_cfg::ApplyOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
+    /// [`ApplyOpSpec`]: peace_cfg::ItemSpec::ApplyOpSpec
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
@@ -125,14 +125,14 @@ where
         Ok(states_ensured)
     }
 
-    /// Conditionally runs [`EnsureOpSpec`]`::`[`exec`] for each [`ItemSpec`].
+    /// Conditionally runs [`ApplyOpSpec`]`::`[`exec`] for each [`ItemSpec`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`StatesEnsured`].
     ///
-    /// [`exec`]: peace_cfg::EnsureOpSpec::exec
+    /// [`exec`]: peace_cfg::ApplyOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`EnsureOpSpec`]: peace_cfg::ItemSpec::EnsureOpSpec
+    /// [`ApplyOpSpec`]: peace_cfg::ItemSpec::ApplyOpSpec
     async fn exec_internal<StatesTs>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
@@ -297,7 +297,7 @@ where
 
         // TODO: Should we run `StatesCurrentFnSpec` again?
         //
-        // i.e. is it part of `EnsureOpSpec::exec`'s contract to return the state.
+        // i.e. is it part of `ApplyOpSpec::exec`'s contract to return the state.
         //
         // * It may be duplication of code.
         // * `FileDownloadItemSpec` needs to know the ETag from the last request, which:
