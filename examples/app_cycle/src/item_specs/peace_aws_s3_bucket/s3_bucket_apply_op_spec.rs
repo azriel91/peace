@@ -29,7 +29,7 @@ where
 
     async fn check(
         _s3_bucket_data: S3BucketData<'_, Id>,
-        _state_current: &S3BucketState,
+        state_current: &S3BucketState,
         _state_desired: &S3BucketState,
         diff: &S3BucketStateDiff,
     ) -> Result<OpCheckStatus, S3BucketError> {
@@ -50,10 +50,23 @@ where
                 Ok(op_check_status)
             }
             S3BucketStateDiff::Removed => {
-                panic!(
-                    "`S3BucketApplyOpSpec::check` called with `S3BucketStateDiff::Removed`.\n\
-                    An ensure should never remove a bucket."
-                );
+                let op_check_status = match state_current {
+                    S3BucketState::None => OpCheckStatus::ExecNotRequired,
+                    S3BucketState::Some { name: _ } => {
+                        #[cfg(not(feature = "output_progress"))]
+                        {
+                            OpCheckStatus::ExecRequired
+                        }
+                        #[cfg(feature = "output_progress")]
+                        {
+                            let steps_required = 1;
+                            let progress_limit = ProgressLimit::Steps(steps_required);
+                            OpCheckStatus::ExecRequired { progress_limit }
+                        }
+                    }
+                };
+
+                Ok(op_check_status)
             }
             S3BucketStateDiff::NameModified {
                 s3_bucket_name_current,
@@ -81,7 +94,7 @@ where
     async fn exec(
         _op_ctx: OpCtx<'_>,
         data: S3BucketData<'_, Id>,
-        _state_current: &S3BucketState,
+        state_current: &S3BucketState,
         state_desired: &S3BucketState,
         diff: &S3BucketStateDiff,
     ) -> Result<S3BucketState, S3BucketError> {
@@ -134,18 +147,36 @@ where
                         }
                     })?;
 
-                    let state_ensured = S3BucketState::Some {
+                    let state_applied = S3BucketState::Some {
                         name: name.to_string(),
                     };
 
-                    Ok(state_ensured)
+                    Ok(state_applied)
                 }
             },
             S3BucketStateDiff::Removed => {
-                panic!(
-                    "`S3BucketApplyOpSpec::exec` called with `S3BucketStateDiff::Removed`.\n\
-                    An ensure should never remove a bucket."
-                );
+                match state_current {
+                    S3BucketState::None => {}
+                    S3BucketState::Some { name } => {
+                        let client = data.client();
+                        client
+                            .delete_bucket()
+                            .bucket(name)
+                            .send()
+                            .await
+                            .map_err(|error| {
+                                let s3_bucket_name = name.to_string();
+
+                                S3BucketError::S3BucketDeleteError {
+                                    s3_bucket_name,
+                                    error,
+                                }
+                            })?;
+                    }
+                }
+
+                let state_applied = state_desired.clone();
+                Ok(state_applied)
             }
             S3BucketStateDiff::InSyncExists | S3BucketStateDiff::InSyncDoesNotExist => {
                 unreachable!(
