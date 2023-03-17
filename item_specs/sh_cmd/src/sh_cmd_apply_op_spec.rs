@@ -36,15 +36,15 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let ensure_check_sh_cmd = sh_cmd_data
+        let apply_check_sh_cmd = sh_cmd_data
             .sh_cmd_params()
-            .ensure_check_sh_cmd()
+            .apply_check_sh_cmd()
             .clone()
             .arg(state_current_arg)
             .arg(state_desired_arg)
             .arg(&**state_diff);
 
-        ShCmdExecutor::<Id>::exec(&ensure_check_sh_cmd)
+        ShCmdExecutor::<Id>::exec(&apply_check_sh_cmd)
             .await
             .and_then(|state| match state.logical {
                 ShCmdState::Some { stdout, .. } => match stdout.trim().lines().rev().next() {
@@ -61,16 +61,16 @@ where
                     }
                     Some("false") => Ok(OpCheckStatus::ExecNotRequired),
                     _ => Err(ShCmdError::EnsureCheckValueNotBoolean {
-                        sh_cmd: ensure_check_sh_cmd.clone(),
+                        sh_cmd: apply_check_sh_cmd.clone(),
                         #[cfg(feature = "error_reporting")]
-                        sh_cmd_string: format!("{ensure_check_sh_cmd}"),
+                        sh_cmd_string: format!("{apply_check_sh_cmd}"),
                         stdout: Some(stdout),
                     }),
                 },
                 _ => Err(ShCmdError::EnsureCheckValueNotBoolean {
-                    sh_cmd: ensure_check_sh_cmd.clone(),
+                    sh_cmd: apply_check_sh_cmd.clone(),
                     #[cfg(feature = "error_reporting")]
-                    sh_cmd_string: format!("{ensure_check_sh_cmd}"),
+                    sh_cmd_string: format!("{apply_check_sh_cmd}"),
                     stdout: None,
                 }),
             })
@@ -92,15 +92,15 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let ensure_exec_sh_cmd = sh_cmd_data
+        let apply_exec_sh_cmd = sh_cmd_data
             .sh_cmd_params()
-            .ensure_exec_sh_cmd()
+            .apply_exec_sh_cmd()
             .clone()
             .arg(state_current_arg)
             .arg(state_desired_arg)
             .arg(&**state_diff);
 
-        ShCmdExecutor::<Id>::exec(&ShCmd::new("echo").arg(format!("{ensure_exec_sh_cmd}"))).await
+        ShCmdExecutor::<Id>::exec(&ShCmd::new("echo").arg(format!("{apply_exec_sh_cmd}"))).await
     }
 
     async fn exec(
@@ -118,15 +118,15 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let ensure_exec_sh_cmd = sh_cmd_data
+        let apply_exec_sh_cmd = sh_cmd_data
             .sh_cmd_params()
-            .ensure_exec_sh_cmd()
+            .apply_exec_sh_cmd()
             .clone()
             .arg(state_current_arg)
             .arg(state_desired_arg)
             .arg(&**state_diff);
 
-        ShCmdExecutor::<Id>::exec(&ensure_exec_sh_cmd).await?;
+        ShCmdExecutor::<Id>::exec(&apply_exec_sh_cmd).await?;
         ShCmdExecutor::<Id>::exec(sh_cmd_data.sh_cmd_params().state_current_sh_cmd()).await
     }
 }

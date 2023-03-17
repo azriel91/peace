@@ -41,11 +41,11 @@ impl TestFileCreationShCmdItemSpec {
             let state_diff_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
                 "sh_cmd_item_spec/unix/test_file_creation_state_diff.sh"
             ));
-            let ensure_check_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-                "sh_cmd_item_spec/unix/test_file_creation_ensure_check.sh"
+            let apply_check_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item_spec/unix/test_file_creation_apply_check.sh"
             ));
-            let ensure_exec_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-                "sh_cmd_item_spec/unix/test_file_creation_ensure_exec.sh"
+            let apply_exec_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item_spec/unix/test_file_creation_apply_exec.sh"
             ));
             let clean_check_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
                 "sh_cmd_item_spec/unix/test_file_creation_clean_check.sh"
@@ -58,8 +58,8 @@ impl TestFileCreationShCmdItemSpec {
                 state_current_sh_cmd,
                 state_desired_sh_cmd,
                 state_diff_sh_cmd,
-                ensure_check_sh_cmd,
-                ensure_exec_sh_cmd,
+                apply_check_sh_cmd,
+                apply_exec_sh_cmd,
                 clean_check_sh_cmd,
                 clean_exec_sh_cmd,
             )
@@ -90,14 +90,14 @@ impl TestFileCreationShCmdItemSpec {
                 include_str!("sh_cmd_item_spec/windows/test_file_creation_state_diff.ps1"),
                 " }"
             ));
-            let ensure_check_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
+            let apply_check_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
                 "& { ",
-                include_str!("sh_cmd_item_spec/windows/test_file_creation_ensure_check.ps1"),
+                include_str!("sh_cmd_item_spec/windows/test_file_creation_apply_check.ps1"),
                 " }"
             ));
-            let ensure_exec_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
+            let apply_exec_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
                 "& { ",
-                include_str!("sh_cmd_item_spec/windows/test_file_creation_ensure_exec.ps1"),
+                include_str!("sh_cmd_item_spec/windows/test_file_creation_apply_exec.ps1"),
                 " }"
             ));
             let clean_check_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
@@ -115,8 +115,8 @@ impl TestFileCreationShCmdItemSpec {
                 state_current_sh_cmd,
                 state_desired_sh_cmd,
                 state_diff_sh_cmd,
-                ensure_check_sh_cmd,
-                ensure_exec_sh_cmd,
+                apply_check_sh_cmd,
+                apply_exec_sh_cmd,
                 clean_check_sh_cmd,
                 clean_exec_sh_cmd,
             )
@@ -289,7 +289,7 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
 }
 
 #[tokio::test]
-async fn ensure_when_creation_required_executes_ensure_exec_shell_command()
+async fn ensure_when_creation_required_executes_apply_exec_shell_command()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
@@ -334,7 +334,7 @@ async fn ensure_when_creation_required_executes_ensure_exec_shell_command()
 }
 
 #[tokio::test]
-async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
+async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
