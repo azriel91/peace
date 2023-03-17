@@ -158,7 +158,8 @@ pub async fn clean_dry<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Dow
 where
     O: OutputWrite<DownloadError>,
 {
-    let states_cleaned_dry = CleanCmd::exec_dry(cmd_ctx).await?;
+    let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
+    let states_cleaned_dry = CleanCmd::exec_dry(cmd_ctx, &states_saved).await?;
     cmd_ctx.output_mut().present(&states_cleaned_dry).await?;
     Ok(())
 }
@@ -167,7 +168,8 @@ pub async fn clean<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Downloa
 where
     O: OutputWrite<DownloadError>,
 {
-    let states_cleaned = CleanCmd::exec(cmd_ctx).await?;
+    let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
+    let states_cleaned = CleanCmd::exec(cmd_ctx, &states_saved).await?;
     cmd_ctx.output_mut().present(&states_cleaned).await?;
     Ok(())
 }
