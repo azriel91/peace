@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+use aws_sdk_iam::{error::ListPolicyVersionsErrorKind, types::SdkError};
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
 use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
@@ -47,10 +48,36 @@ where
                 Ok(op_check_status)
             }
             IamPolicyStateDiff::Removed => {
-                panic!(
-                    "`IamPolicyApplyOpSpec::check` called with `IamPolicyStateDiff::Removed`.\n\
-                    An ensure should never remove an instance profile."
-                );
+                let op_check_status = match state_current {
+                    IamPolicyState::None => OpCheckStatus::ExecNotRequired,
+                    IamPolicyState::Some {
+                        name: _,
+                        path: _,
+                        policy_document: _,
+                        policy_id_arn_version,
+                    } => {
+                        let mut steps_required = 0;
+                        if matches!(policy_id_arn_version, Generated::Value(_)) {
+                            steps_required += 1;
+                        }
+
+                        if steps_required == 0 {
+                            OpCheckStatus::ExecNotRequired
+                        } else {
+                            #[cfg(not(feature = "output_progress"))]
+                            {
+                                OpCheckStatus::ExecRequired
+                            }
+                            #[cfg(feature = "output_progress")]
+                            {
+                                let progress_limit = ProgressLimit::Steps(steps_required);
+                                OpCheckStatus::ExecRequired { progress_limit }
+                            }
+                        }
+                    }
+                };
+
+                Ok(op_check_status)
             }
             IamPolicyStateDiff::NameOrPathModified {
                 name_diff,
@@ -149,21 +176,120 @@ where
                     let policy_id_arn_version =
                         PolicyIdArnVersion::new(policy_id, policy_arn, policy_version);
 
-                    let state_ensured = IamPolicyState::Some {
+                    let state_applied = IamPolicyState::Some {
                         name: name.to_string(),
                         path: path.clone(),
                         policy_document: policy_document.clone(),
                         policy_id_arn_version: Generated::Value(policy_id_arn_version),
                     };
 
-                    Ok(state_ensured)
+                    Ok(state_applied)
                 }
             },
             IamPolicyStateDiff::Removed => {
-                panic!(
-                    "`IamPolicyApplyOpSpec::exec` called with `IamPolicyStateDiff::Removed`.\n\
-                    An ensure should never remove an instance profile."
-                );
+                match state_current {
+                    IamPolicyState::None => {}
+                    IamPolicyState::Some {
+                        name,
+                        path,
+                        policy_document: _,
+                        policy_id_arn_version,
+                    } => {
+                        if let Generated::Value(policy_id_arn_version) = policy_id_arn_version {
+                            let client = data.client();
+                            let list_policy_versions_result = client
+                                .list_policy_versions()
+                                .policy_arn(policy_id_arn_version.arn())
+                                .send()
+                                .await;
+
+                            // Need to delete all of the non-default versions individually.
+                            match list_policy_versions_result {
+                                Ok(list_policy_versions_output) => {
+                                    let policy_versions =
+                                        list_policy_versions_output.versions().unwrap_or_default();
+
+                                    let non_default_policy_versions =
+                                        policy_versions.iter().filter(|policy_version| {
+                                            !policy_version.is_default_version()
+                                        });
+                                    for policy_version in non_default_policy_versions {
+                                        let version_id = policy_version.version_id().expect(
+                                            "Expected policy version version ID to be Some.",
+                                        );
+                                        client
+                                            .delete_policy_version()
+                                            .policy_arn(policy_id_arn_version.arn())
+                                            .version_id(version_id)
+                                            .send()
+                                            .await
+                                            .map_err(|error| {
+                                                IamPolicyError::PolicyVersionDeleteError {
+                                                    policy_name: name.to_string(),
+                                                    policy_path: path.to_string(),
+                                                    version: version_id.to_string(),
+                                                    error,
+                                                }
+                                            })?;
+                                    }
+                                }
+                                Err(error) => match &error {
+                                    SdkError::ServiceError(service_error) => match service_error
+                                        .err()
+                                        .kind
+                                    {
+                                        ListPolicyVersionsErrorKind::NoSuchEntityException(_) => {
+                                            return Err(IamPolicyError::PolicyNotFoundAfterList {
+                                                policy_name: name.to_string(),
+                                                policy_path: path.to_string(),
+                                                policy_id: policy_id_arn_version.id().to_string(),
+                                                policy_arn: policy_id_arn_version.arn().to_string(),
+                                            });
+                                        }
+                                        _ => {
+                                            return Err(IamPolicyError::PolicyVersionsListError {
+                                                policy_name: name.to_string(),
+                                                policy_path: path.to_string(),
+                                                error,
+                                            });
+                                        }
+                                    },
+                                    _ => {
+                                        return Err(IamPolicyError::PolicyVersionsListError {
+                                            policy_name: name.to_string(),
+                                            policy_path: path.to_string(),
+                                            error,
+                                        });
+                                    }
+                                },
+                            };
+
+                            // The default version is deleted along with the policy.
+                            client
+                                .delete_policy()
+                                .policy_arn(policy_id_arn_version.arn())
+                                .send()
+                                .await
+                                .map_err(|error| {
+                                    let policy_name = name.to_string();
+                                    let policy_path = path.to_string();
+                                    let policy_id = policy_id_arn_version.id().to_string();
+                                    let policy_arn = policy_id_arn_version.arn().to_string();
+
+                                    IamPolicyError::PolicyDeleteError {
+                                        policy_name,
+                                        policy_path,
+                                        policy_id,
+                                        policy_arn,
+                                        error,
+                                    }
+                                })?;
+                        }
+                    }
+                }
+
+                let state_applied = state_desired.clone();
+                Ok(state_applied)
             }
             IamPolicyStateDiff::DocumentModified { .. } => match state_desired {
                 IamPolicyState::None => {
@@ -213,14 +339,14 @@ where
                     let policy_id_arn_version =
                         PolicyIdArnVersion::new(policy_id, policy_arn, policy_version_id);
 
-                    let state_ensured = IamPolicyState::Some {
+                    let state_applied = IamPolicyState::Some {
                         name: name.to_string(),
                         path: path.clone(),
                         policy_document: policy_document.clone(),
                         policy_id_arn_version: Generated::Value(policy_id_arn_version),
                     };
 
-                    Ok(state_ensured)
+                    Ok(state_applied)
                 }
             },
             IamPolicyStateDiff::InSyncExists | IamPolicyStateDiff::InSyncDoesNotExist => {
