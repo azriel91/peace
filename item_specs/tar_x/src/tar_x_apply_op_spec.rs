@@ -48,8 +48,11 @@ where
                 }
                 #[cfg(feature = "output_progress")]
                 {
-                    let progress_limit =
-                        ProgressLimit::Steps(state_desired.len().try_into().unwrap());
+                    let progress_limit = state_desired
+                        .len()
+                        .try_into()
+                        .map(ProgressLimit::Steps)
+                        .unwrap_or(ProgressLimit::Unknown);
                     OpCheckStatus::ExecRequired { progress_limit }
                 }
             }
