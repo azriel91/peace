@@ -146,7 +146,7 @@ impl ApplyOpSpec for VecCopyApplyOpSpec {
     #[allow(unused_variables)]
     async fn check(
         _vec_copy_params: VecCopyParams<'_>,
-        _state_current: &Self::State,
+        state_current: &Self::State,
         state_desired: &Self::State,
         diff: &VecCopyDiff,
     ) -> Result<OpCheckStatus, VecCopyError> {
@@ -159,9 +159,10 @@ impl ApplyOpSpec for VecCopyApplyOpSpec {
             }
             #[cfg(feature = "output_progress")]
             {
-                let progress_limit = TryInto::<u64>::try_into(state_desired.len())
-                    .map(ProgressLimit::Bytes)
-                    .unwrap_or(ProgressLimit::Unknown);
+                let progress_limit =
+                    TryInto::<u64>::try_into(state_current.len() + state_desired.len())
+                        .map(ProgressLimit::Bytes)
+                        .unwrap_or(ProgressLimit::Unknown);
 
                 OpCheckStatus::ExecRequired { progress_limit }
             }

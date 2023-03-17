@@ -972,6 +972,59 @@ where
         Ok(())
     }
 
+    async fn clean_prepare(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
+        let mut item_apply_partial = ItemApplyPartial::<State, StateDiff>::new();
+
+        match self.state_current_exec(resources).await {
+            Ok(state_current) => item_apply_partial.state_current = Some(state_current),
+            Err(error) => return Err((error, item_apply_partial.into())),
+        }
+        match self.state_clean(resources).await {
+            Ok(state_clean) => item_apply_partial.state_target = Some(state_clean),
+            Err(error) => return Err((error, item_apply_partial.into())),
+        }
+        match self
+            .state_diff_exec_with(
+                resources,
+                item_apply_partial
+                    .state_current
+                    .as_ref()
+                    .expect("unreachable: This is set just above."),
+                item_apply_partial
+                    .state_target
+                    .as_ref()
+                    .expect("unreachable: This is set just above."),
+            )
+            .await
+        {
+            Ok(state_diff) => item_apply_partial.state_diff = Some(state_diff),
+            Err(error) => return Err((error, item_apply_partial.into())),
+        }
+
+        let (Some(state_current), Some(state_target), Some(state_diff)) = (
+            item_apply_partial.state_current.as_ref(),
+            item_apply_partial.state_target.as_ref(),
+            item_apply_partial.state_diff.as_ref(),
+        ) else {
+            unreachable!("These are set just above.");
+        };
+
+        match self
+            .apply_op_check(resources, state_current, state_target, state_diff)
+            .await
+        {
+            Ok(op_check_status) => item_apply_partial.op_check_status = Some(op_check_status),
+            Err(error) => return Err((error, item_apply_partial.into())),
+        }
+
+        Ok(ItemApply::try_from((item_apply_partial, None))
+            .expect("unreachable: All the fields are set above.")
+            .into())
+    }
+
     async fn clean_op_check(
         &self,
         resources: &Resources<SetUp>,

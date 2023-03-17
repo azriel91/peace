@@ -280,12 +280,45 @@ async fn ensure_exec() -> Result<(), VecCopyError> {
     Ok(())
 }
 
+#[tokio::test]
+async fn clean_prepare() -> Result<(), VecCopyError> {
+    let item_spec_wrapper =
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+    let resources = resources_set_up_pre_saved(&item_spec_wrapper).await?;
+
+    match <dyn ItemSpecRt<_>>::clean_prepare(&item_spec_wrapper, &resources).await {
+        Ok(item_apply) => {
+            #[cfg(not(feature = "output_progress"))]
+            assert_eq!(OpCheckStatus::ExecRequired, item_apply.op_check_status());
+            #[cfg(feature = "output_progress")]
+            assert_eq!(
+                OpCheckStatus::ExecRequired {
+                    progress_limit: ProgressLimit::Bytes(8)
+                },
+                item_apply.op_check_status()
+            );
+
+            Ok(())
+        }
+        Err((error, _item_apply_partial)) => Err(error),
+    }
+}
+
 async fn resources_set_up(
     item_spec_wrapper: &VecCopyItemSpecWrapper,
 ) -> Result<Resources<SetUp>, VecCopyError> {
     let mut resources = Resources::new();
     <dyn ItemSpecRt<_>>::setup(item_spec_wrapper, &mut resources).await?;
     let resources = Resources::<SetUp>::from(resources);
+
+    Ok(resources)
+}
+
+async fn resources_set_up_pre_saved(
+    item_spec_wrapper: &VecCopyItemSpecWrapper,
+) -> Result<Resources<SetUp>, VecCopyError> {
+    let mut resources = resources_set_up(item_spec_wrapper).await?;
+    resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
     Ok(resources)
 }

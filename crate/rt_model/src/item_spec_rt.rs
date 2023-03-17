@@ -148,13 +148,13 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     ///
     /// This runs the following functions in order:
     ///
-    /// * [`StateCurrentFnSpec::try_exec`]
-    /// * [`StateDesiredFnSpec::try_exec`]
+    /// * [`StateCurrentFnSpec::exec`]
+    /// * [`StateDesiredFnSpec::exec`]
     /// * [`StateDiffFnSpec::exec`]
     /// * [`ApplyOpSpec::check`]
     ///
-    /// [`StateCurrentFnSpec::try_exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`StateDesiredFnSpec::try_exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
+    /// [`StateCurrentFnSpec::exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    /// [`StateDesiredFnSpec::exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
     /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
     async fn ensure_prepare(
@@ -214,6 +214,26 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
         resources: &Resources<SetUp>,
         item_apply: &mut ItemApplyBoxed,
     ) -> Result<(), E>
+    where
+        E: Debug + std::error::Error;
+
+    /// Discovers the information needed for a clean execution.
+    ///
+    /// This runs the following functions in order:
+    ///
+    /// * [`StateCurrentFnSpec::exec`]
+    /// * [`ItemSpec::state_clean`]
+    /// * [`StateDiffFnSpec::exec`]
+    /// * [`ApplyOpSpec::check`]
+    ///
+    /// [`StateCurrentFnSpec::exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    /// [`ItemSpec::state_clean`]: peace_cfg::ItemSpec::state_clean
+    /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
+    /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
+    async fn clean_prepare(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
     where
         E: Debug + std::error::Error;
 
