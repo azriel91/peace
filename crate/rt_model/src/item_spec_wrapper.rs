@@ -19,7 +19,7 @@ use peace_resources::{
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
-    outcomes::{ItemEnsure, ItemEnsureBoxed, ItemEnsurePartial, ItemEnsurePartialBoxed},
+    outcomes::{ItemApply, ItemApplyBoxed, ItemApplyPartial, ItemApplyPartialBoxed},
     ItemSpecRt, StatesTypeRegs,
 };
 
@@ -832,39 +832,39 @@ where
     async fn ensure_prepare(
         &self,
         resources: &Resources<SetUp>,
-    ) -> Result<ItemEnsureBoxed, (E, ItemEnsurePartialBoxed)> {
-        let mut item_ensure_partial = ItemEnsurePartial::<State, StateDiff>::new();
+    ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
+        let mut item_apply_partial = ItemApplyPartial::<State, StateDiff>::new();
 
         match self.state_current_exec(resources).await {
-            Ok(state_current) => item_ensure_partial.state_current = Some(state_current),
-            Err(error) => return Err((error, item_ensure_partial.into())),
+            Ok(state_current) => item_apply_partial.state_current = Some(state_current),
+            Err(error) => return Err((error, item_apply_partial.into())),
         }
         match self.state_desired_exec(resources).await {
-            Ok(state_desired) => item_ensure_partial.state_desired = Some(state_desired),
-            Err(error) => return Err((error, item_ensure_partial.into())),
+            Ok(state_desired) => item_apply_partial.state_desired = Some(state_desired),
+            Err(error) => return Err((error, item_apply_partial.into())),
         }
         match self
             .state_diff_exec_with(
                 resources,
-                item_ensure_partial
+                item_apply_partial
                     .state_current
                     .as_ref()
                     .expect("unreachable: This is set just above."),
-                item_ensure_partial
+                item_apply_partial
                     .state_desired
                     .as_ref()
                     .expect("unreachable: This is set just above."),
             )
             .await
         {
-            Ok(state_diff) => item_ensure_partial.state_diff = Some(state_diff),
-            Err(error) => return Err((error, item_ensure_partial.into())),
+            Ok(state_diff) => item_apply_partial.state_diff = Some(state_diff),
+            Err(error) => return Err((error, item_apply_partial.into())),
         }
 
         let (Some(state_current), Some(state_desired), Some(state_diff)) = (
-            item_ensure_partial.state_current.as_ref(),
-            item_ensure_partial.state_desired.as_ref(),
-            item_ensure_partial.state_diff.as_ref(),
+            item_apply_partial.state_current.as_ref(),
+            item_apply_partial.state_desired.as_ref(),
+            item_apply_partial.state_diff.as_ref(),
         ) else {
             unreachable!("These are set just above.");
         };
@@ -873,11 +873,11 @@ where
             .apply_op_check(resources, state_current, state_desired, state_diff)
             .await
         {
-            Ok(op_check_status) => item_ensure_partial.op_check_status = Some(op_check_status),
-            Err(error) => return Err((error, item_ensure_partial.into())),
+            Ok(op_check_status) => item_apply_partial.op_check_status = Some(op_check_status),
+            Err(error) => return Err((error, item_apply_partial.into())),
         }
 
-        Ok(ItemEnsure::try_from((item_ensure_partial, None))
+        Ok(ItemApply::try_from((item_apply_partial, None))
             .expect("unreachable: All the fields are set above.")
             .into())
     }
@@ -886,40 +886,40 @@ where
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
-        item_ensure_boxed: &mut ItemEnsureBoxed,
+        item_apply_boxed: &mut ItemApplyBoxed,
     ) -> Result<(), E> {
-        let Some(item_ensure) =
-            item_ensure_boxed.as_data_type_mut().downcast_mut::<ItemEnsure<State, StateDiff>>() else {
-                panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`.\n\
+        let Some(item_apply) =
+            item_apply_boxed.as_data_type_mut().downcast_mut::<ItemApply<State, StateDiff>>() else {
+                panic!("Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
                     This is a bug in the Peace framework.",
-                    concrete_type = std::any::type_name::<ItemEnsure<State, StateDiff>>())
+                    concrete_type = std::any::type_name::<ItemApply<State, StateDiff>>())
             };
 
-        let ItemEnsure {
+        let ItemApply {
             state_saved: _,
             state_current,
             state_desired,
             state_diff,
             op_check_status,
-            state_ensured,
-        } = item_ensure;
+            state_applied,
+        } = item_apply;
 
         match op_check_status {
             #[cfg(not(feature = "output_progress"))]
             OpCheckStatus::ExecRequired => {
-                let state_ensured_dry = self
+                let state_applied_dry = self
                     .apply_op_exec_dry(op_ctx, resources, state_current, state_desired, state_diff)
                     .await?;
 
-                *state_ensured = Some(state_ensured_dry);
+                *state_applied = Some(state_applied_dry);
             }
             #[cfg(feature = "output_progress")]
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
-                let state_ensured_dry = self
+                let state_applied_dry = self
                     .apply_op_exec_dry(op_ctx, resources, state_current, state_desired, state_diff)
                     .await?;
 
-                *state_ensured = Some(state_ensured_dry);
+                *state_applied = Some(state_applied_dry);
             }
             OpCheckStatus::ExecNotRequired => {}
         }
@@ -931,40 +931,40 @@ where
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
-        item_ensure_boxed: &mut ItemEnsureBoxed,
+        item_apply_boxed: &mut ItemApplyBoxed,
     ) -> Result<(), E> {
-        let Some(item_ensure) =
-            item_ensure_boxed.as_data_type_mut().downcast_mut::<ItemEnsure<State, StateDiff>>() else {
-                panic!("Failed to downcast `ItemEnsureBoxed` to `{concrete_type}`.\n\
+        let Some(item_apply) =
+            item_apply_boxed.as_data_type_mut().downcast_mut::<ItemApply<State, StateDiff>>() else {
+                panic!("Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
                     This is a bug in the Peace framework.",
-                    concrete_type = std::any::type_name::<ItemEnsure<State, StateDiff>>())
+                    concrete_type = std::any::type_name::<ItemApply<State, StateDiff>>())
             };
 
-        let ItemEnsure {
+        let ItemApply {
             state_saved: _,
             state_current,
             state_desired,
             state_diff,
             op_check_status,
-            state_ensured,
-        } = item_ensure;
+            state_applied,
+        } = item_apply;
 
         match op_check_status {
             #[cfg(not(feature = "output_progress"))]
             OpCheckStatus::ExecRequired => {
-                let state_ensured_next = self
+                let state_applied_next = self
                     .apply_op_exec(op_ctx, resources, state_current, state_desired, state_diff)
                     .await?;
 
-                *state_ensured = Some(state_ensured_next);
+                *state_applied = Some(state_applied_next);
             }
             #[cfg(feature = "output_progress")]
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
-                let state_ensured_next = self
+                let state_applied_next = self
                     .apply_op_exec(op_ctx, resources, state_current, state_desired, state_diff)
                     .await?;
 
-                *state_ensured = Some(state_ensured_next);
+                *state_applied = Some(state_applied_next);
             }
             OpCheckStatus::ExecNotRequired => {}
         }

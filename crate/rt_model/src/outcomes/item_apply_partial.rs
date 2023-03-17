@@ -4,13 +4,13 @@ use peace_cfg::OpCheckStatus;
 use peace_resources::type_reg::untagged::{BoxDtDisplay, DataType};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-use crate::outcomes::ItemEnsurePartialRt;
+use crate::outcomes::ItemApplyPartialRt;
 
-/// Information about an item during an `EnsureCmd` execution.
+/// Information about an item during an `ApplyCmd` execution.
 ///
 /// # Design Note
 ///
-/// 1. `EnsureCmd` calls the following function for each item.
+/// 1. `ApplyCmd` calls the following function for each item.
 ///
 ///     - [`StateCurrentFnSpec::exec`]
 ///     - [`StateDesiredFnSpec::exec`]
@@ -32,7 +32,7 @@ use crate::outcomes::ItemEnsurePartialRt;
 /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
 /// [`ApplyOpSpec::exec`]: peace_cfg::ItemSpec::ApplyOpSpec
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct ItemEnsurePartial<State, StateDiff> {
+pub struct ItemApplyPartial<State, StateDiff> {
     /// State saved on disk before the execution.
     pub state_saved: Option<State>,
     /// Current state discovered during the execution.
@@ -45,14 +45,14 @@ pub struct ItemEnsurePartial<State, StateDiff> {
     pub op_check_status: Option<OpCheckStatus>,
 }
 
-impl<State, StateDiff> ItemEnsurePartial<State, StateDiff> {
-    /// Returns a new `ItemEnsurePartial` with all fields set to `None`.
+impl<State, StateDiff> ItemApplyPartial<State, StateDiff> {
+    /// Returns a new `ItemApplyPartial` with all fields set to `None`.
     pub fn new() -> Self {
         Self::default()
     }
 }
 
-impl<State, StateDiff> Default for ItemEnsurePartial<State, StateDiff> {
+impl<State, StateDiff> Default for ItemApplyPartial<State, StateDiff> {
     fn default() -> Self {
         Self {
             state_saved: None,
@@ -64,7 +64,7 @@ impl<State, StateDiff> Default for ItemEnsurePartial<State, StateDiff> {
     }
 }
 
-impl<State, StateDiff> ItemEnsurePartialRt for ItemEnsurePartial<State, StateDiff>
+impl<State, StateDiff> ItemApplyPartialRt for ItemApplyPartial<State, StateDiff>
 where
     State: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,

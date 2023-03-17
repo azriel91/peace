@@ -11,7 +11,7 @@ use peace_resources::{
 };
 
 use crate::{
-    outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
+    outcomes::{ItemApplyBoxed, ItemApplyPartialBoxed},
     StatesTypeRegs,
 };
 
@@ -160,7 +160,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     async fn ensure_prepare(
         &self,
         resources: &Resources<SetUp>,
-    ) -> Result<ItemEnsureBoxed, (E, ItemEnsurePartialBoxed)>
+    ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
     where
         E: Debug + std::error::Error;
 
@@ -177,7 +177,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// # Parameters
     ///
     /// * `resources`: The resources in the current execution.
-    /// * `item_ensure`: The information collected in `self.ensure_prepare`.
+    /// * `item_apply`: The information collected in `self.ensure_prepare`.
     ///
     /// [`StateCurrentFnSpec::try_exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec::try_exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
@@ -188,12 +188,12 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
-        item_ensure: &mut ItemEnsureBoxed,
+        item_apply: &mut ItemApplyBoxed,
     ) -> Result<(), E>
     where
         E: Debug + std::error::Error;
 
-    /// Ensures the item from its current state to its desired state.
+    /// Applys the item from its current state to its desired state.
     ///
     /// This runs the following functions in order:
     ///
@@ -212,7 +212,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
-        item_ensure: &mut ItemEnsureBoxed,
+        item_apply: &mut ItemApplyBoxed,
     ) -> Result<(), E>
     where
         E: Debug + std::error::Error;

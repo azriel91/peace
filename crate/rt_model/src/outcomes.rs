@@ -4,17 +4,17 @@
 //! outcomes to be redisplayed without re-executing commands.
 
 pub use self::{
-    item_ensure::ItemEnsure, item_ensure_boxed::ItemEnsureBoxed,
-    item_ensure_partial::ItemEnsurePartial, item_ensure_partial_boxed::ItemEnsurePartialBoxed,
-    item_ensure_partial_rt::ItemEnsurePartialRt, item_ensure_rt::ItemEnsureRt,
+    item_apply::ItemApply, item_apply_boxed::ItemApplyBoxed, item_apply_partial::ItemApplyPartial,
+    item_apply_partial_boxed::ItemApplyPartialBoxed, item_apply_partial_rt::ItemApplyPartialRt,
+    item_apply_rt::ItemApplyRt,
 };
 
-mod item_ensure;
-mod item_ensure_boxed;
-mod item_ensure_partial;
-mod item_ensure_partial_boxed;
-mod item_ensure_partial_rt;
-mod item_ensure_rt;
+mod item_apply;
+mod item_apply_boxed;
+mod item_apply_partial;
+mod item_apply_partial_boxed;
+mod item_apply_partial_rt;
+mod item_apply_rt;
 
 macro_rules! box_data_type_newtype {
     ($ty_name:ident, $trait_path:path) => {

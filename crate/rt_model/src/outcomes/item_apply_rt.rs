@@ -1,8 +1,8 @@
 use peace_cfg::OpCheckStatus;
 use peace_resources::type_reg::untagged::{BoxDtDisplay, DataType};
 
-/// Trait to allow inspecting a type-erased `ItemEnsure`.
-pub trait ItemEnsureRt: DataType {
+/// Trait to allow inspecting a type-erased `ItemApply`.
+pub trait ItemApplyRt: DataType {
     /// Returns `state_saved` as type-erased data.
     fn state_saved(&self) -> Option<BoxDtDisplay>;
 
@@ -18,8 +18,8 @@ pub trait ItemEnsureRt: DataType {
     /// Returns `op_check_status` as type-erased data.
     fn op_check_status(&self) -> OpCheckStatus;
 
-    /// Returns `state_ensured` as type-erased data.
-    fn state_ensured(&self) -> Option<BoxDtDisplay>;
+    /// Returns `state_applied` as type-erased data.
+    fn state_applied(&self) -> Option<BoxDtDisplay>;
 
     /// Returns self as a `&dyn DataType`;
     fn as_data_type(&self) -> &dyn DataType;
@@ -28,9 +28,9 @@ pub trait ItemEnsureRt: DataType {
     fn as_data_type_mut(&mut self) -> &mut dyn DataType;
 }
 
-dyn_clone::clone_trait_object!(ItemEnsureRt);
+dyn_clone::clone_trait_object!(ItemApplyRt);
 
-impl ItemEnsureRt for Box<dyn ItemEnsureRt> {
+impl ItemApplyRt for Box<dyn ItemApplyRt> {
     fn state_saved(&self) -> Option<BoxDtDisplay> {
         self.as_ref().state_saved()
     }
@@ -51,8 +51,8 @@ impl ItemEnsureRt for Box<dyn ItemEnsureRt> {
         self.as_ref().op_check_status()
     }
 
-    fn state_ensured(&self) -> Option<BoxDtDisplay> {
-        self.as_ref().state_ensured()
+    fn state_applied(&self) -> Option<BoxDtDisplay> {
+        self.as_ref().state_applied()
     }
 
     fn as_data_type(&self) -> &dyn DataType {
@@ -64,7 +64,7 @@ impl ItemEnsureRt for Box<dyn ItemEnsureRt> {
     }
 }
 
-impl<'a> serde::Serialize for dyn ItemEnsureRt + 'a {
+impl<'a> serde::Serialize for dyn ItemApplyRt + 'a {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

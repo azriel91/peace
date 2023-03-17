@@ -13,7 +13,7 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{
-    outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
+    outcomes::{ItemApplyBoxed, ItemApplyPartialBoxed},
     output::OutputWrite,
     params::ParamsKeys,
     Error, ItemSpecBoxed, ItemSpecRt, Storage,
@@ -177,7 +177,7 @@ where
         let mut states_ensured_mut =
             StatesMut::<StatesTs>::from((*states_saved).clone().into_inner());
 
-        let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemEnsureOutcome<E>>();
+        let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemApplyOutcome<E>>();
 
         let resources_ref = &*resources;
         let execution_task = async move {
@@ -187,7 +187,7 @@ where
 
             let (Ok(()) | Err(())) = item_spec_graph
                 .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
-                    Self::item_ensure_exec(
+                    Self::item_apply_exec(
                         resources_ref,
                         #[cfg(feature = "output_progress")]
                         progress_tx,
@@ -241,9 +241,9 @@ where
         let outcomes_rx_task = async {
             while let Some(outcome) = outcomes_rx.recv().await {
                 match outcome {
-                    ItemEnsureOutcome::PrepareFail {
+                    ItemApplyOutcome::PrepareFail {
                         item_spec_id,
-                        item_ensure_partial: _,
+                        item_apply_partial: _,
                         error,
                     } => {
                         eprintln!("{item_spec_id} Prepare failed:");
@@ -254,20 +254,20 @@ where
                         }
                         todo!();
                     }
-                    ItemEnsureOutcome::Success {
+                    ItemApplyOutcome::Success {
                         item_spec_id,
-                        item_ensure,
+                        item_apply,
                     } => {
-                        if let Some(state_ensured) = item_ensure.state_ensured() {
+                        if let Some(state_ensured) = item_apply.state_applied() {
                             states_ensured_mut.insert_raw(item_spec_id, state_ensured);
                         } else {
                             // Item was already in the desired state.
                             // No change to saved state.
                         }
                     }
-                    ItemEnsureOutcome::Fail {
+                    ItemApplyOutcome::Fail {
                         item_spec_id,
-                        item_ensure,
+                        item_apply,
                         error, // TODO: save to report.
                     } => {
                         eprintln!("{item_spec_id} Failed:");
@@ -277,7 +277,7 @@ where
                             eprintln!("  caused by: {source}");
                             error = source.source();
                         }
-                        if let Some(state_ensured) = item_ensure.state_ensured() {
+                        if let Some(state_ensured) = item_apply.state_applied() {
                             states_ensured_mut.insert_raw(item_spec_id, state_ensured);
                         }
                     }
@@ -318,20 +318,20 @@ where
     /// up:
     ///
     /// ```rust,ignore
-    /// async fn item_ensure_exec<F, Fut>(
+    /// async fn item_apply_exec<F, Fut>(
     ///     resources: &Resources<SetUp>,
-    ///     outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
+    ///     outcomes_tx: &UnboundedSender<ItemApplyOutcome<E>>,
     ///     item_spec: FnRef<'_, ItemSpecBoxed<E>>,
     ///     f: F,
     /// ) -> bool
     /// where
-    ///     F: (Fn(&dyn ItemSpecRt<E>, op_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemEnsureBoxed) -> Fut) + Copy,
+    ///     F: (Fn(&dyn ItemSpecRt<E>, op_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemApplyBoxed) -> Fut) + Copy,
     ///     Fut: Future<Output = Result<(), E>>,
     /// ```
-    async fn item_ensure_exec(
+    async fn item_apply_exec(
         resources: &Resources<SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-        outcomes_tx: &UnboundedSender<ItemEnsureOutcome<E>>,
+        outcomes_tx: &UnboundedSender<ItemApplyOutcome<E>>,
         item_spec: &ItemSpecBoxed<E>,
         dry_run: bool,
     ) -> Result<(), ()> {
@@ -341,11 +341,11 @@ where
             ItemSpecRt::ensure_exec
         };
         match item_spec.ensure_prepare(resources).await {
-            Ok(mut item_ensure) => {
+            Ok(mut item_apply) => {
                 let item_spec_id = item_spec.id();
                 #[cfg(feature = "output_progress")]
                 let progress_sender = {
-                    match item_ensure.op_check_status() {
+                    match item_apply.op_check_status() {
                         #[cfg(not(feature = "output_progress"))]
                         OpCheckStatus::ExecRequired => {}
                         #[cfg(feature = "output_progress")]
@@ -366,7 +366,7 @@ where
                     #[cfg(feature = "output_progress")]
                     progress_sender,
                 );
-                match f(&**item_spec, op_ctx, resources, &mut item_ensure).await {
+                match f(&**item_spec, op_ctx, resources, &mut item_apply).await {
                     Ok(()) => {
                         // ensure succeeded
 
@@ -377,9 +377,9 @@ where
                         });
 
                         outcomes_tx
-                            .send(ItemEnsureOutcome::Success {
+                            .send(ItemApplyOutcome::Success {
                                 item_spec_id: item_spec.id().clone(),
-                                item_ensure,
+                                item_apply,
                             })
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
@@ -395,9 +395,9 @@ where
                         });
 
                         outcomes_tx
-                            .send(ItemEnsureOutcome::Fail {
+                            .send(ItemApplyOutcome::Fail {
                                 item_spec_id: item_spec.id().clone(),
-                                item_ensure,
+                                item_apply,
                                 error,
                             })
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
@@ -407,7 +407,7 @@ where
                     }
                 }
             }
-            Err((error, item_ensure_partial)) => {
+            Err((error, item_apply_partial)) => {
                 #[cfg(feature = "output_progress")]
                 let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
                     item_spec_id: item_spec.id().clone(),
@@ -415,9 +415,9 @@ where
                 });
 
                 outcomes_tx
-                    .send(ItemEnsureOutcome::PrepareFail {
+                    .send(ItemApplyOutcome::PrepareFail {
                         item_spec_id: item_spec.id().clone(),
-                        item_ensure_partial,
+                        item_apply_partial,
                         error,
                     })
                     .expect("unreachable: `outcomes_rx` is in a sibling task.");
@@ -455,23 +455,23 @@ impl<E, O, PKeys> Default for EnsureCmd<E, O, PKeys> {
 
 #[allow(dead_code)]
 #[derive(Debug)]
-enum ItemEnsureOutcome<E> {
+enum ItemApplyOutcome<E> {
     /// Error occurred when discovering current state, desired states, state
     /// diff, or `OpCheckStatus`.
     PrepareFail {
         item_spec_id: ItemSpecId,
-        item_ensure_partial: ItemEnsurePartialBoxed,
+        item_apply_partial: ItemApplyPartialBoxed,
         error: E,
     },
     /// Ensure execution succeeded.
     Success {
         item_spec_id: ItemSpecId,
-        item_ensure: ItemEnsureBoxed,
+        item_apply: ItemApplyBoxed,
     },
     /// Ensure execution failed.
     Fail {
         item_spec_id: ItemSpecId,
-        item_ensure: ItemEnsureBoxed,
+        item_apply: ItemApplyBoxed,
         error: E,
     },
 }

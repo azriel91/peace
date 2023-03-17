@@ -1,8 +1,8 @@
 use peace_cfg::OpCheckStatus;
 use peace_resources::type_reg::untagged::{BoxDtDisplay, DataType};
 
-/// Trait to allow inspecting a type-erased `ItemEnsurePartial`.
-pub trait ItemEnsurePartialRt: DataType {
+/// Trait to allow inspecting a type-erased `ItemApplyPartial`.
+pub trait ItemApplyPartialRt: DataType {
     /// Returns `state_saved` as type-erased data.
     fn state_saved(&self) -> Option<BoxDtDisplay>;
 
@@ -25,9 +25,9 @@ pub trait ItemEnsurePartialRt: DataType {
     fn as_data_type_mut(&mut self) -> &mut dyn DataType;
 }
 
-dyn_clone::clone_trait_object!(ItemEnsurePartialRt);
+dyn_clone::clone_trait_object!(ItemApplyPartialRt);
 
-impl ItemEnsurePartialRt for Box<dyn ItemEnsurePartialRt> {
+impl ItemApplyPartialRt for Box<dyn ItemApplyPartialRt> {
     fn state_saved(&self) -> Option<BoxDtDisplay> {
         self.as_ref().state_saved()
     }
@@ -57,7 +57,7 @@ impl ItemEnsurePartialRt for Box<dyn ItemEnsurePartialRt> {
     }
 }
 
-impl<'a> serde::Serialize for dyn ItemEnsurePartialRt + 'a {
+impl<'a> serde::Serialize for dyn ItemApplyPartialRt + 'a {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

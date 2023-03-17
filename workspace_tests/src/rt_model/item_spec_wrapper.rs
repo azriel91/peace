@@ -165,20 +165,20 @@ async fn ensure_prepare() -> Result<(), VecCopyError> {
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
     match <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources).await {
-        Ok(item_ensure) => {
+        Ok(item_apply) => {
             #[cfg(not(feature = "output_progress"))]
-            assert_eq!(OpCheckStatus::ExecRequired, item_ensure.op_check_status());
+            assert_eq!(OpCheckStatus::ExecRequired, item_apply.op_check_status());
             #[cfg(feature = "output_progress")]
             assert_eq!(
                 OpCheckStatus::ExecRequired {
                     progress_limit: ProgressLimit::Bytes(8)
                 },
-                item_ensure.op_check_status()
+                item_apply.op_check_status()
             );
 
             Ok(())
         }
-        Err((error, _item_ensure_partial)) => Err(error),
+        Err((error, _item_apply_partial)) => Err(error),
     }
 }
 
@@ -188,7 +188,7 @@ async fn ensure_exec_dry() -> Result<(), VecCopyError> {
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
-    let mut item_ensure_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
+    let mut item_apply_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
         .await
         .map_err(|(error, _)| error)?;
     cfg_if::cfg_if! {
@@ -210,7 +210,7 @@ async fn ensure_exec_dry() -> Result<(), VecCopyError> {
         &item_spec_wrapper,
         op_ctx,
         &resources,
-        &mut item_ensure_boxed,
+        &mut item_apply_boxed,
     )
     .await?;
 
@@ -237,7 +237,7 @@ async fn ensure_exec() -> Result<(), VecCopyError> {
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
-    let mut item_ensure_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
+    let mut item_apply_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
         .await
         .map_err(|(error, _)| error)?;
     cfg_if::cfg_if! {
@@ -259,7 +259,7 @@ async fn ensure_exec() -> Result<(), VecCopyError> {
         &item_spec_wrapper,
         op_ctx,
         &resources,
-        &mut item_ensure_boxed,
+        &mut item_apply_boxed,
     )
     .await?;
 

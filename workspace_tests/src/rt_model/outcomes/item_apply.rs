@@ -1,13 +1,13 @@
 use peace::{
     cfg::OpCheckStatus,
     resources::type_reg::untagged::BoxDataTypeDowncast,
-    rt_model::outcomes::{ItemEnsure, ItemEnsurePartial, ItemEnsureRt},
+    rt_model::outcomes::{ItemApply, ItemApplyPartial, ItemApplyRt},
 };
 
 #[test]
 fn try_from_returns_ok_when_state_saved_is_none_and_others_are_some()
 -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: None,
         state_current: Some(123u32),
         state_desired: Some(789u32),
@@ -15,25 +15,25 @@ fn try_from_returns_ok_when_state_saved_is_none_and_others_are_some()
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let item_ensure = ItemEnsure::try_from((item_ensure_partial, None)).unwrap();
+    let item_apply = ItemApply::try_from((item_apply_partial, None)).unwrap();
 
     assert_eq!(
-        ItemEnsure {
+        ItemApply {
             state_saved: None,
             state_current: 123u32,
             state_desired: 789u32,
             state_diff: 8u8,
             op_check_status: OpCheckStatus::ExecNotRequired,
-            state_ensured: None,
+            state_applied: None,
         },
-        item_ensure
+        item_apply
     );
     Ok(())
 }
 
 #[test]
 fn try_from_returns_ok_when_all_fields_are_some() -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_desired: Some(789u32),
@@ -41,25 +41,25 @@ fn try_from_returns_ok_when_all_fields_are_some() -> Result<(), Box<dyn std::err
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let item_ensure = ItemEnsure::try_from((item_ensure_partial, None)).unwrap();
+    let item_apply = ItemApply::try_from((item_apply_partial, None)).unwrap();
 
     assert_eq!(
-        ItemEnsure {
+        ItemApply {
             state_saved: Some(456u32),
             state_current: 123u32,
             state_desired: 789u32,
             state_diff: 8u8,
             op_check_status: OpCheckStatus::ExecNotRequired,
-            state_ensured: None,
+            state_applied: None,
         },
-        item_ensure
+        item_apply
     );
     Ok(())
 }
 
 #[test]
-fn try_from_passes_through_state_ensured() -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+fn try_from_passes_through_state_applied() -> Result<(), Box<dyn std::error::Error>> {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_desired: Some(789u32),
@@ -67,25 +67,25 @@ fn try_from_passes_through_state_ensured() -> Result<(), Box<dyn std::error::Err
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let item_ensure = ItemEnsure::try_from((item_ensure_partial, Some(789))).unwrap();
+    let item_apply = ItemApply::try_from((item_apply_partial, Some(789))).unwrap();
 
     assert_eq!(
-        ItemEnsure {
+        ItemApply {
             state_saved: Some(456u32),
             state_current: 123u32,
             state_desired: 789u32,
             state_diff: 8u8,
             op_check_status: OpCheckStatus::ExecNotRequired,
-            state_ensured: Some(789),
+            state_applied: Some(789),
         },
-        item_ensure
+        item_apply
     );
     Ok(())
 }
 
 #[test]
 fn try_from_returns_err_when_state_current_is_none() -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: None,
         state_desired: Some(789u32),
@@ -93,26 +93,26 @@ fn try_from_returns_err_when_state_current_is_none() -> Result<(), Box<dyn std::
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let (item_ensure_partial, state_ensured) =
-        ItemEnsure::try_from((item_ensure_partial, None)).unwrap_err();
+    let (item_apply_partial, state_applied) =
+        ItemApply::try_from((item_apply_partial, None)).unwrap_err();
 
     assert_eq!(
-        ItemEnsurePartial {
+        ItemApplyPartial {
             state_saved: Some(456u32),
             state_current: None,
             state_desired: Some(789u32),
             state_diff: Some(8u8),
             op_check_status: Some(OpCheckStatus::ExecNotRequired),
         },
-        item_ensure_partial
+        item_apply_partial
     );
-    assert!(state_ensured.is_none());
+    assert!(state_applied.is_none());
     Ok(())
 }
 
 #[test]
 fn try_from_returns_err_when_state_desired_is_none() -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_desired: None,
@@ -120,26 +120,26 @@ fn try_from_returns_err_when_state_desired_is_none() -> Result<(), Box<dyn std::
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let (item_ensure_partial, state_ensured) =
-        ItemEnsure::try_from((item_ensure_partial, None)).unwrap_err();
+    let (item_apply_partial, state_applied) =
+        ItemApply::try_from((item_apply_partial, None)).unwrap_err();
 
     assert_eq!(
-        ItemEnsurePartial {
+        ItemApplyPartial {
             state_saved: Some(456u32),
             state_current: Some(123u32),
             state_desired: None,
             state_diff: Some(8u8),
             op_check_status: Some(OpCheckStatus::ExecNotRequired),
         },
-        item_ensure_partial
+        item_apply_partial
     );
-    assert!(state_ensured.is_none());
+    assert!(state_applied.is_none());
     Ok(())
 }
 
 #[test]
 fn try_from_returns_err_when_state_diff_is_none() -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_desired: Some(789u32),
@@ -147,26 +147,26 @@ fn try_from_returns_err_when_state_diff_is_none() -> Result<(), Box<dyn std::err
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let (item_ensure_partial, state_ensured) =
-        ItemEnsure::try_from((item_ensure_partial, None)).unwrap_err();
+    let (item_apply_partial, state_applied) =
+        ItemApply::try_from((item_apply_partial, None)).unwrap_err();
 
     assert_eq!(
-        ItemEnsurePartial {
+        ItemApplyPartial {
             state_saved: Some(456u32),
             state_current: Some(123u32),
             state_desired: Some(789u32),
             state_diff: None,
             op_check_status: Some(OpCheckStatus::ExecNotRequired),
         },
-        item_ensure_partial
+        item_apply_partial
     );
-    assert!(state_ensured.is_none());
+    assert!(state_applied.is_none());
     Ok(())
 }
 
 #[test]
 fn try_from_returns_err_when_op_check_status_is_none() -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_desired: Some(789u32),
@@ -174,26 +174,26 @@ fn try_from_returns_err_when_op_check_status_is_none() -> Result<(), Box<dyn std
         op_check_status: None,
     };
 
-    let (item_ensure_partial, state_ensured) =
-        ItemEnsure::try_from((item_ensure_partial, None)).unwrap_err();
+    let (item_apply_partial, state_applied) =
+        ItemApply::try_from((item_apply_partial, None)).unwrap_err();
 
     assert_eq!(
-        ItemEnsurePartial {
+        ItemApplyPartial {
             state_saved: Some(456u32),
             state_current: Some(123u32),
             state_desired: Some(789u32),
             state_diff: Some(8u8),
             op_check_status: None,
         },
-        item_ensure_partial
+        item_apply_partial
     );
-    assert!(state_ensured.is_none());
+    assert!(state_applied.is_none());
     Ok(())
 }
 
 #[test]
-fn item_ensure_rt_state_saved_returns_state_saved() -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+fn item_apply_rt_state_saved_returns_state_saved() -> Result<(), Box<dyn std::error::Error>> {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_desired: Some(789u32),
@@ -201,8 +201,8 @@ fn item_ensure_rt_state_saved_returns_state_saved() -> Result<(), Box<dyn std::e
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let item_ensure = ItemEnsure::try_from((item_ensure_partial, None)).unwrap();
-    let state_saved = ItemEnsureRt::state_saved(&item_ensure).unwrap();
+    let item_apply = ItemApply::try_from((item_apply_partial, None)).unwrap();
+    let state_saved = ItemApplyRt::state_saved(&item_apply).unwrap();
 
     assert_eq!(
         456u32,
@@ -212,8 +212,8 @@ fn item_ensure_rt_state_saved_returns_state_saved() -> Result<(), Box<dyn std::e
 }
 
 #[test]
-fn item_ensure_rt_state_current_returns_state_current() -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+fn item_apply_rt_state_current_returns_state_current() -> Result<(), Box<dyn std::error::Error>> {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_desired: Some(789u32),
@@ -221,8 +221,8 @@ fn item_ensure_rt_state_current_returns_state_current() -> Result<(), Box<dyn st
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let item_ensure = ItemEnsure::try_from((item_ensure_partial, None)).unwrap();
-    let state_current = ItemEnsureRt::state_current(&item_ensure);
+    let item_apply = ItemApply::try_from((item_apply_partial, None)).unwrap();
+    let state_current = ItemApplyRt::state_current(&item_apply);
 
     assert_eq!(
         123u32,
@@ -232,8 +232,8 @@ fn item_ensure_rt_state_current_returns_state_current() -> Result<(), Box<dyn st
 }
 
 #[test]
-fn item_ensure_rt_state_desired_returns_state_desired() -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+fn item_apply_rt_state_desired_returns_state_desired() -> Result<(), Box<dyn std::error::Error>> {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_desired: Some(789u32),
@@ -241,8 +241,8 @@ fn item_ensure_rt_state_desired_returns_state_desired() -> Result<(), Box<dyn st
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let item_ensure = ItemEnsure::try_from((item_ensure_partial, None)).unwrap();
-    let state_desired = ItemEnsureRt::state_desired(&item_ensure);
+    let item_apply = ItemApply::try_from((item_apply_partial, None)).unwrap();
+    let state_desired = ItemApplyRt::state_desired(&item_apply);
 
     assert_eq!(
         789u32,
@@ -252,8 +252,8 @@ fn item_ensure_rt_state_desired_returns_state_desired() -> Result<(), Box<dyn st
 }
 
 #[test]
-fn item_ensure_rt_state_diff_returns_state_diff() -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+fn item_apply_rt_state_diff_returns_state_diff() -> Result<(), Box<dyn std::error::Error>> {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_desired: Some(789u32),
@@ -261,8 +261,8 @@ fn item_ensure_rt_state_diff_returns_state_diff() -> Result<(), Box<dyn std::err
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let item_ensure = ItemEnsure::try_from((item_ensure_partial, None)).unwrap();
-    let state_diff = ItemEnsureRt::state_diff(&item_ensure);
+    let item_apply = ItemApply::try_from((item_apply_partial, None)).unwrap();
+    let state_diff = ItemApplyRt::state_diff(&item_apply);
 
     assert_eq!(
         8u8,
@@ -272,9 +272,9 @@ fn item_ensure_rt_state_diff_returns_state_diff() -> Result<(), Box<dyn std::err
 }
 
 #[test]
-fn item_ensure_rt_op_check_status_returns_op_check_status() -> Result<(), Box<dyn std::error::Error>>
+fn item_apply_rt_op_check_status_returns_op_check_status() -> Result<(), Box<dyn std::error::Error>>
 {
-    let item_ensure_partial = ItemEnsurePartial {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_desired: Some(789u32),
@@ -282,16 +282,16 @@ fn item_ensure_rt_op_check_status_returns_op_check_status() -> Result<(), Box<dy
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let item_ensure = ItemEnsure::try_from((item_ensure_partial, None)).unwrap();
-    let op_check_status = ItemEnsureRt::op_check_status(&item_ensure);
+    let item_apply = ItemApply::try_from((item_apply_partial, None)).unwrap();
+    let op_check_status = ItemApplyRt::op_check_status(&item_apply);
 
     assert_eq!(OpCheckStatus::ExecNotRequired, op_check_status);
     Ok(())
 }
 
 #[test]
-fn item_ensure_rt_state_ensured_returns_state_ensured() -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+fn item_apply_rt_state_applied_returns_state_applied() -> Result<(), Box<dyn std::error::Error>> {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_desired: Some(789u32),
@@ -299,19 +299,19 @@ fn item_ensure_rt_state_ensured_returns_state_ensured() -> Result<(), Box<dyn st
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let item_ensure = ItemEnsure::try_from((item_ensure_partial, Some(456u32))).unwrap();
-    let state_ensured = ItemEnsureRt::state_ensured(&item_ensure).unwrap();
+    let item_apply = ItemApply::try_from((item_apply_partial, Some(456u32))).unwrap();
+    let state_applied = ItemApplyRt::state_applied(&item_apply).unwrap();
 
     assert_eq!(
         456u32,
-        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_ensured).unwrap()
+        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_applied).unwrap()
     );
     Ok(())
 }
 
 #[test]
-fn item_ensure_rt_as_data_type_returns_self() -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+fn item_apply_rt_as_data_type_returns_self() -> Result<(), Box<dyn std::error::Error>> {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_desired: Some(789u32),
@@ -319,20 +319,20 @@ fn item_ensure_rt_as_data_type_returns_self() -> Result<(), Box<dyn std::error::
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let item_ensure = ItemEnsure::try_from((item_ensure_partial, None)).unwrap();
-    let item_ensure_clone = item_ensure.clone();
-    let data_type = ItemEnsureRt::as_data_type(&item_ensure_clone);
+    let item_apply = ItemApply::try_from((item_apply_partial, None)).unwrap();
+    let item_apply_clone = item_apply.clone();
+    let data_type = ItemApplyRt::as_data_type(&item_apply_clone);
 
     assert_eq!(
-        item_ensure,
-        *data_type.downcast_ref::<ItemEnsure<u32, u8>>().unwrap()
+        item_apply,
+        *data_type.downcast_ref::<ItemApply<u32, u8>>().unwrap()
     );
     Ok(())
 }
 
 #[test]
-fn item_ensure_rt_as_data_type_mut_returns_self() -> Result<(), Box<dyn std::error::Error>> {
-    let item_ensure_partial = ItemEnsurePartial {
+fn item_apply_rt_as_data_type_mut_returns_self() -> Result<(), Box<dyn std::error::Error>> {
+    let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_desired: Some(789u32),
@@ -340,13 +340,13 @@ fn item_ensure_rt_as_data_type_mut_returns_self() -> Result<(), Box<dyn std::err
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
-    let item_ensure = ItemEnsure::try_from((item_ensure_partial, None)).unwrap();
-    let mut item_ensure_clone = item_ensure.clone();
-    let data_type = ItemEnsureRt::as_data_type_mut(&mut item_ensure_clone);
+    let item_apply = ItemApply::try_from((item_apply_partial, None)).unwrap();
+    let mut item_apply_clone = item_apply.clone();
+    let data_type = ItemApplyRt::as_data_type_mut(&mut item_apply_clone);
 
     assert_eq!(
-        item_ensure,
-        *data_type.downcast_mut::<ItemEnsure<u32, u8>>().unwrap()
+        item_apply,
+        *data_type.downcast_mut::<ItemApply<u32, u8>>().unwrap()
     );
     Ok(())
 }
