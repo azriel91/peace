@@ -9,7 +9,7 @@ fn state_saved_returns_state_saved() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -30,7 +30,7 @@ fn state_current_returns_state_current() -> Result<(), Box<dyn std::error::Error
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -47,22 +47,22 @@ fn state_current_returns_state_current() -> Result<(), Box<dyn std::error::Error
 }
 
 #[test]
-fn state_desired_returns_state_desired() -> Result<(), Box<dyn std::error::Error>> {
+fn state_target_returns_state_target() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
     let item_apply = ItemApply::try_from((item_apply_partial, None)).unwrap();
     let item_apply_boxed = Box::new(item_apply) as Box<dyn ItemApplyRt>;
-    let state_desired = ItemApplyRt::state_desired(&item_apply_boxed);
+    let state_target = ItemApplyRt::state_target(&item_apply_boxed);
 
     assert_eq!(
         789u32,
-        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_desired).unwrap()
+        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_target).unwrap()
     );
     Ok(())
 }
@@ -72,7 +72,7 @@ fn state_diff_returns_state_diff() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -93,7 +93,7 @@ fn op_check_status_returns_op_check_status() -> Result<(), Box<dyn std::error::E
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -111,7 +111,7 @@ fn state_applied_returns_state_applied() -> Result<(), Box<dyn std::error::Error
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -132,7 +132,7 @@ fn as_data_type_returns_self() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -154,7 +154,7 @@ fn as_data_type_mut_returns_self() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -176,7 +176,7 @@ fn serialize() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -188,7 +188,7 @@ fn serialize() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(
         r#"state_saved: 456
 state_current: 123
-state_desired: 789
+state_target: 789
 state_diff: 8
 op_check_status: ExecNotRequired
 state_applied: 456

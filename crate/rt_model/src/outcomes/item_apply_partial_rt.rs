@@ -9,8 +9,8 @@ pub trait ItemApplyPartialRt: DataType {
     /// Returns `state_current` as type-erased data.
     fn state_current(&self) -> Option<BoxDtDisplay>;
 
-    /// Returns `state_desired` as type-erased data.
-    fn state_desired(&self) -> Option<BoxDtDisplay>;
+    /// Returns `state_target` as type-erased data.
+    fn state_target(&self) -> Option<BoxDtDisplay>;
 
     /// Returns `state_diff` as type-erased data.
     fn state_diff(&self) -> Option<BoxDtDisplay>;
@@ -36,8 +36,8 @@ impl ItemApplyPartialRt for Box<dyn ItemApplyPartialRt> {
         self.as_ref().state_current()
     }
 
-    fn state_desired(&self) -> Option<BoxDtDisplay> {
-        self.as_ref().state_desired()
+    fn state_target(&self) -> Option<BoxDtDisplay> {
+        self.as_ref().state_target()
     }
 
     fn state_diff(&self) -> Option<BoxDtDisplay> {

@@ -10,7 +10,7 @@ fn try_from_returns_ok_when_state_saved_is_none_and_others_are_some()
     let item_apply_partial = ItemApplyPartial {
         state_saved: None,
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -21,7 +21,7 @@ fn try_from_returns_ok_when_state_saved_is_none_and_others_are_some()
         ItemApply {
             state_saved: None,
             state_current: 123u32,
-            state_desired: 789u32,
+            state_target: 789u32,
             state_diff: 8u8,
             op_check_status: OpCheckStatus::ExecNotRequired,
             state_applied: None,
@@ -36,7 +36,7 @@ fn try_from_returns_ok_when_all_fields_are_some() -> Result<(), Box<dyn std::err
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -47,7 +47,7 @@ fn try_from_returns_ok_when_all_fields_are_some() -> Result<(), Box<dyn std::err
         ItemApply {
             state_saved: Some(456u32),
             state_current: 123u32,
-            state_desired: 789u32,
+            state_target: 789u32,
             state_diff: 8u8,
             op_check_status: OpCheckStatus::ExecNotRequired,
             state_applied: None,
@@ -62,7 +62,7 @@ fn try_from_passes_through_state_applied() -> Result<(), Box<dyn std::error::Err
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -73,7 +73,7 @@ fn try_from_passes_through_state_applied() -> Result<(), Box<dyn std::error::Err
         ItemApply {
             state_saved: Some(456u32),
             state_current: 123u32,
-            state_desired: 789u32,
+            state_target: 789u32,
             state_diff: 8u8,
             op_check_status: OpCheckStatus::ExecNotRequired,
             state_applied: Some(789),
@@ -88,7 +88,7 @@ fn try_from_returns_err_when_state_current_is_none() -> Result<(), Box<dyn std::
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: None,
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -100,7 +100,7 @@ fn try_from_returns_err_when_state_current_is_none() -> Result<(), Box<dyn std::
         ItemApplyPartial {
             state_saved: Some(456u32),
             state_current: None,
-            state_desired: Some(789u32),
+            state_target: Some(789u32),
             state_diff: Some(8u8),
             op_check_status: Some(OpCheckStatus::ExecNotRequired),
         },
@@ -111,11 +111,11 @@ fn try_from_returns_err_when_state_current_is_none() -> Result<(), Box<dyn std::
 }
 
 #[test]
-fn try_from_returns_err_when_state_desired_is_none() -> Result<(), Box<dyn std::error::Error>> {
+fn try_from_returns_err_when_state_target_is_none() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: None,
+        state_target: None,
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -127,7 +127,7 @@ fn try_from_returns_err_when_state_desired_is_none() -> Result<(), Box<dyn std::
         ItemApplyPartial {
             state_saved: Some(456u32),
             state_current: Some(123u32),
-            state_desired: None,
+            state_target: None,
             state_diff: Some(8u8),
             op_check_status: Some(OpCheckStatus::ExecNotRequired),
         },
@@ -142,7 +142,7 @@ fn try_from_returns_err_when_state_diff_is_none() -> Result<(), Box<dyn std::err
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: None::<u8>,
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -154,7 +154,7 @@ fn try_from_returns_err_when_state_diff_is_none() -> Result<(), Box<dyn std::err
         ItemApplyPartial {
             state_saved: Some(456u32),
             state_current: Some(123u32),
-            state_desired: Some(789u32),
+            state_target: Some(789u32),
             state_diff: None,
             op_check_status: Some(OpCheckStatus::ExecNotRequired),
         },
@@ -169,7 +169,7 @@ fn try_from_returns_err_when_op_check_status_is_none() -> Result<(), Box<dyn std
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: None,
     };
@@ -181,7 +181,7 @@ fn try_from_returns_err_when_op_check_status_is_none() -> Result<(), Box<dyn std
         ItemApplyPartial {
             state_saved: Some(456u32),
             state_current: Some(123u32),
-            state_desired: Some(789u32),
+            state_target: Some(789u32),
             state_diff: Some(8u8),
             op_check_status: None,
         },
@@ -196,7 +196,7 @@ fn item_apply_rt_state_saved_returns_state_saved() -> Result<(), Box<dyn std::er
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -216,7 +216,7 @@ fn item_apply_rt_state_current_returns_state_current() -> Result<(), Box<dyn std
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -232,21 +232,21 @@ fn item_apply_rt_state_current_returns_state_current() -> Result<(), Box<dyn std
 }
 
 #[test]
-fn item_apply_rt_state_desired_returns_state_desired() -> Result<(), Box<dyn std::error::Error>> {
+fn item_apply_rt_state_target_returns_state_target() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
     let item_apply = ItemApply::try_from((item_apply_partial, None)).unwrap();
-    let state_desired = ItemApplyRt::state_desired(&item_apply);
+    let state_target = ItemApplyRt::state_target(&item_apply);
 
     assert_eq!(
         789u32,
-        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_desired).unwrap()
+        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_target).unwrap()
     );
     Ok(())
 }
@@ -256,7 +256,7 @@ fn item_apply_rt_state_diff_returns_state_diff() -> Result<(), Box<dyn std::erro
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -277,7 +277,7 @@ fn item_apply_rt_op_check_status_returns_op_check_status() -> Result<(), Box<dyn
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -294,7 +294,7 @@ fn item_apply_rt_state_applied_returns_state_applied() -> Result<(), Box<dyn std
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -314,7 +314,7 @@ fn item_apply_rt_as_data_type_returns_self() -> Result<(), Box<dyn std::error::E
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
@@ -335,7 +335,7 @@ fn item_apply_rt_as_data_type_mut_returns_self() -> Result<(), Box<dyn std::erro
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
-        state_desired: Some(789u32),
+        state_target: Some(789u32),
         state_diff: Some(8u8),
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };

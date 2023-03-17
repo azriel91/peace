@@ -49,7 +49,7 @@ fn debug() {
                 ),
             },
         ),
-        state_desired: Some(
+        state_target: Some(
             State {
                 logical: 3,
                 physical: Tbd,
@@ -89,7 +89,7 @@ fn serialize() -> Result<(), serde_yaml::Error> {
 state_current:
   logical: 1
   physical: !Value 0
-state_desired:
+state_target:
   logical: 3
   physical: !Tbd null
 state_diff: 2
@@ -103,7 +103,7 @@ op_check_status: ExecNotRequired
 fn item_apply_partial() -> ItemApplyPartial<State<u32, External<u32>>, u32> {
     let mut item_apply_partial = ItemApplyPartial::new();
     item_apply_partial.state_current = Some(State::new(1, External::Value(0)));
-    item_apply_partial.state_desired = Some(State::new(3, External::Tbd));
+    item_apply_partial.state_target = Some(State::new(3, External::Tbd));
     item_apply_partial.state_diff = Some(2);
     item_apply_partial.op_check_status = Some(OpCheckStatus::ExecNotRequired);
     item_apply_partial

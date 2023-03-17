@@ -840,7 +840,7 @@ where
             Err(error) => return Err((error, item_apply_partial.into())),
         }
         match self.state_desired_exec(resources).await {
-            Ok(state_desired) => item_apply_partial.state_desired = Some(state_desired),
+            Ok(state_desired) => item_apply_partial.state_target = Some(state_desired),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
         match self
@@ -851,7 +851,7 @@ where
                     .as_ref()
                     .expect("unreachable: This is set just above."),
                 item_apply_partial
-                    .state_desired
+                    .state_target
                     .as_ref()
                     .expect("unreachable: This is set just above."),
             )
@@ -861,16 +861,16 @@ where
             Err(error) => return Err((error, item_apply_partial.into())),
         }
 
-        let (Some(state_current), Some(state_desired), Some(state_diff)) = (
+        let (Some(state_current), Some(state_target), Some(state_diff)) = (
             item_apply_partial.state_current.as_ref(),
-            item_apply_partial.state_desired.as_ref(),
+            item_apply_partial.state_target.as_ref(),
             item_apply_partial.state_diff.as_ref(),
         ) else {
             unreachable!("These are set just above.");
         };
 
         match self
-            .apply_op_check(resources, state_current, state_desired, state_diff)
+            .apply_op_check(resources, state_current, state_target, state_diff)
             .await
         {
             Ok(op_check_status) => item_apply_partial.op_check_status = Some(op_check_status),
@@ -898,7 +898,7 @@ where
         let ItemApply {
             state_saved: _,
             state_current,
-            state_desired,
+            state_target,
             state_diff,
             op_check_status,
             state_applied,
@@ -908,7 +908,7 @@ where
             #[cfg(not(feature = "output_progress"))]
             OpCheckStatus::ExecRequired => {
                 let state_applied_dry = self
-                    .apply_op_exec_dry(op_ctx, resources, state_current, state_desired, state_diff)
+                    .apply_op_exec_dry(op_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_dry);
@@ -916,7 +916,7 @@ where
             #[cfg(feature = "output_progress")]
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
                 let state_applied_dry = self
-                    .apply_op_exec_dry(op_ctx, resources, state_current, state_desired, state_diff)
+                    .apply_op_exec_dry(op_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_dry);
@@ -943,7 +943,7 @@ where
         let ItemApply {
             state_saved: _,
             state_current,
-            state_desired,
+            state_target,
             state_diff,
             op_check_status,
             state_applied,
@@ -953,7 +953,7 @@ where
             #[cfg(not(feature = "output_progress"))]
             OpCheckStatus::ExecRequired => {
                 let state_applied_next = self
-                    .apply_op_exec(op_ctx, resources, state_current, state_desired, state_diff)
+                    .apply_op_exec(op_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_next);
@@ -961,7 +961,7 @@ where
             #[cfg(feature = "output_progress")]
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
                 let state_applied_next = self
-                    .apply_op_exec(op_ctx, resources, state_current, state_desired, state_diff)
+                    .apply_op_exec(op_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_next);

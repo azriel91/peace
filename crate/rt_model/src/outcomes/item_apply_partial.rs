@@ -13,7 +13,7 @@ use crate::outcomes::ItemApplyPartialRt;
 /// 1. `ApplyCmd` calls the following function for each item.
 ///
 ///     - [`StateCurrentFnSpec::exec`]
-///     - [`StateDesiredFnSpec::exec`]
+///     - [`StateDesiredFnSpec::exec`] or [`ItemSpec::state_clean`]
 ///     - [`StateDiffFnSpec::exec`]
 ///     - [`ApplyOpSpec::check`]
 ///     - [`ApplyOpSpec::exec`]
@@ -37,8 +37,8 @@ pub struct ItemApplyPartial<State, StateDiff> {
     pub state_saved: Option<State>,
     /// Current state discovered during the execution.
     pub state_current: Option<State>,
-    /// Desired state discovered during the execution.
-    pub state_desired: Option<State>,
+    /// Target state discovered during the execution.
+    pub state_target: Option<State>,
     /// Diff between current and desired states.
     pub state_diff: Option<StateDiff>,
     /// Whether item execution is required.
@@ -57,7 +57,7 @@ impl<State, StateDiff> Default for ItemApplyPartial<State, StateDiff> {
         Self {
             state_saved: None,
             state_current: None,
-            state_desired: None,
+            state_target: None,
             state_diff: None,
             op_check_status: None,
         }
@@ -77,8 +77,8 @@ where
         self.state_current.clone().map(BoxDtDisplay::new)
     }
 
-    fn state_desired(&self) -> Option<BoxDtDisplay> {
-        self.state_desired.clone().map(BoxDtDisplay::new)
+    fn state_target(&self) -> Option<BoxDtDisplay> {
+        self.state_target.clone().map(BoxDtDisplay::new)
     }
 
     fn state_diff(&self) -> Option<BoxDtDisplay> {

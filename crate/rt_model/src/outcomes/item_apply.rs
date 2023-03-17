@@ -16,8 +16,8 @@ pub struct ItemApply<State, StateDiff> {
     pub state_saved: Option<State>,
     /// Current state discovered during the execution.
     pub state_current: State,
-    /// Desired state discovered during the execution.
-    pub state_desired: State,
+    /// Target state discovered during the execution.
+    pub state_target: State,
     /// Diff between current and desired states.
     pub state_diff: StateDiff,
     /// Whether item execution was required.
@@ -37,24 +37,24 @@ impl<State, StateDiff> TryFrom<(ItemApplyPartial<State, StateDiff>, Option<State
         let ItemApplyPartial {
             state_saved,
             state_current,
-            state_desired,
+            state_target,
             state_diff,
             op_check_status,
         } = partial;
 
         if state_current.is_some()
-            && state_desired.is_some()
+            && state_target.is_some()
             && state_diff.is_some()
             && op_check_status.is_some()
         {
-            let (Some(state_current), Some(state_desired), Some(state_diff), Some(op_check_status)) =
-                (state_current, state_desired, state_diff, op_check_status) else {
+            let (Some(state_current), Some(state_target), Some(state_diff), Some(op_check_status)) =
+                (state_current, state_target, state_diff, op_check_status) else {
                     unreachable!("All are checked to be `Some` above.");
                 };
             Ok(Self {
                 state_saved,
                 state_current,
-                state_desired,
+                state_target,
                 state_diff,
                 op_check_status,
                 state_applied,
@@ -63,7 +63,7 @@ impl<State, StateDiff> TryFrom<(ItemApplyPartial<State, StateDiff>, Option<State
             let partial = ItemApplyPartial {
                 state_saved,
                 state_current,
-                state_desired,
+                state_target,
                 state_diff,
                 op_check_status,
             };
@@ -85,8 +85,8 @@ where
         BoxDtDisplay::new(self.state_current.clone())
     }
 
-    fn state_desired(&self) -> BoxDtDisplay {
-        BoxDtDisplay::new(self.state_desired.clone())
+    fn state_target(&self) -> BoxDtDisplay {
+        BoxDtDisplay::new(self.state_target.clone())
     }
 
     fn state_diff(&self) -> BoxDtDisplay {

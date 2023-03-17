@@ -9,8 +9,8 @@ pub trait ItemApplyRt: DataType {
     /// Returns `state_current` as type-erased data.
     fn state_current(&self) -> BoxDtDisplay;
 
-    /// Returns `state_desired` as type-erased data.
-    fn state_desired(&self) -> BoxDtDisplay;
+    /// Returns `state_target` as type-erased data.
+    fn state_target(&self) -> BoxDtDisplay;
 
     /// Returns `state_diff` as type-erased data.
     fn state_diff(&self) -> BoxDtDisplay;
@@ -39,8 +39,8 @@ impl ItemApplyRt for Box<dyn ItemApplyRt> {
         self.as_ref().state_current()
     }
 
-    fn state_desired(&self) -> BoxDtDisplay {
-        self.as_ref().state_desired()
+    fn state_target(&self) -> BoxDtDisplay {
+        self.as_ref().state_target()
     }
 
     fn state_diff(&self) -> BoxDtDisplay {
