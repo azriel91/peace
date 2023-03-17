@@ -164,59 +164,6 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     where
         E: Debug + std::error::Error;
 
-    /// Dry ensures the item from its current state to its desired state.
-    ///
-    /// This runs the following functions in order:
-    ///
-    /// * [`StateCurrentFnSpec::try_exec`]
-    /// * [`StateDesiredFnSpec::try_exec`]
-    /// * [`StateDiffFnSpec::exec`]
-    /// * [`ApplyOpSpec::check`]
-    /// * [`ApplyOpSpec::exec_dry`]
-    ///
-    /// # Parameters
-    ///
-    /// * `resources`: The resources in the current execution.
-    /// * `item_apply`: The information collected in `self.ensure_prepare`.
-    ///
-    /// [`StateCurrentFnSpec::try_exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`StateDesiredFnSpec::try_exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
-    /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
-    /// [`ApplyOpSpec::exec_dry`]: peace_cfg::ItemSpec::ApplyOpSpec
-    async fn ensure_exec_dry(
-        &self,
-        op_ctx: OpCtx<'_>,
-        resources: &Resources<SetUp>,
-        item_apply: &mut ItemApplyBoxed,
-    ) -> Result<(), E>
-    where
-        E: Debug + std::error::Error;
-
-    /// Applys the item from its current state to its desired state.
-    ///
-    /// This runs the following functions in order:
-    ///
-    /// * [`StateCurrentFnSpec::exec`]
-    /// * [`StateDesiredFnSpec::exec`]
-    /// * [`StateDiffFnSpec::exec`]
-    /// * [`ApplyOpSpec::check`]
-    /// * [`ApplyOpSpec::exec`]
-    ///
-    /// [`StateCurrentFnSpec::exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`StateDesiredFnSpec::exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
-    /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
-    /// [`ApplyOpSpec::exec`]: peace_cfg::ItemSpec::ApplyOpSpec
-    async fn ensure_exec(
-        &self,
-        op_ctx: OpCtx<'_>,
-        resources: &Resources<SetUp>,
-        item_apply: &mut ItemApplyBoxed,
-    ) -> Result<(), E>
-    where
-        E: Debug + std::error::Error;
-
     /// Discovers the information needed for a clean execution.
     ///
     /// This runs the following functions in order:
@@ -234,6 +181,50 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
         &self,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
+    where
+        E: Debug + std::error::Error;
+
+    /// Dry applies the item from its current state to its desired state.
+    ///
+    /// This runs the following function in order, passing in the information
+    /// collected from [`ensure_prepare`] or [`clean_prepare`]:
+    ///
+    /// * [`ApplyOpSpec::exec_dry`]
+    ///
+    /// # Parameters
+    ///
+    /// * `resources`: The resources in the current execution.
+    /// * `item_apply`: The information collected in `self.ensure_prepare`.
+    ///
+    /// [`ApplyOpSpec::exec_dry`]: peace_cfg::ItemSpec::ApplyOpSpec
+    async fn apply_exec_dry(
+        &self,
+        op_ctx: OpCtx<'_>,
+        resources: &Resources<SetUp>,
+        item_apply: &mut ItemApplyBoxed,
+    ) -> Result<(), E>
+    where
+        E: Debug + std::error::Error;
+
+    /// Applies the item from its current state to its desired state.
+    ///
+    /// This runs the following function in order, passing in the information
+    /// collected from [`ensure_prepare`] or [`clean_prepare`]:
+    ///
+    /// * [`ApplyOpSpec::exec`]
+    ///
+    /// # Parameters
+    ///
+    /// * `resources`: The resources in the current execution.
+    /// * `item_apply`: The information collected in `self.ensure_prepare`.
+    ///
+    /// [`ApplyOpSpec::exec`]: peace_cfg::ItemSpec::ApplyOpSpec
+    async fn apply_exec(
+        &self,
+        op_ctx: OpCtx<'_>,
+        resources: &Resources<SetUp>,
+        item_apply: &mut ItemApplyBoxed,
+    ) -> Result<(), E>
     where
         E: Debug + std::error::Error;
 

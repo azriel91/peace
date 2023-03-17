@@ -1,7 +1,7 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{OpCheckStatus, OpCtx},
-    data::marker::{Current, Desired},
+    data::marker::{ApplyDry, Clean, Current, Desired},
     resources::{
         internal::{StateDiffsMut, StatesMut},
         resources::ts::SetUp,
@@ -183,7 +183,7 @@ async fn ensure_prepare() -> Result<(), VecCopyError> {
 }
 
 #[tokio::test]
-async fn ensure_exec_dry() -> Result<(), VecCopyError> {
+async fn apply_exec_dry_for_ensure() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
@@ -206,7 +206,7 @@ async fn ensure_exec_dry() -> Result<(), VecCopyError> {
         progress_sender,
     );
 
-    <dyn ItemSpecRt<_>>::ensure_exec_dry(
+    <dyn ItemSpecRt<_>>::apply_exec_dry(
         &item_spec_wrapper,
         op_ctx,
         &resources,
@@ -219,8 +219,13 @@ async fn ensure_exec_dry() -> Result<(), VecCopyError> {
 
     // Automatic `Current<State>` insertion.
     assert_eq!(
-        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        Some(VecCopyState::new()).as_ref(),
         resources.borrow::<Current<VecCopyState>>().as_ref()
+    );
+    // Automatic `ApplyDry<State>` insertion.
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        resources.borrow::<ApplyDry<VecCopyState>>().as_ref()
     );
     // Desired should also exist.
     assert_eq!(
@@ -232,7 +237,7 @@ async fn ensure_exec_dry() -> Result<(), VecCopyError> {
 }
 
 #[tokio::test]
-async fn ensure_exec() -> Result<(), VecCopyError> {
+async fn apply_exec_for_ensure() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
         ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
@@ -255,7 +260,7 @@ async fn ensure_exec() -> Result<(), VecCopyError> {
         progress_sender,
     );
 
-    <dyn ItemSpecRt<_>>::ensure_exec(
+    <dyn ItemSpecRt<_>>::apply_exec(
         &item_spec_wrapper,
         op_ctx,
         &resources,
@@ -302,6 +307,109 @@ async fn clean_prepare() -> Result<(), VecCopyError> {
         }
         Err((error, _item_apply_partial)) => Err(error),
     }
+}
+
+#[tokio::test]
+async fn apply_exec_dry_for_clean() -> Result<(), VecCopyError> {
+    let item_spec_wrapper =
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+    let resources = resources_set_up_pre_saved(&item_spec_wrapper).await?;
+
+    let mut item_apply_boxed = <dyn ItemSpecRt<_>>::clean_prepare(&item_spec_wrapper, &resources)
+        .await
+        .map_err(|(error, _)| error)?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "output_progress")] {
+            let (progress_tx, _progress_rx) = mpsc::channel(10);
+            let progress_sender = ProgressSender::new(
+                VecCopyItemSpec::ID,
+                &progress_tx,
+            );
+        }
+    }
+    let op_ctx = OpCtx::new(
+        VecCopyItemSpec::ID,
+        #[cfg(feature = "output_progress")]
+        progress_sender,
+    );
+
+    <dyn ItemSpecRt<_>>::apply_exec_dry(
+        &item_spec_wrapper,
+        op_ctx,
+        &resources,
+        &mut item_apply_boxed,
+    )
+    .await?;
+
+    let vec_b = resources.borrow::<VecB>();
+    assert_eq!(&[0u8, 1, 2, 3, 4, 5, 6, 7], &*vec_b.0);
+
+    // Automatic `Current<State>` insertion.
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        resources.borrow::<Current<VecCopyState>>().as_ref()
+    );
+    // Automatic `ApplyDry<State>` insertion.
+    assert_eq!(
+        Some(VecCopyState::new()).as_ref(),
+        resources.borrow::<ApplyDry<VecCopyState>>().as_ref()
+    );
+    // Clean should also exist.
+    assert_eq!(
+        Some(VecCopyState::new()).as_ref(),
+        resources.borrow::<Clean<VecCopyState>>().as_ref()
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn apply_exec_for_clean() -> Result<(), VecCopyError> {
+    let item_spec_wrapper =
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+    let resources = resources_set_up_pre_saved(&item_spec_wrapper).await?;
+
+    let mut item_apply_boxed = <dyn ItemSpecRt<_>>::clean_prepare(&item_spec_wrapper, &resources)
+        .await
+        .map_err(|(error, _)| error)?;
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "output_progress")] {
+            let (progress_tx, _progress_rx) = mpsc::channel(10);
+            let progress_sender = ProgressSender::new(
+                VecCopyItemSpec::ID,
+                &progress_tx,
+            );
+        }
+    }
+    let op_ctx = OpCtx::new(
+        VecCopyItemSpec::ID,
+        #[cfg(feature = "output_progress")]
+        progress_sender,
+    );
+
+    <dyn ItemSpecRt<_>>::apply_exec(
+        &item_spec_wrapper,
+        op_ctx,
+        &resources,
+        &mut item_apply_boxed,
+    )
+    .await?;
+
+    let vec_b = resources.borrow::<VecB>();
+    assert_eq!(&[0u8; 0], &*vec_b.0);
+
+    // Automatic `Current<State>` insertion.
+    assert_eq!(
+        Some(VecCopyState::new()).as_ref(),
+        resources.borrow::<Current<VecCopyState>>().as_ref()
+    );
+    // Clean should also exist.
+    assert_eq!(
+        Some(VecCopyState::new()).as_ref(),
+        resources.borrow::<Clean<VecCopyState>>().as_ref()
+    );
+
+    Ok(())
 }
 
 async fn resources_set_up(

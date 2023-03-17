@@ -336,9 +336,9 @@ where
         dry_run: bool,
     ) -> Result<(), ()> {
         let f = if dry_run {
-            ItemSpecRt::ensure_exec_dry
+            ItemSpecRt::apply_exec_dry
         } else {
-            ItemSpecRt::ensure_exec
+            ItemSpecRt::apply_exec
         };
         match item_spec.ensure_prepare(resources).await {
             Ok(mut item_apply) => {

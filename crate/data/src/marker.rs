@@ -5,7 +5,9 @@
 //! command context is built, and automatically mutated to `Some` when either
 //! `StateCurrentFnSpec` or `StateDesiredFnSpec` is executed.
 
-pub use self::{current::Current, desired::Desired};
+pub use self::{apply_dry::ApplyDry, clean::Clean, current::Current, desired::Desired};
 
+mod apply_dry;
+mod clean;
 mod current;
 mod desired;

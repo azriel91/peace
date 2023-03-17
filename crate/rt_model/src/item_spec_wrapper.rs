@@ -7,7 +7,7 @@ use std::{
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, TryFnSpec};
 use peace_data::{
-    marker::{Current, Desired},
+    marker::{ApplyDry, Clean, Current, Desired},
     Data,
 };
 use peace_resources::{
@@ -154,6 +154,7 @@ where
                 <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
             <IS as peace_cfg::ItemSpec>::state_clean(data).await?
         };
+        resources.borrow_mut::<Clean<State>>().0 = Some(state_clean.clone());
 
         Ok(state_clean)
     }
@@ -312,7 +313,7 @@ where
         .await
         .map_err(Into::<E>::into)?;
 
-        resources.borrow_mut::<Current<State>>().0 = Some(state_ensured_dry.clone());
+        resources.borrow_mut::<ApplyDry<State>>().0 = Some(state_ensured_dry.clone());
 
         Ok(state_ensured_dry)
     }
@@ -709,10 +710,12 @@ where
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E> {
-        // Insert `Current<State>` and `Desired<State>` to create entries in
-        // `Resources`. This is used for referential param values (#94)
+        // Insert `XMarker<State>` to create entries in `Resources`.
+        // This is used for referential param values (#94)
+        resources.insert(Clean::<State>(None));
         resources.insert(Current::<State>(None));
         resources.insert(Desired::<State>(None));
+        resources.insert(ApplyDry::<State>(None));
 
         // Run user defined setup.
         <IS as ItemSpec>::setup(self, resources)
@@ -882,7 +885,7 @@ where
             .into())
     }
 
-    async fn ensure_exec_dry(
+    async fn apply_exec_dry(
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
@@ -920,51 +923,6 @@ where
                     .await?;
 
                 *state_applied = Some(state_applied_dry);
-            }
-            OpCheckStatus::ExecNotRequired => {}
-        }
-
-        Ok(())
-    }
-
-    async fn ensure_exec(
-        &self,
-        op_ctx: OpCtx<'_>,
-        resources: &Resources<SetUp>,
-        item_apply_boxed: &mut ItemApplyBoxed,
-    ) -> Result<(), E> {
-        let Some(item_apply) =
-            item_apply_boxed.as_data_type_mut().downcast_mut::<ItemApply<State, StateDiff>>() else {
-                panic!("Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
-                    This is a bug in the Peace framework.",
-                    concrete_type = std::any::type_name::<ItemApply<State, StateDiff>>())
-            };
-
-        let ItemApply {
-            state_saved: _,
-            state_current,
-            state_target,
-            state_diff,
-            op_check_status,
-            state_applied,
-        } = item_apply;
-
-        match op_check_status {
-            #[cfg(not(feature = "output_progress"))]
-            OpCheckStatus::ExecRequired => {
-                let state_applied_next = self
-                    .apply_op_exec(op_ctx, resources, state_current, state_target, state_diff)
-                    .await?;
-
-                *state_applied = Some(state_applied_next);
-            }
-            #[cfg(feature = "output_progress")]
-            OpCheckStatus::ExecRequired { progress_limit: _ } => {
-                let state_applied_next = self
-                    .apply_op_exec(op_ctx, resources, state_current, state_target, state_diff)
-                    .await?;
-
-                *state_applied = Some(state_applied_next);
             }
             OpCheckStatus::ExecNotRequired => {}
         }
@@ -1023,6 +981,51 @@ where
         Ok(ItemApply::try_from((item_apply_partial, None))
             .expect("unreachable: All the fields are set above.")
             .into())
+    }
+
+    async fn apply_exec(
+        &self,
+        op_ctx: OpCtx<'_>,
+        resources: &Resources<SetUp>,
+        item_apply_boxed: &mut ItemApplyBoxed,
+    ) -> Result<(), E> {
+        let Some(item_apply) =
+            item_apply_boxed.as_data_type_mut().downcast_mut::<ItemApply<State, StateDiff>>() else {
+                panic!("Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
+                    This is a bug in the Peace framework.",
+                    concrete_type = std::any::type_name::<ItemApply<State, StateDiff>>())
+            };
+
+        let ItemApply {
+            state_saved: _,
+            state_current,
+            state_target,
+            state_diff,
+            op_check_status,
+            state_applied,
+        } = item_apply;
+
+        match op_check_status {
+            #[cfg(not(feature = "output_progress"))]
+            OpCheckStatus::ExecRequired => {
+                let state_applied_next = self
+                    .apply_op_exec(op_ctx, resources, state_current, state_target, state_diff)
+                    .await?;
+
+                *state_applied = Some(state_applied_next);
+            }
+            #[cfg(feature = "output_progress")]
+            OpCheckStatus::ExecRequired { progress_limit: _ } => {
+                let state_applied_next = self
+                    .apply_op_exec(op_ctx, resources, state_current, state_target, state_diff)
+                    .await?;
+
+                *state_applied = Some(state_applied_next);
+            }
+            OpCheckStatus::ExecNotRequired => {}
+        }
+
+        Ok(())
     }
 
     async fn clean_op_check(
