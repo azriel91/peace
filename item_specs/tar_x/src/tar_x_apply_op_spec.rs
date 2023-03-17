@@ -98,22 +98,24 @@ where
         // need to be unpacked.
         //
         // Then we can send proper progress updates via `op_ctx.progress_tx`.
-        storage
-            .read_with_sync_api(
-                "TarXApplyOpSpec::exec".to_string(),
-                tar_path,
-                |sync_io_bridge| {
-                    tar::Archive::new(sync_io_bridge)
-                        .unpack(dest)
-                        .map_err(|error| TarXError::TarUnpack {
-                            tar_path: tar_path.to_path_buf(),
-                            dest: dest.to_path_buf(),
-                            error,
-                        })?;
-                    Result::<_, TarXError>::Ok(())
-                },
-            )
-            .await?;
+        if tar_path.exists() {
+            storage
+                .read_with_sync_api(
+                    "TarXApplyOpSpec::exec".to_string(),
+                    tar_path,
+                    |sync_io_bridge| {
+                        tar::Archive::new(sync_io_bridge)
+                            .unpack(dest)
+                            .map_err(|error| TarXError::TarUnpack {
+                                tar_path: tar_path.to_path_buf(),
+                                dest: dest.to_path_buf(),
+                                error,
+                            })?;
+                        Result::<_, TarXError>::Ok(())
+                    },
+                )
+                .await?;
+        }
 
         if let TarXStateDiff::ExtractionOutOfSync {
             added: _,
