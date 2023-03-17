@@ -17,6 +17,13 @@ use crate::ShCmd;
 #[derive(Derivative, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
 pub struct ShCmdParams<Id> {
+    /// Shell command to run to discover the clean state.
+    ///
+    /// The command's stdout is used as the clean state.
+    ///
+    /// The command's stderr is used as the human readable description of the
+    /// state. This must be output as a single line.
+    state_clean_sh_cmd: ShCmd,
     /// Shell command to run to discover the current state.
     ///
     /// The command's stdout is used as the current state.
@@ -90,6 +97,7 @@ pub struct ShCmdParams<Id> {
 impl<Id> ShCmdParams<Id> {
     /// Returns new `ShCmdParams`.
     pub fn new(
+        state_clean_sh_cmd: ShCmd,
         state_current_sh_cmd: ShCmd,
         state_desired_sh_cmd: ShCmd,
         state_diff_sh_cmd: ShCmd,
@@ -99,6 +107,7 @@ impl<Id> ShCmdParams<Id> {
         clean_exec_sh_cmd: ShCmd,
     ) -> Self {
         Self {
+            state_clean_sh_cmd,
             state_current_sh_cmd,
             state_desired_sh_cmd,
             state_diff_sh_cmd,
@@ -108,6 +117,16 @@ impl<Id> ShCmdParams<Id> {
             clean_exec_sh_cmd,
             marker: PhantomData,
         }
+    }
+
+    /// Returns the shell command to run to discover the clean state.
+    ///
+    /// The command's stdout is used as the clean state.
+    ///
+    /// The command's stderr is used as the human readable description of the
+    /// state. This must be output as a single line.
+    pub fn state_clean_sh_cmd(&self) -> &ShCmd {
+        &self.state_clean_sh_cmd
     }
 
     /// Returns the shell command to run to discover the current state.

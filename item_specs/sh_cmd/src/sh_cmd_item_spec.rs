@@ -6,9 +6,9 @@ use peace::{
 };
 
 use crate::{
-    ShCmdApplyOpSpec, ShCmdCleanOpSpec, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdParams,
-    ShCmdState, ShCmdStateCurrentFnSpec, ShCmdStateDesiredFnSpec, ShCmdStateDiff,
-    ShCmdStateDiffFnSpec,
+    sh_cmd_executor::ShCmdExecutor, ShCmdApplyOpSpec, ShCmdCleanOpSpec, ShCmdData, ShCmdError,
+    ShCmdExecutionRecord, ShCmdParams, ShCmdState, ShCmdStateCurrentFnSpec,
+    ShCmdStateDesiredFnSpec, ShCmdStateDiff, ShCmdStateDiffFnSpec,
 };
 
 /// Item spec for executing a shell command.
@@ -83,8 +83,8 @@ where
         Ok(())
     }
 
-    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, ShCmdError> {
-        let state = State::new(ShCmdState::None, ShCmdExecutionRecord::None);
-        Ok(state)
+    async fn state_clean(sh_cmd_data: Self::Data<'_>) -> Result<Self::State, ShCmdError> {
+        let state_clean_sh_cmd = sh_cmd_data.sh_cmd_params().state_clean_sh_cmd();
+        ShCmdExecutor::exec(state_clean_sh_cmd).await
     }
 }

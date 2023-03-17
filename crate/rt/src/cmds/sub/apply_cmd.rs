@@ -282,7 +282,7 @@ where
                         item_apply_partial: _,
                         error,
                     } => {
-                        eprintln!("{item_spec_id} Prepare failed:");
+                        eprintln!("{item_spec_id} Prepare failed: {error}");
                         let mut error = error.source();
                         while let Some(source) = error {
                             eprintln!("  caused by: {source}");
@@ -413,7 +413,7 @@ where
                 );
                 match apply_fn(&**item_spec, op_ctx, resources, &mut item_apply).await {
                     Ok(()) => {
-                        // ensure succeeded
+                        // apply succeeded
 
                         #[cfg(feature = "output_progress")]
                         let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
@@ -431,7 +431,7 @@ where
                         Ok(())
                     }
                     Err(error) => {
-                        // ensure failed
+                        // apply failed
 
                         #[cfg(feature = "output_progress")]
                         let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {

@@ -1,6 +1,7 @@
 use peace::{
     cfg::{app_name, item_spec_id, profile, AppName, FlowId, ItemSpecId, Profile, State},
     cmd::ctx::CmdCtx,
+    data::marker::Clean,
     resources::states::StatesSaved,
     rt::cmds::{
         sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd, StatesSavedReadCmd},
@@ -28,10 +29,12 @@ impl TestFileCreationShCmdItemSpec {
     pub fn new() -> ShCmdItemSpec<Self> {
         #[cfg(unix)]
         let sh_cmd_params = {
+            let state_clean_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item_spec/unix/test_file_creation_state_clean.sh"
+            ));
             let state_current_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
                 "sh_cmd_item_spec/unix/test_file_creation_state_current.sh"
             ));
-
             let state_desired_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
                 "sh_cmd_item_spec/unix/test_file_creation_state_desired.sh"
             ));
@@ -51,6 +54,7 @@ impl TestFileCreationShCmdItemSpec {
                 "sh_cmd_item_spec/unix/test_file_creation_clean_exec.sh"
             ));
             ShCmdParams::<TestFileCreationShCmdItemSpec>::new(
+                state_clean_sh_cmd,
                 state_current_sh_cmd,
                 state_desired_sh_cmd,
                 state_diff_sh_cmd,
@@ -63,13 +67,18 @@ impl TestFileCreationShCmdItemSpec {
 
         #[cfg(windows)]
         let sh_cmd_params = {
+            let state_clean_sh_cmd =
+                ShCmd::new("Powershell.exe")
+                    .arg("-Command")
+                    .arg(include_str!(
+                        "sh_cmd_item_spec/windows/test_file_creation_state_clean.ps1"
+                    ));
             let state_current_sh_cmd =
                 ShCmd::new("Powershell.exe")
                     .arg("-Command")
                     .arg(include_str!(
                         "sh_cmd_item_spec/windows/test_file_creation_state_current.ps1"
                     ));
-
             let state_desired_sh_cmd =
                 ShCmd::new("Powershell.exe")
                     .arg("-Command")
@@ -102,6 +111,7 @@ impl TestFileCreationShCmdItemSpec {
                 " }"
             ));
             ShCmdParams::<TestFileCreationShCmdItemSpec>::new(
+                state_clean_sh_cmd,
                 state_current_sh_cmd,
                 state_desired_sh_cmd,
                 state_diff_sh_cmd,
@@ -114,6 +124,50 @@ impl TestFileCreationShCmdItemSpec {
 
         ShCmdItemSpec::new(Self::ID, Some(sh_cmd_params))
     }
+}
+
+#[tokio::test]
+async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<ShCmdError>::new();
+        graph_builder.add_fn(TestFileCreationShCmdItemSpec::new().into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = InMemoryTextOutput::new();
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .await?;
+
+    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_saved = StatesSaved::from(states_current);
+    CleanCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
+    let state_clean = cmd_ctx
+        .resources()
+        .borrow::<Clean<TestFileCreationShCmdState>>();
+    let Some(state_clean) = state_clean
+        .as_ref() else {
+            panic!("Expected `Clean<TestFileCreationShCmdState>` to be Some after `CleanCmd::exec_dry`.");
+        };
+    if let ShCmdState::Some {
+        stdout,
+        stderr,
+        marker: _,
+    } = &state_clean.logical
+    {
+        assert_eq!("not_exists", stdout);
+        assert_eq!("`test_file` does not exist", stderr);
+    } else {
+        panic!("Expected `state_clean` to be `ShCmdState::Some` after `CleanCmd::exec_dry`.");
+    }
+
+    Ok(())
 }
 
 #[tokio::test]
