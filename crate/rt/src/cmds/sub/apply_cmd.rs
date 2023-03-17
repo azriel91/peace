@@ -267,6 +267,7 @@ where
             }
         };
 
+        let mut errors = Vec::<(&'static str, ItemSpecId, E)>::new();
         let outcomes_rx_task = async {
             while let Some(outcome) = outcomes_rx.recv().await {
                 match outcome {
@@ -275,13 +276,7 @@ where
                         item_apply_partial: _,
                         error,
                     } => {
-                        eprintln!("{item_spec_id} Prepare failed: {error}");
-                        let mut error = error.source();
-                        while let Some(source) = error {
-                            eprintln!("  caused by: {source}");
-                            error = source.source();
-                        }
-                        todo!();
+                        errors.push(("Prepare failed", item_spec_id.clone(), error));
                     }
                     ItemApplyOutcome::Success {
                         item_spec_id,
@@ -299,13 +294,7 @@ where
                         item_apply,
                         error, // TODO: save to report.
                     } => {
-                        eprintln!("{item_spec_id} Failed:");
-                        dbg!(&error);
-                        let mut error = error.source();
-                        while let Some(source) = error {
-                            eprintln!("  caused by: {source}");
-                            error = source.source();
-                        }
+                        errors.push(("Apply failed", item_spec_id.clone(), error));
                         if let Some(state_applied) = item_apply.state_applied() {
                             states_applied_mut.insert_raw(item_spec_id, state_applied);
                         }
@@ -323,6 +312,15 @@ where
                 futures::join!(execution_task, outcomes_rx_task);
             }
         }
+
+        errors.iter().for_each(|(desc, item_spec_id, error)| {
+            eprintln!("\n{item_spec_id} {desc}: {error}");
+            let mut error = error.source();
+            while let Some(source) = error {
+                eprintln!("  caused by: {source}");
+                error = source.source();
+            }
+        });
 
         // TODO: Should we run `StatesCurrentFnSpec` again?
         //
