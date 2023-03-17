@@ -5,8 +5,8 @@ use peace::cfg::progress::ProgressLimit;
 use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_instance_profile::{
-    model::InstanceProfileIdAndArn, InstanceProfileCleanOpSpec, InstanceProfileData,
-    InstanceProfileError, InstanceProfileState, InstanceProfileStateDiff,
+    model::InstanceProfileIdAndArn, InstanceProfileData, InstanceProfileError,
+    InstanceProfileState, InstanceProfileStateDiff,
 };
 
 /// ApplyOpSpec for the instance profile state.
@@ -40,6 +40,30 @@ impl<Id> InstanceProfileApplyOpSpec<Id> {
 
         Ok(())
     }
+
+    pub(crate) async fn role_disassociate(
+        client: &aws_sdk_iam::Client,
+        name: &str,
+        path: &str,
+    ) -> Result<(), InstanceProfileError> {
+        client
+            .remove_role_from_instance_profile()
+            .instance_profile_name(name)
+            .role_name(name)
+            .send()
+            .await
+            .map_err(|error| {
+                let instance_profile_name = name.to_string();
+                let instance_profile_path = path.to_string();
+
+                InstanceProfileError::InstanceProfileRoleRemoveError {
+                    instance_profile_name,
+                    instance_profile_path,
+                    error,
+                }
+            })?;
+        Ok(())
+    }
 }
 
 #[async_trait(?Send)]
@@ -54,7 +78,7 @@ where
 
     async fn check(
         _instance_profile_data: InstanceProfileData<'_, Id>,
-        _state_current: &InstanceProfileState,
+        state_current: &InstanceProfileState,
         _state_desired: &InstanceProfileState,
         diff: &InstanceProfileStateDiff,
     ) -> Result<OpCheckStatus, InstanceProfileError> {
@@ -76,10 +100,39 @@ where
                 Ok(op_check_status)
             }
             InstanceProfileStateDiff::Removed => {
-                panic!(
-                    "`InstanceProfileApplyOpSpec::check` called with `InstanceProfileStateDiff::Removed`.\n\
-                    An ensure should never remove an instance profile."
-                );
+                let op_check_status = match state_current {
+                    InstanceProfileState::None => OpCheckStatus::ExecNotRequired,
+                    InstanceProfileState::Some {
+                        name: _,
+                        path: _,
+                        instance_profile_id_and_arn,
+                        role_associated,
+                    } => {
+                        let mut steps_required = 0;
+                        if *role_associated {
+                            steps_required += 1;
+                        }
+                        if matches!(instance_profile_id_and_arn, Generated::Value(_)) {
+                            steps_required += 1;
+                        }
+
+                        if steps_required == 0 {
+                            OpCheckStatus::ExecNotRequired
+                        } else {
+                            #[cfg(not(feature = "output_progress"))]
+                            {
+                                OpCheckStatus::ExecRequired
+                            }
+                            #[cfg(feature = "output_progress")]
+                            {
+                                let progress_limit = ProgressLimit::Steps(steps_required);
+                                OpCheckStatus::ExecRequired { progress_limit }
+                            }
+                        }
+                    }
+                };
+
+                Ok(op_check_status)
             }
             InstanceProfileStateDiff::NameOrPathModified {
                 name_diff,
@@ -108,7 +161,7 @@ where
     async fn exec(
         _op_ctx: OpCtx<'_>,
         data: InstanceProfileData<'_, Id>,
-        _state_current: &InstanceProfileState,
+        state_current: &InstanceProfileState,
         state_desired: &InstanceProfileState,
         diff: &InstanceProfileStateDiff,
     ) -> Result<InstanceProfileState, InstanceProfileError> {
@@ -158,22 +211,60 @@ where
 
                     Self::role_associate(client, name, path).await?;
 
-                    let state_ensured = InstanceProfileState::Some {
+                    let state_applied = InstanceProfileState::Some {
                         name: name.to_string(),
                         path: path.clone(),
                         instance_profile_id_and_arn: Generated::Value(instance_profile_id_and_arn),
                         role_associated: true,
                     };
 
-                    Ok(state_ensured)
+                    Ok(state_applied)
                 }
             },
-            InstanceProfileStateDiff::Removed => {
-                panic!(
-                    "`InstanceProfileApplyOpSpec::exec` called with `InstanceProfileStateDiff::Removed`.\n\
-                    An ensure should never remove an instance profile."
-                );
-            }
+            InstanceProfileStateDiff::Removed => match state_current {
+                InstanceProfileState::None => {
+                    unreachable!("Instance profile must be Some when it is to be removed.")
+                }
+                InstanceProfileState::Some {
+                    name,
+                    path,
+                    instance_profile_id_and_arn,
+                    role_associated,
+                } => {
+                    let client = data.client();
+                    if *role_associated {
+                        Self::role_disassociate(client, name, path).await?;
+                    }
+                    if let Generated::Value(instance_profile_id_and_arn) =
+                        instance_profile_id_and_arn
+                    {
+                        client
+                            .delete_instance_profile()
+                            .instance_profile_name(name)
+                            .send()
+                            .await
+                            .map_err(|error| {
+                                let instance_profile_name = name.to_string();
+                                let instance_profile_path = path.to_string();
+                                let instance_profile_id =
+                                    instance_profile_id_and_arn.id().to_string();
+                                let instance_profile_arn =
+                                    instance_profile_id_and_arn.arn().to_string();
+
+                                InstanceProfileError::InstanceProfileDeleteError {
+                                    instance_profile_name,
+                                    instance_profile_path,
+                                    instance_profile_id,
+                                    instance_profile_arn,
+                                    error,
+                                }
+                            })?;
+                    }
+
+                    let state_applied = state_desired.clone();
+                    Ok(state_applied)
+                }
+            },
             InstanceProfileStateDiff::InSyncExists
             | InstanceProfileStateDiff::InSyncDoesNotExist => {
                 unreachable!(
@@ -208,13 +299,13 @@ where
                 let client = data.client();
                 if *role_associated_current {
                     // Remove the association.
-                    InstanceProfileCleanOpSpec::<Id>::role_disassociate(client, name, path).await?;
+                    Self::role_disassociate(client, name, path).await?;
                 } else {
                     // Associate the role.
                     Self::role_associate(client, name, path).await?;
                 }
-                let state_ensured = state_desired.clone();
-                Ok(state_ensured)
+                let state_applied = state_desired.clone();
+                Ok(state_applied)
             }
         }
     }
