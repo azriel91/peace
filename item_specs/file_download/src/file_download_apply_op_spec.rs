@@ -244,7 +244,10 @@ where
 
     async fn check(
         _file_download_data: FileDownloadData<'_, Id>,
-        _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
+        State {
+            logical: file_state_current,
+            physical: _e_tag,
+        }: &State<FileDownloadState, FetchedOpt<ETag>>,
         _file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
         diff: &FileDownloadStateDiff,
     ) -> Result<OpCheckStatus, FileDownloadError> {
@@ -273,8 +276,57 @@ where
                     OpCheckStatus::ExecRequired { progress_limit }
                 }
             }
-            FileDownloadStateDiff::Deleted { .. } => OpCheckStatus::ExecNotRequired, /* Don't delete */
-            // existing file
+            FileDownloadStateDiff::Deleted { .. } => match file_state_current {
+                FileDownloadState::None { .. } => OpCheckStatus::ExecNotRequired,
+                FileDownloadState::StringContents {
+                    path: _,
+                    #[cfg(not(feature = "output_progress"))]
+                        contents: _,
+                    #[cfg(feature = "output_progress")]
+                    contents,
+                } => {
+                    #[cfg(not(feature = "output_progress"))]
+                    {
+                        OpCheckStatus::ExecRequired
+                    }
+                    #[cfg(feature = "output_progress")]
+                    {
+                        OpCheckStatus::ExecRequired {
+                            progress_limit: ProgressLimit::Bytes(
+                                contents.as_bytes().len().try_into().unwrap(),
+                            ),
+                        }
+                    }
+                }
+                FileDownloadState::Length {
+                    path: _,
+                    #[cfg(not(feature = "output_progress"))]
+                        byte_count: _,
+                    #[cfg(feature = "output_progress")]
+                    byte_count,
+                } => {
+                    #[cfg(not(feature = "output_progress"))]
+                    {
+                        OpCheckStatus::ExecRequired
+                    }
+
+                    #[cfg(feature = "output_progress")]
+                    OpCheckStatus::ExecRequired {
+                        progress_limit: ProgressLimit::Bytes(*byte_count),
+                    }
+                }
+                FileDownloadState::Unknown { path: _ } => {
+                    #[cfg(not(feature = "output_progress"))]
+                    {
+                        OpCheckStatus::ExecRequired
+                    }
+
+                    #[cfg(feature = "output_progress")]
+                    OpCheckStatus::ExecRequired {
+                        progress_limit: ProgressLimit::Unknown,
+                    }
+                }
+            },
             FileDownloadStateDiff::NoChangeNotExists { .. }
             | FileDownloadStateDiff::NoChangeSync { .. } => OpCheckStatus::ExecNotRequired,
         };
@@ -298,13 +350,32 @@ where
         file_download_data: FileDownloadData<'_, Id>,
         _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
         file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
-        _diff: &FileDownloadStateDiff,
+        diff: &FileDownloadStateDiff,
     ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
-        let e_tag = Self::file_download(op_ctx, file_download_data).await?;
+        match diff {
+            FileDownloadStateDiff::Deleted { path } => {
+                #[cfg(not(target_arch = "wasm32"))]
+                tokio::fs::remove_file(path)
+                    .await
+                    .map_err(FileDownloadError::DestFileRemove)?;
 
-        let mut file_download_state_ensured = file_download_state_desired.clone();
-        file_download_state_ensured.physical = e_tag;
+                #[cfg(target_arch = "wasm32")]
+                file_download_data.storage().remove_item(path)?;
 
-        Ok(file_download_state_ensured)
+                Ok(file_download_state_desired.clone())
+            }
+            FileDownloadStateDiff::Change { .. } => {
+                let e_tag = Self::file_download(op_ctx, file_download_data).await?;
+
+                let mut file_download_state_ensured = file_download_state_desired.clone();
+                file_download_state_ensured.physical = e_tag;
+
+                Ok(file_download_state_ensured)
+            }
+            FileDownloadStateDiff::NoChangeNotExists { .. }
+            | FileDownloadStateDiff::NoChangeSync { .. } => {
+                unreachable!("exec is never called when file is in sync.")
+            }
+        }
     }
 }
