@@ -5,13 +5,39 @@ use peace::cfg::progress::ProgressLimit;
 use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
-    model::RoleIdAndArn, IamRoleCleanOpSpec, IamRoleData, IamRoleError, IamRoleState,
-    IamRoleStateDiff,
+    model::RoleIdAndArn, IamRoleData, IamRoleError, IamRoleState, IamRoleStateDiff,
 };
 
 /// ApplyOpSpec for the instance profile state.
 #[derive(Debug)]
 pub struct IamRoleApplyOpSpec<Id>(PhantomData<Id>);
+
+impl<Id> IamRoleApplyOpSpec<Id> {
+    pub(crate) async fn managed_policy_detach(
+        client: &aws_sdk_iam::Client,
+        name: &str,
+        path: &str,
+        managed_policy_arn: &str,
+    ) -> Result<(), IamRoleError> {
+        client
+            .detach_role_policy()
+            .role_name(name)
+            .policy_arn(managed_policy_arn)
+            .send()
+            .await
+            .map_err(|error| {
+                let role_name = name.to_string();
+                let role_path = path.to_string();
+
+                IamRoleError::ManagedPolicyDetachError {
+                    role_name,
+                    role_path,
+                    error,
+                }
+            })?;
+        Ok(())
+    }
+}
 
 #[async_trait(?Send)]
 impl<Id> ApplyOpSpec for IamRoleApplyOpSpec<Id>
@@ -25,7 +51,7 @@ where
 
     async fn check(
         _iam_role_data: IamRoleData<'_, Id>,
-        _state_current: &IamRoleState,
+        state_current: &IamRoleState,
         _state_desired: &IamRoleState,
         diff: &IamRoleStateDiff,
     ) -> Result<OpCheckStatus, IamRoleError> {
@@ -46,10 +72,39 @@ where
                 Ok(op_check_status)
             }
             IamRoleStateDiff::Removed => {
-                panic!(
-                    "`IamRoleApplyOpSpec::check` called with `IamRoleStateDiff::Removed`.\n\
-                    An ensure should never remove an instance profile."
-                );
+                let op_check_status = match state_current {
+                    IamRoleState::None => OpCheckStatus::ExecNotRequired,
+                    IamRoleState::Some {
+                        name: _,
+                        path: _,
+                        role_id_and_arn,
+                        managed_policy_attachment,
+                    } => {
+                        let mut steps_required = 0;
+                        if managed_policy_attachment.attached() {
+                            steps_required += 1;
+                        }
+                        if matches!(role_id_and_arn, Generated::Value(_)) {
+                            steps_required += 1;
+                        }
+
+                        if steps_required == 0 {
+                            OpCheckStatus::ExecNotRequired
+                        } else {
+                            #[cfg(not(feature = "output_progress"))]
+                            {
+                                OpCheckStatus::ExecRequired
+                            }
+                            #[cfg(feature = "output_progress")]
+                            {
+                                let progress_limit = ProgressLimit::Steps(steps_required);
+                                OpCheckStatus::ExecRequired { progress_limit }
+                            }
+                        }
+                    }
+                };
+
+                Ok(op_check_status)
             }
             IamRoleStateDiff::ManagedPolicyAttachmentModified { .. } => {
                 let op_check_status = {
@@ -94,7 +149,7 @@ where
     async fn exec(
         _op_ctx: OpCtx<'_>,
         data: IamRoleData<'_, Id>,
-        _state_current: &IamRoleState,
+        state_current: &IamRoleState,
         state_desired: &IamRoleState,
         diff: &IamRoleStateDiff,
     ) -> Result<IamRoleState, IamRoleError> {
@@ -164,10 +219,46 @@ where
                 }
             },
             IamRoleStateDiff::Removed => {
-                panic!(
-                    "`IamRoleApplyOpSpec::exec` called with `IamRoleStateDiff::Removed`.\n\
-                    An ensure should never remove an instance profile."
-                );
+                match state_current {
+                    IamRoleState::None => {}
+                    IamRoleState::Some {
+                        name,
+                        path,
+                        role_id_and_arn,
+                        managed_policy_attachment,
+                    } => {
+                        let client = data.client();
+                        if managed_policy_attachment.attached() {
+                            let Generated::Value(managed_policy_arn) = managed_policy_attachment.arn() else {
+                                    unreachable!("Impossible to have an attached managed policy without an ARN.");
+                                };
+                            Self::managed_policy_detach(client, name, path, managed_policy_arn)
+                                .await?;
+                        }
+                        if let Generated::Value(role_id_and_arn) = role_id_and_arn {
+                            client
+                                .delete_role()
+                                .role_name(name)
+                                .send()
+                                .await
+                                .map_err(|error| {
+                                    let role_name = name.to_string();
+                                    let role_id = role_id_and_arn.id().to_string();
+                                    let role_arn = role_id_and_arn.arn().to_string();
+
+                                    IamRoleError::RoleDeleteError {
+                                        role_name,
+                                        role_id,
+                                        role_arn,
+                                        error,
+                                    }
+                                })?;
+                        }
+                    }
+                }
+
+                let state_applied = state_desired.clone();
+                Ok(state_applied)
             }
             IamRoleStateDiff::InSyncExists | IamRoleStateDiff::InSyncDoesNotExist => {
                 unreachable!(
@@ -193,13 +284,7 @@ where
                     let Generated::Value(managed_policy_arn) = managed_policy_attachment_current.arn() else {
                         unreachable!("Impossible to have an attached managed policy without an ARN.");
                     };
-                    IamRoleCleanOpSpec::<Id>::managed_policy_detach(
-                        client,
-                        name,
-                        path,
-                        managed_policy_arn,
-                    )
-                    .await?;
+                    Self::managed_policy_detach(client, name, path, managed_policy_arn).await?;
                 }
 
                 if managed_policy_attachment_desired.attached() {
