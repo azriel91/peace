@@ -1,7 +1,5 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use futures::FutureExt;
-
 use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
 use peace_resources::{
     resources::ts::SetUp,
@@ -10,9 +8,9 @@ use peace_resources::{
         StatesCleaned, StatesCleanedDry, StatesSaved,
     },
 };
-use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, ItemSpecRt};
+use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error};
 
-use crate::cmds::sub::ApplyCmd;
+use crate::cmds::sub::{ApplyCmd, ApplyFor};
 
 #[derive(Debug)]
 pub struct CleanCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
@@ -54,7 +52,7 @@ where
         ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry(
             cmd_ctx,
             states_saved,
-            |item_spec, resources| ItemSpecRt::clean_prepare(item_spec, resources).boxed_local(),
+            ApplyFor::Clean,
         )
         .await
     }
@@ -92,12 +90,8 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
     ) -> Result<StatesCleaned, E> {
-        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec(
-            cmd_ctx,
-            states_saved,
-            |item_spec, resources| ItemSpecRt::clean_prepare(item_spec, resources).boxed_local(),
-        )
-        .await
+        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec(cmd_ctx, states_saved, ApplyFor::Clean)
+            .await
     }
 }
 

@@ -1,6 +1,5 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use futures::future::LocalBoxFuture;
 use peace_cfg::{ItemSpecId, OpCtx};
 use peace_cmd::{
     ctx::CmdCtx,
@@ -85,21 +84,13 @@ where
     /// [`ApplyOpSpec::exec_dry`]: peace_cfg::ApplyOpSpec::exec_dry
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`ApplyOpSpec`]: peace_cfg::ItemSpec::ApplyOpSpec
-    pub async fn exec_dry<ApplyPrepareFn>(
+    pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
-        apply_prepare_fn: ApplyPrepareFn,
-    ) -> Result<States<StatesTsApplyDry>, E>
-    where
-        for<'f> ApplyPrepareFn:
-            Fn(
-                &'f dyn ItemSpecRt<E>,
-                &'f Resources<SetUp>,
-            )
-                -> LocalBoxFuture<'f, Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>>,
-    {
+        apply_for: ApplyFor,
+    ) -> Result<States<StatesTsApplyDry>, E> {
         let states_applied_dry =
-            Self::exec_internal(cmd_ctx, states_saved, apply_prepare_fn, true).await?;
+            Self::exec_internal(cmd_ctx, states_saved, apply_for, true).await?;
 
         Ok(states_applied_dry)
     }
@@ -133,21 +124,12 @@ where
     /// [`ApplyOpSpec::exec`]: peace_cfg::ApplyOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`ApplyOpSpec`]: peace_cfg::ItemSpec::ApplyOpSpec
-    pub async fn exec<ApplyPrepareFn>(
+    pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
-        apply_prepare_fn: ApplyPrepareFn,
-    ) -> Result<States<StatesTsApply>, E>
-    where
-        for<'f> ApplyPrepareFn:
-            Fn(
-                &'f dyn ItemSpecRt<E>,
-                &'f Resources<SetUp>,
-            )
-                -> LocalBoxFuture<'f, Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>>,
-    {
-        let states_applied =
-            Self::exec_internal(cmd_ctx, states_saved, apply_prepare_fn, false).await?;
+        apply_for: ApplyFor,
+    ) -> Result<States<StatesTsApply>, E> {
+        let states_applied = Self::exec_internal(cmd_ctx, states_saved, apply_for, false).await?;
         Self::serialize_internal(cmd_ctx.resources(), &states_applied).await?;
 
         Ok(states_applied)
@@ -161,21 +143,12 @@ where
     /// [`exec`]: peace_cfg::ApplyOpSpec::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`ApplyOpSpec`]: peace_cfg::ItemSpec::ApplyOpSpec
-    async fn exec_internal<StatesTs, ApplyPrepareFn>(
+    async fn exec_internal<StatesTs>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
-        apply_prepare_fn: ApplyPrepareFn,
+        apply_for: ApplyFor,
         dry_run: bool,
-    ) -> Result<States<StatesTs>, E>
-    where
-        States<StatesTs>: From<StatesCurrent>,
-        for<'f> ApplyPrepareFn:
-            Fn(
-                &'f dyn ItemSpecRt<E>,
-                &'f Resources<SetUp>,
-            )
-                -> LocalBoxFuture<'f, Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>>,
-    {
+    ) -> Result<States<StatesTs>, E> {
         let SingleProfileSingleFlowView {
             #[cfg(feature = "output_progress")]
             output,
@@ -220,20 +193,40 @@ where
             let progress_tx = &progress_tx;
             let outcomes_tx = &outcomes_tx;
 
-            let (Ok(()) | Err(())) = item_spec_graph
-                .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
-                    Self::item_apply_exec(
-                        resources_ref,
-                        &apply_prepare_fn,
-                        #[cfg(feature = "output_progress")]
-                        progress_tx,
-                        outcomes_tx,
-                        item_spec,
-                        dry_run,
-                    )
-                })
-                .await
-                .map_err(|_vec_units: Vec<()>| ());
+            match apply_for {
+                ApplyFor::Ensure => {
+                    let (Ok(()) | Err(())) = item_spec_graph
+                        .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
+                            Self::item_apply_exec(
+                                resources_ref,
+                                apply_for,
+                                #[cfg(feature = "output_progress")]
+                                progress_tx,
+                                outcomes_tx,
+                                item_spec,
+                                dry_run,
+                            )
+                        })
+                        .await
+                        .map_err(|_vec_units: Vec<()>| ());
+                }
+                ApplyFor::Clean => {
+                    let (Ok(()) | Err(())) = item_spec_graph
+                        .try_for_each_concurrent_rev(BUFFERED_FUTURES_MAX, |item_spec| {
+                            Self::item_apply_exec(
+                                resources_ref,
+                                apply_for,
+                                #[cfg(feature = "output_progress")]
+                                progress_tx,
+                                outcomes_tx,
+                                item_spec,
+                                dry_run,
+                            )
+                        })
+                        .await
+                        .map_err(|_vec_units: Vec<()>| ());
+                }
+            }
 
             // `progress_tx` is dropped here, so `progress_rx` will safely end.
         };
@@ -364,28 +357,26 @@ where
     ///     F: (Fn(&dyn ItemSpecRt<E>, op_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemApplyBoxed) -> Fut) + Copy,
     ///     Fut: Future<Output = Result<(), E>>,
     /// ```
-    async fn item_apply_exec<ApplyPrepareFn>(
+    async fn item_apply_exec(
         resources: &Resources<SetUp>,
-        apply_prepare_fn: ApplyPrepareFn,
+        apply_for: ApplyFor,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
         outcomes_tx: &UnboundedSender<ItemApplyOutcome<E>>,
         item_spec: &ItemSpecBoxed<E>,
         dry_run: bool,
-    ) -> Result<(), ()>
-    where
-        for<'f> ApplyPrepareFn:
-            Fn(
-                &'f dyn ItemSpecRt<E>,
-                &'f Resources<SetUp>,
-            )
-                -> LocalBoxFuture<'f, Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>>,
-    {
+    ) -> Result<(), ()> {
         let apply_fn = if dry_run {
             ItemSpecRt::apply_exec_dry
         } else {
             ItemSpecRt::apply_exec
         };
-        match apply_prepare_fn(&**item_spec, resources).await {
+
+        let item_apply = match apply_for {
+            ApplyFor::Ensure => ItemSpecRt::ensure_prepare(&**item_spec, resources).await,
+            ApplyFor::Clean => ItemSpecRt::clean_prepare(&**item_spec, resources).await,
+        };
+
+        match item_apply {
             Ok(mut item_apply) => {
                 let item_spec_id = item_spec.id();
                 #[cfg(feature = "output_progress")]
@@ -521,4 +512,10 @@ enum ItemApplyOutcome<E> {
         item_apply: ItemApplyBoxed,
         error: E,
     },
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum ApplyFor {
+    Ensure,
+    Clean,
 }

@@ -936,21 +936,32 @@ where
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
         let mut item_apply_partial = ItemApplyPartial::<State, StateDiff>::new();
 
-        match self.state_current_exec(resources).await {
-            Ok(state_current) => item_apply_partial.state_current = Some(state_current),
+        match self.state_current_try_exec(resources).await {
+            Ok(state_current) => {
+                // Hack: Setting ItemApplyPartial state_current to state_clean is a hack.
+                if let Some(state_current) = state_current {
+                    item_apply_partial.state_current = Some(state_current);
+                } else {
+                    match self.state_clean(resources).await {
+                        Ok(state_clean) => item_apply_partial.state_current = Some(state_clean),
+                        Err(error) => return Err((error, item_apply_partial.into())),
+                    }
+                }
+            }
             Err(error) => return Err((error, item_apply_partial.into())),
         }
         match self.state_clean(resources).await {
             Ok(state_clean) => item_apply_partial.state_target = Some(state_clean),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
+
         match self
             .state_diff_exec_with(
                 resources,
                 item_apply_partial
                     .state_current
                     .as_ref()
-                    .expect("unreachable: This is set just above."),
+                    .expect("unreachable: This is confirmed just above."),
                 item_apply_partial
                     .state_target
                     .as_ref()
