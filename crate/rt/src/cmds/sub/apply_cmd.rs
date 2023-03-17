@@ -54,10 +54,8 @@ where
     O: OutputWrite<E>,
     StatesTsApply: Send + Sync + 'static,
     StatesTsApplyDry: Send + Sync + 'static,
-    for<'resources> States<StatesTsApply>:
-        From<(StatesCurrent, &'resources Resources<SetUp>)> + Send + Sync + 'static,
-    for<'resources> States<StatesTsApplyDry>:
-        From<(StatesCurrent, &'resources Resources<SetUp>)> + Send + Sync + 'static,
+    States<StatesTsApply>: From<StatesCurrent> + Send + Sync + 'static,
+    States<StatesTsApplyDry>: From<StatesCurrent> + Send + Sync + 'static,
 {
     #[cfg(feature = "output_progress")]
     /// Maximum number of progress messages to buffer.
@@ -170,7 +168,7 @@ where
         dry_run: bool,
     ) -> Result<States<StatesTs>, E>
     where
-        for<'resources> States<StatesTs>: From<(StatesCurrent, &'resources Resources<SetUp>)>,
+        States<StatesTs>: From<StatesCurrent>,
         for<'f> ApplyPrepareFn:
             Fn(
                 &'f dyn ItemSpecRt<E>,

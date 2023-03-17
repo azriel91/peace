@@ -1,10 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{
-    resources::ts::SetUp,
-    states::{ts::EnsuredDry, States, StatesCurrent},
-    Resources,
-};
+use crate::states::{ts::EnsuredDry, States, StatesCurrent};
 
 /// Dry-run ensured `State`s for all `ItemSpec`s.
 ///
@@ -19,10 +15,8 @@ use crate::{
 /// [`Data`]: peace_data::Data
 pub type StatesEnsuredDry = States<EnsuredDry>;
 
-/// `Resources` is not used, but is present to signal this type should only be
-/// constructed by `EnsureCmd`.
-impl From<(StatesCurrent, &Resources<SetUp>)> for StatesEnsuredDry {
-    fn from((states, _resources): (StatesCurrent, &Resources<SetUp>)) -> Self {
-        Self(states.into_inner(), PhantomData)
+impl From<StatesCurrent> for StatesEnsuredDry {
+    fn from(states_current: StatesCurrent) -> Self {
+        Self(states_current.into_inner(), PhantomData)
     }
 }

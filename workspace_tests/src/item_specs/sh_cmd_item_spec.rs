@@ -315,7 +315,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
     assert_eq!("exists_sync", state_diff.stdout());
     assert_eq!("nothing to do", state_diff.stderr());
 
-    // Run again, for idempotence checck
+    // Run again, for idempotence check
     let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
     let states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
@@ -366,12 +366,14 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
     assert!(tempdir.path().join("test_file").exists());
 
     // Clean the file
-    CleanCmd::exec(&mut cmd_ctx).await?;
+    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
+    CleanCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     assert!(!tempdir.path().join("test_file").exists());
 
-    // Run again, for idempotence checck
-    let states_cleaned = CleanCmd::exec(&mut cmd_ctx).await?;
+    // Run again, for idempotence check
+    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
+    let states_cleaned = CleanCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     let state_cleaned = states_cleaned
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItemSpec::ID)

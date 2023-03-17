@@ -693,9 +693,10 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
             Some(TarXParams::<TarXTest>::new(tar_path, dest.clone())),
         )
         .await?;
-    StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_saved = StatesSaved::from(states_current);
 
-    let states_cleaned = CleanCmd::exec(&mut cmd_ctx).await?;
+    let states_cleaned = CleanCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     let state_cleaned = states_cleaned
         .get::<FileMetadatas, _>(TarXTest::ID)
