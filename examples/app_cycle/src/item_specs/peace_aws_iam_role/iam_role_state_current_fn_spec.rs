@@ -22,11 +22,6 @@ where
     type Output = IamRoleState;
 
     async fn try_exec(data: IamRoleData<'_, Id>) -> Result<Option<Self::Output>, IamRoleError> {
-        // Hack: Remove this when referential param values is implemented.
-        if data.managed_policy_arn().is_none() {
-            return Ok(None);
-        }
-
         Self::exec(data).await.map(Some)
     }
 
@@ -34,7 +29,6 @@ where
         let client = data.client();
         let name = data.params().name();
         let path = data.params().path();
-        let managed_policy_arn = data.managed_policy_arn();
 
         let get_role_result = client.get_role().role_name(name).send().await;
         let role_opt = match get_role_result {
@@ -100,26 +94,33 @@ where
                         role_path: path.to_string(),
                         error,
                     })?;
-                let managed_policy_attachment = if let Some(managed_policy_arn) = managed_policy_arn
-                {
-                    let attached = list_attached_role_policies_output
-                        .attached_policies()
-                        .and_then(|attached_policies| {
-                            attached_policies.iter().find_map(|attached_policy| {
-                                attached_policy
-                                    .policy_arn()
-                                    .map(|policy_arn| policy_arn == managed_policy_arn.arn())
-                            })
-                        })
-                        .unwrap_or(false);
+                let managed_policy_attachment = list_attached_role_policies_output
+                    .attached_policies()
+                    .and_then(|attached_policies| {
+                        attached_policies.iter().find_map(|attached_policy| {
+                            let policy_name = attached_policy
+                                .policy_name()
+                                .expect("Expected policy_name to be Some for any attached policy.");
 
-                    ManagedPolicyAttachment::new(
-                        Generated::Value(managed_policy_arn.to_string()),
-                        attached,
-                    )
-                } else {
-                    ManagedPolicyAttachment::new(Generated::Tbd, false)
-                };
+                            if policy_name == name {
+                                Some(
+                                    attached_policy
+                                        .policy_arn()
+                                        .expect(
+                                            "Expected policy_arn to be Some for \
+                                            any attached policy.",
+                                        )
+                                        .to_string(),
+                                )
+                            } else {
+                                None
+                            }
+                        })
+                    })
+                    .map(|managed_policy_arn| {
+                        ManagedPolicyAttachment::new(Generated::Value(managed_policy_arn), true)
+                    })
+                    .unwrap_or(ManagedPolicyAttachment::new(Generated::Tbd, false));
 
                 let state_current = IamRoleState::Some {
                     name: name.to_string(),

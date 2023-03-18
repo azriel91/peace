@@ -230,8 +230,8 @@ where
                         let client = data.client();
                         if managed_policy_attachment.attached() {
                             let Generated::Value(managed_policy_arn) = managed_policy_attachment.arn() else {
-                                    unreachable!("Impossible to have an attached managed policy without an ARN.");
-                                };
+                                unreachable!("Impossible to have an attached managed policy without an ARN.");
+                            };
                             Self::managed_policy_detach(client, name, path, managed_policy_arn)
                                 .await?;
                         }
