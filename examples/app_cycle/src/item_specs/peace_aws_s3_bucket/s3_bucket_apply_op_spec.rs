@@ -159,18 +159,37 @@ where
                     S3BucketState::None => {}
                     S3BucketState::Some { name } => {
                         let client = data.client();
-                        client
-                            .delete_bucket()
-                            .bucket(name)
-                            .send()
-                            .await
-                            .map_err(|error| {
-                                let s3_bucket_name = name.to_string();
+                        let delete_bucket_result = client.delete_bucket().bucket(name).send().await;
 
-                                S3BucketError::S3BucketDeleteError {
+                        // Sometimes AWS returns this error:
+                        //
+                        // ```xml
+                        // <Code>NoSuchBucket</Code>
+                        // <Message>The specified bucket does not exist</Message>
+                        // <BucketName>the-bucket-name</BucketName>
+                        // ```
+                        //
+                        // This is really an issue with AWS, where they still show the
+                        // bucket even though it *has* been deleted. See:
+                        //
+                        // <https://serverfault.com/questions/969962/how-to-remove-orphaned-s3-bucket>
+                        delete_bucket_result
+                            .map(|_delete_bucket_output| ())
+                            .or_else(|error| {
+                                match &error {
+                                    SdkError::ServiceError(service_error) => {
+                                        if let Some("NoSuchBucket") = service_error.err().code() {
+                                            return Ok(());
+                                        }
+                                    }
+                                    _ => {}
+                                }
+
+                                let s3_bucket_name = name.to_string();
+                                Err(S3BucketError::S3BucketDeleteError {
                                     s3_bucket_name,
                                     error,
-                                }
+                                })
                             })?;
                     }
                 }
