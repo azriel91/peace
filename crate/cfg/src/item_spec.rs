@@ -3,10 +3,11 @@ use std::fmt;
 use async_trait::async_trait;
 use dyn_clone::DynClone;
 use peace_core::ItemSpecId;
+use peace_data::Data;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{CleanOpSpec, EnsureOpSpec, StateDiffFnSpec, TryFnSpec};
+use crate::{ApplyOpSpec, StateDiffFnSpec, TryFnSpec};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -98,6 +99,14 @@ pub trait ItemSpec: DynClone {
     /// [`StatePhysical`]: Self::StatePhysical
     type StateDiff: Clone + fmt::Display + Serialize + DeserializeOwned;
 
+    /// Data that the function reads from, or writes to.
+    ///
+    /// These may be parameters to the function, or information calculated from
+    /// previous functions.
+    type Data<'op>: Data<'op>
+    where
+        Self: 'op;
+
     /// Function that returns the current state of the managed item.
     type StateCurrentFnSpec: TryFnSpec<Error = Self::Error, Output = Self::State>;
 
@@ -132,15 +141,10 @@ pub trait ItemSpec: DynClone {
     ///   the application version changing from 1 to 2.
     type StateDiffFnSpec: StateDiffFnSpec<Error = Self::Error, State = Self::State, StateDiff = Self::StateDiff>;
 
-    /// Specification of the ensure operation.
+    /// Specification of the apply operation.
     ///
     /// The output is the IDs of resources produced by the operation.
-    type EnsureOpSpec: EnsureOpSpec<Error = Self::Error, State = Self::State, StateDiff = Self::StateDiff>;
-
-    /// Specification of the clean operation.
-    ///
-    /// The output is the IDs of resources cleaned by the operation.
-    type CleanOpSpec: CleanOpSpec<Error = Self::Error, State = Self::State>;
+    type ApplyOpSpec: ApplyOpSpec<Error = Self::Error, State = Self::State, StateDiff = Self::StateDiff>;
 
     /// Returns the ID of this full spec.
     ///
@@ -179,7 +183,17 @@ pub trait ItemSpec: DynClone {
     /// must be inserted into the map so that the [`check`] and [`exec`]
     /// functions of each operation can borrow the instance of that type.
     ///
-    /// [`check`]: crate::EnsureOpSpec::check
-    /// [`exec`]: crate::EnsureOpSpec::exec
+    /// [`check`]: crate::ApplyOpSpec::check
+    /// [`exec`]: crate::ApplyOpSpec::exec
     async fn setup(&self, data: &mut Resources<Empty>) -> Result<(), Self::Error>;
+
+    /// Returns the representation of a clean `State`.
+    ///
+    /// # Implementors
+    ///
+    /// This should return essentially the `None` concept of the item spec
+    /// state. The diff between this and the current state will be shown to the
+    /// user when they want to see what would be cleaned up by the clean
+    /// command.
+    async fn state_clean(data: Self::Data<'_>) -> Result<Self::State, Self::Error>;
 }

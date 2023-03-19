@@ -8,8 +8,8 @@ use diff::{Diff, VecDiff, VecDiffType};
 use peace::cfg::progress::ProgressLimit;
 use peace::{
     cfg::{
-        async_trait, item_spec_id, CleanOpSpec, EnsureOpSpec, ItemSpec, ItemSpecId, OpCheckStatus,
-        OpCtx, StateDiffFnSpec, TryFnSpec,
+        async_trait, item_spec_id, ApplyOpSpec, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx,
+        StateDiffFnSpec, TryFnSpec,
     },
     data::{
         accessors::{RMaybe, R, W},
@@ -29,8 +29,7 @@ pub type VecCopyItemSpecWrapper = ItemSpecWrapper<
     VecCopyStateCurrentFnSpec,
     VecCopyStateDesiredFnSpec,
     VecCopyStateDiffFnSpec,
-    VecCopyEnsureOpSpec,
-    VecCopyCleanOpSpec,
+    VecCopyApplyOpSpec,
 >;
 
 /// Copies bytes from `VecA` to `VecB`.
@@ -43,8 +42,8 @@ impl VecCopyItemSpec {
 
 #[async_trait(?Send)]
 impl ItemSpec for VecCopyItemSpec {
-    type CleanOpSpec = VecCopyCleanOpSpec;
-    type EnsureOpSpec = VecCopyEnsureOpSpec;
+    type ApplyOpSpec = VecCopyApplyOpSpec;
+    type Data<'op> = VecCopyParams<'op>;
     type Error = VecCopyError;
     type State = VecCopyState;
     type StateCurrentFnSpec = VecCopyStateCurrentFnSpec;
@@ -54,6 +53,10 @@ impl ItemSpec for VecCopyItemSpec {
 
     fn id(&self) -> &ItemSpecId {
         Self::ID
+    }
+
+    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, VecCopyError> {
+        Ok(VecCopyState::new())
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {
@@ -75,56 +78,12 @@ impl ItemSpec for VecCopyItemSpec {
     }
 }
 
-/// `CleanOpSpec` for the vec to copy.
+/// `ApplyOpSpec` for the vec to copy.
 #[derive(Debug)]
-pub struct VecCopyCleanOpSpec;
+pub struct VecCopyApplyOpSpec;
 
 #[async_trait(?Send)]
-impl CleanOpSpec for VecCopyCleanOpSpec {
-    type Data<'op> = W<'op, VecB>;
-    type Error = VecCopyError;
-    type State = VecCopyState;
-
-    async fn check(
-        vec_b: W<'_, VecB>,
-        _state: &Self::State,
-    ) -> Result<OpCheckStatus, VecCopyError> {
-        let op_check_status = if vec_b.0.is_empty() {
-            OpCheckStatus::ExecNotRequired
-        } else {
-            #[cfg(not(feature = "output_progress"))]
-            {
-                OpCheckStatus::ExecRequired
-            }
-            #[cfg(feature = "output_progress")]
-            {
-                let progress_limit = TryInto::<u64>::try_into(vec_b.0.len())
-                    .map(ProgressLimit::Bytes)
-                    .unwrap_or(ProgressLimit::Unknown);
-
-                OpCheckStatus::ExecRequired { progress_limit }
-            }
-        };
-        Ok(op_check_status)
-    }
-
-    async fn exec_dry(_vec_b: W<'_, VecB>, _state: &Self::State) -> Result<(), VecCopyError> {
-        // Would erase vec_b
-        Ok(())
-    }
-
-    async fn exec(mut vec_b: W<'_, VecB>, _state: &Self::State) -> Result<(), VecCopyError> {
-        vec_b.0.clear();
-        Ok(())
-    }
-}
-
-/// `EnsureOpSpec` for the vec to copy.
-#[derive(Debug)]
-pub struct VecCopyEnsureOpSpec;
-
-#[async_trait(?Send)]
-impl EnsureOpSpec for VecCopyEnsureOpSpec {
+impl ApplyOpSpec for VecCopyApplyOpSpec {
     type Data<'op> = VecCopyParams<'op>;
     type Error = VecCopyError;
     type State = VecCopyState;
@@ -141,7 +100,7 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
     #[allow(unused_variables)]
     async fn check(
         _vec_copy_params: VecCopyParams<'_>,
-        _state_current: &Self::State,
+        state_current: &Self::State,
         state_desired: &Self::State,
         diff: &VecCopyDiff,
     ) -> Result<OpCheckStatus, VecCopyError> {
@@ -154,9 +113,10 @@ impl EnsureOpSpec for VecCopyEnsureOpSpec {
             }
             #[cfg(feature = "output_progress")]
             {
-                let progress_limit = TryInto::<u64>::try_into(state_desired.len())
-                    .map(ProgressLimit::Bytes)
-                    .unwrap_or(ProgressLimit::Unknown);
+                let progress_limit =
+                    TryInto::<u64>::try_into(state_current.len() + state_desired.len())
+                        .map(ProgressLimit::Bytes)
+                        .unwrap_or(ProgressLimit::Unknown);
 
                 OpCheckStatus::ExecRequired { progress_limit }
             }

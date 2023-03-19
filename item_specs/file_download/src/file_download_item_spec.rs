@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    ETag, FileDownloadCleanOpSpec, FileDownloadEnsureOpSpec, FileDownloadError, FileDownloadState,
+    ETag, FileDownloadApplyOpSpec, FileDownloadData, FileDownloadError, FileDownloadState,
     FileDownloadStateCurrentFnSpec, FileDownloadStateDesiredFnSpec, FileDownloadStateDiff,
     FileDownloadStateDiffFnSpec,
 };
@@ -52,8 +52,8 @@ impl<Id> ItemSpec for FileDownloadItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type CleanOpSpec = FileDownloadCleanOpSpec<Id>;
-    type EnsureOpSpec = FileDownloadEnsureOpSpec<Id>;
+    type ApplyOpSpec = FileDownloadApplyOpSpec<Id>;
+    type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
     type State = State<FileDownloadState, FetchedOpt<ETag>>;
     type StateCurrentFnSpec = FileDownloadStateCurrentFnSpec<Id>;
@@ -69,5 +69,11 @@ where
         resources.insert::<reqwest::Client>(reqwest::Client::new());
 
         Ok(())
+    }
+
+    async fn state_clean(data: Self::Data<'_>) -> Result<Self::State, FileDownloadError> {
+        let path = data.file_download_params().dest().to_path_buf();
+        let state = State::new(FileDownloadState::None { path }, FetchedOpt::Tbd);
+        Ok(state)
     }
 }

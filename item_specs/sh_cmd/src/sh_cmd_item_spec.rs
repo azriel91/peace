@@ -6,8 +6,9 @@ use peace::{
 };
 
 use crate::{
-    ShCmdCleanOpSpec, ShCmdEnsureOpSpec, ShCmdError, ShCmdExecutionRecord, ShCmdParams, ShCmdState,
-    ShCmdStateCurrentFnSpec, ShCmdStateDesiredFnSpec, ShCmdStateDiff, ShCmdStateDiffFnSpec,
+    sh_cmd_executor::ShCmdExecutor, ShCmdApplyOpSpec, ShCmdData, ShCmdError, ShCmdExecutionRecord,
+    ShCmdParams, ShCmdState, ShCmdStateCurrentFnSpec, ShCmdStateDesiredFnSpec, ShCmdStateDiff,
+    ShCmdStateDiffFnSpec,
 };
 
 /// Item spec for executing a shell command.
@@ -60,8 +61,8 @@ impl<Id> ItemSpec for ShCmdItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type CleanOpSpec = ShCmdCleanOpSpec<Id>;
-    type EnsureOpSpec = ShCmdEnsureOpSpec<Id>;
+    type ApplyOpSpec = ShCmdApplyOpSpec<Id>;
+    type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
     type State = State<ShCmdState<Id>, ShCmdExecutionRecord>;
     type StateCurrentFnSpec = ShCmdStateCurrentFnSpec<Id>;
@@ -79,5 +80,10 @@ where
         }
 
         Ok(())
+    }
+
+    async fn state_clean(sh_cmd_data: Self::Data<'_>) -> Result<Self::State, ShCmdError> {
+        let state_clean_sh_cmd = sh_cmd_data.sh_cmd_params().state_clean_sh_cmd();
+        ShCmdExecutor::exec(state_clean_sh_cmd).await
     }
 }

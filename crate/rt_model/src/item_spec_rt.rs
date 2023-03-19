@@ -2,16 +2,16 @@ use std::fmt::Debug;
 
 use dyn_clone::DynClone;
 use fn_graph::{DataAccess, DataAccessDyn};
-use peace_cfg::{async_trait, ItemSpecId, OpCheckStatus, OpCtx};
+use peace_cfg::{async_trait, ItemSpecId, OpCtx};
 use peace_resources::{
     resources::ts::{Empty, SetUp},
-    states::{StateDiffs, StatesCurrent, StatesDesired, StatesSaved},
+    states::{StatesCurrent, StatesDesired, StatesSaved},
     type_reg::untagged::BoxDtDisplay,
     Resources,
 };
 
 use crate::{
-    outcomes::{ItemEnsureBoxed, ItemEnsurePartialBoxed},
+    outcomes::{ItemApplyBoxed, ItemApplyPartialBoxed},
     StatesTypeRegs,
 };
 
@@ -41,6 +41,13 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// `StatesDesiredFile`.
     fn state_register(&self, states_type_regs: &mut StatesTypeRegs);
 
+    /// Runs [`ItemSpec::state_clean`].
+    ///
+    /// [`ItemSpec::state_clean`]: peace_cfg::ItemSpec::state_clean
+    async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
+    where
+        E: Debug + std::error::Error;
+
     /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`try_exec`].
     ///
     /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
@@ -57,40 +64,6 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`exec`]: peace_cfg::TryFnSpec::exec
     async fn state_current_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
-    where
-        E: Debug + std::error::Error;
-
-    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`exec`].
-    ///
-    /// `states_current` and `state_diffs` are not needed by the discovery, but
-    /// are here as markers that this method should be called after the caller
-    /// has previously diffed the desired states to states discovered in the
-    /// current execution.
-    ///
-    /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`exec`]: peace_cfg::TryFnSpec::exec
-    async fn state_ensured_exec(
-        &self,
-        resources: &Resources<SetUp>,
-        states_current: &StatesCurrent,
-        state_diffs: &StateDiffs,
-    ) -> Result<BoxDtDisplay, E>
-    where
-        E: Debug + std::error::Error;
-
-    /// Runs [`ItemSpec::StateCurrentFnSpec`]`::`[`try_exec`].
-    ///
-    /// `states_current` is not needed by the discovery, but is here as a marker
-    /// that this method should be called after the caller has previously saved
-    /// the state of the item.
-    ///
-    /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
-    async fn state_cleaned_try_exec(
-        &self,
-        resources: &Resources<SetUp>,
-        states_current: &StatesCurrent,
-    ) -> Result<Option<BoxDtDisplay>, E>
     where
         E: Debug + std::error::Error;
 
@@ -141,107 +114,82 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     ///
     /// This runs the following functions in order:
     ///
-    /// * [`StateCurrentFnSpec::try_exec`]
-    /// * [`StateDesiredFnSpec::try_exec`]
-    /// * [`StateDiffFnSpec::exec`]
-    /// * [`EnsureOpSpec::check`]
-    ///
-    /// [`StateCurrentFnSpec::try_exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`StateDesiredFnSpec::try_exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
-    /// [`EnsureOpSpec::check`]: peace_cfg::ItemSpec::EnsureOpSpec
-    async fn ensure_prepare(
-        &self,
-        resources: &Resources<SetUp>,
-    ) -> Result<ItemEnsureBoxed, (E, ItemEnsurePartialBoxed)>
-    where
-        E: Debug + std::error::Error;
-
-    /// Dry ensures the item from its current state to its desired state.
-    ///
-    /// This runs the following functions in order:
-    ///
-    /// * [`StateCurrentFnSpec::try_exec`]
-    /// * [`StateDesiredFnSpec::try_exec`]
-    /// * [`StateDiffFnSpec::exec`]
-    /// * [`EnsureOpSpec::check`]
-    /// * [`EnsureOpSpec::exec_dry`]
-    ///
-    /// # Parameters
-    ///
-    /// * `resources`: The resources in the current execution.
-    /// * `item_ensure`: The information collected in `self.ensure_prepare`.
-    ///
-    /// [`StateCurrentFnSpec::try_exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
-    /// [`StateDesiredFnSpec::try_exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
-    /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
-    /// [`EnsureOpSpec::check`]: peace_cfg::ItemSpec::EnsureOpSpec
-    /// [`EnsureOpSpec::exec_dry`]: peace_cfg::ItemSpec::EnsureOpSpec
-    async fn ensure_exec_dry(
-        &self,
-        op_ctx: OpCtx<'_>,
-        resources: &Resources<SetUp>,
-        item_ensure: &mut ItemEnsureBoxed,
-    ) -> Result<(), E>
-    where
-        E: Debug + std::error::Error;
-
-    /// Ensures the item from its current state to its desired state.
-    ///
-    /// This runs the following functions in order:
-    ///
     /// * [`StateCurrentFnSpec::exec`]
     /// * [`StateDesiredFnSpec::exec`]
     /// * [`StateDiffFnSpec::exec`]
-    /// * [`EnsureOpSpec::check`]
-    /// * [`EnsureOpSpec::exec`]
+    /// * [`ApplyOpSpec::check`]
     ///
     /// [`StateCurrentFnSpec::exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`StateDesiredFnSpec::exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
-    /// [`EnsureOpSpec::check`]: peace_cfg::ItemSpec::EnsureOpSpec
-    /// [`EnsureOpSpec::exec`]: peace_cfg::ItemSpec::EnsureOpSpec
-    async fn ensure_exec(
+    /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
+    async fn ensure_prepare(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
+    where
+        E: Debug + std::error::Error;
+
+    /// Discovers the information needed for a clean execution.
+    ///
+    /// This runs the following functions in order:
+    ///
+    /// * [`StateCurrentFnSpec::exec`]
+    /// * [`ItemSpec::state_clean`]
+    /// * [`StateDiffFnSpec::exec`]
+    /// * [`ApplyOpSpec::check`]
+    ///
+    /// [`StateCurrentFnSpec::exec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    /// [`ItemSpec::state_clean`]: peace_cfg::ItemSpec::state_clean
+    /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
+    /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
+    async fn clean_prepare(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
+    where
+        E: Debug + std::error::Error;
+
+    /// Dry applies the item from its current state to its desired state.
+    ///
+    /// This runs the following function in order, passing in the information
+    /// collected from [`ensure_prepare`] or [`clean_prepare`]:
+    ///
+    /// * [`ApplyOpSpec::exec_dry`]
+    ///
+    /// # Parameters
+    ///
+    /// * `resources`: The resources in the current execution.
+    /// * `item_apply`: The information collected in `self.ensure_prepare`.
+    ///
+    /// [`ApplyOpSpec::exec_dry`]: peace_cfg::ItemSpec::ApplyOpSpec
+    async fn apply_exec_dry(
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
-        item_ensure: &mut ItemEnsureBoxed,
+        item_apply: &mut ItemApplyBoxed,
     ) -> Result<(), E>
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`ItemSpec::CleanOpSpec`]`::`[`check`].
+    /// Applies the item from its current state to its desired state.
     ///
-    /// [`ItemSpec::CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
-    /// [`check`]: peace_cfg::OpSpec::check
-    async fn clean_op_check(
-        &self,
-        resources: &Resources<SetUp>,
-        states_current: &StatesCurrent,
-    ) -> Result<OpCheckStatus, E>
-    where
-        E: Debug + std::error::Error;
-
-    /// Runs [`ItemSpec::CleanOpSpec`]`::`[`exec_dry`].
+    /// This runs the following function in order, passing in the information
+    /// collected from [`ensure_prepare`] or [`clean_prepare`]:
     ///
-    /// [`ItemSpec::CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
-    /// [`exec_dry`]: peace_cfg::OpSpec::exec_dry
-    async fn clean_op_exec_dry(
-        &self,
-        resources: &Resources<SetUp>,
-        states_current: &StatesCurrent,
-    ) -> Result<(), E>
-    where
-        E: Debug + std::error::Error;
-
-    /// Runs [`ItemSpec::CleanOpSpec`]`::`[`exec`].
+    /// * [`ApplyOpSpec::exec`]
     ///
-    /// [`ItemSpec::CleanOpSpec`]: peace_cfg::ItemSpec::CleanOpSpec
-    /// [`exec`]: peace_cfg::OpSpec::exec
-    async fn clean_op_exec(
+    /// # Parameters
+    ///
+    /// * `resources`: The resources in the current execution.
+    /// * `item_apply`: The information collected in `self.ensure_prepare`.
+    ///
+    /// [`ApplyOpSpec::exec`]: peace_cfg::ItemSpec::ApplyOpSpec
+    async fn apply_exec(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
-        states_current: &StatesCurrent,
+        item_apply: &mut ItemApplyBoxed,
     ) -> Result<(), E>
     where
         E: Debug + std::error::Error;

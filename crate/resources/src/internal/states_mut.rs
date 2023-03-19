@@ -13,10 +13,10 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 ///
 /// * In `StateCurrentFnSpec`, you should reference [`StatesRw`], which allows
 ///   mutable access to the underlying states.
-/// * In `EnsureOpSpec`, you should reference [`StatesCurrent`].
+/// * In `ApplyOpSpec`, you should reference [`StatesCurrent`].
 /// * [`StatesMut`] is not intended to be referenced in [`Data`] directly.
 ///
-/// You may reference [`StatesCurrent`] in `EnsureOpSpec::Data` for reading. It
+/// You may reference [`StatesCurrent`] in `ApplyOpSpec::Data` for reading. It
 /// is not mutable as `State` must remain unchanged so that all `ItemSpec`s
 /// operate over consistent data.
 ///

@@ -35,7 +35,7 @@ use crate::states::{ts::Current, States};
 /// }
 /// ```
 ///
-/// You may reference [`StatesCurrent`] in `EnsureOpSpec::Data` for reading. It
+/// You may reference [`StatesCurrent`] in `ApplyOpSpec::Data` for reading. It
 /// is not mutable as `StatesCurrent` must remain unchanged so that all
 /// `ItemSpec`s operate over consistent data.
 ///

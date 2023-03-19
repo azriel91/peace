@@ -49,17 +49,8 @@ impl<E> DerefMut for ItemSpecBoxed<E> {
     }
 }
 
-impl<
-    IS,
-    E,
-    State,
-    StateDiff,
-    StateCurrentFnSpec,
-    StateDesiredFnSpec,
-    StateDiffFnSpec,
-    EnsureOpSpec,
-    CleanOpSpec,
-> From<IS> for ItemSpecBoxed<E>
+impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
+    From<IS> for ItemSpecBoxed<E>
 where
     IS: Clone
         + Debug
@@ -69,8 +60,7 @@ where
             StateCurrentFnSpec = StateCurrentFnSpec,
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
-            EnsureOpSpec = EnsureOpSpec,
-            CleanOpSpec = CleanOpSpec,
+            ApplyOpSpec = ApplyOpSpec,
         > + Send
         + Sync
         + 'static,
@@ -96,17 +86,12 @@ where
         > + Send
         + Sync
         + 'static,
-    EnsureOpSpec: Debug
-        + peace_cfg::EnsureOpSpec<
+    ApplyOpSpec: Debug
+        + peace_cfg::ApplyOpSpec<
             Error = <IS as ItemSpec>::Error,
             State = State,
             StateDiff = StateDiff,
         > + Send
-        + Sync
-        + 'static,
-    CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<Error = <IS as ItemSpec>::Error, State = State>
-        + Send
         + Sync
         + 'static,
 {

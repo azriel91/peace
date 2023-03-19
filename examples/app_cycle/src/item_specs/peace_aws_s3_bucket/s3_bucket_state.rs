@@ -22,9 +22,7 @@ impl fmt::Display for S3BucketState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::None => "does not exist".fmt(f),
-            Self::Some { name } => {
-                write!(f, "{name} s3_bucket should exist")
-            }
+            Self::Some { name } => write!(f, "{name} exists"),
         }
     }
 }

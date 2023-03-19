@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    BlankCleanOpSpec, BlankEnsureOpSpec, BlankError, BlankState, BlankStateCurrentFnSpec,
+    BlankApplyOpSpec, BlankData, BlankError, BlankState, BlankStateCurrentFnSpec,
     BlankStateDesiredFnSpec, BlankStateDiff, BlankStateDiffFnSpec,
 };
 
@@ -51,8 +51,8 @@ impl<Id> ItemSpec for BlankItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type CleanOpSpec = BlankCleanOpSpec<Id>;
-    type EnsureOpSpec = BlankEnsureOpSpec<Id>;
+    type ApplyOpSpec = BlankApplyOpSpec<Id>;
+    type Data<'op> = BlankData<'op, Id>;
     type Error = BlankError;
     type State = BlankState;
     type StateCurrentFnSpec = BlankStateCurrentFnSpec<Id>;
@@ -66,5 +66,9 @@ where
 
     async fn setup(&self, _resources: &mut Resources<Empty>) -> Result<(), BlankError> {
         Ok(())
+    }
+
+    async fn state_clean(_: Self::Data<'_>) -> Result<BlankState, BlankError> {
+        Ok(BlankState(None))
     }
 }

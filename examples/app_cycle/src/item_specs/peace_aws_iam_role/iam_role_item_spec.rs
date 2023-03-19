@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_iam_role::{
-    IamRoleCleanOpSpec, IamRoleEnsureOpSpec, IamRoleError, IamRoleState, IamRoleStateCurrentFnSpec,
+    IamRoleApplyOpSpec, IamRoleData, IamRoleError, IamRoleState, IamRoleStateCurrentFnSpec,
     IamRoleStateDesiredFnSpec, IamRoleStateDiff, IamRoleStateDiffFnSpec,
 };
 
@@ -57,8 +57,8 @@ impl<Id> ItemSpec for IamRoleItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type CleanOpSpec = IamRoleCleanOpSpec<Id>;
-    type EnsureOpSpec = IamRoleEnsureOpSpec<Id>;
+    type ApplyOpSpec = IamRoleApplyOpSpec<Id>;
+    type Data<'op> = IamRoleData<'op, Id>;
     type Error = IamRoleError;
     type State = IamRoleState;
     type StateCurrentFnSpec = IamRoleStateCurrentFnSpec<Id>;
@@ -77,5 +77,9 @@ where
             resources.insert(client);
         }
         Ok(())
+    }
+
+    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, IamRoleError> {
+        Ok(IamRoleState::None)
     }
 }

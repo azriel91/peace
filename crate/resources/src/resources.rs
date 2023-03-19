@@ -25,7 +25,7 @@ pub mod ts;
 /// resources beforehand.
 ///
 /// For example, `Resources` must be `setup` before any `TryFnSpec`,
-/// `EnsureOpSpec`, or `CleanOpSpec` may execute with it.
+/// `ApplyOpSpec`, or `CleanOpSpec` may execute with it.
 ///
 /// # Type Parameters
 ///

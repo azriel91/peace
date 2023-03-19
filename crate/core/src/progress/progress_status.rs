@@ -45,7 +45,7 @@ pub enum ProgressStatus {
     /// * **Units total:** Unknown (spinner) / known (progress bar).
     /// * **Units current**
     /// * **Operation:** State current / desired / diff discovery,
-    ///   `EnsureOpSpec::exec`.
+    ///   `ApplyOpSpec::exec`.
     ///
     ///     Certain operations will not be applicable, e.g. when `StateCurrent`
     ///     is feature gated, then the operation won't be available when the
@@ -69,6 +69,6 @@ pub enum ProgressStatus {
     ///
     /// * **Completion Status**: Success, Failed.
     /// * **Operation:** State current / desired / diff discovery,
-    ///   `EnsureOpSpec::exec`.
+    ///   `ApplyOpSpec::exec`.
     Complete(ProgressComplete),
 }

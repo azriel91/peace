@@ -1,6 +1,7 @@
 use peace::{
     cfg::{app_name, item_spec_id, profile, AppName, FlowId, ItemSpecId, Profile, State},
     cmd::ctx::CmdCtx,
+    data::marker::Clean,
     resources::states::StatesSaved,
     rt::cmds::{
         sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd, StatesSavedReadCmd},
@@ -28,48 +29,48 @@ impl TestFileCreationShCmdItemSpec {
     pub fn new() -> ShCmdItemSpec<Self> {
         #[cfg(unix)]
         let sh_cmd_params = {
+            let state_clean_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item_spec/unix/test_file_creation_state_clean.sh"
+            ));
             let state_current_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
                 "sh_cmd_item_spec/unix/test_file_creation_state_current.sh"
             ));
-
             let state_desired_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
                 "sh_cmd_item_spec/unix/test_file_creation_state_desired.sh"
             ));
             let state_diff_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
                 "sh_cmd_item_spec/unix/test_file_creation_state_diff.sh"
             ));
-            let ensure_check_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-                "sh_cmd_item_spec/unix/test_file_creation_ensure_check.sh"
+            let apply_check_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item_spec/unix/test_file_creation_apply_check.sh"
             ));
-            let ensure_exec_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-                "sh_cmd_item_spec/unix/test_file_creation_ensure_exec.sh"
-            ));
-            let clean_check_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-                "sh_cmd_item_spec/unix/test_file_creation_clean_check.sh"
-            ));
-            let clean_exec_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-                "sh_cmd_item_spec/unix/test_file_creation_clean_exec.sh"
+            let apply_exec_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item_spec/unix/test_file_creation_apply_exec.sh"
             ));
             ShCmdParams::<TestFileCreationShCmdItemSpec>::new(
+                state_clean_sh_cmd,
                 state_current_sh_cmd,
                 state_desired_sh_cmd,
                 state_diff_sh_cmd,
-                ensure_check_sh_cmd,
-                ensure_exec_sh_cmd,
-                clean_check_sh_cmd,
-                clean_exec_sh_cmd,
+                apply_check_sh_cmd,
+                apply_exec_sh_cmd,
             )
         };
 
         #[cfg(windows)]
         let sh_cmd_params = {
+            let state_clean_sh_cmd =
+                ShCmd::new("Powershell.exe")
+                    .arg("-Command")
+                    .arg(include_str!(
+                        "sh_cmd_item_spec/windows/test_file_creation_state_clean.ps1"
+                    ));
             let state_current_sh_cmd =
                 ShCmd::new("Powershell.exe")
                     .arg("-Command")
                     .arg(include_str!(
                         "sh_cmd_item_spec/windows/test_file_creation_state_current.ps1"
                     ));
-
             let state_desired_sh_cmd =
                 ShCmd::new("Powershell.exe")
                     .arg("-Command")
@@ -81,39 +82,72 @@ impl TestFileCreationShCmdItemSpec {
                 include_str!("sh_cmd_item_spec/windows/test_file_creation_state_diff.ps1"),
                 " }"
             ));
-            let ensure_check_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
+            let apply_check_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
                 "& { ",
-                include_str!("sh_cmd_item_spec/windows/test_file_creation_ensure_check.ps1"),
+                include_str!("sh_cmd_item_spec/windows/test_file_creation_apply_check.ps1"),
                 " }"
             ));
-            let ensure_exec_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
+            let apply_exec_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
                 "& { ",
-                include_str!("sh_cmd_item_spec/windows/test_file_creation_ensure_exec.ps1"),
-                " }"
-            ));
-            let clean_check_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
-                "& { ",
-                include_str!("sh_cmd_item_spec/windows/test_file_creation_clean_check.ps1"),
-                " }"
-            ));
-            let clean_exec_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
-                "& { ",
-                include_str!("sh_cmd_item_spec/windows/test_file_creation_clean_exec.ps1"),
+                include_str!("sh_cmd_item_spec/windows/test_file_creation_apply_exec.ps1"),
                 " }"
             ));
             ShCmdParams::<TestFileCreationShCmdItemSpec>::new(
+                state_clean_sh_cmd,
                 state_current_sh_cmd,
                 state_desired_sh_cmd,
                 state_diff_sh_cmd,
-                ensure_check_sh_cmd,
-                ensure_exec_sh_cmd,
-                clean_check_sh_cmd,
-                clean_exec_sh_cmd,
+                apply_check_sh_cmd,
+                apply_exec_sh_cmd,
             )
         };
 
         ShCmdItemSpec::new(Self::ID, Some(sh_cmd_params))
     }
+}
+
+#[tokio::test]
+async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<ShCmdError>::new();
+        graph_builder.add_fn(TestFileCreationShCmdItemSpec::new().into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = InMemoryTextOutput::new();
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .await?;
+
+    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_saved = StatesSaved::from(states_current);
+    CleanCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
+    let state_clean = cmd_ctx
+        .resources()
+        .borrow::<Clean<TestFileCreationShCmdState>>();
+    let Some(state_clean) = state_clean
+        .as_ref() else {
+            panic!("Expected `Clean<TestFileCreationShCmdState>` to be Some after `CleanCmd::exec_dry`.");
+        };
+    if let ShCmdState::Some {
+        stdout,
+        stderr,
+        marker: _,
+    } = &state_clean.logical
+    {
+        assert_eq!("not_exists", stdout);
+        assert_eq!("`test_file` does not exist", stderr);
+    } else {
+        panic!("Expected `state_clean` to be `ShCmdState::Some` after `CleanCmd::exec_dry`.");
+    }
+
+    Ok(())
 }
 
 #[tokio::test]
@@ -235,7 +269,7 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
 }
 
 #[tokio::test]
-async fn ensure_when_creation_required_executes_ensure_exec_shell_command()
+async fn ensure_when_creation_required_executes_apply_exec_shell_command()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
@@ -280,7 +314,7 @@ async fn ensure_when_creation_required_executes_ensure_exec_shell_command()
 }
 
 #[tokio::test]
-async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
+async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
@@ -315,7 +349,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_ensure_exec_shell_command()
     assert_eq!("exists_sync", state_diff.stdout());
     assert_eq!("nothing to do", state_diff.stderr());
 
-    // Run again, for idempotence checck
+    // Run again, for idempotence check
     let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
     let states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
@@ -366,12 +400,14 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
     assert!(tempdir.path().join("test_file").exists());
 
     // Clean the file
-    CleanCmd::exec(&mut cmd_ctx).await?;
+    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
+    CleanCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     assert!(!tempdir.path().join("test_file").exists());
 
-    // Run again, for idempotence checck
-    let states_cleaned = CleanCmd::exec(&mut cmd_ctx).await?;
+    // Run again, for idempotence check
+    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
+    let states_cleaned = CleanCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     let state_cleaned = states_cleaned
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItemSpec::ID)

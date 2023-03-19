@@ -20,4 +20,4 @@ To create this command:
 
 2. Call the `EnsureCmd`.
 
-    This will call `EnsureOpSpec::exec` for each item spec, beginning from the first item spec, until the last item spec.
+    This will call `ApplyOpSpec::exec` for each item spec, beginning from the first item spec, until the last item spec.

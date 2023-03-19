@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    ShSyncCmdCleanOpSpec, ShSyncCmdEnsureOpSpec, ShSyncCmdError, ShSyncCmdExecutionRecord,
+    ShSyncCmdApplyOpSpec, ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord,
     ShSyncCmdStateCurrentFnSpec, ShSyncCmdStateDesiredFnSpec, ShSyncCmdStateDiff,
     ShSyncCmdStateDiffFnSpec, ShSyncCmdSyncStatus,
 };
@@ -52,8 +52,8 @@ impl<Id> ItemSpec for ShSyncCmdItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type CleanOpSpec = ShSyncCmdCleanOpSpec<Id>;
-    type EnsureOpSpec = ShSyncCmdEnsureOpSpec<Id>;
+    type ApplyOpSpec = ShSyncCmdApplyOpSpec<Id>;
+    type Data<'op> = ShSyncCmdData<'op, Id>;
     type Error = ShSyncCmdError;
     type State = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;
     type StateCurrentFnSpec = ShSyncCmdStateCurrentFnSpec<Id>;
@@ -67,5 +67,13 @@ where
 
     async fn setup(&self, _resources: &mut Resources<Empty>) -> Result<(), ShSyncCmdError> {
         Ok(())
+    }
+
+    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, ShSyncCmdError> {
+        let state = State::new(
+            ShSyncCmdSyncStatus::NotExecuted,
+            ShSyncCmdExecutionRecord::None,
+        );
+        Ok(state)
     }
 }

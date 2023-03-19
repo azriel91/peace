@@ -89,7 +89,7 @@ When an item spec ensure does multiple writes, there is a possibility of not all
 
 In the last case, we cannot safely write state to disk, so a `StateCurrent` discover is needed to bring `StatesSaved` up to date. However, the previous two cases, it is possible for `ItemSpec`s to return `State` that has been partially ensured, without making any further outgoing calls -- i.e. infer `StatesEnsured` based on the successful writes so far.
 
-Note that this places a burden on the `ItemSpec` implementor to return the partial state ensured (which may conflict with keeping the `State` simple), as well as make the `EnsureOpSpec::exec` return value more complex.
+Note that this places a burden on the `ItemSpec` implementor to return the partial state ensured (which may conflict with keeping the `State` simple), as well as make the `ApplyOpSpec::exec` return value more complex.
 
 The trade off may not be worthwhile.
 
@@ -126,6 +126,20 @@ For items that cost, it is useful to have an expiry time that causes it to be de
 </div>
 </details>
 
+<details>
+<summary>10. Interrupt / cancel safety</summary>
+<div>
+
+The [`tokio-graceful-shutdown`] library can be used to introduce interrupt safety into item spec executions. This is particularly useful for write operations.
+
+See the [`is_shutdown_requested`] method in particular.
+
+[`tokio-graceful-shutdown`]: https://github.com/Finomnis/tokio-graceful-shutdown
+[`is_shutdown_requested`]: https://docs.rs/tokio-graceful-shutdown/latest/tokio_graceful_shutdown/struct.SubsystemHandle.html#method.is_shutdown_requested
+
+</div>
+</details>
+
 
 ## Notes
 
@@ -149,6 +163,8 @@ For items that cost, it is useful to have an expiry time that causes it to be de
 4. Progress output should enable-able for state current / desired discover / clean functions.
 5. Flow params are annoying to register every time we add another item spec.
 6. Blank item spec needs a lot of rework to be easier to implement an item spec. ([67], [#96])
+7. For `ApplyCmd`, collect `StateCurrent`, `StateDesired`, `StateDiff` in execution report.
+8. AWS errors' `code` and `message` should be shown to the user.
 
 [#67]: https://github.com/azriel91/peace/issues/67
 [#94]: https://github.com/azriel91/peace/issues/94
