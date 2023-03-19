@@ -268,7 +268,14 @@ where
                             ProgressStatus::RunningStalled => console::style("{bar:40.222.on_17}"),
                             ProgressStatus::UserPending => console::style("{bar:40.75.on_17}"),
                             ProgressStatus::Complete(progress_complete) => match progress_complete {
-                                ProgressComplete::Success => console::style("{bar:40.35.on_22}"),
+                                ProgressComplete::Success => {
+                                    // for ProgressLimit::Unknown, only the background color shows, so we need to make it bright green.
+                                    if matches!(progress_tracker.progress_limit(), Some(ProgressLimit::Unknown)) {
+                                        console::style("{bar:40.35.on_35}")
+                                    } else {
+                                        console::style("{bar:40.35.on_22}")
+                                    }
+                                },
                                 ProgressComplete::Fail => console::style("{bar:40.160.on_88}"),
                             },
                         }
