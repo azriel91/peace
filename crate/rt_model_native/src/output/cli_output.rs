@@ -307,18 +307,30 @@ where
             }
         }
 
-        let units = if let Some(progress_limit) = progress_tracker.progress_limit() {
-            match progress_limit {
-                ProgressLimit::Unknown => "",
-                ProgressLimit::Steps(_) => "{pos}/{len}",
-                ProgressLimit::Bytes(_) => "{bytes}/{total_bytes}",
-            }
-        } else {
+        let progress_is_complete = matches!(
+            progress_tracker.progress_status(),
+            ProgressStatus::Complete(_)
+        );
+        let units = if progress_is_complete {
             ""
+        } else {
+            progress_tracker
+                .progress_limit()
+                .map(|progress_limit| match progress_limit {
+                    ProgressLimit::Unknown => "",
+                    ProgressLimit::Steps(_) => "{pos}/{len}",
+                    ProgressLimit::Bytes(_) => "{bytes}/{total_bytes}",
+                })
+                .unwrap_or("")
+        };
+        let elapsed_eta = if progress_is_complete {
+            ""
+        } else {
+            " el: {elapsed}, eta: {eta}"
         };
 
         // `prefix` is the item spec ID.
-        format!("{prefix} ▕{bar}▏{units}")
+        format!("{prefix} ▕{bar}▏{units}{elapsed_eta}")
     }
 }
 
@@ -406,16 +418,16 @@ where
                     }
                     ProgressUpdate::Complete(progress_complete) => match progress_complete {
                         ProgressComplete::Success => {
+                            self.progress_bar_style_update(progress_tracker);
+
                             let progress_bar = progress_tracker.progress_bar();
                             progress_bar.finish();
-
-                            self.progress_bar_style_update(progress_tracker);
                         }
                         ProgressComplete::Fail => {
+                            self.progress_bar_style_update(progress_tracker);
+
                             let progress_bar = progress_tracker.progress_bar();
                             progress_bar.abandon();
-
-                            self.progress_bar_style_update(progress_tracker);
                         }
                     },
                 }
