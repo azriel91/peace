@@ -8,8 +8,8 @@ use diff::{Diff, VecDiff, VecDiffType};
 use peace::cfg::progress::ProgressLimit;
 use peace::{
     cfg::{
-        async_trait, item_spec_id, ApplyOpSpec, CleanOpSpec, ItemSpec, ItemSpecId, OpCheckStatus,
-        OpCtx, StateDiffFnSpec, TryFnSpec,
+        async_trait, item_spec_id, ApplyOpSpec, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx,
+        StateDiffFnSpec, TryFnSpec,
     },
     data::{
         accessors::{RMaybe, R, W},
@@ -30,7 +30,6 @@ pub type VecCopyItemSpecWrapper = ItemSpecWrapper<
     VecCopyStateDesiredFnSpec,
     VecCopyStateDiffFnSpec,
     VecCopyApplyOpSpec,
-    VecCopyCleanOpSpec,
 >;
 
 /// Copies bytes from `VecA` to `VecB`.
@@ -44,7 +43,6 @@ impl VecCopyItemSpec {
 #[async_trait(?Send)]
 impl ItemSpec for VecCopyItemSpec {
     type ApplyOpSpec = VecCopyApplyOpSpec;
-    type CleanOpSpec = VecCopyCleanOpSpec;
     type Data<'op> = VecCopyParams<'op>;
     type Error = VecCopyError;
     type State = VecCopyState;
@@ -76,50 +74,6 @@ impl ItemSpec for VecCopyItemSpec {
             }
         };
         resources.insert(vec_b);
-        Ok(())
-    }
-}
-
-/// `CleanOpSpec` for the vec to copy.
-#[derive(Debug)]
-pub struct VecCopyCleanOpSpec;
-
-#[async_trait(?Send)]
-impl CleanOpSpec for VecCopyCleanOpSpec {
-    type Data<'op> = W<'op, VecB>;
-    type Error = VecCopyError;
-    type State = VecCopyState;
-
-    async fn check(
-        vec_b: W<'_, VecB>,
-        _state: &Self::State,
-    ) -> Result<OpCheckStatus, VecCopyError> {
-        let op_check_status = if vec_b.0.is_empty() {
-            OpCheckStatus::ExecNotRequired
-        } else {
-            #[cfg(not(feature = "output_progress"))]
-            {
-                OpCheckStatus::ExecRequired
-            }
-            #[cfg(feature = "output_progress")]
-            {
-                let progress_limit = TryInto::<u64>::try_into(vec_b.0.len())
-                    .map(ProgressLimit::Bytes)
-                    .unwrap_or(ProgressLimit::Unknown);
-
-                OpCheckStatus::ExecRequired { progress_limit }
-            }
-        };
-        Ok(op_check_status)
-    }
-
-    async fn exec_dry(_vec_b: W<'_, VecB>, _state: &Self::State) -> Result<(), VecCopyError> {
-        // Would erase vec_b
-        Ok(())
-    }
-
-    async fn exec(mut vec_b: W<'_, VecB>, _state: &Self::State) -> Result<(), VecCopyError> {
-        vec_b.0.clear();
         Ok(())
     }
 }

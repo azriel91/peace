@@ -6,9 +6,9 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_instance_profile::{
-    InstanceProfileApplyOpSpec, InstanceProfileCleanOpSpec, InstanceProfileData,
-    InstanceProfileError, InstanceProfileState, InstanceProfileStateCurrentFnSpec,
-    InstanceProfileStateDesiredFnSpec, InstanceProfileStateDiff, InstanceProfileStateDiffFnSpec,
+    InstanceProfileApplyOpSpec, InstanceProfileData, InstanceProfileError, InstanceProfileState,
+    InstanceProfileStateCurrentFnSpec, InstanceProfileStateDesiredFnSpec, InstanceProfileStateDiff,
+    InstanceProfileStateDiffFnSpec,
 };
 
 /// Item spec to create an IAM instance profile and IAM role.
@@ -59,7 +59,6 @@ where
     Id: Send + Sync + 'static,
 {
     type ApplyOpSpec = InstanceProfileApplyOpSpec<Id>;
-    type CleanOpSpec = InstanceProfileCleanOpSpec<Id>;
     type Data<'op> = InstanceProfileData<'op, Id>;
     type Error = InstanceProfileError;
     type State = InstanceProfileState;

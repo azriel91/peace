@@ -12,7 +12,7 @@ use peace_data::{
 };
 use peace_resources::{
     resources::ts::{Empty, SetUp},
-    states::{StateDiffs, States, StatesCurrent, StatesDesired, StatesSaved},
+    states::{States, StatesCurrent, StatesDesired, StatesSaved},
     type_reg::untagged::BoxDtDisplay,
     Resources,
 };
@@ -34,7 +34,6 @@ pub struct ItemSpecWrapper<
     StateDesiredFnSpec,
     StateDiffFnSpec,
     ApplyOpSpec,
-    CleanOpSpec,
 >(
     IS,
     PhantomData<(
@@ -45,21 +44,11 @@ pub struct ItemSpecWrapper<
         StateDesiredFnSpec,
         StateDiffFnSpec,
         ApplyOpSpec,
-        CleanOpSpec,
     )>,
 );
 
-impl<
-    IS,
-    E,
-    State,
-    StateDiff,
-    StateCurrentFnSpec,
-    StateDesiredFnSpec,
-    StateDiffFnSpec,
-    ApplyOpSpec,
-    CleanOpSpec,
-> Clone
+impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
+    Clone
     for ItemSpecWrapper<
         IS,
         E,
@@ -69,7 +58,6 @@ impl<
         StateDesiredFnSpec,
         StateDiffFnSpec,
         ApplyOpSpec,
-        CleanOpSpec,
     >
 where
     IS: Clone,
@@ -79,17 +67,7 @@ where
     }
 }
 
-impl<
-    IS,
-    E,
-    State,
-    StateDiff,
-    StateCurrentFnSpec,
-    StateDesiredFnSpec,
-    StateDiffFnSpec,
-    ApplyOpSpec,
-    CleanOpSpec,
->
+impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
     ItemSpecWrapper<
         IS,
         E,
@@ -99,7 +77,6 @@ impl<
         StateDesiredFnSpec,
         StateDiffFnSpec,
         ApplyOpSpec,
-        CleanOpSpec,
     >
 where
     IS: Debug
@@ -110,7 +87,6 @@ where
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             ApplyOpSpec = ApplyOpSpec,
-            CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug
@@ -139,10 +115,6 @@ where
             State = State,
             StateDiff = StateDiff,
         > + Send
-        + Sync,
-    CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<Error = <IS as ItemSpec>::Error, State = State>
-        + Send
         + Sync,
 {
     async fn state_clean<ResourcesTs>(
@@ -346,17 +318,8 @@ where
     }
 }
 
-impl<
-    IS,
-    E,
-    State,
-    StateDiff,
-    StateCurrentFnSpec,
-    StateDesiredFnSpec,
-    StateDiffFnSpec,
-    ApplyOpSpec,
-    CleanOpSpec,
-> Debug
+impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
+    Debug
     for ItemSpecWrapper<
         IS,
         E,
@@ -366,7 +329,6 @@ impl<
         StateDesiredFnSpec,
         StateDiffFnSpec,
         ApplyOpSpec,
-        CleanOpSpec,
     >
 where
     IS: Debug,
@@ -376,17 +338,8 @@ where
     }
 }
 
-impl<
-    IS,
-    E,
-    State,
-    StateDiff,
-    StateCurrentFnSpec,
-    StateDesiredFnSpec,
-    StateDiffFnSpec,
-    ApplyOpSpec,
-    CleanOpSpec,
-> Deref
+impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
+    Deref
     for ItemSpecWrapper<
         IS,
         E,
@@ -396,7 +349,6 @@ impl<
         StateDesiredFnSpec,
         StateDiffFnSpec,
         ApplyOpSpec,
-        CleanOpSpec,
     >
 {
     type Target = IS;
@@ -406,17 +358,8 @@ impl<
     }
 }
 
-impl<
-    IS,
-    E,
-    State,
-    StateDiff,
-    StateCurrentFnSpec,
-    StateDesiredFnSpec,
-    StateDiffFnSpec,
-    ApplyOpSpec,
-    CleanOpSpec,
-> DerefMut
+impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
+    DerefMut
     for ItemSpecWrapper<
         IS,
         E,
@@ -426,7 +369,6 @@ impl<
         StateDesiredFnSpec,
         StateDiffFnSpec,
         ApplyOpSpec,
-        CleanOpSpec,
     >
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
@@ -434,17 +376,8 @@ impl<
     }
 }
 
-impl<
-    IS,
-    E,
-    State,
-    StateDiff,
-    StateCurrentFnSpec,
-    StateDesiredFnSpec,
-    StateDiffFnSpec,
-    ApplyOpSpec,
-    CleanOpSpec,
-> From<IS>
+impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
+    From<IS>
     for ItemSpecWrapper<
         IS,
         E,
@@ -454,7 +387,6 @@ impl<
         StateDesiredFnSpec,
         StateDiffFnSpec,
         ApplyOpSpec,
-        CleanOpSpec,
     >
 where
     IS: Debug
@@ -465,7 +397,6 @@ where
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             ApplyOpSpec = ApplyOpSpec,
-            CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
@@ -488,10 +419,6 @@ where
             State = State,
             StateDiff = StateDiff,
         > + Send
-        + Sync,
-    CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<Error = <IS as ItemSpec>::Error, State = State>
-        + Send
         + Sync,
 {
     fn from(item_spec: IS) -> Self {
@@ -499,17 +426,8 @@ where
     }
 }
 
-impl<
-    IS,
-    E,
-    State,
-    StateDiff,
-    StateCurrentFnSpec,
-    StateDesiredFnSpec,
-    StateDiffFnSpec,
-    ApplyOpSpec,
-    CleanOpSpec,
-> DataAccess
+impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
+    DataAccess
     for ItemSpecWrapper<
         IS,
         E,
@@ -519,7 +437,6 @@ impl<
         StateDesiredFnSpec,
         StateDiffFnSpec,
         ApplyOpSpec,
-        CleanOpSpec,
     >
 where
     IS: Debug
@@ -530,7 +447,6 @@ where
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             ApplyOpSpec = ApplyOpSpec,
-            CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
@@ -553,10 +469,6 @@ where
             State = State,
             StateDiff = StateDiff,
         > + Send
-        + Sync,
-    CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<Error = <IS as ItemSpec>::Error, State = State>
-        + Send
         + Sync,
 {
     fn borrows() -> TypeIds {
@@ -568,17 +480,8 @@ where
     }
 }
 
-impl<
-    IS,
-    E,
-    State,
-    StateDiff,
-    StateCurrentFnSpec,
-    StateDesiredFnSpec,
-    StateDiffFnSpec,
-    ApplyOpSpec,
-    CleanOpSpec,
-> DataAccessDyn
+impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
+    DataAccessDyn
     for ItemSpecWrapper<
         IS,
         E,
@@ -588,7 +491,6 @@ impl<
         StateDesiredFnSpec,
         StateDiffFnSpec,
         ApplyOpSpec,
-        CleanOpSpec,
     >
 where
     IS: Debug
@@ -599,7 +501,6 @@ where
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             ApplyOpSpec = ApplyOpSpec,
-            CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
@@ -622,10 +523,6 @@ where
             State = State,
             StateDiff = StateDiff,
         > + Send
-        + Sync,
-    CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<Error = <IS as ItemSpec>::Error, State = State>
-        + Send
         + Sync,
 {
     fn borrows(&self) -> TypeIds {
@@ -638,17 +535,8 @@ where
 }
 
 #[async_trait(?Send)]
-impl<
-    IS,
-    E,
-    State,
-    StateDiff,
-    StateCurrentFnSpec,
-    StateDesiredFnSpec,
-    StateDiffFnSpec,
-    ApplyOpSpec,
-    CleanOpSpec,
-> ItemSpecRt<E>
+impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
+    ItemSpecRt<E>
     for ItemSpecWrapper<
         IS,
         E,
@@ -658,7 +546,6 @@ impl<
         StateDesiredFnSpec,
         StateDiffFnSpec,
         ApplyOpSpec,
-        CleanOpSpec,
     >
 where
     IS: Clone
@@ -670,7 +557,6 @@ where
             StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             ApplyOpSpec = ApplyOpSpec,
-            CleanOpSpec = CleanOpSpec,
         > + Send
         + Sync,
     E: Debug
@@ -699,10 +585,6 @@ where
             State = State,
             StateDiff = StateDiff,
         > + Send
-        + Sync,
-    CleanOpSpec: Debug
-        + peace_cfg::CleanOpSpec<Error = <IS as ItemSpec>::Error, State = State>
-        + Send
         + Sync,
 {
     fn id(&self) -> &ItemSpecId {
@@ -754,40 +636,6 @@ where
         self.state_current_exec(resources)
             .await
             .map(BoxDtDisplay::new)
-            .map_err(Into::<E>::into)
-    }
-
-    /// `states_current` and `state_diffs` are not needed by the discovery, but
-    /// are here as markers that this method should be called after the caller
-    /// has previously diffed the desired states to states discovered in the
-    /// current execution.
-    async fn state_ensured_exec(
-        &self,
-        resources: &Resources<SetUp>,
-        _states_current: &StatesCurrent,
-        _state_diffs: &StateDiffs,
-    ) -> Result<BoxDtDisplay, E> {
-        // The ensured state is the current state re-discovered
-        // after `ApplyOpSpec::exec` has run.
-        self.state_current_exec(resources)
-            .await
-            .map(BoxDtDisplay::new)
-            .map_err(Into::<E>::into)
-    }
-
-    /// `states_current` is not needed by the discovery, but is here as a marker
-    /// that this method should be called after the caller has previously saved
-    /// the state of the item.
-    async fn state_cleaned_try_exec(
-        &self,
-        resources: &Resources<SetUp>,
-        _states_current: &StatesCurrent,
-    ) -> Result<Option<BoxDtDisplay>, E> {
-        // The cleaned state is the current state re-discovered
-        // after `CleanOpSpec::exec` has run.
-        self.state_current_try_exec(resources)
-            .await
-            .map(|state_current| state_current.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
     }
 
@@ -1034,87 +882,6 @@ where
                 *state_applied = Some(state_applied_next);
             }
             OpCheckStatus::ExecNotRequired => {}
-        }
-
-        Ok(())
-    }
-
-    async fn clean_op_check(
-        &self,
-        resources: &Resources<SetUp>,
-        states_current: &StatesCurrent,
-    ) -> Result<OpCheckStatus, E> {
-        let op_check_status = {
-            let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(
-                self.id(),
-                resources,
-            );
-            let item_spec_id = <IS as ItemSpec>::id(self);
-            let state = states_current.get::<State, _>(item_spec_id);
-
-            if let Some(state) = state {
-                <CleanOpSpec as peace_cfg::CleanOpSpec>::check(data, state).await?
-            } else {
-                // When we reach here, one of the following is true:
-                //
-                // * The current state cannot be retrieved, due to a predecessor's state not
-                //   existing.
-                // * A bug exists, e.g. the state is stored against the wrong type parameter.
-
-                OpCheckStatus::ExecNotRequired
-            }
-        };
-
-        Ok(op_check_status)
-    }
-
-    async fn clean_op_exec_dry(
-        &self,
-        resources: &Resources<SetUp>,
-        states_current: &StatesCurrent,
-    ) -> Result<(), E> {
-        let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(
-            self.id(),
-            resources,
-        );
-        let item_spec_id = <IS as ItemSpec>::id(self);
-        let state = states_current.get::<State, _>(item_spec_id);
-
-        if let Some(state) = state {
-            <CleanOpSpec as peace_cfg::CleanOpSpec>::exec_dry(data, state).await?;
-        } else {
-            // When we reach here, one of the following is true:
-            //
-            // * The current state cannot be retrieved, due to a predecessor's
-            //   state not existing.
-            // * A bug exists, e.g. the state is stored against the wrong type
-            //   parameter.
-        }
-
-        Ok(())
-    }
-
-    async fn clean_op_exec(
-        &self,
-        resources: &Resources<SetUp>,
-        states_current: &StatesCurrent,
-    ) -> Result<(), E> {
-        let data = <<CleanOpSpec as peace_cfg::CleanOpSpec>::Data<'_> as Data>::borrow(
-            self.id(),
-            resources,
-        );
-        let item_spec_id = <IS as ItemSpec>::id(self);
-        let state = states_current.get::<State, _>(item_spec_id);
-
-        if let Some(state) = state {
-            <CleanOpSpec as peace_cfg::CleanOpSpec>::exec(data, state).await?;
-        } else {
-            // When we reach here, one of the following is true:
-            //
-            // * The current state cannot be retrieved, due to a predecessor's
-            //   state not existing.
-            // * A bug exists, e.g. the state is stored against the wrong type
-            //   parameter.
         }
 
         Ok(())

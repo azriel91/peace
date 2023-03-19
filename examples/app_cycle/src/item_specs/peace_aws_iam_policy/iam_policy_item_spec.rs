@@ -6,9 +6,9 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_iam_policy::{
-    model::ManagedPolicyArn, IamPolicyApplyOpSpec, IamPolicyCleanOpSpec, IamPolicyData,
-    IamPolicyError, IamPolicyState, IamPolicyStateCurrentFnSpec, IamPolicyStateDesiredFnSpec,
-    IamPolicyStateDiff, IamPolicyStateDiffFnSpec,
+    model::ManagedPolicyArn, IamPolicyApplyOpSpec, IamPolicyData, IamPolicyError, IamPolicyState,
+    IamPolicyStateCurrentFnSpec, IamPolicyStateDesiredFnSpec, IamPolicyStateDiff,
+    IamPolicyStateDiffFnSpec,
 };
 
 /// Item spec to create an IAM instance profile and IAM role.
@@ -59,7 +59,6 @@ where
     Id: Send + Sync + 'static,
 {
     type ApplyOpSpec = IamPolicyApplyOpSpec<Id>;
-    type CleanOpSpec = IamPolicyCleanOpSpec<Id>;
     type Data<'op> = IamPolicyData<'op, Id>;
     type Error = IamPolicyError;
     type State = IamPolicyState;

@@ -3,9 +3,9 @@ use peace::{
     cfg::{OpCheckStatus, OpCtx},
     data::marker::{ApplyDry, Clean, Current, Desired},
     resources::{
-        internal::{StateDiffsMut, StatesMut},
+        internal::StatesMut,
         resources::ts::SetUp,
-        states::{self, StateDiffs, StatesCurrent, StatesDesired, StatesSaved},
+        states::{self, StatesCurrent, StatesDesired, StatesSaved},
         type_reg::untagged::BoxDataTypeDowncast,
         Resources,
     },
@@ -25,7 +25,7 @@ use crate::{
 #[tokio::test]
 async fn deref_to_dyn_item_spec_rt() {
     let item_spec_wrapper =
-        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let item_spec_rt: &dyn ItemSpecRt<_> = &item_spec_wrapper;
 
     assert_eq!(format!("{VecCopyItemSpec:?}"), format!("{item_spec_rt:?}"));
@@ -34,7 +34,7 @@ async fn deref_to_dyn_item_spec_rt() {
 #[tokio::test]
 async fn deref_mut_to_dyn_item_spec_rt() {
     let item_spec_wrapper =
-        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let item_spec_rt: &dyn ItemSpecRt<_> = &item_spec_wrapper;
 
     assert_eq!(format!("{VecCopyItemSpec:?}"), format!("{item_spec_rt:?}"));
@@ -43,7 +43,7 @@ async fn deref_mut_to_dyn_item_spec_rt() {
 #[tokio::test]
 async fn setup() -> Result<(), Box<dyn std::error::Error>> {
     let item_spec_wrapper =
-        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let mut resources = Resources::new();
     <dyn ItemSpecRt<_>>::setup(&item_spec_wrapper, &mut resources).await?;
 
@@ -60,7 +60,7 @@ async fn setup() -> Result<(), Box<dyn std::error::Error>> {
 #[tokio::test]
 async fn state_current_try_exec() -> Result<(), Box<dyn std::error::Error>> {
     let item_spec_wrapper =
-        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
     let state = item_spec_wrapper
@@ -82,37 +82,9 @@ async fn state_current_try_exec() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn state_ensured_exec() -> Result<(), Box<dyn std::error::Error>> {
-    let item_spec_wrapper =
-        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
-    let (resources, states_current, _states_desired, state_diffs) =
-        resources_with_state_current_diffs(&item_spec_wrapper).await?;
-
-    let state = <dyn ItemSpecRt<_>>::state_ensured_exec(
-        &item_spec_wrapper,
-        &resources,
-        &states_current,
-        &state_diffs,
-    )
-    .await?;
-
-    assert_eq!(
-        Some(VecCopyState::new()).as_ref(),
-        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(&state)
-    );
-    // Automatic `Current<State>` insertion.
-    assert_eq!(
-        Some(VecCopyState::new()).as_ref(),
-        resources.borrow::<Current<VecCopyState>>().as_ref()
-    );
-
-    Ok(())
-}
-
-#[tokio::test]
 async fn state_desired_try_exec() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
-        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
     let state_desired = item_spec_wrapper
@@ -136,7 +108,7 @@ async fn state_desired_try_exec() -> Result<(), VecCopyError> {
 #[tokio::test]
 async fn state_diff_exec_with_states_saved() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
-        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _>::from(VecCopyItemSpec);
 
     let (resources, states_saved, states_desired) =
         resources_and_states_saved_and_desired(&item_spec_wrapper).await?;
@@ -161,7 +133,7 @@ async fn state_diff_exec_with_states_saved() -> Result<(), VecCopyError> {
 #[tokio::test]
 async fn ensure_prepare() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
-        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
     match <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources).await {
@@ -185,7 +157,7 @@ async fn ensure_prepare() -> Result<(), VecCopyError> {
 #[tokio::test]
 async fn apply_exec_dry_for_ensure() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
-        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
     let mut item_apply_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
@@ -239,7 +211,7 @@ async fn apply_exec_dry_for_ensure() -> Result<(), VecCopyError> {
 #[tokio::test]
 async fn apply_exec_for_ensure() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
-        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
 
     let mut item_apply_boxed = <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, &resources)
@@ -288,7 +260,7 @@ async fn apply_exec_for_ensure() -> Result<(), VecCopyError> {
 #[tokio::test]
 async fn clean_prepare() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
-        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up_pre_saved(&item_spec_wrapper).await?;
 
     match <dyn ItemSpecRt<_>>::clean_prepare(&item_spec_wrapper, &resources).await {
@@ -312,7 +284,7 @@ async fn clean_prepare() -> Result<(), VecCopyError> {
 #[tokio::test]
 async fn apply_exec_dry_for_clean() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
-        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up_pre_saved(&item_spec_wrapper).await?;
 
     let mut item_apply_boxed = <dyn ItemSpecRt<_>>::clean_prepare(&item_spec_wrapper, &resources)
@@ -366,7 +338,7 @@ async fn apply_exec_dry_for_clean() -> Result<(), VecCopyError> {
 #[tokio::test]
 async fn apply_exec_for_clean() -> Result<(), VecCopyError> {
     let item_spec_wrapper =
-        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _, _>::from(VecCopyItemSpec);
+        ItemSpecWrapper::<_, VecCopyError, _, _, _, _, _, _>::from(VecCopyItemSpec);
     let resources = resources_set_up_pre_saved(&item_spec_wrapper).await?;
 
     let mut item_apply_boxed = <dyn ItemSpecRt<_>>::clean_prepare(&item_spec_wrapper, &resources)
@@ -431,30 +403,6 @@ async fn resources_set_up_pre_saved(
     Ok(resources)
 }
 
-async fn resources_with_state_current_diffs(
-    item_spec_wrapper: &VecCopyItemSpecWrapper,
-) -> Result<(Resources<SetUp>, StatesCurrent, StatesDesired, StateDiffs), VecCopyError> {
-    let (resources, states_current, states_desired) =
-        resources_and_states_current_and_desired(item_spec_wrapper).await?;
-
-    let state_diffs = {
-        let mut state_diffs_mut = StateDiffsMut::new();
-        let state_desired = item_spec_wrapper
-            .state_diff_exec_with_states_current(&resources, &states_current, &states_desired)
-            .await?
-            .expect(
-                "Expected state_diff to be Some when state_saved and state_desired both exist.",
-            );
-        state_diffs_mut.insert_raw(
-            <dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(),
-            state_desired,
-        );
-
-        StateDiffs::from(state_diffs_mut)
-    };
-    Ok((resources, states_current, states_desired, state_diffs))
-}
-
 async fn resources_and_states_saved_and_desired(
     item_spec_wrapper: &VecCopyItemSpecWrapper,
 ) -> Result<(Resources<SetUp>, StatesSaved, StatesDesired), VecCopyError> {
@@ -484,36 +432,4 @@ async fn resources_and_states_saved_and_desired(
         StatesDesired::from(states_desired_mut)
     };
     Ok((resources, states_saved, states_desired))
-}
-
-async fn resources_and_states_current_and_desired(
-    item_spec_wrapper: &VecCopyItemSpecWrapper,
-) -> Result<(Resources<SetUp>, StatesCurrent, StatesDesired), VecCopyError> {
-    let resources = resources_set_up(item_spec_wrapper).await?;
-
-    let states_current = {
-        let mut states_mut = StatesMut::new();
-        let state =
-            <dyn ItemSpecRt<_>>::state_current_try_exec(item_spec_wrapper, &resources).await?;
-        if let Some(state) = state {
-            states_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(), state);
-        }
-
-        StatesCurrent::from(states_mut)
-    };
-    let states_desired = {
-        let mut states_desired_mut = StatesMut::<states::ts::Desired>::new();
-        let state_desired = item_spec_wrapper
-            .state_desired_try_exec(&resources)
-            .await?
-            .unwrap();
-        states_desired_mut.insert_raw(
-            <dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(),
-            state_desired,
-        );
-
-        StatesDesired::from(states_desired_mut)
-    };
-
-    Ok((resources, states_current, states_desired))
 }

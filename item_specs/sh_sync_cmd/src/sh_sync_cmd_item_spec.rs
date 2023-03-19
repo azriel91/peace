@@ -6,9 +6,9 @@ use peace::{
 };
 
 use crate::{
-    ShSyncCmdApplyOpSpec, ShSyncCmdCleanOpSpec, ShSyncCmdData, ShSyncCmdError,
-    ShSyncCmdExecutionRecord, ShSyncCmdStateCurrentFnSpec, ShSyncCmdStateDesiredFnSpec,
-    ShSyncCmdStateDiff, ShSyncCmdStateDiffFnSpec, ShSyncCmdSyncStatus,
+    ShSyncCmdApplyOpSpec, ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord,
+    ShSyncCmdStateCurrentFnSpec, ShSyncCmdStateDesiredFnSpec, ShSyncCmdStateDiff,
+    ShSyncCmdStateDiffFnSpec, ShSyncCmdSyncStatus,
 };
 
 /// Item spec for executing a shell command.
@@ -53,7 +53,6 @@ where
     Id: Send + Sync + 'static,
 {
     type ApplyOpSpec = ShSyncCmdApplyOpSpec<Id>;
-    type CleanOpSpec = ShSyncCmdCleanOpSpec<Id>;
     type Data<'op> = ShSyncCmdData<'op, Id>;
     type Error = ShSyncCmdError;
     type State = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;

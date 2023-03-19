@@ -7,7 +7,7 @@ use peace_data::Data;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{ApplyOpSpec, CleanOpSpec, StateDiffFnSpec, TryFnSpec};
+use crate::{ApplyOpSpec, StateDiffFnSpec, TryFnSpec};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -145,11 +145,6 @@ pub trait ItemSpec: DynClone {
     ///
     /// The output is the IDs of resources produced by the operation.
     type ApplyOpSpec: ApplyOpSpec<Error = Self::Error, State = Self::State, StateDiff = Self::StateDiff>;
-
-    /// Specification of the clean operation.
-    ///
-    /// The output is the IDs of resources cleaned by the operation.
-    type CleanOpSpec: CleanOpSpec<Error = Self::Error, State = Self::State>;
 
     /// Returns the ID of this full spec.
     ///

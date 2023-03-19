@@ -2,8 +2,8 @@ use std::{io::Cursor, path::PathBuf};
 
 use peace::{
     cfg::{
-        app_name, item_spec_id, profile, AppName, ApplyOpSpec, CleanOpSpec, FlowId, ItemSpecId,
-        OpCheckStatus, Profile,
+        app_name, item_spec_id, profile, AppName, ApplyOpSpec, FlowId, ItemSpecId, OpCheckStatus,
+        Profile,
     },
     cmd::ctx::CmdCtx,
     data::Data,
@@ -20,8 +20,8 @@ use peace::{
     },
 };
 use peace_item_specs::tar_x::{
-    FileMetadata, FileMetadatas, TarXApplyOpSpec, TarXCleanOpSpec, TarXData, TarXError,
-    TarXItemSpec, TarXParams, TarXStateDiff,
+    FileMetadata, FileMetadatas, TarXApplyOpSpec, TarXData, TarXError, TarXItemSpec, TarXParams,
+    TarXStateDiff,
 };
 use pretty_assertions::assert_eq;
 use tempfile::TempDir;
@@ -626,46 +626,6 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
             FileMetadata::new(d_path, TAR_X2_MTIME),
         ]),
         state_ensured
-    );
-
-    Ok(())
-}
-
-#[tokio::test]
-async fn clean_check_returns_exec_not_required_when_dest_empty()
--> Result<(), Box<dyn std::error::Error>> {
-    let flow_id = FlowId::new(crate::fn_name_short!())?;
-    let TestEnv {
-        tempdir: _tempdir,
-        workspace,
-        profile,
-        graph,
-        mut output,
-        tar_path,
-        dest,
-    } = test_env(&flow_id, TAR_X2_TAR).await?;
-    let flow = Flow::new(flow_id, graph);
-
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile.clone())
-        .with_flow(&flow)
-        .with_flow_param_value(
-            "param".to_string(),
-            Some(TarXParams::<TarXTest>::new(tar_path, dest)),
-        )
-        .await?;
-    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
-    let state_current = states_current
-        .get::<FileMetadatas, _>(TarXTest::ID)
-        .unwrap();
-
-    assert_eq!(
-        OpCheckStatus::ExecNotRequired,
-        <TarXCleanOpSpec::<TarXTest> as CleanOpSpec>::check(
-            <TarXData<TarXTest> as Data>::borrow(TarXTest::ID, cmd_ctx.resources()),
-            state_current,
-        )
-        .await?
     );
 
     Ok(())

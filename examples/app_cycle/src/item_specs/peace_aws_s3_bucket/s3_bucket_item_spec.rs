@@ -6,9 +6,8 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_s3_bucket::{
-    S3BucketApplyOpSpec, S3BucketCleanOpSpec, S3BucketData, S3BucketError, S3BucketState,
-    S3BucketStateCurrentFnSpec, S3BucketStateDesiredFnSpec, S3BucketStateDiff,
-    S3BucketStateDiffFnSpec,
+    S3BucketApplyOpSpec, S3BucketData, S3BucketError, S3BucketState, S3BucketStateCurrentFnSpec,
+    S3BucketStateDesiredFnSpec, S3BucketStateDiff, S3BucketStateDiffFnSpec,
 };
 
 /// Item spec to create an IAM S3 bucket and IAM role.
@@ -59,7 +58,6 @@ where
     Id: Send + Sync + 'static,
 {
     type ApplyOpSpec = S3BucketApplyOpSpec<Id>;
-    type CleanOpSpec = S3BucketCleanOpSpec<Id>;
     type Data<'op> = S3BucketData<'op, Id>;
     type Error = S3BucketError;
     type State = S3BucketState;

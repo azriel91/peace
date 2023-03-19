@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    FileMetadatas, TarXApplyOpSpec, TarXCleanOpSpec, TarXData, TarXError, TarXStateCurrentFnSpec,
+    FileMetadatas, TarXApplyOpSpec, TarXData, TarXError, TarXStateCurrentFnSpec,
     TarXStateDesiredFnSpec, TarXStateDiff, TarXStateDiffFnSpec,
 };
 
@@ -58,7 +58,6 @@ where
     Id: Send + Sync + 'static,
 {
     type ApplyOpSpec = TarXApplyOpSpec<Id>;
-    type CleanOpSpec = TarXCleanOpSpec<Id>;
     type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
     type State = FileMetadatas;

@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    BlankApplyOpSpec, BlankCleanOpSpec, BlankData, BlankError, BlankState, BlankStateCurrentFnSpec,
+    BlankApplyOpSpec, BlankData, BlankError, BlankState, BlankStateCurrentFnSpec,
     BlankStateDesiredFnSpec, BlankStateDiff, BlankStateDiffFnSpec,
 };
 
@@ -52,7 +52,6 @@ where
     Id: Send + Sync + 'static,
 {
     type ApplyOpSpec = BlankApplyOpSpec<Id>;
-    type CleanOpSpec = BlankCleanOpSpec<Id>;
     type Data<'op> = BlankData<'op, Id>;
     type Error = BlankError;
     type State = BlankState;
