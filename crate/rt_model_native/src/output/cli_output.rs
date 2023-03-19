@@ -257,6 +257,7 @@ where
                 //  88: red dark (fail background)
 
                 const GRAY_DARK: u8 = 237;
+                const PURPLE: u8 = 128;
 
                 let bar = match self.colorize {
                     CliColorize::Colored => {
@@ -312,25 +313,42 @@ where
             ProgressStatus::Complete(_)
         );
         let units = if progress_is_complete {
-            ""
+            None
         } else {
             progress_tracker
                 .progress_limit()
-                .map(|progress_limit| match progress_limit {
-                    ProgressLimit::Unknown => "",
-                    ProgressLimit::Steps(_) => "{pos}/{len}",
-                    ProgressLimit::Bytes(_) => "{bytes}/{total_bytes}",
+                .and_then(|progress_limit| match progress_limit {
+                    ProgressLimit::Unknown => None,
+                    ProgressLimit::Steps(_) => Some("{pos}/{len}"),
+                    ProgressLimit::Bytes(_) => Some("{bytes}/{total_bytes}"),
                 })
-                .unwrap_or("")
         };
         let elapsed_eta = if progress_is_complete {
-            ""
+            None
         } else {
-            " el: {elapsed}, eta: {eta}"
+            cfg_if::cfg_if! {
+                if #[cfg(feature = "output_colorized")] {
+                    let elapsed_eta = console::style("(el: {elapsed}, eta: {eta})");
+                    match self.colorize {
+                        CliColorize::Colored => Some(elapsed_eta.color256(PURPLE)),
+                        CliColorize::Uncolored => Some(elapsed_eta),
+                    }
+                } else {
+                    Some(console::style("(el: {elapsed}, eta: {eta})"))
+                }
+            }
         };
 
         // `prefix` is the item spec ID.
-        format!("{prefix} ▕{bar}▏{units}{elapsed_eta}")
+        let mut format_str = format!("{prefix} ▕{bar}▏");
+        if let Some(units) = units {
+            format_str.push_str(&format!("{units}"))
+        }
+        if let Some(elapsed_eta) = elapsed_eta {
+            format_str.push_str(&format!(" {elapsed_eta}"))
+        }
+
+        format_str
     }
 }
 
