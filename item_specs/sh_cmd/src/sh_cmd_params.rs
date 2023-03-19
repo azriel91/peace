@@ -72,24 +72,6 @@ pub struct ShCmdParams<Id> {
     /// * Desired state string
     /// * State diff string
     apply_exec_sh_cmd: ShCmd,
-    /// Shell command to run in `CleanOpSpec::check`.
-    ///
-    /// The command will be passed the following as an argument:
-    ///
-    /// * Current state string
-    ///
-    /// If the shell command returns the string `true` as its final line, then
-    /// it is taken to mean `CleanOpSpec::exec` needs to be run.
-    ///
-    /// If the shell command returns the string `false` as its final line, then
-    /// it is taken to mean `CleanOpSpec::exec` does not need to be run.
-    clean_check_sh_cmd: ShCmd,
-    /// Shell command to run in `CleanOpSpec::exec`.
-    ///
-    /// The command will be passed the following as an argument:
-    ///
-    /// * Current state string
-    clean_exec_sh_cmd: ShCmd,
     /// Marker for unique command execution parameters type.
     marker: PhantomData<Id>,
 }
@@ -104,8 +86,6 @@ impl<Id> ShCmdParams<Id> {
         state_diff_sh_cmd: ShCmd,
         apply_check_sh_cmd: ShCmd,
         apply_exec_sh_cmd: ShCmd,
-        clean_check_sh_cmd: ShCmd,
-        clean_exec_sh_cmd: ShCmd,
     ) -> Self {
         Self {
             state_clean_sh_cmd,
@@ -114,8 +94,6 @@ impl<Id> ShCmdParams<Id> {
             state_diff_sh_cmd,
             apply_check_sh_cmd,
             apply_exec_sh_cmd,
-            clean_check_sh_cmd,
-            clean_exec_sh_cmd,
             marker: PhantomData,
         }
     }
@@ -191,29 +169,5 @@ impl<Id> ShCmdParams<Id> {
     /// * State diff string
     pub fn apply_exec_sh_cmd(&self) -> &ShCmd {
         &self.apply_exec_sh_cmd
-    }
-
-    /// Returns the shell command to run in `CleanOpSpec::check`.
-    ///
-    /// The command will be passed the following as an argument:
-    ///
-    /// * Current state string
-    ///
-    /// If the shell command returns the string `true` as its final line, then
-    /// it is taken to mean `CleanOpSpec::exec` needs to be run.
-    ///
-    /// If the shell command returns the string `false` as its final line, then
-    /// it is taken to mean `CleanOpSpec::exec` does not need to be run.
-    pub fn clean_check_sh_cmd(&self) -> &ShCmd {
-        &self.clean_check_sh_cmd
-    }
-
-    /// Returns the shell command to run in `CleanOpSpec::exec`.
-    ///
-    /// The command will be passed the following as an argument:
-    ///
-    /// * Current state string
-    pub fn clean_exec_sh_cmd(&self) -> &ShCmd {
-        &self.clean_exec_sh_cmd
     }
 }

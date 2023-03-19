@@ -47,12 +47,6 @@ impl TestFileCreationShCmdItemSpec {
             let apply_exec_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
                 "sh_cmd_item_spec/unix/test_file_creation_apply_exec.sh"
             ));
-            let clean_check_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-                "sh_cmd_item_spec/unix/test_file_creation_clean_check.sh"
-            ));
-            let clean_exec_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-                "sh_cmd_item_spec/unix/test_file_creation_clean_exec.sh"
-            ));
             ShCmdParams::<TestFileCreationShCmdItemSpec>::new(
                 state_clean_sh_cmd,
                 state_current_sh_cmd,
@@ -60,8 +54,6 @@ impl TestFileCreationShCmdItemSpec {
                 state_diff_sh_cmd,
                 apply_check_sh_cmd,
                 apply_exec_sh_cmd,
-                clean_check_sh_cmd,
-                clean_exec_sh_cmd,
             )
         };
 
@@ -100,16 +92,6 @@ impl TestFileCreationShCmdItemSpec {
                 include_str!("sh_cmd_item_spec/windows/test_file_creation_apply_exec.ps1"),
                 " }"
             ));
-            let clean_check_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
-                "& { ",
-                include_str!("sh_cmd_item_spec/windows/test_file_creation_clean_check.ps1"),
-                " }"
-            ));
-            let clean_exec_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
-                "& { ",
-                include_str!("sh_cmd_item_spec/windows/test_file_creation_clean_exec.ps1"),
-                " }"
-            ));
             ShCmdParams::<TestFileCreationShCmdItemSpec>::new(
                 state_clean_sh_cmd,
                 state_current_sh_cmd,
@@ -117,8 +99,6 @@ impl TestFileCreationShCmdItemSpec {
                 state_diff_sh_cmd,
                 apply_check_sh_cmd,
                 apply_exec_sh_cmd,
-                clean_check_sh_cmd,
-                clean_exec_sh_cmd,
             )
         };
 
