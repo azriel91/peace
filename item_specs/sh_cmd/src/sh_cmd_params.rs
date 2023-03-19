@@ -96,6 +96,7 @@ pub struct ShCmdParams<Id> {
 
 impl<Id> ShCmdParams<Id> {
     /// Returns new `ShCmdParams`.
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         state_clean_sh_cmd: ShCmd,
         state_current_sh_cmd: ShCmd,

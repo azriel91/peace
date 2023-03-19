@@ -176,13 +176,10 @@ where
                         delete_bucket_result
                             .map(|_delete_bucket_output| ())
                             .or_else(|error| {
-                                match &error {
-                                    SdkError::ServiceError(service_error) => {
-                                        if let Some("NoSuchBucket") = service_error.err().code() {
-                                            return Ok(());
-                                        }
+                                if let SdkError::ServiceError(service_error) = &error {
+                                    if let Some("NoSuchBucket") = service_error.err().code() {
+                                        return Ok(());
                                     }
-                                    _ => {}
                                 }
 
                                 let s3_bucket_name = name.to_string();
