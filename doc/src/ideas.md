@@ -163,6 +163,8 @@ See the [`is_shutdown_requested`] method in particular.
 4. Progress output should enable-able for state current / desired discover / clean functions.
 5. Flow params are annoying to register every time we add another item spec.
 6. Blank item spec needs a lot of rework to be easier to implement an item spec. ([67], [#96])
+7. For `ApplyCmd`, collect `StateCurrent`, `StateDesired`, `StateDiff` in execution report.
+8. AWS errors' `code` and `message` should be shown to the user.
 
 [#67]: https://github.com/azriel91/peace/issues/67
 [#94]: https://github.com/azriel91/peace/issues/94
