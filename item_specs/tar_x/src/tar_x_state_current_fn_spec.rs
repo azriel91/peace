@@ -26,7 +26,7 @@ impl<Id> TarXStateCurrentFnSpec<Id> {
                             dest_dir_relative_path,
                             dir_entry,
                         } = dest_dir_entry;
-                        let mut entry_path = dir_entry.path();
+                        let entry_path = dir_entry.path();
                         let metadata = dir_entry.metadata().await.map_err(|error| {
                             Self::dest_metadata_read_error(
                                 dest.to_path_buf(),
@@ -34,12 +34,6 @@ impl<Id> TarXStateCurrentFnSpec<Id> {
                                 error,
                             )
                         })?;
-
-                        if metadata.is_dir() {
-                            // We attach the `MAIN_SEPARATOR_STR` as tar entries end with the
-                            // separator.
-                            entry_path = entry_path.join(std::path::MAIN_SEPARATOR_STR);
-                        }
 
                         let mtime = metadata
                             .modified()
