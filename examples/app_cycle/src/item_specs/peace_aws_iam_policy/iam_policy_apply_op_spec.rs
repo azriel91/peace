@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use aws_sdk_iam::{error::ListPolicyVersionsErrorKind, types::SdkError};
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::ProgressLimit;
+use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_iam_policy::{
@@ -114,13 +114,25 @@ where
         Ok(state_desired.clone())
     }
 
+    // Not sure why we can't use this:
+    //
+    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
+    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
+    //
+    // There's an error saying lifetime bounds don't match the trait definition.
+    //
+    // Likely an issue with the codegen in `async-trait`.
+    #[allow(unused_variables)]
     async fn exec(
-        _op_ctx: OpCtx<'_>,
+        op_ctx: OpCtx<'_>,
         mut data: IamPolicyData<'_, Id>,
         state_current: &IamPolicyState,
         state_desired: &IamPolicyState,
         diff: &IamPolicyStateDiff,
     ) -> Result<IamPolicyState, IamPolicyError> {
+        #[cfg(feature = "output_progress")]
+        let progress_sender = &op_ctx.progress_sender;
+
         match diff {
             IamPolicyStateDiff::Added => match state_desired {
                 IamPolicyState::None => {
@@ -132,6 +144,8 @@ where
                     policy_document,
                     policy_id_arn_version: _,
                 } => {
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.tick(ProgressMsgUpdate::Set(String::from("creating policy")));
                     let create_policy_output = data
                         .client()
                         .create_policy()
@@ -150,6 +164,9 @@ where
                                 error,
                             }
                         })?;
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("policy created")));
+
                     let policy = create_policy_output
                         .policy()
                         .expect("Expected policy to be Some when create_policy is successful.");
@@ -197,11 +214,21 @@ where
                     } => {
                         if let Generated::Value(policy_id_arn_version) = policy_id_arn_version {
                             let client = data.client();
+
+                            #[cfg(feature = "output_progress")]
+                            progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+                                "discovering policy versions",
+                            )));
                             let list_policy_versions_result = client
                                 .list_policy_versions()
                                 .policy_arn(policy_id_arn_version.arn())
                                 .send()
                                 .await;
+                            #[cfg(feature = "output_progress")]
+                            progress_sender.inc(
+                                1,
+                                ProgressMsgUpdate::Set(String::from("policy versions discovered")),
+                            );
 
                             // Need to delete all of the non-default versions individually.
                             match list_policy_versions_result {
@@ -217,6 +244,10 @@ where
                                         let version_id = policy_version.version_id().expect(
                                             "Expected policy version version ID to be Some.",
                                         );
+                                        #[cfg(feature = "output_progress")]
+                                        progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+                                            "deleting policy versions",
+                                        )));
                                         client
                                             .delete_policy_version()
                                             .policy_arn(policy_id_arn_version.arn())
@@ -231,6 +262,13 @@ where
                                                     error,
                                                 }
                                             })?;
+                                        #[cfg(feature = "output_progress")]
+                                        progress_sender.inc(
+                                            1,
+                                            ProgressMsgUpdate::Set(String::from(
+                                                "policy versions deleted",
+                                            )),
+                                        );
                                     }
                                 }
                                 Err(error) => match &error {
@@ -265,6 +303,9 @@ where
                             };
 
                             // The default version is deleted along with the policy.
+                            #[cfg(feature = "output_progress")]
+                            progress_sender
+                                .tick(ProgressMsgUpdate::Set(String::from("deleting policy")));
                             client
                                 .delete_policy()
                                 .policy_arn(policy_id_arn_version.arn())
@@ -284,6 +325,9 @@ where
                                         error,
                                     }
                                 })?;
+                            #[cfg(feature = "output_progress")]
+                            progress_sender
+                                .inc(1, ProgressMsgUpdate::Set(String::from("policy deleted")));
                         }
                     }
                 }
@@ -305,6 +349,10 @@ where
                         panic!("Expected policy ID and ARN to exist when diff is modified.");
                     };
                     let policy_arn = policy_id_arn_version.arn();
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+                        "creating policy version",
+                    )));
                     let create_policy_output = data
                         .client()
                         .create_policy_version()
@@ -322,6 +370,11 @@ where
                                 error,
                             }
                         })?;
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.inc(
+                        1,
+                        ProgressMsgUpdate::Set(String::from("policy version created")),
+                    );
                     let policy_version = create_policy_output.policy_version().expect(
                         "Expected policy_version to be Some when create_policy is successful.",
                     );

@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::ProgressLimit;
+use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate, ProgressSender};
 use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
@@ -14,11 +14,14 @@ pub struct IamRoleApplyOpSpec<Id>(PhantomData<Id>);
 
 impl<Id> IamRoleApplyOpSpec<Id> {
     pub(crate) async fn managed_policy_detach(
+        #[cfg(feature = "output_progress")] progress_sender: &ProgressSender<'_>,
         client: &aws_sdk_iam::Client,
         name: &str,
         path: &str,
         managed_policy_arn: &str,
     ) -> Result<(), IamRoleError> {
+        #[cfg(feature = "output_progress")]
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from("detaching policy")));
         client
             .detach_role_policy()
             .role_name(name)
@@ -35,6 +38,8 @@ impl<Id> IamRoleApplyOpSpec<Id> {
                     error,
                 }
             })?;
+        #[cfg(feature = "output_progress")]
+        progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("detaching policy")));
         Ok(())
     }
 }
@@ -114,9 +119,9 @@ where
                     }
                     #[cfg(feature = "output_progress")]
                     {
-                        // Technically could be 2, if we detach an existing before attaching
-                        // another.
-                        let progress_limit = ProgressLimit::Steps(1);
+                        // Technically could be 1 or 2, whether we detach an existing before
+                        // attaching another, or just attach one.
+                        let progress_limit = ProgressLimit::Steps(2);
                         OpCheckStatus::ExecRequired { progress_limit }
                     }
                 };
@@ -146,13 +151,25 @@ where
         Ok(state_desired.clone())
     }
 
+    // Not sure why we can't use this:
+    //
+    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
+    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
+    //
+    // There's an error saying lifetime bounds don't match the trait definition.
+    //
+    // Likely an issue with the codegen in `async-trait`.
+    #[allow(unused_variables)]
     async fn exec(
-        _op_ctx: OpCtx<'_>,
+        op_ctx: OpCtx<'_>,
         data: IamRoleData<'_, Id>,
         state_current: &IamRoleState,
         state_desired: &IamRoleState,
         diff: &IamRoleStateDiff,
     ) -> Result<IamRoleState, IamRoleError> {
+        #[cfg(feature = "output_progress")]
+        let progress_sender = &op_ctx.progress_sender;
+
         match diff {
             IamRoleStateDiff::Added => match state_desired {
                 IamRoleState::None => {
@@ -167,6 +184,9 @@ where
                     let assume_role_policy_document =
                         include_str!("ec2_assume_role_policy_document.json");
                     let client = data.client();
+
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.tick(ProgressMsgUpdate::Set(String::from("creating role")));
                     let role_create_output = client
                         .create_role()
                         .role_name(name)
@@ -179,6 +199,9 @@ where
 
                             IamRoleError::RoleCreateError { role_name, error }
                         })?;
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("role created")));
+
                     let role = role_create_output
                         .role()
                         .expect("Expected role to be Some when created.");
@@ -189,6 +212,8 @@ where
                         .arn()
                         .expect("Expected role ARN to be Some when created.");
 
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.tick(ProgressMsgUpdate::Set(String::from("attaching policy")));
                     let Generated::Value(managed_policy_arn) = managed_policy_attachment.arn() else {
                         unreachable!("Impossible to have an attached managed policy without an ARN.");
                     };
@@ -204,6 +229,8 @@ where
                             managed_policy_arn: managed_policy_attachment.arn().to_string(),
                             error,
                         })?;
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("policy attached")));
 
                     let state_ensured = IamRoleState::Some {
                         name: name.to_string(),
@@ -232,9 +259,18 @@ where
                             let Generated::Value(managed_policy_arn) = managed_policy_attachment.arn() else {
                                 unreachable!("Impossible to have an attached managed policy without an ARN.");
                             };
-                            Self::managed_policy_detach(client, name, path, managed_policy_arn)
-                                .await?;
+                            Self::managed_policy_detach(
+                                #[cfg(feature = "output_progress")]
+                                progress_sender,
+                                client,
+                                name,
+                                path,
+                                managed_policy_arn,
+                            )
+                            .await?;
                         }
+                        #[cfg(feature = "output_progress")]
+                        progress_sender.tick(ProgressMsgUpdate::Set(String::from("deleting role")));
                         if let Generated::Value(role_id_and_arn) = role_id_and_arn {
                             client
                                 .delete_role()
@@ -253,6 +289,9 @@ where
                                         error,
                                     }
                                 })?;
+                            #[cfg(feature = "output_progress")]
+                            progress_sender
+                                .inc(1, ProgressMsgUpdate::Set(String::from("role deleted")));
                         }
                     }
                 }
@@ -284,13 +323,23 @@ where
                     let Generated::Value(managed_policy_arn) = managed_policy_attachment_current.arn() else {
                         unreachable!("Impossible to have an attached managed policy without an ARN.");
                     };
-                    Self::managed_policy_detach(client, name, path, managed_policy_arn).await?;
+                    Self::managed_policy_detach(
+                        #[cfg(feature = "output_progress")]
+                        progress_sender,
+                        client,
+                        name,
+                        path,
+                        managed_policy_arn,
+                    )
+                    .await?;
                 }
 
                 if managed_policy_attachment_desired.attached() {
                     let Generated::Value(managed_policy_arn) = managed_policy_attachment_desired.arn() else {
                         unreachable!("Impossible to have an attached managed policy without an ARN.");
                     };
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.tick(ProgressMsgUpdate::Set(String::from("attaching policy")));
                     client
                         .attach_role_policy()
                         .role_name(name)
@@ -303,6 +352,8 @@ where
                             managed_policy_arn: managed_policy_attachment.arn().to_string(),
                             error,
                         })?;
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("policy attached")));
                 }
 
                 let state_ensured = state_desired.clone();
