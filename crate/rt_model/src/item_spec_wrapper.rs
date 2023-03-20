@@ -133,6 +133,7 @@ where
 
     async fn state_current_try_exec<ResourcesTs>(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
     ) -> Result<Option<State>, E> {
         let state_current = {
@@ -140,7 +141,7 @@ where
                 self.id(),
                 resources,
             );
-            <StateCurrentFnSpec as TryFnSpec>::try_exec(data).await?
+            <StateCurrentFnSpec as TryFnSpec>::try_exec(op_ctx, data).await?
         };
         if let Some(state_current) = state_current.as_ref() {
             resources.borrow_mut::<Current<State>>().0 = Some(state_current.clone());
@@ -151,6 +152,7 @@ where
 
     async fn state_current_exec<ResourcesTs>(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
     ) -> Result<State, E> {
         let state_current = {
@@ -158,7 +160,7 @@ where
                 self.id(),
                 resources,
             );
-            <StateCurrentFnSpec as TryFnSpec>::exec(data).await?
+            <StateCurrentFnSpec as TryFnSpec>::exec(op_ctx, data).await?
         };
         resources.borrow_mut::<Current<State>>().0 = Some(state_current.clone());
 
@@ -167,13 +169,15 @@ where
 
     async fn state_desired_try_exec(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<State>, E> {
         let data = <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(
             self.id(),
             resources,
         );
-        let state_desired = <StateDesiredFnSpec as peace_cfg::TryFnSpec>::try_exec(data).await?;
+        let state_desired =
+            <StateDesiredFnSpec as peace_cfg::TryFnSpec>::try_exec(op_ctx, data).await?;
         if let Some(state_desired) = state_desired.as_ref() {
             resources.borrow_mut::<Desired<State>>().0 = Some(state_desired.clone());
         }
@@ -181,12 +185,17 @@ where
         Ok(state_desired)
     }
 
-    async fn state_desired_exec(&self, resources: &Resources<SetUp>) -> Result<State, E> {
+    async fn state_desired_exec(
+        &self,
+        op_ctx: OpCtx<'_>,
+        resources: &Resources<SetUp>,
+    ) -> Result<State, E> {
         let data = <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(
             self.id(),
             resources,
         );
-        let state_desired = <StateDesiredFnSpec as peace_cfg::TryFnSpec>::exec(data).await?;
+        let state_desired =
+            <StateDesiredFnSpec as peace_cfg::TryFnSpec>::exec(op_ctx, data).await?;
         resources.borrow_mut::<Desired<State>>().0 = Some(state_desired.clone());
 
         Ok(state_desired)
@@ -624,16 +633,21 @@ where
 
     async fn state_current_try_exec(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_current_try_exec(resources)
+        self.state_current_try_exec(op_ctx, resources)
             .await
             .map(|state_current| state_current.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
     }
 
-    async fn state_current_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
-        self.state_current_exec(resources)
+    async fn state_current_exec(
+        &self,
+        op_ctx: OpCtx<'_>,
+        resources: &Resources<SetUp>,
+    ) -> Result<BoxDtDisplay, E> {
+        self.state_current_exec(op_ctx, resources)
             .await
             .map(BoxDtDisplay::new)
             .map_err(Into::<E>::into)
@@ -641,16 +655,21 @@ where
 
     async fn state_desired_try_exec(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_desired_try_exec(resources)
+        self.state_desired_try_exec(op_ctx, resources)
             .await
             .map(|state_desired| state_desired.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
     }
 
-    async fn state_desired_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
-        self.state_desired_exec(resources)
+    async fn state_desired_exec(
+        &self,
+        op_ctx: OpCtx<'_>,
+        resources: &Resources<SetUp>,
+    ) -> Result<BoxDtDisplay, E> {
+        self.state_desired_exec(op_ctx, resources)
             .await
             .map(BoxDtDisplay::new)
             .map_err(Into::<E>::into)
@@ -682,15 +701,16 @@ where
 
     async fn ensure_prepare(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
         let mut item_apply_partial = ItemApplyPartial::<State, StateDiff>::new();
 
-        match self.state_current_exec(resources).await {
+        match self.state_current_exec(op_ctx, resources).await {
             Ok(state_current) => item_apply_partial.state_current = Some(state_current),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
-        match self.state_desired_exec(resources).await {
+        match self.state_desired_exec(op_ctx, resources).await {
             Ok(state_desired) => item_apply_partial.state_target = Some(state_desired),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
@@ -780,11 +800,12 @@ where
 
     async fn clean_prepare(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
         let mut item_apply_partial = ItemApplyPartial::<State, StateDiff>::new();
 
-        match self.state_current_try_exec(resources).await {
+        match self.state_current_try_exec(op_ctx, resources).await {
             Ok(state_current) => {
                 // Hack: Setting ItemApplyPartial state_current to state_clean is a hack.
                 if let Some(state_current) = state_current {

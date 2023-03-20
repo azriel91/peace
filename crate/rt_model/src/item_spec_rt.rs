@@ -54,6 +54,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     async fn state_current_try_exec(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E>
     where
@@ -63,7 +64,11 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     ///
     /// [`ItemSpec::StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
     /// [`exec`]: peace_cfg::TryFnSpec::exec
-    async fn state_current_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
+    async fn state_current_exec(
+        &self,
+        op_ctx: OpCtx<'_>,
+        resources: &Resources<SetUp>,
+    ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
 
@@ -73,6 +78,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     async fn state_desired_try_exec(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E>
     where
@@ -82,7 +88,11 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     ///
     /// [`ItemSpec::StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
     /// [`exec`]: peace_cfg::TryFnSpec::exec
-    async fn state_desired_exec(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
+    async fn state_desired_exec(
+        &self,
+        op_ctx: OpCtx<'_>,
+        resources: &Resources<SetUp>,
+    ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
 
@@ -125,6 +135,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
     async fn ensure_prepare(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
     where
@@ -145,6 +156,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
     async fn clean_prepare(
         &self,
+        op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
     where

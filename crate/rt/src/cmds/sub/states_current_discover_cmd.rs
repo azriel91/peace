@@ -70,7 +70,7 @@ where
         Ok(states_current)
     }
 
-    // TODO: This duplicates a bit of code with `EnsureCmd`.
+    // TODO: This duplicates a bit of code with `ApplyCmd`.
     async fn serialize_internal(
         resources: &mut Resources<SetUp>,
         states_current: &StatesCurrent,

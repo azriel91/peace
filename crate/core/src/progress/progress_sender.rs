@@ -6,7 +6,7 @@ use crate::{
 };
 
 /// Submits progress for an item spec's `ApplyOpSpec::exec` method.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct ProgressSender<'op> {
     /// ID of the item spec this belongs to.
     item_spec_id: &'op ItemSpecId,

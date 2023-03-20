@@ -1,6 +1,8 @@
 use async_trait::async_trait;
 use peace_data::Data;
 
+use crate::OpCtx;
+
 /// Defines the logic and data of a state discovery function.
 #[async_trait(?Send)]
 pub trait TryFnSpec {
@@ -30,8 +32,11 @@ pub trait TryFnSpec {
 
     /// Executes the function, returning `Ok(None)` if the output is not ready
     /// to be queried.
-    async fn try_exec(data: Self::Data<'_>) -> Result<Option<Self::Output>, Self::Error>;
+    async fn try_exec(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+    ) -> Result<Option<Self::Output>, Self::Error>;
 
     /// Executes the function.
-    async fn exec(data: Self::Data<'_>) -> Result<Self::Output, Self::Error>;
+    async fn exec(op_ctx: OpCtx<'_>, data: Self::Data<'_>) -> Result<Self::Output, Self::Error>;
 }

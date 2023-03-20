@@ -6,7 +6,7 @@ use peace_core::ItemSpecId;
 use peace_core::progress::ProgressSender;
 
 /// References to pass information between the Peace framework and an item spec.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct OpCtx<'op> {
     /// ID of the item spec this belongs to.
     pub item_spec_id: &'op ItemSpecId,
