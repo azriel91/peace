@@ -57,32 +57,30 @@ impl DirUnfold {
                         })?;
 
                         let dest_dir_relative_path = dir_path_base_rel.join(dir_entry.file_name());
+
+                        // Note: We include both files and directories as entries
+
                         if file_type.is_dir() {
                             dir_to_reads.push_back(DirToRead {
                                 dir_path: entry_path,
-                                dir_path_base_rel: dest_dir_relative_path,
+                                dir_path_base_rel: dest_dir_relative_path.clone(),
                             });
-                            dir_and_read_dir_opt = Some(DirAndReadDir {
-                                dir_path_base_rel,
-                                read_dir,
-                            });
-                            continue;
-                        } else {
-                            break Result::<_, TarXError>::Ok(Some((
-                                DestDirEntry {
-                                    dest_dir_relative_path,
-                                    dir_entry,
-                                },
-                                DirContext {
-                                    base_dir,
-                                    dir_and_read_dir_opt: Some(DirAndReadDir {
-                                        dir_path_base_rel,
-                                        read_dir,
-                                    }),
-                                    dir_to_reads,
-                                },
-                            )));
                         }
+
+                        break Result::<_, TarXError>::Ok(Some((
+                            DestDirEntry {
+                                dest_dir_relative_path,
+                                dir_entry,
+                            },
+                            DirContext {
+                                base_dir,
+                                dir_and_read_dir_opt: Some(DirAndReadDir {
+                                    dir_path_base_rel,
+                                    read_dir,
+                                }),
+                                dir_to_reads,
+                            },
+                        )));
                     } else {
                         dir_and_read_dir_opt = None;
                         continue;
