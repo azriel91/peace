@@ -57,6 +57,12 @@ impl DirUnfold {
                         })?;
 
                         let dest_dir_relative_path = dir_path_base_rel.join(dir_entry.file_name());
+
+                        // Ignore directories in tracked `FileMetadata`s, because:
+                        //
+                        // * mtime of tar entries is the mtime it was created.
+                        // * mtime of directories on the file system is always the time it is
+                        //   unpacked, even if the unpack is told to `preserve_mtime`.
                         if file_type.is_dir() {
                             dir_to_reads.push_back(DirToRead {
                                 dir_path: entry_path,

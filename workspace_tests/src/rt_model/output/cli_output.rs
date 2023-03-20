@@ -19,6 +19,7 @@ cfg_if::cfg_if! {
                 ProgressComplete,
                 ProgressDelta,
                 ProgressLimit,
+                ProgressMsgUpdate,
                 ProgressStatus,
                 ProgressTracker,
                 ProgressUpdate,
@@ -314,6 +315,9 @@ mod color_always {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         // We can't inspect `ProgressStyle`'s fields, so we have to render the progress
         // and compare the output.
@@ -322,7 +326,7 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏"#,
+            r#"⏳ test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏ (el: 0s, eta: 0s)"#,
             // ^                   ^ ^                                      ^
             // '---- 20 chars -----' '-------------- 40 chars --------------'
             in_memory_term.contents()
@@ -345,6 +349,9 @@ mod color_always {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -358,6 +365,7 @@ mod color_always {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -372,17 +380,17 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████▍                               ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████▍                               ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████▊                               ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████▊                               ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -403,6 +411,9 @@ mod color_always {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -416,6 +427,7 @@ mod color_always {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -430,13 +442,17 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
+        let progress_complete = ProgressComplete::Success;
+        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
+        progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
+            progress_update: ProgressUpdate::Complete(progress_complete),
+            msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -448,8 +464,8 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕████████████████████████████████████████▏"#,
-            in_memory_term.contents()
+            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏ done"#,
+            in_memory_term.contents(),
         );
     }
 
@@ -469,6 +485,9 @@ mod color_always {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -482,6 +501,7 @@ mod color_always {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -496,13 +516,17 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
+        let progress_complete = ProgressComplete::Fail;
+        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
+        progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
+            progress_update: ProgressUpdate::Complete(progress_complete),
+            msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -514,7 +538,7 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏"#,
+            r#"❌ test_item_spec_id    ▕████████                                ▏ done"#,
             in_memory_term.contents()
         );
     }
@@ -535,6 +559,9 @@ mod color_always {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -544,6 +571,7 @@ mod color_always {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -559,6 +587,7 @@ mod color_always {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -574,10 +603,12 @@ mod color_always {
 item_spec_id: test_item_spec_id
 progress_update: !Limit
   Steps: 100
+msg_update: NoChange
 ---
 item_spec_id: test_item_spec_id
 progress_update: !Delta
-  Inc: 21"#,
+  Inc: 21
+msg_update: NoChange"#,
             in_memory_term.contents()
         );
     }
@@ -599,6 +630,9 @@ progress_update: !Delta
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -608,6 +642,7 @@ progress_update: !Delta
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -623,6 +658,7 @@ progress_update: !Delta
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -634,8 +670,8 @@ progress_update: !Delta
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}}}
-{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}}}"#,
+            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}
+{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}"#,
             in_memory_term.contents()
         );
     }
@@ -661,6 +697,9 @@ mod color_never {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         // We can't inspect `ProgressStyle`'s fields, so we have to render the progress
         // and compare the output.
@@ -669,7 +708,7 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏"#,
+            r#"⏳ test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏ (el: 0s, eta: 0s)"#,
             // ^                   ^ ^                                      ^
             // '---- 20 chars -----' '-------------- 40 chars --------------'
             in_memory_term.contents()
@@ -692,6 +731,9 @@ mod color_never {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -705,6 +747,7 @@ mod color_never {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -719,17 +762,17 @@ mod color_never {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████▍                               ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████▍                               ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████▊                               ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████▊                               ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -750,6 +793,9 @@ mod color_never {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -763,6 +809,7 @@ mod color_never {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -777,13 +824,17 @@ mod color_never {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
+        let progress_complete = ProgressComplete::Success;
+        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
+        progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
+            progress_update: ProgressUpdate::Complete(progress_complete),
+            msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -795,8 +846,8 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕████████████████████████████████████████▏"#,
-            in_memory_term.contents()
+            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏ done"#,
+            in_memory_term.contents(),
         );
     }
 
@@ -816,6 +867,9 @@ mod color_never {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -829,6 +883,7 @@ mod color_never {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -843,13 +898,17 @@ mod color_never {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
+        let progress_complete = ProgressComplete::Fail;
+        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
+        progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
+            progress_update: ProgressUpdate::Complete(progress_complete),
+            msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -861,7 +920,7 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏"#,
+            r#"❌ test_item_spec_id    ▕████████                                ▏ done"#,
             in_memory_term.contents()
         );
     }
@@ -882,6 +941,9 @@ mod color_never {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -891,6 +953,7 @@ mod color_never {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -906,6 +969,7 @@ mod color_never {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -921,10 +985,12 @@ mod color_never {
 item_spec_id: test_item_spec_id
 progress_update: !Limit
   Steps: 100
+msg_update: NoChange
 ---
 item_spec_id: test_item_spec_id
 progress_update: !Delta
-  Inc: 21"#,
+  Inc: 21
+msg_update: NoChange"#,
             in_memory_term.contents()
         );
     }
@@ -946,6 +1012,9 @@ progress_update: !Delta
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -955,6 +1024,7 @@ progress_update: !Delta
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -970,6 +1040,7 @@ progress_update: !Delta
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -981,8 +1052,8 @@ progress_update: !Delta
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}}}
-{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}}}"#,
+            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}
+{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}"#,
             in_memory_term.contents()
         );
     }
@@ -1007,6 +1078,9 @@ mod color_disabled {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         // We can't inspect `ProgressStyle`'s fields, so we have to render the progress
         // and compare the output.
@@ -1015,7 +1089,7 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏"#,
+            r#"⏳ test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏ (el: 0s, eta: 0s)"#,
             // ^                   ^ ^                                      ^
             // '---- 20 chars -----' '-------------- 40 chars --------------'
             in_memory_term.contents()
@@ -1037,6 +1111,9 @@ mod color_disabled {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -1050,6 +1127,7 @@ mod color_disabled {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1064,17 +1142,17 @@ mod color_disabled {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████▍                               ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████▍                               ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████▊                               ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████▊                               ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -1094,6 +1172,9 @@ mod color_disabled {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -1107,6 +1188,7 @@ mod color_disabled {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1121,13 +1203,17 @@ mod color_disabled {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
+        let progress_complete = ProgressComplete::Success;
+        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
+        progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
+            progress_update: ProgressUpdate::Complete(progress_complete),
+            msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1139,8 +1225,8 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕████████████████████████████████████████▏"#,
-            in_memory_term.contents()
+            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏ done"#,
+            in_memory_term.contents(),
         );
     }
 
@@ -1159,6 +1245,9 @@ mod color_disabled {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -1172,6 +1261,7 @@ mod color_disabled {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1186,13 +1276,17 @@ mod color_disabled {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
+        let progress_complete = ProgressComplete::Fail;
+        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
+        progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
+            progress_update: ProgressUpdate::Complete(progress_complete),
+            msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1204,7 +1298,7 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏"#,
+            r#"❌ test_item_spec_id    ▕████████                                ▏ done"#,
             in_memory_term.contents()
         );
     }
@@ -1224,6 +1318,9 @@ mod color_disabled {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -1233,6 +1330,7 @@ mod color_disabled {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1248,6 +1346,7 @@ mod color_disabled {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1263,10 +1362,12 @@ mod color_disabled {
 item_spec_id: test_item_spec_id
 progress_update: !Limit
   Steps: 100
+msg_update: NoChange
 ---
 item_spec_id: test_item_spec_id
 progress_update: !Delta
-  Inc: 21"#,
+  Inc: 21
+msg_update: NoChange"#,
             in_memory_term.contents()
         );
     }
@@ -1287,6 +1388,9 @@ progress_update: !Delta
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -1296,6 +1400,7 @@ progress_update: !Delta
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1311,6 +1416,7 @@ progress_update: !Delta
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1322,8 +1428,8 @@ progress_update: !Delta
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}}}
-{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}}}"#,
+            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}}
+{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}}"#,
             in_memory_term.contents()
         );
     }

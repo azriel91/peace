@@ -27,16 +27,15 @@ impl<Id> TarXStateCurrentFnSpec<Id> {
                             dir_entry,
                         } = dest_dir_entry;
                         let entry_path = dir_entry.path();
-                        let mtime = dir_entry
-                            .metadata()
-                            .await
-                            .map_err(|error| {
-                                Self::dest_mtime_read_error(
-                                    dest.to_path_buf(),
-                                    entry_path.clone(),
-                                    error,
-                                )
-                            })?
+                        let metadata = dir_entry.metadata().await.map_err(|error| {
+                            Self::dest_metadata_read_error(
+                                dest.to_path_buf(),
+                                entry_path.clone(),
+                                error,
+                            )
+                        })?;
+
+                        let mtime = metadata
                             .modified()
                             .map_err(|error| {
                                 Self::dest_mtime_read_error(
@@ -69,6 +68,19 @@ impl<Id> TarXStateCurrentFnSpec<Id> {
         };
 
         Ok(dest_file_metadatas)
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn dest_metadata_read_error(
+        dest: std::path::PathBuf,
+        entry_path: std::path::PathBuf,
+        error: std::io::Error,
+    ) -> TarXError {
+        TarXError::TarDestFileMetadataRead {
+            dest,
+            entry_path,
+            error,
+        }
     }
 
     #[cfg(not(target_arch = "wasm32"))]

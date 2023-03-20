@@ -240,6 +240,15 @@ where
         /// `ProgressBar`'s length and current value,
         const SOLID_BAR: &str = "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒";
 
+        let icon = match progress_tracker.progress_status() {
+            ProgressStatus::Initialized | ProgressStatus::ExecPending | ProgressStatus::Running => {
+                "⏳"
+            }
+            ProgressStatus::RunningStalled | ProgressStatus::UserPending => "⏰",
+            ProgressStatus::Complete(ProgressComplete::Success) => "✅",
+            ProgressStatus::Complete(ProgressComplete::Fail) => "❌",
+        };
+
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_colorized")] {
 
@@ -257,6 +266,7 @@ where
                 //  88: red dark (fail background)
 
                 const GRAY_DARK: u8 = 237;
+                const PURPLE: u8 = 128;
 
                 let bar = match self.colorize {
                     CliColorize::Colored => {
@@ -307,18 +317,50 @@ where
             }
         }
 
-        let units = if let Some(progress_limit) = progress_tracker.progress_limit() {
-            match progress_limit {
-                ProgressLimit::Unknown => "",
-                ProgressLimit::Steps(_) => "{pos}/{len}",
-                ProgressLimit::Bytes(_) => "{bytes}/{total_bytes}",
-            }
+        let progress_is_complete = matches!(
+            progress_tracker.progress_status(),
+            ProgressStatus::Complete(_)
+        );
+        let units = if progress_is_complete {
+            None
         } else {
-            ""
+            progress_tracker
+                .progress_limit()
+                .and_then(|progress_limit| match progress_limit {
+                    ProgressLimit::Unknown => None,
+                    ProgressLimit::Steps(_) => Some(" {pos}/{len}"),
+                    ProgressLimit::Bytes(_) => Some(" {bytes}/{total_bytes}"),
+                })
+        };
+        let elapsed_eta = if progress_is_complete {
+            None
+        } else {
+            cfg_if::cfg_if! {
+                if #[cfg(feature = "output_colorized")] {
+                    let elapsed_eta = console::style("(el: {elapsed}, eta: {eta})");
+                    match self.colorize {
+                        CliColorize::Colored => Some(elapsed_eta.color256(PURPLE)),
+                        CliColorize::Uncolored => Some(elapsed_eta),
+                    }
+                } else {
+                    Some(console::style("(el: {elapsed}, eta: {eta})"))
+                }
+            }
         };
 
         // `prefix` is the item spec ID.
-        format!("{prefix} ▕{bar}▏{units}")
+        let mut format_str = format!("{icon} {prefix} ▕{bar}▏");
+        if let Some(units) = units {
+            format_str.push_str(units);
+        }
+        if progress_tracker.message().is_some() {
+            format_str.push_str(" {msg}");
+        }
+        if let Some(elapsed_eta) = elapsed_eta {
+            format_str.push_str(&format!(" {elapsed_eta}"));
+        }
+
+        format_str
     }
 }
 
@@ -359,6 +401,10 @@ where
                         let progress_bar = progress_tracker.progress_bar();
                         progress_bar.set_prefix(format!("{item_spec_id}"));
                         self.progress_bar_style_update(progress_tracker);
+
+                        // Hack: This should be done with a timer in `ApplyCmd`.
+                        // This uses threads, which is not WASM compatible.
+                        progress_bar.enable_steady_tick(std::time::Duration::from_millis(100));
                     },
                 );
             }
@@ -392,6 +438,10 @@ where
                 // * Need to update progress bar colour on finish (blue to green)
                 // * Need to update progress bar colour on error (blue to red)
 
+                if let Some(message) = progress_tracker.message().cloned() {
+                    progress_tracker.progress_bar().set_message(message);
+                }
+
                 match &progress_update_and_id.progress_update {
                     ProgressUpdate::Limit(_progress_limit) => {
                         // Note: `progress_tracker` also carries the `progress_limit`
@@ -406,16 +456,16 @@ where
                     }
                     ProgressUpdate::Complete(progress_complete) => match progress_complete {
                         ProgressComplete::Success => {
+                            self.progress_bar_style_update(progress_tracker);
+
                             let progress_bar = progress_tracker.progress_bar();
                             progress_bar.finish();
-
-                            self.progress_bar_style_update(progress_tracker);
                         }
                         ProgressComplete::Fail => {
+                            self.progress_bar_style_update(progress_tracker);
+
                             let progress_bar = progress_tracker.progress_bar();
                             progress_bar.abandon();
-
-                            self.progress_bar_style_update(progress_tracker);
                         }
                     },
                 }

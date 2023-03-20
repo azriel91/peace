@@ -120,6 +120,26 @@ pub enum TarXError {
         error: std::io::Error,
     },
 
+    /// Failed to read destination file metadata.
+    #[cfg(not(target_arch = "wasm32"))]
+    #[error(
+        r#"Failed to read destination file metadata: `{}` in `{}`"#,
+        entry_path.display(),
+        dest.display()
+    )]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_item_spec_tar_x::tar_dest_file_metadata_read))
+    )]
+    TarDestFileMetadataRead {
+        /// Path to the destination directory.
+        dest: PathBuf,
+        /// Entry path in the tar file.
+        entry_path: PathBuf,
+        /// Underlying error.
+        error: std::io::Error,
+    },
+
     /// Failed to read destination file modified time.
     #[cfg(not(target_arch = "wasm32"))]
     #[error(

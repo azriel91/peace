@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use aws_sdk_s3::types::ByteStream;
 use base64::Engine;
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::ProgressLimit;
+use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_s3_object::{
@@ -100,13 +100,25 @@ where
         Ok(state_desired.clone())
     }
 
+    // Not sure why we can't use this:
+    //
+    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
+    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
+    //
+    // There's an error saying lifetime bounds don't match the trait definition.
+    //
+    // Likely an issue with the codegen in `async-trait`.
+    #[allow(unused_variables)]
     async fn exec(
-        _op_ctx: OpCtx<'_>,
+        op_ctx: OpCtx<'_>,
         data: S3ObjectData<'_, Id>,
         state_current: &S3ObjectState,
         state_desired: &S3ObjectState,
         diff: &S3ObjectStateDiff,
     ) -> Result<S3ObjectState, S3ObjectError> {
+        #[cfg(feature = "output_progress")]
+        let progress_sender = &op_ctx.progress_sender;
+
         match diff {
             S3ObjectStateDiff::Added | S3ObjectStateDiff::ObjectContentModified { .. } => {
                 match state_desired {
@@ -120,6 +132,10 @@ where
                         e_tag: _,
                     } => {
                         let client = data.client();
+
+                        #[cfg(feature = "output_progress")]
+                        progress_sender
+                            .tick(ProgressMsgUpdate::Set(String::from("uploading object")));
                         let file_path = data.params().file_path();
                         let Some(content_md5_hexstr) = content_md5_hexstr else {
                             panic!("Content MD5 must be Some as this is calculated from an existent local file.");
@@ -185,6 +201,9 @@ where
                                     error,
                                 }
                             })?;
+                        #[cfg(feature = "output_progress")]
+                        progress_sender
+                            .inc(1, ProgressMsgUpdate::Set(String::from("object uploaded")));
                         let e_tag = put_object_output
                             .e_tag()
                             .expect("Expected ETag to be some when put_object is successful.")
@@ -211,6 +230,9 @@ where
                         e_tag: _,
                     } => {
                         let client = data.client();
+                        #[cfg(feature = "output_progress")]
+                        progress_sender
+                            .tick(ProgressMsgUpdate::Set(String::from("deleting object")));
                         client
                             .delete_object()
                             .bucket(bucket_name)
@@ -227,6 +249,9 @@ where
                                     error,
                                 }
                             })?;
+                        #[cfg(feature = "output_progress")]
+                        progress_sender
+                            .inc(1, ProgressMsgUpdate::Set(String::from("object deleted")));
                     }
                 }
 

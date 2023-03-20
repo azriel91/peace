@@ -6,11 +6,16 @@
 * Automatically insert `Current<ItemSpec::State>` after state current and ensure exec executions. ([#94], [#95])
 * Automatically insert `Desired<ItemSpec::State>` after state desired discover execution. ([#94], [#95])
 * Consolidate `EnsureOpSpec` and `CleanOpSpec` into `ApplyOpSpec`. ([#67], [#99])
+* Add icons to CLI progress bars. ([#102], [#103])
+* Add elapsed / ETA time to CLI progress bars. ([#102], [#103])
+* Display messages in CLI progress bars. ([#102], [#103])
 
 [#94]: https://github.com/azriel91/peace/issues/94
 [#95]: https://github.com/azriel91/peace/pull/95
 [#67]: https://github.com/azriel91/peace/issues/67
 [#99]: https://github.com/azriel91/peace/pull/99
+[#102]: https://github.com/azriel91/peace/issues/102
+[#103]: https://github.com/azriel91/peace/pull/103
 
 
 ## 0.0.7 (2023-03-06)

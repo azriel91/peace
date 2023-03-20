@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::ProgressLimit;
+use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate, ProgressSender};
 use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_instance_profile::{
@@ -15,10 +15,13 @@ pub struct InstanceProfileApplyOpSpec<Id>(PhantomData<Id>);
 
 impl<Id> InstanceProfileApplyOpSpec<Id> {
     async fn role_associate(
+        #[cfg(feature = "output_progress")] progress_sender: &ProgressSender<'_>,
         client: &aws_sdk_iam::Client,
         name: &str,
         path: &str,
     ) -> Result<(), InstanceProfileError> {
+        #[cfg(feature = "output_progress")]
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from("associating role")));
         let _instance_profile_role_add_output = client
             .add_role_to_instance_profile()
             .role_name(name)
@@ -37,15 +40,20 @@ impl<Id> InstanceProfileApplyOpSpec<Id> {
                     error,
                 }
             })?;
+        #[cfg(feature = "output_progress")]
+        progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("role associated")));
 
         Ok(())
     }
 
     pub(crate) async fn role_disassociate(
+        #[cfg(feature = "output_progress")] progress_sender: &ProgressSender<'_>,
         client: &aws_sdk_iam::Client,
         name: &str,
         path: &str,
     ) -> Result<(), InstanceProfileError> {
+        #[cfg(feature = "output_progress")]
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from("disassociating role")));
         client
             .remove_role_from_instance_profile()
             .instance_profile_name(name)
@@ -62,6 +70,12 @@ impl<Id> InstanceProfileApplyOpSpec<Id> {
                     error,
                 }
             })?;
+        #[cfg(feature = "output_progress")]
+        progress_sender.inc(
+            1,
+            ProgressMsgUpdate::Set(String::from("role disassociated")),
+        );
+
         Ok(())
     }
 }
@@ -92,7 +106,8 @@ where
                     }
                     #[cfg(feature = "output_progress")]
                     {
-                        let progress_limit = ProgressLimit::Steps(1);
+                        // Create instance profile, associate role
+                        let progress_limit = ProgressLimit::Steps(2);
                         OpCheckStatus::ExecRequired { progress_limit }
                     }
                 };
@@ -158,13 +173,25 @@ where
         Ok(state_desired.clone())
     }
 
+    // Not sure why we can't use this:
+    //
+    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
+    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
+    //
+    // There's an error saying lifetime bounds don't match the trait definition.
+    //
+    // Likely an issue with the codegen in `async-trait`.
+    #[allow(unused_variables)]
     async fn exec(
-        _op_ctx: OpCtx<'_>,
+        op_ctx: OpCtx<'_>,
         data: InstanceProfileData<'_, Id>,
         state_current: &InstanceProfileState,
         state_desired: &InstanceProfileState,
         diff: &InstanceProfileStateDiff,
     ) -> Result<InstanceProfileState, InstanceProfileError> {
+        #[cfg(feature = "output_progress")]
+        let progress_sender = &op_ctx.progress_sender;
+
         match diff {
             InstanceProfileStateDiff::Added => match state_desired {
                 InstanceProfileState::None => {
@@ -179,6 +206,11 @@ where
                     role_associated: _,
                 } => {
                     let client = data.client();
+
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+                        "creating instance profile",
+                    )));
                     let create_instance_profile_output = client
                         .create_instance_profile()
                         .instance_profile_name(name)
@@ -195,6 +227,12 @@ where
                                 error,
                             }
                         })?;
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.inc(
+                        1,
+                        ProgressMsgUpdate::Set(String::from("instance profile created")),
+                    );
+
                     let instance_profile = create_instance_profile_output
                         .instance_profile()
                         .expect("Expected instance_profile to be Some when create_instance_profile is successful.");
@@ -209,7 +247,14 @@ where
                     let instance_profile_id_and_arn =
                         InstanceProfileIdAndArn::new(instance_profile_id, instance_profile_arn);
 
-                    Self::role_associate(client, name, path).await?;
+                    Self::role_associate(
+                        #[cfg(feature = "output_progress")]
+                        progress_sender,
+                        client,
+                        name,
+                        path,
+                    )
+                    .await?;
 
                     let state_applied = InstanceProfileState::Some {
                         name: name.to_string(),
@@ -233,11 +278,22 @@ where
                 } => {
                     let client = data.client();
                     if *role_associated {
-                        Self::role_disassociate(client, name, path).await?;
+                        Self::role_disassociate(
+                            #[cfg(feature = "output_progress")]
+                            progress_sender,
+                            client,
+                            name,
+                            path,
+                        )
+                        .await?;
                     }
                     if let Generated::Value(instance_profile_id_and_arn) =
                         instance_profile_id_and_arn
                     {
+                        #[cfg(feature = "output_progress")]
+                        progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+                            "deleting instance profile",
+                        )));
                         client
                             .delete_instance_profile()
                             .instance_profile_name(name)
@@ -259,6 +315,11 @@ where
                                     error,
                                 }
                             })?;
+                        #[cfg(feature = "output_progress")]
+                        progress_sender.inc(
+                            1,
+                            ProgressMsgUpdate::Set(String::from("instance profile deleted")),
+                        );
                     }
 
                     let state_applied = state_desired.clone();
@@ -299,10 +360,24 @@ where
                 let client = data.client();
                 if *role_associated_current {
                     // Remove the association.
-                    Self::role_disassociate(client, name, path).await?;
+                    Self::role_disassociate(
+                        #[cfg(feature = "output_progress")]
+                        progress_sender,
+                        client,
+                        name,
+                        path,
+                    )
+                    .await?;
                 } else {
                     // Associate the role.
-                    Self::role_associate(client, name, path).await?;
+                    Self::role_associate(
+                        #[cfg(feature = "output_progress")]
+                        progress_sender,
+                        client,
+                        name,
+                        path,
+                    )
+                    .await?;
                 }
                 let state_applied = state_desired.clone();
                 Ok(state_applied)

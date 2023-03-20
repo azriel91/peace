@@ -1,7 +1,7 @@
 use tokio::sync::mpsc::Sender;
 
 use crate::{
-    progress::{ProgressDelta, ProgressUpdate, ProgressUpdateAndId},
+    progress::{ProgressDelta, ProgressMsgUpdate, ProgressUpdate, ProgressUpdateAndId},
     ItemSpecId,
 };
 
@@ -27,10 +27,11 @@ impl<'op> ProgressSender<'op> {
     }
 
     /// Increments the progress by the given unit count.
-    pub fn inc(&self, unit_count: u64) {
+    pub fn inc(&self, unit_count: u64, msg_update: ProgressMsgUpdate) {
         let _progress_send_unused = self.progress_tx.try_send(ProgressUpdateAndId {
             item_spec_id: self.item_spec_id.clone(),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(unit_count)),
+            msg_update,
         });
     }
 
@@ -42,10 +43,11 @@ impl<'op> ProgressSender<'op> {
     /// Note, this also updates the `last_update_dt`, so in the case of a
     /// spinner, this should only be called when there is actually a detected
     /// change.
-    pub fn tick(&self) {
+    pub fn tick(&self, msg_update: ProgressMsgUpdate) {
         let _progress_send_unused = self.progress_tx.try_send(ProgressUpdateAndId {
             item_spec_id: self.item_spec_id.clone(),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
+            msg_update,
         });
     }
 }

@@ -6,7 +6,7 @@ use aws_sdk_s3::{
     model::{BucketLocationConstraint, CreateBucketConfiguration},
 };
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::ProgressLimit;
+use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_s3_bucket::{
@@ -91,13 +91,25 @@ where
         Ok(state_desired.clone())
     }
 
+    // Not sure why we can't use this:
+    //
+    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
+    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
+    //
+    // There's an error saying lifetime bounds don't match the trait definition.
+    //
+    // Likely an issue with the codegen in `async-trait`.
+    #[allow(unused_variables)]
     async fn exec(
-        _op_ctx: OpCtx<'_>,
+        op_ctx: OpCtx<'_>,
         data: S3BucketData<'_, Id>,
         state_current: &S3BucketState,
         state_desired: &S3BucketState,
         diff: &S3BucketStateDiff,
     ) -> Result<S3BucketState, S3BucketError> {
+        #[cfg(feature = "output_progress")]
+        let progress_sender = &op_ctx.progress_sender;
+
         match diff {
             S3BucketStateDiff::Added => match state_desired {
                 S3BucketState::None => {
@@ -105,8 +117,10 @@ where
                 }
                 S3BucketState::Some { name } => {
                     let client = data.client();
-                    let mut create_bucket = client.create_bucket().bucket(name);
 
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.tick(ProgressMsgUpdate::Set(String::from("creating bucket")));
+                    let mut create_bucket = client.create_bucket().bucket(name);
                     if let Some(region) = data.region().as_ref() {
                         create_bucket = create_bucket.create_bucket_configuration(
                             CreateBucketConfiguration::builder()
@@ -146,6 +160,8 @@ where
                             },
                         }
                     })?;
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("bucket created")));
 
                     let state_applied = S3BucketState::Some {
                         name: name.to_string(),
@@ -159,6 +175,10 @@ where
                     S3BucketState::None => {}
                     S3BucketState::Some { name } => {
                         let client = data.client();
+
+                        #[cfg(feature = "output_progress")]
+                        progress_sender
+                            .tick(ProgressMsgUpdate::Set(String::from("deleting bucket")));
                         let delete_bucket_result = client.delete_bucket().bucket(name).send().await;
 
                         // Sometimes AWS returns this error:
@@ -188,6 +208,9 @@ where
                                     error,
                                 })
                             })?;
+                        #[cfg(feature = "output_progress")]
+                        progress_sender
+                            .inc(1, ProgressMsgUpdate::Set(String::from("bucket deleted")));
                     }
                 }
 

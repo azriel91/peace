@@ -62,6 +62,16 @@ impl<Id> TarXStateDesiredFnSpec<Id> {
                     let tar_path = tar_path.to_path_buf();
                     TarXError::TarEntryPathRead { tar_path, error }
                 })?;
+
+                // Ignore directories in tracked `FileMetadata`s, because:
+                //
+                // * mtime of tar entries is the mtime it was created.
+                // * mtime of directories on the file system is always the time it is unpacked,
+                //   even if the unpack is told to `preserve_mtime`.
+                if entry.header().entry_type().is_dir() {
+                    return Ok(files_in_tar);
+                }
+
                 let modified_time = entry.header().mtime().map_err(|error| {
                     let tar_path = tar_path.to_path_buf();
                     let entry_path = entry_path.to_path_buf();
