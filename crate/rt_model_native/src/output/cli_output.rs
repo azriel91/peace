@@ -401,6 +401,10 @@ where
                         let progress_bar = progress_tracker.progress_bar();
                         progress_bar.set_prefix(format!("{item_spec_id}"));
                         self.progress_bar_style_update(progress_tracker);
+
+                        // Hack: This should be done with a timer in `ApplyCmd`.
+                        // This uses threads, which is not WASM compatible.
+                        progress_bar.enable_steady_tick(std::time::Duration::from_millis(100));
                     },
                 );
             }
