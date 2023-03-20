@@ -19,6 +19,7 @@ cfg_if::cfg_if! {
                 ProgressComplete,
                 ProgressDelta,
                 ProgressLimit,
+                ProgressMsgUpdate,
                 ProgressStatus,
                 ProgressTracker,
                 ProgressUpdate,
@@ -358,6 +359,7 @@ mod color_always {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -416,6 +418,7 @@ mod color_always {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -436,9 +439,11 @@ mod color_always {
 
         let progress_complete = ProgressComplete::Success;
         progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
+        progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Complete(progress_complete),
+            msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -450,7 +455,7 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏"#,
+            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏ done"#,
             in_memory_term.contents(),
         );
     }
@@ -484,6 +489,7 @@ mod color_always {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -504,9 +510,11 @@ mod color_always {
 
         let progress_complete = ProgressComplete::Fail;
         progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
+        progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Complete(progress_complete),
+            msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -518,7 +526,7 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"❌ test_item_spec_id    ▕████████                                ▏"#,
+            r#"❌ test_item_spec_id    ▕████████                                ▏ done"#,
             in_memory_term.contents()
         );
     }
@@ -548,6 +556,7 @@ mod color_always {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -563,6 +572,7 @@ mod color_always {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -578,10 +588,12 @@ mod color_always {
 item_spec_id: test_item_spec_id
 progress_update: !Limit
   Steps: 100
+msg_update: NoChange
 ---
 item_spec_id: test_item_spec_id
 progress_update: !Delta
-  Inc: 21"#,
+  Inc: 21
+msg_update: NoChange"#,
             in_memory_term.contents()
         );
     }
@@ -612,6 +624,7 @@ progress_update: !Delta
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -627,6 +640,7 @@ progress_update: !Delta
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -638,8 +652,8 @@ progress_update: !Delta
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}}}
-{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}}}"#,
+            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}
+{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}"#,
             in_memory_term.contents()
         );
     }
@@ -709,6 +723,7 @@ mod color_never {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -767,6 +782,7 @@ mod color_never {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -787,9 +803,11 @@ mod color_never {
 
         let progress_complete = ProgressComplete::Success;
         progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
+        progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Complete(progress_complete),
+            msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -801,7 +819,7 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏"#,
+            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏ done"#,
             in_memory_term.contents(),
         );
     }
@@ -835,6 +853,7 @@ mod color_never {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -855,9 +874,11 @@ mod color_never {
 
         let progress_complete = ProgressComplete::Fail;
         progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
+        progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Complete(progress_complete),
+            msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -869,7 +890,7 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"❌ test_item_spec_id    ▕████████                                ▏"#,
+            r#"❌ test_item_spec_id    ▕████████                                ▏ done"#,
             in_memory_term.contents()
         );
     }
@@ -899,6 +920,7 @@ mod color_never {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -914,6 +936,7 @@ mod color_never {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -929,10 +952,12 @@ mod color_never {
 item_spec_id: test_item_spec_id
 progress_update: !Limit
   Steps: 100
+msg_update: NoChange
 ---
 item_spec_id: test_item_spec_id
 progress_update: !Delta
-  Inc: 21"#,
+  Inc: 21
+msg_update: NoChange"#,
             in_memory_term.contents()
         );
     }
@@ -963,6 +988,7 @@ progress_update: !Delta
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -978,6 +1004,7 @@ progress_update: !Delta
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -989,8 +1016,8 @@ progress_update: !Delta
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}}}
-{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}}}"#,
+            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}
+{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}"#,
             in_memory_term.contents()
         );
     }
@@ -1058,6 +1085,7 @@ mod color_disabled {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1115,6 +1143,7 @@ mod color_disabled {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1135,9 +1164,11 @@ mod color_disabled {
 
         let progress_complete = ProgressComplete::Success;
         progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
+        progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Complete(progress_complete),
+            msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1149,7 +1180,7 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏"#,
+            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏ done"#,
             in_memory_term.contents(),
         );
     }
@@ -1182,6 +1213,7 @@ mod color_disabled {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1202,9 +1234,11 @@ mod color_disabled {
 
         let progress_complete = ProgressComplete::Fail;
         progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
+        progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Complete(progress_complete),
+            msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1216,7 +1250,7 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"❌ test_item_spec_id    ▕████████                                ▏"#,
+            r#"❌ test_item_spec_id    ▕████████                                ▏ done"#,
             in_memory_term.contents()
         );
     }
@@ -1245,6 +1279,7 @@ mod color_disabled {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1260,6 +1295,7 @@ mod color_disabled {
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1275,10 +1311,12 @@ mod color_disabled {
 item_spec_id: test_item_spec_id
 progress_update: !Limit
   Steps: 100
+msg_update: NoChange
 ---
 item_spec_id: test_item_spec_id
 progress_update: !Delta
-  Inc: 21"#,
+  Inc: 21
+msg_update: NoChange"#,
             in_memory_term.contents()
         );
     }
@@ -1308,6 +1346,7 @@ progress_update: !Delta
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1323,6 +1362,7 @@ progress_update: !Delta
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
+            msg_update: ProgressMsgUpdate::NoChange,
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1334,8 +1374,8 @@ progress_update: !Delta
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}}}
-{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}}}"#,
+            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}}
+{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}}"#,
             in_memory_term.contents()
         );
     }

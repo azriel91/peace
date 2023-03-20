@@ -21,7 +21,10 @@ use reqwest::header::ETAG;
 use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
 
 #[cfg(feature = "output_progress")]
-use peace::{cfg::progress::ProgressLimit, diff::Tracked};
+use peace::{
+    cfg::progress::{ProgressLimit, ProgressMsgUpdate},
+    diff::Tracked,
+};
 
 /// ApplyOpSpec for the file to download.
 #[derive(Debug)]
@@ -185,9 +188,9 @@ where
 
                 #[cfg(feature = "output_progress")]
                 if let Ok(progress_inc) = u64::try_from(bytes.len()) {
-                    progress_sender.inc(progress_inc)
+                    progress_sender.inc(progress_inc, ProgressMsgUpdate::NoChange)
                 } else {
-                    progress_sender.tick()
+                    progress_sender.tick(ProgressMsgUpdate::NoChange)
                 };
 
                 Ok(buffer)

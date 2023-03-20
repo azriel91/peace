@@ -14,6 +14,8 @@ pub struct ProgressTracker {
     progress_bar: ProgressBar,
     /// Progress limit for the execution, if known.
     progress_limit: Option<ProgressLimit>,
+    /// Message to display.
+    message: Option<String>,
     /// Timestamp of last progress update.
     ///
     /// This is useful to determine if execution has stalled.
@@ -29,6 +31,7 @@ impl ProgressTracker {
             progress_status: ProgressStatus::Initialized,
             progress_bar,
             progress_limit: None,
+            message: None,
             last_update_dt,
         }
     }
@@ -113,6 +116,16 @@ impl ProgressTracker {
         }
         self.progress_limit = Some(progress_limit);
         self.last_update_dt_update();
+    }
+
+    /// Returns the message for this progress tracker.
+    pub fn message(&self) -> Option<&String> {
+        self.message.as_ref()
+    }
+
+    /// Sets the message for this progress tracker.
+    pub fn set_message(&mut self, message: Option<String>) {
+        self.message = message;
     }
 
     /// Returns the timestamp a progress update was last made.

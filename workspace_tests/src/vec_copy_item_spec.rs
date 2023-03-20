@@ -5,7 +5,7 @@ use std::{
 
 use diff::{Diff, VecDiff, VecDiffType};
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::ProgressLimit;
+use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::{
     cfg::{
         async_trait, item_spec_id, ApplyOpSpec, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx,
@@ -149,7 +149,7 @@ impl ApplyOpSpec for VecCopyApplyOpSpec {
 
         #[cfg(feature = "output_progress")]
         if let Ok(n) = state_desired.len().try_into() {
-            op_ctx.progress_sender().inc(n);
+            op_ctx.progress_sender().inc(n, ProgressMsgUpdate::NoChange);
         }
 
         Ok(state_desired.clone())

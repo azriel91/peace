@@ -1,7 +1,7 @@
 use peace::{
     cfg::{
         item_spec_id,
-        progress::{ProgressDelta, ProgressSender, ProgressUpdateAndId},
+        progress::{ProgressDelta, ProgressMsgUpdate, ProgressSender, ProgressUpdateAndId},
         ItemSpecId,
     },
     rt_model::ProgressUpdate,
@@ -14,14 +14,15 @@ fn inc_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
     let (progress_tx, mut progress_rx) = mpsc::channel(10);
     let progress_sender = ProgressSender::new(&item_spec_id, &progress_tx);
 
-    progress_sender.inc(123);
+    progress_sender.inc(123, ProgressMsgUpdate::NoChange);
 
     let progress_update_and_id = progress_rx.try_recv().unwrap();
 
     assert_eq!(
         ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123))
+            progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
+            msg_update: ProgressMsgUpdate::NoChange,
         },
         progress_update_and_id
     );
@@ -37,7 +38,7 @@ fn inc_is_received_if_sent_before_progress_channel_is_closed()
     let (progress_tx, mut progress_rx) = mpsc::channel(10);
     let progress_sender = ProgressSender::new(&item_spec_id, &progress_tx);
 
-    progress_sender.inc(123);
+    progress_sender.inc(123, ProgressMsgUpdate::NoChange);
     progress_rx.close();
 
     let progress_update_and_id = progress_rx.try_recv().unwrap();
@@ -45,7 +46,8 @@ fn inc_is_received_if_sent_before_progress_channel_is_closed()
     assert_eq!(
         ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123))
+            progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
+            msg_update: ProgressMsgUpdate::NoChange,
         },
         progress_update_and_id
     );
@@ -61,7 +63,7 @@ fn inc_does_not_panic_when_progress_channel_is_closed() -> Result<(), Box<dyn st
     let progress_sender = ProgressSender::new(&item_spec_id, &progress_tx);
 
     progress_rx.close();
-    progress_sender.inc(123);
+    progress_sender.inc(123, ProgressMsgUpdate::NoChange);
 
     let error = progress_rx.try_recv().unwrap_err();
     assert_eq!(TryRecvError::Empty, error);
@@ -74,14 +76,15 @@ fn tick_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
     let (progress_tx, mut progress_rx) = mpsc::channel(10);
     let progress_sender = ProgressSender::new(&item_spec_id, &progress_tx);
 
-    progress_sender.tick();
+    progress_sender.tick(ProgressMsgUpdate::NoChange);
 
     let progress_update_and_id = progress_rx.try_recv().unwrap();
 
     assert_eq!(
         ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Delta(ProgressDelta::Tick)
+            progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
+            msg_update: ProgressMsgUpdate::NoChange,
         },
         progress_update_and_id
     );
@@ -97,7 +100,7 @@ fn tick_is_received_if_sent_before_progress_channel_is_closed()
     let (progress_tx, mut progress_rx) = mpsc::channel(10);
     let progress_sender = ProgressSender::new(&item_spec_id, &progress_tx);
 
-    progress_sender.tick();
+    progress_sender.tick(ProgressMsgUpdate::NoChange);
     progress_rx.close();
 
     let progress_update_and_id = progress_rx.try_recv().unwrap();
@@ -105,7 +108,8 @@ fn tick_is_received_if_sent_before_progress_channel_is_closed()
     assert_eq!(
         ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Delta(ProgressDelta::Tick)
+            progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
+            msg_update: ProgressMsgUpdate::NoChange,
         },
         progress_update_and_id
     );
@@ -121,7 +125,7 @@ fn tick_does_not_panic_when_progress_channel_is_closed() -> Result<(), Box<dyn s
     let progress_sender = ProgressSender::new(&item_spec_id, &progress_tx);
 
     progress_rx.close();
-    progress_sender.tick();
+    progress_sender.tick(ProgressMsgUpdate::NoChange);
 
     let error = progress_rx.try_recv().unwrap_err();
     assert_eq!(TryRecvError::Empty, error);

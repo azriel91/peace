@@ -4,7 +4,7 @@ use crate::progress::{ProgressDelta, ProgressLimit};
 
 use super::ProgressComplete;
 
-/// Message to update the `OutputWrite`.
+/// Delta update for the progress tracker.
 ///
 /// # Potential Future Variants
 ///

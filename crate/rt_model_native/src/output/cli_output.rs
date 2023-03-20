@@ -351,10 +351,13 @@ where
         // `prefix` is the item spec ID.
         let mut format_str = format!("{icon} {prefix} ▕{bar}▏");
         if let Some(units) = units {
-            format_str.push_str(&format!("{units}"))
+            format_str.push_str(units);
+        }
+        if progress_tracker.message().is_some() {
+            format_str.push_str(" {msg}");
         }
         if let Some(elapsed_eta) = elapsed_eta {
-            format_str.push_str(&format!(" {elapsed_eta}"))
+            format_str.push_str(&format!(" {elapsed_eta}"));
         }
 
         format_str
@@ -430,6 +433,10 @@ where
                 // * Need to update progress bar colour on the first delta (grey to blue)
                 // * Need to update progress bar colour on finish (blue to green)
                 // * Need to update progress bar colour on error (blue to red)
+
+                if let Some(message) = progress_tracker.message().cloned() {
+                    progress_tracker.progress_bar().set_message(message);
+                }
 
                 match &progress_update_and_id.progress_update {
                     ProgressUpdate::Limit(_progress_limit) => {
