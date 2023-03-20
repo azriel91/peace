@@ -401,7 +401,19 @@ where
                                 msg_update: ProgressMsgUpdate::Set(String::from("in progress")),
                             });
                         }
-                        OpCheckStatus::ExecNotRequired => {}
+                        OpCheckStatus::ExecNotRequired => {
+                            #[cfg(feature = "output_progress")]
+                            let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                                item_spec_id: item_spec_id.clone(),
+                                progress_update: ProgressUpdate::Complete(
+                                    ProgressComplete::Success,
+                                ),
+                                msg_update: ProgressMsgUpdate::Set(String::from("nothing to do!")),
+                            });
+
+                            // short-circuit
+                            return Ok(());
+                        }
                     }
 
                     ProgressSender::new(item_spec_id, progress_tx)
