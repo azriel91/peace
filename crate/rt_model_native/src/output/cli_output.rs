@@ -240,6 +240,15 @@ where
         /// `ProgressBar`'s length and current value,
         const SOLID_BAR: &str = "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒";
 
+        let icon = match progress_tracker.progress_status() {
+            ProgressStatus::Initialized | ProgressStatus::ExecPending | ProgressStatus::Running => {
+                "⏳"
+            }
+            ProgressStatus::RunningStalled | ProgressStatus::UserPending => "⏰",
+            ProgressStatus::Complete(ProgressComplete::Success) => "✅",
+            ProgressStatus::Complete(ProgressComplete::Fail) => "❌",
+        };
+
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_colorized")] {
 
@@ -340,7 +349,7 @@ where
         };
 
         // `prefix` is the item spec ID.
-        let mut format_str = format!("{prefix} ▕{bar}▏");
+        let mut format_str = format!("{icon} {prefix} ▕{bar}▏");
         if let Some(units) = units {
             format_str.push_str(&format!("{units}"))
         }

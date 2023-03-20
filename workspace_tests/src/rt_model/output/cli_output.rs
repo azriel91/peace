@@ -322,7 +322,7 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏ (el: 0s, eta: 0s)"#,
             // ^                   ^ ^                                      ^
             // '---- 20 chars -----' '-------------- 40 chars --------------'
             in_memory_term.contents()
@@ -372,17 +372,17 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████▍                               ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████▍                               ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████▊                               ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████▊                               ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -430,13 +430,15 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
+        let progress_complete = ProgressComplete::Success;
+        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
+            progress_update: ProgressUpdate::Complete(progress_complete),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -447,12 +449,9 @@ mod color_always {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
-        // TODO: This used to be an `assert_eq!`, but the elapsed/eta don't get erased.
-        // In actual usage they do.
-        assert!(
-            in_memory_term
-                .contents()
-                .starts_with(r#"test_item_spec_id    ▕████████████████████████████████████████▏"#)
+        assert_eq!(
+            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏"#,
+            in_memory_term.contents(),
         );
     }
 
@@ -499,13 +498,15 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
+        let progress_complete = ProgressComplete::Fail;
+        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
+            progress_update: ProgressUpdate::Complete(progress_complete),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -517,7 +518,7 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"❌ test_item_spec_id    ▕████████                                ▏"#,
             in_memory_term.contents()
         );
     }
@@ -672,7 +673,7 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏ (el: 0s, eta: 0s)"#,
             // ^                   ^ ^                                      ^
             // '---- 20 chars -----' '-------------- 40 chars --------------'
             in_memory_term.contents()
@@ -722,17 +723,17 @@ mod color_never {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████▍                               ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████▍                               ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████▊                               ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████▊                               ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -780,13 +781,15 @@ mod color_never {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
+        let progress_complete = ProgressComplete::Success;
+        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
+            progress_update: ProgressUpdate::Complete(progress_complete),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -797,12 +800,9 @@ mod color_never {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
-        // TODO: This used to be an `assert_eq!`, but the elapsed/eta don't get erased.
-        // In actual usage they do.
-        assert!(
-            in_memory_term
-                .contents()
-                .starts_with(r#"test_item_spec_id    ▕████████████████████████████████████████▏"#)
+        assert_eq!(
+            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏"#,
+            in_memory_term.contents(),
         );
     }
 
@@ -849,13 +849,15 @@ mod color_never {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
+        let progress_complete = ProgressComplete::Fail;
+        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
+            progress_update: ProgressUpdate::Complete(progress_complete),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -867,7 +869,7 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"❌ test_item_spec_id    ▕████████                                ▏"#,
             in_memory_term.contents()
         );
     }
@@ -1021,7 +1023,7 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏ (el: 0s, eta: 0s)"#,
             // ^                   ^ ^                                      ^
             // '---- 20 chars -----' '-------------- 40 chars --------------'
             in_memory_term.contents()
@@ -1070,17 +1072,17 @@ mod color_disabled {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████▍                               ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████▍                               ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████▊                               ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████▊                               ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -1127,13 +1129,15 @@ mod color_disabled {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
+        let progress_complete = ProgressComplete::Success;
+        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
+            progress_update: ProgressUpdate::Complete(progress_complete),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1144,12 +1148,9 @@ mod color_disabled {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
-        // TODO: This used to be an `assert_eq!`, but the elapsed/eta don't get erased.
-        // In actual usage they do.
-        assert!(
-            in_memory_term
-                .contents()
-                .starts_with(r#"test_item_spec_id    ▕████████████████████████████████████████▏"#)
+        assert_eq!(
+            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏"#,
+            in_memory_term.contents(),
         );
     }
 
@@ -1195,13 +1196,15 @@ mod color_disabled {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
+        let progress_complete = ProgressComplete::Fail;
+        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
         let progress_update_and_id = ProgressUpdateAndId {
             item_spec_id: item_spec_id!("test_item_spec_id"),
-            progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
+            progress_update: ProgressUpdate::Complete(progress_complete),
         };
         <CliOutput<_> as OutputWrite<Error>>::progress_update(
             &mut cli_output,
@@ -1213,7 +1216,7 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"❌ test_item_spec_id    ▕████████                                ▏"#,
             in_memory_term.contents()
         );
     }
