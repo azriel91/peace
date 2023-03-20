@@ -315,6 +315,9 @@ mod color_always {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         // We can't inspect `ProgressStyle`'s fields, so we have to render the progress
         // and compare the output.
@@ -346,6 +349,9 @@ mod color_always {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -405,6 +411,9 @@ mod color_always {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -476,6 +485,9 @@ mod color_always {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -547,6 +559,9 @@ mod color_always {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -615,6 +630,9 @@ msg_update: NoChange"#,
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -679,6 +697,9 @@ mod color_never {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         // We can't inspect `ProgressStyle`'s fields, so we have to render the progress
         // and compare the output.
@@ -710,6 +731,9 @@ mod color_never {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -769,6 +793,9 @@ mod color_never {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -840,6 +867,9 @@ mod color_never {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -911,6 +941,9 @@ mod color_never {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -979,6 +1012,9 @@ msg_update: NoChange"#,
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -1042,6 +1078,9 @@ mod color_disabled {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         // We can't inspect `ProgressStyle`'s fields, so we have to render the progress
         // and compare the output.
@@ -1072,6 +1111,9 @@ mod color_disabled {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -1130,6 +1172,9 @@ mod color_disabled {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -1200,6 +1245,9 @@ mod color_disabled {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -1270,6 +1318,9 @@ mod color_disabled {
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
@@ -1337,6 +1388,9 @@ msg_update: NoChange"#,
             &cmd_progress_tracker,
         )
         .await;
+        // Hack: because we enable this in `progress_begin`
+        // Remove when we properly tick progress updates in `ApplyCmd`.
+        progress_bar.disable_steady_tick();
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
