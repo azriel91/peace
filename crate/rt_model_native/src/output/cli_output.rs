@@ -328,8 +328,8 @@ where
                 .progress_limit()
                 .and_then(|progress_limit| match progress_limit {
                     ProgressLimit::Unknown => None,
-                    ProgressLimit::Steps(_) => Some("{pos}/{len}"),
-                    ProgressLimit::Bytes(_) => Some("{bytes}/{total_bytes}"),
+                    ProgressLimit::Steps(_) => Some(" {pos}/{len}"),
+                    ProgressLimit::Bytes(_) => Some(" {bytes}/{total_bytes}"),
                 })
         };
         let elapsed_eta = if progress_is_complete {
