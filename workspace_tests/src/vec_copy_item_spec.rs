@@ -237,6 +237,8 @@ impl TryFnSpec for VecCopyStateDesiredFnSpec {
     }
 
     async fn exec(op_ctx: OpCtx<'_>, vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
+        #[cfg(not(feature = "output_progress"))]
+        let _op_ctx = op_ctx;
         let vec_copy_state = VecCopyState::from(vec_a.0.clone());
 
         #[cfg(feature = "output_progress")]

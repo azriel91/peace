@@ -15,6 +15,7 @@ pub fn debug() {
 #[test]
 pub fn partial_eq() {
     let profile_dir_0 = ProfileDir::from(Path::new(".").to_path_buf());
+    #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
     let profile_dir_1 = profile_dir_0.clone();
 
     assert_eq!(profile_dir_0, profile_dir_1);

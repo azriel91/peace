@@ -14,6 +14,7 @@ fn clone() {
         progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
         msg_update: ProgressMsgUpdate::NoChange,
     };
+    #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
     let progress_update_and_id_1 = progress_update_and_id_0.clone();
 
     assert_eq!(progress_update_and_id_0, progress_update_and_id_1);

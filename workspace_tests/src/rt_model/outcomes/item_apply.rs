@@ -320,8 +320,7 @@ fn item_apply_rt_as_data_type_returns_self() -> Result<(), Box<dyn std::error::E
     };
 
     let item_apply = ItemApply::try_from((item_apply_partial, None)).unwrap();
-    let item_apply_clone = item_apply.clone();
-    let data_type = ItemApplyRt::as_data_type(&item_apply_clone);
+    let data_type = ItemApplyRt::as_data_type(&item_apply);
 
     assert_eq!(
         item_apply,

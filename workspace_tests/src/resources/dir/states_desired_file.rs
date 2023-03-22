@@ -23,6 +23,7 @@ pub fn debug() {
 pub fn partial_eq() {
     let states_desired_file_0 =
         StatesDesiredFile::from(Path::new("test_states_desired.yaml").to_path_buf());
+    #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
     let states_desired_file_1 = states_desired_file_0.clone();
 
     assert_eq!(states_desired_file_0, states_desired_file_1);

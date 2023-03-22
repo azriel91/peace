@@ -99,6 +99,7 @@ async fn present_uses_code_inline() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn clone() -> Result<(), ItemSpecIdInvalidFmt<'static>> {
     let item_spec_id_0 = ItemSpecId::new("id")?;
+    #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
     let item_spec_id_1 = item_spec_id_0.clone();
 
     assert_eq!(item_spec_id_0, item_spec_id_1);
