@@ -195,12 +195,27 @@ impl TryFnSpec for VecCopyStateCurrentFnSpec {
     type Error = VecCopyError;
     type Output = VecCopyState;
 
-    async fn try_exec(vec_b: R<'_, VecB>) -> Result<Option<Self::Output>, VecCopyError> {
-        Self::exec(vec_b).await.map(Some)
+    async fn try_exec(
+        op_ctx: OpCtx<'_>,
+        vec_b: R<'_, VecB>,
+    ) -> Result<Option<Self::Output>, VecCopyError> {
+        Self::exec(op_ctx, vec_b).await.map(Some)
     }
 
-    async fn exec(vec_b: R<'_, VecB>) -> Result<Self::Output, VecCopyError> {
-        Ok(VecCopyState::from(vec_b.0.clone()))
+    async fn exec(op_ctx: OpCtx<'_>, vec_b: R<'_, VecB>) -> Result<Self::Output, VecCopyError> {
+        #[cfg(not(feature = "output_progress"))]
+        let _op_ctx = op_ctx;
+
+        let vec_copy_state = VecCopyState::from(vec_b.0.clone());
+
+        #[cfg(feature = "output_progress")]
+        {
+            if let Ok(len) = u64::try_from(vec_copy_state.len()) {
+                op_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
+            }
+        }
+
+        Ok(vec_copy_state)
     }
 }
 
@@ -214,12 +229,24 @@ impl TryFnSpec for VecCopyStateDesiredFnSpec {
     type Error = VecCopyError;
     type Output = VecCopyState;
 
-    async fn try_exec(vec_a: R<'_, VecA>) -> Result<Option<Self::Output>, VecCopyError> {
-        Self::exec(vec_a).await.map(Some)
+    async fn try_exec(
+        op_ctx: OpCtx<'_>,
+        vec_a: R<'_, VecA>,
+    ) -> Result<Option<Self::Output>, VecCopyError> {
+        Self::exec(op_ctx, vec_a).await.map(Some)
     }
 
-    async fn exec(vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
-        Ok(vec_a.0.clone()).map(VecCopyState::from)
+    async fn exec(op_ctx: OpCtx<'_>, vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
+        let vec_copy_state = VecCopyState::from(vec_a.0.clone());
+
+        #[cfg(feature = "output_progress")]
+        {
+            if let Ok(len) = u64::try_from(vec_copy_state.len()) {
+                op_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
+            }
+        }
+
+        Ok(vec_copy_state)
     }
 }
 

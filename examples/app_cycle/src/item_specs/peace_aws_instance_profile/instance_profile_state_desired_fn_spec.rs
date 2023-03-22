@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Generated, TryFnSpec};
+use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
 
 use crate::item_specs::peace_aws_instance_profile::{
     InstanceProfileData, InstanceProfileError, InstanceProfileState,
@@ -20,12 +20,14 @@ where
     type Output = InstanceProfileState;
 
     async fn try_exec(
+        op_ctx: OpCtx<'_>,
         instance_profile_data: InstanceProfileData<'_, Id>,
     ) -> Result<Option<Self::Output>, InstanceProfileError> {
-        Self::exec(instance_profile_data).await.map(Some)
+        Self::exec(op_ctx, instance_profile_data).await.map(Some)
     }
 
     async fn exec(
+        _op_ctx: OpCtx<'_>,
         instance_profile_data: InstanceProfileData<'_, Id>,
     ) -> Result<Self::Output, InstanceProfileError> {
         let params = instance_profile_data.params();

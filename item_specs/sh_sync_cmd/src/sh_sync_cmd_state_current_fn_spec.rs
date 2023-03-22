@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, State, TryFnSpec};
+use peace::cfg::{async_trait, OpCtx, State, TryFnSpec};
 
 use crate::{ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord, ShSyncCmdSyncStatus};
 
@@ -18,12 +18,14 @@ where
     type Output = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;
 
     async fn try_exec(
+        op_ctx: OpCtx<'_>,
         sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
     ) -> Result<Option<Self::Output>, ShSyncCmdError> {
-        Self::exec(sh_sync_cmd_data).await.map(Some)
+        Self::exec(op_ctx, sh_sync_cmd_data).await.map(Some)
     }
 
     async fn exec(
+        _op_ctx: OpCtx<'_>,
         _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
     ) -> Result<Self::Output, ShSyncCmdError> {
         todo!()

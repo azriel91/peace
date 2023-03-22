@@ -1,13 +1,15 @@
 use std::marker::PhantomData;
 
 use aws_sdk_iam::{error::GetPolicyErrorKind, types::SdkError};
-use peace::cfg::{async_trait, state::Generated, TryFnSpec};
+use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
 
 use crate::item_specs::peace_aws_iam_policy::{
-    model::PolicyIdArnVersion, IamPolicyData, IamPolicyError, IamPolicyState,
+    model::{ManagedPolicyArn, PolicyIdArnVersion},
+    IamPolicyData, IamPolicyError, IamPolicyState,
 };
 
-use super::model::ManagedPolicyArn;
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressMsgUpdate;
 
 /// Reads the current state of the instance profile state.
 #[derive(Debug)]
@@ -16,10 +18,16 @@ pub struct IamPolicyStateCurrentFnSpec<Id>(PhantomData<Id>);
 impl<Id> IamPolicyStateCurrentFnSpec<Id> {
     /// Finds a policy with the given name and path.
     pub(crate) async fn policy_find(
+        #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
+        #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
         client: &aws_sdk_iam::Client,
         name: &str,
         path: &str,
     ) -> Result<Option<(String, String)>, IamPolicyError> {
+        #[cfg(feature = "output_progress")]
+        let progress_sender = &op_ctx.progress_sender;
+        #[cfg(feature = "output_progress")]
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from("listing policies")));
         let list_policies_output = client
             .list_policies()
             .scope(aws_sdk_iam::model::PolicyScopeType::Local)
@@ -30,6 +38,8 @@ impl<Id> IamPolicyStateCurrentFnSpec<Id> {
                 path: path.to_string(),
                 error,
             })?;
+        #[cfg(feature = "output_progress")]
+        progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("finding policy")));
         let policy_id_arn_version = list_policies_output
             .policies()
             .and_then(|policies| {
@@ -55,6 +65,16 @@ impl<Id> IamPolicyStateCurrentFnSpec<Id> {
                 (policy_id, policy_arn)
             });
 
+        #[cfg(feature = "output_progress")]
+        {
+            let message = if policy_id_arn_version.is_some() {
+                "policy found"
+            } else {
+                "policy not found"
+            };
+            progress_sender.inc(1, ProgressMsgUpdate::Set(String::from(message)));
+        }
+
         Ok(policy_id_arn_version)
     }
 }
@@ -68,21 +88,35 @@ where
     type Error = IamPolicyError;
     type Output = IamPolicyState;
 
-    async fn try_exec(data: IamPolicyData<'_, Id>) -> Result<Option<Self::Output>, IamPolicyError> {
-        Self::exec(data).await.map(Some)
+    async fn try_exec(
+        op_ctx: OpCtx<'_>,
+        data: IamPolicyData<'_, Id>,
+    ) -> Result<Option<Self::Output>, IamPolicyError> {
+        Self::exec(op_ctx, data).await.map(Some)
     }
 
-    async fn exec(mut data: IamPolicyData<'_, Id>) -> Result<Self::Output, IamPolicyError> {
+    async fn exec(
+        op_ctx: OpCtx<'_>,
+        mut data: IamPolicyData<'_, Id>,
+    ) -> Result<Self::Output, IamPolicyError> {
         let client = data.client();
         let name = data.params().name();
         let path = data.params().path();
 
-        let policy_id_arn_version = Self::policy_find(client, name, path).await?;
+        let policy_id_arn_version = Self::policy_find(op_ctx, client, name, path).await?;
 
         if let Some((policy_id, policy_arn)) = policy_id_arn_version {
+            #[cfg(feature = "output_progress")]
+            let progress_sender = &op_ctx.progress_sender;
+            #[cfg(feature = "output_progress")]
+            progress_sender.tick(ProgressMsgUpdate::Set(String::from("fetching policy")));
+
             let get_policy_result = client.get_policy().policy_arn(&policy_arn).send().await;
             let (policy_name, policy_path, policy_id_arn_version) = match get_policy_result {
                 Ok(get_policy_output) => {
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("policy fetched")));
+
                     let policy = get_policy_output
                         .policy()
                         .expect("Expected Policy to exist when get_policy is successful");
@@ -116,16 +150,30 @@ where
 
                     (policy_name, policy_path, policy_id_arn_version)
                 }
-                Err(error) => match &error {
-                    SdkError::ServiceError(service_error) => match service_error.err().kind {
-                        GetPolicyErrorKind::NoSuchEntityException(_) => {
-                            return Err(IamPolicyError::PolicyNotFoundAfterList {
-                                policy_name: name.to_string(),
-                                policy_path: path.to_string(),
-                                policy_id: policy_id.to_string(),
-                                policy_arn: policy_arn.to_string(),
-                            });
-                        }
+                Err(error) => {
+                    #[cfg(feature = "output_progress")]
+                    progress_sender.inc(
+                        1,
+                        ProgressMsgUpdate::Set(String::from("policy not fetched")),
+                    );
+                    match &error {
+                        SdkError::ServiceError(service_error) => match service_error.err().kind {
+                            GetPolicyErrorKind::NoSuchEntityException(_) => {
+                                return Err(IamPolicyError::PolicyNotFoundAfterList {
+                                    policy_name: name.to_string(),
+                                    policy_path: path.to_string(),
+                                    policy_id: policy_id.to_string(),
+                                    policy_arn: policy_arn.to_string(),
+                                });
+                            }
+                            _ => {
+                                return Err(IamPolicyError::PolicyGetError {
+                                    policy_name: name.to_string(),
+                                    policy_path: path.to_string(),
+                                    error,
+                                });
+                            }
+                        },
                         _ => {
                             return Err(IamPolicyError::PolicyGetError {
                                 policy_name: name.to_string(),
@@ -133,17 +181,14 @@ where
                                 error,
                             });
                         }
-                    },
-                    _ => {
-                        return Err(IamPolicyError::PolicyGetError {
-                            policy_name: name.to_string(),
-                            policy_path: path.to_string(),
-                            error,
-                        });
                     }
-                },
+                }
             };
 
+            #[cfg(feature = "output_progress")]
+            progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+                "fetching policy version",
+            )));
             let get_policy_version_output = client
                 .get_policy_version()
                 .policy_arn(policy_arn)
@@ -155,6 +200,11 @@ where
                     policy_path: policy_path.clone(),
                     error,
                 })?;
+            #[cfg(feature = "output_progress")]
+            progress_sender.inc(
+                1,
+                ProgressMsgUpdate::Set(String::from("policy version fetched")),
+            );
             let policy_document = get_policy_version_output
                 .policy_version()
                 .and_then(|policy_version| policy_version.document())

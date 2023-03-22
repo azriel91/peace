@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, State, TryFnSpec};
+use peace::cfg::{async_trait, OpCtx, State, TryFnSpec};
 
 use crate::{ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState};
 
@@ -17,11 +17,17 @@ where
     type Error = ShCmdError;
     type Output = State<ShCmdState<Id>, ShCmdExecutionRecord>;
 
-    async fn try_exec(sh_cmd_data: ShCmdData<'_, Id>) -> Result<Option<Self::Output>, ShCmdError> {
-        Self::exec(sh_cmd_data).await.map(Some)
+    async fn try_exec(
+        op_ctx: OpCtx<'_>,
+        sh_cmd_data: ShCmdData<'_, Id>,
+    ) -> Result<Option<Self::Output>, ShCmdError> {
+        Self::exec(op_ctx, sh_cmd_data).await.map(Some)
     }
 
-    async fn exec(sh_cmd_data: ShCmdData<'_, Id>) -> Result<Self::Output, ShCmdError> {
+    async fn exec(
+        _op_ctx: OpCtx<'_>,
+        sh_cmd_data: ShCmdData<'_, Id>,
+    ) -> Result<Self::Output, ShCmdError> {
         let state_current_sh_cmd = sh_cmd_data.sh_cmd_params().state_current_sh_cmd();
         ShCmdExecutor::exec(state_current_sh_cmd).await
     }

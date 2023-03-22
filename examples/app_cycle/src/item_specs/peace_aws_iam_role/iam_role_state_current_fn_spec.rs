@@ -1,12 +1,15 @@
 use std::marker::PhantomData;
 
 use aws_sdk_iam::{error::GetRoleErrorKind, types::SdkError};
-use peace::cfg::{async_trait, state::Generated, TryFnSpec};
+use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
 
 use crate::item_specs::peace_aws_iam_role::{
     model::{ManagedPolicyAttachment, RoleIdAndArn},
     IamRoleData, IamRoleError, IamRoleState,
 };
+
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressMsgUpdate;
 
 /// Reads the current state of the instance profile state.
 #[derive(Debug)]
@@ -21,15 +24,27 @@ where
     type Error = IamRoleError;
     type Output = IamRoleState;
 
-    async fn try_exec(data: IamRoleData<'_, Id>) -> Result<Option<Self::Output>, IamRoleError> {
-        Self::exec(data).await.map(Some)
+    async fn try_exec(
+        op_ctx: OpCtx<'_>,
+        data: IamRoleData<'_, Id>,
+    ) -> Result<Option<Self::Output>, IamRoleError> {
+        Self::exec(op_ctx, data).await.map(Some)
     }
 
-    async fn exec(data: IamRoleData<'_, Id>) -> Result<Self::Output, IamRoleError> {
+    async fn exec(
+        op_ctx: OpCtx<'_>,
+        data: IamRoleData<'_, Id>,
+    ) -> Result<Self::Output, IamRoleError> {
         let client = data.client();
         let name = data.params().name();
         let path = data.params().path();
 
+        #[cfg(not(feature = "output_progress"))]
+        let _op_ctx = op_ctx;
+        #[cfg(feature = "output_progress")]
+        let progress_sender = &op_ctx.progress_sender;
+        #[cfg(feature = "output_progress")]
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from("fetching role")));
         let get_role_result = client.get_role().role_name(name).send().await;
         let role_opt = match get_role_result {
             Ok(get_role_output) => {
@@ -78,11 +93,25 @@ where
         };
 
         match role_opt {
-            None => Ok(IamRoleState::None),
+            None => {
+                #[cfg(feature = "output_progress")]
+                progress_sender.inc(
+                    1,
+                    ProgressMsgUpdate::Set(String::from("policy not fetched")),
+                );
+                Ok(IamRoleState::None)
+            }
             Some((role_name, role_path, role_id_and_arn)) => {
                 assert_eq!(name, role_name);
                 assert_eq!(path, role_path);
 
+                #[cfg(feature = "output_progress")]
+                progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("policy fetched")));
+
+                #[cfg(feature = "output_progress")]
+                progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+                    "listing attached policies",
+                )));
                 let list_attached_role_policies_output = client
                     .list_attached_role_policies()
                     .role_name(name)
@@ -94,6 +123,11 @@ where
                         role_path: path.to_string(),
                         error,
                     })?;
+                #[cfg(feature = "output_progress")]
+                progress_sender.inc(
+                    1,
+                    ProgressMsgUpdate::Set(String::from("filtering attached policies")),
+                );
                 let managed_policy_attachment = list_attached_role_policies_output
                     .attached_policies()
                     .and_then(|attached_policies| {
@@ -121,6 +155,15 @@ where
                         ManagedPolicyAttachment::new(Generated::Value(managed_policy_arn), true)
                     })
                     .unwrap_or(ManagedPolicyAttachment::new(Generated::Tbd, false));
+                #[cfg(feature = "output_progress")]
+                {
+                    let message = if managed_policy_attachment.attached() {
+                        "policy attached"
+                    } else {
+                        "policy not attached"
+                    };
+                    progress_sender.inc(1, ProgressMsgUpdate::Set(String::from(message)));
+                }
 
                 let state_current = IamRoleState::Some {
                     name: name.to_string(),

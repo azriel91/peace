@@ -1,11 +1,14 @@
 use std::marker::PhantomData;
 
 use aws_sdk_iam::{error::GetInstanceProfileErrorKind, types::SdkError};
-use peace::cfg::{async_trait, state::Generated, TryFnSpec};
+use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
 
 use crate::item_specs::peace_aws_instance_profile::{
     model::InstanceProfileIdAndArn, InstanceProfileData, InstanceProfileError, InstanceProfileState,
 };
+
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressMsgUpdate;
 
 /// Reads the current state of the instance profile state.
 #[derive(Debug)]
@@ -21,16 +24,28 @@ where
     type Output = InstanceProfileState;
 
     async fn try_exec(
+        op_ctx: OpCtx<'_>,
         data: InstanceProfileData<'_, Id>,
     ) -> Result<Option<Self::Output>, InstanceProfileError> {
-        Self::exec(data).await.map(Some)
+        Self::exec(op_ctx, data).await.map(Some)
     }
 
-    async fn exec(data: InstanceProfileData<'_, Id>) -> Result<Self::Output, InstanceProfileError> {
+    async fn exec(
+        op_ctx: OpCtx<'_>,
+        data: InstanceProfileData<'_, Id>,
+    ) -> Result<Self::Output, InstanceProfileError> {
         let client = data.client();
         let name = data.params().name();
         let path = data.params().path();
 
+        #[cfg(not(feature = "output_progress"))]
+        let _op_ctx = op_ctx;
+        #[cfg(feature = "output_progress")]
+        let progress_sender = &op_ctx.progress_sender;
+        #[cfg(feature = "output_progress")]
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+            "fetching instance profile",
+        )));
         let get_instance_profile_result = client
             .get_instance_profile()
             .instance_profile_name(name)
@@ -38,6 +53,12 @@ where
             .await;
         let instance_profile_opt = match get_instance_profile_result {
             Ok(get_instance_profile_output) => {
+                #[cfg(feature = "output_progress")]
+                progress_sender.inc(
+                    1,
+                    ProgressMsgUpdate::Set(String::from("instance profile fetched")),
+                );
+
                 let instance_profile = get_instance_profile_output.instance_profile().expect(
                     "Expected instance profile to be some when get_instance_profile is successful.",
                 );
@@ -85,9 +106,23 @@ where
                     role_associated,
                 ))
             }
-            Err(error) => match &error {
-                SdkError::ServiceError(service_error) => match service_error.err().kind {
-                    GetInstanceProfileErrorKind::NoSuchEntityException(_) => None,
+            Err(error) => {
+                #[cfg(feature = "output_progress")]
+                progress_sender.inc(
+                    1,
+                    ProgressMsgUpdate::Set(String::from("instance profile not fetched")),
+                );
+                match &error {
+                    SdkError::ServiceError(service_error) => match service_error.err().kind {
+                        GetInstanceProfileErrorKind::NoSuchEntityException(_) => None,
+                        _ => {
+                            return Err(InstanceProfileError::InstanceProfileGetError {
+                                instance_profile_name: name.to_string(),
+                                instance_profile_path: path.to_string(),
+                                error,
+                            });
+                        }
+                    },
                     _ => {
                         return Err(InstanceProfileError::InstanceProfileGetError {
                             instance_profile_name: name.to_string(),
@@ -95,15 +130,8 @@ where
                             error,
                         });
                     }
-                },
-                _ => {
-                    return Err(InstanceProfileError::InstanceProfileGetError {
-                        instance_profile_name: name.to_string(),
-                        instance_profile_path: path.to_string(),
-                        error,
-                    });
                 }
-            },
+            }
         };
 
         if let Some((
