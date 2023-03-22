@@ -501,7 +501,9 @@ where
     }
 
     #[cfg(feature = "output_progress")]
-    async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
+    async fn progress_end(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
+        let _result = cmd_progress_tracker.multi_progress.clear();
+    }
 
     async fn present<P>(&mut self, presentable: &P) -> Result<(), E>
     where

@@ -21,7 +21,10 @@ cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_cfg::{
             progress::{
+                ProgressComplete,
+                ProgressMsgUpdate,
                 ProgressSender,
+                ProgressUpdate,
                 ProgressUpdateAndId,
             },
         };
@@ -100,7 +103,27 @@ where
 
                     let state = item_spec
                         .state_current_try_exec(op_ctx, resources_ref)
-                        .await?;
+                        .await;
+
+                    #[cfg(feature = "output_progress")]
+                    {
+                        let (progress_complete, msg_update) = match &state {
+                            Ok(_) => (ProgressComplete::Success, ProgressMsgUpdate::Clear),
+                            Err(error) => (
+                                ProgressComplete::Fail,
+                                ProgressMsgUpdate::Set(format!("{error}")),
+                            ),
+                        };
+
+                        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                            item_spec_id: item_spec_id.clone(),
+                            progress_update: ProgressUpdate::Complete(progress_complete),
+                            msg_update,
+                        });
+                    }
+
+                    let state = state?;
+
                     Ok(state
                         .map(|state| (item_spec.id().clone(), state))
                         .map(Result::Ok)
