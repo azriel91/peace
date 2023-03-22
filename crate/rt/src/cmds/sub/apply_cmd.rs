@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cfg::{ItemSpecId, OpCtx};
+use peace_cfg::{ItemSpecId, OpCheckStatus, OpCtx};
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
@@ -27,14 +27,11 @@ cfg_if::cfg_if! {
         use peace_cfg::{
             progress::{
                 ProgressComplete,
-                ProgressDelta,
                 ProgressMsgUpdate,
                 ProgressSender,
-                ProgressStatus,
                 ProgressUpdate,
                 ProgressUpdateAndId,
             },
-            OpCheckStatus,
         };
         use peace_rt_model::CmdProgressTracker;
         use tokio::sync::mpsc::Sender;
@@ -57,10 +54,6 @@ where
     States<StatesTsApply>: From<StatesCurrent> + Send + Sync + 'static,
     States<StatesTsApplyDry>: From<StatesCurrent> + Send + Sync + 'static,
 {
-    #[cfg(feature = "output_progress")]
-    /// Maximum number of progress messages to buffer.
-    const PROGRESS_COUNT_MAX: usize = 256;
-
     /// Conditionally runs [`ApplyOpSpec`]`::`[`exec_dry`] for each
     /// [`ItemSpec`].
     ///
@@ -170,8 +163,8 @@ where
                     progress_trackers,
                 } = cmd_progress_tracker;
 
-                let (progress_tx, mut progress_rx) =
-                    mpsc::channel::<ProgressUpdateAndId>(Self::PROGRESS_COUNT_MAX);
+                let (progress_tx, progress_rx) =
+                    mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
             }
         }
 
@@ -233,49 +226,8 @@ where
         };
 
         #[cfg(feature = "output_progress")]
-        let progress_render_task = async {
-            while let Some(progress_update_and_id) = progress_rx.recv().await {
-                let ProgressUpdateAndId {
-                    item_spec_id,
-                    progress_update,
-                    msg_update,
-                } = &progress_update_and_id;
-
-                let Some(progress_tracker) = progress_trackers.get_mut(item_spec_id) else {
-                    panic!("Expected `progress_tracker` to exist for item spec: `{item_spec_id}`.");
-                };
-                match progress_update {
-                    ProgressUpdate::Limit(progress_limit) => {
-                        progress_tracker.set_progress_limit(*progress_limit);
-                        progress_tracker.set_progress_status(ProgressStatus::ExecPending);
-                    }
-                    ProgressUpdate::Delta(delta) => {
-                        match delta {
-                            ProgressDelta::Tick => progress_tracker.tick(),
-                            ProgressDelta::Inc(unit_count) => progress_tracker.inc(*unit_count),
-                        }
-                        progress_tracker.set_progress_status(ProgressStatus::Running);
-                    }
-                    ProgressUpdate::Complete(progress_complete) => {
-                        progress_tracker.set_progress_status(ProgressStatus::Complete(
-                            progress_complete.clone(),
-                        ));
-                    }
-                }
-
-                match msg_update {
-                    ProgressMsgUpdate::Clear => progress_tracker.set_message(None),
-                    ProgressMsgUpdate::NoChange => {}
-                    ProgressMsgUpdate::Set(message) => {
-                        progress_tracker.set_message(Some(message.clone()))
-                    }
-                }
-
-                output
-                    .progress_update(progress_tracker, &progress_update_and_id)
-                    .await
-            }
-        };
+        let progress_render_task =
+            crate::progress::Progress::progress_render(output, progress_trackers, progress_rx);
 
         let mut errors = Vec::<(&'static str, ItemSpecId, E)>::new();
         let outcomes_rx_task = async {
@@ -379,50 +331,43 @@ where
             ItemSpecRt::apply_exec
         };
 
+        let item_spec_id = item_spec.id();
+        let op_ctx = OpCtx::new(
+            item_spec_id,
+            #[cfg(feature = "output_progress")]
+            ProgressSender::new(item_spec_id, progress_tx),
+        );
         let item_apply = match apply_for {
-            ApplyFor::Ensure => ItemSpecRt::ensure_prepare(&**item_spec, resources).await,
-            ApplyFor::Clean => ItemSpecRt::clean_prepare(&**item_spec, resources).await,
+            ApplyFor::Ensure => ItemSpecRt::ensure_prepare(&**item_spec, op_ctx, resources).await,
+            ApplyFor::Clean => ItemSpecRt::clean_prepare(&**item_spec, op_ctx, resources).await,
         };
 
         match item_apply {
             Ok(mut item_apply) => {
-                let item_spec_id = item_spec.id();
-                #[cfg(feature = "output_progress")]
-                let progress_sender = {
-                    match item_apply.op_check_status() {
-                        #[cfg(not(feature = "output_progress"))]
-                        OpCheckStatus::ExecRequired => {}
-                        #[cfg(feature = "output_progress")]
-                        OpCheckStatus::ExecRequired { progress_limit } => {
-                            // Update `OutputWrite`s with progress limit.
-                            let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                                item_spec_id: item_spec_id.clone(),
-                                progress_update: ProgressUpdate::Limit(progress_limit),
-                                msg_update: ProgressMsgUpdate::Set(String::from("in progress")),
-                            });
-                        }
-                        OpCheckStatus::ExecNotRequired => {
-                            #[cfg(feature = "output_progress")]
-                            let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                                item_spec_id: item_spec_id.clone(),
-                                progress_update: ProgressUpdate::Complete(
-                                    ProgressComplete::Success,
-                                ),
-                                msg_update: ProgressMsgUpdate::Set(String::from("nothing to do!")),
-                            });
-
-                            // short-circuit
-                            return Ok(());
-                        }
-                    }
-
-                    ProgressSender::new(item_spec_id, progress_tx)
-                };
-                let op_ctx = OpCtx::new(
-                    item_spec_id,
+                match item_apply.op_check_status() {
+                    #[cfg(not(feature = "output_progress"))]
+                    OpCheckStatus::ExecRequired => {}
                     #[cfg(feature = "output_progress")]
-                    progress_sender,
-                );
+                    OpCheckStatus::ExecRequired { progress_limit } => {
+                        // Update `OutputWrite`s with progress limit.
+                        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                            item_spec_id: item_spec_id.clone(),
+                            progress_update: ProgressUpdate::Limit(progress_limit),
+                            msg_update: ProgressMsgUpdate::Set(String::from("in progress")),
+                        });
+                    }
+                    OpCheckStatus::ExecNotRequired => {
+                        #[cfg(feature = "output_progress")]
+                        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                            item_spec_id: item_spec_id.clone(),
+                            progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
+                            msg_update: ProgressMsgUpdate::Set(String::from("nothing to do!")),
+                        });
+
+                        // short-circuit
+                        return Ok(());
+                    }
+                }
                 match apply_fn(&**item_spec, op_ctx, resources, &mut item_apply).await {
                     Ok(()) => {
                         // apply succeeded

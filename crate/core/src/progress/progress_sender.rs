@@ -50,4 +50,13 @@ impl<'op> ProgressSender<'op> {
             msg_update,
         });
     }
+
+    /// Resets the progress tracker to a clean state.
+    pub fn reset(&self) {
+        let _progress_send_unused = self.progress_tx.try_send(ProgressUpdateAndId {
+            item_spec_id: self.item_spec_id.clone(),
+            progress_update: ProgressUpdate::Reset,
+            msg_update: ProgressMsgUpdate::Clear,
+        });
+    }
 }

@@ -28,6 +28,8 @@ use super::ProgressComplete;
 /// [`serde_yaml::with::singleton_map`]: https://docs.rs/serde_yaml/latest/serde_yaml/with/singleton_map/index.html
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ProgressUpdate {
+    /// Resets the progress tracker to a clean state.
+    Reset,
     /// Progress limit has been discovered.
     #[serde(with = "serde_yaml::with::singleton_map")]
     Limit(ProgressLimit),

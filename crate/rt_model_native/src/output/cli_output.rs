@@ -443,6 +443,9 @@ where
                 }
 
                 match &progress_update_and_id.progress_update {
+                    ProgressUpdate::Reset => {
+                        self.progress_bar_style_update(progress_tracker);
+                    }
                     ProgressUpdate::Limit(_progress_limit) => {
                         // Note: `progress_tracker` also carries the `progress_limit`
                         self.progress_bar_style_update(progress_tracker);

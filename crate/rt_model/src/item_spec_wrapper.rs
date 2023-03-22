@@ -710,10 +710,14 @@ where
             Ok(state_current) => item_apply_partial.state_current = Some(state_current),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
+        #[cfg(feature = "output_progress")]
+        op_ctx.progress_sender().reset();
         match self.state_desired_exec(op_ctx, resources).await {
             Ok(state_desired) => item_apply_partial.state_target = Some(state_desired),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
+        #[cfg(feature = "output_progress")]
+        op_ctx.progress_sender().reset();
         match self
             .state_diff_exec_with(
                 resources,

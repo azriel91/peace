@@ -1,6 +1,7 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::stream::{StreamExt, TryStreamExt};
+use peace_cfg::OpCtx;
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
@@ -12,9 +13,22 @@ use peace_resources::{
     states::{ts::Current, StatesCurrent},
     Resources,
 };
-use peace_rt_model::{params::ParamsKeys, Error, Storage};
+use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, Storage};
 
 use crate::BUFFERED_FUTURES_MAX;
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "output_progress")] {
+        use peace_cfg::{
+            progress::{
+                ProgressSender,
+                ProgressUpdateAndId,
+            },
+        };
+        use peace_rt_model::CmdProgressTracker;
+        use tokio::sync::mpsc;
+    }
+}
 
 #[derive(Debug)]
 pub struct StatesCurrentDiscoverCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
@@ -22,6 +36,7 @@ pub struct StatesCurrentDiscoverCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 impl<E, O, PKeys> StatesCurrentDiscoverCmd<E, O, PKeys>
 where
     E: std::error::Error + From<Error> + Send + 'static,
+    O: OutputWrite<E>,
     PKeys: ParamsKeys + 'static,
 {
     /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
@@ -43,28 +58,81 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StatesCurrent, E> {
         let SingleProfileSingleFlowView {
-            flow, resources, ..
+            #[cfg(feature = "output_progress")]
+            output,
+            #[cfg(feature = "output_progress")]
+            cmd_progress_tracker,
+            flow,
+            resources,
+            ..
         } = cmd_ctx.scope_mut().view();
 
-        let resources_ref = &*resources;
-        let states_mut = flow
-            .graph()
-            .stream()
-            .map(Result::<_, E>::Ok)
-            .try_filter_map(|item_spec| async move {
-                let state = item_spec.state_current_try_exec(resources_ref).await?;
-                Ok(state
-                    .map(|state| (item_spec.id().clone(), state))
-                    .map(Result::Ok)
-                    .map(futures::future::ready))
-            })
-            // TODO: do we need this?
-            // If not, we can remove the `Ok` and `future::ready` mappings above.
-            .try_buffer_unordered(BUFFERED_FUTURES_MAX)
-            .try_collect::<StatesMut<Current>>()
-            .await?;
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "output_progress")] {
+                output.progress_begin(cmd_progress_tracker).await;
 
-        let states_current = StatesCurrent::from(states_mut);
+                let CmdProgressTracker {
+                    multi_progress: _,
+                    progress_trackers,
+                } = cmd_progress_tracker;
+
+                let (progress_tx, progress_rx) =
+                    mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
+            }
+        }
+
+        let resources_ref = &*resources;
+        let execution_task = async move {
+            #[cfg(feature = "output_progress")]
+            let progress_tx = &progress_tx;
+
+            let states_mut = flow
+                .graph()
+                .stream()
+                .map(Result::<_, E>::Ok)
+                .try_filter_map(|item_spec| async move {
+                    let item_spec_id = item_spec.id();
+                    let op_ctx = OpCtx::new(
+                        item_spec_id,
+                        #[cfg(feature = "output_progress")]
+                        ProgressSender::new(item_spec_id, progress_tx),
+                    );
+
+                    let state = item_spec
+                        .state_current_try_exec(op_ctx, resources_ref)
+                        .await?;
+                    Ok(state
+                        .map(|state| (item_spec.id().clone(), state))
+                        .map(Result::Ok)
+                        .map(futures::future::ready))
+                })
+                // TODO: do we need this?
+                // If not, we can remove the `Ok` and `future::ready` mappings above.
+                .try_buffer_unordered(BUFFERED_FUTURES_MAX)
+                .try_collect::<StatesMut<Current>>()
+                .await?;
+
+            let states_current = StatesCurrent::from(states_mut);
+            Result::<_, E>::Ok(states_current)
+
+            // `progress_tx` is dropped here, so `progress_rx` will safely end.
+        };
+
+        #[cfg(feature = "output_progress")]
+        let progress_render_task =
+            crate::progress::Progress::progress_render(output, progress_trackers, progress_rx);
+
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "output_progress")] {
+                let (states_current, _) = futures::join!(execution_task, progress_render_task);
+
+                output.progress_end(cmd_progress_tracker).await;
+            } else {
+                let (states_current,) = futures::join!(execution_task);
+            }
+        }
+        let states_current = states_current?;
+
         Self::serialize_internal(resources, &states_current).await?;
 
         Ok(states_current)

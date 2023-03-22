@@ -5,7 +5,7 @@ use peace_resources::{
     resources::ts::SetUp,
     states::{StatesCurrent, StatesDesired},
 };
-use peace_rt_model::{params::ParamsKeys, Error};
+use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error};
 
 use crate::cmds::sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd};
 
@@ -15,6 +15,7 @@ pub struct StatesDiscoverCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 impl<E, O, PKeys> StatesDiscoverCmd<E, O, PKeys>
 where
     E: std::error::Error + From<Error> + Send + 'static,
+    O: OutputWrite<E>,
     PKeys: ParamsKeys + 'static,
 {
     /// Runs [`StateCurrentFnSpec`]` and
