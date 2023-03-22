@@ -1,8 +1,11 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Generated, TryFnSpec};
+use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
 
 use crate::item_specs::peace_aws_s3_object::{S3ObjectData, S3ObjectError, S3ObjectState};
+
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressMsgUpdate;
 
 /// Reads the desired state of the S3 object state.
 #[derive(Debug)]
@@ -18,6 +21,7 @@ where
     type Output = S3ObjectState;
 
     async fn try_exec(
+        op_ctx: OpCtx<'_>,
         s3_object_data: S3ObjectData<'_, Id>,
     ) -> Result<Option<Self::Output>, S3ObjectError> {
         #[cfg(not(target_arch = "wasm32"))]
@@ -37,14 +41,24 @@ where
                 return Ok(None);
             }
         }
-        Self::exec(s3_object_data).await.map(Some)
+        Self::exec(op_ctx, s3_object_data).await.map(Some)
     }
 
-    async fn exec(s3_object_data: S3ObjectData<'_, Id>) -> Result<Self::Output, S3ObjectError> {
-        let params = s3_object_data.params();
+    async fn exec(
+        op_ctx: OpCtx<'_>,
+        data: S3ObjectData<'_, Id>,
+    ) -> Result<Self::Output, S3ObjectError> {
+        let params = data.params();
         let file_path = params.file_path();
         let bucket_name = params.bucket_name().to_string();
         let object_key = params.object_key().to_string();
+
+        #[cfg(not(feature = "output_progress"))]
+        let _op_ctx = op_ctx;
+        #[cfg(feature = "output_progress")]
+        let progress_sender = &op_ctx.progress_sender;
+        #[cfg(feature = "output_progress")]
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from("computing md5 sum")));
 
         #[cfg(not(target_arch = "wasm32"))]
         let content_md5_bytes = {
@@ -78,6 +92,8 @@ where
                 }
             }
         };
+        #[cfg(feature = "output_progress")]
+        progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("md5 sum computed")));
 
         let content_md5_hexstr = content_md5_bytes
             .iter()

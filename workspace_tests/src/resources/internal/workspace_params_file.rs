@@ -26,6 +26,7 @@ pub fn debug() {
 pub fn partial_eq() {
     let workspace_params_file_0 =
         WorkspaceParamsFile::from(Path::new("workspace_params.yaml").to_path_buf());
+    #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
     let workspace_params_file_1 = workspace_params_file_0.clone();
 
     assert_eq!(workspace_params_file_0, workspace_params_file_1);

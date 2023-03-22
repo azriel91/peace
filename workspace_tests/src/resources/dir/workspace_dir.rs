@@ -12,6 +12,7 @@ pub fn debug() {
 #[test]
 pub fn partial_eq() {
     let workspace_dir_0 = WorkspaceDir::from(Path::new(".").to_path_buf());
+    #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
     let workspace_dir_1 = workspace_dir_0.clone();
 
     assert_eq!(workspace_dir_0, workspace_dir_1);

@@ -1,8 +1,11 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, TryFnSpec};
+use peace::cfg::{async_trait, OpCtx, TryFnSpec};
 
 use crate::item_specs::peace_aws_s3_bucket::{S3BucketData, S3BucketError, S3BucketState};
+
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressMsgUpdate;
 
 /// Reads the current state of the S3 bucket state.
 #[derive(Debug)]
@@ -17,20 +20,34 @@ where
     type Error = S3BucketError;
     type Output = S3BucketState;
 
-    async fn try_exec(data: S3BucketData<'_, Id>) -> Result<Option<Self::Output>, S3BucketError> {
-        Self::exec(data).await.map(Some)
+    async fn try_exec(
+        op_ctx: OpCtx<'_>,
+        data: S3BucketData<'_, Id>,
+    ) -> Result<Option<Self::Output>, S3BucketError> {
+        Self::exec(op_ctx, data).await.map(Some)
     }
 
-    async fn exec(data: S3BucketData<'_, Id>) -> Result<Self::Output, S3BucketError> {
+    async fn exec(
+        op_ctx: OpCtx<'_>,
+        data: S3BucketData<'_, Id>,
+    ) -> Result<Self::Output, S3BucketError> {
         let client = data.client();
         let name = data.params().name();
 
+        #[cfg(not(feature = "output_progress"))]
+        let _op_ctx = op_ctx;
+        #[cfg(feature = "output_progress")]
+        let progress_sender = &op_ctx.progress_sender;
+        #[cfg(feature = "output_progress")]
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from("listing buckets")));
         let list_buckets_output = client.list_buckets().send().await.map_err(|error| {
             S3BucketError::S3BucketListError {
                 s3_bucket_name: name.to_string(),
                 error,
             }
         })?;
+        #[cfg(feature = "output_progress")]
+        progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("finding bucket")));
         let s3_bucket_exists = list_buckets_output
             .buckets()
             .and_then(|buckets| {
@@ -39,6 +56,15 @@ where
                 })
             })
             .is_some();
+        #[cfg(feature = "output_progress")]
+        {
+            let message = if s3_bucket_exists {
+                "bucket found"
+            } else {
+                "bucket not found"
+            };
+            progress_sender.inc(1, ProgressMsgUpdate::Set(String::from(message)));
+        }
 
         // let head_bucket_result = client.head_bucket().bucket(name).send().await;
         // let s3_bucket_exists = match head_bucket_result {

@@ -9,6 +9,8 @@
 * Add icons to CLI progress bars. ([#102], [#103])
 * Add elapsed / ETA time to CLI progress bars. ([#102], [#103])
 * Display messages in CLI progress bars. ([#102], [#103])
+* Display progress bars during state discovery. ([#100], [#104])
+* Clear progress bars on command end. ([#100], [#104])
 
 [#94]: https://github.com/azriel91/peace/issues/94
 [#95]: https://github.com/azriel91/peace/pull/95
@@ -16,6 +18,8 @@
 [#99]: https://github.com/azriel91/peace/pull/99
 [#102]: https://github.com/azriel91/peace/issues/102
 [#103]: https://github.com/azriel91/peace/pull/103
+[#100]: https://github.com/azriel91/peace/issues/100
+[#104]: https://github.com/azriel91/peace/pull/104
 
 
 ## 0.0.7 (2023-03-06)

@@ -6,7 +6,7 @@ use crate::{
 };
 
 /// Submits progress for an item spec's `ApplyOpSpec::exec` method.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct ProgressSender<'op> {
     /// ID of the item spec this belongs to.
     item_spec_id: &'op ItemSpecId,
@@ -48,6 +48,15 @@ impl<'op> ProgressSender<'op> {
             item_spec_id: self.item_spec_id.clone(),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
             msg_update,
+        });
+    }
+
+    /// Resets the progress tracker to a clean state.
+    pub fn reset(&self) {
+        let _progress_send_unused = self.progress_tx.try_send(ProgressUpdateAndId {
+            item_spec_id: self.item_spec_id.clone(),
+            progress_update: ProgressUpdate::Reset,
+            msg_update: ProgressMsgUpdate::Clear,
         });
     }
 }

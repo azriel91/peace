@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, path::Path};
 
-use peace::cfg::{async_trait, TryFnSpec};
+use peace::cfg::{async_trait, OpCtx, TryFnSpec};
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
 
@@ -10,7 +10,10 @@ pub struct TarXStateCurrentFnSpec<Id>(PhantomData<Id>);
 
 impl<Id> TarXStateCurrentFnSpec<Id> {
     #[cfg(not(target_arch = "wasm32"))]
-    pub async fn files_extracted(dest: &Path) -> Result<Vec<FileMetadata>, TarXError> {
+    pub async fn files_extracted(
+        _op_ctx: OpCtx<'_>,
+        dest: &Path,
+    ) -> Result<Vec<FileMetadata>, TarXError> {
         use std::time::UNIX_EPOCH;
 
         use futures::stream::TryStreamExt;
@@ -98,6 +101,7 @@ impl<Id> TarXStateCurrentFnSpec<Id> {
 
     #[cfg(target_arch = "wasm32")]
     fn files_extracted(
+        _op_ctx: OpCtx<'_>,
         _storage: &peace::rt_model::Storage,
         _dest: &Path,
     ) -> Result<Vec<FileMetadata>, TarXError> {
@@ -114,18 +118,24 @@ where
     type Error = TarXError;
     type Output = FileMetadatas;
 
-    async fn try_exec(tar_x_data: TarXData<'_, Id>) -> Result<Option<Self::Output>, TarXError> {
-        Self::exec(tar_x_data).await.map(Some)
+    async fn try_exec(
+        op_ctx: OpCtx<'_>,
+        tar_x_data: TarXData<'_, Id>,
+    ) -> Result<Option<Self::Output>, TarXError> {
+        Self::exec(op_ctx, tar_x_data).await.map(Some)
     }
 
-    async fn exec(tar_x_data: TarXData<'_, Id>) -> Result<Self::Output, TarXError> {
+    async fn exec(
+        op_ctx: OpCtx<'_>,
+        tar_x_data: TarXData<'_, Id>,
+    ) -> Result<Self::Output, TarXError> {
         let tar_x_params = tar_x_data.tar_x_params();
         let dest = tar_x_params.dest();
 
         #[cfg(not(target_arch = "wasm32"))]
-        let files_extracted = Self::files_extracted(dest).await?;
+        let files_extracted = Self::files_extracted(op_ctx, dest).await?;
         #[cfg(target_arch = "wasm32")]
-        let files_extracted = Self::files_extracted(tar_x_data.storage(), dest)?;
+        let files_extracted = Self::files_extracted(op_ctx, tar_x_data.storage(), dest)?;
 
         let dest_files = FileMetadatas::from(files_extracted);
 

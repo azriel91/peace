@@ -26,6 +26,7 @@ pub fn debug() {
 pub fn partial_eq() {
     let profile_params_file_0 =
         ProfileParamsFile::from(Path::new("profile_params.yaml").to_path_buf());
+    #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
     let profile_params_file_1 = profile_params_file_0.clone();
 
     assert_eq!(profile_params_file_0, profile_params_file_1);

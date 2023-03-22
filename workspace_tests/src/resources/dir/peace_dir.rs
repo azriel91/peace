@@ -12,6 +12,7 @@ pub fn debug() {
 #[test]
 pub fn partial_eq() {
     let peace_dir_0 = PeaceDir::from(Path::new(".").to_path_buf());
+    #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
     let peace_dir_1 = peace_dir_0.clone();
 
     assert_eq!(peace_dir_0, peace_dir_1);

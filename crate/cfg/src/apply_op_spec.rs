@@ -142,7 +142,7 @@ pub trait ApplyOpSpec {
     /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     /// [`State`]: Self::State
     async fn exec_dry(
-        ctx: OpCtx<'_>,
+        op_ctx: OpCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,
@@ -171,7 +171,7 @@ pub trait ApplyOpSpec {
     /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     /// [`State`]: Self::State
     async fn exec(
-        ctx: OpCtx<'_>,
+        op_ctx: OpCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,

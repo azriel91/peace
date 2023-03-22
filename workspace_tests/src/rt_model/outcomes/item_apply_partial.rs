@@ -108,6 +108,7 @@ fn item_apply_rt_as_data_type_returns_self() -> Result<(), Box<dyn std::error::E
         op_check_status: Some(OpCheckStatus::ExecNotRequired),
     };
 
+    #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
     let item_apply_partial_clone = item_apply_partial.clone();
     let data_type = ItemApplyPartialRt::as_data_type(&item_apply_partial_clone);
 

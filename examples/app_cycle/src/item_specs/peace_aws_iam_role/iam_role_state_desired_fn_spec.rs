@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Generated, TryFnSpec};
+use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
 
 use crate::item_specs::peace_aws_iam_role::{
     model::ManagedPolicyAttachment, IamRoleData, IamRoleError, IamRoleState,
@@ -19,16 +19,22 @@ where
     type Error = IamRoleError;
     type Output = IamRoleState;
 
-    async fn try_exec(data: IamRoleData<'_, Id>) -> Result<Option<Self::Output>, IamRoleError> {
+    async fn try_exec(
+        op_ctx: OpCtx<'_>,
+        data: IamRoleData<'_, Id>,
+    ) -> Result<Option<Self::Output>, IamRoleError> {
         // Hack: Remove this when referential param values is implemented.
         if data.managed_policy_arn().is_none() {
             return Ok(None);
         }
 
-        Self::exec(data).await.map(Some)
+        Self::exec(op_ctx, data).await.map(Some)
     }
 
-    async fn exec(data: IamRoleData<'_, Id>) -> Result<Self::Output, IamRoleError> {
+    async fn exec(
+        _op_ctx: OpCtx<'_>,
+        data: IamRoleData<'_, Id>,
+    ) -> Result<Self::Output, IamRoleError> {
         let params = data.params();
         let name = params.name().to_string();
         let path = params.path().to_string();

@@ -1,7 +1,7 @@
 use std::{io::Read, marker::PhantomData, path::Path};
 
 use peace::{
-    cfg::{async_trait, TryFnSpec},
+    cfg::{async_trait, OpCtx, TryFnSpec},
     rt_model::Storage,
 };
 use tar::Archive;
@@ -99,7 +99,10 @@ where
     type Error = TarXError;
     type Output = FileMetadatas;
 
-    async fn try_exec(tar_x_data: TarXData<'_, Id>) -> Result<Option<Self::Output>, TarXError> {
+    async fn try_exec(
+        op_ctx: OpCtx<'_>,
+        tar_x_data: TarXData<'_, Id>,
+    ) -> Result<Option<Self::Output>, TarXError> {
         #[cfg(not(target_arch = "wasm32"))]
         let tar_file_exists = tar_x_data.tar_x_params().tar_path().exists();
         #[cfg(target_arch = "wasm32")]
@@ -110,13 +113,16 @@ where
         };
 
         if tar_file_exists {
-            Self::exec(tar_x_data).await.map(Some)
+            Self::exec(op_ctx, tar_x_data).await.map(Some)
         } else {
             Ok(None)
         }
     }
 
-    async fn exec(tar_x_data: TarXData<'_, Id>) -> Result<Self::Output, TarXError> {
+    async fn exec(
+        _op_ctx: OpCtx<'_>,
+        tar_x_data: TarXData<'_, Id>,
+    ) -> Result<Self::Output, TarXError> {
         let tar_x_params = tar_x_data.tar_x_params();
         let storage = tar_x_data.storage();
         let tar_path = tar_x_params.tar_path();

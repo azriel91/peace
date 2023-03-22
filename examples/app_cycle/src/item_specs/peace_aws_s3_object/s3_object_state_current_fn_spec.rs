@@ -2,9 +2,12 @@ use std::marker::PhantomData;
 
 use aws_sdk_iam::types::SdkError;
 use aws_sdk_s3::error::HeadObjectErrorKind;
-use peace::cfg::{async_trait, state::Generated, TryFnSpec};
+use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
 
 use crate::item_specs::peace_aws_s3_object::{S3ObjectData, S3ObjectError, S3ObjectState};
+
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::ProgressMsgUpdate;
 
 /// Reads the current state of the S3 object state.
 #[derive(Debug)]
@@ -19,15 +22,29 @@ where
     type Error = S3ObjectError;
     type Output = S3ObjectState;
 
-    async fn try_exec(data: S3ObjectData<'_, Id>) -> Result<Option<Self::Output>, S3ObjectError> {
-        Self::exec(data).await.map(Some)
+    async fn try_exec(
+        op_ctx: OpCtx<'_>,
+        data: S3ObjectData<'_, Id>,
+    ) -> Result<Option<Self::Output>, S3ObjectError> {
+        Self::exec(op_ctx, data).await.map(Some)
     }
 
-    async fn exec(data: S3ObjectData<'_, Id>) -> Result<Self::Output, S3ObjectError> {
+    async fn exec(
+        op_ctx: OpCtx<'_>,
+        data: S3ObjectData<'_, Id>,
+    ) -> Result<Self::Output, S3ObjectError> {
         let client = data.client();
         let bucket_name = data.params().bucket_name();
         let object_key = data.params().object_key();
 
+        #[cfg(not(feature = "output_progress"))]
+        let _op_ctx = op_ctx;
+        #[cfg(feature = "output_progress")]
+        let progress_sender = &op_ctx.progress_sender;
+        #[cfg(feature = "output_progress")]
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+            "fetching object metadata",
+        )));
         let head_object_result = client
             .head_object()
             .bucket(bucket_name)
@@ -36,6 +53,11 @@ where
             .await;
         let content_md5_and_e_tag = match head_object_result {
             Ok(head_object_output) => {
+                #[cfg(feature = "output_progress")]
+                progress_sender.inc(
+                    1,
+                    ProgressMsgUpdate::Set(String::from("object metadata fetched")),
+                );
                 let content_md5_hexstr = head_object_output
                     .metadata()
                     .and_then(|metadata| metadata.get("content_md5_hexstr"))
@@ -49,23 +71,30 @@ where
 
                 Some((content_md5_hexstr, e_tag))
             }
-            Err(error) => match &error {
-                SdkError::ServiceError(service_error) => match service_error.err().kind {
-                    HeadObjectErrorKind::NotFound(_) => None,
+            Err(error) => {
+                #[cfg(feature = "output_progress")]
+                progress_sender.inc(
+                    1,
+                    ProgressMsgUpdate::Set(String::from("object metadata not fetched")),
+                );
+                match &error {
+                    SdkError::ServiceError(service_error) => match service_error.err().kind {
+                        HeadObjectErrorKind::NotFound(_) => None,
+                        _ => {
+                            return Err(S3ObjectError::S3ObjectGetError {
+                                object_key: object_key.to_string(),
+                                error,
+                            });
+                        }
+                    },
                     _ => {
                         return Err(S3ObjectError::S3ObjectGetError {
                             object_key: object_key.to_string(),
                             error,
                         });
                     }
-                },
-                _ => {
-                    return Err(S3ObjectError::S3ObjectGetError {
-                        object_key: object_key.to_string(),
-                        error,
-                    });
                 }
-            },
+            }
         };
 
         if let Some((content_md5_hexstr, e_tag)) = content_md5_and_e_tag {

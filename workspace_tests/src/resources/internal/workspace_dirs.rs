@@ -32,6 +32,7 @@ fn clone() {
 
     let workspace_dirs_0 = WorkspaceDirs::new(workspace_dir, peace_dir, peace_app_dir);
 
+    #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
     let workspace_dirs_1 = workspace_dirs_0.clone();
 
     assert_eq!(workspace_dirs_0, workspace_dirs_1);

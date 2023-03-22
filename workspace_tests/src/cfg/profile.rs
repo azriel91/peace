@@ -101,6 +101,7 @@ async fn present_uses_tag() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn clone() -> Result<(), ProfileInvalidFmt<'static>> {
     let profile_name_0 = Profile::new("profile_name")?;
+    #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
     let profile_name_1 = profile_name_0.clone();
 
     assert_eq!(profile_name_0, profile_name_1);

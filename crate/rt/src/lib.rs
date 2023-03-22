@@ -6,4 +6,11 @@
 /// suitable number is.
 pub const BUFFERED_FUTURES_MAX: usize = 64;
 
+#[cfg(feature = "output_progress")]
+/// Maximum number of progress messages to buffer.
+pub const PROGRESS_COUNT_MAX: usize = 256;
+
 pub mod cmds;
+
+#[cfg(feature = "output_progress")]
+pub(crate) mod progress;

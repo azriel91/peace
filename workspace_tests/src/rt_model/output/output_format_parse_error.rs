@@ -25,6 +25,7 @@ fn display_includes_text_yaml_when_json_feature_is_enabled() {
 #[test]
 fn clone() {
     let error = OutputFormatParseError("rara".to_string());
+    #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
     let error_clone = error.clone();
 
     assert_eq!(error, error_clone);

@@ -3,6 +3,7 @@ use peace::cfg::progress::{ProgressComplete, ProgressDelta, ProgressLimit, Progr
 #[test]
 fn clone() {
     let progress_update_0 = ProgressUpdate::Delta(ProgressDelta::Tick);
+    #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
     let progress_update_1 = progress_update_0.clone();
 
     assert_eq!(progress_update_0, progress_update_1);

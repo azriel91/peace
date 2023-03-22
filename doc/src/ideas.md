@@ -165,6 +165,7 @@ See the [`is_shutdown_requested`] method in particular.
 6. Blank item spec needs a lot of rework to be easier to implement an item spec. ([67], [#96])
 7. For `ApplyCmd`, collect `StateCurrent`, `StateDesired`, `StateDiff` in execution report.
 8. AWS errors' `code` and `message` should be shown to the user.
+9. Progress limit should not be returned in `ApplyOpSpec::check`, but sent through `progress_sender.limit(ProgressLimit)`. This simplifies `check`, and allows state current/desired discovery to set the limits easily.
 
 [#67]: https://github.com/azriel91/peace/issues/67
 [#94]: https://github.com/azriel91/peace/issues/94
