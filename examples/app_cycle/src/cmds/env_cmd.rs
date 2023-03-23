@@ -46,7 +46,6 @@ impl EnvCmd {
                 >,
             >,
         ) -> LocalBoxFuture<'fn_once, Result<T, AppCycleError>>,
-        T: Presentable,
     {
         cmd_ctx_init!(output, cmd_ctx);
 

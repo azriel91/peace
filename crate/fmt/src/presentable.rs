@@ -1,5 +1,6 @@
 pub use self::{
     bold::Bold, code_inline::CodeInline, heading::Heading, heading_level::HeadingLevel,
+    list_numbered::ListNumbered,
 };
 
 use serde::Serialize;
@@ -10,13 +11,15 @@ mod bold;
 mod code_inline;
 mod heading;
 mod heading_level;
+mod list_numbered;
 mod tuple_impl;
 
 /// A type that is presentable to a user.
 ///
-/// This is analogous to `std::fmt::Display`, with the difference that instead
-/// of formatting an unstyled string, implementations register how they are
-/// presented with a [`Presenter`].
+/// This is analogous in concept to `std::fmt::Display`, and in implementation
+/// to `std::fmt::Debug`, with the difference that instead of formatting an
+/// unstyled string, implementations register how they are presented with a
+/// [`Presenter`].
 ///
 /// # Implementors
 ///
@@ -69,6 +72,12 @@ mod tuple_impl;
 /// ```
 ///
 /// # Design
+///
+/// `Presentable` implies `Serialize` because it is beneficial for anything that
+/// is presented to the user, to be able to be stored, so that it can be
+/// re-presented to them at a later time. However, it currently doesn't imply
+/// `DeserializeOwned`, which may mean the serialization half may not be
+/// worthwhile, and `Presentable` wrapper types may just wrap borrowed data.
 ///
 /// Previously, this was implemented as `Presentable: Serialize +
 /// OwnedDeserialize`, with `OwnedDeserialize` being the following trait:
