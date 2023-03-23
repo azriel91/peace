@@ -32,9 +32,9 @@ where
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
-    async fn present<P>(&mut self, _presentable: &P) -> Result<(), E>
+    async fn present<P>(&mut self, _presentable: P) -> Result<(), E>
     where
-        P: Presentable + ?Sized,
+        P: Presentable,
     {
         Ok(())
     }

@@ -1,4 +1,4 @@
-use peace::fmt::{async_trait, Presentable, Presenter};
+use peace::fmt::{async_trait, presentable::HeadingLevel, Presentable, Presenter};
 
 use crate::{fn_name::fn_name_short, FnInvocation};
 
@@ -27,6 +27,21 @@ impl FnTrackerPresenter {
 impl Presenter<'static> for FnTrackerPresenter {
     type Error = std::io::Error;
 
+    async fn heading<P>(
+        &mut self,
+        heading_level: HeadingLevel,
+        _presentable: &P,
+    ) -> Result<(), Self::Error>
+    where
+        P: Presentable + ?Sized,
+    {
+        self.fn_invocations.push(FnInvocation::new(
+            fn_name_short!(),
+            vec![Some(format!("{heading_level:?}")), None],
+        ));
+        Ok(())
+    }
+
     async fn id(&mut self, id: &str) -> Result<(), Self::Error> {
         self.fn_invocations.push(FnInvocation::new(
             fn_name_short!(),
@@ -48,6 +63,15 @@ impl Presenter<'static> for FnTrackerPresenter {
             fn_name_short!(),
             vec![Some(format!("{text:?}"))],
         ));
+        Ok(())
+    }
+
+    async fn bold<P>(&mut self, _presentable: &P) -> Result<(), Self::Error>
+    where
+        P: Presentable + ?Sized,
+    {
+        self.fn_invocations
+            .push(FnInvocation::new(fn_name_short!(), vec![None]));
         Ok(())
     }
 

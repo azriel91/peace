@@ -1,10 +1,15 @@
-pub use self::code_inline::CodeInline;
+pub use self::{
+    bold::Bold, code_inline::CodeInline, heading::Heading, heading_level::HeadingLevel,
+};
 
 use serde::Serialize;
 
 use crate::Presenter;
 
+mod bold;
 mod code_inline;
+mod heading;
+mod heading_level;
 mod tuple_impl;
 
 /// A type that is presentable to a user.
@@ -112,7 +117,7 @@ where
 }
 
 #[async_trait::async_trait(?Send)]
-impl Presentable for str {
+impl Presentable for &str {
     async fn present<'output, PR>(&self, presenter: &mut PR) -> Result<(), PR::Error>
     where
         PR: Presenter<'output>,

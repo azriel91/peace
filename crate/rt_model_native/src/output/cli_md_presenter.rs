@@ -1,4 +1,4 @@
-use peace_fmt::{async_trait, Presentable, Presenter};
+use peace_fmt::{async_trait, presentable::HeadingLevel, Presentable, Presenter};
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 
 #[cfg(feature = "output_colorized")]
@@ -10,7 +10,11 @@ use crate::output::CliOutput;
 /// Formats `Presentable` data as markdown on the CLI.
 #[derive(Debug)]
 pub struct CliMdPresenter<'output, W> {
+    /// The CLI output to write to.
     output: &'output mut CliOutput<W>,
+    /// Whether to render text in ANSI bold.
+    #[cfg(feature = "output_colorized")]
+    cli_bold: CliBold,
 }
 
 impl<'output, W> CliMdPresenter<'output, W>
@@ -23,7 +27,11 @@ where
     ///
     /// * `output`: Output to write to.
     pub fn new(output: &'output mut CliOutput<W>) -> Self {
-        Self { output }
+        Self {
+            output,
+            #[cfg(feature = "output_colorized")]
+            cli_bold: CliBold::default(),
+        }
     }
 
     #[cfg(feature = "output_colorized")]
@@ -37,9 +45,16 @@ where
 
         if colorize == CliColorize::Colored {
             let s_colorized = style.apply_to(s);
-            writer
-                .write_all(format!("{s_colorized}").as_bytes())
-                .await?;
+            if self.cli_bold.is_bold() {
+                let s_colorized_bolded = s_colorized.bold();
+                writer
+                    .write_all(format!("{s_colorized_bolded}").as_bytes())
+                    .await?;
+            } else {
+                writer
+                    .write_all(format!("{s_colorized}").as_bytes())
+                    .await?;
+            }
         } else {
             writer.write_all(s.as_bytes()).await?;
         }
@@ -99,6 +114,65 @@ where
 {
     type Error = std::io::Error;
 
+    #[cfg(not(feature = "output_colorized"))]
+    async fn heading<P>(
+        &mut self,
+        heading_level: HeadingLevel,
+        presentable: &P,
+    ) -> Result<(), Self::Error>
+    where
+        P: Presentable + ?Sized,
+    {
+        let leading_hashes = match heading_level {
+            HeadingLevel::Level1 => "# ",
+            HeadingLevel::Level2 => "## ",
+            HeadingLevel::Level3 => "### ",
+            HeadingLevel::Level4 => "#### ",
+            HeadingLevel::Level5 => "##### ",
+            HeadingLevel::Level6 => "###### ",
+        };
+
+        self.output
+            .writer
+            .write_all(leading_hashes.as_bytes())
+            .await?;
+        presentable.present(self).await?;
+        self.output.writer.write_all(b"\n\n").await?;
+
+        Ok(())
+    }
+
+    #[cfg(feature = "output_colorized")]
+    async fn heading<P>(
+        &mut self,
+        heading_level: HeadingLevel,
+        presentable: &P,
+    ) -> Result<(), Self::Error>
+    where
+        P: Presentable + ?Sized,
+    {
+        let hash_style = &console::Style::new().bold().color256(243); // grey;
+        let leading_hashes = match heading_level {
+            HeadingLevel::Level1 => "#",
+            HeadingLevel::Level2 => "##",
+            HeadingLevel::Level3 => "###",
+            HeadingLevel::Level4 => "####",
+            HeadingLevel::Level5 => "#####",
+            HeadingLevel::Level6 => "######",
+        };
+
+        self.cli_bold.increment();
+        self.colorize_maybe(leading_hashes, hash_style).await?;
+        self.output.writer.write_all(b" ").await?;
+        presentable.present(self).await?;
+
+        self.cli_bold.decrement();
+
+        self.output.writer.write_all(b"\n\n").await?;
+
+        Ok(())
+    }
+
     #[cfg(feature = "output_colorized")]
     async fn id(&mut self, id: &str) -> Result<(), Self::Error> {
         let style = console::Style::new().color256(75); // blue
@@ -131,7 +205,29 @@ where
     }
 
     async fn text(&mut self, text: &str) -> Result<(), Self::Error> {
+        #[cfg(not(feature = "output_colorized"))]
         self.output.writer.write_all(text.as_bytes()).await?;
+        #[cfg(feature = "output_colorized")]
+        {
+            let style = console::Style::new();
+            self.colorize_maybe(text, &style).await?;
+        }
+
+        Ok(())
+    }
+
+    async fn bold<P>(&mut self, presentable: &P) -> Result<(), Self::Error>
+    where
+        P: Presentable + ?Sized,
+    {
+        #[cfg(feature = "output_colorized")]
+        self.cli_bold.increment();
+        self.output.writer.write_all(b"**").await?;
+        presentable.present(self).await?;
+        self.output.writer.write_all(b"**").await?;
+        #[cfg(feature = "output_colorized")]
+        self.cli_bold.decrement();
+
         Ok(())
     }
 
@@ -146,9 +242,9 @@ where
 
     #[cfg(not(feature = "output_colorized"))]
     async fn tag(&mut self, tag: &str) -> Result<(), Self::Error> {
-        self.output.writer.write_all(b"\xE2\xA6\x97").await?;
+        self.output.writer.write_all(b"\xE2\xA6\x97").await?; // byte sequence for ⦗
         self.output.writer.write_all(tag.as_bytes()).await?;
-        self.output.writer.write_all(b"\xE2\xA6\x98").await?;
+        self.output.writer.write_all(b"\xE2\xA6\x98").await?; // byte sequence for ⦘
 
         Ok(())
     }
@@ -285,5 +381,26 @@ where
         }
 
         Ok(())
+    }
+}
+
+/// Whether to render text in ANSI bold.
+#[cfg(feature = "output_colorized")]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct CliBold(u32);
+
+#[cfg(feature = "output_colorized")]
+impl CliBold {
+    /// Returns whether the CLI text should be rendered as bold.
+    fn is_bold(self) -> bool {
+        self.0 > 0
+    }
+
+    fn increment(&mut self) {
+        self.0 = self.0.saturating_add(1);
+    }
+
+    fn decrement(&mut self) {
+        self.0 = self.0.saturating_sub(1);
     }
 }

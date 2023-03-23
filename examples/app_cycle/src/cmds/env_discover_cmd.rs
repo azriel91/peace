@@ -1,5 +1,9 @@
 use futures::FutureExt;
-use peace::{rt::cmds::StatesDiscoverCmd, rt_model::output::OutputWrite};
+use peace::{
+    fmt::presentable::{Heading, HeadingLevel},
+    rt::cmds::StatesDiscoverCmd,
+    rt_model::output::OutputWrite,
+};
 
 use crate::{cmds::EnvCmd, model::AppCycleError};
 
@@ -20,6 +24,19 @@ impl EnvDiscoverCmd {
     where
         O: OutputWrite<AppCycleError> + Send,
     {
-        EnvCmd::run_and_present(output, |ctx| StatesDiscoverCmd::exec(ctx).boxed_local()).await
+        let (states_current, states_desired) =
+            EnvCmd::run(output, |ctx| StatesDiscoverCmd::exec(ctx).boxed_local()).await?;
+
+        output
+            .present(&(
+                Heading::new(HeadingLevel::Level1, "States Current"),
+                &states_current,
+                "\n",
+                Heading::new(HeadingLevel::Level1, "States Desired"),
+                &states_desired,
+                "\n",
+            ))
+            .await?;
+        Ok(())
     }
 }

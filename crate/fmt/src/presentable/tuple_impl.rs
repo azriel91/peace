@@ -32,18 +32,6 @@ macro_rules! tuple_presentable_impl {
     };
 }
 
-// Generated using the following script on ZSH:
-//
-// ```bash
-// for i in {1..15}; do
-//     printf 'tuple_presentable_impl!((T0'
-//     for j in {1..$i}; do printf ', T%d' $j; done
-//     printf '), [0'
-//     for j in {1..$i}; do printf ', %d' $j; done
-//     printf ']);\n'
-// done
-// ```
-
 tuple_presentable_impl!((T0, T1), [0, 1]);
 tuple_presentable_impl!((T0, T1, T2), [0, 1, 2]);
 tuple_presentable_impl!((T0, T1, T2, T3), [0, 1, 2, 3]);

@@ -160,10 +160,10 @@ where
         self.progress_format
     }
 
-    async fn output_presentable<E, P>(&mut self, presentable: &P) -> Result<(), E>
+    async fn output_presentable<E, P>(&mut self, presentable: P) -> Result<(), E>
     where
         E: std::error::Error + From<Error>,
-        P: Presentable + ?Sized,
+        P: Presentable,
     {
         let presenter = &mut CliMdPresenter::new(self);
         presentable
@@ -505,16 +505,16 @@ where
         let _result = cmd_progress_tracker.multi_progress.clear();
     }
 
-    async fn present<P>(&mut self, presentable: &P) -> Result<(), E>
+    async fn present<P>(&mut self, presentable: P) -> Result<(), E>
     where
-        P: Presentable + ?Sized,
+        P: Presentable,
     {
         match self.outcome_format {
             OutputFormat::Text => self.output_presentable(presentable).await,
-            OutputFormat::Yaml => self.output_yaml(presentable, Error::StatesSerialize).await,
+            OutputFormat::Yaml => self.output_yaml(&presentable, Error::StatesSerialize).await,
             #[cfg(feature = "output_json")]
             OutputFormat::Json => {
-                self.output_json(presentable, Error::StatesSerializeJson)
+                self.output_json(&presentable, Error::StatesSerializeJson)
                     .await
             }
         }
