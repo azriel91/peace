@@ -25,7 +25,7 @@ impl EnvDiscoverCmd {
     where
         O: OutputWrite<AppCycleError> + Send,
     {
-        EnvCmd::run(output, |ctx| {
+        EnvCmd::run(output, true, |ctx| {
             async {
                 let (states_current, states_desired) = StatesDiscoverCmd::exec(ctx).await?;
                 let states_current_raw_map = &**states_current;

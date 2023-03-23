@@ -23,9 +23,11 @@ impl EnvDeployCmd {
     where
         O: OutputWrite<AppCycleError> + Send,
     {
-        let states_saved =
-            EnvCmd::run(output, |ctx| StatesSavedReadCmd::exec(ctx).boxed_local()).await?;
-        EnvCmd::run_and_present(output, |ctx| {
+        let states_saved = EnvCmd::run(output, true, |ctx| {
+            StatesSavedReadCmd::exec(ctx).boxed_local()
+        })
+        .await?;
+        EnvCmd::run_and_present(output, false, |ctx| {
             async move {
                 let states_saved_ref = &states_saved;
                 EnsureCmd::exec(ctx, states_saved_ref).await

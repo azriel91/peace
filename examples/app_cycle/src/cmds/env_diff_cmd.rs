@@ -1,5 +1,10 @@
 use futures::FutureExt;
-use peace::{rt::cmds::DiffCmd, rt_model::output::OutputWrite};
+use peace::{
+    cmd::scopes::SingleProfileSingleFlowView,
+    fmt::presentable::{Heading, HeadingLevel, ListNumbered},
+    rt::cmds::DiffCmd,
+    rt_model::output::OutputWrite,
+};
 
 use crate::{cmds::EnvCmd, model::AppCycleError};
 
@@ -20,6 +25,40 @@ impl EnvDiffCmd {
     where
         O: OutputWrite<AppCycleError> + Send,
     {
-        EnvCmd::run_and_present(output, |ctx| DiffCmd::exec(ctx).boxed_local()).await
+        EnvCmd::run(output, true, |ctx| {
+            async {
+                let state_diffs = DiffCmd::exec(ctx).await?;
+                let state_diffs_raw_map = &**state_diffs;
+
+                let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
+                let state_diffs_presentables = {
+                    let state_diffs_presentables = flow
+                        .graph()
+                        .iter_insertion()
+                        .map(|item_spec| {
+                            let item_spec_id = item_spec.id();
+                            match state_diffs_raw_map.get(item_spec_id) {
+                                Some(state_current) => (item_spec_id, format!(": {state_current}")),
+                                None => (item_spec_id, String::from(": <unknown>")),
+                            }
+                        })
+                        .collect::<Vec<_>>();
+
+                    ListNumbered::new(state_diffs_presentables)
+                };
+
+                output
+                    .present(&(
+                        Heading::new(HeadingLevel::Level1, "State Diffs"),
+                        state_diffs_presentables,
+                        "\n",
+                    ))
+                    .await?;
+
+                Ok(())
+            }
+            .boxed_local()
+        })
+        .await
     }
 }
