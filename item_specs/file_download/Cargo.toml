@@ -1,6 +1,6 @@
 [package]
 name = "peace_item_spec_file_download"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
 description = "Manages downloading a file for the peace framework"
@@ -20,7 +20,7 @@ bytes = "1.4.0"
 cfg-if = { workspace = true }
 futures = "0.3.27"
 miette = { workspace = true, optional = true }
-peace = { path = "../..", version = "0.0.7", default-features = false }
+peace = { path = "../..", version = "0.0.8", default-features = false }
 reqwest = { version = "0.11.14", features = ["stream"] }
 serde = { version = "1.0.155", features = ["derive"] }
 thiserror = "1.0.39"
