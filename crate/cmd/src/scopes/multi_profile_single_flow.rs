@@ -10,7 +10,7 @@ use peace_rt_model::{
         FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
         WorkspaceParams,
     },
-    Flow, StatesTypeRegs, Workspace,
+    Flow, StatesTypeReg, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -110,7 +110,7 @@ where
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
-    states_type_regs: StatesTypeRegs,
+    states_type_reg: StatesTypeReg,
     /// Saved states for each profile for the selected flow.
     profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
 }
@@ -139,7 +139,7 @@ where
             Profile,
             FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
         >,
-        states_type_regs: StatesTypeRegs,
+        states_type_reg: StatesTypeReg,
         profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
     ) -> Self {
         Self {
@@ -154,7 +154,7 @@ where
             workspace_params,
             profile_to_profile_params,
             profile_to_flow_params,
-            states_type_regs,
+            states_type_reg,
             profile_to_states_saved,
         }
     }
@@ -232,8 +232,8 @@ where
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
-    pub fn states_type_regs(&self) -> &StatesTypeRegs {
-        &self.states_type_regs
+    pub fn states_type_reg(&self) -> &StatesTypeReg {
+        &self.states_type_reg
     }
 
     /// Returns the saved states for each profile for the selected flow.

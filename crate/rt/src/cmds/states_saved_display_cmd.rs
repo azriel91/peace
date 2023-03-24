@@ -32,14 +32,14 @@ where
     ) -> Result<StatesSaved, E> {
         let SingleProfileSingleFlowView {
             output,
-            states_type_regs,
+            states_type_reg,
             resources,
             ..
         } = cmd_ctx.view();
 
         let states_saved_result = StatesSavedReadCmd::<E, O, PKeys>::deserialize_internal(
             resources,
-            states_type_regs.states_current_type_reg(),
+            &states_type_reg,
         )
         .await;
 

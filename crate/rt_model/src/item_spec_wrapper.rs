@@ -20,7 +20,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     outcomes::{ItemApply, ItemApplyBoxed, ItemApplyPartial, ItemApplyPartialBoxed},
-    ItemSpecRt, StatesTypeRegs,
+    ItemSpecRt, StatesTypeReg,
 };
 
 /// Wraps a type implementing [`ItemSpec`].
@@ -614,13 +614,8 @@ where
             .map_err(Into::<E>::into)
     }
 
-    fn state_register(&self, states_type_regs: &mut StatesTypeRegs) {
-        states_type_regs
-            .states_current_type_reg_mut()
-            .register::<State>(<IS as ItemSpec>::id(self).clone());
-
-        states_type_regs
-            .states_desired_type_reg_mut()
+    fn state_register(&self, states_type_reg: &mut StatesTypeReg) {
+        states_type_reg
             .register::<State>(<IS as ItemSpec>::id(self).clone());
     }
 

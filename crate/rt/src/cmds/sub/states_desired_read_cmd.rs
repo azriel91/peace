@@ -34,13 +34,13 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StatesDesired, E> {
         let SingleProfileSingleFlowView {
-            states_type_regs,
+            states_type_reg,
             resources,
             ..
         } = cmd_ctx.scope_mut().view();
 
         let states_desired =
-            Self::deserialize_internal(resources, states_type_regs.states_desired_type_reg())
+            Self::deserialize_internal(resources, &states_type_reg)
                 .await?;
 
         Ok(states_desired)
@@ -48,7 +48,7 @@ where
 
     pub(crate) async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
-        states_desired_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
     ) -> Result<StatesDesired, E> {
         let flow_id = resources.borrow::<FlowId>();
         let flow_dir = resources.borrow::<FlowDir>();
@@ -58,7 +58,7 @@ where
         let states_desired = StatesSerializer::deserialize_desired(
             &flow_id,
             &storage,
-            states_desired_type_reg,
+            states_type_reg,
             &states_desired_file,
         )
         .await?;

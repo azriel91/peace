@@ -24,7 +24,7 @@ pub use crate::{
     flow::Flow, in_memory_text_output::InMemoryTextOutput, item_spec_boxed::ItemSpecBoxed,
     item_spec_graph::ItemSpecGraph, item_spec_graph_builder::ItemSpecGraphBuilder,
     item_spec_rt::ItemSpecRt, item_spec_wrapper::ItemSpecWrapper,
-    states_serializer::StatesSerializer, states_type_regs::StatesTypeRegs,
+    states_serializer::StatesSerializer, states_type_reg::StatesTypeReg,
 };
 
 pub mod outcomes;
@@ -37,4 +37,4 @@ mod item_spec_graph_builder;
 mod item_spec_rt;
 mod item_spec_wrapper;
 mod states_serializer;
-mod states_type_regs;
+mod states_type_reg;
