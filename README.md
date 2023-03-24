@@ -31,36 +31,46 @@ See:
 |   🔵   | Compatible by design |
 |   🟣   | Works, "fun idea"    |
 
-* 🟢 Define items to manage with automation
-* 🟢 Define dependencies between items
-* 🟢 Discover current and desired states
-* 🟢 Show diff: what would change
-* 🟢 Store and recall parameters across commands
-* 🟢 Concurrent task execution via [`fn_graph`]
-* 🟢 Skip unnecessary work
-* 🟢 Idempotence: Multiple executions
-* 🟢 Show state differences
-* 🟢 Namespaced profile directories
-* 🟢 Resource clean up
-* 🟢 Understandable progress
-* 🟡 Feature-gated incremental functionality
-* 🟡 Off-the-shelf support for common items
-* 🟡 Dry run
-* 🔵 Understandable error reporting via [`miette`]
-* 🔵 Actionable error messages
-* 🟣 WASM support
-* ⚫ Tutorial for writing a software lifecycle management tool
-* ⚫ Built-in application execution methods -- CLI, web service
-* ⚫ `peace` binary for configuration based workflows
-* ⚫ Web based UI
-* ⚫ Agent mode to run `peace` on servers (Web API invocation)
+* 🟢 **Idempotent:** Multiple invocations result in the desired outcome.
+* 🟢 **Clean:** Every item creation is paired with how it is cleaned up.
+* 🟢 **Understandable:** Progress is shown at an understandable level of detail.
+* 🔵 **Understandable:** Error reporting is compatible with [`miette`].
+* 🟡 **Interruptible:** Execution can be interrupted.
+* 🟢 **Resumable:** Automation resumes where it was interrupted.
+* 🟢 **Diffable:** States and diffs are serialized as YAML.
+* 🟢 **Efficient:** Tasks are concurrently executed via [`fn_graph`].
+* 🟢 **Namespaced:** Profile directories isolate environments from each other.
+* 🟢 **Type Safe:** Items and parameters are defined in code, not configuration.
+
+
+### Roadmap
+
+* 🟢 Define items to manage with automation.
+* 🟢 Define dependencies between items.
+* 🟢 Define "apply" logic.
+* 🟢 Define "clean up" logic.
+* 🟢 Discover current and desired states.
+* 🟢 Define diff calculation between states.
+* 🟢 Store and recall parameters across commands.
+* 🟡 Feature-gated incremental functionality.
+* 🟡 Off-the-shelf support for common items.
+* 🟡 Dry run.
+* 🟣 WASM support.
+* ⚫ Referential parameters ([#94]) -- ability to specify usage of values generated during automation as parameters to subsequent items.
+* ⚫ Cancel-safe interruption via [`tokio-graceful-shutdown`].
+* ⚫ Diff states between multiple profiles.
+* ⚫ Secure-by-design Support: Encrypted value storage, decrypted per execution / time based agent.
+* ⚫ Tutorial for writing a software lifecycle management tool.
+* ⚫ Built-in application execution methods -- CLI, web service.
+* ⚫ `peace` binary for configuration based workflows.
+* ⚫ Web based UI with interactive graph.
+* ⚫ Agent mode to run `peace` on servers (Web API invocation).
 
 Further ideas:
 
-* Back up current state
-* Restore previous state
-* Telemetry logging for monitoring
-* Metrics collection for analysis
+* Back up current state.
+* Restore previous state.
+* Telemetry / metrics logging for analysis.
 
 
 ## Examples
@@ -121,7 +131,9 @@ Unless you explicitly state otherwise, any contribution intentionally submitted 
 
 
 [#42]: https://github.com/azriel91/peace/issues/42
+[#94]: https://github.com/azriel91/peace/issues/94
 [`fn_graph`]: https://github.com/azriel91/fn_graph
 [`miette`]: https://github.com/zkat/miette
+[`tokio-graceful-shutdown`]: https://docs.rs/tokio-graceful-shutdown/latest/tokio_graceful_shutdown/
 [`wasm-pack`]: https://rustwasm.github.io/
 [HTTP server]: https://crates.io/crates/simple-http-server
