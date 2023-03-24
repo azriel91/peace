@@ -5,7 +5,7 @@
 [![CI](https://github.com/azriel91/peace/workflows/CI/badge.svg)](https://github.com/azriel91/peace/actions/workflows/ci.yml)
 [![Coverage Status](https://codecov.io/gh/azriel91/peace/branch/main/graph/badge.svg)](https://codecov.io/gh/azriel91/peace)
 
-`peace` is a framework to build user friendly software automation.
+`peace` is a framework to build empathetic and forgiving software automation.
 
 See:
 
