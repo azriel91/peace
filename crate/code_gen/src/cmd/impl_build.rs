@@ -547,7 +547,7 @@ fn impl_build_for(
                 //         indicatif::ProgressDrawTarget::hidden()
                 //     );
                 //     let progress_trackers = item_spec_graph.iter_insertion().fold(
-                //         std::collections::HashMap::with_capacity(item_spec_graph.node_count()),
+                //         peace_rt_model::IndexMap::with_capacity(item_spec_graph.node_count()),
                 //         |mut progress_trackers, item_spec| {
                 //             let progress_bar = multi_progress.add(indicatif::ProgressBar::hidden());
                 //             let progress_tracker = indicatif::style::ProgressTracker::new(progress_bar);
@@ -1433,7 +1433,7 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                         indicatif::ProgressDrawTarget::hidden()
                     );
                     let progress_trackers = item_spec_graph.iter_insertion().fold(
-                        std::collections::HashMap::with_capacity(item_spec_graph.node_count()),
+                        peace_rt_model::IndexMap::with_capacity(item_spec_graph.node_count()),
                         |mut progress_trackers, item_spec| {
                             let progress_bar = multi_progress.add(indicatif::ProgressBar::hidden());
                             let progress_tracker = peace_core::progress::ProgressTracker::new(progress_bar);

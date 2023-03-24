@@ -39,6 +39,7 @@ members = [
 cfg-if = "1.0.0"
 chrono = { version = "0.4.24", default-features = false, features = ["clock", "serde"] }
 derivative = "2.2.0"
+indexmap = "1.9.2"
 indicatif = { version = "0.17.3" }
 miette = { version = "5.5.0" }
 tar = "0.4.38"

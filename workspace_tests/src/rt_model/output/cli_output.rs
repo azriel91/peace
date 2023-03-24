@@ -12,8 +12,6 @@ use peace::rt_model::output::CliColorizeOpt;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use std::collections::HashMap;
-
         use peace::{
             cfg::progress::{
                 ProgressComplete,
@@ -29,6 +27,7 @@ cfg_if::cfg_if! {
                 indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget},
                 output::{CliOutputTarget, CliProgressFormatOpt},
                 CmdProgressTracker,
+                IndexMap,
             },
         };
     }
@@ -1500,7 +1499,7 @@ fn cmd_progress_tracker(cli_output: &CliOutput<&mut Vec<u8>>) -> (CmdProgressTra
     let multi_progress = MultiProgress::with_draw_target(ProgressDrawTarget::term_like(Box::new(
         in_memory_term.clone(),
     )));
-    let mut progress_trackers = HashMap::new();
+    let mut progress_trackers = IndexMap::new();
     let progress_bar = multi_progress.add(ProgressBar::hidden());
     let progress_tracker = ProgressTracker::new(progress_bar.clone());
     progress_trackers.insert(item_spec_id!("test_item_spec_id"), progress_tracker);
