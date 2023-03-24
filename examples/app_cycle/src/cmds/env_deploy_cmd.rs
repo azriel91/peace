@@ -2,10 +2,7 @@ use futures::FutureExt;
 use peace::{
     cmd::scopes::SingleProfileSingleFlowView,
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
-    rt::cmds::{
-        sub::{StatesCurrentDiscoverCmd, StatesSavedReadCmd},
-        EnsureCmd,
-    },
+    rt::cmds::{sub::StatesSavedReadCmd, EnsureCmd},
     rt_model::output::OutputWrite,
 };
 
@@ -35,34 +32,31 @@ impl EnvDeployCmd {
         EnvCmd::run(output, false, |ctx| {
             async move {
                 let states_saved_ref = &states_saved;
-                let _states_ensured = EnsureCmd::exec(ctx, states_saved_ref).await?;
+                let states_ensured = EnsureCmd::exec(ctx, states_saved_ref).await?;
 
-                // TODO: there's a bug with states_ensured not being up to date after resuming
-                // from interruption.
-                let states_current = StatesCurrentDiscoverCmd::exec(ctx).await?;
-                let states_current_raw_map = &**states_current;
+                let states_ensured_raw_map = &**states_ensured;
 
                 let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
-                let states_current_presentables = {
-                    let states_current_presentables = flow
+                let states_ensured_presentables = {
+                    let states_ensured_presentables = flow
                         .graph()
                         .iter_insertion()
                         .map(|item_spec| {
                             let item_spec_id = item_spec.id();
-                            match states_current_raw_map.get(item_spec_id) {
-                                Some(state_current) => (item_spec_id, format!(": {state_current}")),
+                            match states_ensured_raw_map.get(item_spec_id) {
+                                Some(state_ensured) => (item_spec_id, format!(": {state_ensured}")),
                                 None => (item_spec_id, String::from(": <unknown>")),
                             }
                         })
                         .collect::<Vec<_>>();
 
-                    ListNumbered::new(states_current_presentables)
+                    ListNumbered::new(states_ensured_presentables)
                 };
 
                 output
                     .present(&(
-                        Heading::new(HeadingLevel::Level1, "States Current"),
-                        states_current_presentables,
+                        Heading::new(HeadingLevel::Level1, "States Ensured"),
+                        states_ensured_presentables,
                         "\n",
                     ))
                     .await?;
