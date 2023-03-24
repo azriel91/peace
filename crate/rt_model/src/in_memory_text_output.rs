@@ -54,11 +54,11 @@ where
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
-    async fn present<P>(&mut self, presentable: &P) -> Result<(), E>
+    async fn present<P>(&mut self, presentable: P) -> Result<(), E>
     where
-        P: Presentable + ?Sized,
+        P: Presentable,
     {
-        self.buffer = serde_yaml::to_string(presentable).map_err(Error::StatesSerialize)?;
+        self.buffer = serde_yaml::to_string(&presentable).map_err(Error::StatesSerialize)?;
 
         Ok(())
     }

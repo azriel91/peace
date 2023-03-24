@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-
+use indexmap::IndexMap;
 use indicatif::MultiProgress;
 use peace_core::{progress::ProgressTracker, ItemSpecId};
 
@@ -19,14 +18,14 @@ pub struct CmdProgressTracker {
     /// `MultiProgress` that tracks the remaining progress bars.
     pub multi_progress: MultiProgress,
     /// Tracks progress for each item spec.
-    pub progress_trackers: HashMap<ItemSpecId, ProgressTracker>,
+    pub progress_trackers: IndexMap<ItemSpecId, ProgressTracker>,
 }
 
 impl CmdProgressTracker {
     /// Returns a new `CmdProgressTracker`.
     pub fn new(
         multi_progress: MultiProgress,
-        progress_trackers: HashMap<ItemSpecId, ProgressTracker>,
+        progress_trackers: IndexMap<ItemSpecId, ProgressTracker>,
     ) -> Self {
         Self {
             multi_progress,
@@ -46,13 +45,13 @@ impl CmdProgressTracker {
     }
 
     /// Returns the `ProgressTracker`s for each item spec.
-    pub fn progress_trackers(&self) -> &HashMap<ItemSpecId, ProgressTracker> {
+    pub fn progress_trackers(&self) -> &IndexMap<ItemSpecId, ProgressTracker> {
         &self.progress_trackers
     }
 
     /// Returns a mutable reference to the `ProgressTracker`s for each item
     /// spec.
-    pub fn progress_trackers_mut(&mut self) -> &mut HashMap<ItemSpecId, ProgressTracker> {
+    pub fn progress_trackers_mut(&mut self) -> &mut IndexMap<ItemSpecId, ProgressTracker> {
         &mut self.progress_trackers
     }
 }

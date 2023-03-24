@@ -66,10 +66,10 @@ pub trait OutputWrite<E> {
     async fn progress_end(&mut self, cmd_progress_tracker: &CmdProgressTracker);
 
     /// Writes presentable information to the output.
-    async fn present<P>(&mut self, presentable: &P) -> Result<(), E>
+    async fn present<P>(&mut self, presentable: P) -> Result<(), E>
     where
         E: std::error::Error,
-        P: Presentable + ?Sized;
+        P: Presentable;
 
     /// Writes an error to the output.
     async fn write_err(&mut self, error: &E) -> Result<(), E>

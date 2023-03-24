@@ -15,8 +15,6 @@ use peace_resources::{
 };
 use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, Storage};
 
-use crate::BUFFERED_FUTURES_MAX;
-
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_cfg::{
@@ -124,14 +122,8 @@ where
 
                     let state = state?;
 
-                    Ok(state
-                        .map(|state| (item_spec.id().clone(), state))
-                        .map(Result::Ok)
-                        .map(futures::future::ready))
+                    Ok(state.map(|state| (item_spec.id().clone(), state)))
                 })
-                // TODO: do we need this?
-                // If not, we can remove the `Ok` and `future::ready` mappings above.
-                .try_buffer_unordered(BUFFERED_FUTURES_MAX)
                 .try_collect::<StatesMut<Desired>>()
                 .await?;
 

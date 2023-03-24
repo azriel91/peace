@@ -21,11 +21,11 @@ async fn ref_t_is_presentable_when_t_is_presentable() -> Result<(), Box<dyn std:
 }
 
 #[tokio::test]
-async fn str_is_presentable() -> Result<(), Box<dyn std::error::Error>> {
+async fn ref_str_is_presentable() -> Result<(), Box<dyn std::error::Error>> {
     let mut presenter = FnTrackerPresenter::new();
 
     let s = "hello";
-    <str as Presentable>::present(s, &mut presenter).await?;
+    <&str as Presentable>::present(&s, &mut presenter).await?;
 
     assert_eq!(
         vec![FnInvocation::new(

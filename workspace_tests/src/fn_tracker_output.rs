@@ -53,12 +53,12 @@ where
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, _cmd_progress_tracker: &CmdProgressTracker) {}
 
-    async fn present<P>(&mut self, presentable: &P) -> Result<(), E>
+    async fn present<P>(&mut self, presentable: P) -> Result<(), E>
     where
-        P: Presentable + ?Sized,
+        P: Presentable,
     {
         let presentable_serialized =
-            serde_yaml::to_string(presentable).map_err(rt_model::Error::PresentableSerialize)?;
+            serde_yaml::to_string(&presentable).map_err(rt_model::Error::PresentableSerialize)?;
         self.fn_invocations.push(FnInvocation::new(
             "present",
             vec![Some(presentable_serialized)],

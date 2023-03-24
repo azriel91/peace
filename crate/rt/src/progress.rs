@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use peace_cfg::{
     progress::{
         ProgressDelta, ProgressMsgUpdate, ProgressStatus, ProgressTracker, ProgressUpdate,
@@ -7,7 +5,7 @@ use peace_cfg::{
     },
     ItemSpecId,
 };
-use peace_rt_model::output::OutputWrite;
+use peace_rt_model::{output::OutputWrite, IndexMap};
 use tokio::sync::mpsc::Receiver;
 
 pub struct Progress;
@@ -16,7 +14,7 @@ impl Progress {
     /// Receives progress updates and updates `output` to render it.
     pub async fn progress_render<E, O>(
         output: &mut O,
-        progress_trackers: &mut HashMap<ItemSpecId, ProgressTracker>,
+        progress_trackers: &mut IndexMap<ItemSpecId, ProgressTracker>,
         mut progress_rx: Receiver<ProgressUpdateAndId>,
     ) where
         O: OutputWrite<E>,
@@ -33,6 +31,7 @@ impl Progress {
             };
             match progress_update {
                 ProgressUpdate::Reset => {
+                    progress_tracker.set_progress_status(ProgressStatus::Initialized);
                     let progress_bar = progress_tracker.progress_bar();
                     progress_bar.reset();
                 }

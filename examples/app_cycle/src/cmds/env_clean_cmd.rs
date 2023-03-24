@@ -23,12 +23,14 @@ impl EnvCleanCmd {
     where
         O: OutputWrite<AppCycleError> + Send,
     {
-        let states_saved =
-            EnvCmd::run(output, |ctx| StatesSavedReadCmd::exec(ctx).boxed_local()).await?;
+        let states_saved = EnvCmd::run(output, true, |ctx| {
+            StatesSavedReadCmd::exec(ctx).boxed_local()
+        })
+        .await?;
 
         // https://github.com/rust-lang/rust-clippy/issues/10482
         #[allow(clippy::redundant_async_block)]
-        EnvCmd::run_and_present(output, |ctx| {
+        EnvCmd::run_and_present(output, false, |ctx| {
             async move { CleanCmd::exec(ctx, &states_saved).await }.boxed_local()
         })
         .await

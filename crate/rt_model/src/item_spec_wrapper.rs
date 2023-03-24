@@ -854,15 +854,26 @@ where
             unreachable!("These are set just above.");
         };
 
-        match self
+        let state_applied = match self
             .apply_op_check(resources, state_current, state_target, state_diff)
             .await
         {
-            Ok(op_check_status) => item_apply_partial.op_check_status = Some(op_check_status),
-            Err(error) => return Err((error, item_apply_partial.into())),
-        }
+            Ok(op_check_status) => {
+                item_apply_partial.op_check_status = Some(op_check_status);
 
-        Ok(ItemApply::try_from((item_apply_partial, None))
+                // TODO: write test for this case
+                match op_check_status {
+                    #[cfg(not(feature = "output_progress"))]
+                    OpCheckStatus::ExecRequired => None,
+                    #[cfg(feature = "output_progress")]
+                    OpCheckStatus::ExecRequired { .. } => None,
+                    OpCheckStatus::ExecNotRequired => item_apply_partial.state_current.clone(),
+                }
+            }
+            Err(error) => return Err((error, item_apply_partial.into())),
+        };
+
+        Ok(ItemApply::try_from((item_apply_partial, state_applied))
             .expect("unreachable: All the fields are set above.")
             .into())
     }

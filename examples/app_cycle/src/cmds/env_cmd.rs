@@ -17,6 +17,7 @@ use peace::{
 use crate::{
     flows::EnvDeployFlow,
     model::{AppCycleError, EnvType},
+    rt_model::AppCycleCmdCtx,
 };
 
 /// Runs a `*Cmd` that accesses the environment.
@@ -24,15 +25,14 @@ use crate::{
 pub struct EnvCmd;
 
 impl EnvCmd {
-    /// Runs a command on the environment and presents the returned information.
+    /// Runs a command on the environment.
     ///
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    /// * `slug`: Username and repository of the application to download.
-    /// * `version`: Version of the application to download.
-    /// * `url`: URL to override where to download the application from.
-    pub async fn run<O, T, F>(output: &mut O, f: F) -> Result<T, AppCycleError>
+    /// * `profile_print`: Whether to print the profile used.
+    /// * `f`: The command to run.
+    pub async fn run<O, T, F>(output: &mut O, profile_print: bool, f: F) -> Result<T, AppCycleError>
     where
         O: OutputWrite<AppCycleError>,
         for<'fn_once> F: FnOnce(
@@ -46,9 +46,12 @@ impl EnvCmd {
                 >,
             >,
         ) -> LocalBoxFuture<'fn_once, Result<T, AppCycleError>>,
-        T: Presentable,
     {
         cmd_ctx_init!(output, cmd_ctx);
+
+        if profile_print {
+            Self::profile_print(&mut cmd_ctx).await?;
+        }
 
         let t = f(&mut cmd_ctx).await?;
 
@@ -60,29 +63,40 @@ impl EnvCmd {
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    /// * `slug`: Username and repository of the application to download.
-    /// * `version`: Version of the application to download.
-    /// * `url`: URL to override where to download the application from.
-    pub async fn run_and_present<O, T, F>(output: &mut O, f: F) -> Result<(), AppCycleError>
+    /// * `profile_print`: Whether to print the profile used.
+    /// * `f`: The command to run.
+    pub async fn run_and_present<O, T, F>(
+        output: &mut O,
+        profile_print: bool,
+        f: F,
+    ) -> Result<(), AppCycleError>
     where
         O: OutputWrite<AppCycleError>,
         for<'fn_once> F: FnOnce(
-            &'fn_once mut CmdCtx<
-                SingleProfileSingleFlow<
-                    '_,
-                    AppCycleError,
-                    O,
-                    ParamsKeysImpl<KeyKnown<String>, KeyKnown<String>, KeyKnown<String>>,
-                    SetUp,
-                >,
-            >,
+            &'fn_once mut AppCycleCmdCtx<'_, O, SetUp>,
         ) -> LocalBoxFuture<'fn_once, Result<T, AppCycleError>>,
         T: Presentable,
     {
         cmd_ctx_init!(output, cmd_ctx);
 
+        if profile_print {
+            Self::profile_print(&mut cmd_ctx).await?;
+        }
+
         let t = f(&mut cmd_ctx).await?;
 
+        let output = cmd_ctx.output_mut();
+        presentln!(output, [&t]);
+
+        Ok(())
+    }
+
+    async fn profile_print<O>(
+        cmd_ctx: &mut AppCycleCmdCtx<'_, O, SetUp>,
+    ) -> Result<(), AppCycleError>
+    where
+        O: OutputWrite<AppCycleError>,
+    {
         let SingleProfileSingleFlowView {
             output,
             workspace_params,
@@ -99,7 +113,6 @@ impl EnvCmd {
                 ["Using profile ", profile, " -- type ", env_type, "\n"]
             );
         }
-        presentln!(output, [&t]);
 
         Ok(())
     }

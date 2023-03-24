@@ -160,10 +160,10 @@ where
         self.progress_format
     }
 
-    async fn output_presentable<E, P>(&mut self, presentable: &P) -> Result<(), E>
+    async fn output_presentable<E, P>(&mut self, presentable: P) -> Result<(), E>
     where
         E: std::error::Error + From<Error>,
-        P: Presentable + ?Sized,
+        P: Presentable,
     {
         let presenter = &mut CliMdPresenter::new(self);
         presentable
@@ -227,7 +227,57 @@ where
                         "`ProgressStyle` template was invalid. Template: `{template:?}`. Error: {error}"
                     )
                 })
-                .progress_chars("█▉▊▋▌▍▎▏  "),
+                .progress_chars("▰▱")
+                .tick_strings(&[
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰▱",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰▰",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰▰",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰▰",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰▰",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰",
+                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰",
+                    "▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰",
+                ]),
         );
 
         // Rerender the progress bar after setting style.
@@ -238,7 +288,9 @@ where
     fn progress_bar_template(&self, progress_tracker: &ProgressTracker) -> String {
         /// This is used when we are rendering a bar that is not calculated by
         /// `ProgressBar`'s length and current value,
-        const SOLID_BAR: &str = "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒";
+        const SOLID_BAR: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
+        #[cfg(feature = "output_colorized")]
+        const SOLID_SPINNER: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
 
         let icon = match progress_tracker.progress_status() {
             ProgressStatus::Initialized | ProgressStatus::ExecPending | ProgressStatus::Running => {
@@ -265,63 +317,83 @@ where
                 // 160: red slightly dim (fail)
                 //  88: red dark (fail background)
 
+                const GRAY_MED: u8 = 8;
                 const GRAY_DARK: u8 = 237;
                 const PURPLE: u8 = 128;
 
-                let bar = match self.colorize {
+                let bar_or_spinner = match self.colorize {
                     CliColorize::Colored => {
-                        match progress_tracker.progress_status() {
-                            ProgressStatus::Initialized => console::style(SOLID_BAR).color256(GRAY_DARK),
-                            ProgressStatus::ExecPending | ProgressStatus::Running => {
-                                console::style("{bar:40.32.on_17}")
-                            }
-                            ProgressStatus::RunningStalled => console::style("{bar:40.222.on_17}"),
-                            ProgressStatus::UserPending => console::style("{bar:40.75.on_17}"),
-                            ProgressStatus::Complete(progress_complete) => match progress_complete {
-                                ProgressComplete::Success => {
-                                    // for ProgressLimit::Unknown, only the background color shows, so we need to make it bright green.
-                                    if matches!(progress_tracker.progress_limit(), Some(ProgressLimit::Unknown)) {
-                                        console::style("{bar:40.35.on_35}")
-                                    } else {
-                                        console::style("{bar:40.35.on_22}")
-                                    }
+                        if progress_tracker.progress_limit().is_some() {
+                            match progress_tracker.progress_status() {
+                                ProgressStatus::Initialized => console::style(SOLID_BAR).color256(GRAY_DARK),
+                                ProgressStatus::ExecPending | ProgressStatus::Running => {
+                                    console::style("{bar:40.32}")
+                                }
+                                ProgressStatus::RunningStalled => console::style("{bar:40.222}"),
+                                ProgressStatus::UserPending => console::style("{bar:40.75}"),
+                                ProgressStatus::Complete(progress_complete) => match progress_complete {
+                                    ProgressComplete::Success => {
+                                        console::style("{bar:40.35}")
+                                    },
+                                    ProgressComplete::Fail => console::style("{bar:40.160}"),
                                 },
-                                ProgressComplete::Fail => console::style("{bar:40.160.on_88}"),
-                            },
+                            }
+                        } else {
+                            // No progress limit (as opposed to unknown)
+                            match progress_tracker.progress_status() {
+                                ProgressStatus::Initialized => console::style(SOLID_SPINNER).color256(GRAY_MED),
+                                ProgressStatus::ExecPending | ProgressStatus::Running => {
+                                    console::style("{spinner:40.32}")
+                                }
+                                ProgressStatus::RunningStalled => console::style("{spinner:40.222}"),
+                                ProgressStatus::UserPending => console::style("{spinner:40.75}"),
+                                ProgressStatus::Complete(progress_complete) => match progress_complete {
+                                    ProgressComplete::Success => {
+                                        console::style("{spinner:40.35}")
+                                    },
+                                    ProgressComplete::Fail => console::style("{spinner:40.160}"),
+                                },
+                            }
                         }
                     }
                     CliColorize::Uncolored => {
-                        match progress_tracker.progress_status() {
-                            ProgressStatus::Initialized => console::style(SOLID_BAR),
-                            ProgressStatus::ExecPending | ProgressStatus::Running |
-                            ProgressStatus::RunningStalled |
-                            ProgressStatus::UserPending |
-                            ProgressStatus::Complete(_) => console::style("{bar:40}"),
+                        if progress_tracker.progress_limit().is_some() {
+                            match progress_tracker.progress_status() {
+                                ProgressStatus::Initialized => console::style(SOLID_BAR),
+                                ProgressStatus::ExecPending | ProgressStatus::Running |
+                                ProgressStatus::RunningStalled |
+                                ProgressStatus::UserPending |
+                                ProgressStatus::Complete(_) => console::style("{bar:40}"),
+                            }
+                        } else {
+                            console::style("{spinner:40}")
                         }
                     },
                 };
-
-                let prefix = match self.colorize {
-                    CliColorize::Colored => "{prefix:20.75}",
-                    CliColorize::Uncolored => "{prefix:20}",
-                };
             } else {
-                let bar = match progress_tracker.progress_status() {
-                    ProgressStatus::Initialized => console::style(SOLID_BAR),
-                    ProgressStatus::ExecPending | ProgressStatus::Running |
-                    ProgressStatus::RunningStalled |
-                    ProgressStatus::UserPending |
-                    ProgressStatus::Complete(_) => console::style("{bar:40}"),
+                let bar_or_spinner = if progress_tracker.progress_limit().is_some() {
+                    match progress_tracker.progress_status() {
+                        ProgressStatus::Initialized => console::style(SOLID_BAR),
+                        ProgressStatus::ExecPending | ProgressStatus::Running |
+                        ProgressStatus::RunningStalled |
+                        ProgressStatus::UserPending |
+                        ProgressStatus::Complete(_) => console::style("{bar:40}"),
+                    }
+                } else {
+                    console::style("{spinner:40}")
                 };
-                let prefix = "{prefix:20}";
             }
         }
+        let prefix = "{prefix:20}";
 
-        let progress_is_complete = matches!(
-            progress_tracker.progress_status(),
-            ProgressStatus::Complete(_)
-        );
-        let units = if progress_is_complete {
+        let (progress_is_complete, completion_is_successful) =
+            match progress_tracker.progress_status() {
+                ProgressStatus::Complete(progress_complete) => {
+                    (true, progress_complete.is_successful())
+                }
+                _ => (false, false),
+            };
+        let units = if progress_is_complete && completion_is_successful {
             None
         } else {
             progress_tracker
@@ -349,7 +421,7 @@ where
         };
 
         // `prefix` is the item spec ID.
-        let mut format_str = format!("{icon} {prefix} ▕{bar}▏");
+        let mut format_str = format!("{icon} {prefix} {bar_or_spinner}");
         if let Some(units) = units {
             format_str.push_str(units);
         }
@@ -394,19 +466,53 @@ where
             .multi_progress()
             .set_draw_target(progress_draw_target);
 
+        // avoid reborrowing `self` within `for_each`
+        #[cfg(feature = "output_colorized")]
+        let colorize = self.colorize;
+
         match self.progress_format {
             CliProgressFormat::ProgressBar => {
-                cmd_progress_tracker.progress_trackers().iter().for_each(
-                    |(item_spec_id, progress_tracker)| {
+                cmd_progress_tracker
+                    .progress_trackers()
+                    .iter()
+                    .enumerate()
+                    .for_each(|(index, (item_spec_id, progress_tracker))| {
                         let progress_bar = progress_tracker.progress_bar();
-                        progress_bar.set_prefix(format!("{item_spec_id}"));
+
+                        // Hack: colourization done in `progress_begin` to get
+                        // numerical index to be colorized.
+                        let index = index + 1;
+                        cfg_if::cfg_if! {
+                            if #[cfg(feature = "output_colorized")] {
+                                match colorize {
+                                    CliColorize::Colored => {
+                                        // white
+                                        let index_colorized = console::Style::new()
+                                            .color256(15)
+                                            .apply_to(format!("{index}."));
+                                        // blue
+                                        let item_spec_id_colorized = console::Style::new()
+                                            .color256(75)
+                                            .apply_to(format!("{item_spec_id}"));
+                                        progress_bar.set_prefix(
+                                            format!("{index_colorized} {item_spec_id_colorized}")
+                                        );
+                                    }
+                                    CliColorize::Uncolored => {
+                                        progress_bar.set_prefix(format!("{index}. {item_spec_id}"));
+                                    }
+                                }
+                            } else {
+                                progress_bar.set_prefix(format!("{index}. {item_spec_id}"));
+                            }
+                        }
+
                         self.progress_bar_style_update(progress_tracker);
 
                         // Hack: This should be done with a timer in `ApplyCmd`.
                         // This uses threads, which is not WASM compatible.
                         progress_bar.enable_steady_tick(std::time::Duration::from_millis(100));
-                    },
-                );
+                    });
             }
             CliProgressFormat::Outcome => {
                 let progress_style = ProgressStyle::with_template("").unwrap_or_else(|error| {
@@ -454,8 +560,11 @@ where
                         // Status may have changed from `ExecPending` to
                         // `Running`.
                         //
-                        // We don't have the previous status though, so we use
-                        // the same style for both `ExecPending` and `Running`
+                        // We don't have the previous status though.
+                        //
+                        // TODO: Is this too much of a performance hit, and we send another message
+                        // for spinners?
+                        self.progress_bar_style_update(progress_tracker);
                     }
                     ProgressUpdate::Complete(progress_complete) => match progress_complete {
                         ProgressComplete::Success => {
@@ -502,19 +611,27 @@ where
 
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
+        // Hack: This should be done with a timer in `ApplyCmd`.
+        // This uses threads, which is not WASM compatible.
+        cmd_progress_tracker.progress_trackers().iter().for_each(
+            |(_item_spec_id, progress_tracker)| {
+                progress_tracker.progress_bar().disable_steady_tick();
+            },
+        );
+
         let _result = cmd_progress_tracker.multi_progress.clear();
     }
 
-    async fn present<P>(&mut self, presentable: &P) -> Result<(), E>
+    async fn present<P>(&mut self, presentable: P) -> Result<(), E>
     where
-        P: Presentable + ?Sized,
+        P: Presentable,
     {
         match self.outcome_format {
             OutputFormat::Text => self.output_presentable(presentable).await,
-            OutputFormat::Yaml => self.output_yaml(presentable, Error::StatesSerialize).await,
+            OutputFormat::Yaml => self.output_yaml(&presentable, Error::StatesSerialize).await,
             #[cfg(feature = "output_json")]
             OutputFormat::Json => {
-                self.output_json(presentable, Error::StatesSerializeJson)
+                self.output_json(&presentable, Error::StatesSerializeJson)
                     .await
             }
         }

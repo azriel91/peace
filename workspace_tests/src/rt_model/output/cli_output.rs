@@ -12,8 +12,6 @@ use peace::rt_model::output::CliColorizeOpt;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
-        use std::collections::HashMap;
-
         use peace::{
             cfg::progress::{
                 ProgressComplete,
@@ -29,6 +27,7 @@ cfg_if::cfg_if! {
                 indicatif::{MultiProgress, ProgressBar, ProgressDrawTarget},
                 output::{CliOutputTarget, CliProgressFormatOpt},
                 CmdProgressTracker,
+                IndexMap,
             },
         };
     }
@@ -321,14 +320,17 @@ mod color_always {
 
         // We can't inspect `ProgressStyle`'s fields, so we have to render the progress
         // and compare the output.
-        assert_eq!("test_item_spec_id", progress_bar.prefix());
+        assert_eq!(
+            "\u{1b}[38;5;15m1.\u{1b}[0m \u{1b}[38;5;75mtest_item_spec_id\u{1b}[0m",
+            progress_bar.prefix()
+        );
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏ (el: 0s, eta: 0s)"#,
-            // ^                   ^ ^                                      ^
-            // '---- 20 chars -----' '-------------- 40 chars --------------'
+            r#"⏳ 1. test_item_spec_id ▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
+            //    ^                  ^ ^                                      ^
+            //    '---- 20 chars ----' '-------------- 40 chars --------------'
             in_memory_term.contents()
         );
     }
@@ -360,6 +362,7 @@ mod color_always {
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -374,23 +377,26 @@ mod color_always {
         )
         .await;
 
-        assert_eq!("test_item_spec_id", progress_bar.prefix());
+        assert_eq!(
+            "\u{1b}[38;5;15m1.\u{1b}[0m \u{1b}[38;5;75mtest_item_spec_id\u{1b}[0m",
+            progress_bar.prefix()
+        );
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████▍                               ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████▊                               ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -422,6 +428,7 @@ mod color_always {
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -442,7 +449,7 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -464,7 +471,7 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏ done"#,
+            r#"✅ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
             in_memory_term.contents(),
         );
     }
@@ -496,6 +503,7 @@ mod color_always {
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -516,7 +524,7 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -538,7 +546,7 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"❌ test_item_spec_id    ▕████████                                ▏ done"#,
+            r#"❌ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
             in_memory_term.contents()
         );
     }
@@ -582,6 +590,7 @@ mod color_always {
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -653,6 +662,7 @@ msg_update: NoChange"#,
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -703,14 +713,14 @@ mod color_never {
 
         // We can't inspect `ProgressStyle`'s fields, so we have to render the progress
         // and compare the output.
-        assert_eq!("test_item_spec_id", progress_bar.prefix());
+        assert_eq!("1. test_item_spec_id", progress_bar.prefix());
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏ (el: 0s, eta: 0s)"#,
-            // ^                   ^ ^                                      ^
-            // '---- 20 chars -----' '-------------- 40 chars --------------'
+            r#"⏳ 1. test_item_spec_id ▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
+            //    ^                  ^ ^                                      ^
+            //    '---- 20 chars ----' '-------------- 40 chars --------------'
             in_memory_term.contents()
         );
     }
@@ -742,6 +752,7 @@ mod color_never {
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -756,23 +767,23 @@ mod color_never {
         )
         .await;
 
-        assert_eq!("test_item_spec_id", progress_bar.prefix());
+        assert_eq!("1. test_item_spec_id", progress_bar.prefix());
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████▍                               ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████▊                               ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -804,6 +815,7 @@ mod color_never {
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -824,7 +836,7 @@ mod color_never {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -846,7 +858,7 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏ done"#,
+            r#"✅ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
             in_memory_term.contents(),
         );
     }
@@ -878,6 +890,7 @@ mod color_never {
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -898,7 +911,7 @@ mod color_never {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -920,7 +933,7 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"❌ test_item_spec_id    ▕████████                                ▏ done"#,
+            r#"❌ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
             in_memory_term.contents()
         );
     }
@@ -964,6 +977,7 @@ mod color_never {
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -1035,6 +1049,7 @@ msg_update: NoChange"#,
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -1084,14 +1099,14 @@ mod color_disabled {
 
         // We can't inspect `ProgressStyle`'s fields, so we have to render the progress
         // and compare the output.
-        assert_eq!("test_item_spec_id", progress_bar.prefix());
+        assert_eq!("1. test_item_spec_id", progress_bar.prefix());
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏ (el: 0s, eta: 0s)"#,
-            // ^                   ^ ^                                      ^
-            // '---- 20 chars -----' '-------------- 40 chars --------------'
+            r#"⏳ 1. test_item_spec_id ▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
+            //    ^                  ^ ^                                      ^
+            //    '---- 20 chars ----' '-------------- 40 chars --------------'
             in_memory_term.contents()
         );
     }
@@ -1122,6 +1137,7 @@ mod color_disabled {
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -1136,23 +1152,23 @@ mod color_disabled {
         )
         .await;
 
-        assert_eq!("test_item_spec_id", progress_bar.prefix());
+        assert_eq!("1. test_item_spec_id", progress_bar.prefix());
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████▍                               ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████▊                               ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -1183,6 +1199,7 @@ mod color_disabled {
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -1203,7 +1220,7 @@ mod color_disabled {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -1225,7 +1242,7 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"✅ test_item_spec_id    ▕████████████████████████████████████████▏ done"#,
+            r#"✅ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
             in_memory_term.contents(),
         );
     }
@@ -1256,6 +1273,7 @@ mod color_disabled {
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -1276,7 +1294,7 @@ mod color_disabled {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ test_item_spec_id    ▕████████                                ▏ (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -1298,7 +1316,7 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"❌ test_item_spec_id    ▕████████                                ▏ done"#,
+            r#"❌ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
             in_memory_term.contents()
         );
     }
@@ -1341,6 +1359,7 @@ mod color_disabled {
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -1411,6 +1430,7 @@ msg_update: NoChange"#,
 
         // Adjust progress_bar length and units.
         progress_tracker.set_progress_status(ProgressStatus::Running);
+        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
@@ -1500,7 +1520,7 @@ fn cmd_progress_tracker(cli_output: &CliOutput<&mut Vec<u8>>) -> (CmdProgressTra
     let multi_progress = MultiProgress::with_draw_target(ProgressDrawTarget::term_like(Box::new(
         in_memory_term.clone(),
     )));
-    let mut progress_trackers = HashMap::new();
+    let mut progress_trackers = IndexMap::new();
     let progress_bar = multi_progress.add(ProgressBar::hidden());
     let progress_tracker = ProgressTracker::new(progress_bar.clone());
     progress_trackers.insert(item_spec_id!("test_item_spec_id"), progress_tracker);

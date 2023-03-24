@@ -1,4 +1,4 @@
-use crate::Presentable;
+use crate::{presentable::HeadingLevel, Presentable};
 
 /// Takes a `Presentable` type and presents it to the user.
 ///
@@ -38,6 +38,15 @@ use crate::Presentable;
 /// held in memory for each entry.
 #[async_trait::async_trait(?Send)]
 pub trait Presenter<'output> {
+    /// Presents the given presentable as a heading.
+    ///
+    /// # Purposes
+    ///
+    /// * Headings.
+    async fn heading<P>(&mut self, level: HeadingLevel, presentable: &P) -> Result<(), Self::Error>
+    where
+        P: Presentable + ?Sized;
+
     /// Error returned during a presentation failure.
     type Error: std::error::Error;
 
@@ -57,6 +66,15 @@ pub trait Presenter<'output> {
 
     /// Presents text as plain text.
     async fn text(&mut self, text: &str) -> Result<(), Self::Error>;
+
+    /// Presents the given presentable bolded.
+    ///
+    /// # Purposes
+    ///
+    /// * Emphasis.
+    async fn bold<P>(&mut self, presentable: &P) -> Result<(), Self::Error>
+    where
+        P: Presentable + ?Sized;
 
     /// Presents text as inline code.
     ///
