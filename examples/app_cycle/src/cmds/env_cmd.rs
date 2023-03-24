@@ -17,6 +17,7 @@ use peace::{
 use crate::{
     flows::EnvDeployFlow,
     model::{AppCycleError, EnvType},
+    rt_model::AppCycleCmdCtx,
 };
 
 /// Runs a `*Cmd` that accesses the environment.
@@ -72,15 +73,7 @@ impl EnvCmd {
     where
         O: OutputWrite<AppCycleError>,
         for<'fn_once> F: FnOnce(
-            &'fn_once mut CmdCtx<
-                SingleProfileSingleFlow<
-                    '_,
-                    AppCycleError,
-                    O,
-                    ParamsKeysImpl<KeyKnown<String>, KeyKnown<String>, KeyKnown<String>>,
-                    SetUp,
-                >,
-            >,
+            &'fn_once mut AppCycleCmdCtx<'_, O, SetUp>,
         ) -> LocalBoxFuture<'fn_once, Result<T, AppCycleError>>,
         T: Presentable,
     {
@@ -99,15 +92,7 @@ impl EnvCmd {
     }
 
     async fn profile_print<O>(
-        cmd_ctx: &mut CmdCtx<
-            SingleProfileSingleFlow<
-                '_,
-                AppCycleError,
-                O,
-                ParamsKeysImpl<KeyKnown<String>, KeyKnown<String>, KeyKnown<String>>,
-                SetUp,
-            >,
-        >,
+        cmd_ctx: &mut AppCycleCmdCtx<'_, O, SetUp>,
     ) -> Result<(), AppCycleError>
     where
         O: OutputWrite<AppCycleError>,

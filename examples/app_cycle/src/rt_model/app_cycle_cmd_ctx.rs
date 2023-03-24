@@ -1,6 +1,6 @@
 use peace::{
     cmd::scopes::SingleProfileSingleFlow,
-    rt_model::params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
+    rt_model::params::{KeyKnown, ParamsKeysImpl},
 };
 
 use crate::model::AppCycleError;
@@ -11,7 +11,7 @@ pub type AppCycleCmdCtx<'ctx, O, TS> = peace::cmd::ctx::CmdCtx<
         'ctx,
         AppCycleError,
         O,
-        ParamsKeysImpl<KeyKnown<String>, KeyKnown<String>, KeyUnknown>,
+        ParamsKeysImpl<KeyKnown<String>, KeyKnown<String>, KeyKnown<String>>,
         TS,
     >,
 >;
