@@ -364,6 +364,16 @@ where
                             msg_update: ProgressMsgUpdate::Set(String::from("nothing to do!")),
                         });
 
+                        // TODO: write test for this case
+                        // In case of an interrupt or power failure, we may not have written states
+                        // to disk.
+                        outcomes_tx
+                            .send(ItemApplyOutcome::Success {
+                                item_spec_id: item_spec.id().clone(),
+                                item_apply,
+                            })
+                            .expect("unreachable: `outcomes_rx` is in a sibling task.");
+
                         // short-circuit
                         return Ok(());
                     }
