@@ -386,11 +386,14 @@ where
         }
         let prefix = "{prefix:20}";
 
-        let progress_is_complete = matches!(
-            progress_tracker.progress_status(),
-            ProgressStatus::Complete(_)
-        );
-        let units = if progress_is_complete {
+        let (progress_is_complete, completion_is_successful) =
+            match progress_tracker.progress_status() {
+                ProgressStatus::Complete(progress_complete) => {
+                    (true, progress_complete.is_successful())
+                }
+                _ => (false, false),
+            };
+        let units = if progress_is_complete && completion_is_successful {
             None
         } else {
             progress_tracker
