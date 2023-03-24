@@ -1,6 +1,6 @@
 [package]
 name = "peace_item_specs"
-version = "0.0.7"
+version = "0.0.8"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
 description = "Collection of item specs the peace framework"
@@ -19,14 +19,14 @@ doctest = true
 test = false
 
 [dependencies]
-peace_item_spec_blank = { path = "blank", version = "0.0.7", optional = true }
-peace_item_spec_file_download = { path = "file_download", version = "0.0.7", optional = true }
-peace_item_spec_sh_cmd = { path = "sh_cmd", version = "0.0.7", optional = true }
-peace_item_spec_sh_sync_cmd = { path = "sh_sync_cmd", version = "0.0.7", optional = true }
-peace_item_spec_tar_x = { path = "tar_x", version = "0.0.7", optional = true }
+peace_item_spec_blank = { path = "blank", version = "0.0.8", optional = true }
+peace_item_spec_file_download = { path = "file_download", version = "0.0.8", optional = true }
+peace_item_spec_sh_cmd = { path = "sh_cmd", version = "0.0.8", optional = true }
+peace_item_spec_sh_sync_cmd = { path = "sh_sync_cmd", version = "0.0.8", optional = true }
+peace_item_spec_tar_x = { path = "tar_x", version = "0.0.8", optional = true }
 
 [dev-dependencies]
-peace = { path = "..", version = "0.0.7", default-features = false }
+peace = { path = "..", version = "0.0.8", default-features = false }
 
 [features]
 default = []

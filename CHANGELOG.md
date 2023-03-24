@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.0.8 (2023-03-25)
 
 * Move `R, W, ROpt, WOpt, RMaybe, WMaybe` to `peace_data::accessors`. ([#94], [#95])
 * Automatically insert `Current<ItemSpec::State>` after state current and ensure exec executions. ([#94], [#95])
