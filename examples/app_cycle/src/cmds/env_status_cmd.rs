@@ -1,14 +1,19 @@
 use futures::FutureExt;
-use peace::{rt::cmds::sub::StatesSavedReadCmd, rt_model::output::OutputWrite};
+use peace::{
+    cmd::scopes::SingleProfileSingleFlowView,
+    fmt::presentable::{Heading, HeadingLevel, ListNumbered},
+    rt::cmds::sub::StatesSavedReadCmd,
+    rt_model::output::OutputWrite,
+};
 
 use crate::{cmds::EnvCmd, model::AppCycleError};
 
-/// Shows the current state of the environment.
+/// Shows the saved state of the environment.
 #[derive(Debug)]
 pub struct EnvStatusCmd;
 
 impl EnvStatusCmd {
-    /// Shows the current state of the environment.
+    /// Shows the saved state of the environment.
     ///
     /// # Parameters
     ///
@@ -20,9 +25,42 @@ impl EnvStatusCmd {
     where
         O: OutputWrite<AppCycleError> + Send,
     {
-        EnvCmd::run_and_present(output, true, |ctx| {
-            StatesSavedReadCmd::exec(ctx).boxed_local()
+        EnvCmd::run(output, true, |ctx| {
+            async {
+                let states_saved = StatesSavedReadCmd::exec(ctx).await?;
+                let states_saved_raw_map = &**states_saved;
+
+                let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
+                let states_saved_presentables = {
+                    let states_saved_presentables = flow
+                        .graph()
+                        .iter_insertion()
+                        .map(|item_spec| {
+                            let item_spec_id = item_spec.id();
+                            match states_saved_raw_map.get(item_spec_id) {
+                                Some(state_saved) => (item_spec_id, format!(": {state_saved}")),
+                                None => (item_spec_id, String::from(": <unknown>")),
+                            }
+                        })
+                        .collect::<Vec<_>>();
+
+                    ListNumbered::new(states_saved_presentables)
+                };
+
+                output
+                    .present(&(
+                        Heading::new(HeadingLevel::Level1, "States Saved"),
+                        states_saved_presentables,
+                        "\n",
+                    ))
+                    .await?;
+
+                Ok(())
+            }
+            .boxed_local()
         })
-        .await
+        .await?;
+
+        Ok(())
     }
 }
