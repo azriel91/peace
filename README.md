@@ -84,10 +84,10 @@ cargo run --package $example_name --all-features
 cargo build --package download --all-features
 cargo run -q --package download --all-features -- init https://ifconfig.me ip.json
 
-for cmd in status desired diff ensure diff clean diff
+for cmd in status desired diff ensure ensure diff clean clean diff
 do
     printf "=== ${cmd} ===\n"
-    cargo run -q --package download --all-features -- $cmd
+    cargo run -q --package download --all-features -- --format text $cmd
     printf '\n'
 done
 
