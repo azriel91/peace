@@ -227,7 +227,7 @@ where
                         "`ProgressStyle` template was invalid. Template: `{template:?}`. Error: {error}"
                     )
                 })
-                .progress_chars("█▉▊▋▌▍▎▏  ")
+                .progress_chars("▰▱")
                 .tick_strings(&[
                     "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
                     "▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
@@ -288,8 +288,9 @@ where
     fn progress_bar_template(&self, progress_tracker: &ProgressTracker) -> String {
         /// This is used when we are rendering a bar that is not calculated by
         /// `ProgressBar`'s length and current value,
-        const SOLID_SPINNER: &str = " ▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ ";
-        const SOLID_BAR: &str = "▕▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▏";
+        const SOLID_BAR: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
+        #[cfg(feature = "output_colorized")]
+        const SOLID_SPINNER: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
 
         let icon = match progress_tracker.progress_status() {
             ProgressStatus::Initialized | ProgressStatus::ExecPending | ProgressStatus::Running => {
@@ -326,41 +327,31 @@ where
                             match progress_tracker.progress_status() {
                                 ProgressStatus::Initialized => console::style(SOLID_BAR).color256(GRAY_DARK),
                                 ProgressStatus::ExecPending | ProgressStatus::Running => {
-                                    console::style("▕{bar:40.32.on_17}▏")
+                                    console::style("{bar:40.32}")
                                 }
-                                ProgressStatus::RunningStalled => console::style("▕{bar:40.222.on_17}▏"),
-                                ProgressStatus::UserPending => console::style("▕{bar:40.75.on_17}▏"),
+                                ProgressStatus::RunningStalled => console::style("{bar:40.222}"),
+                                ProgressStatus::UserPending => console::style("{bar:40.75}"),
                                 ProgressStatus::Complete(progress_complete) => match progress_complete {
                                     ProgressComplete::Success => {
-                                        // for ProgressLimit::Unknown, only the background color shows, so we need to make it bright green.
-                                        if matches!(progress_tracker.progress_limit(), Some(ProgressLimit::Unknown)) {
-                                            console::style("▕{bar:40.35.on_35}▏")
-                                        } else {
-                                            console::style("▕{bar:40.35.on_22}▏")
-                                        }
+                                        console::style("{bar:40.35}")
                                     },
-                                    ProgressComplete::Fail => console::style("▕{bar:40.160.on_88}▏"),
+                                    ProgressComplete::Fail => console::style("{bar:40.160}"),
                                 },
                             }
                         } else {
-
+                            // No progress limit (as opposed to unknown)
                             match progress_tracker.progress_status() {
                                 ProgressStatus::Initialized => console::style(SOLID_SPINNER).color256(GRAY_MED),
                                 ProgressStatus::ExecPending | ProgressStatus::Running => {
-                                    console::style(" {spinner:40.32} ")
+                                    console::style("{spinner:40.32}")
                                 }
-                                ProgressStatus::RunningStalled => console::style(" {spinner:40.222} "),
-                                ProgressStatus::UserPending => console::style(" {spinner:40.75} "),
+                                ProgressStatus::RunningStalled => console::style("{spinner:40.222}"),
+                                ProgressStatus::UserPending => console::style("{spinner:40.75}"),
                                 ProgressStatus::Complete(progress_complete) => match progress_complete {
                                     ProgressComplete::Success => {
-                                        // for ProgressLimit::Unknown, only the background color shows, so we need to make it bright green.
-                                        if matches!(progress_tracker.progress_limit(), Some(ProgressLimit::Unknown)) {
-                                            console::style(" {spinner:40.35} ")
-                                        } else {
-                                            console::style(" {spinner:40.35} ")
-                                        }
+                                        console::style("{spinner:40.35}")
                                     },
-                                    ProgressComplete::Fail => console::style(" {spinner:40.160} "),
+                                    ProgressComplete::Fail => console::style("{spinner:40.160}"),
                                 },
                             }
                         }
@@ -372,10 +363,10 @@ where
                                 ProgressStatus::ExecPending | ProgressStatus::Running |
                                 ProgressStatus::RunningStalled |
                                 ProgressStatus::UserPending |
-                                ProgressStatus::Complete(_) => console::style("▕{bar:40}▏"),
+                                ProgressStatus::Complete(_) => console::style("{bar:40}"),
                             }
                         } else {
-                            console::style(" {spinner:40} ")
+                            console::style("{spinner:40}")
                         }
                     },
                 };
@@ -386,10 +377,10 @@ where
                         ProgressStatus::ExecPending | ProgressStatus::Running |
                         ProgressStatus::RunningStalled |
                         ProgressStatus::UserPending |
-                        ProgressStatus::Complete(_) => console::style("▕{bar:40}▏"),
+                        ProgressStatus::Complete(_) => console::style("{bar:40}"),
                     }
                 } else {
-                    console::style(" {spinner:40} ")
+                    console::style("{spinner:40}")
                 };
             }
         }
