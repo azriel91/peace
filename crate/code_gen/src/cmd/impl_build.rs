@@ -520,10 +520,11 @@ fn impl_build_for(
                 // // Set up resources for the flow's item spec graph
                 // let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
                 // let states_type_reg = crate::ctx::cmd_ctx_builder::states_type_reg(flow.graph());
+                // let states_type_reg_ref = &states_type_reg;
                 // let states_saved = peace_rt_model::StatesSerializer::<peace_rt_model::Error>::deserialize_saved_opt(
                 //     flow.flow_id(),
                 //     storage,
-                //     &states_type_reg,
+                //     states_type_reg_ref,
                 //     &states_saved_file,
                 // )
                 // .await?
@@ -1352,6 +1353,7 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
             // consumers.
             quote! {
                 let states_type_reg = crate::ctx::cmd_ctx_builder::states_type_reg(flow.graph());
+                let states_type_reg_ref = &states_type_reg;
                 let flow_id = flow.flow_id();
                 let profile_to_states_saved = futures::stream::iter(
                     flow_dirs
@@ -1364,7 +1366,7 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                         let states_saved = peace_rt_model::StatesSerializer::<peace_rt_model::Error>::deserialize_saved_opt(
                             flow_id,
                             storage,
-                            &states_type_reg,
+                            states_type_reg_ref,
                             &states_saved_file,
                         )
                         .await?
@@ -1402,12 +1404,13 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
             quote! {
                 let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
                 let states_type_reg = crate::ctx::cmd_ctx_builder::states_type_reg(flow.graph());
+                let states_type_reg_ref = &states_type_reg;
                 let flow_id = flow.flow_id();
                 let item_spec_graph = flow.graph();
                 let states_saved = peace_rt_model::StatesSerializer::<peace_rt_model::Error>::deserialize_saved_opt(
                     flow_id,
                     storage,
-                    &states_type_reg,
+                    states_type_reg_ref,
                     &states_saved_file,
                 )
                 .await?

@@ -39,9 +39,7 @@ where
             ..
         } = cmd_ctx.scope_mut().view();
 
-        let states_saved =
-            Self::deserialize_internal(resources, states_type_reg)
-                .await?;
+        let states_saved = Self::deserialize_internal(resources, states_type_reg).await?;
 
         Ok(states_saved)
     }

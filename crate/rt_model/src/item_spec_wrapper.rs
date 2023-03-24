@@ -615,8 +615,7 @@ where
     }
 
     fn state_register(&self, states_type_reg: &mut StatesTypeReg) {
-        states_type_reg
-            .register::<State>(<IS as ItemSpec>::id(self).clone());
+        states_type_reg.register::<State>(<IS as ItemSpec>::id(self).clone());
     }
 
     async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
