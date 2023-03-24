@@ -19,6 +19,9 @@ pub struct CliArgs {
     /// Command to run.
     #[command(subcommand)]
     pub command: AppCycleCommand,
+    /// Whether to run with multiple threads.
+    #[arg(long, default_value = "false")]
+    pub fast: bool,
     /// The format of the command output.
     ///
     /// At this level, this needs to be specified before the subcommand.

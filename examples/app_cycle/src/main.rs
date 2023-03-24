@@ -41,20 +41,26 @@ pub fn main() -> peace::miette::Result<(), peace::miette::Report> {
 }
 
 pub fn run() -> Result<(), AppCycleError> {
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .thread_name("main")
-        .thread_stack_size(3 * 1024 * 1024)
-        .enable_io()
-        .enable_time()
-        .build()
-        .map_err(AppCycleError::TokioRuntimeInit)?;
-
     let CliArgs {
         command,
+        fast,
         format,
         #[cfg(feature = "output_colorized")]
         color,
     } = CliArgs::parse();
+
+    let runtime = if fast {
+        tokio::runtime::Builder::new_multi_thread()
+    } else {
+        tokio::runtime::Builder::new_current_thread()
+    }
+    .thread_name("main")
+    .thread_stack_size(3 * 1024 * 1024)
+    .enable_io()
+    .enable_time()
+    .build()
+    .map_err(AppCycleError::TokioRuntimeInit)?;
+
     #[allow(unused_assignments)]
     runtime.block_on(async {
         let _workspace_spec = WorkspaceSpec::WorkingDir;
