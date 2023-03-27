@@ -54,10 +54,9 @@ where
         let content_md5_and_e_tag = match head_object_result {
             Ok(head_object_output) => {
                 #[cfg(feature = "output_progress")]
-                progress_sender.inc(
-                    1,
-                    ProgressMsgUpdate::Set(String::from("object metadata fetched")),
-                );
+                progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+                    "object metadata fetched",
+                )));
                 let content_md5_hexstr = head_object_output
                     .metadata()
                     .and_then(|metadata| metadata.get("content_md5_hexstr"))
@@ -73,10 +72,9 @@ where
             }
             Err(error) => {
                 #[cfg(feature = "output_progress")]
-                progress_sender.inc(
-                    1,
-                    ProgressMsgUpdate::Set(String::from("object metadata not fetched")),
-                );
+                progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+                    "object metadata not fetched",
+                )));
                 match &error {
                     SdkError::ServiceError(service_error) => match service_error.err().kind {
                         HeadObjectErrorKind::NotFound(_) => None,

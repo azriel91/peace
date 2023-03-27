@@ -39,7 +39,7 @@ impl<Id> IamPolicyStateCurrentFnSpec<Id> {
                 error,
             })?;
         #[cfg(feature = "output_progress")]
-        progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("finding policy")));
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from("finding policy")));
         let policy_id_arn_version = list_policies_output
             .policies()
             .and_then(|policies| {
@@ -72,7 +72,7 @@ impl<Id> IamPolicyStateCurrentFnSpec<Id> {
             } else {
                 "policy not found"
             };
-            progress_sender.inc(1, ProgressMsgUpdate::Set(String::from(message)));
+            progress_sender.tick(ProgressMsgUpdate::Set(String::from(message)));
         }
 
         Ok(policy_id_arn_version)
@@ -115,7 +115,7 @@ where
             let (policy_name, policy_path, policy_id_arn_version) = match get_policy_result {
                 Ok(get_policy_output) => {
                     #[cfg(feature = "output_progress")]
-                    progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("policy fetched")));
+                    progress_sender.tick(ProgressMsgUpdate::Set(String::from("policy fetched")));
 
                     let policy = get_policy_output
                         .policy()
@@ -152,10 +152,8 @@ where
                 }
                 Err(error) => {
                     #[cfg(feature = "output_progress")]
-                    progress_sender.inc(
-                        1,
-                        ProgressMsgUpdate::Set(String::from("policy not fetched")),
-                    );
+                    progress_sender
+                        .tick(ProgressMsgUpdate::Set(String::from("policy not fetched")));
                     match &error {
                         SdkError::ServiceError(service_error) => match service_error.err().kind {
                             GetPolicyErrorKind::NoSuchEntityException(_) => {
@@ -201,10 +199,9 @@ where
                     error,
                 })?;
             #[cfg(feature = "output_progress")]
-            progress_sender.inc(
-                1,
-                ProgressMsgUpdate::Set(String::from("policy version fetched")),
-            );
+            progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+                "policy version fetched",
+            )));
             let policy_document = get_policy_version_output
                 .policy_version()
                 .and_then(|policy_version| policy_version.document())

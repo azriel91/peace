@@ -47,7 +47,7 @@ where
             }
         })?;
         #[cfg(feature = "output_progress")]
-        progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("finding bucket")));
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from("finding bucket")));
         let s3_bucket_exists = list_buckets_output
             .buckets()
             .and_then(|buckets| {
@@ -63,7 +63,7 @@ where
             } else {
                 "bucket not found"
             };
-            progress_sender.inc(1, ProgressMsgUpdate::Set(String::from(message)));
+            progress_sender.tick(ProgressMsgUpdate::Set(String::from(message)));
         }
 
         // let head_bucket_result = client.head_bucket().bucket(name).send().await;

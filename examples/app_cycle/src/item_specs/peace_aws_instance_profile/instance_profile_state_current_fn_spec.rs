@@ -54,10 +54,9 @@ where
         let instance_profile_opt = match get_instance_profile_result {
             Ok(get_instance_profile_output) => {
                 #[cfg(feature = "output_progress")]
-                progress_sender.inc(
-                    1,
-                    ProgressMsgUpdate::Set(String::from("instance profile fetched")),
-                );
+                progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+                    "instance profile fetched",
+                )));
 
                 let instance_profile = get_instance_profile_output.instance_profile().expect(
                     "Expected instance profile to be some when get_instance_profile is successful.",
@@ -108,10 +107,9 @@ where
             }
             Err(error) => {
                 #[cfg(feature = "output_progress")]
-                progress_sender.inc(
-                    1,
-                    ProgressMsgUpdate::Set(String::from("instance profile not fetched")),
-                );
+                progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+                    "instance profile not fetched",
+                )));
                 match &error {
                     SdkError::ServiceError(service_error) => match service_error.err().kind {
                         GetInstanceProfileErrorKind::NoSuchEntityException(_) => None,

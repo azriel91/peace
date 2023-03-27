@@ -95,10 +95,7 @@ where
         match role_opt {
             None => {
                 #[cfg(feature = "output_progress")]
-                progress_sender.inc(
-                    1,
-                    ProgressMsgUpdate::Set(String::from("policy not fetched")),
-                );
+                progress_sender.tick(ProgressMsgUpdate::Set(String::from("policy not fetched")));
                 Ok(IamRoleState::None)
             }
             Some((role_name, role_path, role_id_and_arn)) => {
@@ -106,7 +103,7 @@ where
                 assert_eq!(path, role_path);
 
                 #[cfg(feature = "output_progress")]
-                progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("policy fetched")));
+                progress_sender.tick(ProgressMsgUpdate::Set(String::from("policy fetched")));
 
                 #[cfg(feature = "output_progress")]
                 progress_sender.tick(ProgressMsgUpdate::Set(String::from(
@@ -124,10 +121,9 @@ where
                         error,
                     })?;
                 #[cfg(feature = "output_progress")]
-                progress_sender.inc(
-                    1,
-                    ProgressMsgUpdate::Set(String::from("filtering attached policies")),
-                );
+                progress_sender.tick(ProgressMsgUpdate::Set(String::from(
+                    "filtering attached policies",
+                )));
                 let managed_policy_attachment = list_attached_role_policies_output
                     .attached_policies()
                     .and_then(|attached_policies| {
@@ -162,7 +158,7 @@ where
                     } else {
                         "policy not attached"
                     };
-                    progress_sender.inc(1, ProgressMsgUpdate::Set(String::from(message)));
+                    progress_sender.tick(ProgressMsgUpdate::Set(String::from(message)));
                 }
 
                 let state_current = IamRoleState::Some {
