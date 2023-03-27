@@ -93,7 +93,7 @@ where
             }
         };
         #[cfg(feature = "output_progress")]
-        progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("md5 sum computed")));
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from("md5 sum computed")));
 
         let content_md5_hexstr = content_md5_bytes
             .iter()
