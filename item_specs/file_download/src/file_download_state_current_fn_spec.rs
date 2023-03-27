@@ -122,9 +122,15 @@ where
         let file_state = Self::read_file_contents(dest, file_download_data.storage()).await?;
 
         let e_tag = file_download_data
-            .state_prev()
-            .get()
-            .map(|state_prev| state_prev.physical.clone())
+            .state_working()
+            .as_ref()
+            .map(|state_working| state_working.physical.clone())
+            .or_else(|| {
+                file_download_data
+                    .state_prev()
+                    .get()
+                    .map(|state_prev| state_prev.physical.clone())
+            })
             .unwrap_or_else(|| {
                 if let FileDownloadState::None { .. } = &file_state {
                     FetchedOpt::Tbd
