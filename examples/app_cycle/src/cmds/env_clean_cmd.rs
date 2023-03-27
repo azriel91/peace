@@ -2,10 +2,7 @@ use futures::FutureExt;
 use peace::{
     cmd::scopes::SingleProfileSingleFlowView,
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
-    rt::cmds::{
-        sub::{StatesCurrentDiscoverCmd, StatesSavedReadCmd},
-        CleanCmd,
-    },
+    rt::cmds::{sub::StatesSavedReadCmd, CleanCmd},
     rt_model::output::OutputWrite,
 };
 
@@ -35,34 +32,33 @@ impl EnvCleanCmd {
         EnvCmd::run(output, false, |ctx| {
             async move {
                 let states_saved_ref = &states_saved;
-                let _states_cleaned = CleanCmd::exec(ctx, states_saved_ref).await?;
+                let states_cleaned = CleanCmd::exec(ctx, states_saved_ref).await?;
 
                 // TODO: there's a bug with states_cleaned not being up to date after resuming
                 // from interruption.
-                let states_current = StatesCurrentDiscoverCmd::exec(ctx).await?;
-                let states_current_raw_map = &**states_current;
+                let states_cleaned_raw_map = &**states_cleaned;
 
                 let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
-                let states_current_presentables = {
-                    let states_current_presentables = flow
+                let states_cleaned_presentables = {
+                    let states_cleaned_presentables = flow
                         .graph()
                         .iter_insertion()
                         .map(|item_spec| {
                             let item_spec_id = item_spec.id();
-                            match states_current_raw_map.get(item_spec_id) {
-                                Some(state_current) => (item_spec_id, format!(": {state_current}")),
+                            match states_cleaned_raw_map.get(item_spec_id) {
+                                Some(state_cleaned) => (item_spec_id, format!(": {state_cleaned}")),
                                 None => (item_spec_id, String::from(": <unknown>")),
                             }
                         })
                         .collect::<Vec<_>>();
 
-                    ListNumbered::new(states_current_presentables)
+                    ListNumbered::new(states_cleaned_presentables)
                 };
 
                 output
                     .present(&(
                         Heading::new(HeadingLevel::Level1, "States Cleaned"),
-                        states_current_presentables,
+                        states_cleaned_presentables,
                         "\n",
                     ))
                     .await?;
