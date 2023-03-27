@@ -1,6 +1,11 @@
 use futures::FutureExt;
 use peace::{
-    rt::cmds::{sub::StatesSavedReadCmd, CleanCmd},
+    cmd::scopes::SingleProfileSingleFlowView,
+    fmt::presentable::{Heading, HeadingLevel, ListNumbered},
+    rt::cmds::{
+        sub::{StatesCurrentDiscoverCmd, StatesSavedReadCmd},
+        CleanCmd,
+    },
     rt_model::output::OutputWrite,
 };
 
@@ -27,12 +32,47 @@ impl EnvCleanCmd {
             StatesSavedReadCmd::exec(ctx).boxed_local()
         })
         .await?;
+        EnvCmd::run(output, false, |ctx| {
+            async move {
+                let states_saved_ref = &states_saved;
+                let _states_cleaned = CleanCmd::exec(ctx, states_saved_ref).await?;
 
-        // https://github.com/rust-lang/rust-clippy/issues/10482
-        #[allow(clippy::redundant_async_block)]
-        EnvCmd::run_and_present(output, false, |ctx| {
-            async move { CleanCmd::exec(ctx, &states_saved).await }.boxed_local()
+                // TODO: there's a bug with states_cleaned not being up to date after resuming
+                // from interruption.
+                let states_current = StatesCurrentDiscoverCmd::exec(ctx).await?;
+                let states_current_raw_map = &**states_current;
+
+                let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
+                let states_current_presentables = {
+                    let states_current_presentables = flow
+                        .graph()
+                        .iter_insertion()
+                        .map(|item_spec| {
+                            let item_spec_id = item_spec.id();
+                            match states_current_raw_map.get(item_spec_id) {
+                                Some(state_current) => (item_spec_id, format!(": {state_current}")),
+                                None => (item_spec_id, String::from(": <unknown>")),
+                            }
+                        })
+                        .collect::<Vec<_>>();
+
+                    ListNumbered::new(states_current_presentables)
+                };
+
+                output
+                    .present(&(
+                        Heading::new(HeadingLevel::Level1, "States Cleaned"),
+                        states_current_presentables,
+                        "\n",
+                    ))
+                    .await?;
+
+                Ok(())
+            }
+            .boxed_local()
         })
-        .await
+        .await?;
+
+        Ok(())
     }
 }

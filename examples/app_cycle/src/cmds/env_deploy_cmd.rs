@@ -61,7 +61,7 @@ impl EnvDeployCmd {
 
                 output
                     .present(&(
-                        Heading::new(HeadingLevel::Level1, "States Current"),
+                        Heading::new(HeadingLevel::Level1, "States Ensured"),
                         states_current_presentables,
                         "\n",
                     ))
