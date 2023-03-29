@@ -13,10 +13,10 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{
-    outcomes::{ItemApplyBoxed, ItemApplyPartialBoxed},
+    outcomes::{CmdOutcome, ItemApplyBoxed, ItemApplyPartialBoxed},
     output::OutputWrite,
     params::ParamsKeys,
-    Error, ItemSpecBoxed, ItemSpecRt, Storage,
+    Error, IndexMap, ItemSpecBoxed, ItemSpecRt, Storage,
 };
 use tokio::sync::{mpsc, mpsc::UnboundedSender};
 
@@ -82,11 +82,8 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
         apply_for: ApplyFor,
-    ) -> Result<States<StatesTsApplyDry>, E> {
-        let states_applied_dry =
-            Self::exec_internal(cmd_ctx, states_saved, apply_for, true).await?;
-
-        Ok(states_applied_dry)
+    ) -> CmdOutcome<States<StatesTsApplyDry>, E> {
+        Self::exec_internal(cmd_ctx, states_saved, apply_for, true).await
     }
 
     /// Conditionally runs [`ApplyOpSpec`]`::`[`exec`] for each
@@ -122,11 +119,11 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
         apply_for: ApplyFor,
-    ) -> Result<States<StatesTsApply>, E> {
-        let states_applied = Self::exec_internal(cmd_ctx, states_saved, apply_for, false).await?;
-        Self::serialize_internal(cmd_ctx.resources(), &states_applied).await?;
+    ) -> Result<CmdOutcome<States<StatesTsApply>, E>, E> {
+        let cmd_outcome = Self::exec_internal(cmd_ctx, states_saved, apply_for, false).await;
+        Self::serialize_internal(cmd_ctx.resources(), &cmd_outcome.value).await?;
 
-        Ok(states_applied)
+        Ok(cmd_outcome)
     }
 
     /// Conditionally runs [`ApplyOpSpec`]`::`[`exec`] for each [`ItemSpec`].
@@ -142,7 +139,7 @@ where
         states_saved: &StatesSaved,
         apply_for: ApplyFor,
         dry_run: bool,
-    ) -> Result<States<StatesTs>, E> {
+    ) -> CmdOutcome<States<StatesTs>, E> {
         let SingleProfileSingleFlowView {
             #[cfg(feature = "output_progress")]
             output,
@@ -229,7 +226,7 @@ where
         let progress_render_task =
             crate::progress::Progress::progress_render(output, progress_trackers, progress_rx);
 
-        let mut errors = Vec::<(&'static str, ItemSpecId, E)>::new();
+        let mut errors = IndexMap::<ItemSpecId, E>::new();
         let outcomes_rx_task = async {
             while let Some(outcome) = outcomes_rx.recv().await {
                 match outcome {
@@ -238,7 +235,7 @@ where
                         item_apply_partial: _,
                         error,
                     } => {
-                        errors.push(("Prepare failed", item_spec_id.clone(), error));
+                        errors.insert(item_spec_id.clone(), error);
                     }
                     ItemApplyOutcome::Success {
                         item_spec_id,
@@ -254,9 +251,9 @@ where
                     ItemApplyOutcome::Fail {
                         item_spec_id,
                         item_apply,
-                        error, // TODO: save to report.
+                        error,
                     } => {
-                        errors.push(("Apply failed", item_spec_id.clone(), error));
+                        errors.insert(item_spec_id.clone(), error);
                         if let Some(state_applied) = item_apply.state_applied() {
                             states_applied_mut.insert_raw(item_spec_id, state_applied);
                         }
@@ -275,15 +272,6 @@ where
             }
         }
 
-        errors.iter().for_each(|(desc, item_spec_id, error)| {
-            eprintln!("\n{item_spec_id} {desc}: {error}");
-            let mut error = error.source();
-            while let Some(source) = error {
-                eprintln!("  caused by: {source}");
-                error = source.source();
-            }
-        });
-
         // TODO: Should we run `StatesCurrentFnSpec` again?
         //
         // i.e. is it part of `ApplyOpSpec::exec`'s contract to return the state.
@@ -296,7 +284,10 @@ where
         //   item spec we run the state current script after the apply exec script.
         let states_applied = states_applied_mut.into();
 
-        Ok(states_applied)
+        CmdOutcome {
+            value: states_applied,
+            errors,
+        }
     }
 
     ///

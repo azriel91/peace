@@ -3,7 +3,7 @@ use peace::{
     cmd::scopes::SingleProfileSingleFlowView,
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
     rt::cmds::{sub::StatesSavedReadCmd, CleanCmd},
-    rt_model::output::OutputWrite,
+    rt_model::{outcomes::CmdOutcome, output::OutputWrite},
 };
 
 use crate::{cmds::EnvCmd, model::AppCycleError};
@@ -32,11 +32,13 @@ impl EnvCleanCmd {
         EnvCmd::run(output, false, |ctx| {
             async move {
                 let states_saved_ref = &states_saved;
-                let states_cleaned = CleanCmd::exec(ctx, states_saved_ref).await?;
+                let states_cleaned_outcome = CleanCmd::exec(ctx, states_saved_ref).await?;
+                let CmdOutcome {
+                    value: states_cleaned,
+                    errors,
+                } = &states_cleaned_outcome;
 
-                // TODO: there's a bug with states_cleaned not being up to date after resuming
-                // from interruption.
-                let states_cleaned_raw_map = &**states_cleaned;
+                let states_cleaned_raw_map = &***states_cleaned;
 
                 let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
                 let states_cleaned_presentables = {
@@ -62,6 +64,41 @@ impl EnvCleanCmd {
                         "\n",
                     ))
                     .await?;
+
+                if states_cleaned_outcome.is_err() {
+                    #[cfg(feature = "error_reporting")]
+                    {
+                        use peace::miette::GraphicalReportHandler;
+
+                        let report_handler = GraphicalReportHandler::new();
+                        let mut err_buffer = String::new();
+                        for (item_spec_id, error) in errors.iter() {
+                            // Ignore failures when writing errors
+                            let (Ok(()) | Err(_)) = output.present(item_spec_id).await;
+                            let (Ok(()) | Err(_)) = output.present(":\n").await;
+                            let (Ok(()) | Err(_)) =
+                                report_handler.render_report(&mut err_buffer, error);
+                            let (Ok(()) | Err(_)) = output.present(&err_buffer).await;
+                            let (Ok(()) | Err(_)) = output.present("\n").await;
+
+                            err_buffer.clear();
+                        }
+                    }
+
+                    #[cfg(not(feature = "error_reporting"))]
+                    {
+                        use std::error::Error;
+
+                        errors.iter().for_each(|(item_spec_id, error)| {
+                            eprintln!("\n{item_spec_id}: {error}");
+                            let mut error = error.source();
+                            while let Some(source) = error {
+                                eprintln!("  caused by: {source}");
+                                error = source.source();
+                            }
+                        });
+                    }
+                }
 
                 Ok(())
             }
