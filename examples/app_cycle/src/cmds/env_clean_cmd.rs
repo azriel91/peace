@@ -70,7 +70,7 @@ impl EnvCleanCmd {
                     {
                         use peace::miette::GraphicalReportHandler;
 
-                        let report_handler = GraphicalReportHandler::new();
+                        let report_handler = GraphicalReportHandler::new().without_cause_chain();
                         let mut err_buffer = String::new();
                         for (item_spec_id, error) in errors.iter() {
                             // Ignore failures when writing errors
