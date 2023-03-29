@@ -73,23 +73,35 @@ where
 
                 Some((role_name, role_path, role_id_and_arn))
             }
-            Err(error) => match &error {
-                SdkError::ServiceError(service_error) => match service_error.err().kind {
-                    GetRoleErrorKind::NoSuchEntityException(_) => None,
+            Err(error) => {
+                #[cfg(feature = "error_reporting")]
+                let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
+                match &error {
+                    SdkError::ServiceError(service_error) => match service_error.err().kind {
+                        GetRoleErrorKind::NoSuchEntityException(_) => None,
+                        _ => {
+                            return Err(IamRoleError::RoleGetError {
+                                role_name: name.to_string(),
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc_span,
+                                error,
+                            });
+                        }
+                    },
                     _ => {
                         return Err(IamRoleError::RoleGetError {
                             role_name: name.to_string(),
+                            #[cfg(feature = "error_reporting")]
+                            aws_desc,
+                            #[cfg(feature = "error_reporting")]
+                            aws_desc_span,
                             error,
                         });
                     }
-                },
-                _ => {
-                    return Err(IamRoleError::RoleGetError {
-                        role_name: name.to_string(),
-                        error,
-                    });
                 }
-            },
+            }
         };
 
         match role_opt {
@@ -115,10 +127,19 @@ where
                     .path_prefix(path)
                     .send()
                     .await
-                    .map_err(|error| IamRoleError::ManagedPoliciesListError {
-                        role_name: name.to_string(),
-                        role_path: path.to_string(),
-                        error,
+                    .map_err(|error| {
+                        #[cfg(feature = "error_reporting")]
+                        let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
+
+                        IamRoleError::ManagedPoliciesListError {
+                            role_name: name.to_string(),
+                            role_path: path.to_string(),
+                            #[cfg(feature = "error_reporting")]
+                            aws_desc,
+                            #[cfg(feature = "error_reporting")]
+                            aws_desc_span,
+                            error,
+                        }
                     })?;
                 #[cfg(feature = "output_progress")]
                 progress_sender.tick(ProgressMsgUpdate::Set(String::from(

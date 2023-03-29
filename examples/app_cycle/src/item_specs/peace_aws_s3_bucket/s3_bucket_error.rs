@@ -36,7 +36,7 @@ pub enum S3BucketError {
     #[error("Failed to list S3 buckets to discover: `{s3_bucket_name}`.")]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(help("Please try again later."))
+        diagnostic(help("Make sure you are connected to the internet and try again."))
     )]
     S3BucketListError {
         /// S3Bucket friendly name.
@@ -56,6 +56,16 @@ pub enum S3BucketError {
 
     /// Failed to create S3 bucket as someone else owns the name.
     #[error("Failed to create S3 bucket as someone else owns the name: `{s3_bucket_name}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help(
+            "Please use a different profile name by running:\n\
+            ```\n\
+            ./app_cycle switch <profile_name> --create --type development username/repo <version>\n\
+            ```\n\
+            "
+        ))
+    )]
     S3BucketOwnedBySomeoneElseError {
         /// S3Bucket friendly name.
         s3_bucket_name: String,
@@ -78,9 +88,21 @@ pub enum S3BucketError {
 
     /// Failed to create S3 bucket.
     #[error("Failed to create S3 bucket: `{s3_bucket_name}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     S3BucketCreateError {
         /// S3Bucket friendly name.
         s3_bucket_name: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<CreateBucketError>,
@@ -88,9 +110,21 @@ pub enum S3BucketError {
 
     /// Failed to discover S3 bucket.
     #[error("Failed to discover S3 bucket: `{s3_bucket_name}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     S3BucketGetError {
         /// Expected S3 bucket friendly name.
         s3_bucket_name: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<HeadBucketError>,
@@ -98,9 +132,21 @@ pub enum S3BucketError {
 
     /// Failed to delete S3 bucket.
     #[error("Failed to delete S3 bucket: `{s3_bucket_name}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     S3BucketDeleteError {
         /// S3Bucket friendly name.
         s3_bucket_name: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<DeleteBucketError>,

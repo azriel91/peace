@@ -75,12 +75,20 @@ where
                 progress_sender.tick(ProgressMsgUpdate::Set(String::from(
                     "object metadata not fetched",
                 )));
+
+                #[cfg(feature = "error_reporting")]
+                let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
+
                 match &error {
                     SdkError::ServiceError(service_error) => match service_error.err().kind {
                         HeadObjectErrorKind::NotFound(_) => None,
                         _ => {
                             return Err(S3ObjectError::S3ObjectGetError {
                                 object_key: object_key.to_string(),
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc_span,
                                 error,
                             });
                         }
@@ -88,6 +96,10 @@ where
                     _ => {
                         return Err(S3ObjectError::S3ObjectGetError {
                             object_key: object_key.to_string(),
+                            #[cfg(feature = "error_reporting")]
+                            aws_desc,
+                            #[cfg(feature = "error_reporting")]
+                            aws_desc_span,
                             error,
                         });
                     }

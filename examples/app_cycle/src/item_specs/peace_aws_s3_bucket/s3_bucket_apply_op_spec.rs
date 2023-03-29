@@ -133,6 +133,9 @@ where
                     let _create_bucket_output = create_bucket.send().await.map_err(|error| {
                         let s3_bucket_name = name.to_string();
 
+                        #[cfg(feature = "error_reporting")]
+                        let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
+
                         match &error {
                             SdkError::ServiceError(service_error) => {
                                 match &service_error.err().kind {
@@ -150,12 +153,20 @@ where
                                     }
                                     _ => S3BucketError::S3BucketCreateError {
                                         s3_bucket_name,
+                                        #[cfg(feature = "error_reporting")]
+                                        aws_desc,
+                                        #[cfg(feature = "error_reporting")]
+                                        aws_desc_span,
                                         error,
                                     },
                                 }
                             }
                             _ => S3BucketError::S3BucketCreateError {
                                 s3_bucket_name,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc_span,
                                 error,
                             },
                         }
@@ -202,9 +213,17 @@ where
                                     }
                                 }
 
+                                #[cfg(feature = "error_reporting")]
+                                let (aws_desc, aws_desc_span) =
+                                    crate::item_specs::aws_error_desc!(&error);
+
                                 let s3_bucket_name = name.to_string();
                                 Err(S3BucketError::S3BucketDeleteError {
                                     s3_bucket_name,
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc,
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc_span,
                                     error,
                                 })
                             })?;

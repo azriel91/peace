@@ -110,6 +110,10 @@ where
                 progress_sender.tick(ProgressMsgUpdate::Set(String::from(
                     "instance profile not fetched",
                 )));
+
+                #[cfg(feature = "error_reporting")]
+                let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
+
                 match &error {
                     SdkError::ServiceError(service_error) => match service_error.err().kind {
                         GetInstanceProfileErrorKind::NoSuchEntityException(_) => None,
@@ -117,6 +121,10 @@ where
                             return Err(InstanceProfileError::InstanceProfileGetError {
                                 instance_profile_name: name.to_string(),
                                 instance_profile_path: path.to_string(),
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc_span,
                                 error,
                             });
                         }
@@ -125,6 +133,10 @@ where
                         return Err(InstanceProfileError::InstanceProfileGetError {
                             instance_profile_name: name.to_string(),
                             instance_profile_path: path.to_string(),
+                            #[cfg(feature = "error_reporting")]
+                            aws_desc,
+                            #[cfg(feature = "error_reporting")]
+                            aws_desc_span,
                             error,
                         });
                     }

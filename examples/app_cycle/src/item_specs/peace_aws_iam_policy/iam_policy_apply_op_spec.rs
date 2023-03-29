@@ -158,9 +158,17 @@ where
                             let policy_name = name.to_string();
                             let policy_path = path.to_string();
 
+                            #[cfg(feature = "error_reporting")]
+                            let (aws_desc, aws_desc_span) =
+                                crate::item_specs::aws_error_desc!(&error);
+
                             IamPolicyError::PolicyCreateError {
                                 policy_name,
                                 policy_path,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc_span,
                                 error,
                             }
                         })?;
@@ -255,10 +263,18 @@ where
                                             .send()
                                             .await
                                             .map_err(|error| {
+                                                #[cfg(feature = "error_reporting")]
+                                                let (aws_desc, aws_desc_span) =
+                                                    crate::item_specs::aws_error_desc!(&error);
+
                                                 IamPolicyError::PolicyVersionDeleteError {
                                                     policy_name: name.to_string(),
                                                     policy_path: path.to_string(),
                                                     version: version_id.to_string(),
+                                                    #[cfg(feature = "error_reporting")]
+                                                    aws_desc,
+                                                    #[cfg(feature = "error_reporting")]
+                                                    aws_desc_span,
                                                     error,
                                                 }
                                             })?;
@@ -271,35 +287,62 @@ where
                                         );
                                     }
                                 }
-                                Err(error) => match &error {
-                                    SdkError::ServiceError(service_error) => match service_error
-                                        .err()
-                                        .kind
-                                    {
-                                        ListPolicyVersionsErrorKind::NoSuchEntityException(_) => {
-                                            return Err(IamPolicyError::PolicyNotFoundAfterList {
-                                                policy_name: name.to_string(),
-                                                policy_path: path.to_string(),
-                                                policy_id: policy_id_arn_version.id().to_string(),
-                                                policy_arn: policy_id_arn_version.arn().to_string(),
-                                            });
-                                        }
+                                Err(error) => {
+                                    #[cfg(feature = "error_reporting")]
+                                    let (aws_desc, aws_desc_span) =
+                                        crate::item_specs::aws_error_desc!(&error);
+                                    match &error {
+                                        SdkError::ServiceError(service_error) => match service_error
+                                            .err()
+                                            .kind
+                                        {
+                                            ListPolicyVersionsErrorKind::NoSuchEntityException(
+                                                _,
+                                            ) => {
+                                                return Err(
+                                                    IamPolicyError::PolicyNotFoundAfterList {
+                                                        policy_name: name.to_string(),
+                                                        policy_path: path.to_string(),
+                                                        policy_id: policy_id_arn_version
+                                                            .id()
+                                                            .to_string(),
+                                                        policy_arn: policy_id_arn_version
+                                                            .arn()
+                                                            .to_string(),
+                                                        #[cfg(feature = "error_reporting")]
+                                                        aws_desc,
+                                                        #[cfg(feature = "error_reporting")]
+                                                        aws_desc_span,
+                                                    },
+                                                );
+                                            }
+                                            _ => {
+                                                return Err(
+                                                    IamPolicyError::PolicyVersionsListError {
+                                                        policy_name: name.to_string(),
+                                                        policy_path: path.to_string(),
+                                                        #[cfg(feature = "error_reporting")]
+                                                        aws_desc,
+                                                        #[cfg(feature = "error_reporting")]
+                                                        aws_desc_span,
+                                                        error,
+                                                    },
+                                                );
+                                            }
+                                        },
                                         _ => {
                                             return Err(IamPolicyError::PolicyVersionsListError {
                                                 policy_name: name.to_string(),
                                                 policy_path: path.to_string(),
+                                                #[cfg(feature = "error_reporting")]
+                                                aws_desc,
+                                                #[cfg(feature = "error_reporting")]
+                                                aws_desc_span,
                                                 error,
                                             });
                                         }
-                                    },
-                                    _ => {
-                                        return Err(IamPolicyError::PolicyVersionsListError {
-                                            policy_name: name.to_string(),
-                                            policy_path: path.to_string(),
-                                            error,
-                                        });
                                     }
-                                },
+                                }
                             };
 
                             // The default version is deleted along with the policy.
@@ -317,11 +360,19 @@ where
                                     let policy_id = policy_id_arn_version.id().to_string();
                                     let policy_arn = policy_id_arn_version.arn().to_string();
 
+                                    #[cfg(feature = "error_reporting")]
+                                    let (aws_desc, aws_desc_span) =
+                                        crate::item_specs::aws_error_desc!(&error);
+
                                     IamPolicyError::PolicyDeleteError {
                                         policy_name,
                                         policy_path,
                                         policy_id,
                                         policy_arn,
+                                        #[cfg(feature = "error_reporting")]
+                                        aws_desc,
+                                        #[cfg(feature = "error_reporting")]
+                                        aws_desc_span,
                                         error,
                                     }
                                 })?;
@@ -364,9 +415,17 @@ where
                             let policy_name = name.to_string();
                             let policy_path = path.to_string();
 
+                            #[cfg(feature = "error_reporting")]
+                            let (aws_desc, aws_desc_span) =
+                                crate::item_specs::aws_error_desc!(&error);
+
                             IamPolicyError::PolicyVersionCreateError {
                                 policy_name,
                                 policy_path,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc_span,
                                 error,
                             }
                         })?;

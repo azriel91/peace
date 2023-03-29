@@ -1,5 +1,5 @@
 #[cfg(feature = "error_reporting")]
-use peace::miette;
+use peace::miette::{self, SourceSpan};
 
 use aws_sdk_iam::{
     error::{
@@ -33,6 +33,10 @@ pub enum IamRoleError {
 
     /// Failed to attach managed policy.
     #[error("Failed to attach managed policy.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     ManagedPolicyAttachError {
         /// Role friendly name.
         role_name: String,
@@ -40,6 +44,14 @@ pub enum IamRoleError {
         role_path: String,
         /// ARN of the managed policy.
         managed_policy_arn: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<AttachRolePolicyError>,
@@ -47,11 +59,23 @@ pub enum IamRoleError {
 
     /// Failed to detach managed policy.
     #[error("Failed to detach managed policy.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     ManagedPolicyDetachError {
         /// Role friendly name.
         role_name: String,
         /// Role path.
         role_path: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<DetachRolePolicyError>,
@@ -59,11 +83,23 @@ pub enum IamRoleError {
 
     /// Failed to list managed policies for role.
     #[error("Failed to list managed policies for role.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     ManagedPoliciesListError {
         /// Role friendly name.
         role_name: String,
         /// Role path.
         role_path: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<ListAttachedRolePoliciesError>,
@@ -71,9 +107,21 @@ pub enum IamRoleError {
 
     /// Failed to create role.
     #[error("Failed to create role.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     RoleCreateError {
         /// Role friendly name.
         role_name: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<CreateRoleError>,
@@ -81,9 +129,21 @@ pub enum IamRoleError {
 
     /// Failed to discover role.
     #[error("Failed to discover role.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     RoleGetError {
         /// Expected role friendly name.
         role_name: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<GetRoleError>,
@@ -91,6 +151,10 @@ pub enum IamRoleError {
 
     /// Failed to delete role.
     #[error("Failed to delete role.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     RoleDeleteError {
         /// Role friendly name.
         role_name: String,
@@ -98,6 +162,14 @@ pub enum IamRoleError {
         role_id: String,
         /// Role ARN.
         role_arn: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<DeleteRoleError>,

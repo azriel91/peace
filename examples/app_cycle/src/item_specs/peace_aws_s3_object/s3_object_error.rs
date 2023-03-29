@@ -1,7 +1,7 @@
 use std::{num::ParseIntError, path::PathBuf};
 
 #[cfg(feature = "error_reporting")]
-use peace::miette;
+use peace::miette::{self, SourceSpan};
 
 use aws_sdk_s3::{
     self,
@@ -132,11 +132,23 @@ pub enum S3ObjectError {
 
     /// Failed to list S3 objects.
     #[error("Failed to list S3 objects to discover: `{object_key}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     S3ObjectListError {
         /// S3 bucket name.
         bucket_name: String,
         /// S3 object key.
         object_key: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<ListObjectsError>,
@@ -144,11 +156,23 @@ pub enum S3ObjectError {
 
     /// Failed to upload S3 object.
     #[error("Failed to upload S3 object: `{object_key}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     S3ObjectUploadError {
         /// S3 bucket name.
         bucket_name: String,
         /// S3 object key.
         object_key: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<PutObjectError>,
@@ -156,9 +180,21 @@ pub enum S3ObjectError {
 
     /// Failed to discover S3 object.
     #[error("Failed to discover S3 object: `{object_key}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     S3ObjectGetError {
         /// Expected S3 object friendly name.
         object_key: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<HeadObjectError>,
@@ -166,11 +202,23 @@ pub enum S3ObjectError {
 
     /// Failed to delete S3 object.
     #[error("Failed to delete S3 object: `{object_key}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     S3ObjectDeleteError {
         /// S3 bucket name.
         bucket_name: String,
         /// S3 object key.
         object_key: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<DeleteObjectError>,

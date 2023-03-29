@@ -34,9 +34,18 @@ impl<Id> IamPolicyStateCurrentFnSpec<Id> {
             .path_prefix(path)
             .send()
             .await
-            .map_err(|error| IamPolicyError::PoliciesListError {
-                path: path.to_string(),
-                error,
+            .map_err(|error| {
+                #[cfg(feature = "error_reporting")]
+                let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
+
+                IamPolicyError::PoliciesListError {
+                    path: path.to_string(),
+                    #[cfg(feature = "error_reporting")]
+                    aws_desc,
+                    #[cfg(feature = "error_reporting")]
+                    aws_desc_span,
+                    error,
+                }
             })?;
         #[cfg(feature = "output_progress")]
         progress_sender.tick(ProgressMsgUpdate::Set(String::from("finding policy")));
@@ -154,6 +163,10 @@ where
                     #[cfg(feature = "output_progress")]
                     progress_sender
                         .tick(ProgressMsgUpdate::Set(String::from("policy not fetched")));
+
+                    #[cfg(feature = "error_reporting")]
+                    let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
+
                     match &error {
                         SdkError::ServiceError(service_error) => match service_error.err().kind {
                             GetPolicyErrorKind::NoSuchEntityException(_) => {
@@ -162,12 +175,20 @@ where
                                     policy_path: path.to_string(),
                                     policy_id: policy_id.to_string(),
                                     policy_arn: policy_arn.to_string(),
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc,
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc_span,
                                 });
                             }
                             _ => {
                                 return Err(IamPolicyError::PolicyGetError {
                                     policy_name: name.to_string(),
                                     policy_path: path.to_string(),
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc,
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc_span,
                                     error,
                                 });
                             }
@@ -176,6 +197,10 @@ where
                             return Err(IamPolicyError::PolicyGetError {
                                 policy_name: name.to_string(),
                                 policy_path: path.to_string(),
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc_span,
                                 error,
                             });
                         }
@@ -193,10 +218,19 @@ where
                 .version_id(policy_id_arn_version.version())
                 .send()
                 .await
-                .map_err(|error| IamPolicyError::PolicyVersionGetError {
-                    policy_name: policy_name.clone(),
-                    policy_path: policy_path.clone(),
-                    error,
+                .map_err(|error| {
+                    #[cfg(feature = "error_reporting")]
+                    let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
+
+                    IamPolicyError::PolicyVersionGetError {
+                        policy_name: policy_name.clone(),
+                        policy_path: policy_path.clone(),
+                        #[cfg(feature = "error_reporting")]
+                        aws_desc,
+                        #[cfg(feature = "error_reporting")]
+                        aws_desc_span,
+                        error,
+                    }
                 })?;
             #[cfg(feature = "output_progress")]
             progress_sender.tick(ProgressMsgUpdate::Set(String::from(

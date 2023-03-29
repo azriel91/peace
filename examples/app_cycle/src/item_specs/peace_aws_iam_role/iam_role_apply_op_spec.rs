@@ -32,9 +32,16 @@ impl<Id> IamRoleApplyOpSpec<Id> {
                 let role_name = name.to_string();
                 let role_path = path.to_string();
 
+                #[cfg(feature = "error_reporting")]
+                let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
+
                 IamRoleError::ManagedPolicyDetachError {
                     role_name,
                     role_path,
+                    #[cfg(feature = "error_reporting")]
+                    aws_desc,
+                    #[cfg(feature = "error_reporting")]
+                    aws_desc_span,
                     error,
                 }
             })?;
@@ -197,7 +204,18 @@ where
                         .map_err(|error| {
                             let role_name = name.to_string();
 
-                            IamRoleError::RoleCreateError { role_name, error }
+                            #[cfg(feature = "error_reporting")]
+                            let (aws_desc, aws_desc_span) =
+                                crate::item_specs::aws_error_desc!(&error);
+
+                            IamRoleError::RoleCreateError {
+                                role_name,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc_span,
+                                error,
+                            }
                         })?;
                     #[cfg(feature = "output_progress")]
                     progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("role created")));
@@ -223,11 +241,21 @@ where
                         .policy_arn(managed_policy_arn)
                         .send()
                         .await
-                        .map_err(|error| IamRoleError::ManagedPolicyAttachError {
-                            role_name: name.clone(),
-                            role_path: path.clone(),
-                            managed_policy_arn: managed_policy_attachment.arn().to_string(),
-                            error,
+                        .map_err(|error| {
+                            #[cfg(feature = "error_reporting")]
+                            let (aws_desc, aws_desc_span) =
+                                crate::item_specs::aws_error_desc!(&error);
+
+                            IamRoleError::ManagedPolicyAttachError {
+                                role_name: name.clone(),
+                                role_path: path.clone(),
+                                managed_policy_arn: managed_policy_attachment.arn().to_string(),
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc_span,
+                                error,
+                            }
                         })?;
                     #[cfg(feature = "output_progress")]
                     progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("policy attached")));
@@ -282,10 +310,18 @@ where
                                     let role_id = role_id_and_arn.id().to_string();
                                     let role_arn = role_id_and_arn.arn().to_string();
 
+                                    #[cfg(feature = "error_reporting")]
+                                    let (aws_desc, aws_desc_span) =
+                                        crate::item_specs::aws_error_desc!(&error);
+
                                     IamRoleError::RoleDeleteError {
                                         role_name,
                                         role_id,
                                         role_arn,
+                                        #[cfg(feature = "error_reporting")]
+                                        aws_desc,
+                                        #[cfg(feature = "error_reporting")]
+                                        aws_desc_span,
                                         error,
                                     }
                                 })?;
@@ -346,11 +382,20 @@ where
                         .policy_arn(managed_policy_arn)
                         .send()
                         .await
-                        .map_err(|error| IamRoleError::ManagedPolicyAttachError {
-                            role_name: name.clone(),
-                            role_path: path.clone(),
-                            managed_policy_arn: managed_policy_attachment.arn().to_string(),
-                            error,
+                        .map_err(|error| {
+                            #[cfg(feature = "error_reporting")]
+                            let (aws_desc, aws_desc_span) =
+                                crate::item_specs::aws_error_desc!(&error);
+                            IamRoleError::ManagedPolicyAttachError {
+                                role_name: name.clone(),
+                                role_path: path.clone(),
+                                managed_policy_arn: managed_policy_attachment.arn().to_string(),
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc_span,
+                                error,
+                            }
                         })?;
                     #[cfg(feature = "output_progress")]
                     progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("policy attached")));

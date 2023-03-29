@@ -1,5 +1,5 @@
 #[cfg(feature = "error_reporting")]
-use peace::miette;
+use peace::miette::{self, SourceSpan};
 
 use aws_sdk_iam::{
     error::{
@@ -33,9 +33,21 @@ pub enum IamPolicyError {
 
     /// Failed to list policies.
     #[error("Failed to list policies.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     PoliciesListError {
         /// Path prefix used to list policies
         path: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<ListPoliciesError>,
@@ -57,11 +69,23 @@ pub enum IamPolicyError {
 
     /// Failed to create policy.
     #[error("Failed to create policy.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     PolicyCreateError {
         /// Policy friendly name.
         policy_name: String,
         /// Policy path.
         policy_path: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<CreatePolicyError>,
@@ -69,11 +93,23 @@ pub enum IamPolicyError {
 
     /// Failed to discover policy.
     #[error("Failed to discover policy.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     PolicyGetError {
         /// Expected policy friendly name.
         policy_name: String,
         /// Policy path.
         policy_path: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<GetPolicyError>,
@@ -81,11 +117,23 @@ pub enum IamPolicyError {
 
     /// Failed to create policy version.
     #[error("Failed to create policy version.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     PolicyVersionCreateError {
         /// Policy friendly name.
         policy_name: String,
         /// Policy path.
         policy_path: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<CreatePolicyVersionError>,
@@ -93,6 +141,10 @@ pub enum IamPolicyError {
 
     /// Failed to delete policy version.
     #[error("Failed to delete policy version.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     PolicyVersionDeleteError {
         /// Policy friendly name.
         policy_name: String,
@@ -100,6 +152,14 @@ pub enum IamPolicyError {
         policy_path: String,
         /// Version ID of the policy version to delete.
         version: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<DeletePolicyVersionError>,
@@ -107,11 +167,23 @@ pub enum IamPolicyError {
 
     /// Failed to get policy version.
     #[error("Failed to get policy version.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     PolicyVersionGetError {
         /// Policy friendly name.
         policy_name: String,
         /// Policy path.
         policy_path: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<GetPolicyVersionError>,
@@ -119,11 +191,23 @@ pub enum IamPolicyError {
 
     /// Failed to discover policy.
     #[error("Failed to discover policy.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     PolicyVersionsListError {
         /// Expected policy friendly name.
         policy_name: String,
         /// Policy path.
         policy_path: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<ListPolicyVersionsError>,
@@ -132,6 +216,10 @@ pub enum IamPolicyError {
     /// Policy existed when listing policies, but did not exist when retrieving
     /// details.
     #[error("Policy details failed to be retrieved.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Someone may have deleted it, please try again."))
+    )]
     PolicyNotFoundAfterList {
         /// Expected policy friendly name.
         policy_name: String,
@@ -141,10 +229,22 @@ pub enum IamPolicyError {
         policy_id: String,
         /// Policy ARN.
         policy_arn: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
     },
 
     /// Failed to delete policy.
     #[error("Failed to delete policy.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     PolicyDeleteError {
         /// Policy friendly name.
         policy_name: String,
@@ -154,6 +254,14 @@ pub enum IamPolicyError {
         policy_id: String,
         /// Policy ARN.
         policy_arn: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<DeletePolicyError>,

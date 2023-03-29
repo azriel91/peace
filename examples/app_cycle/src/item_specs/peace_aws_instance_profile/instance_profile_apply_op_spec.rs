@@ -33,10 +33,17 @@ impl<Id> InstanceProfileApplyOpSpec<Id> {
                 let instance_profile_path = path.to_string();
                 let role_name = name.to_string();
 
+                #[cfg(feature = "error_reporting")]
+                let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
+
                 InstanceProfileError::InstanceProfileRoleAddError {
                     instance_profile_name,
                     instance_profile_path,
                     role_name,
+                    #[cfg(feature = "error_reporting")]
+                    aws_desc,
+                    #[cfg(feature = "error_reporting")]
+                    aws_desc_span,
                     error,
                 }
             })?;
@@ -64,9 +71,16 @@ impl<Id> InstanceProfileApplyOpSpec<Id> {
                 let instance_profile_name = name.to_string();
                 let instance_profile_path = path.to_string();
 
+                #[cfg(feature = "error_reporting")]
+                let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
+
                 InstanceProfileError::InstanceProfileRoleRemoveError {
                     instance_profile_name,
                     instance_profile_path,
+                    #[cfg(feature = "error_reporting")]
+                    aws_desc,
+                    #[cfg(feature = "error_reporting")]
+                    aws_desc_span,
                     error,
                 }
             })?;
@@ -221,9 +235,17 @@ where
                             let instance_profile_name = name.to_string();
                             let instance_profile_path = path.to_string();
 
+                            #[cfg(feature = "error_reporting")]
+                            let (aws_desc, aws_desc_span) =
+                                crate::item_specs::aws_error_desc!(&error);
+
                             InstanceProfileError::InstanceProfileCreateError {
                                 instance_profile_name,
                                 instance_profile_path,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc,
+                                #[cfg(feature = "error_reporting")]
+                                aws_desc_span,
                                 error,
                             }
                         })?;
@@ -307,11 +329,19 @@ where
                                 let instance_profile_arn =
                                     instance_profile_id_and_arn.arn().to_string();
 
+                                #[cfg(feature = "error_reporting")]
+                                let (aws_desc, aws_desc_span) =
+                                    crate::item_specs::aws_error_desc!(&error);
+
                                 InstanceProfileError::InstanceProfileDeleteError {
                                     instance_profile_name,
                                     instance_profile_path,
                                     instance_profile_id,
                                     instance_profile_arn,
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc,
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc_span,
                                     error,
                                 }
                             })?;

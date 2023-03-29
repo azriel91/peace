@@ -1,5 +1,5 @@
 #[cfg(feature = "error_reporting")]
-use peace::miette;
+use peace::miette::{self, SourceSpan};
 
 use aws_sdk_iam::{
     error::{
@@ -48,11 +48,23 @@ pub enum InstanceProfileError {
 
     /// Failed to create instance profile.
     #[error("Failed to create instance profile.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     InstanceProfileCreateError {
         /// InstanceProfile friendly name.
         instance_profile_name: String,
         /// InstanceProfile path.
         instance_profile_path: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<CreateInstanceProfileError>,
@@ -60,11 +72,23 @@ pub enum InstanceProfileError {
 
     /// Failed to discover instance profile.
     #[error("Failed to discover instance profile.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     InstanceProfileGetError {
         /// Expected instance profile friendly name.
         instance_profile_name: String,
         /// InstanceProfile path.
         instance_profile_path: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<GetInstanceProfileError>,
@@ -86,6 +110,10 @@ pub enum InstanceProfileError {
 
     /// Failed to delete instance profile.
     #[error("Failed to delete instance profile.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     InstanceProfileDeleteError {
         /// InstanceProfile friendly name.
         instance_profile_name: String,
@@ -95,6 +123,14 @@ pub enum InstanceProfileError {
         instance_profile_id: String,
         /// InstanceProfile ARN.
         instance_profile_arn: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<DeleteInstanceProfileError>,
@@ -102,6 +138,10 @@ pub enum InstanceProfileError {
 
     /// Failed to add role to instance profile.
     #[error("Failed to add role to instance profile: {role_name}.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     InstanceProfileRoleAddError {
         /// InstanceProfile friendly name.
         instance_profile_name: String,
@@ -109,6 +149,14 @@ pub enum InstanceProfileError {
         instance_profile_path: String,
         /// Role friendly name.
         role_name: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<AddRoleToInstanceProfileError>,
@@ -116,11 +164,23 @@ pub enum InstanceProfileError {
 
     /// Failed to remove role from instance profile.
     #[error("Failed to remove role from instance profile.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Make sure you are connected to the internet and try again."))
+    )]
     InstanceProfileRoleRemoveError {
         /// InstanceProfile friendly name.
         instance_profile_name: String,
         /// InstanceProfile path.
         instance_profile_path: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<RemoveRoleFromInstanceProfileError>,

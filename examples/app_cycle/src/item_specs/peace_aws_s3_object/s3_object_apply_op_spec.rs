@@ -195,9 +195,18 @@ where
                             .map_err(|error| {
                                 let bucket_name = bucket_name.to_string();
                                 let object_key = object_key.to_string();
+
+                                #[cfg(feature = "error_reporting")]
+                                let (aws_desc, aws_desc_span) =
+                                    crate::item_specs::aws_error_desc!(&error);
+
                                 S3ObjectError::S3ObjectUploadError {
                                     bucket_name,
                                     object_key,
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc,
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc_span,
                                     error,
                                 }
                             })?;
@@ -243,9 +252,17 @@ where
                                 let bucket_name = bucket_name.to_string();
                                 let object_key = object_key.to_string();
 
+                                #[cfg(feature = "error_reporting")]
+                                let (aws_desc, aws_desc_span) =
+                                    crate::item_specs::aws_error_desc!(&error);
+
                                 S3ObjectError::S3ObjectDeleteError {
                                     bucket_name,
                                     object_key,
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc,
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc_span,
                                     error,
                                 }
                             })?;
