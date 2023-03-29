@@ -162,9 +162,6 @@ where
 
                 let (progress_tx, progress_rx) =
                     mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
-
-                let (progress_close_tx, progress_close_rx) =
-                    tokio::sync::oneshot::channel::<()>();
             }
         }
 
@@ -223,21 +220,11 @@ where
             }
 
             // `progress_tx` is dropped here, so `progress_rx` will safely end.
-
-            // However, the last progress message is somehow rendered *after*
-            // errors are rendered, causing any failed progress bar messages to
-            // overwrite error messages, so we explicitly tell it to stop.
-            #[cfg(feature = "output_progress")]
-            let (Ok(()) | Err(())) = progress_close_tx.send(());
         };
 
         #[cfg(feature = "output_progress")]
-        let progress_render_task = crate::progress::Progress::progress_render(
-            output,
-            progress_trackers,
-            progress_rx,
-            progress_close_rx,
-        );
+        let progress_render_task =
+            crate::progress::Progress::progress_render(output, progress_trackers, progress_rx);
 
         let mut errors = IndexMap::<ItemSpecId, E>::new();
         let outcomes_rx_task = async {
