@@ -611,15 +611,30 @@ where
 
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
+        cmd_progress_tracker
+            .multi_progress
+            .set_draw_target(ProgressDrawTarget::hidden());
+
         // Hack: This should be done with a timer in `ApplyCmd`.
         // This uses threads, which is not WASM compatible.
+        let mut error_exists = false;
         cmd_progress_tracker.progress_trackers().iter().for_each(
             |(_item_spec_id, progress_tracker)| {
-                progress_tracker.progress_bar().disable_steady_tick();
+                if matches!(
+                    progress_tracker.progress_status(),
+                    ProgressStatus::Complete(ProgressComplete::Fail)
+                ) {
+                    error_exists = true;
+                }
+                let progress_bar = progress_tracker.progress_bar();
+                progress_bar.disable_steady_tick();
+                progress_bar.tick();
             },
         );
 
-        let _result = cmd_progress_tracker.multi_progress.clear();
+        if !error_exists {
+            let _result = cmd_progress_tracker.multi_progress.clear();
+        }
     }
 
     async fn present<P>(&mut self, presentable: P) -> Result<(), E>
