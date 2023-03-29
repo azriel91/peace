@@ -37,35 +37,37 @@ impl EnvCleanCmd {
                     value: states_cleaned,
                     errors,
                 } = &states_cleaned_outcome;
-
-                let states_cleaned_raw_map = &***states_cleaned;
-
                 let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
-                let states_cleaned_presentables = {
-                    let states_cleaned_presentables = flow
-                        .graph()
-                        .iter_insertion()
-                        .map(|item_spec| {
-                            let item_spec_id = item_spec.id();
-                            match states_cleaned_raw_map.get(item_spec_id) {
-                                Some(state_cleaned) => (item_spec_id, format!(": {state_cleaned}")),
-                                None => (item_spec_id, String::from(": <unknown>")),
-                            }
-                        })
-                        .collect::<Vec<_>>();
 
-                    ListNumbered::new(states_cleaned_presentables)
-                };
+                if states_cleaned_outcome.is_ok() {
+                    let states_cleaned_raw_map = &***states_cleaned;
 
-                output
-                    .present(&(
-                        Heading::new(HeadingLevel::Level1, "States Cleaned"),
-                        states_cleaned_presentables,
-                        "\n",
-                    ))
-                    .await?;
+                    let states_cleaned_presentables = {
+                        let states_cleaned_presentables = flow
+                            .graph()
+                            .iter_insertion()
+                            .map(|item_spec| {
+                                let item_spec_id = item_spec.id();
+                                match states_cleaned_raw_map.get(item_spec_id) {
+                                    Some(state_cleaned) => {
+                                        (item_spec_id, format!(": {state_cleaned}"))
+                                    }
+                                    None => (item_spec_id, String::from(": <unknown>")),
+                                }
+                            })
+                            .collect::<Vec<_>>();
 
-                if states_cleaned_outcome.is_err() {
+                        ListNumbered::new(states_cleaned_presentables)
+                    };
+
+                    output
+                        .present(&(
+                            Heading::new(HeadingLevel::Level1, "States Cleaned"),
+                            states_cleaned_presentables,
+                            "\n",
+                        ))
+                        .await?;
+                } else {
                     #[cfg(feature = "error_reporting")]
                     {
                         use peace::miette::GraphicalReportHandler;

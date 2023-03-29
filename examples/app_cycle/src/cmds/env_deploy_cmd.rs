@@ -37,35 +37,37 @@ impl EnvDeployCmd {
                     value: states_ensured,
                     errors,
                 } = &states_ensured_outcome;
-
-                let states_ensured_raw_map = &***states_ensured;
-
                 let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
-                let states_ensured_presentables = {
-                    let states_ensured_presentables = flow
-                        .graph()
-                        .iter_insertion()
-                        .map(|item_spec| {
-                            let item_spec_id = item_spec.id();
-                            match states_ensured_raw_map.get(item_spec_id) {
-                                Some(state_ensured) => (item_spec_id, format!(": {state_ensured}")),
-                                None => (item_spec_id, String::from(": <unknown>")),
-                            }
-                        })
-                        .collect::<Vec<_>>();
 
-                    ListNumbered::new(states_ensured_presentables)
-                };
+                if states_ensured_outcome.is_ok() {
+                    let states_ensured_raw_map = &***states_ensured;
 
-                output
-                    .present(&(
-                        Heading::new(HeadingLevel::Level1, "States Ensured"),
-                        states_ensured_presentables,
-                        "\n",
-                    ))
-                    .await?;
+                    let states_ensured_presentables = {
+                        let states_ensured_presentables = flow
+                            .graph()
+                            .iter_insertion()
+                            .map(|item_spec| {
+                                let item_spec_id = item_spec.id();
+                                match states_ensured_raw_map.get(item_spec_id) {
+                                    Some(state_ensured) => {
+                                        (item_spec_id, format!(": {state_ensured}"))
+                                    }
+                                    None => (item_spec_id, String::from(": <unknown>")),
+                                }
+                            })
+                            .collect::<Vec<_>>();
 
-                if states_ensured_outcome.is_err() {
+                        ListNumbered::new(states_ensured_presentables)
+                    };
+
+                    output
+                        .present(&(
+                            Heading::new(HeadingLevel::Level1, "States Ensured"),
+                            states_ensured_presentables,
+                            "\n",
+                        ))
+                        .await?;
+                } else {
                     #[cfg(feature = "error_reporting")]
                     {
                         use peace::miette::{Diagnostic, GraphicalReportHandler};
