@@ -41,8 +41,15 @@ where
         #[cfg(feature = "output_progress")]
         progress_sender.tick(ProgressMsgUpdate::Set(String::from("listing buckets")));
         let list_buckets_output = client.list_buckets().send().await.map_err(|error| {
+            #[cfg(feature = "error_reporting")]
+            let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
+
             S3BucketError::S3BucketListError {
                 s3_bucket_name: name.to_string(),
+                #[cfg(feature = "error_reporting")]
+                aws_desc,
+                #[cfg(feature = "error_reporting")]
+                aws_desc_span,
                 error,
             }
         })?;

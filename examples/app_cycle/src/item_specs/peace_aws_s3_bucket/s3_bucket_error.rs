@@ -1,5 +1,5 @@
 #[cfg(feature = "error_reporting")]
-use peace::miette;
+use peace::miette::{self, SourceSpan};
 
 use aws_sdk_s3::{
     self,
@@ -34,9 +34,21 @@ pub enum S3BucketError {
 
     /// Failed to list S3 buckets.
     #[error("Failed to list S3 buckets to discover: `{s3_bucket_name}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(help("Please try again later."))
+    )]
     S3BucketListError {
         /// S3Bucket friendly name.
         s3_bucket_name: String,
+        /// Error description from AWS error.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        aws_desc: String,
+        /// Span of the description to highlight.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        aws_desc_span: SourceSpan,
         /// Underlying error.
         #[source]
         error: SdkError<ListBucketsError>,

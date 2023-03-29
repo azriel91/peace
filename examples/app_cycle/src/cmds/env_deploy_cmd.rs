@@ -68,16 +68,37 @@ impl EnvDeployCmd {
                 if states_ensured_outcome.is_err() {
                     #[cfg(feature = "error_reporting")]
                     {
-                        use peace::miette::GraphicalReportHandler;
+                        use peace::miette::{Diagnostic, GraphicalReportHandler};
 
                         let report_handler = GraphicalReportHandler::new();
                         let mut err_buffer = String::new();
                         for (item_spec_id, error) in errors.iter() {
+                            #[rustfmt::skip]
+                            let diagnostic: &dyn Diagnostic = match error {
+                                // AppCycleError::AppCycleUrlBuild { url_candidate, error } => todo!(),
+                                // AppCycleError::EnvTypeParseError(_) => todo!(),
+                                // AppCycleError::ProfileSwitchToNonExistent { profile_to_switch_to, app_name } => todo!(),
+                                // AppCycleError::ProfileToCreateExists { profile_to_create, app_name } => todo!(),
+
+                                AppCycleError::PeaceItemSpecFileDownload(e) => e,
+                                AppCycleError::PeaceItemSpecTarX(e) => e,
+                                AppCycleError::InstanceProfileItemSpec(e) => e,
+                                AppCycleError::IamPolicyItemSpec(e) => e,
+                                AppCycleError::IamRoleItemSpec(e) => e,
+                                AppCycleError::S3BucketItemSpec(e) => e,
+                                AppCycleError::S3ObjectItemSpec(e) => e,
+                                AppCycleError::PeaceRtError(e) => e,
+                                // AppCycleError::WouldCycleError(_) => todo!(),
+                                // AppCycleError::TokioRuntimeInit(_) => todo!(),
+
+                                _ => error,
+                            };
+
                             // Ignore failures when writing errors
                             let (Ok(()) | Err(_)) = output.present(item_spec_id).await;
                             let (Ok(()) | Err(_)) = output.present(":\n").await;
                             let (Ok(()) | Err(_)) =
-                                report_handler.render_report(&mut err_buffer, error);
+                                report_handler.render_report(&mut err_buffer, diagnostic);
                             let (Ok(()) | Err(_)) = output.present(&err_buffer).await;
                             let (Ok(()) | Err(_)) = output.present("\n").await;
 
