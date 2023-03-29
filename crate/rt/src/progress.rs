@@ -12,6 +12,7 @@ pub struct Progress;
 
 impl Progress {
     /// Receives progress updates and updates `output` to render it.
+    // TODO: write test for this
     pub async fn progress_render<E, O>(
         output: &mut O,
         progress_trackers: &mut IndexMap<ItemSpecId, ProgressTracker>,
@@ -31,9 +32,7 @@ impl Progress {
             };
             match progress_update {
                 ProgressUpdate::Reset => {
-                    progress_tracker.set_progress_status(ProgressStatus::Initialized);
-                    let progress_bar = progress_tracker.progress_bar();
-                    progress_bar.reset();
+                    progress_tracker.reset();
                 }
                 ProgressUpdate::Limit(progress_limit) => {
                     progress_tracker.set_progress_limit(*progress_limit);
