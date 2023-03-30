@@ -126,7 +126,8 @@ impl ProfileInitCmd {
                 .await?
         };
 
-        let (_states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+        let (_states_current, _states_desired) =
+            StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
         presentln!(
             output,
             [

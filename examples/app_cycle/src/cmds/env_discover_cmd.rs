@@ -27,7 +27,8 @@ impl EnvDiscoverCmd {
     {
         EnvCmd::run(output, true, |ctx| {
             async {
-                let (states_current, states_desired) = StatesDiscoverCmd::exec(ctx).await?;
+                let (states_current, states_desired) =
+                    StatesDiscoverCmd::current_and_desired(ctx).await?;
                 let states_current_raw_map = &**states_current;
                 let states_desired_raw_map = &**states_desired;
 
