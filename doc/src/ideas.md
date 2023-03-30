@@ -166,6 +166,7 @@ See the [`is_shutdown_requested`] method in particular.
 7. For `ApplyCmd`, collect `StateCurrent`, `StateDesired`, `StateDiff` in execution report.
 8. AWS errors' `code` and `message` should be shown to the user.
 9. Progress limit should not be returned in `ApplyOpSpec::check`, but sent through `progress_sender.limit(ProgressLimit)`. This simplifies `check`, and allows state current/desired discovery to set the limits easily.
+10. Consolidate `StatesDiscoverCmd` and `ApplyCmd`, so the outcome of a command is generic. Maybe use a trait and structs, instead of enum variants and hardcoded inlined functions, so that it is extendable.
 
 [#67]: https://github.com/azriel91/peace/issues/67
 [#94]: https://github.com/azriel91/peace/issues/94
