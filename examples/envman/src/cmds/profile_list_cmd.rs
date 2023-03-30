@@ -4,7 +4,7 @@ use peace::{
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
-use crate::model::{AppCycleError, EnvType};
+use crate::model::{EnvManError, EnvType};
 
 /// Command to list initialized profiles.
 #[derive(Debug)]
@@ -16,9 +16,9 @@ impl ProfileListCmd {
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    pub async fn run<O>(output: &mut O) -> Result<(), AppCycleError>
+    pub async fn run<O>(output: &mut O) -> Result<(), EnvManError>
     where
-        O: OutputWrite<AppCycleError>,
+        O: OutputWrite<EnvManError>,
     {
         let workspace = Workspace::new(
             app_name!(),
@@ -30,7 +30,7 @@ impl ProfileListCmd {
 
         let profile_workspace_init = Profile::workspace_init();
         let cmd_ctx_builder =
-            CmdCtx::builder_multi_profile_no_flow::<AppCycleError, _>(output, &workspace);
+            CmdCtx::builder_multi_profile_no_flow::<EnvManError, _>(output, &workspace);
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         let mut cmd_ctx = cmd_ctx_builder

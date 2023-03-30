@@ -6,7 +6,7 @@ use peace::{
 
 use crate::{
     cmds::ProfileInitCmd,
-    model::{AppCycleError, ProfileSwitch},
+    model::{EnvManError, ProfileSwitch},
 };
 
 /// Command to switch between profiles.
@@ -19,9 +19,9 @@ impl ProfileSwitchCmd {
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    pub async fn run<O>(output: &mut O, profile_switch: ProfileSwitch) -> Result<(), AppCycleError>
+    pub async fn run<O>(output: &mut O, profile_switch: ProfileSwitch) -> Result<(), EnvManError>
     where
-        O: OutputWrite<AppCycleError>,
+        O: OutputWrite<EnvManError>,
     {
         let app_name = app_name!();
         let workspace = Workspace::new(
@@ -34,7 +34,7 @@ impl ProfileSwitchCmd {
 
         let profile_workspace_init = Profile::workspace_init();
         let cmd_ctx_builder =
-            CmdCtx::builder_multi_profile_no_flow::<AppCycleError, _>(output, &workspace);
+            CmdCtx::builder_multi_profile_no_flow::<EnvManError, _>(output, &workspace);
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         let mut cmd_ctx = cmd_ctx_builder
@@ -52,13 +52,13 @@ impl ProfileSwitchCmd {
                 profile: profile_to_switch_to,
             } => {
                 if !profiles.contains(&profile_to_switch_to) {
-                    return Err(AppCycleError::ProfileSwitchToNonExistent {
+                    return Err(EnvManError::ProfileSwitchToNonExistent {
                         profile_to_switch_to,
                         app_name,
                     });
                 } else {
                     let cmd_ctx_builder =
-                        CmdCtx::builder_no_profile_no_flow::<AppCycleError, _>(output, workspace);
+                        CmdCtx::builder_no_profile_no_flow::<EnvManError, _>(output, workspace);
                     crate::cmds::ws_params_augment!(cmd_ctx_builder);
                     cmd_ctx_builder
                         .with_workspace_param_value(

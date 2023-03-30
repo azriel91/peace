@@ -11,7 +11,7 @@
 * Display messages in CLI progress bars. ([#102], [#103])
 * Display progress bars during state discovery. ([#100], [#104])
 * Clear progress bars on command end. ([#100], [#104])
-* Include entry for current and discovered states, and diff in `app_cycle` example. ([#91], [#105])
+* Include entry for current and discovered states, and diff in `envman` example. ([#91], [#105])
 * Sort progress bars based on insertion order. ([#91], [#105])
 * Use `▰` and `▱` parallelogram characters for progress bars. ([#91], [#105])
 * Spinner progress is now rendered. ([#91], [#105])

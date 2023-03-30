@@ -3,13 +3,13 @@ use peace::{
     rt_model::params::{KeyKnown, ParamsKeysImpl},
 };
 
-use crate::model::AppCycleError;
+use crate::model::EnvManError;
 
 /// Alias to simplify naming the `CmdCtx` type.
-pub type AppCycleCmdCtx<'ctx, O, TS> = peace::cmd::ctx::CmdCtx<
+pub type EnvManCmdCtx<'ctx, O, TS> = peace::cmd::ctx::CmdCtx<
     SingleProfileSingleFlow<
         'ctx,
-        AppCycleError,
+        EnvManError,
         O,
         ParamsKeysImpl<KeyKnown<String>, KeyKnown<String>, KeyKnown<String>>,
         TS,

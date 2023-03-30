@@ -1,5 +1,5 @@
 [package]
-name = "app_cycle"
+name = "envman"
 version = "0.0.8"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 publish = false
 
 [[bin]]
-name = "app_cycle"
+name = "envman"
 test = false
 
 [lib]

@@ -10,7 +10,7 @@ use url::Url;
 
 use crate::{
     flows::{EnvDeployFlow, EnvDeployFlowParams},
-    model::{AppCycleError, EnvType, RepoSlug},
+    model::{EnvManError, EnvType, RepoSlug},
 };
 
 /// Flow to initialize and set the default profile.
@@ -32,9 +32,9 @@ impl ProfileInitCmd {
         slug: &RepoSlug,
         version: &Version,
         url: Option<Url>,
-    ) -> Result<(), AppCycleError>
+    ) -> Result<(), EnvManError>
     where
-        O: OutputWrite<AppCycleError>,
+        O: OutputWrite<EnvManError>,
     {
         let app_name = app_name!();
         let workspace = Workspace::new(
@@ -47,7 +47,7 @@ impl ProfileInitCmd {
 
         let profile_workspace_init = Profile::workspace_init();
         let cmd_ctx_builder =
-            CmdCtx::builder_multi_profile_no_flow::<AppCycleError, _>(output, &workspace);
+            CmdCtx::builder_multi_profile_no_flow::<EnvManError, _>(output, &workspace);
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         let cmd_ctx_result = cmd_ctx_builder
@@ -58,7 +58,7 @@ impl ProfileInitCmd {
                 let MultiProfileNoFlowView { profiles, .. } = cmd_ctx.view();
 
                 if profiles.contains(&profile_to_create) {
-                    return Err(AppCycleError::ProfileToCreateExists {
+                    return Err(EnvManError::ProfileToCreateExists {
                         profile_to_create,
                         app_name,
                     });
@@ -71,7 +71,7 @@ impl ProfileInitCmd {
         }
 
         let cmd_ctx_builder =
-            CmdCtx::builder_single_profile_no_flow::<AppCycleError, _>(output, &workspace);
+            CmdCtx::builder_single_profile_no_flow::<EnvManError, _>(output, &workspace);
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         // Creating the `CmdCtx` writes the workspace and profile params.
@@ -98,7 +98,7 @@ impl ProfileInitCmd {
 
         let mut cmd_ctx = {
             let cmd_ctx_builder =
-                CmdCtx::builder_single_profile_single_flow::<AppCycleError, _>(output, &workspace);
+                CmdCtx::builder_single_profile_single_flow::<EnvManError, _>(output, &workspace);
             crate::cmds::ws_profile_and_flow_params_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder

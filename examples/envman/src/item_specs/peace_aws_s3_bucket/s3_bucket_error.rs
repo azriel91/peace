@@ -61,7 +61,7 @@ pub enum S3BucketError {
         diagnostic(help(
             "Please use a different profile name by running:\n\
             ```\n\
-            ./app_cycle switch <profile_name> --create --type development username/repo <version>\n\
+            ./envman switch <profile_name> --create --type development username/repo <version>\n\
             ```\n\
             "
         ))

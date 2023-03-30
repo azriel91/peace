@@ -6,7 +6,7 @@ use peace::{
     rt_model::output::OutputWrite,
 };
 
-use crate::{cmds::EnvCmd, model::AppCycleError};
+use crate::{cmds::EnvCmd, model::EnvManError};
 
 /// Shows the diff between current and desired states of the environment.
 #[derive(Debug)]
@@ -21,9 +21,9 @@ impl EnvDiffCmd {
     /// * `slug`: Username and repository of the application to download.
     /// * `version`: Version of the application to download.
     /// * `url`: URL to override where to download the application from.
-    pub async fn run<O>(output: &mut O) -> Result<(), AppCycleError>
+    pub async fn run<O>(output: &mut O) -> Result<(), EnvManError>
     where
-        O: OutputWrite<AppCycleError> + Send,
+        O: OutputWrite<EnvManError> + Send,
     {
         EnvCmd::run(output, true, |ctx| {
             async {

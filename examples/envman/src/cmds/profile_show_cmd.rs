@@ -5,7 +5,7 @@ use peace::{
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
-use crate::model::{AppCycleError, EnvType};
+use crate::model::{EnvManError, EnvType};
 
 /// Command to show the current profile.
 #[derive(Debug)]
@@ -19,9 +19,9 @@ impl ProfileShowCmd {
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    pub async fn run<O>(output: &mut O) -> Result<(), AppCycleError>
+    pub async fn run<O>(output: &mut O) -> Result<(), EnvManError>
     where
-        O: OutputWrite<AppCycleError>,
+        O: OutputWrite<EnvManError>,
     {
         let workspace = Workspace::new(
             app_name!(),
@@ -32,7 +32,7 @@ impl ProfileShowCmd {
         )?;
 
         let cmd_ctx_builder =
-            CmdCtx::builder_single_profile_no_flow::<AppCycleError, _>(output, &workspace);
+            CmdCtx::builder_single_profile_no_flow::<EnvManError, _>(output, &workspace);
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
         let profile_key = String::from("profile");

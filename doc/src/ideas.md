@@ -154,7 +154,7 @@ See the [`is_shutdown_requested`] method in particular.
 </details>
 
 <details>
-<summary>2. Learnings from app_cycle end-to-end implementation.</summary>
+<summary>2. Learnings from envman end-to-end implementation.</summary>
 <div>
 
 1. Referential lookup of values in state / item spec params. ([#94])

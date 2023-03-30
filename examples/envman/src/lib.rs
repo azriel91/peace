@@ -16,35 +16,35 @@
 //! ```bash
 //! ## Initialize different deployment environments
 //! ## Local development
-//! app_cycle init dev --type development azriel91/web_app 0.1.1
+//! envman init dev --type development azriel91/web_app 0.1.1
 //!
 //! ## AWS -- defaults to reading ~/.aws/credentials
-//! app_cycle init demo --type production azriel91/web_app 0.1.1
+//! envman init demo --type production azriel91/web_app 0.1.1
 //!
 //! ## Shows current environment
-//! app_cycle profile
+//! envman profile
 //!
-//! app_cycle switch dev
-//! app_cycle status
-//! app_cycle desired
-//! app_cycle diff
-//! app_cycle deploy
+//! envman switch dev
+//! envman status
+//! envman desired
+//! envman diff
+//! envman deploy
 //! ## make config changes on server / locally
-//! app_cycle discover
-//! app_cycle diff
-//! app_cycle deploy # ensure compliance
-//! app_cycle diff
-//! app_cycle clean
+//! envman discover
+//! envman diff
+//! envman deploy # ensure compliance
+//! envman diff
+//! envman clean
 //!
-//! app_cycle switch demo
-//! app_cycle status
-//! app_cycle desired
-//! app_cycle deploy
-//! app_cycle clean
+//! envman switch demo
+//! envman status
+//! envman desired
+//! envman deploy
+//! envman clean
 //!
 //! ## `diff` defaults to current profile, current and desired state.
 //! ## But we can tell it to diff between different profiles' current states.
-//! app_cycle diff dev demo
+//! envman diff dev demo
 //! ```
 
 pub mod cmds;

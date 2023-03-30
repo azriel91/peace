@@ -1,21 +1,21 @@
-use app_cycle::{
+use clap::Parser;
+use envman::{
     cmds::{
         EnvCleanCmd, EnvDeployCmd, EnvDesiredCmd, EnvDiffCmd, EnvDiscoverCmd, EnvStatusCmd,
         ProfileInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd,
     },
     model::{
-        cli_args::{AppCycleCommand, CliArgs, ProfileCommand},
-        AppCycleError, ProfileSwitch,
+        cli_args::{CliArgs, EnvManCommand, ProfileCommand},
+        EnvManError, ProfileSwitch,
     },
 };
-use clap::Parser;
 use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
     rt_model::{output::CliOutput, WorkspaceSpec},
 };
 
 #[cfg(not(feature = "error_reporting"))]
-pub fn main() -> Result<(), AppCycleError> {
+pub fn main() -> Result<(), EnvManError> {
     run()
 }
 
@@ -33,14 +33,14 @@ pub fn main() -> peace::miette::Result<(), peace::miette::Report> {
     //
     // This is fixed by <https://github.com/zkat/miette/pull/170>.
 
-    run().map_err(|app_cycle_error| match app_cycle_error {
-        AppCycleError::PeaceItemSpecFileDownload(err) => peace::miette::Report::from(err),
-        AppCycleError::PeaceRtError(err) => peace::miette::Report::from(err),
+    run().map_err(|envman_error| match envman_error {
+        EnvManError::PeaceItemSpecFileDownload(err) => peace::miette::Report::from(err),
+        EnvManError::PeaceRtError(err) => peace::miette::Report::from(err),
         other => peace::miette::Report::from(other),
     })
 }
 
-pub fn run() -> Result<(), AppCycleError> {
+pub fn run() -> Result<(), EnvManError> {
     let CliArgs {
         command,
         fast,
@@ -59,7 +59,7 @@ pub fn run() -> Result<(), AppCycleError> {
     .enable_io()
     .enable_time()
     .build()
-    .map_err(AppCycleError::TokioRuntimeInit)?;
+    .map_err(EnvManError::TokioRuntimeInit)?;
 
     #[allow(unused_assignments)]
     runtime.block_on(async {
@@ -80,7 +80,7 @@ pub fn run() -> Result<(), AppCycleError> {
         };
 
         match command {
-            AppCycleCommand::Init {
+            EnvManCommand::Init {
                 profile,
                 r#type,
                 slug,
@@ -89,14 +89,14 @@ pub fn run() -> Result<(), AppCycleError> {
             } => {
                 ProfileInitCmd::run(&mut cli_output, profile, r#type, &slug, &version, url).await?;
             }
-            AppCycleCommand::Profile { command } => {
+            EnvManCommand::Profile { command } => {
                 let command = command.unwrap_or(ProfileCommand::Show);
                 match command {
                     ProfileCommand::List => ProfileListCmd::run(&mut cli_output).await?,
                     ProfileCommand::Show => ProfileShowCmd::run(&mut cli_output).await?,
                 }
             }
-            AppCycleCommand::Switch {
+            EnvManCommand::Switch {
                 profile,
                 create,
                 r#type,
@@ -121,14 +121,14 @@ pub fn run() -> Result<(), AppCycleError> {
                 };
                 ProfileSwitchCmd::run(&mut cli_output, profile_switch).await?
             }
-            AppCycleCommand::Discover => EnvDiscoverCmd::run(&mut cli_output).await?,
-            AppCycleCommand::Status => EnvStatusCmd::run(&mut cli_output).await?,
-            AppCycleCommand::Desired => EnvDesiredCmd::run(&mut cli_output).await?,
-            AppCycleCommand::Diff => EnvDiffCmd::run(&mut cli_output).await?,
-            AppCycleCommand::Deploy => EnvDeployCmd::run(&mut cli_output).await?,
-            AppCycleCommand::Clean => EnvCleanCmd::run(&mut cli_output).await?,
+            EnvManCommand::Discover => EnvDiscoverCmd::run(&mut cli_output).await?,
+            EnvManCommand::Status => EnvStatusCmd::run(&mut cli_output).await?,
+            EnvManCommand::Desired => EnvDesiredCmd::run(&mut cli_output).await?,
+            EnvManCommand::Diff => EnvDiffCmd::run(&mut cli_output).await?,
+            EnvManCommand::Deploy => EnvDeployCmd::run(&mut cli_output).await?,
+            EnvManCommand::Clean => EnvCleanCmd::run(&mut cli_output).await?,
         }
 
-        Ok::<_, AppCycleError>(())
+        Ok::<_, EnvManError>(())
     })
 }

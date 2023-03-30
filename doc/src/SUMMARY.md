@@ -8,8 +8,8 @@
 
 - [Examples](examples.md)
     - [Download](examples/download.md)
-    - [App Cycle](examples/app_cycle.md)
-        - [Walkthrough](examples/app_cycle/walkthrough.md)
+    - [Env Man](examples/envman.md)
+        - [Walkthrough](examples/envman/walkthrough.md)
 
 - [Technical Concepts](technical_concepts.md)
     - [Resources](technical_concepts/resources.md)

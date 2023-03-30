@@ -19,7 +19,7 @@ use crate::{
         peace_aws_s3_bucket::{S3BucketItemSpec, S3BucketParams},
         peace_aws_s3_object::{S3ObjectItemSpec, S3ObjectParams},
     },
-    model::{AppCycleError, RepoSlug, WebAppFileId},
+    model::{EnvManError, RepoSlug, WebAppFileId},
 };
 
 /// Flow to deploy a web application.
@@ -28,11 +28,11 @@ pub struct EnvDeployFlow;
 
 impl EnvDeployFlow {
     /// Returns the `Flow` graph.
-    pub async fn flow() -> Result<Flow<AppCycleError>, AppCycleError> {
+    pub async fn flow() -> Result<Flow<EnvManError>, EnvManError> {
         let flow = {
             let flow_id = flow_id!("env_deploy");
             let graph = {
-                let mut graph_builder = ItemSpecGraphBuilder::<AppCycleError>::new();
+                let mut graph_builder = ItemSpecGraphBuilder::<EnvManError>::new();
 
                 let web_app_download_id = graph_builder.add_fn(
                     FileDownloadItemSpec::<WebAppFileId>::new(item_spec_id!("web_app_download"))
@@ -86,7 +86,7 @@ impl EnvDeployFlow {
         slug: &RepoSlug,
         version: &Version,
         url: Option<Url>,
-    ) -> Result<EnvDeployFlowParams, AppCycleError> {
+    ) -> Result<EnvDeployFlowParams, EnvManError> {
         let account = slug.account();
         let repo_name = slug.repo_name();
         let web_app_download_dir = PathBuf::from_iter([account, repo_name, &format!("{version}")]);
@@ -108,11 +108,9 @@ impl EnvDeployFlow {
                         let url_candidate = format!(
                             "https://github.com/{account}/{repo_name}/releases/download/{version}/{repo_name}.{file_ext}"
                         );
-                        Url::parse(&url_candidate).map_err(|error| {
-                            AppCycleError::AppCycleUrlBuild {
-                                url_candidate,
-                                error,
-                            }
+                        Url::parse(&url_candidate).map_err(|error| EnvManError::EnvManUrlBuild {
+                            url_candidate,
+                            error,
                         })?
                     }
                 }

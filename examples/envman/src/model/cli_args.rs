@@ -18,7 +18,7 @@ use peace::rt_model::output::CliColorizeOpt;
 pub struct CliArgs {
     /// Command to run.
     #[command(subcommand)]
-    pub command: AppCycleCommand,
+    pub command: EnvManCommand,
     /// Whether to run with multiple threads.
     #[arg(long, default_value = "false")]
     pub fast: bool,
@@ -40,7 +40,7 @@ pub struct CliArgs {
 }
 
 #[derive(Subcommand)]
-pub enum AppCycleCommand {
+pub enum EnvManCommand {
     /// Initializes a profile to deploy a web application.
     Init {
         /// Name to use for the profile.

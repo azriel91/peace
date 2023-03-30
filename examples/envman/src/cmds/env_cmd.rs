@@ -16,8 +16,8 @@ use peace::{
 
 use crate::{
     flows::EnvDeployFlow,
-    model::{AppCycleError, EnvType},
-    rt_model::AppCycleCmdCtx,
+    model::{EnvManError, EnvType},
+    rt_model::EnvManCmdCtx,
 };
 
 /// Runs a `*Cmd` that accesses the environment.
@@ -32,20 +32,20 @@ impl EnvCmd {
     /// * `output`: Output to write the execution outcome.
     /// * `profile_print`: Whether to print the profile used.
     /// * `f`: The command to run.
-    pub async fn run<O, T, F>(output: &mut O, profile_print: bool, f: F) -> Result<T, AppCycleError>
+    pub async fn run<O, T, F>(output: &mut O, profile_print: bool, f: F) -> Result<T, EnvManError>
     where
-        O: OutputWrite<AppCycleError>,
+        O: OutputWrite<EnvManError>,
         for<'fn_once> F: FnOnce(
             &'fn_once mut CmdCtx<
                 SingleProfileSingleFlow<
                     '_,
-                    AppCycleError,
+                    EnvManError,
                     O,
                     ParamsKeysImpl<KeyKnown<String>, KeyKnown<String>, KeyKnown<String>>,
                     SetUp,
                 >,
             >,
-        ) -> LocalBoxFuture<'fn_once, Result<T, AppCycleError>>,
+        ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
     {
         cmd_ctx_init!(output, cmd_ctx);
 
@@ -69,12 +69,12 @@ impl EnvCmd {
         output: &mut O,
         profile_print: bool,
         f: F,
-    ) -> Result<(), AppCycleError>
+    ) -> Result<(), EnvManError>
     where
-        O: OutputWrite<AppCycleError>,
+        O: OutputWrite<EnvManError>,
         for<'fn_once> F: FnOnce(
-            &'fn_once mut AppCycleCmdCtx<'_, O, SetUp>,
-        ) -> LocalBoxFuture<'fn_once, Result<T, AppCycleError>>,
+            &'fn_once mut EnvManCmdCtx<'_, O, SetUp>,
+        ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
         T: Presentable,
     {
         cmd_ctx_init!(output, cmd_ctx);
@@ -91,11 +91,9 @@ impl EnvCmd {
         Ok(())
     }
 
-    async fn profile_print<O>(
-        cmd_ctx: &mut AppCycleCmdCtx<'_, O, SetUp>,
-    ) -> Result<(), AppCycleError>
+    async fn profile_print<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O, SetUp>) -> Result<(), EnvManError>
     where
-        O: OutputWrite<AppCycleError>,
+        O: OutputWrite<EnvManError>,
     {
         let SingleProfileSingleFlowView {
             output,
@@ -132,7 +130,7 @@ macro_rules! cmd_ctx_init {
 
         let mut $cmd_ctx = {
             let cmd_ctx_builder =
-                CmdCtx::builder_single_profile_single_flow::<AppCycleError, _>($output, &workspace);
+                CmdCtx::builder_single_profile_single_flow::<EnvManError, _>($output, &workspace);
             crate::cmds::ws_profile_and_flow_params_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder

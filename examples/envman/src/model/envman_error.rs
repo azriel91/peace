@@ -9,17 +9,17 @@ use peace::{
 /// Error while managing a web application.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
-pub enum AppCycleError {
+pub enum EnvManError {
     /// Failed to construct web application download URL.
     #[error("Failed to construct web application download URL.")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
-            code(app_cycle::app_cycle_url_build),
+            code(envman::envman_url_build),
             help("If the URL is valid, this may be a bug in the example, or the `url` library.")
         )
     )]
-    AppCycleUrlBuild {
+    EnvManUrlBuild {
         /// Computed URL that is attempted to be parsed.
         #[cfg_attr(feature = "error_reporting", source_code)]
         url_candidate: String,
@@ -40,7 +40,7 @@ pub enum AppCycleError {
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
-            code(app_cycle::profile_switch_to_non_existent),
+            code(envman::profile_switch_to_non_existent),
             help(
                 "The `{profile_to_switch_to}` profile does not exist.\n\
                 You can create it by passing the `--create --type development` parameters\n\
@@ -60,7 +60,7 @@ pub enum AppCycleError {
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
-            code(app_cycle::profile_to_create_exists),
+            code(envman::profile_to_create_exists),
             help(
                 "The `{profile_to_create}` profile already exists.\n\
                 You may switch to the profile using `{app_name} switch {profile_to_create}`\n\
