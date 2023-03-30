@@ -625,6 +625,12 @@ where
         cmd_progress_tracker
             .multi_progress
             .set_draw_target(ProgressDrawTarget::hidden());
+
+        // Add spacing between end of progress bars and next output.
+        //
+        // For some reason it needs two newlines, `indicatif` possibly
+        // moves the cursor up a line.
+        let (Ok(()) | Err(_)) = self.writer.write_all(b"\n\n").await;
     }
 
     async fn present<P>(&mut self, presentable: P) -> Result<(), E>
