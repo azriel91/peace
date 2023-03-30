@@ -396,7 +396,12 @@ where
                         let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
                             item_spec_id: item_spec_id.clone(),
                             progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
-                            msg_update: ProgressMsgUpdate::Set(format!("apply failed: {error}")),
+                            msg_update: ProgressMsgUpdate::Set(
+                                error
+                                    .source()
+                                    .map(|source| format!("{source}"))
+                                    .unwrap_or_else(|| format!("{error}")),
+                            ),
                         });
 
                         outcomes_tx
@@ -417,7 +422,12 @@ where
                 let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
                     item_spec_id: item_spec.id().clone(),
                     progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
-                    msg_update: ProgressMsgUpdate::Set(format!("prepare failed: {error}")),
+                    msg_update: ProgressMsgUpdate::Set(
+                        error
+                            .source()
+                            .map(|source| format!("{source}"))
+                            .unwrap_or_else(|| format!("{error}")),
+                    ),
                 });
 
                 outcomes_tx
