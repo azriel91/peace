@@ -68,6 +68,10 @@ impl EnvDeployCmd {
                         ))
                         .await?;
                 } else {
+                    output
+                        .present(&Heading::new(HeadingLevel::Level1, "Errors"))
+                        .await?;
+
                     #[cfg(feature = "error_reporting")]
                     {
                         use peace::miette::{Diagnostic, GraphicalReportHandler};
