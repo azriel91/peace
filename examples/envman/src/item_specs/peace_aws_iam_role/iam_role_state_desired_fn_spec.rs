@@ -23,11 +23,6 @@ where
         op_ctx: OpCtx<'_>,
         data: IamRoleData<'_, Id>,
     ) -> Result<Option<Self::Output>, IamRoleError> {
-        // Hack: Remove this when referential param values is implemented.
-        if data.managed_policy_arn().is_none() {
-            return Ok(None);
-        }
-
         Self::exec(op_ctx, data).await.map(Some)
     }
 
