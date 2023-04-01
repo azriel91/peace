@@ -48,11 +48,15 @@ impl EnvCleanCmd {
                             .iter_insertion()
                             .map(|item_spec| {
                                 let item_spec_id = item_spec.id();
+                                // Hack: for alignment
+                                let padding = " ".repeat(
+                                    18usize.saturating_sub(format!("{item_spec_id}").len() + 2),
+                                );
                                 match states_cleaned_raw_map.get(item_spec_id) {
                                     Some(state_cleaned) => {
-                                        (item_spec_id, format!(": {state_cleaned}"))
+                                        (item_spec_id, format!("{padding}: {state_cleaned}"))
                                     }
-                                    None => (item_spec_id, String::from(": <unknown>")),
+                                    None => (item_spec_id, format!("{padding}: <unknown>")),
                                 }
                             })
                             .collect::<Vec<_>>();

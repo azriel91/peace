@@ -37,9 +37,15 @@ impl EnvDiffCmd {
                         .iter_insertion()
                         .map(|item_spec| {
                             let item_spec_id = item_spec.id();
+                            // Hack: for alignment
+                            let padding = " ".repeat(
+                                18usize.saturating_sub(format!("{item_spec_id}").len() + 2),
+                            );
                             match state_diffs_raw_map.get(item_spec_id) {
-                                Some(state_current) => (item_spec_id, format!(": {state_current}")),
-                                None => (item_spec_id, String::from(": <unknown>")),
+                                Some(state_current) => {
+                                    (item_spec_id, format!("{padding}: {state_current}"))
+                                }
+                                None => (item_spec_id, format!("{padding}: <unknown>")),
                             }
                         })
                         .collect::<Vec<_>>();

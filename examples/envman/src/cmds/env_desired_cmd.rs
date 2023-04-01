@@ -37,9 +37,15 @@ impl EnvDesiredCmd {
                         .iter_insertion()
                         .map(|item_spec| {
                             let item_spec_id = item_spec.id();
+                            // Hack: for alignment
+                            let padding = " ".repeat(
+                                18usize.saturating_sub(format!("{item_spec_id}").len() + 2),
+                            );
                             match states_desired_raw_map.get(item_spec_id) {
-                                Some(state_desired) => (item_spec_id, format!(": {state_desired}")),
-                                None => (item_spec_id, String::from(": <unknown>")),
+                                Some(state_desired) => {
+                                    (item_spec_id, format!("{padding}: {state_desired}"))
+                                }
+                                None => (item_spec_id, format!("{padding}: <unknown>")),
                             }
                         })
                         .collect::<Vec<_>>();
