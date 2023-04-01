@@ -33,7 +33,7 @@ pub enum S3BucketError {
     ),
 
     /// Failed to list S3 buckets.
-    #[error("Failed to list S3 buckets to discover: `{s3_bucket_name}`.")]
+    #[error("Failed to discover: `{s3_bucket_name}`.")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(help("Make sure you are connected to the internet and try again."))
@@ -55,11 +55,13 @@ pub enum S3BucketError {
     },
 
     /// Failed to create S3 bucket as someone else owns the name.
-    #[error("Failed to create S3 bucket as someone else owns the name: `{s3_bucket_name}`.")]
+    #[error("Failed to create S3 bucket: `{s3_bucket_name}`.")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(help(
-            "Please use a different profile name by running:\n\
+            "Someone else owns the S3 bucket name.\n\
+            \n\
+            Please use a different profile name by running:\n\
             ```\n\
             ./envman switch <profile_name> --create --type development username/repo <version>\n\
             ```\n\
