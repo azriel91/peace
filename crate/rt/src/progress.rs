@@ -1,7 +1,7 @@
 use peace_cfg::{
     progress::{
-        ProgressDelta, ProgressMsgUpdate, ProgressStatus, ProgressTracker, ProgressUpdate,
-        ProgressUpdateAndId,
+        ProgressComplete, ProgressDelta, ProgressMsgUpdate, ProgressStatus, ProgressTracker,
+        ProgressUpdate, ProgressUpdateAndId,
     },
     ItemSpecId,
 };
@@ -48,6 +48,12 @@ impl Progress {
                 ProgressUpdate::Complete(progress_complete) => {
                     progress_tracker
                         .set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
+
+                    let progress_bar = progress_tracker.progress_bar();
+                    match progress_complete {
+                        ProgressComplete::Success => progress_bar.finish(),
+                        ProgressComplete::Fail => progress_bar.abandon(),
+                    }
                 }
             }
 

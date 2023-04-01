@@ -549,37 +549,19 @@ where
                 }
 
                 match &progress_update_and_id.progress_update {
-                    ProgressUpdate::Reset => {
+                    ProgressUpdate::Reset
+                    | ProgressUpdate::Limit(_)
+                    | ProgressUpdate::Complete(_)
+                    // Status may have changed from `ExecPending` to
+                    // `Running`.
+                    //
+                    // We don't have the previous status though.
+                    //
+                    // TODO: Is this too much of a performance hit, and we send another message
+                    // for spinners?
+                    | ProgressUpdate::Delta(_) => {
                         self.progress_bar_style_update(progress_tracker);
                     }
-                    ProgressUpdate::Limit(_progress_limit) => {
-                        // Note: `progress_tracker` also carries the `progress_limit`
-                        self.progress_bar_style_update(progress_tracker);
-                    }
-                    ProgressUpdate::Delta(_delta) => {
-                        // Status may have changed from `ExecPending` to
-                        // `Running`.
-                        //
-                        // We don't have the previous status though.
-                        //
-                        // TODO: Is this too much of a performance hit, and we send another message
-                        // for spinners?
-                        self.progress_bar_style_update(progress_tracker);
-                    }
-                    ProgressUpdate::Complete(progress_complete) => match progress_complete {
-                        ProgressComplete::Success => {
-                            self.progress_bar_style_update(progress_tracker);
-
-                            let progress_bar = progress_tracker.progress_bar();
-                            progress_bar.finish();
-                        }
-                        ProgressComplete::Fail => {
-                            self.progress_bar_style_update(progress_tracker);
-
-                            let progress_bar = progress_tracker.progress_bar();
-                            progress_bar.abandon();
-                        }
-                    },
                 }
             }
             CliProgressFormat::Outcome => {
