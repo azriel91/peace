@@ -34,12 +34,12 @@ macro_rules! ws_profile_and_flow_params_augment {
                 peace_item_specs::file_download::FileDownloadParams<
                     $crate::model::WebAppFileId
                 >
-            >(String::from("web_app_file_download_params"))
+            >(String::from("app_download_params"))
             .with_flow_param::<
                 peace_item_specs::tar_x::TarXParams<
                     $crate::model::WebAppFileId
                 >
-            >(String::from("web_app_tar_x_params"))
+            >(String::from("app_extract_params"))
             .with_flow_param::<
                 $crate::item_specs::peace_aws_iam_policy::IamPolicyParams<
                     $crate::model::WebAppFileId
@@ -64,7 +64,7 @@ macro_rules! ws_profile_and_flow_params_augment {
                 $crate::item_specs::peace_aws_s3_object::S3ObjectParams<
                     $crate::model::WebAppFileId
                 >
-            >(String::from("web_app_s3_object_params"))
+            >(String::from("s3_object_params"))
             ;
     };
 }

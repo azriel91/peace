@@ -85,13 +85,13 @@ impl ProfileInitCmd {
         // --- //
 
         let EnvDeployFlowParams {
-            web_app_file_download_params,
-            web_app_tar_x_params,
+            app_download_params,
+            app_extract_params,
             iam_policy_params,
             iam_role_params,
             instance_profile_params,
             s3_bucket_params,
-            web_app_s3_object_params,
+            s3_object_params,
         } = EnvDeployFlow::params(&profile_to_create, slug, version, url)?;
         let flow = EnvDeployFlow::flow().await?;
         let profile_key = String::from("profile");
@@ -105,13 +105,10 @@ impl ProfileInitCmd {
                 .with_profile_from_workspace_param(&profile_key)
                 .with_flow(&flow)
                 .with_flow_param_value(
-                    String::from("web_app_file_download_params"),
-                    Some(web_app_file_download_params),
+                    String::from("app_download_params"),
+                    Some(app_download_params),
                 )
-                .with_flow_param_value(
-                    String::from("web_app_tar_x_params"),
-                    Some(web_app_tar_x_params),
-                )
+                .with_flow_param_value(String::from("app_extract_params"), Some(app_extract_params))
                 .with_flow_param_value(String::from("iam_policy_params"), Some(iam_policy_params))
                 .with_flow_param_value(String::from("iam_role_params"), Some(iam_role_params))
                 .with_flow_param_value(
@@ -119,10 +116,7 @@ impl ProfileInitCmd {
                     Some(instance_profile_params),
                 )
                 .with_flow_param_value(String::from("s3_bucket_params"), Some(s3_bucket_params))
-                .with_flow_param_value(
-                    String::from("web_app_s3_object_params"),
-                    Some(web_app_s3_object_params),
-                )
+                .with_flow_param_value(String::from("s3_object_params"), Some(s3_object_params))
                 .await?
         };
 
