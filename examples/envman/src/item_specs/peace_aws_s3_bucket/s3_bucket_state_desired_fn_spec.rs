@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, OpCtx, TryFnSpec};
+use peace::cfg::{async_trait, state::Timestamped, OpCtx, TryFnSpec};
 
 use crate::item_specs::peace_aws_s3_bucket::{S3BucketData, S3BucketError, S3BucketState};
 
@@ -31,6 +31,9 @@ where
         let params = s3_bucket_data.params();
         let name = params.name().to_string();
 
-        Ok(S3BucketState::Some { name })
+        Ok(S3BucketState::Some {
+            name,
+            creation_date: Timestamped::Tbd,
+        })
     }
 }

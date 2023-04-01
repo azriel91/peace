@@ -25,9 +25,11 @@ impl StateDiffFnSpec for S3BucketStateDiffFnSpec {
             (
                 S3BucketState::Some {
                     name: s3_bucket_name_current,
+                    creation_date: _,
                 },
                 S3BucketState::Some {
                     name: s3_bucket_name_desired,
+                    creation_date: _,
                 },
             ) => {
                 if s3_bucket_name_current != s3_bucket_name_desired {
@@ -36,6 +38,7 @@ impl StateDiffFnSpec for S3BucketStateDiffFnSpec {
                         s3_bucket_name_desired: s3_bucket_name_desired.to_string(),
                     }
                 } else {
+                    // We don't care about the creation date, as existence is sufficient.
                     S3BucketStateDiff::InSyncExists
                 }
             }

@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, OpCtx, TryFnSpec};
+use chrono::{DateTime, NaiveDateTime, Utc};
+use peace::cfg::{async_trait, state::Timestamped, OpCtx, TryFnSpec};
 
 use crate::item_specs::peace_aws_s3_bucket::{S3BucketData, S3BucketError, S3BucketState};
 
@@ -55,17 +56,22 @@ where
         })?;
         #[cfg(feature = "output_progress")]
         progress_sender.tick(ProgressMsgUpdate::Set(String::from("finding bucket")));
-        let s3_bucket_exists = list_buckets_output
-            .buckets()
-            .and_then(|buckets| {
-                buckets.iter().find(|bucket| {
-                    matches!(bucket.name(), Some(bucket_name_listed) if bucket_name_listed == name)
-                })
+        let creation_date =
+            list_buckets_output.buckets().and_then(|buckets| {
+                buckets.iter().find_map(|bucket| {
+                if matches!(bucket.name(), Some(bucket_name_listed) if bucket_name_listed == name) {
+                    Some(bucket
+                        .creation_date()
+                        .cloned()
+                        .expect("Expected bucket creation date to be Some."))
+                } else {
+                    None
+                }
             })
-            .is_some();
+            });
         #[cfg(feature = "output_progress")]
         {
-            let message = if s3_bucket_exists {
+            let message = if creation_date.is_some() {
                 "bucket found"
             } else {
                 "bucket not found"
@@ -104,9 +110,17 @@ where
         //     },
         // };
 
-        if s3_bucket_exists {
+        if let Some(creation_date) = creation_date {
             let state_current = S3BucketState::Some {
                 name: name.to_string(),
+                creation_date: Timestamped::Value(DateTime::from_utc(
+                    NaiveDateTime::from_timestamp_opt(
+                        creation_date.secs(),
+                        creation_date.subsec_nanos(),
+                    )
+                    .unwrap(),
+                    Utc,
+                )),
             };
 
             Ok(state_current)

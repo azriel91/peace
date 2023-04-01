@@ -7,11 +7,13 @@ use aws_sdk_s3::{
 };
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
-use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx, TryFnSpec};
 
 use crate::item_specs::peace_aws_s3_bucket::{
     S3BucketData, S3BucketError, S3BucketState, S3BucketStateDiff,
 };
+
+use super::S3BucketStateCurrentFnSpec;
 
 /// ApplyOpSpec for the S3 bucket state.
 #[derive(Debug)]
@@ -52,7 +54,10 @@ where
             S3BucketStateDiff::Removed => {
                 let op_check_status = match state_current {
                     S3BucketState::None => OpCheckStatus::ExecNotRequired,
-                    S3BucketState::Some { name: _ } => {
+                    S3BucketState::Some {
+                        name: _,
+                        creation_date: _,
+                    } => {
                         #[cfg(not(feature = "output_progress"))]
                         {
                             OpCheckStatus::ExecRequired
@@ -115,7 +120,10 @@ where
                 S3BucketState::None => {
                     panic!("`S3BucketApplyOpSpec::exec` called with state_desired being None.");
                 }
-                S3BucketState::Some { name } => {
+                S3BucketState::Some {
+                    name,
+                    creation_date: _,
+                } => {
                     let client = data.client();
 
                     #[cfg(feature = "output_progress")]
@@ -130,7 +138,7 @@ where
                                 .build(),
                         );
                     }
-                    let _create_bucket_output = create_bucket.send().await.map_err(|error| {
+                    let create_bucket_output = create_bucket.send().await.map_err(|error| {
                         let s3_bucket_name = name.to_string();
 
                         #[cfg(feature = "error_reporting")]
@@ -174,9 +182,8 @@ where
                     #[cfg(feature = "output_progress")]
                     progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("bucket created")));
 
-                    let state_applied = S3BucketState::Some {
-                        name: name.to_string(),
-                    };
+                    let state_applied =
+                        <S3BucketStateCurrentFnSpec<Id> as TryFnSpec>::exec(op_ctx, data).await?;
 
                     Ok(state_applied)
                 }
@@ -184,7 +191,10 @@ where
             S3BucketStateDiff::Removed => {
                 match state_current {
                     S3BucketState::None => {}
-                    S3BucketState::Some { name } => {
+                    S3BucketState::Some {
+                        name,
+                        creation_date: _,
+                    } => {
                         let client = data.client();
 
                         #[cfg(feature = "output_progress")]

@@ -24,6 +24,7 @@ aws-sdk-s3 = "0.24.0"
 aws-smithy-http = "0.54.4" # used to reference error type, otherwise not recommended for direct usage
 base64 = "0.21.0"
 cfg-if = { workspace = true }
+chrono = { version = "0.4.24", default-features = false, features = ["clock", "serde"] }
 derivative = { workspace = true }
 futures = "0.3.27"
 md5-rs = "0.1.5"  # WASM compatible, and reads bytes as stream

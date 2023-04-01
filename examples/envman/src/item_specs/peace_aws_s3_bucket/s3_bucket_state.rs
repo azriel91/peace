@@ -1,5 +1,7 @@
 use std::fmt;
 
+use chrono::{DateTime, Utc};
+use peace::cfg::state::Timestamped;
 use serde::{Deserialize, Serialize};
 
 /// S3 bucket state.
@@ -15,6 +17,8 @@ pub enum S3BucketState {
         ///
         /// TODO: newtype + proc macro.
         name: String,
+        ///
+        creation_date: Timestamped<DateTime<Utc>>,
     },
 }
 
@@ -23,10 +27,16 @@ impl fmt::Display for S3BucketState {
         match self {
             Self::None => "does not exist".fmt(f),
             // https://s3.console.aws.amazon.com/s3/buckets/azriel-peace-envman-demo
-            Self::Some { name } => write!(
-                f,
-                "exists at https://s3.console.aws.amazon.com/s3/buckets/{name}"
-            ),
+            Self::Some {
+                name,
+                creation_date,
+            } => match creation_date {
+                Timestamped::Tbd => write!(f, "should exist"),
+                Timestamped::Value(_) => write!(
+                    f,
+                    "exists at https://s3.console.aws.amazon.com/s3/buckets/{name}"
+                ),
+            },
         }
     }
 }
