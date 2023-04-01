@@ -1,7 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use futures::stream::{StreamExt, TryStreamExt};
-use peace_cfg::OpCtx;
+use peace_cfg::{ItemSpecId, OpCtx};
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
@@ -14,9 +13,13 @@ use peace_resources::{
         ts::{Current, Desired},
         StatesCurrent, StatesDesired,
     },
+    type_reg::untagged::BoxDtDisplay,
     Resources,
 };
-use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, Storage};
+use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, IndexMap, Storage};
+use tokio::sync::mpsc;
+
+use crate::BUFFERED_FUTURES_MAX;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -30,7 +33,6 @@ cfg_if::cfg_if! {
             },
         };
         use peace_rt_model::CmdProgressTracker;
-        use tokio::sync::mpsc;
     }
 }
 
@@ -160,116 +162,131 @@ where
             }
         }
 
+        let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemDiscoverOutcome<E>>();
+
         let resources_ref = &*resources;
         let execution_task = async move {
             #[cfg(feature = "output_progress")]
             let progress_tx = &progress_tx;
+            let outcomes_tx = &outcomes_tx;
 
-            let (states_current_mut, states_desired_mut) = flow
-                .graph()
-                .stream()
-                .map(Result::<_, E>::Ok)
-                .try_fold(
-                    (StatesMut::<Current>::new(), StatesMut::<Desired>::new()),
-                    |(mut states_current_mut, mut states_desired_mut), item_spec| async move {
-                        let item_spec_id = item_spec.id();
-                        let op_ctx = OpCtx::new(
-                            item_spec_id,
-                            #[cfg(feature = "output_progress")]
-                            ProgressSender::new(item_spec_id, progress_tx),
-                        );
+            flow.graph()
+                .for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| async move {
+                    let item_spec_id = item_spec.id();
+                    let op_ctx = OpCtx::new(
+                        item_spec_id,
+                        #[cfg(feature = "output_progress")]
+                        ProgressSender::new(item_spec_id, progress_tx),
+                    );
 
-                        let (state_current_result, state_desired_result) = match discover_for {
-                            DiscoverFor::Current => {
-                                let state_current_result = item_spec
-                                    .state_current_try_exec(op_ctx, resources_ref)
-                                    .await;
+                    let (state_current_result, state_desired_result) = match discover_for {
+                        DiscoverFor::Current => {
+                            let state_current_result = item_spec
+                                .state_current_try_exec(op_ctx, resources_ref)
+                                .await;
 
-                                (Some(state_current_result), None)
-                            }
-                            DiscoverFor::Desired => {
-                                let state_desired_result = item_spec
-                                    .state_desired_try_exec(op_ctx, resources_ref)
-                                    .await;
+                            (Some(state_current_result), None)
+                        }
+                        DiscoverFor::Desired => {
+                            let state_desired_result = item_spec
+                                .state_desired_try_exec(op_ctx, resources_ref)
+                                .await;
 
-                                (None, Some(state_desired_result))
-                            }
-                            DiscoverFor::CurrentAndDesired => {
-                                let state_current_result = item_spec
-                                    .state_current_try_exec(op_ctx, resources_ref)
-                                    .await;
-                                let state_desired_result = item_spec
-                                    .state_desired_try_exec(op_ctx, resources_ref)
-                                    .await;
+                            (None, Some(state_desired_result))
+                        }
+                        DiscoverFor::CurrentAndDesired => {
+                            let state_current_result = item_spec
+                                .state_current_try_exec(op_ctx, resources_ref)
+                                .await;
+                            let state_desired_result = item_spec
+                                .state_desired_try_exec(op_ctx, resources_ref)
+                                .await;
 
-                                (Some(state_current_result), Some(state_desired_result))
-                            }
-                        };
+                            (Some(state_current_result), Some(state_desired_result))
+                        }
+                    };
 
-                        if let Some(state_current_result) = state_current_result {
-                            #[cfg(feature = "output_progress")]
-                            {
-                                let (progress_complete, msg_update) = match &state_current_result {
-                                    Ok(_) => (ProgressComplete::Success, ProgressMsgUpdate::Clear),
-                                    Err(error) => (
-                                        ProgressComplete::Fail,
-                                        ProgressMsgUpdate::Set(format!("{error}")),
-                                    ),
-                                };
+                    let state_current = if let Some(state_current_result) = state_current_result {
+                        #[cfg(feature = "output_progress")]
+                        {
+                            let (progress_complete, msg_update) = match &state_current_result {
+                                Ok(_) => (ProgressComplete::Success, ProgressMsgUpdate::Clear),
+                                Err(error) => (
+                                    ProgressComplete::Fail,
+                                    ProgressMsgUpdate::Set(format!("{error}")),
+                                ),
+                            };
 
-                                let _progress_send_unused =
-                                    progress_tx.try_send(ProgressUpdateAndId {
-                                        item_spec_id: item_spec_id.clone(),
-                                        progress_update: ProgressUpdate::Complete(
-                                            progress_complete,
-                                        ),
-                                        msg_update,
-                                    });
-                            }
-
-                            let state_current = state_current_result?;
-                            if let Some(state_current) = state_current {
-                                states_current_mut
-                                    .insert_raw(item_spec.id().clone(), state_current);
-                            }
+                            let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                                item_spec_id: item_spec_id.clone(),
+                                progress_update: ProgressUpdate::Complete(progress_complete),
+                                msg_update,
+                            });
                         }
 
-                        if let Some(state_desired_result) = state_desired_result {
-                            #[cfg(feature = "output_progress")]
-                            {
-                                let (progress_complete, msg_update) = match &state_desired_result {
-                                    Ok(_) => (ProgressComplete::Success, ProgressMsgUpdate::Clear),
-                                    Err(error) => (
-                                        ProgressComplete::Fail,
-                                        ProgressMsgUpdate::Set(format!("{error}")),
-                                    ),
-                                };
-
-                                let _progress_send_unused =
-                                    progress_tx.try_send(ProgressUpdateAndId {
+                        match state_current_result {
+                            Ok(state_current_opt) => state_current_opt,
+                            Err(error) => {
+                                outcomes_tx
+                                    .send(ItemDiscoverOutcome::Fail {
                                         item_spec_id: item_spec_id.clone(),
-                                        progress_update: ProgressUpdate::Complete(
-                                            progress_complete,
-                                        ),
-                                        msg_update,
-                                    });
-                            }
-
-                            let state_desired = state_desired_result?;
-                            if let Some(state_desired) = state_desired {
-                                states_desired_mut
-                                    .insert_raw(item_spec.id().clone(), state_desired);
+                                        state_current: None,
+                                        state_desired: None,
+                                        error,
+                                    })
+                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                                return; // short circuit
                             }
                         }
+                    } else {
+                        None
+                    };
 
-                        Ok((states_current_mut, states_desired_mut))
-                    },
-                )
-                .await?;
+                    let state_desired = if let Some(state_desired_result) = state_desired_result {
+                        #[cfg(feature = "output_progress")]
+                        {
+                            let (progress_complete, msg_update) = match &state_desired_result {
+                                Ok(_) => (ProgressComplete::Success, ProgressMsgUpdate::Clear),
+                                Err(error) => (
+                                    ProgressComplete::Fail,
+                                    ProgressMsgUpdate::Set(format!("{error}")),
+                                ),
+                            };
 
-            let states_current = StatesCurrent::from(states_current_mut);
-            let states_desired = StatesDesired::from(states_desired_mut);
-            Result::<_, E>::Ok((states_current, states_desired))
+                            let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+                                item_spec_id: item_spec_id.clone(),
+                                progress_update: ProgressUpdate::Complete(progress_complete),
+                                msg_update,
+                            });
+                        }
+
+                        match state_desired_result {
+                            Ok(state_desired_opt) => state_desired_opt,
+                            Err(error) => {
+                                outcomes_tx
+                                    .send(ItemDiscoverOutcome::Fail {
+                                        item_spec_id: item_spec_id.clone(),
+                                        state_current,
+                                        state_desired: None,
+                                        error,
+                                    })
+                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                                return; // short circuit
+                            }
+                        }
+                    } else {
+                        None
+                    };
+
+                    outcomes_tx
+                        .send(ItemDiscoverOutcome::Success {
+                            item_spec_id: item_spec_id.clone(),
+                            state_current,
+                            state_desired,
+                        })
+                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                })
+                .await;
 
             // `progress_tx` is dropped here, so `progress_rx` will safely end.
         };
@@ -278,16 +295,59 @@ where
         let progress_render_task =
             crate::progress::Progress::progress_render(output, progress_trackers, progress_rx);
 
+        let mut errors = IndexMap::<ItemSpecId, E>::new();
+        let outcomes_rx_task = async {
+            let mut states_current_mut = StatesMut::<Current>::new();
+            let mut states_desired_mut = StatesMut::<Desired>::new();
+
+            while let Some(outcome) = outcomes_rx.recv().await {
+                match outcome {
+                    ItemDiscoverOutcome::Success {
+                        item_spec_id,
+                        state_current,
+                        state_desired,
+                    } => {
+                        if let Some(state_current) = state_current {
+                            states_current_mut.insert_raw(item_spec_id.clone(), state_current);
+                        }
+                        if let Some(state_desired) = state_desired {
+                            states_desired_mut.insert_raw(item_spec_id, state_desired);
+                        }
+                    }
+                    ItemDiscoverOutcome::Fail {
+                        item_spec_id,
+                        state_current,
+                        state_desired,
+                        error,
+                    } => {
+                        errors.insert(item_spec_id.clone(), error);
+
+                        if let Some(state_current) = state_current {
+                            states_current_mut.insert_raw(item_spec_id.clone(), state_current);
+                        }
+                        if let Some(state_desired) = state_desired {
+                            states_desired_mut.insert_raw(item_spec_id, state_desired);
+                        }
+                    }
+                }
+            }
+
+            let states_current = StatesCurrent::from(states_current_mut);
+            let states_desired = StatesDesired::from(states_desired_mut);
+
+            (states_current, states_desired)
+        };
+
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_progress")] {
-                let (states_current_and_desired, _) = futures::join!(execution_task, progress_render_task);
+                let ((), _progress_result, outcomes_result) = futures::join!(execution_task, progress_render_task, outcomes_rx_task);
 
                 output.progress_end(cmd_progress_tracker).await;
             } else {
-                let (states_current_and_desired,) = futures::join!(execution_task);
+                let ((), outcomes_result) = futures::join!(execution_task, outcomes_rx_task);
             }
         }
-        let (states_current, states_desired) = states_current_and_desired?;
+        let (states_current, states_desired) = outcomes_result;
 
         match discover_for {
             DiscoverFor::Current => {
@@ -351,6 +411,23 @@ impl<E, O, PKeys> Default for StatesDiscoverCmd<E, O, PKeys> {
     fn default() -> Self {
         Self(PhantomData)
     }
+}
+
+#[derive(Debug)]
+enum ItemDiscoverOutcome<E> {
+    /// Discover succeeded.
+    Success {
+        item_spec_id: ItemSpecId,
+        state_current: Option<BoxDtDisplay>,
+        state_desired: Option<BoxDtDisplay>,
+    },
+    /// Discover failed.
+    Fail {
+        item_spec_id: ItemSpecId,
+        state_current: Option<BoxDtDisplay>,
+        state_desired: Option<BoxDtDisplay>,
+        error: E,
+    },
 }
 
 /// Which states to discover.
