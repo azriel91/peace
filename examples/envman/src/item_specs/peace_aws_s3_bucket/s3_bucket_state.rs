@@ -31,7 +31,7 @@ impl fmt::Display for S3BucketState {
                 name,
                 creation_date,
             } => match creation_date {
-                Timestamped::Tbd => write!(f, "should exist"),
+                Timestamped::Tbd => write!(f, "`{name}` should exist"),
                 Timestamped::Value(_) => write!(
                     f,
                     "exists at https://s3.console.aws.amazon.com/s3/buckets/{name}"

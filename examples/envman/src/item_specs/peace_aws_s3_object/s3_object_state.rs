@@ -29,13 +29,20 @@ impl fmt::Display for S3ObjectState {
                 bucket_name,
                 object_key,
                 content_md5_hexstr,
-                e_tag: _,
+                e_tag,
             } => {
-                // https://s3.console.aws.amazon.com/s3/object/azriel-peace-envman-demo?prefix=web_app.tar
-                write!(
-                    f,
-                    "uploaded at https://s3.console.aws.amazon.com/s3/object/{bucket_name}?prefix={object_key} "
-                )?;
+                match e_tag {
+                    Generated::Tbd => {
+                        write!(f, "`{object_key}` should be uploaded to `{bucket_name}`")?
+                    }
+                    Generated::Value(_) => {
+                        // https://s3.console.aws.amazon.com/s3/object/azriel-peace-envman-demo?prefix=web_app.tar
+                        write!(
+                            f,
+                            "uploaded at https://s3.console.aws.amazon.com/s3/object/{bucket_name}?prefix={object_key} "
+                        )?;
+                    }
+                }
                 if let Some(content_md5_hexstr) = content_md5_hexstr {
                     write!(f, "(MD5: {content_md5_hexstr})")
                 } else {

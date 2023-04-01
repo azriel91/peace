@@ -41,13 +41,13 @@ impl fmt::Display for IamPolicyState {
         match self {
             Self::None => "does not exist".fmt(f),
             Self::Some {
-                name: _,
-                path: _,
+                name,
+                path,
                 policy_document: _,
                 policy_id_arn_version,
             } => {
                 match policy_id_arn_version {
-                    Generated::Tbd => write!(f, "should exist"),
+                    Generated::Tbd => write!(f, "`{path}{name}` should exist"),
                     Generated::Value(policy_id_arn_version) => {
                         let arn = policy_id_arn_version.arn();
                         // https://console.aws.amazon.com/iam/home#/policies/arn:aws:iam::$acc_number:policy/demo

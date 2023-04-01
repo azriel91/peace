@@ -42,12 +42,12 @@ impl fmt::Display for IamRoleState {
             Self::None => "does not exist".fmt(f),
             Self::Some {
                 name,
-                path: _,
+                path,
                 role_id_and_arn,
                 managed_policy_attachment,
             } => {
                 match role_id_and_arn {
-                    Generated::Tbd => write!(f, "should exist")?,
+                    Generated::Tbd => write!(f, "`{path}{name}` should exist")?,
                     Generated::Value(_role_id_and_arn) => {
                         // https://console.aws.amazon.com/iamv2/home#/roles/details/demo
                         write!(

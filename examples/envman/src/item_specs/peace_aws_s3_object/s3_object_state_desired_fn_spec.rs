@@ -58,7 +58,7 @@ where
         #[cfg(feature = "output_progress")]
         let progress_sender = &op_ctx.progress_sender;
         #[cfg(feature = "output_progress")]
-        progress_sender.tick(ProgressMsgUpdate::Set(String::from("computing md5 sum")));
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from("computing MD5 sum")));
 
         #[cfg(not(target_arch = "wasm32"))]
         let content_md5_bytes = {
@@ -93,7 +93,7 @@ where
             }
         };
         #[cfg(feature = "output_progress")]
-        progress_sender.tick(ProgressMsgUpdate::Set(String::from("md5 sum computed")));
+        progress_sender.tick(ProgressMsgUpdate::Set(String::from("MD5 sum computed")));
 
         let content_md5_hexstr = content_md5_bytes
             .iter()

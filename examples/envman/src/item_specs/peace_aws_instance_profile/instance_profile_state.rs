@@ -42,17 +42,17 @@ impl fmt::Display for InstanceProfileState {
             Self::None => "does not exist".fmt(f),
             Self::Some {
                 name,
-                path: _,
+                path,
                 instance_profile_id_and_arn,
                 role_associated,
             } => {
                 match instance_profile_id_and_arn {
-                    Generated::Tbd => write!(f, "should exist, ")?,
+                    Generated::Tbd => write!(f, "`{path}{name}` should exist ")?,
                     Generated::Value(_instance_profile_id_and_arn) => {
                         // https://console.aws.amazon.com/iamv2/home#/roles/details/demo
                         write!(
                             f,
-                            "exists at https://console.aws.amazon.com/iamv2/home#/roles/details/{name}, "
+                            "exists at https://console.aws.amazon.com/iamv2/home#/roles/details/{name} "
                         )?;
                     }
                 }
