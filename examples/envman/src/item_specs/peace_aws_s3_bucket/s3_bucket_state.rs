@@ -22,7 +22,11 @@ impl fmt::Display for S3BucketState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::None => "does not exist".fmt(f),
-            Self::Some { name } => write!(f, "{name} exists"),
+            // https://s3.console.aws.amazon.com/s3/buckets/azriel-peace-envman-demo
+            Self::Some { name } => write!(
+                f,
+                "exists at https://s3.console.aws.amazon.com/s3/buckets/{name}"
+            ),
         }
     }
 }

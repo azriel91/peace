@@ -31,13 +31,15 @@ impl fmt::Display for S3ObjectState {
                 content_md5_hexstr,
                 e_tag: _,
             } => {
+                // https://s3.console.aws.amazon.com/s3/object/azriel-peace-envman-demo?prefix=web_app.tar
+                write!(
+                    f,
+                    "uploaded at https://s3.console.aws.amazon.com/s3/object/{bucket_name}?prefix={object_key} "
+                )?;
                 if let Some(content_md5_hexstr) = content_md5_hexstr {
-                    write!(
-                        f,
-                        "{bucket_name}/{object_key} with MD5 sum: {content_md5_hexstr}"
-                    )
+                    write!(f, "(MD5: {content_md5_hexstr})")
                 } else {
-                    write!(f, "{bucket_name}/{object_key} (MD5 unknown)")
+                    write!(f, "(MD5 unknown)")
                 }
             }
         }

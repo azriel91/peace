@@ -42,27 +42,27 @@ impl fmt::Display for InstanceProfileState {
             Self::None => "does not exist".fmt(f),
             Self::Some {
                 name,
-                path,
+                path: _,
                 instance_profile_id_and_arn,
                 role_associated,
             } => {
-                let instance_profile_exists = match instance_profile_id_and_arn {
-                    Generated::Tbd => String::from("should exist"),
-                    Generated::Value(instance_profile_id_and_arn) => {
-                        let instance_profile_id = instance_profile_id_and_arn.id();
-                        format!("exists with id {instance_profile_id}")
+                match instance_profile_id_and_arn {
+                    Generated::Tbd => write!(f, "should exist, ")?,
+                    Generated::Value(_instance_profile_id_and_arn) => {
+                        // https://console.aws.amazon.com/iamv2/home#/roles/details/demo
+                        write!(
+                            f,
+                            "exists at https://console.aws.amazon.com/iamv2/home#/roles/details/{name}, "
+                        )?;
                     }
-                };
-                let role_associated = if *role_associated {
-                    "associated with same named role"
+                }
+                if *role_associated {
+                    write!(f, "associated with same named role")?;
                 } else {
-                    "but role not associated"
-                };
+                    write!(f, "but role not associated")?;
+                }
 
-                write!(
-                    f,
-                    "{path}{name} instance_profile {instance_profile_exists}, {role_associated}"
-                )
+                Ok(())
             }
         }
     }

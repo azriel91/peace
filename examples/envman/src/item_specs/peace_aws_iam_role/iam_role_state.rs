@@ -42,27 +42,27 @@ impl fmt::Display for IamRoleState {
             Self::None => "does not exist".fmt(f),
             Self::Some {
                 name,
-                path,
+                path: _,
                 role_id_and_arn,
                 managed_policy_attachment,
             } => {
-                let role_exists = match role_id_and_arn {
-                    Generated::Tbd => String::from("should exist"),
-                    Generated::Value(role_id_and_arn) => {
-                        let role_id = role_id_and_arn.id();
-                        format!("exists with id {role_id}")
+                match role_id_and_arn {
+                    Generated::Tbd => write!(f, "should exist")?,
+                    Generated::Value(_role_id_and_arn) => {
+                        // https://console.aws.amazon.com/iamv2/home#/roles/details/demo
+                        write!(
+                            f,
+                            "exists at https://console.aws.amazon.com/iamv2/home#/roles/details/{name}"
+                        )?;
                     }
-                };
-                let managed_policy_attached = if managed_policy_attachment.attached() {
-                    "attached with same named managed policy"
+                }
+                if managed_policy_attachment.attached() {
+                    write!(f, " with policy attached")?;
                 } else {
-                    "but managed policy not attached"
+                    write!(f, ", but managed policy not attached")?;
                 };
 
-                write!(
-                    f,
-                    "{path}{name} role {role_exists}, {managed_policy_attached}"
-                )
+                Ok(())
             }
         }
     }
