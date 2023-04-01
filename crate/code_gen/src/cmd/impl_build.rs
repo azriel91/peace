@@ -550,8 +550,6 @@ fn impl_build_for(
                 //         peace_rt_model::IndexMap::with_capacity(item_spec_graph.node_count()),
                 //         |mut progress_trackers, item_spec| {
                 //             let progress_bar = multi_progress.add(indicatif::ProgressBar::hidden());
-                //             // Causes spinners to still render with full bars when they are complete.
-                //             progress_bar.set_length(0);
                 //             let progress_tracker = indicatif::style::ProgressTracker::new(progress_bar);
                 //             progress_trackers.insert(item_spec.id().clone(), progress_tracker);
                 //             progress_trackers
@@ -1438,8 +1436,6 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                         peace_rt_model::IndexMap::with_capacity(item_spec_graph.node_count()),
                         |mut progress_trackers, item_spec| {
                             let progress_bar = multi_progress.add(indicatif::ProgressBar::hidden());
-                            // Causes spinners to still render with full bars when they are complete.
-                            progress_bar.set_length(0);
                             let progress_tracker = peace_core::progress::ProgressTracker::new(progress_bar);
                             progress_trackers.insert(item_spec.id().clone(), progress_tracker);
                             progress_trackers
