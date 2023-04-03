@@ -1,5 +1,16 @@
 # Changelog
 
+## unreleased
+
+* Rename `app_cycle` example to `envman`. ([#35], [#107])
+* Develop `envman` example to have sensible errors and state display messages. ([#35], [#107])
+* Return both command outcome and errors in `ApplyCmd`. ([#107])
+* `StatesDiscoverCmd` discovers states concurrently. ([#107])
+* Serialize `StatesDesired` as part of `ApplyCmd`. ([#107])
+
+[#107]: https://github.com/azriel91/peace/pull/107
+
+
 ## 0.0.8 (2023-03-25)
 
 * Move `R, W, ROpt, WOpt, RMaybe, WMaybe` to `peace_data::accessors`. ([#94], [#95])
