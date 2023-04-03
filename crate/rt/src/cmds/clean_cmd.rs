@@ -48,13 +48,13 @@ where
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
-    ) -> CmdOutcome<StatesCleanedDry, E> {
-        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry(
+    ) -> Result<CmdOutcome<StatesCleanedDry, E>, E> {
+        Ok(ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry(
             cmd_ctx,
             states_saved,
             ApplyFor::Clean,
         )
-        .await
+        .await)
     }
 
     /// Conditionally runs [`ApplyOpSpec`]`::`[`exec`] for each

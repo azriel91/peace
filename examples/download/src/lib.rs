@@ -140,7 +140,7 @@ where
     O: OutputWrite<DownloadError>,
 {
     let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let states_ensured_dry_outcome = EnsureCmd::exec_dry(cmd_ctx, &states_saved).await;
+    let states_ensured_dry_outcome = EnsureCmd::exec_dry(cmd_ctx, &states_saved).await?;
     let states_ensured_dry = &states_ensured_dry_outcome.value;
     cmd_ctx.output_mut().present(states_ensured_dry).await?;
     Ok(())
@@ -162,7 +162,7 @@ where
     O: OutputWrite<DownloadError>,
 {
     let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let states_cleaned_dry_outcome = CleanCmd::exec_dry(cmd_ctx, &states_saved).await;
+    let states_cleaned_dry_outcome = CleanCmd::exec_dry(cmd_ctx, &states_saved).await?;
     let states_cleaned_dry = &states_cleaned_dry_outcome.value;
     cmd_ctx.output_mut().present(states_cleaned_dry).await?;
     Ok(())
