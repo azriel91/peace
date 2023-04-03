@@ -7,16 +7,16 @@ use peace_cmd::{
 };
 use peace_resources::{
     internal::StatesMut,
-    paths::{FlowDir, StatesSavedFile},
+    paths::{FlowDir, StatesDesiredFile, StatesSavedFile},
     resources::ts::SetUp,
-    states::{States, StatesCurrent, StatesSaved},
+    states::{ts::Desired, States, StatesCurrent, StatesDesired, StatesSaved},
     Resources,
 };
 use peace_rt_model::{
-    outcomes::{ItemApplyBoxed, ItemApplyPartialBoxed},
+    outcomes::{CmdOutcome, ItemApplyBoxed, ItemApplyPartialBoxed},
     output::OutputWrite,
     params::ParamsKeys,
-    Error, ItemSpecBoxed, ItemSpecRt, Storage,
+    Error, IndexMap, ItemSpecBoxed, ItemSpecRt, Storage,
 };
 use tokio::sync::{mpsc, mpsc::UnboundedSender};
 
@@ -82,11 +82,16 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
         apply_for: ApplyFor,
-    ) -> Result<States<StatesTsApplyDry>, E> {
-        let states_applied_dry =
-            Self::exec_internal(cmd_ctx, states_saved, apply_for, true).await?;
+    ) -> CmdOutcome<States<StatesTsApplyDry>, E> {
+        let CmdOutcome {
+            value: (states_applied, _states_desired),
+            errors,
+        } = Self::exec_internal(cmd_ctx, states_saved, apply_for, true).await;
 
-        Ok(states_applied_dry)
+        CmdOutcome {
+            value: states_applied,
+            errors,
+        }
     }
 
     /// Conditionally runs [`ApplyOpSpec`]`::`[`exec`] for each
@@ -122,11 +127,25 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
         apply_for: ApplyFor,
-    ) -> Result<States<StatesTsApply>, E> {
-        let states_applied = Self::exec_internal(cmd_ctx, states_saved, apply_for, false).await?;
-        Self::serialize_internal(cmd_ctx.resources(), &states_applied).await?;
+    ) -> Result<CmdOutcome<States<StatesTsApply>, E>, E> {
+        let CmdOutcome {
+            value: (states_applied, states_desired),
+            errors,
+        } = Self::exec_internal(cmd_ctx, states_saved, apply_for, false).await;
+        Self::serialize_saved(cmd_ctx.resources(), &states_applied).await?;
 
-        Ok(states_applied)
+        match apply_for {
+            ApplyFor::Ensure => {
+                Self::serialize_desired(cmd_ctx.resources(), &states_desired).await?;
+            }
+            ApplyFor::Clean => {}
+        };
+
+        let cmd_outcome = CmdOutcome {
+            value: states_applied,
+            errors,
+        };
+        Ok(cmd_outcome)
     }
 
     /// Conditionally runs [`ApplyOpSpec`]`::`[`exec`] for each [`ItemSpec`].
@@ -142,7 +161,7 @@ where
         states_saved: &StatesSaved,
         apply_for: ApplyFor,
         dry_run: bool,
-    ) -> Result<States<StatesTs>, E> {
+    ) -> CmdOutcome<(States<StatesTs>, StatesDesired), E> {
         let SingleProfileSingleFlowView {
             #[cfg(feature = "output_progress")]
             output,
@@ -178,6 +197,7 @@ where
         // server, when the remote server doesn't exist.
         let mut states_applied_mut =
             StatesMut::<StatesTs>::from((*states_saved).clone().into_inner());
+        let mut states_desired_mut = StatesMut::<Desired>::new();
 
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemApplyOutcome<E>>();
 
@@ -229,36 +249,64 @@ where
         let progress_render_task =
             crate::progress::Progress::progress_render(output, progress_trackers, progress_rx);
 
-        let mut errors = Vec::<(&'static str, ItemSpecId, E)>::new();
+        let mut errors = IndexMap::<ItemSpecId, E>::new();
         let outcomes_rx_task = async {
             while let Some(outcome) = outcomes_rx.recv().await {
                 match outcome {
                     ItemApplyOutcome::PrepareFail {
                         item_spec_id,
-                        item_apply_partial: _,
+                        item_apply_partial,
                         error,
                     } => {
-                        errors.push(("Prepare failed", item_spec_id.clone(), error));
+                        errors.insert(item_spec_id.clone(), error);
+
+                        // Save `state_target` (which is state_desired) if we are not cleaning up.
+                        match apply_for {
+                            ApplyFor::Ensure => {
+                                if let Some(state_desired) = item_apply_partial.state_target() {
+                                    states_desired_mut.insert_raw(item_spec_id, state_desired);
+                                }
+                            }
+                            ApplyFor::Clean => {}
+                        }
                     }
                     ItemApplyOutcome::Success {
                         item_spec_id,
                         item_apply,
                     } => {
                         if let Some(state_applied) = item_apply.state_applied() {
-                            states_applied_mut.insert_raw(item_spec_id, state_applied);
+                            states_applied_mut.insert_raw(item_spec_id.clone(), state_applied);
                         } else {
                             // Item was already in the desired state.
                             // No change to saved state.
+                        }
+
+                        // Save `state_target` (which is state_desired) if we are not cleaning up.
+                        match apply_for {
+                            ApplyFor::Ensure => {
+                                let state_desired = item_apply.state_target();
+                                states_desired_mut.insert_raw(item_spec_id, state_desired);
+                            }
+                            ApplyFor::Clean => {}
                         }
                     }
                     ItemApplyOutcome::Fail {
                         item_spec_id,
                         item_apply,
-                        error, // TODO: save to report.
+                        error,
                     } => {
-                        errors.push(("Apply failed", item_spec_id.clone(), error));
+                        errors.insert(item_spec_id.clone(), error);
                         if let Some(state_applied) = item_apply.state_applied() {
-                            states_applied_mut.insert_raw(item_spec_id, state_applied);
+                            states_applied_mut.insert_raw(item_spec_id.clone(), state_applied);
+                        }
+
+                        // Save `state_target` (which is state_desired) if we are not cleaning up.
+                        match apply_for {
+                            ApplyFor::Ensure => {
+                                let state_desired = item_apply.state_target();
+                                states_desired_mut.insert_raw(item_spec_id, state_desired);
+                            }
+                            ApplyFor::Clean => {}
                         }
                     }
                 }
@@ -275,15 +323,6 @@ where
             }
         }
 
-        errors.iter().for_each(|(desc, item_spec_id, error)| {
-            eprintln!("\n{item_spec_id} {desc}: {error}");
-            let mut error = error.source();
-            while let Some(source) = error {
-                eprintln!("  caused by: {source}");
-                error = source.source();
-            }
-        });
-
         // TODO: Should we run `StatesCurrentFnSpec` again?
         //
         // i.e. is it part of `ApplyOpSpec::exec`'s contract to return the state.
@@ -295,8 +334,12 @@ where
         // * `ShCmdItemSpec` doesn't return the state in the apply script, so in the
         //   item spec we run the state current script after the apply exec script.
         let states_applied = states_applied_mut.into();
+        let states_desired = states_desired_mut.into();
 
-        Ok(states_applied)
+        CmdOutcome {
+            value: (states_applied, states_desired),
+            errors,
+        }
     }
 
     ///
@@ -405,7 +448,12 @@ where
                         let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
                             item_spec_id: item_spec_id.clone(),
                             progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
-                            msg_update: ProgressMsgUpdate::Set(format!("apply failed: {error}")),
+                            msg_update: ProgressMsgUpdate::Set(
+                                error
+                                    .source()
+                                    .map(|source| format!("{source}"))
+                                    .unwrap_or_else(|| format!("{error}")),
+                            ),
                         });
 
                         outcomes_tx
@@ -426,7 +474,12 @@ where
                 let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
                     item_spec_id: item_spec.id().clone(),
                     progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
-                    msg_update: ProgressMsgUpdate::Set(format!("prepare failed: {error}")),
+                    msg_update: ProgressMsgUpdate::Set(
+                        error
+                            .source()
+                            .map(|source| format!("{source}"))
+                            .unwrap_or_else(|| format!("{error}")),
+                    ),
                 });
 
                 outcomes_tx
@@ -442,8 +495,9 @@ where
         }
     }
 
-    // TODO: This duplicates a bit of code with `StatesCurrentDiscoverCmd`.
-    async fn serialize_internal(
+    // TODO: This duplicates a bit of code with `StatesDiscoverCmd`,
+    // `StatesCurrentDiscoverCmd`, `StatesDesiredDiscoverCmd`.
+    async fn serialize_saved(
         resources: &Resources<SetUp>,
         states_applied: &States<StatesTsApply>,
     ) -> Result<(), E> {
@@ -454,6 +508,24 @@ where
         let states_saved_file = StatesSavedFile::from(&*flow_dir);
 
         StatesSerializer::serialize(&storage, states_applied, &states_saved_file).await?;
+
+        drop(flow_dir);
+        drop(storage);
+
+        Ok(())
+    }
+
+    async fn serialize_desired(
+        resources: &Resources<SetUp>,
+        states_desired: &StatesDesired,
+    ) -> Result<(), E> {
+        use peace_rt_model::StatesSerializer;
+
+        let flow_dir = resources.borrow::<FlowDir>();
+        let storage = resources.borrow::<Storage>();
+        let states_desired_file = StatesDesiredFile::from(&*flow_dir);
+
+        StatesSerializer::serialize(&storage, states_desired, &states_desired_file).await?;
 
         drop(flow_dir);
         drop(storage);

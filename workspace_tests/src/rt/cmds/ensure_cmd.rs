@@ -3,7 +3,7 @@ use peace::{
     cmd::ctx::CmdCtx,
     resources::states::StatesSaved,
     rt::cmds::{sub::StatesSavedReadCmd, EnsureCmd, StatesDiscoverCmd},
-    rt_model::{Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{outcomes::CmdOutcome, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{NoOpOutput, PeaceTestError, VecCopyError, VecCopyItemSpec, VecCopyState};
@@ -28,13 +28,17 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, _states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Dry-ensured states.
     // The returned states are currently the same as `StatesSaved`, but it would be
     // useful to return simulated ensured states.
-    let states_ensured_dry = EnsureCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
+    let CmdOutcome {
+        value: states_ensured_dry,
+        errors: _,
+    } = EnsureCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
 
     // TODO: When EnsureCmd returns the execution report, assert on the state that
     // was discovered.
@@ -83,7 +87,8 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, _states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Alter states.
@@ -92,7 +97,10 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let ensured_states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    let CmdOutcome {
+        value: ensured_states_ensured,
+        errors: _,
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     // Re-read states from disk.
     let mut output = NoOpOutput;
@@ -153,11 +161,15 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, _states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Alter states.
-    let ensured_states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    let CmdOutcome {
+        value: ensured_states_ensured,
+        errors: _,
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
     let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
 
     // Dry ensure states.
@@ -166,7 +178,10 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let ensured_states_ensured_dry = EnsureCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
+    let CmdOutcome {
+        value: ensured_states_ensured_dry,
+        errors: _,
+    } = EnsureCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
 
     // Re-read states from disk.
     let mut output = NoOpOutput;

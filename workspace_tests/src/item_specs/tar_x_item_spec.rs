@@ -16,7 +16,8 @@ use peace::{
         CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd,
     },
     rt_model::{
-        Flow, InMemoryTextOutput, ItemSpecGraph, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
+        outcomes::CmdOutcome, Flow, InMemoryTextOutput, ItemSpecGraph, ItemSpecGraphBuilder,
+        Workspace, WorkspaceSpec,
     },
 };
 use peace_item_specs::tar_x::{
@@ -189,7 +190,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
@@ -240,7 +241,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
@@ -293,7 +294,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
@@ -344,7 +345,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
@@ -400,7 +401,7 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
@@ -450,7 +451,7 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
@@ -487,7 +488,8 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    let (states_current, states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let state_current = states_current
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
@@ -540,10 +542,14 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, _states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
-    let states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    let CmdOutcome {
+        value: states_ensured,
+        errors: _,
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     let state_ensured = states_ensured
         .get::<FileMetadatas, _>(TarXTest::ID)
@@ -594,11 +600,15 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, _states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Overwrite changed files and remove extra files
-    let states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    let CmdOutcome {
+        value: states_ensured,
+        errors: _,
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     let state_ensured = states_ensured
         .get::<FileMetadatas, _>(TarXTest::ID)
@@ -614,7 +624,10 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
 
     // Execute again to check idempotence
     let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
-    let states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    let CmdOutcome {
+        value: states_ensured,
+        errors: _,
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     let state_ensured = states_ensured
         .get::<FileMetadatas, _>(TarXTest::ID)
@@ -653,10 +666,14 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
             Some(TarXParams::<TarXTest>::new(tar_path, dest.clone())),
         )
         .await?;
-    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, _states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
-    let states_cleaned = CleanCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    let CmdOutcome {
+        value: states_cleaned,
+        errors: _,
+    } = CleanCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     let state_cleaned = states_cleaned
         .get::<FileMetadatas, _>(TarXTest::ID)

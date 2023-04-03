@@ -34,7 +34,8 @@ async fn contains_state_diff_for_each_item_spec() -> Result<(), Box<dyn std::err
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let (states_current, states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Re-read states from disk.
     let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
@@ -86,7 +87,8 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     #[rustfmt::skip]
     resources.insert(VecA(vec![0, 1, 2,    4, 5, 6, 8, 9]));
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-    let (states_current, states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Re-read states from disk.
     let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
@@ -116,6 +118,14 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         .as_ref(),
         vec_diff
     );
+    // `CliOutput` writes `\n\n`s in `progress_end` for better spacing with
+    // progress bars.
+    #[cfg(feature = "output_progress")]
+    assert_eq!(
+        "\n\n1. `vec_copy`: [(-)3..4, (~)7;1, (+)8;9, ]\n",
+        String::from_utf8(buffer)?
+    );
+    #[cfg(not(feature = "output_progress"))]
     assert_eq!(
         "1. `vec_copy`: [(-)3..4, (~)7;1, (+)8;9, ]\n",
         String::from_utf8(buffer)?

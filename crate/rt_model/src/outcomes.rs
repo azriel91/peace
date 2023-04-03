@@ -4,11 +4,12 @@
 //! outcomes to be redisplayed without re-executing commands.
 
 pub use self::{
-    item_apply::ItemApply, item_apply_boxed::ItemApplyBoxed, item_apply_partial::ItemApplyPartial,
-    item_apply_partial_boxed::ItemApplyPartialBoxed, item_apply_partial_rt::ItemApplyPartialRt,
-    item_apply_rt::ItemApplyRt,
+    cmd_outcome::CmdOutcome, item_apply::ItemApply, item_apply_boxed::ItemApplyBoxed,
+    item_apply_partial::ItemApplyPartial, item_apply_partial_boxed::ItemApplyPartialBoxed,
+    item_apply_partial_rt::ItemApplyPartialRt, item_apply_rt::ItemApplyRt,
 };
 
+mod cmd_outcome;
 mod item_apply;
 mod item_apply_boxed;
 mod item_apply_partial;

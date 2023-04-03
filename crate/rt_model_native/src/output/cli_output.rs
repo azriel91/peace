@@ -112,6 +112,17 @@ impl CliOutput<Stdout> {
     }
 }
 
+/// This is used when we are rendering a bar that is not calculated by
+/// `ProgressBar`'s length and current value,
+#[cfg(feature = "output_progress")]
+const BAR_EMPTY: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
+#[cfg(feature = "output_progress")]
+const BAR_FULL: &str = "▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰";
+#[cfg(feature = "output_progress")]
+const SPINNER_EMPTY: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
+#[cfg(feature = "output_progress")]
+const SPINNER_FULL: &str = "▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰";
+
 impl<W> CliOutput<W>
 where
     W: AsyncWrite + std::marker::Unpin,
@@ -229,7 +240,7 @@ where
                 })
                 .progress_chars("▰▱")
                 .tick_strings(&[
-                    "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
+                    SPINNER_EMPTY,
                     "▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
                     "▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
                     "▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱",
@@ -276,7 +287,7 @@ where
                     "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰▰",
                     "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰▰",
                     "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▰",
-                    "▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰",
+                    SPINNER_FULL,
                 ]),
         );
 
@@ -286,12 +297,6 @@ where
 
     #[cfg(feature = "output_progress")]
     fn progress_bar_template(&self, progress_tracker: &ProgressTracker) -> String {
-        /// This is used when we are rendering a bar that is not calculated by
-        /// `ProgressBar`'s length and current value,
-        const SOLID_BAR: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
-        #[cfg(feature = "output_colorized")]
-        const SOLID_SPINNER: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
-
         let icon = match progress_tracker.progress_status() {
             ProgressStatus::Initialized | ProgressStatus::ExecPending | ProgressStatus::Running => {
                 "⏳"
@@ -317,41 +322,54 @@ where
                 // 160: red slightly dim (fail)
                 //  88: red dark (fail background)
 
-                const GRAY_MED: u8 = 8;
                 const GRAY_DARK: u8 = 237;
+                const GRAY_MED: u8 = 8;
+                const GREEN_LIGHT: u8 = 35;
                 const PURPLE: u8 = 128;
+                const RED_DIM: u8 = 160;
 
                 let bar_or_spinner = match self.colorize {
                     CliColorize::Colored => {
                         if progress_tracker.progress_limit().is_some() {
+                            // Colored, with progress limit
                             match progress_tracker.progress_status() {
-                                ProgressStatus::Initialized => console::style(SOLID_BAR).color256(GRAY_DARK),
+                                ProgressStatus::Initialized => console::style(BAR_EMPTY).color256(GRAY_DARK),
                                 ProgressStatus::ExecPending | ProgressStatus::Running => {
                                     console::style("{bar:40.32}")
                                 }
                                 ProgressStatus::RunningStalled => console::style("{bar:40.222}"),
                                 ProgressStatus::UserPending => console::style("{bar:40.75}"),
                                 ProgressStatus::Complete(progress_complete) => match progress_complete {
+                                    // Ideally we just use `"{bar:40.35}"`,
+                                    // and the `ProgressBar` renders the filled green bar.
+                                    //
+                                    // However, it's still rendered as blue because
+                                    // the `ProgressBar` is abandoned before getting one
+                                    // final render.
                                     ProgressComplete::Success => {
-                                        console::style("{bar:40.35}")
+                                        console::style(BAR_FULL).color256(GREEN_LIGHT)
                                     },
                                     ProgressComplete::Fail => console::style("{bar:40.160}"),
                                 },
                             }
                         } else {
-                            // No progress limit (as opposed to unknown)
+                            // Colored, no progress limit (as opposed to unknown)
                             match progress_tracker.progress_status() {
-                                ProgressStatus::Initialized => console::style(SOLID_SPINNER).color256(GRAY_MED),
+                                ProgressStatus::Initialized => console::style(SPINNER_EMPTY).color256(GRAY_MED),
                                 ProgressStatus::ExecPending | ProgressStatus::Running => {
                                     console::style("{spinner:40.32}")
                                 }
                                 ProgressStatus::RunningStalled => console::style("{spinner:40.222}"),
                                 ProgressStatus::UserPending => console::style("{spinner:40.75}"),
                                 ProgressStatus::Complete(progress_complete) => match progress_complete {
+                                    // Ideally we just use `"{spinner:40.35}"`,
+                                    // and the `ProgressBar` renders the filled green spinner.
+                                    // However, for a spinner, it just renders it empty for some
+                                    // reason.
                                     ProgressComplete::Success => {
-                                        console::style("{spinner:40.35}")
+                                        console::style(SPINNER_FULL).color256(GREEN_LIGHT)
                                     },
-                                    ProgressComplete::Fail => console::style("{spinner:40.160}"),
+                                    ProgressComplete::Fail => console::style(SPINNER_FULL).color256(RED_DIM),
                                 },
                             }
                         }
@@ -359,7 +377,7 @@ where
                     CliColorize::Uncolored => {
                         if progress_tracker.progress_limit().is_some() {
                             match progress_tracker.progress_status() {
-                                ProgressStatus::Initialized => console::style(SOLID_BAR),
+                                ProgressStatus::Initialized => console::style(BAR_EMPTY),
                                 ProgressStatus::ExecPending | ProgressStatus::Running |
                                 ProgressStatus::RunningStalled |
                                 ProgressStatus::UserPending |
@@ -371,9 +389,10 @@ where
                     },
                 };
             } else {
+                // "output_colorized" feature disabled
                 let bar_or_spinner = if progress_tracker.progress_limit().is_some() {
                     match progress_tracker.progress_status() {
-                        ProgressStatus::Initialized => console::style(SOLID_BAR),
+                        ProgressStatus::Initialized => console::style(BAR_EMPTY),
                         ProgressStatus::ExecPending | ProgressStatus::Running |
                         ProgressStatus::RunningStalled |
                         ProgressStatus::UserPending |
@@ -615,11 +634,22 @@ where
         // This uses threads, which is not WASM compatible.
         cmd_progress_tracker.progress_trackers().iter().for_each(
             |(_item_spec_id, progress_tracker)| {
-                progress_tracker.progress_bar().disable_steady_tick();
+                let progress_bar = progress_tracker.progress_bar();
+                progress_bar.disable_steady_tick();
+                progress_bar.tick();
             },
         );
 
-        let _result = cmd_progress_tracker.multi_progress.clear();
+        // Prevents progress bars from drawing over error messages.
+        cmd_progress_tracker
+            .multi_progress
+            .set_draw_target(ProgressDrawTarget::hidden());
+
+        // Add spacing between end of progress bars and next output.
+        //
+        // For some reason it needs two newlines, `indicatif` possibly
+        // moves the cursor up a line.
+        let (Ok(()) | Err(_)) = self.writer.write_all(b"\n\n").await;
     }
 
     async fn present<P>(&mut self, presentable: P) -> Result<(), E>

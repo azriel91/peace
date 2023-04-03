@@ -36,6 +36,18 @@ impl ProgressTracker {
         }
     }
 
+    /// Resets the progress tracker.
+    // TODO: write test for this
+    pub fn reset(&mut self) {
+        self.progress_status = ProgressStatus::Initialized;
+        self.message = None;
+        self.progress_limit = None;
+        self.progress_bar.set_length(0);
+        self.progress_bar.set_position(0);
+        self.progress_bar.reset();
+        self.last_update_dt = Utc::now();
+    }
+
     /// Increments the progress by the given unit count.
     pub fn inc(&mut self, unit_count: u64) {
         self.progress_bar.inc(unit_count);

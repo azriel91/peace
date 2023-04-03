@@ -8,7 +8,7 @@ use peace_resources::{
         StatesCleaned, StatesCleanedDry, StatesSaved,
     },
 };
-use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error};
+use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error};
 
 use crate::cmds::sub::{ApplyCmd, ApplyFor};
 
@@ -48,13 +48,13 @@ where
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
-    ) -> Result<StatesCleanedDry, E> {
-        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry(
+    ) -> Result<CmdOutcome<StatesCleanedDry, E>, E> {
+        Ok(ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry(
             cmd_ctx,
             states_saved,
             ApplyFor::Clean,
         )
-        .await
+        .await)
     }
 
     /// Conditionally runs [`ApplyOpSpec`]`::`[`exec`] for each
@@ -89,7 +89,7 @@ where
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
-    ) -> Result<StatesCleaned, E> {
+    ) -> Result<CmdOutcome<StatesCleaned, E>, E> {
         ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec(cmd_ctx, states_saved, ApplyFor::Clean)
             .await
     }

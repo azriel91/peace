@@ -31,7 +31,8 @@ async fn runs_state_current_and_state_desired() -> Result<(), Box<dyn std::error
         .with_flow(&flow)
         .await?;
 
-    let (states_current, states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItemSpec.id());

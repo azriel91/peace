@@ -3,7 +3,7 @@ use peace::rt_model::Storage;
 
 use peace::{
     cfg::{accessors::Saved, state::FetchedOpt, State},
-    data::{accessors::R, Data},
+    data::{accessors::R, marker::Current, Data},
 };
 
 use crate::{ETag, FileDownloadParams, FileDownloadState};
@@ -27,6 +27,9 @@ where
     /// The previous file download state.
     state_prev: Saved<'op, State<FileDownloadState, FetchedOpt<ETag>>>,
 
+    /// The file state working copy in memory.
+    state_working: R<'op, Current<State<FileDownloadState, FetchedOpt<ETag>>>>,
+
     /// For wasm, we write to web storage through the `Storage` object.
     ///
     /// If `rt_model_native::Storage` exposed similar API, then storage
@@ -49,6 +52,10 @@ where
 
     pub fn state_prev(&self) -> &Saved<'op, State<FileDownloadState, FetchedOpt<ETag>>> {
         &self.state_prev
+    }
+
+    pub fn state_working(&self) -> &Current<State<FileDownloadState, FetchedOpt<ETag>>> {
+        &self.state_working
     }
 
     #[cfg(target_arch = "wasm32")]

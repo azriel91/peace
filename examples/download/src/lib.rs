@@ -103,7 +103,8 @@ pub async fn fetch<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Downloa
 where
     O: OutputWrite<DownloadError>,
 {
-    let (_states_current, _states_desired) = StatesDiscoverCmd::exec(cmd_ctx).await?;
+    let (_states_current, _states_desired) =
+        StatesDiscoverCmd::current_and_desired(cmd_ctx).await?;
     Ok(())
 }
 
@@ -139,8 +140,9 @@ where
     O: OutputWrite<DownloadError>,
 {
     let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let states_ensured_dry = EnsureCmd::exec_dry(cmd_ctx, &states_saved).await?;
-    cmd_ctx.output_mut().present(&states_ensured_dry).await?;
+    let states_ensured_dry_outcome = EnsureCmd::exec_dry(cmd_ctx, &states_saved).await?;
+    let states_ensured_dry = &states_ensured_dry_outcome.value;
+    cmd_ctx.output_mut().present(states_ensured_dry).await?;
     Ok(())
 }
 
@@ -149,8 +151,9 @@ where
     O: OutputWrite<DownloadError>,
 {
     let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let states_ensured = EnsureCmd::exec(cmd_ctx, &states_saved).await?;
-    cmd_ctx.output_mut().present(&states_ensured).await?;
+    let states_ensured_outcome = EnsureCmd::exec(cmd_ctx, &states_saved).await?;
+    let states_ensured = &states_ensured_outcome.value;
+    cmd_ctx.output_mut().present(states_ensured).await?;
     Ok(())
 }
 
@@ -159,8 +162,9 @@ where
     O: OutputWrite<DownloadError>,
 {
     let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let states_cleaned_dry = CleanCmd::exec_dry(cmd_ctx, &states_saved).await?;
-    cmd_ctx.output_mut().present(&states_cleaned_dry).await?;
+    let states_cleaned_dry_outcome = CleanCmd::exec_dry(cmd_ctx, &states_saved).await?;
+    let states_cleaned_dry = &states_cleaned_dry_outcome.value;
+    cmd_ctx.output_mut().present(states_cleaned_dry).await?;
     Ok(())
 }
 
@@ -169,7 +173,8 @@ where
     O: OutputWrite<DownloadError>,
 {
     let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let states_cleaned = CleanCmd::exec(cmd_ctx, &states_saved).await?;
-    cmd_ctx.output_mut().present(&states_cleaned).await?;
+    let states_cleaned_outcome = CleanCmd::exec(cmd_ctx, &states_saved).await?;
+    let states_cleaned = &states_cleaned_outcome.value;
+    cmd_ctx.output_mut().present(states_cleaned).await?;
     Ok(())
 }

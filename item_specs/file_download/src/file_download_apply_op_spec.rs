@@ -42,16 +42,11 @@ where
         let client = file_download_data.client();
         let params = file_download_data.file_download_params();
         let src_url = params.src();
-        let dest = params.dest();
-        let response = client.get(src_url.clone()).send().await.map_err(|error| {
-            #[cfg(not(target_arch = "wasm32"))]
-            let (Ok(file_download_error) | Err(file_download_error)) =
-                FileDownloadError::src_get(src_url.clone(), dest, error);
-            #[cfg(target_arch = "wasm32")]
-            let file_download_error = FileDownloadError::src_get(src_url.clone(), error);
-
-            file_download_error
-        })?;
+        let response = client
+            .get(src_url.clone())
+            .send()
+            .await
+            .map_err(|error| FileDownloadError::src_get(src_url.clone(), error))?;
 
         let e_tag = response
             .headers()
@@ -79,7 +74,7 @@ where
             Self::stream_write(
                 #[cfg(feature = "output_progress")]
                 op_ctx,
-                dest,
+                params.dest(),
                 file_download_data.storage(),
                 params.storage_form(),
                 response,
