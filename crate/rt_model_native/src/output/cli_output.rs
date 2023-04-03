@@ -349,7 +349,7 @@ where
                                     ProgressComplete::Success => {
                                         console::style(BAR_FULL).color256(GREEN_LIGHT)
                                     },
-                                    ProgressComplete::Fail => console::style(BAR_FULL).color256(RED_DIM),
+                                    ProgressComplete::Fail => console::style("{bar:40.160}"),
                                 },
                             }
                         } else {

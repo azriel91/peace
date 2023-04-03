@@ -7,7 +7,10 @@ use peace::{
         sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd, StatesSavedReadCmd},
         CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd,
     },
-    rt_model::{Flow, InMemoryTextOutput, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{
+        outcomes::CmdOutcome, Flow, InMemoryTextOutput, ItemSpecGraphBuilder, Workspace,
+        WorkspaceSpec,
+    },
 };
 use peace_item_specs::sh_cmd::{
     ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdItemSpec, ShCmdParams, ShCmdState, ShCmdStateDiff,
@@ -125,7 +128,8 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
         .with_flow(&flow)
         .await?;
 
-    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, _states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
     CleanCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
     let state_clean = cmd_ctx
@@ -254,7 +258,7 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
         .await?;
 
     // Discover states current and desired
-    StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Diff them
     let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
@@ -289,11 +293,15 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command()
         .await?;
 
     // Discover states current and desired
-    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, _states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Create the file
-    let states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    let CmdOutcome {
+        value: states_ensured,
+        errors: _,
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     let state_ensured = states_ensured
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItemSpec::ID)
@@ -334,7 +342,8 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
         .await?;
 
     // Discover states current and desired
-    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, _states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Create the file
@@ -351,7 +360,10 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
 
     // Run again, for idempotence check
     let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
-    let states_ensured = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    let CmdOutcome {
+        value: states_ensured,
+        errors: _,
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     let state_ensured = states_ensured
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItemSpec::ID)
@@ -391,7 +403,8 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
         .await?;
 
     // Discover states current and desired
-    let (states_current, _states_desired) = StatesDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let (states_current, _states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Create the file
@@ -407,7 +420,10 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
 
     // Run again, for idempotence check
     let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
-    let states_cleaned = CleanCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    let CmdOutcome {
+        value: states_cleaned,
+        errors: _,
+    } = CleanCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     let state_cleaned = states_cleaned
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItemSpec::ID)
