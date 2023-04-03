@@ -114,13 +114,13 @@ impl CliOutput<Stdout> {
 
 /// This is used when we are rendering a bar that is not calculated by
 /// `ProgressBar`'s length and current value,
-#[cfg(feature = "output_colorized")]
+#[cfg(feature = "output_progress")]
 const BAR_EMPTY: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
-#[cfg(feature = "output_colorized")]
+#[cfg(feature = "output_progress")]
 const BAR_FULL: &str = "▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰";
-#[cfg(feature = "output_colorized")]
+#[cfg(feature = "output_progress")]
 const SPINNER_EMPTY: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
-#[cfg(feature = "output_colorized")]
+#[cfg(feature = "output_progress")]
 const SPINNER_FULL: &str = "▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰";
 
 impl<W> CliOutput<W>
