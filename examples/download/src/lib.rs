@@ -175,6 +175,6 @@ where
     let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
     let states_cleaned_outcome = CleanCmd::exec(cmd_ctx, &states_saved).await?;
     let states_cleaned = &states_cleaned_outcome.value;
-    cmd_ctx.output_mut().present(&states_cleaned).await?;
+    cmd_ctx.output_mut().present(states_cleaned).await?;
     Ok(())
 }

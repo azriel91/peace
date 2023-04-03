@@ -131,12 +131,10 @@ where
                     .get()
                     .map(|state_prev| state_prev.physical.clone())
             })
-            .unwrap_or_else(|| {
-                if let FileDownloadState::None { .. } = &file_state {
-                    FetchedOpt::Tbd
-                } else {
-                    FetchedOpt::None
-                }
+            .unwrap_or(if let FileDownloadState::None { .. } = &file_state {
+                FetchedOpt::Tbd
+            } else {
+                FetchedOpt::None
             });
 
         Ok(State::new(file_state, e_tag))
