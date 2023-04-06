@@ -10,10 +10,7 @@ pub use peace_core::progress;
 
 pub use peace_core::*;
 
-pub use crate::{
-    apply_op_spec::ApplyOpSpec, item_spec::ItemSpec, op_ctx::OpCtx, state::State,
-    state_diff_fn_spec::StateDiffFnSpec,
-};
+pub use crate::{apply_op_spec::ApplyOpSpec, item_spec::ItemSpec, op_ctx::OpCtx, state::State};
 
 pub mod accessors;
 pub mod state;
@@ -21,4 +18,3 @@ pub mod state;
 mod apply_op_spec;
 mod item_spec;
 mod op_ctx;
-mod state_diff_fn_spec;

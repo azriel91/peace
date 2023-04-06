@@ -7,7 +7,7 @@ use peace_data::Data;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{ApplyOpSpec, OpCtx, StateDiffFnSpec};
+use crate::{ApplyOpSpec, OpCtx};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -107,26 +107,6 @@ pub trait ItemSpec: DynClone {
     where
         Self: 'op;
 
-    /// Returns the difference between the current state and desired state.
-    ///
-    /// # Implementors
-    ///
-    /// When this type is serialized, it should provide "just enough" /
-    /// meaningful information to the user on what has changed. So instead of
-    /// including the complete [`State`] and [`StateDesired`], it should only
-    /// include the parts that matter.
-    ///
-    /// This function call is intended to be cheap and fast.
-    ///
-    /// # Examples
-    ///
-    /// * For a file download operation, the difference could be the content
-    ///   hash changes from `abcd` to `efgh`.
-    ///
-    /// * For a web application service operation, the desired state could be
-    ///   the application version changing from 1 to 2.
-    type StateDiffFnSpec: StateDiffFnSpec<Error = Self::Error, State = Self::State, StateDiff = Self::StateDiff>;
-
     /// Specification of the apply operation.
     ///
     /// The output is the IDs of resources produced by the operation.
@@ -218,6 +198,30 @@ pub trait ItemSpec: DynClone {
         op_ctx: OpCtx<'_>,
         data: Self::Data<'_>,
     ) -> Result<Self::State, Self::Error>;
+
+    /// Returns the difference between the current state and desired state.
+    ///
+    /// # Implementors
+    ///
+    /// When this type is serialized, it should provide "just enough" /
+    /// meaningful information to the user on what has changed. So instead of
+    /// including the complete desired [`State`], it should only include the
+    /// parts that changed.
+    ///
+    /// This function call is intended to be cheap and fast.
+    ///
+    /// # Examples
+    ///
+    /// * For a file download operation, the difference could be the content
+    ///   hash changes from `abcd` to `efgh`.
+    ///
+    /// * For a web application service operation, the desired state could be
+    ///   the application version changing from 1 to 2.
+    async fn state_diff(
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::StateDiff, Self::Error>;
 
     /// Returns the representation of a clean `State`.
     ///
