@@ -7,9 +7,9 @@ use crate::{ETag, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
 
 /// Download status diff function.
 #[derive(Debug)]
-pub struct FileDownloadStateDiffFnSpec;
+pub struct FileDownloadStateDiffFn;
 
-impl FileDownloadStateDiffFnSpec {
+impl FileDownloadStateDiffFn {
     pub async fn state_diff(
         state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
         state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,

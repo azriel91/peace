@@ -14,7 +14,7 @@ use crate::outcomes::ItemApplyPartialRt;
 ///
 ///     - [`StateCurrentFn::exec`]
 ///     - [`StateDesiredFn::exec`] or [`ItemSpec::state_clean`]
-///     - [`StateDiffFnSpec::exec`]
+///     - [`StateDiffFn::exec`]
 ///     - [`ApplyOpSpec::check`]
 ///     - [`ApplyOpSpec::exec`]
 ///     - [`StateCurrentFn::exec`]
@@ -28,7 +28,7 @@ use crate::outcomes::ItemApplyPartialRt;
 ///
 /// [`StateCurrentFn::exec`]: peace_cfg::ItemSpec::StateCurrentFn
 /// [`StateDesiredFn::exec`]: peace_cfg::ItemSpec::StateDesiredFn
-/// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
+/// [`StateDiffFn::exec`]: peace_cfg::ItemSpec::StateDiffFn
 /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
 /// [`ApplyOpSpec::exec`]: peace_cfg::ItemSpec::ApplyOpSpec
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]

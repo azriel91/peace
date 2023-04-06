@@ -8,9 +8,9 @@ use crate::{
 
 /// Runs a shell command to obtain the `ShCmd` diff.
 #[derive(Debug)]
-pub struct ShCmdStateDiffFnSpec<Id>(PhantomData<Id>);
+pub struct ShCmdStateDiffFn<Id>(PhantomData<Id>);
 
-impl<Id> ShCmdStateDiffFnSpec<Id>
+impl<Id> ShCmdStateDiffFn<Id>
 where
     Id: Send + Sync + 'static,
 {

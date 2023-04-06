@@ -6,7 +6,7 @@ pub use self::{
     s3_object_params::S3ObjectParams, s3_object_state::S3ObjectState,
     s3_object_state_current_fn::S3ObjectStateCurrentFn,
     s3_object_state_desired_fn::S3ObjectStateDesiredFn, s3_object_state_diff::S3ObjectStateDiff,
-    s3_object_state_diff_fn_spec::S3ObjectStateDiffFnSpec,
+    s3_object_state_diff_fn::S3ObjectStateDiffFn,
 };
 
 mod s3_object_apply_op_spec;
@@ -18,4 +18,4 @@ mod s3_object_state;
 mod s3_object_state_current_fn;
 mod s3_object_state_desired_fn;
 mod s3_object_state_diff;
-mod s3_object_state_diff_fn_spec;
+mod s3_object_state_diff_fn;

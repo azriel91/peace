@@ -63,7 +63,7 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
 
         For this to work, when `StateCurrentFn::try_exec` is requested, `peace` will:
 
-        1. For each non-parent item, run `StateCurrentFn`, `StateDesiredFn`, `StateDiffFnSpec`, and `ApplyOpSpec::check`.
+        1. For each non-parent item, run `StateCurrentFn`, `StateDesiredFn`, `StateDiffFn`, and `ApplyOpSpec::check`.
         2. If `ApplyOpSpec::check` returns `OpCheckStatus::ExecNotRequired`, then successor items can be processed as well.
 
     3. `StateCurrentFn` could return `Result<Option<Status>, E>`:

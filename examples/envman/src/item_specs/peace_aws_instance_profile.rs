@@ -8,7 +8,7 @@ pub use self::{
     instance_profile_state_current_fn::InstanceProfileStateCurrentFn,
     instance_profile_state_desired_fn::InstanceProfileStateDesiredFn,
     instance_profile_state_diff::InstanceProfileStateDiff,
-    instance_profile_state_diff_fn_spec::InstanceProfileStateDiffFnSpec,
+    instance_profile_state_diff_fn::InstanceProfileStateDiffFn,
 };
 
 pub mod model;
@@ -22,4 +22,4 @@ mod instance_profile_state;
 mod instance_profile_state_current_fn;
 mod instance_profile_state_desired_fn;
 mod instance_profile_state_diff;
-mod instance_profile_state_diff_fn_spec;
+mod instance_profile_state_diff_fn;

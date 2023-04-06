@@ -126,12 +126,12 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     ///
     /// * [`StateCurrentFn::exec`]
     /// * [`StateDesiredFn::exec`]
-    /// * [`StateDiffFnSpec::exec`]
+    /// * [`StateDiffFn::exec`]
     /// * [`ApplyOpSpec::check`]
     ///
     /// [`StateCurrentFn::exec`]: peace_cfg::ItemSpec::StateCurrentFn
     /// [`StateDesiredFn::exec`]: peace_cfg::ItemSpec::StateDesiredFn
-    /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
+    /// [`StateDiffFn::exec`]: peace_cfg::ItemSpec::StateDiffFn
     /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
     async fn ensure_prepare(
         &self,
@@ -147,12 +147,12 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     ///
     /// * [`StateCurrentFn::exec`]
     /// * [`ItemSpec::state_clean`]
-    /// * [`StateDiffFnSpec::exec`]
+    /// * [`StateDiffFn::exec`]
     /// * [`ApplyOpSpec::check`]
     ///
     /// [`StateCurrentFn::exec`]: peace_cfg::ItemSpec::StateCurrentFn
     /// [`ItemSpec::state_clean`]: peace_cfg::ItemSpec::state_clean
-    /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
+    /// [`StateDiffFn::exec`]: peace_cfg::ItemSpec::StateDiffFn
     /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
     async fn clean_prepare(
         &self,

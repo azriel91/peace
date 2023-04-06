@@ -8,7 +8,7 @@ use peace::{
 use crate::{
     ETag, FileDownloadApplyOpSpec, FileDownloadData, FileDownloadError, FileDownloadState,
     FileDownloadStateCurrentFn, FileDownloadStateDesiredFn, FileDownloadStateDiff,
-    FileDownloadStateDiffFnSpec,
+    FileDownloadStateDiffFn,
 };
 
 /// Item spec for downloading a file.
@@ -101,7 +101,7 @@ where
         state_current: &Self::State,
         state_desired: &Self::State,
     ) -> Result<Self::StateDiff, FileDownloadError> {
-        FileDownloadStateDiffFnSpec::state_diff(state_current, state_desired).await
+        FileDownloadStateDiffFn::state_diff(state_current, state_desired).await
     }
 
     async fn state_clean(data: Self::Data<'_>) -> Result<Self::State, FileDownloadError> {

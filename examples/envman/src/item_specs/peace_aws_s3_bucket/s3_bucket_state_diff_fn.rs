@@ -2,9 +2,9 @@ use crate::item_specs::peace_aws_s3_bucket::{S3BucketError, S3BucketState, S3Buc
 
 /// Tar extraction status diff function.
 #[derive(Debug)]
-pub struct S3BucketStateDiffFnSpec;
+pub struct S3BucketStateDiffFn;
 
-impl S3BucketStateDiffFnSpec {
+impl S3BucketStateDiffFn {
     pub async fn state_diff(
         state_current: &S3BucketState,
         state_desired: &S3BucketState,

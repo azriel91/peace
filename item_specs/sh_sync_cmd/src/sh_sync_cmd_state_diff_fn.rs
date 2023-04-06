@@ -9,9 +9,9 @@ use crate::{
 
 /// Tar extraction status diff function.
 #[derive(Debug)]
-pub struct ShSyncCmdStateDiffFnSpec<Id>(PhantomData<Id>);
+pub struct ShSyncCmdStateDiffFn<Id>(PhantomData<Id>);
 
-impl<Id> ShSyncCmdStateDiffFnSpec<Id>
+impl<Id> ShSyncCmdStateDiffFn<Id>
 where
     Id: Send + Sync + 'static,
 {

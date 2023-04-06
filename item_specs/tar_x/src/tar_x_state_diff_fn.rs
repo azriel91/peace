@@ -4,9 +4,9 @@ use crate::{FileMetadata, FileMetadatas, TarXError, TarXStateDiff};
 
 /// Tar extraction status diff function.
 #[derive(Debug)]
-pub struct TarXStateDiffFnSpec;
+pub struct TarXStateDiffFn;
 
-impl TarXStateDiffFnSpec {
+impl TarXStateDiffFn {
     pub async fn state_diff(
         file_metadatas_current: &FileMetadatas,
         file_metadatas_desired: &FileMetadatas,

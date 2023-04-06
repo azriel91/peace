@@ -4,9 +4,9 @@ use crate::item_specs::peace_aws_instance_profile::{
 
 /// Tar extraction status diff function.
 #[derive(Debug)]
-pub struct InstanceProfileStateDiffFnSpec;
+pub struct InstanceProfileStateDiffFn;
 
-impl InstanceProfileStateDiffFnSpec {
+impl InstanceProfileStateDiffFn {
     pub async fn state_diff(
         state_current: &InstanceProfileState,
         state_desired: &InstanceProfileState,

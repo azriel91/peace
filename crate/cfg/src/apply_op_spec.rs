@@ -45,11 +45,11 @@ pub trait ApplyOpSpec {
     /// [`ItemSpec::State`]: crate::ItemSpec::State
     type State: Clone + Serialize + DeserializeOwned;
 
-    /// State difference produced by [`StateDiffFnSpec`].
+    /// State difference produced by [`StateDiffFn`].
     ///
     /// See [`ItemSpec::StateDiff`] for more detail.
     ///
-    /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
+    /// [`StateDiffFn`]: crate::ItemSpec::StateDiffFn
     /// [`ItemSpec::StateDiff`]: crate::ItemSpec::StateDiff
     type StateDiff: Clone + Serialize + DeserializeOwned;
 
@@ -93,12 +93,12 @@ pub trait ApplyOpSpec {
     /// * `state_desired`: Desired [`State`] of the managed item, returned from
     ///   [`StateDesiredFn`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
-    ///   [`StateDiffFnSpec`].
+    ///   [`StateDiffFn`].
     ///
     /// [`State`]: Self::State
     /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
     /// [`StateDesiredFn`]: crate::ItemSpec::StateDesiredFn
-    /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
+    /// [`StateDiffFn`]: crate::ItemSpec::StateDiffFn
     async fn check(
         data: Self::Data<'_>,
         state_current: &Self::State,
@@ -132,14 +132,14 @@ pub trait ApplyOpSpec {
     /// * `state_desired`: Desired [`State`] of the managed item, returned from
     ///   [`StateDesiredFn`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
-    ///   [`StateDiffFnSpec`].
+    ///   [`StateDiffFn`].
     ///
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     /// [`State`]: crate::State
     /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
     /// [`StateDesiredFn`]: crate::ItemSpec::StateDesiredFn
-    /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
+    /// [`StateDiffFn`]: crate::ItemSpec::StateDiffFn
     /// [`State`]: Self::State
     async fn exec_dry(
         op_ctx: OpCtx<'_>,
@@ -161,14 +161,14 @@ pub trait ApplyOpSpec {
     /// * `state_desired`: Desired [`State`] of the managed item, returned from
     ///   [`StateDesiredFn`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
-    ///   [`StateDiffFnSpec`].
+    ///   [`StateDiffFn`].
     ///
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     /// [`State`]: crate::State
     /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
     /// [`StateDesiredFn`]: crate::ItemSpec::StateDesiredFn
-    /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
+    /// [`StateDiffFn`]: crate::ItemSpec::StateDiffFn
     /// [`State`]: Self::State
     async fn exec(
         op_ctx: OpCtx<'_>,

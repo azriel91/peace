@@ -90,7 +90,7 @@
 
 ## 0.0.5 (2022-12-18)
 
-* `ShCmdStateDiffFnSpec` correctly runs `state_diff_sh_cmd` for state diff. ([#57])
+* `ShCmdStateDiffFn` correctly runs `state_diff_sh_cmd` for state diff. ([#57])
 * `ShCmdParams` now uses the `Id` type parameter so that different `ShCmdItemSpec`s can be used correctly. ([#57])
 * `ShCmdItemSpec` takes in optional `ShCmdParams<Id>` and inserts it into `resources`. ([#57])
 * `CmdContextBuilder` sets the current directory to the workspace directory. ([#57])

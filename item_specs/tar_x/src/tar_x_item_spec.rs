@@ -7,7 +7,7 @@ use peace::{
 
 use crate::{
     FileMetadatas, TarXApplyOpSpec, TarXData, TarXError, TarXStateCurrentFn, TarXStateDesiredFn,
-    TarXStateDiff, TarXStateDiffFnSpec,
+    TarXStateDiff, TarXStateDiffFn,
 };
 
 /// Item spec for extracting a tar file.
@@ -104,7 +104,7 @@ where
         state_current: &Self::State,
         state_desired: &Self::State,
     ) -> Result<Self::StateDiff, TarXError> {
-        TarXStateDiffFnSpec::state_diff(state_current, state_desired).await
+        TarXStateDiffFn::state_diff(state_current, state_desired).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, TarXError> {

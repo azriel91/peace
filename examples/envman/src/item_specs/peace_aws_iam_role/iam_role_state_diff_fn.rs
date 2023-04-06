@@ -2,9 +2,9 @@ use crate::item_specs::peace_aws_iam_role::{IamRoleError, IamRoleState, IamRoleS
 
 /// Tar extraction status diff function.
 #[derive(Debug)]
-pub struct IamRoleStateDiffFnSpec;
+pub struct IamRoleStateDiffFn;
 
-impl IamRoleStateDiffFnSpec {
+impl IamRoleStateDiffFn {
     pub async fn state_diff(
         state_current: &IamRoleState,
         state_desired: &IamRoleState,

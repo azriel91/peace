@@ -19,7 +19,7 @@ where
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
-    /// Runs [`StateDiffFnSpec`]` for each [`ItemSpec`].
+    /// Runs [`StateDiffFn`]` for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`], [`StatesDesired`], and [`StateDiffs`].
@@ -28,7 +28,7 @@ where
     /// [`StatesCurrent`]: peace_resources::StatesCurrent
     /// [`StatesDesired`]: peace_resources::StatesDesired
     /// [`StatesRw`]: peace_resources::StatesRw
-    /// [`StateDiffFnSpec`]: peace_cfg::ItemSpec::StateDiffFnSpec
+    /// [`StateDiffFn`]: peace_cfg::ItemSpec::StateDiffFn
     /// [`StateDesiredFn`]: peace_cfg::ItemSpec::StateDesiredFn
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,

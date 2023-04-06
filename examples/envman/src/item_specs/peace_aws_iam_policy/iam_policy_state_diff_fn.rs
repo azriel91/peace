@@ -2,9 +2,9 @@ use crate::item_specs::peace_aws_iam_policy::{IamPolicyError, IamPolicyState, Ia
 
 /// Tar extraction status diff function.
 #[derive(Debug)]
-pub struct IamPolicyStateDiffFnSpec;
+pub struct IamPolicyStateDiffFn;
 
-impl IamPolicyStateDiffFnSpec {
+impl IamPolicyStateDiffFn {
     pub async fn state_diff(
         state_current: &IamPolicyState,
         state_desired: &IamPolicyState,

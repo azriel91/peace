@@ -7,7 +7,7 @@ use peace::{
 
 use crate::{
     ShSyncCmdApplyOpSpec, ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord,
-    ShSyncCmdStateDiff, ShSyncCmdStateDiffFnSpec, ShSyncCmdSyncStatus,
+    ShSyncCmdStateDiff, ShSyncCmdStateDiffFn, ShSyncCmdSyncStatus,
 };
 
 /// Item spec for executing a shell command.
@@ -98,7 +98,7 @@ where
         state_current: &Self::State,
         state_desired: &Self::State,
     ) -> Result<Self::StateDiff, ShSyncCmdError> {
-        ShSyncCmdStateDiffFnSpec::state_diff(data, state_current, state_desired).await
+        ShSyncCmdStateDiffFn::state_diff(data, state_current, state_desired).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, ShSyncCmdError> {

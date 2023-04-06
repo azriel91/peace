@@ -6,7 +6,7 @@ pub use crate::item_specs::peace_aws_iam_role::{
     iam_role_params::IamRoleParams, iam_role_state::IamRoleState,
     iam_role_state_current_fn::IamRoleStateCurrentFn,
     iam_role_state_desired_fn::IamRoleStateDesiredFn,
-    iam_role_state_diff::IamRoleStateDiff, iam_role_state_diff_fn_spec::IamRoleStateDiffFnSpec,
+    iam_role_state_diff::IamRoleStateDiff, iam_role_state_diff_fn::IamRoleStateDiffFn,
 };
 
 pub mod model;
@@ -20,4 +20,4 @@ mod iam_role_state;
 mod iam_role_state_current_fn;
 mod iam_role_state_desired_fn;
 mod iam_role_state_diff;
-mod iam_role_state_diff_fn_spec;
+mod iam_role_state_diff_fn;
