@@ -12,12 +12,12 @@ use crate::outcomes::ItemApplyPartialRt;
 ///
 /// 1. `ApplyCmd` calls the following function for each item.
 ///
-///     - [`StateCurrentFn::exec`]
+///     - [`ItemSpec::state_current`]
 ///     - [`StateDesiredFn::exec`] or [`ItemSpec::state_clean`]
 ///     - [`StateDiffFn::exec`]
 ///     - [`ApplyFns::check`]
 ///     - [`ApplyFns::exec`]
-///     - [`StateCurrentFn::exec`]
+///     - [`ItemSpec::state_current`]
 ///
 /// 2. Each function call *may* fail.
 /// 3. If we have an enum representing the state after each function call, we
@@ -26,7 +26,7 @@ use crate::outcomes::ItemApplyPartialRt;
 /// It is not likely to be error prone or too unergonomic to store each field as
 /// optional.
 ///
-/// [`StateCurrentFn::exec`]: peace_cfg::ItemSpec::StateCurrentFn
+/// [`ItemSpec::state_current`]: peace_cfg::ItemSpec::state_current
 /// [`StateDesiredFn::exec`]: peace_cfg::ItemSpec::StateDesiredFn
 /// [`StateDiffFn::exec`]: peace_cfg::ItemSpec::StateDiffFn
 /// [`ApplyFns::check`]: peace_cfg::ItemSpec::ApplyFns

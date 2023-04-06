@@ -45,21 +45,22 @@ where
     O: OutputWrite<E>,
     PKeys: ParamsKeys + 'static,
 {
-    /// Runs [`StateCurrentFn`]`::`[`try_exec`] for each [`ItemSpec`].
+    /// Runs [`try_state_current`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`], and will be serialized to
     /// `$flow_dir/states_saved.yaml`.
     ///
-    /// If any `StateCurrentFn` needs to read the `State` from a previous
-    /// `ItemSpec`, the predecessor should insert a copy / clone of their state
-    /// into `Resources`, and the successor should references it in their
-    /// [`Data`].
+    /// If any `state_current` function needs to read the `State` from a
+    /// previous `ItemSpec`, it may automatically be referenced using
+    /// [`Current<T>`] where `T` us the predecessor's state. Peace will have
+    /// automatically inserted it into `Resources`, and the successor should
+    /// references it in their [`Data`].
     ///
-    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
+    /// [`Current<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Current.html
     /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateCurrentFn`]: peace_cfg::ItemSpec::StateCurrentFn
+    /// [`try_state_current`]: peace_cfg::ItemSpec::try_state_current
     pub async fn current(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StatesCurrent, E> {
@@ -68,21 +69,22 @@ where
             .map(|(states_current, _states_desired)| states_current)
     }
 
-    /// Runs [`StateDesiredFn`]`::`[`try_exec`] for each [`ItemSpec`].
+    /// Runs [`try_state_desired`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesDesired`], and will be serialized to
     /// `$flow_dir/states_desired.yaml`.
     ///
-    /// If any `StateDesiredFn` needs to read the `State` from a previous
-    /// `ItemSpec`, the predecessor should insert a copy / clone of their state
-    /// into `Resources`, and the successor should references it in their
-    /// [`Data`].
+    /// If any `state_desired` function needs to read the `State` from a
+    /// previous `ItemSpec`, it may automatically be referenced using
+    /// [`Desired<T>`] where `T` us the predecessor's state. Peace will have
+    /// automatically inserted it into `Resources`, and the successor should
+    /// references it in their [`Data`].
     ///
-    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     /// [`Data`]: peace_cfg::TryFnSpec::Data
+    /// [`Desired<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Desired.html
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateDesiredFn`]: peace_cfg::ItemSpec::StateDesiredFn
+    /// [`try_state_desired`]: peace_cfg::ItemSpec::try_state_desired
     pub async fn desired(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StatesDesired, E> {
@@ -91,49 +93,38 @@ where
             .map(|(_states_current, states_desired)| states_desired)
     }
 
-    /// Runs [`StateCurrentFn`] and [`StateDesiredFn`]`::`[`try_exec`]
-    /// for each [`ItemSpec`].
+    /// Runs [`try_state_current`] and [`try_state_desired`]` for each
+    /// [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`] and [`StatesDesired`], and states will be serialized
     /// to `$flow_dir/states_saved.yaml` and
     /// `$flow_dir/states_desired.yaml`.
     ///
-    /// If any `StateCurrentFn` needs to read the `State` from a previous
-    /// `ItemSpec`, the predecessor should insert a copy / clone of their state
-    /// into `Resources`, and the successor should references it in their
-    /// [`Data`].
+    /// If any `state_current` function needs to read the `State` from a
+    /// previous `ItemSpec`, the predecessor should insert a copy / clone of
+    /// their state into `Resources`, and the successor should references it
+    /// in their [`Data`].
     ///
-    /// If any `StateDesiredFn` needs to read the `State` from a previous
-    /// `ItemSpec`, the predecessor should insert a copy / clone of their state
-    /// into `Resources`, and the successor should references it in their
-    /// [`Data`].
+    /// If any `state_desired` function needs to read the `State` from a
+    /// previous `ItemSpec`, it may automatically be referenced using
+    /// [`Desired<T>`] where `T` us the predecessor's state. Peace will have
+    /// automatically inserted it into `Resources`, and the successor should
+    /// references it in their [`Data`].
     ///
-    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
+    /// [`Current<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Current.html
     /// [`Data`]: peace_cfg::TryFnSpec::Data
+    /// [`Desired<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Desired.html
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateDesiredFn`]: peace_cfg::ItemSpec::StateDesiredFn
+    /// [`try_state_current`]: peace_cfg::ItemSpec::try_state_current
+    /// [`try_state_desired`]: peace_cfg::ItemSpec::try_state_desired
     pub async fn current_and_desired(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<(StatesCurrent, StatesDesired), E> {
         Self::exec(cmd_ctx, DiscoverFor::CurrentAndDesired).await
     }
 
-    /// Runs [`StateCurrentFn`]`::`[`try_exec`] for each [`ItemSpec`].
-    ///
-    /// At the end of this function, [`Resources`] will be populated with
-    /// [`StatesCurrent`], and will be serialized to
-    /// `$flow_dir/states_saved.yaml`.
-    ///
-    /// If any `StateCurrentFn` needs to read the `State` from a previous
-    /// `ItemSpec`, the predecessor should insert a copy / clone of their state
-    /// into `Resources`, and the successor should references it in their
-    /// [`Data`].
-    ///
-    /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
-    /// [`Data`]: peace_cfg::TryFnSpec::Data
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateCurrentFn`]: peace_cfg::ItemSpec::StateCurrentFn
+    /// Actual logic to discover current and/or desired states.
     async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         discover_for: DiscoverFor,

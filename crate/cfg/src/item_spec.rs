@@ -244,16 +244,16 @@ pub trait ItemSpec: DynClone {
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
-    ///   [`StateCurrentFn`].
+    ///   [`state_current`].
     /// * `state_target`: Target [`State`] of the managed item, either
     ///   [`state_clean`] or [`state_desired`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
     ///   [`StateDiffFn`].
     ///
     /// [`state_clean`]: crate::ItemSpec::state_clean
+    /// [`state_current`]: crate::ItemSpec::state_current
     /// [`state_desired`]: crate::ItemSpec::state_desired
     /// [`State`]: Self::State
-    /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
     /// [`StateDiffFn`]: crate::ItemSpec::StateDiffFn
     async fn apply_check(
         data: Self::Data<'_>,
@@ -284,7 +284,7 @@ pub trait ItemSpec: DynClone {
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
-    ///   [`StateCurrentFn`].
+    ///   [`state_current`].
     /// * `state_target`: Target [`State`] of the managed item, either
     ///   [`state_clean`] or [`state_desired`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
@@ -293,9 +293,9 @@ pub trait ItemSpec: DynClone {
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     /// [`state_clean`]: crate::ItemSpec::state_clean
+    /// [`state_current`]: crate::ItemSpec::state_current
     /// [`state_desired`]: crate::ItemSpec::state_desired
     /// [`State`]: Self::State
-    /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
     /// [`StateDiffFn`]: crate::ItemSpec::StateDiffFn
     async fn apply_dry(
         op_ctx: OpCtx<'_>,
@@ -313,19 +313,19 @@ pub trait ItemSpec: DynClone {
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
-    ///   [`StateCurrentFn`].
+    ///   [`state_current`].
     /// * `state_target`: Target [`State`] of the managed item, either
     ///   [`state_clean`] or [`state_desired`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
     ///   [`StateDiffFn`].
     ///
     /// [`check`]: Self::check
+    /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     /// [`state_clean`]: crate::ItemSpec::state_clean
+    /// [`state_current`]: crate::ItemSpec::state_current
     /// [`state_desired`]: crate::ItemSpec::state_desired
     /// [`State`]: Self::State
-    /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
     /// [`StateDiffFn`]: crate::ItemSpec::StateDiffFn
-    /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     async fn apply(
         op_ctx: OpCtx<'_>,
         data: Self::Data<'_>,

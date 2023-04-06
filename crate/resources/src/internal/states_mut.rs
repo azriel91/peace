@@ -11,23 +11,20 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 ///
 /// # Implementors
 ///
-/// * In `StateCurrentFn`, you should reference [`StatesRw`], which allows
-///   mutable access to the underlying states.
-/// * In `ApplyFns`, you should reference [`StatesCurrent`].
-/// * [`StatesMut`] is not intended to be referenced in [`Data`] directly.
-///
-/// You may reference [`StatesCurrent`] in `ApplyFns::Data` for reading. It
-/// is not mutable as `State` must remain unchanged so that all `ItemSpec`s
-/// operate over consistent data.
+/// To reference State from another `ItemSpec`, in `ItemSpec::Data`, you should
+/// reference [`Current<T>`] or [`Desired<T>`], where `T` is the predecessor
+/// item spec's state.
 ///
 /// # Type Parameters
 ///
 /// * `TS`: Type state to distinguish the purpose of the `States` map.
 ///
+/// [`Current<T>`]: peace_data::marker::Current
 /// [`Data`]: peace_data::Data
+/// [`Desired<T>`]: peace_data::marker::Desired
+/// [`Resources`]: crate::Resources
 /// [`StatesCurrent`]: crate::StatesCurrent
 /// [`StatesRw`]: crate::StatesRw
-/// [`Resources`]: crate::Resources
 #[derive(Debug, Serialize)]
 pub struct StatesMut<TS>(TypeMap<ItemSpecId, BoxDtDisplay>, PhantomData<TS>);
 
