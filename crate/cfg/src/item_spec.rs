@@ -144,8 +144,8 @@ pub trait ItemSpec: DynClone {
     /// must be inserted into the map so that the [`check`] and [`apply`]
     /// functions of each operation can borrow the instance of that type.
     ///
-    /// [`check`]: crate::ApplyOpSpec::check
-    /// [`apply`]: crate::ApplyOpSpec::apply
+    /// [`check`]: crate::ApplyFns::check
+    /// [`apply`]: crate::ApplyFns::apply
     async fn setup(&self, data: &mut Resources<Empty>) -> Result<(), Self::Error>;
 
     /// Returns the current state of the managed item, if possible.

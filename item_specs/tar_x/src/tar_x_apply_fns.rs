@@ -6,11 +6,11 @@ use peace::cfg::{OpCheckStatus, OpCtx};
 
 use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
 
-/// ApplyOpSpec for the tar to extract.
+/// ApplyFns for the tar to extract.
 #[derive(Debug)]
-pub struct TarXApplyOpSpec<Id>(PhantomData<Id>);
+pub struct TarXApplyFns<Id>(PhantomData<Id>);
 
-impl<Id> TarXApplyOpSpec<Id>
+impl<Id> TarXApplyFns<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -95,7 +95,7 @@ where
         if tar_path.exists() {
             storage
                 .read_with_sync_api(
-                    "TarXApplyOpSpec::exec".to_string(),
+                    "TarXApplyFns::exec".to_string(),
                     tar_path,
                     |sync_io_bridge| {
                         tar::Archive::new(sync_io_bridge)

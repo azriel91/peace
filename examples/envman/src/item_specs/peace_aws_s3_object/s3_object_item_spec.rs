@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_s3_object::{
-    S3ObjectApplyOpSpec, S3ObjectData, S3ObjectError, S3ObjectState, S3ObjectStateCurrentFn,
+    S3ObjectApplyFns, S3ObjectData, S3ObjectError, S3ObjectState, S3ObjectStateCurrentFn,
     S3ObjectStateDesiredFn, S3ObjectStateDiff, S3ObjectStateDiffFn,
 };
 
@@ -122,7 +122,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error> {
-        S3ObjectApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+        S3ObjectApplyFns::apply_check(data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
@@ -132,7 +132,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        S3ObjectApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        S3ObjectApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
@@ -142,6 +142,6 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        S3ObjectApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
+        S3ObjectApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

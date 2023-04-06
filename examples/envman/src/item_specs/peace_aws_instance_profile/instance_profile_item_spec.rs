@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_instance_profile::{
-    InstanceProfileApplyOpSpec, InstanceProfileData, InstanceProfileError, InstanceProfileState,
+    InstanceProfileApplyFns, InstanceProfileData, InstanceProfileError, InstanceProfileState,
     InstanceProfileStateCurrentFn, InstanceProfileStateDesiredFn, InstanceProfileStateDiff,
     InstanceProfileStateDiffFn,
 };
@@ -122,7 +122,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error> {
-        InstanceProfileApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+        InstanceProfileApplyFns::apply_check(data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
@@ -132,7 +132,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        InstanceProfileApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        InstanceProfileApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
@@ -142,6 +142,6 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        InstanceProfileApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
+        InstanceProfileApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

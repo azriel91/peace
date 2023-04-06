@@ -8,11 +8,11 @@ use crate::{
     ShCmd, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState, ShCmdStateDiff,
 };
 
-/// ApplyOpSpec for the command to execute.
+/// ApplyFns for the command to execute.
 #[derive(Debug)]
-pub struct ShCmdApplyOpSpec<Id>(PhantomData<Id>);
+pub struct ShCmdApplyFns<Id>(PhantomData<Id>);
 
-impl<Id> ShCmdApplyOpSpec<Id>
+impl<Id> ShCmdApplyFns<Id>
 where
     Id: Send + Sync + 'static,
 {

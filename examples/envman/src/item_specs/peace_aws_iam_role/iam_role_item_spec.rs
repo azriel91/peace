@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_iam_role::{
-    IamRoleApplyOpSpec, IamRoleData, IamRoleError, IamRoleState, IamRoleStateCurrentFn,
+    IamRoleApplyFns, IamRoleData, IamRoleError, IamRoleState, IamRoleStateCurrentFn,
     IamRoleStateDesiredFn, IamRoleStateDiff, IamRoleStateDiffFn,
 };
 
@@ -121,7 +121,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error> {
-        IamRoleApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+        IamRoleApplyFns::apply_check(data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
@@ -131,7 +131,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        IamRoleApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        IamRoleApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
@@ -141,6 +141,6 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        IamRoleApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
+        IamRoleApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

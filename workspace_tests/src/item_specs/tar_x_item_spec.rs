@@ -21,8 +21,7 @@ use peace::{
     },
 };
 use peace_item_specs::tar_x::{
-    FileMetadata, FileMetadatas, TarXData, TarXError, TarXItemSpec, TarXParams,
-    TarXStateDiff,
+    FileMetadata, FileMetadatas, TarXData, TarXError, TarXItemSpec, TarXParams, TarXStateDiff,
 };
 use pretty_assertions::assert_eq;
 use tempfile::TempDir;

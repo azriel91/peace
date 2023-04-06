@@ -1,7 +1,7 @@
 //! Copies a number from one resource to another.
 
 pub use crate::item_specs::peace_aws_iam_role::{
-    iam_role_apply_op_spec::IamRoleApplyOpSpec, iam_role_data::IamRoleData,
+    iam_role_apply_fns::IamRoleApplyFns, iam_role_data::IamRoleData,
     iam_role_error::IamRoleError, iam_role_item_spec::IamRoleItemSpec,
     iam_role_params::IamRoleParams, iam_role_state::IamRoleState,
     iam_role_state_current_fn::IamRoleStateCurrentFn,
@@ -11,7 +11,7 @@ pub use crate::item_specs::peace_aws_iam_role::{
 
 pub mod model;
 
-mod iam_role_apply_op_spec;
+mod iam_role_apply_fns;
 mod iam_role_data;
 mod iam_role_error;
 mod iam_role_item_spec;

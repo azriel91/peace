@@ -6,8 +6,8 @@ use peace::{
 };
 
 use crate::{
-    ShSyncCmdApplyOpSpec, ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord,
-    ShSyncCmdStateDiff, ShSyncCmdStateDiffFn, ShSyncCmdSyncStatus,
+    ShSyncCmdApplyFns, ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord, ShSyncCmdStateDiff,
+    ShSyncCmdStateDiffFn, ShSyncCmdSyncStatus,
 };
 
 /// Item spec for executing a shell command.
@@ -114,7 +114,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error> {
-        ShSyncCmdApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+        ShSyncCmdApplyFns::apply_check(data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
@@ -124,7 +124,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        ShSyncCmdApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        ShSyncCmdApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
@@ -134,6 +134,6 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        ShSyncCmdApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
+        ShSyncCmdApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

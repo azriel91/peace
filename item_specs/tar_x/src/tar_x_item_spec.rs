@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    FileMetadatas, TarXApplyOpSpec, TarXData, TarXError, TarXStateCurrentFn, TarXStateDesiredFn,
+    FileMetadatas, TarXApplyFns, TarXData, TarXError, TarXStateCurrentFn, TarXStateDesiredFn,
     TarXStateDiff, TarXStateDiffFn,
 };
 
@@ -116,7 +116,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error> {
-        TarXApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+        TarXApplyFns::apply_check(data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
@@ -126,7 +126,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        TarXApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        TarXApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
@@ -136,6 +136,6 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        TarXApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
+        TarXApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

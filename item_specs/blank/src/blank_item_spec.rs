@@ -5,7 +5,7 @@ use peace::{
     resources::{resources::ts::Empty, Resources},
 };
 
-use crate::{BlankApplyOpSpec, BlankData, BlankError, BlankState, BlankStateDiff};
+use crate::{BlankApplyFns, BlankData, BlankError, BlankState, BlankStateDiff};
 
 /// Item spec for copying a number.
 ///
@@ -125,7 +125,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error> {
-        BlankApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+        BlankApplyFns::apply_check(data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
@@ -135,7 +135,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        BlankApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        BlankApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
@@ -145,6 +145,6 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        BlankApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
+        BlankApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

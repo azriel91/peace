@@ -11,18 +11,18 @@ let resources = /* .. */;
 let resources = EnsureCmd::exec(graph, resources).await?;
 ```
 
-Note that the `ApplyOpSpec::exec` requires implementers to return `StatePhysical`, which is the state information generated during the `exec` logic, but not necessarily within the implementers' control.
+Note that the `ApplyFns::exec` requires implementers to return `StatePhysical`, which is the state information generated during the `exec` logic, but not necessarily within the implementers' control.
 
 
 ## Method
 
 To discover the current state of all items, the following method is used:
 
-1. `ApplyOpSpec::check` is run for all item specs.
-2. Of the ones that return `OpCheckStatus::ExecRequired`, `ApplyOpSpec::exec` is run.
+1. `ApplyFns::check` is run for all item specs.
+2. Of the ones that return `OpCheckStatus::ExecRequired`, `ApplyFns::exec` is run.
 3. Finally, `StateCurrentFn::try_exec` is run so that the end state can be compared with the desired state to confirm that they match.
 
-### `ApplyOpSpec::check`
+### `ApplyFns::check`
 
 <div style="display: inline-block; padding: 0px 20px 0px 0px;">
 <br />
@@ -87,7 +87,7 @@ OpCheckStatus::ExecRequired { .. }
 </div>
 
 
-### `ApplyOpSpec::exec`
+### `ApplyFns::exec`
 
 <div style="display: inline-block; padding: 0px 20px 0px 0px;">
 <br />
@@ -135,7 +135,7 @@ digraph {
 </div>
 <div style="display: inline-block; width: 600px; vertical-align: top;">
 
-Item specs 1, 3, and 4 need to be executed, but `ItemSpec2`'s `ApplyOpSpec::exec` is skipped as `check` indicated it isn't needed.
+Item specs 1, 3, and 4 need to be executed, but `ItemSpec2`'s `ApplyFns::exec` is skipped as `check` indicated it isn't needed.
 
 ```rust ,ignore
 // ItemSpec1
@@ -174,7 +174,7 @@ It is also recommended that *read* requests to external services are minimized t
 
 Since these processes happen over distributed systems, and errors can happen at any point in the process, it is realistic to assume that the process doesn't happen transactionally.
 
-`ApplyOpSpec` has been designed so that implementers will consider transitions from non-atomic states to the desired state. In simpler terms, if the desired state is "10 servers must exist", then:
+`ApplyFns` has been designed so that implementers will consider transitions from non-atomic states to the desired state. In simpler terms, if the desired state is "10 servers must exist", then:
 
 * When the current state is 0 servers, then 10 servers should be launched.
 * When the current state is 6 servers, then 4 servers should be launched.

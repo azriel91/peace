@@ -127,12 +127,12 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// * [`StateCurrentFn::exec`]
     /// * [`StateDesiredFn::exec`]
     /// * [`StateDiffFn::exec`]
-    /// * [`ApplyOpSpec::check`]
+    /// * [`ApplyFns::check`]
     ///
     /// [`StateCurrentFn::exec`]: peace_cfg::ItemSpec::StateCurrentFn
     /// [`StateDesiredFn::exec`]: peace_cfg::ItemSpec::StateDesiredFn
     /// [`StateDiffFn::exec`]: peace_cfg::ItemSpec::StateDiffFn
-    /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
+    /// [`ApplyFns::check`]: peace_cfg::ItemSpec::ApplyFns
     async fn ensure_prepare(
         &self,
         op_ctx: OpCtx<'_>,
@@ -148,12 +148,12 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// * [`StateCurrentFn::exec`]
     /// * [`ItemSpec::state_clean`]
     /// * [`StateDiffFn::exec`]
-    /// * [`ApplyOpSpec::check`]
+    /// * [`ApplyFns::check`]
     ///
     /// [`StateCurrentFn::exec`]: peace_cfg::ItemSpec::StateCurrentFn
     /// [`ItemSpec::state_clean`]: peace_cfg::ItemSpec::state_clean
     /// [`StateDiffFn::exec`]: peace_cfg::ItemSpec::StateDiffFn
-    /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
+    /// [`ApplyFns::check`]: peace_cfg::ItemSpec::ApplyFns
     async fn clean_prepare(
         &self,
         op_ctx: OpCtx<'_>,
@@ -167,14 +167,14 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// This runs the following function in order, passing in the information
     /// collected from [`ensure_prepare`] or [`clean_prepare`]:
     ///
-    /// * [`ApplyOpSpec::exec_dry`]
+    /// * [`ApplyFns::exec_dry`]
     ///
     /// # Parameters
     ///
     /// * `resources`: The resources in the current execution.
     /// * `item_apply`: The information collected in `self.ensure_prepare`.
     ///
-    /// [`ApplyOpSpec::exec_dry`]: peace_cfg::ItemSpec::ApplyOpSpec
+    /// [`ApplyFns::exec_dry`]: peace_cfg::ItemSpec::ApplyFns
     async fn apply_exec_dry(
         &self,
         op_ctx: OpCtx<'_>,
@@ -189,14 +189,14 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// This runs the following function in order, passing in the information
     /// collected from [`ensure_prepare`] or [`clean_prepare`]:
     ///
-    /// * [`ApplyOpSpec::exec`]
+    /// * [`ApplyFns::exec`]
     ///
     /// # Parameters
     ///
     /// * `resources`: The resources in the current execution.
     /// * `item_apply`: The information collected in `self.ensure_prepare`.
     ///
-    /// [`ApplyOpSpec::exec`]: peace_cfg::ItemSpec::ApplyOpSpec
+    /// [`ApplyFns::exec`]: peace_cfg::ItemSpec::ApplyFns
     async fn apply_exec(
         &self,
         op_ctx: OpCtx<'_>,

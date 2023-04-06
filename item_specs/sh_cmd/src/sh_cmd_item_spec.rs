@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    ShCmdApplyOpSpec, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdParams,
+    ShCmdApplyFns, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdParams,
     ShCmdState, ShCmdStateDiff, ShCmdStateDiffFn,
 };
 
@@ -128,7 +128,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error> {
-        ShCmdApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+        ShCmdApplyFns::apply_check(data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
@@ -138,7 +138,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        ShCmdApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        ShCmdApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
@@ -148,6 +148,6 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        ShCmdApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
+        ShCmdApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

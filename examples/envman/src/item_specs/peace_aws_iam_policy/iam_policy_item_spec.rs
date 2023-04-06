@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_iam_policy::{
-    model::ManagedPolicyArn, IamPolicyApplyOpSpec, IamPolicyData, IamPolicyError, IamPolicyState,
+    model::ManagedPolicyArn, IamPolicyApplyFns, IamPolicyData, IamPolicyError, IamPolicyState,
     IamPolicyStateCurrentFn, IamPolicyStateDesiredFn, IamPolicyStateDiff, IamPolicyStateDiffFn,
 };
 
@@ -123,7 +123,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error> {
-        IamPolicyApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+        IamPolicyApplyFns::apply_check(data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
@@ -133,7 +133,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        IamPolicyApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        IamPolicyApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
@@ -143,6 +143,6 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        IamPolicyApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
+        IamPolicyApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

@@ -1,11 +1,11 @@
 # Feature Gated Incremental Functionality
 
-Tried the following parameter type for `ApplyOpSpec::exec`:
+Tried the following parameter type for `ApplyFns::exec`:
 
 ```rust ,ignore
 use std::marker::PhantomData;
 
-/// Parameters to `ApplyOpSpec::exec`.
+/// Parameters to `ApplyFns::exec`.
 #[derive(Debug)]
 pub struct EnsureExecParams<
     'params,

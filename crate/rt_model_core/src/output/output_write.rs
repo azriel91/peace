@@ -23,7 +23,7 @@ cfg_if::cfg_if! {
 /// perspective, this should not be difficult to use as the return value / error
 /// value is intended to be returned at the end of a command.
 ///
-/// Progress updates sent during `ApplyOpSpec::exec` and `CleanOpSpec::exec`.
+/// Progress updates sent during `ApplyFns::exec` and `CleanOpSpec::exec`.
 #[async_trait(?Send)]
 pub trait OutputWrite<E> {
     /// Prepares this `OutputWrite` implementation for rendering progress.

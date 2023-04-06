@@ -21,10 +21,10 @@ where
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
-    /// Conditionally runs [`ApplyOpSpec`]`::`[`exec_dry`] for each
+    /// Conditionally runs [`ApplyFns`]`::`[`exec_dry`] for each
     /// [`ItemSpec`].
     ///
-    /// In practice this runs [`ApplyOpSpec::check`], and only runs
+    /// In practice this runs [`ApplyFns::check`], and only runs
     /// [`exec_dry`] if execution is required.
     ///
     /// # Note
@@ -33,18 +33,18 @@ where
     /// functions as homogeneous groups instead of interleaving the functions
     /// together per `ItemSpec`:
     ///
-    /// 1. Run [`ApplyOpSpec::check`] for all `ItemSpec`s.
-    /// 2. Run [`ApplyOpSpec::exec_dry`] for all `ItemSpec`s.
+    /// 1. Run [`ApplyFns::check`] for all `ItemSpec`s.
+    /// 2. Run [`ApplyFns::exec_dry`] for all `ItemSpec`s.
     /// 3. Fetch `StatesCurrent` again, and compare.
     ///
     /// State cannot be fetched interleaved with `exec_dry` as it may use
     /// different `Data`.
     ///
-    /// [`exec_dry`]: peace_cfg::ApplyOpSpec::exec_dry
-    /// [`ApplyOpSpec::check`]: peace_cfg::ApplyOpSpec::check
-    /// [`ApplyOpSpec::exec_dry`]: peace_cfg::ApplyOpSpec::exec_dry
+    /// [`exec_dry`]: peace_cfg::ApplyFns::exec_dry
+    /// [`ApplyFns::check`]: peace_cfg::ApplyFns::check
+    /// [`ApplyFns::exec_dry`]: peace_cfg::ApplyFns::exec_dry
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`ApplyOpSpec`]: peace_cfg::ItemSpec::ApplyOpSpec
+    /// [`ApplyFns`]: peace_cfg::ItemSpec::ApplyFns
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
@@ -57,10 +57,10 @@ where
         .await)
     }
 
-    /// Conditionally runs [`ApplyOpSpec`]`::`[`exec`] for each
+    /// Conditionally runs [`ApplyFns`]`::`[`exec`] for each
     /// [`ItemSpec`].
     ///
-    /// In practice this runs [`ApplyOpSpec::check`], and only runs
+    /// In practice this runs [`ApplyFns::check`], and only runs
     /// [`exec`] if execution is required.
     ///
     /// This function takes in a `StatesSaved`, but if you retrieve the state
@@ -74,18 +74,18 @@ where
     /// functions as homogeneous groups instead of interleaving the functions
     /// together per `ItemSpec`:
     ///
-    /// 1. Run [`ApplyOpSpec::check`] for all `ItemSpec`s.
-    /// 2. Run [`ApplyOpSpec::exec`] for all `ItemSpec`s.
+    /// 1. Run [`ApplyFns::check`] for all `ItemSpec`s.
+    /// 2. Run [`ApplyFns::exec`] for all `ItemSpec`s.
     /// 3. Fetch `StatesCurrent` again, and compare.
     ///
     /// State cannot be fetched interleaved with `exec` as it may use
     /// different `Data`.
     ///
-    /// [`exec`]: peace_cfg::ApplyOpSpec::exec
-    /// [`ApplyOpSpec::check`]: peace_cfg::ApplyOpSpec::check
-    /// [`ApplyOpSpec::exec`]: peace_cfg::ApplyOpSpec::exec
+    /// [`exec`]: peace_cfg::ApplyFns::exec
+    /// [`ApplyFns::check`]: peace_cfg::ApplyFns::check
+    /// [`ApplyFns::exec`]: peace_cfg::ApplyFns::exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`ApplyOpSpec`]: peace_cfg::ItemSpec::ApplyOpSpec
+    /// [`ApplyFns`]: peace_cfg::ItemSpec::ApplyFns
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,

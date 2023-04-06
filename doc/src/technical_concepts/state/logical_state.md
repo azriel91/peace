@@ -59,12 +59,12 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
 
         It incurs mental effort to always cater for `src` not being available &ndash; i.e. implementing an item spec would need knowledge beyond itself.
 
-    2. the `peace` framework defaults to not running `state_current_fn` for items that have a logical dependency on things that `ApplyOpSpec::check` returns `ExecRequired`
+    2. the `peace` framework defaults to not running `state_current_fn` for items that have a logical dependency on things that `ApplyFns::check` returns `ExecRequired`
 
         For this to work, when `StateCurrentFn::try_exec` is requested, `peace` will:
 
-        1. For each non-parent item, run `StateCurrentFn`, `StateDesiredFn`, `StateDiffFn`, and `ApplyOpSpec::check`.
-        2. If `ApplyOpSpec::check` returns `OpCheckStatus::ExecNotRequired`, then successor items can be processed as well.
+        1. For each non-parent item, run `StateCurrentFn`, `StateDesiredFn`, `StateDiffFn`, and `ApplyFns::check`.
+        2. If `ApplyFns::check` returns `OpCheckStatus::ExecNotRequired`, then successor items can be processed as well.
 
     3. `StateCurrentFn` could return `Result<Option<Status>, E>`:
 
@@ -78,7 +78,7 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
 
         <!--  -->
 
-    Option 2 may be something we have to do anyway &ndash; we will not be able to provide current state to run `ApplyOpSpec::exec` for successors for the same reason.
+    Option 2 may be something we have to do anyway &ndash; we will not be able to provide current state to run `ApplyFns::exec` for successors for the same reason.
 
     Option 3 may coexist with option 2.
 

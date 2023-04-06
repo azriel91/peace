@@ -15,8 +15,8 @@ use crate::outcomes::ItemApplyPartialRt;
 ///     - [`StateCurrentFn::exec`]
 ///     - [`StateDesiredFn::exec`] or [`ItemSpec::state_clean`]
 ///     - [`StateDiffFn::exec`]
-///     - [`ApplyOpSpec::check`]
-///     - [`ApplyOpSpec::exec`]
+///     - [`ApplyFns::check`]
+///     - [`ApplyFns::exec`]
 ///     - [`StateCurrentFn::exec`]
 ///
 /// 2. Each function call *may* fail.
@@ -29,8 +29,8 @@ use crate::outcomes::ItemApplyPartialRt;
 /// [`StateCurrentFn::exec`]: peace_cfg::ItemSpec::StateCurrentFn
 /// [`StateDesiredFn::exec`]: peace_cfg::ItemSpec::StateDesiredFn
 /// [`StateDiffFn::exec`]: peace_cfg::ItemSpec::StateDiffFn
-/// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
-/// [`ApplyOpSpec::exec`]: peace_cfg::ItemSpec::ApplyOpSpec
+/// [`ApplyFns::check`]: peace_cfg::ItemSpec::ApplyFns
+/// [`ApplyFns::exec`]: peace_cfg::ItemSpec::ApplyFns
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct ItemApplyPartial<State, StateDiff> {
     /// State saved on disk before the execution.

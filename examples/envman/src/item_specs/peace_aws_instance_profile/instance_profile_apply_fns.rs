@@ -9,11 +9,11 @@ use crate::item_specs::peace_aws_instance_profile::{
     InstanceProfileState, InstanceProfileStateDiff,
 };
 
-/// ApplyOpSpec for the instance profile state.
+/// ApplyFns for the instance profile state.
 #[derive(Debug)]
-pub struct InstanceProfileApplyOpSpec<Id>(PhantomData<Id>);
+pub struct InstanceProfileApplyFns<Id>(PhantomData<Id>);
 
-impl<Id> InstanceProfileApplyOpSpec<Id> {
+impl<Id> InstanceProfileApplyFns<Id> {
     async fn role_associate(
         #[cfg(feature = "output_progress")] progress_sender: &ProgressSender<'_>,
         client: &aws_sdk_iam::Client,
@@ -94,7 +94,7 @@ impl<Id> InstanceProfileApplyOpSpec<Id> {
     }
 }
 
-impl<Id> InstanceProfileApplyOpSpec<Id>
+impl<Id> InstanceProfileApplyFns<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -203,9 +203,7 @@ where
         match diff {
             InstanceProfileStateDiff::Added => match state_desired {
                 InstanceProfileState::None => {
-                    panic!(
-                        "`InstanceProfileApplyOpSpec::exec` called with state_desired being None."
-                    );
+                    panic!("`InstanceProfileApplyFns::exec` called with state_desired being None.");
                 }
                 InstanceProfileState::Some {
                     name,
@@ -353,7 +351,7 @@ where
             InstanceProfileStateDiff::InSyncExists
             | InstanceProfileStateDiff::InSyncDoesNotExist => {
                 unreachable!(
-                    "`InstanceProfileApplyOpSpec::exec` should never be called when state is in sync."
+                    "`InstanceProfileApplyFns::exec` should never be called when state is in sync."
                 );
             }
             InstanceProfileStateDiff::NameOrPathModified {
@@ -370,7 +368,7 @@ where
                 let (name, path) = match state_desired {
                     InstanceProfileState::None => {
                         panic!(
-                            "`InstanceProfileApplyOpSpec::exec` called with state_desired being None."
+                            "`InstanceProfileApplyFns::exec` called with state_desired being None."
                         );
                     }
                     InstanceProfileState::Some {

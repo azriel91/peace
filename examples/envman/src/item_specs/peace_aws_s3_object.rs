@@ -1,7 +1,7 @@
 //! Uploads a file to S3.
 
 pub use self::{
-    s3_object_apply_op_spec::S3ObjectApplyOpSpec, s3_object_data::S3ObjectData,
+    s3_object_apply_fns::S3ObjectApplyFns, s3_object_data::S3ObjectData,
     s3_object_error::S3ObjectError, s3_object_item_spec::S3ObjectItemSpec,
     s3_object_params::S3ObjectParams, s3_object_state::S3ObjectState,
     s3_object_state_current_fn::S3ObjectStateCurrentFn,
@@ -9,7 +9,7 @@ pub use self::{
     s3_object_state_diff_fn::S3ObjectStateDiffFn,
 };
 
-mod s3_object_apply_op_spec;
+mod s3_object_apply_fns;
 mod s3_object_data;
 mod s3_object_error;
 mod s3_object_item_spec;

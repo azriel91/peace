@@ -15,11 +15,11 @@ use crate::item_specs::peace_aws_s3_bucket::{
 
 use super::S3BucketStateCurrentFn;
 
-/// ApplyOpSpec for the S3 bucket state.
+/// ApplyFns for the S3 bucket state.
 #[derive(Debug)]
-pub struct S3BucketApplyOpSpec<Id>(PhantomData<Id>);
+pub struct S3BucketApplyFns<Id>(PhantomData<Id>);
 
-impl<Id> S3BucketApplyOpSpec<Id>
+impl<Id> S3BucketApplyFns<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -112,7 +112,7 @@ where
         match diff {
             S3BucketStateDiff::Added => match state_desired {
                 S3BucketState::None => {
-                    panic!("`S3BucketApplyOpSpec::exec` called with state_desired being None.");
+                    panic!("`S3BucketApplyFns::exec` called with state_desired being None.");
                 }
                 S3BucketState::Some {
                     name,
@@ -242,7 +242,7 @@ where
             }
             S3BucketStateDiff::InSyncExists | S3BucketStateDiff::InSyncDoesNotExist => {
                 unreachable!(
-                    "`S3BucketApplyOpSpec::exec` should never be called when state is in sync."
+                    "`S3BucketApplyFns::exec` should never be called when state is in sync."
                 );
             }
             S3BucketStateDiff::NameModified {

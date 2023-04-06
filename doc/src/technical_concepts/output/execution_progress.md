@@ -24,7 +24,7 @@ Whether a task has started, is in-progress, stalled, or completed.
 
     - **Units total:** Unknown (spinner) / known (progress bar).
     - **Units current**
-    - **Operation:** State current / desired / diff discovery, `ApplyOpSpec::exec`.
+    - **Operation:** State current / desired / diff discovery, `ApplyFns::exec`.
 
         Certain operations will not be applicable, e.g. when `StateCurrent` is feature gated, then the operation won't be available when the feature is not enabled.
 
@@ -41,7 +41,7 @@ Whether a task has started, is in-progress, stalled, or completed.
     This status is best conveyed alongside the following information:
 
     - **Completion Status**: Success, Failed.
-    - **Operation:** State current / desired / diff discovery, `ApplyOpSpec::exec`.
+    - **Operation:** State current / desired / diff discovery, `ApplyFns::exec`.
 
 
 The following variant is possible conceptually, but not applicable to the Peace framework:
@@ -103,7 +103,7 @@ Peace should support the following usages out-of-the-box<sup>1</sup>:
 
 ## API
 
-Implementors define the following in `ApplyOpSpec::check`:
+Implementors define the following in `ApplyFns::check`:
 
 * Unit of measurement: Steps, Bytes, Percentage, None
 * Units total: Known / Unknown
@@ -129,7 +129,7 @@ There is a tradeoff between:
         Peace could provide something like:
 
         ```rust
-        impl ApplyOpSpec for MyApplyOpSpec {
+        impl ApplyFns for MyApplyFns {
             async fn exec(data: Data<'_>) -> Result<(), E> {
                 [
                     Self::fn_1,

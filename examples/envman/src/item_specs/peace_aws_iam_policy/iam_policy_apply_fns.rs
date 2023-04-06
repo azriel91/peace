@@ -11,11 +11,11 @@ use crate::item_specs::peace_aws_iam_policy::{
 
 use super::model::ManagedPolicyArn;
 
-/// ApplyOpSpec for the instance profile state.
+/// ApplyFns for the instance profile state.
 #[derive(Debug)]
-pub struct IamPolicyApplyOpSpec<Id>(PhantomData<Id>);
+pub struct IamPolicyApplyFns<Id>(PhantomData<Id>);
 
-impl<Id> IamPolicyApplyOpSpec<Id>
+impl<Id> IamPolicyApplyFns<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -130,7 +130,7 @@ where
         match diff {
             IamPolicyStateDiff::Added => match state_desired {
                 IamPolicyState::None => {
-                    panic!("`IamPolicyApplyOpSpec::exec` called with state_desired being None.");
+                    panic!("`IamPolicyApplyFns::exec` called with state_desired being None.");
                 }
                 IamPolicyState::Some {
                     name,
@@ -382,7 +382,7 @@ where
             }
             IamPolicyStateDiff::DocumentModified { .. } => match state_desired {
                 IamPolicyState::None => {
-                    panic!("`IamPolicyApplyOpSpec::exec` called with state_desired being None.");
+                    panic!("`IamPolicyApplyFns::exec` called with state_desired being None.");
                 }
                 IamPolicyState::Some {
                     name,
@@ -457,7 +457,7 @@ where
             },
             IamPolicyStateDiff::InSyncExists | IamPolicyStateDiff::InSyncDoesNotExist => {
                 unreachable!(
-                    "`IamPolicyApplyOpSpec::exec` should never be called when state is in sync."
+                    "`IamPolicyApplyFns::exec` should never be called when state is in sync."
                 );
             }
             IamPolicyStateDiff::NameOrPathModified {

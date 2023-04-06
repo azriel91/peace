@@ -10,11 +10,11 @@ use crate::item_specs::peace_aws_s3_object::{
     S3ObjectData, S3ObjectError, S3ObjectState, S3ObjectStateDiff,
 };
 
-/// ApplyOpSpec for the S3 object state.
+/// ApplyFns for the S3 object state.
 #[derive(Debug)]
-pub struct S3ObjectApplyOpSpec<Id>(PhantomData<Id>);
+pub struct S3ObjectApplyFns<Id>(PhantomData<Id>);
 
-impl<Id> S3ObjectApplyOpSpec<Id>
+impl<Id> S3ObjectApplyFns<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -117,7 +117,7 @@ where
             S3ObjectStateDiff::Added | S3ObjectStateDiff::ObjectContentModified { .. } => {
                 match state_desired {
                     S3ObjectState::None => {
-                        panic!("`S3ObjectApplyOpSpec::exec` called with state_desired being None.");
+                        panic!("`S3ObjectApplyFns::exec` called with state_desired being None.");
                     }
                     S3ObjectState::Some {
                         bucket_name,
@@ -271,7 +271,7 @@ where
             }
             S3ObjectStateDiff::InSyncExists | S3ObjectStateDiff::InSyncDoesNotExist => {
                 unreachable!(
-                    "`S3ObjectApplyOpSpec::exec` should never be called when state is in sync."
+                    "`S3ObjectApplyFns::exec` should never be called when state is in sync."
                 );
             }
             S3ObjectStateDiff::BucketNameModified {
@@ -286,7 +286,7 @@ where
                 object_key_desired,
             } => {
                 let S3ObjectState::Some {bucket_name, ..} = state_desired else {
-                    panic!("`S3ObjectApplyOpSpec::exec` called with state_desired being None.");
+                    panic!("`S3ObjectApplyFns::exec` called with state_desired being None.");
                 };
 
                 Err(S3ObjectError::ObjectKeyModificationNotSupported {

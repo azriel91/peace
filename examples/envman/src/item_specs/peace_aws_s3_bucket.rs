@@ -1,7 +1,7 @@
 //! Copies a number from one resource to another.
 
 pub use self::{
-    s3_bucket_apply_op_spec::S3BucketApplyOpSpec, s3_bucket_data::S3BucketData,
+    s3_bucket_apply_fns::S3BucketApplyFns, s3_bucket_data::S3BucketData,
     s3_bucket_error::S3BucketError, s3_bucket_item_spec::S3BucketItemSpec,
     s3_bucket_params::S3BucketParams, s3_bucket_state::S3BucketState,
     s3_bucket_state_current_fn::S3BucketStateCurrentFn,
@@ -9,7 +9,7 @@ pub use self::{
     s3_bucket_state_diff_fn::S3BucketStateDiffFn,
 };
 
-mod s3_bucket_apply_op_spec;
+mod s3_bucket_apply_fns;
 mod s3_bucket_data;
 mod s3_bucket_error;
 mod s3_bucket_item_spec;

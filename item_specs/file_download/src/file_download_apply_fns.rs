@@ -26,11 +26,11 @@ use peace::{
     diff::Tracked,
 };
 
-/// ApplyOpSpec for the file to download.
+/// ApplyFns for the file to download.
 #[derive(Debug)]
-pub struct FileDownloadApplyOpSpec<Id>(PhantomData<Id>);
+pub struct FileDownloadApplyFns<Id>(PhantomData<Id>);
 
-impl<Id> FileDownloadApplyOpSpec<Id>
+impl<Id> FileDownloadApplyFns<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -230,7 +230,7 @@ where
     }
 }
 
-impl<Id> FileDownloadApplyOpSpec<Id>
+impl<Id> FileDownloadApplyFns<Id>
 where
     Id: Send + Sync + 'static,
 {

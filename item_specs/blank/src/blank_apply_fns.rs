@@ -6,11 +6,11 @@ use peace::cfg::{OpCheckStatus, OpCtx};
 
 use crate::{BlankData, BlankError, BlankState, BlankStateDiff};
 
-/// ApplyOpSpec for the blank state.
+/// ApplyFns for the blank state.
 #[derive(Debug)]
-pub struct BlankApplyOpSpec<Id>(PhantomData<Id>);
+pub struct BlankApplyFns<Id>(PhantomData<Id>);
 
-impl<Id> BlankApplyOpSpec<Id>
+impl<Id> BlankApplyFns<Id>
 where
     Id: Send + Sync + 'static,
 {

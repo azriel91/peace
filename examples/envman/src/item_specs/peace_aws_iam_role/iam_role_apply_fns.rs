@@ -8,11 +8,11 @@ use crate::item_specs::peace_aws_iam_role::{
     model::RoleIdAndArn, IamRoleData, IamRoleError, IamRoleState, IamRoleStateDiff,
 };
 
-/// ApplyOpSpec for the instance profile state.
+/// ApplyFns for the instance profile state.
 #[derive(Debug)]
-pub struct IamRoleApplyOpSpec<Id>(PhantomData<Id>);
+pub struct IamRoleApplyFns<Id>(PhantomData<Id>);
 
-impl<Id> IamRoleApplyOpSpec<Id> {
+impl<Id> IamRoleApplyFns<Id> {
     pub(crate) async fn managed_policy_detach(
         #[cfg(feature = "output_progress")] progress_sender: &ProgressSender<'_>,
         client: &aws_sdk_iam::Client,
@@ -51,7 +51,7 @@ impl<Id> IamRoleApplyOpSpec<Id> {
     }
 }
 
-impl<Id> IamRoleApplyOpSpec<Id>
+impl<Id> IamRoleApplyFns<Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -174,7 +174,7 @@ where
         match diff {
             IamRoleStateDiff::Added => match state_desired {
                 IamRoleState::None => {
-                    panic!("`IamRoleApplyOpSpec::exec` called with state_desired being None.");
+                    panic!("`IamRoleApplyFns::exec` called with state_desired being None.");
                 }
                 IamRoleState::Some {
                     name,
@@ -331,7 +331,7 @@ where
             }
             IamRoleStateDiff::InSyncExists | IamRoleStateDiff::InSyncDoesNotExist => {
                 unreachable!(
-                    "`IamRoleApplyOpSpec::exec` should never be called when state is in sync."
+                    "`IamRoleApplyFns::exec` should never be called when state is in sync."
                 );
             }
             IamRoleStateDiff::ManagedPolicyAttachmentModified {
@@ -344,7 +344,7 @@ where
                         role_id_and_arn: _,
                         managed_policy_attachment,
                     } = state_desired else {
-                        panic!("`IamRoleApplyOpSpec::exec` called with state_desired being None.");
+                        panic!("`IamRoleApplyFns::exec` called with state_desired being None.");
                     };
 
                 let client = data.client();

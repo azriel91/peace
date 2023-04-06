@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    ETag, FileDownloadApplyOpSpec, FileDownloadData, FileDownloadError, FileDownloadState,
+    ETag, FileDownloadApplyFns, FileDownloadData, FileDownloadError, FileDownloadState,
     FileDownloadStateCurrentFn, FileDownloadStateDesiredFn, FileDownloadStateDiff,
     FileDownloadStateDiffFn,
 };
@@ -115,7 +115,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<OpCheckStatus, Self::Error> {
-        FileDownloadApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+        FileDownloadApplyFns::apply_check(data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
@@ -125,7 +125,7 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        FileDownloadApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        FileDownloadApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
@@ -135,6 +135,6 @@ where
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        FileDownloadApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
+        FileDownloadApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

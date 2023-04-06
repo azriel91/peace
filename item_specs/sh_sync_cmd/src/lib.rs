@@ -1,7 +1,7 @@
 //! Manages a synchronization shell command for the peace framework.
 
 pub use crate::{
-    sh_sync_cmd::ShSyncCmd, sh_sync_cmd_apply_op_spec::ShSyncCmdApplyOpSpec,
+    sh_sync_cmd::ShSyncCmd, sh_sync_cmd_apply_fns::ShSyncCmdApplyFns,
     sh_sync_cmd_data::ShSyncCmdData, sh_sync_cmd_error::ShSyncCmdError,
     sh_sync_cmd_execution_record::ShSyncCmdExecutionRecord,
     sh_sync_cmd_item_spec::ShSyncCmdItemSpec, sh_sync_cmd_params::ShSyncCmdParams,
@@ -10,7 +10,7 @@ pub use crate::{
 };
 
 mod sh_sync_cmd;
-mod sh_sync_cmd_apply_op_spec;
+mod sh_sync_cmd_apply_fns;
 mod sh_sync_cmd_data;
 mod sh_sync_cmd_error;
 mod sh_sync_cmd_execution_record;
