@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{OpCheckStatus, OpCtx};
 
 use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
 
@@ -10,16 +10,10 @@ use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
 #[derive(Debug)]
 pub struct TarXApplyOpSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl<Id> ApplyOpSpec for TarXApplyOpSpec<Id>
+impl<Id> TarXApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = TarXData<'op, Id>;
-    type Error = TarXError;
-    type State = FileMetadatas;
-    type StateDiff = TarXStateDiff;
-
     // Not sure why we can't use this:
     //
     // #[cfg(not(feature = "output_progress"))] _state_desired: &FileMetadatas,
@@ -29,7 +23,7 @@ where
     //
     // Likely an issue with the codegen in `async-trait`.
     #[allow(unused_variables)]
-    async fn check(
+    pub async fn apply_check(
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         state_desired: &FileMetadatas,
@@ -61,7 +55,7 @@ where
         Ok(op_check_status)
     }
 
-    async fn exec_dry(
+    pub async fn apply_dry(
         _op_ctx: OpCtx<'_>,
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
@@ -72,7 +66,7 @@ where
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    async fn exec(
+    pub async fn apply(
         _op_ctx: OpCtx<'_>,
         tar_x_data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
@@ -142,7 +136,7 @@ where
     }
 
     #[cfg(target_arch = "wasm32")]
-    async fn exec(
+    pub async fn apply(
         _op_ctx: OpCtx<'_>,
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,

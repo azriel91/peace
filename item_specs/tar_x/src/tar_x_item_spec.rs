@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCtx},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -57,7 +57,6 @@ impl<Id> ItemSpec for TarXItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type ApplyOpSpec = TarXApplyOpSpec<Id>;
     type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
     type State = FileMetadatas;
@@ -109,5 +108,34 @@ where
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, TarXError> {
         Ok(FileMetadatas::default())
+    }
+
+    async fn apply_check(
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<OpCheckStatus, Self::Error> {
+        TarXApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+    }
+
+    async fn apply_dry(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        TarXApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+    }
+
+    async fn apply(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        TarXApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

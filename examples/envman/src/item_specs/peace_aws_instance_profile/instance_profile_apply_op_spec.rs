@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate, ProgressSender};
-use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{state::Generated, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_instance_profile::{
     model::InstanceProfileIdAndArn, InstanceProfileData, InstanceProfileError,
@@ -94,17 +94,11 @@ impl<Id> InstanceProfileApplyOpSpec<Id> {
     }
 }
 
-#[async_trait(?Send)]
-impl<Id> ApplyOpSpec for InstanceProfileApplyOpSpec<Id>
+impl<Id> InstanceProfileApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = InstanceProfileData<'op, Id>;
-    type Error = InstanceProfileError;
-    type State = InstanceProfileState;
-    type StateDiff = InstanceProfileStateDiff;
-
-    async fn check(
+    pub async fn apply_check(
         _instance_profile_data: InstanceProfileData<'_, Id>,
         state_current: &InstanceProfileState,
         _state_desired: &InstanceProfileState,
@@ -177,7 +171,7 @@ where
         }
     }
 
-    async fn exec_dry(
+    pub async fn apply_dry(
         _op_ctx: OpCtx<'_>,
         _instance_profile_data: InstanceProfileData<'_, Id>,
         _state_current: &InstanceProfileState,
@@ -196,7 +190,7 @@ where
     //
     // Likely an issue with the codegen in `async-trait`.
     #[allow(unused_variables)]
-    async fn exec(
+    pub async fn apply(
         op_ctx: OpCtx<'_>,
         data: InstanceProfileData<'_, Id>,
         state_current: &InstanceProfileState,

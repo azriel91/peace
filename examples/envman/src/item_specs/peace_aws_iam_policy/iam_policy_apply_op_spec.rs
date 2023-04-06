@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use aws_sdk_iam::{error::ListPolicyVersionsErrorKind, types::SdkError};
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
-use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{state::Generated, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_iam_policy::{
     model::PolicyIdArnVersion, IamPolicyData, IamPolicyError, IamPolicyState, IamPolicyStateDiff,
@@ -15,17 +15,11 @@ use super::model::ManagedPolicyArn;
 #[derive(Debug)]
 pub struct IamPolicyApplyOpSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl<Id> ApplyOpSpec for IamPolicyApplyOpSpec<Id>
+impl<Id> IamPolicyApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = IamPolicyData<'op, Id>;
-    type Error = IamPolicyError;
-    type State = IamPolicyState;
-    type StateDiff = IamPolicyStateDiff;
-
-    async fn check(
+    pub async fn apply_check(
         mut data: IamPolicyData<'_, Id>,
         state_current: &IamPolicyState,
         _state_desired: &IamPolicyState,
@@ -104,7 +98,7 @@ where
         }
     }
 
-    async fn exec_dry(
+    pub async fn apply_dry(
         _op_ctx: OpCtx<'_>,
         _iam_policy_data: IamPolicyData<'_, Id>,
         _state_current: &IamPolicyState,
@@ -123,7 +117,7 @@ where
     //
     // Likely an issue with the codegen in `async-trait`.
     #[allow(unused_variables)]
-    async fn exec(
+    pub async fn apply(
         op_ctx: OpCtx<'_>,
         mut data: IamPolicyData<'_, Id>,
         state_current: &IamPolicyState,

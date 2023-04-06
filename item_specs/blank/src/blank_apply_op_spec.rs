@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{OpCheckStatus, OpCtx};
 
 use crate::{BlankData, BlankError, BlankState, BlankStateDiff};
 
@@ -10,17 +10,11 @@ use crate::{BlankData, BlankError, BlankState, BlankStateDiff};
 #[derive(Debug)]
 pub struct BlankApplyOpSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl<Id> ApplyOpSpec for BlankApplyOpSpec<Id>
+impl<Id> BlankApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = BlankData<'op, Id>;
-    type Error = BlankError;
-    type State = BlankState;
-    type StateDiff = BlankStateDiff;
-
-    async fn check(
+    pub async fn apply_check(
         _blank_data: BlankData<'_, Id>,
         _state_current: &BlankState,
         _state_desired: &BlankState,
@@ -44,7 +38,7 @@ where
         Ok(op_check_status)
     }
 
-    async fn exec_dry(
+    pub async fn apply_dry(
         _op_ctx: OpCtx<'_>,
         _blank_data: BlankData<'_, Id>,
         _state_current: &BlankState,
@@ -54,7 +48,7 @@ where
         Ok(*state_desired)
     }
 
-    async fn exec(
+    pub async fn apply(
         _op_ctx: OpCtx<'_>,
         mut blank_data: BlankData<'_, Id>,
         _state_current: &BlankState,

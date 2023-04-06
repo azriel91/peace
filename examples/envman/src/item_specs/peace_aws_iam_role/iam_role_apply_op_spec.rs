@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate, ProgressSender};
-use peace::cfg::{async_trait, state::Generated, ApplyOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{state::Generated, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
     model::RoleIdAndArn, IamRoleData, IamRoleError, IamRoleState, IamRoleStateDiff,
@@ -51,17 +51,11 @@ impl<Id> IamRoleApplyOpSpec<Id> {
     }
 }
 
-#[async_trait(?Send)]
-impl<Id> ApplyOpSpec for IamRoleApplyOpSpec<Id>
+impl<Id> IamRoleApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = IamRoleData<'op, Id>;
-    type Error = IamRoleError;
-    type State = IamRoleState;
-    type StateDiff = IamRoleStateDiff;
-
-    async fn check(
+    pub async fn apply_check(
         _iam_role_data: IamRoleData<'_, Id>,
         state_current: &IamRoleState,
         _state_desired: &IamRoleState,
@@ -148,7 +142,7 @@ where
         }
     }
 
-    async fn exec_dry(
+    pub async fn apply_dry(
         _op_ctx: OpCtx<'_>,
         _iam_role_data: IamRoleData<'_, Id>,
         _state_current: &IamRoleState,
@@ -167,7 +161,7 @@ where
     //
     // Likely an issue with the codegen in `async-trait`.
     #[allow(unused_variables)]
-    async fn exec(
+    pub async fn apply(
         op_ctx: OpCtx<'_>,
         data: IamRoleData<'_, Id>,
         state_current: &IamRoleState,

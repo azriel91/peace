@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCtx},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -57,7 +57,6 @@ impl<Id> ItemSpec for S3ObjectItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type ApplyOpSpec = S3ObjectApplyOpSpec<Id>;
     type Data<'op> = S3ObjectData<'op, Id>;
     type Error = S3ObjectError;
     type State = S3ObjectState;
@@ -115,5 +114,34 @@ where
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, S3ObjectError> {
         Ok(S3ObjectState::None)
+    }
+
+    async fn apply_check(
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<OpCheckStatus, Self::Error> {
+        S3ObjectApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+    }
+
+    async fn apply_dry(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        S3ObjectApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+    }
+
+    async fn apply(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        S3ObjectApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

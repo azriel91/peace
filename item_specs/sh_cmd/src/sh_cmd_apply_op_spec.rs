@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx, State};
+use peace::cfg::{OpCheckStatus, OpCtx, State};
 
 use crate::{
     ShCmd, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState, ShCmdStateDiff,
@@ -12,17 +12,11 @@ use crate::{
 #[derive(Debug)]
 pub struct ShCmdApplyOpSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl<Id> ApplyOpSpec for ShCmdApplyOpSpec<Id>
+impl<Id> ShCmdApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = ShCmdData<'op, Id>;
-    type Error = ShCmdError;
-    type State = State<ShCmdState<Id>, ShCmdExecutionRecord>;
-    type StateDiff = ShCmdStateDiff;
-
-    async fn check(
+    pub async fn apply_check(
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
@@ -76,13 +70,13 @@ where
             })
     }
 
-    async fn exec_dry(
+    pub async fn apply_dry(
         _op_ctx: OpCtx<'_>,
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
-    ) -> Result<Self::State, ShCmdError> {
+    ) -> Result<State<ShCmdState<Id>, ShCmdExecutionRecord>, ShCmdError> {
         // TODO: implement properly
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
@@ -103,13 +97,13 @@ where
         ShCmdExecutor::<Id>::exec(&ShCmd::new("echo").arg(format!("{apply_exec_sh_cmd}"))).await
     }
 
-    async fn exec(
+    pub async fn apply(
         _op_ctx: OpCtx<'_>,
         sh_cmd_data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
-    ) -> Result<Self::State, ShCmdError> {
+    ) -> Result<State<ShCmdState<Id>, ShCmdExecutionRecord>, ShCmdError> {
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),

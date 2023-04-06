@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCtx},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -48,7 +48,6 @@ impl<Id> ItemSpec for BlankItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type ApplyOpSpec = BlankApplyOpSpec<Id>;
     type Data<'op> = BlankData<'op, Id>;
     type Error = BlankError;
     type State = BlankState;
@@ -118,5 +117,34 @@ where
 
     async fn state_clean(_: Self::Data<'_>) -> Result<BlankState, BlankError> {
         Ok(BlankState(None))
+    }
+
+    async fn apply_check(
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<OpCheckStatus, Self::Error> {
+        BlankApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+    }
+
+    async fn apply_dry(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        BlankApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+    }
+
+    async fn apply(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        BlankApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

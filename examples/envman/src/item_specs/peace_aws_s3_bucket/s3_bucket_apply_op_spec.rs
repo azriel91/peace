@@ -7,7 +7,7 @@ use aws_sdk_s3::{
 };
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
-use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx};
+use peace::cfg::{OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_s3_bucket::{
     S3BucketData, S3BucketError, S3BucketState, S3BucketStateDiff,
@@ -19,17 +19,11 @@ use super::S3BucketStateCurrentFn;
 #[derive(Debug)]
 pub struct S3BucketApplyOpSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl<Id> ApplyOpSpec for S3BucketApplyOpSpec<Id>
+impl<Id> S3BucketApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = S3BucketData<'op, Id>;
-    type Error = S3BucketError;
-    type State = S3BucketState;
-    type StateDiff = S3BucketStateDiff;
-
-    async fn check(
+    pub async fn apply_check(
         _s3_bucket_data: S3BucketData<'_, Id>,
         state_current: &S3BucketState,
         _state_desired: &S3BucketState,
@@ -86,7 +80,7 @@ where
         }
     }
 
-    async fn exec_dry(
+    pub async fn apply_dry(
         _op_ctx: OpCtx<'_>,
         _s3_bucket_data: S3BucketData<'_, Id>,
         _state_current: &S3BucketState,
@@ -105,7 +99,7 @@ where
     //
     // Likely an issue with the codegen in `async-trait`.
     #[allow(unused_variables)]
-    async fn exec(
+    pub async fn apply(
         op_ctx: OpCtx<'_>,
         data: S3BucketData<'_, Id>,
         state_current: &S3BucketState,

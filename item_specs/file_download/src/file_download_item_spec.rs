@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, state::FetchedOpt, ItemSpec, ItemSpecId, OpCtx, State},
+    cfg::{async_trait, state::FetchedOpt, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, State},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -52,7 +52,6 @@ impl<Id> ItemSpec for FileDownloadItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type ApplyOpSpec = FileDownloadApplyOpSpec<Id>;
     type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
     type State = State<FileDownloadState, FetchedOpt<ETag>>;
@@ -108,5 +107,34 @@ where
         let path = data.file_download_params().dest().to_path_buf();
         let state = State::new(FileDownloadState::None { path }, FetchedOpt::Tbd);
         Ok(state)
+    }
+
+    async fn apply_check(
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<OpCheckStatus, Self::Error> {
+        FileDownloadApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+    }
+
+    async fn apply_dry(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        FileDownloadApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+    }
+
+    async fn apply(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        FileDownloadApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

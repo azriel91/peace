@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCtx},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -57,7 +57,6 @@ impl<Id> ItemSpec for IamPolicyItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type ApplyOpSpec = IamPolicyApplyOpSpec<Id>;
     type Data<'op> = IamPolicyData<'op, Id>;
     type Error = IamPolicyError;
     type State = IamPolicyState;
@@ -116,5 +115,34 @@ where
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, IamPolicyError> {
         Ok(IamPolicyState::None)
+    }
+
+    async fn apply_check(
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<OpCheckStatus, Self::Error> {
+        IamPolicyApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+    }
+
+    async fn apply_dry(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        IamPolicyApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+    }
+
+    async fn apply(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        IamPolicyApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCtx},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -57,7 +57,6 @@ impl<Id> ItemSpec for IamRoleItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type ApplyOpSpec = IamRoleApplyOpSpec<Id>;
     type Data<'op> = IamRoleData<'op, Id>;
     type Error = IamRoleError;
     type State = IamRoleState;
@@ -114,5 +113,34 @@ where
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, IamRoleError> {
         Ok(IamRoleState::None)
+    }
+
+    async fn apply_check(
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<OpCheckStatus, Self::Error> {
+        IamRoleApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+    }
+
+    async fn apply_dry(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        IamRoleApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+    }
+
+    async fn apply(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        IamRoleApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

@@ -15,7 +15,7 @@ cfg_if::cfg_if! {
     }
 }
 
-use peace::cfg::{async_trait, state::FetchedOpt, ApplyOpSpec, OpCheckStatus, OpCtx, State};
+use peace::cfg::{state::FetchedOpt, OpCheckStatus, OpCtx, State};
 use reqwest::header::ETAG;
 
 use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
@@ -230,17 +230,11 @@ where
     }
 }
 
-#[async_trait(?Send)]
-impl<Id> ApplyOpSpec for FileDownloadApplyOpSpec<Id>
+impl<Id> FileDownloadApplyOpSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = FileDownloadData<'op, Id>;
-    type Error = FileDownloadError;
-    type State = State<FileDownloadState, FetchedOpt<ETag>>;
-    type StateDiff = FileDownloadStateDiff;
-
-    async fn check(
+    pub async fn apply_check(
         _file_download_data: FileDownloadData<'_, Id>,
         State {
             logical: file_state_current,
@@ -331,7 +325,7 @@ where
         Ok(op_check_status)
     }
 
-    async fn exec_dry(
+    pub async fn apply_dry(
         _op_ctx: OpCtx<'_>,
         _file_download_data: FileDownloadData<'_, Id>,
         _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
@@ -343,7 +337,7 @@ where
         Ok(file_download_state_desired.clone())
     }
 
-    async fn exec(
+    pub async fn apply(
         op_ctx: OpCtx<'_>,
         file_download_data: FileDownloadData<'_, Id>,
         _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,

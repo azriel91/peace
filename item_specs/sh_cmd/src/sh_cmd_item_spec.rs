@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCtx, State},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, State},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -60,7 +60,6 @@ impl<Id> ItemSpec for ShCmdItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type ApplyOpSpec = ShCmdApplyOpSpec<Id>;
     type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
     type State = State<ShCmdState<Id>, ShCmdExecutionRecord>;
@@ -121,5 +120,34 @@ where
     async fn state_clean(sh_cmd_data: Self::Data<'_>) -> Result<Self::State, ShCmdError> {
         let state_clean_sh_cmd = sh_cmd_data.sh_cmd_params().state_clean_sh_cmd();
         ShCmdExecutor::exec(state_clean_sh_cmd).await
+    }
+
+    async fn apply_check(
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<OpCheckStatus, Self::Error> {
+        ShCmdApplyOpSpec::apply_check(data, state_current, state_target, diff).await
+    }
+
+    async fn apply_dry(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        ShCmdApplyOpSpec::apply_dry(op_ctx, data, state_current, state_target, diff).await
+    }
+
+    async fn apply(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        ShCmdApplyOpSpec::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }
