@@ -7,7 +7,7 @@ use aws_sdk_s3::{
 };
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
-use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx, TryFnSpec};
+use peace::cfg::{async_trait, ApplyOpSpec, OpCheckStatus, OpCtx};
 
 use crate::item_specs::peace_aws_s3_bucket::{
     S3BucketData, S3BucketError, S3BucketState, S3BucketStateDiff,
@@ -183,7 +183,7 @@ where
                     progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("bucket created")));
 
                     let state_applied =
-                        <S3BucketStateCurrentFnSpec<Id> as TryFnSpec>::exec(op_ctx, data).await?;
+                        S3BucketStateCurrentFnSpec::<Id>::state_current(op_ctx, data).await?;
 
                     Ok(state_applied)
                 }

@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use aws_sdk_iam::{error::GetInstanceProfileErrorKind, types::SdkError};
-use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
+use peace::cfg::{state::Generated, OpCtx};
 
 use crate::item_specs::peace_aws_instance_profile::{
     model::InstanceProfileIdAndArn, InstanceProfileData, InstanceProfileError, InstanceProfileState,
@@ -14,26 +14,21 @@ use peace::cfg::progress::ProgressMsgUpdate;
 #[derive(Debug)]
 pub struct InstanceProfileStateCurrentFnSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl<Id> TryFnSpec for InstanceProfileStateCurrentFnSpec<Id>
+impl<Id> InstanceProfileStateCurrentFnSpec<Id>
 where
-    Id: Send + Sync + 'static,
+    Id: Send + Sync,
 {
-    type Data<'op> = InstanceProfileData<'op, Id>;
-    type Error = InstanceProfileError;
-    type Output = InstanceProfileState;
-
-    async fn try_exec(
+    pub async fn try_state_current(
         op_ctx: OpCtx<'_>,
         data: InstanceProfileData<'_, Id>,
-    ) -> Result<Option<Self::Output>, InstanceProfileError> {
-        Self::exec(op_ctx, data).await.map(Some)
+    ) -> Result<Option<InstanceProfileState>, InstanceProfileError> {
+        Self::state_current(op_ctx, data).await.map(Some)
     }
 
-    async fn exec(
+    pub async fn state_current(
         op_ctx: OpCtx<'_>,
         data: InstanceProfileData<'_, Id>,
-    ) -> Result<Self::Output, InstanceProfileError> {
+    ) -> Result<InstanceProfileState, InstanceProfileError> {
         let client = data.client();
         let name = data.params().name();
         let path = data.params().path();

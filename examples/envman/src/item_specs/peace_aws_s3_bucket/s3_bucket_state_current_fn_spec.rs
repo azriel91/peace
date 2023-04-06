@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use chrono::{DateTime, NaiveDateTime, Utc};
-use peace::cfg::{async_trait, state::Timestamped, OpCtx, TryFnSpec};
+use peace::cfg::{state::Timestamped, OpCtx};
 
 use crate::item_specs::peace_aws_s3_bucket::{S3BucketData, S3BucketError, S3BucketState};
 
@@ -12,26 +12,21 @@ use peace::cfg::progress::ProgressMsgUpdate;
 #[derive(Debug)]
 pub struct S3BucketStateCurrentFnSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl<Id> TryFnSpec for S3BucketStateCurrentFnSpec<Id>
+impl<Id> S3BucketStateCurrentFnSpec<Id>
 where
-    Id: Send + Sync + 'static,
+    Id: Send + Sync,
 {
-    type Data<'op> = S3BucketData<'op, Id>;
-    type Error = S3BucketError;
-    type Output = S3BucketState;
-
-    async fn try_exec(
+    pub async fn try_state_current(
         op_ctx: OpCtx<'_>,
         data: S3BucketData<'_, Id>,
-    ) -> Result<Option<Self::Output>, S3BucketError> {
-        Self::exec(op_ctx, data).await.map(Some)
+    ) -> Result<Option<S3BucketState>, S3BucketError> {
+        Self::state_current(op_ctx, data).await.map(Some)
     }
 
-    async fn exec(
+    pub async fn state_current(
         op_ctx: OpCtx<'_>,
         data: S3BucketData<'_, Id>,
-    ) -> Result<Self::Output, S3BucketError> {
+    ) -> Result<S3BucketState, S3BucketError> {
         let client = data.client();
         let name = data.params().name();
 

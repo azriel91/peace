@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
+use peace::cfg::{state::Generated, OpCtx};
 
 use crate::item_specs::peace_aws_iam_policy::{IamPolicyData, IamPolicyError, IamPolicyState};
 
@@ -8,26 +8,21 @@ use crate::item_specs::peace_aws_iam_policy::{IamPolicyData, IamPolicyError, Iam
 #[derive(Debug)]
 pub struct IamPolicyStateDesiredFnSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl<Id> TryFnSpec for IamPolicyStateDesiredFnSpec<Id>
+impl<Id> IamPolicyStateDesiredFnSpec<Id>
 where
-    Id: Send + Sync + 'static,
+    Id: Send + Sync,
 {
-    type Data<'op> = IamPolicyData<'op, Id>;
-    type Error = IamPolicyError;
-    type Output = IamPolicyState;
-
-    async fn try_exec(
+    pub async fn try_state_desired(
         op_ctx: OpCtx<'_>,
         iam_policy_data: IamPolicyData<'_, Id>,
-    ) -> Result<Option<Self::Output>, IamPolicyError> {
-        Self::exec(op_ctx, iam_policy_data).await.map(Some)
+    ) -> Result<Option<IamPolicyState>, IamPolicyError> {
+        Self::state_desired(op_ctx, iam_policy_data).await.map(Some)
     }
 
-    async fn exec(
+    pub async fn state_desired(
         _op_ctx: OpCtx<'_>,
         iam_policy_data: IamPolicyData<'_, Id>,
-    ) -> Result<Self::Output, IamPolicyError> {
+    ) -> Result<IamPolicyState, IamPolicyError> {
         let params = iam_policy_data.params();
         let name = params.name().to_string();
         let path = params.path().to_string();

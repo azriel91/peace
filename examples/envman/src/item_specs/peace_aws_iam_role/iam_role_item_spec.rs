@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -61,8 +61,6 @@ where
     type Data<'op> = IamRoleData<'op, Id>;
     type Error = IamRoleError;
     type State = IamRoleState;
-    type StateCurrentFnSpec = IamRoleStateCurrentFnSpec<Id>;
-    type StateDesiredFnSpec = IamRoleStateDesiredFnSpec<Id>;
     type StateDiff = IamRoleStateDiff;
     type StateDiffFnSpec = IamRoleStateDiffFnSpec;
 
@@ -77,6 +75,34 @@ where
             resources.insert(client);
         }
         Ok(())
+    }
+
+    async fn try_state_current(
+        op_ctx: OpCtx<'_>,
+        data: IamRoleData<'_, Id>,
+    ) -> Result<Option<Self::State>, IamRoleError> {
+        IamRoleStateCurrentFnSpec::try_state_current(op_ctx, data).await
+    }
+
+    async fn state_current(
+        op_ctx: OpCtx<'_>,
+        data: IamRoleData<'_, Id>,
+    ) -> Result<Self::State, IamRoleError> {
+        IamRoleStateCurrentFnSpec::state_current(op_ctx, data).await
+    }
+
+    async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: IamRoleData<'_, Id>,
+    ) -> Result<Option<Self::State>, IamRoleError> {
+        IamRoleStateDesiredFnSpec::try_state_desired(op_ctx, data).await
+    }
+
+    async fn state_desired(
+        op_ctx: OpCtx<'_>,
+        data: IamRoleData<'_, Id>,
+    ) -> Result<Self::State, IamRoleError> {
+        IamRoleStateDesiredFnSpec::state_desired(op_ctx, data).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, IamRoleError> {

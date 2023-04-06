@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
+use peace::cfg::{state::Generated, OpCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
     model::ManagedPolicyAttachment, IamRoleData, IamRoleError, IamRoleState,
@@ -10,26 +10,21 @@ use crate::item_specs::peace_aws_iam_role::{
 #[derive(Debug)]
 pub struct IamRoleStateDesiredFnSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl<Id> TryFnSpec for IamRoleStateDesiredFnSpec<Id>
+impl<Id> IamRoleStateDesiredFnSpec<Id>
 where
-    Id: Send + Sync + 'static,
+    Id: Send + Sync,
 {
-    type Data<'op> = IamRoleData<'op, Id>;
-    type Error = IamRoleError;
-    type Output = IamRoleState;
-
-    async fn try_exec(
+    pub async fn try_state_desired(
         op_ctx: OpCtx<'_>,
         data: IamRoleData<'_, Id>,
-    ) -> Result<Option<Self::Output>, IamRoleError> {
-        Self::exec(op_ctx, data).await.map(Some)
+    ) -> Result<Option<IamRoleState>, IamRoleError> {
+        Self::state_desired(op_ctx, data).await.map(Some)
     }
 
-    async fn exec(
+    pub async fn state_desired(
         _op_ctx: OpCtx<'_>,
         data: IamRoleData<'_, Id>,
-    ) -> Result<Self::Output, IamRoleError> {
+    ) -> Result<IamRoleState, IamRoleError> {
         let params = data.params();
         let name = params.name().to_string();
         let path = params.path().to_string();

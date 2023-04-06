@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, state::FetchedOpt, ItemSpec, ItemSpecId, State},
+    cfg::{async_trait, state::FetchedOpt, ItemSpec, ItemSpecId, OpCtx, State},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -56,8 +56,6 @@ where
     type Data<'op> = FileDownloadData<'op, Id>;
     type Error = FileDownloadError;
     type State = State<FileDownloadState, FetchedOpt<ETag>>;
-    type StateCurrentFnSpec = FileDownloadStateCurrentFnSpec<Id>;
-    type StateDesiredFnSpec = FileDownloadStateDesiredFnSpec<Id>;
     type StateDiff = FileDownloadStateDiff;
     type StateDiffFnSpec = FileDownloadStateDiffFnSpec;
 
@@ -69,6 +67,34 @@ where
         resources.insert::<reqwest::Client>(reqwest::Client::new());
 
         Ok(())
+    }
+
+    async fn try_state_current(
+        op_ctx: OpCtx<'_>,
+        data: FileDownloadData<'_, Id>,
+    ) -> Result<Option<Self::State>, FileDownloadError> {
+        FileDownloadStateCurrentFnSpec::try_state_current(op_ctx, data).await
+    }
+
+    async fn state_current(
+        op_ctx: OpCtx<'_>,
+        data: FileDownloadData<'_, Id>,
+    ) -> Result<Self::State, FileDownloadError> {
+        FileDownloadStateCurrentFnSpec::state_current(op_ctx, data).await
+    }
+
+    async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: FileDownloadData<'_, Id>,
+    ) -> Result<Option<Self::State>, FileDownloadError> {
+        FileDownloadStateDesiredFnSpec::try_state_desired(op_ctx, data).await
+    }
+
+    async fn state_desired(
+        op_ctx: OpCtx<'_>,
+        data: FileDownloadData<'_, Id>,
+    ) -> Result<Self::State, FileDownloadError> {
+        FileDownloadStateDesiredFnSpec::state_desired(op_ctx, data).await
     }
 
     async fn state_clean(data: Self::Data<'_>) -> Result<Self::State, FileDownloadError> {

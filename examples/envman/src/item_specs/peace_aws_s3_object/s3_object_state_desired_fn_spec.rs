@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
+use peace::cfg::{state::Generated, OpCtx};
 
 use crate::item_specs::peace_aws_s3_object::{S3ObjectData, S3ObjectError, S3ObjectState};
 
@@ -11,19 +11,14 @@ use peace::cfg::progress::ProgressMsgUpdate;
 #[derive(Debug)]
 pub struct S3ObjectStateDesiredFnSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl<Id> TryFnSpec for S3ObjectStateDesiredFnSpec<Id>
+impl<Id> S3ObjectStateDesiredFnSpec<Id>
 where
-    Id: Send + Sync + 'static,
+    Id: Send + Sync,
 {
-    type Data<'op> = S3ObjectData<'op, Id>;
-    type Error = S3ObjectError;
-    type Output = S3ObjectState;
-
-    async fn try_exec(
+    pub async fn try_state_desired(
         op_ctx: OpCtx<'_>,
         s3_object_data: S3ObjectData<'_, Id>,
-    ) -> Result<Option<Self::Output>, S3ObjectError> {
+    ) -> Result<Option<S3ObjectState>, S3ObjectError> {
         #[cfg(not(target_arch = "wasm32"))]
         {
             let params = s3_object_data.params();
@@ -41,13 +36,13 @@ where
                 return Ok(None);
             }
         }
-        Self::exec(op_ctx, s3_object_data).await.map(Some)
+        Self::state_desired(op_ctx, s3_object_data).await.map(Some)
     }
 
-    async fn exec(
+    pub async fn state_desired(
         op_ctx: OpCtx<'_>,
         data: S3ObjectData<'_, Id>,
-    ) -> Result<Self::Output, S3ObjectError> {
+    ) -> Result<S3ObjectState, S3ObjectError> {
         let params = data.params();
         let file_path = params.file_path();
         let bucket_name = params.bucket_name().to_string();

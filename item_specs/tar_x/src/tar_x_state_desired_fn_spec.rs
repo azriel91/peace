@@ -1,9 +1,6 @@
 use std::{io::Read, marker::PhantomData, path::Path};
 
-use peace::{
-    cfg::{async_trait, OpCtx, TryFnSpec},
-    rt_model::Storage,
-};
+use peace::{cfg::OpCtx, rt_model::Storage};
 use tar::Archive;
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
@@ -12,7 +9,56 @@ use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
 #[derive(Debug)]
 pub struct TarXStateDesiredFnSpec<Id>(PhantomData<Id>);
 
-impl<Id> TarXStateDesiredFnSpec<Id> {
+impl<Id> TarXStateDesiredFnSpec<Id>
+where
+    Id: Send + Sync,
+{
+    pub async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        tar_x_data: TarXData<'_, Id>,
+    ) -> Result<Option<FileMetadatas>, TarXError> {
+        #[cfg(not(target_arch = "wasm32"))]
+        let tar_file_exists = tar_x_data.tar_x_params().tar_path().exists();
+        #[cfg(target_arch = "wasm32")]
+        let tar_file_exists = {
+            let storage = tar_x_data.storage();
+            let tar_path = tar_x_data.tar_x_params().tar_path();
+            storage.contains_item(tar_path)?
+        };
+
+        if tar_file_exists {
+            Self::state_desired(op_ctx, tar_x_data).await.map(Some)
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub async fn state_desired(
+        _op_ctx: OpCtx<'_>,
+        tar_x_data: TarXData<'_, Id>,
+    ) -> Result<FileMetadatas, TarXError> {
+        let tar_x_params = tar_x_data.tar_x_params();
+        let storage = tar_x_data.storage();
+        let tar_path = tar_x_params.tar_path();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let tar_file_exists = tar_x_data.tar_x_params().tar_path().exists();
+        #[cfg(target_arch = "wasm32")]
+        let tar_file_exists = storage.contains_item(tar_path)?;
+
+        if tar_file_exists {
+            #[cfg(not(target_arch = "wasm32"))]
+            let files_in_tar = Self::files_in_tar(storage, tar_path).await?;
+            #[cfg(target_arch = "wasm32")]
+            let files_in_tar = Self::files_in_tar(storage, tar_path)?;
+
+            Ok(FileMetadatas::from(files_in_tar))
+        } else {
+            let tar_path = tar_path.to_path_buf();
+            Err(TarXError::TarFileNotExists { tar_path })
+        }
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     pub async fn files_in_tar(
         storage: &Storage,
@@ -87,61 +133,5 @@ impl<Id> TarXStateDesiredFnSpec<Id> {
 
                 Ok(files_in_tar)
             })
-    }
-}
-
-#[async_trait(?Send)]
-impl<Id> TryFnSpec for TarXStateDesiredFnSpec<Id>
-where
-    Id: Send + Sync + 'static,
-{
-    type Data<'op> = TarXData<'op, Id>;
-    type Error = TarXError;
-    type Output = FileMetadatas;
-
-    async fn try_exec(
-        op_ctx: OpCtx<'_>,
-        tar_x_data: TarXData<'_, Id>,
-    ) -> Result<Option<Self::Output>, TarXError> {
-        #[cfg(not(target_arch = "wasm32"))]
-        let tar_file_exists = tar_x_data.tar_x_params().tar_path().exists();
-        #[cfg(target_arch = "wasm32")]
-        let tar_file_exists = {
-            let storage = tar_x_data.storage();
-            let tar_path = tar_x_data.tar_x_params().tar_path();
-            storage.contains_item(tar_path)?
-        };
-
-        if tar_file_exists {
-            Self::exec(op_ctx, tar_x_data).await.map(Some)
-        } else {
-            Ok(None)
-        }
-    }
-
-    async fn exec(
-        _op_ctx: OpCtx<'_>,
-        tar_x_data: TarXData<'_, Id>,
-    ) -> Result<Self::Output, TarXError> {
-        let tar_x_params = tar_x_data.tar_x_params();
-        let storage = tar_x_data.storage();
-        let tar_path = tar_x_params.tar_path();
-
-        #[cfg(not(target_arch = "wasm32"))]
-        let tar_file_exists = tar_x_data.tar_x_params().tar_path().exists();
-        #[cfg(target_arch = "wasm32")]
-        let tar_file_exists = storage.contains_item(tar_path)?;
-
-        if tar_file_exists {
-            #[cfg(not(target_arch = "wasm32"))]
-            let files_in_tar = Self::files_in_tar(storage, tar_path).await?;
-            #[cfg(target_arch = "wasm32")]
-            let files_in_tar = Self::files_in_tar(storage, tar_path)?;
-
-            Ok(FileMetadatas::from(files_in_tar))
-        } else {
-            let tar_path = tar_path.to_path_buf();
-            Err(TarXError::TarFileNotExists { tar_path })
-        }
     }
 }

@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -61,8 +61,6 @@ where
     type Data<'op> = S3BucketData<'op, Id>;
     type Error = S3BucketError;
     type State = S3BucketState;
-    type StateCurrentFnSpec = S3BucketStateCurrentFnSpec<Id>;
-    type StateDesiredFnSpec = S3BucketStateDesiredFnSpec<Id>;
     type StateDiff = S3BucketStateDiff;
     type StateDiffFnSpec = S3BucketStateDiffFnSpec;
 
@@ -78,6 +76,34 @@ where
             resources.insert(client);
         }
         Ok(())
+    }
+
+    async fn try_state_current(
+        op_ctx: OpCtx<'_>,
+        data: S3BucketData<'_, Id>,
+    ) -> Result<Option<Self::State>, S3BucketError> {
+        S3BucketStateCurrentFnSpec::try_state_current(op_ctx, data).await
+    }
+
+    async fn state_current(
+        op_ctx: OpCtx<'_>,
+        data: S3BucketData<'_, Id>,
+    ) -> Result<Self::State, S3BucketError> {
+        S3BucketStateCurrentFnSpec::state_current(op_ctx, data).await
+    }
+
+    async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: S3BucketData<'_, Id>,
+    ) -> Result<Option<Self::State>, S3BucketError> {
+        S3BucketStateDesiredFnSpec::try_state_desired(op_ctx, data).await
+    }
+
+    async fn state_desired(
+        op_ctx: OpCtx<'_>,
+        data: S3BucketData<'_, Id>,
+    ) -> Result<Self::State, S3BucketError> {
+        S3BucketStateDesiredFnSpec::state_desired(op_ctx, data).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, S3BucketError> {

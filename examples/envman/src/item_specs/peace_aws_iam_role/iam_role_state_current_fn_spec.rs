@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use aws_sdk_iam::{error::GetRoleErrorKind, types::SdkError};
-use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
+use peace::cfg::{state::Generated, OpCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
     model::{ManagedPolicyAttachment, RoleIdAndArn},
@@ -15,26 +15,21 @@ use peace::cfg::progress::ProgressMsgUpdate;
 #[derive(Debug)]
 pub struct IamRoleStateCurrentFnSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl<Id> TryFnSpec for IamRoleStateCurrentFnSpec<Id>
+impl<Id> IamRoleStateCurrentFnSpec<Id>
 where
-    Id: Send + Sync + 'static,
+    Id: Send + Sync,
 {
-    type Data<'op> = IamRoleData<'op, Id>;
-    type Error = IamRoleError;
-    type Output = IamRoleState;
-
-    async fn try_exec(
+    pub async fn try_state_current(
         op_ctx: OpCtx<'_>,
         data: IamRoleData<'_, Id>,
-    ) -> Result<Option<Self::Output>, IamRoleError> {
-        Self::exec(op_ctx, data).await.map(Some)
+    ) -> Result<Option<IamRoleState>, IamRoleError> {
+        Self::state_current(op_ctx, data).await.map(Some)
     }
 
-    async fn exec(
+    pub async fn state_current(
         op_ctx: OpCtx<'_>,
         data: IamRoleData<'_, Id>,
-    ) -> Result<Self::Output, IamRoleError> {
+    ) -> Result<IamRoleState, IamRoleError> {
         let client = data.client();
         let name = data.params().name();
         let path = data.params().path();

@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -61,8 +61,6 @@ where
     type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
     type State = FileMetadatas;
-    type StateCurrentFnSpec = TarXStateCurrentFnSpec<Id>;
-    type StateDesiredFnSpec = TarXStateDesiredFnSpec<Id>;
     type StateDiff = TarXStateDiff;
     type StateDiffFnSpec = TarXStateDiffFnSpec;
 
@@ -72,6 +70,34 @@ where
 
     async fn setup(&self, _resources: &mut Resources<Empty>) -> Result<(), TarXError> {
         Ok(())
+    }
+
+    async fn try_state_current(
+        op_ctx: OpCtx<'_>,
+        data: TarXData<'_, Id>,
+    ) -> Result<Option<Self::State>, TarXError> {
+        Self::state_current(op_ctx, data).await.map(Some)
+    }
+
+    async fn state_current(
+        op_ctx: OpCtx<'_>,
+        data: TarXData<'_, Id>,
+    ) -> Result<Self::State, TarXError> {
+        TarXStateCurrentFnSpec::state_current(op_ctx, data).await
+    }
+
+    async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: TarXData<'_, Id>,
+    ) -> Result<Option<Self::State>, TarXError> {
+        TarXStateDesiredFnSpec::try_state_desired(op_ctx, data).await
+    }
+
+    async fn state_desired(
+        op_ctx: OpCtx<'_>,
+        data: TarXData<'_, Id>,
+    ) -> Result<Self::State, TarXError> {
+        TarXStateDesiredFnSpec::state_desired(op_ctx, data).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, TarXError> {

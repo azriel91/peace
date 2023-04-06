@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use aws_sdk_iam::{error::GetPolicyErrorKind, types::SdkError};
-use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
+use peace::cfg::{state::Generated, OpCtx};
 
 use crate::item_specs::peace_aws_iam_policy::{
     model::{ManagedPolicyArn, PolicyIdArnVersion},
@@ -88,26 +88,21 @@ impl<Id> IamPolicyStateCurrentFnSpec<Id> {
     }
 }
 
-#[async_trait(?Send)]
-impl<Id> TryFnSpec for IamPolicyStateCurrentFnSpec<Id>
+impl<Id> IamPolicyStateCurrentFnSpec<Id>
 where
-    Id: Send + Sync + 'static,
+    Id: Send + Sync,
 {
-    type Data<'op> = IamPolicyData<'op, Id>;
-    type Error = IamPolicyError;
-    type Output = IamPolicyState;
-
-    async fn try_exec(
+    pub async fn try_state_current(
         op_ctx: OpCtx<'_>,
         data: IamPolicyData<'_, Id>,
-    ) -> Result<Option<Self::Output>, IamPolicyError> {
-        Self::exec(op_ctx, data).await.map(Some)
+    ) -> Result<Option<IamPolicyState>, IamPolicyError> {
+        Self::state_current(op_ctx, data).await.map(Some)
     }
 
-    async fn exec(
+    pub async fn state_current(
         op_ctx: OpCtx<'_>,
         mut data: IamPolicyData<'_, Id>,
-    ) -> Result<Self::Output, IamPolicyError> {
+    ) -> Result<IamPolicyState, IamPolicyError> {
         let client = data.client();
         let name = data.params().name();
         let path = data.params().path();

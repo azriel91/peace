@@ -9,7 +9,7 @@ use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::{
     cfg::{
         async_trait, item_spec_id, ApplyOpSpec, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx,
-        StateDiffFnSpec, TryFnSpec,
+        StateDiffFnSpec,
     },
     data::{
         accessors::{RMaybe, R, W},
@@ -26,8 +26,6 @@ pub type VecCopyItemSpecWrapper = ItemSpecWrapper<
     VecCopyError,
     VecCopyState,
     VecCopyDiff,
-    VecCopyStateCurrentFnSpec,
-    VecCopyStateDesiredFnSpec,
     VecCopyStateDiffFnSpec,
     VecCopyApplyOpSpec,
 >;
@@ -43,16 +41,65 @@ impl VecCopyItemSpec {
 #[async_trait(?Send)]
 impl ItemSpec for VecCopyItemSpec {
     type ApplyOpSpec = VecCopyApplyOpSpec;
-    type Data<'op> = VecCopyParams<'op>;
+    type Data<'op> = VecCopyData<'op>;
     type Error = VecCopyError;
     type State = VecCopyState;
-    type StateCurrentFnSpec = VecCopyStateCurrentFnSpec;
-    type StateDesiredFnSpec = VecCopyStateDesiredFnSpec;
     type StateDiff = VecCopyDiff;
     type StateDiffFnSpec = VecCopyStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         Self::ID
+    }
+
+    async fn try_state_current(
+        op_ctx: OpCtx<'_>,
+        data: VecCopyData<'_>,
+    ) -> Result<Option<Self::State>, VecCopyError> {
+        Self::state_current(op_ctx, data).await.map(Some)
+    }
+
+    async fn state_current(
+        op_ctx: OpCtx<'_>,
+        data: VecCopyData<'_>,
+    ) -> Result<Self::State, VecCopyError> {
+        #[cfg(not(feature = "output_progress"))]
+        let _op_ctx = op_ctx;
+
+        let vec_copy_state = VecCopyState::from(data.dest().0.clone());
+
+        #[cfg(feature = "output_progress")]
+        {
+            if let Ok(len) = u64::try_from(vec_copy_state.len()) {
+                op_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
+            }
+        }
+
+        Ok(vec_copy_state)
+    }
+
+    async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: VecCopyData<'_>,
+    ) -> Result<Option<Self::State>, VecCopyError> {
+        Self::state_desired(op_ctx, data).await.map(Some)
+    }
+
+    async fn state_desired(
+        op_ctx: OpCtx<'_>,
+        data: VecCopyData<'_>,
+    ) -> Result<Self::State, VecCopyError> {
+        #[cfg(not(feature = "output_progress"))]
+        let _op_ctx = op_ctx;
+        let vec_copy_state = VecCopyState::from(data.src().0.clone());
+
+        #[cfg(feature = "output_progress")]
+        {
+            if let Ok(len) = u64::try_from(vec_copy_state.len()) {
+                op_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
+            }
+        }
+
+        Ok(vec_copy_state)
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, VecCopyError> {
@@ -84,7 +131,7 @@ pub struct VecCopyApplyOpSpec;
 
 #[async_trait(?Send)]
 impl ApplyOpSpec for VecCopyApplyOpSpec {
-    type Data<'op> = VecCopyParams<'op>;
+    type Data<'op> = VecCopyData<'op>;
     type Error = VecCopyError;
     type State = VecCopyState;
     type StateDiff = VecCopyDiff;
@@ -99,7 +146,7 @@ impl ApplyOpSpec for VecCopyApplyOpSpec {
     // Likely an issue with the codegen in `async-trait`.
     #[allow(unused_variables)]
     async fn check(
-        _vec_copy_params: VecCopyParams<'_>,
+        _data: VecCopyData<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,
         diff: &VecCopyDiff,
@@ -126,7 +173,7 @@ impl ApplyOpSpec for VecCopyApplyOpSpec {
 
     async fn exec_dry(
         _op_ctx: OpCtx<'_>,
-        _vec_copy_params: VecCopyParams<'_>,
+        _data: VecCopyData<'_>,
         _state_current: &Self::State,
         state_desired: &Self::State,
         _diff: &VecCopyDiff,
@@ -138,12 +185,12 @@ impl ApplyOpSpec for VecCopyApplyOpSpec {
     #[allow(unused_variables)]
     async fn exec(
         op_ctx: OpCtx<'_>,
-        mut vec_copy_params: VecCopyParams<'_>,
+        mut data: VecCopyData<'_>,
         _state_current: &Self::State,
         state_desired: &Self::State,
         _diff: &VecCopyDiff,
     ) -> Result<Self::State, VecCopyError> {
-        let dest = vec_copy_params.dest_mut();
+        let dest = data.dest_mut();
         dest.0.clear();
         dest.0.extend_from_slice(state_desired.as_slice());
 
@@ -174,81 +221,24 @@ pub enum VecCopyError {
 }
 
 #[derive(Data, Debug)]
-pub struct VecCopyParams<'op> {
+pub struct VecCopyData<'op> {
+    /// Source `Vec` to read from.
+    src: R<'op, VecA>,
     /// Destination `Vec` to write to.
     dest: W<'op, VecB>,
 }
 
-impl<'op> VecCopyParams<'op> {
+impl<'op> VecCopyData<'op> {
+    pub fn src(&self) -> &VecA {
+        &self.src
+    }
+
+    pub fn dest(&self) -> &VecB {
+        &self.dest
+    }
+
     pub fn dest_mut(&mut self) -> &mut VecB {
         &mut self.dest
-    }
-}
-
-/// `StateCurrentFnSpec` for the vector to copy.
-#[derive(Debug)]
-pub struct VecCopyStateCurrentFnSpec;
-
-#[async_trait(?Send)]
-impl TryFnSpec for VecCopyStateCurrentFnSpec {
-    type Data<'op> = R<'op, VecB>;
-    type Error = VecCopyError;
-    type Output = VecCopyState;
-
-    async fn try_exec(
-        op_ctx: OpCtx<'_>,
-        vec_b: R<'_, VecB>,
-    ) -> Result<Option<Self::Output>, VecCopyError> {
-        Self::exec(op_ctx, vec_b).await.map(Some)
-    }
-
-    async fn exec(op_ctx: OpCtx<'_>, vec_b: R<'_, VecB>) -> Result<Self::Output, VecCopyError> {
-        #[cfg(not(feature = "output_progress"))]
-        let _op_ctx = op_ctx;
-
-        let vec_copy_state = VecCopyState::from(vec_b.0.clone());
-
-        #[cfg(feature = "output_progress")]
-        {
-            if let Ok(len) = u64::try_from(vec_copy_state.len()) {
-                op_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
-            }
-        }
-
-        Ok(vec_copy_state)
-    }
-}
-
-/// `StateCurrentFnSpec` for the vector to copy.
-#[derive(Debug)]
-pub struct VecCopyStateDesiredFnSpec;
-
-#[async_trait(?Send)]
-impl TryFnSpec for VecCopyStateDesiredFnSpec {
-    type Data<'op> = R<'op, VecA>;
-    type Error = VecCopyError;
-    type Output = VecCopyState;
-
-    async fn try_exec(
-        op_ctx: OpCtx<'_>,
-        vec_a: R<'_, VecA>,
-    ) -> Result<Option<Self::Output>, VecCopyError> {
-        Self::exec(op_ctx, vec_a).await.map(Some)
-    }
-
-    async fn exec(op_ctx: OpCtx<'_>, vec_a: R<'_, VecA>) -> Result<Self::Output, VecCopyError> {
-        #[cfg(not(feature = "output_progress"))]
-        let _op_ctx = op_ctx;
-        let vec_copy_state = VecCopyState::from(vec_a.0.clone());
-
-        #[cfg(feature = "output_progress")]
-        {
-            if let Ok(len) = u64::try_from(vec_copy_state.len()) {
-                op_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
-            }
-        }
-
-        Ok(vec_copy_state)
     }
 }
 

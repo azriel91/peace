@@ -1,13 +1,12 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
 use crate::{
-    BlankApplyOpSpec, BlankData, BlankError, BlankState, BlankStateCurrentFnSpec,
-    BlankStateDesiredFnSpec, BlankStateDiff, BlankStateDiffFnSpec,
+    BlankApplyOpSpec, BlankData, BlankError, BlankState, BlankStateDiff, BlankStateDiffFnSpec,
 };
 
 /// Item spec for copying a number.
@@ -55,8 +54,6 @@ where
     type Data<'op> = BlankData<'op, Id>;
     type Error = BlankError;
     type State = BlankState;
-    type StateCurrentFnSpec = BlankStateCurrentFnSpec<Id>;
-    type StateDesiredFnSpec = BlankStateDesiredFnSpec<Id>;
     type StateDiff = BlankStateDiff;
     type StateDiffFnSpec = BlankStateDiffFnSpec;
 
@@ -66,6 +63,39 @@ where
 
     async fn setup(&self, _resources: &mut Resources<Empty>) -> Result<(), BlankError> {
         Ok(())
+    }
+
+    async fn try_state_current(
+        op_ctx: OpCtx<'_>,
+        data: BlankData<'_, Id>,
+    ) -> Result<Option<Self::State>, BlankError> {
+        Self::state_current(op_ctx, data).await.map(Some)
+    }
+
+    async fn state_current(
+        _op_ctx: OpCtx<'_>,
+        data: BlankData<'_, Id>,
+    ) -> Result<Self::State, BlankError> {
+        let current = BlankState(data.params().dest().0);
+
+        let state = current;
+
+        Ok(state)
+    }
+
+    async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: BlankData<'_, Id>,
+    ) -> Result<Option<Self::State>, BlankError> {
+        Self::state_desired(op_ctx, data).await.map(Some)
+    }
+
+    async fn state_desired(
+        _op_ctx: OpCtx<'_>,
+        data: BlankData<'_, Id>,
+    ) -> Result<Self::State, BlankError> {
+        let params = data.params();
+        Ok(BlankState(Some(**params.src())))
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<BlankState, BlankError> {

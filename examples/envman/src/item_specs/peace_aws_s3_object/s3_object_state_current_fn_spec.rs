@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use aws_sdk_iam::types::SdkError;
 use aws_sdk_s3::error::HeadObjectErrorKind;
-use peace::cfg::{async_trait, state::Generated, OpCtx, TryFnSpec};
+use peace::cfg::{state::Generated, OpCtx};
 
 use crate::item_specs::peace_aws_s3_object::{S3ObjectData, S3ObjectError, S3ObjectState};
 
@@ -13,26 +13,21 @@ use peace::cfg::progress::ProgressMsgUpdate;
 #[derive(Debug)]
 pub struct S3ObjectStateCurrentFnSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl<Id> TryFnSpec for S3ObjectStateCurrentFnSpec<Id>
+impl<Id> S3ObjectStateCurrentFnSpec<Id>
 where
-    Id: Send + Sync + 'static,
+    Id: Send + Sync,
 {
-    type Data<'op> = S3ObjectData<'op, Id>;
-    type Error = S3ObjectError;
-    type Output = S3ObjectState;
-
-    async fn try_exec(
+    pub async fn try_state_current(
         op_ctx: OpCtx<'_>,
         data: S3ObjectData<'_, Id>,
-    ) -> Result<Option<Self::Output>, S3ObjectError> {
-        Self::exec(op_ctx, data).await.map(Some)
+    ) -> Result<Option<S3ObjectState>, S3ObjectError> {
+        Self::state_current(op_ctx, data).await.map(Some)
     }
 
-    async fn exec(
+    pub async fn state_current(
         op_ctx: OpCtx<'_>,
         data: S3ObjectData<'_, Id>,
-    ) -> Result<Self::Output, S3ObjectError> {
+    ) -> Result<S3ObjectState, S3ObjectError> {
         let client = data.client();
         let bucket_name = data.params().bucket_name();
         let object_key = data.params().object_key();

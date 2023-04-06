@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, path::Path};
 
-use peace::cfg::{async_trait, OpCtx, TryFnSpec};
+use peace::cfg::OpCtx;
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
 
@@ -8,7 +8,29 @@ use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
 #[derive(Debug)]
 pub struct TarXStateCurrentFnSpec<Id>(PhantomData<Id>);
 
-impl<Id> TarXStateCurrentFnSpec<Id> {
+impl<Id> TarXStateCurrentFnSpec<Id>
+where
+    Id: Send + Sync,
+{
+    pub async fn state_current(
+        op_ctx: OpCtx<'_>,
+        data: TarXData<'_, Id>,
+    ) -> Result<FileMetadatas, TarXError> {
+        let tar_x_params = data.tar_x_params();
+        let dest = tar_x_params.dest();
+
+        #[cfg(not(target_arch = "wasm32"))]
+        let files_extracted = Self::files_extracted(op_ctx, dest).await?;
+        #[cfg(target_arch = "wasm32")]
+        let files_extracted = Self::files_extracted(op_ctx, data.storage(), dest)?;
+
+        let dest_files = FileMetadatas::from(files_extracted);
+
+        let state = dest_files;
+
+        Ok(state)
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     pub async fn files_extracted(
         _op_ctx: OpCtx<'_>,
@@ -106,41 +128,5 @@ impl<Id> TarXStateCurrentFnSpec<Id> {
         _dest: &Path,
     ) -> Result<Vec<FileMetadata>, TarXError> {
         todo!()
-    }
-}
-
-#[async_trait(?Send)]
-impl<Id> TryFnSpec for TarXStateCurrentFnSpec<Id>
-where
-    Id: Send + Sync + 'static,
-{
-    type Data<'op> = TarXData<'op, Id>;
-    type Error = TarXError;
-    type Output = FileMetadatas;
-
-    async fn try_exec(
-        op_ctx: OpCtx<'_>,
-        tar_x_data: TarXData<'_, Id>,
-    ) -> Result<Option<Self::Output>, TarXError> {
-        Self::exec(op_ctx, tar_x_data).await.map(Some)
-    }
-
-    async fn exec(
-        op_ctx: OpCtx<'_>,
-        tar_x_data: TarXData<'_, Id>,
-    ) -> Result<Self::Output, TarXError> {
-        let tar_x_params = tar_x_data.tar_x_params();
-        let dest = tar_x_params.dest();
-
-        #[cfg(not(target_arch = "wasm32"))]
-        let files_extracted = Self::files_extracted(op_ctx, dest).await?;
-        #[cfg(target_arch = "wasm32")]
-        let files_extracted = Self::files_extracted(op_ctx, tar_x_data.storage(), dest)?;
-
-        let dest_files = FileMetadatas::from(files_extracted);
-
-        let state = dest_files;
-
-        Ok(state)
     }
 }

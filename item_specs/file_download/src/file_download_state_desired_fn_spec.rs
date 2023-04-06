@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, state::FetchedOpt, OpCtx, State, TryFnSpec};
+use peace::cfg::{state::FetchedOpt, OpCtx, State};
 use reqwest::header::ETAG;
 
 use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState};
@@ -13,12 +13,28 @@ impl<Id> FileDownloadStateDesiredFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
+    pub async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: FileDownloadData<'_, Id>,
+    ) -> Result<Option<State<FileDownloadState, FetchedOpt<ETag>>>, FileDownloadError> {
+        Self::state_desired(op_ctx, data).await.map(Some)
+    }
+
+    pub async fn state_desired(
+        op_ctx: OpCtx<'_>,
+        data: FileDownloadData<'_, Id>,
+    ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
+        let file_state_desired = Self::file_state_desired(op_ctx, &data).await?;
+
+        Ok(file_state_desired)
+    }
+
     async fn file_state_desired(
         _op_ctx: OpCtx<'_>,
-        file_download_data: &FileDownloadData<'_, Id>,
+        data: &FileDownloadData<'_, Id>,
     ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
-        let client = file_download_data.client();
-        let file_download_params = file_download_data.file_download_params();
+        let client = data.client();
+        let file_download_params = data.file_download_params();
         let dest = file_download_params.dest();
         let src_url = file_download_params.src();
         let response = client
@@ -68,31 +84,5 @@ where
         } else {
             Err(FileDownloadError::SrcFileUndetermined { status_code })
         }
-    }
-}
-
-#[async_trait(?Send)]
-impl<Id> TryFnSpec for FileDownloadStateDesiredFnSpec<Id>
-where
-    Id: Send + Sync + 'static,
-{
-    type Data<'op> = FileDownloadData<'op, Id>;
-    type Error = FileDownloadError;
-    type Output = State<FileDownloadState, FetchedOpt<ETag>>;
-
-    async fn try_exec(
-        op_ctx: OpCtx<'_>,
-        file_download_data: FileDownloadData<'_, Id>,
-    ) -> Result<Option<Self::Output>, FileDownloadError> {
-        Self::exec(op_ctx, file_download_data).await.map(Some)
-    }
-
-    async fn exec(
-        op_ctx: OpCtx<'_>,
-        file_download_data: FileDownloadData<'_, Id>,
-    ) -> Result<Self::Output, FileDownloadError> {
-        let file_state_desired = Self::file_state_desired(op_ctx, &file_download_data).await?;
-
-        Ok(file_state_desired)
     }
 }

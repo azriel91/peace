@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -62,8 +62,6 @@ where
     type Data<'op> = InstanceProfileData<'op, Id>;
     type Error = InstanceProfileError;
     type State = InstanceProfileState;
-    type StateCurrentFnSpec = InstanceProfileStateCurrentFnSpec<Id>;
-    type StateDesiredFnSpec = InstanceProfileStateDesiredFnSpec<Id>;
     type StateDiff = InstanceProfileStateDiff;
     type StateDiffFnSpec = InstanceProfileStateDiffFnSpec;
 
@@ -78,6 +76,34 @@ where
             resources.insert(client);
         }
         Ok(())
+    }
+
+    async fn try_state_current(
+        op_ctx: OpCtx<'_>,
+        data: InstanceProfileData<'_, Id>,
+    ) -> Result<Option<Self::State>, InstanceProfileError> {
+        InstanceProfileStateCurrentFnSpec::try_state_current(op_ctx, data).await
+    }
+
+    async fn state_current(
+        op_ctx: OpCtx<'_>,
+        data: InstanceProfileData<'_, Id>,
+    ) -> Result<Self::State, InstanceProfileError> {
+        InstanceProfileStateCurrentFnSpec::state_current(op_ctx, data).await
+    }
+
+    async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: InstanceProfileData<'_, Id>,
+    ) -> Result<Option<Self::State>, InstanceProfileError> {
+        InstanceProfileStateDesiredFnSpec::try_state_desired(op_ctx, data).await
+    }
+
+    async fn state_desired(
+        op_ctx: OpCtx<'_>,
+        data: InstanceProfileData<'_, Id>,
+    ) -> Result<Self::State, InstanceProfileError> {
+        InstanceProfileStateDesiredFnSpec::state_desired(op_ctx, data).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, InstanceProfileError> {

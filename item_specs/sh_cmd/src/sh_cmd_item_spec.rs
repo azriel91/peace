@@ -1,14 +1,13 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, State},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCtx, State},
     resources::{resources::ts::Empty, Resources},
 };
 
 use crate::{
-    sh_cmd_executor::ShCmdExecutor, ShCmdApplyOpSpec, ShCmdData, ShCmdError, ShCmdExecutionRecord,
-    ShCmdParams, ShCmdState, ShCmdStateCurrentFnSpec, ShCmdStateDesiredFnSpec, ShCmdStateDiff,
-    ShCmdStateDiffFnSpec,
+    ShCmdApplyOpSpec, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdParams,
+    ShCmdState, ShCmdStateDiff, ShCmdStateDiffFnSpec,
 };
 
 /// Item spec for executing a shell command.
@@ -65,8 +64,6 @@ where
     type Data<'op> = ShCmdData<'op, Id>;
     type Error = ShCmdError;
     type State = State<ShCmdState<Id>, ShCmdExecutionRecord>;
-    type StateCurrentFnSpec = ShCmdStateCurrentFnSpec<Id>;
-    type StateDesiredFnSpec = ShCmdStateDesiredFnSpec<Id>;
     type StateDiff = ShCmdStateDiff;
     type StateDiffFnSpec = ShCmdStateDiffFnSpec<Id>;
 
@@ -80,6 +77,38 @@ where
         }
 
         Ok(())
+    }
+
+    async fn try_state_current(
+        op_ctx: OpCtx<'_>,
+        data: ShCmdData<'_, Id>,
+    ) -> Result<Option<Self::State>, ShCmdError> {
+        Self::state_current(op_ctx, data).await.map(Some)
+    }
+
+    async fn state_current(
+        _op_ctx: OpCtx<'_>,
+        data: ShCmdData<'_, Id>,
+    ) -> Result<Self::State, ShCmdError> {
+        let state_current_sh_cmd = data.sh_cmd_params().state_current_sh_cmd();
+        ShCmdExecutor::exec(state_current_sh_cmd).await
+    }
+
+    async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: ShCmdData<'_, Id>,
+    ) -> Result<Option<Self::State>, ShCmdError> {
+        Self::state_desired(op_ctx, data).await.map(Some)
+    }
+
+    async fn state_desired(
+        _op_ctx: OpCtx<'_>,
+        data: ShCmdData<'_, Id>,
+    ) -> Result<Self::State, ShCmdError> {
+        let state_desired_sh_cmd = data.sh_cmd_params().state_desired_sh_cmd();
+        // Maybe we should support reading different exit statuses for an `Ok(None)`
+        // value.
+        ShCmdExecutor::exec(state_desired_sh_cmd).await
     }
 
     async fn state_clean(sh_cmd_data: Self::Data<'_>) -> Result<Self::State, ShCmdError> {
