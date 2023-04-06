@@ -323,13 +323,13 @@ where
             }
         }
 
-        // TODO: Should we run `StatesCurrentFnSpec` again?
+        // TODO: Should we run `StatesCurrentFn` again?
         //
         // i.e. is it part of `ApplyOpSpec::exec`'s contract to return the state.
         //
         // * It may be duplication of code.
         // * `FileDownloadItemSpec` needs to know the ETag from the last request, which:
-        //     - in `StatesCurrentFnSpec` comes from `StatesSaved`
+        //     - in `StatesCurrentFn` comes from `StatesSaved`
         //     - in `ApplyCmd` comes from `StatesTsApply`
         // * `ShCmdItemSpec` doesn't return the state in the apply script, so in the
         //   item spec we run the state current script after the apply exec script.

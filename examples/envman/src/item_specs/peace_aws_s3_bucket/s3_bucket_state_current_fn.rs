@@ -10,9 +10,9 @@ use peace::cfg::progress::ProgressMsgUpdate;
 
 /// Reads the current state of the S3 bucket state.
 #[derive(Debug)]
-pub struct S3BucketStateCurrentFnSpec<Id>(PhantomData<Id>);
+pub struct S3BucketStateCurrentFn<Id>(PhantomData<Id>);
 
-impl<Id> S3BucketStateCurrentFnSpec<Id>
+impl<Id> S3BucketStateCurrentFn<Id>
 where
     Id: Send + Sync,
 {

@@ -7,7 +7,7 @@ use peace::{
 
 use crate::item_specs::peace_aws_instance_profile::{
     InstanceProfileApplyOpSpec, InstanceProfileData, InstanceProfileError, InstanceProfileState,
-    InstanceProfileStateCurrentFnSpec, InstanceProfileStateDesiredFnSpec, InstanceProfileStateDiff,
+    InstanceProfileStateCurrentFn, InstanceProfileStateDesiredFnSpec, InstanceProfileStateDiff,
     InstanceProfileStateDiffFnSpec,
 };
 
@@ -82,14 +82,14 @@ where
         op_ctx: OpCtx<'_>,
         data: InstanceProfileData<'_, Id>,
     ) -> Result<Option<Self::State>, InstanceProfileError> {
-        InstanceProfileStateCurrentFnSpec::try_state_current(op_ctx, data).await
+        InstanceProfileStateCurrentFn::try_state_current(op_ctx, data).await
     }
 
     async fn state_current(
         op_ctx: OpCtx<'_>,
         data: InstanceProfileData<'_, Id>,
     ) -> Result<Self::State, InstanceProfileError> {
-        InstanceProfileStateCurrentFnSpec::state_current(op_ctx, data).await
+        InstanceProfileStateCurrentFn::state_current(op_ctx, data).await
     }
 
     async fn try_state_desired(

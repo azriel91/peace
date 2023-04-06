@@ -12,9 +12,9 @@ use peace::cfg::progress::ProgressMsgUpdate;
 
 /// Reads the current state of the instance profile state.
 #[derive(Debug)]
-pub struct InstanceProfileStateCurrentFnSpec<Id>(PhantomData<Id>);
+pub struct InstanceProfileStateCurrentFn<Id>(PhantomData<Id>);
 
-impl<Id> InstanceProfileStateCurrentFnSpec<Id>
+impl<Id> InstanceProfileStateCurrentFn<Id>
 where
     Id: Send + Sync,
 {

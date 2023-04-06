@@ -20,7 +20,7 @@ To discover the current state of all items, the following method is used:
 
 1. `ApplyOpSpec::check` is run for all item specs.
 2. Of the ones that return `OpCheckStatus::ExecRequired`, `ApplyOpSpec::exec` is run.
-3. Finally, `StateCurrentFnSpec::try_exec` is run so that the end state can be compared with the desired state to confirm that they match.
+3. Finally, `StateCurrentFn::try_exec` is run so that the end state can be compared with the desired state to confirm that they match.
 
 ### `ApplyOpSpec::check`
 
@@ -167,7 +167,7 @@ Implementers must replace all *write* logic with mocks. These include:
 * File writes
 * Web requests
 
-It is also recommended that *read* requests to external services are minimized to decrease the time to return feedback to the user. If possible, move read request logic to `StateCurrentFnSpec` so that it is stored by the `StatesDiscoverCmd`.
+It is also recommended that *read* requests to external services are minimized to decrease the time to return feedback to the user. If possible, move read request logic to `StateCurrentFn` so that it is stored by the `StatesDiscoverCmd`.
 
 
 ## Convergence / Non-Transactional Execution Recovery

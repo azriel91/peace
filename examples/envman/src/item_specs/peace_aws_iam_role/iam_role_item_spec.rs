@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_iam_role::{
-    IamRoleApplyOpSpec, IamRoleData, IamRoleError, IamRoleState, IamRoleStateCurrentFnSpec,
+    IamRoleApplyOpSpec, IamRoleData, IamRoleError, IamRoleState, IamRoleStateCurrentFn,
     IamRoleStateDesiredFnSpec, IamRoleStateDiff, IamRoleStateDiffFnSpec,
 };
 
@@ -81,14 +81,14 @@ where
         op_ctx: OpCtx<'_>,
         data: IamRoleData<'_, Id>,
     ) -> Result<Option<Self::State>, IamRoleError> {
-        IamRoleStateCurrentFnSpec::try_state_current(op_ctx, data).await
+        IamRoleStateCurrentFn::try_state_current(op_ctx, data).await
     }
 
     async fn state_current(
         op_ctx: OpCtx<'_>,
         data: IamRoleData<'_, Id>,
     ) -> Result<Self::State, IamRoleError> {
-        IamRoleStateCurrentFnSpec::state_current(op_ctx, data).await
+        IamRoleStateCurrentFn::state_current(op_ctx, data).await
     }
 
     async fn try_state_desired(

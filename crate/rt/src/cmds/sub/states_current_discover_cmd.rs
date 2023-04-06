@@ -40,13 +40,13 @@ where
     O: OutputWrite<E>,
     PKeys: ParamsKeys + 'static,
 {
-    /// Runs [`StateCurrentFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
+    /// Runs [`StateCurrentFn`]`::`[`try_exec`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`], and will be serialized to
     /// `$flow_dir/states_saved.yaml`.
     ///
-    /// If any `StateCurrentFnSpec` needs to read the `State` from a previous
+    /// If any `StateCurrentFn` needs to read the `State` from a previous
     /// `ItemSpec`, the predecessor should insert a copy / clone of their state
     /// into `Resources`, and the successor should references it in their
     /// [`Data`].
@@ -54,7 +54,7 @@ where
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateCurrentFnSpec`]: peace_cfg::ItemSpec::StateCurrentFnSpec
+    /// [`StateCurrentFn`]: peace_cfg::ItemSpec::StateCurrentFn
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StatesCurrent, E> {

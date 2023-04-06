@@ -34,12 +34,12 @@ pub trait ApplyOpSpec {
 
     /// State of the managed item.
     ///
-    /// This is the type returned by the [`StateCurrentFnSpec`], and is used by
+    /// This is the type returned by the [`StateCurrentFn`], and is used by
     /// [`ApplyOpSpec`] to determine if [`exec`] needs to be run.
     ///
     /// See [`ItemSpec::State`] for more detail.
     ///
-    /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
+    /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
     /// [`ApplyOpSpec`]: crate::ItemSpec::ApplyOpSpec
     /// [`exec`]: Self::exec
     /// [`ItemSpec::State`]: crate::ItemSpec::State
@@ -89,14 +89,14 @@ pub trait ApplyOpSpec {
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
-    ///   [`StateCurrentFnSpec`].
+    ///   [`StateCurrentFn`].
     /// * `state_desired`: Desired [`State`] of the managed item, returned from
     ///   [`StateDesiredFnSpec`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
     ///   [`StateDiffFnSpec`].
     ///
     /// [`State`]: Self::State
-    /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
+    /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
     /// [`StateDesiredFnSpec`]: crate::ItemSpec::StateDesiredFnSpec
     /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     async fn check(
@@ -128,7 +128,7 @@ pub trait ApplyOpSpec {
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
-    ///   [`StateCurrentFnSpec`].
+    ///   [`StateCurrentFn`].
     /// * `state_desired`: Desired [`State`] of the managed item, returned from
     ///   [`StateDesiredFnSpec`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
@@ -137,7 +137,7 @@ pub trait ApplyOpSpec {
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     /// [`State`]: crate::State
-    /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
+    /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
     /// [`StateDesiredFnSpec`]: crate::ItemSpec::StateDesiredFnSpec
     /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     /// [`State`]: Self::State
@@ -157,7 +157,7 @@ pub trait ApplyOpSpec {
     ///
     /// * `data`: Runtime data that the operation reads from, or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
-    ///   [`StateCurrentFnSpec`].
+    ///   [`StateCurrentFn`].
     /// * `state_desired`: Desired [`State`] of the managed item, returned from
     ///   [`StateDesiredFnSpec`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
@@ -166,7 +166,7 @@ pub trait ApplyOpSpec {
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     /// [`State`]: crate::State
-    /// [`StateCurrentFnSpec`]: crate::ItemSpec::StateCurrentFnSpec
+    /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
     /// [`StateDesiredFnSpec`]: crate::ItemSpec::StateDesiredFnSpec
     /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     /// [`State`]: Self::State

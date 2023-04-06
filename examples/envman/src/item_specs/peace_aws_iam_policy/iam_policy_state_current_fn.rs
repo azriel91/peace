@@ -13,9 +13,9 @@ use peace::cfg::progress::ProgressMsgUpdate;
 
 /// Reads the current state of the instance profile state.
 #[derive(Debug)]
-pub struct IamPolicyStateCurrentFnSpec<Id>(PhantomData<Id>);
+pub struct IamPolicyStateCurrentFn<Id>(PhantomData<Id>);
 
-impl<Id> IamPolicyStateCurrentFnSpec<Id> {
+impl<Id> IamPolicyStateCurrentFn<Id> {
     /// Finds a policy with the given name and path.
     pub(crate) async fn policy_find(
         #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
@@ -88,7 +88,7 @@ impl<Id> IamPolicyStateCurrentFnSpec<Id> {
     }
 }
 
-impl<Id> IamPolicyStateCurrentFnSpec<Id>
+impl<Id> IamPolicyStateCurrentFn<Id>
 where
     Id: Send + Sync,
 {

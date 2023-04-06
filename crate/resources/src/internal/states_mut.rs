@@ -11,7 +11,7 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 ///
 /// # Implementors
 ///
-/// * In `StateCurrentFnSpec`, you should reference [`StatesRw`], which allows
+/// * In `StateCurrentFn`, you should reference [`StatesRw`], which allows
 ///   mutable access to the underlying states.
 /// * In `ApplyOpSpec`, you should reference [`StatesCurrent`].
 /// * [`StatesMut`] is not intended to be referenced in [`Data`] directly.

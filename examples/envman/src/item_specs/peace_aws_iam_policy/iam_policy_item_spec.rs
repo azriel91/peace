@@ -7,7 +7,7 @@ use peace::{
 
 use crate::item_specs::peace_aws_iam_policy::{
     model::ManagedPolicyArn, IamPolicyApplyOpSpec, IamPolicyData, IamPolicyError, IamPolicyState,
-    IamPolicyStateCurrentFnSpec, IamPolicyStateDesiredFnSpec, IamPolicyStateDiff,
+    IamPolicyStateCurrentFn, IamPolicyStateDesiredFnSpec, IamPolicyStateDiff,
     IamPolicyStateDiffFnSpec,
 };
 
@@ -84,14 +84,14 @@ where
         op_ctx: OpCtx<'_>,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Option<Self::State>, IamPolicyError> {
-        IamPolicyStateCurrentFnSpec::try_state_current(op_ctx, data).await
+        IamPolicyStateCurrentFn::try_state_current(op_ctx, data).await
     }
 
     async fn state_current(
         op_ctx: OpCtx<'_>,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Self::State, IamPolicyError> {
-        IamPolicyStateCurrentFnSpec::state_current(op_ctx, data).await
+        IamPolicyStateCurrentFn::state_current(op_ctx, data).await
     }
 
     async fn try_state_desired(

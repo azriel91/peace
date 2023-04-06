@@ -59,14 +59,14 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
 
         It incurs mental effort to always cater for `src` not being available &ndash; i.e. implementing an item spec would need knowledge beyond itself.
 
-    2. the `peace` framework defaults to not running `state_current_fn_spec` for items that have a logical dependency on things that `ApplyOpSpec::check` returns `ExecRequired`
+    2. the `peace` framework defaults to not running `state_current_fn` for items that have a logical dependency on things that `ApplyOpSpec::check` returns `ExecRequired`
 
-        For this to work, when `StateCurrentFnSpec::try_exec` is requested, `peace` will:
+        For this to work, when `StateCurrentFn::try_exec` is requested, `peace` will:
 
-        1. For each non-parent item, run `StateCurrentFnSpec`, `StateDesiredFnSpec`, `StateDiffFnSpec`, and `ApplyOpSpec::check`.
+        1. For each non-parent item, run `StateCurrentFn`, `StateDesiredFnSpec`, `StateDiffFnSpec`, and `ApplyOpSpec::check`.
         2. If `ApplyOpSpec::check` returns `OpCheckStatus::ExecNotRequired`, then successor items can be processed as well.
 
-    3. `StateCurrentFnSpec` could return `Result<Option<Status>, E>`:
+    3. `StateCurrentFn` could return `Result<Option<Status>, E>`:
 
         + `Ok(None)`: State cannot be discovered, likely because predecessor hasn't run
         + `Ok(Some(State<_, _>))`: State cannot be discovered.
@@ -74,7 +74,7 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
 
             May be difficult to distinguish some cases from `Ok(None)`, e.g. failed to connect to server, is it because the server doesn't exist, or because the address is incorrect.
 
-            Should we have two `StateCurrentFnSpec`s? Or pass in whether it's being called from `Discover` vs `Ensure` &ndash; i.e. some information that says "err when failing to connect because the predecessor has been ensured".
+            Should we have two `StateCurrentFn`s? Or pass in whether it's being called from `Discover` vs `Ensure` &ndash; i.e. some information that says "err when failing to connect because the predecessor has been ensured".
 
         <!--  -->
 

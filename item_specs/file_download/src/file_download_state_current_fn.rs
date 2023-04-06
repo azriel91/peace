@@ -11,9 +11,9 @@ use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState};
 
 /// Reads the current state of the file to download.
 #[derive(Debug)]
-pub struct FileDownloadStateCurrentFnSpec<Id>(PhantomData<Id>);
+pub struct FileDownloadStateCurrentFn<Id>(PhantomData<Id>);
 
-impl<Id> FileDownloadStateCurrentFnSpec<Id>
+impl<Id> FileDownloadStateCurrentFn<Id>
 where
     Id: Send + Sync,
 {

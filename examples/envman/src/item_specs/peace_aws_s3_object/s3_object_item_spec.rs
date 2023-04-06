@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_s3_object::{
-    S3ObjectApplyOpSpec, S3ObjectData, S3ObjectError, S3ObjectState, S3ObjectStateCurrentFnSpec,
+    S3ObjectApplyOpSpec, S3ObjectData, S3ObjectError, S3ObjectState, S3ObjectStateCurrentFn,
     S3ObjectStateDesiredFnSpec, S3ObjectStateDiff, S3ObjectStateDiffFnSpec,
 };
 
@@ -82,14 +82,14 @@ where
         op_ctx: OpCtx<'_>,
         data: S3ObjectData<'_, Id>,
     ) -> Result<Option<Self::State>, S3ObjectError> {
-        S3ObjectStateCurrentFnSpec::try_state_current(op_ctx, data).await
+        S3ObjectStateCurrentFn::try_state_current(op_ctx, data).await
     }
 
     async fn state_current(
         op_ctx: OpCtx<'_>,
         data: S3ObjectData<'_, Id>,
     ) -> Result<Self::State, S3ObjectError> {
-        S3ObjectStateCurrentFnSpec::state_current(op_ctx, data).await
+        S3ObjectStateCurrentFn::state_current(op_ctx, data).await
     }
 
     async fn try_state_desired(

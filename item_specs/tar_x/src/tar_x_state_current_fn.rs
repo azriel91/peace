@@ -6,9 +6,9 @@ use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
 
 /// Reads the current state of the tar to extract.
 #[derive(Debug)]
-pub struct TarXStateCurrentFnSpec<Id>(PhantomData<Id>);
+pub struct TarXStateCurrentFn<Id>(PhantomData<Id>);
 
-impl<Id> TarXStateCurrentFnSpec<Id>
+impl<Id> TarXStateCurrentFn<Id>
 where
     Id: Send + Sync,
 {

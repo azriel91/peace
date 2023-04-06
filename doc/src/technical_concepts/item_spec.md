@@ -75,7 +75,7 @@ This function also instantiates the data types referenced by this `ItemSpec` int
 <summary>3. Fetch current item state.</summary>
 <div>
 
-`ItemSpec::StateCurrentFnSpec`
+`ItemSpec::StateCurrentFn`
 
 This may not necessarily be a cheap operation, for example if it needs to make web requests that take seconds to complete.
 

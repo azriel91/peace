@@ -13,7 +13,7 @@ use crate::item_specs::peace_aws_s3_bucket::{
     S3BucketData, S3BucketError, S3BucketState, S3BucketStateDiff,
 };
 
-use super::S3BucketStateCurrentFnSpec;
+use super::S3BucketStateCurrentFn;
 
 /// ApplyOpSpec for the S3 bucket state.
 #[derive(Debug)]
@@ -183,7 +183,7 @@ where
                     progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("bucket created")));
 
                     let state_applied =
-                        S3BucketStateCurrentFnSpec::<Id>::state_current(op_ctx, data).await?;
+                        S3BucketStateCurrentFn::<Id>::state_current(op_ctx, data).await?;
 
                     Ok(state_applied)
                 }

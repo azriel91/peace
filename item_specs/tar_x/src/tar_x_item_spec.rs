@@ -6,7 +6,7 @@ use peace::{
 };
 
 use crate::{
-    FileMetadatas, TarXApplyOpSpec, TarXData, TarXError, TarXStateCurrentFnSpec,
+    FileMetadatas, TarXApplyOpSpec, TarXData, TarXError, TarXStateCurrentFn,
     TarXStateDesiredFnSpec, TarXStateDiff, TarXStateDiffFnSpec,
 };
 
@@ -83,7 +83,7 @@ where
         op_ctx: OpCtx<'_>,
         data: TarXData<'_, Id>,
     ) -> Result<Self::State, TarXError> {
-        TarXStateCurrentFnSpec::state_current(op_ctx, data).await
+        TarXStateCurrentFn::state_current(op_ctx, data).await
     }
 
     async fn try_state_desired(
