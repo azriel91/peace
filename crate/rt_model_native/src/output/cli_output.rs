@@ -116,7 +116,7 @@ impl CliOutput<Stdout> {
 /// `ProgressBar`'s length and current value,
 #[cfg(feature = "output_progress")]
 const BAR_EMPTY: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
-#[cfg(feature = "output_progress")]
+#[cfg(all(feature = "output_progress", feature = "output_colorized"))]
 const BAR_FULL: &str = "▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰";
 #[cfg(feature = "output_progress")]
 const SPINNER_EMPTY: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
