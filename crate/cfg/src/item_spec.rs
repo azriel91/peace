@@ -7,7 +7,7 @@ use peace_data::Data;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{ApplyOpSpec, StateDiffFnSpec, TryFnSpec};
+use crate::{ApplyOpSpec, OpCtx, StateDiffFnSpec};
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -107,20 +107,6 @@ pub trait ItemSpec: DynClone {
     where
         Self: 'op;
 
-    /// Function that returns the current state of the managed item.
-    type StateCurrentFnSpec: TryFnSpec<Error = Self::Error, Output = Self::State>;
-
-    /// Function that returns the desired state of the managed item.
-    ///
-    /// # Examples
-    ///
-    /// * For a file download operation, the desired state could be the
-    ///   destination path and a content hash.
-    ///
-    /// * For a web application service operation, the desired state could be
-    ///   the web service is running on the latest version.
-    type StateDesiredFnSpec: TryFnSpec<Error = Self::Error, Output = Self::State>;
-
     /// Returns the difference between the current state and desired state.
     ///
     /// # Implementors
@@ -186,6 +172,52 @@ pub trait ItemSpec: DynClone {
     /// [`check`]: crate::ApplyOpSpec::check
     /// [`exec`]: crate::ApplyOpSpec::exec
     async fn setup(&self, data: &mut Resources<Empty>) -> Result<(), Self::Error>;
+
+    /// Returns the current state of the managed item, if possible.
+    ///
+    /// This should return `Ok(None)` if the state is not able to be queried,
+    /// such as when failing to connect to a remote host, instead of returning
+    /// an error.
+    async fn try_state_current(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+    ) -> Result<Option<Self::State>, Self::Error>;
+
+    /// Returns the current state of the managed item.
+    ///
+    /// This is *expected* to successfully discover the current state, so errors
+    /// will be presented to the user.
+    async fn state_current(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+    ) -> Result<Self::State, Self::Error>;
+
+    /// Returns the desired state of the managed item, if possible.
+    ///
+    /// This should return `Ok(None)` if the state is not able to be queried,
+    /// such as when failing to read a potentially non-existent file to
+    /// determine its content hash, instead of returning an error.
+    async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+    ) -> Result<Option<Self::State>, Self::Error>;
+
+    /// Returns the desired state of the managed item.
+    ///
+    /// This is *expected* to successfully discover the desired state, so errors
+    /// will be presented to the user.
+    ///
+    /// # Examples
+    ///
+    /// * For a file download operation, the desired state could be the
+    ///   destination path and a content hash.
+    ///
+    /// * For a web application service operation, the desired state could be
+    ///   the web service is running on the latest version.
+    async fn state_desired(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+    ) -> Result<Self::State, Self::Error>;
 
     /// Returns the representation of a clean `State`.
     ///

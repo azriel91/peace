@@ -12,7 +12,7 @@ pub use peace_core::*;
 
 pub use crate::{
     apply_op_spec::ApplyOpSpec, item_spec::ItemSpec, op_ctx::OpCtx, state::State,
-    state_diff_fn_spec::StateDiffFnSpec, try_fn_spec::TryFnSpec,
+    state_diff_fn_spec::StateDiffFnSpec,
 };
 
 pub mod accessors;
@@ -22,4 +22,3 @@ mod apply_op_spec;
 mod item_spec;
 mod op_ctx;
 mod state_diff_fn_spec;
-mod try_fn_spec;
