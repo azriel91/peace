@@ -5,7 +5,7 @@ use std::{
 };
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
-use peace_cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, TryFnSpec};
+use peace_cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx};
 use peace_data::{
     marker::{ApplyDry, Clean, Current, Desired},
     Data,
@@ -25,40 +25,13 @@ use crate::{
 
 /// Wraps a type implementing [`ItemSpec`].
 #[allow(clippy::type_complexity)]
-pub struct ItemSpecWrapper<
+pub struct ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>(
     IS,
-    E,
-    State,
-    StateDiff,
-    StateCurrentFnSpec,
-    StateDesiredFnSpec,
-    StateDiffFnSpec,
-    ApplyOpSpec,
->(
-    IS,
-    PhantomData<(
-        E,
-        State,
-        StateDiff,
-        StateCurrentFnSpec,
-        StateDesiredFnSpec,
-        StateDiffFnSpec,
-        ApplyOpSpec,
-    )>,
+    PhantomData<(E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec)>,
 );
 
-impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
-    Clone
-    for ItemSpecWrapper<
-        IS,
-        E,
-        State,
-        StateDiff,
-        StateCurrentFnSpec,
-        StateDesiredFnSpec,
-        StateDiffFnSpec,
-        ApplyOpSpec,
-    >
+impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> Clone
+    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
 where
     IS: Clone,
 {
@@ -67,24 +40,13 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
-    ItemSpecWrapper<
-        IS,
-        E,
-        State,
-        StateDiff,
-        StateCurrentFnSpec,
-        StateDesiredFnSpec,
-        StateDiffFnSpec,
-        ApplyOpSpec,
-    >
+impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
+    ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
 where
     IS: Debug
         + ItemSpec<
             State = State,
             StateDiff = StateDiff,
-            StateCurrentFnSpec = StateCurrentFnSpec,
-            StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             ApplyOpSpec = ApplyOpSpec,
         > + Send
@@ -98,10 +60,6 @@ where
         + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync,
-    StateDesiredFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             Error = <IS as ItemSpec>::Error,
@@ -137,11 +95,9 @@ where
         resources: &Resources<ResourcesTs>,
     ) -> Result<Option<State>, E> {
         let state_current = {
-            let data = <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(
-                self.id(),
-                resources,
-            );
-            <StateCurrentFnSpec as TryFnSpec>::try_exec(op_ctx, data).await?
+            let data =
+                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
+            <IS as peace_cfg::ItemSpec>::try_state_current(op_ctx, data).await?
         };
         if let Some(state_current) = state_current.as_ref() {
             resources.borrow_mut::<Current<State>>().0 = Some(state_current.clone());
@@ -156,11 +112,9 @@ where
         resources: &Resources<ResourcesTs>,
     ) -> Result<State, E> {
         let state_current = {
-            let data = <<StateCurrentFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(
-                self.id(),
-                resources,
-            );
-            <StateCurrentFnSpec as TryFnSpec>::exec(op_ctx, data).await?
+            let data =
+                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
+            <IS as peace_cfg::ItemSpec>::state_current(op_ctx, data).await?
         };
         resources.borrow_mut::<Current<State>>().0 = Some(state_current.clone());
 
@@ -172,12 +126,8 @@ where
         op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<State>, E> {
-        let data = <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(
-            self.id(),
-            resources,
-        );
-        let state_desired =
-            <StateDesiredFnSpec as peace_cfg::TryFnSpec>::try_exec(op_ctx, data).await?;
+        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_desired = <IS as peace_cfg::ItemSpec>::try_state_desired(op_ctx, data).await?;
         if let Some(state_desired) = state_desired.as_ref() {
             resources.borrow_mut::<Desired<State>>().0 = Some(state_desired.clone());
         }
@@ -190,12 +140,8 @@ where
         op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<State, E> {
-        let data = <<StateDesiredFnSpec as peace_cfg::TryFnSpec>::Data<'_> as Data>::borrow(
-            self.id(),
-            resources,
-        );
-        let state_desired =
-            <StateDesiredFnSpec as peace_cfg::TryFnSpec>::exec(op_ctx, data).await?;
+        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_desired = <IS as peace_cfg::ItemSpec>::state_desired(op_ctx, data).await?;
         resources.borrow_mut::<Desired<State>>().0 = Some(state_desired.clone());
 
         Ok(state_desired)
@@ -327,18 +273,8 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
-    Debug
-    for ItemSpecWrapper<
-        IS,
-        E,
-        State,
-        StateDiff,
-        StateCurrentFnSpec,
-        StateDesiredFnSpec,
-        StateDiffFnSpec,
-        ApplyOpSpec,
-    >
+impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> Debug
+    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
 where
     IS: Debug,
 {
@@ -347,18 +283,8 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
-    Deref
-    for ItemSpecWrapper<
-        IS,
-        E,
-        State,
-        StateDiff,
-        StateCurrentFnSpec,
-        StateDesiredFnSpec,
-        StateDiffFnSpec,
-        ApplyOpSpec,
-    >
+impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> Deref
+    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
 {
     type Target = IS;
 
@@ -367,43 +293,21 @@ impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffF
     }
 }
 
-impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
-    DerefMut
-    for ItemSpecWrapper<
-        IS,
-        E,
-        State,
-        StateDiff,
-        StateCurrentFnSpec,
-        StateDesiredFnSpec,
-        StateDiffFnSpec,
-        ApplyOpSpec,
-    >
+impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> DerefMut
+    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
-    From<IS>
-    for ItemSpecWrapper<
-        IS,
-        E,
-        State,
-        StateDiff,
-        StateCurrentFnSpec,
-        StateDesiredFnSpec,
-        StateDiffFnSpec,
-        ApplyOpSpec,
-    >
+impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> From<IS>
+    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
 where
     IS: Debug
         + ItemSpec<
             State = State,
             StateDiff = StateDiff,
-            StateCurrentFnSpec = StateCurrentFnSpec,
-            StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             ApplyOpSpec = ApplyOpSpec,
         > + Send
@@ -411,10 +315,6 @@ where
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync,
-    StateDesiredFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             Error = <IS as ItemSpec>::Error,
@@ -435,25 +335,13 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
-    DataAccess
-    for ItemSpecWrapper<
-        IS,
-        E,
-        State,
-        StateDiff,
-        StateCurrentFnSpec,
-        StateDesiredFnSpec,
-        StateDiffFnSpec,
-        ApplyOpSpec,
-    >
+impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> DataAccess
+    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
 where
     IS: Debug
         + ItemSpec<
             State = State,
             StateDiff = StateDiff,
-            StateCurrentFnSpec = StateCurrentFnSpec,
-            StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             ApplyOpSpec = ApplyOpSpec,
         > + Send
@@ -461,10 +349,6 @@ where
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync,
-    StateDesiredFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             Error = <IS as ItemSpec>::Error,
@@ -489,25 +373,13 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
-    DataAccessDyn
-    for ItemSpecWrapper<
-        IS,
-        E,
-        State,
-        StateDiff,
-        StateCurrentFnSpec,
-        StateDesiredFnSpec,
-        StateDiffFnSpec,
-        ApplyOpSpec,
-    >
+impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> DataAccessDyn
+    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
 where
     IS: Debug
         + ItemSpec<
             State = State,
             StateDiff = StateDiff,
-            StateCurrentFnSpec = StateCurrentFnSpec,
-            StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             ApplyOpSpec = ApplyOpSpec,
         > + Send
@@ -515,10 +387,6 @@ where
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync,
-    StateDesiredFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             Error = <IS as ItemSpec>::Error,
@@ -544,26 +412,14 @@ where
 }
 
 #[async_trait(?Send)]
-impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
-    ItemSpecRt<E>
-    for ItemSpecWrapper<
-        IS,
-        E,
-        State,
-        StateDiff,
-        StateCurrentFnSpec,
-        StateDesiredFnSpec,
-        StateDiffFnSpec,
-        ApplyOpSpec,
-    >
+impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> ItemSpecRt<E>
+    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
 where
     IS: Clone
         + Debug
         + ItemSpec<
             State = State,
             StateDiff = StateDiff,
-            StateCurrentFnSpec = StateCurrentFnSpec,
-            StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             ApplyOpSpec = ApplyOpSpec,
         > + Send
@@ -577,10 +433,6 @@ where
         + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync,
-    StateDesiredFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             Error = <IS as ItemSpec>::Error,

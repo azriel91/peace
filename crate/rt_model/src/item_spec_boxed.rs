@@ -16,7 +16,7 @@ use std::{
 };
 
 use fn_graph::{DataAccessDyn, TypeIds};
-use peace_cfg::{ItemSpec, TryFnSpec};
+use peace_cfg::ItemSpec;
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{ItemSpecRt, ItemSpecWrapper};
@@ -49,16 +49,13 @@ impl<E> DerefMut for ItemSpecBoxed<E> {
     }
 }
 
-impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
-    From<IS> for ItemSpecBoxed<E>
+impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> From<IS> for ItemSpecBoxed<E>
 where
     IS: Clone
         + Debug
         + ItemSpec<
             State = State,
             StateDiff = StateDiff,
-            StateCurrentFnSpec = StateCurrentFnSpec,
-            StateDesiredFnSpec = StateDesiredFnSpec,
             StateDiffFnSpec = StateDiffFnSpec,
             ApplyOpSpec = ApplyOpSpec,
         > + Send
@@ -74,10 +71,6 @@ where
         + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync + 'static,
-    StateDesiredFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync + 'static,
     StateDiffFnSpec: Debug
         + peace_cfg::StateDiffFnSpec<
             Error = <IS as ItemSpec>::Error,
