@@ -1,11 +1,11 @@
 # Feature Gated Incremental Functionality
 
-Tried the following parameter type for `ApplyFns::exec`:
+Tried the following parameter type for `ItemSpec::apply`:
 
 ```rust ,ignore
 use std::marker::PhantomData;
 
-/// Parameters to `ApplyFns::exec`.
+/// Parameters to `ItemSpec::apply`.
 #[derive(Debug)]
 pub struct EnsureExecParams<
     'params,
@@ -14,14 +14,14 @@ pub struct EnsureExecParams<
     #[cfg(feature = "state_desired")] StateDesired,
     #[cfg(feature = "state_diff")] StateDiff,
 > {
-    /// Data accessed by the apply op spec.
+    /// Data accessed by the apply fns.
     pub data: Data,
     /// Current state of the item.
     #[cfg(feature = "state_current")]
     pub state_current: &'params StateCurrent,
     /// Desired state of the item.
     #[cfg(feature = "state_desired")]
-    pub state_desired: &'params StateDesiredl,
+    pub state_desired: &'params StateDesired,
     /// Diff between current and desired states.
     #[cfg(feature = "state_diff")]
     pub diff: &'params StateDiff,
@@ -39,8 +39,6 @@ async fn exec(
         Self::Data<'_>,
         #[cfg(feature = "state_current")]
         Self::State,
-        #[cfg(feature = "state_desired")]
-        Self::StateLogical,
         #[cfg(feature = "state_diff")]
         Self::StateDiff,
     >,
@@ -82,7 +80,6 @@ pub type EnsureExecParams<'params> = EnsureExecParams<
     'params,
     Self::Data<'params>,
     Self::State,
-    Self::StateLogical,
 >
 
 #[cfg(all(
@@ -94,7 +91,6 @@ pub type EnsureExecParams<'params> = EnsureExecParams<
     'params,
     Self::Data<'params>,
     Self::State,
-    Self::StateLogical,
     Self::StateDiff,
 >
 ```

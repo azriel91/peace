@@ -2,7 +2,7 @@ use crate::states::{ts::Desired, States};
 
 /// Desired `State`s for all `ItemSpec`s.
 ///
-/// This is typically `TypeMap<ItemSpecId, State<StateLogical, External>>`,
+/// This is typically `TypeMap<ItemSpecId, State>`,
 /// where [`External`] is not necessarily used in `StateDiff` computations.
 ///
 /// # Implementors

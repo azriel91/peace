@@ -4,8 +4,8 @@ use peace_core::ItemSpecId;
 use serde::Serialize;
 use type_reg::untagged::{BoxDtDisplay, TypeMap};
 
-/// Diffs of `StateLogical`s for each `ItemSpec`s. `TypeMap<ItemSpecId,
-/// BoxDtDisplay>` newtype.
+/// Diffs of `State`s for each `ItemSpec`s. `TypeMap<ItemSpecId, BoxDtDisplay>`
+/// newtype.
 ///
 /// # Implementors
 ///

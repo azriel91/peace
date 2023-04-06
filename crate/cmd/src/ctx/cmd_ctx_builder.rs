@@ -217,7 +217,7 @@ pub(crate) async fn profiles_from_peace_app_dir(
     Ok(profiles)
 }
 
-/// Registers each item spec's `State` and `StateLogical` for deserialization.
+/// Registers each item spec's `State` for deserialization.
 fn states_type_reg<E>(item_spec_graph: &ItemSpecGraph<E>) -> StatesTypeReg {
     item_spec_graph
         .iter()

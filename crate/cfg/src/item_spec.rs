@@ -78,25 +78,19 @@ pub trait ItemSpec: DynClone {
     /// [`State`]: crate::state::State
     type State: Clone + fmt::Display + Serialize + DeserializeOwned;
 
-    /// Diff between the current [`State`] and the desired [`State`].
-    ///
-    /// This may be the difference between two [`StateLogical`]s, since it may
-    /// be impossible to compute / control what [`StatePhysical`] will be.
-    /// However, the type may include whether [`StatePhysical`] will be
-    /// replaced, even if it cannot tell what it will be replaced with.
+    /// Diff between the current and target [`State`]s.
     ///
     /// # Design Note
     ///
-    /// Initially I thought the field-wise diff between two [`StateLogical`]s is
+    /// Initially I thought the field-wise diff between two [`State`]s is
     /// suitable, but:
     ///
-    /// * It does not capture that `StatePhysical` may change.
+    /// * Externally controlled state may not be known ahead of time.
     /// * It isn't easy or necessarily desired to compare every single field.
-    /// * `state.logical.apply(diff) = state_desired` may not be meaningful for
-    ///   a field level diff, and the `apply` may be a complex process.
+    /// * `state.apply(diff) = state_desired` may not be meaningful for a field
+    ///   level diff, and the `apply` may be a complex process.
     ///
-    /// [`StateLogical`]: Self::StateLogical
-    /// [`StatePhysical`]: Self::StatePhysical
+    /// [`State`]: Self::State
     type StateDiff: Clone + fmt::Display + Serialize + DeserializeOwned;
 
     /// Data that the function reads from, or writes to.
