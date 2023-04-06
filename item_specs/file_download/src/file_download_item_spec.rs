@@ -7,7 +7,7 @@ use peace::{
 
 use crate::{
     ETag, FileDownloadApplyOpSpec, FileDownloadData, FileDownloadError, FileDownloadState,
-    FileDownloadStateCurrentFn, FileDownloadStateDesiredFnSpec, FileDownloadStateDiff,
+    FileDownloadStateCurrentFn, FileDownloadStateDesiredFn, FileDownloadStateDiff,
     FileDownloadStateDiffFnSpec,
 };
 
@@ -87,14 +87,14 @@ where
         op_ctx: OpCtx<'_>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<Self::State>, FileDownloadError> {
-        FileDownloadStateDesiredFnSpec::try_state_desired(op_ctx, data).await
+        FileDownloadStateDesiredFn::try_state_desired(op_ctx, data).await
     }
 
     async fn state_desired(
         op_ctx: OpCtx<'_>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Self::State, FileDownloadError> {
-        FileDownloadStateDesiredFnSpec::state_desired(op_ctx, data).await
+        FileDownloadStateDesiredFn::state_desired(op_ctx, data).await
     }
 
     async fn state_clean(data: Self::Data<'_>) -> Result<Self::State, FileDownloadError> {

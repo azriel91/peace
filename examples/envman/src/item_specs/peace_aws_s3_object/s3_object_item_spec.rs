@@ -7,7 +7,7 @@ use peace::{
 
 use crate::item_specs::peace_aws_s3_object::{
     S3ObjectApplyOpSpec, S3ObjectData, S3ObjectError, S3ObjectState, S3ObjectStateCurrentFn,
-    S3ObjectStateDesiredFnSpec, S3ObjectStateDiff, S3ObjectStateDiffFnSpec,
+    S3ObjectStateDesiredFn, S3ObjectStateDiff, S3ObjectStateDiffFnSpec,
 };
 
 /// Item spec to create an IAM S3 object and IAM role.
@@ -96,14 +96,14 @@ where
         op_ctx: OpCtx<'_>,
         data: S3ObjectData<'_, Id>,
     ) -> Result<Option<Self::State>, S3ObjectError> {
-        S3ObjectStateDesiredFnSpec::try_state_desired(op_ctx, data).await
+        S3ObjectStateDesiredFn::try_state_desired(op_ctx, data).await
     }
 
     async fn state_desired(
         op_ctx: OpCtx<'_>,
         data: S3ObjectData<'_, Id>,
     ) -> Result<Self::State, S3ObjectError> {
-        S3ObjectStateDesiredFnSpec::state_desired(op_ctx, data).await
+        S3ObjectStateDesiredFn::state_desired(op_ctx, data).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, S3ObjectError> {

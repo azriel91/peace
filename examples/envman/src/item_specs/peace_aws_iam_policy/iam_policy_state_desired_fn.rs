@@ -6,9 +6,9 @@ use crate::item_specs::peace_aws_iam_policy::{IamPolicyData, IamPolicyError, Iam
 
 /// Reads the desired state of the instance profile state.
 #[derive(Debug)]
-pub struct IamPolicyStateDesiredFnSpec<Id>(PhantomData<Id>);
+pub struct IamPolicyStateDesiredFn<Id>(PhantomData<Id>);
 
-impl<Id> IamPolicyStateDesiredFnSpec<Id>
+impl<Id> IamPolicyStateDesiredFn<Id>
 where
     Id: Send + Sync,
 {

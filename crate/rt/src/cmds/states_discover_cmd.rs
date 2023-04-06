@@ -68,13 +68,13 @@ where
             .map(|(states_current, _states_desired)| states_current)
     }
 
-    /// Runs [`StateDesiredFnSpec`]`::`[`try_exec`] for each [`ItemSpec`].
+    /// Runs [`StateDesiredFn`]`::`[`try_exec`] for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesDesired`], and will be serialized to
     /// `$flow_dir/states_desired.yaml`.
     ///
-    /// If any `StateDesiredFnSpec` needs to read the `State` from a previous
+    /// If any `StateDesiredFn` needs to read the `State` from a previous
     /// `ItemSpec`, the predecessor should insert a copy / clone of their state
     /// into `Resources`, and the successor should references it in their
     /// [`Data`].
@@ -82,7 +82,7 @@ where
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
+    /// [`StateDesiredFn`]: peace_cfg::ItemSpec::StateDesiredFn
     pub async fn desired(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StatesDesired, E> {
@@ -91,7 +91,7 @@ where
             .map(|(_states_current, states_desired)| states_desired)
     }
 
-    /// Runs [`StateCurrentFn`] and [`StateDesiredFnSpec`]`::`[`try_exec`]
+    /// Runs [`StateCurrentFn`] and [`StateDesiredFn`]`::`[`try_exec`]
     /// for each [`ItemSpec`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
@@ -104,7 +104,7 @@ where
     /// into `Resources`, and the successor should references it in their
     /// [`Data`].
     ///
-    /// If any `StateDesiredFnSpec` needs to read the `State` from a previous
+    /// If any `StateDesiredFn` needs to read the `State` from a previous
     /// `ItemSpec`, the predecessor should insert a copy / clone of their state
     /// into `Resources`, and the successor should references it in their
     /// [`Data`].
@@ -112,7 +112,7 @@ where
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
+    /// [`StateDesiredFn`]: peace_cfg::ItemSpec::StateDesiredFn
     pub async fn current_and_desired(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<(StatesCurrent, StatesDesired), E> {

@@ -6,9 +6,9 @@ use crate::item_specs::peace_aws_s3_bucket::{S3BucketData, S3BucketError, S3Buck
 
 /// Reads the desired state of the S3 bucket state.
 #[derive(Debug)]
-pub struct S3BucketStateDesiredFnSpec<Id>(PhantomData<Id>);
+pub struct S3BucketStateDesiredFn<Id>(PhantomData<Id>);
 
-impl<Id> S3BucketStateDesiredFnSpec<Id>
+impl<Id> S3BucketStateDesiredFn<Id>
 where
     Id: Send + Sync,
 {

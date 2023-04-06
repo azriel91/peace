@@ -91,13 +91,13 @@ pub trait ApplyOpSpec {
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`StateCurrentFn`].
     /// * `state_desired`: Desired [`State`] of the managed item, returned from
-    ///   [`StateDesiredFnSpec`].
+    ///   [`StateDesiredFn`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
     ///   [`StateDiffFnSpec`].
     ///
     /// [`State`]: Self::State
     /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
-    /// [`StateDesiredFnSpec`]: crate::ItemSpec::StateDesiredFnSpec
+    /// [`StateDesiredFn`]: crate::ItemSpec::StateDesiredFn
     /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     async fn check(
         data: Self::Data<'_>,
@@ -130,7 +130,7 @@ pub trait ApplyOpSpec {
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`StateCurrentFn`].
     /// * `state_desired`: Desired [`State`] of the managed item, returned from
-    ///   [`StateDesiredFnSpec`].
+    ///   [`StateDesiredFn`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
     ///   [`StateDiffFnSpec`].
     ///
@@ -138,7 +138,7 @@ pub trait ApplyOpSpec {
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     /// [`State`]: crate::State
     /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
-    /// [`StateDesiredFnSpec`]: crate::ItemSpec::StateDesiredFnSpec
+    /// [`StateDesiredFn`]: crate::ItemSpec::StateDesiredFn
     /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     /// [`State`]: Self::State
     async fn exec_dry(
@@ -159,7 +159,7 @@ pub trait ApplyOpSpec {
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`StateCurrentFn`].
     /// * `state_desired`: Desired [`State`] of the managed item, returned from
-    ///   [`StateDesiredFnSpec`].
+    ///   [`StateDesiredFn`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
     ///   [`StateDiffFnSpec`].
     ///
@@ -167,7 +167,7 @@ pub trait ApplyOpSpec {
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
     /// [`State`]: crate::State
     /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
-    /// [`StateDesiredFnSpec`]: crate::ItemSpec::StateDesiredFnSpec
+    /// [`StateDesiredFn`]: crate::ItemSpec::StateDesiredFn
     /// [`StateDiffFnSpec`]: crate::ItemSpec::StateDiffFnSpec
     /// [`State`]: Self::State
     async fn exec(

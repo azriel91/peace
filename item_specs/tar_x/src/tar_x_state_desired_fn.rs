@@ -7,9 +7,9 @@ use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
 
 /// Reads the desired state of the tar to extract.
 #[derive(Debug)]
-pub struct TarXStateDesiredFnSpec<Id>(PhantomData<Id>);
+pub struct TarXStateDesiredFn<Id>(PhantomData<Id>);
 
-impl<Id> TarXStateDesiredFnSpec<Id>
+impl<Id> TarXStateDesiredFn<Id>
 where
     Id: Send + Sync,
 {
@@ -66,7 +66,7 @@ where
     ) -> Result<Vec<FileMetadata>, TarXError> {
         let file_metadatas = storage
             .read_with_sync_api(
-                "TarXStateDesiredFnSpec::files_in_tar".to_string(),
+                "TarXStateDesiredFn::files_in_tar".to_string(),
                 tar_path,
                 |sync_io_bridge| Self::tar_file_metadata(tar_path, Archive::new(sync_io_bridge)),
             )

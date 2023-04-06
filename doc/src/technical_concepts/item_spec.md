@@ -96,7 +96,7 @@ This may not necessarily be a cheap operation, for example if it needs to make w
 <summary>4. Fetch desired item state.</summary>
 <div>
 
-`ItemSpec::StateDesiredFnSpec`
+`ItemSpec::StateDesiredFn`
 
 This may not necessarily be a cheap operation, for example if it needs to make web requests that take seconds to complete.
 

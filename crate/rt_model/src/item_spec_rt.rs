@@ -72,9 +72,9 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`ItemSpec::StateDesiredFnSpec`]`::`[`try_exec`].
+    /// Runs [`ItemSpec::StateDesiredFn`]`::`[`try_exec`].
     ///
-    /// [`ItemSpec::StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
+    /// [`ItemSpec::StateDesiredFn`]: peace_cfg::ItemSpec::StateDesiredFn
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     async fn state_desired_try_exec(
         &self,
@@ -84,9 +84,9 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`ItemSpec::StateDesiredFnSpec`]`::`[`exec`].
+    /// Runs [`ItemSpec::StateDesiredFn`]`::`[`exec`].
     ///
-    /// [`ItemSpec::StateDesiredFnSpec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
+    /// [`ItemSpec::StateDesiredFn`]: peace_cfg::ItemSpec::StateDesiredFn
     /// [`exec`]: peace_cfg::TryFnSpec::exec
     async fn state_desired_exec(
         &self,
@@ -125,12 +125,12 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// This runs the following functions in order:
     ///
     /// * [`StateCurrentFn::exec`]
-    /// * [`StateDesiredFnSpec::exec`]
+    /// * [`StateDesiredFn::exec`]
     /// * [`StateDiffFnSpec::exec`]
     /// * [`ApplyOpSpec::check`]
     ///
     /// [`StateCurrentFn::exec`]: peace_cfg::ItemSpec::StateCurrentFn
-    /// [`StateDesiredFnSpec::exec`]: peace_cfg::ItemSpec::StateDesiredFnSpec
+    /// [`StateDesiredFn::exec`]: peace_cfg::ItemSpec::StateDesiredFn
     /// [`StateDiffFnSpec::exec`]: peace_cfg::ItemSpec::StateDiffFnSpec
     /// [`ApplyOpSpec::check`]: peace_cfg::ItemSpec::ApplyOpSpec
     async fn ensure_prepare(

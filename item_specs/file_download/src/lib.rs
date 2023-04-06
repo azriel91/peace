@@ -6,7 +6,7 @@ pub use crate::{
     file_download_item_spec::FileDownloadItemSpec, file_download_params::FileDownloadParams,
     file_download_state::FileDownloadState,
     file_download_state_current_fn::FileDownloadStateCurrentFn,
-    file_download_state_desired_fn_spec::FileDownloadStateDesiredFnSpec,
+    file_download_state_desired_fn::FileDownloadStateDesiredFn,
     file_download_state_diff::FileDownloadStateDiff,
     file_download_state_diff_fn_spec::FileDownloadStateDiffFnSpec,
 };
@@ -22,7 +22,7 @@ mod file_download_item_spec;
 mod file_download_params;
 mod file_download_state;
 mod file_download_state_current_fn;
-mod file_download_state_desired_fn_spec;
+mod file_download_state_desired_fn;
 mod file_download_state_diff;
 mod file_download_state_diff_fn_spec;
 

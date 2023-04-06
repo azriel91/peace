@@ -7,7 +7,7 @@ use peace::{
 
 use crate::item_specs::peace_aws_iam_role::{
     IamRoleApplyOpSpec, IamRoleData, IamRoleError, IamRoleState, IamRoleStateCurrentFn,
-    IamRoleStateDesiredFnSpec, IamRoleStateDiff, IamRoleStateDiffFnSpec,
+    IamRoleStateDesiredFn, IamRoleStateDiff, IamRoleStateDiffFnSpec,
 };
 
 /// Item spec to create an IAM instance profile and IAM role.
@@ -95,14 +95,14 @@ where
         op_ctx: OpCtx<'_>,
         data: IamRoleData<'_, Id>,
     ) -> Result<Option<Self::State>, IamRoleError> {
-        IamRoleStateDesiredFnSpec::try_state_desired(op_ctx, data).await
+        IamRoleStateDesiredFn::try_state_desired(op_ctx, data).await
     }
 
     async fn state_desired(
         op_ctx: OpCtx<'_>,
         data: IamRoleData<'_, Id>,
     ) -> Result<Self::State, IamRoleError> {
-        IamRoleStateDesiredFnSpec::state_desired(op_ctx, data).await
+        IamRoleStateDesiredFn::state_desired(op_ctx, data).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, IamRoleError> {

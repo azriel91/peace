@@ -9,9 +9,9 @@ use peace::cfg::progress::ProgressMsgUpdate;
 
 /// Reads the desired state of the S3 object state.
 #[derive(Debug)]
-pub struct S3ObjectStateDesiredFnSpec<Id>(PhantomData<Id>);
+pub struct S3ObjectStateDesiredFn<Id>(PhantomData<Id>);
 
-impl<Id> S3ObjectStateDesiredFnSpec<Id>
+impl<Id> S3ObjectStateDesiredFn<Id>
 where
     Id: Send + Sync,
 {

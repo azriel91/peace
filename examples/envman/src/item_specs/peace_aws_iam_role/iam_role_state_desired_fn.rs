@@ -8,9 +8,9 @@ use crate::item_specs::peace_aws_iam_role::{
 
 /// Reads the desired state of the instance profile state.
 #[derive(Debug)]
-pub struct IamRoleStateDesiredFnSpec<Id>(PhantomData<Id>);
+pub struct IamRoleStateDesiredFn<Id>(PhantomData<Id>);
 
-impl<Id> IamRoleStateDesiredFnSpec<Id>
+impl<Id> IamRoleStateDesiredFn<Id>
 where
     Id: Send + Sync,
 {

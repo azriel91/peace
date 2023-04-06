@@ -7,9 +7,9 @@ use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState};
 
 /// Reads the desired state of the file to download.
 #[derive(Debug)]
-pub struct FileDownloadStateDesiredFnSpec<Id>(PhantomData<Id>);
+pub struct FileDownloadStateDesiredFn<Id>(PhantomData<Id>);
 
-impl<Id> FileDownloadStateDesiredFnSpec<Id>
+impl<Id> FileDownloadStateDesiredFn<Id>
 where
     Id: Send + Sync + 'static,
 {

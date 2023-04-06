@@ -7,8 +7,7 @@ use peace::{
 
 use crate::item_specs::peace_aws_iam_policy::{
     model::ManagedPolicyArn, IamPolicyApplyOpSpec, IamPolicyData, IamPolicyError, IamPolicyState,
-    IamPolicyStateCurrentFn, IamPolicyStateDesiredFnSpec, IamPolicyStateDiff,
-    IamPolicyStateDiffFnSpec,
+    IamPolicyStateCurrentFn, IamPolicyStateDesiredFn, IamPolicyStateDiff, IamPolicyStateDiffFnSpec,
 };
 
 /// Item spec to create an IAM instance profile and IAM role.
@@ -98,14 +97,14 @@ where
         op_ctx: OpCtx<'_>,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Option<Self::State>, IamPolicyError> {
-        IamPolicyStateDesiredFnSpec::try_state_desired(op_ctx, data).await
+        IamPolicyStateDesiredFn::try_state_desired(op_ctx, data).await
     }
 
     async fn state_desired(
         op_ctx: OpCtx<'_>,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Self::State, IamPolicyError> {
-        IamPolicyStateDesiredFnSpec::state_desired(op_ctx, data).await
+        IamPolicyStateDesiredFn::state_desired(op_ctx, data).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, IamPolicyError> {

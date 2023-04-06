@@ -6,8 +6,8 @@ use peace::{
 };
 
 use crate::{
-    FileMetadatas, TarXApplyOpSpec, TarXData, TarXError, TarXStateCurrentFn,
-    TarXStateDesiredFnSpec, TarXStateDiff, TarXStateDiffFnSpec,
+    FileMetadatas, TarXApplyOpSpec, TarXData, TarXError, TarXStateCurrentFn, TarXStateDesiredFn,
+    TarXStateDiff, TarXStateDiffFnSpec,
 };
 
 /// Item spec for extracting a tar file.
@@ -90,14 +90,14 @@ where
         op_ctx: OpCtx<'_>,
         data: TarXData<'_, Id>,
     ) -> Result<Option<Self::State>, TarXError> {
-        TarXStateDesiredFnSpec::try_state_desired(op_ctx, data).await
+        TarXStateDesiredFn::try_state_desired(op_ctx, data).await
     }
 
     async fn state_desired(
         op_ctx: OpCtx<'_>,
         data: TarXData<'_, Id>,
     ) -> Result<Self::State, TarXError> {
-        TarXStateDesiredFnSpec::state_desired(op_ctx, data).await
+        TarXStateDesiredFn::state_desired(op_ctx, data).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, TarXError> {

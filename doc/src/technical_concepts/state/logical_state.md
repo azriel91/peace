@@ -55,7 +55,7 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
 * If `src` is not available, and we want to show `state_desired` that is not just "we can't look it up", then `src` must be defined in terms of something readable during discovery.
 * If that is not possible, or is too expensive, then one or more of the following has to be chosen:
 
-    1. `StateDesiredFnSpec`s have to always cater for `src` not being available.
+    1. `StateDesiredFn`s have to always cater for `src` not being available.
 
         It incurs mental effort to always cater for `src` not being available &ndash; i.e. implementing an item spec would need knowledge beyond itself.
 
@@ -63,7 +63,7 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
 
         For this to work, when `StateCurrentFn::try_exec` is requested, `peace` will:
 
-        1. For each non-parent item, run `StateCurrentFn`, `StateDesiredFnSpec`, `StateDiffFnSpec`, and `ApplyOpSpec::check`.
+        1. For each non-parent item, run `StateCurrentFn`, `StateDesiredFn`, `StateDiffFnSpec`, and `ApplyOpSpec::check`.
         2. If `ApplyOpSpec::check` returns `OpCheckStatus::ExecNotRequired`, then successor items can be processed as well.
 
     3. `StateCurrentFn` could return `Result<Option<Status>, E>`:
