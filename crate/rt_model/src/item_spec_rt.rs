@@ -12,7 +12,7 @@ use peace_resources::{
 
 use crate::{
     outcomes::{ItemApplyBoxed, ItemApplyPartialBoxed},
-    StatesTypeRegs,
+    StatesTypeReg,
 };
 
 /// Internal trait that erases the types from [`ItemSpec`]
@@ -39,7 +39,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     ///
     /// This is necessary to deserialize `StatesSavedFile` and
     /// `StatesDesiredFile`.
-    fn state_register(&self, states_type_regs: &mut StatesTypeRegs);
+    fn state_register(&self, states_type_reg: &mut StatesTypeReg);
 
     /// Runs [`ItemSpec::state_clean`].
     ///

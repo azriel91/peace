@@ -11,7 +11,7 @@ use peace_rt_model::{
         FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
         WorkspaceParams,
     },
-    Flow, StatesTypeRegs, Workspace,
+    Flow, StatesTypeReg, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -92,7 +92,7 @@ where
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
-    states_type_regs: StatesTypeRegs,
+    states_type_reg: StatesTypeReg,
     /// `Resources` for flow execution.
     resources: Resources<TS>,
 }
@@ -174,7 +174,7 @@ where
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
-    pub states_type_regs: &'view StatesTypeRegs,
+    pub states_type_reg: &'view StatesTypeReg,
     /// `Resources` for flow execution.
     pub resources: &'view mut Resources<TS>,
 }
@@ -199,7 +199,7 @@ where
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
         flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
-        states_type_regs: StatesTypeRegs,
+        states_type_reg: StatesTypeReg,
         resources: Resources<SetUp>,
     ) -> Self {
         Self {
@@ -216,7 +216,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
-            states_type_regs,
+            states_type_reg,
             resources,
         }
     }
@@ -244,7 +244,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
-            states_type_regs,
+            states_type_reg,
             resources,
         } = self;
 
@@ -262,7 +262,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
-            states_type_regs,
+            states_type_reg,
             resources,
         }
     }
@@ -350,8 +350,8 @@ where
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
-    pub fn states_type_regs(&self) -> &StatesTypeRegs {
-        &self.states_type_regs
+    pub fn states_type_reg(&self) -> &StatesTypeReg {
+        &self.states_type_reg
     }
 
     /// Returns a reference to the `Resources` for flow execution.
@@ -387,7 +387,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
-            states_type_regs,
+            states_type_reg,
             resources,
         } = self;
 
@@ -407,7 +407,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
-            states_type_regs,
+            states_type_reg,
             resources,
         }
     }
