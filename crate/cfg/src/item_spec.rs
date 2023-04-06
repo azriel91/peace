@@ -2,12 +2,12 @@ use std::fmt;
 
 use async_trait::async_trait;
 use dyn_clone::DynClone;
-use peace_core::ItemSpecId;
+use peace_core::{ItemSpecId, OpCheckStatus};
 use peace_data::Data;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{ApplyOpSpec, OpCtx};
+use crate::OpCtx;
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -107,11 +107,6 @@ pub trait ItemSpec: DynClone {
     where
         Self: 'op;
 
-    /// Specification of the apply operation.
-    ///
-    /// The output is the IDs of resources produced by the operation.
-    type ApplyOpSpec: ApplyOpSpec<Error = Self::Error, State = Self::State, StateDiff = Self::StateDiff>;
-
     /// Returns the ID of this full spec.
     ///
     /// # Implementors
@@ -146,11 +141,11 @@ pub trait ItemSpec: DynClone {
     /// # Implementors
     ///
     /// [`Resources`] is the map of any type, and an instance of each data type
-    /// must be inserted into the map so that the [`check`] and [`exec`]
+    /// must be inserted into the map so that the [`check`] and [`apply`]
     /// functions of each operation can borrow the instance of that type.
     ///
     /// [`check`]: crate::ApplyOpSpec::check
-    /// [`exec`]: crate::ApplyOpSpec::exec
+    /// [`apply`]: crate::ApplyOpSpec::apply
     async fn setup(&self, data: &mut Resources<Empty>) -> Result<(), Self::Error>;
 
     /// Returns the current state of the managed item, if possible.
@@ -232,4 +227,116 @@ pub trait ItemSpec: DynClone {
     /// user when they want to see what would be cleaned up by the clean
     /// command.
     async fn state_clean(data: Self::Data<'_>) -> Result<Self::State, Self::Error>;
+
+    /// Returns whether `apply` needs to be executed.
+    ///
+    /// If the current state is already in sync with the target state, then
+    /// `apply` does not have to be executed.
+    ///
+    /// # Examples
+    ///
+    /// * For a file download operation, if the destination file differs from
+    ///   the file on the server, then the file needs to be downloaded.
+    ///
+    /// * For a web application service operation, if the web service is
+    ///   running, but reports a previous version, then the service may need to
+    ///   be restarted.
+    ///
+    /// # Implementors
+    ///
+    /// This function call is intended to be cheap and fast.
+    ///
+    /// # Parameters
+    ///
+    /// * `data`: Runtime data that the operation reads from, or writes to.
+    /// * `state_current`: Current [`State`] of the managed item, returned from
+    ///   [`StateCurrentFn`].
+    /// * `state_target`: Target [`State`] of the managed item, either
+    ///   [`state_clean`] or [`state_desired`].
+    /// * `state_diff`: Desired [`State`] of the managed item, returned from
+    ///   [`StateDiffFn`].
+    ///
+    /// [`state_clean`]: crate::ItemSpec::state_clean
+    /// [`state_desired`]: crate::ItemSpec::state_desired
+    /// [`State`]: Self::State
+    /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
+    /// [`StateDiffFn`]: crate::ItemSpec::StateDiffFn
+    async fn apply_check(
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<OpCheckStatus, Self::Error>;
+
+    /// Dry-run transform of the current state to the target state.
+    ///
+    /// This will only be called if [`check`] returns [`ExecRequired`].
+    ///
+    /// This should mirror the logic in [`apply`], with the following
+    /// differences:
+    ///
+    /// * When state will actually be altered, this would skip the logic.
+    ///
+    /// * Where there would be IDs received from an external system, a
+    ///   placeholder ID should still be inserted into the runtime data. This
+    ///   should allow subsequent `ItemSpec`s that rely on this one to use those
+    ///   placeholders in their logic.
+    ///
+    /// # Implementors
+    ///
+    /// This function call is intended to be read-only and cheap.
+    ///
+    /// # Parameters
+    ///
+    /// * `data`: Runtime data that the operation reads from, or writes to.
+    /// * `state_current`: Current [`State`] of the managed item, returned from
+    ///   [`StateCurrentFn`].
+    /// * `state_target`: Target [`State`] of the managed item, either
+    ///   [`state_clean`] or [`state_desired`].
+    /// * `state_diff`: Desired [`State`] of the managed item, returned from
+    ///   [`StateDiffFn`].
+    ///
+    /// [`check`]: Self::check
+    /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
+    /// [`state_clean`]: crate::ItemSpec::state_clean
+    /// [`state_desired`]: crate::ItemSpec::state_desired
+    /// [`State`]: Self::State
+    /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
+    /// [`StateDiffFn`]: crate::ItemSpec::StateDiffFn
+    async fn apply_dry(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error>;
+
+    /// Transforms the current state to the target state.
+    ///
+    /// This will only be called if [`check`] returns [`ExecRequired`].
+    ///
+    /// # Parameters
+    ///
+    /// * `data`: Runtime data that the operation reads from, or writes to.
+    /// * `state_current`: Current [`State`] of the managed item, returned from
+    ///   [`StateCurrentFn`].
+    /// * `state_target`: Target [`State`] of the managed item, either
+    ///   [`state_clean`] or [`state_desired`].
+    /// * `state_diff`: Desired [`State`] of the managed item, returned from
+    ///   [`StateDiffFn`].
+    ///
+    /// [`check`]: Self::check
+    /// [`state_clean`]: crate::ItemSpec::state_clean
+    /// [`state_desired`]: crate::ItemSpec::state_desired
+    /// [`State`]: Self::State
+    /// [`StateCurrentFn`]: crate::ItemSpec::StateCurrentFn
+    /// [`StateDiffFn`]: crate::ItemSpec::StateDiffFn
+    /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
+    async fn apply(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error>;
 }
