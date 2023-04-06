@@ -25,13 +25,13 @@ use crate::{
 
 /// Wraps a type implementing [`ItemSpec`].
 #[allow(clippy::type_complexity)]
-pub struct ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>(
+pub struct ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>(
     IS,
-    PhantomData<(E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec)>,
+    PhantomData<(E, State, StateDiff, ApplyOpSpec)>,
 );
 
-impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> Clone
-    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
+impl<IS, E, State, StateDiff, ApplyOpSpec> Clone
+    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
 where
     IS: Clone,
 {
@@ -40,16 +40,11 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
-    ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
+impl<IS, E, State, StateDiff, ApplyOpSpec> ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
 where
     IS: Debug
-        + ItemSpec<
-            State = State,
-            StateDiff = StateDiff,
-            StateDiffFnSpec = StateDiffFnSpec,
-            ApplyOpSpec = ApplyOpSpec,
-        > + Send
+        + ItemSpec<State = State, StateDiff = StateDiff, ApplyOpSpec = ApplyOpSpec>
+        + Send
         + Sync,
     E: Debug
         + Send
@@ -60,13 +55,6 @@ where
         + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiffFnSpec: Debug
-        + peace_cfg::StateDiffFnSpec<
-            Error = <IS as ItemSpec>::Error,
-            State = State,
-            StateDiff = StateDiff,
-        > + Send
-        + Sync,
     ApplyOpSpec: Debug
         + peace_cfg::ApplyOpSpec<
             Error = <IS as ItemSpec>::Error,
@@ -185,11 +173,9 @@ where
         state_desired: &State,
     ) -> Result<StateDiff, E> {
         let state_diff: StateDiff = {
-            let data = <<StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::Data<'_> as Data>::borrow(
-                self.id(),
-                resources,
-            );
-            <StateDiffFnSpec as peace_cfg::StateDiffFnSpec>::exec(data, state_base, state_desired)
+            let data =
+                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
+            <IS as peace_cfg::ItemSpec>::state_diff(data, state_base, state_desired)
                 .await
                 .map_err(Into::<E>::into)?
         };
@@ -273,8 +259,8 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> Debug
-    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
+impl<IS, E, State, StateDiff, ApplyOpSpec> Debug
+    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
 where
     IS: Debug,
 {
@@ -283,8 +269,8 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> Deref
-    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
+impl<IS, E, State, StateDiff, ApplyOpSpec> Deref
+    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
 {
     type Target = IS;
 
@@ -293,35 +279,24 @@ impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> Deref
     }
 }
 
-impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> DerefMut
-    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
+impl<IS, E, State, StateDiff, ApplyOpSpec> DerefMut
+    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> From<IS>
-    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
+impl<IS, E, State, StateDiff, ApplyOpSpec> From<IS>
+    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
 where
     IS: Debug
-        + ItemSpec<
-            State = State,
-            StateDiff = StateDiff,
-            StateDiffFnSpec = StateDiffFnSpec,
-            ApplyOpSpec = ApplyOpSpec,
-        > + Send
+        + ItemSpec<State = State, StateDiff = StateDiff, ApplyOpSpec = ApplyOpSpec>
+        + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiffFnSpec: Debug
-        + peace_cfg::StateDiffFnSpec<
-            Error = <IS as ItemSpec>::Error,
-            State = State,
-            StateDiff = StateDiff,
-        > + Send
-        + Sync,
     ApplyOpSpec: Debug
         + peace_cfg::ApplyOpSpec<
             Error = <IS as ItemSpec>::Error,
@@ -335,27 +310,16 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> DataAccess
-    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
+impl<IS, E, State, StateDiff, ApplyOpSpec> DataAccess
+    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
 where
     IS: Debug
-        + ItemSpec<
-            State = State,
-            StateDiff = StateDiff,
-            StateDiffFnSpec = StateDiffFnSpec,
-            ApplyOpSpec = ApplyOpSpec,
-        > + Send
+        + ItemSpec<State = State, StateDiff = StateDiff, ApplyOpSpec = ApplyOpSpec>
+        + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiffFnSpec: Debug
-        + peace_cfg::StateDiffFnSpec<
-            Error = <IS as ItemSpec>::Error,
-            State = State,
-            StateDiff = StateDiff,
-        > + Send
-        + Sync,
     ApplyOpSpec: Debug
         + peace_cfg::ApplyOpSpec<
             Error = <IS as ItemSpec>::Error,
@@ -373,27 +337,16 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> DataAccessDyn
-    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
+impl<IS, E, State, StateDiff, ApplyOpSpec> DataAccessDyn
+    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
 where
     IS: Debug
-        + ItemSpec<
-            State = State,
-            StateDiff = StateDiff,
-            StateDiffFnSpec = StateDiffFnSpec,
-            ApplyOpSpec = ApplyOpSpec,
-        > + Send
+        + ItemSpec<State = State, StateDiff = StateDiff, ApplyOpSpec = ApplyOpSpec>
+        + Send
         + Sync,
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiffFnSpec: Debug
-        + peace_cfg::StateDiffFnSpec<
-            Error = <IS as ItemSpec>::Error,
-            State = State,
-            StateDiff = StateDiff,
-        > + Send
-        + Sync,
     ApplyOpSpec: Debug
         + peace_cfg::ApplyOpSpec<
             Error = <IS as ItemSpec>::Error,
@@ -412,17 +365,13 @@ where
 }
 
 #[async_trait(?Send)]
-impl<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec> ItemSpecRt<E>
-    for ItemSpecWrapper<IS, E, State, StateDiff, StateDiffFnSpec, ApplyOpSpec>
+impl<IS, E, State, StateDiff, ApplyOpSpec> ItemSpecRt<E>
+    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
 where
     IS: Clone
         + Debug
-        + ItemSpec<
-            State = State,
-            StateDiff = StateDiff,
-            StateDiffFnSpec = StateDiffFnSpec,
-            ApplyOpSpec = ApplyOpSpec,
-        > + Send
+        + ItemSpec<State = State, StateDiff = StateDiff, ApplyOpSpec = ApplyOpSpec>
+        + Send
         + Sync,
     E: Debug
         + Send
@@ -433,13 +382,6 @@ where
         + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiffFnSpec: Debug
-        + peace_cfg::StateDiffFnSpec<
-            Error = <IS as ItemSpec>::Error,
-            State = State,
-            StateDiff = StateDiff,
-        > + Send
-        + Sync,
     ApplyOpSpec: Debug
         + peace_cfg::ApplyOpSpec<
             Error = <IS as ItemSpec>::Error,
