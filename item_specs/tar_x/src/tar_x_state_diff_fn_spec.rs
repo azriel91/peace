@@ -1,25 +1,16 @@
 use std::cmp::Ordering;
 
-use peace::cfg::{async_trait, StateDiffFnSpec};
-
 use crate::{FileMetadata, FileMetadatas, TarXError, TarXStateDiff};
 
 /// Tar extraction status diff function.
 #[derive(Debug)]
 pub struct TarXStateDiffFnSpec;
 
-#[async_trait(?Send)]
-impl StateDiffFnSpec for TarXStateDiffFnSpec {
-    type Data<'op> = &'op ();
-    type Error = TarXError;
-    type State = FileMetadatas;
-    type StateDiff = TarXStateDiff;
-
-    async fn exec(
-        _: &(),
+impl TarXStateDiffFnSpec {
+    pub async fn state_diff(
         file_metadatas_current: &FileMetadatas,
         file_metadatas_desired: &FileMetadatas,
-    ) -> Result<Self::StateDiff, TarXError> {
+    ) -> Result<TarXStateDiff, TarXError> {
         let mut current_metadata_iter = file_metadatas_current.iter();
         let mut desired_metadata_iter = file_metadatas_desired.iter();
 

@@ -7,10 +7,7 @@ use diff::{Diff, VecDiff, VecDiffType};
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::{
-    cfg::{
-        async_trait, item_spec_id, ApplyOpSpec, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx,
-        StateDiffFnSpec,
-    },
+    cfg::{async_trait, item_spec_id, ApplyOpSpec, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
     data::{
         accessors::{RMaybe, R, W},
         Data,
@@ -21,14 +18,8 @@ use peace::{
 use serde::{Deserialize, Serialize};
 
 /// Type alias for `ItemSpecWrapper` with all of VecCopyItemSpec's parameters.
-pub type VecCopyItemSpecWrapper = ItemSpecWrapper<
-    VecCopyItemSpec,
-    VecCopyError,
-    VecCopyState,
-    VecCopyDiff,
-    VecCopyStateDiffFnSpec,
-    VecCopyApplyOpSpec,
->;
+pub type VecCopyItemSpecWrapper =
+    ItemSpecWrapper<VecCopyItemSpec, VecCopyError, VecCopyState, VecCopyDiff, VecCopyApplyOpSpec>;
 
 /// Copies bytes from `VecA` to `VecB`.
 #[derive(Clone, Debug)]
@@ -45,7 +36,6 @@ impl ItemSpec for VecCopyItemSpec {
     type Error = VecCopyError;
     type State = VecCopyState;
     type StateDiff = VecCopyDiff;
-    type StateDiffFnSpec = VecCopyStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         Self::ID
@@ -100,6 +90,14 @@ impl ItemSpec for VecCopyItemSpec {
         }
 
         Ok(vec_copy_state)
+    }
+
+    async fn state_diff(
+        _data: VecCopyData<'_>,
+        state_current: &VecCopyState,
+        state_desired: &VecCopyState,
+    ) -> Result<Self::StateDiff, VecCopyError> {
+        Ok(state_current.diff(state_desired)).map(VecCopyDiff::from)
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, VecCopyError> {
@@ -239,26 +237,6 @@ impl<'op> VecCopyData<'op> {
 
     pub fn dest_mut(&mut self) -> &mut VecB {
         &mut self.dest
-    }
-}
-
-/// `StateDiffFnSpec` to compute the diff between two vectors.
-#[derive(Debug)]
-pub struct VecCopyStateDiffFnSpec;
-
-#[async_trait(?Send)]
-impl StateDiffFnSpec for VecCopyStateDiffFnSpec {
-    type Data<'op> = &'op ();
-    type Error = VecCopyError;
-    type State = VecCopyState;
-    type StateDiff = VecCopyDiff;
-
-    async fn exec(
-        _: &(),
-        state_current: &VecCopyState,
-        state_desired: &VecCopyState,
-    ) -> Result<Self::StateDiff, VecCopyError> {
-        Ok(state_current.diff(state_desired)).map(VecCopyDiff::from)
     }
 }
 

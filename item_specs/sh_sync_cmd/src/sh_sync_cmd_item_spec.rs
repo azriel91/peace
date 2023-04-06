@@ -56,7 +56,6 @@ where
     type Error = ShSyncCmdError;
     type State = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;
     type StateDiff = ShSyncCmdStateDiff;
-    type StateDiffFnSpec = ShSyncCmdStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id
@@ -92,6 +91,14 @@ where
         _data: ShSyncCmdData<'_, Id>,
     ) -> Result<Self::State, ShSyncCmdError> {
         todo!()
+    }
+
+    async fn state_diff(
+        data: ShSyncCmdData<'_, Id>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::StateDiff, ShSyncCmdError> {
+        ShSyncCmdStateDiffFnSpec::state_diff(data, state_current, state_desired).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, ShSyncCmdError> {

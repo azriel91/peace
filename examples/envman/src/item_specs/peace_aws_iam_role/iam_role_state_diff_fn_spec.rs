@@ -1,23 +1,14 @@
-use peace::cfg::{async_trait, StateDiffFnSpec};
-
 use crate::item_specs::peace_aws_iam_role::{IamRoleError, IamRoleState, IamRoleStateDiff};
 
 /// Tar extraction status diff function.
 #[derive(Debug)]
 pub struct IamRoleStateDiffFnSpec;
 
-#[async_trait(?Send)]
-impl StateDiffFnSpec for IamRoleStateDiffFnSpec {
-    type Data<'op> = &'op ();
-    type Error = IamRoleError;
-    type State = IamRoleState;
-    type StateDiff = IamRoleStateDiff;
-
-    async fn exec(
-        _: &(),
+impl IamRoleStateDiffFnSpec {
+    pub async fn state_diff(
         state_current: &IamRoleState,
         state_desired: &IamRoleState,
-    ) -> Result<Self::StateDiff, IamRoleError> {
+    ) -> Result<IamRoleStateDiff, IamRoleError> {
         let diff = match (state_current, state_desired) {
             (IamRoleState::None, IamRoleState::None) => IamRoleStateDiff::InSyncDoesNotExist,
             (IamRoleState::None, IamRoleState::Some { .. }) => IamRoleStateDiff::Added,

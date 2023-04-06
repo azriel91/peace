@@ -1,23 +1,14 @@
-use peace::cfg::{async_trait, StateDiffFnSpec};
-
 use crate::item_specs::peace_aws_iam_policy::{IamPolicyError, IamPolicyState, IamPolicyStateDiff};
 
 /// Tar extraction status diff function.
 #[derive(Debug)]
 pub struct IamPolicyStateDiffFnSpec;
 
-#[async_trait(?Send)]
-impl StateDiffFnSpec for IamPolicyStateDiffFnSpec {
-    type Data<'op> = &'op ();
-    type Error = IamPolicyError;
-    type State = IamPolicyState;
-    type StateDiff = IamPolicyStateDiff;
-
-    async fn exec(
-        _: &(),
+impl IamPolicyStateDiffFnSpec {
+    pub async fn state_diff(
         state_current: &IamPolicyState,
         state_desired: &IamPolicyState,
-    ) -> Result<Self::StateDiff, IamPolicyError> {
+    ) -> Result<IamPolicyStateDiff, IamPolicyError> {
         let diff = match (state_current, state_desired) {
             (IamPolicyState::None, IamPolicyState::None) => IamPolicyStateDiff::InSyncDoesNotExist,
             (IamPolicyState::None, IamPolicyState::Some { .. }) => IamPolicyStateDiff::Added,

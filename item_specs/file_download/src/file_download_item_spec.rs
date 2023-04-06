@@ -57,7 +57,6 @@ where
     type Error = FileDownloadError;
     type State = State<FileDownloadState, FetchedOpt<ETag>>;
     type StateDiff = FileDownloadStateDiff;
-    type StateDiffFnSpec = FileDownloadStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id
@@ -95,6 +94,14 @@ where
         data: FileDownloadData<'_, Id>,
     ) -> Result<Self::State, FileDownloadError> {
         FileDownloadStateDesiredFn::state_desired(op_ctx, data).await
+    }
+
+    async fn state_diff(
+        _data: FileDownloadData<'_, Id>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::StateDiff, FileDownloadError> {
+        FileDownloadStateDiffFnSpec::state_diff(state_current, state_desired).await
     }
 
     async fn state_clean(data: Self::Data<'_>) -> Result<Self::State, FileDownloadError> {

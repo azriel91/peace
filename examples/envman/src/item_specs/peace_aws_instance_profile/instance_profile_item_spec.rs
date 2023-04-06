@@ -63,7 +63,6 @@ where
     type Error = InstanceProfileError;
     type State = InstanceProfileState;
     type StateDiff = InstanceProfileStateDiff;
-    type StateDiffFnSpec = InstanceProfileStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id
@@ -104,6 +103,14 @@ where
         data: InstanceProfileData<'_, Id>,
     ) -> Result<Self::State, InstanceProfileError> {
         InstanceProfileStateDesiredFn::state_desired(op_ctx, data).await
+    }
+
+    async fn state_diff(
+        _data: InstanceProfileData<'_, Id>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::StateDiff, InstanceProfileError> {
+        InstanceProfileStateDiffFnSpec::state_diff(state_current, state_desired).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, InstanceProfileError> {

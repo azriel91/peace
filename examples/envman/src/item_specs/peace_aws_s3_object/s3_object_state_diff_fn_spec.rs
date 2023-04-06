@@ -1,23 +1,14 @@
-use peace::cfg::{async_trait, StateDiffFnSpec};
-
 use crate::item_specs::peace_aws_s3_object::{S3ObjectError, S3ObjectState, S3ObjectStateDiff};
 
 /// Tar extraction status diff function.
 #[derive(Debug)]
 pub struct S3ObjectStateDiffFnSpec;
 
-#[async_trait(?Send)]
-impl StateDiffFnSpec for S3ObjectStateDiffFnSpec {
-    type Data<'op> = &'op ();
-    type Error = S3ObjectError;
-    type State = S3ObjectState;
-    type StateDiff = S3ObjectStateDiff;
-
-    async fn exec(
-        _: &(),
+impl S3ObjectStateDiffFnSpec {
+    pub async fn state_diff(
         state_current: &S3ObjectState,
         state_desired: &S3ObjectState,
-    ) -> Result<Self::StateDiff, S3ObjectError> {
+    ) -> Result<S3ObjectStateDiff, S3ObjectError> {
         let diff = match (state_current, state_desired) {
             (S3ObjectState::None, S3ObjectState::None) => S3ObjectStateDiff::InSyncDoesNotExist,
             (S3ObjectState::None, S3ObjectState::Some { .. }) => S3ObjectStateDiff::Added,

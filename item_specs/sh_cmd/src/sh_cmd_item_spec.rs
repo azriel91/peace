@@ -65,7 +65,6 @@ where
     type Error = ShCmdError;
     type State = State<ShCmdState<Id>, ShCmdExecutionRecord>;
     type StateDiff = ShCmdStateDiff;
-    type StateDiffFnSpec = ShCmdStateDiffFnSpec<Id>;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id
@@ -109,6 +108,14 @@ where
         // Maybe we should support reading different exit statuses for an `Ok(None)`
         // value.
         ShCmdExecutor::exec(state_desired_sh_cmd).await
+    }
+
+    async fn state_diff(
+        data: ShCmdData<'_, Id>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::StateDiff, ShCmdError> {
+        ShCmdStateDiffFnSpec::state_diff(data, state_current, state_desired).await
     }
 
     async fn state_clean(sh_cmd_data: Self::Data<'_>) -> Result<Self::State, ShCmdError> {

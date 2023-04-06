@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{async_trait, State, StateDiffFnSpec};
+use peace::cfg::State;
 
 use crate::{
     ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState, ShCmdStateDiff,
@@ -10,21 +10,15 @@ use crate::{
 #[derive(Debug)]
 pub struct ShCmdStateDiffFnSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl<Id> StateDiffFnSpec for ShCmdStateDiffFnSpec<Id>
+impl<Id> ShCmdStateDiffFnSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = ShCmdData<'op, Id>;
-    type Error = ShCmdError;
-    type State = State<ShCmdState<Id>, ShCmdExecutionRecord>;
-    type StateDiff = ShCmdStateDiff;
-
-    async fn exec(
-        sh_cmd_data: ShCmdData<'_, Id>,
+    pub async fn state_diff(
+        data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-    ) -> Result<Self::StateDiff, ShCmdError> {
+    ) -> Result<ShCmdStateDiff, ShCmdError> {
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
@@ -33,7 +27,7 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_diff_sh_cmd = sh_cmd_data
+        let state_diff_sh_cmd = data
             .sh_cmd_params()
             .state_diff_sh_cmd()
             .clone()

@@ -1,23 +1,25 @@
-use peace::cfg::{async_trait, State, StateDiffFnSpec};
+use std::marker::PhantomData;
 
-use crate::{ShSyncCmdError, ShSyncCmdExecutionRecord, ShSyncCmdStateDiff, ShSyncCmdSyncStatus};
+use peace::cfg::State;
+
+use crate::{
+    ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord, ShSyncCmdStateDiff,
+    ShSyncCmdSyncStatus,
+};
 
 /// Tar extraction status diff function.
 #[derive(Debug)]
-pub struct ShSyncCmdStateDiffFnSpec;
+pub struct ShSyncCmdStateDiffFnSpec<Id>(PhantomData<Id>);
 
-#[async_trait(?Send)]
-impl StateDiffFnSpec for ShSyncCmdStateDiffFnSpec {
-    type Data<'op> = &'op ();
-    type Error = ShSyncCmdError;
-    type State = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;
-    type StateDiff = ShSyncCmdStateDiff;
-
-    async fn exec(
-        _: &(),
+impl<Id> ShSyncCmdStateDiffFnSpec<Id>
+where
+    Id: Send + Sync + 'static,
+{
+    pub async fn state_diff(
+        _data: ShSyncCmdData<'_, Id>,
         _state_current: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
-    ) -> Result<Self::StateDiff, ShSyncCmdError> {
+    ) -> Result<ShSyncCmdStateDiff, ShSyncCmdError> {
         todo!()
     }
 }

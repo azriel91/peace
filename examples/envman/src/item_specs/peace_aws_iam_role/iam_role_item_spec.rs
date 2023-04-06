@@ -62,7 +62,6 @@ where
     type Error = IamRoleError;
     type State = IamRoleState;
     type StateDiff = IamRoleStateDiff;
-    type StateDiffFnSpec = IamRoleStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id
@@ -103,6 +102,14 @@ where
         data: IamRoleData<'_, Id>,
     ) -> Result<Self::State, IamRoleError> {
         IamRoleStateDesiredFn::state_desired(op_ctx, data).await
+    }
+
+    async fn state_diff(
+        _data: IamRoleData<'_, Id>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::StateDiff, IamRoleError> {
+        IamRoleStateDiffFnSpec::state_diff(state_current, state_desired).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, IamRoleError> {

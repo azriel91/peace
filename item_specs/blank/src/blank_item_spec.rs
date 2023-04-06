@@ -5,9 +5,7 @@ use peace::{
     resources::{resources::ts::Empty, Resources},
 };
 
-use crate::{
-    BlankApplyOpSpec, BlankData, BlankError, BlankState, BlankStateDiff, BlankStateDiffFnSpec,
-};
+use crate::{BlankApplyOpSpec, BlankData, BlankError, BlankState, BlankStateDiff};
 
 /// Item spec for copying a number.
 ///
@@ -55,7 +53,6 @@ where
     type Error = BlankError;
     type State = BlankState;
     type StateDiff = BlankStateDiff;
-    type StateDiffFnSpec = BlankStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id
@@ -96,6 +93,27 @@ where
     ) -> Result<Self::State, BlankError> {
         let params = data.params();
         Ok(BlankState(Some(**params.src())))
+    }
+
+    async fn state_diff(
+        _data: BlankData<'_, Id>,
+        blank_state_current: &BlankState,
+        blank_state_desired: &BlankState,
+    ) -> Result<Self::StateDiff, BlankError> {
+        let diff = match (blank_state_current, blank_state_desired) {
+            (BlankState(Some(current)), BlankState(Some(desired))) if current == desired => {
+                BlankStateDiff::InSync { value: *current }
+            }
+            (BlankState(Some(current)), BlankState(Some(desired))) => BlankStateDiff::OutOfSync {
+                diff: i64::from(desired - current),
+            },
+            (BlankState(None), BlankState(Some(desired))) => {
+                BlankStateDiff::Added { value: *desired }
+            }
+            (BlankState(_), BlankState(None)) => unreachable!("desired state is always Some"),
+        };
+
+        Ok(diff)
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<BlankState, BlankError> {

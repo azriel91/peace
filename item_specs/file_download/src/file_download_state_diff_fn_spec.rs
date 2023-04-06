@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{async_trait, state::FetchedOpt, State, StateDiffFnSpec},
+    cfg::{state::FetchedOpt, State},
     diff::{Changeable, Tracked},
 };
 
@@ -9,18 +9,11 @@ use crate::{ETag, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
 #[derive(Debug)]
 pub struct FileDownloadStateDiffFnSpec;
 
-#[async_trait(?Send)]
-impl StateDiffFnSpec for FileDownloadStateDiffFnSpec {
-    type Data<'op> = &'op ();
-    type Error = FileDownloadError;
-    type State = State<FileDownloadState, FetchedOpt<ETag>>;
-    type StateDiff = FileDownloadStateDiff;
-
-    async fn exec(
-        _: &(),
+impl FileDownloadStateDiffFnSpec {
+    pub async fn state_diff(
         state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
         state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
-    ) -> Result<Self::StateDiff, FileDownloadError> {
+    ) -> Result<FileDownloadStateDiff, FileDownloadError> {
         let State {
             logical: file_state_current,
             physical: e_tag_current,

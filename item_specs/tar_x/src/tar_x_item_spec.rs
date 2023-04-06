@@ -62,7 +62,6 @@ where
     type Error = TarXError;
     type State = FileMetadatas;
     type StateDiff = TarXStateDiff;
-    type StateDiffFnSpec = TarXStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id
@@ -98,6 +97,14 @@ where
         data: TarXData<'_, Id>,
     ) -> Result<Self::State, TarXError> {
         TarXStateDesiredFn::state_desired(op_ctx, data).await
+    }
+
+    async fn state_diff(
+        _data: TarXData<'_, Id>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::StateDiff, TarXError> {
+        TarXStateDiffFnSpec::state_diff(state_current, state_desired).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, TarXError> {

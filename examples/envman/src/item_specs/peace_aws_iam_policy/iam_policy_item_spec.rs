@@ -62,7 +62,6 @@ where
     type Error = IamPolicyError;
     type State = IamPolicyState;
     type StateDiff = IamPolicyStateDiff;
-    type StateDiffFnSpec = IamPolicyStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id
@@ -105,6 +104,14 @@ where
         data: IamPolicyData<'_, Id>,
     ) -> Result<Self::State, IamPolicyError> {
         IamPolicyStateDesiredFn::state_desired(op_ctx, data).await
+    }
+
+    async fn state_diff(
+        _data: IamPolicyData<'_, Id>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::StateDiff, IamPolicyError> {
+        IamPolicyStateDiffFnSpec::state_diff(state_current, state_desired).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, IamPolicyError> {

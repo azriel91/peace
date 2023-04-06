@@ -62,7 +62,6 @@ where
     type Error = S3BucketError;
     type State = S3BucketState;
     type StateDiff = S3BucketStateDiff;
-    type StateDiffFnSpec = S3BucketStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id
@@ -104,6 +103,14 @@ where
         data: S3BucketData<'_, Id>,
     ) -> Result<Self::State, S3BucketError> {
         S3BucketStateDesiredFn::state_desired(op_ctx, data).await
+    }
+
+    async fn state_diff(
+        _data: S3BucketData<'_, Id>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::StateDiff, S3BucketError> {
+        S3BucketStateDiffFnSpec::state_diff(state_current, state_desired).await
     }
 
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, S3BucketError> {

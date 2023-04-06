@@ -1,5 +1,3 @@
-use peace::cfg::{async_trait, StateDiffFnSpec};
-
 use crate::item_specs::peace_aws_instance_profile::{
     InstanceProfileError, InstanceProfileState, InstanceProfileStateDiff,
 };
@@ -8,18 +6,11 @@ use crate::item_specs::peace_aws_instance_profile::{
 #[derive(Debug)]
 pub struct InstanceProfileStateDiffFnSpec;
 
-#[async_trait(?Send)]
-impl StateDiffFnSpec for InstanceProfileStateDiffFnSpec {
-    type Data<'op> = &'op ();
-    type Error = InstanceProfileError;
-    type State = InstanceProfileState;
-    type StateDiff = InstanceProfileStateDiff;
-
-    async fn exec(
-        _: &(),
+impl InstanceProfileStateDiffFnSpec {
+    pub async fn state_diff(
         state_current: &InstanceProfileState,
         state_desired: &InstanceProfileState,
-    ) -> Result<Self::StateDiff, InstanceProfileError> {
+    ) -> Result<InstanceProfileStateDiff, InstanceProfileError> {
         let diff = match (state_current, state_desired) {
             (InstanceProfileState::None, InstanceProfileState::None) => {
                 InstanceProfileStateDiff::InSyncDoesNotExist
