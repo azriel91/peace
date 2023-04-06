@@ -25,13 +25,9 @@ use crate::{
 
 /// Wraps a type implementing [`ItemSpec`].
 #[allow(clippy::type_complexity)]
-pub struct ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>(
-    IS,
-    PhantomData<(E, State, StateDiff, ApplyOpSpec)>,
-);
+pub struct ItemSpecWrapper<IS, E, State, StateDiff>(IS, PhantomData<(E, State, StateDiff)>);
 
-impl<IS, E, State, StateDiff, ApplyOpSpec> Clone
-    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
+impl<IS, E, State, StateDiff> Clone for ItemSpecWrapper<IS, E, State, StateDiff>
 where
     IS: Clone,
 {
@@ -40,12 +36,9 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff, ApplyOpSpec> ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
+impl<IS, E, State, StateDiff> ItemSpecWrapper<IS, E, State, StateDiff>
 where
-    IS: Debug
-        + ItemSpec<State = State, StateDiff = StateDiff, ApplyOpSpec = ApplyOpSpec>
-        + Send
-        + Sync,
+    IS: Debug + ItemSpec<State = State, StateDiff = StateDiff> + Send + Sync,
     E: Debug
         + Send
         + Sync
@@ -55,13 +48,6 @@ where
         + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    ApplyOpSpec: Debug
-        + peace_cfg::ApplyOpSpec<
-            Error = <IS as ItemSpec>::Error,
-            State = State,
-            StateDiff = StateDiff,
-        > + Send
-        + Sync,
 {
     async fn state_clean<ResourcesTs>(
         &self,
@@ -190,18 +176,10 @@ where
         state_desired: &State,
         state_diff: &StateDiff,
     ) -> Result<OpCheckStatus, E> {
-        let data = <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as Data>::borrow(
-            self.id(),
-            resources,
-        );
-        <ApplyOpSpec as peace_cfg::ApplyOpSpec>::check(
-            data,
-            state_current,
-            state_desired,
-            state_diff,
-        )
-        .await
-        .map_err(Into::<E>::into)
+        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
+        <IS as peace_cfg::ItemSpec>::apply_check(data, state_current, state_desired, state_diff)
+            .await
+            .map_err(Into::<E>::into)
     }
 
     async fn apply_op_exec_dry<ResourcesTs>(
@@ -212,11 +190,8 @@ where
         state_desired: &State,
         state_diff: &StateDiff,
     ) -> Result<State, E> {
-        let data = <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as Data>::borrow(
-            self.id(),
-            resources,
-        );
-        let state_ensured_dry = <ApplyOpSpec as peace_cfg::ApplyOpSpec>::exec_dry(
+        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_ensured_dry = <IS as peace_cfg::ItemSpec>::apply_dry(
             op_ctx,
             data,
             state_current,
@@ -239,11 +214,8 @@ where
         state_desired: &State,
         state_diff: &StateDiff,
     ) -> Result<State, E> {
-        let data = <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as Data>::borrow(
-            self.id(),
-            resources,
-        );
-        let state_ensured = <ApplyOpSpec as peace_cfg::ApplyOpSpec>::exec(
+        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_ensured = <IS as peace_cfg::ItemSpec>::apply(
             op_ctx,
             data,
             state_current,
@@ -259,8 +231,7 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff, ApplyOpSpec> Debug
-    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
+impl<IS, E, State, StateDiff> Debug for ItemSpecWrapper<IS, E, State, StateDiff>
 where
     IS: Debug,
 {
@@ -269,9 +240,7 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff, ApplyOpSpec> Deref
-    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
-{
+impl<IS, E, State, StateDiff> Deref for ItemSpecWrapper<IS, E, State, StateDiff> {
     type Target = IS;
 
     fn deref(&self) -> &Self::Target {
@@ -279,100 +248,60 @@ impl<IS, E, State, StateDiff, ApplyOpSpec> Deref
     }
 }
 
-impl<IS, E, State, StateDiff, ApplyOpSpec> DerefMut
-    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
-{
+impl<IS, E, State, StateDiff> DerefMut for ItemSpecWrapper<IS, E, State, StateDiff> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl<IS, E, State, StateDiff, ApplyOpSpec> From<IS>
-    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
+impl<IS, E, State, StateDiff> From<IS> for ItemSpecWrapper<IS, E, State, StateDiff>
 where
-    IS: Debug
-        + ItemSpec<State = State, StateDiff = StateDiff, ApplyOpSpec = ApplyOpSpec>
-        + Send
-        + Sync,
+    IS: Debug + ItemSpec<State = State, StateDiff = StateDiff> + Send + Sync,
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    ApplyOpSpec: Debug
-        + peace_cfg::ApplyOpSpec<
-            Error = <IS as ItemSpec>::Error,
-            State = State,
-            StateDiff = StateDiff,
-        > + Send
-        + Sync,
 {
     fn from(item_spec: IS) -> Self {
         Self(item_spec, PhantomData)
     }
 }
 
-impl<IS, E, State, StateDiff, ApplyOpSpec> DataAccess
-    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
+impl<IS, E, State, StateDiff> DataAccess for ItemSpecWrapper<IS, E, State, StateDiff>
 where
-    IS: Debug
-        + ItemSpec<State = State, StateDiff = StateDiff, ApplyOpSpec = ApplyOpSpec>
-        + Send
-        + Sync,
+    IS: Debug + ItemSpec<State = State, StateDiff = StateDiff> + Send + Sync,
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    ApplyOpSpec: Debug
-        + peace_cfg::ApplyOpSpec<
-            Error = <IS as ItemSpec>::Error,
-            State = State,
-            StateDiff = StateDiff,
-        > + Send
-        + Sync,
 {
     fn borrows() -> TypeIds {
-        <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as DataAccess>::borrows()
+        <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrows()
     }
 
     fn borrow_muts() -> TypeIds {
-        <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as DataAccess>::borrow_muts()
+        <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrow_muts()
     }
 }
 
-impl<IS, E, State, StateDiff, ApplyOpSpec> DataAccessDyn
-    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
+impl<IS, E, State, StateDiff> DataAccessDyn for ItemSpecWrapper<IS, E, State, StateDiff>
 where
-    IS: Debug
-        + ItemSpec<State = State, StateDiff = StateDiff, ApplyOpSpec = ApplyOpSpec>
-        + Send
-        + Sync,
+    IS: Debug + ItemSpec<State = State, StateDiff = StateDiff> + Send + Sync,
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    ApplyOpSpec: Debug
-        + peace_cfg::ApplyOpSpec<
-            Error = <IS as ItemSpec>::Error,
-            State = State,
-            StateDiff = StateDiff,
-        > + Send
-        + Sync,
 {
     fn borrows(&self) -> TypeIds {
-        <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as DataAccess>::borrows()
+        <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrows()
     }
 
     fn borrow_muts(&self) -> TypeIds {
-        <<ApplyOpSpec as peace_cfg::ApplyOpSpec>::Data<'_> as DataAccess>::borrow_muts()
+        <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrow_muts()
     }
 }
 
 #[async_trait(?Send)]
-impl<IS, E, State, StateDiff, ApplyOpSpec> ItemSpecRt<E>
-    for ItemSpecWrapper<IS, E, State, StateDiff, ApplyOpSpec>
+impl<IS, E, State, StateDiff> ItemSpecRt<E> for ItemSpecWrapper<IS, E, State, StateDiff>
 where
-    IS: Clone
-        + Debug
-        + ItemSpec<State = State, StateDiff = StateDiff, ApplyOpSpec = ApplyOpSpec>
-        + Send
-        + Sync,
+    IS: Clone + Debug + ItemSpec<State = State, StateDiff = StateDiff> + Send + Sync,
     E: Debug
         + Send
         + Sync
@@ -382,13 +311,6 @@ where
         + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    ApplyOpSpec: Debug
-        + peace_cfg::ApplyOpSpec<
-            Error = <IS as ItemSpec>::Error,
-            State = State,
-            StateDiff = StateDiff,
-        > + Send
-        + Sync,
 {
     fn id(&self) -> &ItemSpecId {
         <IS as ItemSpec>::id(self)

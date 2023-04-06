@@ -49,14 +49,9 @@ impl<E> DerefMut for ItemSpecBoxed<E> {
     }
 }
 
-impl<IS, E, State, StateDiff, ApplyOpSpec> From<IS> for ItemSpecBoxed<E>
+impl<IS, E, State, StateDiff> From<IS> for ItemSpecBoxed<E>
 where
-    IS: Clone
-        + Debug
-        + ItemSpec<State = State, StateDiff = StateDiff, ApplyOpSpec = ApplyOpSpec>
-        + Send
-        + Sync
-        + 'static,
+    IS: Clone + Debug + ItemSpec<State = State, StateDiff = StateDiff> + Send + Sync + 'static,
     <IS as ItemSpec>::Error: Send + Sync,
     E: Debug
         + Send
@@ -67,14 +62,6 @@ where
         + 'static,
     State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    ApplyOpSpec: Debug
-        + peace_cfg::ApplyOpSpec<
-            Error = <IS as ItemSpec>::Error,
-            State = State,
-            StateDiff = StateDiff,
-        > + Send
-        + Sync
-        + 'static,
 {
     fn from(item_spec: IS) -> Self {
         Self(Box::new(ItemSpecWrapper::from(item_spec)))
