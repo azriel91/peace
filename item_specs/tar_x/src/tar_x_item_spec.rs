@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
 use crate::{
-    FileMetadatas, TarXApplyOpSpec, TarXData, TarXError, TarXStateCurrentFnSpec,
-    TarXStateDesiredFnSpec, TarXStateDiff, TarXStateDiffFnSpec,
+    FileMetadatas, TarXApplyFns, TarXData, TarXError, TarXStateCurrentFn, TarXStateDesiredFn,
+    TarXStateDiff, TarXStateDiffFn,
 };
 
 /// Item spec for extracting a tar file.
@@ -57,14 +57,10 @@ impl<Id> ItemSpec for TarXItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type ApplyOpSpec = TarXApplyOpSpec<Id>;
     type Data<'op> = TarXData<'op, Id>;
     type Error = TarXError;
     type State = FileMetadatas;
-    type StateCurrentFnSpec = TarXStateCurrentFnSpec<Id>;
-    type StateDesiredFnSpec = TarXStateDesiredFnSpec<Id>;
     type StateDiff = TarXStateDiff;
-    type StateDiffFnSpec = TarXStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id
@@ -74,7 +70,72 @@ where
         Ok(())
     }
 
+    async fn try_state_current(
+        op_ctx: OpCtx<'_>,
+        data: TarXData<'_, Id>,
+    ) -> Result<Option<Self::State>, TarXError> {
+        Self::state_current(op_ctx, data).await.map(Some)
+    }
+
+    async fn state_current(
+        op_ctx: OpCtx<'_>,
+        data: TarXData<'_, Id>,
+    ) -> Result<Self::State, TarXError> {
+        TarXStateCurrentFn::state_current(op_ctx, data).await
+    }
+
+    async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: TarXData<'_, Id>,
+    ) -> Result<Option<Self::State>, TarXError> {
+        TarXStateDesiredFn::try_state_desired(op_ctx, data).await
+    }
+
+    async fn state_desired(
+        op_ctx: OpCtx<'_>,
+        data: TarXData<'_, Id>,
+    ) -> Result<Self::State, TarXError> {
+        TarXStateDesiredFn::state_desired(op_ctx, data).await
+    }
+
+    async fn state_diff(
+        _data: TarXData<'_, Id>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::StateDiff, TarXError> {
+        TarXStateDiffFn::state_diff(state_current, state_desired).await
+    }
+
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, TarXError> {
         Ok(FileMetadatas::default())
+    }
+
+    async fn apply_check(
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<OpCheckStatus, Self::Error> {
+        TarXApplyFns::apply_check(data, state_current, state_target, diff).await
+    }
+
+    async fn apply_dry(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        TarXApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+    }
+
+    async fn apply(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        TarXApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

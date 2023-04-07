@@ -7,8 +7,8 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 
 use crate::internal::StateDiffsMut;
 
-/// Diffs of `StateLogical`s for each `ItemSpec`s. `TypeMap<ItemSpecId,
-/// BoxDtDisplay>` newtype.
+/// Diffs of `State`s for each `ItemSpec`s. `TypeMap<ItemSpecId, BoxDtDisplay>`
+/// newtype.
 ///
 /// # Implementors
 ///

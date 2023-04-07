@@ -89,7 +89,7 @@ When an item spec ensure does multiple writes, there is a possibility of not all
 
 In the last case, we cannot safely write state to disk, so a `StateCurrent` discover is needed to bring `StatesSaved` up to date. However, the previous two cases, it is possible for `ItemSpec`s to return `State` that has been partially ensured, without making any further outgoing calls -- i.e. infer `StatesEnsured` based on the successful writes so far.
 
-Note that this places a burden on the `ItemSpec` implementor to return the partial state ensured (which may conflict with keeping the `State` simple), as well as make the `ApplyOpSpec::exec` return value more complex.
+Note that this places a burden on the `ItemSpec` implementor to return the partial state ensured (which may conflict with keeping the `State` simple), as well as make the `ApplyFns::exec` return value more complex.
 
 The trade off may not be worthwhile.
 
@@ -165,8 +165,10 @@ See the [`is_shutdown_requested`] method in particular.
 6. Blank item spec needs a lot of rework to be easier to implement an item spec. ([67], [#96])
 7. For `ApplyCmd`, collect `StateCurrent`, `StateDesired`, `StateDiff` in execution report.
 8. AWS errors' `code` and `message` should be shown to the user.
-9. Progress limit should not be returned in `ApplyOpSpec::check`, but sent through `progress_sender.limit(ProgressLimit)`. This simplifies `check`, and allows state current/desired discovery to set the limits easily.
+9. Progress limit should not be returned in `ApplyFns::check`, but sent through `progress_sender.limit(ProgressLimit)`. This simplifies `check`, and allows state current/desired discovery to set the limits easily.
 10. Consolidate `StatesDiscoverCmd` and `ApplyCmd`, so the outcome of a command is generic. Maybe use a trait and structs, instead of enum variants and hardcoded inlined functions, so that it is extendable.
+11. Add an `ListKeysAligned` presentable type so `Presenter`s can align keys of a list dynamically.
+12. Remove the `peace_cfg::State` type.
 
 [#67]: https://github.com/azriel91/peace/issues/67
 [#94]: https://github.com/azriel91/peace/issues/94
@@ -179,10 +181,11 @@ See the [`is_shutdown_requested`] method in particular.
 
 
 ```bash
-fd -Ftf 'blank' -x bash -c 'mv $0 ${0/blank/ec2_instance}' {}
-sd -s 'blank' 'ec2_instance' $(fd -tf)
-sd -s 'Blank' 'Ec2Instance' $(fd -tf)
-sd '/// (.+) ec2_instance(.*)' '/// $1 ec2 instance$2' $(fd -tf)
+fd -Ftd 'app_cycle' -x bash -c 'mv $0 ${0/app_cycle/envman}' {}
+fd -Ftf 'app_cycle' -x bash -c 'mv $0 ${0/app_cycle/envman}' {}
+sd -s 'app_cycle' 'envman' $(fd -tf)
+sd -s 'app cycle' 'envman' $(fd -tf)
+sd -s 'App Cycle' 'Env Man' $(fd -tf)
+sd -s 'AppCycle' 'EnvMan' $(fd -tf)
 cargo fmt --all
 ```
-

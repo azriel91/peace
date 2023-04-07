@@ -1,14 +1,14 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
 use crate::item_specs::peace_aws_instance_profile::{
-    InstanceProfileApplyOpSpec, InstanceProfileData, InstanceProfileError, InstanceProfileState,
-    InstanceProfileStateCurrentFnSpec, InstanceProfileStateDesiredFnSpec, InstanceProfileStateDiff,
-    InstanceProfileStateDiffFnSpec,
+    InstanceProfileApplyFns, InstanceProfileData, InstanceProfileError, InstanceProfileState,
+    InstanceProfileStateCurrentFn, InstanceProfileStateDesiredFn, InstanceProfileStateDiff,
+    InstanceProfileStateDiffFn,
 };
 
 /// Item spec to create an IAM instance profile and IAM role.
@@ -58,14 +58,10 @@ impl<Id> ItemSpec for InstanceProfileItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type ApplyOpSpec = InstanceProfileApplyOpSpec<Id>;
     type Data<'op> = InstanceProfileData<'op, Id>;
     type Error = InstanceProfileError;
     type State = InstanceProfileState;
-    type StateCurrentFnSpec = InstanceProfileStateCurrentFnSpec<Id>;
-    type StateDesiredFnSpec = InstanceProfileStateDesiredFnSpec<Id>;
     type StateDiff = InstanceProfileStateDiff;
-    type StateDiffFnSpec = InstanceProfileStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id
@@ -80,7 +76,72 @@ where
         Ok(())
     }
 
+    async fn try_state_current(
+        op_ctx: OpCtx<'_>,
+        data: InstanceProfileData<'_, Id>,
+    ) -> Result<Option<Self::State>, InstanceProfileError> {
+        InstanceProfileStateCurrentFn::try_state_current(op_ctx, data).await
+    }
+
+    async fn state_current(
+        op_ctx: OpCtx<'_>,
+        data: InstanceProfileData<'_, Id>,
+    ) -> Result<Self::State, InstanceProfileError> {
+        InstanceProfileStateCurrentFn::state_current(op_ctx, data).await
+    }
+
+    async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: InstanceProfileData<'_, Id>,
+    ) -> Result<Option<Self::State>, InstanceProfileError> {
+        InstanceProfileStateDesiredFn::try_state_desired(op_ctx, data).await
+    }
+
+    async fn state_desired(
+        op_ctx: OpCtx<'_>,
+        data: InstanceProfileData<'_, Id>,
+    ) -> Result<Self::State, InstanceProfileError> {
+        InstanceProfileStateDesiredFn::state_desired(op_ctx, data).await
+    }
+
+    async fn state_diff(
+        _data: InstanceProfileData<'_, Id>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::StateDiff, InstanceProfileError> {
+        InstanceProfileStateDiffFn::state_diff(state_current, state_desired).await
+    }
+
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, InstanceProfileError> {
         Ok(InstanceProfileState::None)
+    }
+
+    async fn apply_check(
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<OpCheckStatus, Self::Error> {
+        InstanceProfileApplyFns::apply_check(data, state_current, state_target, diff).await
+    }
+
+    async fn apply_dry(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        InstanceProfileApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+    }
+
+    async fn apply(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        InstanceProfileApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

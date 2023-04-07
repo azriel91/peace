@@ -38,7 +38,7 @@ where
         } = cmd_ctx.view();
 
         let states_desired_result =
-            StatesDesiredReadCmd::<E, O, PKeys>::deserialize_internal(resources, &states_type_reg)
+            StatesDesiredReadCmd::<E, O, PKeys>::deserialize_internal(resources, states_type_reg)
                 .await;
 
         match states_desired_result {

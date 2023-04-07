@@ -5,7 +5,10 @@ use peace::{
     rt_model::{ItemSpecBoxed, ItemSpecRt},
 };
 
-use crate::{vec_copy_item_spec::VecB, VecCopyError, VecCopyItemSpec};
+use crate::{
+    vec_copy_item_spec::{VecA, VecB},
+    VecCopyError, VecCopyItemSpec,
+};
 
 #[test]
 fn deref_to_dyn_item_spec_rt() {
@@ -25,7 +28,8 @@ fn deref_mut_to_dyn_item_spec_rt() {
 
 #[test]
 fn data_access_dyn_borrows() {
-    let type_ids = TypeIds::new();
+    let mut type_ids = TypeIds::new();
+    type_ids.push(TypeId::of::<VecA>());
 
     let item_spec_boxed: ItemSpecBoxed<VecCopyError> = VecCopyItemSpec.into();
 

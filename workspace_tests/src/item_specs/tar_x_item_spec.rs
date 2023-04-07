@@ -2,7 +2,7 @@ use std::{io::Cursor, path::PathBuf};
 
 use peace::{
     cfg::{
-        app_name, item_spec_id, profile, AppName, ApplyOpSpec, FlowId, ItemSpecId, OpCheckStatus,
+        app_name, item_spec_id, profile, AppName, FlowId, ItemSpec, ItemSpecId, OpCheckStatus,
         Profile,
     },
     cmd::ctx::CmdCtx,
@@ -21,8 +21,7 @@ use peace::{
     },
 };
 use peace_item_specs::tar_x::{
-    FileMetadata, FileMetadatas, TarXApplyOpSpec, TarXData, TarXError, TarXItemSpec, TarXParams,
-    TarXStateDiff,
+    FileMetadata, FileMetadatas, TarXData, TarXError, TarXItemSpec, TarXParams, TarXStateDiff,
 };
 use pretty_assertions::assert_eq;
 use tempfile::TempDir;
@@ -508,7 +507,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
 
     assert_eq!(
         OpCheckStatus::ExecNotRequired,
-        <TarXApplyOpSpec::<TarXTest> as ApplyOpSpec>::check(
+        <TarXItemSpec::<TarXTest> as ItemSpec>::apply_check(
             <TarXData<TarXTest> as Data>::borrow(TarXTest::ID, cmd_ctx.resources()),
             state_current,
             state_desired,

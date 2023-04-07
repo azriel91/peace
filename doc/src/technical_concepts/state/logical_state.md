@@ -6,6 +6,7 @@ Logical state is the part of an item that is:
 * Controllable by automation
 * Deterministic
 
+
 ## Uses
 
 There are three uses of logical state:
@@ -29,6 +30,7 @@ let state_desired = params.src().read();
 let state_diff = state_desired - state_current;
 ```
 
+
 ## Discovery Constraints
 
 In an item spec's parameters, there must be the following categories of information:
@@ -43,11 +45,13 @@ In an item spec's parameters, there must be the following categories of informat
 
 Both `src` and `dest` may reference resources that are ensured by predecessor item specs. Meaning sometimes `state_desired` and `state_current` cannot be discovered because they rely on the predecessors' completions.
 
+
 ### Examples
 
 * A list of files in a zip file cannot be read, if the zip file is not downloaded.
 * A file on a server cannot be read, if the server doesn't exist.
 * A server cannot have a domain name assigned to it, if the server doesn't exist.
+
 
 ### Implications
 
@@ -55,18 +59,18 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
 * If `src` is not available, and we want to show `state_desired` that is not just "we can't look it up", then `src` must be defined in terms of something readable during discovery.
 * If that is not possible, or is too expensive, then one or more of the following has to be chosen:
 
-    1. `StateDesiredFnSpec`s have to always cater for `src` not being available.
+    1. `ItemSpec::state_desired` functions have to always cater for `src` not being available.
 
         It incurs mental effort to always cater for `src` not being available &ndash; i.e. implementing an item spec would need knowledge beyond itself.
 
-    2. the `peace` framework defaults to not running `state_current_fn_spec` for items that have a logical dependency on things that `ApplyOpSpec::check` returns `ExecRequired`
+    2. the `peace` framework defaults to not running `state_current_fn` for items that have a logical dependency on things that `ItemSpec::apply_check` returns `ExecRequired`
 
-        For this to work, when `StateCurrentFnSpec::try_exec` is requested, `peace` will:
+        For this to work, when the current state is requested, `peace` will:
 
-        1. For each non-parent item, run `StateCurrentFnSpec`, `StateDesiredFnSpec`, `StateDiffFnSpec`, and `ApplyOpSpec::check`.
-        2. If `ApplyOpSpec::check` returns `OpCheckStatus::ExecNotRequired`, then successor items can be processed as well.
+        1. For each non-parent item, run `state_current`, `state_desired`, `state_diff`, and `apply_check`.
+        2. If `apply_check` returns `OpCheckStatus::ExecNotRequired`, then successor items can be processed as well.
 
-    3. `StateCurrentFnSpec` could return `Result<Option<Status>, E>`:
+    3. `state_current` could return `Result<Option<Status>, E>`:
 
         + `Ok(None)`: State cannot be discovered, likely because predecessor hasn't run
         + `Ok(Some(State<_, _>))`: State cannot be discovered.
@@ -74,11 +78,11 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
 
             May be difficult to distinguish some cases from `Ok(None)`, e.g. failed to connect to server, is it because the server doesn't exist, or because the address is incorrect.
 
-            Should we have two `StateCurrentFnSpec`s? Or pass in whether it's being called from `Discover` vs `Ensure` &ndash; i.e. some information that says "err when failing to connect because the predecessor has been ensured".
+            Should we have two `state_current`s? Or pass in whether it's being called from `Discover` vs `Ensure` &ndash; i.e. some information that says "err when failing to connect because the predecessor has been ensured".
 
         <!--  -->
 
-    Option 2 may be something we have to do anyway &ndash; we will not be able to provide current state to run `ApplyOpSpec::exec` for successors for the same reason.
+    Option 2 may be something we have to do anyway &ndash; we will not be able to provide current state to run `ItemSpec::apply` for successors for the same reason.
 
     Option 3 may coexist with option 2.
 

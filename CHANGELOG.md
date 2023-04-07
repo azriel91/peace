@@ -7,8 +7,11 @@
 * Return both command outcome and errors in `ApplyCmd`. ([#107])
 * `StatesDiscoverCmd` discovers states concurrently. ([#107])
 * Serialize `StatesDesired` as part of `ApplyCmd`. ([#107])
+* Consolidate `ItemSpec` functions into single trait. ([#96], [#109])
 
 [#107]: https://github.com/azriel91/peace/pull/107
+[#96]: https://github.com/azriel91/peace/issues/96
+[#109]: https://github.com/azriel91/peace/pull/109
 
 
 ## 0.0.8 (2023-03-25)
@@ -90,7 +93,7 @@
 
 ## 0.0.5 (2022-12-18)
 
-* `ShCmdStateDiffFnSpec` correctly runs `state_diff_sh_cmd` for state diff. ([#57])
+* `ShCmdStateDiffFn` correctly runs `state_diff_sh_cmd` for state diff. ([#57])
 * `ShCmdParams` now uses the `Id` type parameter so that different `ShCmdItemSpec`s can be used correctly. ([#57])
 * `ShCmdItemSpec` takes in optional `ShCmdParams<Id>` and inserts it into `resources`. ([#57])
 * `CmdContextBuilder` sets the current directory to the workspace directory. ([#57])

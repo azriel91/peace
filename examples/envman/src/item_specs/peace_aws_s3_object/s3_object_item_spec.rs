@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
 use crate::item_specs::peace_aws_s3_object::{
-    S3ObjectApplyOpSpec, S3ObjectData, S3ObjectError, S3ObjectState, S3ObjectStateCurrentFnSpec,
-    S3ObjectStateDesiredFnSpec, S3ObjectStateDiff, S3ObjectStateDiffFnSpec,
+    S3ObjectApplyFns, S3ObjectData, S3ObjectError, S3ObjectState, S3ObjectStateCurrentFn,
+    S3ObjectStateDesiredFn, S3ObjectStateDiff, S3ObjectStateDiffFn,
 };
 
 /// Item spec to create an IAM S3 object and IAM role.
@@ -57,14 +57,10 @@ impl<Id> ItemSpec for S3ObjectItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type ApplyOpSpec = S3ObjectApplyOpSpec<Id>;
     type Data<'op> = S3ObjectData<'op, Id>;
     type Error = S3ObjectError;
     type State = S3ObjectState;
-    type StateCurrentFnSpec = S3ObjectStateCurrentFnSpec<Id>;
-    type StateDesiredFnSpec = S3ObjectStateDesiredFnSpec<Id>;
     type StateDiff = S3ObjectStateDiff;
-    type StateDiffFnSpec = S3ObjectStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id
@@ -80,7 +76,72 @@ where
         Ok(())
     }
 
+    async fn try_state_current(
+        op_ctx: OpCtx<'_>,
+        data: S3ObjectData<'_, Id>,
+    ) -> Result<Option<Self::State>, S3ObjectError> {
+        S3ObjectStateCurrentFn::try_state_current(op_ctx, data).await
+    }
+
+    async fn state_current(
+        op_ctx: OpCtx<'_>,
+        data: S3ObjectData<'_, Id>,
+    ) -> Result<Self::State, S3ObjectError> {
+        S3ObjectStateCurrentFn::state_current(op_ctx, data).await
+    }
+
+    async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: S3ObjectData<'_, Id>,
+    ) -> Result<Option<Self::State>, S3ObjectError> {
+        S3ObjectStateDesiredFn::try_state_desired(op_ctx, data).await
+    }
+
+    async fn state_desired(
+        op_ctx: OpCtx<'_>,
+        data: S3ObjectData<'_, Id>,
+    ) -> Result<Self::State, S3ObjectError> {
+        S3ObjectStateDesiredFn::state_desired(op_ctx, data).await
+    }
+
+    async fn state_diff(
+        _data: S3ObjectData<'_, Id>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::StateDiff, S3ObjectError> {
+        S3ObjectStateDiffFn::state_diff(state_current, state_desired).await
+    }
+
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, S3ObjectError> {
         Ok(S3ObjectState::None)
+    }
+
+    async fn apply_check(
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<OpCheckStatus, Self::Error> {
+        S3ObjectApplyFns::apply_check(data, state_current, state_target, diff).await
+    }
+
+    async fn apply_dry(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        S3ObjectApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+    }
+
+    async fn apply(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        S3ObjectApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }

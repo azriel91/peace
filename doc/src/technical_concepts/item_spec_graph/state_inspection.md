@@ -2,7 +2,7 @@
 
 > Before applying a change, you should understand the current state, and what the change will do.
 
-To discover the current state of all items, `StateCurrentFnSpec::try_exec` is run for each item spec concurrently.
+To discover the current state of all items, `StateCurrentFn::try_exec` is run for each item spec concurrently.
 
 ```rust ,ignore
 let graph = /* .. */;
@@ -58,15 +58,15 @@ digraph {
 <div style="display: inline-block; vertical-align: top;">
 
 ```rust ,ignore
-// ItemSpec1::StateCurrentFnSpec::try_exec
+// ItemSpec1::StateCurrentFn::try_exec
 let exists = param1.path().exists();
 Ok(State::new(exists, ()))
 
-// ItemSpec2::StateCurrentFnSpec::try_exec
+// ItemSpec2::StateCurrentFn::try_exec
 let instance_url = discover(param2).await?;
 Ok(State::new(Some(instance_url), ()))
 
-// ItemSpec3::StateCurrentFnSpec::try_exec
+// ItemSpec3::StateCurrentFn::try_exec
 let version = reqwest::get(instance_url).await?;
 Ok(State::new(version, ()))
 

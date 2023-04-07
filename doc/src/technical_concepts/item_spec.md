@@ -75,7 +75,7 @@ This function also instantiates the data types referenced by this `ItemSpec` int
 <summary>3. Fetch current item state.</summary>
 <div>
 
-`ItemSpec::StateCurrentFnSpec`
+`ItemSpec::state_current`
 
 This may not necessarily be a cheap operation, for example if it needs to make web requests that take seconds to complete.
 
@@ -96,7 +96,7 @@ This may not necessarily be a cheap operation, for example if it needs to make w
 <summary>4. Fetch desired item state.</summary>
 <div>
 
-`ItemSpec::StateDesiredFnSpec`
+`ItemSpec::StateDesiredFn`
 
 This may not necessarily be a cheap operation, for example if it needs to make web requests that take seconds to complete.
 
@@ -117,7 +117,7 @@ This may not necessarily be a cheap operation, for example if it needs to make w
 <summary>5. Return the difference between current and desired states.</summary>
 <div>
 
-`ItemSpec::StateDiffFnSpec`
+`ItemSpec::StateDiffFn`
 
 It is important that both the `from` and `to` are shown for values that have changed, and values that have not changed or are not relevant, are not returned.
 

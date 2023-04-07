@@ -3,7 +3,7 @@
 //! For `SingleProfileSingleFlow` commands, `Current<ItemSpec::State>(None)` and
 //! `Desired<ItemSpec::State>(None)` are inserted into `Resources` when the
 //! command context is built, and automatically mutated to `Some` when either
-//! `StateCurrentFnSpec` or `StateDesiredFnSpec` is executed.
+//! `ItemSpec::state_current` or `ItemSpec::state_desired` is executed.
 
 pub use self::{apply_dry::ApplyDry, clean::Clean, current::Current, desired::Desired};
 

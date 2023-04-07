@@ -2,7 +2,7 @@ use crate::states::{ts::Desired, States};
 
 /// Desired `State`s for all `ItemSpec`s.
 ///
-/// This is typically `TypeMap<ItemSpecId, State<StateLogical, External>>`,
+/// This is typically `TypeMap<ItemSpecId, State>`,
 /// where [`External`] is not necessarily used in `StateDiff` computations.
 ///
 /// # Implementors
@@ -34,7 +34,7 @@ use crate::states::{ts::Desired, States};
 /// }
 /// ```
 ///
-/// You may reference [`StatesDesired`] in `ApplyOpSpec::Data` for reading. It
+/// You may reference [`StatesDesired`] in `ApplyFns::Data` for reading. It
 /// is not mutable as `StatesDesired` must remain unchanged so that all
 /// `ItemSpec`s operate over consistent data.
 ///

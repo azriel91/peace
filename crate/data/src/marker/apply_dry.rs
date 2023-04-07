@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Note: A successor's dry-applied state is dependent on the predecessor's
 /// dry-applied state, which should be in sync with its saved state after
-/// `ApplyOpSpec::exec_dry` has been executed.
+/// `ApplyFns::exec_dry` has been executed.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct ApplyDry<T>(pub Option<T>);
 

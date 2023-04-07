@@ -11,13 +11,12 @@
 //! [`ItemSpecWrapper`]: crate::ItemSpecWrapper
 
 use std::{
-    fmt::{self, Debug},
+    fmt::Debug,
     ops::{Deref, DerefMut},
 };
 
 use fn_graph::{DataAccessDyn, TypeIds};
-use peace_cfg::{ItemSpec, TryFnSpec};
-use serde::{de::DeserializeOwned, Serialize};
+use peace_cfg::ItemSpec;
 
 use crate::{ItemSpecRt, ItemSpecWrapper};
 
@@ -26,6 +25,10 @@ use crate::{ItemSpecRt, ItemSpecWrapper};
 /// # Type Parameters
 ///
 /// * `E`: Application specific error type.
+///
+///     Notably, `E` here should be the application's error type, which is not
+///     necessarily the item spec's error type (unless you have only one item
+///     spec in the application).
 #[derive(Debug)]
 pub struct ItemSpecBoxed<E>(Box<dyn ItemSpecRt<E>>);
 
@@ -49,21 +52,9 @@ impl<E> DerefMut for ItemSpecBoxed<E> {
     }
 }
 
-impl<IS, E, State, StateDiff, StateCurrentFnSpec, StateDesiredFnSpec, StateDiffFnSpec, ApplyOpSpec>
-    From<IS> for ItemSpecBoxed<E>
+impl<IS, E> From<IS> for ItemSpecBoxed<E>
 where
-    IS: Clone
-        + Debug
-        + ItemSpec<
-            State = State,
-            StateDiff = StateDiff,
-            StateCurrentFnSpec = StateCurrentFnSpec,
-            StateDesiredFnSpec = StateDesiredFnSpec,
-            StateDiffFnSpec = StateDiffFnSpec,
-            ApplyOpSpec = ApplyOpSpec,
-        > + Send
-        + Sync
-        + 'static,
+    IS: Clone + Debug + ItemSpec + Send + Sync + 'static,
     <IS as ItemSpec>::Error: Send + Sync,
     E: Debug
         + Send
@@ -71,28 +62,6 @@ where
         + std::error::Error
         + From<<IS as ItemSpec>::Error>
         + From<crate::Error>
-        + 'static,
-    State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateCurrentFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync + 'static,
-    StateDesiredFnSpec:
-        Debug + TryFnSpec<Error = <IS as ItemSpec>::Error, Output = State> + Send + Sync + 'static,
-    StateDiffFnSpec: Debug
-        + peace_cfg::StateDiffFnSpec<
-            Error = <IS as ItemSpec>::Error,
-            State = State,
-            StateDiff = StateDiff,
-        > + Send
-        + Sync
-        + 'static,
-    ApplyOpSpec: Debug
-        + peace_cfg::ApplyOpSpec<
-            Error = <IS as ItemSpec>::Error,
-            State = State,
-            StateDiff = StateDiff,
-        > + Send
-        + Sync
         + 'static,
 {
     fn from(item_spec: IS) -> Self {

@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// Note: A successor's desired state is dependent on the predecessor's desired
 /// state, which should be in sync with its current state after
-/// `ApplyOpSpec::exec` has been executed.
+/// `ApplyFns::exec` has been executed.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct Desired<T>(pub Option<T>);
 

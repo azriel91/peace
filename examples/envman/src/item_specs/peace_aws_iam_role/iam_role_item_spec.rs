@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId},
+    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
     resources::{resources::ts::Empty, Resources},
 };
 
 use crate::item_specs::peace_aws_iam_role::{
-    IamRoleApplyOpSpec, IamRoleData, IamRoleError, IamRoleState, IamRoleStateCurrentFnSpec,
-    IamRoleStateDesiredFnSpec, IamRoleStateDiff, IamRoleStateDiffFnSpec,
+    IamRoleApplyFns, IamRoleData, IamRoleError, IamRoleState, IamRoleStateCurrentFn,
+    IamRoleStateDesiredFn, IamRoleStateDiff, IamRoleStateDiffFn,
 };
 
 /// Item spec to create an IAM instance profile and IAM role.
@@ -57,14 +57,10 @@ impl<Id> ItemSpec for IamRoleItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type ApplyOpSpec = IamRoleApplyOpSpec<Id>;
     type Data<'op> = IamRoleData<'op, Id>;
     type Error = IamRoleError;
     type State = IamRoleState;
-    type StateCurrentFnSpec = IamRoleStateCurrentFnSpec<Id>;
-    type StateDesiredFnSpec = IamRoleStateDesiredFnSpec<Id>;
     type StateDiff = IamRoleStateDiff;
-    type StateDiffFnSpec = IamRoleStateDiffFnSpec;
 
     fn id(&self) -> &ItemSpecId {
         &self.item_spec_id
@@ -79,7 +75,72 @@ where
         Ok(())
     }
 
+    async fn try_state_current(
+        op_ctx: OpCtx<'_>,
+        data: IamRoleData<'_, Id>,
+    ) -> Result<Option<Self::State>, IamRoleError> {
+        IamRoleStateCurrentFn::try_state_current(op_ctx, data).await
+    }
+
+    async fn state_current(
+        op_ctx: OpCtx<'_>,
+        data: IamRoleData<'_, Id>,
+    ) -> Result<Self::State, IamRoleError> {
+        IamRoleStateCurrentFn::state_current(op_ctx, data).await
+    }
+
+    async fn try_state_desired(
+        op_ctx: OpCtx<'_>,
+        data: IamRoleData<'_, Id>,
+    ) -> Result<Option<Self::State>, IamRoleError> {
+        IamRoleStateDesiredFn::try_state_desired(op_ctx, data).await
+    }
+
+    async fn state_desired(
+        op_ctx: OpCtx<'_>,
+        data: IamRoleData<'_, Id>,
+    ) -> Result<Self::State, IamRoleError> {
+        IamRoleStateDesiredFn::state_desired(op_ctx, data).await
+    }
+
+    async fn state_diff(
+        _data: IamRoleData<'_, Id>,
+        state_current: &Self::State,
+        state_desired: &Self::State,
+    ) -> Result<Self::StateDiff, IamRoleError> {
+        IamRoleStateDiffFn::state_diff(state_current, state_desired).await
+    }
+
     async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, IamRoleError> {
         Ok(IamRoleState::None)
+    }
+
+    async fn apply_check(
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<OpCheckStatus, Self::Error> {
+        IamRoleApplyFns::apply_check(data, state_current, state_target, diff).await
+    }
+
+    async fn apply_dry(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        IamRoleApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+    }
+
+    async fn apply(
+        op_ctx: OpCtx<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
+        state_target: &Self::State,
+        diff: &Self::StateDiff,
+    ) -> Result<Self::State, Self::Error> {
+        IamRoleApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
     }
 }
