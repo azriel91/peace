@@ -21,7 +21,7 @@ where
     /// IAM client to communicate with AWS.
     client: R<'op, aws_sdk_s3::Client>,
     /// Region to use to constrain S3 bucket.
-    region: ROpt<'op, aws_sdk_s3::Region>,
+    region: ROpt<'op, aws_sdk_s3::config::Region>,
 }
 
 impl<'op, Id> S3BucketData<'op, Id>
@@ -40,7 +40,7 @@ where
         &self.client
     }
 
-    pub fn region(&self) -> &ROpt<'op, aws_sdk_s3::Region> {
+    pub fn region(&self) -> &ROpt<'op, aws_sdk_s3::config::Region> {
         &self.region
     }
 }

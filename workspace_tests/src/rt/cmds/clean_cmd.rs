@@ -2,10 +2,7 @@ use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
     cmd::ctx::CmdCtx,
     resources::states::StatesSaved,
-    rt::cmds::{
-        sub::{StatesCurrentDiscoverCmd, StatesSavedReadCmd},
-        CleanCmd, EnsureCmd, StatesDiscoverCmd,
-    },
+    rt::cmds::{sub::StatesSavedReadCmd, CleanCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{outcomes::CmdOutcome, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -32,7 +29,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let states_current = StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Dry-clean states
@@ -90,7 +87,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
 
     // Re-read states from disk.
     CleanCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
-    let states_current = StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
 
     assert_eq!(
@@ -130,7 +127,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let states_current = StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Clean states.

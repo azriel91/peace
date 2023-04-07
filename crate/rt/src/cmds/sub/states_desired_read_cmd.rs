@@ -25,10 +25,9 @@ where
 {
     /// Reads [`StatesDesired`]s from storage.
     ///
-    /// Either [`StatesDesiredDiscoverCmd`] or [`StatesDiscoverCmd`] must have
-    /// run prior to this command to read the state.
+    /// [`StatesDiscoverCmd`] must have run prior to this command to read the
+    /// state.
     ///
-    /// [`StatesDesiredDiscoverCmd`]: crate::StatesDesiredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,

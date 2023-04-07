@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use aws_sdk_iam::{error::ListPolicyVersionsErrorKind, types::SdkError};
+use aws_sdk_iam::{error::SdkError, operation::list_policy_versions::ListPolicyVersionsError};
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::cfg::{state::Generated, OpCheckStatus, OpCtx};
@@ -286,44 +286,43 @@ where
                                     let (aws_desc, aws_desc_span) =
                                         crate::item_specs::aws_error_desc!(&error);
                                     match &error {
-                                        SdkError::ServiceError(service_error) => match service_error
-                                            .err()
-                                            .kind
-                                        {
-                                            ListPolicyVersionsErrorKind::NoSuchEntityException(
-                                                _,
-                                            ) => {
-                                                return Err(
-                                                    IamPolicyError::PolicyNotFoundAfterList {
-                                                        policy_name: name.to_string(),
-                                                        policy_path: path.to_string(),
-                                                        policy_id: policy_id_arn_version
-                                                            .id()
-                                                            .to_string(),
-                                                        policy_arn: policy_id_arn_version
-                                                            .arn()
-                                                            .to_string(),
-                                                        #[cfg(feature = "error_reporting")]
-                                                        aws_desc,
-                                                        #[cfg(feature = "error_reporting")]
-                                                        aws_desc_span,
-                                                    },
-                                                );
+                                        SdkError::ServiceError(service_error) => {
+                                            match service_error.err() {
+                                                ListPolicyVersionsError::NoSuchEntityException(
+                                                    _,
+                                                ) => {
+                                                    return Err(
+                                                        IamPolicyError::PolicyNotFoundAfterList {
+                                                            policy_name: name.to_string(),
+                                                            policy_path: path.to_string(),
+                                                            policy_id: policy_id_arn_version
+                                                                .id()
+                                                                .to_string(),
+                                                            policy_arn: policy_id_arn_version
+                                                                .arn()
+                                                                .to_string(),
+                                                            #[cfg(feature = "error_reporting")]
+                                                            aws_desc,
+                                                            #[cfg(feature = "error_reporting")]
+                                                            aws_desc_span,
+                                                        },
+                                                    );
+                                                }
+                                                _ => {
+                                                    return Err(
+                                                        IamPolicyError::PolicyVersionsListError {
+                                                            policy_name: name.to_string(),
+                                                            policy_path: path.to_string(),
+                                                            #[cfg(feature = "error_reporting")]
+                                                            aws_desc,
+                                                            #[cfg(feature = "error_reporting")]
+                                                            aws_desc_span,
+                                                            error,
+                                                        },
+                                                    );
+                                                }
                                             }
-                                            _ => {
-                                                return Err(
-                                                    IamPolicyError::PolicyVersionsListError {
-                                                        policy_name: name.to_string(),
-                                                        policy_path: path.to_string(),
-                                                        #[cfg(feature = "error_reporting")]
-                                                        aws_desc,
-                                                        #[cfg(feature = "error_reporting")]
-                                                        aws_desc_span,
-                                                        error,
-                                                    },
-                                                );
-                                            }
-                                        },
+                                        }
                                         _ => {
                                             return Err(IamPolicyError::PolicyVersionsListError {
                                                 policy_name: name.to_string(),

@@ -10,8 +10,10 @@ pub mod peace_aws_s3_object;
 #[cfg(feature = "error_reporting")]
 macro_rules! aws_error_desc {
     ($error:expr) => {{
+        use aws_sdk_iam::error::ProvideErrorMetadata;
+
         let (error_code, desc) = match $error {
-            aws_sdk_iam::types::SdkError::ServiceError(service_error) => {
+            aws_sdk_iam::error::SdkError::ServiceError(service_error) => {
                 let error_code = service_error.err().code().map(|s| s.to_string());
                 let desc = service_error.err().message().map(|s| s.to_string());
 

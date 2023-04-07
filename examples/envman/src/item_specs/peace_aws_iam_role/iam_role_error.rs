@@ -1,13 +1,13 @@
+use aws_sdk_iam::{
+    error::SdkError,
+    operation::{
+        attach_role_policy::AttachRolePolicyError, create_role::CreateRoleError,
+        delete_role::DeleteRoleError, detach_role_policy::DetachRolePolicyError,
+        get_role::GetRoleError, list_attached_role_policies::ListAttachedRolePoliciesError,
+    },
+};
 #[cfg(feature = "error_reporting")]
 use peace::miette::{self, SourceSpan};
-
-use aws_sdk_iam::{
-    error::{
-        AttachRolePolicyError, CreateRoleError, DeleteRoleError, DetachRolePolicyError,
-        GetRoleError, ListAttachedRolePoliciesError,
-    },
-    types::SdkError,
-};
 
 /// Error while managing instance profile state.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]

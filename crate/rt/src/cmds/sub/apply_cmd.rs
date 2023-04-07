@@ -496,7 +496,6 @@ where
     }
 
     // TODO: This duplicates a bit of code with `StatesDiscoverCmd`,
-    // `StatesCurrentDiscoverCmd`, `StatesDesiredDiscoverCmd`.
     async fn serialize_saved(
         resources: &Resources<SetUp>,
         states_applied: &States<StatesTsApply>,

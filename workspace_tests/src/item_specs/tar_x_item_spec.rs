@@ -11,10 +11,7 @@ use peace::{
         paths::{FlowDir, ProfileDir},
         states::StatesSaved,
     },
-    rt::cmds::{
-        sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd, StatesSavedReadCmd},
-        CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd,
-    },
+    rt::cmds::{sub::StatesSavedReadCmd, CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{
         outcomes::CmdOutcome, Flow, InMemoryTextOutput, ItemSpecGraph, ItemSpecGraphBuilder,
         Workspace, WorkspaceSpec,
@@ -67,7 +64,7 @@ async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_e
         )
         .await?;
 
-    let states_current = StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let state_current = states_current
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
@@ -107,7 +104,7 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
         )
         .await?;
 
-    let states_current = StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let state_current = states_current
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
@@ -148,7 +145,7 @@ async fn state_desired_returns_file_metadatas_from_tar() -> Result<(), Box<dyn s
         )
         .await?;
 
-    let states_desired = StatesDesiredDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_desired = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
     let state_desired = states_desired
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();

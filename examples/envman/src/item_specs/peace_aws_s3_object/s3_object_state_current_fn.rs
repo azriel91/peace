@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
-use aws_sdk_iam::types::SdkError;
-use aws_sdk_s3::error::HeadObjectErrorKind;
+use aws_sdk_iam::error::SdkError;
+use aws_sdk_s3::operation::head_object::HeadObjectError;
 use peace::cfg::{state::Generated, OpCtx};
 
 use crate::item_specs::peace_aws_s3_object::{S3ObjectData, S3ObjectError, S3ObjectState};
@@ -75,8 +75,8 @@ where
                 let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
 
                 match &error {
-                    SdkError::ServiceError(service_error) => match service_error.err().kind {
-                        HeadObjectErrorKind::NotFound(_) => None,
+                    SdkError::ServiceError(service_error) => match service_error.err() {
+                        HeadObjectError::NotFound(_) => None,
                         _ => {
                             return Err(S3ObjectError::S3ObjectGetError {
                                 object_key: object_key.to_string(),
