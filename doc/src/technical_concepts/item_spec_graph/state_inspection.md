@@ -2,13 +2,13 @@
 
 > Before applying a change, you should understand the current state, and what the change will do.
 
-To discover the current state of all items, `StateCurrentFn::try_exec` is run for each item spec concurrently.
+To discover the current state of all items, `ItemSpec::try_state_current` is run for each item spec concurrently.
 
 ```rust ,ignore
 let graph = /* .. */;
 let resources = /* .. */;
 
-let resources = StatesCurrentDiscoverCmd::exec(graph, resources).await?;
+let resources = StatesDiscoverCmd::current(graph, resources).await?;
 ```
 
 <div style="display: inline-block; padding: 0px 20px 0px 0px;">

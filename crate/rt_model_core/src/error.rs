@@ -104,7 +104,7 @@ pub enum Error {
         feature = "error_reporting",
         diagnostic(
             code(peace_rt_model::states_current_discover_required),
-            help("Ensure that `StatesDiscoverCmd` or `StatesCurrentDiscoverCmd` has been called.")
+            help("Ensure that `StatesDiscoverCmd::current` has been called.")
         )
     )]
     StatesCurrentDiscoverRequired,
@@ -118,7 +118,7 @@ pub enum Error {
         feature = "error_reporting",
         diagnostic(
             code(peace_rt_model::states_desired_discover_required),
-            help("Ensure that `StatesDiscoverCmd` or `StatesDesiredDiscoverCmd` has been called.")
+            help("Ensure that `StatesDiscoverCmd::desired` has been called.")
         )
     )]
     StatesDesiredDiscoverRequired,

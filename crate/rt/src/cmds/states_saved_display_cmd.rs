@@ -22,10 +22,9 @@ where
 {
     /// Displays [`StatesSaved`]s from storage.
     ///
-    /// Either [`StatesSavedDiscoverCmd`] or [`StatesDiscoverCmd`] must have
-    /// run prior to this command to read the state.
+    /// [`StatesDiscoverCmd`] must have run prior to this command to read the
+    /// state.
     ///
-    /// [`StatesSavedDiscoverCmd`]: crate::StatesSavedDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
