@@ -16,7 +16,6 @@ use peace_resources::{
     type_reg::untagged::BoxDtDisplay,
     Resources,
 };
-use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{
     outcomes::{ItemApply, ItemApplyBoxed, ItemApplyPartial, ItemApplyPartialBoxed},
@@ -24,10 +23,19 @@ use crate::{
 };
 
 /// Wraps a type implementing [`ItemSpec`].
+///
+/// # Type Parameters
+///
+/// * `IS`: Item spec type to wrap.
+/// * `E`: Application specific error type.
+///
+///     Notably, `E` here should be the application's error type, which is not
+///     necessarily the item spec's error type (unless you have only one item
+///     spec in the application).
 #[allow(clippy::type_complexity)]
-pub struct ItemSpecWrapper<IS, E, State, StateDiff>(IS, PhantomData<(E, State, StateDiff)>);
+pub struct ItemSpecWrapper<IS, E>(IS, PhantomData<E>);
 
-impl<IS, E, State, StateDiff> Clone for ItemSpecWrapper<IS, E, State, StateDiff>
+impl<IS, E> Clone for ItemSpecWrapper<IS, E>
 where
     IS: Clone,
 {
@@ -36,9 +44,9 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff> ItemSpecWrapper<IS, E, State, StateDiff>
+impl<IS, E> ItemSpecWrapper<IS, E>
 where
-    IS: Debug + ItemSpec<State = State, StateDiff = StateDiff> + Send + Sync,
+    IS: Debug + ItemSpec + Send + Sync,
     E: Debug
         + Send
         + Sync
@@ -46,19 +54,17 @@ where
         + From<<IS as ItemSpec>::Error>
         + From<crate::Error>
         + 'static,
-    State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
 {
     async fn state_clean<ResourcesTs>(
         &self,
         resources: &Resources<ResourcesTs>,
-    ) -> Result<State, E> {
+    ) -> Result<IS::State, E> {
         let state_clean = {
             let data =
                 <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
             <IS as peace_cfg::ItemSpec>::state_clean(data).await?
         };
-        resources.borrow_mut::<Clean<State>>().0 = Some(state_clean.clone());
+        resources.borrow_mut::<Clean<IS::State>>().0 = Some(state_clean.clone());
 
         Ok(state_clean)
     }
@@ -67,14 +73,14 @@ where
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
-    ) -> Result<Option<State>, E> {
+    ) -> Result<Option<IS::State>, E> {
         let state_current = {
             let data =
                 <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
             <IS as peace_cfg::ItemSpec>::try_state_current(op_ctx, data).await?
         };
         if let Some(state_current) = state_current.as_ref() {
-            resources.borrow_mut::<Current<State>>().0 = Some(state_current.clone());
+            resources.borrow_mut::<Current<IS::State>>().0 = Some(state_current.clone());
         }
 
         Ok(state_current)
@@ -84,13 +90,13 @@ where
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
-    ) -> Result<State, E> {
+    ) -> Result<IS::State, E> {
         let state_current = {
             let data =
                 <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
             <IS as peace_cfg::ItemSpec>::state_current(op_ctx, data).await?
         };
-        resources.borrow_mut::<Current<State>>().0 = Some(state_current.clone());
+        resources.borrow_mut::<Current<IS::State>>().0 = Some(state_current.clone());
 
         Ok(state_current)
     }
@@ -99,11 +105,11 @@ where
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
-    ) -> Result<Option<State>, E> {
+    ) -> Result<Option<IS::State>, E> {
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
         let state_desired = <IS as peace_cfg::ItemSpec>::try_state_desired(op_ctx, data).await?;
         if let Some(state_desired) = state_desired.as_ref() {
-            resources.borrow_mut::<Desired<State>>().0 = Some(state_desired.clone());
+            resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
         }
 
         Ok(state_desired)
@@ -113,10 +119,10 @@ where
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
-    ) -> Result<State, E> {
+    ) -> Result<IS::State, E> {
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
         let state_desired = <IS as peace_cfg::ItemSpec>::state_desired(op_ctx, data).await?;
-        resources.borrow_mut::<Desired<State>>().0 = Some(state_desired.clone());
+        resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
 
         Ok(state_desired)
     }
@@ -126,16 +132,16 @@ where
         resources: &Resources<ResourcesTs>,
         states_base: &States<StatesTs>,
         states_desired: &StatesDesired,
-    ) -> Result<Option<StateDiff>, E>
+    ) -> Result<Option<IS::StateDiff>, E>
     where
         StatesTs: Debug + Send + Sync + 'static,
     {
         let item_spec_id = <IS as ItemSpec>::id(self);
-        let state_base = states_base.get::<State, _>(item_spec_id);
-        let state_desired = states_desired.get::<State, _>(item_spec_id);
+        let state_base = states_base.get::<IS::State, _>(item_spec_id);
+        let state_desired = states_desired.get::<IS::State, _>(item_spec_id);
 
         if let Some((state_base, state_desired)) = state_base.zip(state_desired) {
-            let state_diff: StateDiff = self
+            let state_diff: IS::StateDiff = self
                 .state_diff_exec_with(resources, state_base, state_desired)
                 .await?;
             Ok(Some(state_diff))
@@ -155,10 +161,10 @@ where
     async fn state_diff_exec_with<ResourcesTs>(
         &self,
         resources: &Resources<ResourcesTs>,
-        state_base: &State,
-        state_desired: &State,
-    ) -> Result<StateDiff, E> {
-        let state_diff: StateDiff = {
+        state_base: &IS::State,
+        state_desired: &IS::State,
+    ) -> Result<IS::StateDiff, E> {
+        let state_diff: IS::StateDiff = {
             let data =
                 <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
             <IS as peace_cfg::ItemSpec>::state_diff(data, state_base, state_desired)
@@ -172,9 +178,9 @@ where
     async fn apply_op_check<ResourcesTs>(
         &self,
         resources: &Resources<ResourcesTs>,
-        state_current: &State,
-        state_desired: &State,
-        state_diff: &StateDiff,
+        state_current: &IS::State,
+        state_desired: &IS::State,
+        state_diff: &IS::StateDiff,
     ) -> Result<OpCheckStatus, E> {
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
         <IS as peace_cfg::ItemSpec>::apply_check(data, state_current, state_desired, state_diff)
@@ -186,10 +192,10 @@ where
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
-        state_current: &State,
-        state_desired: &State,
-        state_diff: &StateDiff,
-    ) -> Result<State, E> {
+        state_current: &IS::State,
+        state_desired: &IS::State,
+        state_diff: &IS::StateDiff,
+    ) -> Result<IS::State, E> {
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured_dry = <IS as peace_cfg::ItemSpec>::apply_dry(
             op_ctx,
@@ -201,7 +207,7 @@ where
         .await
         .map_err(Into::<E>::into)?;
 
-        resources.borrow_mut::<ApplyDry<State>>().0 = Some(state_ensured_dry.clone());
+        resources.borrow_mut::<ApplyDry<IS::State>>().0 = Some(state_ensured_dry.clone());
 
         Ok(state_ensured_dry)
     }
@@ -210,10 +216,10 @@ where
         &self,
         op_ctx: OpCtx<'_>,
         resources: &Resources<ResourcesTs>,
-        state_current: &State,
-        state_desired: &State,
-        state_diff: &StateDiff,
-    ) -> Result<State, E> {
+        state_current: &IS::State,
+        state_desired: &IS::State,
+        state_diff: &IS::StateDiff,
+    ) -> Result<IS::State, E> {
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured = <IS as peace_cfg::ItemSpec>::apply(
             op_ctx,
@@ -225,13 +231,13 @@ where
         .await
         .map_err(Into::<E>::into)?;
 
-        resources.borrow_mut::<Current<State>>().0 = Some(state_ensured.clone());
+        resources.borrow_mut::<Current<IS::State>>().0 = Some(state_ensured.clone());
 
         Ok(state_ensured)
     }
 }
 
-impl<IS, E, State, StateDiff> Debug for ItemSpecWrapper<IS, E, State, StateDiff>
+impl<IS, E> Debug for ItemSpecWrapper<IS, E>
 where
     IS: Debug,
 {
@@ -240,7 +246,7 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff> Deref for ItemSpecWrapper<IS, E, State, StateDiff> {
+impl<IS, E> Deref for ItemSpecWrapper<IS, E> {
     type Target = IS;
 
     fn deref(&self) -> &Self::Target {
@@ -248,30 +254,26 @@ impl<IS, E, State, StateDiff> Deref for ItemSpecWrapper<IS, E, State, StateDiff>
     }
 }
 
-impl<IS, E, State, StateDiff> DerefMut for ItemSpecWrapper<IS, E, State, StateDiff> {
+impl<IS, E> DerefMut for ItemSpecWrapper<IS, E> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl<IS, E, State, StateDiff> From<IS> for ItemSpecWrapper<IS, E, State, StateDiff>
+impl<IS, E> From<IS> for ItemSpecWrapper<IS, E>
 where
-    IS: Debug + ItemSpec<State = State, StateDiff = StateDiff> + Send + Sync,
+    IS: Debug + ItemSpec + Send + Sync,
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
-    State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
 {
     fn from(item_spec: IS) -> Self {
         Self(item_spec, PhantomData)
     }
 }
 
-impl<IS, E, State, StateDiff> DataAccess for ItemSpecWrapper<IS, E, State, StateDiff>
+impl<IS, E> DataAccess for ItemSpecWrapper<IS, E>
 where
-    IS: Debug + ItemSpec<State = State, StateDiff = StateDiff> + Send + Sync,
+    IS: Debug + ItemSpec + Send + Sync,
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
-    State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
 {
     fn borrows() -> TypeIds {
         <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrows()
@@ -282,12 +284,10 @@ where
     }
 }
 
-impl<IS, E, State, StateDiff> DataAccessDyn for ItemSpecWrapper<IS, E, State, StateDiff>
+impl<IS, E> DataAccessDyn for ItemSpecWrapper<IS, E>
 where
-    IS: Debug + ItemSpec<State = State, StateDiff = StateDiff> + Send + Sync,
+    IS: Debug + ItemSpec + Send + Sync,
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
-    State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
 {
     fn borrows(&self) -> TypeIds {
         <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrows()
@@ -299,9 +299,9 @@ where
 }
 
 #[async_trait(?Send)]
-impl<IS, E, State, StateDiff> ItemSpecRt<E> for ItemSpecWrapper<IS, E, State, StateDiff>
+impl<IS, E> ItemSpecRt<E> for ItemSpecWrapper<IS, E>
 where
-    IS: Clone + Debug + ItemSpec<State = State, StateDiff = StateDiff> + Send + Sync,
+    IS: Clone + Debug + ItemSpec + Send + Sync,
     E: Debug
         + Send
         + Sync
@@ -309,20 +309,18 @@ where
         + From<<IS as ItemSpec>::Error>
         + From<crate::Error>
         + 'static,
-    State: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
-    StateDiff: Clone + Debug + fmt::Display + Serialize + DeserializeOwned + Send + Sync + 'static,
 {
     fn id(&self) -> &ItemSpecId {
         <IS as ItemSpec>::id(self)
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E> {
-        // Insert `XMarker<State>` to create entries in `Resources`.
+        // Insert `XMarker<IS::State>` to create entries in `Resources`.
         // This is used for referential param values (#94)
-        resources.insert(Clean::<State>(None));
-        resources.insert(Current::<State>(None));
-        resources.insert(Desired::<State>(None));
-        resources.insert(ApplyDry::<State>(None));
+        resources.insert(Clean::<IS::State>(None));
+        resources.insert(Current::<IS::State>(None));
+        resources.insert(Desired::<IS::State>(None));
+        resources.insert(ApplyDry::<IS::State>(None));
 
         // Run user defined setup.
         <IS as ItemSpec>::setup(self, resources)
@@ -331,7 +329,7 @@ where
     }
 
     fn state_register(&self, states_type_reg: &mut StatesTypeReg) {
-        states_type_reg.register::<State>(<IS as ItemSpec>::id(self).clone());
+        states_type_reg.register::<IS::State>(<IS as ItemSpec>::id(self).clone());
     }
 
     async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
@@ -414,7 +412,7 @@ where
         op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
-        let mut item_apply_partial = ItemApplyPartial::<State, StateDiff>::new();
+        let mut item_apply_partial = ItemApplyPartial::<IS::State, IS::StateDiff>::new();
 
         match self.state_current_exec(op_ctx, resources).await {
             Ok(state_current) => item_apply_partial.state_current = Some(state_current),
@@ -485,10 +483,10 @@ where
         item_apply_boxed: &mut ItemApplyBoxed,
     ) -> Result<(), E> {
         let Some(item_apply) =
-            item_apply_boxed.as_data_type_mut().downcast_mut::<ItemApply<State, StateDiff>>() else {
+            item_apply_boxed.as_data_type_mut().downcast_mut::<ItemApply<IS::State, IS::StateDiff>>() else {
                 panic!("Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
                     This is a bug in the Peace framework.",
-                    concrete_type = std::any::type_name::<ItemApply<State, StateDiff>>())
+                    concrete_type = std::any::type_name::<ItemApply<IS::State, IS::StateDiff>>())
             };
 
         let ItemApply {
@@ -528,7 +526,7 @@ where
         op_ctx: OpCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
-        let mut item_apply_partial = ItemApplyPartial::<State, StateDiff>::new();
+        let mut item_apply_partial = ItemApplyPartial::<IS::State, IS::StateDiff>::new();
 
         match self.state_current_try_exec(op_ctx, resources).await {
             Ok(state_current) => {
@@ -606,10 +604,10 @@ where
         item_apply_boxed: &mut ItemApplyBoxed,
     ) -> Result<(), E> {
         let Some(item_apply) =
-            item_apply_boxed.as_data_type_mut().downcast_mut::<ItemApply<State, StateDiff>>() else {
+            item_apply_boxed.as_data_type_mut().downcast_mut::<ItemApply<IS::State, IS::StateDiff>>() else {
                 panic!("Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
                     This is a bug in the Peace framework.",
-                    concrete_type = std::any::type_name::<ItemApply<State, StateDiff>>())
+                    concrete_type = std::any::type_name::<ItemApply<IS::State, IS::StateDiff>>())
             };
 
         let ItemApply {

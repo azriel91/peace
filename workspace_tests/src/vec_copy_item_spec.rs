@@ -18,8 +18,7 @@ use peace::{
 use serde::{Deserialize, Serialize};
 
 /// Type alias for `ItemSpecWrapper` with all of VecCopyItemSpec's parameters.
-pub type VecCopyItemSpecWrapper =
-    ItemSpecWrapper<VecCopyItemSpec, VecCopyError, VecCopyState, VecCopyDiff>;
+pub type VecCopyItemSpecWrapper = ItemSpecWrapper<VecCopyItemSpec, VecCopyError>;
 
 /// Copies bytes from `VecA` to `VecB`.
 #[derive(Clone, Debug)]

@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::{Debug, Display};
 
 use async_trait::async_trait;
 use dyn_clone::DynClone;
@@ -56,7 +56,7 @@ use crate::OpCtx;
 #[async_trait(?Send)]
 pub trait ItemSpec: DynClone {
     /// Consumer provided error type.
-    type Error: std::error::Error;
+    type Error: std::error::Error + Send + Sync;
 
     /// Summary of the managed item's state.
     ///
@@ -76,7 +76,7 @@ pub trait ItemSpec: DynClone {
     ///
     /// [state concept]: https://peace.mk/book/technical_concepts/state.html
     /// [`State`]: crate::state::State
-    type State: Clone + fmt::Display + Serialize + DeserializeOwned;
+    type State: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static;
 
     /// Diff between the current and target [`State`]s.
     ///
@@ -91,7 +91,7 @@ pub trait ItemSpec: DynClone {
     ///   level diff, and the `apply` may be a complex process.
     ///
     /// [`State`]: Self::State
-    type StateDiff: Clone + fmt::Display + Serialize + DeserializeOwned;
+    type StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static;
 
     /// Data that the function reads from, or writes to.
     ///
