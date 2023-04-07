@@ -248,13 +248,13 @@ pub trait ItemSpec: DynClone {
     /// * `state_target`: Target [`State`] of the managed item, either
     ///   [`state_clean`] or [`state_desired`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
-    ///   [`StateDiffFn`].
+    ///   [`state_diff`].
     ///
     /// [`state_clean`]: crate::ItemSpec::state_clean
     /// [`state_current`]: crate::ItemSpec::state_current
     /// [`state_desired`]: crate::ItemSpec::state_desired
     /// [`State`]: Self::State
-    /// [`StateDiffFn`]: crate::ItemSpec::StateDiffFn
+    /// [`state_diff`]: crate::ItemSpec::state_diff
     async fn apply_check(
         data: Self::Data<'_>,
         state_current: &Self::State,
@@ -288,7 +288,7 @@ pub trait ItemSpec: DynClone {
     /// * `state_target`: Target [`State`] of the managed item, either
     ///   [`state_clean`] or [`state_desired`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
-    ///   [`StateDiffFn`].
+    ///   [`state_diff`].
     ///
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
@@ -296,7 +296,7 @@ pub trait ItemSpec: DynClone {
     /// [`state_current`]: crate::ItemSpec::state_current
     /// [`state_desired`]: crate::ItemSpec::state_desired
     /// [`State`]: Self::State
-    /// [`StateDiffFn`]: crate::ItemSpec::StateDiffFn
+    /// [`state_diff`]: crate::ItemSpec::state_diff
     async fn apply_dry(
         op_ctx: OpCtx<'_>,
         data: Self::Data<'_>,
@@ -317,7 +317,7 @@ pub trait ItemSpec: DynClone {
     /// * `state_target`: Target [`State`] of the managed item, either
     ///   [`state_clean`] or [`state_desired`].
     /// * `state_diff`: Desired [`State`] of the managed item, returned from
-    ///   [`StateDiffFn`].
+    ///   [`state_diff`].
     ///
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
@@ -325,7 +325,7 @@ pub trait ItemSpec: DynClone {
     /// [`state_current`]: crate::ItemSpec::state_current
     /// [`state_desired`]: crate::ItemSpec::state_desired
     /// [`State`]: Self::State
-    /// [`StateDiffFn`]: crate::ItemSpec::StateDiffFn
+    /// [`state_diff`]: crate::ItemSpec::state_diff
     async fn apply(
         op_ctx: OpCtx<'_>,
         data: Self::Data<'_>,
