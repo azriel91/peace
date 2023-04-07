@@ -16,7 +16,7 @@ doctest = false
 test = false
 
 [dependencies]
-async-trait = "0.1.66"
+async-trait = "0.1.68"
 cfg-if = { workspace = true }
 indicatif = { workspace = true, features = ["tokio"] }
 indexmap = { workspace = true }
@@ -24,10 +24,10 @@ miette = { workspace = true, optional = true }
 peace_core = { path = "../core", version = "0.0.8" }
 peace_fmt = { path = "../fmt", version = "0.0.8" }
 peace_resources = { path = "../resources", version = "0.0.8" }
-serde = "1.0.155"
-serde_json = { version = "1.0.94", optional = true }
-serde_yaml = "0.9.19"
-thiserror = "1.0.39"
+serde = "1.0.159"
+serde_json = { version = "1.0.95", optional = true }
+serde_yaml = "0.9.21"
+thiserror = "1.0.40"
 type_reg = { workspace = true, features = ["resman"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

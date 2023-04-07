@@ -125,7 +125,7 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
 }
 
 fn peace_internal(attr: &&Attribute) -> bool {
-    attr.path.is_ident("peace_internal")
+    attr.path().is_ident("peace_internal")
 }
 
 fn collect_field_types(fields: &Punctuated<Field, Comma>) -> Vec<Type> {

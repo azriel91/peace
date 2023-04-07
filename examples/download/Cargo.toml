@@ -20,11 +20,11 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 peace = { path = "../..", default-features = false }
 peace_item_specs = { path = "../../item_specs", features = ["file_download"] }
-thiserror = "1.0.39"
+thiserror = "1.0.40"
 url = { version = "2.3.1", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-clap = { version = "4.1.8", features = ["derive"] }
+clap = { version = "4.2.1", features = ["derive"] }
 tokio = { workspace = true, features = ["net", "time", "rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

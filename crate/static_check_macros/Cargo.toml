@@ -17,6 +17,6 @@ doctest = true
 test = false
 
 [dependencies]
-syn = "1.0.109"
-quote = "1.0.25"
-proc-macro2 = "1.0.52"
+syn = "2.0.13"
+quote = "1.0.26"
+proc-macro2 = "1.0.56"
