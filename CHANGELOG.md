@@ -7,8 +7,11 @@
 * Return both command outcome and errors in `ApplyCmd`. ([#107])
 * `StatesDiscoverCmd` discovers states concurrently. ([#107])
 * Serialize `StatesDesired` as part of `ApplyCmd`. ([#107])
+* Consolidate `ItemSpec` functions into single trait. ([#96], [#109])
 
 [#107]: https://github.com/azriel91/peace/pull/107
+[#96]: https://github.com/azriel91/peace/issues/96
+[#109]: https://github.com/azriel91/peace/pull/109
 
 
 ## 0.0.8 (2023-03-25)
