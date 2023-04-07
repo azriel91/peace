@@ -3,10 +3,7 @@ use peace::{
     cmd::ctx::CmdCtx,
     data::marker::Clean,
     resources::states::StatesSaved,
-    rt::cmds::{
-        sub::{StatesCurrentDiscoverCmd, StatesDesiredDiscoverCmd, StatesSavedReadCmd},
-        CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd,
-    },
+    rt::cmds::{sub::StatesSavedReadCmd, CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{
         outcomes::CmdOutcome, Flow, InMemoryTextOutput, ItemSpecGraphBuilder, Workspace,
         WorkspaceSpec,
@@ -174,7 +171,7 @@ async fn state_current_returns_shell_command_current_state()
         .with_flow(&flow)
         .await?;
 
-    let states_current = StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let state_current = states_current
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItemSpec::ID)
         .unwrap();
@@ -215,7 +212,7 @@ async fn state_desired_returns_shell_command_desired_state()
         .with_flow(&flow)
         .await?;
 
-    let states_desired = StatesDesiredDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_desired = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
     let state_desired = states_desired
         .get::<State<TestFileCreationShCmdStateLogical, ShCmdExecutionRecord>, _>(
             &TestFileCreationShCmdItemSpec::ID,

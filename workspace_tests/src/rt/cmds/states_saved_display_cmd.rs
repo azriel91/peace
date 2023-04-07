@@ -1,7 +1,7 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
     cmd::ctx::CmdCtx,
-    rt::cmds::{sub::StatesCurrentDiscoverCmd, StatesSavedDisplayCmd},
+    rt::cmds::{StatesDiscoverCmd, StatesSavedDisplayCmd},
     rt_model::{Error, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -31,7 +31,7 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
-    let states_saved_from_discover = StatesCurrentDiscoverCmd::exec(&mut cmd_ctx).await?;
+    let states_saved_from_discover = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
 
     // Re-read states from disk in a new set of resources.
     let mut cmd_ctx =

@@ -1,4 +1,2 @@
-mod states_current_discover_cmd;
-mod states_desired_discover_cmd;
 mod states_desired_read_cmd;
 mod states_saved_read_cmd;
