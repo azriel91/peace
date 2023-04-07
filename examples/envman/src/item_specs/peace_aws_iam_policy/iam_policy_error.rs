@@ -1,13 +1,14 @@
+use aws_sdk_iam::{
+    error::SdkError,
+    operation::{
+        create_policy::CreatePolicyError, create_policy_version::CreatePolicyVersionError,
+        delete_policy::DeletePolicyError, delete_policy_version::DeletePolicyVersionError,
+        get_policy::GetPolicyError, get_policy_version::GetPolicyVersionError,
+        list_policies::ListPoliciesError, list_policy_versions::ListPolicyVersionsError,
+    },
+};
 #[cfg(feature = "error_reporting")]
 use peace::miette::{self, SourceSpan};
-
-use aws_sdk_iam::{
-    error::{
-        CreatePolicyError, CreatePolicyVersionError, DeletePolicyError, DeletePolicyVersionError,
-        GetPolicyError, GetPolicyVersionError, ListPoliciesError, ListPolicyVersionsError,
-    },
-    types::SdkError,
-};
 
 /// Error while managing instance profile state.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]

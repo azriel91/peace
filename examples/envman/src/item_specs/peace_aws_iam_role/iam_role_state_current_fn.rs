@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use aws_sdk_iam::{error::GetRoleErrorKind, types::SdkError};
+use aws_sdk_iam::{error::SdkError, operation::get_role::GetRoleError};
 use peace::cfg::{state::Generated, OpCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
@@ -72,8 +72,8 @@ where
                 #[cfg(feature = "error_reporting")]
                 let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
                 match &error {
-                    SdkError::ServiceError(service_error) => match service_error.err().kind {
-                        GetRoleErrorKind::NoSuchEntityException(_) => None,
+                    SdkError::ServiceError(service_error) => match service_error.err() {
+                        GetRoleError::NoSuchEntityException(_) => None,
                         _ => {
                             return Err(IamRoleError::RoleGetError {
                                 role_name: name.to_string(),

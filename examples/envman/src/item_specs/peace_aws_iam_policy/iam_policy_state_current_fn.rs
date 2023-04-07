@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use aws_sdk_iam::{error::GetPolicyErrorKind, types::SdkError};
+use aws_sdk_iam::{error::SdkError, operation::get_policy::GetPolicyError};
 use peace::cfg::{state::Generated, OpCtx};
 
 use crate::item_specs::peace_aws_iam_policy::{
@@ -30,7 +30,7 @@ impl<Id> IamPolicyStateCurrentFn<Id> {
         progress_sender.tick(ProgressMsgUpdate::Set(String::from("listing policies")));
         let list_policies_output = client
             .list_policies()
-            .scope(aws_sdk_iam::model::PolicyScopeType::Local)
+            .scope(aws_sdk_iam::types::PolicyScopeType::Local)
             .path_prefix(path)
             .send()
             .await
@@ -163,8 +163,8 @@ where
                     let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
 
                     match &error {
-                        SdkError::ServiceError(service_error) => match service_error.err().kind {
-                            GetPolicyErrorKind::NoSuchEntityException(_) => {
+                        SdkError::ServiceError(service_error) => match service_error.err() {
+                            GetPolicyError::NoSuchEntityException(_) => {
                                 return Err(IamPolicyError::PolicyNotFoundAfterList {
                                     policy_name: name.to_string(),
                                     policy_path: path.to_string(),

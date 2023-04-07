@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use aws_sdk_iam::{error::GetInstanceProfileErrorKind, types::SdkError};
+use aws_sdk_iam::{error::SdkError, operation::get_instance_profile::GetInstanceProfileError};
 use peace::cfg::{state::Generated, OpCtx};
 
 use crate::item_specs::peace_aws_instance_profile::{
@@ -110,8 +110,8 @@ where
                 let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
 
                 match &error {
-                    SdkError::ServiceError(service_error) => match service_error.err().kind {
-                        GetInstanceProfileErrorKind::NoSuchEntityException(_) => None,
+                    SdkError::ServiceError(service_error) => match service_error.err() {
+                        GetInstanceProfileError::NoSuchEntityException(_) => None,
                         _ => {
                             return Err(InstanceProfileError::InstanceProfileGetError {
                                 instance_profile_name: name.to_string(),

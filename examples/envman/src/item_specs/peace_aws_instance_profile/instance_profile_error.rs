@@ -1,13 +1,15 @@
+use aws_sdk_iam::{
+    error::SdkError,
+    operation::{
+        add_role_to_instance_profile::AddRoleToInstanceProfileError,
+        create_instance_profile::CreateInstanceProfileError,
+        delete_instance_profile::DeleteInstanceProfileError,
+        get_instance_profile::GetInstanceProfileError,
+        remove_role_from_instance_profile::RemoveRoleFromInstanceProfileError,
+    },
+};
 #[cfg(feature = "error_reporting")]
 use peace::miette::{self, SourceSpan};
-
-use aws_sdk_iam::{
-    error::{
-        AddRoleToInstanceProfileError, CreateInstanceProfileError, DeleteInstanceProfileError,
-        GetInstanceProfileError, RemoveRoleFromInstanceProfileError,
-    },
-    types::SdkError,
-};
 
 /// Error while managing instance profile state.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]

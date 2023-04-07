@@ -1,14 +1,13 @@
+use aws_sdk_s3::{
+    error::SdkError,
+    operation::{
+        create_bucket::CreateBucketError, delete_bucket::DeleteBucketError,
+        head_bucket::HeadBucketError, list_buckets::ListBucketsError,
+    },
+    types::error::{BucketAlreadyExists, BucketAlreadyOwnedByYou},
+};
 #[cfg(feature = "error_reporting")]
 use peace::miette::{self, SourceSpan};
-
-use aws_sdk_s3::{
-    self,
-    error::{
-        BucketAlreadyExists, BucketAlreadyOwnedByYou, CreateBucketError, DeleteBucketError,
-        HeadBucketError, ListBucketsError,
-    },
-    types::SdkError,
-};
 
 /// Error while managing S3 bucket state.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]

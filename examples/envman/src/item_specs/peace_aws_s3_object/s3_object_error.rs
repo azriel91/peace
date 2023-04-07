@@ -1,13 +1,14 @@
 use std::{num::ParseIntError, path::PathBuf};
 
+use aws_sdk_s3::{
+    error::SdkError,
+    operation::{
+        delete_object::DeleteObjectError, head_object::HeadObjectError,
+        list_objects::ListObjectsError, put_object::PutObjectError,
+    },
+};
 #[cfg(feature = "error_reporting")]
 use peace::miette::{self, SourceSpan};
-
-use aws_sdk_s3::{
-    self,
-    error::{DeleteObjectError, HeadObjectError, ListObjectsError, PutObjectError},
-    types::SdkError,
-};
 
 /// Error while managing S3 object state.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]

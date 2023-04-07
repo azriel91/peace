@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
-use aws_sdk_iam::types::SdkError;
+use aws_sdk_iam::error::{ProvideErrorMetadata, SdkError};
 use aws_sdk_s3::{
-    error::CreateBucketErrorKind,
-    model::{BucketLocationConstraint, CreateBucketConfiguration},
+    operation::create_bucket::CreateBucketError,
+    types::{BucketLocationConstraint, CreateBucketConfiguration},
 };
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
@@ -139,30 +139,28 @@ where
                         let (aws_desc, aws_desc_span) = crate::item_specs::aws_error_desc!(&error);
 
                         match &error {
-                            SdkError::ServiceError(service_error) => {
-                                match &service_error.err().kind {
-                                    CreateBucketErrorKind::BucketAlreadyExists(error) => {
-                                        S3BucketError::S3BucketOwnedBySomeoneElseError {
-                                            s3_bucket_name,
-                                            error: error.clone(),
-                                        }
-                                    }
-                                    CreateBucketErrorKind::BucketAlreadyOwnedByYou(error) => {
-                                        S3BucketError::S3BucketOwnedByYouError {
-                                            s3_bucket_name,
-                                            error: error.clone(),
-                                        }
-                                    }
-                                    _ => S3BucketError::S3BucketCreateError {
+                            SdkError::ServiceError(service_error) => match &service_error.err() {
+                                CreateBucketError::BucketAlreadyExists(error) => {
+                                    S3BucketError::S3BucketOwnedBySomeoneElseError {
                                         s3_bucket_name,
-                                        #[cfg(feature = "error_reporting")]
-                                        aws_desc,
-                                        #[cfg(feature = "error_reporting")]
-                                        aws_desc_span,
-                                        error,
-                                    },
+                                        error: error.clone(),
+                                    }
                                 }
-                            }
+                                CreateBucketError::BucketAlreadyOwnedByYou(error) => {
+                                    S3BucketError::S3BucketOwnedByYouError {
+                                        s3_bucket_name,
+                                        error: error.clone(),
+                                    }
+                                }
+                                _ => S3BucketError::S3BucketCreateError {
+                                    s3_bucket_name,
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc,
+                                    #[cfg(feature = "error_reporting")]
+                                    aws_desc_span,
+                                    error,
+                                },
+                            },
                             _ => S3BucketError::S3BucketCreateError {
                                 s3_bucket_name,
                                 #[cfg(feature = "error_reporting")]
