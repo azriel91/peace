@@ -13,7 +13,7 @@ use crate::outcomes::ItemApplyPartialRt;
 /// 1. `ApplyCmd` calls the following function for each item.
 ///
 ///     - [`ItemSpec::state_current`]
-///     - [`StateDesiredFn::exec`] or [`ItemSpec::state_clean`]
+///     - [`ItemSpec::state_desired`] or [`ItemSpec::state_clean`]
 ///     - [`StateDiffFn::exec`]
 ///     - [`ApplyFns::check`]
 ///     - [`ApplyFns::exec`]
@@ -27,7 +27,7 @@ use crate::outcomes::ItemApplyPartialRt;
 /// optional.
 ///
 /// [`ItemSpec::state_current`]: peace_cfg::ItemSpec::state_current
-/// [`StateDesiredFn::exec`]: peace_cfg::ItemSpec::StateDesiredFn
+/// [`ItemSpec::state_desired`]: peace_cfg::ItemSpec::state_desired
 /// [`StateDiffFn::exec`]: peace_cfg::ItemSpec::StateDiffFn
 /// [`ApplyFns::check`]: peace_cfg::ItemSpec::ApplyFns
 /// [`ApplyFns::exec`]: peace_cfg::ItemSpec::ApplyFns

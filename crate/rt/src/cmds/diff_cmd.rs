@@ -29,7 +29,6 @@ where
     /// [`StatesDesired`]: peace_resources::StatesDesired
     /// [`StatesRw`]: peace_resources::StatesRw
     /// [`StateDiffFn`]: peace_cfg::ItemSpec::StateDiffFn
-    /// [`StateDesiredFn`]: peace_cfg::ItemSpec::StateDesiredFn
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StateDiffs, E> {
