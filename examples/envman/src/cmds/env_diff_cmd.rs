@@ -2,7 +2,10 @@ use futures::FutureExt;
 use peace::{
     cmd::scopes::SingleProfileSingleFlowView,
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
-    rt::cmds::DiffCmd,
+    rt::cmds::{
+        sub::{StatesDesiredReadCmd, StatesSavedReadCmd},
+        DiffCmd,
+    },
     rt_model::output::OutputWrite,
 };
 
@@ -27,10 +30,18 @@ impl EnvDiffCmd {
     {
         EnvCmd::run(output, true, |ctx| {
             async {
-                let state_diffs = DiffCmd::exec(ctx).await?;
+                let states_saved = StatesSavedReadCmd::exec(ctx).await?;
+                let states_desired = StatesDesiredReadCmd::exec(ctx).await?;
+                let SingleProfileSingleFlowView {
+                    output,
+                    flow,
+                    resources,
+                    ..
+                } = ctx.view();
+                let state_diffs =
+                    DiffCmd::exec(flow, resources, &states_saved, &states_desired).await?;
                 let state_diffs_raw_map = &**state_diffs;
 
-                let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
                 let state_diffs_presentables = {
                     let state_diffs_presentables = flow
                         .graph()
