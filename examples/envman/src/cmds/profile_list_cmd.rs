@@ -4,7 +4,7 @@ use peace::{
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
-use crate::model::{EnvManError, EnvType};
+use crate::model::{EnvManError, EnvType, ProfileParamsKey};
 
 /// Command to list initialized profiles.
 #[derive(Debug)]
@@ -47,7 +47,7 @@ impl ProfileListCmd {
         let profiles_presentable = profile_to_profile_params
             .iter()
             .filter_map(|(profile, profile_params)| {
-                let env_type = profile_params.get::<EnvType, _>("env_type");
+                let env_type = profile_params.get::<EnvType, _>(&ProfileParamsKey::EnvType);
                 env_type.map(|env_type| (profile, " - type: ".to_string(), env_type))
             })
             .collect::<Vec<_>>();

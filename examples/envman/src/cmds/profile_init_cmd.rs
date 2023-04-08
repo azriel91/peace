@@ -10,7 +10,10 @@ use url::Url;
 
 use crate::{
     flows::{EnvDeployFlow, EnvDeployFlowParams},
-    model::{EnvManError, EnvType, RepoSlug},
+    model::{
+        EnvDeployFlowParamsKey, EnvManError, EnvType, ProfileParamsKey, RepoSlug,
+        WorkspaceParamsKey,
+    },
 };
 
 /// Flow to initialize and set the default profile.
@@ -77,8 +80,11 @@ impl ProfileInitCmd {
         // Creating the `CmdCtx` writes the workspace and profile params.
         // We don't need to run any flows with it.
         let _cmd_ctx = cmd_ctx_builder
-            .with_workspace_param_value(String::from("profile"), Some(profile_to_create.clone()))
-            .with_profile_param_value(String::from("env_type"), Some(env_type))
+            .with_workspace_param_value(
+                WorkspaceParamsKey::Profile,
+                Some(profile_to_create.clone()),
+            )
+            .with_profile_param_value(ProfileParamsKey::EnvType, Some(env_type))
             .with_profile(profile_to_create.clone())
             .await?;
 
@@ -94,7 +100,7 @@ impl ProfileInitCmd {
             s3_object_params,
         } = EnvDeployFlow::params(&profile_to_create, slug, version, url)?;
         let flow = EnvDeployFlow::flow().await?;
-        let profile_key = String::from("profile");
+        let profile_key = WorkspaceParamsKey::Profile;
 
         let mut cmd_ctx = {
             let cmd_ctx_builder =
@@ -105,18 +111,30 @@ impl ProfileInitCmd {
                 .with_profile_from_workspace_param(&profile_key)
                 .with_flow(&flow)
                 .with_flow_param_value(
-                    String::from("app_download_params"),
+                    EnvDeployFlowParamsKey::AppDownloadParams,
                     Some(app_download_params),
                 )
-                .with_flow_param_value(String::from("app_extract_params"), Some(app_extract_params))
-                .with_flow_param_value(String::from("iam_policy_params"), Some(iam_policy_params))
-                .with_flow_param_value(String::from("iam_role_params"), Some(iam_role_params))
                 .with_flow_param_value(
-                    String::from("instance_profile_params"),
+                    EnvDeployFlowParamsKey::AppExtractParams,
+                    Some(app_extract_params),
+                )
+                .with_flow_param_value(
+                    EnvDeployFlowParamsKey::IamPolicyParams,
+                    Some(iam_policy_params),
+                )
+                .with_flow_param_value(EnvDeployFlowParamsKey::IamRoleParams, Some(iam_role_params))
+                .with_flow_param_value(
+                    EnvDeployFlowParamsKey::InstanceProfileParams,
                     Some(instance_profile_params),
                 )
-                .with_flow_param_value(String::from("s3_bucket_params"), Some(s3_bucket_params))
-                .with_flow_param_value(String::from("s3_object_params"), Some(s3_object_params))
+                .with_flow_param_value(
+                    EnvDeployFlowParamsKey::S3BucketParams,
+                    Some(s3_bucket_params),
+                )
+                .with_flow_param_value(
+                    EnvDeployFlowParamsKey::S3ObjectParams,
+                    Some(s3_object_params),
+                )
                 .await?
         };
 

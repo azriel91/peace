@@ -6,7 +6,7 @@ use peace::{
 
 use crate::{
     cmds::ProfileInitCmd,
-    model::{EnvManError, ProfileSwitch},
+    model::{EnvManError, ProfileSwitch, WorkspaceParamsKey},
 };
 
 /// Command to switch between profiles.
@@ -62,7 +62,7 @@ impl ProfileSwitchCmd {
                     crate::cmds::ws_params_augment!(cmd_ctx_builder);
                     cmd_ctx_builder
                         .with_workspace_param_value(
-                            String::from("profile"),
+                            WorkspaceParamsKey::Profile,
                             Some(profile_to_switch_to.clone()),
                         )
                         .build()

@@ -16,7 +16,7 @@ use peace::{
 
 use crate::{
     flows::EnvDeployFlow,
-    model::{EnvManError, EnvType},
+    model::{EnvDeployFlowParamsKey, EnvManError, EnvType, ProfileParamsKey, WorkspaceParamsKey},
     rt_model::EnvManCmdCtx,
 };
 
@@ -41,7 +41,11 @@ impl EnvCmd {
                     '_,
                     EnvManError,
                     O,
-                    ParamsKeysImpl<KeyKnown<String>, KeyKnown<String>, KeyKnown<String>>,
+                    ParamsKeysImpl<
+                        KeyKnown<WorkspaceParamsKey>,
+                        KeyKnown<ProfileParamsKey>,
+                        KeyKnown<EnvDeployFlowParamsKey>,
+                    >,
                     SetUp,
                 >,
             >,
@@ -102,8 +106,8 @@ impl EnvCmd {
             ..
         } = cmd_ctx.view();
 
-        let profile = workspace_params.get::<Profile, _>("profile");
-        let env_type = profile_params.get::<EnvType, _>("env_type");
+        let profile = workspace_params.get::<Profile, _>(&WorkspaceParamsKey::Profile);
+        let env_type = profile_params.get::<EnvType, _>(&ProfileParamsKey::EnvType);
 
         if let Some((profile, env_type)) = profile.zip(env_type) {
             presentln!(
@@ -126,7 +130,7 @@ macro_rules! cmd_ctx_init {
             WorkspaceSpec::SessionStorage,
         )?;
         let flow = EnvDeployFlow::flow().await?;
-        let profile_key = String::from("profile");
+        let profile_key = WorkspaceParamsKey::Profile;
 
         let mut $cmd_ctx = {
             let cmd_ctx_builder =

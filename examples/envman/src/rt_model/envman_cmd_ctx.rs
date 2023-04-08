@@ -3,7 +3,7 @@ use peace::{
     rt_model::params::{KeyKnown, ParamsKeysImpl},
 };
 
-use crate::model::EnvManError;
+use crate::model::{EnvDeployFlowParamsKey, EnvManError, ProfileParamsKey, WorkspaceParamsKey};
 
 /// Alias to simplify naming the `CmdCtx` type.
 pub type EnvManCmdCtx<'ctx, O, TS> = peace::cmd::ctx::CmdCtx<
@@ -11,7 +11,11 @@ pub type EnvManCmdCtx<'ctx, O, TS> = peace::cmd::ctx::CmdCtx<
         'ctx,
         EnvManError,
         O,
-        ParamsKeysImpl<KeyKnown<String>, KeyKnown<String>, KeyKnown<String>>,
+        ParamsKeysImpl<
+            KeyKnown<WorkspaceParamsKey>,
+            KeyKnown<ProfileParamsKey>,
+            KeyKnown<EnvDeployFlowParamsKey>,
+        >,
         TS,
     >,
 >;
