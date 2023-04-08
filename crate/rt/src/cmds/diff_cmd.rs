@@ -1,59 +1,44 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::{StreamExt, TryStreamExt};
-use peace_cmd::{
-    ctx::CmdCtx,
-    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+use peace_resources::{
+    internal::StateDiffsMut,
+    resources::ts::SetUp,
+    states::{StateDiffs, States},
+    Resources,
 };
-use peace_resources::{internal::StateDiffsMut, resources::ts::SetUp, states::StateDiffs};
-use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error};
-
-use crate::cmds::sub::{StatesDesiredReadCmd, StatesSavedReadCmd};
+use peace_rt_model::{Error, Flow};
 
 #[derive(Debug)]
-pub struct DiffCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
+pub struct DiffCmd<E>(PhantomData<E>);
 
-impl<E, O, PKeys> DiffCmd<E, O, PKeys>
+impl<E> DiffCmd<E>
 where
     E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
-    O: OutputWrite<E>,
 {
-    /// Runs [`state_diff`]` for each [`ItemSpec`].
+    /// Returns the [`state_diff`]` for each [`ItemSpec`].
     ///
-    /// At the end of this function, [`Resources`] will be populated with
-    /// [`StatesCurrent`], [`StatesDesired`], and [`StateDiffs`].
+    /// This does not take in `CmdCtx` as it may be used by both
+    /// `SingleProfileSingleFlow` and `MultiProfileSingleFlow`
+    /// commands.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`StatesCurrent`]: peace_resources::StatesCurrent
-    /// [`StatesDesired`]: peace_resources::StatesDesired
-    /// [`StatesRw`]: peace_resources::StatesRw
     /// [`state_diff`]: peace_cfg::ItemSpec::state_diff
-    pub async fn exec(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+    pub async fn exec<StatesTsA, StatesTsB>(
+        flow: &Flow<E>,
+        resources: &Resources<SetUp>,
+        states_a: &States<StatesTsA>,
+        states_b: &States<StatesTsB>,
     ) -> Result<StateDiffs, E> {
-        let states_saved = StatesSavedReadCmd::<E, O, PKeys>::exec(cmd_ctx).await?;
-        let states_desired = StatesDesiredReadCmd::<E, O, PKeys>::exec(cmd_ctx).await?;
-
-        let SingleProfileSingleFlowView {
-            flow, resources, ..
-        } = cmd_ctx.scope_mut().view();
-        let item_spec_graph = flow.graph();
-
         let resources_ref = &*resources;
-        let states_saved_ref = &states_saved;
-        let states_desired_ref = &states_desired;
         let state_diffs = {
-            let state_diffs_mut = item_spec_graph
+            let state_diffs_mut = flow
+                .graph()
                 .stream()
                 .map(Result::<_, E>::Ok)
                 .try_filter_map(|item_spec| async move {
                     let state_diff_opt = item_spec
-                        .state_diff_exec_with_states_saved(
-                            resources_ref,
-                            states_saved_ref,
-                            states_desired_ref,
-                        )
+                        .state_diff_exec(resources_ref, states_a, states_b)
                         .await?;
 
                     Ok(state_diff_opt.map(|state_diff| (item_spec.id().clone(), state_diff)))
@@ -68,7 +53,7 @@ where
     }
 }
 
-impl<E, O, PKeys> Default for DiffCmd<E, O, PKeys> {
+impl<E> Default for DiffCmd<E> {
     fn default() -> Self {
         Self(PhantomData)
     }

@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, item_spec_id, profile, AppName, FlowId, ItemSpecId, Profile, State},
-    cmd::ctx::CmdCtx,
+    cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
     data::marker::Clean,
     resources::states::StatesSaved,
     rt::cmds::{sub::StatesSavedReadCmd, CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd},
@@ -254,11 +254,15 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
         .with_flow(&flow)
         .await?;
 
-    // Discover states current and desired
-    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Discover current and desired states.
+    let (states_current, states_desired) =
+        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let SingleProfileSingleFlowView {
+        flow, resources, ..
+    } = cmd_ctx.view();
 
-    // Diff them
-    let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
+    // Diff current and desired states.
+    let state_diffs = DiffCmd::exec(flow, resources, &states_current, &states_desired).await?;
 
     let state_diff = state_diffs
         .get::<ShCmdStateDiff, _>(&TestFileCreationShCmdItemSpec::ID)
@@ -339,15 +343,21 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
         .await?;
 
     // Discover states current and desired
-    let (states_current, _states_desired) =
+    let (states_current, states_desired) =
         StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Create the file
-    EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    let CmdOutcome {
+        value: states_ensured,
+        errors: _,
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
 
     // Diff state after creation
-    let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
+    let SingleProfileSingleFlowView {
+        flow, resources, ..
+    } = cmd_ctx.view();
+    let state_diffs = DiffCmd::exec(flow, resources, &states_ensured, &states_desired).await?;
 
     let state_diff = state_diffs
         .get::<ShCmdStateDiff, _>(&TestFileCreationShCmdItemSpec::ID)

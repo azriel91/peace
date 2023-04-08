@@ -5,8 +5,7 @@ use fn_graph::{DataAccess, DataAccessDyn};
 use peace_cfg::{async_trait, ItemSpecId, OpCtx};
 use peace_resources::{
     resources::ts::{Empty, SetUp},
-    states::{StatesCurrent, StatesDesired, StatesSaved},
-    type_reg::untagged::BoxDtDisplay,
+    type_reg::untagged::{BoxDtDisplay, TypeMap},
     Resources,
 };
 
@@ -99,23 +98,11 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// Returns the diff between the previous and desired [`State`]s.
     ///
     /// [`State`]: peace_cfg::State
-    async fn state_diff_exec_with_states_saved(
+    async fn state_diff_exec(
         &self,
         resources: &Resources<SetUp>,
-        states_saved: &StatesSaved,
-        states_desired: &StatesDesired,
-    ) -> Result<Option<BoxDtDisplay>, E>
-    where
-        E: Debug + std::error::Error;
-
-    /// Returns the diff between the current and desired [`State`]s.
-    ///
-    /// [`State`]: peace_cfg::State
-    async fn state_diff_exec_with_states_current(
-        &self,
-        resources: &Resources<SetUp>,
-        states_current: &StatesCurrent,
-        states_desired: &StatesDesired,
+        states_a: &TypeMap<ItemSpecId, BoxDtDisplay>,
+        states_b: &TypeMap<ItemSpecId, BoxDtDisplay>,
     ) -> Result<Option<BoxDtDisplay>, E>
     where
         E: Debug + std::error::Error;
