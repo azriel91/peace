@@ -139,7 +139,7 @@ where
     let SingleProfileSingleFlowView {
         flow, resources, ..
     } = cmd_ctx.view();
-    let states_diff = DiffCmd::exec(flow, resources, &states_saved, &states_desired).await?;
+    let states_diff = DiffCmd::diff_any(flow, resources, &states_saved, &states_desired).await?;
     cmd_ctx.output_mut().present(&states_diff).await?;
     Ok(())
 }

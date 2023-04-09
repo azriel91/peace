@@ -24,7 +24,7 @@ where
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
     /// [`state_diff`]: peace_cfg::ItemSpec::state_diff
-    pub async fn exec<StatesTsA, StatesTsB>(
+    pub async fn diff_any<StatesTsA, StatesTsB>(
         flow: &Flow<E>,
         resources: &Resources<SetUp>,
         states_a: &States<StatesTsA>,

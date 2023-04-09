@@ -41,7 +41,7 @@ async fn contains_state_diff_for_each_item_spec() -> Result<(), Box<dyn std::err
     } = cmd_ctx.view();
 
     // Diff current and desired states.
-    let state_diffs = DiffCmd::exec(flow, resources, &states_current, &states_desired).await?;
+    let state_diffs = DiffCmd::diff_any(flow, resources, &states_current, &states_desired).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec.id());
     assert_eq!(
@@ -97,7 +97,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     } = cmd_ctx.view();
 
     // Diff current and desired states.
-    let state_diffs = DiffCmd::exec(flow, resources, &states_current, &states_desired).await?;
+    let state_diffs = DiffCmd::diff_any(flow, resources, &states_current, &states_desired).await?;
     <_ as OutputWrite<PeaceTestError>>::present(cmd_ctx.output_mut(), &state_diffs).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec.id());

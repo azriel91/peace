@@ -60,7 +60,7 @@ impl EnvDiffCmd {
                     ..
                 } = ctx.view();
                 let state_diffs =
-                    DiffCmd::exec(flow, resources, &states_saved, &states_desired).await?;
+                    DiffCmd::diff_any(flow, resources, &states_saved, &states_desired).await?;
 
                 Self::state_diffs_present(output, flow, &state_diffs).await?;
 
@@ -95,7 +95,7 @@ impl EnvDiffCmd {
                 } = ctx.view();
 
                 let state_diffs =
-                    DiffCmd::exec(flow, resources, &states_saved_a, &states_saved_b).await?;
+                    DiffCmd::diff_any(flow, resources, &states_saved_a, &states_saved_b).await?;
 
                 Self::state_diffs_present(output, flow, &state_diffs).await?;
 
