@@ -169,6 +169,26 @@ See the [`is_shutdown_requested`] method in particular.
 10. Consolidate `StatesDiscoverCmd` and `ApplyCmd`, so the outcome of a command is generic. Maybe use a trait and structs, instead of enum variants and hardcoded inlined functions, so that it is extendable.
 11. Add an `ListKeysAligned` presentable type so `Presenter`s can align keys of a list dynamically.
 12. Remove the `peace_cfg::State` type.
+13. Contextual presentable strings, for states and diffs.
+
+    What command is this called for:
+
+    - state current: "is .."
+    - state desired: "should be .."
+    - diff between current and desired: "will change from .. to .."
+    - diff between current and cleaned: "will change from .. to .."
+    - diff between two profiles' current states: : "left is .., right is .."
+
+    Maybe we don't burden the presenter implementation, but Peace will insert the contextual words
+
+14. Easy API functions for diffing -- current vs desired, between profiles' current states.
+15. What about diffing states of different state versions?
+
+    Maybe this is already taken care of -- `state_diff` is already passed in both `State`s, so implementors had to manage it already.
+
+16. Rename `StatesSaved`, because we may need to distinguish between `StatesCurrentSaved`, `StatesDesiredSaved`.
+
+
 
 [#67]: https://github.com/azriel91/peace/issues/67
 [#94]: https://github.com/azriel91/peace/issues/94
