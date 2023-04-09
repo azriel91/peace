@@ -95,9 +95,20 @@ pub enum EnvManCommand {
     Status,
     /// Shows the desired state of the environment.
     Desired,
-    /// Shows the diff between the current and desired states of the
-    /// environment.
-    Diff,
+    /// Shows the diff between states of the environment.
+    ///
+    /// By default, this compares the current and desired states of the active
+    /// profile.
+    ///
+    /// Users may pass in two profiles to compare the current states of both
+    /// profiles.
+    Diff {
+        /// First profile in the comparison.
+        #[arg(requires("profile_b"))]
+        profile_a: Option<Profile>,
+        /// Second profile in the comparison.
+        profile_b: Option<Profile>,
+    },
     /// Deploys / updates the environment.
     Deploy,
     /// Cleans the current environment.

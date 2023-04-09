@@ -6,7 +6,7 @@ use envman::{
     },
     model::{
         cli_args::{CliArgs, EnvManCommand, ProfileCommand},
-        EnvManError, ProfileSwitch,
+        EnvDiffSelection, EnvManError, ProfileSwitch,
     },
 };
 use peace::{
@@ -124,7 +124,22 @@ pub fn run() -> Result<(), EnvManError> {
             EnvManCommand::Discover => EnvDiscoverCmd::run(&mut cli_output).await?,
             EnvManCommand::Status => EnvStatusCmd::run(&mut cli_output).await?,
             EnvManCommand::Desired => EnvDesiredCmd::run(&mut cli_output).await?,
-            EnvManCommand::Diff => EnvDiffCmd::run(&mut cli_output).await?,
+            EnvManCommand::Diff {
+                profile_a,
+                profile_b,
+            } => {
+                let env_diff_selection = profile_a
+                    .zip(profile_b)
+                    .map(
+                        |(profile_a, profile_b)| EnvDiffSelection::DiffProfilesCurrent {
+                            profile_a,
+                            profile_b,
+                        },
+                    )
+                    .unwrap_or(EnvDiffSelection::CurrentAndDesired);
+
+                EnvDiffCmd::run(&mut cli_output, env_diff_selection).await?
+            }
             EnvManCommand::Deploy => EnvDeployCmd::run(&mut cli_output).await?,
             EnvManCommand::Clean => EnvCleanCmd::run(&mut cli_output).await?,
         }

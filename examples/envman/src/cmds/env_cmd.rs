@@ -25,7 +25,7 @@ use crate::{
 pub struct EnvCmd;
 
 impl EnvCmd {
-    /// Runs a command on the environment.
+    /// Runs a command on the environment with the active profile.
     ///
     /// # Parameters
     ///
@@ -56,6 +56,61 @@ impl EnvCmd {
         if profile_print {
             Self::profile_print(&mut cmd_ctx).await?;
         }
+
+        let t = f(&mut cmd_ctx).await?;
+
+        Ok(t)
+    }
+
+    /// Runs a command on the environment with the given profile.
+    ///
+    /// # Parameters
+    ///
+    /// * `output`: Output to write the execution outcome.
+    /// * `profile`: The profile to use.
+    /// * `f`: The command to run.
+    pub async fn run_with_profile<O, T, F>(
+        output: &mut O,
+        profile: Profile,
+        f: F,
+    ) -> Result<T, EnvManError>
+    where
+        O: OutputWrite<EnvManError>,
+        for<'fn_once> F: FnOnce(
+            &'fn_once mut CmdCtx<
+                SingleProfileSingleFlow<
+                    '_,
+                    EnvManError,
+                    O,
+                    ParamsKeysImpl<
+                        KeyKnown<WorkspaceParamsKey>,
+                        KeyKnown<ProfileParamsKey>,
+                        KeyKnown<EnvDeployFlowParamsKey>,
+                    >,
+                    SetUp,
+                >,
+            >,
+        ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
+    {
+        let workspace = Workspace::new(
+            app_name!(),
+            #[cfg(not(target_arch = "wasm32"))]
+            WorkspaceSpec::WorkingDir,
+            #[cfg(target_arch = "wasm32")]
+            WorkspaceSpec::SessionStorage,
+        )?;
+        let flow = EnvDeployFlow::flow().await?;
+
+        let mut cmd_ctx = {
+            let cmd_ctx_builder =
+                CmdCtx::builder_single_profile_single_flow::<EnvManError, _>(output, &workspace);
+            crate::cmds::ws_profile_and_flow_params_augment!(cmd_ctx_builder);
+
+            cmd_ctx_builder
+                .with_profile(profile)
+                .with_flow(&flow)
+                .await?
+        };
 
         let t = f(&mut cmd_ctx).await?;
 

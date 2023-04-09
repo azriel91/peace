@@ -1,6 +1,7 @@
 //! Data structures
 
 pub use self::{
+    env_diff_selection::EnvDiffSelection,
     env_type::EnvType,
     env_type_parse_error::EnvTypeParseError,
     envman_error::EnvManError,
@@ -14,6 +15,7 @@ pub use self::{
 #[cfg(not(target_arch = "wasm32"))]
 pub mod cli_args;
 
+mod env_diff_selection;
 mod env_type;
 mod env_type_parse_error;
 mod envman_error;
