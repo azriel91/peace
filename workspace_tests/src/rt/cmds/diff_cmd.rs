@@ -1,7 +1,7 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
-    cmd::ctx::CmdCtx,
+    cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{
         output::{CliOutput, OutputWrite},
@@ -29,16 +29,19 @@ async fn contains_state_diff_for_each_item_spec() -> Result<(), Box<dyn std::err
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
-    // Write current and desired states to disk.
+    // Discover current and desired states.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
     let (states_current, states_desired) =
         StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let SingleProfileSingleFlowView {
+        flow, resources, ..
+    } = cmd_ctx.view();
 
-    // Re-read states from disk.
-    let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
+    // Diff current and desired states.
+    let state_diffs = DiffCmd::exec(flow, resources, &states_current, &states_desired).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec.id());
     assert_eq!(
@@ -75,10 +78,10 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut buffer = Vec::with_capacity(256);
-    let mut cli_output = CliOutput::new_with_writer(&mut buffer);
+    let mut output = CliOutput::new_with_writer(&mut buffer);
 
-    // Write current and desired states to disk.
-    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut cli_output, &workspace)
+    // Discover current and desired states.
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .await?;
@@ -89,9 +92,12 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
     let (states_current, states_desired) =
         StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let SingleProfileSingleFlowView {
+        flow, resources, ..
+    } = cmd_ctx.view();
 
-    // Re-read states from disk.
-    let state_diffs = DiffCmd::exec(&mut cmd_ctx).await?;
+    // Diff current and desired states.
+    let state_diffs = DiffCmd::exec(flow, resources, &states_current, &states_desired).await?;
     <_ as OutputWrite<PeaceTestError>>::present(cmd_ctx.output_mut(), &state_diffs).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec.id());
@@ -136,10 +142,9 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
 
 #[test]
 fn debug() {
-    let debug_str = format!("{:?}", DiffCmd::<VecCopyError, NoOpOutput, ()>::default());
+    let debug_str = format!("{:?}", DiffCmd::<VecCopyError>::default());
     assert!(
-        debug_str
-            == r#"DiffCmd(PhantomData<(workspace_tests::vec_copy_item_spec::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#
+        debug_str == r#"DiffCmd(PhantomData<workspace_tests::vec_copy_item_spec::VecCopyError>)"#
             || debug_str == r#"DiffCmd(PhantomData)"#
     );
 }

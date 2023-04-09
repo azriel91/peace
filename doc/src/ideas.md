@@ -161,7 +161,7 @@ See the [`is_shutdown_requested`] method in particular.
 2. AWS SDK is not WASM ready -- includes `mio` unconditionally through `tokio` (calls UDP). ([aws-sdk-rust#59])
 3. AWS SDK does not always include error detail -- S3 `head_object`. ([aws-sdk-rust#227])
 4. Progress output should enable-able for state current / desired discover / clean functions.
-5. Flow params are annoying to register every time we add another item spec.
+5. Flow params are annoying to register every time we add another item spec. Maybe split end user provided params from item spec params.
 6. Blank item spec needs a lot of rework to be easier to implement an item spec. ([67], [#96])
 7. For `ApplyCmd`, collect `StateCurrent`, `StateDesired`, `StateDiff` in execution report.
 8. AWS errors' `code` and `message` should be shown to the user.

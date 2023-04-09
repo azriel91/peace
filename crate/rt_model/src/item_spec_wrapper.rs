@@ -12,8 +12,7 @@ use peace_data::{
 };
 use peace_resources::{
     resources::ts::{Empty, SetUp},
-    states::{States, StatesCurrent, StatesDesired, StatesSaved},
-    type_reg::untagged::BoxDtDisplay,
+    type_reg::untagged::{BoxDtDisplay, TypeMap},
     Resources,
 };
 
@@ -127,18 +126,15 @@ where
         Ok(state_desired)
     }
 
-    async fn state_diff_exec<ResourcesTs, StatesTs>(
+    async fn state_diff_exec(
         &self,
-        resources: &Resources<ResourcesTs>,
-        states_base: &States<StatesTs>,
-        states_desired: &StatesDesired,
-    ) -> Result<Option<IS::StateDiff>, E>
-    where
-        StatesTs: Debug + Send + Sync + 'static,
-    {
+        resources: &Resources<SetUp>,
+        states_a: &TypeMap<ItemSpecId, BoxDtDisplay>,
+        states_b: &TypeMap<ItemSpecId, BoxDtDisplay>,
+    ) -> Result<Option<IS::StateDiff>, E> {
         let item_spec_id = <IS as ItemSpec>::id(self);
-        let state_base = states_base.get::<IS::State, _>(item_spec_id);
-        let state_desired = states_desired.get::<IS::State, _>(item_spec_id);
+        let state_base = states_a.get::<IS::State, _>(item_spec_id);
+        let state_desired = states_b.get::<IS::State, _>(item_spec_id);
 
         if let Some((state_base, state_desired)) = state_base.zip(state_desired) {
             let state_diff: IS::StateDiff = self
@@ -158,16 +154,16 @@ where
         }
     }
 
-    async fn state_diff_exec_with<ResourcesTs>(
+    async fn state_diff_exec_with(
         &self,
-        resources: &Resources<ResourcesTs>,
-        state_base: &IS::State,
-        state_desired: &IS::State,
+        resources: &Resources<SetUp>,
+        state_a: &IS::State,
+        state_b: &IS::State,
     ) -> Result<IS::StateDiff, E> {
         let state_diff: IS::StateDiff = {
             let data =
                 <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::state_diff(data, state_base, state_desired)
+            <IS as peace_cfg::ItemSpec>::state_diff(data, state_a, state_b)
                 .await
                 .map_err(Into::<E>::into)?
         };
@@ -383,25 +379,13 @@ where
             .map_err(Into::<E>::into)
     }
 
-    async fn state_diff_exec_with_states_saved(
+    async fn state_diff_exec(
         &self,
         resources: &Resources<SetUp>,
-        states_saved: &StatesSaved,
-        states_desired: &StatesDesired,
+        states_a: &TypeMap<ItemSpecId, BoxDtDisplay>,
+        states_b: &TypeMap<ItemSpecId, BoxDtDisplay>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_diff_exec(resources, states_saved, states_desired)
-            .await
-            .map(|state_diff_opt| state_diff_opt.map(BoxDtDisplay::new))
-            .map_err(Into::<E>::into)
-    }
-
-    async fn state_diff_exec_with_states_current(
-        &self,
-        resources: &Resources<SetUp>,
-        states_current: &StatesCurrent,
-        states_desired: &StatesDesired,
-    ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_diff_exec(resources, states_current, states_desired)
+        self.state_diff_exec(resources, states_a, states_b)
             .await
             .map(|state_diff_opt| state_diff_opt.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)

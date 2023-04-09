@@ -5,7 +5,7 @@ use peace::{
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 
-use crate::model::{EnvManError, EnvType};
+use crate::model::{EnvManError, EnvType, ProfileParamsKey, WorkspaceParamsKey};
 
 /// Command to show the current profile.
 #[derive(Debug)]
@@ -35,7 +35,7 @@ impl ProfileShowCmd {
             CmdCtx::builder_single_profile_no_flow::<EnvManError, _>(output, &workspace);
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
-        let profile_key = String::from("profile");
+        let profile_key = WorkspaceParamsKey::Profile;
         let mut cmd_ctx = cmd_ctx_builder
             .with_profile_from_workspace_param(&profile_key)
             .await?;
@@ -46,8 +46,8 @@ impl ProfileShowCmd {
             ..
         } = cmd_ctx.view();
 
-        let profile = workspace_params.get::<Profile, _>("profile");
-        let env_type = profile_params.get::<EnvType, _>("env_type");
+        let profile = workspace_params.get::<Profile, _>(&profile_key);
+        let env_type = profile_params.get::<EnvType, _>(&ProfileParamsKey::EnvType);
 
         if let Some((profile, env_type)) = profile.zip(env_type) {
             presentln!(output, ["Using profile ", profile]);

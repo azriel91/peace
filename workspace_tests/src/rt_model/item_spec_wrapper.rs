@@ -129,14 +129,14 @@ async fn state_desired_try_exec() -> Result<(), VecCopyError> {
 }
 
 #[tokio::test]
-async fn state_diff_exec_with_states_saved() -> Result<(), VecCopyError> {
+async fn state_diff_exec() -> Result<(), VecCopyError> {
     let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
 
     let (resources, states_saved, states_desired) =
         resources_and_states_saved_and_desired(&item_spec_wrapper).await?;
 
     let state_diff = item_spec_wrapper
-        .state_diff_exec_with_states_saved(&resources, &states_saved, &states_desired)
+        .state_diff_exec(&resources, &states_saved, &states_desired)
         .await?
         .expect("Expected state_diff to be Some when state_saved and state_desired both exist.");
 
