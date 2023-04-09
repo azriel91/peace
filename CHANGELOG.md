@@ -9,12 +9,15 @@
 * Serialize `StatesDesired` as part of `ApplyCmd`. ([#107])
 * Consolidate `ItemSpec` functions into single trait. ([#96], [#109])
 * Remove `StatesCurrentDiscoverCmd` and `StatesDesiredDiscoverCmd`. ([#110], [#111])
+* Update `DiffCmd` to take in states to diff. ([#101], [#112])
 
 [#107]: https://github.com/azriel91/peace/pull/107
 [#96]: https://github.com/azriel91/peace/issues/96
 [#109]: https://github.com/azriel91/peace/pull/109
 [#110]: https://github.com/azriel91/peace/issues/110
 [#111]: https://github.com/azriel91/peace/pull/111
+[#101]: https://github.com/azriel91/peace/issues/101
+[#112]: https://github.com/azriel91/peace/pull/112
 
 
 ## 0.0.8 (2023-03-25)
