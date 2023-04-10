@@ -4,10 +4,7 @@ use peace::{
     cmd::scopes::SingleProfileSingleFlowView,
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
     resources::states::StateDiffs,
-    rt::cmds::{
-        sub::{StatesDesiredReadCmd, StatesSavedReadCmd},
-        DiffCmd,
-    },
+    rt::cmds::{sub::StatesSavedReadCmd, DiffCmd},
     rt_model::{output::OutputWrite, Flow},
 };
 
@@ -51,17 +48,9 @@ impl EnvDiffCmd {
     {
         EnvCmd::run(output, true, |ctx| {
             async {
-                let states_saved = StatesSavedReadCmd::exec(ctx).await?;
-                let states_desired = StatesDesiredReadCmd::exec(ctx).await?;
-                let SingleProfileSingleFlowView {
-                    output,
-                    flow,
-                    resources,
-                    ..
-                } = ctx.view();
-                let state_diffs =
-                    DiffCmd::diff_any(flow, resources, &states_saved, &states_desired).await?;
+                let state_diffs = DiffCmd::current_and_desired(ctx).await?;
 
+                let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
                 Self::state_diffs_present(output, flow, &state_diffs).await?;
 
                 Ok(())

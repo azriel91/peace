@@ -255,14 +255,10 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
         .await?;
 
     // Discover current and desired states.
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let SingleProfileSingleFlowView {
-        flow, resources, ..
-    } = cmd_ctx.view();
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Diff current and desired states.
-    let state_diffs = DiffCmd::diff_any(flow, resources, &states_current, &states_desired).await?;
+    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
 
     let state_diff = state_diffs
         .get::<ShCmdStateDiff, _>(&TestFileCreationShCmdItemSpec::ID)

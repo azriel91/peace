@@ -36,12 +36,9 @@ async fn contains_state_diff_for_each_item_spec() -> Result<(), Box<dyn std::err
         .await?;
     let (states_current, states_desired) =
         StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let SingleProfileSingleFlowView {
-        flow, resources, ..
-    } = cmd_ctx.view();
 
     // Diff current and desired states.
-    let state_diffs = DiffCmd::diff_any(flow, resources, &states_current, &states_desired).await?;
+    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec.id());
     assert_eq!(
@@ -51,6 +48,66 @@ async fn contains_state_diff_for_each_item_spec() -> Result<(), Box<dyn std::err
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         states_desired.get::<VecCopyState, _>(VecCopyItemSpec.id())
+    );
+    assert_eq!(
+        Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
+            index: 0,
+            changes: vec![0u8, 1, 2, 3, 4, 5, 6, 7]
+        }])))
+        .as_ref(),
+        vec_diff
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn diff_any_with_multiple_profiles() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    // profile_0
+    let mut cmd_ctx_0 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile_0"))
+        .with_flow(&flow)
+        .await?;
+    let states_current_0 = StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
+
+    // profile_1
+    let mut cmd_ctx_1 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile_1"))
+        .with_flow(&flow)
+        .await?;
+    let resources = cmd_ctx_1.resources_mut();
+    resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
+    let states_current_1 = StatesDiscoverCmd::current(&mut cmd_ctx_1).await?;
+
+    let SingleProfileSingleFlowView {
+        flow, resources, ..
+    } = cmd_ctx_1.view();
+
+    // Diff current states for profile_0 and profile_1.
+    let state_diffs =
+        DiffCmd::diff_any(flow, resources, &states_current_0, &states_current_1).await?;
+
+    let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec.id());
+    assert_eq!(
+        Some(VecCopyState::new()).as_ref(),
+        states_current_0.get::<VecCopyState, _>(VecCopyItemSpec.id())
+    );
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        states_current_1.get::<VecCopyState, _>(VecCopyItemSpec.id())
     );
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
@@ -92,12 +149,9 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
     let (states_current, states_desired) =
         StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let SingleProfileSingleFlowView {
-        flow, resources, ..
-    } = cmd_ctx.view();
 
     // Diff current and desired states.
-    let state_diffs = DiffCmd::diff_any(flow, resources, &states_current, &states_desired).await?;
+    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
     <_ as OutputWrite<PeaceTestError>>::present(cmd_ctx.output_mut(), &state_diffs).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec.id());
