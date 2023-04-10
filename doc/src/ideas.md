@@ -140,6 +140,29 @@ See the [`is_shutdown_requested`] method in particular.
 </div>
 </details>
 
+<details>
+<summary>11. Diffable item spec params</summary>
+<div>
+
+`DiffCmd` originally was written to diff the current and desired states. However, with the second use case of "diff states between two profiles", it is also apparent that other related functionality is useful:
+
+* Diff profile params / flow params.
+* Diff item spec params between profiles for a given flow.
+
+Because of diffable params, and [#94], the `ItemSpec` should likely have:
+
+* `type Params: ItemSpecParams + Serialize + DeserializeOwned`.
+* feature gated `fn item_spec_params_diff(..)`.
+
+`fn item_spec_params_diff(..)` should likely have a similar signature to `fn state_diff(..)`, whereby if one uses  `XData<'_>`, the other should as well for consistency:
+
+* For `MultiProfileSingleFlow` commands, a diff for item spec params which contains a referential value (e.g. "use the `some_predecessor.ip_address()`") may(?) need information about `some_predecessor` through `Resources` / `Data`.
+
+We should work out the design of that before settling on what `state_diff` and `item_spec_params_diff`'s function parameters will be. See **Design Thoughts** on [#94] for how it may look like.
+
+</div>
+</details>
+
 
 ## Notes
 
