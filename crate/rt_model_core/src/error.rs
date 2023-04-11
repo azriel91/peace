@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use peace_core::FlowId;
+use peace_core::{FlowId, Profile};
 
 cfg_if::cfg_if! {
     if #[cfg(not(target_arch = "wasm32"))] {
@@ -189,6 +189,48 @@ pub enum Error {
         diagnostic(code(peace_rt_model::workspace_params_profile_none))
     )]
     WorkspaceParamsProfileNone,
+
+    /// Profile to diff does not exist in `MultiProfileSingleFlow` scope.
+    ///
+    /// This could mean the caller provided a profile that does not exist, or
+    /// the profile filter function filtered out the profile from the list of
+    /// profiles.
+    #[error("Profile `{profile}` not in scope, make sure it exists in `.peace/*/{profile}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::profile_not_in_scope),
+            help(
+                "Make sure the profile is spelt correctly.\n\
+                Available profiles are: [{profiles_in_scope}]",
+                profiles_in_scope = profiles_in_scope
+                    .iter()
+                    .map(|profile| format!("{profile}"))
+                    .collect::<Vec<_>>()
+                    .join(",")
+            )
+        )
+    )]
+    ProfileNotInScope {
+        /// The profile that was not in scope.
+        profile: Profile,
+        /// The profiles that are in scope.
+        profiles_in_scope: Vec<Profile>,
+    },
+
+    /// Profile to diff has not had its states current discovered.
+    #[error("Profile `{profile}`'s states have not been discovered.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::profile_states_current_not_discovered),
+            help("Switch to the profile and run the states discover command.")
+        )
+    )]
+    ProfileStatesCurrentNotDiscovered {
+        /// The profile that was not in scope.
+        profile: Profile,
+    },
 
     /// Failed to serialize profile init params.
     #[error("Failed to serialize profile init params.")]

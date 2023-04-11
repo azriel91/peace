@@ -115,6 +115,57 @@ where
     profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
 }
 
+/// Access to fields in `MultiProfileSingleFlow` so that multiple borrows can
+/// happen simultaneously.
+#[derive(Debug)]
+pub struct MultiProfileSingleFlowView<'view, E, O, PKeys>
+where
+    PKeys: ParamsKeys + 'static,
+{
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    pub output: &'view mut O,
+    /// Workspace that the `peace` tool runs in.
+    pub workspace: &'view Workspace,
+    /// The profiles that are accessible by this command.
+    pub profiles: &'view [Profile],
+    /// Profile directories that store params and flows.
+    pub profile_dirs: &'view BTreeMap<Profile, ProfileDir>,
+    /// Directories of each profile's execution history.
+    pub profile_history_dirs: &'view BTreeMap<Profile, ProfileHistoryDir>,
+    /// The chosen process flow.
+    pub flow: &'view Flow<E>,
+    /// Flow directory that stores params and states.
+    pub flow_dirs: &'view BTreeMap<Profile, FlowDir>,
+    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+    /// [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
+    /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
+    /// [`FlowParams`]: peace_rt_model::params::FlowParams
+    pub params_type_regs: &'view ParamsTypeRegs<PKeys>,
+    /// Workspace params.
+    pub workspace_params: &'view WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    /// Profile params for the profile.
+    pub profile_to_profile_params:
+        &'view BTreeMap<Profile, ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
+    /// Flow params for the selected flow.
+    pub profile_to_flow_params:
+        &'view BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
+    /// Type registries to deserialize [`StatesSavedFile`] and
+    /// [`StatesDesiredFile`].
+    ///
+    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
+    pub states_type_reg: &'view StatesTypeReg,
+    /// Saved states for each profile for the selected flow.
+    pub profile_to_states_saved: &'view BTreeMap<Profile, Option<StatesSaved>>,
+}
+
 impl<'ctx, E, O, PKeys> MultiProfileSingleFlow<'ctx, E, O, PKeys>
 where
     PKeys: ParamsKeys + 'static,
@@ -143,6 +194,43 @@ where
         profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
     ) -> Self {
         Self {
+            output,
+            workspace,
+            profiles,
+            profile_dirs,
+            profile_history_dirs,
+            flow,
+            flow_dirs,
+            params_type_regs,
+            workspace_params,
+            profile_to_profile_params,
+            profile_to_flow_params,
+            states_type_reg,
+            profile_to_states_saved,
+        }
+    }
+
+    /// Returns a view struct of this scope.
+    ///
+    /// This allows the flow and resources to be borrowed concurrently.
+    pub fn view(&mut self) -> MultiProfileSingleFlowView<'_, E, O, PKeys> {
+        let Self {
+            output,
+            workspace,
+            profiles,
+            profile_dirs,
+            profile_history_dirs,
+            flow,
+            flow_dirs,
+            params_type_regs,
+            workspace_params,
+            profile_to_profile_params,
+            profile_to_flow_params,
+            states_type_reg,
+            profile_to_states_saved,
+        } = self;
+
+        MultiProfileSingleFlowView {
             output,
             workspace,
             profiles,

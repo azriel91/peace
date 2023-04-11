@@ -1,9 +1,13 @@
 use std::{fmt::Debug, marker::PhantomData};
 
 use futures::{StreamExt, TryStreamExt};
+use peace_cfg::Profile;
 use peace_cmd::{
     ctx::CmdCtx,
-    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+    scopes::{
+        MultiProfileSingleFlow, MultiProfileSingleFlowView, SingleProfileSingleFlow,
+        SingleProfileSingleFlowView,
+    },
 };
 use peace_resources::{
     internal::StateDiffsMut,
@@ -43,6 +47,63 @@ where
         let SingleProfileSingleFlowView {
             flow, resources, ..
         } = cmd_ctx.view();
+
+        Self::diff_any(flow, resources, &states_a, &states_b).await
+    }
+
+    /// Returns the [`state_diff`]`s between the saved current states of two
+    /// profiles.
+    ///
+    /// Both profiles' current states must have been discovered prior to
+    /// running this. See [`StatesDiscoverCmd::current`].
+    ///
+    /// [`state_diff`]: peace_cfg::ItemSpec::state_diff
+    /// [`StatesDiscoverCmd::current`]: crate::cmds::StatesDiscoverCmd::current
+    pub async fn diff_profiles_current<O, PKeys>(
+        cmd_ctx: &mut CmdCtx<MultiProfileSingleFlow<'_, E, O, PKeys>>,
+        profile_a: &Profile,
+        profile_b: &Profile,
+    ) -> Result<StateDiffs, E>
+    where
+        PKeys: ParamsKeys + 'static,
+        O: OutputWrite<E>,
+    {
+        let MultiProfileSingleFlowView {
+            flow,
+            resources,
+            profiles,
+            profile_to_states_saved,
+            ..
+        } = cmd_ctx.view();
+
+        let states_a = profile_to_states_saved
+            .get(profile_a)
+            .ok_or_else(|| {
+                let profile = profile_a.clone();
+                let profiles_in_scope = profiles.to_vec();
+                Error::ProfileNotInScope {
+                    profile,
+                    profiles_in_scope,
+                }
+            })?
+            .ok_or_else(|| {
+                let profile = profile_a.clone();
+                Error::ProfileStatesCurrentNotDiscovered { profile }
+            })?;
+        let states_b = profile_to_states_saved
+            .get(profile_b)
+            .ok_or_else(|| {
+                let profile = profile_b.clone();
+                let profiles_in_scope = profiles.to_vec();
+                Error::ProfileNotInScope {
+                    profile,
+                    profiles_in_scope,
+                }
+            })?
+            .ok_or_else(|| {
+                let profile = profile_b.clone();
+                Error::ProfileStatesCurrentNotDiscovered { profile }
+            })?;
 
         Self::diff_any(flow, resources, &states_a, &states_b).await
     }
