@@ -107,7 +107,7 @@ where
                 Error::ProfileStatesCurrentNotDiscovered { profile }
             })?;
 
-        Self::diff_any(flow, resources, &states_a, &states_b).await
+        Self::diff_any(flow, resources, states_a, states_b).await
     }
 
     /// Returns the [`state_diff`]` for each [`ItemSpec`].
@@ -124,7 +124,7 @@ where
         states_a: &States<StatesTsA>,
         states_b: &States<StatesTsB>,
     ) -> Result<StateDiffs, E> {
-        let resources_ref = &*resources;
+        let resources_ref = resources;
         let state_diffs = {
             let state_diffs_mut = flow
                 .graph()
