@@ -3,9 +3,9 @@ use peace::{
     cfg::{app_name, AppName, Profile},
     cmd::{
         ctx::CmdCtx,
-        scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+        scopes::{MultiProfileSingleFlow, SingleProfileSingleFlow, SingleProfileSingleFlowView},
     },
-    fmt::{presentln, Presentable},
+    fmt::presentln,
     resources::resources::ts::SetUp,
     rt_model::{
         output::OutputWrite,
@@ -62,23 +62,18 @@ impl EnvCmd {
         Ok(t)
     }
 
-    /// Runs a command on the environment with the given profile.
+    /// Runs a multi-profile command using the `EnvDeploy` flow..
     ///
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    /// * `profile`: The profile to use.
     /// * `f`: The command to run.
-    pub async fn run_with_profile<O, T, F>(
-        output: &mut O,
-        profile: Profile,
-        f: F,
-    ) -> Result<T, EnvManError>
+    pub async fn multi_profile<O, T, F>(output: &mut O, f: F) -> Result<T, EnvManError>
     where
         O: OutputWrite<EnvManError>,
         for<'fn_once> F: FnOnce(
             &'fn_once mut CmdCtx<
-                SingleProfileSingleFlow<
+                MultiProfileSingleFlow<
                     '_,
                     EnvManError,
                     O,
@@ -103,51 +98,15 @@ impl EnvCmd {
 
         let mut cmd_ctx = {
             let cmd_ctx_builder =
-                CmdCtx::builder_single_profile_single_flow::<EnvManError, _>(output, &workspace);
+                CmdCtx::builder_multi_profile_single_flow::<EnvManError, _>(output, &workspace);
             crate::cmds::ws_profile_and_flow_params_augment!(cmd_ctx_builder);
 
-            cmd_ctx_builder
-                .with_profile(profile)
-                .with_flow(&flow)
-                .await?
+            cmd_ctx_builder.with_flow(&flow).await?
         };
 
         let t = f(&mut cmd_ctx).await?;
 
         Ok(t)
-    }
-
-    /// Runs a command on the environment and presents the returned information.
-    ///
-    /// # Parameters
-    ///
-    /// * `output`: Output to write the execution outcome.
-    /// * `profile_print`: Whether to print the profile used.
-    /// * `f`: The command to run.
-    pub async fn run_and_present<O, T, F>(
-        output: &mut O,
-        profile_print: bool,
-        f: F,
-    ) -> Result<(), EnvManError>
-    where
-        O: OutputWrite<EnvManError>,
-        for<'fn_once> F: FnOnce(
-            &'fn_once mut EnvManCmdCtx<'_, O, SetUp>,
-        ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
-        T: Presentable,
-    {
-        cmd_ctx_init!(output, cmd_ctx);
-
-        if profile_print {
-            Self::profile_print(&mut cmd_ctx).await?;
-        }
-
-        let t = f(&mut cmd_ctx).await?;
-
-        let output = cmd_ctx.output_mut();
-        presentln!(output, [&t]);
-
-        Ok(())
     }
 
     async fn profile_print<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O, SetUp>) -> Result<(), EnvManError>
