@@ -10,6 +10,8 @@
 * Consolidate `ItemSpec` functions into single trait. ([#96], [#109])
 * Remove `StatesCurrentDiscoverCmd` and `StatesDesiredDiscoverCmd`. ([#110], [#111])
 * Update `DiffCmd` to take in states to diff. ([#101], [#112])
+* Add `DiffCmd::current_and_desired` to diff current and desired states of a profile. ([#113], [#114])
+* Add `DiffCmd::diff_profiles_current` to diff current states of two profiles. ([#113], [#114])
 
 [#107]: https://github.com/azriel91/peace/pull/107
 [#96]: https://github.com/azriel91/peace/issues/96
@@ -18,6 +20,8 @@
 [#111]: https://github.com/azriel91/peace/pull/111
 [#101]: https://github.com/azriel91/peace/issues/101
 [#112]: https://github.com/azriel91/peace/pull/112
+[#113]: https://github.com/azriel91/peace/issues/113
+[#114]: https://github.com/azriel91/peace/pull/114
 
 
 ## 0.0.8 (2023-03-25)
