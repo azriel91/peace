@@ -1,7 +1,7 @@
 [package]
 name = "peace_cfg"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
-version = "0.0.8"
+version = "0.0.9"
 edition = "2021"
 description = "Configuration model for the peace automation framework."
 repository = "https://github.com/azriel91/peace"
@@ -19,9 +19,9 @@ test = false
 async-trait = "0.1.68"
 dyn-clone = "1.0.11"
 enser = "0.1.3"
-peace_core = { path = "../core", version = "0.0.8" }
-peace_data = { path = "../data", version = "0.0.8" }
-peace_resources = { path = "../resources", version = "0.0.8" }
+peace_core = { path = "../core", version = "0.0.9" }
+peace_data = { path = "../data", version = "0.0.9" }
+peace_resources = { path = "../resources", version = "0.0.9" }
 serde = { version = "1.0.159", features = ["derive"] }
 tynm = "0.1.7"
 

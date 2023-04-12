@@ -39,14 +39,20 @@ Collect coverage and open `html` report.
 1. Update crate versions.
 
     ```bash
-    sd -s 'version = "0.0.4"' 'version = "0.0.5"' $(fd -tf -F toml)
+    sd -s 'version = "0.0.9"' 'version = "0.0.10"' $(fd -tf -F toml) README.md src/lib.rs
 
     # Make sure only `peace` crates are updated.
     git --no-pager diff | rg '^[+]' | rg -v '(peace)|(\+\+\+)|\+version'
     ```
 
 2. Update `CHANGELOG.md` with the version and today's date.
-3. Push a tag to the repository.
+3. If dependency versions have changed, update `licenses.html`:
+
+    ```bash
+    cargo about generate --workspace --all-features about.hbs > doc/src/licenses.html
+    ```
+
+4. Push a tag to the repository.
 
     The [`publish`] GitHub workflow will automatically publish the crates to [`crates.io`].
 

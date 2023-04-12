@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.0.9 (2023-04-13)
 
 * Rename `app_cycle` example to `envman`. ([#35], [#107])
 * Develop `envman` example to have sensible errors and state display messages. ([#35], [#107])

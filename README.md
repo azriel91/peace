@@ -52,13 +52,13 @@ See:
 * 🟢 Discover current and desired states.
 * 🟢 Define diff calculation between states.
 * 🟢 Store and recall parameters across commands.
+* 🟢 Diff states between multiple profiles.
 * 🟡 Feature-gated incremental functionality.
 * 🟡 Off-the-shelf support for common items.
 * 🟡 Dry run.
 * 🟣 WASM support.
 * ⚫ Referential parameters ([#94]) -- ability to specify usage of values generated during automation as parameters to subsequent items.
 * ⚫ Cancel-safe interruption via [`tokio-graceful-shutdown`].
-* ⚫ Diff states between multiple profiles.
 * ⚫ Secure-by-design Support: Encrypted value storage, decrypted per execution / time based agent.
 * ⚫ Tutorial for writing a software lifecycle management tool.
 * ⚫ Built-in application execution methods -- CLI, web service.

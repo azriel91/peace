@@ -1,6 +1,6 @@
 [package]
 name = "peace_item_spec_blank"
-version = "0.0.8"
+version = "0.0.9"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
 description = "Copies a number from one resource to another"
@@ -18,7 +18,7 @@ test = false
 [dependencies]
 derivative = { workspace = true }
 miette = { workspace = true, optional = true }
-peace = { path = "../..", version = "0.0.8", default-features = false }
+peace = { path = "../..", version = "0.0.9", default-features = false }
 serde = { version = "1.0.159", features = ["derive"] }
 thiserror = "1.0.40"
 
