@@ -46,7 +46,13 @@ Collect coverage and open `html` report.
     ```
 
 2. Update `CHANGELOG.md` with the version and today's date.
-3. Push a tag to the repository.
+3. If dependency versions have changed, update `licenses.html`:
+
+    ```bash
+    cargo about generate --workspace --all-features about.hbs > doc/src/licenses.html
+    ```
+
+4. Push a tag to the repository.
 
     The [`publish`] GitHub workflow will automatically publish the crates to [`crates.io`].
 
