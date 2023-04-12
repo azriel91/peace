@@ -60,7 +60,7 @@ where
     /// [`state_diff`]: peace_cfg::ItemSpec::state_diff
     /// [`StatesDiscoverCmd::current`]: crate::cmds::StatesDiscoverCmd::current
     pub async fn diff_profiles_current<O, PKeys>(
-        cmd_ctx: &mut CmdCtx<MultiProfileSingleFlow<'_, E, O, PKeys>>,
+        cmd_ctx: &mut CmdCtx<MultiProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         profile_a: &Profile,
         profile_b: &Profile,
     ) -> Result<StateDiffs, E>
@@ -86,6 +86,7 @@ where
                     profiles_in_scope,
                 }
             })?
+            .as_ref()
             .ok_or_else(|| {
                 let profile = profile_a.clone();
                 Error::ProfileStatesCurrentNotDiscovered { profile }
@@ -100,6 +101,7 @@ where
                     profiles_in_scope,
                 }
             })?
+            .as_ref()
             .ok_or_else(|| {
                 let profile = profile_b.clone();
                 Error::ProfileStatesCurrentNotDiscovered { profile }

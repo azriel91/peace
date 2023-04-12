@@ -1,7 +1,7 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
-    cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
+    cmd::ctx::CmdCtx,
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{
         output::{CliOutput, OutputWrite},
@@ -62,7 +62,7 @@ async fn contains_state_diff_for_each_item_spec() -> Result<(), Box<dyn std::err
 }
 
 #[tokio::test]
-async fn diff_any_with_multiple_profiles() -> Result<(), Box<dyn std::error::Error>> {
+async fn diff_profiles_current_with_multiple_profiles() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -77,28 +77,30 @@ async fn diff_any_with_multiple_profiles() -> Result<(), Box<dyn std::error::Err
     let mut output = NoOpOutput;
 
     // profile_0
+    let profile_0 = profile!("test_profile_0");
     let mut cmd_ctx_0 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile_0"))
+        .with_profile(profile_0.clone())
         .with_flow(&flow)
         .await?;
     let states_current_0 = StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
 
     // profile_1
+    let profile_1 = profile!("test_profile_1");
     let mut cmd_ctx_1 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
-        .with_profile(profile!("test_profile_1"))
+        .with_profile(profile_1.clone())
         .with_flow(&flow)
         .await?;
     let resources = cmd_ctx_1.resources_mut();
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
     let states_current_1 = StatesDiscoverCmd::current(&mut cmd_ctx_1).await?;
 
-    let SingleProfileSingleFlowView {
-        flow, resources, ..
-    } = cmd_ctx_1.view();
+    let mut cmd_ctx_multi = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
+        .with_flow(&flow)
+        .await?;
 
     // Diff current states for profile_0 and profile_1.
     let state_diffs =
-        DiffCmd::diff_any(flow, resources, &states_current_0, &states_current_1).await?;
+        DiffCmd::diff_profiles_current(&mut cmd_ctx_multi, &profile_0, &profile_1).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec.id());
     assert_eq!(
@@ -117,6 +119,194 @@ async fn diff_any_with_multiple_profiles() -> Result<(), Box<dyn std::error::Err
         .as_ref(),
         vec_diff
     );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn diff_profiles_current_with_missing_profile_0() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    // profile_0
+    let profile_0 = profile!("test_profile_0");
+
+    // profile_1
+    let profile_1 = profile!("test_profile_1");
+    let mut cmd_ctx_1 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile_1.clone())
+        .with_flow(&flow)
+        .await?;
+    let resources = cmd_ctx_1.resources_mut();
+    resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
+    StatesDiscoverCmd::current(&mut cmd_ctx_1).await?;
+
+    let mut cmd_ctx_multi = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
+        .with_flow(&flow)
+        .await?;
+
+    let diff_result =
+        DiffCmd::diff_profiles_current(&mut cmd_ctx_multi, &profile_0, &profile_1).await;
+
+    assert!(matches!(
+            diff_result,
+            Err(PeaceTestError::PeaceRtError(
+                peace::rt_model::Error::ProfileNotInScope { profile, profiles_in_scope }
+            ))
+            if profile == profile_0 && profiles_in_scope == vec![profile_1]));
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn diff_profiles_current_with_missing_profile_1() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    // profile_0
+    let profile_0 = profile!("test_profile_0");
+    let mut cmd_ctx_0 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile_0.clone())
+        .with_flow(&flow)
+        .await?;
+    StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
+
+    // profile_1
+    let profile_1 = profile!("test_profile_1");
+
+    let mut cmd_ctx_multi = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
+        .with_flow(&flow)
+        .await?;
+
+    let diff_result =
+        DiffCmd::diff_profiles_current(&mut cmd_ctx_multi, &profile_0, &profile_1).await;
+
+    assert!(matches!(
+            diff_result,
+            Err(PeaceTestError::PeaceRtError(
+                peace::rt_model::Error::ProfileNotInScope { profile, profiles_in_scope }
+            ))
+            if profile == profile_1 && profiles_in_scope == vec![profile_0]));
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn diff_profiles_current_with_profile_0_missing_states_current()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    // profile_0
+    let profile_0 = profile!("test_profile_0");
+    let mut cmd_ctx_0 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile_0.clone())
+        .with_flow(&flow)
+        .await?;
+    StatesDiscoverCmd::desired(&mut cmd_ctx_0).await?;
+
+    // profile_1
+    let profile_1 = profile!("test_profile_1");
+    let mut cmd_ctx_1 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile_1.clone())
+        .with_flow(&flow)
+        .await?;
+    let resources = cmd_ctx_1.resources_mut();
+    resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
+    StatesDiscoverCmd::current(&mut cmd_ctx_1).await?;
+
+    let mut cmd_ctx_multi = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
+        .with_flow(&flow)
+        .await?;
+
+    let diff_result =
+        DiffCmd::diff_profiles_current(&mut cmd_ctx_multi, &profile_0, &profile_1).await;
+
+    assert!(matches!(
+            diff_result,
+            Err(PeaceTestError::PeaceRtError(
+                peace::rt_model::Error::ProfileStatesCurrentNotDiscovered { profile }
+            ))
+            if profile == profile_0));
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn diff_profiles_current_with_profile_1_missing_states_current()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+
+    // profile_0
+    let profile_0 = profile!("test_profile_0");
+    let mut cmd_ctx_0 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile_0.clone())
+        .with_flow(&flow)
+        .await?;
+    StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
+
+    // profile_1
+    let profile_1 = profile!("test_profile_1");
+    let mut cmd_ctx_1 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile_1.clone())
+        .with_flow(&flow)
+        .await?;
+    StatesDiscoverCmd::desired(&mut cmd_ctx_1).await?;
+
+    let mut cmd_ctx_multi = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
+        .with_flow(&flow)
+        .await?;
+
+    let diff_result =
+        DiffCmd::diff_profiles_current(&mut cmd_ctx_multi, &profile_0, &profile_1).await;
+
+    assert!(matches!(
+            diff_result,
+            Err(PeaceTestError::PeaceRtError(
+                peace::rt_model::Error::ProfileStatesCurrentNotDiscovered { profile }
+            ))
+            if profile == profile_1));
 
     Ok(())
 }
