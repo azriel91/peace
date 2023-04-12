@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate, ProgressSender};
-use peace::cfg::{state::Generated, OpCheckStatus, OpCtx};
+use peace::cfg::{state::Generated, FnCtx, OpCheckStatus};
 
 use crate::item_specs::peace_aws_instance_profile::{
     model::InstanceProfileIdAndArn, InstanceProfileData, InstanceProfileError,
@@ -172,7 +172,7 @@ where
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         _instance_profile_data: InstanceProfileData<'_, Id>,
         _state_current: &InstanceProfileState,
         state_desired: &InstanceProfileState,
@@ -183,22 +183,22 @@ where
 
     // Not sure why we can't use this:
     //
-    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
-    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
+    // #[cfg(not(feature = "output_progress"))] _fn_ctx: OpCtx<'_>,
+    // #[cfg(feature = "output_progress")] fn_ctx: OpCtx<'_>,
     //
     // There's an error saying lifetime bounds don't match the trait definition.
     //
     // Likely an issue with the codegen in `async-trait`.
     #[allow(unused_variables)]
     pub async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: InstanceProfileData<'_, Id>,
         state_current: &InstanceProfileState,
         state_desired: &InstanceProfileState,
         diff: &InstanceProfileStateDiff,
     ) -> Result<InstanceProfileState, InstanceProfileError> {
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
 
         match diff {
             InstanceProfileStateDiff::Added => match state_desired {

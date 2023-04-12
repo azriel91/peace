@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
+    cfg::{async_trait, FnCtx, ItemSpec, ItemSpecId, OpCheckStatus},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -77,31 +77,31 @@ where
     }
 
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: S3ObjectData<'_, Id>,
     ) -> Result<Option<Self::State>, S3ObjectError> {
-        S3ObjectStateCurrentFn::try_state_current(op_ctx, data).await
+        S3ObjectStateCurrentFn::try_state_current(fn_ctx, data).await
     }
 
     async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: S3ObjectData<'_, Id>,
     ) -> Result<Self::State, S3ObjectError> {
-        S3ObjectStateCurrentFn::state_current(op_ctx, data).await
+        S3ObjectStateCurrentFn::state_current(fn_ctx, data).await
     }
 
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: S3ObjectData<'_, Id>,
     ) -> Result<Option<Self::State>, S3ObjectError> {
-        S3ObjectStateDesiredFn::try_state_desired(op_ctx, data).await
+        S3ObjectStateDesiredFn::try_state_desired(fn_ctx, data).await
     }
 
     async fn state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: S3ObjectData<'_, Id>,
     ) -> Result<Self::State, S3ObjectError> {
-        S3ObjectStateDesiredFn::state_desired(op_ctx, data).await
+        S3ObjectStateDesiredFn::state_desired(fn_ctx, data).await
     }
 
     async fn state_diff(
@@ -126,22 +126,22 @@ where
     }
 
     async fn apply_dry(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        S3ObjectApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        S3ObjectApplyFns::apply_dry(fn_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        S3ObjectApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
+        S3ObjectApplyFns::apply(fn_ctx, data, state_current, state_target, diff).await
     }
 }

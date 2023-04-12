@@ -7,7 +7,7 @@ use diff::{Diff, VecDiff, VecDiffType};
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::{
-    cfg::{async_trait, item_spec_id, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
+    cfg::{async_trait, item_spec_id, FnCtx, ItemSpec, ItemSpecId, OpCheckStatus},
     data::{
         accessors::{RMaybe, R, W},
         Data,
@@ -40,25 +40,25 @@ impl ItemSpec for VecCopyItemSpec {
     }
 
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: VecCopyData<'_>,
     ) -> Result<Option<Self::State>, VecCopyError> {
-        Self::state_current(op_ctx, data).await.map(Some)
+        Self::state_current(fn_ctx, data).await.map(Some)
     }
 
     async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: VecCopyData<'_>,
     ) -> Result<Self::State, VecCopyError> {
         #[cfg(not(feature = "output_progress"))]
-        let _op_ctx = op_ctx;
+        let _fn_ctx = fn_ctx;
 
         let vec_copy_state = VecCopyState::from(data.dest().0.clone());
 
         #[cfg(feature = "output_progress")]
         {
             if let Ok(len) = u64::try_from(vec_copy_state.len()) {
-                op_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
+                fn_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
             }
         }
 
@@ -66,24 +66,24 @@ impl ItemSpec for VecCopyItemSpec {
     }
 
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: VecCopyData<'_>,
     ) -> Result<Option<Self::State>, VecCopyError> {
-        Self::state_desired(op_ctx, data).await.map(Some)
+        Self::state_desired(fn_ctx, data).await.map(Some)
     }
 
     async fn state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: VecCopyData<'_>,
     ) -> Result<Self::State, VecCopyError> {
         #[cfg(not(feature = "output_progress"))]
-        let _op_ctx = op_ctx;
+        let _fn_ctx = fn_ctx;
         let vec_copy_state = VecCopyState::from(data.src().0.clone());
 
         #[cfg(feature = "output_progress")]
         {
             if let Ok(len) = u64::try_from(vec_copy_state.len()) {
-                op_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
+                fn_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
             }
         }
 
@@ -131,7 +131,7 @@ impl ItemSpec for VecCopyItemSpec {
     }
 
     async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         _data: Self::Data<'_>,
         _state_current: &Self::State,
         state_target: &Self::State,
@@ -142,7 +142,7 @@ impl ItemSpec for VecCopyItemSpec {
     }
 
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         mut data: Self::Data<'_>,
         _state_current: &Self::State,
         state_target: &Self::State,
@@ -153,10 +153,10 @@ impl ItemSpec for VecCopyItemSpec {
         dest.0.extend_from_slice(state_target.as_slice());
 
         #[cfg(not(feature = "output_progress"))]
-        let _op_ctx = op_ctx;
+        let _fn_ctx = fn_ctx;
         #[cfg(feature = "output_progress")]
         if let Ok(n) = state_target.len().try_into() {
-            op_ctx.progress_sender().inc(n, ProgressMsgUpdate::NoChange);
+            fn_ctx.progress_sender().inc(n, ProgressMsgUpdate::NoChange);
         }
 
         Ok(state_target.clone())

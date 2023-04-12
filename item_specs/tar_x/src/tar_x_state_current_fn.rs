@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, path::Path};
 
-use peace::cfg::OpCtx;
+use peace::cfg::FnCtx;
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
 
@@ -13,16 +13,16 @@ where
     Id: Send + Sync,
 {
     pub async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: TarXData<'_, Id>,
     ) -> Result<FileMetadatas, TarXError> {
         let tar_x_params = data.tar_x_params();
         let dest = tar_x_params.dest();
 
         #[cfg(not(target_arch = "wasm32"))]
-        let files_extracted = Self::files_extracted(op_ctx, dest).await?;
+        let files_extracted = Self::files_extracted(fn_ctx, dest).await?;
         #[cfg(target_arch = "wasm32")]
-        let files_extracted = Self::files_extracted(op_ctx, data.storage(), dest)?;
+        let files_extracted = Self::files_extracted(fn_ctx, data.storage(), dest)?;
 
         let dest_files = FileMetadatas::from(files_extracted);
 
@@ -33,7 +33,7 @@ where
 
     #[cfg(not(target_arch = "wasm32"))]
     pub async fn files_extracted(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         dest: &Path,
     ) -> Result<Vec<FileMetadata>, TarXError> {
         use std::time::UNIX_EPOCH;
@@ -123,7 +123,7 @@ where
 
     #[cfg(target_arch = "wasm32")]
     fn files_extracted(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         _storage: &peace::rt_model::Storage,
         _dest: &Path,
     ) -> Result<Vec<FileMetadata>, TarXError> {

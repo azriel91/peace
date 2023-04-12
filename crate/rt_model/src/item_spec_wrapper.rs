@@ -5,7 +5,7 @@ use std::{
 };
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
-use peace_cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx};
+use peace_cfg::{async_trait, FnCtx, ItemSpec, ItemSpecId, OpCheckStatus};
 use peace_data::{
     marker::{ApplyDry, Clean, Current, Desired},
     Data,
@@ -70,13 +70,13 @@ where
 
     async fn state_current_try_exec<ResourcesTs>(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<ResourcesTs>,
     ) -> Result<Option<IS::State>, E> {
         let state_current = {
             let data =
                 <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::try_state_current(op_ctx, data).await?
+            <IS as peace_cfg::ItemSpec>::try_state_current(fn_ctx, data).await?
         };
         if let Some(state_current) = state_current.as_ref() {
             resources.borrow_mut::<Current<IS::State>>().0 = Some(state_current.clone());
@@ -87,13 +87,13 @@ where
 
     async fn state_current_exec<ResourcesTs>(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<ResourcesTs>,
     ) -> Result<IS::State, E> {
         let state_current = {
             let data =
                 <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::state_current(op_ctx, data).await?
+            <IS as peace_cfg::ItemSpec>::state_current(fn_ctx, data).await?
         };
         resources.borrow_mut::<Current<IS::State>>().0 = Some(state_current.clone());
 
@@ -102,11 +102,11 @@ where
 
     async fn state_desired_try_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<IS::State>, E> {
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_desired = <IS as peace_cfg::ItemSpec>::try_state_desired(op_ctx, data).await?;
+        let state_desired = <IS as peace_cfg::ItemSpec>::try_state_desired(fn_ctx, data).await?;
         if let Some(state_desired) = state_desired.as_ref() {
             resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
         }
@@ -116,11 +116,11 @@ where
 
     async fn state_desired_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<IS::State, E> {
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_desired = <IS as peace_cfg::ItemSpec>::state_desired(op_ctx, data).await?;
+        let state_desired = <IS as peace_cfg::ItemSpec>::state_desired(fn_ctx, data).await?;
         resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
 
         Ok(state_desired)
@@ -186,7 +186,7 @@ where
 
     async fn apply_op_exec_dry<ResourcesTs>(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<ResourcesTs>,
         state_current: &IS::State,
         state_desired: &IS::State,
@@ -194,7 +194,7 @@ where
     ) -> Result<IS::State, E> {
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured_dry = <IS as peace_cfg::ItemSpec>::apply_dry(
-            op_ctx,
+            fn_ctx,
             data,
             state_current,
             state_desired,
@@ -210,7 +210,7 @@ where
 
     async fn apply_op_exec<ResourcesTs>(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<ResourcesTs>,
         state_current: &IS::State,
         state_desired: &IS::State,
@@ -218,7 +218,7 @@ where
     ) -> Result<IS::State, E> {
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured = <IS as peace_cfg::ItemSpec>::apply(
-            op_ctx,
+            fn_ctx,
             data,
             state_current,
             state_desired,
@@ -337,10 +337,10 @@ where
 
     async fn state_current_try_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_current_try_exec(op_ctx, resources)
+        self.state_current_try_exec(fn_ctx, resources)
             .await
             .map(|state_current| state_current.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
@@ -348,10 +348,10 @@ where
 
     async fn state_current_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<BoxDtDisplay, E> {
-        self.state_current_exec(op_ctx, resources)
+        self.state_current_exec(fn_ctx, resources)
             .await
             .map(BoxDtDisplay::new)
             .map_err(Into::<E>::into)
@@ -359,10 +359,10 @@ where
 
     async fn state_desired_try_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_desired_try_exec(op_ctx, resources)
+        self.state_desired_try_exec(fn_ctx, resources)
             .await
             .map(|state_desired| state_desired.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
@@ -370,10 +370,10 @@ where
 
     async fn state_desired_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<BoxDtDisplay, E> {
-        self.state_desired_exec(op_ctx, resources)
+        self.state_desired_exec(fn_ctx, resources)
             .await
             .map(BoxDtDisplay::new)
             .map_err(Into::<E>::into)
@@ -393,23 +393,23 @@ where
 
     async fn ensure_prepare(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
         let mut item_apply_partial = ItemApplyPartial::<IS::State, IS::StateDiff>::new();
 
-        match self.state_current_exec(op_ctx, resources).await {
+        match self.state_current_exec(fn_ctx, resources).await {
             Ok(state_current) => item_apply_partial.state_current = Some(state_current),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
         #[cfg(feature = "output_progress")]
-        op_ctx.progress_sender().reset();
-        match self.state_desired_exec(op_ctx, resources).await {
+        fn_ctx.progress_sender().reset();
+        match self.state_desired_exec(fn_ctx, resources).await {
             Ok(state_desired) => item_apply_partial.state_target = Some(state_desired),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
         #[cfg(feature = "output_progress")]
-        op_ctx.progress_sender().reset();
+        fn_ctx.progress_sender().reset();
         match self
             .state_diff_exec_with(
                 resources,
@@ -462,7 +462,7 @@ where
 
     async fn apply_exec_dry(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
         item_apply_boxed: &mut ItemApplyBoxed,
     ) -> Result<(), E> {
@@ -486,7 +486,7 @@ where
             #[cfg(not(feature = "output_progress"))]
             OpCheckStatus::ExecRequired => {
                 let state_applied_dry = self
-                    .apply_op_exec_dry(op_ctx, resources, state_current, state_target, state_diff)
+                    .apply_op_exec_dry(fn_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_dry);
@@ -494,7 +494,7 @@ where
             #[cfg(feature = "output_progress")]
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
                 let state_applied_dry = self
-                    .apply_op_exec_dry(op_ctx, resources, state_current, state_target, state_diff)
+                    .apply_op_exec_dry(fn_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_dry);
@@ -507,12 +507,12 @@ where
 
     async fn clean_prepare(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
         let mut item_apply_partial = ItemApplyPartial::<IS::State, IS::StateDiff>::new();
 
-        match self.state_current_try_exec(op_ctx, resources).await {
+        match self.state_current_try_exec(fn_ctx, resources).await {
             Ok(state_current) => {
                 // Hack: Setting ItemApplyPartial state_current to state_clean is a hack.
                 if let Some(state_current) = state_current {
@@ -583,7 +583,7 @@ where
 
     async fn apply_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
         item_apply_boxed: &mut ItemApplyBoxed,
     ) -> Result<(), E> {
@@ -607,7 +607,7 @@ where
             #[cfg(not(feature = "output_progress"))]
             OpCheckStatus::ExecRequired => {
                 let state_applied_next = self
-                    .apply_op_exec(op_ctx, resources, state_current, state_target, state_diff)
+                    .apply_op_exec(fn_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_next);
@@ -615,7 +615,7 @@ where
             #[cfg(feature = "output_progress")]
             OpCheckStatus::ExecRequired { progress_limit: _ } => {
                 let state_applied_next = self
-                    .apply_op_exec(op_ctx, resources, state_current, state_target, state_diff)
+                    .apply_op_exec(fn_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_next);

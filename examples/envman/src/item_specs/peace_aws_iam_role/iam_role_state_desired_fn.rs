@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{state::Generated, OpCtx};
+use peace::cfg::{state::Generated, FnCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
     model::ManagedPolicyAttachment, IamRoleData, IamRoleError, IamRoleState,
@@ -15,14 +15,14 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: IamRoleData<'_, Id>,
     ) -> Result<Option<IamRoleState>, IamRoleError> {
-        Self::state_desired(op_ctx, data).await.map(Some)
+        Self::state_desired(fn_ctx, data).await.map(Some)
     }
 
     pub async fn state_desired(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         data: IamRoleData<'_, Id>,
     ) -> Result<IamRoleState, IamRoleError> {
         let params = data.params();

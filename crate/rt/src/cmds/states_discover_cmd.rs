@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cfg::{ItemSpecId, OpCtx};
+use peace_cfg::{FnCtx, ItemSpecId};
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
@@ -164,7 +164,7 @@ where
             flow.graph()
                 .for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| async move {
                     let item_spec_id = item_spec.id();
-                    let op_ctx = OpCtx::new(
+                    let fn_ctx = FnCtx::new(
                         item_spec_id,
                         #[cfg(feature = "output_progress")]
                         ProgressSender::new(item_spec_id, progress_tx),
@@ -173,24 +173,24 @@ where
                     let (state_current_result, state_desired_result) = match discover_for {
                         DiscoverFor::Current => {
                             let state_current_result = item_spec
-                                .state_current_try_exec(op_ctx, resources_ref)
+                                .state_current_try_exec(fn_ctx, resources_ref)
                                 .await;
 
                             (Some(state_current_result), None)
                         }
                         DiscoverFor::Desired => {
                             let state_desired_result = item_spec
-                                .state_desired_try_exec(op_ctx, resources_ref)
+                                .state_desired_try_exec(fn_ctx, resources_ref)
                                 .await;
 
                             (None, Some(state_desired_result))
                         }
                         DiscoverFor::CurrentAndDesired => {
                             let state_current_result = item_spec
-                                .state_current_try_exec(op_ctx, resources_ref)
+                                .state_current_try_exec(fn_ctx, resources_ref)
                                 .await;
                             let state_desired_result = item_spec
-                                .state_desired_try_exec(op_ctx, resources_ref)
+                                .state_desired_try_exec(fn_ctx, resources_ref)
                                 .await;
 
                             (Some(state_current_result), Some(state_desired_result))

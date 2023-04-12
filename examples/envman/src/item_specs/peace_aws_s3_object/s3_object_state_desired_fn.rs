@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{state::Generated, OpCtx};
+use peace::cfg::{state::Generated, FnCtx};
 
 use crate::item_specs::peace_aws_s3_object::{S3ObjectData, S3ObjectError, S3ObjectState};
 
@@ -16,7 +16,7 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         s3_object_data: S3ObjectData<'_, Id>,
     ) -> Result<Option<S3ObjectState>, S3ObjectError> {
         #[cfg(not(target_arch = "wasm32"))]
@@ -36,11 +36,11 @@ where
                 return Ok(None);
             }
         }
-        Self::state_desired(op_ctx, s3_object_data).await.map(Some)
+        Self::state_desired(fn_ctx, s3_object_data).await.map(Some)
     }
 
     pub async fn state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: S3ObjectData<'_, Id>,
     ) -> Result<S3ObjectState, S3ObjectError> {
         let params = data.params();
@@ -49,9 +49,9 @@ where
         let object_key = params.object_key().to_string();
 
         #[cfg(not(feature = "output_progress"))]
-        let _op_ctx = op_ctx;
+        let _fn_ctx = fn_ctx;
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
         #[cfg(feature = "output_progress")]
         progress_sender.tick(ProgressMsgUpdate::Set(String::from("computing MD5 sum")));
 

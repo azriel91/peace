@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{OpCheckStatus, OpCtx};
+use peace::cfg::{FnCtx, OpCheckStatus};
 
 use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
 
@@ -56,7 +56,7 @@ where
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         state_desired: &FileMetadatas,
@@ -67,7 +67,7 @@ where
 
     #[cfg(not(target_arch = "wasm32"))]
     pub async fn apply(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         tar_x_data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         state_desired: &FileMetadatas,
@@ -91,7 +91,7 @@ where
         // Probably store entries in `IndexMap`s, then look them up to determine if they
         // need to be unpacked.
         //
-        // Then we can send proper progress updates via `op_ctx.progress_tx`.
+        // Then we can send proper progress updates via `fn_ctx.progress_tx`.
         if tar_path.exists() {
             storage
                 .read_with_sync_api(
@@ -137,7 +137,7 @@ where
 
     #[cfg(target_arch = "wasm32")]
     pub async fn apply(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         _tar_x_data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         _state_desired: &FileMetadatas,

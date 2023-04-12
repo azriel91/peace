@@ -7,7 +7,7 @@ use aws_sdk_s3::{
 };
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
-use peace::cfg::{OpCheckStatus, OpCtx};
+use peace::cfg::{FnCtx, OpCheckStatus};
 
 use crate::item_specs::peace_aws_s3_bucket::{
     S3BucketData, S3BucketError, S3BucketState, S3BucketStateDiff,
@@ -81,7 +81,7 @@ where
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         _s3_bucket_data: S3BucketData<'_, Id>,
         _state_current: &S3BucketState,
         state_desired: &S3BucketState,
@@ -92,22 +92,22 @@ where
 
     // Not sure why we can't use this:
     //
-    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
-    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
+    // #[cfg(not(feature = "output_progress"))] _fn_ctx: OpCtx<'_>,
+    // #[cfg(feature = "output_progress")] fn_ctx: OpCtx<'_>,
     //
     // There's an error saying lifetime bounds don't match the trait definition.
     //
     // Likely an issue with the codegen in `async-trait`.
     #[allow(unused_variables)]
     pub async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: S3BucketData<'_, Id>,
         state_current: &S3BucketState,
         state_desired: &S3BucketState,
         diff: &S3BucketStateDiff,
     ) -> Result<S3BucketState, S3BucketError> {
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
 
         match diff {
             S3BucketStateDiff::Added => match state_desired {
@@ -175,7 +175,7 @@ where
                     progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("bucket created")));
 
                     let state_applied =
-                        S3BucketStateCurrentFn::<Id>::state_current(op_ctx, data).await?;
+                        S3BucketStateCurrentFn::<Id>::state_current(fn_ctx, data).await?;
 
                     Ok(state_applied)
                 }

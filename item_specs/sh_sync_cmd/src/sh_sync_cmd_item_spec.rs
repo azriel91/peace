@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, State},
+    cfg::{async_trait, FnCtx, ItemSpec, ItemSpecId, OpCheckStatus, State},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -65,28 +65,28 @@ where
     }
 
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: ShSyncCmdData<'_, Id>,
     ) -> Result<Option<Self::State>, ShSyncCmdError> {
-        Self::state_current(op_ctx, data).await.map(Some)
+        Self::state_current(fn_ctx, data).await.map(Some)
     }
 
     async fn state_current(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         _data: ShSyncCmdData<'_, Id>,
     ) -> Result<Self::State, ShSyncCmdError> {
         todo!()
     }
 
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: ShSyncCmdData<'_, Id>,
     ) -> Result<Option<Self::State>, ShSyncCmdError> {
-        Self::state_desired(op_ctx, data).await.map(Some)
+        Self::state_desired(fn_ctx, data).await.map(Some)
     }
 
     async fn state_desired(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         _data: ShSyncCmdData<'_, Id>,
     ) -> Result<Self::State, ShSyncCmdError> {
         todo!()
@@ -118,22 +118,22 @@ where
     }
 
     async fn apply_dry(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        ShSyncCmdApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        ShSyncCmdApplyFns::apply_dry(fn_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        ShSyncCmdApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
+        ShSyncCmdApplyFns::apply(fn_ctx, data, state_current, state_target, diff).await
     }
 }

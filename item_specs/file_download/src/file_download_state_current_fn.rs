@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{state::FetchedOpt, OpCtx, State};
+use peace::cfg::{state::FetchedOpt, FnCtx, State};
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::{fs::File, io::AsyncReadExt};
 
@@ -18,14 +18,14 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<State<FileDownloadState, FetchedOpt<ETag>>>, FileDownloadError> {
-        Self::state_current(op_ctx, data).await.map(Some)
+        Self::state_current(fn_ctx, data).await.map(Some)
     }
 
     pub async fn state_current(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
         let dest = data.file_download_params().dest();

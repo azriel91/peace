@@ -4,7 +4,7 @@ use aws_smithy_http::byte_stream::ByteStream;
 use base64::Engine;
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
-use peace::cfg::{state::Generated, OpCheckStatus, OpCtx};
+use peace::cfg::{state::Generated, FnCtx, OpCheckStatus};
 
 use crate::item_specs::peace_aws_s3_object::{
     S3ObjectData, S3ObjectError, S3ObjectState, S3ObjectStateDiff,
@@ -85,7 +85,7 @@ where
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         _s3_object_data: S3ObjectData<'_, Id>,
         _state_current: &S3ObjectState,
         state_desired: &S3ObjectState,
@@ -96,22 +96,22 @@ where
 
     // Not sure why we can't use this:
     //
-    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
-    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
+    // #[cfg(not(feature = "output_progress"))] _fn_ctx: OpCtx<'_>,
+    // #[cfg(feature = "output_progress")] fn_ctx: OpCtx<'_>,
     //
     // There's an error saying lifetime bounds don't match the trait definition.
     //
     // Likely an issue with the codegen in `async-trait`.
     #[allow(unused_variables)]
     pub async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: S3ObjectData<'_, Id>,
         state_current: &S3ObjectState,
         state_desired: &S3ObjectState,
         diff: &S3ObjectStateDiff,
     ) -> Result<S3ObjectState, S3ObjectError> {
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
 
         match diff {
             S3ObjectStateDiff::Added | S3ObjectStateDiff::ObjectContentModified { .. } => {

@@ -1,6 +1,6 @@
 use std::{io::Read, marker::PhantomData, path::Path};
 
-use peace::{cfg::OpCtx, rt_model::Storage};
+use peace::{cfg::FnCtx, rt_model::Storage};
 use tar::Archive;
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
@@ -14,7 +14,7 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         tar_x_data: TarXData<'_, Id>,
     ) -> Result<Option<FileMetadatas>, TarXError> {
         #[cfg(not(target_arch = "wasm32"))]
@@ -27,14 +27,14 @@ where
         };
 
         if tar_file_exists {
-            Self::state_desired(op_ctx, tar_x_data).await.map(Some)
+            Self::state_desired(fn_ctx, tar_x_data).await.map(Some)
         } else {
             Ok(None)
         }
     }
 
     pub async fn state_desired(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         tar_x_data: TarXData<'_, Id>,
     ) -> Result<FileMetadatas, TarXError> {
         let tar_x_params = tar_x_data.tar_x_params();

@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{state::Generated, OpCtx};
+use peace::cfg::{state::Generated, FnCtx};
 
 use crate::item_specs::peace_aws_iam_policy::{IamPolicyData, IamPolicyError, IamPolicyState};
 
@@ -13,14 +13,14 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         iam_policy_data: IamPolicyData<'_, Id>,
     ) -> Result<Option<IamPolicyState>, IamPolicyError> {
-        Self::state_desired(op_ctx, iam_policy_data).await.map(Some)
+        Self::state_desired(fn_ctx, iam_policy_data).await.map(Some)
     }
 
     pub async fn state_desired(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         iam_policy_data: IamPolicyData<'_, Id>,
     ) -> Result<IamPolicyState, IamPolicyError> {
         let params = iam_policy_data.params();

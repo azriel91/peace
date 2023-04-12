@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{state::Timestamped, OpCtx};
+use peace::cfg::{state::Timestamped, FnCtx};
 
 use crate::item_specs::peace_aws_s3_bucket::{S3BucketData, S3BucketError, S3BucketState};
 
@@ -13,14 +13,14 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: S3BucketData<'_, Id>,
     ) -> Result<Option<S3BucketState>, S3BucketError> {
-        Self::state_desired(op_ctx, data).await.map(Some)
+        Self::state_desired(fn_ctx, data).await.map(Some)
     }
 
     pub async fn state_desired(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         data: S3BucketData<'_, Id>,
     ) -> Result<S3BucketState, S3BucketError> {
         let params = data.params();

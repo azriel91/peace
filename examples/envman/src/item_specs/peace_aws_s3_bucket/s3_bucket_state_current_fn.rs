@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use chrono::{DateTime, NaiveDateTime, Utc};
-use peace::cfg::{state::Timestamped, OpCtx};
+use peace::cfg::{state::Timestamped, FnCtx};
 
 use crate::item_specs::peace_aws_s3_bucket::{S3BucketData, S3BucketError, S3BucketState};
 
@@ -17,23 +17,23 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: S3BucketData<'_, Id>,
     ) -> Result<Option<S3BucketState>, S3BucketError> {
-        Self::state_current(op_ctx, data).await.map(Some)
+        Self::state_current(fn_ctx, data).await.map(Some)
     }
 
     pub async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: S3BucketData<'_, Id>,
     ) -> Result<S3BucketState, S3BucketError> {
         let client = data.client();
         let name = data.params().name();
 
         #[cfg(not(feature = "output_progress"))]
-        let _op_ctx = op_ctx;
+        let _fn_ctx = fn_ctx;
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
         #[cfg(feature = "output_progress")]
         progress_sender.tick(ProgressMsgUpdate::Set(String::from("listing buckets")));
         let list_buckets_output = client.list_buckets().send().await.map_err(|error| {

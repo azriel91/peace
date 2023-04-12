@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, state::FetchedOpt, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, State},
+    cfg::{async_trait, state::FetchedOpt, FnCtx, ItemSpec, ItemSpecId, OpCheckStatus, State},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -68,31 +68,31 @@ where
     }
 
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<Self::State>, FileDownloadError> {
-        FileDownloadStateCurrentFn::try_state_current(op_ctx, data).await
+        FileDownloadStateCurrentFn::try_state_current(fn_ctx, data).await
     }
 
     async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Self::State, FileDownloadError> {
-        FileDownloadStateCurrentFn::state_current(op_ctx, data).await
+        FileDownloadStateCurrentFn::state_current(fn_ctx, data).await
     }
 
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<Self::State>, FileDownloadError> {
-        FileDownloadStateDesiredFn::try_state_desired(op_ctx, data).await
+        FileDownloadStateDesiredFn::try_state_desired(fn_ctx, data).await
     }
 
     async fn state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Self::State, FileDownloadError> {
-        FileDownloadStateDesiredFn::state_desired(op_ctx, data).await
+        FileDownloadStateDesiredFn::state_desired(fn_ctx, data).await
     }
 
     async fn state_diff(
@@ -119,22 +119,22 @@ where
     }
 
     async fn apply_dry(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        FileDownloadApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        FileDownloadApplyFns::apply_dry(fn_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        FileDownloadApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
+        FileDownloadApplyFns::apply(fn_ctx, data, state_current, state_target, diff).await
     }
 }

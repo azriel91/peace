@@ -15,7 +15,7 @@ cfg_if::cfg_if! {
     }
 }
 
-use peace::cfg::{state::FetchedOpt, OpCheckStatus, OpCtx, State};
+use peace::cfg::{state::FetchedOpt, FnCtx, OpCheckStatus, State};
 use reqwest::header::ETAG;
 
 use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
@@ -35,8 +35,8 @@ where
     Id: Send + Sync + 'static,
 {
     async fn file_download(
-        #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
-        #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
+        #[cfg(not(feature = "output_progress"))] _fn_ctx: FnCtx<'_>,
+        #[cfg(feature = "output_progress")] fn_ctx: FnCtx<'_>,
         file_download_data: FileDownloadData<'_, Id>,
     ) -> Result<FetchedOpt<ETag>, FileDownloadError> {
         let client = file_download_data.client();
@@ -60,7 +60,7 @@ where
         {
             Self::stream_write(
                 #[cfg(feature = "output_progress")]
-                op_ctx,
+                fn_ctx,
                 params,
                 response.bytes_stream(),
             )
@@ -73,7 +73,7 @@ where
         {
             Self::stream_write(
                 #[cfg(feature = "output_progress")]
-                op_ctx,
+                fn_ctx,
                 params.dest(),
                 file_download_data.storage(),
                 params.storage_form(),
@@ -88,7 +88,7 @@ where
     /// Streams the content to disk.
     #[cfg(not(target_arch = "wasm32"))]
     async fn stream_write(
-        #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
+        #[cfg(feature = "output_progress")] fn_ctx: FnCtx<'_>,
         file_download_params: &FileDownloadParams<Id>,
         byte_stream: impl Stream<Item = reqwest::Result<Bytes>>,
     ) -> Result<(), FileDownloadError> {
@@ -172,7 +172,7 @@ where
 
         let buffer = BufWriter::new(dest_file);
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
         let mut buffer = byte_stream
             .map(|bytes_result| bytes_result.map_err(FileDownloadError::ResponseBytesStream))
             .try_fold(buffer, |mut buffer, bytes| async move {
@@ -201,7 +201,7 @@ where
     /// Streams the content to disk.
     #[cfg(target_arch = "wasm32")]
     async fn stream_write(
-        #[cfg(feature = "output_progress")] _op_ctx: OpCtx<'_>,
+        #[cfg(feature = "output_progress")] _fn_ctx: FnCtx<'_>,
         dest_path: &Path,
         storage: &Storage,
         storage_form: crate::StorageForm,
@@ -326,7 +326,7 @@ where
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         _file_download_data: FileDownloadData<'_, Id>,
         _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
         file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
@@ -338,7 +338,7 @@ where
     }
 
     pub async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         file_download_data: FileDownloadData<'_, Id>,
         _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
         file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
@@ -357,7 +357,7 @@ where
                 Ok(file_download_state_desired.clone())
             }
             FileDownloadStateDiff::Change { .. } => {
-                let e_tag = Self::file_download(op_ctx, file_download_data).await?;
+                let e_tag = Self::file_download(fn_ctx, file_download_data).await?;
 
                 let mut file_download_state_ensured = file_download_state_desired.clone();
                 file_download_state_ensured.physical = e_tag;

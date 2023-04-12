@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use dyn_clone::DynClone;
 use fn_graph::{DataAccess, DataAccessDyn};
-use peace_cfg::{async_trait, ItemSpecId, OpCtx};
+use peace_cfg::{async_trait, FnCtx, ItemSpecId};
 use peace_resources::{
     resources::ts::{Empty, SetUp},
     type_reg::untagged::{BoxDtDisplay, TypeMap},
@@ -53,7 +53,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     async fn state_current_try_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E>
     where
@@ -65,7 +65,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`exec`]: peace_cfg::TryFnSpec::exec
     async fn state_current_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<BoxDtDisplay, E>
     where
@@ -77,7 +77,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     async fn state_desired_try_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E>
     where
@@ -89,7 +89,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`exec`]: peace_cfg::TryFnSpec::exec
     async fn state_desired_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<BoxDtDisplay, E>
     where
@@ -122,7 +122,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`ApplyFns::check`]: peace_cfg::ItemSpec::ApplyFns
     async fn ensure_prepare(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
     where
@@ -143,7 +143,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`ApplyFns::check`]: peace_cfg::ItemSpec::ApplyFns
     async fn clean_prepare(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
     where
@@ -164,7 +164,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`ApplyFns::exec_dry`]: peace_cfg::ItemSpec::ApplyFns
     async fn apply_exec_dry(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
         item_apply: &mut ItemApplyBoxed,
     ) -> Result<(), E>
@@ -186,7 +186,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`ApplyFns::exec`]: peace_cfg::ItemSpec::ApplyFns
     async fn apply_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
         item_apply: &mut ItemApplyBoxed,
     ) -> Result<(), E>

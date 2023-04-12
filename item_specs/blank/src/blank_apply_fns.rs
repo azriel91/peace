@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{OpCheckStatus, OpCtx};
+use peace::cfg::{FnCtx, OpCheckStatus};
 
 use crate::{BlankData, BlankError, BlankState, BlankStateDiff};
 
@@ -39,7 +39,7 @@ where
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         _blank_data: BlankData<'_, Id>,
         _state_current: &BlankState,
         state_desired: &BlankState,
@@ -49,7 +49,7 @@ where
     }
 
     pub async fn apply(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         mut blank_data: BlankData<'_, Id>,
         _state_current: &BlankState,
         state_desired: &BlankState,

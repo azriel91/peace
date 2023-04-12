@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
+    cfg::{async_trait, FnCtx, ItemSpec, ItemSpecId, OpCheckStatus},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -71,31 +71,31 @@ where
     }
 
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: TarXData<'_, Id>,
     ) -> Result<Option<Self::State>, TarXError> {
-        Self::state_current(op_ctx, data).await.map(Some)
+        Self::state_current(fn_ctx, data).await.map(Some)
     }
 
     async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: TarXData<'_, Id>,
     ) -> Result<Self::State, TarXError> {
-        TarXStateCurrentFn::state_current(op_ctx, data).await
+        TarXStateCurrentFn::state_current(fn_ctx, data).await
     }
 
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: TarXData<'_, Id>,
     ) -> Result<Option<Self::State>, TarXError> {
-        TarXStateDesiredFn::try_state_desired(op_ctx, data).await
+        TarXStateDesiredFn::try_state_desired(fn_ctx, data).await
     }
 
     async fn state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: TarXData<'_, Id>,
     ) -> Result<Self::State, TarXError> {
-        TarXStateDesiredFn::state_desired(op_ctx, data).await
+        TarXStateDesiredFn::state_desired(fn_ctx, data).await
     }
 
     async fn state_diff(
@@ -120,22 +120,22 @@ where
     }
 
     async fn apply_dry(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        TarXApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        TarXApplyFns::apply_dry(fn_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        TarXApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
+        TarXApplyFns::apply(fn_ctx, data, state_current, state_target, diff).await
     }
 }

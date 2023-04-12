@@ -7,7 +7,7 @@ use peace_data::Data;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::OpCtx;
+use crate::FnCtx;
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -148,7 +148,7 @@ pub trait ItemSpec: DynClone {
     /// such as when failing to connect to a remote host, instead of returning
     /// an error.
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, Self::Error>;
 
@@ -157,7 +157,7 @@ pub trait ItemSpec: DynClone {
     /// This is *expected* to successfully discover the current state, so errors
     /// will be presented to the user.
     async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
     ) -> Result<Self::State, Self::Error>;
 
@@ -167,7 +167,7 @@ pub trait ItemSpec: DynClone {
     /// such as when failing to read a potentially non-existent file to
     /// determine its content hash, instead of returning an error.
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, Self::Error>;
 
@@ -184,7 +184,7 @@ pub trait ItemSpec: DynClone {
     /// * For a web application service operation, the desired state could be
     ///   the web service is running on the latest version.
     async fn state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
     ) -> Result<Self::State, Self::Error>;
 
@@ -298,7 +298,7 @@ pub trait ItemSpec: DynClone {
     /// [`State`]: Self::State
     /// [`state_diff`]: crate::ItemSpec::state_diff
     async fn apply_dry(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
@@ -327,7 +327,7 @@ pub trait ItemSpec: DynClone {
     /// [`State`]: Self::State
     /// [`state_diff`]: crate::ItemSpec::state_diff
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,

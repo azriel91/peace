@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use aws_sdk_iam::{error::SdkError, operation::list_policy_versions::ListPolicyVersionsError};
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
-use peace::cfg::{state::Generated, OpCheckStatus, OpCtx};
+use peace::cfg::{state::Generated, FnCtx, OpCheckStatus};
 
 use crate::item_specs::peace_aws_iam_policy::{
     model::PolicyIdArnVersion, IamPolicyData, IamPolicyError, IamPolicyState, IamPolicyStateDiff,
@@ -99,7 +99,7 @@ where
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         _iam_policy_data: IamPolicyData<'_, Id>,
         _state_current: &IamPolicyState,
         state_desired: &IamPolicyState,
@@ -110,22 +110,22 @@ where
 
     // Not sure why we can't use this:
     //
-    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
-    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
+    // #[cfg(not(feature = "output_progress"))] _fn_ctx: OpCtx<'_>,
+    // #[cfg(feature = "output_progress")] fn_ctx: OpCtx<'_>,
     //
     // There's an error saying lifetime bounds don't match the trait definition.
     //
     // Likely an issue with the codegen in `async-trait`.
     #[allow(unused_variables)]
     pub async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         mut data: IamPolicyData<'_, Id>,
         state_current: &IamPolicyState,
         state_desired: &IamPolicyState,
         diff: &IamPolicyStateDiff,
     ) -> Result<IamPolicyState, IamPolicyError> {
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
 
         match diff {
             IamPolicyStateDiff::Added => match state_desired {

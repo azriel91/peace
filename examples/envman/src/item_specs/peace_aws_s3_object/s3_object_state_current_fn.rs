@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use aws_sdk_iam::error::SdkError;
 use aws_sdk_s3::operation::head_object::HeadObjectError;
-use peace::cfg::{state::Generated, OpCtx};
+use peace::cfg::{state::Generated, FnCtx};
 
 use crate::item_specs::peace_aws_s3_object::{S3ObjectData, S3ObjectError, S3ObjectState};
 
@@ -18,14 +18,14 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: S3ObjectData<'_, Id>,
     ) -> Result<Option<S3ObjectState>, S3ObjectError> {
-        Self::state_current(op_ctx, data).await.map(Some)
+        Self::state_current(fn_ctx, data).await.map(Some)
     }
 
     pub async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: S3ObjectData<'_, Id>,
     ) -> Result<S3ObjectState, S3ObjectError> {
         let client = data.client();
@@ -33,9 +33,9 @@ where
         let object_key = data.params().object_key();
 
         #[cfg(not(feature = "output_progress"))]
-        let _op_ctx = op_ctx;
+        let _fn_ctx = fn_ctx;
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
         #[cfg(feature = "output_progress")]
         progress_sender.tick(ProgressMsgUpdate::Set(String::from(
             "fetching object metadata",

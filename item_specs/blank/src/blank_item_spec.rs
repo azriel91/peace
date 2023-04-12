@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
+    cfg::{async_trait, FnCtx, ItemSpec, ItemSpecId, OpCheckStatus},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -62,14 +62,14 @@ where
     }
 
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: BlankData<'_, Id>,
     ) -> Result<Option<Self::State>, BlankError> {
-        Self::state_current(op_ctx, data).await.map(Some)
+        Self::state_current(fn_ctx, data).await.map(Some)
     }
 
     async fn state_current(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         data: BlankData<'_, Id>,
     ) -> Result<Self::State, BlankError> {
         let current = BlankState(data.params().dest().0);
@@ -80,14 +80,14 @@ where
     }
 
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: BlankData<'_, Id>,
     ) -> Result<Option<Self::State>, BlankError> {
-        Self::state_desired(op_ctx, data).await.map(Some)
+        Self::state_desired(fn_ctx, data).await.map(Some)
     }
 
     async fn state_desired(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         data: BlankData<'_, Id>,
     ) -> Result<Self::State, BlankError> {
         let params = data.params();
@@ -129,22 +129,22 @@ where
     }
 
     async fn apply_dry(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        BlankApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        BlankApplyFns::apply_dry(fn_ctx, data, state_current, state_target, diff).await
     }
 
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        BlankApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
+        BlankApplyFns::apply(fn_ctx, data, state_current, state_target, diff).await
     }
 }

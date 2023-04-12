@@ -7,7 +7,7 @@ use peace_core::progress::ProgressSender;
 
 /// References to pass information between the Peace framework and an item spec.
 #[derive(Clone, Copy, Debug)]
-pub struct OpCtx<'op> {
+pub struct FnCtx<'op> {
     /// ID of the item spec this belongs to.
     pub item_spec_id: &'op ItemSpecId,
     /// For item specs to submit progress updates.
@@ -17,7 +17,7 @@ pub struct OpCtx<'op> {
     pub marker: PhantomData<&'op ()>,
 }
 
-impl<'op> OpCtx<'op> {
+impl<'op> FnCtx<'op> {
     /// Returns a new `OpCtx`.
     pub fn new(
         item_spec_id: &'op ItemSpecId,

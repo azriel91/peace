@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cfg::{ItemSpecId, OpCheckStatus, OpCtx};
+use peace_cfg::{FnCtx, ItemSpecId, OpCheckStatus};
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
@@ -357,7 +357,7 @@ where
     ///     f: F,
     /// ) -> bool
     /// where
-    ///     F: (Fn(&dyn ItemSpecRt<E>, op_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemApplyBoxed) -> Fut) + Copy,
+    ///     F: (Fn(&dyn ItemSpecRt<E>, fn_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemApplyBoxed) -> Fut) + Copy,
     ///     Fut: Future<Output = Result<(), E>>,
     /// ```
     async fn item_apply_exec(
@@ -375,14 +375,14 @@ where
         };
 
         let item_spec_id = item_spec.id();
-        let op_ctx = OpCtx::new(
+        let fn_ctx = FnCtx::new(
             item_spec_id,
             #[cfg(feature = "output_progress")]
             ProgressSender::new(item_spec_id, progress_tx),
         );
         let item_apply = match apply_for {
-            ApplyFor::Ensure => ItemSpecRt::ensure_prepare(&**item_spec, op_ctx, resources).await,
-            ApplyFor::Clean => ItemSpecRt::clean_prepare(&**item_spec, op_ctx, resources).await,
+            ApplyFor::Ensure => ItemSpecRt::ensure_prepare(&**item_spec, fn_ctx, resources).await,
+            ApplyFor::Clean => ItemSpecRt::clean_prepare(&**item_spec, fn_ctx, resources).await,
         };
 
         match item_apply {
@@ -421,7 +421,7 @@ where
                         return Ok(());
                     }
                 }
-                match apply_fn(&**item_spec, op_ctx, resources, &mut item_apply).await {
+                match apply_fn(&**item_spec, fn_ctx, resources, &mut item_apply).await {
                     Ok(()) => {
                         // apply succeeded
 

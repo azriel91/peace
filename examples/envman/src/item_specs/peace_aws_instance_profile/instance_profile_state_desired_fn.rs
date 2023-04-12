@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{state::Generated, OpCtx};
+use peace::cfg::{state::Generated, FnCtx};
 
 use crate::item_specs::peace_aws_instance_profile::{
     InstanceProfileData, InstanceProfileError, InstanceProfileState,
@@ -15,16 +15,16 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         instance_profile_data: InstanceProfileData<'_, Id>,
     ) -> Result<Option<InstanceProfileState>, InstanceProfileError> {
-        Self::state_desired(op_ctx, instance_profile_data)
+        Self::state_desired(fn_ctx, instance_profile_data)
             .await
             .map(Some)
     }
 
     pub async fn state_desired(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         instance_profile_data: InstanceProfileData<'_, Id>,
     ) -> Result<InstanceProfileState, InstanceProfileError> {
         let params = instance_profile_data.params();
