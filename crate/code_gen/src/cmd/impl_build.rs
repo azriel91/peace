@@ -147,8 +147,11 @@ fn impl_build_for(
     let scope_type_params = {
         let mut type_params = Punctuated::<GenericArgument, Token![,]>::new();
 
-        if scope == Scope::SingleProfileSingleFlow {
-            type_params.push(parse_quote!(peace_resources::resources::ts::SetUp));
+        match scope {
+            Scope::SingleProfileSingleFlow | Scope::MultiProfileSingleFlow => {
+                type_params.push(parse_quote!(peace_resources::resources::ts::SetUp));
+            }
+            Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {}
         }
 
         type_params
@@ -223,7 +226,7 @@ fn impl_build_for(
                             PKeys::FlowParamsKMaybe,
                         >,
 
-                        // SingleProfileSingleFlow
+                        // MultiProfileSingleFlow / SingleProfileSingleFlow
                         // peace_resources::resources::ts::SetUp
                         #scope_type_params
                     >,
@@ -468,6 +471,18 @@ fn impl_build_for(
 
                 // Insert resources
                 //
+                // === MultiProfileSingleFlow === //
+                // {
+                //     let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
+                //     let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
+                //
+                //     resources.insert(app_name);
+                //     resources.insert(storage);
+                //     resources.insert(workspace_dir);
+                //     resources.insert(peace_dir);
+                //     resources.insert(peace_app_dir);
+                //     resources.insert(flow.flow_id().clone());
+                // }
                 // === SingleProfileSingleFlow === //
                 // {
                 //     let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
@@ -487,8 +502,10 @@ fn impl_build_for(
                 #resources_insert
 
                 // === MultiProfileSingleFlow === //
-                // let states_current_type_reg = crate::ctx::cmd_ctx_builder::states_type_reg(flow.graph());
+                // let states_type_reg = crate::ctx::cmd_ctx_builder::states_type_reg(flow.graph());
+                // let states_type_reg_ref = &states_type_reg;
                 // let flow_id = flow.flow_id();
+                // let item_spec_graph = flow.graph();
                 // let profile_to_states_saved = futures::stream::iter(
                 //     flow_dirs
                 //         .iter()
@@ -500,7 +517,7 @@ fn impl_build_for(
                 //         let states_saved = peace_rt_model::StatesSerializer::<peace_rt_model::Error>::deserialize_saved_opt(
                 //             flow_id,
                 //             storage,
-                //             &states_current_type_reg,
+                //             states_type_reg_ref,
                 //             &states_saved_file,
                 //         )
                 //         .await?
@@ -515,6 +532,13 @@ fn impl_build_for(
                 //         >
                 //     >()
                 //     .await?;
+                //
+                // // Call each `ItemSpec`'s initialization function.
+                // let resources = crate::ctx::cmd_ctx_builder::item_spec_graph_setup(
+                //     item_spec_graph,
+                //     resources
+                // )
+                // .await?;
                 //
                 // === SingleProfileSingleFlow === //
                 // // Set up resources for the flow's item spec graph
@@ -598,9 +622,13 @@ fn impl_build_for(
                     // flow_dirs,
                     // profile_to_flow_params,
 
-                    // === SingleProfileSingleFlow === //
+                    // === MultiProfileSingleFlow === //
+                    // profile_to_states_saved,
+                    // states_type_reg,
                     // resources,
-                    // states_type_reg
+                    // === SingleProfileSingleFlow === //
+                    // states_type_reg,
+                    // resources,
 
                     #scope_fields
                 );
@@ -650,7 +678,7 @@ fn impl_build_for(
                                         PKeys::FlowParamsKMaybe,
                                     >,
 
-                                    // SingleProfileSingleFlow
+                                    // MultiProfileSingleFlow / SingleProfileSingleFlow
                                     // peace_resources::resources::ts::SetUp
                                     #scope_type_params
                                 >,
@@ -1330,8 +1358,9 @@ fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
     match scope {
         Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {}
         Scope::MultiProfileSingleFlow => {
-            scope_fields.push(parse_quote!(states_type_reg));
             scope_fields.push(parse_quote!(profile_to_states_saved));
+            scope_fields.push(parse_quote!(states_type_reg));
+            scope_fields.push(parse_quote!(resources));
         }
         Scope::SingleProfileSingleFlow => {
             scope_fields.push(parse_quote!(states_type_reg));
@@ -1355,6 +1384,7 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                 let states_type_reg = crate::ctx::cmd_ctx_builder::states_type_reg(flow.graph());
                 let states_type_reg_ref = &states_type_reg;
                 let flow_id = flow.flow_id();
+                let item_spec_graph = flow.graph();
                 let profile_to_states_saved = futures::stream::iter(
                     flow_dirs
                         .iter()
@@ -1381,6 +1411,13 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                         >
                     >()
                     .await?;
+
+                // Call each `ItemSpec`'s initialization function.
+                let resources = crate::ctx::cmd_ctx_builder::item_spec_graph_setup(
+                    item_spec_graph,
+                    resources
+                )
+                .await?;
             }
         }
         Scope::SingleProfileSingleFlow => {
@@ -1450,25 +1487,43 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
 }
 
 fn resources_insert(scope: Scope) -> proc_macro2::TokenStream {
-    if scope == Scope::SingleProfileSingleFlow {
-        quote! {
-            {
-                let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
-                let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
+    match scope {
+        Scope::MultiProfileSingleFlow => {
+            quote! {
+                {
+                    let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
+                    let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
 
-                resources.insert(app_name);
-                resources.insert(storage);
-                resources.insert(workspace_dir);
-                resources.insert(peace_dir);
-                resources.insert(peace_app_dir);
-                resources.insert(profile_dir.clone());
-                resources.insert(profile_history_dir.clone());
-                resources.insert(profile.clone());
-                resources.insert(flow_dir.clone());
-                resources.insert(flow.flow_id().clone());
+                    resources.insert(app_name);
+                    resources.insert(storage);
+                    resources.insert(workspace_dir);
+                    resources.insert(peace_dir);
+                    resources.insert(peace_app_dir);
+                    resources.insert(flow.flow_id().clone());
+                }
             }
         }
-    } else {
-        proc_macro2::TokenStream::new()
+        Scope::SingleProfileSingleFlow => {
+            quote! {
+                {
+                    let (app_name, workspace_dirs, storage) = workspace.clone().into_inner();
+                    let (workspace_dir, peace_dir, peace_app_dir) = workspace_dirs.into_inner();
+
+                    resources.insert(app_name);
+                    resources.insert(storage);
+                    resources.insert(workspace_dir);
+                    resources.insert(peace_dir);
+                    resources.insert(peace_app_dir);
+                    resources.insert(profile_dir.clone());
+                    resources.insert(profile_history_dir.clone());
+                    resources.insert(profile.clone());
+                    resources.insert(flow_dir.clone());
+                    resources.insert(flow.flow_id().clone());
+                }
+            }
+        }
+        Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {
+            proc_macro2::TokenStream::new()
+        }
     }
 }

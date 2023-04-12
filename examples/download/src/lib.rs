@@ -1,14 +1,10 @@
 use peace::{
     cfg::{app_name, item_spec_id, AppName, FlowId, ItemSpecId, Profile},
-    cmd::{
-        ctx::CmdCtx,
-        scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
-    },
+    cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
     resources::resources::ts::SetUp,
     rt::cmds::{
-        sub::{StatesDesiredReadCmd, StatesSavedReadCmd},
-        CleanCmd, DiffCmd, EnsureCmd, StatesDesiredDisplayCmd, StatesDiscoverCmd,
-        StatesSavedDisplayCmd,
+        sub::StatesSavedReadCmd, CleanCmd, DiffCmd, EnsureCmd, StatesDesiredDisplayCmd,
+        StatesDiscoverCmd, StatesSavedDisplayCmd,
     },
     rt_model::{
         output::OutputWrite,
@@ -134,12 +130,7 @@ pub async fn diff<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Download
 where
     O: OutputWrite<DownloadError>,
 {
-    let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let states_desired = StatesDesiredReadCmd::exec(cmd_ctx).await?;
-    let SingleProfileSingleFlowView {
-        flow, resources, ..
-    } = cmd_ctx.view();
-    let states_diff = DiffCmd::exec(flow, resources, &states_saved, &states_desired).await?;
+    let states_diff = DiffCmd::current_and_desired(cmd_ctx).await?;
     cmd_ctx.output_mut().present(&states_diff).await?;
     Ok(())
 }

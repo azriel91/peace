@@ -140,7 +140,7 @@ pub trait ItemSpec: DynClone {
     ///
     /// [`check`]: crate::ApplyFns::check
     /// [`apply`]: crate::ApplyFns::apply
-    async fn setup(&self, data: &mut Resources<Empty>) -> Result<(), Self::Error>;
+    async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), Self::Error>;
 
     /// Returns the current state of the managed item, if possible.
     ///

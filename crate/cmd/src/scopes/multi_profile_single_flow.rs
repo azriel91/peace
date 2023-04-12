@@ -3,7 +3,9 @@ use std::{collections::BTreeMap, fmt::Debug, hash::Hash};
 use peace_core::Profile;
 use peace_resources::{
     paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
+    resources::ts::SetUp,
     states::StatesSaved,
+    Resources,
 };
 use peace_rt_model::{
     params::{
@@ -67,7 +69,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// * Read or write flow parameters for different flows.
 /// * Read or write flow state for different flows.
 #[derive(Debug)]
-pub struct MultiProfileSingleFlow<'ctx, E, O, PKeys>
+pub struct MultiProfileSingleFlow<'ctx, E, O, PKeys, TS>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -105,17 +107,72 @@ where
     /// Flow params for the selected flow.
     profile_to_flow_params:
         BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
+    /// Saved states for each profile for the selected flow.
+    profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
     /// Type registries to deserialize [`StatesSavedFile`] and
     /// [`StatesDesiredFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
     states_type_reg: StatesTypeReg,
-    /// Saved states for each profile for the selected flow.
-    profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
+    /// `Resources` for flow execution.
+    resources: Resources<TS>,
 }
 
-impl<'ctx, E, O, PKeys> MultiProfileSingleFlow<'ctx, E, O, PKeys>
+/// Access to fields in `MultiProfileSingleFlow` so that multiple borrows can
+/// happen simultaneously.
+#[derive(Debug)]
+pub struct MultiProfileSingleFlowView<'view, E, O, PKeys, TS>
+where
+    PKeys: ParamsKeys + 'static,
+{
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    pub output: &'view mut O,
+    /// Workspace that the `peace` tool runs in.
+    pub workspace: &'view Workspace,
+    /// The profiles that are accessible by this command.
+    pub profiles: &'view [Profile],
+    /// Profile directories that store params and flows.
+    pub profile_dirs: &'view BTreeMap<Profile, ProfileDir>,
+    /// Directories of each profile's execution history.
+    pub profile_history_dirs: &'view BTreeMap<Profile, ProfileHistoryDir>,
+    /// The chosen process flow.
+    pub flow: &'view Flow<E>,
+    /// Flow directory that stores params and states.
+    pub flow_dirs: &'view BTreeMap<Profile, FlowDir>,
+    /// Type registries for [`WorkspaceParams`], [`ProfileParams`], and
+    /// [`FlowParams`] deserialization.
+    ///
+    /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
+    /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
+    /// [`FlowParams`]: peace_rt_model::params::FlowParams
+    pub params_type_regs: &'view ParamsTypeRegs<PKeys>,
+    /// Workspace params.
+    pub workspace_params: &'view WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
+    /// Profile params for the profile.
+    pub profile_to_profile_params:
+        &'view BTreeMap<Profile, ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>>,
+    /// Flow params for the selected flow.
+    pub profile_to_flow_params:
+        &'view BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
+    /// Saved states for each profile for the selected flow.
+    pub profile_to_states_saved: &'view BTreeMap<Profile, Option<StatesSaved>>,
+    /// Type registries to deserialize [`StatesSavedFile`] and
+    /// [`StatesDesiredFile`].
+    ///
+    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
+    pub states_type_reg: &'view StatesTypeReg,
+    /// `Resources` for flow execution.
+    pub resources: &'view mut Resources<TS>,
+}
+
+impl<'ctx, E, O, PKeys> MultiProfileSingleFlow<'ctx, E, O, PKeys, SetUp>
 where
     PKeys: ParamsKeys + 'static,
 {
@@ -139,8 +196,9 @@ where
             Profile,
             FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
         >,
-        states_type_reg: StatesTypeReg,
         profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
+        states_type_reg: StatesTypeReg,
+        resources: Resources<SetUp>,
     ) -> Self {
         Self {
             output,
@@ -154,8 +212,53 @@ where
             workspace_params,
             profile_to_profile_params,
             profile_to_flow_params,
-            states_type_reg,
             profile_to_states_saved,
+            states_type_reg,
+            resources,
+        }
+    }
+}
+
+impl<'ctx, E, O, PKeys, TS> MultiProfileSingleFlow<'ctx, E, O, PKeys, TS>
+where
+    PKeys: ParamsKeys + 'static,
+{
+    /// Returns a view struct of this scope.
+    ///
+    /// This allows the flow and resources to be borrowed concurrently.
+    pub fn view(&mut self) -> MultiProfileSingleFlowView<'_, E, O, PKeys, TS> {
+        let Self {
+            output,
+            workspace,
+            profiles,
+            profile_dirs,
+            profile_history_dirs,
+            flow,
+            flow_dirs,
+            params_type_regs,
+            workspace_params,
+            profile_to_profile_params,
+            profile_to_flow_params,
+            profile_to_states_saved,
+            states_type_reg,
+            resources,
+        } = self;
+
+        MultiProfileSingleFlowView {
+            output,
+            workspace,
+            profiles,
+            profile_dirs,
+            profile_history_dirs,
+            flow,
+            flow_dirs,
+            params_type_regs,
+            workspace_params,
+            profile_to_profile_params,
+            profile_to_flow_params,
+            profile_to_states_saved,
+            states_type_reg,
+            resources,
         }
     }
 
@@ -227,6 +330,11 @@ where
         &self.params_type_regs
     }
 
+    /// Returns the saved states for each profile for the selected flow.
+    pub fn profile_to_states_saved(&self) -> &BTreeMap<Profile, Option<StatesSaved>> {
+        &self.profile_to_states_saved
+    }
+
     /// Returns the type registries to deserialize [`StatesSavedFile`] and
     /// [`StatesDesiredFile`].
     ///
@@ -236,18 +344,24 @@ where
         &self.states_type_reg
     }
 
-    /// Returns the saved states for each profile for the selected flow.
-    pub fn profile_to_states_saved(&self) -> &BTreeMap<Profile, Option<StatesSaved>> {
-        &self.profile_to_states_saved
+    /// Returns a reference to the `Resources` for flow execution.
+    pub fn resources(&self) -> &Resources<TS> {
+        &self.resources
+    }
+
+    /// Returns a reference to the `Resources` for flow execution.
+    pub fn resources_mut(&mut self) -> &mut Resources<TS> {
+        &mut self.resources
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
+impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe, TS>
     MultiProfileSingleFlow<
         'ctx,
         E,
         O,
         ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
+        TS,
     >
 where
     WorkspaceParamsK:
@@ -261,12 +375,13 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
+impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe, TS>
     MultiProfileSingleFlow<
         'ctx,
         E,
         O,
         ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
+        TS,
     >
 where
     WorkspaceParamsKMaybe: KeyMaybe,
@@ -280,12 +395,13 @@ where
     }
 }
 
-impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK>
+impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK, TS>
     MultiProfileSingleFlow<
         'ctx,
         E,
         O,
         ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
+        TS,
     >
 where
     WorkspaceParamsKMaybe: KeyMaybe,

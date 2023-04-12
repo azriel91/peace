@@ -1,13 +1,10 @@
 use futures::FutureExt;
 use peace::{
     cfg::Profile,
-    cmd::scopes::SingleProfileSingleFlowView,
+    cmd::scopes::{MultiProfileSingleFlowView, SingleProfileSingleFlowView},
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
     resources::states::StateDiffs,
-    rt::cmds::{
-        sub::{StatesDesiredReadCmd, StatesSavedReadCmd},
-        DiffCmd,
-    },
+    rt::cmds::DiffCmd,
     rt_model::{output::OutputWrite, Flow},
 };
 
@@ -51,17 +48,9 @@ impl EnvDiffCmd {
     {
         EnvCmd::run(output, true, |ctx| {
             async {
-                let states_saved = StatesSavedReadCmd::exec(ctx).await?;
-                let states_desired = StatesDesiredReadCmd::exec(ctx).await?;
-                let SingleProfileSingleFlowView {
-                    output,
-                    flow,
-                    resources,
-                    ..
-                } = ctx.view();
-                let state_diffs =
-                    DiffCmd::exec(flow, resources, &states_saved, &states_desired).await?;
+                let state_diffs = DiffCmd::current_and_desired(ctx).await?;
 
+                let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
                 Self::state_diffs_present(output, flow, &state_diffs).await?;
 
                 Ok(())
@@ -79,23 +68,11 @@ impl EnvDiffCmd {
     where
         O: OutputWrite<EnvManError> + Send,
     {
-        let states_saved_a = EnvCmd::run_with_profile(output, profile_a, |ctx| {
-            StatesSavedReadCmd::exec(ctx).boxed_local()
-        })
-        .await?;
-        EnvCmd::run_with_profile(output, profile_b, move |ctx| {
+        EnvCmd::multi_profile(output, move |ctx| {
             async move {
-                let states_saved_b = StatesSavedReadCmd::exec(ctx).await?;
-
-                let SingleProfileSingleFlowView {
-                    output,
-                    flow,
-                    resources,
-                    ..
-                } = ctx.view();
-
                 let state_diffs =
-                    DiffCmd::exec(flow, resources, &states_saved_a, &states_saved_b).await?;
+                    DiffCmd::diff_profiles_current(ctx, &profile_a, &profile_b).await?;
+                let MultiProfileSingleFlowView { output, flow, .. } = ctx.view();
 
                 Self::state_diffs_present(output, flow, &state_diffs).await?;
 

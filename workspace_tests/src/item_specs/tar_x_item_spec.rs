@@ -5,7 +5,7 @@ use peace::{
         app_name, item_spec_id, profile, AppName, FlowId, ItemSpec, ItemSpecId, OpCheckStatus,
         Profile,
     },
-    cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
+    cmd::ctx::CmdCtx,
     data::Data,
     resources::{
         paths::{FlowDir, ProfileDir},
@@ -186,14 +186,10 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let SingleProfileSingleFlowView {
-        flow, resources, ..
-    } = cmd_ctx.view();
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Diff current and desired states.
-    let state_diffs = DiffCmd::exec(flow, resources, &states_current, &states_desired).await?;
+    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
@@ -242,14 +238,10 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let SingleProfileSingleFlowView {
-        flow, resources, ..
-    } = cmd_ctx.view();
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Diff current and desired states.
-    let state_diffs = DiffCmd::exec(flow, resources, &states_current, &states_desired).await?;
+    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
@@ -300,14 +292,10 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
             Some(TarXParams::<TarXTest>::new(tar_path, dest)),
         )
         .await?;
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let SingleProfileSingleFlowView {
-        flow, resources, ..
-    } = cmd_ctx.view();
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Diff current and desired states.
-    let state_diffs = DiffCmd::exec(flow, resources, &states_current, &states_desired).await?;
+    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     // `b` and `d` are not included in the diff
@@ -357,14 +345,10 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
         )
         .await?;
     // Discover current and desired states.
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let SingleProfileSingleFlowView {
-        flow, resources, ..
-    } = cmd_ctx.view();
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Diff current and desired states.
-    let state_diffs = DiffCmd::exec(flow, resources, &states_current, &states_desired).await?;
+    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     // `b` and `d` are not included in the diff
@@ -419,14 +403,10 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
         )
         .await?;
     // Discover current and desired states.
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let SingleProfileSingleFlowView {
-        flow, resources, ..
-    } = cmd_ctx.view();
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Diff current and desired states.
-    let state_diffs = DiffCmd::exec(flow, resources, &states_current, &states_desired).await?;
+    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
@@ -475,14 +455,10 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
         )
         .await?;
     // Discover current and desired states.
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let SingleProfileSingleFlowView {
-        flow, resources, ..
-    } = cmd_ctx.view();
+    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Diff current and desired states.
-    let state_diffs = DiffCmd::exec(flow, resources, &states_current, &states_desired).await?;
+    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(&TarXStateDiff::ExtractionInSync, state_diff);
@@ -523,10 +499,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
 
-    let SingleProfileSingleFlowView {
-        flow, resources, ..
-    } = cmd_ctx.view();
-    let state_diffs = DiffCmd::exec(flow, resources, &states_current, &states_desired).await?;
+    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
     let state_desired = states_desired
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
