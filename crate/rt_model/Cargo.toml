@@ -1,7 +1,7 @@
 [package]
 name = "peace_rt_model"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
-version = "0.0.8"
+version = "0.0.9"
 edition = "2021"
 description = "Runtime data types for the peace automation framework."
 repository = "https://github.com/azriel91/peace"
@@ -23,20 +23,20 @@ fn_graph = { version = "0.8.2", features = ["resman"] }
 futures = "0.3.28"
 indicatif = { workspace = true, features = ["tokio"] }
 miette = { workspace = true, optional = true }
-peace_cfg = { path = "../cfg", version = "0.0.8" }
-peace_data = { path = "../data", version = "0.0.8" }
-peace_fmt = { path = "../fmt", version = "0.0.8" }
-peace_resources = { path = "../resources", version = "0.0.8" }
-peace_rt_model_core = { path = "../rt_model_core", version = "0.0.8" }
-peace_rt_model_hack = { path = "../rt_model_hack", version = "0.0.8", optional = true }
+peace_cfg = { path = "../cfg", version = "0.0.9" }
+peace_data = { path = "../data", version = "0.0.9" }
+peace_fmt = { path = "../fmt", version = "0.0.9" }
+peace_resources = { path = "../resources", version = "0.0.9" }
+peace_rt_model_core = { path = "../rt_model_core", version = "0.0.9" }
+peace_rt_model_hack = { path = "../rt_model_hack", version = "0.0.9", optional = true }
 serde = "1.0.159"
 serde_yaml = "0.9.21"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-peace_rt_model_native = { path = "../rt_model_native", version = "0.0.8" }
+peace_rt_model_native = { path = "../rt_model_native", version = "0.0.9" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-peace_rt_model_web = { path = "../rt_model_web", version = "0.0.8" }
+peace_rt_model_web = { path = "../rt_model_web", version = "0.0.9" }
 
 [features]
 default = []

@@ -39,7 +39,7 @@ Collect coverage and open `html` report.
 1. Update crate versions.
 
     ```bash
-    sd -s 'version = "0.0.4"' 'version = "0.0.5"' $(fd -tf -F toml)
+    sd -s 'version = "0.0.9"' 'version = "0.0.10"' $(fd -tf -F toml) README.md src/lib.rs
 
     # Make sure only `peace` crates are updated.
     git --no-pager diff | rg '^[+]' | rg -v '(peace)|(\+\+\+)|\+version'

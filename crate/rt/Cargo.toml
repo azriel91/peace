@@ -1,7 +1,7 @@
 [package]
 name = "peace_rt"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
-version = "0.0.8"
+version = "0.0.9"
 edition = "2021"
 description = "Runtime logic for the peace automation library."
 repository = "https://github.com/azriel91/peace"
@@ -19,11 +19,11 @@ test = false
 cfg-if = { workspace = true }
 futures = "0.3.28"
 miette = { workspace = true, optional = true }
-peace_cfg = { path = "../cfg", version = "0.0.8" }
-peace_cmd = { path = "../cmd", version = "0.0.8" }
-peace_resources = { path = "../resources", version = "0.0.8" }
-peace_rt_model = { path = "../rt_model", version = "0.0.8" }
-peace_rt_model_core = { path = "../rt_model_core", version = "0.0.8" }
+peace_cfg = { path = "../cfg", version = "0.0.9" }
+peace_cmd = { path = "../cmd", version = "0.0.9" }
+peace_resources = { path = "../resources", version = "0.0.9" }
+peace_rt_model = { path = "../rt_model", version = "0.0.9" }
+peace_rt_model_core = { path = "../rt_model_core", version = "0.0.9" }
 serde = "1.0.159"
 serde_yaml = "0.9.21"
 tokio = { workspace = true, features = ["sync"] }
@@ -33,7 +33,7 @@ tokio = { workspace = true, features = ["fs", "io-util"] }
 tokio-util = { version = "0.7.7", features = ["io", "io-util"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-peace_rt_model_web = { path = "../rt_model_web", version = "0.0.8" }
+peace_rt_model_web = { path = "../rt_model_web", version = "0.0.9" }
 wasm-bindgen = { version = "0.2.84", features = ["serde-serialize"] }
 web-sys = { version = "0.3.61", features = ["Storage", "Window"] }
 
