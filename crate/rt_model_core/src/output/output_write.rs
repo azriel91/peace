@@ -42,7 +42,7 @@ pub trait OutputWrite<E> {
     ///
     /// This function is infallible as progress information is considered
     /// transient, and loss of progress information is not considered as
-    /// something worth stopping an operation.
+    /// something worth stopping a command for.
     ///
     /// # Implementors
     ///

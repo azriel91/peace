@@ -31,7 +31,7 @@ This page records ideas that I'd like, but there isn't enough mental capacity an
 </div>
 </details>
 <details>
-<summary>4. Clean Operation Retains History</summary>
+<summary>4. Clean Command Retains History</summary>
 <div>
 
 End users may want to see what was previously deployed.
@@ -130,7 +130,7 @@ For items that cost, it is useful to have an expiry time that causes it to be de
 <summary>10. Interrupt / cancel safety</summary>
 <div>
 
-The [`tokio-graceful-shutdown`] library can be used to introduce interrupt safety into item spec executions. This is particularly useful for write operations.
+The [`tokio-graceful-shutdown`] library can be used to introduce interrupt safety into item spec executions. This is particularly useful for write functions.
 
 See the [`is_shutdown_requested`] method in particular.
 

@@ -61,7 +61,7 @@ where
     output: &'ctx mut O,
     /// Workspace that the `peace` tool runs in.
     workspace: &'ctx Workspace,
-    /// Tracks progress of each operation execution.
+    /// Tracks progress of each function execution.
     #[cfg(feature = "output_progress")]
     cmd_progress_tracker: peace_rt_model::CmdProgressTracker,
     /// The profile this command operates on.
@@ -143,7 +143,7 @@ where
     pub output: &'view mut O,
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'view Workspace,
-    /// Tracks progress of each operation execution.
+    /// Tracks progress of each function execution.
     #[cfg(feature = "output_progress")]
     pub cmd_progress_tracker: &'view mut peace_rt_model::CmdProgressTracker,
     /// The profile this command operates on.
@@ -297,13 +297,13 @@ where
         self.workspace.dirs().peace_app_dir()
     }
 
-    /// Returns the progress tracker for all operations' executions.
+    /// Returns the progress tracker for all functions' executions.
     #[cfg(feature = "output_progress")]
     pub fn cmd_progress_tracker(&self) -> &peace_rt_model::CmdProgressTracker {
         &self.cmd_progress_tracker
     }
 
-    /// Returns a mutable reference to the progress tracker for all operations'
+    /// Returns a mutable reference to the progress tracker for all functions'
     /// executions.
     #[cfg(feature = "output_progress")]
     pub fn cmd_progress_tracker_mut(&mut self) -> &mut peace_rt_model::CmdProgressTracker {

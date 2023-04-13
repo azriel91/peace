@@ -18,7 +18,7 @@ use crate::FnCtx;
 /// * Server launching / initialization.
 /// * Multiple cloud resource management.
 ///
-/// The lifecycle operations include:
+/// The lifecycle functions include:
 ///
 /// 1. Status discovery.
 /// 2. Execution.
@@ -26,7 +26,7 @@ use crate::FnCtx;
 /// 4. Restoration.
 /// 5. Clean up / deletion.
 ///
-/// Since the latter four operations are write-operations, their specification
+/// Since the latter four functions are write-operations, their specification
 /// includes a dry run function.
 ///
 /// # Logical IDs vs Physical IDs
@@ -39,11 +39,11 @@ use crate::FnCtx;
 /// The following are examples of logical IDs and corresponding physical
 /// IDs:
 ///
-/// * If the operation creates a file, the ID *may* be the full file path, or it
+/// * If the function creates a file, the ID *may* be the full file path, or it
 ///   may be the file name, assuming the file path may be deduced by the clean
 ///   up logic from [`Data`].
 ///
-/// * If the operation instantiates a virtual machine on a cloud platform, this
+/// * If the function instantiates a virtual machine on a cloud platform, this
 ///   may be the ID of the instance so that it may be terminated.
 ///
 /// | Logical ID               | Physical ID                            |
@@ -93,7 +93,7 @@ pub trait ItemSpec: DynClone {
     /// [`State`]: Self::State
     type StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static;
 
-    /// Data that the function reads from, or writes to.
+    /// Data that the function reads from or writes to.
     ///
     /// These may be parameters to the function, or information calculated from
     /// previous functions.
@@ -135,8 +135,8 @@ pub trait ItemSpec: DynClone {
     /// # Implementors
     ///
     /// [`Resources`] is the map of any type, and an instance of each data type
-    /// must be inserted into the map so that the [`check`] and [`apply`]
-    /// functions of each operation can borrow the instance of that type.
+    /// must be inserted into the map so that item spec functions can borrow the
+    /// instance of that type.
     ///
     /// [`check`]: crate::ApplyFns::check
     /// [`apply`]: crate::ApplyFns::apply
@@ -178,10 +178,10 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Examples
     ///
-    /// * For a file download operation, the desired state could be the
+    /// * For a file download item spec, the desired state could be the
     ///   destination path and a content hash.
     ///
-    /// * For a web application service operation, the desired state could be
+    /// * For a web application service item spec, the desired state could be
     ///   the web service is running on the latest version.
     async fn state_desired(
         fn_ctx: FnCtx<'_>,
@@ -201,10 +201,10 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Examples
     ///
-    /// * For a file download operation, the difference could be the content
+    /// * For a file download item spec, the difference could be the content
     ///   hash changes from `abcd` to `efgh`.
     ///
-    /// * For a web application service operation, the desired state could be
+    /// * For a web application service item spec, the desired state could be
     ///   the application version changing from 1 to 2.
     async fn state_diff(
         data: Self::Data<'_>,
@@ -229,10 +229,10 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Examples
     ///
-    /// * For a file download operation, if the destination file differs from
+    /// * For a file download item spec, if the destination file differs from
     ///   the file on the server, then the file needs to be downloaded.
     ///
-    /// * For a web application service operation, if the web service is
+    /// * For a web application service item spec, if the web service is
     ///   running, but reports a previous version, then the service may need to
     ///   be restarted.
     ///
@@ -242,7 +242,7 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Parameters
     ///
-    /// * `data`: Runtime data that the operation reads from, or writes to.
+    /// * `data`: Runtime data that the function reads from or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`state_current`].
     /// * `state_target`: Target [`State`] of the managed item, either
@@ -282,7 +282,7 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Parameters
     ///
-    /// * `data`: Runtime data that the operation reads from, or writes to.
+    /// * `data`: Runtime data that the function reads from or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`state_current`].
     /// * `state_target`: Target [`State`] of the managed item, either
@@ -311,7 +311,7 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Parameters
     ///
-    /// * `data`: Runtime data that the operation reads from, or writes to.
+    /// * `data`: Runtime data that the function reads from or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`state_current`].
     /// * `state_target`: Target [`State`] of the managed item, either

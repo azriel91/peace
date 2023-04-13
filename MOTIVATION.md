@@ -25,7 +25,7 @@ Instead of restarting the build and deployment process from scratch, we can reus
 * I want to set up my laptop with these applications and configuration that I normally use.
 * A realistic CI environment takes a long time to build and deploy, so when I make a change, the rebuilt application should be able to be deployed into an existing integration environment.
 
-### Operations
+### Site Reliability Engineer
 
 * When alerted, I want to know any differences between the deployed environment and its intended state.
 * When I identify and solve the issue, I want to know what would change when I run a command before I execute it for real.

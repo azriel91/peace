@@ -77,7 +77,7 @@ This function also instantiates the data types referenced by this `ItemSpec` int
 
 `ItemSpec::state_current`
 
-This may not necessarily be a cheap operation, for example if it needs to make web requests that take seconds to complete.
+This may not necessarily be a cheap function, for example if it needs to make web requests that take seconds to complete.
 
 ### Examples
 
@@ -98,7 +98,7 @@ This may not necessarily be a cheap operation, for example if it needs to make w
 
 `ItemSpec::StateDesiredFn`
 
-This may not necessarily be a cheap operation, for example if it needs to make web requests that take seconds to complete.
+This may not necessarily be a cheap function, for example if it needs to make web requests that take seconds to complete.
 
 ### Examples
 

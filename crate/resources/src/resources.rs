@@ -11,8 +11,7 @@ pub mod ts;
 ///
 /// This augments the any-map functionality of [`resman::Resources`] with type
 /// state, so that it is impossible for developers to pass `Resources` to
-/// functions that require particular operations to have executed over the
-/// resources beforehand.
+/// functions that require particular data to have been inserted beforehand.
 ///
 /// For example, `Resources` must be `setup` before any `TryFnSpec`,
 /// `ApplyFns`, or `CleanOpSpec` may execute with it.

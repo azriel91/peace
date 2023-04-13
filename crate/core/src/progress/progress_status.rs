@@ -23,7 +23,7 @@ use crate::progress::ProgressComplete;
 /// ## `!Copy`
 ///
 /// This type isn't `Copy`, because one way wish to include detail about the
-/// operation to render as part of the progress output, and that detail may not
+/// function to render as part of the progress output, and that detail may not
 /// be `Copy` -- not sure yet.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ProgressStatus {
@@ -44,11 +44,10 @@ pub enum ProgressStatus {
     ///
     /// * **Units total:** Unknown (spinner) / known (progress bar).
     /// * **Units current**
-    /// * **Operation:** State current / desired / diff discovery,
-    ///   `ApplyFns::exec`.
+    /// * **Function:** `ItemSpec::{state_current, state_desired, apply}`.
     ///
-    ///     Certain operations will not be applicable, e.g. when `StateCurrent`
-    ///     is feature gated, then the operation won't be available when the
+    ///     Certain functions will not be applicable, e.g. when `StateCurrent`
+    ///     is feature gated, then the function won't be available when the
     ///     feature is not enabled.
     Running,
     /// Progress updates have not been received for a given period.
@@ -68,7 +67,6 @@ pub enum ProgressStatus {
     /// This status is best conveyed alongside additional information:
     ///
     /// * **Completion Status**: Success, Failed.
-    /// * **Operation:** State current / desired / diff discovery,
-    ///   `ApplyFns::exec`.
+    /// * **Function:** `ItemSpec::{state_current, state_desired, apply}`.
     Complete(ProgressComplete),
 }

@@ -29,7 +29,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`ItemSpec::id`]: peace_cfg::ItemSpec::id
     fn id(&self) -> &ItemSpecId;
 
-    /// Initializes data for the operation's check and `exec` functions.
+    /// Initializes data for the item spec's functions.
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E>
     where
         E: Debug + std::error::Error;
