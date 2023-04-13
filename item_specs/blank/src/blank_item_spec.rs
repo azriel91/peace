@@ -48,7 +48,7 @@ impl<Id> ItemSpec for BlankItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = BlankData<'op, Id>;
+    type Data<'exec> = BlankData<'exec, Id>;
     type Error = BlankError;
     type State = BlankState;
     type StateDiff = BlankStateDiff;

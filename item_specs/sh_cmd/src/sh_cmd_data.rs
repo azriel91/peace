@@ -15,18 +15,18 @@ use crate::ShCmdParams;
 /// * `Id`: A zero-sized type used to distinguish different command execution
 ///   parameters from each other.
 #[derive(Data, Debug)]
-pub struct ShCmdData<'op, Id>
+pub struct ShCmdData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
     /// Parameters to determine what shell command to run.
-    sh_cmd_params: R<'op, ShCmdParams<Id>>,
+    sh_cmd_params: R<'exec, ShCmdParams<Id>>,
 
     /// Saved states with this item spec's previous execution.
-    states_saved: RMaybe<'op, StatesSaved>,
+    states_saved: RMaybe<'exec, StatesSaved>,
 }
 
-impl<'op, Id> ShCmdData<'op, Id>
+impl<'exec, Id> ShCmdData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {

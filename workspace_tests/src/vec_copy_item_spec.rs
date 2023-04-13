@@ -30,7 +30,7 @@ impl VecCopyItemSpec {
 
 #[async_trait(?Send)]
 impl ItemSpec for VecCopyItemSpec {
-    type Data<'op> = VecCopyData<'op>;
+    type Data<'exec> = VecCopyData<'exec>;
     type Error = VecCopyError;
     type State = VecCopyState;
     type StateDiff = VecCopyDiff;
@@ -199,14 +199,14 @@ pub enum VecCopyError {
 }
 
 #[derive(Data, Debug)]
-pub struct VecCopyData<'op> {
+pub struct VecCopyData<'exec> {
     /// Source `Vec` to read from.
-    src: R<'op, VecA>,
+    src: R<'exec, VecA>,
     /// Destination `Vec` to write to.
-    dest: W<'op, VecB>,
+    dest: W<'exec, VecB>,
 }
 
-impl<'op> VecCopyData<'op> {
+impl<'exec> VecCopyData<'exec> {
     pub fn src(&self) -> &VecA {
         &self.src
     }

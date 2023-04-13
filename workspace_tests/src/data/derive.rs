@@ -106,24 +106,24 @@ mod tests {
     }
 
     #[derive(Debug, Data)]
-    struct DataNamedFields<'op> {
-        a_imm: R<'op, A>,
-        b_imm: R<'op, B>,
+    struct DataNamedFields<'exec> {
+        a_imm: R<'exec, A>,
+        b_imm: R<'exec, B>,
     }
 
     #[derive(Debug, Data)]
-    struct DataUnnamedFields<'op>(R<'op, A>, R<'op, B>);
+    struct DataUnnamedFields<'exec>(R<'exec, A>, R<'exec, B>);
 
     #[derive(Debug, Data)]
-    struct DataMutFields<'op> {
-        a_mut: W<'op, A>,
-        b_mut: W<'op, B>,
+    struct DataMutFields<'exec> {
+        a_mut: W<'exec, A>,
+        b_mut: W<'exec, B>,
     }
 
     #[derive(Debug, Data)]
-    struct DataMixFields<'op> {
-        a_imm: R<'op, A>,
-        b_mut: W<'op, B>,
+    struct DataMixFields<'exec> {
+        a_imm: R<'exec, A>,
+        b_mut: W<'exec, B>,
     }
 
     #[derive(Clone, Copy, Debug, PartialEq)]

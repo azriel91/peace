@@ -52,7 +52,7 @@ impl<Id> ItemSpec for FileDownloadItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = FileDownloadData<'op, Id>;
+    type Data<'exec> = FileDownloadData<'exec, Id>;
     type Error = FileDownloadError;
     type State = State<FileDownloadState, FetchedOpt<ETag>>;
     type StateDiff = FileDownloadStateDiff;

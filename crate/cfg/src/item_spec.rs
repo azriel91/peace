@@ -97,9 +97,9 @@ pub trait ItemSpec: DynClone {
     ///
     /// These may be parameters to the function, or information calculated from
     /// previous functions.
-    type Data<'op>: Data<'op>
+    type Data<'exec>: Data<'exec>
     where
-        Self: 'op;
+        Self: 'exec;
 
     /// Returns the ID of this full spec.
     ///

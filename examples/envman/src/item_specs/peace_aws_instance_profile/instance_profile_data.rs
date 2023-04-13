@@ -12,17 +12,17 @@ use crate::item_specs::peace_aws_instance_profile::InstanceProfileParams;
 /// * `Id`: A zero-sized type used to distinguish different instance profile
 ///   parameters from each other.
 #[derive(Data, Debug)]
-pub struct InstanceProfileData<'op, Id>
+pub struct InstanceProfileData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
     /// InstanceProfile state parameters.
-    params: W<'op, InstanceProfileParams<Id>>,
+    params: W<'exec, InstanceProfileParams<Id>>,
     /// IAM client to communicate with AWS.
-    client: R<'op, aws_sdk_iam::Client>,
+    client: R<'exec, aws_sdk_iam::Client>,
 }
 
-impl<'op, Id> InstanceProfileData<'op, Id>
+impl<'exec, Id> InstanceProfileData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -34,7 +34,7 @@ where
         &mut self.params
     }
 
-    pub fn client(&self) -> &R<'op, aws_sdk_iam::Client> {
+    pub fn client(&self) -> &R<'exec, aws_sdk_iam::Client> {
         &self.client
     }
 }

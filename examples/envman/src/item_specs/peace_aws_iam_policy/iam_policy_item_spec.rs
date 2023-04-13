@@ -57,7 +57,7 @@ impl<Id> ItemSpec for IamPolicyItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = IamPolicyData<'op, Id>;
+    type Data<'exec> = IamPolicyData<'exec, Id>;
     type Error = IamPolicyError;
     type State = IamPolicyState;
     type StateDiff = IamPolicyStateDiff;

@@ -51,7 +51,7 @@ impl<Id> ItemSpec for ShSyncCmdItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = ShSyncCmdData<'op, Id>;
+    type Data<'exec> = ShSyncCmdData<'exec, Id>;
     type Error = ShSyncCmdError;
     type State = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;
     type StateDiff = ShSyncCmdStateDiff;

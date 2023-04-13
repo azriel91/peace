@@ -57,7 +57,7 @@ impl<Id> ItemSpec for S3BucketItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = S3BucketData<'op, Id>;
+    type Data<'exec> = S3BucketData<'exec, Id>;
     type Error = S3BucketError;
     type State = S3BucketState;
     type StateDiff = S3BucketStateDiff;

@@ -57,7 +57,7 @@ impl<Id> ItemSpec for S3ObjectItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = S3ObjectData<'op, Id>;
+    type Data<'exec> = S3ObjectData<'exec, Id>;
     type Error = S3ObjectError;
     type State = S3ObjectState;
     type StateDiff = S3ObjectStateDiff;

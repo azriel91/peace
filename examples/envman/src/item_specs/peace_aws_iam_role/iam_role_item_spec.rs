@@ -57,7 +57,7 @@ impl<Id> ItemSpec for IamRoleItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = IamRoleData<'op, Id>;
+    type Data<'exec> = IamRoleData<'exec, Id>;
     type Error = IamRoleError;
     type State = IamRoleState;
     type StateDiff = IamRoleStateDiff;

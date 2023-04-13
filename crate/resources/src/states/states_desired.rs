@@ -19,18 +19,18 @@ use crate::states::{ts::Desired, States};
 /// #
 /// /// Predecessor `TryFnSpec::Data`.
 /// #[derive(Data, Debug)]
-/// pub struct AppUploadParams<'op> {
+/// pub struct AppUploadParams<'exec> {
 ///     /// Path to the application directory.
-///     app_dir: W<'op, PathBuf>,
+///     app_dir: W<'exec, PathBuf>,
 /// }
 ///
 /// /// Successor `TryFnSpec::Data`.
 /// #[derive(Data, Debug)]
-/// pub struct AppInstallParams<'op> {
+/// pub struct AppInstallParams<'exec> {
 ///     /// Path to the application directory.
-///     app_dir: R<'op, PathBuf>,
+///     app_dir: R<'exec, PathBuf>,
 ///     /// Configuration to use.
-///     config: W<'op, String>,
+///     config: W<'exec, String>,
 /// }
 /// ```
 ///

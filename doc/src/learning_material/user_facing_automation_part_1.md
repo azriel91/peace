@@ -1209,7 +1209,7 @@ Error: <span style='color:#f44'>peace_item_spec_file_download::src_get</span>
 
   <span style='color:#f44'>×</span> Failed to download file.
    ╭────
- <span style='opacity:0.67'>1</span> │ download init http://non_existent_domain/ file.txt
+ <span style='execacity:0.67'>1</span> │ download init http://non_existent_domain/ file.txt
    · <span style='color:#f3f'><b>              ─────────────┬─────────────</b></span>
    ·                            <span style='color:#f3f'><b>╰── defined here</b></span>
    ╰────
@@ -1256,7 +1256,7 @@ Error: <span style='color:#f44'>peace_item_spec_file_download::src_get</span>
 
   <span style='color:#f44'>×</span> Failed to download file.
    ╭────
- <span style='opacity:0.67'>1</span> │ download init http://localhost:3000/ peace_book.html
+ <span style='execacity:0.67'>1</span> │ download init http://localhost:3000/ peace_book.html
    · <span style='color:#f3f'><b>              ───────────┬──────────</b></span>
    ·                          <span style='color:#f3f'><b>╰── defined here</b></span>
    ╰────

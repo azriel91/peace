@@ -58,7 +58,7 @@ impl<Id> ItemSpec for InstanceProfileItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = InstanceProfileData<'op, Id>;
+    type Data<'exec> = InstanceProfileData<'exec, Id>;
     type Error = InstanceProfileError;
     type State = InstanceProfileState;
     type StateDiff = InstanceProfileStateDiff;

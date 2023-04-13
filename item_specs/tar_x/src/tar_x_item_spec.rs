@@ -57,7 +57,7 @@ impl<Id> ItemSpec for TarXItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = TarXData<'op, Id>;
+    type Data<'exec> = TarXData<'exec, Id>;
     type Error = TarXError;
     type State = FileMetadatas;
     type StateDiff = TarXStateDiff;

@@ -14,21 +14,21 @@ use crate::item_specs::{
 /// * `Id`: A zero-sized type used to distinguish different instance profile
 ///   parameters from each other.
 #[derive(Data, Debug)]
-pub struct IamRoleData<'op, Id>
+pub struct IamRoleData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
     /// IamRole state parameters.
-    params: W<'op, IamRoleParams<Id>>,
+    params: W<'exec, IamRoleParams<Id>>,
     /// Workaround for managed policy ARN param.
     ///
     /// Hack: Remove this when referential param values is implemented.
-    managed_policy_arn: ROpt<'op, ManagedPolicyArn<Id>>,
+    managed_policy_arn: ROpt<'exec, ManagedPolicyArn<Id>>,
     /// IAM client to communicate with AWS.
-    client: R<'op, aws_sdk_iam::Client>,
+    client: R<'exec, aws_sdk_iam::Client>,
 }
 
-impl<'op, Id> IamRoleData<'op, Id>
+impl<'exec, Id> IamRoleData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
@@ -45,7 +45,7 @@ where
         self.managed_policy_arn.as_ref()
     }
 
-    pub fn client(&self) -> &R<'op, aws_sdk_iam::Client> {
+    pub fn client(&self) -> &R<'exec, aws_sdk_iam::Client> {
         &self.client
     }
 }
