@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
 use peace::{
-    cfg::{state::External, OpCheckStatus, State},
+    cfg::{state::External, ApplyCheck, State},
     resources::type_reg::untagged::BoxDataTypeDowncast,
     rt_model::outcomes::{ItemApply, ItemApplyBoxed, ItemApplyPartial},
 };
@@ -52,7 +52,7 @@ fn debug() {
             physical: Tbd,
         },
         state_diff: 2,
-        op_check_status: ExecNotRequired,
+        apply_check: ExecNotRequired,
         state_applied: None,
     },
 )"#,
@@ -86,7 +86,7 @@ state_target:
   logical: 3
   physical: !Tbd null
 state_diff: 2
-op_check_status: ExecNotRequired
+apply_check: ExecNotRequired
 state_applied: null
 "#,
         serde_yaml::to_string(data_type_wrapper)?
@@ -99,6 +99,6 @@ fn item_apply() -> ItemApply<State<u32, External<u32>>, u32> {
     item_apply_partial.state_current = Some(State::new(1, External::Value(0)));
     item_apply_partial.state_target = Some(State::new(3, External::Tbd));
     item_apply_partial.state_diff = Some(2);
-    item_apply_partial.op_check_status = Some(OpCheckStatus::ExecNotRequired);
+    item_apply_partial.apply_check = Some(ApplyCheck::ExecNotRequired);
     ItemApply::try_from((item_apply_partial, None)).unwrap()
 }

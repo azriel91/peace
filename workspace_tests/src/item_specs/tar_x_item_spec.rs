@@ -2,8 +2,7 @@ use std::{io::Cursor, path::PathBuf};
 
 use peace::{
     cfg::{
-        app_name, item_spec_id, profile, AppName, FlowId, ItemSpec, ItemSpecId, OpCheckStatus,
-        Profile,
+        app_name, item_spec_id, profile, AppName, ApplyCheck, FlowId, ItemSpec, ItemSpecId, Profile,
     },
     cmd::ctx::CmdCtx,
     data::Data,
@@ -506,7 +505,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
-        OpCheckStatus::ExecNotRequired,
+        ApplyCheck::ExecNotRequired,
         <TarXItemSpec::<TarXTest> as ItemSpec>::apply_check(
             <TarXData<TarXTest> as Data>::borrow(TarXTest::ID, cmd_ctx.resources()),
             state_current,

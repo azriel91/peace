@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{FnCtx, OpCheckStatus, State};
+use peace::cfg::{ApplyCheck, FnCtx, State};
 
 use crate::{
     ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord, ShSyncCmdStateDiff,
@@ -20,7 +20,7 @@ where
         _file_state_current: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _file_state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _diff: &ShSyncCmdStateDiff,
-    ) -> Result<OpCheckStatus, ShSyncCmdError> {
+    ) -> Result<ApplyCheck, ShSyncCmdError> {
         todo!();
     }
 

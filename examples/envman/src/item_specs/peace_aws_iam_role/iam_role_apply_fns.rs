@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate, ProgressSender};
-use peace::cfg::{state::Generated, FnCtx, OpCheckStatus};
+use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
     model::RoleIdAndArn, IamRoleData, IamRoleError, IamRoleState, IamRoleStateDiff,
@@ -60,26 +60,26 @@ where
         state_current: &IamRoleState,
         _state_desired: &IamRoleState,
         diff: &IamRoleStateDiff,
-    ) -> Result<OpCheckStatus, IamRoleError> {
+    ) -> Result<ApplyCheck, IamRoleError> {
         match diff {
             IamRoleStateDiff::Added => {
-                let op_check_status = {
+                let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
                     #[cfg(feature = "output_progress")]
                     {
                         let progress_limit = ProgressLimit::Steps(2);
-                        OpCheckStatus::ExecRequired { progress_limit }
+                        ApplyCheck::ExecRequired { progress_limit }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             IamRoleStateDiff::Removed => {
-                let op_check_status = match state_current {
-                    IamRoleState::None => OpCheckStatus::ExecNotRequired,
+                let apply_check = match state_current {
+                    IamRoleState::None => ApplyCheck::ExecNotRequired,
                     IamRoleState::Some {
                         name: _,
                         path: _,
@@ -95,39 +95,39 @@ where
                         }
 
                         if steps_required == 0 {
-                            OpCheckStatus::ExecNotRequired
+                            ApplyCheck::ExecNotRequired
                         } else {
                             #[cfg(not(feature = "output_progress"))]
                             {
-                                OpCheckStatus::ExecRequired
+                                ApplyCheck::ExecRequired
                             }
                             #[cfg(feature = "output_progress")]
                             {
                                 let progress_limit = ProgressLimit::Steps(steps_required);
-                                OpCheckStatus::ExecRequired { progress_limit }
+                                ApplyCheck::ExecRequired { progress_limit }
                             }
                         }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             IamRoleStateDiff::ManagedPolicyAttachmentModified { .. } => {
-                let op_check_status = {
+                let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
                     #[cfg(feature = "output_progress")]
                     {
                         // Technically could be 1 or 2, whether we detach an existing before
                         // attaching another, or just attach one.
                         let progress_limit = ProgressLimit::Steps(2);
-                        OpCheckStatus::ExecRequired { progress_limit }
+                        ApplyCheck::ExecRequired { progress_limit }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             IamRoleStateDiff::NameOrPathModified {
                 name_diff,
@@ -137,7 +137,7 @@ where
                 path_diff: path_diff.clone(),
             }),
             IamRoleStateDiff::InSyncExists | IamRoleStateDiff::InSyncDoesNotExist => {
-                Ok(OpCheckStatus::ExecNotRequired)
+                Ok(ApplyCheck::ExecNotRequired)
             }
         }
     }

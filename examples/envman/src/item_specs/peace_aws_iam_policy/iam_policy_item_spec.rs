@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, FnCtx, ItemSpec, ItemSpecId, OpCheckStatus},
+    cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -122,7 +122,7 @@ where
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
-    ) -> Result<OpCheckStatus, Self::Error> {
+    ) -> Result<ApplyCheck, Self::Error> {
         IamPolicyApplyFns::apply_check(data, state_current, state_target, diff).await
     }
 

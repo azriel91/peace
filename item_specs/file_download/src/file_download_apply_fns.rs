@@ -15,7 +15,7 @@ cfg_if::cfg_if! {
     }
 }
 
-use peace::cfg::{state::FetchedOpt, FnCtx, OpCheckStatus, State};
+use peace::cfg::{state::FetchedOpt, ApplyCheck, FnCtx, State};
 use reqwest::header::ETAG;
 
 use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
@@ -242,8 +242,8 @@ where
         }: &State<FileDownloadState, FetchedOpt<ETag>>,
         _file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
         diff: &FileDownloadStateDiff,
-    ) -> Result<OpCheckStatus, FileDownloadError> {
-        let op_check_status = match diff {
+    ) -> Result<ApplyCheck, FileDownloadError> {
+        let apply_check = match diff {
             FileDownloadStateDiff::Change {
                 #[cfg(feature = "output_progress")]
                 byte_len,
@@ -251,7 +251,7 @@ where
             } => {
                 #[cfg(not(feature = "output_progress"))]
                 {
-                    OpCheckStatus::ExecRequired
+                    ApplyCheck::ExecRequired
                 }
 
                 #[cfg(feature = "output_progress")]
@@ -265,11 +265,11 @@ where
                         Tracked::Unknown => ProgressLimit::Unknown,
                     };
 
-                    OpCheckStatus::ExecRequired { progress_limit }
+                    ApplyCheck::ExecRequired { progress_limit }
                 }
             }
             FileDownloadStateDiff::Deleted { .. } => match file_state_current {
-                FileDownloadState::None { .. } => OpCheckStatus::ExecNotRequired,
+                FileDownloadState::None { .. } => ApplyCheck::ExecNotRequired,
                 FileDownloadState::StringContents {
                     path: _,
                     #[cfg(not(feature = "output_progress"))]
@@ -279,11 +279,11 @@ where
                 } => {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
                     #[cfg(feature = "output_progress")]
                     {
-                        OpCheckStatus::ExecRequired {
+                        ApplyCheck::ExecRequired {
                             progress_limit: ProgressLimit::Bytes(
                                 contents.as_bytes().len().try_into().unwrap(),
                             ),
@@ -299,30 +299,30 @@ where
                 } => {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
 
                     #[cfg(feature = "output_progress")]
-                    OpCheckStatus::ExecRequired {
+                    ApplyCheck::ExecRequired {
                         progress_limit: ProgressLimit::Bytes(*byte_count),
                     }
                 }
                 FileDownloadState::Unknown { path: _ } => {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
 
                     #[cfg(feature = "output_progress")]
-                    OpCheckStatus::ExecRequired {
+                    ApplyCheck::ExecRequired {
                         progress_limit: ProgressLimit::Unknown,
                     }
                 }
             },
             FileDownloadStateDiff::NoChangeNotExists { .. }
-            | FileDownloadStateDiff::NoChangeSync { .. } => OpCheckStatus::ExecNotRequired,
+            | FileDownloadStateDiff::NoChangeSync { .. } => ApplyCheck::ExecNotRequired,
         };
-        Ok(op_check_status)
+        Ok(apply_check)
     }
 
     pub async fn apply_dry(

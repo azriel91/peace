@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use aws_sdk_iam::{error::SdkError, operation::list_policy_versions::ListPolicyVersionsError};
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
-use peace::cfg::{state::Generated, FnCtx, OpCheckStatus};
+use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_iam_policy::{
     model::PolicyIdArnVersion, IamPolicyData, IamPolicyError, IamPolicyState, IamPolicyStateDiff,
@@ -24,26 +24,26 @@ where
         state_current: &IamPolicyState,
         _state_desired: &IamPolicyState,
         diff: &IamPolicyStateDiff,
-    ) -> Result<OpCheckStatus, IamPolicyError> {
+    ) -> Result<ApplyCheck, IamPolicyError> {
         match diff {
             IamPolicyStateDiff::Added | IamPolicyStateDiff::DocumentModified { .. } => {
-                let op_check_status = {
+                let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
                     #[cfg(feature = "output_progress")]
                     {
                         let progress_limit = ProgressLimit::Steps(3);
-                        OpCheckStatus::ExecRequired { progress_limit }
+                        ApplyCheck::ExecRequired { progress_limit }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             IamPolicyStateDiff::Removed => {
-                let op_check_status = match state_current {
-                    IamPolicyState::None => OpCheckStatus::ExecNotRequired,
+                let apply_check = match state_current {
+                    IamPolicyState::None => ApplyCheck::ExecNotRequired,
                     IamPolicyState::Some {
                         name: _,
                         path: _,
@@ -56,22 +56,22 @@ where
                         }
 
                         if steps_required == 0 {
-                            OpCheckStatus::ExecNotRequired
+                            ApplyCheck::ExecNotRequired
                         } else {
                             #[cfg(not(feature = "output_progress"))]
                             {
-                                OpCheckStatus::ExecRequired
+                                ApplyCheck::ExecRequired
                             }
                             #[cfg(feature = "output_progress")]
                             {
                                 let progress_limit = ProgressLimit::Steps(steps_required);
-                                OpCheckStatus::ExecRequired { progress_limit }
+                                ApplyCheck::ExecRequired { progress_limit }
                             }
                         }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             IamPolicyStateDiff::NameOrPathModified {
                 name_diff,
@@ -92,9 +92,9 @@ where
                     policy_id_version_arn.arn().to_string(),
                 ));
 
-                Ok(OpCheckStatus::ExecNotRequired)
+                Ok(ApplyCheck::ExecNotRequired)
             }
-            IamPolicyStateDiff::InSyncDoesNotExist => Ok(OpCheckStatus::ExecNotRequired),
+            IamPolicyStateDiff::InSyncDoesNotExist => Ok(ApplyCheck::ExecNotRequired),
         }
     }
 

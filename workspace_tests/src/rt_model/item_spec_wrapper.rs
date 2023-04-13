@@ -1,6 +1,6 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
-    cfg::{FnCtx, OpCheckStatus},
+    cfg::{ApplyCheck, FnCtx},
     data::marker::{ApplyDry, Clean, Current, Desired},
     resources::{
         internal::StatesMut,
@@ -174,13 +174,13 @@ async fn ensure_prepare() -> Result<(), VecCopyError> {
     match <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, fn_ctx, &resources).await {
         Ok(item_apply) => {
             #[cfg(not(feature = "output_progress"))]
-            assert_eq!(OpCheckStatus::ExecRequired, item_apply.op_check_status());
+            assert_eq!(ApplyCheck::ExecRequired, item_apply.apply_check());
             #[cfg(feature = "output_progress")]
             assert_eq!(
-                OpCheckStatus::ExecRequired {
+                ApplyCheck::ExecRequired {
                     progress_limit: ProgressLimit::Bytes(8)
                 },
-                item_apply.op_check_status()
+                item_apply.apply_check()
             );
 
             Ok(())
@@ -342,13 +342,13 @@ async fn clean_prepare() -> Result<(), VecCopyError> {
     match <dyn ItemSpecRt<_>>::clean_prepare(&item_spec_wrapper, fn_ctx, &resources).await {
         Ok(item_apply) => {
             #[cfg(not(feature = "output_progress"))]
-            assert_eq!(OpCheckStatus::ExecRequired, item_apply.op_check_status());
+            assert_eq!(ApplyCheck::ExecRequired, item_apply.apply_check());
             #[cfg(feature = "output_progress")]
             assert_eq!(
-                OpCheckStatus::ExecRequired {
+                ApplyCheck::ExecRequired {
                     progress_limit: ProgressLimit::Bytes(8)
                 },
-                item_apply.op_check_status()
+                item_apply.apply_check()
             );
 
             Ok(())

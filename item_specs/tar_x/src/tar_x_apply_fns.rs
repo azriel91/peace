@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{FnCtx, OpCheckStatus};
+use peace::cfg::{ApplyCheck, FnCtx};
 
 use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
 
@@ -28,9 +28,9 @@ where
         _state_current: &FileMetadatas,
         state_desired: &FileMetadatas,
         diff: &TarXStateDiff,
-    ) -> Result<OpCheckStatus, TarXError> {
-        let op_check_status = match diff {
-            TarXStateDiff::ExtractionInSync => OpCheckStatus::ExecNotRequired,
+    ) -> Result<ApplyCheck, TarXError> {
+        let apply_check = match diff {
+            TarXStateDiff::ExtractionInSync => ApplyCheck::ExecNotRequired,
             TarXStateDiff::ExtractionOutOfSync {
                 added: _,
                 modified: _,
@@ -38,7 +38,7 @@ where
             } => {
                 #[cfg(not(feature = "output_progress"))]
                 {
-                    OpCheckStatus::ExecRequired
+                    ApplyCheck::ExecRequired
                 }
                 #[cfg(feature = "output_progress")]
                 {
@@ -47,12 +47,12 @@ where
                         .try_into()
                         .map(ProgressLimit::Steps)
                         .unwrap_or(ProgressLimit::Unknown);
-                    OpCheckStatus::ExecRequired { progress_limit }
+                    ApplyCheck::ExecRequired { progress_limit }
                 }
             }
         };
 
-        Ok(op_check_status)
+        Ok(apply_check)
     }
 
     pub async fn apply_dry(

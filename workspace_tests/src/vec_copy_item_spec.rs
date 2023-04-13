@@ -7,7 +7,7 @@ use diff::{Diff, VecDiff, VecDiffType};
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::{
-    cfg::{async_trait, item_spec_id, FnCtx, ItemSpec, ItemSpecId, OpCheckStatus},
+    cfg::{async_trait, item_spec_id, ApplyCheck, FnCtx, ItemSpec, ItemSpecId},
     data::{
         accessors::{RMaybe, R, W},
         Data,
@@ -107,15 +107,15 @@ impl ItemSpec for VecCopyItemSpec {
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
-    ) -> Result<OpCheckStatus, Self::Error> {
-        let op_check_status = if diff.0.0.is_empty() {
-            OpCheckStatus::ExecNotRequired
+    ) -> Result<ApplyCheck, Self::Error> {
+        let apply_check = if diff.0.0.is_empty() {
+            ApplyCheck::ExecNotRequired
         } else {
             #[cfg(not(feature = "output_progress"))]
             {
                 let _state_current = state_current;
                 let _state_target = state_target;
-                OpCheckStatus::ExecRequired
+                ApplyCheck::ExecRequired
             }
             #[cfg(feature = "output_progress")]
             {
@@ -124,10 +124,10 @@ impl ItemSpec for VecCopyItemSpec {
                         .map(ProgressLimit::Bytes)
                         .unwrap_or(ProgressLimit::Unknown);
 
-                OpCheckStatus::ExecRequired { progress_limit }
+                ApplyCheck::ExecRequired { progress_limit }
             }
         };
-        Ok(op_check_status)
+        Ok(apply_check)
     }
 
     async fn apply_dry(

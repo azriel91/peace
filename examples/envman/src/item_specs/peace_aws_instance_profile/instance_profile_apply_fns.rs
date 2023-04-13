@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate, ProgressSender};
-use peace::cfg::{state::Generated, FnCtx, OpCheckStatus};
+use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_instance_profile::{
     model::InstanceProfileIdAndArn, InstanceProfileData, InstanceProfileError,
@@ -103,28 +103,28 @@ where
         state_current: &InstanceProfileState,
         _state_desired: &InstanceProfileState,
         diff: &InstanceProfileStateDiff,
-    ) -> Result<OpCheckStatus, InstanceProfileError> {
+    ) -> Result<ApplyCheck, InstanceProfileError> {
         match diff {
             InstanceProfileStateDiff::Added
             | InstanceProfileStateDiff::RoleAssociatedModified { .. } => {
-                let op_check_status = {
+                let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
                     #[cfg(feature = "output_progress")]
                     {
                         // Create instance profile, associate role
                         let progress_limit = ProgressLimit::Steps(2);
-                        OpCheckStatus::ExecRequired { progress_limit }
+                        ApplyCheck::ExecRequired { progress_limit }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             InstanceProfileStateDiff::Removed => {
-                let op_check_status = match state_current {
-                    InstanceProfileState::None => OpCheckStatus::ExecNotRequired,
+                let apply_check = match state_current {
+                    InstanceProfileState::None => ApplyCheck::ExecNotRequired,
                     InstanceProfileState::Some {
                         name: _,
                         path: _,
@@ -140,22 +140,22 @@ where
                         }
 
                         if steps_required == 0 {
-                            OpCheckStatus::ExecNotRequired
+                            ApplyCheck::ExecNotRequired
                         } else {
                             #[cfg(not(feature = "output_progress"))]
                             {
-                                OpCheckStatus::ExecRequired
+                                ApplyCheck::ExecRequired
                             }
                             #[cfg(feature = "output_progress")]
                             {
                                 let progress_limit = ProgressLimit::Steps(steps_required);
-                                OpCheckStatus::ExecRequired { progress_limit }
+                                ApplyCheck::ExecRequired { progress_limit }
                             }
                         }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             InstanceProfileStateDiff::NameOrPathModified {
                 name_diff,
@@ -167,7 +167,7 @@ where
                 },
             ),
             InstanceProfileStateDiff::InSyncExists
-            | InstanceProfileStateDiff::InSyncDoesNotExist => Ok(OpCheckStatus::ExecNotRequired),
+            | InstanceProfileStateDiff::InSyncDoesNotExist => Ok(ApplyCheck::ExecNotRequired),
         }
     }
 

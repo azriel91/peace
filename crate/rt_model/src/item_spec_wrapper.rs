@@ -5,7 +5,7 @@ use std::{
 };
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
-use peace_cfg::{async_trait, FnCtx, ItemSpec, ItemSpecId, OpCheckStatus};
+use peace_cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId};
 use peace_data::{
     marker::{ApplyDry, Clean, Current, Desired},
     Data,
@@ -177,7 +177,7 @@ where
         state_current: &IS::State,
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
-    ) -> Result<OpCheckStatus, E> {
+    ) -> Result<ApplyCheck, E> {
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
         <IS as peace_cfg::ItemSpec>::apply_check(data, state_current, state_desired, state_diff)
             .await
@@ -440,16 +440,16 @@ where
             .apply_op_check(resources, state_current, state_target, state_diff)
             .await
         {
-            Ok(op_check_status) => {
-                item_apply_partial.op_check_status = Some(op_check_status);
+            Ok(apply_check) => {
+                item_apply_partial.apply_check = Some(apply_check);
 
                 // TODO: write test for this case
-                match op_check_status {
+                match apply_check {
                     #[cfg(not(feature = "output_progress"))]
-                    OpCheckStatus::ExecRequired => None,
+                    ApplyCheck::ExecRequired => None,
                     #[cfg(feature = "output_progress")]
-                    OpCheckStatus::ExecRequired { .. } => None,
-                    OpCheckStatus::ExecNotRequired => item_apply_partial.state_current.clone(),
+                    ApplyCheck::ExecRequired { .. } => None,
+                    ApplyCheck::ExecNotRequired => item_apply_partial.state_current.clone(),
                 }
             }
             Err(error) => return Err((error, item_apply_partial.into())),
@@ -478,13 +478,13 @@ where
             state_current,
             state_target,
             state_diff,
-            op_check_status,
+            apply_check,
             state_applied,
         } = item_apply;
 
-        match op_check_status {
+        match apply_check {
             #[cfg(not(feature = "output_progress"))]
-            OpCheckStatus::ExecRequired => {
+            ApplyCheck::ExecRequired => {
                 let state_applied_dry = self
                     .apply_op_exec_dry(fn_ctx, resources, state_current, state_target, state_diff)
                     .await?;
@@ -492,14 +492,14 @@ where
                 *state_applied = Some(state_applied_dry);
             }
             #[cfg(feature = "output_progress")]
-            OpCheckStatus::ExecRequired { progress_limit: _ } => {
+            ApplyCheck::ExecRequired { progress_limit: _ } => {
                 let state_applied_dry = self
                     .apply_op_exec_dry(fn_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_dry);
             }
-            OpCheckStatus::ExecNotRequired => {}
+            ApplyCheck::ExecNotRequired => {}
         }
 
         Ok(())
@@ -561,16 +561,16 @@ where
             .apply_op_check(resources, state_current, state_target, state_diff)
             .await
         {
-            Ok(op_check_status) => {
-                item_apply_partial.op_check_status = Some(op_check_status);
+            Ok(apply_check) => {
+                item_apply_partial.apply_check = Some(apply_check);
 
                 // TODO: write test for this case
-                match op_check_status {
+                match apply_check {
                     #[cfg(not(feature = "output_progress"))]
-                    OpCheckStatus::ExecRequired => None,
+                    ApplyCheck::ExecRequired => None,
                     #[cfg(feature = "output_progress")]
-                    OpCheckStatus::ExecRequired { .. } => None,
-                    OpCheckStatus::ExecNotRequired => item_apply_partial.state_current.clone(),
+                    ApplyCheck::ExecRequired { .. } => None,
+                    ApplyCheck::ExecNotRequired => item_apply_partial.state_current.clone(),
                 }
             }
             Err(error) => return Err((error, item_apply_partial.into())),
@@ -599,13 +599,13 @@ where
             state_current,
             state_target,
             state_diff,
-            op_check_status,
+            apply_check,
             state_applied,
         } = item_apply;
 
-        match op_check_status {
+        match apply_check {
             #[cfg(not(feature = "output_progress"))]
-            OpCheckStatus::ExecRequired => {
+            ApplyCheck::ExecRequired => {
                 let state_applied_next = self
                     .apply_op_exec(fn_ctx, resources, state_current, state_target, state_diff)
                     .await?;
@@ -613,14 +613,14 @@ where
                 *state_applied = Some(state_applied_next);
             }
             #[cfg(feature = "output_progress")]
-            OpCheckStatus::ExecRequired { progress_limit: _ } => {
+            ApplyCheck::ExecRequired { progress_limit: _ } => {
                 let state_applied_next = self
                     .apply_op_exec(fn_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_next);
             }
-            OpCheckStatus::ExecNotRequired => {}
+            ApplyCheck::ExecNotRequired => {}
         }
 
         Ok(())

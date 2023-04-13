@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{FnCtx, OpCheckStatus, State};
+use peace::cfg::{ApplyCheck, FnCtx, State};
 
 use crate::{
     ShCmd, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState, ShCmdStateDiff,
@@ -21,7 +21,7 @@ where
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
-    ) -> Result<OpCheckStatus, ShCmdError> {
+    ) -> Result<ApplyCheck, ShCmdError> {
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
@@ -45,15 +45,15 @@ where
                     Some("true") => {
                         #[cfg(not(feature = "output_progress"))]
                         {
-                            Ok(OpCheckStatus::ExecRequired)
+                            Ok(ApplyCheck::ExecRequired)
                         }
 
                         #[cfg(feature = "output_progress")]
-                        Ok(OpCheckStatus::ExecRequired {
+                        Ok(ApplyCheck::ExecRequired {
                             progress_limit: ProgressLimit::Unknown,
                         })
                     }
-                    Some("false") => Ok(OpCheckStatus::ExecNotRequired),
+                    Some("false") => Ok(ApplyCheck::ExecNotRequired),
                     _ => Err(ShCmdError::EnsureCheckValueNotBoolean {
                         sh_cmd: apply_check_sh_cmd.clone(),
                         #[cfg(feature = "error_reporting")]

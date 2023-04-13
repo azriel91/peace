@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{FnCtx, OpCheckStatus};
+use peace::cfg::{ApplyCheck, FnCtx};
 
 use crate::{BlankData, BlankError, BlankState, BlankStateDiff};
 
@@ -19,23 +19,23 @@ where
         _state_current: &BlankState,
         _state_desired: &BlankState,
         diff: &BlankStateDiff,
-    ) -> Result<OpCheckStatus, BlankError> {
-        let op_check_status = match *diff {
-            BlankStateDiff::InSync { .. } => OpCheckStatus::ExecNotRequired,
+    ) -> Result<ApplyCheck, BlankError> {
+        let apply_check = match *diff {
+            BlankStateDiff::InSync { .. } => ApplyCheck::ExecNotRequired,
             BlankStateDiff::Added { .. } | BlankStateDiff::OutOfSync { .. } => {
                 #[cfg(not(feature = "output_progress"))]
                 {
-                    OpCheckStatus::ExecRequired
+                    ApplyCheck::ExecRequired
                 }
                 #[cfg(feature = "output_progress")]
                 {
                     let progress_limit = ProgressLimit::Steps(1);
-                    OpCheckStatus::ExecRequired { progress_limit }
+                    ApplyCheck::ExecRequired { progress_limit }
                 }
             }
         };
 
-        Ok(op_check_status)
+        Ok(apply_check)
     }
 
     pub async fn apply_dry(

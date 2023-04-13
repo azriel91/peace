@@ -2,7 +2,7 @@ use std::fmt::{Debug, Display};
 
 use async_trait::async_trait;
 use dyn_clone::DynClone;
-use peace_core::{ItemSpecId, OpCheckStatus};
+use peace_core::{ApplyCheck, ItemSpecId};
 use peace_data::Data;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
@@ -260,7 +260,7 @@ pub trait ItemSpec: DynClone {
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
-    ) -> Result<OpCheckStatus, Self::Error>;
+    ) -> Result<ApplyCheck, Self::Error>;
 
     /// Dry-run transform of the current state to the target state.
     ///
@@ -291,7 +291,7 @@ pub trait ItemSpec: DynClone {
     ///   [`state_diff`].
     ///
     /// [`check`]: Self::check
-    /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
+    /// [`ExecRequired`]: crate::ApplyCheck::ExecRequired
     /// [`state_clean`]: crate::ItemSpec::state_clean
     /// [`state_current`]: crate::ItemSpec::state_current
     /// [`state_desired`]: crate::ItemSpec::state_desired
@@ -320,7 +320,7 @@ pub trait ItemSpec: DynClone {
     ///   [`state_diff`].
     ///
     /// [`check`]: Self::check
-    /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
+    /// [`ExecRequired`]: crate::ApplyCheck::ExecRequired
     /// [`state_clean`]: crate::ItemSpec::state_clean
     /// [`state_current`]: crate::ItemSpec::state_current
     /// [`state_desired`]: crate::ItemSpec::state_desired

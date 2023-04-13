@@ -7,7 +7,7 @@ use aws_sdk_s3::{
 };
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
-use peace::cfg::{FnCtx, OpCheckStatus};
+use peace::cfg::{ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_s3_bucket::{
     S3BucketData, S3BucketError, S3BucketState, S3BucketStateDiff,
@@ -28,44 +28,44 @@ where
         state_current: &S3BucketState,
         _state_desired: &S3BucketState,
         diff: &S3BucketStateDiff,
-    ) -> Result<OpCheckStatus, S3BucketError> {
+    ) -> Result<ApplyCheck, S3BucketError> {
         match diff {
             S3BucketStateDiff::Added { .. } => {
-                let op_check_status = {
+                let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
                     #[cfg(feature = "output_progress")]
                     {
                         let progress_limit = ProgressLimit::Steps(1);
-                        OpCheckStatus::ExecRequired { progress_limit }
+                        ApplyCheck::ExecRequired { progress_limit }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             S3BucketStateDiff::Removed => {
-                let op_check_status = match state_current {
-                    S3BucketState::None => OpCheckStatus::ExecNotRequired,
+                let apply_check = match state_current {
+                    S3BucketState::None => ApplyCheck::ExecNotRequired,
                     S3BucketState::Some {
                         name: _,
                         creation_date: _,
                     } => {
                         #[cfg(not(feature = "output_progress"))]
                         {
-                            OpCheckStatus::ExecRequired
+                            ApplyCheck::ExecRequired
                         }
                         #[cfg(feature = "output_progress")]
                         {
                             let steps_required = 1;
                             let progress_limit = ProgressLimit::Steps(steps_required);
-                            OpCheckStatus::ExecRequired { progress_limit }
+                            ApplyCheck::ExecRequired { progress_limit }
                         }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             S3BucketStateDiff::NameModified {
                 s3_bucket_name_current,
@@ -75,7 +75,7 @@ where
                 s3_bucket_name_desired: s3_bucket_name_desired.clone(),
             }),
             S3BucketStateDiff::InSyncExists | S3BucketStateDiff::InSyncDoesNotExist => {
-                Ok(OpCheckStatus::ExecNotRequired)
+                Ok(ApplyCheck::ExecNotRequired)
             }
         }
     }

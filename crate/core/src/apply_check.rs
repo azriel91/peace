@@ -5,7 +5,7 @@ use crate::progress::ProgressLimit;
 
 /// Whether the `apply` function needs to be executed.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub enum OpCheckStatus {
+pub enum ApplyCheck {
     /// Item is not in desired state.
     #[cfg(not(feature = "output_progress"))]
     ExecRequired,

@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use peace_cfg::OpCheckStatus;
+use peace_cfg::ApplyCheck;
 use peace_resources::type_reg::untagged::{BoxDtDisplay, DataType};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
@@ -21,7 +21,7 @@ pub struct ItemApply<State, StateDiff> {
     /// Diff between current and desired states.
     pub state_diff: StateDiff,
     /// Whether item execution was required.
-    pub op_check_status: OpCheckStatus,
+    pub apply_check: ApplyCheck,
     /// The state that was applyd, `None` if execution was not required.
     pub state_applied: Option<State>,
 }
@@ -39,16 +39,16 @@ impl<State, StateDiff> TryFrom<(ItemApplyPartial<State, StateDiff>, Option<State
             state_current,
             state_target,
             state_diff,
-            op_check_status,
+            apply_check,
         } = partial;
 
         if state_current.is_some()
             && state_target.is_some()
             && state_diff.is_some()
-            && op_check_status.is_some()
+            && apply_check.is_some()
         {
-            let (Some(state_current), Some(state_target), Some(state_diff), Some(op_check_status)) =
-                (state_current, state_target, state_diff, op_check_status) else {
+            let (Some(state_current), Some(state_target), Some(state_diff), Some(apply_check)) =
+                (state_current, state_target, state_diff, apply_check) else {
                     unreachable!("All are checked to be `Some` above.");
                 };
             Ok(Self {
@@ -56,7 +56,7 @@ impl<State, StateDiff> TryFrom<(ItemApplyPartial<State, StateDiff>, Option<State
                 state_current,
                 state_target,
                 state_diff,
-                op_check_status,
+                apply_check,
                 state_applied,
             })
         } else {
@@ -65,7 +65,7 @@ impl<State, StateDiff> TryFrom<(ItemApplyPartial<State, StateDiff>, Option<State
                 state_current,
                 state_target,
                 state_diff,
-                op_check_status,
+                apply_check,
             };
             Err((partial, state_applied))
         }
@@ -93,8 +93,8 @@ where
         BoxDtDisplay::new(self.state_diff.clone())
     }
 
-    fn op_check_status(&self) -> OpCheckStatus {
-        self.op_check_status
+    fn apply_check(&self) -> ApplyCheck {
+        self.apply_check
     }
 
     fn state_applied(&self) -> Option<BoxDtDisplay> {

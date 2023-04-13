@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, state::FetchedOpt, FnCtx, ItemSpec, ItemSpecId, OpCheckStatus, State},
+    cfg::{async_trait, state::FetchedOpt, ApplyCheck, FnCtx, ItemSpec, ItemSpecId, State},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -114,7 +114,7 @@ where
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
-    ) -> Result<OpCheckStatus, Self::Error> {
+    ) -> Result<ApplyCheck, Self::Error> {
         FileDownloadApplyFns::apply_check(data, state_current, state_target, diff).await
     }
 
