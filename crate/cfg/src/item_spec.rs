@@ -93,13 +93,33 @@ pub trait ItemSpec: DynClone {
     /// [`State`]: Self::State
     type StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static;
 
-    /// Data that the function reads from or writes to.
+    /// Parameters to use this item spec.
     ///
-    /// These may be parameters to the function, or information calculated from
-    /// previous functions.
-    type Data<'exec>: Data<'exec>
-    where
-        Self: 'exec;
+    /// Item spec consumers must provide for this item spec to work.
+    ///
+    /// # Examples
+    ///
+    /// * For a file download item spec:
+    ///
+    ///     - URL of the file.
+    ///     - Credentials.
+    ///
+    /// * For a server launch item spec:
+    ///
+    ///     - Image ID.
+    ///     - Server size.
+    ///
+    /// # Implementors
+    ///
+    /// Peace will automatically save and load these into `Resources` when a
+    /// command context is built.
+    type Params<'exec>: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static;
+
+    /// Data that the item spec accesses at runtime.
+    ///
+    /// These may be objects instantiated in `setup` for use during execution,
+    /// or information calculated from previous items.
+    type Data<'exec>: Data<'exec>;
 
     /// Returns the ID of this full spec.
     ///
@@ -149,6 +169,7 @@ pub trait ItemSpec: DynClone {
     /// an error.
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, Self::Error>;
 
@@ -158,6 +179,7 @@ pub trait ItemSpec: DynClone {
     /// will be presented to the user.
     async fn state_current(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
     ) -> Result<Self::State, Self::Error>;
 
@@ -168,6 +190,7 @@ pub trait ItemSpec: DynClone {
     /// determine its content hash, instead of returning an error.
     async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, Self::Error>;
 
@@ -185,10 +208,11 @@ pub trait ItemSpec: DynClone {
     ///   the web service is running on the latest version.
     async fn state_desired(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
     ) -> Result<Self::State, Self::Error>;
 
-    /// Returns the difference between the current state and desired state.
+    /// Returns the difference between two states.
     ///
     /// # Implementors
     ///
@@ -207,9 +231,8 @@ pub trait ItemSpec: DynClone {
     /// * For a web application service item spec, the desired state could be
     ///   the application version changing from 1 to 2.
     async fn state_diff(
-        data: Self::Data<'_>,
-        state_current: &Self::State,
-        state_desired: &Self::State,
+        state_a: &Self::State,
+        state_b: &Self::State,
     ) -> Result<Self::StateDiff, Self::Error>;
 
     /// Returns the representation of a clean `State`.
@@ -220,7 +243,10 @@ pub trait ItemSpec: DynClone {
     /// state. The diff between this and the current state will be shown to the
     /// user when they want to see what would be cleaned up by the clean
     /// command.
-    async fn state_clean(data: Self::Data<'_>) -> Result<Self::State, Self::Error>;
+    async fn state_clean(
+        params_partial: Option<&Self::Params<'_>>,
+        data: Self::Data<'_>,
+    ) -> Result<Self::State, Self::Error>;
 
     /// Returns whether `apply` needs to be executed.
     ///
@@ -256,7 +282,6 @@ pub trait ItemSpec: DynClone {
     /// [`State`]: Self::State
     /// [`state_diff`]: crate::ItemSpec::state_diff
     async fn apply_check(
-        data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
@@ -299,6 +324,7 @@ pub trait ItemSpec: DynClone {
     /// [`state_diff`]: crate::ItemSpec::state_diff
     async fn apply_dry(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
@@ -328,6 +354,7 @@ pub trait ItemSpec: DynClone {
     /// [`state_diff`]: crate::ItemSpec::state_diff
     async fn apply(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
