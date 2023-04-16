@@ -140,6 +140,7 @@ where
 
     async fn state_diff_exec(
         &self,
+        resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemSpecId, BoxDtDisplay>,
         states_b: &TypeMap<ItemSpecId, BoxDtDisplay>,
     ) -> Result<Option<IS::StateDiff>, E> {
@@ -148,8 +149,9 @@ where
         let state_desired = states_b.get::<IS::State, _>(item_spec_id);
 
         if let Some((state_base, state_desired)) = state_base.zip(state_desired) {
-            let state_diff: IS::StateDiff =
-                self.state_diff_exec_with(state_base, state_desired).await?;
+            let state_diff: IS::StateDiff = self
+                .state_diff_exec_with(resources, state_base, state_desired)
+                .await?;
             Ok(Some(state_diff))
         } else {
             // When we reach here, one of the following is true:
@@ -166,11 +168,16 @@ where
 
     async fn state_diff_exec_with(
         &self,
+        resources: &Resources<SetUp>,
         state_a: &IS::State,
         state_b: &IS::State,
     ) -> Result<IS::StateDiff, E> {
         let state_diff: IS::StateDiff = {
-            <IS as peace_cfg::ItemSpec>::state_diff(state_a, state_b)
+            // TODO: #94, this should be per Params field type, not Params type.
+            let params = resources.try_borrow::<IS::Params<'_>>().ok();
+            let data =
+                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
+            <IS as peace_cfg::ItemSpec>::state_diff(params.as_deref(), data, state_a, state_b)
                 .await
                 .map_err(Into::<E>::into)?
         };
@@ -180,13 +187,23 @@ where
 
     async fn apply_op_check(
         &self,
+        resources: &Resources<SetUp>,
         state_current: &IS::State,
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<ApplyCheck, E> {
-        <IS as peace_cfg::ItemSpec>::apply_check(state_current, state_desired, state_diff)
-            .await
-            .map_err(Into::<E>::into)
+        // TODO: #94, this should be constructing Params from ParamsSpec.
+        let params = resources.borrow::<IS::Params<'_>>();
+        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
+        <IS as peace_cfg::ItemSpec>::apply_check(
+            &params,
+            data,
+            state_current,
+            state_desired,
+            state_diff,
+        )
+        .await
+        .map_err(Into::<E>::into)
     }
 
     async fn apply_op_exec_dry<ResourcesTs>(
@@ -392,10 +409,11 @@ where
 
     async fn state_diff_exec(
         &self,
+        resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemSpecId, BoxDtDisplay>,
         states_b: &TypeMap<ItemSpecId, BoxDtDisplay>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_diff_exec(states_a, states_b)
+        self.state_diff_exec(resources, states_a, states_b)
             .await
             .map(|state_diff_opt| state_diff_opt.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
@@ -422,6 +440,7 @@ where
         fn_ctx.progress_sender().reset();
         match self
             .state_diff_exec_with(
+                resources,
                 item_apply_partial
                     .state_current
                     .as_ref()
@@ -446,7 +465,7 @@ where
         };
 
         let state_applied = match self
-            .apply_op_check(state_current, state_target, state_diff)
+            .apply_op_check(resources, state_current, state_target, state_diff)
             .await
         {
             Ok(apply_check) => {
@@ -542,6 +561,7 @@ where
 
         match self
             .state_diff_exec_with(
+                resources,
                 item_apply_partial
                     .state_current
                     .as_ref()
@@ -566,7 +586,7 @@ where
         };
 
         let state_applied = match self
-            .apply_op_check(state_current, state_target, state_diff)
+            .apply_op_check(resources, state_current, state_target, state_diff)
             .await
         {
             Ok(apply_check) => {

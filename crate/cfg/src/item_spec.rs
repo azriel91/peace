@@ -231,6 +231,8 @@ pub trait ItemSpec: DynClone {
     /// * For a web application service item spec, the desired state could be
     ///   the application version changing from 1 to 2.
     async fn state_diff(
+        params_partial: Option<&Self::Params<'_>>,
+        data: Self::Data<'_>,
         state_a: &Self::State,
         state_b: &Self::State,
     ) -> Result<Self::StateDiff, Self::Error>;
@@ -268,6 +270,8 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Parameters
     ///
+    /// * `fn_ctx`: Context to send progress updates.
+    /// * `params`: Parameters to the item spec.
     /// * `data`: Runtime data that the function reads from or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`state_current`].
@@ -282,6 +286,8 @@ pub trait ItemSpec: DynClone {
     /// [`State`]: Self::State
     /// [`state_diff`]: crate::ItemSpec::state_diff
     async fn apply_check(
+        params: &Self::Params<'_>,
+        data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
@@ -307,6 +313,8 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Parameters
     ///
+    /// * `fn_ctx`: Context to send progress updates.
+    /// * `params`: Parameters to the item spec.
     /// * `data`: Runtime data that the function reads from or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`state_current`].
@@ -337,6 +345,8 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Parameters
     ///
+    /// * `fn_ctx`: Context to send progress updates.
+    /// * `params`: Parameters to the item spec.
     /// * `data`: Runtime data that the function reads from or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`state_current`].
