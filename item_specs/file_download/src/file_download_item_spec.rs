@@ -110,10 +110,13 @@ where
     }
 
     async fn state_clean(
-        _params_partial: Option<&Self::Params<'_>>,
-        data: Self::Data<'_>,
+        params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
     ) -> Result<Self::State, FileDownloadError> {
-        let path = data.file_download_params().dest().to_path_buf();
+        let path = params_partial
+            .map(|params| params.dest())
+            .unwrap_or_else(|| todo!("Redesign FileDownloadState"))
+            .to_path_buf();
         let state = State::new(FileDownloadState::None { path }, FetchedOpt::Tbd);
         Ok(state)
     }

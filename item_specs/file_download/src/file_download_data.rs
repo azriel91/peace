@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 #[cfg(target_arch = "wasm32")]
 use peace::rt_model::Storage;
 
@@ -6,7 +8,7 @@ use peace::{
     data::{accessors::R, marker::Current, Data},
 };
 
-use crate::{ETag, FileDownloadParams, FileDownloadState};
+use crate::{ETag, FileDownloadState};
 
 /// Data used to download a file.
 ///
@@ -21,8 +23,6 @@ where
 {
     /// Client to make web requests.
     client: R<'exec, reqwest::Client>,
-    /// Url of the file to download.
-    file_download_params: R<'exec, FileDownloadParams<Id>>,
 
     /// The previous file download state.
     state_prev: Saved<'exec, State<FileDownloadState, FetchedOpt<ETag>>>,
@@ -36,6 +36,9 @@ where
     /// operations for item spec implementations will be easier.
     #[cfg(target_arch = "wasm32")]
     storage: R<'exec, Storage>,
+
+    /// Marker.
+    marker: PhantomData<Id>,
 }
 
 impl<'exec, Id> FileDownloadData<'exec, Id>
@@ -44,10 +47,6 @@ where
 {
     pub fn client(&self) -> &reqwest::Client {
         &self.client
-    }
-
-    pub fn file_download_params(&self) -> &FileDownloadParams<Id> {
-        &self.file_download_params
     }
 
     pub fn state_prev(&self) -> &Saved<'exec, State<FileDownloadState, FetchedOpt<ETag>>> {
