@@ -70,7 +70,7 @@ where
     #[cfg(not(target_arch = "wasm32"))]
     pub async fn apply(
         _fn_ctx: FnCtx<'_>,
-        _params: &TarXParams<Id>,
+        params: &TarXParams<Id>,
         data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         state_desired: &FileMetadatas,
@@ -79,7 +79,6 @@ where
         use futures::stream::{StreamExt, TryStreamExt};
 
         let storage = data.storage();
-        let params = data.tar_x_params();
         let tar_path = params.tar_path();
         let dest = params.dest();
 
