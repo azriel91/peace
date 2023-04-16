@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use std::any::TypeId;
+    use std::{any::TypeId, marker::PhantomData};
 
     use peace::data::{
         accessors::{R, W},
@@ -123,7 +123,9 @@ mod tests {
     #[derive(Debug, Data)]
     struct DataMixFields<'exec> {
         a_imm: R<'exec, A>,
+        phantom_0: PhantomData<()>,
         b_mut: W<'exec, B>,
+        phantom_1: PhantomData<()>,
     }
 
     #[derive(Clone, Copy, Debug, PartialEq)]

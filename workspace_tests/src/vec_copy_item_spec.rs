@@ -9,7 +9,7 @@ use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::{
     cfg::{async_trait, item_spec_id, ApplyCheck, FnCtx, ItemSpec, ItemSpecId},
     data::{
-        accessors::{RMaybe, R, W},
+        accessors::{RMaybe, W},
         Data,
     },
     resources::{resources::ts::Empty, states::StatesSaved, Resources},
@@ -86,12 +86,12 @@ impl ItemSpec for VecCopyItemSpec {
 
     async fn state_desired(
         fn_ctx: FnCtx<'_>,
-        _params: &Self::Params<'_>,
-        data: Self::Data<'_>,
+        params: &Self::Params<'_>,
+        _data: Self::Data<'_>,
     ) -> Result<Self::State, VecCopyError> {
         #[cfg(not(feature = "output_progress"))]
         let _fn_ctx = fn_ctx;
-        let vec_copy_state = VecCopyState::from(data.src().0.clone());
+        let vec_copy_state = VecCopyState::from(params.0.clone());
 
         #[cfg(feature = "output_progress")]
         {
@@ -220,17 +220,11 @@ pub enum VecCopyError {
 
 #[derive(Data, Debug)]
 pub struct VecCopyData<'exec> {
-    /// Source `Vec` to read from.
-    src: R<'exec, VecA>,
     /// Destination `Vec` to write to.
     dest: W<'exec, VecB>,
 }
 
 impl<'exec> VecCopyData<'exec> {
-    pub fn src(&self) -> &VecA {
-        &self.src
-    }
-
     pub fn dest(&self) -> &VecB {
         &self.dest
     }
