@@ -100,7 +100,6 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`State`]: peace_cfg::State
     async fn state_diff_exec(
         &self,
-        resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemSpecId, BoxDtDisplay>,
         states_b: &TypeMap<ItemSpecId, BoxDtDisplay>,
     ) -> Result<Option<BoxDtDisplay>, E>

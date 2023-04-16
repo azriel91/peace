@@ -59,9 +59,11 @@ where
         resources: &Resources<ResourcesTs>,
     ) -> Result<IS::State, E> {
         let state_clean = {
+            // TODO: #94, this should be per Params field type, not Params type.
+            let params = resources.try_borrow::<IS::Params<'_>>().ok();
             let data =
                 <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::state_clean(data).await?
+            <IS as peace_cfg::ItemSpec>::state_clean(params.as_deref(), data).await?
         };
         resources.borrow_mut::<Clean<IS::State>>().0 = Some(state_clean.clone());
 
@@ -74,9 +76,11 @@ where
         resources: &Resources<ResourcesTs>,
     ) -> Result<Option<IS::State>, E> {
         let state_current = {
+            // TODO: #94, this should be per Params field type, not Params type.
+            let params = resources.try_borrow::<IS::Params<'_>>().ok();
             let data =
                 <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::try_state_current(fn_ctx, data).await?
+            <IS as peace_cfg::ItemSpec>::try_state_current(fn_ctx, params.as_deref(), data).await?
         };
         if let Some(state_current) = state_current.as_ref() {
             resources.borrow_mut::<Current<IS::State>>().0 = Some(state_current.clone());
@@ -91,9 +95,11 @@ where
         resources: &Resources<ResourcesTs>,
     ) -> Result<IS::State, E> {
         let state_current = {
+            // TODO: #94, this should be constructing Params from ParamsSpec.
+            let params = resources.borrow::<IS::Params<'_>>();
             let data =
                 <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::state_current(fn_ctx, data).await?
+            <IS as peace_cfg::ItemSpec>::state_current(fn_ctx, &params, data).await?
         };
         resources.borrow_mut::<Current<IS::State>>().0 = Some(state_current.clone());
 
@@ -105,8 +111,11 @@ where
         fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<IS::State>, E> {
+        // TODO: #94, this should be per Params field type, not Params type.
+        let params = resources.try_borrow::<IS::Params<'_>>().ok();
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_desired = <IS as peace_cfg::ItemSpec>::try_state_desired(fn_ctx, data).await?;
+        let state_desired =
+            <IS as peace_cfg::ItemSpec>::try_state_desired(fn_ctx, params.as_deref(), data).await?;
         if let Some(state_desired) = state_desired.as_ref() {
             resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
         }
@@ -119,8 +128,11 @@ where
         fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<IS::State, E> {
+        // TODO: #94, this should be constructing Params from ParamsSpec.
+        let params = resources.borrow::<IS::Params<'_>>();
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_desired = <IS as peace_cfg::ItemSpec>::state_desired(fn_ctx, data).await?;
+        let state_desired =
+            <IS as peace_cfg::ItemSpec>::state_desired(fn_ctx, &params, data).await?;
         resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
 
         Ok(state_desired)
@@ -128,7 +140,6 @@ where
 
     async fn state_diff_exec(
         &self,
-        resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemSpecId, BoxDtDisplay>,
         states_b: &TypeMap<ItemSpecId, BoxDtDisplay>,
     ) -> Result<Option<IS::StateDiff>, E> {
@@ -137,9 +148,8 @@ where
         let state_desired = states_b.get::<IS::State, _>(item_spec_id);
 
         if let Some((state_base, state_desired)) = state_base.zip(state_desired) {
-            let state_diff: IS::StateDiff = self
-                .state_diff_exec_with(resources, state_base, state_desired)
-                .await?;
+            let state_diff: IS::StateDiff =
+                self.state_diff_exec_with(state_base, state_desired).await?;
             Ok(Some(state_diff))
         } else {
             // When we reach here, one of the following is true:
@@ -156,14 +166,11 @@ where
 
     async fn state_diff_exec_with(
         &self,
-        resources: &Resources<SetUp>,
         state_a: &IS::State,
         state_b: &IS::State,
     ) -> Result<IS::StateDiff, E> {
         let state_diff: IS::StateDiff = {
-            let data =
-                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::state_diff(data, state_a, state_b)
+            <IS as peace_cfg::ItemSpec>::state_diff(state_a, state_b)
                 .await
                 .map_err(Into::<E>::into)?
         };
@@ -171,15 +178,13 @@ where
         Ok(state_diff)
     }
 
-    async fn apply_op_check<ResourcesTs>(
+    async fn apply_op_check(
         &self,
-        resources: &Resources<ResourcesTs>,
         state_current: &IS::State,
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<ApplyCheck, E> {
-        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        <IS as peace_cfg::ItemSpec>::apply_check(data, state_current, state_desired, state_diff)
+        <IS as peace_cfg::ItemSpec>::apply_check(state_current, state_desired, state_diff)
             .await
             .map_err(Into::<E>::into)
     }
@@ -192,9 +197,12 @@ where
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<IS::State, E> {
+        // TODO: #94, this should be constructing Params from ParamsSpec.
+        let params = resources.borrow::<IS::Params<'_>>();
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured_dry = <IS as peace_cfg::ItemSpec>::apply_dry(
             fn_ctx,
+            &params,
             data,
             state_current,
             state_desired,
@@ -216,9 +224,12 @@ where
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<IS::State, E> {
+        // TODO: #94, this should be constructing Params from ParamsSpec.
+        let params = resources.borrow::<IS::Params<'_>>();
         let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured = <IS as peace_cfg::ItemSpec>::apply(
             fn_ctx,
+            &params,
             data,
             state_current,
             state_desired,
@@ -381,11 +392,10 @@ where
 
     async fn state_diff_exec(
         &self,
-        resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemSpecId, BoxDtDisplay>,
         states_b: &TypeMap<ItemSpecId, BoxDtDisplay>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_diff_exec(resources, states_a, states_b)
+        self.state_diff_exec(states_a, states_b)
             .await
             .map(|state_diff_opt| state_diff_opt.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
@@ -412,7 +422,6 @@ where
         fn_ctx.progress_sender().reset();
         match self
             .state_diff_exec_with(
-                resources,
                 item_apply_partial
                     .state_current
                     .as_ref()
@@ -437,7 +446,7 @@ where
         };
 
         let state_applied = match self
-            .apply_op_check(resources, state_current, state_target, state_diff)
+            .apply_op_check(state_current, state_target, state_diff)
             .await
         {
             Ok(apply_check) => {
@@ -533,7 +542,6 @@ where
 
         match self
             .state_diff_exec_with(
-                resources,
                 item_apply_partial
                     .state_current
                     .as_ref()
@@ -558,7 +566,7 @@ where
         };
 
         let state_applied = match self
-            .apply_op_check(resources, state_current, state_target, state_diff)
+            .apply_op_check(state_current, state_target, state_diff)
             .await
         {
             Ok(apply_check) => {
