@@ -109,8 +109,8 @@ trait ItemSpec {
     fn state_desired    (fn_ctx, params,         data);
     fn apply_dry        (fn_ctx, params,         data, state_current, state_target, diff);
     fn apply            (fn_ctx, params,         data, state_current, state_target, diff);
-    fn apply_check      (                              state_current, state_target, diff);
-    fn state_diff       (state_a, state_b);
+    fn apply_check      (        params_partial, data, state_current, state_target, diff);
+    fn state_diff       (        params_partial, data, state_a, state_b);
 
     // Once more, with types:
     fn setup(&self, &mut Resources<Empty>);
@@ -121,8 +121,8 @@ trait ItemSpec {
     fn state_desired    (FnCtx<'_>, Self::Params<'_>         , Self::Data<'_>);
     fn apply_dry        (FnCtx<'_>, Self::Params<'_>         , Self::Data<'_>, Self::State, Self::State, Self::StateDiff);
     fn apply            (FnCtx<'_>, Self::Params<'_>         , Self::Data<'_>, Self::State, Self::State, Self::StateDiff);
-    fn apply_check      (                                                      Self::State, Self::State, Self::StateDiff);
-    fn state_diff       (Self::State, Self::State);
+    fn apply_check      (           Self::Params<'_>::Partial, Self::Data<'_>, Self::State, Self::State, Self::StateDiff);
+    fn state_diff       (           Self::Params<'_>::Partial, Self::Data<'_>, Self::State, Self::State);
 }
 
 /// For Peace to access <ItemSpec::Params as Params>::Spec
@@ -140,6 +140,27 @@ enum ValueSpec<T> {
 ```
 
 Also need to provide a `Params` derive macro.
+
+#### Design Note
+
+The `apply_check` and `state_diff` functions *usually* are not expected to need `params` and `data`, but some item specs may use them, such as the `ShCmdItemSpec` which accesses params to determine the script to run.
+
+Regarding params will be `Params` or `Params<'_>::Partial` for `state_diff`, if we call `state_diff` for a file upload item spec, we must have both state current and state desired. Then we need to ask, does having both states imply `Params` is fully resolvable?
+
+If we call `state_current` for a file upload:
+
+* the destination server may not be there
+* so params may not have the IP
+* we *may* still return `Some(State::Empty)`
+* So params may still be partial, even if `State` is `Some`.
+
+If we call `state_desired` for a file upload:
+
+* the source file may not be there
+* so params may not have the source content hash
+* we *may* still return `Some(State::Empty)`
+* So params may still be partial, even if `State` is `Some`.
+
 
 
 ### Implementor
