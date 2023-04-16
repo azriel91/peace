@@ -6,7 +6,8 @@ use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_iam_policy::{
-    model::PolicyIdArnVersion, IamPolicyData, IamPolicyError, IamPolicyState, IamPolicyStateDiff,
+    model::PolicyIdArnVersion, IamPolicyData, IamPolicyError, IamPolicyParams, IamPolicyState,
+    IamPolicyStateDiff,
 };
 
 use super::model::ManagedPolicyArn;
@@ -20,6 +21,7 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
+        _params: &IamPolicyParams<Id>,
         mut data: IamPolicyData<'_, Id>,
         state_current: &IamPolicyState,
         _state_desired: &IamPolicyState,
@@ -100,6 +102,7 @@ where
 
     pub async fn apply_dry(
         _fn_ctx: FnCtx<'_>,
+        _params: &IamPolicyParams<Id>,
         _iam_policy_data: IamPolicyData<'_, Id>,
         _state_current: &IamPolicyState,
         state_desired: &IamPolicyState,
@@ -119,6 +122,7 @@ where
     #[allow(unused_variables)]
     pub async fn apply(
         fn_ctx: FnCtx<'_>,
+        params: &IamPolicyParams<Id>,
         mut data: IamPolicyData<'_, Id>,
         state_current: &IamPolicyState,
         state_desired: &IamPolicyState,

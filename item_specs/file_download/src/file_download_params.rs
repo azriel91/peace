@@ -16,7 +16,7 @@ use url::Url;
 ///
 /// * `Id`: A zero-sized type used to distinguish different file download
 ///   parameters from each other.
-#[derive(Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(PartialEq, Eq, Deserialize, Serialize)]
 pub struct FileDownloadParams<Id> {
     /// Url of the file to download.
     src: Url,
@@ -32,6 +32,18 @@ pub struct FileDownloadParams<Id> {
     storage_form: crate::StorageForm,
     /// Marker for unique download parameters type.
     marker: PhantomData<Id>,
+}
+
+impl<Id> Clone for FileDownloadParams<Id> {
+    fn clone(&self) -> Self {
+        Self {
+            src: self.src.clone(),
+            dest: self.dest.clone(),
+            #[cfg(target_arch = "wasm32")]
+            storage_form: self.storage_form.clone(),
+            marker: PhantomData,
+        }
+    }
 }
 
 impl<Id> FileDownloadParams<Id> {

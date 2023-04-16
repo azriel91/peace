@@ -504,10 +504,12 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         .unwrap();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
+    let resources = cmd_ctx.resources();
     assert_eq!(
         ApplyCheck::ExecNotRequired,
         <TarXItemSpec::<TarXTest> as ItemSpec>::apply_check(
-            <TarXData<TarXTest> as Data>::borrow(TarXTest::ID, cmd_ctx.resources()),
+            &resources.borrow::<TarXParams<TarXTest>>(),
+            <TarXData<TarXTest> as Data>::borrow(TarXTest::ID, resources),
             state_current,
             state_desired,
             state_diff

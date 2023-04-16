@@ -7,7 +7,7 @@ use tokio::{fs::File, io::AsyncReadExt};
 #[cfg(target_arch = "wasm32")]
 use peace::rt_model::Storage;
 
-use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState};
+use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState};
 
 /// Reads the current state of the file to download.
 #[derive(Debug)]
@@ -19,16 +19,22 @@ where
 {
     pub async fn try_state_current(
         fn_ctx: FnCtx<'_>,
+        params_partial: Option<&FileDownloadParams<Id>>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<State<FileDownloadState, FetchedOpt<ETag>>>, FileDownloadError> {
-        Self::state_current(fn_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_current(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn state_current(
         _fn_ctx: FnCtx<'_>,
+        params: &FileDownloadParams<Id>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
-        let dest = data.file_download_params().dest();
+        let dest = params.dest();
 
         #[cfg(not(target_arch = "wasm32"))]
         let file_exists = dest.exists();

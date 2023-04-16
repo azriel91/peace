@@ -10,7 +10,7 @@ use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::cfg::{ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_s3_bucket::{
-    S3BucketData, S3BucketError, S3BucketState, S3BucketStateDiff,
+    S3BucketData, S3BucketError, S3BucketParams, S3BucketState, S3BucketStateDiff,
 };
 
 use super::S3BucketStateCurrentFn;
@@ -24,7 +24,8 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        _s3_bucket_data: S3BucketData<'_, Id>,
+        _params: &S3BucketParams<Id>,
+        _data: S3BucketData<'_, Id>,
         state_current: &S3BucketState,
         _state_desired: &S3BucketState,
         diff: &S3BucketStateDiff,
@@ -82,7 +83,8 @@ where
 
     pub async fn apply_dry(
         _fn_ctx: FnCtx<'_>,
-        _s3_bucket_data: S3BucketData<'_, Id>,
+        _params: &S3BucketParams<Id>,
+        _data: S3BucketData<'_, Id>,
         _state_current: &S3BucketState,
         state_desired: &S3BucketState,
         _diff: &S3BucketStateDiff,
@@ -101,6 +103,7 @@ where
     #[allow(unused_variables)]
     pub async fn apply(
         fn_ctx: FnCtx<'_>,
+        params: &S3BucketParams<Id>,
         data: S3BucketData<'_, Id>,
         state_current: &S3BucketState,
         state_desired: &S3BucketState,
@@ -175,7 +178,7 @@ where
                     progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("bucket created")));
 
                     let state_applied =
-                        S3BucketStateCurrentFn::<Id>::state_current(fn_ctx, data).await?;
+                        S3BucketStateCurrentFn::<Id>::state_current(fn_ctx, params, data).await?;
 
                     Ok(state_applied)
                 }

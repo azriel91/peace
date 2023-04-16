@@ -6,8 +6,6 @@ cfg_if::cfg_if! {
         use futures::{Stream, StreamExt, TryStreamExt};
         use tokio::io::AsyncWriteExt;
         use tokio::{fs::File, io::BufWriter};
-
-        use crate::FileDownloadParams;
     } else if #[cfg(target_arch = "wasm32")] {
         use std::path::Path;
 
@@ -18,7 +16,10 @@ cfg_if::cfg_if! {
 use peace::cfg::{state::FetchedOpt, ApplyCheck, FnCtx, State};
 use reqwest::header::ETAG;
 
-use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
+use crate::{
+    ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState,
+    FileDownloadStateDiff,
+};
 
 #[cfg(feature = "output_progress")]
 use peace::{
@@ -37,10 +38,10 @@ where
     async fn file_download(
         #[cfg(not(feature = "output_progress"))] _fn_ctx: FnCtx<'_>,
         #[cfg(feature = "output_progress")] fn_ctx: FnCtx<'_>,
-        file_download_data: FileDownloadData<'_, Id>,
+        params: &FileDownloadParams<Id>,
+        data: FileDownloadData<'_, Id>,
     ) -> Result<FetchedOpt<ETag>, FileDownloadError> {
-        let client = file_download_data.client();
-        let params = file_download_data.file_download_params();
+        let client = data.client();
         let src_url = params.src();
         let response = client
             .get(src_url.clone())
@@ -75,7 +76,7 @@ where
                 #[cfg(feature = "output_progress")]
                 fn_ctx,
                 params.dest(),
-                file_download_data.storage(),
+                data.storage(),
                 params.storage_form(),
                 response,
             )
@@ -235,7 +236,8 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        _file_download_data: FileDownloadData<'_, Id>,
+        _params: &FileDownloadParams<Id>,
+        _data: FileDownloadData<'_, Id>,
         State {
             logical: file_state_current,
             physical: _e_tag,
@@ -327,7 +329,8 @@ where
 
     pub async fn apply_dry(
         _fn_ctx: FnCtx<'_>,
-        _file_download_data: FileDownloadData<'_, Id>,
+        _params: &FileDownloadParams<Id>,
+        _data: FileDownloadData<'_, Id>,
         _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
         file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
         _diff: &FileDownloadStateDiff,
@@ -339,7 +342,8 @@ where
 
     pub async fn apply(
         fn_ctx: FnCtx<'_>,
-        file_download_data: FileDownloadData<'_, Id>,
+        params: &FileDownloadParams<Id>,
+        data: FileDownloadData<'_, Id>,
         _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
         file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
         diff: &FileDownloadStateDiff,
@@ -352,12 +356,12 @@ where
                     .map_err(FileDownloadError::DestFileRemove)?;
 
                 #[cfg(target_arch = "wasm32")]
-                file_download_data.storage().remove_item(path)?;
+                data.storage().remove_item(path)?;
 
                 Ok(file_download_state_desired.clone())
             }
             FileDownloadStateDiff::Change { .. } => {
-                let e_tag = Self::file_download(fn_ctx, file_download_data).await?;
+                let e_tag = Self::file_download(fn_ctx, params, data).await?;
 
                 let mut file_download_state_ensured = file_download_state_desired.clone();
                 file_download_state_ensured.physical = e_tag;

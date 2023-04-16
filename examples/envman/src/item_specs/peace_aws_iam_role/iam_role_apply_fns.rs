@@ -5,7 +5,7 @@ use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate, ProgressSender};
 use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
-    model::RoleIdAndArn, IamRoleData, IamRoleError, IamRoleState, IamRoleStateDiff,
+    model::RoleIdAndArn, IamRoleData, IamRoleError, IamRoleParams, IamRoleState, IamRoleStateDiff,
 };
 
 /// ApplyFns for the instance profile state.
@@ -56,7 +56,8 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        _iam_role_data: IamRoleData<'_, Id>,
+        _params: &IamRoleParams<Id>,
+        _data: IamRoleData<'_, Id>,
         state_current: &IamRoleState,
         _state_desired: &IamRoleState,
         diff: &IamRoleStateDiff,
@@ -144,7 +145,8 @@ where
 
     pub async fn apply_dry(
         _fn_ctx: FnCtx<'_>,
-        _iam_role_data: IamRoleData<'_, Id>,
+        _params: &IamRoleParams<Id>,
+        _data: IamRoleData<'_, Id>,
         _state_current: &IamRoleState,
         state_desired: &IamRoleState,
         _diff: &IamRoleStateDiff,
@@ -163,6 +165,7 @@ where
     #[allow(unused_variables)]
     pub async fn apply(
         fn_ctx: FnCtx<'_>,
+        params: &IamRoleParams<Id>,
         data: IamRoleData<'_, Id>,
         state_current: &IamRoleState,
         state_desired: &IamRoleState,

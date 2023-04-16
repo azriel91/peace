@@ -3,7 +3,7 @@ use std::{io::Read, marker::PhantomData, path::Path};
 use peace::{cfg::FnCtx, rt_model::Storage};
 use tar::Archive;
 
-use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
+use crate::{FileMetadata, FileMetadatas, TarXData, TarXError, TarXParams};
 
 /// Reads the desired state of the tar to extract.
 #[derive(Debug)]
@@ -15,19 +15,25 @@ where
 {
     pub async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
-        tar_x_data: TarXData<'_, Id>,
+        params_partial: Option<&TarXParams<Id>>,
+        data: TarXData<'_, Id>,
     ) -> Result<Option<FileMetadatas>, TarXError> {
         #[cfg(not(target_arch = "wasm32"))]
-        let tar_file_exists = tar_x_data.tar_x_params().tar_path().exists();
+        let tar_file_exists = data.tar_x_params().tar_path().exists();
         #[cfg(target_arch = "wasm32")]
         let tar_file_exists = {
-            let storage = tar_x_data.storage();
-            let tar_path = tar_x_data.tar_x_params().tar_path();
+            let storage = data.storage();
+            let tar_path = data.tar_x_params().tar_path();
             storage.contains_item(tar_path)?
         };
 
         if tar_file_exists {
-            Self::state_desired(fn_ctx, tar_x_data).await.map(Some)
+            // TODO: `tar_file_exists` should be calculated based on `params`.
+            if let Some(params) = params_partial {
+                Self::state_desired(fn_ctx, params, data).await.map(Some)
+            } else {
+                Ok(None)
+            }
         } else {
             Ok(None)
         }
@@ -35,14 +41,15 @@ where
 
     pub async fn state_desired(
         _fn_ctx: FnCtx<'_>,
-        tar_x_data: TarXData<'_, Id>,
+        _params: &TarXParams<Id>,
+        data: TarXData<'_, Id>,
     ) -> Result<FileMetadatas, TarXError> {
-        let tar_x_params = tar_x_data.tar_x_params();
-        let storage = tar_x_data.storage();
+        let tar_x_params = data.tar_x_params();
+        let storage = data.storage();
         let tar_path = tar_x_params.tar_path();
 
         #[cfg(not(target_arch = "wasm32"))]
-        let tar_file_exists = tar_x_data.tar_x_params().tar_path().exists();
+        let tar_file_exists = data.tar_x_params().tar_path().exists();
         #[cfg(target_arch = "wasm32")]
         let tar_file_exists = storage.contains_item(tar_path)?;
 

@@ -32,6 +32,7 @@ impl VecCopyItemSpec {
 impl ItemSpec for VecCopyItemSpec {
     type Data<'exec> = VecCopyData<'exec>;
     type Error = VecCopyError;
+    type Params<'exec> = VecA;
     type State = VecCopyState;
     type StateDiff = VecCopyDiff;
 
@@ -41,14 +42,20 @@ impl ItemSpec for VecCopyItemSpec {
 
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        data: VecCopyData<'_>,
+        params_partial: Option<&Self::Params<'_>>,
+        data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, VecCopyError> {
-        Self::state_current(fn_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_current(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn state_current(
         fn_ctx: FnCtx<'_>,
-        data: VecCopyData<'_>,
+        _params: &Self::Params<'_>,
+        data: Self::Data<'_>,
     ) -> Result<Self::State, VecCopyError> {
         #[cfg(not(feature = "output_progress"))]
         let _fn_ctx = fn_ctx;
@@ -67,14 +74,20 @@ impl ItemSpec for VecCopyItemSpec {
 
     async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
-        data: VecCopyData<'_>,
+        params_partial: Option<&Self::Params<'_>>,
+        data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, VecCopyError> {
-        Self::state_desired(fn_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_desired(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn state_desired(
         fn_ctx: FnCtx<'_>,
-        data: VecCopyData<'_>,
+        _params: &Self::Params<'_>,
+        data: Self::Data<'_>,
     ) -> Result<Self::State, VecCopyError> {
         #[cfg(not(feature = "output_progress"))]
         let _fn_ctx = fn_ctx;
@@ -91,6 +104,7 @@ impl ItemSpec for VecCopyItemSpec {
     }
 
     async fn state_diff(
+        _params_partial: Option<&Self::Params<'_>>,
         _data: VecCopyData<'_>,
         state_current: &VecCopyState,
         state_desired: &VecCopyState,
@@ -98,11 +112,15 @@ impl ItemSpec for VecCopyItemSpec {
         Ok(state_current.diff(state_desired)).map(VecCopyDiff::from)
     }
 
-    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, VecCopyError> {
+    async fn state_clean(
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
+    ) -> Result<Self::State, VecCopyError> {
         Ok(VecCopyState::new())
     }
 
     async fn apply_check(
+        _params: &Self::Params<'_>,
         _data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
@@ -132,6 +150,7 @@ impl ItemSpec for VecCopyItemSpec {
 
     async fn apply_dry(
         _fn_ctx: FnCtx<'_>,
+        _params: &Self::Params<'_>,
         _data: Self::Data<'_>,
         _state_current: &Self::State,
         state_target: &Self::State,
@@ -143,6 +162,7 @@ impl ItemSpec for VecCopyItemSpec {
 
     async fn apply(
         fn_ctx: FnCtx<'_>,
+        _params: &Self::Params<'_>,
         mut data: Self::Data<'_>,
         _state_current: &Self::State,
         state_target: &Self::State,

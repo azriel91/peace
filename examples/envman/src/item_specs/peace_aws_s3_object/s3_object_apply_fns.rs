@@ -7,7 +7,7 @@ use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_s3_object::{
-    S3ObjectData, S3ObjectError, S3ObjectState, S3ObjectStateDiff,
+    S3ObjectData, S3ObjectError, S3ObjectParams, S3ObjectState, S3ObjectStateDiff,
 };
 
 /// ApplyFns for the S3 object state.
@@ -19,7 +19,8 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        _s3_object_data: S3ObjectData<'_, Id>,
+        _params: &S3ObjectParams<Id>,
+        _data: S3ObjectData<'_, Id>,
         state_current: &S3ObjectState,
         _state_desired: &S3ObjectState,
         diff: &S3ObjectStateDiff,
@@ -86,7 +87,8 @@ where
 
     pub async fn apply_dry(
         _fn_ctx: FnCtx<'_>,
-        _s3_object_data: S3ObjectData<'_, Id>,
+        _params: &S3ObjectParams<Id>,
+        _data: S3ObjectData<'_, Id>,
         _state_current: &S3ObjectState,
         state_desired: &S3ObjectState,
         _diff: &S3ObjectStateDiff,
@@ -105,6 +107,7 @@ where
     #[allow(unused_variables)]
     pub async fn apply(
         fn_ctx: FnCtx<'_>,
+        _params: &S3ObjectParams<Id>,
         data: S3ObjectData<'_, Id>,
         state_current: &S3ObjectState,
         state_desired: &S3ObjectState,

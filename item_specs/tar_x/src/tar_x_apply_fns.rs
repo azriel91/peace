@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use peace::cfg::progress::ProgressLimit;
 use peace::cfg::{ApplyCheck, FnCtx};
 
-use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
+use crate::{FileMetadatas, TarXData, TarXError, TarXParams, TarXStateDiff};
 
 /// ApplyFns for the tar to extract.
 #[derive(Debug)]
@@ -24,7 +24,8 @@ where
     // Likely an issue with the codegen in `async-trait`.
     #[allow(unused_variables)]
     pub async fn apply_check(
-        _tar_x_data: TarXData<'_, Id>,
+        _params: &TarXParams<Id>,
+        _data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         state_desired: &FileMetadatas,
         diff: &TarXStateDiff,
@@ -57,7 +58,8 @@ where
 
     pub async fn apply_dry(
         _fn_ctx: FnCtx<'_>,
-        _tar_x_data: TarXData<'_, Id>,
+        _params: &TarXParams<Id>,
+        _data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         state_desired: &FileMetadatas,
         _diff: &TarXStateDiff,
@@ -68,15 +70,16 @@ where
     #[cfg(not(target_arch = "wasm32"))]
     pub async fn apply(
         _fn_ctx: FnCtx<'_>,
-        tar_x_data: TarXData<'_, Id>,
+        _params: &TarXParams<Id>,
+        data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         state_desired: &FileMetadatas,
         diff: &TarXStateDiff,
     ) -> Result<FileMetadatas, TarXError> {
         use futures::stream::{StreamExt, TryStreamExt};
 
-        let storage = tar_x_data.storage();
-        let params = tar_x_data.tar_x_params();
+        let storage = data.storage();
+        let params = data.tar_x_params();
         let tar_path = params.tar_path();
         let dest = params.dest();
 
@@ -138,7 +141,8 @@ where
     #[cfg(target_arch = "wasm32")]
     pub async fn apply(
         _fn_ctx: FnCtx<'_>,
-        _tar_x_data: TarXData<'_, Id>,
+        params: &TarXParams<Id>,
+        _data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         _state_desired: &FileMetadatas,
         _diff: &TarXStateDiff,

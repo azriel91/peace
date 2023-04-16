@@ -6,9 +6,9 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_instance_profile::{
-    InstanceProfileApplyFns, InstanceProfileData, InstanceProfileError, InstanceProfileState,
-    InstanceProfileStateCurrentFn, InstanceProfileStateDesiredFn, InstanceProfileStateDiff,
-    InstanceProfileStateDiffFn,
+    InstanceProfileApplyFns, InstanceProfileData, InstanceProfileError, InstanceProfileParams,
+    InstanceProfileState, InstanceProfileStateCurrentFn, InstanceProfileStateDesiredFn,
+    InstanceProfileStateDiff, InstanceProfileStateDiffFn,
 };
 
 /// Item spec to create an IAM instance profile and IAM role.
@@ -60,6 +60,7 @@ where
 {
     type Data<'exec> = InstanceProfileData<'exec, Id>;
     type Error = InstanceProfileError;
+    type Params<'exec> = InstanceProfileParams<Id>;
     type State = InstanceProfileState;
     type StateDiff = InstanceProfileStateDiff;
 
@@ -78,70 +79,98 @@ where
 
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: InstanceProfileData<'_, Id>,
     ) -> Result<Option<Self::State>, InstanceProfileError> {
-        InstanceProfileStateCurrentFn::try_state_current(fn_ctx, data).await
+        InstanceProfileStateCurrentFn::try_state_current(fn_ctx, params_partial, data).await
     }
 
     async fn state_current(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: InstanceProfileData<'_, Id>,
     ) -> Result<Self::State, InstanceProfileError> {
-        InstanceProfileStateCurrentFn::state_current(fn_ctx, data).await
+        InstanceProfileStateCurrentFn::state_current(fn_ctx, params, data).await
     }
 
     async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: InstanceProfileData<'_, Id>,
     ) -> Result<Option<Self::State>, InstanceProfileError> {
-        InstanceProfileStateDesiredFn::try_state_desired(fn_ctx, data).await
+        InstanceProfileStateDesiredFn::try_state_desired(fn_ctx, params_partial, data).await
     }
 
     async fn state_desired(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: InstanceProfileData<'_, Id>,
     ) -> Result<Self::State, InstanceProfileError> {
-        InstanceProfileStateDesiredFn::state_desired(fn_ctx, data).await
+        InstanceProfileStateDesiredFn::state_desired(fn_ctx, params, data).await
     }
 
     async fn state_diff(
-        _data: InstanceProfileData<'_, Id>,
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,
     ) -> Result<Self::StateDiff, InstanceProfileError> {
         InstanceProfileStateDiffFn::state_diff(state_current, state_desired).await
     }
 
-    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, InstanceProfileError> {
+    async fn state_clean(
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
+    ) -> Result<Self::State, InstanceProfileError> {
         Ok(InstanceProfileState::None)
     }
 
     async fn apply_check(
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<ApplyCheck, Self::Error> {
-        InstanceProfileApplyFns::apply_check(data, state_current, state_target, diff).await
+        InstanceProfileApplyFns::<Id>::apply_check(params, data, state_current, state_target, diff)
+            .await
     }
 
     async fn apply_dry(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        InstanceProfileApplyFns::apply_dry(fn_ctx, data, state_current, state_target, diff).await
+        InstanceProfileApplyFns::<Id>::apply_dry(
+            fn_ctx,
+            params,
+            data,
+            state_current,
+            state_target,
+            diff,
+        )
+        .await
     }
 
     async fn apply(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        InstanceProfileApplyFns::apply(fn_ctx, data, state_current, state_target, diff).await
+        InstanceProfileApplyFns::<Id>::apply(
+            fn_ctx,
+            params,
+            data,
+            state_current,
+            state_target,
+            diff,
+        )
+        .await
     }
 }

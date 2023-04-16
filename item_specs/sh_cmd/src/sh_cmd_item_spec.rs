@@ -62,6 +62,7 @@ where
 {
     type Data<'exec> = ShCmdData<'exec, Id>;
     type Error = ShCmdError;
+    type Params<'exec> = ShCmdParams<Id>;
     type State = State<ShCmdState<Id>, ShCmdExecutionRecord>;
     type StateDiff = ShCmdStateDiff;
 
@@ -79,28 +80,40 @@ where
 
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: ShCmdData<'_, Id>,
     ) -> Result<Option<Self::State>, ShCmdError> {
-        Self::state_current(fn_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_current(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn state_current(
         _fn_ctx: FnCtx<'_>,
-        data: ShCmdData<'_, Id>,
+        params: &Self::Params<'_>,
+        _data: ShCmdData<'_, Id>,
     ) -> Result<Self::State, ShCmdError> {
-        let state_current_sh_cmd = data.sh_cmd_params().state_current_sh_cmd();
+        let state_current_sh_cmd = params.state_current_sh_cmd();
         ShCmdExecutor::exec(state_current_sh_cmd).await
     }
 
     async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: ShCmdData<'_, Id>,
     ) -> Result<Option<Self::State>, ShCmdError> {
-        Self::state_desired(fn_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_desired(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn state_desired(
         _fn_ctx: FnCtx<'_>,
+        _params: &Self::Params<'_>,
         data: ShCmdData<'_, Id>,
     ) -> Result<Self::State, ShCmdError> {
         let state_desired_sh_cmd = data.sh_cmd_params().state_desired_sh_cmd();
@@ -110,44 +123,52 @@ where
     }
 
     async fn state_diff(
-        data: ShCmdData<'_, Id>,
+        _params_partial: Option<&Self::Params<'_>>,
+        data: Self::Data<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,
     ) -> Result<Self::StateDiff, ShCmdError> {
         ShCmdStateDiffFn::state_diff(data, state_current, state_desired).await
     }
 
-    async fn state_clean(sh_cmd_data: Self::Data<'_>) -> Result<Self::State, ShCmdError> {
-        let state_clean_sh_cmd = sh_cmd_data.sh_cmd_params().state_clean_sh_cmd();
+    async fn state_clean(
+        _params_partial: Option<&Self::Params<'_>>,
+        data: Self::Data<'_>,
+    ) -> Result<Self::State, ShCmdError> {
+        let state_clean_sh_cmd = data.sh_cmd_params().state_clean_sh_cmd();
         ShCmdExecutor::exec(state_clean_sh_cmd).await
     }
 
     async fn apply_check(
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<ApplyCheck, Self::Error> {
-        ShCmdApplyFns::apply_check(data, state_current, state_target, diff).await
+        ShCmdApplyFns::<Id>::apply_check(params, data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        ShCmdApplyFns::apply_dry(fn_ctx, data, state_current, state_target, diff).await
+        ShCmdApplyFns::<Id>::apply_dry(fn_ctx, params, data, state_current, state_target, diff)
+            .await
     }
 
     async fn apply(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        ShCmdApplyFns::apply(fn_ctx, data, state_current, state_target, diff).await
+        ShCmdApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff).await
     }
 }

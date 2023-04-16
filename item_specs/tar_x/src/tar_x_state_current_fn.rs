@@ -2,7 +2,7 @@ use std::{marker::PhantomData, path::Path};
 
 use peace::cfg::FnCtx;
 
-use crate::{FileMetadata, FileMetadatas, TarXData, TarXError};
+use crate::{FileMetadata, FileMetadatas, TarXData, TarXError, TarXParams};
 
 /// Reads the current state of the tar to extract.
 #[derive(Debug)]
@@ -14,6 +14,7 @@ where
 {
     pub async fn state_current(
         fn_ctx: FnCtx<'_>,
+        _params: &TarXParams<Id>,
         data: TarXData<'_, Id>,
     ) -> Result<FileMetadatas, TarXError> {
         let tar_x_params = data.tar_x_params();
@@ -22,7 +23,7 @@ where
         #[cfg(not(target_arch = "wasm32"))]
         let files_extracted = Self::files_extracted(fn_ctx, dest).await?;
         #[cfg(target_arch = "wasm32")]
-        let files_extracted = Self::files_extracted(fn_ctx, data.storage(), dest)?;
+        let files_extracted = Self::files_extracted(fn_ctx, params, data.storage(), dest)?;
 
         let dest_files = FileMetadatas::from(files_extracted);
 

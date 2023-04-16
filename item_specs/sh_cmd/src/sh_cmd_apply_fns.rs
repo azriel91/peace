@@ -5,7 +5,8 @@ use peace::cfg::progress::ProgressLimit;
 use peace::cfg::{ApplyCheck, FnCtx, State};
 
 use crate::{
-    ShCmd, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState, ShCmdStateDiff,
+    ShCmd, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdParams, ShCmdState,
+    ShCmdStateDiff,
 };
 
 /// ApplyFns for the command to execute.
@@ -17,7 +18,8 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        sh_cmd_data: ShCmdData<'_, Id>,
+        params: &ShCmdParams<Id>,
+        _data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
@@ -30,8 +32,7 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let apply_check_sh_cmd = sh_cmd_data
-            .sh_cmd_params()
+        let apply_check_sh_cmd = params
             .apply_check_sh_cmd()
             .clone()
             .arg(state_current_arg)
@@ -72,7 +73,8 @@ where
 
     pub async fn apply_dry(
         _fn_ctx: FnCtx<'_>,
-        sh_cmd_data: ShCmdData<'_, Id>,
+        params: &ShCmdParams<Id>,
+        _data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
@@ -86,8 +88,7 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let apply_exec_sh_cmd = sh_cmd_data
-            .sh_cmd_params()
+        let apply_exec_sh_cmd = params
             .apply_exec_sh_cmd()
             .clone()
             .arg(state_current_arg)
@@ -99,7 +100,8 @@ where
 
     pub async fn apply(
         _fn_ctx: FnCtx<'_>,
-        sh_cmd_data: ShCmdData<'_, Id>,
+        params: &ShCmdParams<Id>,
+        data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
@@ -112,8 +114,7 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let apply_exec_sh_cmd = sh_cmd_data
-            .sh_cmd_params()
+        let apply_exec_sh_cmd = params
             .apply_exec_sh_cmd()
             .clone()
             .arg(state_current_arg)
@@ -121,6 +122,6 @@ where
             .arg(&**state_diff);
 
         ShCmdExecutor::<Id>::exec(&apply_exec_sh_cmd).await?;
-        ShCmdExecutor::<Id>::exec(sh_cmd_data.sh_cmd_params().state_current_sh_cmd()).await
+        ShCmdExecutor::<Id>::exec(data.sh_cmd_params().state_current_sh_cmd()).await
     }
 }

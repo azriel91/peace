@@ -5,7 +5,7 @@ use peace::{
     resources::{resources::ts::Empty, Resources},
 };
 
-use crate::{BlankApplyFns, BlankData, BlankError, BlankState, BlankStateDiff};
+use crate::{BlankApplyFns, BlankData, BlankError, BlankParams, BlankState, BlankStateDiff};
 
 /// Item spec for copying a number.
 ///
@@ -50,6 +50,7 @@ where
 {
     type Data<'exec> = BlankData<'exec, Id>;
     type Error = BlankError;
+    type Params<'exec> = BlankParams<Id>;
     type State = BlankState;
     type StateDiff = BlankStateDiff;
 
@@ -63,13 +64,19 @@ where
 
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: BlankData<'_, Id>,
     ) -> Result<Option<Self::State>, BlankError> {
-        Self::state_current(fn_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_current(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn state_current(
         _fn_ctx: FnCtx<'_>,
+        _params: &Self::Params<'_>,
         data: BlankData<'_, Id>,
     ) -> Result<Self::State, BlankError> {
         let current = BlankState(data.params().dest().0);
@@ -81,13 +88,19 @@ where
 
     async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: BlankData<'_, Id>,
     ) -> Result<Option<Self::State>, BlankError> {
-        Self::state_desired(fn_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_desired(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn state_desired(
         _fn_ctx: FnCtx<'_>,
+        _params: &Self::Params<'_>,
         data: BlankData<'_, Id>,
     ) -> Result<Self::State, BlankError> {
         let params = data.params();
@@ -95,11 +108,12 @@ where
     }
 
     async fn state_diff(
-        _data: BlankData<'_, Id>,
-        blank_state_current: &BlankState,
-        blank_state_desired: &BlankState,
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
+        state_current: &BlankState,
+        state_desired: &BlankState,
     ) -> Result<Self::StateDiff, BlankError> {
-        let diff = match (blank_state_current, blank_state_desired) {
+        let diff = match (state_current, state_desired) {
             (BlankState(Some(current)), BlankState(Some(desired))) if current == desired => {
                 BlankStateDiff::InSync { value: *current }
             }
@@ -115,36 +129,43 @@ where
         Ok(diff)
     }
 
-    async fn state_clean(_: Self::Data<'_>) -> Result<BlankState, BlankError> {
+    async fn state_clean(
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
+    ) -> Result<BlankState, BlankError> {
         Ok(BlankState(None))
     }
 
     async fn apply_check(
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<ApplyCheck, Self::Error> {
-        BlankApplyFns::apply_check(data, state_current, state_target, diff).await
+        BlankApplyFns::<Id>::apply_check(params, data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        BlankApplyFns::apply_dry(fn_ctx, data, state_current, state_target, diff).await
+        BlankApplyFns::<Id>::apply_dry(fn_ctx, params, data, state_current, state_target, diff)
+            .await
     }
 
     async fn apply(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        BlankApplyFns::apply(fn_ctx, data, state_current, state_target, diff).await
+        BlankApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff).await
     }
 }

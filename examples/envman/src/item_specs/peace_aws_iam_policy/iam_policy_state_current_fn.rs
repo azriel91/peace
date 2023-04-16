@@ -5,7 +5,7 @@ use peace::cfg::{state::Generated, FnCtx};
 
 use crate::item_specs::peace_aws_iam_policy::{
     model::{ManagedPolicyArn, PolicyIdArnVersion},
-    IamPolicyData, IamPolicyError, IamPolicyState,
+    IamPolicyData, IamPolicyError, IamPolicyParams, IamPolicyState,
 };
 
 #[cfg(feature = "output_progress")]
@@ -94,18 +94,24 @@ where
 {
     pub async fn try_state_current(
         fn_ctx: FnCtx<'_>,
+        params_partial: Option<&IamPolicyParams<Id>>,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Option<IamPolicyState>, IamPolicyError> {
-        Self::state_current(fn_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_current(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn state_current(
         fn_ctx: FnCtx<'_>,
+        params: &IamPolicyParams<Id>,
         mut data: IamPolicyData<'_, Id>,
     ) -> Result<IamPolicyState, IamPolicyError> {
         let client = data.client();
-        let name = data.params().name();
-        let path = data.params().path();
+        let name = params.name();
+        let path = params.path();
 
         let policy_id_arn_version = Self::policy_find(fn_ctx, client, name, path).await?;
 

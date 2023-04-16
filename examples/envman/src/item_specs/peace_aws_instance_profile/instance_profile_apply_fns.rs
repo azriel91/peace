@@ -6,7 +6,7 @@ use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_instance_profile::{
     model::InstanceProfileIdAndArn, InstanceProfileData, InstanceProfileError,
-    InstanceProfileState, InstanceProfileStateDiff,
+    InstanceProfileParams, InstanceProfileState, InstanceProfileStateDiff,
 };
 
 /// ApplyFns for the instance profile state.
@@ -99,7 +99,8 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        _instance_profile_data: InstanceProfileData<'_, Id>,
+        _params: &InstanceProfileParams<Id>,
+        _data: InstanceProfileData<'_, Id>,
         state_current: &InstanceProfileState,
         _state_desired: &InstanceProfileState,
         diff: &InstanceProfileStateDiff,
@@ -173,7 +174,8 @@ where
 
     pub async fn apply_dry(
         _fn_ctx: FnCtx<'_>,
-        _instance_profile_data: InstanceProfileData<'_, Id>,
+        _params: &InstanceProfileParams<Id>,
+        _data: InstanceProfileData<'_, Id>,
         _state_current: &InstanceProfileState,
         state_desired: &InstanceProfileState,
         _diff: &InstanceProfileStateDiff,
@@ -192,6 +194,7 @@ where
     #[allow(unused_variables)]
     pub async fn apply(
         fn_ctx: FnCtx<'_>,
+        params: &InstanceProfileParams<Id>,
         data: InstanceProfileData<'_, Id>,
         state_current: &InstanceProfileState,
         state_desired: &InstanceProfileState,

@@ -5,7 +5,7 @@ use peace::cfg::{state::Generated, FnCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
     model::{ManagedPolicyAttachment, RoleIdAndArn},
-    IamRoleData, IamRoleError, IamRoleState,
+    IamRoleData, IamRoleError, IamRoleParams, IamRoleState,
 };
 
 #[cfg(feature = "output_progress")]
@@ -21,18 +21,24 @@ where
 {
     pub async fn try_state_current(
         fn_ctx: FnCtx<'_>,
+        params_partial: Option<&IamRoleParams<Id>>,
         data: IamRoleData<'_, Id>,
     ) -> Result<Option<IamRoleState>, IamRoleError> {
-        Self::state_current(fn_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_current(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn state_current(
         fn_ctx: FnCtx<'_>,
+        params: &IamRoleParams<Id>,
         data: IamRoleData<'_, Id>,
     ) -> Result<IamRoleState, IamRoleError> {
         let client = data.client();
-        let name = data.params().name();
-        let path = data.params().path();
+        let name = params.name();
+        let path = params.path();
 
         #[cfg(not(feature = "output_progress"))]
         let _fn_ctx = fn_ctx;

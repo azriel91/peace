@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use peace::cfg::progress::ProgressLimit;
 use peace::cfg::{ApplyCheck, FnCtx};
 
-use crate::{BlankData, BlankError, BlankState, BlankStateDiff};
+use crate::{BlankData, BlankError, BlankParams, BlankState, BlankStateDiff};
 
 /// ApplyFns for the blank state.
 #[derive(Debug)]
@@ -15,7 +15,8 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        _blank_data: BlankData<'_, Id>,
+        _params: &BlankParams<Id>,
+        _data: BlankData<'_, Id>,
         _state_current: &BlankState,
         _state_desired: &BlankState,
         diff: &BlankStateDiff,
@@ -40,7 +41,8 @@ where
 
     pub async fn apply_dry(
         _fn_ctx: FnCtx<'_>,
-        _blank_data: BlankData<'_, Id>,
+        _params: &BlankParams<Id>,
+        _data: BlankData<'_, Id>,
         _state_current: &BlankState,
         state_desired: &BlankState,
         _diff: &BlankStateDiff,
@@ -50,12 +52,13 @@ where
 
     pub async fn apply(
         _fn_ctx: FnCtx<'_>,
-        mut blank_data: BlankData<'_, Id>,
+        _params: &BlankParams<Id>,
+        mut data: BlankData<'_, Id>,
         _state_current: &BlankState,
         state_desired: &BlankState,
         _diff: &BlankStateDiff,
     ) -> Result<BlankState, BlankError> {
-        let params = blank_data.params_mut();
+        let params = data.params_mut();
         **params.dest_mut() = Some(**params.src());
 
         Ok(*state_desired)

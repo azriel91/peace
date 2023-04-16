@@ -12,8 +12,8 @@ use serde::{Deserialize, Serialize};
 ///
 /// * `Id`: A zero-sized type used to distinguish different S3 bucket parameters
 ///   from each other.
-#[derive(Clone, Derivative, PartialEq, Eq, Deserialize, Serialize)]
-#[derivative(Debug)]
+#[derive(Derivative, PartialEq, Eq, Deserialize, Serialize)]
+#[derivative(Clone, Debug)]
 pub struct S3BucketParams<Id> {
     /// Name for both the S3 bucket and role.
     ///

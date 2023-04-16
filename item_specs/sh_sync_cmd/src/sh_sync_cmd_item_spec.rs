@@ -6,8 +6,8 @@ use peace::{
 };
 
 use crate::{
-    ShSyncCmdApplyFns, ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord, ShSyncCmdStateDiff,
-    ShSyncCmdStateDiffFn, ShSyncCmdSyncStatus,
+    ShSyncCmdApplyFns, ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord, ShSyncCmdParams,
+    ShSyncCmdStateDiff, ShSyncCmdStateDiffFn, ShSyncCmdSyncStatus,
 };
 
 /// Item spec for executing a shell command.
@@ -53,6 +53,7 @@ where
 {
     type Data<'exec> = ShSyncCmdData<'exec, Id>;
     type Error = ShSyncCmdError;
+    type Params<'exec> = ShSyncCmdParams<Id>;
     type State = State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>;
     type StateDiff = ShSyncCmdStateDiff;
 
@@ -66,13 +67,19 @@ where
 
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: ShSyncCmdData<'_, Id>,
     ) -> Result<Option<Self::State>, ShSyncCmdError> {
-        Self::state_current(fn_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_current(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn state_current(
         _fn_ctx: FnCtx<'_>,
+        _params: &Self::Params<'_>,
         _data: ShSyncCmdData<'_, Id>,
     ) -> Result<Self::State, ShSyncCmdError> {
         todo!()
@@ -80,27 +87,37 @@ where
 
     async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: ShSyncCmdData<'_, Id>,
     ) -> Result<Option<Self::State>, ShSyncCmdError> {
-        Self::state_desired(fn_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_desired(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn state_desired(
         _fn_ctx: FnCtx<'_>,
+        _params: &Self::Params<'_>,
         _data: ShSyncCmdData<'_, Id>,
     ) -> Result<Self::State, ShSyncCmdError> {
         todo!()
     }
 
     async fn state_diff(
-        data: ShSyncCmdData<'_, Id>,
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: ShSyncCmdData<'_, Id>,
         state_current: &Self::State,
         state_desired: &Self::State,
     ) -> Result<Self::StateDiff, ShSyncCmdError> {
-        ShSyncCmdStateDiffFn::state_diff(data, state_current, state_desired).await
+        ShSyncCmdStateDiffFn::<Id>::state_diff(state_current, state_desired).await
     }
 
-    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, ShSyncCmdError> {
+    async fn state_clean(
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
+    ) -> Result<Self::State, ShSyncCmdError> {
         let state = State::new(
             ShSyncCmdSyncStatus::NotExecuted,
             ShSyncCmdExecutionRecord::None,
@@ -109,31 +126,36 @@ where
     }
 
     async fn apply_check(
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<ApplyCheck, Self::Error> {
-        ShSyncCmdApplyFns::apply_check(data, state_current, state_target, diff).await
+        ShSyncCmdApplyFns::<Id>::apply_check(params, data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        ShSyncCmdApplyFns::apply_dry(fn_ctx, data, state_current, state_target, diff).await
+        ShSyncCmdApplyFns::<Id>::apply_dry(fn_ctx, params, data, state_current, state_target, diff)
+            .await
     }
 
     async fn apply(
         fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        ShSyncCmdApplyFns::apply(fn_ctx, data, state_current, state_target, diff).await
+        ShSyncCmdApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff)
+            .await
     }
 }
