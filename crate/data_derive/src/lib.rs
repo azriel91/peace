@@ -225,10 +225,8 @@ fn field_names(fields: &Punctuated<Field, Comma>) -> FieldNames<'_> {
                 if let Some(field_name) = field.ident.as_ref() {
                     field_names.phantom_data_fields.push(field_name);
                 }
-            } else {
-                if let Some(field_name) = field.ident.as_ref() {
-                    field_names.normal_fields.push(field_name);
-                }
+            } else if let Some(field_name) = field.ident.as_ref() {
+                field_names.normal_fields.push(field_name);
             }
 
             field_names
