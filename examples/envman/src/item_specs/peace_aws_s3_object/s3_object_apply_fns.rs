@@ -96,18 +96,10 @@ where
         Ok(state_desired.clone())
     }
 
-    // Not sure why we can't use this:
-    //
-    // #[cfg(not(feature = "output_progress"))] _fn_ctx: OpCtx<'_>,
-    // #[cfg(feature = "output_progress")] fn_ctx: OpCtx<'_>,
-    //
-    // There's an error saying lifetime bounds don't match the trait definition.
-    //
-    // Likely an issue with the codegen in `async-trait`.
-    #[allow(unused_variables)]
     pub async fn apply(
-        fn_ctx: FnCtx<'_>,
-        _params: &S3ObjectParams<Id>,
+        #[cfg(not(feature = "output_progress"))] _fn_ctx: FnCtx<'_>,
+        #[cfg(feature = "output_progress")] fn_ctx: FnCtx<'_>,
+        params: &S3ObjectParams<Id>,
         data: S3ObjectData<'_, Id>,
         state_current: &S3ObjectState,
         state_desired: &S3ObjectState,
@@ -133,7 +125,7 @@ where
                         #[cfg(feature = "output_progress")]
                         progress_sender
                             .tick(ProgressMsgUpdate::Set(String::from("uploading object")));
-                        let file_path = data.params().file_path();
+                        let file_path = params.file_path();
                         let Some(content_md5_hexstr) = content_md5_hexstr else {
                             panic!("Content MD5 must be Some as this is calculated from an existent local file.");
                         };

@@ -25,7 +25,6 @@ where
         if let Some(params) = params_partial {
             #[cfg(not(target_arch = "wasm32"))]
             {
-                let params = s3_object_data.params();
                 let file_path = params.file_path();
                 let bucket_name = params.bucket_name();
                 let object_key = params.object_key();

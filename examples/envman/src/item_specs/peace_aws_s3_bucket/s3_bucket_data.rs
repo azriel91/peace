@@ -1,9 +1,9 @@
+use std::marker::PhantomData;
+
 use peace::data::{
-    accessors::{ROpt, R, W},
+    accessors::{ROpt, R},
     Data,
 };
-
-use crate::item_specs::peace_aws_s3_bucket::S3BucketParams;
 
 /// Data used to manage S3 bucket state.
 ///
@@ -16,26 +16,18 @@ pub struct S3BucketData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    /// S3Bucket state parameters.
-    params: W<'exec, S3BucketParams<Id>>,
     /// IAM client to communicate with AWS.
     client: R<'exec, aws_sdk_s3::Client>,
     /// Region to use to constrain S3 bucket.
     region: ROpt<'exec, aws_sdk_s3::config::Region>,
+    /// Marker.
+    marker: PhantomData<Id>,
 }
 
 impl<'exec, Id> S3BucketData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    pub fn params(&self) -> &S3BucketParams<Id> {
-        &self.params
-    }
-
-    pub fn params_mut(&mut self) -> &mut S3BucketParams<Id> {
-        &mut self.params
-    }
-
     pub fn client(&self) -> &R<'exec, aws_sdk_s3::Client> {
         &self.client
     }

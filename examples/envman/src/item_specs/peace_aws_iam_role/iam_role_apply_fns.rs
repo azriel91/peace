@@ -154,18 +154,10 @@ where
         Ok(state_desired.clone())
     }
 
-    // Not sure why we can't use this:
-    //
-    // #[cfg(not(feature = "output_progress"))] _fn_ctx: OpCtx<'_>,
-    // #[cfg(feature = "output_progress")] fn_ctx: OpCtx<'_>,
-    //
-    // There's an error saying lifetime bounds don't match the trait definition.
-    //
-    // Likely an issue with the codegen in `async-trait`.
-    #[allow(unused_variables)]
     pub async fn apply(
-        fn_ctx: FnCtx<'_>,
-        params: &IamRoleParams<Id>,
+        #[cfg(not(feature = "output_progress"))] _fn_ctx: FnCtx<'_>,
+        #[cfg(feature = "output_progress")] fn_ctx: FnCtx<'_>,
+        _params: &IamRoleParams<Id>,
         data: IamRoleData<'_, Id>,
         state_current: &IamRoleState,
         state_desired: &IamRoleState,

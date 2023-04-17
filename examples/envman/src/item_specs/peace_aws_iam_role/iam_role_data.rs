@@ -1,11 +1,9 @@
 use peace::data::{
-    accessors::{ROpt, R, W},
+    accessors::{ROpt, R},
     Data,
 };
 
-use crate::item_specs::{
-    peace_aws_iam_policy::model::ManagedPolicyArn, peace_aws_iam_role::IamRoleParams,
-};
+use crate::item_specs::peace_aws_iam_policy::model::ManagedPolicyArn;
 
 /// Data used to manage instance profile state.
 ///
@@ -18,8 +16,6 @@ pub struct IamRoleData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    /// IamRole state parameters.
-    params: W<'exec, IamRoleParams<Id>>,
     /// Workaround for managed policy ARN param.
     ///
     /// Hack: Remove this when referential param values is implemented.
@@ -32,14 +28,6 @@ impl<'exec, Id> IamRoleData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    pub fn params(&self) -> &IamRoleParams<Id> {
-        &self.params
-    }
-
-    pub fn params_mut(&mut self) -> &mut IamRoleParams<Id> {
-        &mut self.params
-    }
-
     /// Hack: Remove this when referential param values is implemented.
     pub fn managed_policy_arn(&self) -> Option<&ManagedPolicyArn<Id>> {
         self.managed_policy_arn.as_ref()
