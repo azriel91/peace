@@ -61,9 +61,8 @@ where
         let state_clean = {
             // TODO: #94, this should be per Params field type, not Params type.
             let params = resources.try_borrow::<IS::Params<'_>>().ok();
-            let data =
-                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::state_clean(params.as_deref(), data).await?
+            let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+            IS::state_clean(params.as_deref(), data).await?
         };
         resources.borrow_mut::<Clean<IS::State>>().0 = Some(state_clean.clone());
 
@@ -78,9 +77,8 @@ where
         let state_current = {
             // TODO: #94, this should be per Params field type, not Params type.
             let params = resources.try_borrow::<IS::Params<'_>>().ok();
-            let data =
-                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::try_state_current(fn_ctx, params.as_deref(), data).await?
+            let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+            IS::try_state_current(fn_ctx, params.as_deref(), data).await?
         };
         if let Some(state_current) = state_current.as_ref() {
             resources.borrow_mut::<Current<IS::State>>().0 = Some(state_current.clone());
@@ -97,9 +95,8 @@ where
         let state_current = {
             // TODO: #94, this should be constructing Params from ParamsSpec.
             let params = resources.borrow::<IS::Params<'_>>();
-            let data =
-                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::state_current(fn_ctx, &params, data).await?
+            let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+            IS::state_current(fn_ctx, &params, data).await?
         };
         resources.borrow_mut::<Current<IS::State>>().0 = Some(state_current.clone());
 
@@ -113,9 +110,8 @@ where
     ) -> Result<Option<IS::State>, E> {
         // TODO: #94, this should be per Params field type, not Params type.
         let params = resources.try_borrow::<IS::Params<'_>>().ok();
-        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_desired =
-            <IS as peace_cfg::ItemSpec>::try_state_desired(fn_ctx, params.as_deref(), data).await?;
+        let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_desired = IS::try_state_desired(fn_ctx, params.as_deref(), data).await?;
         if let Some(state_desired) = state_desired.as_ref() {
             resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
         }
@@ -130,9 +126,8 @@ where
     ) -> Result<IS::State, E> {
         // TODO: #94, this should be constructing Params from ParamsSpec.
         let params = resources.borrow::<IS::Params<'_>>();
-        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_desired =
-            <IS as peace_cfg::ItemSpec>::state_desired(fn_ctx, &params, data).await?;
+        let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_desired = IS::state_desired(fn_ctx, &params, data).await?;
         resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
 
         Ok(state_desired)
@@ -175,9 +170,8 @@ where
         let state_diff: IS::StateDiff = {
             // TODO: #94, this should be per Params field type, not Params type.
             let params = resources.try_borrow::<IS::Params<'_>>().ok();
-            let data =
-                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::state_diff(params.as_deref(), data, state_a, state_b)
+            let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+            IS::state_diff(params.as_deref(), data, state_a, state_b)
                 .await
                 .map_err(Into::<E>::into)?
         };
@@ -194,16 +188,10 @@ where
     ) -> Result<ApplyCheck, E> {
         // TODO: #94, this should be constructing Params from ParamsSpec.
         let params = resources.borrow::<IS::Params<'_>>();
-        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        <IS as peace_cfg::ItemSpec>::apply_check(
-            &params,
-            data,
-            state_current,
-            state_desired,
-            state_diff,
-        )
-        .await
-        .map_err(Into::<E>::into)
+        let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+        IS::apply_check(&params, data, state_current, state_desired, state_diff)
+            .await
+            .map_err(Into::<E>::into)
     }
 
     async fn apply_op_exec_dry<ResourcesTs>(
@@ -216,8 +204,8 @@ where
     ) -> Result<IS::State, E> {
         // TODO: #94, this should be constructing Params from ParamsSpec.
         let params = resources.borrow::<IS::Params<'_>>();
-        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_ensured_dry = <IS as peace_cfg::ItemSpec>::apply_dry(
+        let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_ensured_dry = IS::apply_dry(
             fn_ctx,
             &params,
             data,
@@ -243,8 +231,8 @@ where
     ) -> Result<IS::State, E> {
         // TODO: #94, this should be constructing Params from ParamsSpec.
         let params = resources.borrow::<IS::Params<'_>>();
-        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_ensured = <IS as peace_cfg::ItemSpec>::apply(
+        let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_ensured = IS::apply(
             fn_ctx,
             &params,
             data,
@@ -300,14 +288,14 @@ where
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
 {
     fn borrows() -> TypeIds {
-        let mut type_ids = <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrows();
+        let mut type_ids = <IS::Data<'_> as DataAccess>::borrows();
         type_ids.push(std::any::TypeId::of::<IS::Params<'_>>());
 
         type_ids
     }
 
     fn borrow_muts() -> TypeIds {
-        <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrow_muts()
+        <IS::Data<'_> as DataAccess>::borrow_muts()
     }
 }
 
@@ -317,14 +305,14 @@ where
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
 {
     fn borrows(&self) -> TypeIds {
-        let mut type_ids = <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrows();
+        let mut type_ids = <IS::Data<'_> as DataAccess>::borrows();
         type_ids.push(std::any::TypeId::of::<IS::Params<'_>>());
 
         type_ids
     }
 
     fn borrow_muts(&self) -> TypeIds {
-        <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrow_muts()
+        <IS::Data<'_> as DataAccess>::borrow_muts()
     }
 }
 
