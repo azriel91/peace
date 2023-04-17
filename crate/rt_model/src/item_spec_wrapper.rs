@@ -300,7 +300,10 @@ where
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
 {
     fn borrows() -> TypeIds {
-        <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrows()
+        let mut type_ids = <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrows();
+        type_ids.push(std::any::TypeId::of::<IS::Params<'_>>());
+
+        type_ids
     }
 
     fn borrow_muts() -> TypeIds {
@@ -314,7 +317,10 @@ where
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
 {
     fn borrows(&self) -> TypeIds {
-        <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrows()
+        let mut type_ids = <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrows();
+        type_ids.push(std::any::TypeId::of::<IS::Params<'_>>());
+
+        type_ids
     }
 
     fn borrow_muts(&self) -> TypeIds {
