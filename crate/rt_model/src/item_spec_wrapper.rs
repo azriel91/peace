@@ -54,10 +54,7 @@ where
         + From<crate::Error>
         + 'static,
 {
-    async fn state_clean<ResourcesTs>(
-        &self,
-        resources: &Resources<ResourcesTs>,
-    ) -> Result<IS::State, E> {
+    async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<IS::State, E> {
         let state_clean = {
             // TODO: #94, this should be per Params field type, not Params type.
             let params = resources.try_borrow::<IS::Params<'_>>().ok();
@@ -69,10 +66,10 @@ where
         Ok(state_clean)
     }
 
-    async fn state_current_try_exec<ResourcesTs>(
+    async fn state_current_try_exec(
         &self,
         fn_ctx: FnCtx<'_>,
-        resources: &Resources<ResourcesTs>,
+        resources: &Resources<SetUp>,
     ) -> Result<Option<IS::State>, E> {
         let state_current = {
             // TODO: #94, this should be per Params field type, not Params type.
@@ -87,10 +84,10 @@ where
         Ok(state_current)
     }
 
-    async fn state_current_exec<ResourcesTs>(
+    async fn state_current_exec(
         &self,
         fn_ctx: FnCtx<'_>,
-        resources: &Resources<ResourcesTs>,
+        resources: &Resources<SetUp>,
     ) -> Result<IS::State, E> {
         let state_current = {
             // TODO: #94, this should be constructing Params from ParamsSpec.
@@ -194,10 +191,10 @@ where
             .map_err(Into::<E>::into)
     }
 
-    async fn apply_op_exec_dry<ResourcesTs>(
+    async fn apply_op_exec_dry(
         &self,
         fn_ctx: FnCtx<'_>,
-        resources: &Resources<ResourcesTs>,
+        resources: &Resources<SetUp>,
         state_current: &IS::State,
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
@@ -221,10 +218,10 @@ where
         Ok(state_ensured_dry)
     }
 
-    async fn apply_op_exec<ResourcesTs>(
+    async fn apply_op_exec(
         &self,
         fn_ctx: FnCtx<'_>,
-        resources: &Resources<ResourcesTs>,
+        resources: &Resources<SetUp>,
         state_current: &IS::State,
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
