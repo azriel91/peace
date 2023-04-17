@@ -113,30 +113,42 @@ where
 
     async fn state_desired(
         _fn_ctx: FnCtx<'_>,
-        _params: &Self::Params<'_>,
-        data: ShCmdData<'_, Id>,
+        params: &Self::Params<'_>,
+        _data: ShCmdData<'_, Id>,
     ) -> Result<Self::State, ShCmdError> {
-        let state_desired_sh_cmd = data.sh_cmd_params().state_desired_sh_cmd();
+        let state_desired_sh_cmd = params.state_desired_sh_cmd();
         // Maybe we should support reading different exit statuses for an `Ok(None)`
         // value.
         ShCmdExecutor::exec(state_desired_sh_cmd).await
     }
 
     async fn state_diff(
-        _params_partial: Option<&Self::Params<'_>>,
+        params_partial: Option<&Self::Params<'_>>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,
     ) -> Result<Self::StateDiff, ShCmdError> {
-        ShCmdStateDiffFn::state_diff(data, state_current, state_desired).await
+        if let Some(params) = params_partial {
+            ShCmdStateDiffFn::state_diff(params, data, state_current, state_desired).await
+        } else {
+            Err(ShCmdError::CmdScriptNotResolved {
+                cmd_variant: crate::CmdVariant::StateDiff,
+            })
+        }
     }
 
     async fn state_clean(
-        _params_partial: Option<&Self::Params<'_>>,
-        data: Self::Data<'_>,
+        params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
     ) -> Result<Self::State, ShCmdError> {
-        let state_clean_sh_cmd = data.sh_cmd_params().state_clean_sh_cmd();
-        ShCmdExecutor::exec(state_clean_sh_cmd).await
+        if let Some(params) = params_partial {
+            let state_clean_sh_cmd = params.state_clean_sh_cmd();
+            ShCmdExecutor::exec(state_clean_sh_cmd).await
+        } else {
+            Err(ShCmdError::CmdScriptNotResolved {
+                cmd_variant: crate::CmdVariant::StateClean,
+            })
+        }
     }
 
     async fn apply_check(

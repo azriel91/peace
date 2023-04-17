@@ -101,7 +101,7 @@ where
     pub async fn apply(
         _fn_ctx: FnCtx<'_>,
         params: &ShCmdParams<Id>,
-        data: ShCmdData<'_, Id>,
+        _data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
@@ -122,6 +122,6 @@ where
             .arg(&**state_diff);
 
         ShCmdExecutor::<Id>::exec(&apply_exec_sh_cmd).await?;
-        ShCmdExecutor::<Id>::exec(data.sh_cmd_params().state_current_sh_cmd()).await
+        ShCmdExecutor::<Id>::exec(params.state_current_sh_cmd()).await
     }
 }

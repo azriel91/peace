@@ -1,12 +1,9 @@
+use std::marker::PhantomData;
+
 use peace::{
-    data::{
-        accessors::{RMaybe, R},
-        Data,
-    },
+    data::{accessors::RMaybe, Data},
     resources::states::StatesSaved,
 };
-
-use crate::ShCmdParams;
 
 /// Data used to run a shell command.
 ///
@@ -19,22 +16,17 @@ pub struct ShCmdData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    /// Parameters to determine what shell command to run.
-    sh_cmd_params: R<'exec, ShCmdParams<Id>>,
-
     /// Saved states with this item spec's previous execution.
     states_saved: RMaybe<'exec, StatesSaved>,
+
+    /// Marker.
+    marker: PhantomData<Id>,
 }
 
 impl<'exec, Id> ShCmdData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    /// Returns the parameters to determine what shell command to run.
-    pub fn sh_cmd_params(&self) -> &ShCmdParams<Id> {
-        &self.sh_cmd_params
-    }
-
     /// Returns the previous states.
     pub fn states_saved(&self) -> Option<&StatesSaved> {
         self.states_saved.as_deref()
