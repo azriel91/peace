@@ -109,8 +109,9 @@ where
         BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
     /// Saved states for each profile for the selected flow.
     profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
-    /// Type registries to deserialize [`StatesSavedFile`] and
-    /// [`StatesDesiredFile`].
+    /// Type registry for each item spec's `State`.
+    ///
+    /// This is used to deserialize [`StatesSavedFile`] and [`StatesDesiredFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile

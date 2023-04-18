@@ -87,8 +87,9 @@ where
     profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
     /// Flow params for the selected flow.
     flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
-    /// Type registries to deserialize [`StatesSavedFile`] and
-    /// [`StatesDesiredFile`].
+    /// Type registry for each item spec's `State`.
+    ///
+    /// This is used to deserialize [`StatesSavedFile`] and [`StatesDesiredFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
