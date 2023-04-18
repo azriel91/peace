@@ -502,10 +502,13 @@ fn impl_build_for(
                 #resources_insert
 
                 // === MultiProfileSingleFlow === //
-                // let states_type_reg = crate::ctx::cmd_ctx_builder::states_type_reg(flow.graph());
-                // let states_type_reg_ref = &states_type_reg;
                 // let flow_id = flow.flow_id();
                 // let item_spec_graph = flow.graph();
+                //
+                // let (item_spec_params_type_reg, states_type_reg) =
+                //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
+                //
+                // let states_type_reg_ref = &states_type_reg;
                 // let profile_to_states_saved = futures::stream::iter(
                 //     flow_dirs
                 //         .iter()
@@ -542,8 +545,13 @@ fn impl_build_for(
                 //
                 // === SingleProfileSingleFlow === //
                 // // Set up resources for the flow's item spec graph
+                // let flow_id = flow.flow_id();
+                // let item_spec_graph = flow.graph();
+                //
+                // let (item_spec_params_type_reg, states_type_reg) =
+                //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
+                //
                 // let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
-                // let states_type_reg = crate::ctx::cmd_ctx_builder::states_type_reg(flow.graph());
                 // let states_type_reg_ref = &states_type_reg;
                 // let states_saved = peace_rt_model::StatesSerializer::<peace_rt_model::Error>::deserialize_saved_opt(
                 //     flow.flow_id(),
@@ -624,9 +632,11 @@ fn impl_build_for(
 
                     // === MultiProfileSingleFlow === //
                     // profile_to_states_saved,
+                    // item_spec_params_type_reg,
                     // states_type_reg,
                     // resources,
                     // === SingleProfileSingleFlow === //
+                    // item_spec_params_type_reg,
                     // states_type_reg,
                     // resources,
 
@@ -1359,10 +1369,12 @@ fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
         Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {}
         Scope::MultiProfileSingleFlow => {
             scope_fields.push(parse_quote!(profile_to_states_saved));
+            scope_fields.push(parse_quote!(item_spec_params_type_reg));
             scope_fields.push(parse_quote!(states_type_reg));
             scope_fields.push(parse_quote!(resources));
         }
         Scope::SingleProfileSingleFlow => {
+            scope_fields.push(parse_quote!(item_spec_params_type_reg));
             scope_fields.push(parse_quote!(states_type_reg));
             scope_fields.push(parse_quote!(resources));
         }
@@ -1381,10 +1393,13 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
             // StatesSaved>. These are then saved in the scope for easy use by
             // consumers.
             quote! {
-                let states_type_reg = crate::ctx::cmd_ctx_builder::states_type_reg(flow.graph());
-                let states_type_reg_ref = &states_type_reg;
                 let flow_id = flow.flow_id();
                 let item_spec_graph = flow.graph();
+
+                let (item_spec_params_type_reg, states_type_reg) =
+                    crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
+
+                let states_type_reg_ref = &states_type_reg;
                 let profile_to_states_saved = futures::stream::iter(
                     flow_dirs
                         .iter()
@@ -1439,11 +1454,14 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
             // It also requires multiple item spec graph setups to work without conflicting
             // with each other.
             quote! {
-                let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
-                let states_type_reg = crate::ctx::cmd_ctx_builder::states_type_reg(flow.graph());
-                let states_type_reg_ref = &states_type_reg;
                 let flow_id = flow.flow_id();
                 let item_spec_graph = flow.graph();
+
+                let (item_spec_params_type_reg, states_type_reg) =
+                    crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
+
+                let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
+                let states_type_reg_ref = &states_type_reg;
                 let states_saved = peace_rt_model::StatesSerializer::<peace_rt_model::Error>::deserialize_saved_opt(
                     flow_id,
                     storage,

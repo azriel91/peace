@@ -7,8 +7,15 @@ use peace_resources::type_reg::untagged::{BoxDtDisplay, TypeReg};
 ///
 /// This is used to deserialize [`StatesSavedFile`] and [`StatesDesiredFile`].
 ///
-/// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+/// Note: [`ItemSpecParamsTypeReg`] uses [`BoxDt`], whereas this uses
+/// [`BoxDtDisplay`].
+///
+/// [`BoxDt`]: peace_resources::type_reg::untagged::BoxDt
+/// [`BoxDtDisplay`]: peace_resources::type_reg::untagged::BoxDtDisplay
+/// [`ItemSpecParamsTypeReg`]: crate::ItemSpecParamsTypeReg
+/// [`Params`]: peace_cfg::ItemSpec::Params
 /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
+/// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
 #[derive(Debug, Default)]
 pub struct StatesTypeReg(TypeReg<ItemSpecId, BoxDtDisplay>);
 

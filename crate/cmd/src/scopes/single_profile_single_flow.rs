@@ -11,7 +11,7 @@ use peace_rt_model::{
         FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
         WorkspaceParams,
     },
-    Flow, StatesTypeReg, Workspace,
+    Flow, ItemSpecParamsTypeReg, StatesTypeReg, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -87,9 +87,17 @@ where
     profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
     /// Flow params for the selected flow.
     flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+    /// Type registry for each item spec's [`Params`].
+    ///
+    /// This is used to deserialize [`ItemSpecParamsFile`].
+    ///
+    /// [`Params`]: peace_cfg::ItemSpec::Params
+    /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
+    item_spec_params_type_reg: ItemSpecParamsTypeReg,
     /// Type registry for each item spec's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and [`StatesDesiredFile`].
+    /// This is used to deserialize [`StatesSavedFile`] and
+    /// [`StatesDesiredFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
@@ -170,6 +178,13 @@ where
     pub profile_params: &'view ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
     /// Flow params for the selected flow.
     pub flow_params: &'view FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+    /// Type registry for each item spec's [`Params`].
+    ///
+    /// This is used to deserialize [`ItemSpecParamsFile`].
+    ///
+    /// [`Params`]: peace_cfg::ItemSpec::Params
+    /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
+    pub item_spec_params_type_reg: &'view ItemSpecParamsTypeReg,
     /// Type registries to deserialize [`StatesSavedFile`] and
     /// [`StatesDesiredFile`].
     ///
@@ -200,6 +215,7 @@ where
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
         flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
+        item_spec_params_type_reg: ItemSpecParamsTypeReg,
         states_type_reg: StatesTypeReg,
         resources: Resources<SetUp>,
     ) -> Self {
@@ -217,6 +233,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
+            item_spec_params_type_reg,
             states_type_reg,
             resources,
         }
@@ -245,6 +262,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
+            item_spec_params_type_reg,
             states_type_reg,
             resources,
         } = self;
@@ -263,6 +281,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
+            item_spec_params_type_reg,
             states_type_reg,
             resources,
         }
@@ -388,6 +407,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
+            item_spec_params_type_reg,
             states_type_reg,
             resources,
         } = self;
@@ -408,6 +428,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
+            item_spec_params_type_reg,
             states_type_reg,
             resources,
         }

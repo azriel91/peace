@@ -12,7 +12,7 @@ use peace_rt_model::{
         FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
         WorkspaceParams,
     },
-    Flow, StatesTypeReg, Workspace,
+    Flow, ItemSpecParamsTypeReg, StatesTypeReg, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -109,9 +109,17 @@ where
         BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
     /// Saved states for each profile for the selected flow.
     profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
+    /// Type registry for each item spec's [`Params`].
+    ///
+    /// This is used to deserialize [`ItemSpecParamsFile`].
+    ///
+    /// [`Params`]: peace_cfg::ItemSpec::Params
+    /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
+    item_spec_params_type_reg: ItemSpecParamsTypeReg,
     /// Type registry for each item spec's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and [`StatesDesiredFile`].
+    /// This is used to deserialize [`StatesSavedFile`] and
+    /// [`StatesDesiredFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
@@ -163,6 +171,13 @@ where
         &'view BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
     /// Saved states for each profile for the selected flow.
     pub profile_to_states_saved: &'view BTreeMap<Profile, Option<StatesSaved>>,
+    /// Type registry for each item spec's [`Params`].
+    ///
+    /// This is used to deserialize [`ItemSpecParamsFile`].
+    ///
+    /// [`Params`]: peace_cfg::ItemSpec::Params
+    /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
+    pub item_spec_params_type_reg: &'view ItemSpecParamsTypeReg,
     /// Type registries to deserialize [`StatesSavedFile`] and
     /// [`StatesDesiredFile`].
     ///
@@ -198,6 +213,7 @@ where
             FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
         >,
         profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
+        item_spec_params_type_reg: ItemSpecParamsTypeReg,
         states_type_reg: StatesTypeReg,
         resources: Resources<SetUp>,
     ) -> Self {
@@ -214,6 +230,7 @@ where
             profile_to_profile_params,
             profile_to_flow_params,
             profile_to_states_saved,
+            item_spec_params_type_reg,
             states_type_reg,
             resources,
         }
@@ -241,6 +258,7 @@ where
             profile_to_profile_params,
             profile_to_flow_params,
             profile_to_states_saved,
+            item_spec_params_type_reg,
             states_type_reg,
             resources,
         } = self;
@@ -258,6 +276,7 @@ where
             profile_to_profile_params,
             profile_to_flow_params,
             profile_to_states_saved,
+            item_spec_params_type_reg,
             states_type_reg,
             resources,
         }

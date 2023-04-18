@@ -11,7 +11,7 @@ use peace_resources::{
 
 use crate::{
     outcomes::{ItemApplyBoxed, ItemApplyPartialBoxed},
-    StatesTypeReg,
+    ItemSpecParamsTypeReg, StatesTypeReg,
 };
 
 /// Internal trait that erases the types from [`ItemSpec`]
@@ -34,11 +34,16 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     where
         E: Debug + std::error::Error;
 
-    /// Registers state types with type registries for deserializing from disk.
+    /// Registers state types with the type registry for deserializing from
+    /// disk.
     ///
     /// This is necessary to deserialize `StatesSavedFile` and
     /// `StatesDesiredFile`.
-    fn state_register(&self, states_type_reg: &mut StatesTypeReg);
+    fn params_and_state_register(
+        &self,
+        item_spec_params_type_reg: &mut ItemSpecParamsTypeReg,
+        states_type_reg: &mut StatesTypeReg,
+    );
 
     /// Runs [`ItemSpec::state_clean`].
     ///

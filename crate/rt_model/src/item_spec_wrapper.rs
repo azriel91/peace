@@ -18,7 +18,7 @@ use peace_resources::{
 
 use crate::{
     outcomes::{ItemApply, ItemApplyBoxed, ItemApplyPartial, ItemApplyPartialBoxed},
-    ItemSpecRt, StatesTypeReg,
+    ItemSpecParamsTypeReg, ItemSpecRt, StatesTypeReg,
 };
 
 /// Wraps a type implementing [`ItemSpec`].
@@ -343,8 +343,13 @@ where
             .map_err(Into::<E>::into)
     }
 
-    fn state_register(&self, states_type_reg: &mut StatesTypeReg) {
-        states_type_reg.register::<IS::State>(<IS as ItemSpec>::id(self).clone());
+    fn params_and_state_register(
+        &self,
+        item_spec_params_type_reg: &mut ItemSpecParamsTypeReg,
+        states_type_reg: &mut StatesTypeReg,
+    ) {
+        item_spec_params_type_reg.register::<IS::Params<'_>>(IS::id(self).clone());
+        states_type_reg.register::<IS::State>(IS::id(self).clone());
     }
 
     async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {

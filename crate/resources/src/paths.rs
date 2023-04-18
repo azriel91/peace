@@ -70,12 +70,14 @@
 //! ```
 
 pub use self::{
-    flow_dir::FlowDir, peace_app_dir::PeaceAppDir, peace_dir::PeaceDir, profile_dir::ProfileDir,
-    profile_history_dir::ProfileHistoryDir, states_desired_file::StatesDesiredFile,
-    states_saved_file::StatesSavedFile, workspace_dir::WorkspaceDir,
+    flow_dir::FlowDir, item_spec_params_file::ItemSpecParamsFile, peace_app_dir::PeaceAppDir,
+    peace_dir::PeaceDir, profile_dir::ProfileDir, profile_history_dir::ProfileHistoryDir,
+    states_desired_file::StatesDesiredFile, states_saved_file::StatesSavedFile,
+    workspace_dir::WorkspaceDir,
 };
 
 mod flow_dir;
+mod item_spec_params_file;
 mod peace_app_dir;
 mod peace_dir;
 mod profile_dir;
