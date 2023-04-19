@@ -4,7 +4,8 @@ use syn::parse_macro_input;
 use crate::cmd::scope_struct::ScopeStruct;
 
 pub use self::{
-    flow_count::FlowCount, impl_build::impl_build, impl_constructor::impl_constructor,
+    flow_count::FlowCount, impl_build::impl_build,
+    impl_constructor_and_common_fns::impl_constructor_and_common_fns,
     impl_params_deserialize::impl_params_deserialize, impl_params_merge::impl_params_merge,
     impl_with_flow::impl_with_flow, impl_with_param::impl_with_param,
     impl_with_params_k::impl_with_params_k, impl_with_profile::impl_with_profile,
@@ -14,7 +15,7 @@ pub use self::{
 
 mod flow_count;
 mod impl_build;
-mod impl_constructor;
+mod impl_constructor_and_common_fns;
 mod impl_params_deserialize;
 mod impl_params_merge;
 mod impl_with_flow;
@@ -38,7 +39,7 @@ pub fn cmd_ctx_builder_impl(input: proc_macro::TokenStream) -> proc_macro::Token
     let mut scope_struct = parse_macro_input!(input as ScopeStruct);
 
     let struct_definition = struct_definition(&mut scope_struct);
-    let impl_constructor = impl_constructor(&scope_struct);
+    let impl_constructor_and_common_fns = impl_constructor_and_common_fns(&scope_struct);
     let impl_with_param = impl_with_param(&scope_struct);
     let impl_with_params_k = impl_with_params_k(&scope_struct);
 
@@ -55,7 +56,7 @@ pub fn cmd_ctx_builder_impl(input: proc_macro::TokenStream) -> proc_macro::Token
     let tokens = quote! {
         #struct_definition
 
-        #impl_constructor
+        #impl_constructor_and_common_fns
 
         #impl_with_param
 

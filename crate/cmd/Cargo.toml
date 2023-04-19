@@ -18,6 +18,7 @@ test = false
 [dependencies]
 futures = "0.3.28"
 indicatif = { workspace = true, optional = true, features = ["tokio"] }
+peace_cfg = { path = "../cfg", version = "0.0.9" }
 peace_code_gen = { path = "../code_gen", version = "0.0.9" }
 peace_core = { path = "../core", version = "0.0.9" }
 peace_resources = { path = "../resources", version = "0.0.9" }
