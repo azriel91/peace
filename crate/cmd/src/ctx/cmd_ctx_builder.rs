@@ -5,13 +5,14 @@ use std::{fmt::Debug, hash::Hash};
 use futures::stream::{StreamExt, TryStreamExt};
 use peace_resources::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
+    paths::ItemSpecParamsFile,
     resources::ts::{Empty, SetUp},
     Resources,
 };
 use peace_rt_model::{
     fn_graph::resman::Resource,
     params::{FlowParams, ProfileParams, WorkspaceParams},
-    Error, ItemSpecGraph, ItemSpecParamsTypeReg, StatesTypeReg, Storage, Workspace,
+    Error, ItemSpecGraph, ItemSpecParams, ItemSpecParamsTypeReg, StatesTypeReg, Storage, Workspace,
     WorkspaceInitializer,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -126,6 +127,23 @@ where
     WorkspaceInitializer::flow_params_serialize(storage, flow_params, flow_params_file).await?;
 
     Ok(())
+}
+
+/// Serializes item spec params to storage.
+async fn item_spec_params_serialize(
+    item_spec_params: &ItemSpecParams,
+    storage: &Storage,
+    item_spec_params_file: &ItemSpecParamsFile,
+) -> Result<(), Error> {
+    storage
+        .serialized_write(
+            #[cfg(not(target_arch = "wasm32"))]
+            "item_spec_params_serialize".to_string(),
+            item_spec_params_file,
+            item_spec_params,
+            Error::ItemSpecParamsSerialize,
+        )
+        .await
 }
 
 /// Inserts flow params into the `Resources` map.

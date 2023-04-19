@@ -135,6 +135,14 @@ pub enum Error {
         error: serde_yaml::Error,
     },
 
+    /// Failed to serialize item spec params.
+    #[error("Failed to serialize item spec params.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::item_spec_params_serialize))
+    )]
+    ItemSpecParamsSerialize(#[source] serde_yaml::Error),
+
     /// Item spec params file does not exist.
     ///
     /// This is returned when `ItemSpecParams` is attempted to be

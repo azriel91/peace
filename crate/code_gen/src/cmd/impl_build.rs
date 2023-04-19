@@ -602,7 +602,14 @@ fn impl_build_for(
                 //     item_spec_params.values()
                 //         .for_each(|item_spec_param| {
                 //             resources.insert(item_spec_param.clone());
-                //         })
+                //         });
+                //
+                //     crate::ctx::cmd_ctx_builder::item_spec_params_serialize(
+                //         &item_spec_params,
+                //         storage,
+                //         &item_spec_params_file,
+                //     )
+                //     .await?;
                 // }
                 //
                 // let states_type_reg_ref = &states_type_reg;
@@ -1574,7 +1581,14 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                     item_spec_params.values()
                         .for_each(|item_spec_param| {
                             resources.insert(item_spec_param.clone());
-                        })
+                        });
+
+                    crate::ctx::cmd_ctx_builder::item_spec_params_serialize(
+                        &item_spec_params,
+                        storage,
+                        &item_spec_params_file,
+                    )
+                    .await?;
                 }
 
                 let states_type_reg_ref = &states_type_reg;
