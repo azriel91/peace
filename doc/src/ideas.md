@@ -163,6 +163,26 @@ We should work out the design of that before settling on what `state_diff` and `
 </div>
 </details>
 
+<details>
+<summary>12. Upgrades: Tolerate optional or different workspace params / item spec params / states</summary>
+<div>
+
+When new workspace params are added, or new item specs are added to a flow, existing `*_params.yaml`, `item_spec_params.yaml`, and `states_*.yaml` may not contain values for those newly added params / item specs.
+
+Automation software should be able to:
+
+* Work with missing parameters.
+* Work with changed parameter types.
+
+When workspace params / item specs are removed from a flow, leftover params / state are no longer used. However, we may want to do one of:
+
+* Notify the user to clean up unused params
+* Peace should ignore it
+* Inform the automator to still register the item spec, so that old execution may be loaded.
+
+</div>
+</details>
+
 
 ## Notes
 
