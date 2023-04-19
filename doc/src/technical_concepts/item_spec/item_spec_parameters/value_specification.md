@@ -256,8 +256,8 @@ let server_params_spec = ServerParams::spec()
     .build();
 
 cmd_ctx_builder
-    .with_item_params(app_params_spec)
-    .with_item_params(server_params_spec)
+    .with_item_spec_params(app_params_spec)
+    .with_item_spec_params(server_params_spec)
     .await?;
 ```
 
@@ -412,7 +412,7 @@ let file_upload_params_spec = FileUploadParams::spec()
     .build();
 
 cmd_ctx_builder
-    .with_item_params(file_upload_params_spec)
+    .with_item_spec_params(file_upload_params_spec)
     .await?;
 ```
 
@@ -570,6 +570,6 @@ let file_upload_params_spec = FileUploadParams::spec()
     .build();
 
 cmd_ctx_builder
-    .with_item_params(file_upload_params_spec)
+    .with_item_spec_params(file_upload_params_spec)
     .await?;
 ```
