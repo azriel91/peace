@@ -49,6 +49,10 @@ pub(crate) fn passthrough(
         }
     }
 
+    if scope.flow_count() == FlowCount::One {
+        field_values.push(parse_quote!(item_spec_params));
+    }
+
     field_values.push(parse_quote!(marker));
 
     field_values
@@ -107,6 +111,10 @@ pub(crate) fn params_none(
         }
     }
 
+    if scope.flow_count() == FlowCount::One {
+        field_values.push(parse_quote!(item_spec_params));
+    }
+
     field_values.push(parse_quote!(marker));
 
     field_values
@@ -154,6 +162,10 @@ pub(crate) fn params_some(scope: Scope, params_scope: ParamsScope) -> Punctuated
                 field_values.push(parse_quote!(mut flow_params_selection));
             }
         }
+    }
+
+    if scope.flow_count() == FlowCount::One {
+        field_values.push(parse_quote!(item_spec_params));
     }
 
     field_values.push(parse_quote!(marker));
@@ -215,6 +227,10 @@ pub(crate) fn params_some_new(
                 });
             }
         }
+    }
+
+    if scope.flow_count() == FlowCount::One {
+        field_values.push(parse_quote!(item_spec_params));
     }
 
     field_values.push(parse_quote!(marker));

@@ -421,6 +421,10 @@ fn impl_build_for(
                 //         workspace_params_selection: WorkspaceParamsSome(workspace_params),
                 //         profile_params_selection: ProfileParamsSome(profile_params),
                 //         flow_params_selection: FlowParamsNone,
+                //
+                //         // === FlowCount::One === //
+                //         item_spec_params,
+                //
                 //         marker: std::marker::PhantomData,
                 //     },
                 // } = self;
@@ -825,6 +829,12 @@ fn scope_builder_deconstruct(
         scope_builder_fields.push(flow_params_selection.deconstruct());
     }
 
+    if scope.flow_count() == FlowCount::One {
+        scope_builder_fields.push(parse_quote! {
+            item_spec_params
+        });
+    }
+
     scope_builder_fields.push(parse_quote! {
         marker: std::marker::PhantomData
     });
@@ -840,6 +850,10 @@ fn scope_builder_deconstruct(
                 // workspace_params_selection: WorkspaceParamsSome(workspace_params),
                 // profile_params_selection: ProfileParamsSome(profile_params),
                 // flow_params_selection: FlowParamsNone,
+
+                // // === FlowCount::One === //
+                // item_spec_params,
+
                 // marker: std::marker::PhantomData,
                 #scope_builder_fields,
             },
