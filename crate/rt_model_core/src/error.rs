@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use peace_core::{FlowId, Profile};
+use peace_resources::paths::ItemSpecParamsFile;
 
 cfg_if::cfg_if! {
     if #[cfg(not(target_arch = "wasm32"))] {
@@ -94,6 +95,72 @@ pub enum Error {
         diagnostic(code(peace_rt_model::states_serialize))
     )]
     StatesSerialize(#[source] serde_yaml::Error),
+
+    /// Failed to deserialize item spec params.
+    #[error("Failed to deserialize item spec params for `{profile}/{flow_id}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::item_spec_params_deserialize),
+            help(
+                "Make sure that all commands using the `{flow_id}` flow, also use the same item spec graph.\n\
+                This is because all ItemSpecs are used to deserialize state.\n\
+                \n\
+                If the item spec graph is different, it may make sense to use a different flow ID."
+            )
+        )
+    )]
+    ItemSpecParamsDeserialize {
+        /// Profile of the flow.
+        profile: Profile,
+        /// Flow ID whose item spec params are being deserialized.
+        flow_id: FlowId,
+        /// Source text to be deserialized.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        item_spec_params_file_source: miette::NamedSource,
+        /// Offset within the source text that the error occurred.
+        #[cfg(feature = "error_reporting")]
+        #[label("{}", error_message)]
+        error_span: Option<miette::SourceOffset>,
+        /// Message explaining the error.
+        #[cfg(feature = "error_reporting")]
+        error_message: String,
+        /// Offset within the source text surrounding the error.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        context_span: Option<miette::SourceOffset>,
+        /// Underlying error.
+        #[source]
+        error: serde_yaml::Error,
+    },
+
+    /// Item spec params file does not exist.
+    ///
+    /// This is returned when `ItemSpecParams` is attempted to be
+    /// deserialized but the file does not exist.
+    ///
+    /// The automation tool implementor needs to ensure the
+    /// `SingleProfileSingleFlow` command context has been initialized for that
+    /// flow previously.
+    #[error("Item spec params file does not exist for `{profile}/{flow_id}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::item_spec_params_file_not_exists),
+            help(
+                "Ensure that a `SingleProfileSingleFlow` command context has previously been built."
+            )
+        )
+    )]
+    ItemSpecParamsFileNotExists {
+        /// Profile of the flow.
+        profile: Profile,
+        /// Flow ID whose params are being deserialized.
+        flow_id: FlowId,
+        /// Path of the item spec params file.
+        item_spec_params_file: ItemSpecParamsFile,
+    },
 
     /// Current states have not been discovered.
     ///
