@@ -1607,7 +1607,11 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                 )?;
                 item_spec_params.values()
                     .for_each(|item_spec_param| {
-                        resources.insert(item_spec_param.clone());
+                        let box_resource = item_spec_param.clone().into_inner().upcast();
+                        resources.insert_raw(
+                            crate::ctx::cmd_ctx_builder::Resource::type_id(&*box_resource),
+                            box_resource
+                        );
                     });
 
                 crate::ctx::cmd_ctx_builder::item_spec_params_serialize(
