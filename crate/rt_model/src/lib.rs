@@ -23,7 +23,7 @@ pub use peace_rt_model_web::*;
 pub use crate::{
     flow::Flow, in_memory_text_output::InMemoryTextOutput, item_spec_boxed::ItemSpecBoxed,
     item_spec_graph::ItemSpecGraph, item_spec_graph_builder::ItemSpecGraphBuilder,
-    item_spec_params::ItemSpecParams, item_spec_params_serializer::ItemSpecParamsSerializer,
+    item_spec_params_serializer::ItemSpecParamsSerializer,
     item_spec_params_type_reg::ItemSpecParamsTypeReg, item_spec_rt::ItemSpecRt,
     item_spec_wrapper::ItemSpecWrapper, states_serializer::StatesSerializer,
     states_type_reg::StatesTypeReg,
@@ -36,7 +36,6 @@ mod in_memory_text_output;
 mod item_spec_boxed;
 mod item_spec_graph;
 mod item_spec_graph_builder;
-mod item_spec_params;
 mod item_spec_params_serializer;
 mod item_spec_params_type_reg;
 mod item_spec_rt;

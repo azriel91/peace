@@ -589,9 +589,10 @@ fn impl_build_for(
                 // let (item_spec_params_type_reg, states_type_reg) =
                 //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
                 //
+                // // Item spec params loading and storage.
                 // let item_spec_params_type_reg_ref = &item_spec_params_type_reg;
                 // let item_spec_params_file = peace_resources::paths::ItemSpecParamsFile::from(&flow_dir);
-                // let item_spec_params = peace_rt_model::ItemSpecParamsSerializer::<
+                // let item_spec_params_stored = peace_rt_model::ItemSpecParamsSerializer::<
                 //     peace_rt_model::Error
                 // >::deserialize_opt(
                 //     &profile,
@@ -602,20 +603,26 @@ fn impl_build_for(
                 // )
                 // .await?
                 // .map(Into::<peace_rt_model::ItemSpecParams>::into);
-                // if let Some(item_spec_params) = item_spec_params.as_ref() {
-                //     item_spec_params.values()
-                //         .for_each(|item_spec_param| {
-                //             resources.insert(item_spec_param.clone());
-                //         });
                 //
-                //     crate::ctx::cmd_ctx_builder::item_spec_params_serialize(
-                //         &item_spec_params,
-                //         storage,
-                //         &item_spec_params_file,
-                //     )
-                //     .await?;
-                // }
+                // let item_spec_params_provided = item_spec_params; // Deconstructed from scope builder fields
+                // let item_spec_params = crate::ctx::cmd_ctx_builder::item_spec_params_merge(
+                //     &flow,
+                //     item_spec_params_provided,
+                //     item_spec_params_stored,
+                // )?;
+                // item_spec_params.values()
+                //     .for_each(|item_spec_param| {
+                //         resources.insert(item_spec_param.clone());
+                //     });
                 //
+                // crate::ctx::cmd_ctx_builder::item_spec_params_serialize(
+                //     &item_spec_params,
+                //     storage,
+                //     &item_spec_params_file,
+                // )
+                // .await?;
+                //
+                // // States loading and storage.
                 // let states_type_reg_ref = &states_type_reg;
                 // let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
                 // let states_saved = peace_rt_model::StatesSerializer::<
@@ -1578,9 +1585,10 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                 let (item_spec_params_type_reg, states_type_reg) =
                     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
 
+                // Item spec params loading and storage.
                 let item_spec_params_type_reg_ref = &item_spec_params_type_reg;
                 let item_spec_params_file = peace_resources::paths::ItemSpecParamsFile::from(&flow_dir);
-                let item_spec_params = peace_rt_model::ItemSpecParamsSerializer::<
+                let item_spec_params_stored = peace_rt_model::ItemSpecParamsSerializer::<
                     peace_rt_model::Error
                 >::deserialize_opt(
                     &profile,
@@ -1591,20 +1599,26 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                 )
                 .await?
                 .map(Into::<peace_rt_model::ItemSpecParams>::into);
-                if let Some(item_spec_params) = item_spec_params.as_ref() {
-                    item_spec_params.values()
-                        .for_each(|item_spec_param| {
-                            resources.insert(item_spec_param.clone());
-                        });
 
-                    crate::ctx::cmd_ctx_builder::item_spec_params_serialize(
-                        &item_spec_params,
-                        storage,
-                        &item_spec_params_file,
-                    )
-                    .await?;
-                }
+                let item_spec_params_provided = item_spec_params; // Deconstructed from scope builder fields
+                let item_spec_params = crate::ctx::cmd_ctx_builder::item_spec_params_merge(
+                    &flow,
+                    item_spec_params_provided,
+                    item_spec_params_stored,
+                )?;
+                item_spec_params.values()
+                    .for_each(|item_spec_param| {
+                        resources.insert(item_spec_param.clone());
+                    });
 
+                crate::ctx::cmd_ctx_builder::item_spec_params_serialize(
+                    &item_spec_params,
+                    storage,
+                    &item_spec_params_file,
+                )
+                .await?;
+
+                // States loading and storage.
                 let states_type_reg_ref = &states_type_reg;
                 let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
                 let states_saved = peace_rt_model::StatesSerializer::<

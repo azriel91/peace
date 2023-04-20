@@ -94,8 +94,8 @@ where
     /// [`Params`]: peace_cfg::ItemSpec::Params
     /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
     item_spec_params_type_reg: ItemSpecParamsTypeReg,
-    /// Previously saved item spec params for the selected flow.
-    item_spec_params: Option<ItemSpecParams>,
+    /// Item spec params for the selected flow.
+    item_spec_params: ItemSpecParams,
     /// Type registry for each item spec's `State`.
     ///
     /// This is used to deserialize [`StatesSavedFile`] and
@@ -187,8 +187,8 @@ where
     /// [`Params`]: peace_cfg::ItemSpec::Params
     /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
     pub item_spec_params_type_reg: &'view ItemSpecParamsTypeReg,
-    /// Previously saved item spec params for the selected flow.
-    pub item_spec_params: Option<&'view ItemSpecParams>,
+    /// Item spec params for the selected flow.
+    pub item_spec_params: &'view ItemSpecParams,
     /// Type registry for each item spec's `State`.
     ///
     /// This is used to deserialize [`StatesSavedFile`] and
@@ -222,7 +222,7 @@ where
         profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
         flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
         item_spec_params_type_reg: ItemSpecParamsTypeReg,
-        item_spec_params: Option<ItemSpecParams>,
+        item_spec_params: ItemSpecParams,
         states_type_reg: StatesTypeReg,
         resources: Resources<SetUp>,
     ) -> Self {
@@ -291,7 +291,7 @@ where
             profile_params,
             flow_params,
             item_spec_params_type_reg,
-            item_spec_params: item_spec_params.as_ref(),
+            item_spec_params,
             states_type_reg,
             resources,
         }
@@ -391,8 +391,8 @@ where
     }
 
     /// Returns the item spec params for the selected flow.
-    pub fn item_spec_params(&self) -> Option<&ItemSpecParams> {
-        self.item_spec_params.as_ref()
+    pub fn item_spec_params(&self) -> &ItemSpecParams {
+        &self.item_spec_params
     }
 
     /// Returns the type registry for each item spec's `State`.

@@ -1,7 +1,9 @@
 use std::path::PathBuf;
 
-use peace_core::{FlowId, Profile};
+use peace_core::{FlowId, ItemSpecId, Profile};
 use peace_resources::paths::ItemSpecParamsFile;
+
+use crate::ItemSpecParams;
 
 cfg_if::cfg_if! {
     if #[cfg(not(target_arch = "wasm32"))] {
@@ -26,6 +28,111 @@ pub enum Error {
         diagnostic(code(peace_rt_model::error_serialize))
     )]
     ErrorSerialize(#[source] serde_yaml::Error),
+
+    /// Item spec params do not match with the item specs in the flow.
+    ///
+    /// # Symptoms
+    ///
+    /// * Provided params for an item spec ID has no corresponding item spec ID
+    ///   in the flow.
+    /// * Stored params for an item spec ID has no corresponding item spec ID in
+    ///   the flow.
+    /// * ID of an item spec in the flow does not have a corresponding provided
+    ///   param.
+    /// * ID of an item spec in the flow does not have a corresponding stored
+    ///   param.
+    ///
+    /// # Causes
+    ///
+    /// These can happen when:
+    ///
+    /// * An item spec is added.
+    ///
+    ///    - No corresponding provided param.
+    ///    - No corresponding stored param.
+    ///
+    /// * An item spec ID is renamed.
+    ///
+    ///    - Provided param ID mismatch.
+    ///    - Stored param ID mismatch.
+    ///    - No corresponding provided param
+    ///
+    /// * An item spec is removed.
+    ///
+    ///    - Provided param ID mismatch.
+    ///    - Stored param ID mismatch.
+    #[error("Item spec params do not match with the item specs in the flow.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::item_spec_params_mismatch),
+            help("{item_specs_no_params}\n\
+                {provided_params}\n\
+                {stored_params}\n\
+                ",
+                item_specs_no_params = {
+                    if !item_spec_ids_with_no_params.is_empty() {
+                        format!(
+                            "The following item specs do not have parameters provided:\n\
+                            \n\
+                            {}\n",
+                            item_spec_ids_with_no_params
+                                .iter()
+                                .map(|item_spec_id| format!("* {item_spec_id}"))
+                                .collect::<Vec<String>>()
+                                .join("\n")
+                        )
+                    } else {
+                        String::from("")
+                    }
+                },
+                provided_params = {
+                    if !provided_item_spec_params_mismatches.is_empty() {
+                        format!(
+                            "The following provided params do not correspond to any item specs in the flow:\n\
+                            \n\
+                            {}\n",
+                            provided_item_spec_params_mismatches
+                                .keys()
+                                .map(|item_spec_id| format!("* {item_spec_id}"))
+                                .collect::<Vec<String>>()
+                                .join("\n")
+                        )
+                    } else {
+                        String::from("")
+                    }
+                },
+                stored_params = {
+                    if let Some(stored_item_spec_params_mismatches) = stored_item_spec_params_mismatches {
+                        if !stored_item_spec_params_mismatches.is_empty() {
+                            format!(
+                                "The following stored params do not correspond to any item specs in the flow:\n\
+                                \n\
+                                {}\n",
+                                stored_item_spec_params_mismatches
+                                    .keys()
+                                    .map(|item_spec_id| format!("* {item_spec_id}"))
+                                    .collect::<Vec<String>>()
+                                    .join("\n")
+                            )
+                        } else {
+                            String::from("")
+                        }
+                    } else {
+                        String::from("")
+                    }
+                },
+            )
+        )
+    )]
+    ItemSpecParamsMismatch {
+        /// Item spec IDs for which there are no provided or stored params.
+        item_spec_ids_with_no_params: Vec<ItemSpecId>,
+        /// Provided item spec params with no matching item spec ID in the flow.
+        provided_item_spec_params_mismatches: ItemSpecParams,
+        /// Stored item spec params with no matching item spec ID in the flow.
+        stored_item_spec_params_mismatches: Option<ItemSpecParams>,
+    },
 
     /// Failed to serialize a presentable type.
     #[error("Failed to serialize a presentable type.")]

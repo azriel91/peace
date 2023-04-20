@@ -12,9 +12,10 @@ pub use indicatif;
 pub mod output;
 pub mod params;
 
-pub use crate::error::Error;
+pub use crate::{error::Error, item_spec_params::ItemSpecParams};
 
 mod error;
+mod item_spec_params;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
