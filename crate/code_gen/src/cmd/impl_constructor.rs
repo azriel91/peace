@@ -4,9 +4,8 @@ use syn::{parse_quote, punctuated::Punctuated, FieldValue, GenericArgument, Toke
 
 use crate::cmd::{Scope, ScopeStruct};
 
-/// Generates the constructor and common functions for the command context
-/// builder for a given scope.
-pub fn impl_constructor_and_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
+/// Generates the constructor for the command context builder for a given scope.
+pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;
     let constructor_method_name = Ident::new(scope.as_str(), Span::call_site());
@@ -34,27 +33,6 @@ pub fn impl_constructor_and_common_fns(scope_struct: &ScopeStruct) -> proc_macro
         type_params.push(parse_quote!(marker: std::marker::PhantomData));
 
         type_params
-    };
-
-    let common_fns = if scope == Scope::SingleProfileSingleFlow {
-        quote! {
-            /// Sets an item spec's parameters.
-            ///
-            /// Note: this **must** be called for each item spec in the flow.
-            pub fn with_item_spec_params<IS>(
-                mut self,
-                item_spec_id: peace_cfg::ItemSpecId,
-                param: IS::Params<'_>,
-            ) -> Self
-            where
-                IS: peace_cfg::ItemSpec<Error = E>,
-            {
-                self.scope_builder.item_spec_params_provided.insert(item_spec_id, param);
-                self
-            }
-        }
-    } else {
-        proc_macro2::TokenStream::new()
     };
 
     quote! {
@@ -111,8 +89,6 @@ pub fn impl_constructor_and_common_fns(scope_struct: &ScopeStruct) -> proc_macro
                     scope_builder,
                 }
             }
-
-            #common_fns
         }
     }
 }
