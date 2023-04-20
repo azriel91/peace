@@ -8,7 +8,7 @@ use type_reg::untagged::{BoxDt, TypeMap};
 ///
 /// The information may not be of the same type across flows, as flows are
 /// different in what they are doing.
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Default, Serialize)]
 #[serde(transparent)] // Needed to serialize as a map instead of a list.
 pub struct ItemSpecParams(TypeMap<ItemSpecId, BoxDt>);
 
@@ -29,12 +29,6 @@ impl ItemSpecParams {
     /// Returns the inner map.
     pub fn into_inner(self) -> TypeMap<ItemSpecId, BoxDt> {
         self.0
-    }
-}
-
-impl Default for ItemSpecParams {
-    fn default() -> Self {
-        Self(TypeMap::default())
     }
 }
 
