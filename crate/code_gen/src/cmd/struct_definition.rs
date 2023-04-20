@@ -160,10 +160,10 @@ mod fields {
 
     /// Appends a `item_spec_params: ItemSpecParams` field to the given fields.
     pub fn item_spec_params_push(fields_named: &mut FieldsNamed, scope: Scope) {
-        if scope.flow_count() == FlowCount::One {
+        if scope == Scope::SingleProfileSingleFlow {
             let fields_marker: FieldsNamed = parse_quote!({
                 /// Map of item spec ID to its parameters. `TypeMap<ItemSpecId, BoxDt>` newtype.
-                pub(crate) item_spec_params: peace_rt_model::ItemSpecParams
+                pub(crate) item_spec_params_provided: peace_rt_model::ItemSpecParams
             });
             fields_named.named.extend(fields_marker.named);
         }

@@ -422,8 +422,8 @@ fn impl_build_for(
                 //         profile_params_selection: ProfileParamsSome(profile_params),
                 //         flow_params_selection: FlowParamsNone,
                 //
-                //         // === FlowCount::One === //
-                //         item_spec_params,
+                //         // === SingleProfileSingleFlow === //
+                //         item_spec_params_provided,
                 //
                 //         marker: std::marker::PhantomData,
                 //     },
@@ -836,9 +836,9 @@ fn scope_builder_deconstruct(
         scope_builder_fields.push(flow_params_selection.deconstruct());
     }
 
-    if scope.flow_count() == FlowCount::One {
+    if scope == Scope::SingleProfileSingleFlow {
         scope_builder_fields.push(parse_quote! {
-            item_spec_params
+            item_spec_params_provided
         });
     }
 
@@ -858,8 +858,8 @@ fn scope_builder_deconstruct(
                 // profile_params_selection: ProfileParamsSome(profile_params),
                 // flow_params_selection: FlowParamsNone,
 
-                // // === FlowCount::One === //
-                // item_spec_params,
+                // // === SingleProfileSingleFlow === //
+                // item_spec_params_provided,
 
                 // marker: std::marker::PhantomData,
                 #scope_builder_fields,
@@ -1600,7 +1600,6 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                 .await?
                 .map(Into::<peace_rt_model::ItemSpecParams>::into);
 
-                let item_spec_params_provided = item_spec_params; // Deconstructed from scope builder fields
                 let item_spec_params = crate::ctx::cmd_ctx_builder::item_spec_params_merge(
                     &flow,
                     item_spec_params_provided,

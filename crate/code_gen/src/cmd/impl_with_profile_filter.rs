@@ -89,7 +89,7 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
                             // workspace_params_selection,
                             // profile_params_selection,
                             // flow_params_selection,
-                            // item_spec_params,
+                            // item_spec_params_provided,
                             // marker: std::marker::PhantomData,
                             #scope_builder_fields_profile_not_selected
                         },
@@ -102,7 +102,7 @@ pub fn impl_with_profile_filter(scope_struct: &ScopeStruct) -> proc_macro2::Toke
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,
-                    // item_spec_params,
+                    // item_spec_params_provided,
                     // marker: std::marker::PhantomData,
                     #scope_builder_fields_profile_filter_fn
                 };
@@ -152,8 +152,8 @@ fn scope_builder_fields_remainder_push(
     if scope.flow_params_supported() {
         field_values.push(parse_quote!(flow_params_selection));
     }
-    if scope.flow_count() == FlowCount::One {
-        field_values.push(parse_quote!(item_spec_params));
+    if scope == Scope::SingleProfileSingleFlow {
+        field_values.push(parse_quote!(item_spec_params_provided));
     }
     field_values.push(parse_quote!(marker: std::marker::PhantomData));
 }

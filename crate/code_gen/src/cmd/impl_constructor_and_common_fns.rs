@@ -2,7 +2,7 @@ use proc_macro2::{Ident, Span};
 use quote::quote;
 use syn::{parse_quote, punctuated::Punctuated, FieldValue, GenericArgument, Token};
 
-use crate::cmd::{FlowCount, ScopeStruct};
+use crate::cmd::{Scope, ScopeStruct};
 
 /// Generates the constructor and common functions for the command context
 /// builder for a given scope.
@@ -26,9 +26,9 @@ pub fn impl_constructor_and_common_fns(scope_struct: &ScopeStruct) -> proc_macro
         scope_field_values::profile_and_flow_selection_push(&mut type_params, scope);
         scope_field_values::params_selection_push(&mut type_params, scope);
 
-        if scope.flow_count() == FlowCount::One {
+        if scope == Scope::SingleProfileSingleFlow {
             type_params.push(parse_quote!(
-                item_spec_params: peace_rt_model::ItemSpecParams::new()
+                item_spec_params_provided: peace_rt_model::ItemSpecParams::new()
             ));
         }
         type_params.push(parse_quote!(marker: std::marker::PhantomData));
@@ -36,7 +36,7 @@ pub fn impl_constructor_and_common_fns(scope_struct: &ScopeStruct) -> proc_macro
         type_params
     };
 
-    let common_fns = if scope.flow_count() == FlowCount::One {
+    let common_fns = if scope == Scope::SingleProfileSingleFlow {
         quote! {
             /// Sets an item spec's parameters.
             ///
@@ -49,7 +49,7 @@ pub fn impl_constructor_and_common_fns(scope_struct: &ScopeStruct) -> proc_macro
             where
                 IS: peace_cfg::ItemSpec<Error = E>,
             {
-                self.scope_builder.item_spec_params.insert(item_spec_id, param);
+                self.scope_builder.item_spec_params_provided.insert(item_spec_id, param);
                 self
             }
         }
@@ -98,8 +98,8 @@ pub fn impl_constructor_and_common_fns(scope_struct: &ScopeStruct) -> proc_macro
                     // workspace_params_selection: WorkspaceParamsNone,
                     // profile_params_selection: ProfileParamsNone,
 
-                    // // === FlowCount::One === //
-                    // item_spec_params: peace_rt_model::ItemSpecParams::new()
+                    // // === SingleProfileSingleFlow === //
+                    // item_spec_params_provided: peace_rt_model::ItemSpecParams::new()
 
                     // marker: std::marker::PhantomData,
                     #scope_field_values
