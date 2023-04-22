@@ -66,63 +66,11 @@ pub enum Error {
         feature = "error_reporting",
         diagnostic(
             code(peace_rt_model::item_spec_params_mismatch),
-            help("{item_specs_no_params}\n\
-                {provided_params}\n\
-                {stored_params}\n\
-                ",
-                item_specs_no_params = {
-                    if !item_spec_ids_with_no_params.is_empty() {
-                        format!(
-                            "The following item specs do not have parameters provided:\n\
-                            \n\
-                            {}\n",
-                            item_spec_ids_with_no_params
-                                .iter()
-                                .map(|item_spec_id| format!("* {item_spec_id}"))
-                                .collect::<Vec<String>>()
-                                .join("\n")
-                        )
-                    } else {
-                        String::from("")
-                    }
-                },
-                provided_params = {
-                    if !provided_item_spec_params_mismatches.is_empty() {
-                        format!(
-                            "The following provided params do not correspond to any item specs in the flow:\n\
-                            \n\
-                            {}\n",
-                            provided_item_spec_params_mismatches
-                                .keys()
-                                .map(|item_spec_id| format!("* {item_spec_id}"))
-                                .collect::<Vec<String>>()
-                                .join("\n")
-                        )
-                    } else {
-                        String::from("")
-                    }
-                },
-                stored_params = {
-                    if let Some(stored_item_spec_params_mismatches) = stored_item_spec_params_mismatches {
-                        if !stored_item_spec_params_mismatches.is_empty() {
-                            format!(
-                                "The following stored params do not correspond to any item specs in the flow:\n\
-                                \n\
-                                {}\n",
-                                stored_item_spec_params_mismatches
-                                    .keys()
-                                    .map(|item_spec_id| format!("* {item_spec_id}"))
-                                    .collect::<Vec<String>>()
-                                    .join("\n")
-                            )
-                        } else {
-                            String::from("")
-                        }
-                    } else {
-                        String::from("")
-                    }
-                },
-            )
+            help("{}", item_spec_params_mismatch_display(
+                item_spec_ids_with_no_params,
+                provided_item_spec_params_mismatches,
+                stored_item_spec_params_mismatches.as_ref(),
+            ))
         )
     )]
     ItemSpecParamsMismatch {
@@ -476,4 +424,56 @@ pub enum Error {
         #[from]
         WebError,
     ),
+}
+
+#[cfg(feature = "error_reporting")]
+fn item_spec_params_mismatch_display(
+    item_spec_ids_with_no_params: &[ItemSpecId],
+    provided_item_spec_params_mismatches: &ItemSpecParams,
+    stored_item_spec_params_mismatches: Option<&ItemSpecParams>,
+) -> String {
+    let mut items = Vec::<String>::new();
+
+    if !item_spec_ids_with_no_params.is_empty() {
+        items.push(format!(
+            "The following item specs do not have parameters provided:\n\
+            \n\
+            {}\n",
+            item_spec_ids_with_no_params
+                .iter()
+                .map(|item_spec_id| format!("* {item_spec_id}"))
+                .collect::<Vec<String>>()
+                .join("\n")
+        ));
+    }
+
+    if !provided_item_spec_params_mismatches.is_empty() {
+        items.push(format!(
+            "The following provided params do not correspond to any item specs in the flow:\n\
+                            \n\
+                            {}\n",
+            provided_item_spec_params_mismatches
+                .keys()
+                .map(|item_spec_id| format!("* {item_spec_id}"))
+                .collect::<Vec<String>>()
+                .join("\n")
+        ))
+    }
+
+    if let Some(stored_item_spec_params_mismatches) = stored_item_spec_params_mismatches {
+        if !stored_item_spec_params_mismatches.is_empty() {
+            items.push(format!(
+                "The following stored params do not correspond to any item specs in the flow:\n\
+                        \n\
+                        {}\n",
+                stored_item_spec_params_mismatches
+                    .keys()
+                    .map(|item_spec_id| format!("* {item_spec_id}"))
+                    .collect::<Vec<String>>()
+                    .join("\n")
+            ));
+        }
+    }
+
+    items.join("\n")
 }
