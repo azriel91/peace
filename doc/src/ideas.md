@@ -164,7 +164,20 @@ We should work out the design of that before settling on what `state_diff` and `
 </details>
 
 <details>
-<summary>12. Upgrades: Tolerate optional or different workspace params / item spec params / states</summary>
+<summary>12. Default item spec params</summary>
+<div>
+
+An `ItemSpec`'s params may not necessarily be mandatory. From the `Params` type (and corresponding trait), Peace may:
+
+* Insert default param values, if the `ItemSpec` implementor provides a default
+* Still make the params required if there is no default.
+* Provide a way for `ParamsSpec` for each field to be the default, or a mapping function.
+
+</div>
+</details>
+
+<details>
+<summary>13. Upgrades: Tolerate optional or different workspace params / item spec params / states</summary>
 <div>
 
 When new workspace params are added, or new item specs are added to a flow, existing `*_params.yaml`, `item_spec_params.yaml`, and `states_*.yaml` may not contain values for those newly added params / item specs.
