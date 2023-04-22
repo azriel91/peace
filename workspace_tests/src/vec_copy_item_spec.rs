@@ -22,10 +22,23 @@ pub type VecCopyItemSpecWrapper = ItemSpecWrapper<VecCopyItemSpec, VecCopyError>
 
 /// Copies bytes from `VecA` to `VecB`.
 #[derive(Clone, Debug)]
-pub struct VecCopyItemSpec;
+pub struct VecCopyItemSpec {
+    /// ID of the item spec.
+    id: ItemSpecId,
+}
 
 impl VecCopyItemSpec {
-    pub const ID: &ItemSpecId = &item_spec_id!("vec_copy");
+    pub const ID_DEFAULT: &ItemSpecId = &item_spec_id!("vec_copy");
+
+    pub fn new(id: ItemSpecId) -> Self {
+        Self { id }
+    }
+}
+
+impl Default for VecCopyItemSpec {
+    fn default() -> Self {
+        Self::new(Self::ID_DEFAULT.clone())
+    }
 }
 
 #[async_trait(?Send)]
@@ -37,7 +50,7 @@ impl ItemSpec for VecCopyItemSpec {
     type StateDiff = VecCopyDiff;
 
     fn id(&self) -> &ItemSpecId {
-        Self::ID
+        &self.id
     }
 
     async fn try_state_current(
@@ -184,7 +197,8 @@ impl ItemSpec for VecCopyItemSpec {
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {
         let vec_b = {
-            let states_saved = <RMaybe<'_, StatesSaved> as Data>::borrow(Self::ID, resources);
+            let states_saved =
+                <RMaybe<'_, StatesSaved> as Data>::borrow(Self::ID_DEFAULT, resources);
             let vec_copy_state_saved: Option<&'_ VecCopyState> = states_saved
                 .as_ref()
                 .and_then(|states_saved| states_saved.get(self.id()));

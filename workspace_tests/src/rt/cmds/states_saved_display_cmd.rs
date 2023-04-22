@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
+    cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
     rt::cmds::{StatesDiscoverCmd, StatesSavedDisplayCmd},
     rt_model::{Error, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
@@ -19,7 +19,7 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.add_fn(VecCopyItemSpec::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -31,7 +31,7 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
-            VecCopyItemSpec.id().clone(),
+            VecCopyItemSpec::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
         )
         .await?;
@@ -43,7 +43,7 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
             .with_profile(profile!("test_profile"))
             .with_flow(&flow)
             .with_item_spec_params::<VecCopyItemSpec>(
-                VecCopyItemSpec.id().clone(),
+                VecCopyItemSpec::ID_DEFAULT.clone(),
                 VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
             )
             .await?;
@@ -51,10 +51,10 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
     let fn_tracker_output = cmd_ctx.output();
 
     let vec_copy_state_from_discover =
-        states_saved_from_discover.get::<VecCopyState, _>(VecCopyItemSpec.id());
+        states_saved_from_discover.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT);
     let states_saved_from_read = &*states_saved_from_read;
     let vec_copy_state_from_read =
-        states_saved_from_read.get::<VecCopyState, _>(VecCopyItemSpec.id());
+        states_saved_from_read.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT);
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
     assert_eq!(
         vec![FnInvocation::new(
@@ -75,7 +75,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.add_fn(VecCopyItemSpec::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -87,7 +87,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
             .with_profile(profile!("test_profile"))
             .with_flow(&flow)
             .with_item_spec_params::<VecCopyItemSpec>(
-                VecCopyItemSpec.id().clone(),
+                VecCopyItemSpec::ID_DEFAULT.clone(),
                 VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
             )
             .await?;

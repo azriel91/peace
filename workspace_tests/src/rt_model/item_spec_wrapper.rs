@@ -24,23 +24,32 @@ use crate::{
 
 #[tokio::test]
 async fn deref_to_dyn_item_spec_rt() {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec.clone());
     let item_spec_rt: &dyn ItemSpecRt<_> = &item_spec_wrapper;
 
-    assert_eq!(format!("{VecCopyItemSpec:?}"), format!("{item_spec_rt:?}"));
+    assert_eq!(
+        format!("{vec_copy_item_spec:?}"),
+        format!("{item_spec_rt:?}")
+    );
 }
 
 #[tokio::test]
 async fn deref_mut_to_dyn_item_spec_rt() {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec.clone());
     let item_spec_rt: &dyn ItemSpecRt<_> = &item_spec_wrapper;
 
-    assert_eq!(format!("{VecCopyItemSpec:?}"), format!("{item_spec_rt:?}"));
+    assert_eq!(
+        format!("{vec_copy_item_spec:?}"),
+        format!("{item_spec_rt:?}")
+    );
 }
 
 #[tokio::test]
 async fn setup() -> Result<(), Box<dyn std::error::Error>> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let mut resources = Resources::new();
     <dyn ItemSpecRt<_>>::setup(&item_spec_wrapper, &mut resources).await?;
     resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
@@ -57,19 +66,20 @@ async fn setup() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 async fn state_current_try_exec() -> Result<(), Box<dyn std::error::Error>> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
     let fn_ctx = FnCtx::new(
-        VecCopyItemSpec::ID,
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
@@ -94,19 +104,20 @@ async fn state_current_try_exec() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 async fn state_desired_try_exec() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
     let fn_ctx = FnCtx::new(
-        VecCopyItemSpec::ID,
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
@@ -131,7 +142,8 @@ async fn state_desired_try_exec() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn state_diff_exec() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
 
     let (resources, states_saved, states_desired) =
         resources_and_states_saved_and_desired(&item_spec_wrapper).await?;
@@ -155,19 +167,20 @@ async fn state_diff_exec() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn ensure_prepare() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
     let fn_ctx = FnCtx::new(
-        VecCopyItemSpec::ID,
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
@@ -192,19 +205,20 @@ async fn ensure_prepare() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn apply_exec_dry_for_ensure() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
     let fn_ctx = FnCtx::new(
-        VecCopyItemSpec::ID,
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
@@ -217,13 +231,13 @@ async fn apply_exec_dry_for_ensure() -> Result<(), VecCopyError> {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
     let fn_ctx = FnCtx::new(
-        VecCopyItemSpec::ID,
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
@@ -260,19 +274,20 @@ async fn apply_exec_dry_for_ensure() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn apply_exec_for_ensure() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
     let fn_ctx = FnCtx::new(
-        VecCopyItemSpec::ID,
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
@@ -285,13 +300,13 @@ async fn apply_exec_for_ensure() -> Result<(), VecCopyError> {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
     let fn_ctx = FnCtx::new(
-        VecCopyItemSpec::ID,
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
@@ -323,19 +338,20 @@ async fn apply_exec_for_ensure() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn clean_prepare() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up_pre_saved(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
     let fn_ctx = FnCtx::new(
-        VecCopyItemSpec::ID,
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
@@ -360,19 +376,20 @@ async fn clean_prepare() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn apply_exec_dry_for_clean() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up_pre_saved(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
     let fn_ctx = FnCtx::new(
-        VecCopyItemSpec::ID,
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
@@ -385,13 +402,13 @@ async fn apply_exec_dry_for_clean() -> Result<(), VecCopyError> {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
     let fn_ctx = FnCtx::new(
-        VecCopyItemSpec::ID,
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
@@ -428,19 +445,20 @@ async fn apply_exec_dry_for_clean() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn apply_exec_for_clean() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up_pre_saved(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
     let fn_ctx = FnCtx::new(
-        VecCopyItemSpec::ID,
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
@@ -453,13 +471,13 @@ async fn apply_exec_for_clean() -> Result<(), VecCopyError> {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
     let fn_ctx = FnCtx::new(
-        VecCopyItemSpec::ID,
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
@@ -517,13 +535,13 @@ async fn resources_and_states_saved_and_desired(
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
     let fn_ctx = FnCtx::new(
-        VecCopyItemSpec::ID,
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
