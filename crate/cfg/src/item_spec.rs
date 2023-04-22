@@ -2,12 +2,12 @@ use std::fmt::{Debug, Display};
 
 use async_trait::async_trait;
 use dyn_clone::DynClone;
-use peace_core::{ItemSpecId, OpCheckStatus};
+use peace_core::{ApplyCheck, ItemSpecId};
 use peace_data::Data;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::OpCtx;
+use crate::FnCtx;
 
 /// Defines all of the data and logic to manage an item.
 ///
@@ -18,7 +18,7 @@ use crate::OpCtx;
 /// * Server launching / initialization.
 /// * Multiple cloud resource management.
 ///
-/// The lifecycle operations include:
+/// The lifecycle functions include:
 ///
 /// 1. Status discovery.
 /// 2. Execution.
@@ -26,7 +26,7 @@ use crate::OpCtx;
 /// 4. Restoration.
 /// 5. Clean up / deletion.
 ///
-/// Since the latter four operations are write-operations, their specification
+/// Since the latter four functions are write-operations, their specification
 /// includes a dry run function.
 ///
 /// # Logical IDs vs Physical IDs
@@ -39,11 +39,11 @@ use crate::OpCtx;
 /// The following are examples of logical IDs and corresponding physical
 /// IDs:
 ///
-/// * If the operation creates a file, the ID *may* be the full file path, or it
+/// * If the function creates a file, the ID *may* be the full file path, or it
 ///   may be the file name, assuming the file path may be deduced by the clean
 ///   up logic from [`Data`].
 ///
-/// * If the operation instantiates a virtual machine on a cloud platform, this
+/// * If the function instantiates a virtual machine on a cloud platform, this
 ///   may be the ID of the instance so that it may be terminated.
 ///
 /// | Logical ID               | Physical ID                            |
@@ -93,13 +93,33 @@ pub trait ItemSpec: DynClone {
     /// [`State`]: Self::State
     type StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static;
 
-    /// Data that the function reads from, or writes to.
+    /// Parameters to use this item spec.
     ///
-    /// These may be parameters to the function, or information calculated from
-    /// previous functions.
-    type Data<'op>: Data<'op>
-    where
-        Self: 'op;
+    /// Item spec consumers must provide for this item spec to work.
+    ///
+    /// # Examples
+    ///
+    /// * For a file download item spec:
+    ///
+    ///     - URL of the file.
+    ///     - Credentials.
+    ///
+    /// * For a server launch item spec:
+    ///
+    ///     - Image ID.
+    ///     - Server size.
+    ///
+    /// # Implementors
+    ///
+    /// Peace will automatically save and load these into `Resources` when a
+    /// command context is built.
+    type Params<'exec>: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static;
+
+    /// Data that the item spec accesses at runtime.
+    ///
+    /// These may be objects instantiated in `setup` for use during execution,
+    /// or information calculated from previous items.
+    type Data<'exec>: Data<'exec>;
 
     /// Returns the ID of this full spec.
     ///
@@ -135,8 +155,8 @@ pub trait ItemSpec: DynClone {
     /// # Implementors
     ///
     /// [`Resources`] is the map of any type, and an instance of each data type
-    /// must be inserted into the map so that the [`check`] and [`apply`]
-    /// functions of each operation can borrow the instance of that type.
+    /// must be inserted into the map so that item spec functions can borrow the
+    /// instance of that type.
     ///
     /// [`check`]: crate::ApplyFns::check
     /// [`apply`]: crate::ApplyFns::apply
@@ -148,7 +168,8 @@ pub trait ItemSpec: DynClone {
     /// such as when failing to connect to a remote host, instead of returning
     /// an error.
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, Self::Error>;
 
@@ -157,7 +178,8 @@ pub trait ItemSpec: DynClone {
     /// This is *expected* to successfully discover the current state, so errors
     /// will be presented to the user.
     async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
     ) -> Result<Self::State, Self::Error>;
 
@@ -167,7 +189,8 @@ pub trait ItemSpec: DynClone {
     /// such as when failing to read a potentially non-existent file to
     /// determine its content hash, instead of returning an error.
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, Self::Error>;
 
@@ -178,17 +201,18 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Examples
     ///
-    /// * For a file download operation, the desired state could be the
+    /// * For a file download item spec, the desired state could be the
     ///   destination path and a content hash.
     ///
-    /// * For a web application service operation, the desired state could be
+    /// * For a web application service item spec, the desired state could be
     ///   the web service is running on the latest version.
     async fn state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
     ) -> Result<Self::State, Self::Error>;
 
-    /// Returns the difference between the current state and desired state.
+    /// Returns the difference between two states.
     ///
     /// # Implementors
     ///
@@ -201,15 +225,16 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Examples
     ///
-    /// * For a file download operation, the difference could be the content
+    /// * For a file download item spec, the difference could be the content
     ///   hash changes from `abcd` to `efgh`.
     ///
-    /// * For a web application service operation, the desired state could be
+    /// * For a web application service item spec, the desired state could be
     ///   the application version changing from 1 to 2.
     async fn state_diff(
+        params_partial: Option<&Self::Params<'_>>,
         data: Self::Data<'_>,
-        state_current: &Self::State,
-        state_desired: &Self::State,
+        state_a: &Self::State,
+        state_b: &Self::State,
     ) -> Result<Self::StateDiff, Self::Error>;
 
     /// Returns the representation of a clean `State`.
@@ -220,7 +245,10 @@ pub trait ItemSpec: DynClone {
     /// state. The diff between this and the current state will be shown to the
     /// user when they want to see what would be cleaned up by the clean
     /// command.
-    async fn state_clean(data: Self::Data<'_>) -> Result<Self::State, Self::Error>;
+    async fn state_clean(
+        params_partial: Option<&Self::Params<'_>>,
+        data: Self::Data<'_>,
+    ) -> Result<Self::State, Self::Error>;
 
     /// Returns whether `apply` needs to be executed.
     ///
@@ -229,10 +257,10 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Examples
     ///
-    /// * For a file download operation, if the destination file differs from
+    /// * For a file download item spec, if the destination file differs from
     ///   the file on the server, then the file needs to be downloaded.
     ///
-    /// * For a web application service operation, if the web service is
+    /// * For a web application service item spec, if the web service is
     ///   running, but reports a previous version, then the service may need to
     ///   be restarted.
     ///
@@ -242,7 +270,9 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Parameters
     ///
-    /// * `data`: Runtime data that the operation reads from, or writes to.
+    /// * `fn_ctx`: Context to send progress updates.
+    /// * `params`: Parameters to the item spec.
+    /// * `data`: Runtime data that the function reads from or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`state_current`].
     /// * `state_target`: Target [`State`] of the managed item, either
@@ -256,11 +286,12 @@ pub trait ItemSpec: DynClone {
     /// [`State`]: Self::State
     /// [`state_diff`]: crate::ItemSpec::state_diff
     async fn apply_check(
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
-    ) -> Result<OpCheckStatus, Self::Error>;
+    ) -> Result<ApplyCheck, Self::Error>;
 
     /// Dry-run transform of the current state to the target state.
     ///
@@ -282,7 +313,9 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Parameters
     ///
-    /// * `data`: Runtime data that the operation reads from, or writes to.
+    /// * `fn_ctx`: Context to send progress updates.
+    /// * `params`: Parameters to the item spec.
+    /// * `data`: Runtime data that the function reads from or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`state_current`].
     /// * `state_target`: Target [`State`] of the managed item, either
@@ -291,14 +324,15 @@ pub trait ItemSpec: DynClone {
     ///   [`state_diff`].
     ///
     /// [`check`]: Self::check
-    /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
+    /// [`ExecRequired`]: crate::ApplyCheck::ExecRequired
     /// [`state_clean`]: crate::ItemSpec::state_clean
     /// [`state_current`]: crate::ItemSpec::state_current
     /// [`state_desired`]: crate::ItemSpec::state_desired
     /// [`State`]: Self::State
     /// [`state_diff`]: crate::ItemSpec::state_diff
     async fn apply_dry(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
@@ -311,7 +345,9 @@ pub trait ItemSpec: DynClone {
     ///
     /// # Parameters
     ///
-    /// * `data`: Runtime data that the operation reads from, or writes to.
+    /// * `fn_ctx`: Context to send progress updates.
+    /// * `params`: Parameters to the item spec.
+    /// * `data`: Runtime data that the function reads from or writes to.
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`state_current`].
     /// * `state_target`: Target [`State`] of the managed item, either
@@ -320,14 +356,15 @@ pub trait ItemSpec: DynClone {
     ///   [`state_diff`].
     ///
     /// [`check`]: Self::check
-    /// [`ExecRequired`]: crate::OpCheckStatus::ExecRequired
+    /// [`ExecRequired`]: crate::ApplyCheck::ExecRequired
     /// [`state_clean`]: crate::ItemSpec::state_clean
     /// [`state_current`]: crate::ItemSpec::state_current
     /// [`state_desired`]: crate::ItemSpec::state_desired
     /// [`State`]: Self::State
     /// [`state_diff`]: crate::ItemSpec::state_diff
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,

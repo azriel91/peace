@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{state::Generated, OpCtx};
+use peace::cfg::{state::Generated, FnCtx};
 
 use crate::item_specs::peace_aws_instance_profile::{
-    InstanceProfileData, InstanceProfileError, InstanceProfileState,
+    InstanceProfileData, InstanceProfileError, InstanceProfileParams, InstanceProfileState,
 };
 
 /// Reads the desired state of the instance profile state.
@@ -15,19 +15,22 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
-        instance_profile_data: InstanceProfileData<'_, Id>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&InstanceProfileParams<Id>>,
+        data: InstanceProfileData<'_, Id>,
     ) -> Result<Option<InstanceProfileState>, InstanceProfileError> {
-        Self::state_desired(op_ctx, instance_profile_data)
-            .await
-            .map(Some)
+        if let Some(params) = params_partial {
+            Self::state_desired(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn state_desired(
-        _op_ctx: OpCtx<'_>,
-        instance_profile_data: InstanceProfileData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        params: &InstanceProfileParams<Id>,
+        _data: InstanceProfileData<'_, Id>,
     ) -> Result<InstanceProfileState, InstanceProfileError> {
-        let params = instance_profile_data.params();
         let name = params.name().to_string();
         let path = params.path().to_string();
         let role_associated = params.role_associate();

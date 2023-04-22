@@ -3,10 +3,11 @@ use std::marker::PhantomData;
 use aws_sdk_iam::{error::SdkError, operation::list_policy_versions::ListPolicyVersionsError};
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
-use peace::cfg::{state::Generated, OpCheckStatus, OpCtx};
+use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_iam_policy::{
-    model::PolicyIdArnVersion, IamPolicyData, IamPolicyError, IamPolicyState, IamPolicyStateDiff,
+    model::PolicyIdArnVersion, IamPolicyData, IamPolicyError, IamPolicyParams, IamPolicyState,
+    IamPolicyStateDiff,
 };
 
 use super::model::ManagedPolicyArn;
@@ -20,30 +21,31 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
+        _params: &IamPolicyParams<Id>,
         mut data: IamPolicyData<'_, Id>,
         state_current: &IamPolicyState,
         _state_desired: &IamPolicyState,
         diff: &IamPolicyStateDiff,
-    ) -> Result<OpCheckStatus, IamPolicyError> {
+    ) -> Result<ApplyCheck, IamPolicyError> {
         match diff {
             IamPolicyStateDiff::Added | IamPolicyStateDiff::DocumentModified { .. } => {
-                let op_check_status = {
+                let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
                     #[cfg(feature = "output_progress")]
                     {
                         let progress_limit = ProgressLimit::Steps(3);
-                        OpCheckStatus::ExecRequired { progress_limit }
+                        ApplyCheck::ExecRequired { progress_limit }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             IamPolicyStateDiff::Removed => {
-                let op_check_status = match state_current {
-                    IamPolicyState::None => OpCheckStatus::ExecNotRequired,
+                let apply_check = match state_current {
+                    IamPolicyState::None => ApplyCheck::ExecNotRequired,
                     IamPolicyState::Some {
                         name: _,
                         path: _,
@@ -56,22 +58,22 @@ where
                         }
 
                         if steps_required == 0 {
-                            OpCheckStatus::ExecNotRequired
+                            ApplyCheck::ExecNotRequired
                         } else {
                             #[cfg(not(feature = "output_progress"))]
                             {
-                                OpCheckStatus::ExecRequired
+                                ApplyCheck::ExecRequired
                             }
                             #[cfg(feature = "output_progress")]
                             {
                                 let progress_limit = ProgressLimit::Steps(steps_required);
-                                OpCheckStatus::ExecRequired { progress_limit }
+                                ApplyCheck::ExecRequired { progress_limit }
                             }
                         }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             IamPolicyStateDiff::NameOrPathModified {
                 name_diff,
@@ -92,14 +94,15 @@ where
                     policy_id_version_arn.arn().to_string(),
                 ));
 
-                Ok(OpCheckStatus::ExecNotRequired)
+                Ok(ApplyCheck::ExecNotRequired)
             }
-            IamPolicyStateDiff::InSyncDoesNotExist => Ok(OpCheckStatus::ExecNotRequired),
+            IamPolicyStateDiff::InSyncDoesNotExist => Ok(ApplyCheck::ExecNotRequired),
         }
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
+        _params: &IamPolicyParams<Id>,
         _iam_policy_data: IamPolicyData<'_, Id>,
         _state_current: &IamPolicyState,
         state_desired: &IamPolicyState,
@@ -108,24 +111,17 @@ where
         Ok(state_desired.clone())
     }
 
-    // Not sure why we can't use this:
-    //
-    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
-    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
-    //
-    // There's an error saying lifetime bounds don't match the trait definition.
-    //
-    // Likely an issue with the codegen in `async-trait`.
-    #[allow(unused_variables)]
     pub async fn apply(
-        op_ctx: OpCtx<'_>,
+        #[cfg(not(feature = "output_progress"))] _fn_ctx: FnCtx<'_>,
+        #[cfg(feature = "output_progress")] fn_ctx: FnCtx<'_>,
+        _params: &IamPolicyParams<Id>,
         mut data: IamPolicyData<'_, Id>,
         state_current: &IamPolicyState,
         state_desired: &IamPolicyState,
         diff: &IamPolicyStateDiff,
     ) -> Result<IamPolicyState, IamPolicyError> {
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
 
         match diff {
             IamPolicyStateDiff::Added => match state_desired {

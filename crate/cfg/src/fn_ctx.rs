@@ -7,21 +7,21 @@ use peace_core::progress::ProgressSender;
 
 /// References to pass information between the Peace framework and an item spec.
 #[derive(Clone, Copy, Debug)]
-pub struct OpCtx<'op> {
+pub struct FnCtx<'exec> {
     /// ID of the item spec this belongs to.
-    pub item_spec_id: &'op ItemSpecId,
+    pub item_spec_id: &'exec ItemSpecId,
     /// For item specs to submit progress updates.
     #[cfg(feature = "output_progress")]
-    pub progress_sender: ProgressSender<'op>,
+    pub progress_sender: ProgressSender<'exec>,
     /// Marker.
-    pub marker: PhantomData<&'op ()>,
+    pub marker: PhantomData<&'exec ()>,
 }
 
-impl<'op> OpCtx<'op> {
+impl<'exec> FnCtx<'exec> {
     /// Returns a new `OpCtx`.
     pub fn new(
-        item_spec_id: &'op ItemSpecId,
-        #[cfg(feature = "output_progress")] progress_sender: ProgressSender<'op>,
+        item_spec_id: &'exec ItemSpecId,
+        #[cfg(feature = "output_progress")] progress_sender: ProgressSender<'exec>,
     ) -> Self {
         Self {
             item_spec_id,
@@ -33,7 +33,7 @@ impl<'op> OpCtx<'op> {
 
     /// Returns the `ProgressTracker` for item specs to send progress to.
     #[cfg(feature = "output_progress")]
-    pub fn progress_sender(&self) -> &ProgressSender<'op> {
+    pub fn progress_sender(&self) -> &ProgressSender<'exec> {
         &self.progress_sender
     }
 }

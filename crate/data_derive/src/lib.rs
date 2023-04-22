@@ -11,7 +11,7 @@ use proc_macro::TokenStream;
 use proc_macro2::Literal;
 use syn::{
     punctuated::Punctuated, token::Comma, Attribute, DataStruct, DeriveInput, Field, Fields,
-    FieldsNamed, FieldsUnnamed, Ident, Lifetime, Type, WhereClause, WherePredicate,
+    FieldsNamed, FieldsUnnamed, Ident, Lifetime, Type, TypePath, WhereClause, WherePredicate,
 };
 
 /// Used to `#[derive]` the `Data` trait.
@@ -41,7 +41,7 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
 
     let mut generics = ast.generics.clone();
 
-    let (tys, field_names, borrow_return) = gen_from_body(&ast.data, name);
+    let (tys, field_names, borrow_return) = data_borrow_impl(&ast.data, name);
     let tys = &tys;
     // Assumes that the first lifetime is the borrow lifetime
     let def_borrow_lt = ast
@@ -128,30 +128,19 @@ fn peace_internal(attr: &&Attribute) -> bool {
     attr.path().is_ident("peace_internal")
 }
 
-fn collect_field_types(fields: &Punctuated<Field, Comma>) -> Vec<Type> {
-    fields.iter().map(|x| x.ty.clone()).collect()
-}
-
-fn gen_identifiers(fields: &Punctuated<Field, Comma>) -> Vec<Ident> {
-    fields
-        .iter()
-        .map(|x| x.ident.clone().expect("Data derive: Failed to clone ident"))
-        .collect()
-}
-
 /// Adds a `Data<'lt>` bound on each of the system data types.
-fn constrain_data_access_types(clause: &mut WhereClause, borrow_lt: &Lifetime, tys: &[Type]) {
+fn constrain_data_access_types(clause: &mut WhereClause, borrow_lt: &Lifetime, tys: &[&Type]) {
     for ty in tys.iter() {
         let where_predicate: WherePredicate = parse_quote!(#ty : Data< #borrow_lt >);
         clause.predicates.push(where_predicate);
     }
 }
 
-fn gen_from_body(
-    ast: &syn::Data,
+fn data_borrow_impl<'ast>(
+    ast: &'ast syn::Data,
     name: &Ident,
 ) -> (
-    Vec<Type>,
+    Vec<&'ast Type>,
     Vec<proc_macro2::TokenStream>,
     proc_macro2::TokenStream,
 ) {
@@ -160,42 +149,45 @@ fn gen_from_body(
         Tuple,
     }
 
-    let (body, fields) = match *ast {
+    let (data_type, fields) = match ast {
         syn::Data::Struct(DataStruct {
-            fields: Fields::Named(FieldsNamed { named: ref x, .. }),
+            fields: Fields::Named(FieldsNamed { named, .. }),
             ..
-        }) => (DataType::Struct, x),
+        }) => (DataType::Struct, named),
 
         syn::Data::Struct(DataStruct {
-            fields: Fields::Unnamed(FieldsUnnamed { unnamed: ref x, .. }),
+            fields: Fields::Unnamed(FieldsUnnamed { unnamed, .. }),
             ..
-        }) => (DataType::Tuple, x),
+        }) => (DataType::Tuple, unnamed),
 
         _ => panic!("Enums are not supported"),
     };
 
-    let tys = collect_field_types(fields);
+    let tys = field_types(fields);
 
-    let (field_names, borrow_return) = match body {
+    let (field_names_tokens, borrow_return) = match data_type {
         DataType::Struct => {
-            let identifiers = gen_identifiers(fields);
+            let field_names = field_names(fields);
 
-            let field_names = identifiers
+            let field_names_tokens = field_names
+                .normal_fields
                 .iter()
                 .map(|ident| quote!(#ident))
                 .collect::<Vec<_>>();
+            let phantom_data_fields = &field_names.phantom_data_fields;
 
             let borrow_return = quote! {
                 #name {
-                    #( #identifiers: Data::borrow(item_spec_id, resources) ),*
+                    #( #field_names_tokens: Data::borrow(item_spec_id, resources) ),*
+                    #(, #phantom_data_fields: ::std::marker::PhantomData)*
                 }
             };
 
-            (field_names, borrow_return)
+            (field_names_tokens, borrow_return)
         }
         DataType::Tuple => {
             let count = tys.len();
-            let field_names = (0..count)
+            let field_names_tokens = (0..count)
                 .map(Literal::usize_unsuffixed)
                 .map(|n| quote!(#n))
                 .collect::<Vec<_>>();
@@ -205,9 +197,49 @@ fn gen_from_body(
                 #name ( #( #borrow ),* )
             };
 
-            (field_names, borrow_return)
+            (field_names_tokens, borrow_return)
         }
     };
 
-    (tys, field_names, borrow_return)
+    (tys, field_names_tokens, borrow_return)
+}
+
+fn field_types(fields: &Punctuated<Field, Comma>) -> Vec<&Type> {
+    fields
+        .iter()
+        .filter_map(|field| {
+            if !is_phantom_data(field) {
+                Some(&field.ty)
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn field_names(fields: &Punctuated<Field, Comma>) -> FieldNames<'_> {
+    fields
+        .iter()
+        .fold(FieldNames::default(), |mut field_names, field| {
+            if is_phantom_data(field) {
+                if let Some(field_name) = field.ident.as_ref() {
+                    field_names.phantom_data_fields.push(field_name);
+                }
+            } else if let Some(field_name) = field.ident.as_ref() {
+                field_names.normal_fields.push(field_name);
+            }
+
+            field_names
+        })
+}
+
+fn is_phantom_data(field: &Field) -> bool {
+    matches!(&field.ty, Type::Path(TypePath { path, .. })
+                if matches!(path.segments.last(), Some(segment) if segment.ident == "PhantomData"))
+}
+
+#[derive(Debug, Default)]
+struct FieldNames<'field> {
+    normal_fields: Vec<&'field Ident>,
+    phantom_data_fields: Vec<&'field Ident>,
 }

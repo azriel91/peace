@@ -1,5 +1,15 @@
 # Changelog
 
+## unreleased
+
+* Add `ItemSpec::Params` associated type. ([#116], [#117])
+* Rename `OpCtx` to `FnCtx`. ([#116], [#117])
+* Update `ItemSpec` functions to take in `Self::Params`. ([#116], [#117])
+
+[#116]: https://github.com/azriel91/peace/issues/116
+[#117]: https://github.com/azriel91/peace/pull/117
+
+
 ## 0.0.9 (2023-04-13)
 
 * Rename `app_cycle` example to `envman`. ([#35], [#107])

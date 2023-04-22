@@ -1,4 +1,4 @@
-use peace_cfg::OpCheckStatus;
+use peace_cfg::ApplyCheck;
 use peace_resources::type_reg::untagged::{BoxDtDisplay, DataType};
 
 /// Trait to allow inspecting a type-erased `ItemApply`.
@@ -15,8 +15,8 @@ pub trait ItemApplyRt: DataType {
     /// Returns `state_diff` as type-erased data.
     fn state_diff(&self) -> BoxDtDisplay;
 
-    /// Returns `op_check_status` as type-erased data.
-    fn op_check_status(&self) -> OpCheckStatus;
+    /// Returns `apply_check` as type-erased data.
+    fn apply_check(&self) -> ApplyCheck;
 
     /// Returns `state_applied` as type-erased data.
     fn state_applied(&self) -> Option<BoxDtDisplay>;
@@ -47,8 +47,8 @@ impl ItemApplyRt for Box<dyn ItemApplyRt> {
         self.as_ref().state_diff()
     }
 
-    fn op_check_status(&self) -> OpCheckStatus {
-        self.as_ref().op_check_status()
+    fn apply_check(&self) -> ApplyCheck {
+        self.as_ref().apply_check()
     }
 
     fn state_applied(&self) -> Option<BoxDtDisplay> {

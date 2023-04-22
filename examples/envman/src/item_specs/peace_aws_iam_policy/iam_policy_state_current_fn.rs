@@ -1,11 +1,11 @@
 use std::marker::PhantomData;
 
 use aws_sdk_iam::{error::SdkError, operation::get_policy::GetPolicyError};
-use peace::cfg::{state::Generated, OpCtx};
+use peace::cfg::{state::Generated, FnCtx};
 
 use crate::item_specs::peace_aws_iam_policy::{
     model::{ManagedPolicyArn, PolicyIdArnVersion},
-    IamPolicyData, IamPolicyError, IamPolicyState,
+    IamPolicyData, IamPolicyError, IamPolicyParams, IamPolicyState,
 };
 
 #[cfg(feature = "output_progress")]
@@ -18,14 +18,14 @@ pub struct IamPolicyStateCurrentFn<Id>(PhantomData<Id>);
 impl<Id> IamPolicyStateCurrentFn<Id> {
     /// Finds a policy with the given name and path.
     pub(crate) async fn policy_find(
-        #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
-        #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
+        #[cfg(not(feature = "output_progress"))] _fn_ctx: FnCtx<'_>,
+        #[cfg(feature = "output_progress")] fn_ctx: FnCtx<'_>,
         client: &aws_sdk_iam::Client,
         name: &str,
         path: &str,
     ) -> Result<Option<(String, String)>, IamPolicyError> {
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
         #[cfg(feature = "output_progress")]
         progress_sender.tick(ProgressMsgUpdate::Set(String::from("listing policies")));
         let list_policies_output = client
@@ -93,25 +93,31 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&IamPolicyParams<Id>>,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Option<IamPolicyState>, IamPolicyError> {
-        Self::state_current(op_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_current(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &IamPolicyParams<Id>,
         mut data: IamPolicyData<'_, Id>,
     ) -> Result<IamPolicyState, IamPolicyError> {
         let client = data.client();
-        let name = data.params().name();
-        let path = data.params().path();
+        let name = params.name();
+        let path = params.path();
 
-        let policy_id_arn_version = Self::policy_find(op_ctx, client, name, path).await?;
+        let policy_id_arn_version = Self::policy_find(fn_ctx, client, name, path).await?;
 
         if let Some((policy_id, policy_arn)) = policy_id_arn_version {
             #[cfg(feature = "output_progress")]
-            let progress_sender = &op_ctx.progress_sender;
+            let progress_sender = &fn_ctx.progress_sender;
             #[cfg(feature = "output_progress")]
             progress_sender.tick(ProgressMsgUpdate::Set(String::from("fetching policy")));
 

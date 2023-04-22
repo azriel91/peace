@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{OpCheckStatus, OpCtx, State};
+use peace::cfg::{ApplyCheck, FnCtx, State};
 
 use crate::{
-    ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord, ShSyncCmdStateDiff,
+    ShSyncCmdData, ShSyncCmdError, ShSyncCmdExecutionRecord, ShSyncCmdParams, ShSyncCmdStateDiff,
     ShSyncCmdSyncStatus,
 };
 
@@ -16,17 +16,19 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
+        _params: &ShSyncCmdParams<Id>,
+        _data: ShSyncCmdData<'_, Id>,
         _file_state_current: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _file_state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _diff: &ShSyncCmdStateDiff,
-    ) -> Result<OpCheckStatus, ShSyncCmdError> {
+    ) -> Result<ApplyCheck, ShSyncCmdError> {
         todo!();
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
-        _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        _params: &ShSyncCmdParams<Id>,
+        _data: ShSyncCmdData<'_, Id>,
         _state: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _file_state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _diff: &ShSyncCmdStateDiff,
@@ -35,8 +37,9 @@ where
     }
 
     pub async fn apply(
-        _op_ctx: OpCtx<'_>,
-        _sh_sync_cmd_data: ShSyncCmdData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        _params: &ShSyncCmdParams<Id>,
+        _data: ShSyncCmdData<'_, Id>,
         _state: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _file_state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _diff: &ShSyncCmdStateDiff,

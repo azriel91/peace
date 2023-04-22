@@ -6,8 +6,6 @@ cfg_if::cfg_if! {
         use futures::{Stream, StreamExt, TryStreamExt};
         use tokio::io::AsyncWriteExt;
         use tokio::{fs::File, io::BufWriter};
-
-        use crate::FileDownloadParams;
     } else if #[cfg(target_arch = "wasm32")] {
         use std::path::Path;
 
@@ -15,10 +13,13 @@ cfg_if::cfg_if! {
     }
 }
 
-use peace::cfg::{state::FetchedOpt, OpCheckStatus, OpCtx, State};
+use peace::cfg::{state::FetchedOpt, ApplyCheck, FnCtx, State};
 use reqwest::header::ETAG;
 
-use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState, FileDownloadStateDiff};
+use crate::{
+    ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState,
+    FileDownloadStateDiff,
+};
 
 #[cfg(feature = "output_progress")]
 use peace::{
@@ -35,12 +36,12 @@ where
     Id: Send + Sync + 'static,
 {
     async fn file_download(
-        #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
-        #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
-        file_download_data: FileDownloadData<'_, Id>,
+        #[cfg(not(feature = "output_progress"))] _fn_ctx: FnCtx<'_>,
+        #[cfg(feature = "output_progress")] fn_ctx: FnCtx<'_>,
+        params: &FileDownloadParams<Id>,
+        data: FileDownloadData<'_, Id>,
     ) -> Result<FetchedOpt<ETag>, FileDownloadError> {
-        let client = file_download_data.client();
-        let params = file_download_data.file_download_params();
+        let client = data.client();
         let src_url = params.src();
         let response = client
             .get(src_url.clone())
@@ -60,7 +61,7 @@ where
         {
             Self::stream_write(
                 #[cfg(feature = "output_progress")]
-                op_ctx,
+                fn_ctx,
                 params,
                 response.bytes_stream(),
             )
@@ -73,9 +74,9 @@ where
         {
             Self::stream_write(
                 #[cfg(feature = "output_progress")]
-                op_ctx,
+                fn_ctx,
                 params.dest(),
-                file_download_data.storage(),
+                data.storage(),
                 params.storage_form(),
                 response,
             )
@@ -88,7 +89,7 @@ where
     /// Streams the content to disk.
     #[cfg(not(target_arch = "wasm32"))]
     async fn stream_write(
-        #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
+        #[cfg(feature = "output_progress")] fn_ctx: FnCtx<'_>,
         file_download_params: &FileDownloadParams<Id>,
         byte_stream: impl Stream<Item = reqwest::Result<Bytes>>,
     ) -> Result<(), FileDownloadError> {
@@ -172,7 +173,7 @@ where
 
         let buffer = BufWriter::new(dest_file);
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
         let mut buffer = byte_stream
             .map(|bytes_result| bytes_result.map_err(FileDownloadError::ResponseBytesStream))
             .try_fold(buffer, |mut buffer, bytes| async move {
@@ -201,7 +202,7 @@ where
     /// Streams the content to disk.
     #[cfg(target_arch = "wasm32")]
     async fn stream_write(
-        #[cfg(feature = "output_progress")] _op_ctx: OpCtx<'_>,
+        #[cfg(feature = "output_progress")] _fn_ctx: FnCtx<'_>,
         dest_path: &Path,
         storage: &Storage,
         storage_form: crate::StorageForm,
@@ -235,15 +236,16 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        _file_download_data: FileDownloadData<'_, Id>,
+        _params: &FileDownloadParams<Id>,
+        _data: FileDownloadData<'_, Id>,
         State {
             logical: file_state_current,
             physical: _e_tag,
         }: &State<FileDownloadState, FetchedOpt<ETag>>,
         _file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
         diff: &FileDownloadStateDiff,
-    ) -> Result<OpCheckStatus, FileDownloadError> {
-        let op_check_status = match diff {
+    ) -> Result<ApplyCheck, FileDownloadError> {
+        let apply_check = match diff {
             FileDownloadStateDiff::Change {
                 #[cfg(feature = "output_progress")]
                 byte_len,
@@ -251,7 +253,7 @@ where
             } => {
                 #[cfg(not(feature = "output_progress"))]
                 {
-                    OpCheckStatus::ExecRequired
+                    ApplyCheck::ExecRequired
                 }
 
                 #[cfg(feature = "output_progress")]
@@ -265,11 +267,11 @@ where
                         Tracked::Unknown => ProgressLimit::Unknown,
                     };
 
-                    OpCheckStatus::ExecRequired { progress_limit }
+                    ApplyCheck::ExecRequired { progress_limit }
                 }
             }
             FileDownloadStateDiff::Deleted { .. } => match file_state_current {
-                FileDownloadState::None { .. } => OpCheckStatus::ExecNotRequired,
+                FileDownloadState::None { .. } => ApplyCheck::ExecNotRequired,
                 FileDownloadState::StringContents {
                     path: _,
                     #[cfg(not(feature = "output_progress"))]
@@ -279,11 +281,11 @@ where
                 } => {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
                     #[cfg(feature = "output_progress")]
                     {
-                        OpCheckStatus::ExecRequired {
+                        ApplyCheck::ExecRequired {
                             progress_limit: ProgressLimit::Bytes(
                                 contents.as_bytes().len().try_into().unwrap(),
                             ),
@@ -299,35 +301,36 @@ where
                 } => {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
 
                     #[cfg(feature = "output_progress")]
-                    OpCheckStatus::ExecRequired {
+                    ApplyCheck::ExecRequired {
                         progress_limit: ProgressLimit::Bytes(*byte_count),
                     }
                 }
                 FileDownloadState::Unknown { path: _ } => {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
 
                     #[cfg(feature = "output_progress")]
-                    OpCheckStatus::ExecRequired {
+                    ApplyCheck::ExecRequired {
                         progress_limit: ProgressLimit::Unknown,
                     }
                 }
             },
             FileDownloadStateDiff::NoChangeNotExists { .. }
-            | FileDownloadStateDiff::NoChangeSync { .. } => OpCheckStatus::ExecNotRequired,
+            | FileDownloadStateDiff::NoChangeSync { .. } => ApplyCheck::ExecNotRequired,
         };
-        Ok(op_check_status)
+        Ok(apply_check)
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
-        _file_download_data: FileDownloadData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        _params: &FileDownloadParams<Id>,
+        _data: FileDownloadData<'_, Id>,
         _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
         file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
         _diff: &FileDownloadStateDiff,
@@ -338,8 +341,9 @@ where
     }
 
     pub async fn apply(
-        op_ctx: OpCtx<'_>,
-        file_download_data: FileDownloadData<'_, Id>,
+        fn_ctx: FnCtx<'_>,
+        params: &FileDownloadParams<Id>,
+        data: FileDownloadData<'_, Id>,
         _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
         file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
         diff: &FileDownloadStateDiff,
@@ -352,12 +356,12 @@ where
                     .map_err(FileDownloadError::DestFileRemove)?;
 
                 #[cfg(target_arch = "wasm32")]
-                file_download_data.storage().remove_item(path)?;
+                data.storage().remove_item(path)?;
 
                 Ok(file_download_state_desired.clone())
             }
             FileDownloadStateDiff::Change { .. } => {
-                let e_tag = Self::file_download(op_ctx, file_download_data).await?;
+                let e_tag = Self::file_download(fn_ctx, params, data).await?;
 
                 let mut file_download_state_ensured = file_download_state_desired.clone();
                 file_download_state_ensured.physical = e_tag;

@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 /// A managed policy ARN.
 ///
 /// Hack: Remove this when referential param values is implemented.
-#[derive(Clone, Derivative, PartialEq, Eq, Deserialize, Serialize)]
-#[derivative(Debug)]
+#[derive(Derivative, PartialEq, Eq, Deserialize, Serialize)]
+#[derivative(Clone, Debug)]
 pub struct ManagedPolicyArn<Id> {
     /// ARN of the managed policy.
     arn: String,

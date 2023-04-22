@@ -1,12 +1,12 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
+    cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId},
     resources::{resources::ts::Empty, Resources},
 };
 
 use crate::item_specs::peace_aws_iam_role::{
-    IamRoleApplyFns, IamRoleData, IamRoleError, IamRoleState, IamRoleStateCurrentFn,
+    IamRoleApplyFns, IamRoleData, IamRoleError, IamRoleParams, IamRoleState, IamRoleStateCurrentFn,
     IamRoleStateDesiredFn, IamRoleStateDiff, IamRoleStateDiffFn,
 };
 
@@ -57,8 +57,9 @@ impl<Id> ItemSpec for IamRoleItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = IamRoleData<'op, Id>;
+    type Data<'exec> = IamRoleData<'exec, Id>;
     type Error = IamRoleError;
+    type Params<'exec> = IamRoleParams<Id>;
     type State = IamRoleState;
     type StateDiff = IamRoleStateDiff;
 
@@ -76,71 +77,83 @@ where
     }
 
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: IamRoleData<'_, Id>,
     ) -> Result<Option<Self::State>, IamRoleError> {
-        IamRoleStateCurrentFn::try_state_current(op_ctx, data).await
+        IamRoleStateCurrentFn::try_state_current(fn_ctx, params_partial, data).await
     }
 
     async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: IamRoleData<'_, Id>,
     ) -> Result<Self::State, IamRoleError> {
-        IamRoleStateCurrentFn::state_current(op_ctx, data).await
+        IamRoleStateCurrentFn::state_current(fn_ctx, params, data).await
     }
 
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: IamRoleData<'_, Id>,
     ) -> Result<Option<Self::State>, IamRoleError> {
-        IamRoleStateDesiredFn::try_state_desired(op_ctx, data).await
+        IamRoleStateDesiredFn::try_state_desired(fn_ctx, params_partial, data).await
     }
 
     async fn state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: IamRoleData<'_, Id>,
     ) -> Result<Self::State, IamRoleError> {
-        IamRoleStateDesiredFn::state_desired(op_ctx, data).await
+        IamRoleStateDesiredFn::state_desired(fn_ctx, params, data).await
     }
 
     async fn state_diff(
-        _data: IamRoleData<'_, Id>,
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,
     ) -> Result<Self::StateDiff, IamRoleError> {
         IamRoleStateDiffFn::state_diff(state_current, state_desired).await
     }
 
-    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, IamRoleError> {
+    async fn state_clean(
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
+    ) -> Result<Self::State, IamRoleError> {
         Ok(IamRoleState::None)
     }
 
     async fn apply_check(
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
-    ) -> Result<OpCheckStatus, Self::Error> {
-        IamRoleApplyFns::apply_check(data, state_current, state_target, diff).await
+    ) -> Result<ApplyCheck, Self::Error> {
+        IamRoleApplyFns::<Id>::apply_check(params, data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        IamRoleApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        IamRoleApplyFns::<Id>::apply_dry(fn_ctx, params, data, state_current, state_target, diff)
+            .await
     }
 
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        IamRoleApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
+        IamRoleApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff).await
     }
 }

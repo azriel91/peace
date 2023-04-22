@@ -124,7 +124,6 @@ where
         states_a: &States<StatesTsA>,
         states_b: &States<StatesTsB>,
     ) -> Result<StateDiffs, E> {
-        let resources_ref = resources;
         let state_diffs = {
             let state_diffs_mut = flow
                 .graph()
@@ -132,7 +131,7 @@ where
                 .map(Result::<_, E>::Ok)
                 .try_filter_map(|item_spec| async move {
                     let state_diff_opt = item_spec
-                        .state_diff_exec(resources_ref, states_a, states_b)
+                        .state_diff_exec(resources, states_a, states_b)
                         .await?;
 
                     Ok(state_diff_opt.map(|state_diff| (item_spec.id().clone(), state_diff)))

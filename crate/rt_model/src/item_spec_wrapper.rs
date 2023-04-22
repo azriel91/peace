@@ -5,7 +5,7 @@ use std::{
 };
 
 use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
-use peace_cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx};
+use peace_cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId};
 use peace_data::{
     marker::{ApplyDry, Clean, Current, Desired},
     Data,
@@ -18,7 +18,7 @@ use peace_resources::{
 
 use crate::{
     outcomes::{ItemApply, ItemApplyBoxed, ItemApplyPartial, ItemApplyPartialBoxed},
-    ItemSpecRt, StatesTypeReg,
+    ItemSpecParamsTypeReg, ItemSpecRt, StatesTypeReg,
 };
 
 /// Wraps a type implementing [`ItemSpec`].
@@ -54,29 +54,28 @@ where
         + From<crate::Error>
         + 'static,
 {
-    async fn state_clean<ResourcesTs>(
-        &self,
-        resources: &Resources<ResourcesTs>,
-    ) -> Result<IS::State, E> {
+    async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<IS::State, E> {
         let state_clean = {
-            let data =
-                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::state_clean(data).await?
+            // TODO: #94, this should be per Params field type, not Params type.
+            let params = resources.try_borrow::<IS::Params<'_>>().ok();
+            let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+            IS::state_clean(params.as_deref(), data).await?
         };
         resources.borrow_mut::<Clean<IS::State>>().0 = Some(state_clean.clone());
 
         Ok(state_clean)
     }
 
-    async fn state_current_try_exec<ResourcesTs>(
+    async fn state_current_try_exec(
         &self,
-        op_ctx: OpCtx<'_>,
-        resources: &Resources<ResourcesTs>,
+        fn_ctx: FnCtx<'_>,
+        resources: &Resources<SetUp>,
     ) -> Result<Option<IS::State>, E> {
         let state_current = {
-            let data =
-                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::try_state_current(op_ctx, data).await?
+            // TODO: #94, this should be per Params field type, not Params type.
+            let params = resources.try_borrow::<IS::Params<'_>>().ok();
+            let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+            IS::try_state_current(fn_ctx, params.as_deref(), data).await?
         };
         if let Some(state_current) = state_current.as_ref() {
             resources.borrow_mut::<Current<IS::State>>().0 = Some(state_current.clone());
@@ -85,15 +84,16 @@ where
         Ok(state_current)
     }
 
-    async fn state_current_exec<ResourcesTs>(
+    async fn state_current_exec(
         &self,
-        op_ctx: OpCtx<'_>,
-        resources: &Resources<ResourcesTs>,
+        fn_ctx: FnCtx<'_>,
+        resources: &Resources<SetUp>,
     ) -> Result<IS::State, E> {
         let state_current = {
-            let data =
-                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::state_current(op_ctx, data).await?
+            // TODO: #94, this should be constructing Params from ParamsSpec.
+            let params = resources.borrow::<IS::Params<'_>>();
+            let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+            IS::state_current(fn_ctx, &params, data).await?
         };
         resources.borrow_mut::<Current<IS::State>>().0 = Some(state_current.clone());
 
@@ -102,11 +102,13 @@ where
 
     async fn state_desired_try_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<IS::State>, E> {
-        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_desired = <IS as peace_cfg::ItemSpec>::try_state_desired(op_ctx, data).await?;
+        // TODO: #94, this should be per Params field type, not Params type.
+        let params = resources.try_borrow::<IS::Params<'_>>().ok();
+        let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_desired = IS::try_state_desired(fn_ctx, params.as_deref(), data).await?;
         if let Some(state_desired) = state_desired.as_ref() {
             resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
         }
@@ -116,11 +118,13 @@ where
 
     async fn state_desired_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<IS::State, E> {
-        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_desired = <IS as peace_cfg::ItemSpec>::state_desired(op_ctx, data).await?;
+        // TODO: #94, this should be constructing Params from ParamsSpec.
+        let params = resources.borrow::<IS::Params<'_>>();
+        let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_desired = IS::state_desired(fn_ctx, &params, data).await?;
         resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
 
         Ok(state_desired)
@@ -161,9 +165,10 @@ where
         state_b: &IS::State,
     ) -> Result<IS::StateDiff, E> {
         let state_diff: IS::StateDiff = {
-            let data =
-                <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-            <IS as peace_cfg::ItemSpec>::state_diff(data, state_a, state_b)
+            // TODO: #94, this should be per Params field type, not Params type.
+            let params = resources.try_borrow::<IS::Params<'_>>().ok();
+            let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+            IS::state_diff(params.as_deref(), data, state_a, state_b)
                 .await
                 .map_err(Into::<E>::into)?
         };
@@ -171,30 +176,35 @@ where
         Ok(state_diff)
     }
 
-    async fn apply_op_check<ResourcesTs>(
+    async fn apply_op_check(
         &self,
-        resources: &Resources<ResourcesTs>,
+        resources: &Resources<SetUp>,
         state_current: &IS::State,
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
-    ) -> Result<OpCheckStatus, E> {
-        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        <IS as peace_cfg::ItemSpec>::apply_check(data, state_current, state_desired, state_diff)
+    ) -> Result<ApplyCheck, E> {
+        // TODO: #94, this should be constructing Params from ParamsSpec.
+        let params = resources.borrow::<IS::Params<'_>>();
+        let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+        IS::apply_check(&params, data, state_current, state_desired, state_diff)
             .await
             .map_err(Into::<E>::into)
     }
 
-    async fn apply_op_exec_dry<ResourcesTs>(
+    async fn apply_op_exec_dry(
         &self,
-        op_ctx: OpCtx<'_>,
-        resources: &Resources<ResourcesTs>,
+        fn_ctx: FnCtx<'_>,
+        resources: &Resources<SetUp>,
         state_current: &IS::State,
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<IS::State, E> {
-        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_ensured_dry = <IS as peace_cfg::ItemSpec>::apply_dry(
-            op_ctx,
+        // TODO: #94, this should be constructing Params from ParamsSpec.
+        let params = resources.borrow::<IS::Params<'_>>();
+        let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_ensured_dry = IS::apply_dry(
+            fn_ctx,
+            &params,
             data,
             state_current,
             state_desired,
@@ -208,17 +218,20 @@ where
         Ok(state_ensured_dry)
     }
 
-    async fn apply_op_exec<ResourcesTs>(
+    async fn apply_op_exec(
         &self,
-        op_ctx: OpCtx<'_>,
-        resources: &Resources<ResourcesTs>,
+        fn_ctx: FnCtx<'_>,
+        resources: &Resources<SetUp>,
         state_current: &IS::State,
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<IS::State, E> {
-        let data = <<IS as peace_cfg::ItemSpec>::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_ensured = <IS as peace_cfg::ItemSpec>::apply(
-            op_ctx,
+        // TODO: #94, this should be constructing Params from ParamsSpec.
+        let params = resources.borrow::<IS::Params<'_>>();
+        let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_ensured = IS::apply(
+            fn_ctx,
+            &params,
             data,
             state_current,
             state_desired,
@@ -272,11 +285,14 @@ where
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
 {
     fn borrows() -> TypeIds {
-        <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrows()
+        let mut type_ids = <IS::Data<'_> as DataAccess>::borrows();
+        type_ids.push(std::any::TypeId::of::<IS::Params<'_>>());
+
+        type_ids
     }
 
     fn borrow_muts() -> TypeIds {
-        <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrow_muts()
+        <IS::Data<'_> as DataAccess>::borrow_muts()
     }
 }
 
@@ -286,11 +302,14 @@ where
     E: Debug + Send + Sync + std::error::Error + From<<IS as ItemSpec>::Error> + 'static,
 {
     fn borrows(&self) -> TypeIds {
-        <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrows()
+        let mut type_ids = <IS::Data<'_> as DataAccess>::borrows();
+        type_ids.push(std::any::TypeId::of::<IS::Params<'_>>());
+
+        type_ids
     }
 
     fn borrow_muts(&self) -> TypeIds {
-        <<IS as peace_cfg::ItemSpec>::Data<'_> as DataAccess>::borrow_muts()
+        <IS::Data<'_> as DataAccess>::borrow_muts()
     }
 }
 
@@ -324,8 +343,13 @@ where
             .map_err(Into::<E>::into)
     }
 
-    fn state_register(&self, states_type_reg: &mut StatesTypeReg) {
-        states_type_reg.register::<IS::State>(<IS as ItemSpec>::id(self).clone());
+    fn params_and_state_register(
+        &self,
+        item_spec_params_type_reg: &mut ItemSpecParamsTypeReg,
+        states_type_reg: &mut StatesTypeReg,
+    ) {
+        item_spec_params_type_reg.register::<IS::Params<'_>>(IS::id(self).clone());
+        states_type_reg.register::<IS::State>(IS::id(self).clone());
     }
 
     async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
@@ -337,10 +361,10 @@ where
 
     async fn state_current_try_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_current_try_exec(op_ctx, resources)
+        self.state_current_try_exec(fn_ctx, resources)
             .await
             .map(|state_current| state_current.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
@@ -348,10 +372,10 @@ where
 
     async fn state_current_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<BoxDtDisplay, E> {
-        self.state_current_exec(op_ctx, resources)
+        self.state_current_exec(fn_ctx, resources)
             .await
             .map(BoxDtDisplay::new)
             .map_err(Into::<E>::into)
@@ -359,10 +383,10 @@ where
 
     async fn state_desired_try_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_desired_try_exec(op_ctx, resources)
+        self.state_desired_try_exec(fn_ctx, resources)
             .await
             .map(|state_desired| state_desired.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
@@ -370,10 +394,10 @@ where
 
     async fn state_desired_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<BoxDtDisplay, E> {
-        self.state_desired_exec(op_ctx, resources)
+        self.state_desired_exec(fn_ctx, resources)
             .await
             .map(BoxDtDisplay::new)
             .map_err(Into::<E>::into)
@@ -393,23 +417,23 @@ where
 
     async fn ensure_prepare(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
         let mut item_apply_partial = ItemApplyPartial::<IS::State, IS::StateDiff>::new();
 
-        match self.state_current_exec(op_ctx, resources).await {
+        match self.state_current_exec(fn_ctx, resources).await {
             Ok(state_current) => item_apply_partial.state_current = Some(state_current),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
         #[cfg(feature = "output_progress")]
-        op_ctx.progress_sender().reset();
-        match self.state_desired_exec(op_ctx, resources).await {
+        fn_ctx.progress_sender().reset();
+        match self.state_desired_exec(fn_ctx, resources).await {
             Ok(state_desired) => item_apply_partial.state_target = Some(state_desired),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
         #[cfg(feature = "output_progress")]
-        op_ctx.progress_sender().reset();
+        fn_ctx.progress_sender().reset();
         match self
             .state_diff_exec_with(
                 resources,
@@ -440,16 +464,16 @@ where
             .apply_op_check(resources, state_current, state_target, state_diff)
             .await
         {
-            Ok(op_check_status) => {
-                item_apply_partial.op_check_status = Some(op_check_status);
+            Ok(apply_check) => {
+                item_apply_partial.apply_check = Some(apply_check);
 
                 // TODO: write test for this case
-                match op_check_status {
+                match apply_check {
                     #[cfg(not(feature = "output_progress"))]
-                    OpCheckStatus::ExecRequired => None,
+                    ApplyCheck::ExecRequired => None,
                     #[cfg(feature = "output_progress")]
-                    OpCheckStatus::ExecRequired { .. } => None,
-                    OpCheckStatus::ExecNotRequired => item_apply_partial.state_current.clone(),
+                    ApplyCheck::ExecRequired { .. } => None,
+                    ApplyCheck::ExecNotRequired => item_apply_partial.state_current.clone(),
                 }
             }
             Err(error) => return Err((error, item_apply_partial.into())),
@@ -462,7 +486,7 @@ where
 
     async fn apply_exec_dry(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
         item_apply_boxed: &mut ItemApplyBoxed,
     ) -> Result<(), E> {
@@ -478,28 +502,28 @@ where
             state_current,
             state_target,
             state_diff,
-            op_check_status,
+            apply_check,
             state_applied,
         } = item_apply;
 
-        match op_check_status {
+        match apply_check {
             #[cfg(not(feature = "output_progress"))]
-            OpCheckStatus::ExecRequired => {
+            ApplyCheck::ExecRequired => {
                 let state_applied_dry = self
-                    .apply_op_exec_dry(op_ctx, resources, state_current, state_target, state_diff)
+                    .apply_op_exec_dry(fn_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_dry);
             }
             #[cfg(feature = "output_progress")]
-            OpCheckStatus::ExecRequired { progress_limit: _ } => {
+            ApplyCheck::ExecRequired { progress_limit: _ } => {
                 let state_applied_dry = self
-                    .apply_op_exec_dry(op_ctx, resources, state_current, state_target, state_diff)
+                    .apply_op_exec_dry(fn_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_dry);
             }
-            OpCheckStatus::ExecNotRequired => {}
+            ApplyCheck::ExecNotRequired => {}
         }
 
         Ok(())
@@ -507,12 +531,12 @@ where
 
     async fn clean_prepare(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
         let mut item_apply_partial = ItemApplyPartial::<IS::State, IS::StateDiff>::new();
 
-        match self.state_current_try_exec(op_ctx, resources).await {
+        match self.state_current_try_exec(fn_ctx, resources).await {
             Ok(state_current) => {
                 // Hack: Setting ItemApplyPartial state_current to state_clean is a hack.
                 if let Some(state_current) = state_current {
@@ -561,16 +585,16 @@ where
             .apply_op_check(resources, state_current, state_target, state_diff)
             .await
         {
-            Ok(op_check_status) => {
-                item_apply_partial.op_check_status = Some(op_check_status);
+            Ok(apply_check) => {
+                item_apply_partial.apply_check = Some(apply_check);
 
                 // TODO: write test for this case
-                match op_check_status {
+                match apply_check {
                     #[cfg(not(feature = "output_progress"))]
-                    OpCheckStatus::ExecRequired => None,
+                    ApplyCheck::ExecRequired => None,
                     #[cfg(feature = "output_progress")]
-                    OpCheckStatus::ExecRequired { .. } => None,
-                    OpCheckStatus::ExecNotRequired => item_apply_partial.state_current.clone(),
+                    ApplyCheck::ExecRequired { .. } => None,
+                    ApplyCheck::ExecNotRequired => item_apply_partial.state_current.clone(),
                 }
             }
             Err(error) => return Err((error, item_apply_partial.into())),
@@ -583,7 +607,7 @@ where
 
     async fn apply_exec(
         &self,
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
         item_apply_boxed: &mut ItemApplyBoxed,
     ) -> Result<(), E> {
@@ -599,28 +623,28 @@ where
             state_current,
             state_target,
             state_diff,
-            op_check_status,
+            apply_check,
             state_applied,
         } = item_apply;
 
-        match op_check_status {
+        match apply_check {
             #[cfg(not(feature = "output_progress"))]
-            OpCheckStatus::ExecRequired => {
+            ApplyCheck::ExecRequired => {
                 let state_applied_next = self
-                    .apply_op_exec(op_ctx, resources, state_current, state_target, state_diff)
+                    .apply_op_exec(fn_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_next);
             }
             #[cfg(feature = "output_progress")]
-            OpCheckStatus::ExecRequired { progress_limit: _ } => {
+            ApplyCheck::ExecRequired { progress_limit: _ } => {
                 let state_applied_next = self
-                    .apply_op_exec(op_ctx, resources, state_current, state_target, state_diff)
+                    .apply_op_exec(fn_ctx, resources, state_current, state_target, state_diff)
                     .await?;
 
                 *state_applied = Some(state_applied_next);
             }
-            OpCheckStatus::ExecNotRequired => {}
+            ApplyCheck::ExecNotRequired => {}
         }
 
         Ok(())

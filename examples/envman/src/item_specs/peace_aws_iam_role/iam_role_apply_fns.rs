@@ -2,10 +2,10 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate, ProgressSender};
-use peace::cfg::{state::Generated, OpCheckStatus, OpCtx};
+use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
-    model::RoleIdAndArn, IamRoleData, IamRoleError, IamRoleState, IamRoleStateDiff,
+    model::RoleIdAndArn, IamRoleData, IamRoleError, IamRoleParams, IamRoleState, IamRoleStateDiff,
 };
 
 /// ApplyFns for the instance profile state.
@@ -56,30 +56,31 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        _iam_role_data: IamRoleData<'_, Id>,
+        _params: &IamRoleParams<Id>,
+        _data: IamRoleData<'_, Id>,
         state_current: &IamRoleState,
         _state_desired: &IamRoleState,
         diff: &IamRoleStateDiff,
-    ) -> Result<OpCheckStatus, IamRoleError> {
+    ) -> Result<ApplyCheck, IamRoleError> {
         match diff {
             IamRoleStateDiff::Added => {
-                let op_check_status = {
+                let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
                     #[cfg(feature = "output_progress")]
                     {
                         let progress_limit = ProgressLimit::Steps(2);
-                        OpCheckStatus::ExecRequired { progress_limit }
+                        ApplyCheck::ExecRequired { progress_limit }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             IamRoleStateDiff::Removed => {
-                let op_check_status = match state_current {
-                    IamRoleState::None => OpCheckStatus::ExecNotRequired,
+                let apply_check = match state_current {
+                    IamRoleState::None => ApplyCheck::ExecNotRequired,
                     IamRoleState::Some {
                         name: _,
                         path: _,
@@ -95,39 +96,39 @@ where
                         }
 
                         if steps_required == 0 {
-                            OpCheckStatus::ExecNotRequired
+                            ApplyCheck::ExecNotRequired
                         } else {
                             #[cfg(not(feature = "output_progress"))]
                             {
-                                OpCheckStatus::ExecRequired
+                                ApplyCheck::ExecRequired
                             }
                             #[cfg(feature = "output_progress")]
                             {
                                 let progress_limit = ProgressLimit::Steps(steps_required);
-                                OpCheckStatus::ExecRequired { progress_limit }
+                                ApplyCheck::ExecRequired { progress_limit }
                             }
                         }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             IamRoleStateDiff::ManagedPolicyAttachmentModified { .. } => {
-                let op_check_status = {
+                let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
                     #[cfg(feature = "output_progress")]
                     {
                         // Technically could be 1 or 2, whether we detach an existing before
                         // attaching another, or just attach one.
                         let progress_limit = ProgressLimit::Steps(2);
-                        OpCheckStatus::ExecRequired { progress_limit }
+                        ApplyCheck::ExecRequired { progress_limit }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             IamRoleStateDiff::NameOrPathModified {
                 name_diff,
@@ -137,14 +138,15 @@ where
                 path_diff: path_diff.clone(),
             }),
             IamRoleStateDiff::InSyncExists | IamRoleStateDiff::InSyncDoesNotExist => {
-                Ok(OpCheckStatus::ExecNotRequired)
+                Ok(ApplyCheck::ExecNotRequired)
             }
         }
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
-        _iam_role_data: IamRoleData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        _params: &IamRoleParams<Id>,
+        _data: IamRoleData<'_, Id>,
         _state_current: &IamRoleState,
         state_desired: &IamRoleState,
         _diff: &IamRoleStateDiff,
@@ -152,24 +154,17 @@ where
         Ok(state_desired.clone())
     }
 
-    // Not sure why we can't use this:
-    //
-    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
-    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
-    //
-    // There's an error saying lifetime bounds don't match the trait definition.
-    //
-    // Likely an issue with the codegen in `async-trait`.
-    #[allow(unused_variables)]
     pub async fn apply(
-        op_ctx: OpCtx<'_>,
+        #[cfg(not(feature = "output_progress"))] _fn_ctx: FnCtx<'_>,
+        #[cfg(feature = "output_progress")] fn_ctx: FnCtx<'_>,
+        _params: &IamRoleParams<Id>,
         data: IamRoleData<'_, Id>,
         state_current: &IamRoleState,
         state_desired: &IamRoleState,
         diff: &IamRoleStateDiff,
     ) -> Result<IamRoleState, IamRoleError> {
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
 
         match diff {
             IamRoleStateDiff::Added => match state_desired {

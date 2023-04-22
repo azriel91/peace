@@ -24,9 +24,9 @@ Whether a task has started, is in-progress, stalled, or completed.
 
     - **Units total:** Unknown (spinner) / known (progress bar).
     - **Units current**
-    - **Operation:** State current / desired / diff discovery, `ApplyFns::exec`.
+    - **Function:** `ItemSpec::{state_current, state_desired, apply}`.
 
-        Certain operations will not be applicable, e.g. when `StateCurrent` is feature gated, then the operation won't be available when the feature is not enabled.
+        Certain functions will not be applicable, e.g. when `StateCurrent` is feature gated, then the function won't be available when the feature is not enabled.
 
 * **Running Stalled:** Progress updates have not been received for a given period.
 
@@ -41,7 +41,7 @@ Whether a task has started, is in-progress, stalled, or completed.
     This status is best conveyed alongside the following information:
 
     - **Completion Status**: Success, Failed.
-    - **Operation:** State current / desired / diff discovery, `ApplyFns::exec`.
+    - **Function:** `ItemSpec::{state_current, state_desired, apply}`.
 
 
 The following variant is possible conceptually, but not applicable to the Peace framework:

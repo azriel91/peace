@@ -7,10 +7,10 @@ use aws_sdk_s3::{
 };
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
-use peace::cfg::{OpCheckStatus, OpCtx};
+use peace::cfg::{ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_s3_bucket::{
-    S3BucketData, S3BucketError, S3BucketState, S3BucketStateDiff,
+    S3BucketData, S3BucketError, S3BucketParams, S3BucketState, S3BucketStateDiff,
 };
 
 use super::S3BucketStateCurrentFn;
@@ -24,48 +24,49 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        _s3_bucket_data: S3BucketData<'_, Id>,
+        _params: &S3BucketParams<Id>,
+        _data: S3BucketData<'_, Id>,
         state_current: &S3BucketState,
         _state_desired: &S3BucketState,
         diff: &S3BucketStateDiff,
-    ) -> Result<OpCheckStatus, S3BucketError> {
+    ) -> Result<ApplyCheck, S3BucketError> {
         match diff {
             S3BucketStateDiff::Added { .. } => {
-                let op_check_status = {
+                let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
                     #[cfg(feature = "output_progress")]
                     {
                         let progress_limit = ProgressLimit::Steps(1);
-                        OpCheckStatus::ExecRequired { progress_limit }
+                        ApplyCheck::ExecRequired { progress_limit }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             S3BucketStateDiff::Removed => {
-                let op_check_status = match state_current {
-                    S3BucketState::None => OpCheckStatus::ExecNotRequired,
+                let apply_check = match state_current {
+                    S3BucketState::None => ApplyCheck::ExecNotRequired,
                     S3BucketState::Some {
                         name: _,
                         creation_date: _,
                     } => {
                         #[cfg(not(feature = "output_progress"))]
                         {
-                            OpCheckStatus::ExecRequired
+                            ApplyCheck::ExecRequired
                         }
                         #[cfg(feature = "output_progress")]
                         {
                             let steps_required = 1;
                             let progress_limit = ProgressLimit::Steps(steps_required);
-                            OpCheckStatus::ExecRequired { progress_limit }
+                            ApplyCheck::ExecRequired { progress_limit }
                         }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             S3BucketStateDiff::NameModified {
                 s3_bucket_name_current,
@@ -75,14 +76,15 @@ where
                 s3_bucket_name_desired: s3_bucket_name_desired.clone(),
             }),
             S3BucketStateDiff::InSyncExists | S3BucketStateDiff::InSyncDoesNotExist => {
-                Ok(OpCheckStatus::ExecNotRequired)
+                Ok(ApplyCheck::ExecNotRequired)
             }
         }
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
-        _s3_bucket_data: S3BucketData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        _params: &S3BucketParams<Id>,
+        _data: S3BucketData<'_, Id>,
         _state_current: &S3BucketState,
         state_desired: &S3BucketState,
         _diff: &S3BucketStateDiff,
@@ -90,24 +92,16 @@ where
         Ok(state_desired.clone())
     }
 
-    // Not sure why we can't use this:
-    //
-    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
-    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
-    //
-    // There's an error saying lifetime bounds don't match the trait definition.
-    //
-    // Likely an issue with the codegen in `async-trait`.
-    #[allow(unused_variables)]
     pub async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &S3BucketParams<Id>,
         data: S3BucketData<'_, Id>,
         state_current: &S3BucketState,
         state_desired: &S3BucketState,
         diff: &S3BucketStateDiff,
     ) -> Result<S3BucketState, S3BucketError> {
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
 
         match diff {
             S3BucketStateDiff::Added => match state_desired {
@@ -132,7 +126,7 @@ where
                                 .build(),
                         );
                     }
-                    let create_bucket_output = create_bucket.send().await.map_err(|error| {
+                    let _create_bucket_output = create_bucket.send().await.map_err(|error| {
                         let s3_bucket_name = name.to_string();
 
                         #[cfg(feature = "error_reporting")]
@@ -175,7 +169,7 @@ where
                     progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("bucket created")));
 
                     let state_applied =
-                        S3BucketStateCurrentFn::<Id>::state_current(op_ctx, data).await?;
+                        S3BucketStateCurrentFn::<Id>::state_current(fn_ctx, params, data).await?;
 
                     Ok(state_applied)
                 }

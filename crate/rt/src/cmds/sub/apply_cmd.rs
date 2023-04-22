@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cfg::{ItemSpecId, OpCheckStatus, OpCtx};
+use peace_cfg::{ApplyCheck, FnCtx, ItemSpecId};
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
@@ -357,7 +357,7 @@ where
     ///     f: F,
     /// ) -> bool
     /// where
-    ///     F: (Fn(&dyn ItemSpecRt<E>, op_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemApplyBoxed) -> Fut) + Copy,
+    ///     F: (Fn(&dyn ItemSpecRt<E>, fn_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemApplyBoxed) -> Fut) + Copy,
     ///     Fut: Future<Output = Result<(), E>>,
     /// ```
     async fn item_apply_exec(
@@ -375,23 +375,23 @@ where
         };
 
         let item_spec_id = item_spec.id();
-        let op_ctx = OpCtx::new(
+        let fn_ctx = FnCtx::new(
             item_spec_id,
             #[cfg(feature = "output_progress")]
             ProgressSender::new(item_spec_id, progress_tx),
         );
         let item_apply = match apply_for {
-            ApplyFor::Ensure => ItemSpecRt::ensure_prepare(&**item_spec, op_ctx, resources).await,
-            ApplyFor::Clean => ItemSpecRt::clean_prepare(&**item_spec, op_ctx, resources).await,
+            ApplyFor::Ensure => ItemSpecRt::ensure_prepare(&**item_spec, fn_ctx, resources).await,
+            ApplyFor::Clean => ItemSpecRt::clean_prepare(&**item_spec, fn_ctx, resources).await,
         };
 
         match item_apply {
             Ok(mut item_apply) => {
-                match item_apply.op_check_status() {
+                match item_apply.apply_check() {
                     #[cfg(not(feature = "output_progress"))]
-                    OpCheckStatus::ExecRequired => {}
+                    ApplyCheck::ExecRequired => {}
                     #[cfg(feature = "output_progress")]
-                    OpCheckStatus::ExecRequired { progress_limit } => {
+                    ApplyCheck::ExecRequired { progress_limit } => {
                         // Update `OutputWrite`s with progress limit.
                         let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
                             item_spec_id: item_spec_id.clone(),
@@ -399,7 +399,7 @@ where
                             msg_update: ProgressMsgUpdate::Set(String::from("in progress")),
                         });
                     }
-                    OpCheckStatus::ExecNotRequired => {
+                    ApplyCheck::ExecNotRequired => {
                         #[cfg(feature = "output_progress")]
                         let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
                             item_spec_id: item_spec_id.clone(),
@@ -421,7 +421,7 @@ where
                         return Ok(());
                     }
                 }
-                match apply_fn(&**item_spec, op_ctx, resources, &mut item_apply).await {
+                match apply_fn(&**item_spec, fn_ctx, resources, &mut item_apply).await {
                     Ok(()) => {
                         // apply succeeded
 
@@ -545,7 +545,7 @@ impl<E, O, PKeys, StatesTsApply, StatesTsApplyDry> Default
 #[derive(Debug)]
 enum ItemApplyOutcome<E> {
     /// Error occurred when discovering current state, desired states, state
-    /// diff, or `OpCheckStatus`.
+    /// diff, or `ApplyCheck`.
     PrepareFail {
         item_spec_id: ItemSpecId,
         item_apply_partial: ItemApplyPartialBoxed,

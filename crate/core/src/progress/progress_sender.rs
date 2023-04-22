@@ -7,18 +7,18 @@ use crate::{
 
 /// Submits progress for an item spec's `ApplyFns::exec` method.
 #[derive(Clone, Copy, Debug)]
-pub struct ProgressSender<'op> {
+pub struct ProgressSender<'exec> {
     /// ID of the item spec this belongs to.
-    item_spec_id: &'op ItemSpecId,
+    item_spec_id: &'exec ItemSpecId,
     /// Channel sender to send progress updates to.
-    progress_tx: &'op Sender<ProgressUpdateAndId>,
+    progress_tx: &'exec Sender<ProgressUpdateAndId>,
 }
 
-impl<'op> ProgressSender<'op> {
+impl<'exec> ProgressSender<'exec> {
     /// Returns a new `ProgressSender`.
     pub fn new(
-        item_spec_id: &'op ItemSpecId,
-        progress_tx: &'op Sender<ProgressUpdateAndId>,
+        item_spec_id: &'exec ItemSpecId,
+        progress_tx: &'exec Sender<ProgressUpdateAndId>,
     ) -> Self {
         Self {
             item_spec_id,

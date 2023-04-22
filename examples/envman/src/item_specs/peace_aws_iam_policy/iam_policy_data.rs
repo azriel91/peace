@@ -1,9 +1,9 @@
 use peace::data::{
-    accessors::{WOpt, R, W},
+    accessors::{WOpt, R},
     Data,
 };
 
-use crate::item_specs::peace_aws_iam_policy::{model::ManagedPolicyArn, IamPolicyParams};
+use crate::item_specs::peace_aws_iam_policy::model::ManagedPolicyArn;
 
 /// Data used to manage instance profile state.
 ///
@@ -12,33 +12,23 @@ use crate::item_specs::peace_aws_iam_policy::{model::ManagedPolicyArn, IamPolicy
 /// * `Id`: A zero-sized type used to distinguish different instance profile
 ///   parameters from each other.
 #[derive(Data, Debug)]
-pub struct IamPolicyData<'op, Id>
+pub struct IamPolicyData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    /// IamPolicy state parameters.
-    params: W<'op, IamPolicyParams<Id>>,
     /// Workaround for managed policy ARN param.
     ///
     /// Hack: Remove this when referential param values is implemented.
-    managed_policy_arn: WOpt<'op, ManagedPolicyArn<Id>>,
+    managed_policy_arn: WOpt<'exec, ManagedPolicyArn<Id>>,
     /// IAM client to communicate with AWS.
-    client: R<'op, aws_sdk_iam::Client>,
+    client: R<'exec, aws_sdk_iam::Client>,
 }
 
-impl<'op, Id> IamPolicyData<'op, Id>
+impl<'exec, Id> IamPolicyData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    pub fn params(&self) -> &IamPolicyParams<Id> {
-        &self.params
-    }
-
-    pub fn params_mut(&mut self) -> &mut IamPolicyParams<Id> {
-        &mut self.params
-    }
-
-    pub fn client(&self) -> &R<'op, aws_sdk_iam::Client> {
+    pub fn client(&self) -> &R<'exec, aws_sdk_iam::Client> {
         &self.client
     }
 
@@ -48,7 +38,7 @@ where
     }
 
     /// Hack: Remove this when referential param values is implemented.
-    pub fn managed_policy_arn_mut(&mut self) -> &mut WOpt<'op, ManagedPolicyArn<Id>> {
+    pub fn managed_policy_arn_mut(&mut self) -> &mut WOpt<'exec, ManagedPolicyArn<Id>> {
         &mut self.managed_policy_arn
     }
 }

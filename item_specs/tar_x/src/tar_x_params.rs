@@ -19,8 +19,8 @@ use serde::{Deserialize, Serialize};
 //
 // * keep or remove unknown files
 // * force re-extraction
-#[derive(Clone, Derivative, PartialEq, Eq, Deserialize, Serialize)]
-#[derivative(Debug)]
+#[derive(Derivative, PartialEq, Eq, Deserialize, Serialize)]
+#[derivative(Clone, Debug)]
 pub struct TarXParams<Id> {
     /// Path of the tar file to extract.
     tar_path: PathBuf,

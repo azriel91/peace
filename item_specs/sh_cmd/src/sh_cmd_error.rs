@@ -1,12 +1,29 @@
 #[cfg(feature = "error_reporting")]
 use peace::miette::{self, SourceSpan};
 
-use crate::ShCmd;
+use crate::{CmdVariant, ShCmd};
 
 /// Error while managing command execution.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 pub enum ShCmdError {
+    /// A command script was not resolved during execution.
+    ///
+    /// This could be due to it not being provided, or it failed to be looked up
+    /// when needed.
+    #[error("Script not resolved for: `{cmd_variant}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_item_spec_sh_cmd::cmd_script_not_exists),
+            help("Check if the `{cmd_variant}` is provided in params.")
+        )
+    )]
+    CmdScriptNotResolved {
+        /// The cmd variant that was not existent.
+        cmd_variant: CmdVariant,
+    },
+
     /// Failed to execute command.
     #[error("Failed to execute command: `{}`", sh_cmd)]
     #[cfg_attr(

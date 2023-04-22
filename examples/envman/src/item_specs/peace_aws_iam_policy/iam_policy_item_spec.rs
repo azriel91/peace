@@ -1,13 +1,14 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
+    cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId},
     resources::{resources::ts::Empty, Resources},
 };
 
 use crate::item_specs::peace_aws_iam_policy::{
-    model::ManagedPolicyArn, IamPolicyApplyFns, IamPolicyData, IamPolicyError, IamPolicyState,
-    IamPolicyStateCurrentFn, IamPolicyStateDesiredFn, IamPolicyStateDiff, IamPolicyStateDiffFn,
+    model::ManagedPolicyArn, IamPolicyApplyFns, IamPolicyData, IamPolicyError, IamPolicyParams,
+    IamPolicyState, IamPolicyStateCurrentFn, IamPolicyStateDesiredFn, IamPolicyStateDiff,
+    IamPolicyStateDiffFn,
 };
 
 /// Item spec to create an IAM instance profile and IAM role.
@@ -57,8 +58,9 @@ impl<Id> ItemSpec for IamPolicyItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = IamPolicyData<'op, Id>;
+    type Data<'exec> = IamPolicyData<'exec, Id>;
     type Error = IamPolicyError;
+    type Params<'exec> = IamPolicyParams<Id>;
     type State = IamPolicyState;
     type StateDiff = IamPolicyStateDiff;
 
@@ -78,71 +80,84 @@ where
     }
 
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Option<Self::State>, IamPolicyError> {
-        IamPolicyStateCurrentFn::try_state_current(op_ctx, data).await
+        IamPolicyStateCurrentFn::try_state_current(fn_ctx, params_partial, data).await
     }
 
     async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Self::State, IamPolicyError> {
-        IamPolicyStateCurrentFn::state_current(op_ctx, data).await
+        IamPolicyStateCurrentFn::state_current(fn_ctx, params, data).await
     }
 
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Option<Self::State>, IamPolicyError> {
-        IamPolicyStateDesiredFn::try_state_desired(op_ctx, data).await
+        IamPolicyStateDesiredFn::try_state_desired(fn_ctx, params_partial, data).await
     }
 
     async fn state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Self::State, IamPolicyError> {
-        IamPolicyStateDesiredFn::state_desired(op_ctx, data).await
+        IamPolicyStateDesiredFn::state_desired(fn_ctx, params, data).await
     }
 
     async fn state_diff(
-        _data: IamPolicyData<'_, Id>,
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,
     ) -> Result<Self::StateDiff, IamPolicyError> {
         IamPolicyStateDiffFn::state_diff(state_current, state_desired).await
     }
 
-    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, IamPolicyError> {
+    async fn state_clean(
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
+    ) -> Result<Self::State, IamPolicyError> {
         Ok(IamPolicyState::None)
     }
 
     async fn apply_check(
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
-    ) -> Result<OpCheckStatus, Self::Error> {
-        IamPolicyApplyFns::apply_check(data, state_current, state_target, diff).await
+    ) -> Result<ApplyCheck, Self::Error> {
+        IamPolicyApplyFns::<Id>::apply_check(params, data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        IamPolicyApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        IamPolicyApplyFns::<Id>::apply_dry(fn_ctx, params, data, state_current, state_target, diff)
+            .await
     }
 
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        IamPolicyApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
+        IamPolicyApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff)
+            .await
     }
 }

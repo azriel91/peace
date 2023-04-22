@@ -9,19 +9,19 @@ use crate::BlankParams;
 /// * `Id`: A zero-sized type used to distinguish different blank parameters
 ///   from each other.
 #[derive(Data, Debug)]
-pub struct BlankData<'op, Id>
+pub struct BlankData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
     /// Blank state parameters.
-    params: W<'op, BlankParams<Id>>,
+    params: W<'exec, BlankParams<Id>>,
 }
 
-impl<'op, Id> BlankData<'op, Id>
+impl<'exec, Id> BlankData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    pub fn new(params: W<'op, BlankParams<Id>>) -> Self {
+    pub fn new(params: W<'exec, BlankParams<Id>>) -> Self {
         Self { params }
     }
 

@@ -1,13 +1,13 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
+    cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId},
     resources::{resources::ts::Empty, Resources},
 };
 
 use crate::{
-    FileMetadatas, TarXApplyFns, TarXData, TarXError, TarXStateCurrentFn, TarXStateDesiredFn,
-    TarXStateDiff, TarXStateDiffFn,
+    FileMetadatas, TarXApplyFns, TarXData, TarXError, TarXParams, TarXStateCurrentFn,
+    TarXStateDesiredFn, TarXStateDiff, TarXStateDiffFn,
 };
 
 /// Item spec for extracting a tar file.
@@ -57,8 +57,9 @@ impl<Id> ItemSpec for TarXItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = TarXData<'op, Id>;
+    type Data<'exec> = TarXData<'exec, Id>;
     type Error = TarXError;
+    type Params<'exec> = TarXParams<Id>;
     type State = FileMetadatas;
     type StateDiff = TarXStateDiff;
 
@@ -71,71 +72,86 @@ where
     }
 
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: TarXData<'_, Id>,
     ) -> Result<Option<Self::State>, TarXError> {
-        Self::state_current(op_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_current(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: TarXData<'_, Id>,
     ) -> Result<Self::State, TarXError> {
-        TarXStateCurrentFn::state_current(op_ctx, data).await
+        TarXStateCurrentFn::state_current(fn_ctx, params, data).await
     }
 
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: TarXData<'_, Id>,
     ) -> Result<Option<Self::State>, TarXError> {
-        TarXStateDesiredFn::try_state_desired(op_ctx, data).await
+        TarXStateDesiredFn::try_state_desired(fn_ctx, params_partial, data).await
     }
 
     async fn state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: TarXData<'_, Id>,
     ) -> Result<Self::State, TarXError> {
-        TarXStateDesiredFn::state_desired(op_ctx, data).await
+        TarXStateDesiredFn::state_desired(fn_ctx, params, data).await
     }
 
     async fn state_diff(
-        _data: TarXData<'_, Id>,
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,
     ) -> Result<Self::StateDiff, TarXError> {
         TarXStateDiffFn::state_diff(state_current, state_desired).await
     }
 
-    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, TarXError> {
+    async fn state_clean(
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
+    ) -> Result<Self::State, TarXError> {
         Ok(FileMetadatas::default())
     }
 
     async fn apply_check(
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
-    ) -> Result<OpCheckStatus, Self::Error> {
-        TarXApplyFns::apply_check(data, state_current, state_target, diff).await
+    ) -> Result<ApplyCheck, Self::Error> {
+        TarXApplyFns::<Id>::apply_check(params, data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        TarXApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        TarXApplyFns::<Id>::apply_dry(fn_ctx, params, data, state_current, state_target, diff).await
     }
 
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        TarXApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
+        TarXApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff).await
     }
 }

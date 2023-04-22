@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, State},
+    cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId, State},
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -23,8 +23,6 @@ use crate::{
 pub struct ShCmdItemSpec<Id> {
     /// ID to easily tell what the item spec command is for.
     item_spec_id: ItemSpecId,
-    /// Parameters to insert into `resources` in [`ItemSpec::setup`].
-    sh_cmd_params: Option<ShCmdParams<Id>>,
     /// Marker for unique command execution parameters type.
     marker: PhantomData<Id>,
 }
@@ -33,7 +31,6 @@ impl<Id> Clone for ShCmdItemSpec<Id> {
     fn clone(&self) -> Self {
         Self {
             item_spec_id: self.item_spec_id.clone(),
-            sh_cmd_params: self.sh_cmd_params.clone(),
             marker: PhantomData,
         }
     }
@@ -45,11 +42,9 @@ impl<Id> ShCmdItemSpec<Id> {
     /// # Parameters
     ///
     /// * `item_spec_id`: ID of this `ShCmdItemSpec`.
-    /// * `sh_cmd_params`: Parameters to insert into `Resources`.
-    pub fn new(item_spec_id: ItemSpecId, sh_cmd_params: Option<ShCmdParams<Id>>) -> Self {
+    pub fn new(item_spec_id: ItemSpecId) -> Self {
         Self {
             item_spec_id,
-            sh_cmd_params,
             marker: PhantomData,
         }
     }
@@ -60,8 +55,9 @@ impl<Id> ItemSpec for ShCmdItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = ShCmdData<'op, Id>;
+    type Data<'exec> = ShCmdData<'exec, Id>;
     type Error = ShCmdError;
+    type Params<'exec> = ShCmdParams<Id>;
     type State = State<ShCmdState<Id>, ShCmdExecutionRecord>;
     type StateDiff = ShCmdStateDiff;
 
@@ -69,85 +65,113 @@ where
         &self.item_spec_id
     }
 
-    async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), ShCmdError> {
-        if let Some(sh_cmd_params) = self.sh_cmd_params.clone() {
-            resources.insert(sh_cmd_params);
-        }
-
+    async fn setup(&self, _resources: &mut Resources<Empty>) -> Result<(), ShCmdError> {
         Ok(())
     }
 
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: ShCmdData<'_, Id>,
     ) -> Result<Option<Self::State>, ShCmdError> {
-        Self::state_current(op_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_current(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn state_current(
-        _op_ctx: OpCtx<'_>,
-        data: ShCmdData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
+        _data: ShCmdData<'_, Id>,
     ) -> Result<Self::State, ShCmdError> {
-        let state_current_sh_cmd = data.sh_cmd_params().state_current_sh_cmd();
+        let state_current_sh_cmd = params.state_current_sh_cmd();
         ShCmdExecutor::exec(state_current_sh_cmd).await
     }
 
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: ShCmdData<'_, Id>,
     ) -> Result<Option<Self::State>, ShCmdError> {
-        Self::state_desired(op_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_desired(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn state_desired(
-        _op_ctx: OpCtx<'_>,
-        data: ShCmdData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
+        _data: ShCmdData<'_, Id>,
     ) -> Result<Self::State, ShCmdError> {
-        let state_desired_sh_cmd = data.sh_cmd_params().state_desired_sh_cmd();
+        let state_desired_sh_cmd = params.state_desired_sh_cmd();
         // Maybe we should support reading different exit statuses for an `Ok(None)`
         // value.
         ShCmdExecutor::exec(state_desired_sh_cmd).await
     }
 
     async fn state_diff(
-        data: ShCmdData<'_, Id>,
+        params_partial: Option<&Self::Params<'_>>,
+        data: Self::Data<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,
     ) -> Result<Self::StateDiff, ShCmdError> {
-        ShCmdStateDiffFn::state_diff(data, state_current, state_desired).await
+        if let Some(params) = params_partial {
+            ShCmdStateDiffFn::state_diff(params, data, state_current, state_desired).await
+        } else {
+            Err(ShCmdError::CmdScriptNotResolved {
+                cmd_variant: crate::CmdVariant::StateDiff,
+            })
+        }
     }
 
-    async fn state_clean(sh_cmd_data: Self::Data<'_>) -> Result<Self::State, ShCmdError> {
-        let state_clean_sh_cmd = sh_cmd_data.sh_cmd_params().state_clean_sh_cmd();
-        ShCmdExecutor::exec(state_clean_sh_cmd).await
+    async fn state_clean(
+        params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
+    ) -> Result<Self::State, ShCmdError> {
+        if let Some(params) = params_partial {
+            let state_clean_sh_cmd = params.state_clean_sh_cmd();
+            ShCmdExecutor::exec(state_clean_sh_cmd).await
+        } else {
+            Err(ShCmdError::CmdScriptNotResolved {
+                cmd_variant: crate::CmdVariant::StateClean,
+            })
+        }
     }
 
     async fn apply_check(
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
-    ) -> Result<OpCheckStatus, Self::Error> {
-        ShCmdApplyFns::apply_check(data, state_current, state_target, diff).await
+    ) -> Result<ApplyCheck, Self::Error> {
+        ShCmdApplyFns::<Id>::apply_check(params, data, state_current, state_target, diff).await
     }
 
     async fn apply_dry(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        ShCmdApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        ShCmdApplyFns::<Id>::apply_dry(fn_ctx, params, data, state_current, state_target, diff)
+            .await
     }
 
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        ShCmdApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
+        ShCmdApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff).await
     }
 }

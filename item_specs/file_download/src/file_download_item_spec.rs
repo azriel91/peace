@@ -1,14 +1,14 @@
 use std::marker::PhantomData;
 
 use peace::{
-    cfg::{async_trait, state::FetchedOpt, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx, State},
+    cfg::{async_trait, state::FetchedOpt, ApplyCheck, FnCtx, ItemSpec, ItemSpecId, State},
     resources::{resources::ts::Empty, Resources},
 };
 
 use crate::{
-    ETag, FileDownloadApplyFns, FileDownloadData, FileDownloadError, FileDownloadState,
-    FileDownloadStateCurrentFn, FileDownloadStateDesiredFn, FileDownloadStateDiff,
-    FileDownloadStateDiffFn,
+    ETag, FileDownloadApplyFns, FileDownloadData, FileDownloadError, FileDownloadParams,
+    FileDownloadState, FileDownloadStateCurrentFn, FileDownloadStateDesiredFn,
+    FileDownloadStateDiff, FileDownloadStateDiffFn,
 };
 
 /// Item spec for downloading a file.
@@ -52,8 +52,9 @@ impl<Id> ItemSpec for FileDownloadItemSpec<Id>
 where
     Id: Send + Sync + 'static,
 {
-    type Data<'op> = FileDownloadData<'op, Id>;
+    type Data<'exec> = FileDownloadData<'exec, Id>;
     type Error = FileDownloadError;
+    type Params<'exec> = FileDownloadParams<Id>;
     type State = State<FileDownloadState, FetchedOpt<ETag>>;
     type StateDiff = FileDownloadStateDiff;
 
@@ -68,73 +69,97 @@ where
     }
 
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<Self::State>, FileDownloadError> {
-        FileDownloadStateCurrentFn::try_state_current(op_ctx, data).await
+        FileDownloadStateCurrentFn::try_state_current(fn_ctx, params_partial, data).await
     }
 
     async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Self::State, FileDownloadError> {
-        FileDownloadStateCurrentFn::state_current(op_ctx, data).await
+        FileDownloadStateCurrentFn::state_current(fn_ctx, params, data).await
     }
 
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<Self::State>, FileDownloadError> {
-        FileDownloadStateDesiredFn::try_state_desired(op_ctx, data).await
+        FileDownloadStateDesiredFn::try_state_desired(fn_ctx, params_partial, data).await
     }
 
     async fn state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Self::State, FileDownloadError> {
-        FileDownloadStateDesiredFn::state_desired(op_ctx, data).await
+        FileDownloadStateDesiredFn::state_desired(fn_ctx, params, data).await
     }
 
     async fn state_diff(
-        _data: FileDownloadData<'_, Id>,
-        state_current: &Self::State,
-        state_desired: &Self::State,
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
+        state_a: &Self::State,
+        state_b: &Self::State,
     ) -> Result<Self::StateDiff, FileDownloadError> {
-        FileDownloadStateDiffFn::state_diff(state_current, state_desired).await
+        FileDownloadStateDiffFn::state_diff(state_a, state_b).await
     }
 
-    async fn state_clean(data: Self::Data<'_>) -> Result<Self::State, FileDownloadError> {
-        let path = data.file_download_params().dest().to_path_buf();
+    async fn state_clean(
+        params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
+    ) -> Result<Self::State, FileDownloadError> {
+        let path = params_partial
+            .map(|params| params.dest())
+            .unwrap_or_else(|| todo!("Redesign FileDownloadState"))
+            .to_path_buf();
         let state = State::new(FileDownloadState::None { path }, FetchedOpt::Tbd);
         Ok(state)
     }
 
     async fn apply_check(
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
-    ) -> Result<OpCheckStatus, Self::Error> {
-        FileDownloadApplyFns::apply_check(data, state_current, state_target, diff).await
+    ) -> Result<ApplyCheck, Self::Error> {
+        FileDownloadApplyFns::<Id>::apply_check(params, data, state_current, state_target, diff)
+            .await
     }
 
     async fn apply_dry(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        FileDownloadApplyFns::apply_dry(op_ctx, data, state_current, state_target, diff).await
+        FileDownloadApplyFns::<Id>::apply_dry(
+            fn_ctx,
+            params,
+            data,
+            state_current,
+            state_target,
+            diff,
+        )
+        .await
     }
 
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        FileDownloadApplyFns::apply(op_ctx, data, state_current, state_target, diff).await
+        FileDownloadApplyFns::<Id>::apply(fn_ctx, params, data, state_current, state_target, diff)
+            .await
     }
 }

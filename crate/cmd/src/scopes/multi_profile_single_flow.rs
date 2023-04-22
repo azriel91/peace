@@ -12,7 +12,7 @@ use peace_rt_model::{
         FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
         WorkspaceParams,
     },
-    Flow, StatesTypeReg, Workspace,
+    Flow, ItemSpecParams, ItemSpecParamsTypeReg, StatesTypeReg, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -109,7 +109,18 @@ where
         BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
     /// Saved states for each profile for the selected flow.
     profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
-    /// Type registries to deserialize [`StatesSavedFile`] and
+    /// Type registry for each item spec's [`Params`].
+    ///
+    /// This is used to deserialize [`ItemSpecParamsFile`].
+    ///
+    /// [`Params`]: peace_cfg::ItemSpec::Params
+    /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
+    item_spec_params_type_reg: ItemSpecParamsTypeReg,
+    /// Item spec params for each profile for the selected flow.
+    profile_to_item_spec_params: BTreeMap<Profile, Option<ItemSpecParams>>,
+    /// Type registry for each item spec's `State`.
+    ///
+    /// This is used to deserialize [`StatesSavedFile`] and
     /// [`StatesDesiredFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
@@ -162,7 +173,18 @@ where
         &'view BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
     /// Saved states for each profile for the selected flow.
     pub profile_to_states_saved: &'view BTreeMap<Profile, Option<StatesSaved>>,
-    /// Type registries to deserialize [`StatesSavedFile`] and
+    /// Type registry for each item spec's [`Params`].
+    ///
+    /// This is used to deserialize [`ItemSpecParamsFile`].
+    ///
+    /// [`Params`]: peace_cfg::ItemSpec::Params
+    /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
+    pub item_spec_params_type_reg: &'view ItemSpecParamsTypeReg,
+    /// Item spec params for each profile for the selected flow.
+    pub profile_to_item_spec_params: &'view BTreeMap<Profile, Option<ItemSpecParams>>,
+    /// Type registry for each item spec's `State`.
+    ///
+    /// This is used to deserialize [`StatesSavedFile`] and
     /// [`StatesDesiredFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
@@ -197,6 +219,8 @@ where
             FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
         >,
         profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
+        item_spec_params_type_reg: ItemSpecParamsTypeReg,
+        profile_to_item_spec_params: BTreeMap<Profile, Option<ItemSpecParams>>,
         states_type_reg: StatesTypeReg,
         resources: Resources<SetUp>,
     ) -> Self {
@@ -213,6 +237,8 @@ where
             profile_to_profile_params,
             profile_to_flow_params,
             profile_to_states_saved,
+            item_spec_params_type_reg,
+            profile_to_item_spec_params,
             states_type_reg,
             resources,
         }
@@ -240,6 +266,8 @@ where
             profile_to_profile_params,
             profile_to_flow_params,
             profile_to_states_saved,
+            item_spec_params_type_reg,
+            profile_to_item_spec_params,
             states_type_reg,
             resources,
         } = self;
@@ -257,6 +285,8 @@ where
             profile_to_profile_params,
             profile_to_flow_params,
             profile_to_states_saved,
+            item_spec_params_type_reg,
+            profile_to_item_spec_params,
             states_type_reg,
             resources,
         }
@@ -323,9 +353,14 @@ where
     /// Returns the type registries for [`WorkspaceParams`], [`ProfileParams`],
     /// and [`FlowParams`] deserialization.
     ///
-    /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
-    /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
+    /// Not to be confused with [`item_spec_params_type_reg`], which is used to
+    /// deserialize [`ItemSpecParams`]
+    ///
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
+    /// [`ItemSpecParams`]: peace_rt_model::ItemSpecParams
+    /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
+    /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
+    /// [`item_spec_params_type_reg`]: Self::item_spec_params_type_reg
     pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
         &self.params_type_regs
     }
@@ -335,7 +370,24 @@ where
         &self.profile_to_states_saved
     }
 
-    /// Returns the type registries to deserialize [`StatesSavedFile`] and
+    /// Returns the type registry for each item spec's [`Params`].
+    ///
+    /// This is used to deserialize [`ItemSpecParamsFile`].
+    ///
+    /// [`Params`]: peace_cfg::ItemSpec::Params
+    /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
+    pub fn item_spec_params_type_reg(&self) -> &ItemSpecParamsTypeReg {
+        &self.item_spec_params_type_reg
+    }
+
+    /// Returns the item spec params for each profile for the selected flow.
+    pub fn profile_to_item_spec_params(&self) -> &BTreeMap<Profile, Option<ItemSpecParams>> {
+        &self.profile_to_item_spec_params
+    }
+
+    /// Returns the type registry for each item spec's `State`.
+    ///
+    /// This is used to deserialize [`StatesSavedFile`] and
     /// [`StatesDesiredFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile

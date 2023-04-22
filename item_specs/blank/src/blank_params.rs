@@ -14,8 +14,8 @@ use crate::{BlankDest, BlankSrc};
 ///
 /// * `Id`: A zero-sized type used to distinguish different blank parameters
 ///   from each other.
-#[derive(Clone, Derivative, PartialEq, Eq, Deserialize, Serialize)]
-#[derivative(Debug)]
+#[derive(Derivative, PartialEq, Eq, Deserialize, Serialize)]
+#[derivative(Clone, Debug)]
 pub struct BlankParams<Id> {
     /// Source / desired value for the state.
     src: BlankSrc,

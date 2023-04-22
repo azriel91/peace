@@ -1,9 +1,6 @@
-use peace::data::{
-    accessors::{R, W},
-    Data,
-};
+use std::marker::PhantomData;
 
-use crate::item_specs::peace_aws_instance_profile::InstanceProfileParams;
+use peace::data::{accessors::R, Data};
 
 /// Data used to manage instance profile state.
 ///
@@ -12,29 +9,21 @@ use crate::item_specs::peace_aws_instance_profile::InstanceProfileParams;
 /// * `Id`: A zero-sized type used to distinguish different instance profile
 ///   parameters from each other.
 #[derive(Data, Debug)]
-pub struct InstanceProfileData<'op, Id>
+pub struct InstanceProfileData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    /// InstanceProfile state parameters.
-    params: W<'op, InstanceProfileParams<Id>>,
     /// IAM client to communicate with AWS.
-    client: R<'op, aws_sdk_iam::Client>,
+    client: R<'exec, aws_sdk_iam::Client>,
+    /// Marker.
+    marker: PhantomData<Id>,
 }
 
-impl<'op, Id> InstanceProfileData<'op, Id>
+impl<'exec, Id> InstanceProfileData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    pub fn params(&self) -> &InstanceProfileParams<Id> {
-        &self.params
-    }
-
-    pub fn params_mut(&mut self) -> &mut InstanceProfileParams<Id> {
-        &mut self.params
-    }
-
-    pub fn client(&self) -> &R<'op, aws_sdk_iam::Client> {
+    pub fn client(&self) -> &R<'exec, aws_sdk_iam::Client> {
         &self.client
     }
 }

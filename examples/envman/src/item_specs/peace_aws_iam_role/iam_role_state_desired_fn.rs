@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{state::Generated, OpCtx};
+use peace::cfg::{state::Generated, FnCtx};
 
 use crate::item_specs::peace_aws_iam_role::{
-    model::ManagedPolicyAttachment, IamRoleData, IamRoleError, IamRoleState,
+    model::ManagedPolicyAttachment, IamRoleData, IamRoleError, IamRoleParams, IamRoleState,
 };
 
 /// Reads the desired state of the instance profile state.
@@ -15,17 +15,22 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&IamRoleParams<Id>>,
         data: IamRoleData<'_, Id>,
     ) -> Result<Option<IamRoleState>, IamRoleError> {
-        Self::state_desired(op_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_desired(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn state_desired(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
+        params: &IamRoleParams<Id>,
         data: IamRoleData<'_, Id>,
     ) -> Result<IamRoleState, IamRoleError> {
-        let params = data.params();
         let name = params.name().to_string();
         let path = params.path().to_string();
         let managed_policy_attachment = ManagedPolicyAttachment::new(

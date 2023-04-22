@@ -18,7 +18,7 @@ Note that the `ItemSpec::apply` requires implementers to return `StatePhysical`,
 To discover the current state of all items, the following method is used:
 
 1. `ApplyFns::check` is run for all item specs.
-2. Of the ones that return `OpCheckStatus::ExecRequired`, `ItemSpec::apply` is run.
+2. Of the ones that return `ApplyCheck::ExecRequired`, `ItemSpec::apply` is run.
 3. Finally, `ItemSpec::state_current` is run so that the end state can be compared with the desired state to confirm that they match.
 
 ### `ApplyFns::check`
@@ -71,16 +71,16 @@ digraph {
 
 ```rust ,ignore
 // ItemSpec1
-OpCheckStatus::ExecRequired { .. }
+ApplyCheck::ExecRequired { .. }
 
 // ItemSpec2
-OpCheckStatus::ExecNotRequired
+ApplyCheck::ExecNotRequired
 
 // ItemSpec3
-OpCheckStatus::ExecRequired { .. }
+ApplyCheck::ExecRequired { .. }
 
 // ItemSpec4
-OpCheckStatus::ExecRequired { .. }
+ApplyCheck::ExecRequired { .. }
 ```
 
 </div>

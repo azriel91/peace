@@ -68,7 +68,7 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
         For this to work, when the current state is requested, `peace` will:
 
         1. For each non-parent item, run `state_current`, `state_desired`, `state_diff`, and `apply_check`.
-        2. If `apply_check` returns `OpCheckStatus::ExecNotRequired`, then successor items can be processed as well.
+        2. If `apply_check` returns `ApplyCheck::ExecNotRequired`, then successor items can be processed as well.
 
     3. `state_current` could return `Result<Option<Status>, E>`:
 

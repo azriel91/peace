@@ -1,13 +1,23 @@
-use peace_cfg::ItemSpecId;
-use peace_resources::type_reg::untagged::{BoxDtDisplay, TypeReg};
 use std::ops::{Deref, DerefMut};
 
-/// Type registries to deserialize `StatesSavedFile` and `StatesDesiredFile`.
+use peace_cfg::ItemSpecId;
+use peace_resources::type_reg::untagged::{BoxDtDisplay, TypeReg};
+
+/// Type registry for each item spec's `State`.
+///
+/// This is used to deserialize [`StatesSavedFile`] and [`StatesDesiredFile`].
+///
+/// Note: [`ItemSpecParamsTypeReg`] uses [`BoxDt`], whereas this uses
+/// [`BoxDtDisplay`].
+///
+/// [`BoxDt`]: peace_resources::type_reg::untagged::BoxDt
+/// [`BoxDtDisplay`]: peace_resources::type_reg::untagged::BoxDtDisplay
+/// [`ItemSpecParamsTypeReg`]: crate::ItemSpecParamsTypeReg
+/// [`Params`]: peace_cfg::ItemSpec::Params
+/// [`StatesDesiredFile`]: peace_resources::paths::StatesDesiredFile
+/// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
 #[derive(Debug, Default)]
-pub struct StatesTypeReg(
-    /// Type registry for each item spec's `State`.
-    TypeReg<ItemSpecId, BoxDtDisplay>,
-);
+pub struct StatesTypeReg(TypeReg<ItemSpecId, BoxDtDisplay>);
 
 impl StatesTypeReg {
     /// Returns new `StatesTypeReg`.

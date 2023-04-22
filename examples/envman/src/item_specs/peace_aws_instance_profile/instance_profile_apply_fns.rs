@@ -2,11 +2,11 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate, ProgressSender};
-use peace::cfg::{state::Generated, OpCheckStatus, OpCtx};
+use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_instance_profile::{
     model::InstanceProfileIdAndArn, InstanceProfileData, InstanceProfileError,
-    InstanceProfileState, InstanceProfileStateDiff,
+    InstanceProfileParams, InstanceProfileState, InstanceProfileStateDiff,
 };
 
 /// ApplyFns for the instance profile state.
@@ -99,32 +99,33 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        _instance_profile_data: InstanceProfileData<'_, Id>,
+        _params: &InstanceProfileParams<Id>,
+        _data: InstanceProfileData<'_, Id>,
         state_current: &InstanceProfileState,
         _state_desired: &InstanceProfileState,
         diff: &InstanceProfileStateDiff,
-    ) -> Result<OpCheckStatus, InstanceProfileError> {
+    ) -> Result<ApplyCheck, InstanceProfileError> {
         match diff {
             InstanceProfileStateDiff::Added
             | InstanceProfileStateDiff::RoleAssociatedModified { .. } => {
-                let op_check_status = {
+                let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
                     #[cfg(feature = "output_progress")]
                     {
                         // Create instance profile, associate role
                         let progress_limit = ProgressLimit::Steps(2);
-                        OpCheckStatus::ExecRequired { progress_limit }
+                        ApplyCheck::ExecRequired { progress_limit }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             InstanceProfileStateDiff::Removed => {
-                let op_check_status = match state_current {
-                    InstanceProfileState::None => OpCheckStatus::ExecNotRequired,
+                let apply_check = match state_current {
+                    InstanceProfileState::None => ApplyCheck::ExecNotRequired,
                     InstanceProfileState::Some {
                         name: _,
                         path: _,
@@ -140,22 +141,22 @@ where
                         }
 
                         if steps_required == 0 {
-                            OpCheckStatus::ExecNotRequired
+                            ApplyCheck::ExecNotRequired
                         } else {
                             #[cfg(not(feature = "output_progress"))]
                             {
-                                OpCheckStatus::ExecRequired
+                                ApplyCheck::ExecRequired
                             }
                             #[cfg(feature = "output_progress")]
                             {
                                 let progress_limit = ProgressLimit::Steps(steps_required);
-                                OpCheckStatus::ExecRequired { progress_limit }
+                                ApplyCheck::ExecRequired { progress_limit }
                             }
                         }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             InstanceProfileStateDiff::NameOrPathModified {
                 name_diff,
@@ -167,13 +168,14 @@ where
                 },
             ),
             InstanceProfileStateDiff::InSyncExists
-            | InstanceProfileStateDiff::InSyncDoesNotExist => Ok(OpCheckStatus::ExecNotRequired),
+            | InstanceProfileStateDiff::InSyncDoesNotExist => Ok(ApplyCheck::ExecNotRequired),
         }
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
-        _instance_profile_data: InstanceProfileData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        _params: &InstanceProfileParams<Id>,
+        _data: InstanceProfileData<'_, Id>,
         _state_current: &InstanceProfileState,
         state_desired: &InstanceProfileState,
         _diff: &InstanceProfileStateDiff,
@@ -181,24 +183,17 @@ where
         Ok(state_desired.clone())
     }
 
-    // Not sure why we can't use this:
-    //
-    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
-    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
-    //
-    // There's an error saying lifetime bounds don't match the trait definition.
-    //
-    // Likely an issue with the codegen in `async-trait`.
-    #[allow(unused_variables)]
     pub async fn apply(
-        op_ctx: OpCtx<'_>,
+        #[cfg(not(feature = "output_progress"))] _fn_ctx: FnCtx<'_>,
+        #[cfg(feature = "output_progress")] fn_ctx: FnCtx<'_>,
+        _params: &InstanceProfileParams<Id>,
         data: InstanceProfileData<'_, Id>,
         state_current: &InstanceProfileState,
         state_desired: &InstanceProfileState,
         diff: &InstanceProfileStateDiff,
     ) -> Result<InstanceProfileState, InstanceProfileError> {
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
 
         match diff {
             InstanceProfileStateDiff::Added => match state_desired {

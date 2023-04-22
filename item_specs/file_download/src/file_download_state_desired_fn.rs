@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{state::FetchedOpt, OpCtx, State};
+use peace::cfg::{state::FetchedOpt, FnCtx, State};
 use reqwest::header::ETAG;
 
-use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadState};
+use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState};
 
 /// Reads the desired state of the file to download.
 #[derive(Debug)]
@@ -14,29 +14,35 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&FileDownloadParams<Id>>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<State<FileDownloadState, FetchedOpt<ETag>>>, FileDownloadError> {
-        Self::state_desired(op_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_desired(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn state_desired(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &FileDownloadParams<Id>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
-        let file_state_desired = Self::file_state_desired(op_ctx, &data).await?;
+        let file_state_desired = Self::file_state_desired(fn_ctx, params, &data).await?;
 
         Ok(file_state_desired)
     }
 
     async fn file_state_desired(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
+        params: &FileDownloadParams<Id>,
         data: &FileDownloadData<'_, Id>,
     ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
         let client = data.client();
-        let file_download_params = data.file_download_params();
-        let dest = file_download_params.dest();
-        let src_url = file_download_params.src();
+        let dest = params.dest();
+        let src_url = params.src();
         let response = client
             .get(src_url.clone())
             .send()

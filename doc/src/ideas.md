@@ -31,7 +31,7 @@ This page records ideas that I'd like, but there isn't enough mental capacity an
 </div>
 </details>
 <details>
-<summary>4. Clean Operation Retains History</summary>
+<summary>4. Clean Command Retains History</summary>
 <div>
 
 End users may want to see what was previously deployed.
@@ -130,7 +130,7 @@ For items that cost, it is useful to have an expiry time that causes it to be de
 <summary>10. Interrupt / cancel safety</summary>
 <div>
 
-The [`tokio-graceful-shutdown`] library can be used to introduce interrupt safety into item spec executions. This is particularly useful for write operations.
+The [`tokio-graceful-shutdown`] library can be used to introduce interrupt safety into item spec executions. This is particularly useful for write functions.
 
 See the [`is_shutdown_requested`] method in particular.
 
@@ -159,6 +159,39 @@ Because of diffable params, and [#94], the `ItemSpec` should likely have:
 * For `MultiProfileSingleFlow` commands, a diff for item spec params which contains a referential value (e.g. "use the `some_predecessor.ip_address()`") may(?) need information about `some_predecessor` through `Resources` / `Data`.
 
 We should work out the design of that before settling on what `state_diff` and `item_spec_params_diff`'s function parameters will be. See **Design Thoughts** on [#94] for how it may look like.
+
+</div>
+</details>
+
+<details>
+<summary>12. Default item spec params</summary>
+<div>
+
+An `ItemSpec`'s params may not necessarily be mandatory. From the `Params` type (and corresponding trait), Peace may:
+
+* Insert default param values, if the `ItemSpec` implementor provides a default
+* Still make the params required if there is no default.
+* Provide a way for `ParamsSpec` for each field to be the default, or a mapping function.
+
+</div>
+</details>
+
+<details>
+<summary>13. Upgrades: Tolerate optional or different workspace params / item spec params / states</summary>
+<div>
+
+When new workspace params are added, or new item specs are added to a flow, existing `*_params.yaml`, `item_spec_params.yaml`, and `states_*.yaml` may not contain values for those newly added params / item specs.
+
+Automation software should be able to:
+
+* Work with missing parameters.
+* Work with changed parameter types.
+
+When workspace params / item specs are removed from a flow, leftover params / state are no longer used. However, we may want to do one of:
+
+* Notify the user to clean up unused params
+* Peace should ignore it
+* Inform the automator to still register the item spec, so that old execution may be loaded.
 
 </div>
 </details>

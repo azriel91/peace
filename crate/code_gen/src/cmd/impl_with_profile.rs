@@ -88,6 +88,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
                             // workspace_params_selection,
                             // profile_params_selection,
                             // flow_params_selection,
+                            // item_spec_params_provided,
                             // marker: std::marker::PhantomData,
                             #scope_builder_fields_profile_not_selected
                         },
@@ -100,6 +101,7 @@ pub fn impl_with_profile(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,
+                    // item_spec_params_provided,
                     // marker: std::marker::PhantomData,
                     #scope_builder_fields_profile_selected
                 };
@@ -260,6 +262,7 @@ pub fn impl_with_profile_from_workspace_param(
                             // workspace_params_selection,
                             // profile_params_selection,
                             // flow_params_selection,
+                            // item_spec_params_provided,
                             // marker: std::marker::PhantomData,
                             #scope_builder_fields_profile_not_selected
                         },
@@ -272,6 +275,7 @@ pub fn impl_with_profile_from_workspace_param(
                     // workspace_params_selection,
                     // profile_params_selection,
                     // flow_params_selection,
+                    // item_spec_params_provided,
                     // marker: std::marker::PhantomData,
                     #scope_builder_fields_profile_from_workspace
                 };
@@ -291,18 +295,7 @@ fn scope_builder_fields_profile_not_selected(scope: Scope) -> Punctuated<FieldVa
     field_values.push(parse_quote!(
         profile_selection: crate::scopes::type_params::ProfileNotSelected
     ));
-    if scope.flow_count() == FlowCount::One {
-        field_values.push(parse_quote!(flow_selection));
-    }
-    field_values.push(parse_quote!(params_type_regs_builder));
-    field_values.push(parse_quote!(workspace_params_selection));
-    if scope.profile_params_supported() {
-        field_values.push(parse_quote!(profile_params_selection));
-    }
-    if scope.flow_params_supported() {
-        field_values.push(parse_quote!(flow_params_selection));
-    }
-    field_values.push(parse_quote!(marker: std::marker::PhantomData));
+    scope_builder_fields_remainder_push(scope, &mut field_values);
 
     field_values
 }
@@ -312,18 +305,7 @@ fn scope_builder_fields_profile_selected(scope: Scope) -> Punctuated<FieldValue,
     field_values.push(parse_quote!(
         profile_selection: crate::scopes::type_params::ProfileSelected(profile)
     ));
-    if scope.flow_count() == FlowCount::One {
-        field_values.push(parse_quote!(flow_selection));
-    }
-    field_values.push(parse_quote!(params_type_regs_builder));
-    field_values.push(parse_quote!(workspace_params_selection));
-    if scope.profile_params_supported() {
-        field_values.push(parse_quote!(profile_params_selection));
-    }
-    if scope.flow_params_supported() {
-        field_values.push(parse_quote!(flow_params_selection));
-    }
-    field_values.push(parse_quote!(marker: std::marker::PhantomData));
+    scope_builder_fields_remainder_push(scope, &mut field_values);
 
     field_values
 }
@@ -333,6 +315,15 @@ fn scope_builder_fields_profile_from_workspace(scope: Scope) -> Punctuated<Field
     field_values.push(parse_quote!(
         profile_selection: crate::scopes::type_params::ProfileFromWorkspaceParam(workspace_param_k)
     ));
+    scope_builder_fields_remainder_push(scope, &mut field_values);
+
+    field_values
+}
+
+fn scope_builder_fields_remainder_push(
+    scope: Scope,
+    field_values: &mut Punctuated<FieldValue, Comma>,
+) {
     if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(flow_selection));
     }
@@ -344,7 +335,8 @@ fn scope_builder_fields_profile_from_workspace(scope: Scope) -> Punctuated<Field
     if scope.flow_params_supported() {
         field_values.push(parse_quote!(flow_params_selection));
     }
+    if scope == Scope::SingleProfileSingleFlow {
+        field_values.push(parse_quote!(item_spec_params_provided));
+    }
     field_values.push(parse_quote!(marker: std::marker::PhantomData));
-
-    field_values
 }

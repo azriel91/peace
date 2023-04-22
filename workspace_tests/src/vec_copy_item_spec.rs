@@ -7,9 +7,9 @@ use diff::{Diff, VecDiff, VecDiffType};
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
 use peace::{
-    cfg::{async_trait, item_spec_id, ItemSpec, ItemSpecId, OpCheckStatus, OpCtx},
+    cfg::{async_trait, item_spec_id, ApplyCheck, FnCtx, ItemSpec, ItemSpecId},
     data::{
-        accessors::{RMaybe, R, W},
+        accessors::{RMaybe, W},
         Data,
     },
     resources::{resources::ts::Empty, states::StatesSaved, Resources},
@@ -22,43 +22,63 @@ pub type VecCopyItemSpecWrapper = ItemSpecWrapper<VecCopyItemSpec, VecCopyError>
 
 /// Copies bytes from `VecA` to `VecB`.
 #[derive(Clone, Debug)]
-pub struct VecCopyItemSpec;
+pub struct VecCopyItemSpec {
+    /// ID of the item spec.
+    id: ItemSpecId,
+}
 
 impl VecCopyItemSpec {
-    pub const ID: &ItemSpecId = &item_spec_id!("vec_copy");
+    pub const ID_DEFAULT: &ItemSpecId = &item_spec_id!("vec_copy");
+
+    pub fn new(id: ItemSpecId) -> Self {
+        Self { id }
+    }
+}
+
+impl Default for VecCopyItemSpec {
+    fn default() -> Self {
+        Self::new(Self::ID_DEFAULT.clone())
+    }
 }
 
 #[async_trait(?Send)]
 impl ItemSpec for VecCopyItemSpec {
-    type Data<'op> = VecCopyData<'op>;
+    type Data<'exec> = VecCopyData<'exec>;
     type Error = VecCopyError;
+    type Params<'exec> = VecA;
     type State = VecCopyState;
     type StateDiff = VecCopyDiff;
 
     fn id(&self) -> &ItemSpecId {
-        Self::ID
+        &self.id
     }
 
     async fn try_state_current(
-        op_ctx: OpCtx<'_>,
-        data: VecCopyData<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
+        data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, VecCopyError> {
-        Self::state_current(op_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_current(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn state_current(
-        op_ctx: OpCtx<'_>,
-        data: VecCopyData<'_>,
+        fn_ctx: FnCtx<'_>,
+        _params: &Self::Params<'_>,
+        data: Self::Data<'_>,
     ) -> Result<Self::State, VecCopyError> {
         #[cfg(not(feature = "output_progress"))]
-        let _op_ctx = op_ctx;
+        let _fn_ctx = fn_ctx;
 
         let vec_copy_state = VecCopyState::from(data.dest().0.clone());
 
         #[cfg(feature = "output_progress")]
         {
             if let Ok(len) = u64::try_from(vec_copy_state.len()) {
-                op_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
+                fn_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
             }
         }
 
@@ -66,24 +86,30 @@ impl ItemSpec for VecCopyItemSpec {
     }
 
     async fn try_state_desired(
-        op_ctx: OpCtx<'_>,
-        data: VecCopyData<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&Self::Params<'_>>,
+        data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, VecCopyError> {
-        Self::state_desired(op_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_desired(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn state_desired(
-        op_ctx: OpCtx<'_>,
-        data: VecCopyData<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
+        _data: Self::Data<'_>,
     ) -> Result<Self::State, VecCopyError> {
         #[cfg(not(feature = "output_progress"))]
-        let _op_ctx = op_ctx;
-        let vec_copy_state = VecCopyState::from(data.src().0.clone());
+        let _fn_ctx = fn_ctx;
+        let vec_copy_state = VecCopyState::from(params.0.clone());
 
         #[cfg(feature = "output_progress")]
         {
             if let Ok(len) = u64::try_from(vec_copy_state.len()) {
-                op_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
+                fn_ctx.progress_sender.inc(len, ProgressMsgUpdate::NoChange);
             }
         }
 
@@ -91,6 +117,7 @@ impl ItemSpec for VecCopyItemSpec {
     }
 
     async fn state_diff(
+        _params_partial: Option<&Self::Params<'_>>,
         _data: VecCopyData<'_>,
         state_current: &VecCopyState,
         state_desired: &VecCopyState,
@@ -98,24 +125,28 @@ impl ItemSpec for VecCopyItemSpec {
         Ok(state_current.diff(state_desired)).map(VecCopyDiff::from)
     }
 
-    async fn state_clean(_: Self::Data<'_>) -> Result<Self::State, VecCopyError> {
+    async fn state_clean(
+        _params_partial: Option<&Self::Params<'_>>,
+        _data: Self::Data<'_>,
+    ) -> Result<Self::State, VecCopyError> {
         Ok(VecCopyState::new())
     }
 
     async fn apply_check(
+        _params: &Self::Params<'_>,
         _data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
-    ) -> Result<OpCheckStatus, Self::Error> {
-        let op_check_status = if diff.0.0.is_empty() {
-            OpCheckStatus::ExecNotRequired
+    ) -> Result<ApplyCheck, Self::Error> {
+        let apply_check = if diff.0.0.is_empty() {
+            ApplyCheck::ExecNotRequired
         } else {
             #[cfg(not(feature = "output_progress"))]
             {
                 let _state_current = state_current;
                 let _state_target = state_target;
-                OpCheckStatus::ExecRequired
+                ApplyCheck::ExecRequired
             }
             #[cfg(feature = "output_progress")]
             {
@@ -124,14 +155,15 @@ impl ItemSpec for VecCopyItemSpec {
                         .map(ProgressLimit::Bytes)
                         .unwrap_or(ProgressLimit::Unknown);
 
-                OpCheckStatus::ExecRequired { progress_limit }
+                ApplyCheck::ExecRequired { progress_limit }
             }
         };
-        Ok(op_check_status)
+        Ok(apply_check)
     }
 
     async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
+        _params: &Self::Params<'_>,
         _data: Self::Data<'_>,
         _state_current: &Self::State,
         state_target: &Self::State,
@@ -142,7 +174,8 @@ impl ItemSpec for VecCopyItemSpec {
     }
 
     async fn apply(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        _params: &Self::Params<'_>,
         mut data: Self::Data<'_>,
         _state_current: &Self::State,
         state_target: &Self::State,
@@ -153,20 +186,19 @@ impl ItemSpec for VecCopyItemSpec {
         dest.0.extend_from_slice(state_target.as_slice());
 
         #[cfg(not(feature = "output_progress"))]
-        let _op_ctx = op_ctx;
+        let _fn_ctx = fn_ctx;
         #[cfg(feature = "output_progress")]
         if let Ok(n) = state_target.len().try_into() {
-            op_ctx.progress_sender().inc(n, ProgressMsgUpdate::NoChange);
+            fn_ctx.progress_sender().inc(n, ProgressMsgUpdate::NoChange);
         }
 
         Ok(state_target.clone())
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {
-        resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-
         let vec_b = {
-            let states_saved = <RMaybe<'_, StatesSaved> as Data>::borrow(Self::ID, resources);
+            let states_saved =
+                <RMaybe<'_, StatesSaved> as Data>::borrow(Self::ID_DEFAULT, resources);
             let vec_copy_state_saved: Option<&'_ VecCopyState> = states_saved
                 .as_ref()
                 .and_then(|states_saved| states_saved.get(self.id()));
@@ -199,18 +231,12 @@ pub enum VecCopyError {
 }
 
 #[derive(Data, Debug)]
-pub struct VecCopyData<'op> {
-    /// Source `Vec` to read from.
-    src: R<'op, VecA>,
+pub struct VecCopyData<'exec> {
     /// Destination `Vec` to write to.
-    dest: W<'op, VecB>,
+    dest: W<'exec, VecB>,
 }
 
-impl<'op> VecCopyData<'op> {
-    pub fn src(&self) -> &VecA {
-        &self.src
-    }
-
+impl<'exec> VecCopyData<'exec> {
     pub fn dest(&self) -> &VecB {
         &self.dest
     }
@@ -220,10 +246,10 @@ impl<'op> VecCopyData<'op> {
     }
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VecA(pub Vec<u8>);
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VecB(pub Vec<u8>);
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

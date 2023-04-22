@@ -2,10 +2,11 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{OpCheckStatus, OpCtx, State};
+use peace::cfg::{ApplyCheck, FnCtx, State};
 
 use crate::{
-    ShCmd, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState, ShCmdStateDiff,
+    ShCmd, ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdParams, ShCmdState,
+    ShCmdStateDiff,
 };
 
 /// ApplyFns for the command to execute.
@@ -17,11 +18,12 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        sh_cmd_data: ShCmdData<'_, Id>,
+        params: &ShCmdParams<Id>,
+        _data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
-    ) -> Result<OpCheckStatus, ShCmdError> {
+    ) -> Result<ApplyCheck, ShCmdError> {
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
@@ -30,8 +32,7 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let apply_check_sh_cmd = sh_cmd_data
-            .sh_cmd_params()
+        let apply_check_sh_cmd = params
             .apply_check_sh_cmd()
             .clone()
             .arg(state_current_arg)
@@ -45,15 +46,15 @@ where
                     Some("true") => {
                         #[cfg(not(feature = "output_progress"))]
                         {
-                            Ok(OpCheckStatus::ExecRequired)
+                            Ok(ApplyCheck::ExecRequired)
                         }
 
                         #[cfg(feature = "output_progress")]
-                        Ok(OpCheckStatus::ExecRequired {
+                        Ok(ApplyCheck::ExecRequired {
                             progress_limit: ProgressLimit::Unknown,
                         })
                     }
-                    Some("false") => Ok(OpCheckStatus::ExecNotRequired),
+                    Some("false") => Ok(ApplyCheck::ExecNotRequired),
                     _ => Err(ShCmdError::EnsureCheckValueNotBoolean {
                         sh_cmd: apply_check_sh_cmd.clone(),
                         #[cfg(feature = "error_reporting")]
@@ -71,8 +72,9 @@ where
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
-        sh_cmd_data: ShCmdData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        params: &ShCmdParams<Id>,
+        _data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
@@ -86,8 +88,7 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let apply_exec_sh_cmd = sh_cmd_data
-            .sh_cmd_params()
+        let apply_exec_sh_cmd = params
             .apply_exec_sh_cmd()
             .clone()
             .arg(state_current_arg)
@@ -98,8 +99,9 @@ where
     }
 
     pub async fn apply(
-        _op_ctx: OpCtx<'_>,
-        sh_cmd_data: ShCmdData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        params: &ShCmdParams<Id>,
+        _data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
@@ -112,8 +114,7 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let apply_exec_sh_cmd = sh_cmd_data
-            .sh_cmd_params()
+        let apply_exec_sh_cmd = params
             .apply_exec_sh_cmd()
             .clone()
             .arg(state_current_arg)
@@ -121,6 +122,6 @@ where
             .arg(&**state_diff);
 
         ShCmdExecutor::<Id>::exec(&apply_exec_sh_cmd).await?;
-        ShCmdExecutor::<Id>::exec(sh_cmd_data.sh_cmd_params().state_current_sh_cmd()).await
+        ShCmdExecutor::<Id>::exec(params.state_current_sh_cmd()).await
     }
 }

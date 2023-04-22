@@ -4,10 +4,10 @@ use aws_smithy_http::byte_stream::ByteStream;
 use base64::Engine;
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::{ProgressLimit, ProgressMsgUpdate};
-use peace::cfg::{state::Generated, OpCheckStatus, OpCtx};
+use peace::cfg::{state::Generated, ApplyCheck, FnCtx};
 
 use crate::item_specs::peace_aws_s3_object::{
-    S3ObjectData, S3ObjectError, S3ObjectState, S3ObjectStateDiff,
+    S3ObjectData, S3ObjectError, S3ObjectParams, S3ObjectState, S3ObjectStateDiff,
 };
 
 /// ApplyFns for the S3 object state.
@@ -19,30 +19,31 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn apply_check(
-        _s3_object_data: S3ObjectData<'_, Id>,
+        _params: &S3ObjectParams<Id>,
+        _data: S3ObjectData<'_, Id>,
         state_current: &S3ObjectState,
         _state_desired: &S3ObjectState,
         diff: &S3ObjectStateDiff,
-    ) -> Result<OpCheckStatus, S3ObjectError> {
+    ) -> Result<ApplyCheck, S3ObjectError> {
         match diff {
             S3ObjectStateDiff::Added { .. } | S3ObjectStateDiff::ObjectContentModified { .. } => {
-                let op_check_status = {
+                let apply_check = {
                     #[cfg(not(feature = "output_progress"))]
                     {
-                        OpCheckStatus::ExecRequired
+                        ApplyCheck::ExecRequired
                     }
                     #[cfg(feature = "output_progress")]
                     {
                         let progress_limit = ProgressLimit::Steps(1);
-                        OpCheckStatus::ExecRequired { progress_limit }
+                        ApplyCheck::ExecRequired { progress_limit }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             S3ObjectStateDiff::Removed => {
-                let op_check_status = match state_current {
-                    S3ObjectState::None => OpCheckStatus::ExecNotRequired,
+                let apply_check = match state_current {
+                    S3ObjectState::None => ApplyCheck::ExecNotRequired,
                     S3ObjectState::Some {
                         bucket_name: _,
                         object_key: _,
@@ -51,18 +52,18 @@ where
                     } => {
                         #[cfg(not(feature = "output_progress"))]
                         {
-                            OpCheckStatus::ExecRequired
+                            ApplyCheck::ExecRequired
                         }
                         #[cfg(feature = "output_progress")]
                         {
                             let steps_required = 1;
                             let progress_limit = ProgressLimit::Steps(steps_required);
-                            OpCheckStatus::ExecRequired { progress_limit }
+                            ApplyCheck::ExecRequired { progress_limit }
                         }
                     }
                 };
 
-                Ok(op_check_status)
+                Ok(apply_check)
             }
             S3ObjectStateDiff::BucketNameModified {
                 bucket_name_current,
@@ -79,14 +80,15 @@ where
                 object_key_desired: object_key_desired.clone(),
             }),
             S3ObjectStateDiff::InSyncExists | S3ObjectStateDiff::InSyncDoesNotExist => {
-                Ok(OpCheckStatus::ExecNotRequired)
+                Ok(ApplyCheck::ExecNotRequired)
             }
         }
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
-        _s3_object_data: S3ObjectData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        _params: &S3ObjectParams<Id>,
+        _data: S3ObjectData<'_, Id>,
         _state_current: &S3ObjectState,
         state_desired: &S3ObjectState,
         _diff: &S3ObjectStateDiff,
@@ -94,24 +96,17 @@ where
         Ok(state_desired.clone())
     }
 
-    // Not sure why we can't use this:
-    //
-    // #[cfg(not(feature = "output_progress"))] _op_ctx: OpCtx<'_>,
-    // #[cfg(feature = "output_progress")] op_ctx: OpCtx<'_>,
-    //
-    // There's an error saying lifetime bounds don't match the trait definition.
-    //
-    // Likely an issue with the codegen in `async-trait`.
-    #[allow(unused_variables)]
     pub async fn apply(
-        op_ctx: OpCtx<'_>,
+        #[cfg(not(feature = "output_progress"))] _fn_ctx: FnCtx<'_>,
+        #[cfg(feature = "output_progress")] fn_ctx: FnCtx<'_>,
+        params: &S3ObjectParams<Id>,
         data: S3ObjectData<'_, Id>,
         state_current: &S3ObjectState,
         state_desired: &S3ObjectState,
         diff: &S3ObjectStateDiff,
     ) -> Result<S3ObjectState, S3ObjectError> {
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
 
         match diff {
             S3ObjectStateDiff::Added | S3ObjectStateDiff::ObjectContentModified { .. } => {
@@ -130,7 +125,7 @@ where
                         #[cfg(feature = "output_progress")]
                         progress_sender
                             .tick(ProgressMsgUpdate::Set(String::from("uploading object")));
-                        let file_path = data.params().file_path();
+                        let file_path = params.file_path();
                         let Some(content_md5_hexstr) = content_md5_hexstr else {
                             panic!("Content MD5 must be Some as this is calculated from an existent local file.");
                         };

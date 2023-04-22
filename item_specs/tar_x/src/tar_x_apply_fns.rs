@@ -2,9 +2,9 @@ use std::marker::PhantomData;
 
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressLimit;
-use peace::cfg::{OpCheckStatus, OpCtx};
+use peace::cfg::{ApplyCheck, FnCtx};
 
-use crate::{FileMetadatas, TarXData, TarXError, TarXStateDiff};
+use crate::{FileMetadatas, TarXData, TarXError, TarXParams, TarXStateDiff};
 
 /// ApplyFns for the tar to extract.
 #[derive(Debug)]
@@ -24,13 +24,14 @@ where
     // Likely an issue with the codegen in `async-trait`.
     #[allow(unused_variables)]
     pub async fn apply_check(
-        _tar_x_data: TarXData<'_, Id>,
+        _params: &TarXParams<Id>,
+        _data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         state_desired: &FileMetadatas,
         diff: &TarXStateDiff,
-    ) -> Result<OpCheckStatus, TarXError> {
-        let op_check_status = match diff {
-            TarXStateDiff::ExtractionInSync => OpCheckStatus::ExecNotRequired,
+    ) -> Result<ApplyCheck, TarXError> {
+        let apply_check = match diff {
+            TarXStateDiff::ExtractionInSync => ApplyCheck::ExecNotRequired,
             TarXStateDiff::ExtractionOutOfSync {
                 added: _,
                 modified: _,
@@ -38,7 +39,7 @@ where
             } => {
                 #[cfg(not(feature = "output_progress"))]
                 {
-                    OpCheckStatus::ExecRequired
+                    ApplyCheck::ExecRequired
                 }
                 #[cfg(feature = "output_progress")]
                 {
@@ -47,17 +48,18 @@ where
                         .try_into()
                         .map(ProgressLimit::Steps)
                         .unwrap_or(ProgressLimit::Unknown);
-                    OpCheckStatus::ExecRequired { progress_limit }
+                    ApplyCheck::ExecRequired { progress_limit }
                 }
             }
         };
 
-        Ok(op_check_status)
+        Ok(apply_check)
     }
 
     pub async fn apply_dry(
-        _op_ctx: OpCtx<'_>,
-        _tar_x_data: TarXData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        _params: &TarXParams<Id>,
+        _data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         state_desired: &FileMetadatas,
         _diff: &TarXStateDiff,
@@ -67,16 +69,16 @@ where
 
     #[cfg(not(target_arch = "wasm32"))]
     pub async fn apply(
-        _op_ctx: OpCtx<'_>,
-        tar_x_data: TarXData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        params: &TarXParams<Id>,
+        data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         state_desired: &FileMetadatas,
         diff: &TarXStateDiff,
     ) -> Result<FileMetadatas, TarXError> {
         use futures::stream::{StreamExt, TryStreamExt};
 
-        let storage = tar_x_data.storage();
-        let params = tar_x_data.tar_x_params();
+        let storage = data.storage();
         let tar_path = params.tar_path();
         let dest = params.dest();
 
@@ -91,7 +93,7 @@ where
         // Probably store entries in `IndexMap`s, then look them up to determine if they
         // need to be unpacked.
         //
-        // Then we can send proper progress updates via `op_ctx.progress_tx`.
+        // Then we can send proper progress updates via `fn_ctx.progress_tx`.
         if tar_path.exists() {
             storage
                 .read_with_sync_api(
@@ -137,8 +139,9 @@ where
 
     #[cfg(target_arch = "wasm32")]
     pub async fn apply(
-        _op_ctx: OpCtx<'_>,
-        _tar_x_data: TarXData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        params: &TarXParams<Id>,
+        _data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         _state_desired: &FileMetadatas,
         _diff: &TarXStateDiff,

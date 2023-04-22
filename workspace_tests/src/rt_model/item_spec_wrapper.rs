@@ -1,6 +1,6 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
-    cfg::{OpCheckStatus, OpCtx},
+    cfg::{ApplyCheck, FnCtx},
     data::marker::{ApplyDry, Clean, Current, Desired},
     resources::{
         internal::StatesMut,
@@ -24,25 +24,35 @@ use crate::{
 
 #[tokio::test]
 async fn deref_to_dyn_item_spec_rt() {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec.clone());
     let item_spec_rt: &dyn ItemSpecRt<_> = &item_spec_wrapper;
 
-    assert_eq!(format!("{VecCopyItemSpec:?}"), format!("{item_spec_rt:?}"));
+    assert_eq!(
+        format!("{vec_copy_item_spec:?}"),
+        format!("{item_spec_rt:?}")
+    );
 }
 
 #[tokio::test]
 async fn deref_mut_to_dyn_item_spec_rt() {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec.clone());
     let item_spec_rt: &dyn ItemSpecRt<_> = &item_spec_wrapper;
 
-    assert_eq!(format!("{VecCopyItemSpec:?}"), format!("{item_spec_rt:?}"));
+    assert_eq!(
+        format!("{vec_copy_item_spec:?}"),
+        format!("{item_spec_rt:?}")
+    );
 }
 
 #[tokio::test]
 async fn setup() -> Result<(), Box<dyn std::error::Error>> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let mut resources = Resources::new();
     <dyn ItemSpecRt<_>>::setup(&item_spec_wrapper, &mut resources).await?;
+    resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
     assert!(resources.try_borrow::<VecA>().is_ok());
     // Automatic `Current<State>` and `Desired<State>` insertion.
@@ -56,25 +66,26 @@ async fn setup() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 async fn state_current_try_exec() -> Result<(), Box<dyn std::error::Error>> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
-    let op_ctx = OpCtx::new(
-        VecCopyItemSpec::ID,
+    let fn_ctx = FnCtx::new(
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
 
     let state = item_spec_wrapper
-        .state_current_try_exec(op_ctx, &resources)
+        .state_current_try_exec(fn_ctx, &resources)
         .await?
         .unwrap();
 
@@ -93,25 +104,26 @@ async fn state_current_try_exec() -> Result<(), Box<dyn std::error::Error>> {
 
 #[tokio::test]
 async fn state_desired_try_exec() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
-    let op_ctx = OpCtx::new(
-        VecCopyItemSpec::ID,
+    let fn_ctx = FnCtx::new(
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
 
     let state_desired = item_spec_wrapper
-        .state_desired_try_exec(op_ctx, &resources)
+        .state_desired_try_exec(fn_ctx, &resources)
         .await?
         .unwrap();
 
@@ -130,7 +142,8 @@ async fn state_desired_try_exec() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn state_diff_exec() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
 
     let (resources, states_saved, states_desired) =
         resources_and_states_saved_and_desired(&item_spec_wrapper).await?;
@@ -154,33 +167,34 @@ async fn state_diff_exec() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn ensure_prepare() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
-    let op_ctx = OpCtx::new(
-        VecCopyItemSpec::ID,
+    let fn_ctx = FnCtx::new(
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
 
-    match <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, op_ctx, &resources).await {
+    match <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, fn_ctx, &resources).await {
         Ok(item_apply) => {
             #[cfg(not(feature = "output_progress"))]
-            assert_eq!(OpCheckStatus::ExecRequired, item_apply.op_check_status());
+            assert_eq!(ApplyCheck::ExecRequired, item_apply.apply_check());
             #[cfg(feature = "output_progress")]
             assert_eq!(
-                OpCheckStatus::ExecRequired {
+                ApplyCheck::ExecRequired {
                     progress_limit: ProgressLimit::Bytes(8)
                 },
-                item_apply.op_check_status()
+                item_apply.apply_check()
             );
 
             Ok(())
@@ -191,45 +205,46 @@ async fn ensure_prepare() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn apply_exec_dry_for_ensure() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
-    let op_ctx = OpCtx::new(
-        VecCopyItemSpec::ID,
+    let fn_ctx = FnCtx::new(
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
 
     let mut item_apply_boxed =
-        <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, op_ctx, &resources)
+        <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, fn_ctx, &resources)
             .await
             .map_err(|(error, _)| error)?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
-    let op_ctx = OpCtx::new(
-        VecCopyItemSpec::ID,
+    let fn_ctx = FnCtx::new(
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
 
     <dyn ItemSpecRt<_>>::apply_exec_dry(
         &item_spec_wrapper,
-        op_ctx,
+        fn_ctx,
         &resources,
         &mut item_apply_boxed,
     )
@@ -259,45 +274,46 @@ async fn apply_exec_dry_for_ensure() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn apply_exec_for_ensure() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
-    let op_ctx = OpCtx::new(
-        VecCopyItemSpec::ID,
+    let fn_ctx = FnCtx::new(
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
 
     let mut item_apply_boxed =
-        <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, op_ctx, &resources)
+        <dyn ItemSpecRt<_>>::ensure_prepare(&item_spec_wrapper, fn_ctx, &resources)
             .await
             .map_err(|(error, _)| error)?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
-    let op_ctx = OpCtx::new(
-        VecCopyItemSpec::ID,
+    let fn_ctx = FnCtx::new(
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
 
     <dyn ItemSpecRt<_>>::apply_exec(
         &item_spec_wrapper,
-        op_ctx,
+        fn_ctx,
         &resources,
         &mut item_apply_boxed,
     )
@@ -322,33 +338,34 @@ async fn apply_exec_for_ensure() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn clean_prepare() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up_pre_saved(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
-    let op_ctx = OpCtx::new(
-        VecCopyItemSpec::ID,
+    let fn_ctx = FnCtx::new(
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
 
-    match <dyn ItemSpecRt<_>>::clean_prepare(&item_spec_wrapper, op_ctx, &resources).await {
+    match <dyn ItemSpecRt<_>>::clean_prepare(&item_spec_wrapper, fn_ctx, &resources).await {
         Ok(item_apply) => {
             #[cfg(not(feature = "output_progress"))]
-            assert_eq!(OpCheckStatus::ExecRequired, item_apply.op_check_status());
+            assert_eq!(ApplyCheck::ExecRequired, item_apply.apply_check());
             #[cfg(feature = "output_progress")]
             assert_eq!(
-                OpCheckStatus::ExecRequired {
+                ApplyCheck::ExecRequired {
                     progress_limit: ProgressLimit::Bytes(8)
                 },
-                item_apply.op_check_status()
+                item_apply.apply_check()
             );
 
             Ok(())
@@ -359,45 +376,46 @@ async fn clean_prepare() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn apply_exec_dry_for_clean() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up_pre_saved(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
-    let op_ctx = OpCtx::new(
-        VecCopyItemSpec::ID,
+    let fn_ctx = FnCtx::new(
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
 
     let mut item_apply_boxed =
-        <dyn ItemSpecRt<_>>::clean_prepare(&item_spec_wrapper, op_ctx, &resources)
+        <dyn ItemSpecRt<_>>::clean_prepare(&item_spec_wrapper, fn_ctx, &resources)
             .await
             .map_err(|(error, _)| error)?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
-    let op_ctx = OpCtx::new(
-        VecCopyItemSpec::ID,
+    let fn_ctx = FnCtx::new(
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
 
     <dyn ItemSpecRt<_>>::apply_exec_dry(
         &item_spec_wrapper,
-        op_ctx,
+        fn_ctx,
         &resources,
         &mut item_apply_boxed,
     )
@@ -427,45 +445,46 @@ async fn apply_exec_dry_for_clean() -> Result<(), VecCopyError> {
 
 #[tokio::test]
 async fn apply_exec_for_clean() -> Result<(), VecCopyError> {
-    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
+    let vec_copy_item_spec = VecCopyItemSpec::default();
+    let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(vec_copy_item_spec);
     let resources = resources_set_up_pre_saved(&item_spec_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
-    let op_ctx = OpCtx::new(
-        VecCopyItemSpec::ID,
+    let fn_ctx = FnCtx::new(
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
 
     let mut item_apply_boxed =
-        <dyn ItemSpecRt<_>>::clean_prepare(&item_spec_wrapper, op_ctx, &resources)
+        <dyn ItemSpecRt<_>>::clean_prepare(&item_spec_wrapper, fn_ctx, &resources)
             .await
             .map_err(|(error, _)| error)?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
-    let op_ctx = OpCtx::new(
-        VecCopyItemSpec::ID,
+    let fn_ctx = FnCtx::new(
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
 
     <dyn ItemSpecRt<_>>::apply_exec(
         &item_spec_wrapper,
-        op_ctx,
+        fn_ctx,
         &resources,
         &mut item_apply_boxed,
     )
@@ -493,7 +512,8 @@ async fn resources_set_up(
 ) -> Result<Resources<SetUp>, VecCopyError> {
     let mut resources = Resources::new();
     <dyn ItemSpecRt<_>>::setup(item_spec_wrapper, &mut resources).await?;
-    let resources = Resources::<SetUp>::from(resources);
+    let mut resources = Resources::<SetUp>::from(resources);
+    resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
     Ok(resources)
 }
@@ -515,13 +535,13 @@ async fn resources_and_states_saved_and_desired(
         if #[cfg(feature = "output_progress")] {
             let (progress_tx, _progress_rx) = mpsc::channel(10);
             let progress_sender = ProgressSender::new(
-                VecCopyItemSpec::ID,
+                VecCopyItemSpec::ID_DEFAULT,
                 &progress_tx,
             );
         }
     }
-    let op_ctx = OpCtx::new(
-        VecCopyItemSpec::ID,
+    let fn_ctx = FnCtx::new(
+        VecCopyItemSpec::ID_DEFAULT,
         #[cfg(feature = "output_progress")]
         progress_sender,
     );
@@ -529,7 +549,7 @@ async fn resources_and_states_saved_and_desired(
     let states_saved = {
         let mut states_mut = StatesMut::new();
         let state =
-            <dyn ItemSpecRt<_>>::state_current_try_exec(item_spec_wrapper, op_ctx, &resources)
+            <dyn ItemSpecRt<_>>::state_current_try_exec(item_spec_wrapper, fn_ctx, &resources)
                 .await?;
         if let Some(state) = state {
             states_mut.insert_raw(<dyn ItemSpecRt<_>>::id(item_spec_wrapper).clone(), state);
@@ -540,7 +560,7 @@ async fn resources_and_states_saved_and_desired(
     let states_desired = {
         let mut states_desired_mut = StatesMut::<states::ts::Desired>::new();
         let state_desired = item_spec_wrapper
-            .state_desired_try_exec(op_ctx, &resources)
+            .state_desired_try_exec(fn_ctx, &resources)
             .await?
             .unwrap();
         states_desired_mut.insert_raw(

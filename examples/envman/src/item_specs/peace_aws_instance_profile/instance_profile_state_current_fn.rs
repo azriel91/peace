@@ -1,10 +1,11 @@
 use std::marker::PhantomData;
 
 use aws_sdk_iam::{error::SdkError, operation::get_instance_profile::GetInstanceProfileError};
-use peace::cfg::{state::Generated, OpCtx};
+use peace::cfg::{state::Generated, FnCtx};
 
 use crate::item_specs::peace_aws_instance_profile::{
-    model::InstanceProfileIdAndArn, InstanceProfileData, InstanceProfileError, InstanceProfileState,
+    model::InstanceProfileIdAndArn, InstanceProfileData, InstanceProfileError,
+    InstanceProfileParams, InstanceProfileState,
 };
 
 #[cfg(feature = "output_progress")]
@@ -19,24 +20,30 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params_partial: Option<&InstanceProfileParams<Id>>,
         data: InstanceProfileData<'_, Id>,
     ) -> Result<Option<InstanceProfileState>, InstanceProfileError> {
-        Self::state_current(op_ctx, data).await.map(Some)
+        if let Some(params) = params_partial {
+            Self::state_current(fn_ctx, params, data).await.map(Some)
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn state_current(
-        op_ctx: OpCtx<'_>,
+        fn_ctx: FnCtx<'_>,
+        params: &InstanceProfileParams<Id>,
         data: InstanceProfileData<'_, Id>,
     ) -> Result<InstanceProfileState, InstanceProfileError> {
         let client = data.client();
-        let name = data.params().name();
-        let path = data.params().path();
+        let name = params.name();
+        let path = params.path();
 
         #[cfg(not(feature = "output_progress"))]
-        let _op_ctx = op_ctx;
+        let _fn_ctx = fn_ctx;
         #[cfg(feature = "output_progress")]
-        let progress_sender = &op_ctx.progress_sender;
+        let progress_sender = &fn_ctx.progress_sender;
         #[cfg(feature = "output_progress")]
         progress_sender.tick(ProgressMsgUpdate::Set(String::from(
             "fetching instance profile",

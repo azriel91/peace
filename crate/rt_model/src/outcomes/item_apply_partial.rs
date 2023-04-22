@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Display};
 
-use peace_cfg::OpCheckStatus;
+use peace_cfg::ApplyCheck;
 use peace_resources::type_reg::untagged::{BoxDtDisplay, DataType};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
@@ -42,7 +42,7 @@ pub struct ItemApplyPartial<State, StateDiff> {
     /// Diff between current and desired states.
     pub state_diff: Option<StateDiff>,
     /// Whether item execution is required.
-    pub op_check_status: Option<OpCheckStatus>,
+    pub apply_check: Option<ApplyCheck>,
 }
 
 impl<State, StateDiff> ItemApplyPartial<State, StateDiff> {
@@ -59,7 +59,7 @@ impl<State, StateDiff> Default for ItemApplyPartial<State, StateDiff> {
             state_current: None,
             state_target: None,
             state_diff: None,
-            op_check_status: None,
+            apply_check: None,
         }
     }
 }
@@ -85,8 +85,8 @@ where
         self.state_diff.clone().map(BoxDtDisplay::new)
     }
 
-    fn op_check_status(&self) -> Option<OpCheckStatus> {
-        self.op_check_status
+    fn apply_check(&self) -> Option<ApplyCheck> {
+        self.apply_check
     }
 
     fn as_data_type(&self) -> &dyn DataType {

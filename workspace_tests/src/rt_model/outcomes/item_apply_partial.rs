@@ -1,5 +1,5 @@
 use peace::{
-    cfg::OpCheckStatus,
+    cfg::ApplyCheck,
     resources::type_reg::untagged::BoxDataTypeDowncast,
     rt_model::outcomes::{ItemApplyPartial, ItemApplyPartialRt},
 };
@@ -11,7 +11,7 @@ fn item_apply_rt_state_saved_returns_state_saved() -> Result<(), Box<dyn std::er
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
-        op_check_status: Some(OpCheckStatus::ExecNotRequired),
+        apply_check: Some(ApplyCheck::ExecNotRequired),
     };
 
     let state_saved = ItemApplyPartialRt::state_saved(&item_apply_partial).unwrap();
@@ -31,7 +31,7 @@ fn item_apply_rt_state_current_returns_state_current() -> Result<(), Box<dyn std
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
-        op_check_status: Some(OpCheckStatus::ExecNotRequired),
+        apply_check: Some(ApplyCheck::ExecNotRequired),
     };
 
     let state_current = ItemApplyPartialRt::state_current(&item_apply_partial).unwrap();
@@ -50,7 +50,7 @@ fn item_apply_rt_state_target_returns_state_target() -> Result<(), Box<dyn std::
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
-        op_check_status: Some(OpCheckStatus::ExecNotRequired),
+        apply_check: Some(ApplyCheck::ExecNotRequired),
     };
 
     let state_target = ItemApplyPartialRt::state_target(&item_apply_partial).unwrap();
@@ -69,7 +69,7 @@ fn item_apply_rt_state_diff_returns_state_diff() -> Result<(), Box<dyn std::erro
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
-        op_check_status: Some(OpCheckStatus::ExecNotRequired),
+        apply_check: Some(ApplyCheck::ExecNotRequired),
     };
 
     let state_diff = ItemApplyPartialRt::state_diff(&item_apply_partial).unwrap();
@@ -82,19 +82,18 @@ fn item_apply_rt_state_diff_returns_state_diff() -> Result<(), Box<dyn std::erro
 }
 
 #[test]
-fn item_apply_rt_op_check_status_returns_op_check_status() -> Result<(), Box<dyn std::error::Error>>
-{
+fn item_apply_rt_apply_check_returns_apply_check() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
         state_saved: Some(456u32),
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
-        op_check_status: Some(OpCheckStatus::ExecNotRequired),
+        apply_check: Some(ApplyCheck::ExecNotRequired),
     };
 
-    let op_check_status = ItemApplyPartialRt::op_check_status(&item_apply_partial).unwrap();
+    let apply_check = ItemApplyPartialRt::apply_check(&item_apply_partial).unwrap();
 
-    assert_eq!(OpCheckStatus::ExecNotRequired, op_check_status);
+    assert_eq!(ApplyCheck::ExecNotRequired, apply_check);
     Ok(())
 }
 
@@ -105,7 +104,7 @@ fn item_apply_rt_as_data_type_returns_self() -> Result<(), Box<dyn std::error::E
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
-        op_check_status: Some(OpCheckStatus::ExecNotRequired),
+        apply_check: Some(ApplyCheck::ExecNotRequired),
     };
 
     #[allow(clippy::redundant_clone)] // https://github.com/rust-lang/rust-clippy/issues/9011
@@ -128,7 +127,7 @@ fn item_apply_rt_as_data_type_mut_returns_self() -> Result<(), Box<dyn std::erro
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
-        op_check_status: Some(OpCheckStatus::ExecNotRequired),
+        apply_check: Some(ApplyCheck::ExecNotRequired),
     };
 
     let mut item_apply_partial_clone = item_apply_partial.clone();

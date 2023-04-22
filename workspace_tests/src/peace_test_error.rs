@@ -8,7 +8,7 @@ use peace::miette;
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 pub enum PeaceTestError {
-    /// A `peace` runtime error occurred.
+    /// A VecCopy item spec error occurred.
     #[error("A VecCopy item spec error occurred.")]
     VecCopyError(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]

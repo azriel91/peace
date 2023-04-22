@@ -13,12 +13,21 @@ use crate::ShSyncCmd;
 ///
 /// * `Id`: A zero-sized type used to distinguish different command execution
 ///   parameters from each other.
-#[derive(Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(PartialEq, Eq, Deserialize, Serialize)]
 pub struct ShSyncCmdParams<Id> {
     /// Shell command to run that does the work.
     work_sh_command: ShSyncCmd,
     /// Marker for unique command execution parameters type.
     marker: PhantomData<Id>,
+}
+
+impl<Id> Clone for ShSyncCmdParams<Id> {
+    fn clone(&self) -> Self {
+        Self {
+            work_sh_command: self.work_sh_command.clone(),
+            marker: PhantomData,
+        }
+    }
 }
 
 impl<Id> ShSyncCmdParams<Id> {

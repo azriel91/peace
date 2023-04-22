@@ -1,12 +1,12 @@
 use peace::{
-    cfg::{app_name, profile, AppName, FlowId, ItemSpec, Profile},
+    cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
     resources::states::StatesSaved,
     rt::cmds::{sub::StatesSavedReadCmd, EnsureCmd, StatesDiscoverCmd},
     rt_model::{outcomes::CmdOutcome, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, PeaceTestError, VecCopyError, VecCopyItemSpec, VecCopyState};
+use crate::{NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std::error::Error>> {
@@ -17,7 +17,7 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.add_fn(VecCopyItemSpec::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -27,6 +27,10 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let (states_current, _states_desired) =
         StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
@@ -48,19 +52,19 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     // let states_desired = resources.borrow::<StatesDesired>();
     // assert_eq!(
     //     Some(VecCopyState::new()).as_ref(),
-    //     states.get::<VecCopyState, _>(&VecCopyItemSpec.id())
+    //     states.get::<VecCopyState, _>(&VecCopyItemSpec::ID_DEFAULT)
     // );
     // assert_eq!(
     //     Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
     //     states_desired
-    //         .get::<VecCopyState, _>(&VecCopyItemSpec.id())
+    //         .get::<VecCopyState, _>(&VecCopyItemSpec::ID_DEFAULT)
     //
     // );
     // ```
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_ensured_dry.get::<VecCopyState, _>(VecCopyItemSpec.id())
+        states_ensured_dry.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT)
     ); // states_ensured_dry should be the same as the beginning.
 
     Ok(())
@@ -76,7 +80,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.add_fn(VecCopyItemSpec::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -86,6 +90,10 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let (states_current, _states_desired) =
         StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
@@ -96,6 +104,10 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let CmdOutcome {
         value: ensured_states_ensured,
@@ -107,6 +119,10 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
 
@@ -118,23 +134,23 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     // let ensured_states_desired = resources_ensured.borrow::<StatesDesired>();
     // assert_eq!(
     //     Some(VecCopyState::new()).as_ref(),
-    //     ensured_states_before.get::<VecCopyState, _>(&VecCopyItemSpec.id())
+    //     ensured_states_before.get::<VecCopyState, _>(&VecCopyItemSpec::ID_DEFAULT)
     // );
     // assert_eq!(
     //     Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
     //     ensured_states_desired
-    //         .get::<VecCopyState, _>(&VecCopyItemSpec.id())
+    //         .get::<VecCopyState, _>(&VecCopyItemSpec::ID_DEFAULT)
     //
     // );
     // ```
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        ensured_states_ensured.get::<VecCopyState, _>(VecCopyItemSpec.id())
+        ensured_states_ensured.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT)
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_saved.get::<VecCopyState, _>(VecCopyItemSpec.id())
+        states_saved.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT)
     );
 
     Ok(())
@@ -150,7 +166,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     )?;
     let graph = {
         let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItemSpec.into());
+        graph_builder.add_fn(VecCopyItemSpec::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -160,6 +176,10 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let (states_current, _states_desired) =
         StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
@@ -177,6 +197,10 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let CmdOutcome {
         value: ensured_states_ensured_dry,
@@ -188,6 +212,10 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
 
@@ -200,25 +228,25 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
     // assert_eq!(
     //     Some(VecCopyState::new()).as_ref(),
     //     ensured_states_before.get::<VecCopyState,
-    // _>(&VecCopyItemSpec.id()) );
+    // _>(&VecCopyItemSpec::ID_DEFAULT) );
     // assert_eq!(
     //     Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
     //     ensured_states_desired
-    //         .get::<VecCopyState, _>(&VecCopyItemSpec.id())
+    //         .get::<VecCopyState, _>(&VecCopyItemSpec::ID_DEFAULT)
     //
     // );
     // ```
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        ensured_states_ensured.get::<VecCopyState, _>(VecCopyItemSpec.id())
+        ensured_states_ensured.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT)
     ); // states_ensured.logical should be the same as states desired, if all went well.
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        ensured_states_ensured_dry.get::<VecCopyState, _>(VecCopyItemSpec.id())
+        ensured_states_ensured_dry.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT)
     ); // TODO: EnsureDry state should simulate the actual states, not return the actual current state
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_saved.get::<VecCopyState, _>(VecCopyItemSpec.id())
+        states_saved.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT)
     );
 
     Ok(())
