@@ -7,9 +7,7 @@
 //! `ItemSpec`'s params type.
 
 pub use self::{
-    cmd_ctx_builder::{
-        ws_and_profile_params_augment, ws_params_augment, ws_profile_and_flow_params_augment,
-    },
+    cmd_ctx_builder::{ws_and_profile_params_augment, ws_params_augment},
     env_clean_cmd::EnvCleanCmd,
     env_cmd::EnvCmd,
     env_deploy_cmd::EnvDeployCmd,

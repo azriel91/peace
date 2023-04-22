@@ -5,7 +5,7 @@ pub use self::{
     env_type::EnvType,
     env_type_parse_error::EnvTypeParseError,
     envman_error::EnvManError,
-    params_keys::{EnvDeployFlowParamsKey, ProfileParamsKey, WorkspaceParamsKey},
+    params_keys::{ProfileParamsKey, WorkspaceParamsKey},
     profile_switch::ProfileSwitch,
     repo_slug::RepoSlug,
     repo_slug_error::RepoSlugError,

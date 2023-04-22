@@ -3,20 +3,20 @@ use peace::{
     cfg::{app_name, AppName, Profile},
     cmd::{
         ctx::CmdCtx,
-        scopes::{MultiProfileSingleFlow, SingleProfileSingleFlow, SingleProfileSingleFlowView},
+        scopes::{MultiProfileSingleFlow, SingleProfileSingleFlowView},
     },
     fmt::presentln,
     resources::resources::ts::SetUp,
     rt_model::{
         output::OutputWrite,
-        params::{KeyKnown, ParamsKeysImpl},
+        params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
         Workspace, WorkspaceSpec,
     },
 };
 
 use crate::{
     flows::EnvDeployFlow,
-    model::{EnvDeployFlowParamsKey, EnvManError, EnvType, ProfileParamsKey, WorkspaceParamsKey},
+    model::{EnvManError, EnvType, ProfileParamsKey, WorkspaceParamsKey},
     rt_model::EnvManCmdCtx,
 };
 
@@ -36,19 +36,7 @@ impl EnvCmd {
     where
         O: OutputWrite<EnvManError>,
         for<'fn_once> F: FnOnce(
-            &'fn_once mut CmdCtx<
-                SingleProfileSingleFlow<
-                    '_,
-                    EnvManError,
-                    O,
-                    ParamsKeysImpl<
-                        KeyKnown<WorkspaceParamsKey>,
-                        KeyKnown<ProfileParamsKey>,
-                        KeyKnown<EnvDeployFlowParamsKey>,
-                    >,
-                    SetUp,
-                >,
-            >,
+            &'fn_once mut EnvManCmdCtx<'_, O, SetUp>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
     {
         cmd_ctx_init!(output, cmd_ctx);
@@ -80,7 +68,7 @@ impl EnvCmd {
                     ParamsKeysImpl<
                         KeyKnown<WorkspaceParamsKey>,
                         KeyKnown<ProfileParamsKey>,
-                        KeyKnown<EnvDeployFlowParamsKey>,
+                        KeyUnknown,
                     >,
                     SetUp,
                 >,
@@ -99,7 +87,7 @@ impl EnvCmd {
         let mut cmd_ctx = {
             let cmd_ctx_builder =
                 CmdCtx::builder_multi_profile_single_flow::<EnvManError, _>(output, &workspace);
-            crate::cmds::ws_profile_and_flow_params_augment!(cmd_ctx_builder);
+            crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder.with_flow(&flow).await?
         };
@@ -149,7 +137,7 @@ macro_rules! cmd_ctx_init {
         let mut $cmd_ctx = {
             let cmd_ctx_builder =
                 CmdCtx::builder_single_profile_single_flow::<EnvManError, _>($output, &workspace);
-            crate::cmds::ws_profile_and_flow_params_augment!(cmd_ctx_builder);
+            crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder
                 .with_profile_from_workspace_param(&profile_key)

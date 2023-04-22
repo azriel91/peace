@@ -1,19 +1,22 @@
 use peace::{
-    cfg::{app_name, AppName, Profile},
+    cfg::{app_name, item_spec_id, AppName, ItemSpecId, Profile},
     cmd::{ctx::CmdCtx, scopes::MultiProfileNoFlowView},
     fmt::{presentable::CodeInline, presentln},
     rt::cmds::StatesDiscoverCmd,
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
+use peace_item_specs::{file_download::FileDownloadItemSpec, tar_x::TarXItemSpec};
 use semver::Version;
 use url::Url;
 
 use crate::{
     flows::{EnvDeployFlow, EnvDeployFlowParams},
-    model::{
-        EnvDeployFlowParamsKey, EnvManError, EnvType, ProfileParamsKey, RepoSlug,
-        WorkspaceParamsKey,
+    item_specs::{
+        peace_aws_iam_policy::IamPolicyItemSpec, peace_aws_iam_role::IamRoleItemSpec,
+        peace_aws_instance_profile::InstanceProfileItemSpec, peace_aws_s3_bucket::S3BucketItemSpec,
+        peace_aws_s3_object::S3ObjectItemSpec,
     },
+    model::{EnvManError, EnvType, ProfileParamsKey, RepoSlug, WebAppFileId, WorkspaceParamsKey},
 };
 
 /// Flow to initialize and set the default profile.
@@ -105,35 +108,38 @@ impl ProfileInitCmd {
         let mut cmd_ctx = {
             let cmd_ctx_builder =
                 CmdCtx::builder_single_profile_single_flow::<EnvManError, _>(output, &workspace);
-            crate::cmds::ws_profile_and_flow_params_augment!(cmd_ctx_builder);
+            crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
             cmd_ctx_builder
                 .with_profile_from_workspace_param(&profile_key)
                 .with_flow(&flow)
-                .with_flow_param_value(
-                    EnvDeployFlowParamsKey::AppDownloadParams,
-                    Some(app_download_params),
+                .with_item_spec_params::<FileDownloadItemSpec<WebAppFileId>>(
+                    item_spec_id!("app_download"),
+                    app_download_params,
                 )
-                .with_flow_param_value(
-                    EnvDeployFlowParamsKey::AppExtractParams,
-                    Some(app_extract_params),
+                .with_item_spec_params::<TarXItemSpec<WebAppFileId>>(
+                    item_spec_id!("app_extract"),
+                    app_extract_params,
                 )
-                .with_flow_param_value(
-                    EnvDeployFlowParamsKey::IamPolicyParams,
-                    Some(iam_policy_params),
+                .with_item_spec_params::<IamPolicyItemSpec<WebAppFileId>>(
+                    item_spec_id!("iam_policy"),
+                    iam_policy_params,
                 )
-                .with_flow_param_value(EnvDeployFlowParamsKey::IamRoleParams, Some(iam_role_params))
-                .with_flow_param_value(
-                    EnvDeployFlowParamsKey::InstanceProfileParams,
-                    Some(instance_profile_params),
+                .with_item_spec_params::<IamRoleItemSpec<WebAppFileId>>(
+                    item_spec_id!("iam_role"),
+                    iam_role_params,
                 )
-                .with_flow_param_value(
-                    EnvDeployFlowParamsKey::S3BucketParams,
-                    Some(s3_bucket_params),
+                .with_item_spec_params::<InstanceProfileItemSpec<WebAppFileId>>(
+                    item_spec_id!("instance_profile"),
+                    instance_profile_params,
                 )
-                .with_flow_param_value(
-                    EnvDeployFlowParamsKey::S3ObjectParams,
-                    Some(s3_object_params),
+                .with_item_spec_params::<S3BucketItemSpec<WebAppFileId>>(
+                    item_spec_id!("s3_bucket"),
+                    s3_bucket_params,
+                )
+                .with_item_spec_params::<S3ObjectItemSpec<WebAppFileId>>(
+                    item_spec_id!("s3_object"),
+                    s3_object_params,
                 )
                 .await?
         };

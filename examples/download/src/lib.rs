@@ -8,7 +8,7 @@ use peace::{
     },
     rt_model::{
         output::OutputWrite,
-        params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
+        params::{KeyUnknown, ParamsKeysImpl},
         Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
@@ -32,6 +32,8 @@ pub struct WorkspaceAndFlow {
     flow: Flow<DownloadError>,
 }
 
+const FILE_ITEM_SPEC_ID: ItemSpecId = item_spec_id!("file");
+
 /// Returns a default workspace and the Download item spec graph.
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn workspace_and_flow_setup(
@@ -43,7 +45,7 @@ pub async fn workspace_and_flow_setup(
     let item_spec_graph = {
         let mut item_spec_graph_builder = ItemSpecGraphBuilder::<DownloadError>::new();
         item_spec_graph_builder
-            .add_fn(FileDownloadItemSpec::<FileId>::new(item_spec_id!("file")).into());
+            .add_fn(FileDownloadItemSpec::<FileId>::new(FILE_ITEM_SPEC_ID).into());
         item_spec_graph_builder.build()
     };
     let flow = Flow::new(flow_id, item_spec_graph);
@@ -76,7 +78,7 @@ pub type DownloadCmdCtx<'ctx, O> = CmdCtx<
         'ctx,
         DownloadError,
         O,
-        ParamsKeysImpl<KeyUnknown, KeyKnown<String>, KeyUnknown>,
+        ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
         SetUp,
     >,
 >;
@@ -92,11 +94,18 @@ where
     O: OutputWrite<DownloadError>,
 {
     let WorkspaceAndFlow { workspace, flow } = workspace_and_flow;
-    CmdCtx::builder_single_profile_single_flow(output, workspace)
+    let mut cmd_ctx_builder = CmdCtx::builder_single_profile_single_flow(output, workspace)
         .with_profile(profile)
-        .with_flow(flow)
-        .with_profile_param_value("file_download_params".to_string(), file_download_params)
-        .await
+        .with_flow(flow);
+
+    if let Some(file_download_params) = file_download_params {
+        cmd_ctx_builder = cmd_ctx_builder.with_item_spec_params::<FileDownloadItemSpec<FileId>>(
+            FILE_ITEM_SPEC_ID,
+            file_download_params,
+        );
+    }
+
+    cmd_ctx_builder.await
 }
 
 pub async fn fetch<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
