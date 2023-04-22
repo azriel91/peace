@@ -23,8 +23,6 @@ use crate::{
 pub struct ShCmdItemSpec<Id> {
     /// ID to easily tell what the item spec command is for.
     item_spec_id: ItemSpecId,
-    /// Parameters to insert into `resources` in [`ItemSpec::setup`].
-    sh_cmd_params: Option<ShCmdParams<Id>>,
     /// Marker for unique command execution parameters type.
     marker: PhantomData<Id>,
 }
@@ -33,7 +31,6 @@ impl<Id> Clone for ShCmdItemSpec<Id> {
     fn clone(&self) -> Self {
         Self {
             item_spec_id: self.item_spec_id.clone(),
-            sh_cmd_params: self.sh_cmd_params.clone(),
             marker: PhantomData,
         }
     }
@@ -45,11 +42,9 @@ impl<Id> ShCmdItemSpec<Id> {
     /// # Parameters
     ///
     /// * `item_spec_id`: ID of this `ShCmdItemSpec`.
-    /// * `sh_cmd_params`: Parameters to insert into `Resources`.
-    pub fn new(item_spec_id: ItemSpecId, sh_cmd_params: Option<ShCmdParams<Id>>) -> Self {
+    pub fn new(item_spec_id: ItemSpecId) -> Self {
         Self {
             item_spec_id,
-            sh_cmd_params,
             marker: PhantomData,
         }
     }
@@ -70,11 +65,7 @@ where
         &self.item_spec_id
     }
 
-    async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), ShCmdError> {
-        if let Some(sh_cmd_params) = self.sh_cmd_params.clone() {
-            resources.insert(sh_cmd_params);
-        }
-
+    async fn setup(&self, _resources: &mut Resources<Empty>) -> Result<(), ShCmdError> {
         Ok(())
     }
 

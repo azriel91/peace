@@ -321,8 +321,8 @@ where
     let provided_item_spec_params_mismatches = item_spec_params_provided;
 
     let params_all_match = item_spec_ids_with_no_params.is_empty()
-        || provided_item_spec_params_mismatches.is_empty()
-        || stored_item_spec_params_mismatches
+        && provided_item_spec_params_mismatches.is_empty()
+        && stored_item_spec_params_mismatches
             .as_ref()
             .map(|stored_item_spec_params_mismatches| stored_item_spec_params_mismatches.is_empty())
             .unwrap_or(true);

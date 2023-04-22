@@ -10,7 +10,7 @@ use peace::{
     rt_model::{Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, PeaceTestError, VecCopyError, VecCopyItemSpec, VecCopyState};
+use crate::{NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn current_and_desired_discovers_both_states_current_and_desired()
@@ -30,6 +30,10 @@ async fn current_and_desired_discovers_both_states_current_and_desired()
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec.id().clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
 
     let (states_current, states_desired) =
@@ -92,6 +96,10 @@ async fn current_runs_state_current_for_each_item_spec() -> Result<(), Box<dyn s
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec.id().clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
 
     let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
@@ -135,6 +143,10 @@ async fn current_inserts_states_saved_from_states_saved_file()
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec.id().clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
 
     // Writes to states_saved_file.yaml
@@ -144,6 +156,10 @@ async fn current_inserts_states_saved_from_states_saved_file()
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec.id().clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let resources = cmd_ctx.resources();
@@ -186,6 +202,10 @@ async fn desired_runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn s
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec.id().clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
 
     let states_desired = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;

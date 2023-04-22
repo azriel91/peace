@@ -5,7 +5,7 @@ use peace::{
     rt_model::{Error, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, PeaceTestError, VecCopyError, VecCopyItemSpec, VecCopyState};
+use crate::{NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
@@ -26,6 +26,10 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec.id().clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let states_desired_from_discover = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
 
@@ -34,6 +38,10 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec.id().clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let states_desired_from_read = StatesDesiredReadCmd::exec(&mut cmd_ctx).await?;
 
@@ -64,6 +72,10 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec.id().clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let exec_result = StatesDesiredReadCmd::exec(&mut cmd_ctx).await;
 

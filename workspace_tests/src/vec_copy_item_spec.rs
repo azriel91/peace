@@ -183,8 +183,6 @@ impl ItemSpec for VecCopyItemSpec {
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {
-        resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-
         let vec_b = {
             let states_saved = <RMaybe<'_, StatesSaved> as Data>::borrow(Self::ID, resources);
             let vec_copy_state_saved: Option<&'_ VecCopyState> = states_saved
@@ -234,10 +232,10 @@ impl<'exec> VecCopyData<'exec> {
     }
 }
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VecA(pub Vec<u8>);
 
-#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VecB(pub Vec<u8>);
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

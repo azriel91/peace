@@ -6,7 +6,7 @@ use peace::{
     rt_model::{outcomes::CmdOutcome, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
-use crate::{NoOpOutput, PeaceTestError, VecCopyError, VecCopyItemSpec, VecCopyState};
+use crate::{NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItemSpec, VecCopyState};
 
 #[tokio::test]
 async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
@@ -28,6 +28,10 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec.id().clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
@@ -71,6 +75,10 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec.id().clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let (states_current, _states_desired) =
         StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
@@ -126,6 +134,10 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec.id().clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
@@ -171,6 +183,10 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(
+            VecCopyItemSpec.id().clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+        )
         .await?;
     let (states_current, _states_desired) =
         StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;

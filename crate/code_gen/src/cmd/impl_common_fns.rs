@@ -3,7 +3,8 @@ use syn::{parse_quote, punctuated::Punctuated, GenericArgument, Path, Token};
 
 use crate::cmd::{type_parameters_impl, Scope, ScopeStruct};
 
-/// Generates functions for the command context builder that are not constrained by type parameters.
+/// Generates functions for the command context builder that are not constrained
+/// by type parameters.
 pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
     let scope = scope_struct.scope();
     let scope_builder_name = &scope_struct.item_struct().ident;

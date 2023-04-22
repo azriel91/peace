@@ -43,6 +43,7 @@ async fn setup() -> Result<(), Box<dyn std::error::Error>> {
     let item_spec_wrapper = ItemSpecWrapper::<_, VecCopyError>::from(VecCopyItemSpec);
     let mut resources = Resources::new();
     <dyn ItemSpecRt<_>>::setup(&item_spec_wrapper, &mut resources).await?;
+    resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
     assert!(resources.try_borrow::<VecA>().is_ok());
     // Automatic `Current<State>` and `Desired<State>` insertion.
@@ -493,7 +494,8 @@ async fn resources_set_up(
 ) -> Result<Resources<SetUp>, VecCopyError> {
     let mut resources = Resources::new();
     <dyn ItemSpecRt<_>>::setup(item_spec_wrapper, &mut resources).await?;
-    let resources = Resources::<SetUp>::from(resources);
+    let mut resources = Resources::<SetUp>::from(resources);
+    resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
     Ok(resources)
 }

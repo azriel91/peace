@@ -27,6 +27,10 @@ impl TestFileCreationShCmdItemSpec {
 
     /// Returns a new `TestFileCreationShCmdItemSpec`.
     pub fn new() -> ShCmdItemSpec<Self> {
+        ShCmdItemSpec::new(Self::ID)
+    }
+
+    fn params() -> ShCmdParams<TestFileCreationShCmdItemSpec> {
         #[cfg(unix)]
         let sh_cmd_params = {
             let state_clean_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
@@ -102,7 +106,7 @@ impl TestFileCreationShCmdItemSpec {
             )
         };
 
-        ShCmdItemSpec::new(Self::ID, Some(sh_cmd_params))
+        sh_cmd_params
     }
 }
 
@@ -123,6 +127,10 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
+            TestFileCreationShCmdItemSpec::ID,
+            TestFileCreationShCmdItemSpec::params(),
+        )
         .await?;
 
     let (states_current, _states_desired) =
@@ -169,6 +177,10 @@ async fn state_current_returns_shell_command_current_state()
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
+            TestFileCreationShCmdItemSpec::ID,
+            TestFileCreationShCmdItemSpec::params(),
+        )
         .await?;
 
     let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
@@ -210,6 +222,10 @@ async fn state_desired_returns_shell_command_desired_state()
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
+            TestFileCreationShCmdItemSpec::ID,
+            TestFileCreationShCmdItemSpec::params(),
+        )
         .await?;
 
     let states_desired = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
@@ -252,6 +268,10 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
+            TestFileCreationShCmdItemSpec::ID,
+            TestFileCreationShCmdItemSpec::params(),
+        )
         .await?;
 
     // Discover current and desired states.
@@ -287,6 +307,10 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command()
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
+            TestFileCreationShCmdItemSpec::ID,
+            TestFileCreationShCmdItemSpec::params(),
+        )
         .await?;
 
     // Discover states current and desired
@@ -336,6 +360,10 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
+            TestFileCreationShCmdItemSpec::ID,
+            TestFileCreationShCmdItemSpec::params(),
+        )
         .await?;
 
     // Discover states current and desired
@@ -403,6 +431,10 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
+            TestFileCreationShCmdItemSpec::ID,
+            TestFileCreationShCmdItemSpec::params(),
+        )
         .await?;
 
     // Discover states current and desired
