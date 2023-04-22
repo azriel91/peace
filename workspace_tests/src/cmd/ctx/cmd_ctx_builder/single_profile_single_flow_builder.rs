@@ -587,7 +587,7 @@ async fn build_with_item_spec_params_returns_ok_and_uses_params_provided_when_pa
 }
 
 #[tokio::test]
-async fn build_with_item_spec_params_returns_err_when_params_mismatch()
+async fn build_with_item_spec_params_returns_err_when_params_provided_mismatch()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
@@ -636,6 +636,133 @@ async fn build_with_item_spec_params_returns_err_when_params_mismatch()
                 Some(stored_item_spec_params_mismatches)
                 if stored_item_spec_params_mismatches.is_empty()
             ),
+        ),
+        "was {cmd_ctx_result:#?}"
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn build_with_item_spec_params_returns_err_when_params_stored_mismatch()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let profile = profile!("test_profile");
+    let flow_id = flow_id!("test_flow_id");
+    let item_spec_graph = {
+        let mut item_spec_graph_builder = ItemSpecGraphBuilder::new();
+        item_spec_graph_builder.add_fn(VecCopyItemSpec::new(item_spec_id!("original_id")).into());
+        item_spec_graph_builder.build()
+    };
+    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_spec_graph);
+
+    let mut output = NoOpOutput;
+    let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile.clone())
+        .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(item_spec_id!("original_id"), VecA(vec![1u8]))
+        .build()
+        .await?;
+
+    let item_spec_graph = {
+        let mut item_spec_graph_builder = ItemSpecGraphBuilder::new();
+        // Without the original ID also registered for the item spec,
+        // item_spec_params deserialization will fail before reaching the params merge
+        // error.
+        item_spec_graph_builder.add_fn(VecCopyItemSpec::new(item_spec_id!("original_id")).into());
+        item_spec_graph_builder.add_fn(VecCopyItemSpec::new(item_spec_id!("new_id")).into());
+        item_spec_graph_builder.build()
+    };
+    let flow = Flow::<PeaceTestError>::new(flow_id, item_spec_graph);
+    let cmd_ctx_result = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile.clone())
+        .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(item_spec_id!("mismatch_id"), VecA(vec![2u8]))
+        .build()
+        .await;
+
+    assert!(
+        matches!(
+            &cmd_ctx_result,
+            Err(PeaceTestError::PeaceRtError(
+                peace::rt_model::Error::ItemSpecParamsMismatch {
+                    item_spec_ids_with_no_params,
+                    provided_item_spec_params_mismatches,
+                    stored_item_spec_params_mismatches
+                }
+            ))
+            if item_spec_ids_with_no_params == &vec![item_spec_id!("new_id")]
+            && provided_item_spec_params_mismatches.get(&item_spec_id!("mismatch_id"))
+                == Some(&VecA(vec![2u8]))
+            && matches!(
+                stored_item_spec_params_mismatches,
+                Some(stored_item_spec_params_mismatches)
+                if stored_item_spec_params_mismatches.is_empty()
+            ),
+        ),
+        "was {cmd_ctx_result:#?}"
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn build_with_item_spec_params_returns_deserialization_err_when_item_spec_renamed()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let profile = profile!("test_profile");
+    let flow_id = flow_id!("test_flow_id");
+    let item_spec_graph = {
+        let mut item_spec_graph_builder = ItemSpecGraphBuilder::new();
+        item_spec_graph_builder.add_fn(VecCopyItemSpec::new(item_spec_id!("original_id")).into());
+        item_spec_graph_builder.build()
+    };
+    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_spec_graph);
+
+    let mut output = NoOpOutput;
+    let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile.clone())
+        .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(item_spec_id!("original_id"), VecA(vec![1u8]))
+        .build()
+        .await?;
+
+    let item_spec_graph = {
+        let mut item_spec_graph_builder = ItemSpecGraphBuilder::new();
+        // Note: no `"original_id"` item spec.
+        item_spec_graph_builder.add_fn(VecCopyItemSpec::new(item_spec_id!("new_id")).into());
+        item_spec_graph_builder.build()
+    };
+    let flow = Flow::<PeaceTestError>::new(flow_id, item_spec_graph);
+    let cmd_ctx_result = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile.clone())
+        .with_flow(&flow)
+        .with_item_spec_params::<VecCopyItemSpec>(item_spec_id!("mismatch_id"), VecA(vec![2u8]))
+        .build()
+        .await;
+
+    assert!(
+        matches!(
+            &cmd_ctx_result,
+            Err(PeaceTestError::PeaceRtError(
+                peace::rt_model::Error::ItemSpecParamsDeserialize {
+                    profile,
+                    flow_id,
+                    #[cfg(feature = "error_reporting")]
+                    item_spec_params_file_source: _,
+                    #[cfg(feature = "error_reporting")]
+                    error_span: _,
+                    #[cfg(feature = "error_reporting")]
+                    error_message: _,
+                    #[cfg(feature = "error_reporting")]
+                    context_span: _,
+                    error: _,
+                }
+            ))
+            if profile == &profile!("test_profile")
+            && flow_id == &flow_id!("test_flow_id")
         ),
         "was {cmd_ctx_result:#?}"
     );
