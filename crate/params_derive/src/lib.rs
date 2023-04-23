@@ -157,7 +157,11 @@ fn params_spec(
                 #[doc="Specification of how to look up the values for an item spec's parameters."]
             },
             // TODO: Figure out how to encode `ValueSpec::FromMap` into a serializable form.
-            parse_quote!(#[derive(Clone, Debug /*, serde::Serialize, serde::Deserialize*/)]),
+            //
+            // Can't derive any of the following because `ValueSpec` contains `Box<dyn Fn..>`
+            //
+            // parse_quote!(#[derive(Clone, serde::Serialize, serde::Deserialize)]),
+            parse_quote!(#[derive(Debug)]),
         ],
     )
 }

@@ -59,6 +59,9 @@
 //! '----------------------------------------------------------------------------------'
 //! ```
 
+// Re-exports
+pub use peace_params_derive::Params;
+
 pub use crate::{params::Params, params_spec_builder::ParamsSpecBuilder, value_spec::ValueSpec};
 
 mod params;

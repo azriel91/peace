@@ -16,5 +16,6 @@ doctest = false
 test = false
 
 [dependencies]
+peace_params_derive = { version = "0.0.9", path = "../params_derive" }
 peace_resources = { version = "0.0.9", path = "../resources" }
 serde = { version = "1.0.159", features = ["derive"] }
