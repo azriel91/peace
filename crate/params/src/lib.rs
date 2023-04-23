@@ -59,7 +59,8 @@
 //! '----------------------------------------------------------------------------------'
 //! ```
 
-pub use crate::{params::Params, params_spec_builder::ParamsSpecBuilder};
+pub use crate::{params::Params, params_spec_builder::ParamsSpecBuilder, value_spec::ValueSpec};
 
 mod params;
 mod params_spec_builder;
+mod value_spec;
