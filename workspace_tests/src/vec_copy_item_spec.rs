@@ -12,6 +12,7 @@ use peace::{
         accessors::{RMaybe, W},
         Data,
     },
+    params::Params,
     resources::{resources::ts::Empty, states::StatesSaved, Resources},
     rt_model::ItemSpecWrapper,
 };
@@ -246,7 +247,7 @@ impl<'exec> VecCopyData<'exec> {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Params, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VecA(pub Vec<u8>);
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]

@@ -10,8 +10,8 @@ extern crate syn;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use syn::{
-    punctuated::Punctuated, Attribute, DeriveInput, Fields, Generics, Ident, ImplGenerics, Path,
-    Type, TypeGenerics, TypePath, Variant, WhereClause, WherePredicate,
+    punctuated::Punctuated, Attribute, DeriveInput, Fields, Generics, Ident, ImplGenerics, LitInt,
+    Path, Type, TypeGenerics, TypePath, Variant, WhereClause, WherePredicate,
 };
 
 /// Used to `#[derive]` the `Params` trait.
@@ -249,10 +249,15 @@ where
             fields_map(&mut fields);
 
             let struct_fields_debug = struct_fields_debug(type_name, &fields);
+            let semi_colon_maybe = if matches!(&fields, Fields::Unnamed(_)) {
+                quote!(;)
+            } else {
+                quote!()
+            };
 
             quote! {
                 #(#attrs)*
-                pub struct #type_name #ty_generics #fields
+                pub struct #type_name #ty_generics #fields #semi_colon_maybe
 
                 impl #impl_generics ::std::fmt::Debug for #type_name #ty_generics {
                     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
@@ -336,12 +341,18 @@ where
     match fields {
         Fields::Named(fields_named) => {
             fields_named.named.iter_mut().for_each(|field| {
+                // Don't copy across attributes, e.g. `#[serde(default)].
+                field.attrs.clear();
+
                 let field_ty = &mut field.ty;
                 field.ty = f(field_ty);
             });
         }
         Fields::Unnamed(fields_unnamed) => {
             fields_unnamed.unnamed.iter_mut().for_each(|field| {
+                // Don't copy across attributes, e.g. `#[serde(default)].
+                field.attrs.clear();
+
                 let field_ty = &field.ty;
                 field.ty = f(field_ty);
             });
@@ -454,6 +465,9 @@ fn struct_fields_debug(type_name: &Ident, fields: &Fields) -> proc_macro2::Token
 
             let mut tokens =
                 (0..fields_unnamed.unnamed.len()).fold(tokens, |mut tokens, field_index| {
+                    // Need to convert this to a `LitInt`,
+                    // because `quote` outputs the index as `0usize` instead of `0`
+                    let field_index = LitInt::new(&format!("{field_index}"), Span::call_site());
                     tokens.extend(quote! {
                         debug_tuple.field(&self.#field_index);
                     });

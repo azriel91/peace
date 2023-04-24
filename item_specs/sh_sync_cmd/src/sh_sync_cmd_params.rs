@@ -1,5 +1,6 @@
 use std::{fmt, marker::PhantomData};
 
+use peace::params::Params;
 use serde::{Deserialize, Serialize};
 
 use crate::ShSyncCmd;
@@ -13,7 +14,7 @@ use crate::ShSyncCmd;
 ///
 /// * `Id`: A zero-sized type used to distinguish different command execution
 ///   parameters from each other.
-#[derive(PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Params, PartialEq, Eq, Deserialize, Serialize)]
 pub struct ShSyncCmdParams<Id> {
     /// Shell command to run that does the work.
     work_sh_command: ShSyncCmd,

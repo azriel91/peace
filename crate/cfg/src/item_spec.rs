@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use dyn_clone::DynClone;
 use peace_core::{ApplyCheck, ItemSpecId};
 use peace_data::Data;
+use peace_params::Params;
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -113,7 +114,14 @@ pub trait ItemSpec: DynClone {
     ///
     /// Peace will automatically save and load these into `Resources` when a
     /// command context is built.
-    type Params<'exec>: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static;
+    type Params<'exec>: Params
+        + Clone
+        + Debug
+        + Serialize
+        + DeserializeOwned
+        + Send
+        + Sync
+        + 'static;
 
     /// Data that the item spec accesses at runtime.
     ///
