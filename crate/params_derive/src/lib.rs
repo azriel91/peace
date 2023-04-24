@@ -65,10 +65,10 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&params_spec_builder_name, ast.ident.span())
     };
 
-    let params_partial = params_partial(&ast, &generics_split, &params_partial_name);
-    let params_spec = params_spec(&ast, &generics_split, &params_spec_name, &peace_params_path);
+    let params_partial = params_partial(ast, &generics_split, &params_partial_name);
+    let params_spec = params_spec(ast, &generics_split, &params_spec_name, &peace_params_path);
     let params_spec_builder = params_spec_builder(
-        &ast,
+        ast,
         &generics_split,
         &params_spec_builder_name,
         &peace_params_path,

@@ -2,10 +2,18 @@ use std::fmt;
 
 use peace_resources::{resources::ts::SetUp, Resources};
 
+/// Alias for `Fn(&Resources) -> T` with additional constraints.
+pub type MappingFn<T> = dyn (Fn(&Resources<SetUp>) -> Option<T>) + Send + Sync + 'static;
+
+/// How to populate a field's value in an item spec's params.
 pub enum ValueSpec<T> {
+    /// Use this provided value.
     Value(T),
+    /// Look up the value populated by a predecessor.
     From,
-    FromMap(Box<dyn (Fn(&Resources<SetUp>) -> Option<T>) + Send + Sync + 'static>),
+    /// Look up some data populated by a predecessor, and compute the value
+    /// from that data.
+    FromMap(Box<MappingFn<T>>),
 }
 
 impl<T> fmt::Debug for ValueSpec<T>
