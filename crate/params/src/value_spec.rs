@@ -5,7 +5,7 @@ use peace_resources::{resources::ts::SetUp, Resources};
 pub enum ValueSpec<T> {
     Value(T),
     From,
-    FromMap(Box<dyn Fn(&Resources<SetUp>) -> Option<T>>),
+    FromMap(Box<dyn (Fn(&Resources<SetUp>) -> Option<T>) + Send + Sync + 'static>),
 }
 
 impl<T> fmt::Debug for ValueSpec<T>

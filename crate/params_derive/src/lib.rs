@@ -8,8 +8,10 @@ extern crate quote;
 extern crate syn;
 
 use proc_macro::TokenStream;
+use proc_macro2::Span;
 use syn::{
-    Attribute, DeriveInput, Fields, Ident, ImplGenerics, Path, Type, TypeGenerics, WhereClause,
+    punctuated::Punctuated, Attribute, DeriveInput, Fields, Generics, Ident, ImplGenerics, Path,
+    Type, TypeGenerics, TypePath, Variant, WhereClause, WherePredicate,
 };
 
 /// Used to `#[derive]` the `Params` trait.
@@ -38,7 +40,9 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
         .map(|_| parse_quote!(peace_params))
         .unwrap_or_else(|| parse_quote!(peace::params));
 
-    let generics_split = ast.generics.split_for_impl();
+    let mut generics = ast.generics.clone();
+    type_parameters_constrain(&mut generics);
+    let generics_split = generics.split_for_impl();
 
     // MyParams -> MyParamsPartial
     let params_partial_name = {
@@ -95,6 +99,26 @@ fn peace_internal(attr: &&Attribute) -> bool {
     attr.path().is_ident("peace_internal")
 }
 
+/// Adds a `Send + Sync + 'static` bound on each of the type parameters.
+fn type_parameters_constrain(generics: &mut Generics) {
+    let generic_params = &generics.params;
+
+    let where_predicates = generic_params
+        .iter()
+        .filter_map(|generic_param| match generic_param {
+            syn::GenericParam::Lifetime(_) => None,
+            syn::GenericParam::Type(type_param) => Some(type_param),
+            syn::GenericParam::Const(_) => None,
+        })
+        .map(|type_param| parse_quote!(#type_param: Send + Sync + 'static))
+        .collect::<Vec<WherePredicate>>();
+
+    let where_clause = generics.make_where_clause();
+    where_predicates
+        .into_iter()
+        .for_each(|where_predicate| where_clause.predicates.push(where_predicate));
+}
+
 /// Generates something like the following:
 ///
 /// ```rust,ignore
@@ -126,7 +150,7 @@ fn params_partial(
                     such as the content hash of a file which is to be re-downloaded.\n\
                 "]
             },
-            parse_quote!(#[derive(Clone, Debug, PartialEq, Eq)]),
+            parse_quote!(#[derive(Clone, PartialEq, Eq)]),
         ],
     )
 }
@@ -134,7 +158,6 @@ fn params_partial(
 /// Generates something like the following:
 ///
 /// ```rust,ignore
-/// #[derive(Clone, Debug /*, serde::Serialize, serde::Deserialize */)]
 /// struct MyParamsSpec {
 ///     src: peace_params::ValueSpec<PathBuf>,
 ///     dest_ip: peace_params::ValueSpec<IpAddr>,
@@ -161,7 +184,6 @@ fn params_spec(
             // Can't derive any of the following because `ValueSpec` contains `Box<dyn Fn..>`
             //
             // parse_quote!(#[derive(Clone, serde::Serialize, serde::Deserialize)]),
-            parse_quote!(#[derive(Debug)]),
         ],
     )
 }
@@ -169,7 +191,6 @@ fn params_spec(
 /// Generates something like the following:
 ///
 /// ```rust,ignore
-/// #[derive(Debug)]
 /// struct MyParamsSpecBuilder {
 ///     src: Option<peace_params::ValueSpec<PathBuf>>,
 ///     dest_ip: Option<peace_params::ValueSpec<IpAddr>>,
@@ -188,15 +209,12 @@ fn params_spec_builder(
         generics_split,
         params_spec_builder_name,
         |fields| fields_to_optional_value_spec(fields, peace_params_path),
-        &[
-            parse_quote! {
-                #[doc="\
-                    Builder for specification of how to look up the values for an item spec's \n\
-                    parameters.\n\
-                "]
-            },
-            parse_quote!(#[derive(Debug)]),
-        ],
+        &[parse_quote! {
+            #[doc="\
+                Builder for specification of how to look up the values for an item spec's \n\
+                parameters.\n\
+            "]
+        }],
     );
 
     let (impl_generics, ty_generics, where_clause) = generics_split;
@@ -223,16 +241,24 @@ fn type_gen<F>(
 where
     F: Fn(&mut Fields),
 {
-    let (_impl_generics, ty_generics, _where_clause) = generics_split;
+    let (impl_generics, ty_generics, _where_clause) = generics_split;
 
     match &ast.data {
         syn::Data::Struct(data_struct) => {
             let mut fields = data_struct.fields.clone();
             fields_map(&mut fields);
 
+            let struct_fields_debug = struct_fields_debug(type_name, &fields);
+
             quote! {
                 #(#attrs)*
-                struct #type_name #ty_generics #fields
+                pub struct #type_name #ty_generics #fields
+
+                impl #impl_generics ::std::fmt::Debug for #type_name #ty_generics {
+                    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+                        #struct_fields_debug
+                    }
+                }
             }
         }
         syn::Data::Enum(data_enum) => {
@@ -241,9 +267,19 @@ where
                 fields_map(&mut variant.fields);
             });
 
+            let variants_debug = variants_debug(&variants);
+
             quote! {
                 #(#attrs)*
-                enum #type_name #ty_generics #variants
+                pub enum #type_name #ty_generics {
+                    #variants
+                }
+
+                impl #impl_generics ::std::fmt::Debug for #type_name #ty_generics {
+                    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+                        #variants_debug
+                    }
+                }
             }
         }
         syn::Data::Union(data_union) => {
@@ -252,31 +288,48 @@ where
 
             quote! {
                 #(#attrs)*
-                union #type_name #ty_generics #fields
+                pub union #type_name #ty_generics #fields
             }
         }
     }
 }
 
 fn fields_to_optional(fields: &mut Fields) {
-    field_map(fields, |field_ty| parse_quote!(Option<#field_ty>))
+    fields_map(fields, |field_ty| {
+        if is_phantom_data(field_ty) {
+            field_ty.clone()
+        } else {
+            parse_quote!(Option<#field_ty>)
+        }
+    })
 }
 
 fn fields_to_value_spec(fields: &mut Fields, peace_params_path: &Path) {
-    field_map(
-        fields,
-        |field_ty| parse_quote!(#peace_params_path::ValueSpec<#field_ty>),
-    )
+    fields_map(fields, |field_ty| {
+        if is_phantom_data(field_ty) {
+            field_ty.clone()
+        } else {
+            parse_quote!(#peace_params_path::ValueSpec<#field_ty>)
+        }
+    })
 }
 
 fn fields_to_optional_value_spec(fields: &mut Fields, peace_params_path: &Path) {
-    field_map(
-        fields,
-        |field_ty| parse_quote!(Option<#peace_params_path::ValueSpec<#field_ty>>),
-    )
+    fields_map(fields, |field_ty| {
+        if is_phantom_data(field_ty) {
+            field_ty.clone()
+        } else {
+            parse_quote!(Option<#peace_params_path::ValueSpec<#field_ty>>)
+        }
+    })
 }
 
-fn field_map<F>(fields: &mut Fields, f: F)
+fn is_phantom_data(field_ty: &Type) -> bool {
+    matches!(&field_ty, Type::Path(TypePath { path, .. })
+        if matches!(path.segments.last(), Some(segment) if segment.ident == "PhantomData"))
+}
+
+fn fields_map<F>(fields: &mut Fields, f: F)
 where
     F: Fn(&Type) -> Type,
 {
@@ -295,4 +348,184 @@ where
         }
         Fields::Unit => {}
     }
+}
+
+fn variants_debug(variants: &Punctuated<Variant, Token![,]>) -> proc_macro2::TokenStream {
+    // Generates:
+    //
+    // match self {
+    //     Self::Variant1 => f.debug_struct("Variant1").finish(),
+    //     Self::Variant2 => f.debug_tuple("Variant2").finish(),
+    //     Self::Variant3 { .. } => f.debug_struct("Variant3").field(..).finish(),
+    // }
+
+    let variant_debug_arms =
+        variants
+            .iter()
+            .fold(proc_macro2::TokenStream::new(), |mut tokens, variant| {
+                let variant_name = &variant.ident;
+                let variant_fields = &variant
+                    .fields
+                    .iter()
+                    .enumerate()
+                    .map(|(field_index, field)| {
+                        field
+                            .ident
+                            .clone()
+                            .unwrap_or_else(|| tuple_ident_from_field_index(field_index))
+                    })
+                    .collect::<Vec<Ident>>();
+                let variant_fields_debug = enum_fields_debug(&variant.ident, &variant.fields);
+
+                match &variant.fields {
+                    Fields::Named(_fields_named) => {
+                        tokens.extend(quote! {
+                            Self::#variant_name { #(#variant_fields),* } => {
+                                #variant_fields_debug
+                            }
+                        });
+                    }
+                    Fields::Unnamed(_) => {
+                        tokens.extend(quote! {
+                            Self::#variant_name(#(#variant_fields),*) => {
+                                #variant_fields_debug
+                            }
+                        });
+                    }
+                    Fields::Unit => {
+                        tokens.extend(quote! {
+                            Self::#variant_name => {
+                                #variant_fields_debug
+                            }
+                        });
+                    }
+                }
+
+                tokens
+            });
+
+    quote! {
+        match self {
+            #variant_debug_arms
+        }
+    }
+}
+
+fn struct_fields_debug(type_name: &Ident, fields: &Fields) -> proc_macro2::TokenStream {
+    let type_name = &type_name.to_string();
+    match fields {
+        Fields::Named(fields_named) => {
+            // Generates:
+            //
+            // let mut debug_struct = f.debug_struct(#type_name);
+            // debug_struct.field("field_0", &self.field_0);
+            // debug_struct.field("field_1", &self.field_1);
+            // debug_struct.finish()
+
+            let tokens = quote! {
+                let mut debug_struct = f.debug_struct(#type_name);
+            };
+
+            let mut tokens = fields_named.named.iter().fold(tokens, |mut tokens, field| {
+                if let Some(field_name) = field.ident.as_ref() {
+                    let field_name_str = &field_name.to_string();
+                    tokens.extend(quote! {
+                        debug_struct.field(#field_name_str, &self.#field_name);
+                    });
+                }
+                tokens
+            });
+
+            tokens.extend(quote!(debug_struct.finish()));
+
+            tokens
+        }
+        Fields::Unnamed(fields_unnamed) => {
+            // Generates:
+            //
+            // let mut debug_tuple = f.debug_tuple(#type_name);
+            // debug_tuple.field(&self.0);
+            // debug_tuple.field(&self.1);
+            // debug_tuple.finish()
+
+            let tokens = quote! {
+                let mut debug_tuple = f.debug_tuple(#type_name);
+            };
+
+            let mut tokens =
+                (0..fields_unnamed.unnamed.len()).fold(tokens, |mut tokens, field_index| {
+                    tokens.extend(quote! {
+                        debug_tuple.field(&self.#field_index);
+                    });
+                    tokens
+                });
+
+            tokens.extend(quote!(debug_tuple.finish()));
+
+            tokens
+        }
+        Fields::Unit => quote!(f.debug_struct(#type_name).finish()),
+    }
+}
+
+fn enum_fields_debug(type_name: &Ident, fields: &Fields) -> proc_macro2::TokenStream {
+    let type_name = &type_name.to_string();
+    match fields {
+        Fields::Named(fields_named) => {
+            // Generates:
+            //
+            // let mut debug_struct = f.debug_struct(#type_name);
+            // debug_struct.field("field_0", &field_0);
+            // debug_struct.field("field_1", &field_1);
+            // debug_struct.finish()
+
+            let tokens = quote! {
+                let mut debug_struct = f.debug_struct(#type_name);
+            };
+
+            let mut tokens = fields_named.named.iter().fold(tokens, |mut tokens, field| {
+                if let Some(field_name) = field.ident.as_ref() {
+                    let field_name_str = &field_name.to_string();
+                    tokens.extend(quote! {
+                        debug_struct.field(#field_name_str, &#field_name);
+                    });
+                }
+                tokens
+            });
+
+            tokens.extend(quote!(debug_struct.finish()));
+
+            tokens
+        }
+        Fields::Unnamed(fields_unnamed) => {
+            // Generates:
+            //
+            // let mut debug_tuple = f.debug_tuple(#type_name);
+            // debug_tuple.field(&_0);
+            // debug_tuple.field(&_1);
+            // debug_tuple.finish()
+
+            let tokens = quote! {
+                let mut debug_tuple = f.debug_tuple(#type_name);
+            };
+
+            let mut tokens = (0..fields_unnamed.unnamed.len())
+                .map(tuple_ident_from_field_index)
+                .fold(tokens, |mut tokens, field_index| {
+                    tokens.extend(quote! {
+                        debug_tuple.field(&#field_index);
+                    });
+                    tokens
+                });
+
+            tokens.extend(quote!(debug_tuple.finish()));
+
+            tokens
+        }
+        Fields::Unit => quote!(f.debug_struct(#type_name).finish()),
+    }
+}
+
+fn tuple_ident_from_field_index(field_index: usize) -> Ident {
+    Ident::new(&format!("_{field_index}"), Span::call_site())
 }

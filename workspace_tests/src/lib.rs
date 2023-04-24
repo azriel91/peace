@@ -19,6 +19,7 @@ mod cmd;
 mod data;
 mod diff;
 mod fmt;
+mod params;
 mod resources;
 mod rt;
 mod rt_model;
