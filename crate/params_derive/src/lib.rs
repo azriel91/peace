@@ -150,7 +150,7 @@ fn params_partial(
                     such as the content hash of a file which is to be re-downloaded.\n\
                 "]
             },
-            parse_quote!(#[derive(Clone, PartialEq, Eq)]),
+            parse_quote!(#[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]),
         ],
     )
 }
@@ -179,11 +179,12 @@ fn params_spec(
             parse_quote! {
                 #[doc="Specification of how to look up the values for an item spec's parameters."]
             },
-            // TODO: Figure out how to encode `ValueSpec::FromMap` into a serializable form.
+            // `Clone` and `Debug` are implemented manually, so that type parameters do not receive
+            // the `Clone` and `Debug` bounds.
             //
-            // Can't derive any of the following because `ValueSpec` contains `Box<dyn Fn..>`
-            //
-            // parse_quote!(#[derive(Clone, serde::Serialize, serde::Deserialize)]),
+            // `serde::Deserialize` is not derived, as `ValueSpec` is generic, and `ValueSpecDe` is
+            // used to deserialize the serialized value.
+            parse_quote!(#[derive(serde::Serialize)]),
         ],
     )
 }
@@ -247,17 +248,24 @@ where
         syn::Data::Struct(data_struct) => {
             let mut fields = data_struct.fields.clone();
             fields_map(&mut fields);
-
-            let struct_fields_debug = struct_fields_debug(type_name, &fields);
             let semi_colon_maybe = if matches!(&fields, Fields::Unnamed(_)) {
                 quote!(;)
             } else {
                 quote!()
             };
 
+            let struct_fields_clone = struct_fields_clone(type_name, &fields);
+            let struct_fields_debug = struct_fields_debug(type_name, &fields);
+
             quote! {
                 #(#attrs)*
                 pub struct #type_name #ty_generics #fields #semi_colon_maybe
+
+                impl #impl_generics ::std::clone::Clone for #type_name #ty_generics {
+                    fn clone(&self) -> Self {
+                        #struct_fields_clone
+                    }
+                }
 
                 impl #impl_generics ::std::fmt::Debug for #type_name #ty_generics {
                     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
@@ -272,12 +280,19 @@ where
                 fields_map(&mut variant.fields);
             });
 
+            let variants_clone = variants_clone(&variants);
             let variants_debug = variants_debug(&variants);
 
             quote! {
                 #(#attrs)*
                 pub enum #type_name #ty_generics {
                     #variants
+                }
+
+                impl #impl_generics ::std::clone::Clone for #type_name #ty_generics {
+                    fn clone(&self) -> Self {
+                        #variants_clone
+                    }
                 }
 
                 impl #impl_generics ::std::fmt::Debug for #type_name #ty_generics {
@@ -386,7 +401,7 @@ fn variants_debug(variants: &Punctuated<Variant, Token![,]>) -> proc_macro2::Tok
                             .unwrap_or_else(|| tuple_ident_from_field_index(field_index))
                     })
                     .collect::<Vec<Ident>>();
-                let variant_fields_debug = enum_fields_debug(&variant.ident, &variant.fields);
+                let variant_fields_debug = variant_fields_debug(&variant.ident, &variant.fields);
 
                 match &variant.fields {
                     Fields::Named(_fields_named) => {
@@ -482,19 +497,19 @@ fn struct_fields_debug(type_name: &Ident, fields: &Fields) -> proc_macro2::Token
     }
 }
 
-fn enum_fields_debug(type_name: &Ident, fields: &Fields) -> proc_macro2::TokenStream {
-    let type_name = &type_name.to_string();
+fn variant_fields_debug(variant_name: &Ident, fields: &Fields) -> proc_macro2::TokenStream {
+    let variant_name = &variant_name.to_string();
     match fields {
         Fields::Named(fields_named) => {
             // Generates:
             //
-            // let mut debug_struct = f.debug_struct(#type_name);
+            // let mut debug_struct = f.debug_struct(#variant_name);
             // debug_struct.field("field_0", &field_0);
             // debug_struct.field("field_1", &field_1);
             // debug_struct.finish()
 
             let tokens = quote! {
-                let mut debug_struct = f.debug_struct(#type_name);
+                let mut debug_struct = f.debug_struct(#variant_name);
             };
 
             let mut tokens = fields_named.named.iter().fold(tokens, |mut tokens, field| {
@@ -514,13 +529,13 @@ fn enum_fields_debug(type_name: &Ident, fields: &Fields) -> proc_macro2::TokenSt
         Fields::Unnamed(fields_unnamed) => {
             // Generates:
             //
-            // let mut debug_tuple = f.debug_tuple(#type_name);
+            // let mut debug_tuple = f.debug_tuple(#variant_name);
             // debug_tuple.field(&_0);
             // debug_tuple.field(&_1);
             // debug_tuple.finish()
 
             let tokens = quote! {
-                let mut debug_tuple = f.debug_tuple(#type_name);
+                let mut debug_tuple = f.debug_tuple(#variant_name);
             };
 
             let mut tokens = (0..fields_unnamed.unnamed.len())
@@ -536,7 +551,213 @@ fn enum_fields_debug(type_name: &Ident, fields: &Fields) -> proc_macro2::TokenSt
 
             tokens
         }
-        Fields::Unit => quote!(f.debug_struct(#type_name).finish()),
+        Fields::Unit => quote!(f.debug_struct(#variant_name).finish()),
+    }
+}
+
+fn struct_fields_clone(type_name: &Ident, fields: &Fields) -> proc_macro2::TokenStream {
+    match fields {
+        Fields::Named(fields_named) => {
+            // Generates:
+            //
+            // #type_name {
+            //     field_1: self.field_1.clone(),
+            //     field_2: self.field_2.clone(),
+            //     marker: PhantomData,
+            // }
+
+            let fields_clone = fields_named.named.iter().fold(
+                proc_macro2::TokenStream::new(),
+                |mut tokens, field| {
+                    if let Some(field_name) = field.ident.as_ref() {
+                        if is_phantom_data(&field.ty) {
+                            tokens.extend(quote! {
+                                #field_name: std::marker::PhantomData,
+                            });
+                        } else {
+                            tokens.extend(quote! {
+                                #field_name: self.#field_name.clone(),
+                            });
+                        }
+                    }
+                    tokens
+                },
+            );
+
+            quote! {
+                #type_name {
+                    #fields_clone
+                }
+            }
+        }
+        Fields::Unnamed(fields_unnamed) => {
+            // Generates:
+            //
+            // #type_name(self.0.clone(), self.1.clone(), PhantomData)
+            let fields_clone = fields_unnamed.unnamed.iter().enumerate().fold(
+                proc_macro2::TokenStream::new(),
+                |mut tokens, (field_index, field)| {
+                    // Need to convert this to a `LitInt`,
+                    // because `quote` outputs the index as `0usize` instead of `0`
+                    let field_index = LitInt::new(&format!("{field_index}"), Span::call_site());
+
+                    if is_phantom_data(&field.ty) {
+                        tokens.extend(quote!(std::marker::PhantomData,));
+                    } else {
+                        tokens.extend(quote!(self.#field_index.clone(),));
+                    }
+
+                    tokens
+                },
+            );
+
+            quote! {
+                #type_name(#fields_clone)
+            }
+        }
+        Fields::Unit => quote!(#type_name),
+    }
+}
+
+fn variants_clone(variants: &Punctuated<Variant, Token![,]>) -> proc_macro2::TokenStream {
+    // Generates:
+    //
+    // match self {
+    //     Self::Variant1 => Self::Variant1,
+    //     Self::Variant2(_0, _1, PhantomData) => {
+    //         Self::Variant2(_0.clone(), _1.clone(), PhantomData)
+    //     }
+    //     Self::Variant3 { field_1, field_2, marker: PhantomData } => {
+    //         Self::Variant3 {
+    //             field_1: field_1.clone(),
+    //             field_2: field_2.clone(),
+    //             marker: PhantomData,
+    //         }
+    //     }
+    // }
+
+    let variant_clone_arms =
+        variants
+            .iter()
+            .fold(proc_macro2::TokenStream::new(), |mut tokens, variant| {
+                let variant_name = &variant.ident;
+                let variant_fields = &variant
+                    .fields
+                    .iter()
+                    .enumerate()
+                    .map(|(field_index, field)| {
+                        if is_phantom_data(&field.ty) {
+                            if let Some(field_ident) = field.ident.as_ref() {
+                                quote!(#field_ident: ::std::marker::PhantomData)
+                            } else {
+                                quote!(::std::marker::PhantomData)
+                            }
+                        } else if let Some(field_ident) = field.ident.as_ref() {
+                            quote!(#field_ident)
+                        } else {
+                            let field_ident = tuple_ident_from_field_index(field_index);
+                            quote!(#field_ident)
+                        }
+                    })
+                    .collect::<Vec<proc_macro2::TokenStream>>();
+                let variant_fields_clone = variant_fields_clone(&variant.ident, &variant.fields);
+
+                match &variant.fields {
+                    Fields::Named(_fields_named) => {
+                        tokens.extend(quote! {
+                            Self::#variant_name { #(#variant_fields),* } => {
+                                #variant_fields_clone
+                            }
+                        });
+                    }
+                    Fields::Unnamed(_) => {
+                        tokens.extend(quote! {
+                            Self::#variant_name(#(#variant_fields),*) => {
+                                #variant_fields_clone
+                            }
+                        });
+                    }
+                    Fields::Unit => {
+                        tokens.extend(quote! {
+                            Self::#variant_name => {
+                                #variant_fields_clone
+                            }
+                        });
+                    }
+                }
+
+                tokens
+            });
+
+    quote! {
+        match self {
+            #variant_clone_arms
+        }
+    }
+}
+
+fn variant_fields_clone(variant_name: &Ident, fields: &Fields) -> proc_macro2::TokenStream {
+    match fields {
+        Fields::Named(fields_named) => {
+            // Generates:
+            //
+            // Self {
+            //     field_1: field_1.clone(),
+            //     field_2: field_2.clone(),
+            //     marker: PhantomData,
+            // }
+
+            let fields_clone = fields_named.named.iter().fold(
+                proc_macro2::TokenStream::new(),
+                |mut tokens, field| {
+                    if let Some(field_name) = field.ident.as_ref() {
+                        if is_phantom_data(&field.ty) {
+                            tokens.extend(quote! {
+                                #field_name: std::marker::PhantomData,
+                            });
+                        } else {
+                            tokens.extend(quote! {
+                                #field_name: #field_name.clone(),
+                            });
+                        }
+                    }
+                    tokens
+                },
+            );
+
+            quote! {
+                Self::#variant_name {
+                    #fields_clone
+                }
+            }
+        }
+        Fields::Unnamed(fields_unnamed) => {
+            // Generates:
+            //
+            // Self(_0.clone(), _1.clone(), PhantomData)
+            let fields_clone = fields_unnamed
+                .unnamed
+                .iter()
+                .enumerate()
+                .map(|(field_index, field)| (tuple_ident_from_field_index(field_index), field))
+                .fold(
+                    proc_macro2::TokenStream::new(),
+                    |mut tokens, (field_index, field)| {
+                        if is_phantom_data(&field.ty) {
+                            tokens.extend(quote!(std::marker::PhantomData,));
+                        } else {
+                            tokens.extend(quote!(#field_index.clone(),));
+                        }
+
+                        tokens
+                    },
+                );
+
+            quote! {
+                Self::#variant_name(#fields_clone)
+            }
+        }
+        Fields::Unit => quote!(Self::#variant_name),
     }
 }
 

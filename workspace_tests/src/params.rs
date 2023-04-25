@@ -128,18 +128,16 @@ mod enum_params {
 
     use peace::params::{Params, ValueSpec};
 
+    #[allow(dead_code)]
     #[derive(Params)]
     pub enum EnumParams<Id> {
-        #[allow(dead_code)]
         Named {
             /// Source / desired value for the state.
             src: String,
             /// Marker for unique parameters type.
             marker: PhantomData<Id>,
         },
-        #[allow(dead_code)]
         Tuple(String),
-        #[allow(dead_code)]
         Unit,
     }
 
@@ -152,6 +150,47 @@ mod enum_params {
     );
 
     #[test]
+    fn spec_clone_named() {
+        let spec = EnumParamsSpec::<()>::Named {
+            src: ValueSpec::Value(String::from("a")),
+            marker: PhantomData,
+        };
+        let spec_clone = spec.clone();
+        drop(spec);
+
+        assert!(matches!(
+            spec_clone,
+            EnumParamsSpec::<()>::Named {
+                src: ValueSpec::Value(value),
+                marker: PhantomData
+            }
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn spec_clone_tuple() {
+        let spec = EnumParamsSpec::<()>::Tuple(ValueSpec::Value(String::from("a")));
+        let spec_clone = spec.clone();
+        drop(spec);
+
+        assert!(matches!(
+            spec_clone,
+            EnumParamsSpec::<()>::Tuple(ValueSpec::Value(value))
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn spec_clone_unit() {
+        let spec = EnumParamsSpec::<()>::Unit;
+        let spec_clone = spec.clone();
+        drop(spec);
+
+        assert!(matches!(spec_clone, EnumParamsSpec::<()>::Unit));
+    }
+
+    #[test]
     fn spec_debug_named() {
         assert_eq!(
             r#"Named { src: Value("a"), marker: PhantomData<()> }"#,
@@ -159,34 +198,6 @@ mod enum_params {
                 "{:?}",
                 EnumParamsSpec::<()>::Named {
                     src: ValueSpec::Value(String::from("a")),
-                    marker: PhantomData,
-                }
-            )
-        );
-    }
-
-    #[test]
-    fn spec_builder_debug_named() {
-        assert_eq!(
-            r#"Named { src: Some(Value("a")), marker: PhantomData<()> }"#,
-            format!(
-                "{:?}",
-                EnumParamsSpecBuilder::<()>::Named {
-                    src: Some(ValueSpec::Value(String::from("a"))),
-                    marker: PhantomData,
-                }
-            )
-        );
-    }
-
-    #[test]
-    fn params_partial_debug_named() {
-        assert_eq!(
-            r#"Named { src: Some("a"), marker: PhantomData<()> }"#,
-            format!(
-                "{:?}",
-                EnumParamsPartial::<()>::Named {
-                    src: Some(String::from("a")),
                     marker: PhantomData,
                 }
             )
@@ -205,12 +216,142 @@ mod enum_params {
     }
 
     #[test]
+    fn spec_debug_unit() {
+        assert_eq!(r#"Unit"#, format!("{:?}", EnumParamsSpec::<()>::Unit));
+    }
+
+    #[test]
+    fn spec_builder_clone_named() {
+        let spec_builder = EnumParamsSpecBuilder::<()>::Named {
+            src: Some(ValueSpec::Value(String::from("a"))),
+            marker: PhantomData,
+        };
+        let spec_builder_clone = spec_builder.clone();
+        drop(spec_builder);
+
+        assert!(matches!(
+            spec_builder_clone,
+            EnumParamsSpecBuilder::<()>::Named {
+                src: Some(ValueSpec::Value(value)),
+                marker: PhantomData
+            }
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn spec_builder_clone_tuple() {
+        let spec_builder =
+            EnumParamsSpecBuilder::<()>::Tuple(Some(ValueSpec::Value(String::from("a"))));
+        let spec_builder_clone = spec_builder.clone();
+        drop(spec_builder);
+
+        assert!(matches!(
+            spec_builder_clone,
+            EnumParamsSpecBuilder::<()>::Tuple(Some(ValueSpec::Value(value)))
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn spec_builder_clone_unit() {
+        let spec_builder = EnumParamsSpecBuilder::<()>::Unit;
+        let spec_builder_clone = spec_builder.clone();
+        drop(spec_builder);
+
+        assert!(matches!(
+            spec_builder_clone,
+            EnumParamsSpecBuilder::<()>::Unit
+        ));
+    }
+
+    #[test]
+    fn spec_builder_debug_named() {
+        assert_eq!(
+            r#"Named { src: Some(Value("a")), marker: PhantomData<()> }"#,
+            format!(
+                "{:?}",
+                EnumParamsSpecBuilder::<()>::Named {
+                    src: Some(ValueSpec::Value(String::from("a"))),
+                    marker: PhantomData,
+                }
+            )
+        );
+    }
+
+    #[test]
     fn spec_builder_debug_tuple() {
         assert_eq!(
             r#"Tuple(Some(Value("a")))"#,
             format!(
                 "{:?}",
                 EnumParamsSpecBuilder::<()>::Tuple(Some(ValueSpec::Value(String::from("a"))))
+            )
+        );
+    }
+
+    #[test]
+    fn spec_builder_debug_unit() {
+        assert_eq!(
+            r#"Unit"#,
+            format!("{:?}", EnumParamsSpecBuilder::<()>::Unit)
+        );
+    }
+
+    #[test]
+    fn params_partial_clone_named() {
+        let params_partial = EnumParamsPartial::<()>::Named {
+            src: Some(String::from("a")),
+            marker: PhantomData,
+        };
+        let params_partial_clone = params_partial.clone();
+        drop(params_partial);
+
+        assert!(matches!(
+            params_partial_clone,
+            EnumParamsPartial::<()>::Named {
+                src: Some(value),
+                marker: PhantomData
+            }
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn params_partial_clone_tuple() {
+        let params_partial = EnumParamsPartial::<()>::Tuple(Some(String::from("a")));
+        let params_partial_clone = params_partial.clone();
+        drop(params_partial);
+
+        assert!(matches!(
+            params_partial_clone,
+            EnumParamsPartial::<()>::Tuple(Some(value))
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn params_partial_clone_unit() {
+        let params_partial = EnumParamsPartial::<()>::Unit;
+        let params_partial_clone = params_partial.clone();
+        drop(params_partial);
+
+        assert!(matches!(
+            params_partial_clone,
+            EnumParamsPartial::<()>::Unit
+        ));
+    }
+
+    #[test]
+    fn params_partial_debug_named() {
+        assert_eq!(
+            r#"Named { src: Some("a"), marker: PhantomData<()> }"#,
+            format!(
+                "{:?}",
+                EnumParamsPartial::<()>::Named {
+                    src: Some(String::from("a")),
+                    marker: PhantomData,
+                }
             )
         );
     }
@@ -223,19 +364,6 @@ mod enum_params {
                 "{:?}",
                 EnumParamsPartial::<()>::Tuple(Some(String::from("a")))
             )
-        );
-    }
-
-    #[test]
-    fn spec_debug_unit() {
-        assert_eq!(r#"Unit"#, format!("{:?}", EnumParamsSpec::<()>::Unit));
-    }
-
-    #[test]
-    fn spec_builder_debug_unit() {
-        assert_eq!(
-            r#"Unit"#,
-            format!("{:?}", EnumParamsSpecBuilder::<()>::Unit)
         );
     }
 
