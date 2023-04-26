@@ -27,7 +27,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
 
         if scope == Scope::SingleProfileSingleFlow {
             type_params.push(parse_quote!(
-                item_spec_params_provided: peace_rt_model::ItemSpecParams::new()
+                params_specs_provided: peace_params::ParamsSpecs::new()
             ));
         }
         type_params.push(parse_quote!(marker: std::marker::PhantomData));
@@ -77,7 +77,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
                     // profile_params_selection: ProfileParamsNone,
 
                     // // === SingleProfileSingleFlow === //
-                    // item_spec_params_provided: peace_rt_model::ItemSpecParams::new()
+                    // params_specs_provided: peace_params::ParamsSpecs::new()
 
                     // marker: std::marker::PhantomData,
                     #scope_field_values

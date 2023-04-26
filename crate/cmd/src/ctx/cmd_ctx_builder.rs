@@ -4,17 +4,18 @@ use std::{fmt::Debug, hash::Hash};
 
 use futures::stream::{StreamExt, TryStreamExt};
 use peace_cfg::ItemSpecId;
+use peace_params::ParamsSpecs;
 use peace_resources::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
-    paths::ItemSpecParamsFile,
+    paths::ParamsSpecsFile,
     resources::ts::{Empty, SetUp},
     Resources,
 };
 use peace_rt_model::{
     fn_graph::resman::Resource,
     params::{FlowParams, ProfileParams, WorkspaceParams},
-    Error, Flow, ItemSpecGraph, ItemSpecParams, ItemSpecParamsTypeReg, ParamsSpecsDeTypeReg,
-    StatesTypeReg, Storage, Workspace, WorkspaceInitializer,
+    Error, Flow, ItemSpecGraph, ItemSpecParamsTypeReg, ParamsSpecsDeTypeReg, StatesTypeReg,
+    Storage, Workspace, WorkspaceInitializer,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -131,18 +132,18 @@ where
 }
 
 /// Serializes item spec params to storage.
-async fn item_spec_params_serialize(
-    item_spec_params: &ItemSpecParams,
+async fn params_specs_serialize(
+    params_specs: &ParamsSpecs,
     storage: &Storage,
-    item_spec_params_file: &ItemSpecParamsFile,
+    params_specs_file: &ParamsSpecsFile,
 ) -> Result<(), Error> {
     storage
         .serialized_write(
             #[cfg(not(target_arch = "wasm32"))]
-            "item_spec_params_serialize".to_string(),
-            item_spec_params_file,
-            item_spec_params,
-            Error::ItemSpecParamsSerialize,
+            "cmd_ctx_builder::params_specs_serialize".to_string(),
+            params_specs_file,
+            params_specs,
+            Error::ParamsSpecsSerialize,
         )
         .await
 }
@@ -270,82 +271,84 @@ fn params_and_states_type_reg<E>(
 ///
 /// If an item spec's parameters are not provided, and nothing was previously
 /// stored, then an error is returned.
-fn item_spec_params_merge<E>(
+fn params_specs_merge<E>(
     flow: &Flow<E>,
-    mut item_spec_params_provided: ItemSpecParams,
-    item_spec_params_stored: Option<ItemSpecParams>,
-) -> Result<ItemSpecParams, E>
+    mut params_specs_provided: ParamsSpecs,
+    params_specs_stored: Option<ParamsSpecs>,
+) -> Result<ParamsSpecs, E>
 where
     E: From<Error>,
 {
-    // Combine provided and stored params. Provided params take precedence.
+    // Combine provided and stored params  specs. Provided params  specs take
+    // precedence.
     //
-    // We construct a new TypeMap because we want to make sure params are serialized
-    // in order of the item specs in the graph.
+    // We construct a new TypeMap because we want to make sure params  specs are
+    // serialized in order of the item specs in the graph.
     let item_spec_graph = flow.graph();
-    let mut item_spec_params = ItemSpecParams::with_capacity(item_spec_graph.node_count());
+    let mut params_specs = ParamsSpecs::with_capacity(item_spec_graph.node_count());
 
     // Collected erroneous data -- parameters may have been valid in the past, but:
     //
     // * item spec IDs may have changed.
-    // * item specs may have been removed, but params remain.
-    // * item specs may have been added, but params forgotten to be added.
-    let mut item_spec_ids_with_no_params = Vec::<ItemSpecId>::new();
-    let mut stored_item_spec_params_mismatches = None;
+    // * item specs may have been removed, but params specs remain.
+    // * item specs may have been added, but params  specs forgotten to be added.
+    let mut item_spec_ids_with_no_params_specs = Vec::<ItemSpecId>::new();
+    let mut params_specs_stored_mismatches = None;
 
-    if let Some(mut item_spec_params_stored) = item_spec_params_stored {
+    if let Some(mut params_specs_stored) = params_specs_stored {
         item_spec_graph.iter_insertion().for_each(|item_spec_rt| {
             let item_spec_id = item_spec_rt.id();
 
-            // Removing the entry from stored params is deliberate, so filtering for stored
-            // params that no longer have a corresponding item spec are
-            // detected.
-            let provided_params = item_spec_params_provided.remove_entry(item_spec_id);
-            let stored_params = item_spec_params_stored.remove_entry(item_spec_id);
-            if let Some((item_spec_id, params_boxed)) = provided_params.or(stored_params) {
-                item_spec_params.insert_raw(item_spec_id, params_boxed);
+            // Removing the entry from stored params  specs is deliberate, so filtering for
+            // stored params  specs that no longer have a corresponding item
+            // spec are detected.
+            let params_spec_provided = params_specs_provided.remove_entry(item_spec_id);
+            let params_spec_stored = params_specs_stored.remove_entry(item_spec_id);
+            if let Some((item_spec_id, params_boxed)) = params_spec_provided.or(params_spec_stored)
+            {
+                params_specs.insert_raw(item_spec_id, params_boxed);
             } else {
                 // Collect item specs that do not have parameters.
-                item_spec_ids_with_no_params.push(item_spec_id.clone());
+                item_spec_ids_with_no_params_specs.push(item_spec_id.clone());
             }
         });
 
         // Stored parameters whose IDs do not correspond to any item spec IDs in the
         // graph. May be empty.
-        stored_item_spec_params_mismatches = Some(item_spec_params_stored);
+        params_specs_stored_mismatches = Some(params_specs_stored);
     } else {
         item_spec_graph.iter_insertion().for_each(|item_spec_rt| {
             let item_spec_id = item_spec_rt.id();
 
             if let Some((item_spec_id, params_boxed)) =
-                item_spec_params_provided.remove_entry(item_spec_id)
+                params_specs_provided.remove_entry(item_spec_id)
             {
-                item_spec_params.insert_raw(item_spec_id, params_boxed);
+                params_specs.insert_raw(item_spec_id, params_boxed);
             } else {
                 // Collect item specs that do not have parameters.
-                item_spec_ids_with_no_params.push(item_spec_id.clone());
+                item_spec_ids_with_no_params_specs.push(item_spec_id.clone());
             }
         });
     }
 
     // Provided parameters whose IDs do not correspond to any item spec IDs in the
     // graph.
-    let provided_item_spec_params_mismatches = item_spec_params_provided;
+    let params_specs_provided_mismatches = params_specs_provided;
 
-    let params_all_match = item_spec_ids_with_no_params.is_empty()
-        && provided_item_spec_params_mismatches.is_empty()
-        && stored_item_spec_params_mismatches
+    let params_all_match = item_spec_ids_with_no_params_specs.is_empty()
+        && params_specs_provided_mismatches.is_empty()
+        && params_specs_stored_mismatches
             .as_ref()
-            .map(|stored_item_spec_params_mismatches| stored_item_spec_params_mismatches.is_empty())
+            .map(|params_specs_stored_mismatches| params_specs_stored_mismatches.is_empty())
             .unwrap_or(true);
 
     if params_all_match {
-        Ok(item_spec_params)
+        Ok(params_specs)
     } else {
-        Err(Error::ItemSpecParamsMismatch {
-            item_spec_ids_with_no_params,
-            provided_item_spec_params_mismatches,
-            stored_item_spec_params_mismatches,
+        Err(Error::ParamsSpecsMismatch {
+            item_spec_ids_with_no_params_specs,
+            params_specs_provided_mismatches,
+            params_specs_stored_mismatches,
         }
         .into())
     }

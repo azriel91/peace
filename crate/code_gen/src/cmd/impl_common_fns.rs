@@ -27,13 +27,13 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             pub fn with_item_spec_params<IS>(
                 mut self,
                 item_spec_id: peace_cfg::ItemSpecId,
-                param: IS::Params<'_>,
+                params_spec: <IS::Params<'_> as peace_params::Params>::Spec,
             ) -> Self
             where
                 IS: peace_cfg::ItemSpec,
                 E: From<IS::Error>
             {
-                self.scope_builder.item_spec_params_provided.insert(item_spec_id, param);
+                self.scope_builder.params_specs_provided.insert(item_spec_id, params_spec);
                 self
             }
         }
