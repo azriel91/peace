@@ -1,13 +1,10 @@
 use std::marker::PhantomData;
 
-use peace_cfg::{FlowId, ItemSpecId, Profile};
+use peace_cfg::{FlowId, Profile};
 use peace_params::ParamsSpecs;
-use peace_resources::{
-    paths::ParamsSpecsFile,
-    type_reg::untagged::{BoxDt, TypeReg},
-};
+use peace_resources::paths::ParamsSpecsFile;
 
-use crate::{Error, Storage};
+use crate::{Error, ParamsSpecsDeTypeReg, Storage};
 
 /// Reads and writes [`ParamsSpecs`] to and from storage.
 pub struct ParamsSpecsSerializer<E>(PhantomData<E>);
@@ -50,8 +47,8 @@ where
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
-    /// * `params_specs_type_reg`: Type registry with functions to deserialize
-    ///   each params spec.
+    /// * `params_specs_de_type_reg`: Type registry with functions to
+    ///   deserialize each params spec.
     /// * `params_specs_file`: `ParamsSpecsFile` to deserialize.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
@@ -59,7 +56,7 @@ where
         profile: &Profile,
         flow_id: &FlowId,
         storage: &Storage,
-        params_specs_type_reg: &TypeReg<ItemSpecId, BoxDt>,
+        params_specs_de_type_reg: &ParamsSpecsDeTypeReg,
         params_specs_file: &ParamsSpecsFile,
     ) -> Result<ParamsSpecs, E> {
         let params_specs = Self::deserialize_internal(
@@ -68,7 +65,7 @@ where
             profile,
             flow_id,
             storage,
-            params_specs_type_reg,
+            params_specs_de_type_reg,
             params_specs_file,
         )
         .await?;
@@ -88,8 +85,8 @@ where
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
-    /// * `params_specs_type_reg`: Type registry with functions to deserialize
-    ///   each params spec.
+    /// * `params_specs_de_type_reg`: Type registry with functions to
+    ///   deserialize each params spec.
     /// * `params_specs_file`: `ParamsSpecsFile` to deserialize.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
@@ -97,7 +94,7 @@ where
         profile: &Profile,
         flow_id: &FlowId,
         storage: &Storage,
-        params_specs_type_reg: &TypeReg<ItemSpecId, BoxDt>,
+        params_specs_de_type_reg: &ParamsSpecsDeTypeReg,
         params_specs_file: &ParamsSpecsFile,
     ) -> Result<Option<ParamsSpecs>, E> {
         Self::deserialize_internal(
@@ -106,7 +103,7 @@ where
             profile,
             flow_id,
             storage,
-            params_specs_type_reg,
+            params_specs_de_type_reg,
             params_specs_file,
         )
         .await
@@ -118,8 +115,8 @@ where
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
-    /// * `params_specs_type_reg`: Type registry with functions to deserialize
-    ///   each params spec.
+    /// * `params_specs_de_type_reg`: Type registry with functions to
+    ///   deserialize each params spec.
     /// * `params_specs_file`: `ParamsSpecsFile` to deserialize.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
@@ -129,13 +126,13 @@ where
         profile: &Profile,
         flow_id: &FlowId,
         storage: &Storage,
-        params_specs_type_reg: &TypeReg<ItemSpecId, BoxDt>,
+        params_specs_de_type_reg: &ParamsSpecsDeTypeReg,
         params_specs_file: &ParamsSpecsFile,
     ) -> Result<Option<ParamsSpecs>, E> {
         let params_specs_opt = storage
             .serialized_typemap_read_opt(
                 thread_name,
-                params_specs_type_reg,
+                params_specs_de_type_reg,
                 params_specs_file,
                 |error| {
                     #[cfg(not(feature = "error_reporting"))]
@@ -183,8 +180,8 @@ where
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
-    /// * `params_specs_type_reg`: Type registry with functions to deserialize
-    ///   each params spec.
+    /// * `params_specs_de_type_reg`: Type registry with functions to
+    ///   deserialize each params spec.
     /// * `params_specs_file`: `ParamsSpecsFile` to deserialize.
     ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
@@ -193,11 +190,11 @@ where
         profile: &Profile,
         flow_id: &FlowId,
         storage: &Storage,
-        params_specs_type_reg: &TypeReg<ItemSpecId, BoxDt>,
+        params_specs_de_type_reg: &ParamsSpecsDeTypeReg,
         params_specs_file: &ParamsSpecsFile,
     ) -> Result<Option<ParamsSpecs>, E> {
         let params_specs_opt = storage
-            .serialized_typemap_read_opt(params_specs_type_reg, params_specs_file, |error| {
+            .serialized_typemap_read_opt(params_specs_de_type_reg, params_specs_file, |error| {
                 #[cfg(not(feature = "error_reporting"))]
                 {
                     Error::ParamsSpecsDeserialize {

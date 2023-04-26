@@ -13,7 +13,7 @@ use peace_resources::{
 use peace_rt_model::{
     fn_graph::resman::Resource,
     params::{FlowParams, ProfileParams, WorkspaceParams},
-    Error, Flow, ItemSpecGraph, ItemSpecParams, ItemSpecParamsTypeReg, ParamsSpecsTypeReg,
+    Error, Flow, ItemSpecGraph, ItemSpecParams, ItemSpecParamsTypeReg, ParamsSpecsDeTypeReg,
     StatesTypeReg, Storage, Workspace, WorkspaceInitializer,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -241,24 +241,24 @@ pub(crate) async fn profiles_from_peace_app_dir(
 /// deserialization.
 fn params_and_states_type_reg<E>(
     item_spec_graph: &ItemSpecGraph<E>,
-) -> (ItemSpecParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg) {
+) -> (ItemSpecParamsTypeReg, ParamsSpecsDeTypeReg, StatesTypeReg) {
     item_spec_graph.iter().fold(
         (
             ItemSpecParamsTypeReg::new(),
-            ParamsSpecsTypeReg::new(),
+            ParamsSpecsDeTypeReg::new(),
             StatesTypeReg::new(),
         ),
-        |(mut item_spec_params_type_reg, mut params_specs_type_reg, mut states_type_reg),
+        |(mut item_spec_params_type_reg, mut params_specs_de_type_reg, mut states_type_reg),
          item_spec| {
             item_spec.params_and_state_register(
                 &mut item_spec_params_type_reg,
-                &mut params_specs_type_reg,
+                &mut params_specs_de_type_reg,
                 &mut states_type_reg,
             );
 
             (
                 item_spec_params_type_reg,
-                params_specs_type_reg,
+                params_specs_de_type_reg,
                 states_type_reg,
             )
         },
