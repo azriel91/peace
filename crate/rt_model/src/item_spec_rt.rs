@@ -11,7 +11,7 @@ use peace_resources::{
 
 use crate::{
     outcomes::{ItemApplyBoxed, ItemApplyPartialBoxed},
-    ItemSpecParamsTypeReg, StatesTypeReg,
+    ItemSpecParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg,
 };
 
 /// Internal trait that erases the types from [`ItemSpec`]
@@ -42,6 +42,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     fn params_and_state_register(
         &self,
         item_spec_params_type_reg: &mut ItemSpecParamsTypeReg,
+        params_specs_type_reg: &mut ParamsSpecsTypeReg,
         states_type_reg: &mut StatesTypeReg,
     );
 

@@ -10,6 +10,7 @@ use peace_data::{
     marker::{ApplyDry, Clean, Current, Desired},
     Data,
 };
+use peace_params::Params;
 use peace_resources::{
     resources::ts::{Empty, SetUp},
     type_reg::untagged::{BoxDtDisplay, TypeMap},
@@ -18,7 +19,7 @@ use peace_resources::{
 
 use crate::{
     outcomes::{ItemApply, ItemApplyBoxed, ItemApplyPartial, ItemApplyPartialBoxed},
-    ItemSpecParamsTypeReg, ItemSpecRt, StatesTypeReg,
+    ItemSpecParamsTypeReg, ItemSpecRt, ParamsSpecsTypeReg, StatesTypeReg,
 };
 
 /// Wraps a type implementing [`ItemSpec`].
@@ -346,9 +347,11 @@ where
     fn params_and_state_register(
         &self,
         item_spec_params_type_reg: &mut ItemSpecParamsTypeReg,
+        params_specs_type_reg: &mut ParamsSpecsTypeReg,
         states_type_reg: &mut StatesTypeReg,
     ) {
         item_spec_params_type_reg.register::<IS::Params<'_>>(IS::id(self).clone());
+        params_specs_type_reg.register::<<IS::Params<'_> as Params>::SpecDe>(IS::id(self).clone());
         states_type_reg.register::<IS::State>(IS::id(self).clone());
     }
 
