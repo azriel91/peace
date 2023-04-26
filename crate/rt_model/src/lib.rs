@@ -25,8 +25,8 @@ pub use crate::{
     item_spec_graph::ItemSpecGraph, item_spec_graph_builder::ItemSpecGraphBuilder,
     item_spec_params_serializer::ItemSpecParamsSerializer,
     item_spec_params_type_reg::ItemSpecParamsTypeReg, item_spec_rt::ItemSpecRt,
-    item_spec_wrapper::ItemSpecWrapper, states_serializer::StatesSerializer,
-    states_type_reg::StatesTypeReg,
+    item_spec_wrapper::ItemSpecWrapper, params_specs_serializer::ParamsSpecsSerializer,
+    states_serializer::StatesSerializer, states_type_reg::StatesTypeReg,
 };
 
 pub mod outcomes;
@@ -40,6 +40,7 @@ mod item_spec_params_serializer;
 mod item_spec_params_type_reg;
 mod item_spec_rt;
 mod item_spec_wrapper;
+mod params_specs_serializer;
 mod states_serializer;
 mod states_type_reg;
 
