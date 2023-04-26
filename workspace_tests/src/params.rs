@@ -19,6 +19,21 @@ mod struct_params {
     );
 
     #[test]
+    fn spec_from_params() {
+        let params = StructParams {
+            src: String::from("a"),
+        };
+
+        assert!(matches!(
+            StructParamsSpec::from(params),
+            StructParamsSpec {
+                src: ValueSpec::Value(value),
+            }
+            if value == "a"
+        ));
+    }
+
+    #[test]
     fn spec_debug() {
         assert_eq!(
             r#"StructParamsSpec { src: Value("a") }"#,
@@ -63,7 +78,6 @@ mod struct_with_type_params {
 
     use peace::params::{Params, ValueSpec};
 
-    #[allow(dead_code)]
     #[derive(Params)]
     pub struct StructWithTypeParams<Id> {
         /// Source / desired value for the state.
@@ -79,6 +93,23 @@ mod struct_with_type_params {
         StructWithTypeParamsPartial,
         [<()>]
     );
+
+    #[test]
+    fn spec_from_params() {
+        let params = StructWithTypeParams::<()> {
+            src: String::from("a"),
+            marker: PhantomData,
+        };
+
+        assert!(matches!(
+            StructWithTypeParamsSpec::from(params),
+            StructWithTypeParamsSpec::<()> {
+                src: ValueSpec::Value(value),
+                marker: PhantomData,
+            }
+            if value == "a"
+        ));
+    }
 
     #[test]
     fn spec_debug() {
@@ -128,7 +159,6 @@ mod enum_params {
 
     use peace::params::{Params, ValueSpec};
 
-    #[allow(dead_code)]
     #[derive(Params)]
     pub enum EnumParams<Id> {
         Named {
@@ -148,6 +178,44 @@ mod enum_params {
         EnumParamsPartial,
         [<()>]
     );
+
+    #[test]
+    fn spec_named_from_params() {
+        let params = EnumParams::<()>::Named {
+            src: String::from("a"),
+            marker: PhantomData,
+        };
+
+        assert!(matches!(
+            EnumParamsSpec::from(params),
+            EnumParamsSpec::<()>::Named {
+                src: ValueSpec::Value(value),
+                marker: PhantomData,
+            }
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn spec_tuple_from_params() {
+        let params = EnumParams::<()>::Tuple(String::from("a"));
+
+        assert!(matches!(
+            EnumParamsSpec::from(params),
+            EnumParamsSpec::<()>::Tuple(ValueSpec::Value(value))
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn spec_unit_from_params() {
+        let params = EnumParams::<()>::Unit;
+
+        assert!(matches!(
+            EnumParamsSpec::from(params),
+            EnumParamsSpec::<()>::Unit
+        ));
+    }
 
     #[test]
     fn spec_clone_named() {
