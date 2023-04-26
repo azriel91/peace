@@ -1,3 +1,45 @@
+mod unit {
+    use std::any::TypeId;
+
+    use peace::params::Params;
+
+    #[derive(Params)]
+    pub struct UnitParams;
+
+    super::params_tests!(
+        UnitParams,
+        UnitParamsSpec,
+        UnitParamsSpecBuilder,
+        UnitParamsPartial,
+        []
+    );
+
+    #[test]
+    fn spec_from_params() {
+        let params = UnitParams;
+
+        assert!(matches!(UnitParamsSpec::from(params), UnitParamsSpec));
+    }
+
+    #[test]
+    fn spec_debug() {
+        assert_eq!(r#"UnitParamsSpec"#, format!("{:?}", UnitParamsSpec));
+    }
+
+    #[test]
+    fn spec_builder_debug() {
+        assert_eq!(
+            r#"UnitParamsSpecBuilder"#,
+            format!("{:?}", UnitParamsSpecBuilder)
+        );
+    }
+
+    #[test]
+    fn params_partial_debug() {
+        assert_eq!(r#"UnitParamsPartial"#, format!("{:?}", UnitParamsPartial));
+    }
+}
+
 mod struct_params {
     use std::any::TypeId;
 
@@ -148,6 +190,147 @@ mod struct_with_type_params {
                     src: Some(String::from("a")),
                     marker: PhantomData,
                 }
+            )
+        );
+    }
+}
+
+mod tuple_params {
+    use std::any::TypeId;
+
+    use peace::params::{Params, ValueSpec};
+
+    #[derive(Params)]
+    pub struct TupleParams {
+        /// Source / desired value for the state.
+        src: String,
+    }
+
+    super::params_tests!(
+        TupleParams,
+        TupleParamsSpec,
+        TupleParamsSpecBuilder,
+        TupleParamsPartial,
+        []
+    );
+
+    #[test]
+    fn spec_from_params() {
+        let params = TupleParams {
+            src: String::from("a"),
+        };
+
+        assert!(matches!(
+            TupleParamsSpec::from(params),
+            TupleParamsSpec {
+                src: ValueSpec::Value(value),
+            }
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn spec_debug() {
+        assert_eq!(
+            r#"TupleParamsSpec { src: Value("a") }"#,
+            format!(
+                "{:?}",
+                TupleParamsSpec {
+                    src: ValueSpec::Value(String::from("a")),
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn spec_builder_debug() {
+        assert_eq!(
+            r#"TupleParamsSpecBuilder { src: Some(Value("a")) }"#,
+            format!(
+                "{:?}",
+                TupleParamsSpecBuilder {
+                    src: Some(ValueSpec::Value(String::from("a"))),
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn params_partial_debug() {
+        assert_eq!(
+            r#"TupleParamsPartial { src: Some("a") }"#,
+            format!(
+                "{:?}",
+                TupleParamsPartial {
+                    src: Some(String::from("a")),
+                }
+            )
+        );
+    }
+}
+
+mod tuple_with_type_params {
+    use std::{any::TypeId, marker::PhantomData};
+
+    use peace::params::{Params, ValueSpec};
+
+    #[derive(Params)]
+    pub struct TupleWithTypeParams<Id>(String, PhantomData<Id>);
+
+    super::params_tests!(
+        TupleWithTypeParams,
+        TupleWithTypeParamsSpec,
+        TupleWithTypeParamsSpecBuilder,
+        TupleWithTypeParamsPartial,
+        [<()>]
+    );
+
+    #[test]
+    fn spec_from_params() {
+        let params = TupleWithTypeParams::<()>(String::from("a"), PhantomData);
+
+        assert!(matches!(
+            TupleWithTypeParamsSpec::from(params),
+            TupleWithTypeParamsSpec::<()>(
+                ValueSpec::Value(value),
+                PhantomData,
+            )
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn spec_debug() {
+        assert_eq!(
+            r#"TupleWithTypeParamsSpec(Value("a"), PhantomData<()>)"#,
+            format!(
+                "{:?}",
+                TupleWithTypeParamsSpec::<()>(ValueSpec::Value(String::from("a")), PhantomData,)
+            )
+        );
+    }
+
+    #[test]
+    fn spec_builder_debug() {
+        assert_eq!(
+            r#"TupleWithTypeParamsSpecBuilder(Some(Value("a")), PhantomData<()>)"#,
+            format!(
+                "{:?}",
+                TupleWithTypeParamsSpecBuilder::<()>(
+                    Some(ValueSpec::Value(String::from("a"))),
+                    PhantomData,
+                )
+            )
+        );
+    }
+
+    #[test]
+    fn params_partial_debug() {
+        assert_eq!(
+            r#"TupleWithTypeParamsPartial(Some("a"), PhantomData<()>)"#,
+            format!(
+                "{:?}",
+                TupleWithTypeParamsPartial::<()>(Some(String::from("a")), PhantomData,)
             )
         );
     }

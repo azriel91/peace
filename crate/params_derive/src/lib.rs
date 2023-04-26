@@ -264,7 +264,7 @@ where
         syn::Data::Struct(data_struct) => {
             let mut fields = data_struct.fields.clone();
             fields_map(&mut fields);
-            let semi_colon_maybe = if matches!(&fields, Fields::Unnamed(_)) {
+            let semi_colon_maybe = if matches!(&fields, Fields::Unnamed(_) | Fields::Unit) {
                 quote!(;)
             } else {
                 quote!()
