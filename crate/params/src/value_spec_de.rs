@@ -1,22 +1,22 @@
 use std::fmt::{self, Debug};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{MappingFnImpl, ValueSpec};
 
 /// Exists to deserialize `FromMap` with a non-type-erased `MappingFnImpl`
-#[derive(Clone, Deserialize)]
-pub enum ValueSpecDe<T, F, U> {
+#[derive(Clone, Serialize, Deserialize)]
+pub enum ValueSpecDe<T> {
     /// Use this provided value.
     Value(T),
     /// Look up the value populated by a predecessor.
     From,
     /// Look up some data populated by a predecessor, and compute the value
     /// from that data.
-    FromMap(MappingFnImpl<T, F, U>),
+    FromMap(MappingFnImpl<T, fn(&()) -> T, ()>),
 }
 
-impl<T, F, U> fmt::Debug for ValueSpecDe<T, F, U>
+impl<T> fmt::Debug for ValueSpecDe<T>
 where
     T: fmt::Debug,
 {
@@ -31,13 +31,11 @@ where
     }
 }
 
-impl<T, F, U> From<ValueSpecDe<T, F, U>> for ValueSpec<T>
+impl<T> From<ValueSpecDe<T>> for ValueSpec<T>
 where
     T: Clone + Debug + Send + Sync + 'static,
-    F: Fn(&U) -> T + Clone + Send + Sync + 'static,
-    U: Clone + Debug + Send + Sync + 'static,
 {
-    fn from(value_spec_de: ValueSpecDe<T, F, U>) -> Self {
+    fn from(value_spec_de: ValueSpecDe<T>) -> Self {
         match value_spec_de {
             ValueSpecDe::Value(t) => ValueSpec::Value(t),
             ValueSpecDe::From => ValueSpec::From,

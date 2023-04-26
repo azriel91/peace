@@ -58,6 +58,13 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&params_spec_name, ast.ident.span())
     };
 
+    // MyParams -> MyParamsSpecDe
+    let params_spec_de_name = {
+        let mut params_spec_de_name = ast.ident.to_string();
+        params_spec_de_name.push_str("SpecDe");
+        Ident::new(&params_spec_de_name, ast.ident.span())
+    };
+
     // MyParams -> MyParamsSpecBuilder
     let params_spec_builder_name = {
         let mut params_spec_builder_name = ast.ident.to_string();
@@ -72,6 +79,13 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
         &params_spec_name,
         &peace_params_path,
         params_name,
+    );
+    let params_spec_de = params_spec_de(
+        ast,
+        &generics_split,
+        &params_spec_de_name,
+        &peace_params_path,
+        &params_spec_name,
     );
     let params_spec_builder = params_spec_builder(
         ast,
@@ -89,15 +103,18 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
         #where_clause
         {
             type Spec = #params_spec_name #ty_generics;
+            type SpecDe = #params_spec_de_name #ty_generics;
             type SpecBuilder = #params_spec_builder_name #ty_generics;
             type Partial = #params_partial_name #ty_generics;
         }
 
-        #params_partial
-
         #params_spec
 
+        #params_spec_de
+
         #params_spec_builder
+
+        #params_partial
     }
 }
 
@@ -184,7 +201,7 @@ fn params_spec(
         |fields| fields_to_value_spec(fields, peace_params_path),
         &[
             parse_quote! {
-                #[doc="Specification of how to look up the values for an item spec's parameters."]
+                #[doc="Specification of how to look up values for an item spec's parameters."]
             },
             // `Clone` and `Debug` are implemented manually, so that type parameters do not receive
             // the `Clone` and `Debug` bounds.
@@ -204,6 +221,52 @@ fn params_spec(
     ));
 
     params_spec
+}
+
+/// Generates something like the following:
+///
+/// ```rust,ignore
+/// struct MyParamsSpecDe {
+///     src: peace_params::ValueSpecDe<PathBuf>,
+///     dest_ip: peace_params::ValueSpecDe<IpAddr>,
+///     dest_path: peace_params::ValueSpecDe<PathBuf>,
+/// }
+/// ```
+fn params_spec_de(
+    ast: &DeriveInput,
+    generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
+    params_spec_de_name: &Ident,
+    peace_params_path: &Path,
+    params_spec_name: &Ident,
+) -> proc_macro2::TokenStream {
+    let mut params_spec_de = type_gen(
+        ast,
+        generics_split,
+        params_spec_de_name,
+        |fields| fields_to_value_spec_de(fields, peace_params_path),
+        &[
+            parse_quote! {
+                #[doc="\
+                    Non-type-erased specification of how to look up values for an item spec's parameters.\n\
+                    \n\
+                    This allows a serialized `Spec` to be deserialized using a type registry.\n\
+                    "]
+            },
+            // `Clone` and `Debug` are implemented manually, so that type parameters do not receive
+            // the `Clone` and `Debug` bounds.
+            parse_quote!(#[derive(serde::Serialize, serde::Deserialize)]),
+        ],
+    );
+
+    params_spec_de.extend(impl_from_params_spec_de_for_params_spec(
+        ast,
+        generics_split,
+        params_spec_name,
+        params_spec_de_name,
+        peace_params_path,
+    ));
+
+    params_spec_de
 }
 
 /// Generates something like the following:
@@ -346,6 +409,16 @@ fn fields_to_value_spec(fields: &mut Fields, peace_params_path: &Path) {
             field_ty.clone()
         } else {
             parse_quote!(#peace_params_path::ValueSpec<#field_ty>)
+        }
+    })
+}
+
+fn fields_to_value_spec_de(fields: &mut Fields, peace_params_path: &Path) {
+    fields_map(fields, |field_ty| {
+        if is_phantom_data(field_ty) {
+            field_ty.clone()
+        } else {
+            parse_quote!(#peace_params_path::ValueSpecDe<#field_ty>)
         }
     })
 }
@@ -792,22 +865,39 @@ fn impl_from_params_for_params_spec(
     peace_params_path: &Path,
 ) -> proc_macro2::TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics_split;
+    let value_spec_init = parse_quote!(ValueSpec::Value);
 
     let from_body = match &ast.data {
         syn::Data::Struct(data_struct) => {
             let fields = &data_struct.fields;
 
-            struct_fields_map_to_some(params_spec_name, fields, peace_params_path)
+            struct_fields_map_to_value(
+                params_spec_name,
+                fields,
+                peace_params_path,
+                &value_spec_init,
+            )
         }
         syn::Data::Enum(data_enum) => {
             let variants = &data_enum.variants;
 
-            variants_map_to_some(params_spec_name, params_name, variants, peace_params_path)
+            variants_map_to_value(
+                params_spec_name,
+                params_name,
+                variants,
+                peace_params_path,
+                &value_spec_init,
+            )
         }
         syn::Data::Union(data_union) => {
             let fields = Fields::from(data_union.fields.clone());
 
-            struct_fields_map_to_some(params_spec_name, &fields, peace_params_path)
+            struct_fields_map_to_value(
+                params_spec_name,
+                &fields,
+                peace_params_path,
+                &value_spec_init,
+            )
         }
     };
 
@@ -823,10 +913,71 @@ fn impl_from_params_for_params_spec(
     }
 }
 
-fn struct_fields_map_to_some(
+/// `impl From<ParamsSpecDe> for ParamsSpec`, so that users can provide
+/// `params.into()` when building a cmd_ctx, instead of constructing a
+/// `ParamsSpec`.
+fn impl_from_params_spec_de_for_params_spec(
+    ast: &DeriveInput,
+    generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
+    params_spec_name: &Ident,
+    params_spec_de_name: &Ident,
+    peace_params_path: &Path,
+) -> proc_macro2::TokenStream {
+    let (impl_generics, ty_generics, where_clause) = generics_split;
+    let value_spec_init = parse_quote!(ValueSpec::from);
+
+    let from_body = match &ast.data {
+        syn::Data::Struct(data_struct) => {
+            let fields = &data_struct.fields;
+
+            struct_fields_map_to_value(
+                params_spec_name,
+                fields,
+                peace_params_path,
+                &value_spec_init,
+            )
+        }
+        syn::Data::Enum(data_enum) => {
+            let variants = &data_enum.variants;
+
+            variants_map_to_value(
+                params_spec_name,
+                params_spec_de_name,
+                variants,
+                peace_params_path,
+                &value_spec_init,
+            )
+        }
+        syn::Data::Union(data_union) => {
+            let fields = Fields::from(data_union.fields.clone());
+
+            struct_fields_map_to_value(
+                params_spec_name,
+                &fields,
+                peace_params_path,
+                &value_spec_init,
+            )
+        }
+    };
+
+    quote! {
+        impl #impl_generics From<#params_spec_de_name #ty_generics>
+        for #params_spec_name #ty_generics
+        #where_clause
+        {
+            fn from(params: #params_spec_de_name #ty_generics) -> Self {
+                #from_body
+            }
+        }
+    }
+}
+
+// `value_spec_init`: Either `ValueSpec::Value` or `ValueSpec::from`
+fn struct_fields_map_to_value(
     params_spec_name: &Ident,
     fields: &Fields,
     peace_params_path: &Path,
+    value_spec_init: &Path,
 ) -> proc_macro2::TokenStream {
     match fields {
         Fields::Named(fields_named) => {
@@ -838,7 +989,7 @@ fn struct_fields_map_to_some(
             //     marker: PhantomData,
             // }
 
-            let fields_map_to_some = fields_named.named.iter().fold(
+            let fields_map_to_value = fields_named.named.iter().fold(
                 proc_macro2::TokenStream::new(),
                 |mut tokens, field| {
                     if let Some(field_name) = field.ident.as_ref() {
@@ -848,7 +999,7 @@ fn struct_fields_map_to_some(
                             });
                         } else {
                             tokens.extend(quote! {
-                                #field_name: #peace_params_path::ValueSpec::Value(params.#field_name),
+                                #field_name: #peace_params_path::#value_spec_init(params.#field_name),
                             });
                         }
                     }
@@ -858,7 +1009,7 @@ fn struct_fields_map_to_some(
 
             quote! {
                 #params_spec_name {
-                    #fields_map_to_some
+                    #fields_map_to_value
                 }
             }
         }
@@ -867,7 +1018,7 @@ fn struct_fields_map_to_some(
             //
             // #params_spec_name(#peace_params_path::ValueSpec::Value(params.0),
             // #peace_params_path::ValueSpec::Value(params.1), PhantomData)
-            let fields_map_to_some = fields_unnamed.unnamed.iter().enumerate().fold(
+            let fields_map_to_value = fields_unnamed.unnamed.iter().enumerate().fold(
                 proc_macro2::TokenStream::new(),
                 |mut tokens, (field_index, field)| {
                     // Need to convert this to a `LitInt`,
@@ -878,7 +1029,7 @@ fn struct_fields_map_to_some(
                         tokens.extend(quote!(std::marker::PhantomData,));
                     } else {
                         tokens.extend(
-                            quote!(#peace_params_path::ValueSpec::Value(params.#field_index),),
+                            quote!(#peace_params_path::#value_spec_init(params.#field_index),),
                         );
                     }
 
@@ -887,18 +1038,19 @@ fn struct_fields_map_to_some(
             );
 
             quote! {
-                #params_spec_name(#fields_map_to_some)
+                #params_spec_name(#fields_map_to_value)
             }
         }
         Fields::Unit => quote!(#params_spec_name),
     }
 }
 
-fn variants_map_to_some(
+fn variants_map_to_value(
     params_spec_name: &Ident,
     params_name: &Ident,
     variants: &Punctuated<Variant, Token![,]>,
     peace_params_path: &Path,
+    value_spec_init: &Path,
 ) -> proc_macro2::TokenStream {
     // Generates:
     //
@@ -920,7 +1072,7 @@ fn variants_map_to_some(
     //     }
     // }
 
-    let variant_map_to_some_arms =
+    let variant_map_to_value_arms =
         variants
             .iter()
             .fold(proc_macro2::TokenStream::new(), |mut tokens, variant| {
@@ -944,32 +1096,33 @@ fn variants_map_to_some(
                         }
                     })
                     .collect::<Vec<proc_macro2::TokenStream>>();
-                let variant_fields_map_to_some = variant_fields_map_to_some(
+                let variant_fields_map_to_value = variant_fields_map_to_value(
                     params_spec_name,
                     &variant.ident,
                     &variant.fields,
                     peace_params_path,
+                    value_spec_init,
                 );
 
                 match &variant.fields {
                     Fields::Named(_fields_named) => {
                         tokens.extend(quote! {
                             #params_name::#variant_name { #(#variant_fields),* } => {
-                                #variant_fields_map_to_some
+                                #variant_fields_map_to_value
                             }
                         });
                     }
                     Fields::Unnamed(_) => {
                         tokens.extend(quote! {
                             #params_name::#variant_name(#(#variant_fields),*) => {
-                                #variant_fields_map_to_some
+                                #variant_fields_map_to_value
                             }
                         });
                     }
                     Fields::Unit => {
                         tokens.extend(quote! {
                             #params_name::#variant_name => {
-                                #variant_fields_map_to_some
+                                #variant_fields_map_to_value
                             }
                         });
                     }
@@ -980,16 +1133,17 @@ fn variants_map_to_some(
 
     quote! {
         match params {
-            #variant_map_to_some_arms
+            #variant_map_to_value_arms
         }
     }
 }
 
-fn variant_fields_map_to_some(
+fn variant_fields_map_to_value(
     params_spec_name: &Ident,
     variant_name: &Ident,
     fields: &Fields,
     peace_params_path: &Path,
+    value_spec_init: &Path,
 ) -> proc_macro2::TokenStream {
     match fields {
         Fields::Named(fields_named) => {
@@ -1001,7 +1155,7 @@ fn variant_fields_map_to_some(
             //     marker: PhantomData,
             // }
 
-            let fields_map_to_some = fields_named.named.iter().fold(
+            let fields_map_to_value = fields_named.named.iter().fold(
                 proc_macro2::TokenStream::new(),
                 |mut tokens, field| {
                     if let Some(field_name) = field.ident.as_ref() {
@@ -1011,7 +1165,7 @@ fn variant_fields_map_to_some(
                             });
                         } else {
                             tokens.extend(quote! {
-                                #field_name: #peace_params_path::ValueSpec::Value(#field_name),
+                                #field_name: #peace_params_path::#value_spec_init(#field_name),
                             });
                         }
                     }
@@ -1021,7 +1175,7 @@ fn variant_fields_map_to_some(
 
             quote! {
                 #params_spec_name::#variant_name {
-                    #fields_map_to_some
+                    #fields_map_to_value
                 }
             }
         }
@@ -1029,7 +1183,7 @@ fn variant_fields_map_to_some(
             // Generates:
             //
             // ParamsSpecName(_0, #peace_params_path::ValueSpec::Value(_1), PhantomData)
-            let fields_map_to_some = fields_unnamed
+            let fields_map_to_value = fields_unnamed
                 .unnamed
                 .iter()
                 .enumerate()
@@ -1041,7 +1195,7 @@ fn variant_fields_map_to_some(
                             tokens.extend(quote!(std::marker::PhantomData,));
                         } else {
                             tokens.extend(
-                                quote!(#peace_params_path::ValueSpec::Value(#field_index),),
+                                quote!(#peace_params_path::#value_spec_init(#field_index),),
                             );
                         }
 
@@ -1050,7 +1204,7 @@ fn variant_fields_map_to_some(
                 );
 
             quote! {
-                #params_spec_name::#variant_name(#fields_map_to_some)
+                #params_spec_name::#variant_name(#fields_map_to_value)
             }
         }
         Fields::Unit => quote!(Self::#variant_name),
