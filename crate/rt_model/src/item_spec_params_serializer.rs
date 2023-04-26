@@ -122,14 +122,7 @@ where
     ///   deserialize each item spec state.
     /// * `item_spec_params_file`: `ItemSpecParamsFile` to deserialize.
     ///
-    /// # Type Parameters
-    ///
-    /// * `TS`: The item_spec_params type state to use, such as [`ts::Current`]
-    ///   or [`ts::Saved`].
-    ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`ts::Current`]: peace_resources::item_spec_params::ts::Current
-    /// [`ts::Saved`]: peace_resources::item_spec_params::ts::Saved
     #[cfg(not(target_arch = "wasm32"))]
     async fn deserialize_internal(
         thread_name: String,
@@ -196,14 +189,7 @@ where
     ///   deserialize each item spec state.
     /// * `item_spec_params_file`: `ItemSpecParamsFile` to deserialize.
     ///
-    /// # Type Parameters
-    ///
-    /// * `TS`: The item_spec_params type state to use, such as [`ts::Current`]
-    ///   or [`ts::Saved`].
-    ///
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`ts::Current`]: peace_resources::item_spec_params::ts::Current
-    /// [`ts::Saved`]: peace_resources::item_spec_params::ts::Saved
     #[cfg(target_arch = "wasm32")]
     async fn deserialize_internal(
         profile: &Profile,
