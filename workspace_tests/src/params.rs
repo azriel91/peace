@@ -3,7 +3,6 @@ mod struct_params {
 
     use peace::params::{Params, ValueSpec};
 
-    #[allow(dead_code)]
     #[derive(Params)]
     pub struct StructParams {
         /// Source / desired value for the state.
@@ -168,6 +167,7 @@ mod enum_params {
             marker: PhantomData<Id>,
         },
         Tuple(String),
+        TupleMarker(String, PhantomData<Id>),
         Unit,
     }
 
@@ -203,6 +203,17 @@ mod enum_params {
         assert!(matches!(
             EnumParamsSpec::from(params),
             EnumParamsSpec::<()>::Tuple(ValueSpec::Value(value))
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn spec_tuple_marker_from_params() {
+        let params = EnumParams::<()>::TupleMarker(String::from("a"), PhantomData);
+
+        assert!(matches!(
+            EnumParamsSpec::from(params),
+            EnumParamsSpec::<()>::TupleMarker(ValueSpec::Value(value), PhantomData)
             if value == "a"
         ));
     }
@@ -250,6 +261,20 @@ mod enum_params {
     }
 
     #[test]
+    fn spec_clone_tuple_marker() {
+        let spec =
+            EnumParamsSpec::<()>::TupleMarker(ValueSpec::Value(String::from("a")), PhantomData);
+        let spec_clone = spec.clone();
+        drop(spec);
+
+        assert!(matches!(
+            spec_clone,
+            EnumParamsSpec::<()>::TupleMarker(ValueSpec::Value(value), PhantomData)
+            if value == "a"
+        ));
+    }
+
+    #[test]
     fn spec_clone_unit() {
         let spec = EnumParamsSpec::<()>::Unit;
         let spec_clone = spec.clone();
@@ -279,6 +304,17 @@ mod enum_params {
             format!(
                 "{:?}",
                 EnumParamsSpec::<()>::Tuple(ValueSpec::Value(String::from("a")))
+            )
+        );
+    }
+
+    #[test]
+    fn spec_debug_tuple_marker() {
+        assert_eq!(
+            r#"TupleMarker(Value("a"), PhantomData<()>)"#,
+            format!(
+                "{:?}",
+                EnumParamsSpec::<()>::TupleMarker(ValueSpec::Value(String::from("a")), PhantomData)
             )
         );
     }
@@ -322,6 +358,22 @@ mod enum_params {
     }
 
     #[test]
+    fn spec_builder_clone_tuple_marker() {
+        let spec_builder = EnumParamsSpecBuilder::<()>::TupleMarker(
+            Some(ValueSpec::Value(String::from("a"))),
+            PhantomData,
+        );
+        let spec_builder_clone = spec_builder.clone();
+        drop(spec_builder);
+
+        assert!(matches!(
+            spec_builder_clone,
+            EnumParamsSpecBuilder::<()>::TupleMarker(Some(ValueSpec::Value(value)), PhantomData)
+            if value == "a"
+        ));
+    }
+
+    #[test]
     fn spec_builder_clone_unit() {
         let spec_builder = EnumParamsSpecBuilder::<()>::Unit;
         let spec_builder_clone = spec_builder.clone();
@@ -354,6 +406,20 @@ mod enum_params {
             format!(
                 "{:?}",
                 EnumParamsSpecBuilder::<()>::Tuple(Some(ValueSpec::Value(String::from("a"))))
+            )
+        );
+    }
+
+    #[test]
+    fn spec_builder_debug_tuple_marker() {
+        assert_eq!(
+            r#"TupleMarker(Some(Value("a")), PhantomData<()>)"#,
+            format!(
+                "{:?}",
+                EnumParamsSpecBuilder::<()>::TupleMarker(
+                    Some(ValueSpec::Value(String::from("a"))),
+                    PhantomData
+                )
             )
         );
     }
@@ -399,6 +465,20 @@ mod enum_params {
     }
 
     #[test]
+    fn params_partial_clone_tuple_marker() {
+        let params_partial =
+            EnumParamsPartial::<()>::TupleMarker(Some(String::from("a")), PhantomData);
+        let params_partial_clone = params_partial.clone();
+        drop(params_partial);
+
+        assert!(matches!(
+            params_partial_clone,
+            EnumParamsPartial::<()>::TupleMarker(Some(value), PhantomData)
+            if value == "a"
+        ));
+    }
+
+    #[test]
     fn params_partial_clone_unit() {
         let params_partial = EnumParamsPartial::<()>::Unit;
         let params_partial_clone = params_partial.clone();
@@ -431,6 +511,17 @@ mod enum_params {
             format!(
                 "{:?}",
                 EnumParamsPartial::<()>::Tuple(Some(String::from("a")))
+            )
+        );
+    }
+
+    #[test]
+    fn params_partial_debug_tuple_marker() {
+        assert_eq!(
+            r#"TupleMarker(Some("a"), PhantomData<()>)"#,
+            format!(
+                "{:?}",
+                EnumParamsPartial::<()>::TupleMarker(Some(String::from("a")), PhantomData)
             )
         );
     }
