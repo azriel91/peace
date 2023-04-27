@@ -64,12 +64,15 @@ pub use peace_params_derive::Params;
 
 pub use crate::{
     mapping_fn::MappingFn, mapping_fn_impl::MappingFnImpl, params::Params,
-    params_specs::ParamsSpecs, value_spec::ValueSpec, value_spec_de::ValueSpecDe,
+    params_resolve_error::ParamsResolveError, params_spec::ParamsSpec, params_specs::ParamsSpecs,
+    value_spec::ValueSpec, value_spec_de::ValueSpecDe,
 };
 
 mod mapping_fn;
 mod mapping_fn_impl;
 mod params;
+mod params_resolve_error;
+mod params_spec;
 mod params_specs;
 mod value_spec;
 mod value_spec_de;

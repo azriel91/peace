@@ -28,4 +28,5 @@ tynm = "0.1.7"
 
 [features]
 default = []
+error_reporting = ["peace_params/error_reporting"]
 output_progress = ["peace_core/output_progress"]

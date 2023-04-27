@@ -42,7 +42,11 @@ peace_rt_model_web = { path = "../rt_model_web", version = "0.0.9" }
 
 [features]
 default = []
-error_reporting = ["dep:miette", "peace_rt_model_hack/error_reporting"]
+error_reporting = [
+    "dep:miette",
+    "peace_params/error_reporting",
+    "peace_rt_model_hack/error_reporting",
+]
 output_colorized = ["peace_rt_model_native/output_colorized"]
 output_in_memory = ["peace_rt_model_native/output_in_memory"]
 output_json = ["peace_rt_model_hack/output_json"]

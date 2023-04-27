@@ -10,7 +10,7 @@ use peace_data::{
     marker::{ApplyDry, Clean, Current, Desired},
     Data,
 };
-use peace_params::Params;
+use peace_params::{Params, ParamsSpec};
 use peace_resources::{
     resources::ts::{Empty, SetUp},
     type_reg::untagged::{BoxDtDisplay, TypeMap},
@@ -57,10 +57,10 @@ where
 {
     async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<IS::State, E> {
         let state_clean = {
-            // TODO: #94, this should be per Params field type, not Params type.
-            let params = resources.try_borrow::<IS::Params<'_>>().ok();
+            let params_spec = resources.borrow::<<IS::Params<'_> as Params>::Spec>();
+            let params_partial = params_spec.resolve_partial(resources);
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
-            IS::state_clean(params.as_deref(), data).await?
+            IS::state_clean(&params_partial, data).await?
         };
         resources.borrow_mut::<Clean<IS::State>>().0 = Some(state_clean.clone());
 
@@ -73,10 +73,10 @@ where
         resources: &Resources<SetUp>,
     ) -> Result<Option<IS::State>, E> {
         let state_current = {
-            // TODO: #94, this should be per Params field type, not Params type.
-            let params = resources.try_borrow::<IS::Params<'_>>().ok();
+            let params_spec = resources.borrow::<<IS::Params<'_> as Params>::Spec>();
+            let params_partial = params_spec.resolve_partial(resources);
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
-            IS::try_state_current(fn_ctx, params.as_deref(), data).await?
+            IS::try_state_current(fn_ctx, &params_partial, data).await?
         };
         if let Some(state_current) = state_current.as_ref() {
             resources.borrow_mut::<Current<IS::State>>().0 = Some(state_current.clone());
@@ -91,8 +91,10 @@ where
         resources: &Resources<SetUp>,
     ) -> Result<IS::State, E> {
         let state_current = {
-            // TODO: #94, this should be constructing Params from ParamsSpec.
-            let params = resources.borrow::<IS::Params<'_>>();
+            let params_spec = resources.borrow::<<IS::Params<'_> as Params>::Spec>();
+            let params = params_spec
+                .resolve(resources)
+                .map_err(crate::Error::ParamsResolveError)?;
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
             IS::state_current(fn_ctx, &params, data).await?
         };
@@ -106,10 +108,10 @@ where
         fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<Option<IS::State>, E> {
-        // TODO: #94, this should be per Params field type, not Params type.
-        let params = resources.try_borrow::<IS::Params<'_>>().ok();
+        let params_spec = resources.borrow::<<IS::Params<'_> as Params>::Spec>();
+        let params_partial = params_spec.resolve_partial(resources);
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_desired = IS::try_state_desired(fn_ctx, params.as_deref(), data).await?;
+        let state_desired = IS::try_state_desired(fn_ctx, &params_partial, data).await?;
         if let Some(state_desired) = state_desired.as_ref() {
             resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
         }
@@ -122,8 +124,10 @@ where
         fn_ctx: FnCtx<'_>,
         resources: &Resources<SetUp>,
     ) -> Result<IS::State, E> {
-        // TODO: #94, this should be constructing Params from ParamsSpec.
-        let params = resources.borrow::<IS::Params<'_>>();
+        let params_spec = resources.borrow::<<IS::Params<'_> as Params>::Spec>();
+        let params = params_spec
+            .resolve(resources)
+            .map_err(crate::Error::ParamsResolveError)?;
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         let state_desired = IS::state_desired(fn_ctx, &params, data).await?;
         resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
@@ -166,10 +170,10 @@ where
         state_b: &IS::State,
     ) -> Result<IS::StateDiff, E> {
         let state_diff: IS::StateDiff = {
-            // TODO: #94, this should be per Params field type, not Params type.
-            let params = resources.try_borrow::<IS::Params<'_>>().ok();
+            let params_spec = resources.borrow::<<IS::Params<'_> as Params>::Spec>();
+            let params_partial = params_spec.resolve_partial(resources);
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
-            IS::state_diff(params.as_deref(), data, state_a, state_b)
+            IS::state_diff(&params_partial, data, state_a, state_b)
                 .await
                 .map_err(Into::<E>::into)?
         };
@@ -184,8 +188,10 @@ where
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<ApplyCheck, E> {
-        // TODO: #94, this should be constructing Params from ParamsSpec.
-        let params = resources.borrow::<IS::Params<'_>>();
+        let params_spec = resources.borrow::<<IS::Params<'_> as Params>::Spec>();
+        let params = params_spec
+            .resolve(resources)
+            .map_err(crate::Error::ParamsResolveError)?;
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         IS::apply_check(&params, data, state_current, state_desired, state_diff)
             .await
@@ -200,8 +206,10 @@ where
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<IS::State, E> {
-        // TODO: #94, this should be constructing Params from ParamsSpec.
-        let params = resources.borrow::<IS::Params<'_>>();
+        let params_spec = resources.borrow::<<IS::Params<'_> as Params>::Spec>();
+        let params = params_spec
+            .resolve(resources)
+            .map_err(crate::Error::ParamsResolveError)?;
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured_dry = IS::apply_dry(
             fn_ctx,
@@ -227,8 +235,10 @@ where
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<IS::State, E> {
-        // TODO: #94, this should be constructing Params from ParamsSpec.
-        let params = resources.borrow::<IS::Params<'_>>();
+        let params_spec = resources.borrow::<<IS::Params<'_> as Params>::Spec>();
+        let params = params_spec
+            .resolve(resources)
+            .map_err(crate::Error::ParamsResolveError)?;
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured = IS::apply(
             fn_ctx,

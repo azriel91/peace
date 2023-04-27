@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use peace_core::{FlowId, ItemSpecId, Profile};
-use peace_params::ParamsSpecs;
+use peace_params::{ParamsResolveError, ParamsSpecs};
 use peace_resources::paths::{ItemSpecParamsFile, ParamsSpecsFile};
 
 cfg_if::cfg_if! {
@@ -27,6 +27,19 @@ pub enum Error {
         diagnostic(code(peace_rt_model::error_serialize))
     )]
     ErrorSerialize(#[source] serde_yaml::Error),
+
+    /// Failed to resolve values for a `Params` object from `resources`.
+    #[error("Failed to resolve values for a `Params` object from `resources`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::error_serialize))
+    )]
+    ParamsResolveError(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        ParamsResolveError,
+    ),
 
     /// Item spec params specs do not match with the item specs in the flow.
     ///

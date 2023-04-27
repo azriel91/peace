@@ -177,7 +177,7 @@ pub trait ItemSpec: DynClone {
     /// an error.
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, Self::Error>;
 
@@ -198,7 +198,7 @@ pub trait ItemSpec: DynClone {
     /// determine its content hash, instead of returning an error.
     async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, Self::Error>;
 
@@ -239,7 +239,7 @@ pub trait ItemSpec: DynClone {
     /// * For a web application service item spec, the desired state could be
     ///   the application version changing from 1 to 2.
     async fn state_diff(
-        params_partial: Option<&Self::Params<'_>>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
         state_a: &Self::State,
         state_b: &Self::State,
@@ -254,7 +254,7 @@ pub trait ItemSpec: DynClone {
     /// user when they want to see what would be cleaned up by the clean
     /// command.
     async fn state_clean(
-        params_partial: Option<&Self::Params<'_>>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
     ) -> Result<Self::State, Self::Error>;
 

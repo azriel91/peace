@@ -2,6 +2,8 @@ use std::fmt::Debug;
 
 use serde::{de::DeserializeOwned, Serialize};
 
+use crate::ParamsSpec;
+
 /// Input parameters to an item spec.
 ///
 /// This trait is automatically implemented by `#[derive(Params)]`.
@@ -10,7 +12,14 @@ pub trait Params {
     ///
     /// Specifies how to look up values for each field in the item spec's
     /// `Params`.
-    type Spec: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static;
+    type Spec: ParamsSpec<Params = Self, Partial = Self::Partial>
+        + Clone
+        + Debug
+        + Serialize
+        + DeserializeOwned
+        + Send
+        + Sync
+        + 'static;
     /// The `Params` type, but with optional fields
     type Partial: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static;
 }
