@@ -129,7 +129,7 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 
@@ -179,7 +179,7 @@ async fn state_current_returns_shell_command_current_state()
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 
@@ -224,7 +224,7 @@ async fn state_desired_returns_shell_command_desired_state()
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 
@@ -270,7 +270,7 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 
@@ -309,7 +309,7 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command()
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 
@@ -362,7 +362,7 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 
@@ -433,7 +433,7 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 

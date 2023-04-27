@@ -30,7 +30,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
@@ -77,7 +77,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     let (states_current, _states_desired) =
@@ -136,7 +136,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
@@ -185,7 +185,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     let (states_current, _states_desired) =

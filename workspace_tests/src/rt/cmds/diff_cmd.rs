@@ -35,7 +35,7 @@ async fn contains_state_diff_for_each_item_spec() -> Result<(), Box<dyn std::err
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     let (states_current, states_desired) =
@@ -87,7 +87,7 @@ async fn diff_profiles_current_with_multiple_profiles() -> Result<(), Box<dyn st
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     let states_current_0 = StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
@@ -99,7 +99,7 @@ async fn diff_profiles_current_with_multiple_profiles() -> Result<(), Box<dyn st
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     let resources = cmd_ctx_1.resources_mut();
@@ -160,7 +160,7 @@ async fn diff_profiles_current_with_missing_profile_0() -> Result<(), Box<dyn st
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     let resources = cmd_ctx_1.resources_mut();
@@ -206,7 +206,7 @@ async fn diff_profiles_current_with_missing_profile_1() -> Result<(), Box<dyn st
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
@@ -254,7 +254,7 @@ async fn diff_profiles_current_with_profile_0_missing_states_current()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     StatesDiscoverCmd::desired(&mut cmd_ctx_0).await?;
@@ -266,7 +266,7 @@ async fn diff_profiles_current_with_profile_0_missing_states_current()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     let resources = cmd_ctx_1.resources_mut();
@@ -313,7 +313,7 @@ async fn diff_profiles_current_with_profile_1_missing_states_current()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
@@ -325,7 +325,7 @@ async fn diff_profiles_current_with_profile_1_missing_states_current()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     StatesDiscoverCmd::desired(&mut cmd_ctx_1).await?;
@@ -369,7 +369,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     // overwrite initial state

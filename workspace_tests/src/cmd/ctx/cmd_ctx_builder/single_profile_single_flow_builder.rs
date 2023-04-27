@@ -3,6 +3,7 @@ use peace::{
         app_name, flow_id, item_spec_id, profile, AppName, FlowId, ItemSpec, ItemSpecId, Profile,
     },
     cmd::ctx::CmdCtx,
+    params::{Params, ValueSpec},
     resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
@@ -12,7 +13,7 @@ use crate::{
         assert_flow_params, assert_profile_params, assert_workspace_params, workspace,
     },
     no_op_output::NoOpOutput,
-    vec_copy_item_spec::{VecA, VecCopyItemSpec},
+    vec_copy_item_spec::{VecA, VecASpec, VecCopyItemSpec},
     PeaceTestError,
 };
 
@@ -411,20 +412,22 @@ async fn build_with_item_spec_params_returns_ok_when_params_provided()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![1u8]),
+            VecASpec(ValueSpec::Value(vec![1u8])),
         )
         .build()
         .await?;
 
     let scope = cmd_ctx.scope();
-    let item_spec_params = scope.item_spec_params();
+    let params_specs = scope.params_specs();
     let resources = scope.resources();
-    assert_eq!(
-        Some(VecA(vec![1u8])).as_ref().map(|vec_a| &vec_a.0),
-        item_spec_params
-            .get::<<VecCopyItemSpec as ItemSpec>::Params<'_>, _>(VecCopyItemSpec::ID_DEFAULT)
-            .map(|vec_a| &vec_a.0)
-    );
+    let vec_a_spec = params_specs
+        .get::<<<VecCopyItemSpec as ItemSpec>::Params<'_> as Params>::Spec, _>(
+            VecCopyItemSpec::ID_DEFAULT,
+        );
+    assert!(matches!(vec_a_spec,
+        Some(VecASpec(ValueSpec::Value(value)))
+        if value == &[1u8]
+    ));
     assert_eq!(
         Some(VecA(vec![1u8])).as_ref().map(|vec_a| &vec_a.0),
         resources
@@ -462,15 +465,15 @@ async fn build_with_item_spec_params_returns_err_when_params_not_provided_and_no
         matches!(
             &cmd_ctx_result,
             Err(PeaceTestError::PeaceRtError(
-                peace::rt_model::Error::ItemSpecParamsMismatch {
-                    item_spec_ids_with_no_params,
-                    provided_item_spec_params_mismatches,
-                    stored_item_spec_params_mismatches
+                peace::rt_model::Error::ParamsSpecsMismatch {
+                    item_spec_ids_with_no_params_specs,
+                    params_specs_provided_mismatches,
+                    params_specs_stored_mismatches
                 }
             ))
-            if item_spec_ids_with_no_params == &vec![VecCopyItemSpec::ID_DEFAULT.clone()]
-            && provided_item_spec_params_mismatches.is_empty()
-            && stored_item_spec_params_mismatches.is_none(),
+            if item_spec_ids_with_no_params_specs == &vec![VecCopyItemSpec::ID_DEFAULT.clone()]
+            && params_specs_provided_mismatches.is_empty()
+            && params_specs_stored_mismatches.is_none(),
         ),
         "was {cmd_ctx_result:#?}"
     );
@@ -498,7 +501,7 @@ async fn build_with_item_spec_params_returns_ok_when_params_not_provided_but_are
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![1u8]),
+            VecASpec(ValueSpec::Value(vec![1u8])),
         )
         .build()
         .await?;
@@ -510,14 +513,16 @@ async fn build_with_item_spec_params_returns_ok_when_params_not_provided_but_are
         .await?;
 
     let scope = cmd_ctx_from_stored.scope();
-    let item_spec_params = scope.item_spec_params();
+    let params_specs = scope.params_specs();
     let resources = scope.resources();
-    assert_eq!(
-        Some(VecA(vec![1u8])).as_ref().map(|vec_a| &vec_a.0),
-        item_spec_params
-            .get::<<VecCopyItemSpec as ItemSpec>::Params<'_>, _>(VecCopyItemSpec::ID_DEFAULT)
-            .map(|vec_a| &vec_a.0)
-    );
+    let vec_a_spec = params_specs
+        .get::<<<VecCopyItemSpec as ItemSpec>::Params<'_> as Params>::Spec, _>(
+            VecCopyItemSpec::ID_DEFAULT,
+        );
+    assert!(matches!(vec_a_spec,
+        Some(VecASpec(ValueSpec::Value(value)))
+        if value == &[1u8]
+    ));
     assert_eq!(
         Some(VecA(vec![1u8])).as_ref().map(|vec_a| &vec_a.0),
         resources
@@ -550,7 +555,7 @@ async fn build_with_item_spec_params_returns_ok_and_uses_params_provided_when_pa
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![1u8]),
+            VecA(vec![1u8]).into(),
         )
         .build()
         .await?;
@@ -560,20 +565,22 @@ async fn build_with_item_spec_params_returns_ok_and_uses_params_provided_when_pa
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![2u8]),
+            VecA(vec![2u8]).into(),
         )
         .build()
         .await?;
 
     let scope = cmd_ctx_from_stored.scope();
-    let item_spec_params = scope.item_spec_params();
+    let params_specs = scope.params_specs();
     let resources = scope.resources();
-    assert_eq!(
-        Some(VecA(vec![2u8])).as_ref().map(|vec_a| &vec_a.0),
-        item_spec_params
-            .get::<<VecCopyItemSpec as ItemSpec>::Params<'_>, _>(VecCopyItemSpec::ID_DEFAULT)
-            .map(|vec_a| &vec_a.0)
-    );
+    let vec_a_spec = params_specs
+        .get::<<<VecCopyItemSpec as ItemSpec>::Params<'_> as Params>::Spec, _>(
+            VecCopyItemSpec::ID_DEFAULT,
+        );
+    assert!(matches!(vec_a_spec,
+        Some(VecASpec(ValueSpec::Value(value)))
+        if value == &[2u8]
+    ));
     assert_eq!(
         Some(VecA(vec![2u8])).as_ref().map(|vec_a| &vec_a.0),
         resources
@@ -606,7 +613,7 @@ async fn build_with_item_spec_params_returns_err_when_params_provided_mismatch()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![1u8]),
+            VecA(vec![1u8]).into(),
         )
         .build()
         .await?;
@@ -614,7 +621,10 @@ async fn build_with_item_spec_params_returns_err_when_params_provided_mismatch()
     let cmd_ctx_result = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(item_spec_id!("mismatch_id"), VecA(vec![2u8]))
+        .with_item_spec_params::<VecCopyItemSpec>(
+            item_spec_id!("mismatch_id"),
+            VecA(vec![2u8]).into(),
+        )
         .build()
         .await;
 
@@ -622,19 +632,19 @@ async fn build_with_item_spec_params_returns_err_when_params_provided_mismatch()
         matches!(
             &cmd_ctx_result,
             Err(PeaceTestError::PeaceRtError(
-                peace::rt_model::Error::ItemSpecParamsMismatch {
-                    item_spec_ids_with_no_params,
-                    provided_item_spec_params_mismatches,
-                    stored_item_spec_params_mismatches
+                peace::rt_model::Error::ParamsSpecsMismatch {
+                    item_spec_ids_with_no_params_specs,
+                    params_specs_provided_mismatches,
+                    params_specs_stored_mismatches
                 }
             ))
-            if item_spec_ids_with_no_params.is_empty()
-            && provided_item_spec_params_mismatches.get(&item_spec_id!("mismatch_id"))
+            if item_spec_ids_with_no_params_specs.is_empty()
+            && params_specs_provided_mismatches.get(&item_spec_id!("mismatch_id"))
                 == Some(&VecA(vec![2u8]))
             && matches!(
-                stored_item_spec_params_mismatches,
-                Some(stored_item_spec_params_mismatches)
-                if stored_item_spec_params_mismatches.is_empty()
+                params_specs_stored_mismatches,
+                Some(params_specs_stored_mismatches)
+                if params_specs_stored_mismatches.is_empty()
             ),
         ),
         "was {cmd_ctx_result:#?}"
@@ -661,7 +671,10 @@ async fn build_with_item_spec_params_returns_err_when_params_stored_mismatch()
     let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(item_spec_id!("original_id"), VecA(vec![1u8]))
+        .with_item_spec_params::<VecCopyItemSpec>(
+            item_spec_id!("original_id"),
+            VecA(vec![1u8]).into(),
+        )
         .build()
         .await?;
 
@@ -678,7 +691,10 @@ async fn build_with_item_spec_params_returns_err_when_params_stored_mismatch()
     let cmd_ctx_result = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(item_spec_id!("mismatch_id"), VecA(vec![2u8]))
+        .with_item_spec_params::<VecCopyItemSpec>(
+            item_spec_id!("mismatch_id"),
+            VecA(vec![2u8]).into(),
+        )
         .build()
         .await;
 
@@ -686,19 +702,19 @@ async fn build_with_item_spec_params_returns_err_when_params_stored_mismatch()
         matches!(
             &cmd_ctx_result,
             Err(PeaceTestError::PeaceRtError(
-                peace::rt_model::Error::ItemSpecParamsMismatch {
-                    item_spec_ids_with_no_params,
-                    provided_item_spec_params_mismatches,
-                    stored_item_spec_params_mismatches
+                peace::rt_model::Error::ParamsSpecsMismatch {
+                    item_spec_ids_with_no_params_specs,
+                    params_specs_provided_mismatches,
+                    params_specs_stored_mismatches
                 }
             ))
-            if item_spec_ids_with_no_params == &vec![item_spec_id!("new_id")]
-            && provided_item_spec_params_mismatches.get(&item_spec_id!("mismatch_id"))
+            if item_spec_ids_with_no_params_specs == &vec![item_spec_id!("new_id")]
+            && params_specs_provided_mismatches.get(&item_spec_id!("mismatch_id"))
                 == Some(&VecA(vec![2u8]))
             && matches!(
-                stored_item_spec_params_mismatches,
-                Some(stored_item_spec_params_mismatches)
-                if stored_item_spec_params_mismatches.is_empty()
+                params_specs_stored_mismatches,
+                Some(params_specs_stored_mismatches)
+                if params_specs_stored_mismatches.is_empty()
             ),
         ),
         "was {cmd_ctx_result:#?}"
@@ -725,7 +741,10 @@ async fn build_with_item_spec_params_returns_deserialization_err_when_item_spec_
     let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(item_spec_id!("original_id"), VecA(vec![1u8]))
+        .with_item_spec_params::<VecCopyItemSpec>(
+            item_spec_id!("original_id"),
+            VecA(vec![1u8]).into(),
+        )
         .build()
         .await?;
 
@@ -739,7 +758,10 @@ async fn build_with_item_spec_params_returns_deserialization_err_when_item_spec_
     let cmd_ctx_result = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile.clone())
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(item_spec_id!("mismatch_id"), VecA(vec![2u8]))
+        .with_item_spec_params::<VecCopyItemSpec>(
+            item_spec_id!("mismatch_id"),
+            VecA(vec![2u8]).into(),
+        )
         .build()
         .await;
 
