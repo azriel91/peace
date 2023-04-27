@@ -19,7 +19,7 @@ use peace_resources::{
 
 use crate::{
     outcomes::{ItemApply, ItemApplyBoxed, ItemApplyPartial, ItemApplyPartialBoxed},
-    ItemSpecParamsTypeReg, ItemSpecRt, ParamsSpecsDeTypeReg, StatesTypeReg,
+    ItemSpecParamsTypeReg, ItemSpecRt, ParamsSpecsTypeReg, StatesTypeReg,
 };
 
 /// Wraps a type implementing [`ItemSpec`].
@@ -347,11 +347,11 @@ where
     fn params_and_state_register(
         &self,
         item_spec_params_type_reg: &mut ItemSpecParamsTypeReg,
-        params_specs_de_type_reg: &mut ParamsSpecsDeTypeReg,
+        params_specs_type_reg: &mut ParamsSpecsTypeReg,
         states_type_reg: &mut StatesTypeReg,
     ) {
         item_spec_params_type_reg.register::<IS::Params<'_>>(IS::id(self).clone());
-        params_specs_de_type_reg.register::<<IS::Params<'_> as Params>::Spec>(IS::id(self).clone());
+        params_specs_type_reg.register::<<IS::Params<'_> as Params>::Spec>(IS::id(self).clone());
         states_type_reg.register::<IS::State>(IS::id(self).clone());
     }
 

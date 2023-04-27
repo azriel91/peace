@@ -509,10 +509,10 @@ fn impl_build_for(
                 // let flow_id = flow.flow_id();
                 // let item_spec_graph = flow.graph();
                 //
-                // let (item_spec_params_type_reg, params_specs_de_type_reg, states_type_reg) =
+                // let (item_spec_params_type_reg, params_specs_type_reg, states_type_reg) =
                 //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
                 //
-                // let params_specs_de_type_reg_ref = &params_specs_de_type_reg;
+                // let params_specs_type_reg_ref = &params_specs_type_reg;
                 // let profile_to_params_specs = futures::stream::iter(
                 //     flow_dirs
                 //         .iter()
@@ -528,7 +528,7 @@ fn impl_build_for(
                 //             profile,
                 //             flow_id,
                 //             storage,
-                //             params_specs_de_type_reg_ref,
+                //             params_specs_type_reg_ref,
                 //             &params_specs_file,
                 //         )
                 //         .await?;
@@ -585,11 +585,11 @@ fn impl_build_for(
                 // let flow_id = flow.flow_id();
                 // let item_spec_graph = flow.graph();
                 //
-                // let (item_spec_params_type_reg, params_specs_de_type_reg, states_type_reg) =
+                // let (item_spec_params_type_reg, params_specs_type_reg, states_type_reg) =
                 //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
                 //
                 // // Params specs loading and storage.
-                // let params_specs_de_type_reg_ref = &params_specs_de_type_reg;
+                // let params_specs_type_reg_ref = &params_specs_type_reg;
                 // let params_specs_file = peace_resources::paths::ParamsSpecsFile::from(&flow_dir);
                 // let params_specs_stored = peace_rt_model::ParamsSpecsSerializer::<
                 //     peace_rt_model::Error
@@ -597,7 +597,7 @@ fn impl_build_for(
                 //     &profile,
                 //     flow_id,
                 //     storage,
-                //     params_specs_de_type_reg_ref,
+                //     params_specs_type_reg_ref,
                 //     &params_specs_file,
                 // )
                 // .await?;
@@ -708,13 +708,13 @@ fn impl_build_for(
                     // === MultiProfileSingleFlow === //
                     // profile_to_states_saved,
                     // item_spec_params_type_reg,
-                    // params_specs_de_type_reg,
+                    // params_specs_type_reg,
                     // profile_to_params_specs,
                     // states_type_reg,
                     // resources,
                     // === SingleProfileSingleFlow === //
                     // item_spec_params_type_reg,
-                    // params_specs_de_type_reg,
+                    // params_specs_type_reg,
                     // params_specs,
                     // states_type_reg,
                     // resources,
@@ -1459,14 +1459,14 @@ fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
         Scope::MultiProfileSingleFlow => {
             scope_fields.push(parse_quote!(profile_to_states_saved));
             scope_fields.push(parse_quote!(item_spec_params_type_reg));
-            scope_fields.push(parse_quote!(params_specs_de_type_reg));
+            scope_fields.push(parse_quote!(params_specs_type_reg));
             scope_fields.push(parse_quote!(profile_to_params_specs));
             scope_fields.push(parse_quote!(states_type_reg));
             scope_fields.push(parse_quote!(resources));
         }
         Scope::SingleProfileSingleFlow => {
             scope_fields.push(parse_quote!(item_spec_params_type_reg));
-            scope_fields.push(parse_quote!(params_specs_de_type_reg));
+            scope_fields.push(parse_quote!(params_specs_type_reg));
             scope_fields.push(parse_quote!(params_specs));
             scope_fields.push(parse_quote!(states_type_reg));
             scope_fields.push(parse_quote!(resources));
@@ -1492,10 +1492,10 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                 let flow_id = flow.flow_id();
                 let item_spec_graph = flow.graph();
 
-                let (item_spec_params_type_reg, params_specs_de_type_reg, states_type_reg) =
+                let (item_spec_params_type_reg, params_specs_type_reg, states_type_reg) =
                     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
 
-                let params_specs_de_type_reg_ref = &params_specs_de_type_reg;
+                let params_specs_type_reg_ref = &params_specs_type_reg;
                 let profile_to_params_specs = futures::stream::iter(
                     flow_dirs
                         .iter()
@@ -1511,7 +1511,7 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                             profile,
                             flow_id,
                             storage,
-                            params_specs_de_type_reg_ref,
+                            params_specs_type_reg_ref,
                             &params_specs_file,
                         )
                         .await?;
@@ -1586,11 +1586,11 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                 let flow_id = flow.flow_id();
                 let item_spec_graph = flow.graph();
 
-                let (item_spec_params_type_reg, params_specs_de_type_reg, states_type_reg) =
+                let (item_spec_params_type_reg, params_specs_type_reg, states_type_reg) =
                     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
 
                 // Params specs loading and storage.
-                let params_specs_de_type_reg_ref = &params_specs_de_type_reg;
+                let params_specs_type_reg_ref = &params_specs_type_reg;
                 let params_specs_file = peace_resources::paths::ParamsSpecsFile::from(&flow_dir);
                 let params_specs_stored = peace_rt_model::ParamsSpecsSerializer::<
                     peace_rt_model::Error
@@ -1598,7 +1598,7 @@ fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
                     &profile,
                     flow_id,
                     storage,
-                    params_specs_de_type_reg_ref,
+                    params_specs_type_reg_ref,
                     &params_specs_file,
                 )
                 .await?;

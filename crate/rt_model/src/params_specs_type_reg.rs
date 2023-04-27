@@ -3,7 +3,7 @@ use std::ops::{Deref, DerefMut};
 use peace_cfg::ItemSpecId;
 use peace_resources::type_reg::untagged::{BoxDt, TypeReg};
 
-/// Type registry for each item spec's [`Params`]'s SpecDe.
+/// Type registry for each item spec's [`Params`]'s Spec.
 ///
 /// This is used to deserialize [`ParamsSpecsFile`].
 ///
@@ -14,16 +14,16 @@ use peace_resources::type_reg::untagged::{BoxDt, TypeReg};
 /// [`Params`]: peace_cfg::ItemSpec::Params
 /// [`StatesTypeReg`]: crate::StatesTypeReg
 #[derive(Debug, Default)]
-pub struct ParamsSpecsDeTypeReg(TypeReg<ItemSpecId, BoxDt>);
+pub struct ParamsSpecsTypeReg(TypeReg<ItemSpecId, BoxDt>);
 
-impl ParamsSpecsDeTypeReg {
+impl ParamsSpecsTypeReg {
     /// Returns a new `ParamsSpecsTypeReg`.
     pub fn new() -> Self {
         Self::default()
     }
 }
 
-impl Deref for ParamsSpecsDeTypeReg {
+impl Deref for ParamsSpecsTypeReg {
     type Target = TypeReg<ItemSpecId, BoxDt>;
 
     fn deref(&self) -> &Self::Target {
@@ -31,7 +31,7 @@ impl Deref for ParamsSpecsDeTypeReg {
     }
 }
 
-impl DerefMut for ParamsSpecsDeTypeReg {
+impl DerefMut for ParamsSpecsTypeReg {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }

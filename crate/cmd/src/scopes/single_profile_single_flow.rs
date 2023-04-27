@@ -12,7 +12,7 @@ use peace_rt_model::{
         FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
         WorkspaceParams,
     },
-    Flow, ItemSpecParamsTypeReg, ParamsSpecsDeTypeReg, StatesTypeReg, Workspace,
+    Flow, ItemSpecParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -95,13 +95,13 @@ where
     /// [`Params`]: peace_cfg::ItemSpec::Params
     /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
     item_spec_params_type_reg: ItemSpecParamsTypeReg,
-    /// Type registry for each item spec's [`Params`]`::SpecDe`.
+    /// Type registry for each item spec's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
     /// [`Params`]: peace_cfg::ItemSpec::Params
     /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
-    params_specs_de_type_reg: ParamsSpecsDeTypeReg,
+    params_specs_type_reg: ParamsSpecsTypeReg,
     /// Item spec params specs for the selected flow.
     params_specs: ParamsSpecs,
     /// Type registry for each item spec's `State`.
@@ -195,13 +195,13 @@ where
     /// [`Params`]: peace_cfg::ItemSpec::Params
     /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
     pub item_spec_params_type_reg: &'view ItemSpecParamsTypeReg,
-    /// Type registry for each item spec's [`Params`]`::SpecDe`.
+    /// Type registry for each item spec's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
     /// [`Params`]: peace_cfg::ItemSpec::Params
     /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
-    pub params_specs_de_type_reg: &'view ParamsSpecsDeTypeReg,
+    pub params_specs_type_reg: &'view ParamsSpecsTypeReg,
     /// Item spec params specs for the selected flow.
     pub params_specs: &'view ParamsSpecs,
     /// Type registry for each item spec's `State`.
@@ -237,7 +237,7 @@ where
         profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
         flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
         item_spec_params_type_reg: ItemSpecParamsTypeReg,
-        params_specs_de_type_reg: ParamsSpecsDeTypeReg,
+        params_specs_type_reg: ParamsSpecsTypeReg,
         params_specs: ParamsSpecs,
         states_type_reg: StatesTypeReg,
         resources: Resources<SetUp>,
@@ -257,7 +257,7 @@ where
             profile_params,
             flow_params,
             item_spec_params_type_reg,
-            params_specs_de_type_reg,
+            params_specs_type_reg,
             params_specs,
             states_type_reg,
             resources,
@@ -288,7 +288,7 @@ where
             profile_params,
             flow_params,
             item_spec_params_type_reg,
-            params_specs_de_type_reg,
+            params_specs_type_reg,
             params_specs,
             states_type_reg,
             resources,
@@ -309,7 +309,7 @@ where
             profile_params,
             flow_params,
             item_spec_params_type_reg,
-            params_specs_de_type_reg,
+            params_specs_type_reg,
             params_specs,
             states_type_reg,
             resources,
@@ -409,14 +409,14 @@ where
         &self.item_spec_params_type_reg
     }
 
-    /// Returns the type registry for each item spec's [`Params`]`::SpecDe`.
+    /// Returns the type registry for each item spec's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
     /// [`Params`]: peace_cfg::ItemSpec::Params
     /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
-    pub fn params_specs_de_type_reg(&self) -> &ParamsSpecsDeTypeReg {
-        &self.params_specs_de_type_reg
+    pub fn params_specs_type_reg(&self) -> &ParamsSpecsTypeReg {
+        &self.params_specs_type_reg
     }
 
     /// Returns the item spec params specs for the selected flow.
@@ -469,7 +469,7 @@ where
             profile_params,
             flow_params,
             item_spec_params_type_reg,
-            params_specs_de_type_reg,
+            params_specs_type_reg,
             params_specs,
             states_type_reg,
             resources,
@@ -492,7 +492,7 @@ where
             profile_params,
             flow_params,
             item_spec_params_type_reg,
-            params_specs_de_type_reg,
+            params_specs_type_reg,
             params_specs,
             states_type_reg,
             resources,
