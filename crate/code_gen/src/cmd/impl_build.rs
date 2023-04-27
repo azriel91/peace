@@ -175,7 +175,7 @@ fn impl_build_for(
     let cmd_dirs = cmd_dirs(scope);
     let dirs_to_create = dirs_to_create(scope);
     let scope_fields = scope_fields(scope);
-    let states_saved_read_and_pg_init = states_saved_read_and_pg_init(scope);
+    let states_and_params_read_and_pg_init = states_and_params_read_and_pg_init(scope);
     let resources_insert = resources_insert(scope);
 
     let scope_builder_deconstruct = scope_builder_deconstruct(
@@ -665,7 +665,7 @@ fn impl_build_for(
                 //
                 //     peace_rt_model::CmdProgressTracker::new(multi_progress, progress_trackers)
                 // };
-                #states_saved_read_and_pg_init
+                #states_and_params_read_and_pg_init
 
                 let params_type_regs = params_type_regs_builder.build();
 
@@ -1476,7 +1476,7 @@ fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
     scope_fields
 }
 
-fn states_saved_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
+fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream {
     match scope {
         Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {
             proc_macro2::TokenStream::new()
