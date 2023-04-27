@@ -12,12 +12,7 @@ pub trait Params {
     ///
     /// Specifies how to look up values for each field in the item spec's
     /// `Params`.
-    type Spec: Clone + Debug + Serialize + Send + Sync + 'static;
-    /// The `Params` type, but each field is wrapped with `ValueSpecDe<T>`.
-    ///
-    /// This is the non-type-erased `Spec`, which allows the type to be
-    /// deserialized.
-    type SpecDe: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static;
+    type Spec: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static;
     /// Builder for the `Spec`.
     type SpecBuilder: ParamsSpecBuilder<Output = Self::Spec>;
     /// The `Params` type, but with optional fields
