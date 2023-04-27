@@ -15,7 +15,7 @@ use syn::{
 };
 
 use crate::{
-    fields_map::{fields_to_optional, fields_to_optional_value_spec, fields_to_value_spec},
+    fields_map::{fields_to_optional, fields_to_value_spec},
     impl_from_params_for_params_spec::impl_from_params_for_params_spec,
     type_gen::type_gen,
 };
@@ -34,7 +34,8 @@ mod util;
 /// re-export.
 #[proc_macro_derive(Params, attributes(peace_internal))]
 pub fn data_access(input: TokenStream) -> TokenStream {
-    let ast = syn::parse(input).expect("Data derive: Code failed to be parsed.");
+    let ast = syn::parse(input)
+        .expect("`Params` derive: Failed to parse item as struct, enum, or union.");
 
     let gen = impl_data_access(&ast);
 
@@ -69,13 +70,6 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&params_spec_name, ast.ident.span())
     };
 
-    // MyParams -> MyParamsSpecBuilder
-    let params_spec_builder_name = {
-        let mut params_spec_builder_name = ast.ident.to_string();
-        params_spec_builder_name.push_str("SpecBuilder");
-        Ident::new(&params_spec_builder_name, ast.ident.span())
-    };
-
     let params_partial = params_partial(ast, &generics_split, &params_partial_name);
     let params_spec = params_spec(
         ast,
@@ -83,13 +77,6 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
         &params_spec_name,
         &peace_params_path,
         params_name,
-    );
-    let params_spec_builder = params_spec_builder(
-        ast,
-        &generics_split,
-        &params_spec_builder_name,
-        &peace_params_path,
-        &params_spec_name,
     );
 
     let (impl_generics, ty_generics, where_clause) = generics_split;
@@ -100,13 +87,10 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
         #where_clause
         {
             type Spec = #params_spec_name #ty_generics;
-            type SpecBuilder = #params_spec_builder_name #ty_generics;
             type Partial = #params_partial_name #ty_generics;
         }
 
         #params_spec
-
-        #params_spec_builder
 
         #params_partial
     }
@@ -212,46 +196,4 @@ fn params_spec(
     ));
 
     params_spec
-}
-
-/// Generates something like the following:
-///
-/// ```rust,ignore
-/// struct MyParamsSpecBuilder {
-///     src: Option<peace_params::ValueSpec<PathBuf>>,
-///     dest_ip: Option<peace_params::ValueSpec<IpAddr>>,
-///     dest_path: Option<peace_params::ValueSpec<PathBuf>>,
-/// }
-/// ```
-fn params_spec_builder(
-    ast: &DeriveInput,
-    generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
-    params_spec_builder_name: &Ident,
-    peace_params_path: &Path,
-    params_spec_name: &Ident,
-) -> proc_macro2::TokenStream {
-    let mut params_spec_builder = type_gen(
-        ast,
-        generics_split,
-        params_spec_builder_name,
-        |fields| fields_to_optional_value_spec(fields, peace_params_path),
-        &[parse_quote! {
-            #[doc="\
-                Builder for specification of how to look up the values for an item spec's \n\
-                parameters.\n\
-            "]
-        }],
-    );
-
-    let (impl_generics, ty_generics, where_clause) = generics_split;
-
-    params_spec_builder.extend(quote! {
-        impl #impl_generics #peace_params_path::ParamsSpecBuilder
-        for #params_spec_builder_name #ty_generics
-        #where_clause
-        {
-            type Output = #params_spec_name #ty_generics;
-        }
-    });
-    params_spec_builder
 }

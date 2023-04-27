@@ -6,13 +6,7 @@ mod unit {
     #[derive(Params)]
     pub struct UnitParams;
 
-    super::params_tests!(
-        UnitParams,
-        UnitParamsSpec,
-        UnitParamsSpecBuilder,
-        UnitParamsPartial,
-        []
-    );
+    super::params_tests!(UnitParams, UnitParamsSpec, UnitParamsPartial, []);
 
     #[test]
     fn spec_from_params() {
@@ -24,14 +18,6 @@ mod unit {
     #[test]
     fn spec_debug() {
         assert_eq!(r#"UnitParamsSpec"#, format!("{:?}", UnitParamsSpec));
-    }
-
-    #[test]
-    fn spec_builder_debug() {
-        assert_eq!(
-            r#"UnitParamsSpecBuilder"#,
-            format!("{:?}", UnitParamsSpecBuilder)
-        );
     }
 
     #[test]
@@ -51,13 +37,7 @@ mod struct_params {
         src: String,
     }
 
-    super::params_tests!(
-        StructParams,
-        StructParamsSpec,
-        StructParamsSpecBuilder,
-        StructParamsPartial,
-        []
-    );
+    super::params_tests!(StructParams, StructParamsSpec, StructParamsPartial, []);
 
     #[test]
     fn spec_from_params() {
@@ -82,19 +62,6 @@ mod struct_params {
                 "{:?}",
                 StructParamsSpec {
                     src: ValueSpec::Value(String::from("a")),
-                }
-            )
-        );
-    }
-
-    #[test]
-    fn spec_builder_debug() {
-        assert_eq!(
-            r#"StructParamsSpecBuilder { src: Some(Value("a")) }"#,
-            format!(
-                "{:?}",
-                StructParamsSpecBuilder {
-                    src: Some(ValueSpec::Value(String::from("a"))),
                 }
             )
         );
@@ -130,7 +97,6 @@ mod struct_with_type_params {
     super::params_tests!(
         StructWithTypeParams,
         StructWithTypeParamsSpec,
-        StructWithTypeParamsSpecBuilder,
         StructWithTypeParamsPartial,
         [<()>]
     );
@@ -167,20 +133,6 @@ mod struct_with_type_params {
     }
 
     #[test]
-    fn spec_builder_debug() {
-        assert_eq!(
-            r#"StructWithTypeParamsSpecBuilder { src: Some(Value("a")), marker: PhantomData<()> }"#,
-            format!(
-                "{:?}",
-                StructWithTypeParamsSpecBuilder::<()> {
-                    src: Some(ValueSpec::Value(String::from("a"))),
-                    marker: PhantomData,
-                }
-            )
-        );
-    }
-
-    #[test]
     fn params_partial_debug() {
         assert_eq!(
             r#"StructWithTypeParamsPartial { src: Some("a"), marker: PhantomData<()> }"#,
@@ -206,13 +158,7 @@ mod tuple_params {
         src: String,
     }
 
-    super::params_tests!(
-        TupleParams,
-        TupleParamsSpec,
-        TupleParamsSpecBuilder,
-        TupleParamsPartial,
-        []
-    );
+    super::params_tests!(TupleParams, TupleParamsSpec, TupleParamsPartial, []);
 
     #[test]
     fn spec_from_params() {
@@ -243,19 +189,6 @@ mod tuple_params {
     }
 
     #[test]
-    fn spec_builder_debug() {
-        assert_eq!(
-            r#"TupleParamsSpecBuilder { src: Some(Value("a")) }"#,
-            format!(
-                "{:?}",
-                TupleParamsSpecBuilder {
-                    src: Some(ValueSpec::Value(String::from("a"))),
-                }
-            )
-        );
-    }
-
-    #[test]
     fn params_partial_debug() {
         assert_eq!(
             r#"TupleParamsPartial { src: Some("a") }"#,
@@ -280,7 +213,6 @@ mod tuple_with_type_params {
     super::params_tests!(
         TupleWithTypeParams,
         TupleWithTypeParamsSpec,
-        TupleWithTypeParamsSpecBuilder,
         TupleWithTypeParamsPartial,
         [<()>]
     );
@@ -306,20 +238,6 @@ mod tuple_with_type_params {
             format!(
                 "{:?}",
                 TupleWithTypeParamsSpec::<()>(ValueSpec::Value(String::from("a")), PhantomData,)
-            )
-        );
-    }
-
-    #[test]
-    fn spec_builder_debug() {
-        assert_eq!(
-            r#"TupleWithTypeParamsSpecBuilder(Some(Value("a")), PhantomData<()>)"#,
-            format!(
-                "{:?}",
-                TupleWithTypeParamsSpecBuilder::<()>(
-                    Some(ValueSpec::Value(String::from("a"))),
-                    PhantomData,
-                )
             )
         );
     }
@@ -357,7 +275,6 @@ mod enum_params {
     super::params_tests!(
         EnumParams,
         EnumParamsSpec,
-        EnumParamsSpecBuilder,
         EnumParamsPartial,
         [<()>]
     );
@@ -508,114 +425,6 @@ mod enum_params {
     }
 
     #[test]
-    fn spec_builder_clone_named() {
-        let spec_builder = EnumParamsSpecBuilder::<()>::Named {
-            src: Some(ValueSpec::Value(String::from("a"))),
-            marker: PhantomData,
-        };
-        let spec_builder_clone = spec_builder.clone();
-        drop(spec_builder);
-
-        assert!(matches!(
-            spec_builder_clone,
-            EnumParamsSpecBuilder::<()>::Named {
-                src: Some(ValueSpec::Value(value)),
-                marker: PhantomData
-            }
-            if value == "a"
-        ));
-    }
-
-    #[test]
-    fn spec_builder_clone_tuple() {
-        let spec_builder =
-            EnumParamsSpecBuilder::<()>::Tuple(Some(ValueSpec::Value(String::from("a"))));
-        let spec_builder_clone = spec_builder.clone();
-        drop(spec_builder);
-
-        assert!(matches!(
-            spec_builder_clone,
-            EnumParamsSpecBuilder::<()>::Tuple(Some(ValueSpec::Value(value)))
-            if value == "a"
-        ));
-    }
-
-    #[test]
-    fn spec_builder_clone_tuple_marker() {
-        let spec_builder = EnumParamsSpecBuilder::<()>::TupleMarker(
-            Some(ValueSpec::Value(String::from("a"))),
-            PhantomData,
-        );
-        let spec_builder_clone = spec_builder.clone();
-        drop(spec_builder);
-
-        assert!(matches!(
-            spec_builder_clone,
-            EnumParamsSpecBuilder::<()>::TupleMarker(Some(ValueSpec::Value(value)), PhantomData)
-            if value == "a"
-        ));
-    }
-
-    #[test]
-    fn spec_builder_clone_unit() {
-        let spec_builder = EnumParamsSpecBuilder::<()>::Unit;
-        let spec_builder_clone = spec_builder.clone();
-        drop(spec_builder);
-
-        assert!(matches!(
-            spec_builder_clone,
-            EnumParamsSpecBuilder::<()>::Unit
-        ));
-    }
-
-    #[test]
-    fn spec_builder_debug_named() {
-        assert_eq!(
-            r#"Named { src: Some(Value("a")), marker: PhantomData<()> }"#,
-            format!(
-                "{:?}",
-                EnumParamsSpecBuilder::<()>::Named {
-                    src: Some(ValueSpec::Value(String::from("a"))),
-                    marker: PhantomData,
-                }
-            )
-        );
-    }
-
-    #[test]
-    fn spec_builder_debug_tuple() {
-        assert_eq!(
-            r#"Tuple(Some(Value("a")))"#,
-            format!(
-                "{:?}",
-                EnumParamsSpecBuilder::<()>::Tuple(Some(ValueSpec::Value(String::from("a"))))
-            )
-        );
-    }
-
-    #[test]
-    fn spec_builder_debug_tuple_marker() {
-        assert_eq!(
-            r#"TupleMarker(Some(Value("a")), PhantomData<()>)"#,
-            format!(
-                "{:?}",
-                EnumParamsSpecBuilder::<()>::TupleMarker(
-                    Some(ValueSpec::Value(String::from("a"))),
-                    PhantomData
-                )
-            )
-        );
-    }
-
-    #[test]
-    fn spec_builder_debug_unit() {
-        assert_eq!(
-            r#"Unit"#,
-            format!("{:?}", EnumParamsSpecBuilder::<()>::Unit)
-        );
-    }
-
-    #[test]
     fn params_partial_clone_named() {
         let params_partial = EnumParamsPartial::<()>::Named {
             src: Some(String::from("a")),
@@ -719,7 +528,6 @@ macro_rules! params_tests {
     (
         $params_ty:ident,
         $params_spec_ty:ident,
-        $params_spec_builder_ty:ident,
         $params_partial_ty:ident,
         [$($generics:tt)*]
     ) => {
@@ -728,14 +536,6 @@ macro_rules! params_tests {
             assert_eq!(
                 TypeId::of::<<$params_ty $($generics)* as Params>::Spec>(),
                 TypeId::of::<$params_spec_ty $($generics)*>()
-            );
-        }
-
-        #[test]
-        fn params_spec_builder_associated_type_is_params_spec_builder() {
-            assert_eq!(
-                TypeId::of::<<$params_ty $($generics)* as Params>::SpecBuilder>(),
-                TypeId::of::<$params_spec_builder_ty $($generics)*>()
             );
         }
 

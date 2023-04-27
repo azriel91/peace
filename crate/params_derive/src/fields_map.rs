@@ -22,16 +22,6 @@ pub fn fields_to_value_spec(fields: &mut Fields, peace_params_path: &Path) {
     })
 }
 
-pub fn fields_to_optional_value_spec(fields: &mut Fields, peace_params_path: &Path) {
-    fields_map(fields, |field_ty| {
-        if is_phantom_data(field_ty) {
-            field_ty.clone()
-        } else {
-            parse_quote!(Option<#peace_params_path::ValueSpec<#field_ty>>)
-        }
-    })
-}
-
 fn fields_map<F>(fields: &mut Fields, f: F)
 where
     F: Fn(&Type) -> Type,
