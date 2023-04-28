@@ -58,7 +58,9 @@ where
     async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<IS::State, E> {
         let state_clean = {
             let params_spec = resources.borrow::<<IS::Params<'_> as Params>::Spec>();
-            let params_partial = params_spec.resolve_partial(resources);
+            let params_partial = params_spec
+                .resolve_partial(resources)
+                .map_err(crate::Error::ParamsResolveError)?;
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
             IS::state_clean(&params_partial, data).await?
         };
@@ -74,7 +76,9 @@ where
     ) -> Result<Option<IS::State>, E> {
         let state_current = {
             let params_spec = resources.borrow::<<IS::Params<'_> as Params>::Spec>();
-            let params_partial = params_spec.resolve_partial(resources);
+            let params_partial = params_spec
+                .resolve_partial(resources)
+                .map_err(crate::Error::ParamsResolveError)?;
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
             IS::try_state_current(fn_ctx, &params_partial, data).await?
         };
@@ -109,7 +113,9 @@ where
         resources: &Resources<SetUp>,
     ) -> Result<Option<IS::State>, E> {
         let params_spec = resources.borrow::<<IS::Params<'_> as Params>::Spec>();
-        let params_partial = params_spec.resolve_partial(resources);
+        let params_partial = params_spec
+            .resolve_partial(resources)
+            .map_err(crate::Error::ParamsResolveError)?;
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         let state_desired = IS::try_state_desired(fn_ctx, &params_partial, data).await?;
         if let Some(state_desired) = state_desired.as_ref() {
@@ -171,7 +177,9 @@ where
     ) -> Result<IS::StateDiff, E> {
         let state_diff: IS::StateDiff = {
             let params_spec = resources.borrow::<<IS::Params<'_> as Params>::Spec>();
-            let params_partial = params_spec.resolve_partial(resources);
+            let params_partial = params_spec
+                .resolve_partial(resources)
+                .map_err(crate::Error::ParamsResolveError)?;
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
             IS::state_diff(&params_partial, data, state_a, state_b)
                 .await

@@ -27,5 +27,8 @@ pub trait ParamsSpec {
     /// Resolves the values to construct the item spec `Params`.
     ///
     /// Values that are not present in `Resources` will be `None`.
-    fn resolve_partial(&self, resources: &Resources<SetUp>) -> Self::Partial;
+    fn resolve_partial(
+        &self,
+        resources: &Resources<SetUp>,
+    ) -> Result<Self::Partial, ParamsResolveError>;
 }
