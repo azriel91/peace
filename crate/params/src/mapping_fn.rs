@@ -1,7 +1,12 @@
 use peace_resources::{resources::ts::SetUp, type_reg::untagged::DataType, Resources};
 use serde::{Serialize, Serializer};
 
+use crate::ParamsResolveError;
+
 /// Type erased mapping function.
+///
+/// This is used by Peace to hold type-erased mapping functions, and is not
+/// intended to be implemented by users or implementors.
 pub trait MappingFn: DataType {
     /// Type that is output by the function.
     type Output;
@@ -10,7 +15,35 @@ pub trait MappingFn: DataType {
     ///
     /// The data being accessed is defined by the implementation of this
     /// function.
-    fn call(&self, resources: &Resources<SetUp>) -> Option<Self::Output>;
+    ///
+    /// # Parameters
+    ///
+    /// * `resources`: Resources to resolve values from.
+    /// * `params_type_name_fn`: Function to retrieve the params type name.
+    /// * `field_name_fn`: Function to retrieve the field name.
+    fn map(
+        &self,
+        resources: &Resources<SetUp>,
+        params_type_name_fn: fn() -> &'static str,
+        field_name: &'static str,
+    ) -> Result<Self::Output, ParamsResolveError>;
+
+    /// Maps data in resources to the output type.
+    ///
+    /// The data being accessed is defined by the implementation of this
+    /// function.
+    ///
+    /// # Parameters
+    ///
+    /// * `resources`: Resources to resolve values from.
+    /// * `params_type_name_fn`: Function to retrieve the params type name.
+    /// * `field_name_fn`: Function to retrieve the field name.
+    fn try_map(
+        &self,
+        resources: &Resources<SetUp>,
+        params_type_name_fn: fn() -> &'static str,
+        field_name: &'static str,
+    ) -> Result<Option<Self::Output>, ParamsResolveError>;
 }
 
 impl<T> Clone for Box<dyn MappingFn<Output = T>> {

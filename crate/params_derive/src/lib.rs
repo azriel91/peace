@@ -17,11 +17,13 @@ use syn::{
 use crate::{
     fields_map::{fields_to_optional, fields_to_value_spec},
     impl_from_params_for_params_spec::impl_from_params_for_params_spec,
+    impl_params_spec_for_params_spec::impl_params_spec_for_params_spec,
     type_gen::type_gen,
 };
 
 mod fields_map;
 mod impl_from_params_for_params_spec;
+mod impl_params_spec_for_params_spec;
 mod type_gen;
 mod util;
 
@@ -45,12 +47,12 @@ pub fn data_access(input: TokenStream) -> TokenStream {
 fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
     let params_name = &ast.ident;
 
-    let peace_params_path: Path = ast
+    let (peace_params_path, peace_resources_path): (Path, Path) = ast
         .attrs
         .iter()
         .find(peace_internal)
-        .map(|_| parse_quote!(peace_params))
-        .unwrap_or_else(|| parse_quote!(peace::params));
+        .map(|_| (parse_quote!(peace_params), parse_quote!(peace_resources)))
+        .unwrap_or_else(|| (parse_quote!(peace::params), parse_quote!(peace::resources)));
 
     let mut generics = ast.generics.clone();
     type_parameters_constrain(&mut generics);
@@ -74,9 +76,11 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
     let params_spec = params_spec(
         ast,
         &generics_split,
-        &params_spec_name,
         &peace_params_path,
+        &peace_resources_path,
         params_name,
+        &params_spec_name,
+        &params_partial_name,
     );
 
     let (impl_generics, ty_generics, where_clause) = generics_split;
@@ -168,9 +172,11 @@ fn params_partial(
 fn params_spec(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
-    params_spec_name: &Ident,
     peace_params_path: &Path,
+    peace_resources_path: &Path,
     params_name: &Ident,
+    params_spec_name: &Ident,
+    params_partial_name: &Ident,
 ) -> proc_macro2::TokenStream {
     let mut params_spec = type_gen(
         ast,
@@ -187,12 +193,22 @@ fn params_spec(
         ],
     );
 
+    params_spec.extend(impl_params_spec_for_params_spec(
+        ast,
+        generics_split,
+        peace_params_path,
+        peace_resources_path,
+        params_name,
+        params_spec_name,
+        params_partial_name,
+    ));
+
     params_spec.extend(impl_from_params_for_params_spec(
         ast,
         generics_split,
-        params_spec_name,
-        params_name,
         peace_params_path,
+        params_name,
+        params_spec_name,
     ));
 
     params_spec

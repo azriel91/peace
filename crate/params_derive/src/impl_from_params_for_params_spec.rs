@@ -4,7 +4,9 @@ use syn::{
     Variant, WhereClause,
 };
 
-use crate::util::{is_phantom_data, tuple_ident_from_field_index};
+use crate::util::{
+    fields_deconstruct, is_phantom_data, tuple_ident_from_field_index, variant_match_arm,
+};
 
 /// `impl From<Params> for ParamsSpec`, so that users can provide
 /// `params.into()` when building a cmd_ctx, instead of constructing a
@@ -12,9 +14,9 @@ use crate::util::{is_phantom_data, tuple_ident_from_field_index};
 pub fn impl_from_params_for_params_spec(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
-    params_spec_name: &Ident,
-    params_name: &Ident,
     peace_params_path: &Path,
+    params_name: &Ident,
+    params_spec_name: &Ident,
 ) -> proc_macro2::TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics_split;
 
@@ -149,56 +151,19 @@ fn variants_map_to_value(
         variants
             .iter()
             .fold(proc_macro2::TokenStream::new(), |mut tokens, variant| {
-                let variant_name = &variant.ident;
-                let variant_fields = &variant
-                    .fields
-                    .iter()
-                    .enumerate()
-                    .map(|(field_index, field)| {
-                        if is_phantom_data(&field.ty) {
-                            if let Some(field_ident) = field.ident.as_ref() {
-                                quote!(#field_ident: ::std::marker::PhantomData)
-                            } else {
-                                quote!(::std::marker::PhantomData)
-                            }
-                        } else if let Some(field_ident) = field.ident.as_ref() {
-                            quote!(#field_ident)
-                        } else {
-                            let field_ident = tuple_ident_from_field_index(field_index);
-                            quote!(#field_ident)
-                        }
-                    })
-                    .collect::<Vec<proc_macro2::TokenStream>>();
+                let variant_fields = fields_deconstruct(&variant.fields);
                 let variant_fields_map_to_value = variant_fields_map_to_value(
                     params_spec_name,
                     &variant.ident,
                     &variant.fields,
                     peace_params_path,
                 );
-
-                match &variant.fields {
-                    Fields::Named(_fields_named) => {
-                        tokens.extend(quote! {
-                            #params_name::#variant_name { #(#variant_fields),* } => {
-                                #variant_fields_map_to_value
-                            }
-                        });
-                    }
-                    Fields::Unnamed(_) => {
-                        tokens.extend(quote! {
-                            #params_name::#variant_name(#(#variant_fields),*) => {
-                                #variant_fields_map_to_value
-                            }
-                        });
-                    }
-                    Fields::Unit => {
-                        tokens.extend(quote! {
-                            #params_name::#variant_name => {
-                                #variant_fields_map_to_value
-                            }
-                        });
-                    }
-                }
+                tokens.extend(variant_match_arm(
+                    params_name,
+                    variant,
+                    &variant_fields,
+                    variant_fields_map_to_value,
+                ));
 
                 tokens
             });

@@ -32,6 +32,33 @@ pub enum ParamsResolveError {
         field_type_name: &'static str,
     },
 
+    /// Failed to borrow a field value from `resources`.
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_params::params_resolve_error::from_borrow_conflict),
+            help("By design `{field_type_name}` must not be borrowed mutably.")
+        )
+    )]
+    #[error(
+        r#"Borrow conflict on `{field_type_name}` to populate:
+
+```rust
+{params_type_name} {{
+    {field_name}: {field_type_name},
+    ..
+}}
+```"#
+    )]
+    FromBorrowConflict {
+        /// Name of the `Params` type.
+        params_type_name: &'static str,
+        /// Field name within `Params`.
+        field_name: &'static str,
+        /// Name of the field type in `Params`.
+        field_type_name: &'static str,
+    },
+
     /// Failed to resolve a from value from `resources`.
     #[cfg_attr(
         feature = "error_reporting",
@@ -58,6 +85,37 @@ pub enum ParamsResolveError {
         /// Name of the field type in `Params`.
         ///
         /// Corresponds to `T` in `Fn(&U) -> T`.
+        field_type_name: &'static str,
+        /// Name of the type from which to map the field value from.
+        ///
+        /// Corresponds to `U` in `Fn(&U) -> T`.
+        from_type_name: &'static str,
+    },
+
+    /// Failed to borrow a value to map to a field from `resources`.
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_params::params_resolve_error::from_map_borrow_conflict),
+            help("By design `{from_type_name}` must not be borrowed mutably.")
+        )
+    )]
+    #[error(
+        r#"Borrow conflict on `{from_type_name}` to populate:
+
+```rust
+{params_type_name} {{
+    {field_name}: {field_type_name},
+    ..
+}}
+```"#
+    )]
+    FromMapBorrowConflict {
+        /// Name of the `Params` type.
+        params_type_name: &'static str,
+        /// Field name within `Params`.
+        field_name: &'static str,
+        /// Name of the field type in `Params`.
         field_type_name: &'static str,
         /// Name of the type from which to map the field value from.
         ///

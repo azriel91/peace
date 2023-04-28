@@ -4,7 +4,9 @@ use syn::{
     TypeGenerics, Variant, WhereClause,
 };
 
-use crate::util::{is_phantom_data, tuple_ident_from_field_index};
+use crate::util::{
+    fields_deconstruct, is_phantom_data, tuple_ident_from_field_index, variant_match_arm,
+};
 
 /// Generates a type based off the `Params` type.
 ///
@@ -177,56 +179,21 @@ fn variants_clone(variants: &Punctuated<Variant, Token![,]>) -> proc_macro2::Tok
     //         }
     //     }
     // }
+    let self_ident = Ident::new("Self", Span::call_site());
 
     let variant_clone_arms =
         variants
             .iter()
             .fold(proc_macro2::TokenStream::new(), |mut tokens, variant| {
-                let variant_name = &variant.ident;
-                let variant_fields = &variant
-                    .fields
-                    .iter()
-                    .enumerate()
-                    .map(|(field_index, field)| {
-                        if is_phantom_data(&field.ty) {
-                            if let Some(field_ident) = field.ident.as_ref() {
-                                quote!(#field_ident: ::std::marker::PhantomData)
-                            } else {
-                                quote!(::std::marker::PhantomData)
-                            }
-                        } else if let Some(field_ident) = field.ident.as_ref() {
-                            quote!(#field_ident)
-                        } else {
-                            let field_ident = tuple_ident_from_field_index(field_index);
-                            quote!(#field_ident)
-                        }
-                    })
-                    .collect::<Vec<proc_macro2::TokenStream>>();
+                let variant_fields = fields_deconstruct(&variant.fields);
                 let variant_fields_clone = variant_fields_clone(&variant.ident, &variant.fields);
 
-                match &variant.fields {
-                    Fields::Named(_fields_named) => {
-                        tokens.extend(quote! {
-                            Self::#variant_name { #(#variant_fields),* } => {
-                                #variant_fields_clone
-                            }
-                        });
-                    }
-                    Fields::Unnamed(_) => {
-                        tokens.extend(quote! {
-                            Self::#variant_name(#(#variant_fields),*) => {
-                                #variant_fields_clone
-                            }
-                        });
-                    }
-                    Fields::Unit => {
-                        tokens.extend(quote! {
-                            Self::#variant_name => {
-                                #variant_fields_clone
-                            }
-                        });
-                    }
-                }
+                tokens.extend(variant_match_arm(
+                    &self_ident,
+                    variant,
+                    &variant_fields,
+                    variant_fields_clone,
+                ));
 
                 tokens
             });
