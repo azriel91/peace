@@ -5,7 +5,8 @@ use syn::{
 };
 
 use crate::util::{
-    fields_deconstruct, is_phantom_data, tuple_ident_from_field_index, variant_match_arm,
+    fields_deconstruct, fields_deconstruct_retain, is_phantom_data, tuple_ident_from_field_index,
+    variant_match_arm,
 };
 
 /// Generates a type based off the `Params` type.
@@ -278,48 +279,24 @@ fn variants_debug(variants: &Punctuated<Variant, Token![,]>) -> proc_macro2::Tok
     //     Self::Variant2 => f.debug_tuple("Variant2").finish(),
     //     Self::Variant3 { .. } => f.debug_struct("Variant3").field(..).finish(),
     // }
+    let self_ident = Ident::new("Self", Span::call_site());
 
     let variant_debug_arms =
         variants
             .iter()
             .fold(proc_macro2::TokenStream::new(), |mut tokens, variant| {
-                let variant_name = &variant.ident;
-                let variant_fields = &variant
-                    .fields
-                    .iter()
-                    .enumerate()
-                    .map(|(field_index, field)| {
-                        field
-                            .ident
-                            .clone()
-                            .unwrap_or_else(|| tuple_ident_from_field_index(field_index))
-                    })
-                    .collect::<Vec<Ident>>();
-                let variant_fields_debug = variant_fields_debug(&variant.ident, &variant.fields);
+                // This differs from `crate::util::fields_deconstruct` in that
+                // this retains `PhantomData` fields.
+                let variant_fields = fields_deconstruct_retain(&variant.fields, true);
 
-                match &variant.fields {
-                    Fields::Named(_fields_named) => {
-                        tokens.extend(quote! {
-                            Self::#variant_name { #(#variant_fields),* } => {
-                                #variant_fields_debug
-                            }
-                        });
-                    }
-                    Fields::Unnamed(_) => {
-                        tokens.extend(quote! {
-                            Self::#variant_name(#(#variant_fields),*) => {
-                                #variant_fields_debug
-                            }
-                        });
-                    }
-                    Fields::Unit => {
-                        tokens.extend(quote! {
-                            Self::#variant_name => {
-                                #variant_fields_debug
-                            }
-                        });
-                    }
-                }
+                let variant_fields_debug = fields_debug(&variant.ident, &variant.fields);
+
+                tokens.extend(variant_match_arm(
+                    &self_ident,
+                    variant,
+                    &variant_fields,
+                    variant_fields_debug,
+                ));
 
                 tokens
             });
@@ -332,78 +309,63 @@ fn variants_debug(variants: &Punctuated<Variant, Token![,]>) -> proc_macro2::Tok
 }
 
 fn struct_fields_debug(type_name: &Ident, fields: &Fields) -> proc_macro2::TokenStream {
+    let fields_debug = fields_debug(type_name, fields);
+    let fields_deconstructed = fields_deconstruct_retain(fields, true);
+
+    match fields {
+        Fields::Named(_fields_named) => {
+            // Generates:
+            //
+            // ```rust
+            // let #type_name {
+            //     field_1,
+            //     field_2,
+            //     marker: PhantomData,
+            // } = self;
+            //
+            // #fields_debug
+            // ```
+
+            quote! {
+                let #type_name {
+                    #(#fields_deconstructed),*
+                } = self;
+
+                #fields_debug
+            }
+        }
+        Fields::Unnamed(_fields_unnamed) => {
+            // Generates:
+            //
+            // ```rust
+            // let #type_name(_0, _1, PhantomData,) = self;
+            //
+            // #fields_debug
+            // ```
+
+            quote! {
+                let #type_name(#(#fields_deconstructed),*) = self;
+
+                #fields_debug
+            }
+        }
+        Fields::Unit => fields_debug,
+    }
+}
+
+fn fields_debug(type_name: &Ident, fields: &Fields) -> proc_macro2::TokenStream {
     let type_name = &type_name.to_string();
     match fields {
         Fields::Named(fields_named) => {
             // Generates:
             //
             // let mut debug_struct = f.debug_struct(#type_name);
-            // debug_struct.field("field_0", &self.field_0);
-            // debug_struct.field("field_1", &self.field_1);
-            // debug_struct.finish()
-
-            let tokens = quote! {
-                let mut debug_struct = f.debug_struct(#type_name);
-            };
-
-            let mut tokens = fields_named.named.iter().fold(tokens, |mut tokens, field| {
-                if let Some(field_name) = field.ident.as_ref() {
-                    let field_name_str = &field_name.to_string();
-                    tokens.extend(quote! {
-                        debug_struct.field(#field_name_str, &self.#field_name);
-                    });
-                }
-                tokens
-            });
-
-            tokens.extend(quote!(debug_struct.finish()));
-
-            tokens
-        }
-        Fields::Unnamed(fields_unnamed) => {
-            // Generates:
-            //
-            // let mut debug_tuple = f.debug_tuple(#type_name);
-            // debug_tuple.field(&self.0);
-            // debug_tuple.field(&self.1);
-            // debug_tuple.finish()
-
-            let tokens = quote! {
-                let mut debug_tuple = f.debug_tuple(#type_name);
-            };
-
-            let mut tokens =
-                (0..fields_unnamed.unnamed.len()).fold(tokens, |mut tokens, field_index| {
-                    // Need to convert this to a `LitInt`,
-                    // because `quote` outputs the index as `0usize` instead of `0`
-                    let field_index = LitInt::new(&format!("{field_index}"), Span::call_site());
-                    tokens.extend(quote! {
-                        debug_tuple.field(&self.#field_index);
-                    });
-                    tokens
-                });
-
-            tokens.extend(quote!(debug_tuple.finish()));
-
-            tokens
-        }
-        Fields::Unit => quote!(f.debug_struct(#type_name).finish()),
-    }
-}
-
-fn variant_fields_debug(variant_name: &Ident, fields: &Fields) -> proc_macro2::TokenStream {
-    let variant_name = &variant_name.to_string();
-    match fields {
-        Fields::Named(fields_named) => {
-            // Generates:
-            //
-            // let mut debug_struct = f.debug_struct(#variant_name);
             // debug_struct.field("field_0", &field_0);
             // debug_struct.field("field_1", &field_1);
             // debug_struct.finish()
 
             let tokens = quote! {
-                let mut debug_struct = f.debug_struct(#variant_name);
+                let mut debug_struct = f.debug_struct(#type_name);
             };
 
             let mut tokens = fields_named.named.iter().fold(tokens, |mut tokens, field| {
@@ -423,13 +385,13 @@ fn variant_fields_debug(variant_name: &Ident, fields: &Fields) -> proc_macro2::T
         Fields::Unnamed(fields_unnamed) => {
             // Generates:
             //
-            // let mut debug_tuple = f.debug_tuple(#variant_name);
+            // let mut debug_tuple = f.debug_tuple(#type_name);
             // debug_tuple.field(&_0);
             // debug_tuple.field(&_1);
             // debug_tuple.finish()
 
             let tokens = quote! {
-                let mut debug_tuple = f.debug_tuple(#variant_name);
+                let mut debug_tuple = f.debug_tuple(#type_name);
             };
 
             let mut tokens = (0..fields_unnamed.unnamed.len())
@@ -445,6 +407,6 @@ fn variant_fields_debug(variant_name: &Ident, fields: &Fields) -> proc_macro2::T
 
             tokens
         }
-        Fields::Unit => quote!(f.debug_struct(#variant_name).finish()),
+        Fields::Unit => quote!(f.debug_struct(#type_name).finish()),
     }
 }

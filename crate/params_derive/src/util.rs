@@ -17,11 +17,18 @@ pub fn tuple_ident_from_field_index(field_index: usize) -> Ident {
 /// Tuple fields are returned as `_n`, and marker fields are returned as
 /// `::std::marker::PhantomData`.
 pub fn fields_deconstruct(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
+    fields_deconstruct_retain(fields, false)
+}
+
+pub fn fields_deconstruct_retain(
+    fields: &Fields,
+    retain_phantom_data: bool,
+) -> Vec<proc_macro2::TokenStream> {
     fields
         .iter()
         .enumerate()
         .map(|(field_index, field)| {
-            if is_phantom_data(&field.ty) {
+            if !retain_phantom_data && is_phantom_data(&field.ty) {
                 if let Some(field_ident) = field.ident.as_ref() {
                     quote!(#field_ident: ::std::marker::PhantomData)
                 } else {
