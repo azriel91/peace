@@ -34,6 +34,14 @@ mod util;
 /// For peace crates, also add the `#[peace_internal]` attribute, which
 /// references the `peace_params` crate instead of the `peace::params`
 /// re-export.
+///
+/// For types derived from `struct` `Param`s -- `Spec`, `Partial` -- we also:
+///
+/// * Generate getters and mut getters for non-`pub`, non-`PhantomData` fields.
+/// * Generate a constructor if not all fields are `pub`.
+///
+/// Maybe we should also generate a `SpecBuilder` -- see commit `10f63611` which
+/// removed builder generation.
 #[proc_macro_derive(Params, attributes(peace_internal))]
 pub fn data_access(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input)

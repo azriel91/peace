@@ -1,5 +1,8 @@
 use proc_macro2::Span;
-use syn::{Fields, Ident, Type, TypePath, Variant};
+use syn::{
+    AngleBracketedGenericArguments, Fields, GenericArgument, Ident, LitInt, PathArguments,
+    PathSegment, Type, TypePath, Variant,
+};
 
 /// Returns whether the given field is a `PhantomData`.
 pub fn is_phantom_data(field_ty: &Type) -> bool {
@@ -10,6 +13,13 @@ pub fn is_phantom_data(field_ty: &Type) -> bool {
 /// Returns tuple idents as `_n` where `n` is the index of the field.
 pub fn tuple_ident_from_field_index(field_index: usize) -> Ident {
     Ident::new(&format!("_{field_index}"), Span::call_site())
+}
+
+/// Returns tuple idents as `_n` where `n` is the index of the field.
+pub fn tuple_index_from_field_index(field_index: usize) -> LitInt {
+    // Need to convert this to a `LitInt`,
+    // because `quote` outputs a usize index as `0usize` instead of `0`
+    LitInt::new(&format!("{field_index}"), Span::call_site())
 }
 
 /// Returns a comma separated list of deconstructed fields.
@@ -83,4 +93,111 @@ pub fn variant_match_arm(
             }
         }
     }
+}
+
+/// Returns the reference `&Field` for any `Field`.
+///
+/// This includes special handling for the following types:
+///
+/// * `Option`: returns `Option<&Field>`.
+/// * `PathBuf`: returns `&Path`.
+/// * `Vec<T>`: returns `&[T]`.
+/// * `String`: returns `&str`.
+pub fn field_ty_to_ref_ty(field_ty: &Type, field_var: &proc_macro2::TokenStream) -> RefTypeAndExpr {
+    if let Some((type_path, inner_args)) = type_path_simple(field_ty) {
+        let type_name = &type_path.ident;
+        if type_name == "Option" {
+            if let Some(inner_args) = inner_args {
+                if inner_args.args.len() == 1 {
+                    if let Some(GenericArgument::Type(inner_type)) = inner_args.args.first() {
+                        if let Some((inner_type_path, _inner_args)) = type_path_simple(inner_type) {
+                            let inner_type_name = &inner_type_path.ident;
+                            if inner_type_name == "String" {
+                                return RefTypeAndExpr {
+                                    ref_type: parse_quote!(Option<&str>),
+                                    ref_mut_type: parse_quote!(Option<&mut str>),
+                                    ref_expr: parse_quote!(self.#field_var.as_deref()),
+                                    ref_mut_expr: parse_quote!(self.#field_var.as_deref_mut()),
+                                };
+                            } else if inner_type_name == "PathBuf" {
+                                // It's more useful to return a `&mut PathBuf` instead of a `&mut
+                                // Path`, as `PathBuf` has `.push()`.
+                                return RefTypeAndExpr {
+                                    ref_type: parse_quote!(Option<&Path>),
+                                    ref_mut_type: parse_quote!(Option<&mut PathBuf>),
+                                    ref_expr: parse_quote!(self.#field_var.as_deref()),
+                                    ref_mut_expr: parse_quote!(self.#field_var.as_mut()),
+                                };
+                            }
+                        }
+
+                        return RefTypeAndExpr {
+                            ref_type: parse_quote!(Option<&#inner_type>),
+                            ref_mut_type: parse_quote!(Option<&mut #inner_type>),
+                            ref_expr: parse_quote!(self.#field_var.as_ref()),
+                            ref_mut_expr: parse_quote!(self.#field_var.as_mut()),
+                        };
+                    }
+                }
+            }
+        } else if type_name == "PathBuf" {
+            return RefTypeAndExpr {
+                ref_type: parse_quote!(&::std::path::Path),
+                ref_mut_type: parse_quote!(&mut ::std::path::PathBuf),
+                ref_expr: parse_quote!(self.#field_var.as_str()),
+                ref_mut_expr: parse_quote!(self.#field_var.as_mut_str()),
+            };
+        } else if type_name == "String" {
+            return RefTypeAndExpr {
+                ref_type: parse_quote!(&str),
+                ref_mut_type: parse_quote!(&mut str),
+                ref_expr: parse_quote!(self.#field_var.as_str()),
+                ref_mut_expr: parse_quote!(self.#field_var.as_mut_str()),
+            };
+        }
+    } else if let Type::Reference(_) = field_ty {
+        return RefTypeAndExpr {
+            ref_type: parse_quote!(#field_ty), // no `&` prefix
+            ref_mut_type: parse_quote!(&mut #field_ty),
+            ref_expr: parse_quote!(&self.#field_var),
+            ref_mut_expr: parse_quote!(&mut self.#field_var),
+        };
+    }
+
+    // By default, return `&#field_ty`.
+    RefTypeAndExpr {
+        ref_type: parse_quote!(&#field_ty),
+        ref_mut_type: parse_quote!(&mut #field_ty),
+        ref_expr: parse_quote!(&self.#field_var),
+        ref_mut_expr: parse_quote!(&mut self.#field_var),
+    }
+}
+
+fn type_path_simple(ty: &Type) -> Option<(&PathSegment, Option<&AngleBracketedGenericArguments>)> {
+    if let Type::Path(type_path) = ty {
+        if let Some(segment) = type_path.path.segments.last() {
+            let arguments = if let PathArguments::AngleBracketed(inner_args) = &segment.arguments {
+                Some(inner_args)
+            } else {
+                None
+            };
+
+            return Some((segment, arguments));
+        }
+    }
+
+    None
+}
+
+/// Type of reference to return, and the expression to obtain it from the
+/// original object.
+pub struct RefTypeAndExpr {
+    /// e.g. `&Field`, `&str`
+    pub ref_type: Type,
+    /// e.g. `&mut Field`, `&mut str`
+    pub ref_mut_type: Type,
+    /// e.g. `&field`, `field.as_ref()`, `field.as_deref()`
+    pub ref_expr: proc_macro2::TokenStream,
+    /// e.g. `&mut field`, `field.as_mut()`
+    pub ref_mut_expr: proc_macro2::TokenStream,
 }

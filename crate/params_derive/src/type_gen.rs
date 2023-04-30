@@ -1,12 +1,13 @@
 use proc_macro2::Span;
+use quote::ToTokens;
 use syn::{
-    punctuated::Punctuated, Attribute, DeriveInput, Fields, Ident, ImplGenerics, LitInt,
-    TypeGenerics, Variant, WhereClause,
+    punctuated::Punctuated, Attribute, DeriveInput, Fields, Ident, ImplGenerics, TypeGenerics,
+    Variant, Visibility, WhereClause,
 };
 
 use crate::util::{
-    fields_deconstruct, fields_deconstruct_retain, is_phantom_data, tuple_ident_from_field_index,
-    variant_match_arm,
+    field_ty_to_ref_ty, fields_deconstruct, fields_deconstruct_retain, is_phantom_data,
+    tuple_ident_from_field_index, tuple_index_from_field_index, variant_match_arm, RefTypeAndExpr,
 };
 
 /// Generates a type based off the `Params` type.
@@ -40,12 +41,20 @@ where
                 quote!()
             };
 
+            let struct_constructor = struct_constructor(type_name, &fields);
             let struct_fields_clone = struct_fields_clone(type_name, &fields);
             let struct_fields_debug = struct_fields_debug(type_name, &fields);
+            let struct_getters_and_mut_getters = struct_getters_and_mut_getters(&fields);
 
             quote! {
                 #(#attrs)*
                 pub struct #type_name #ty_generics #fields #semi_colon_maybe
+
+                impl #impl_generics #type_name #ty_generics {
+                    #struct_constructor
+
+                    #struct_getters_and_mut_getters
+                }
 
                 impl #impl_generics ::std::clone::Clone for #type_name #ty_generics {
                     fn clone(&self) -> Self {
@@ -100,6 +109,108 @@ where
     }
 }
 
+/// Returns tokens for a constructor `Struct::new(..)` if any fields are
+/// non-pub, or there are phantom data fields.
+fn struct_constructor(type_name: &Ident, fields: &Fields) -> Option<proc_macro2::TokenStream> {
+    let constructor_needed = fields.iter().any(|field| {
+        is_phantom_data(&field.ty)
+            || matches!(field.vis, Visibility::Restricted(_) | Visibility::Inherited)
+    });
+
+    if constructor_needed {
+        let constructor_doc = format!("Returns a new `{type_name}`.");
+        let fields_deconstructed = fields_deconstruct(fields);
+        let fields_as_params = fields
+            .iter()
+            .enumerate()
+            .filter(|(_field_index, field)| !is_phantom_data(&field.ty))
+            .map(|(field_index, field)| {
+                let field_name = if let Some(field_ident) = field.ident.as_ref() {
+                    quote!(#field_ident)
+                } else {
+                    let field_ident = tuple_ident_from_field_index(field_index);
+                    quote!(#field_ident)
+                };
+                let field_ty = &field.ty;
+                quote!(#field_name: #field_ty)
+            })
+            .collect::<Vec<proc_macro2::TokenStream>>();
+
+        let constructor = match fields {
+            Fields::Named(_fields_named) => quote! {
+                Self {
+                    #(#fields_deconstructed),*
+                }
+            },
+            Fields::Unnamed(_fields_unnamed) => quote! {
+                Self(#(#fields_deconstructed),*)
+            },
+            Fields::Unit => unreachable!("Guarded by `constructor_needed`."),
+        };
+
+        Some(quote! {
+            #[doc = #constructor_doc]
+            pub fn new(#(#fields_as_params),*) -> Self {
+                #constructor
+            }
+        })
+    } else {
+        None
+    }
+}
+
+/// Returns `field(&self) -> &Field` and `field_mut(&mut self) -> &mut Field`
+/// for any fields that are non-pub.
+///
+/// This includes special handling for the following types:
+///
+/// * `Option`: returns `Option<&Field>`.
+/// * `PathBuf`: returns `&Path`.
+/// * `Vec<T>`: returns `&[T]`.
+/// * `String`: returns `&str`.
+fn struct_getters_and_mut_getters(fields: &Fields) -> proc_macro2::TokenStream {
+    let fields_as_params = fields
+        .iter()
+        .enumerate()
+        .filter(|(_field_index, field)| {
+            !is_phantom_data(&field.ty)
+                && matches!(field.vis, Visibility::Restricted(_) | Visibility::Inherited)
+        })
+        .map(|(field_index, field)| {
+            let (self_field_name, field_name) = if let Some(field_ident) = field.ident.as_ref() {
+                let self_field_name = field_ident.to_token_stream();
+                let field_name = self_field_name.clone();
+                (self_field_name, field_name)
+            } else {
+                let self_field_name = tuple_index_from_field_index(field_index).to_token_stream();
+                let field_name = tuple_ident_from_field_index(field_index).to_token_stream();
+                (self_field_name, field_name)
+            };
+            let field_name_mut = Ident::new(&format!("{field_name}_mut"), Span::call_site());
+
+            let RefTypeAndExpr {
+                ref_type,
+                ref_mut_type,
+                ref_expr,
+                ref_mut_expr,
+            } = field_ty_to_ref_ty(&field.ty, &self_field_name);
+            quote! {
+                pub fn #field_name(&self) -> #ref_type {
+                    #ref_expr
+                }
+
+                pub fn #field_name_mut(&mut self) -> #ref_mut_type {
+                    #ref_mut_expr
+                }
+            }
+        })
+        .collect::<Vec<proc_macro2::TokenStream>>();
+
+    quote! {
+        #(#fields_as_params)*
+    }
+}
+
 fn struct_fields_clone(type_name: &Ident, fields: &Fields) -> proc_macro2::TokenStream {
     match fields {
         Fields::Named(fields_named) => {
@@ -142,9 +253,7 @@ fn struct_fields_clone(type_name: &Ident, fields: &Fields) -> proc_macro2::Token
             let fields_clone = fields_unnamed.unnamed.iter().enumerate().fold(
                 proc_macro2::TokenStream::new(),
                 |mut tokens, (field_index, field)| {
-                    // Need to convert this to a `LitInt`,
-                    // because `quote` outputs the index as `0usize` instead of `0`
-                    let field_index = LitInt::new(&format!("{field_index}"), Span::call_site());
+                    let field_index = tuple_index_from_field_index(field_index);
 
                     if is_phantom_data(&field.ty) {
                         tokens.extend(quote!(std::marker::PhantomData,));
