@@ -1,7 +1,10 @@
 use std::marker::PhantomData;
 
 use aws_sdk_iam::{error::SdkError, operation::get_role::GetRoleError};
-use peace::cfg::{state::Generated, FnCtx};
+use peace::{
+    cfg::{state::Generated, FnCtx},
+    params::Params,
+};
 
 use crate::item_specs::peace_aws_iam_role::{
     model::{ManagedPolicyAttachment, RoleIdAndArn},
@@ -21,11 +24,15 @@ where
 {
     pub async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: Option<&IamRoleParams<Id>>,
+        params_partial: &<IamRoleParams<Id> as Params>::Partial,
         data: IamRoleData<'_, Id>,
     ) -> Result<Option<IamRoleState>, IamRoleError> {
-        if let Some(params) = params_partial {
-            Self::state_current(fn_ctx, params, data).await.map(Some)
+        let name = params_partial.name();
+        let path = params_partial.path();
+        if let Some((name, path)) = name.zip(path) {
+            Self::state_current_internal(fn_ctx, data, name, path)
+                .await
+                .map(Some)
         } else {
             Ok(None)
         }
@@ -36,9 +43,19 @@ where
         params: &IamRoleParams<Id>,
         data: IamRoleData<'_, Id>,
     ) -> Result<IamRoleState, IamRoleError> {
-        let client = data.client();
         let name = params.name();
         let path = params.path();
+
+        Self::state_current_internal(fn_ctx, data, name, path).await
+    }
+
+    async fn state_current_internal(
+        fn_ctx: FnCtx<'_>,
+        data: IamRoleData<'_, Id>,
+        name: &str,
+        path: &str,
+    ) -> Result<IamRoleState, IamRoleError> {
+        let client = data.client();
 
         #[cfg(not(feature = "output_progress"))]
         let _fn_ctx = fn_ctx;

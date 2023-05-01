@@ -19,9 +19,9 @@ use crate::{BlankDest, BlankSrc};
 #[derivative(Clone, Debug)]
 pub struct BlankParams<Id> {
     /// Source / desired value for the state.
-    src: BlankSrc,
+    pub src: BlankSrc,
     /// Destination / current value of the state.
-    dest: BlankDest,
+    pub dest: BlankDest,
     /// Marker for unique blank parameters type.
     marker: PhantomData<Id>,
 }
@@ -34,26 +34,5 @@ impl<Id> BlankParams<Id> {
             dest,
             marker: PhantomData,
         }
-    }
-
-    /// Returns the source / desired value for the state.
-    pub fn src(&self) -> &BlankSrc {
-        &self.src
-    }
-
-    /// Returns a mutable reference to the source / desired value for the state.
-    pub fn src_mut(&mut self) -> &mut BlankSrc {
-        &mut self.src
-    }
-
-    /// Returns the destination / current value of the state.
-    pub fn dest(&self) -> &BlankDest {
-        &self.dest
-    }
-
-    /// Returns a mutable reference to the destination / current value of the
-    /// state.
-    pub fn dest_mut(&mut self) -> &mut BlankDest {
-        &mut self.dest
     }
 }

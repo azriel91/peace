@@ -2,7 +2,10 @@ use std::marker::PhantomData;
 
 use aws_sdk_iam::error::SdkError;
 use aws_sdk_s3::operation::head_object::HeadObjectError;
-use peace::cfg::{state::Generated, FnCtx};
+use peace::{
+    cfg::{state::Generated, FnCtx},
+    params::Params,
+};
 
 use crate::item_specs::peace_aws_s3_object::{
     S3ObjectData, S3ObjectError, S3ObjectParams, S3ObjectState,
@@ -21,11 +24,15 @@ where
 {
     pub async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: Option<&S3ObjectParams<Id>>,
+        params_partial: &<S3ObjectParams<Id> as Params>::Partial,
         data: S3ObjectData<'_, Id>,
     ) -> Result<Option<S3ObjectState>, S3ObjectError> {
-        if let Some(params) = params_partial {
-            Self::state_current(fn_ctx, params, data).await.map(Some)
+        let bucket_name = params_partial.bucket_name();
+        let object_key = params_partial.object_key();
+        if let Some((bucket_name, object_key)) = bucket_name.zip(object_key) {
+            Self::state_current_internal(fn_ctx, data, bucket_name, object_key)
+                .await
+                .map(Some)
         } else {
             Ok(None)
         }
@@ -36,9 +43,19 @@ where
         params: &S3ObjectParams<Id>,
         data: S3ObjectData<'_, Id>,
     ) -> Result<S3ObjectState, S3ObjectError> {
-        let client = data.client();
         let bucket_name = params.bucket_name();
         let object_key = params.object_key();
+
+        Self::state_current_internal(fn_ctx, data, bucket_name, object_key).await
+    }
+
+    async fn state_current_internal(
+        fn_ctx: FnCtx<'_>,
+        data: S3ObjectData<'_, Id>,
+        bucket_name: &str,
+        object_key: &str,
+    ) -> Result<S3ObjectState, S3ObjectError> {
+        let client = data.client();
 
         #[cfg(not(feature = "output_progress"))]
         let _fn_ctx = fn_ctx;

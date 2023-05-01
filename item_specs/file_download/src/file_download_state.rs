@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 pub enum FileDownloadState {
     /// File does not exist.
     None {
-        /// Path to the tracked file.
-        path: PathBuf,
+        /// Path to the tracked file, if any.
+        path: Option<PathBuf>,
     },
     /// String contents of the file.
     ///
@@ -49,8 +49,12 @@ impl fmt::Display for FileDownloadState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::None { path } => {
-                let path = path.display();
-                write!(f, "`{path}` non-existent")
+                if let Some(path) = path {
+                    let path = path.display();
+                    write!(f, "`{path}` non-existent")
+                } else {
+                    write!(f, "non-existent")
+                }
             }
             Self::StringContents { path, contents } => {
                 let path = path.display();

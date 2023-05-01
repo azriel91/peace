@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, path::Path};
 
-use peace::cfg::FnCtx;
+use peace::{cfg::FnCtx, params::Params};
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError, TarXParams};
 
@@ -12,6 +12,26 @@ impl<Id> TarXStateCurrentFn<Id>
 where
     Id: Send + Sync,
 {
+    pub async fn try_state_current(
+        fn_ctx: FnCtx<'_>,
+        params_partial: &<TarXParams<Id> as Params>::Partial,
+        data: TarXData<'_, Id>,
+    ) -> Result<Option<FileMetadatas>, TarXError> {
+        #[cfg(not(target_arch = "wasm32"))]
+        let _data = data;
+
+        if let Some(dest) = params_partial.dest().as_ref() {
+            #[cfg(not(target_arch = "wasm32"))]
+            let files_extracted = Self::files_extracted(fn_ctx, dest).await?;
+            #[cfg(target_arch = "wasm32")]
+            let files_extracted = Self::files_extracted(fn_ctx, data.storage(), dest)?;
+
+            Ok(Some(FileMetadatas::from(files_extracted)))
+        } else {
+            Ok(None)
+        }
+    }
+
     pub async fn state_current(
         fn_ctx: FnCtx<'_>,
         params: &TarXParams<Id>,
@@ -27,11 +47,7 @@ where
         #[cfg(target_arch = "wasm32")]
         let files_extracted = Self::files_extracted(fn_ctx, data.storage(), dest)?;
 
-        let dest_files = FileMetadatas::from(files_extracted);
-
-        let state = dest_files;
-
-        Ok(state)
+        Ok(FileMetadatas::from(files_extracted))
     }
 
     #[cfg(not(target_arch = "wasm32"))]

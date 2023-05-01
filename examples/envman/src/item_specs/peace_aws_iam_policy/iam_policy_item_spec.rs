@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use peace::{
     cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId},
+    params::Params,
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -81,7 +82,7 @@ where
 
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Option<Self::State>, IamPolicyError> {
         IamPolicyStateCurrentFn::try_state_current(fn_ctx, params_partial, data).await
@@ -97,7 +98,7 @@ where
 
     async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Option<Self::State>, IamPolicyError> {
         IamPolicyStateDesiredFn::try_state_desired(fn_ctx, params_partial, data).await
@@ -112,7 +113,7 @@ where
     }
 
     async fn state_diff(
-        _params_partial: Option<&Self::Params<'_>>,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,
@@ -121,7 +122,7 @@ where
     }
 
     async fn state_clean(
-        _params_partial: Option<&Self::Params<'_>>,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> Result<Self::State, IamPolicyError> {
         Ok(IamPolicyState::None)

@@ -77,9 +77,7 @@ impl FileDownloadStateDiffFn {
                     }
                 }
                 (FileDownloadState::None { .. }, FileDownloadState::None { path }) => {
-                    FileDownloadStateDiff::NoChangeNotExists {
-                        path: path.to_path_buf(),
-                    }
+                    FileDownloadStateDiff::NoChangeNotExists { path: path.clone() }
                 }
             }
         };

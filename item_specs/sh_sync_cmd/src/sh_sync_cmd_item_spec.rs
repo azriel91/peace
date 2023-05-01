@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use peace::{
     cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId, State},
+    params::Params,
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -66,15 +67,11 @@ where
     }
 
     async fn try_state_current(
-        fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
-        data: ShSyncCmdData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
+        _data: ShSyncCmdData<'_, Id>,
     ) -> Result<Option<Self::State>, ShSyncCmdError> {
-        if let Some(params) = params_partial {
-            Self::state_current(fn_ctx, params, data).await.map(Some)
-        } else {
-            Ok(None)
-        }
+        todo!()
     }
 
     async fn state_current(
@@ -86,15 +83,11 @@ where
     }
 
     async fn try_state_desired(
-        fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
-        data: ShSyncCmdData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
+        _data: ShSyncCmdData<'_, Id>,
     ) -> Result<Option<Self::State>, ShSyncCmdError> {
-        if let Some(params) = params_partial {
-            Self::state_desired(fn_ctx, params, data).await.map(Some)
-        } else {
-            Ok(None)
-        }
+        todo!()
     }
 
     async fn state_desired(
@@ -106,7 +99,7 @@ where
     }
 
     async fn state_diff(
-        _params_partial: Option<&Self::Params<'_>>,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: ShSyncCmdData<'_, Id>,
         state_current: &Self::State,
         state_desired: &Self::State,
@@ -115,7 +108,7 @@ where
     }
 
     async fn state_clean(
-        _params_partial: Option<&Self::Params<'_>>,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> Result<Self::State, ShSyncCmdError> {
         let state = State::new(

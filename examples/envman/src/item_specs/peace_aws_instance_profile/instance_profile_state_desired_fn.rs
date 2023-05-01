@@ -1,6 +1,9 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{state::Generated, FnCtx};
+use peace::{
+    cfg::{state::Generated, FnCtx},
+    params::Params,
+};
 
 use crate::item_specs::peace_aws_instance_profile::{
     InstanceProfileData, InstanceProfileError, InstanceProfileParams, InstanceProfileState,
@@ -15,12 +18,17 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn try_state_desired(
-        fn_ctx: FnCtx<'_>,
-        params_partial: Option<&InstanceProfileParams<Id>>,
-        data: InstanceProfileData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        params_partial: &<InstanceProfileParams<Id> as Params>::Partial,
+        _data: InstanceProfileData<'_, Id>,
     ) -> Result<Option<InstanceProfileState>, InstanceProfileError> {
-        if let Some(params) = params_partial {
-            Self::state_desired(fn_ctx, params, data).await.map(Some)
+        let name = params_partial.name();
+        let path = params_partial.path();
+        let role_associate = params_partial.role_associate();
+        if let Some(((name, path), role_associated)) = name.zip(path).zip(role_associate) {
+            Self::state_desired_internal(name.to_string(), path.to_string(), *role_associated)
+                .await
+                .map(Some)
         } else {
             Ok(None)
         }
@@ -34,6 +42,15 @@ where
         let name = params.name().to_string();
         let path = params.path().to_string();
         let role_associated = params.role_associate();
+
+        Self::state_desired_internal(name, path, role_associated).await
+    }
+
+    async fn state_desired_internal(
+        name: String,
+        path: String,
+        role_associated: bool,
+    ) -> Result<InstanceProfileState, InstanceProfileError> {
         let instance_profile_id_and_arn = Generated::Tbd;
 
         Ok(InstanceProfileState::Some {

@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use peace::{
     cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId},
+    params::Params,
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -63,52 +64,42 @@ where
     }
 
     async fn try_state_current(
-        fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
-        data: BlankData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
+        _data: BlankData<'_, Id>,
     ) -> Result<Option<Self::State>, BlankError> {
-        if let Some(params) = params_partial {
-            Self::state_current(fn_ctx, params, data).await.map(Some)
-        } else {
-            Ok(None)
-        }
+        Ok(params_partial.dest.clone().map(|dest| BlankState(dest.0)))
     }
 
     async fn state_current(
         _fn_ctx: FnCtx<'_>,
-        _params: &Self::Params<'_>,
-        data: BlankData<'_, Id>,
+        params: &Self::Params<'_>,
+        _data: BlankData<'_, Id>,
     ) -> Result<Self::State, BlankError> {
-        let current = BlankState(data.params().dest().0);
-
-        let state = current;
-
-        Ok(state)
+        Ok(BlankState(params.dest.0))
     }
 
     async fn try_state_desired(
-        fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
-        data: BlankData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
+        _data: BlankData<'_, Id>,
     ) -> Result<Option<Self::State>, BlankError> {
-        if let Some(params) = params_partial {
-            Self::state_desired(fn_ctx, params, data).await.map(Some)
-        } else {
-            Ok(None)
-        }
+        Ok(params_partial
+            .src
+            .clone()
+            .map(|src| BlankState(Some(src.0))))
     }
 
     async fn state_desired(
         _fn_ctx: FnCtx<'_>,
-        _params: &Self::Params<'_>,
-        data: BlankData<'_, Id>,
+        params: &Self::Params<'_>,
+        _data: BlankData<'_, Id>,
     ) -> Result<Self::State, BlankError> {
-        let params = data.params();
-        Ok(BlankState(Some(**params.src())))
+        Ok(BlankState(Some(params.src.0)))
     }
 
     async fn state_diff(
-        _params_partial: Option<&Self::Params<'_>>,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
         state_current: &BlankState,
         state_desired: &BlankState,
@@ -130,7 +121,7 @@ where
     }
 
     async fn state_clean(
-        _params_partial: Option<&Self::Params<'_>>,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> Result<BlankState, BlankError> {
         Ok(BlankState(None))

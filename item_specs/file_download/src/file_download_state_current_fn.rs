@@ -1,6 +1,9 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, path::Path};
 
-use peace::cfg::{state::FetchedOpt, FnCtx, State};
+use peace::{
+    cfg::{state::FetchedOpt, FnCtx, State},
+    params::Params,
+};
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::{fs::File, io::AsyncReadExt};
 
@@ -18,12 +21,12 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_current(
-        fn_ctx: FnCtx<'_>,
-        params_partial: Option<&FileDownloadParams<Id>>,
+        _fn_ctx: FnCtx<'_>,
+        params_partial: &<FileDownloadParams<Id> as Params>::Partial,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<State<FileDownloadState, FetchedOpt<ETag>>>, FileDownloadError> {
-        if let Some(params) = params_partial {
-            Self::state_current(fn_ctx, params, data).await.map(Some)
+        if let Some(dest) = params_partial.dest() {
+            Self::state_current_internal(data, dest).await.map(Some)
         } else {
             Ok(None)
         }
@@ -36,14 +39,22 @@ where
     ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
         let dest = params.dest();
 
+        Self::state_current_internal(data, dest).await
+    }
+
+    async fn state_current_internal(
+        data: FileDownloadData<'_, Id>,
+        dest: &Path,
+    ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
         #[cfg(not(target_arch = "wasm32"))]
         let file_exists = dest.exists();
         #[cfg(target_arch = "wasm32")]
         let file_exists = data.storage().get_item_opt(dest)?.is_some();
         if !file_exists {
-            let path = dest.to_path_buf();
             return Ok(State::new(
-                FileDownloadState::None { path },
+                FileDownloadState::None {
+                    path: Some(dest.to_path_buf()),
+                },
                 FetchedOpt::Tbd,
             ));
         }

@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use peace::{
     cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId, State},
+    params::Params,
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -70,12 +71,12 @@ where
     }
 
     async fn try_state_current(
-        fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
-        data: ShCmdData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
+        _data: ShCmdData<'_, Id>,
     ) -> Result<Option<Self::State>, ShCmdError> {
-        if let Some(params) = params_partial {
-            Self::state_current(fn_ctx, params, data).await.map(Some)
+        if let Some(state_current_sh_cmd) = params_partial.state_current_sh_cmd() {
+            ShCmdExecutor::exec(state_current_sh_cmd).await.map(Some)
         } else {
             Ok(None)
         }
@@ -91,12 +92,12 @@ where
     }
 
     async fn try_state_desired(
-        fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
-        data: ShCmdData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
+        _data: ShCmdData<'_, Id>,
     ) -> Result<Option<Self::State>, ShCmdError> {
-        if let Some(params) = params_partial {
-            Self::state_desired(fn_ctx, params, data).await.map(Some)
+        if let Some(state_desired_sh_cmd) = params_partial.state_desired_sh_cmd() {
+            ShCmdExecutor::exec(state_desired_sh_cmd).await.map(Some)
         } else {
             Ok(None)
         }
@@ -114,13 +115,14 @@ where
     }
 
     async fn state_diff(
-        params_partial: Option<&Self::Params<'_>>,
-        data: Self::Data<'_>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
+        _data: Self::Data<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,
     ) -> Result<Self::StateDiff, ShCmdError> {
-        if let Some(params) = params_partial {
-            ShCmdStateDiffFn::state_diff(params, data, state_current, state_desired).await
+        if let Some(state_diff_sh_cmd) = params_partial.state_diff_sh_cmd() {
+            ShCmdStateDiffFn::state_diff(state_diff_sh_cmd.clone(), state_current, state_desired)
+                .await
         } else {
             Err(ShCmdError::CmdScriptNotResolved {
                 cmd_variant: crate::CmdVariant::StateDiff,
@@ -129,11 +131,10 @@ where
     }
 
     async fn state_clean(
-        params_partial: Option<&Self::Params<'_>>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> Result<Self::State, ShCmdError> {
-        if let Some(params) = params_partial {
-            let state_clean_sh_cmd = params.state_clean_sh_cmd();
+        if let Some(state_clean_sh_cmd) = params_partial.state_clean_sh_cmd() {
             ShCmdExecutor::exec(state_clean_sh_cmd).await
         } else {
             Err(ShCmdError::CmdScriptNotResolved {

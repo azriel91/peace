@@ -1,6 +1,6 @@
 use std::{io::Read, marker::PhantomData, path::Path};
 
-use peace::{cfg::FnCtx, rt_model::Storage};
+use peace::{cfg::FnCtx, params::Params, rt_model::Storage};
 use tar::Archive;
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError, TarXParams};
@@ -14,24 +14,27 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_desired(
-        fn_ctx: FnCtx<'_>,
-        params_partial: Option<&TarXParams<Id>>,
+        _fn_ctx: FnCtx<'_>,
+        params_partial: &<TarXParams<Id> as Params>::Partial,
         data: TarXData<'_, Id>,
     ) -> Result<Option<FileMetadatas>, TarXError> {
-        if let Some(params) = params_partial {
+        let storage = data.storage();
+        if let Some(tar_path) = params_partial.tar_path() {
             #[cfg(not(target_arch = "wasm32"))]
-            let tar_file_exists = params.tar_path().exists();
+            let tar_file_exists = tar_path.exists();
             #[cfg(target_arch = "wasm32")]
-            let tar_file_exists = {
-                let storage = data.storage();
-                let tar_path = params.tar_path();
-                storage.contains_item(tar_path)?
-            };
+            let tar_file_exists = storage.contains_item(tar_path)?;
 
             if tar_file_exists {
-                Self::state_desired(fn_ctx, params, data).await.map(Some)
+                #[cfg(not(target_arch = "wasm32"))]
+                let files_in_tar = Self::files_in_tar(storage, tar_path).await?;
+                #[cfg(target_arch = "wasm32")]
+                let files_in_tar = Self::files_in_tar(storage, tar_path)?;
+
+                Ok(Some(FileMetadatas::from(files_in_tar)))
             } else {
-                Ok(None)
+                let tar_path = tar_path.to_path_buf();
+                Err(TarXError::TarFileNotExists { tar_path })
             }
         } else {
             Ok(None)

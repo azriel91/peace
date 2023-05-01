@@ -115,31 +115,31 @@ impl ProfileInitCmd {
                 .with_flow(&flow)
                 .with_item_spec_params::<FileDownloadItemSpec<WebAppFileId>>(
                     item_spec_id!("app_download"),
-                    app_download_params,
+                    app_download_params.into(),
                 )
                 .with_item_spec_params::<TarXItemSpec<WebAppFileId>>(
                     item_spec_id!("app_extract"),
-                    app_extract_params,
+                    app_extract_params.into(),
                 )
                 .with_item_spec_params::<IamPolicyItemSpec<WebAppFileId>>(
                     item_spec_id!("iam_policy"),
-                    iam_policy_params,
+                    iam_policy_params.into(),
                 )
                 .with_item_spec_params::<IamRoleItemSpec<WebAppFileId>>(
                     item_spec_id!("iam_role"),
-                    iam_role_params,
+                    iam_role_params.into(),
                 )
                 .with_item_spec_params::<InstanceProfileItemSpec<WebAppFileId>>(
                     item_spec_id!("instance_profile"),
-                    instance_profile_params,
+                    instance_profile_params.into(),
                 )
                 .with_item_spec_params::<S3BucketItemSpec<WebAppFileId>>(
                     item_spec_id!("s3_bucket"),
-                    s3_bucket_params,
+                    s3_bucket_params.into(),
                 )
                 .with_item_spec_params::<S3ObjectItemSpec<WebAppFileId>>(
                     item_spec_id!("s3_object"),
-                    s3_object_params,
+                    s3_object_params.into(),
                 )
                 .await?
         };

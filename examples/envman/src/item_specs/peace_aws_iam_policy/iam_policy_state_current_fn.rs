@@ -1,7 +1,10 @@
 use std::marker::PhantomData;
 
 use aws_sdk_iam::{error::SdkError, operation::get_policy::GetPolicyError};
-use peace::cfg::{state::Generated, FnCtx};
+use peace::{
+    cfg::{state::Generated, FnCtx},
+    params::Params,
+};
 
 use crate::item_specs::peace_aws_iam_policy::{
     model::{ManagedPolicyArn, PolicyIdArnVersion},
@@ -94,11 +97,15 @@ where
 {
     pub async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: Option<&IamPolicyParams<Id>>,
+        params_partial: &<IamPolicyParams<Id> as Params>::Partial,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Option<IamPolicyState>, IamPolicyError> {
-        if let Some(params) = params_partial {
-            Self::state_current(fn_ctx, params, data).await.map(Some)
+        let name = params_partial.name();
+        let path = params_partial.path();
+        if let Some((name, path)) = name.zip(path) {
+            Self::state_current_internal(fn_ctx, data, name, path)
+                .await
+                .map(Some)
         } else {
             Ok(None)
         }
@@ -107,11 +114,21 @@ where
     pub async fn state_current(
         fn_ctx: FnCtx<'_>,
         params: &IamPolicyParams<Id>,
-        mut data: IamPolicyData<'_, Id>,
+        data: IamPolicyData<'_, Id>,
     ) -> Result<IamPolicyState, IamPolicyError> {
-        let client = data.client();
         let name = params.name();
         let path = params.path();
+
+        Self::state_current_internal(fn_ctx, data, name, path).await
+    }
+
+    async fn state_current_internal(
+        fn_ctx: FnCtx<'_>,
+        mut data: IamPolicyData<'_, Id>,
+        name: &str,
+        path: &str,
+    ) -> Result<IamPolicyState, IamPolicyError> {
+        let client = data.client();
 
         let policy_id_arn_version = Self::policy_find(fn_ctx, client, name, path).await?;
 

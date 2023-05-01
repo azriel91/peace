@@ -1,7 +1,8 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, path::Path};
 
 use peace::{
     cfg::{async_trait, state::FetchedOpt, ApplyCheck, FnCtx, ItemSpec, ItemSpecId, State},
+    params::Params,
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -70,7 +71,7 @@ where
 
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<Self::State>, FileDownloadError> {
         FileDownloadStateCurrentFn::try_state_current(fn_ctx, params_partial, data).await
@@ -86,7 +87,7 @@ where
 
     async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<Self::State>, FileDownloadError> {
         FileDownloadStateDesiredFn::try_state_desired(fn_ctx, params_partial, data).await
@@ -101,7 +102,7 @@ where
     }
 
     async fn state_diff(
-        _params_partial: Option<&Self::Params<'_>>,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
         state_a: &Self::State,
         state_b: &Self::State,
@@ -110,13 +111,10 @@ where
     }
 
     async fn state_clean(
-        params_partial: Option<&Self::Params<'_>>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> Result<Self::State, FileDownloadError> {
-        let path = params_partial
-            .map(|params| params.dest())
-            .unwrap_or_else(|| todo!("Redesign FileDownloadState"))
-            .to_path_buf();
+        let path = params_partial.dest().map(Path::to_path_buf);
         let state = State::new(FileDownloadState::None { path }, FetchedOpt::Tbd);
         Ok(state)
     }
