@@ -143,7 +143,7 @@ where
                     })
             })
             .unwrap_or(FileDownloadState::None {
-                path: dest.to_path_buf(),
+                path: Some(dest.to_path_buf()),
             });
 
         Ok(file_state)

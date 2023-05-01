@@ -101,7 +101,7 @@ where
     if let Some(file_download_params) = file_download_params {
         cmd_ctx_builder = cmd_ctx_builder.with_item_spec_params::<FileDownloadItemSpec<FileId>>(
             FILE_ITEM_SPEC_ID,
-            file_download_params,
+            file_download_params.into(),
         );
     }
 
