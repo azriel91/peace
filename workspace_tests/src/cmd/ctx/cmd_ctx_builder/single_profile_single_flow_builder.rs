@@ -430,7 +430,7 @@ async fn build_with_item_spec_params_returns_ok_when_params_provided()
     ));
     assert_eq!(
         Some(VecA(vec![1u8])),
-        vec_a_spec.and_then(|vec_a_spec| vec_a_spec.resolve(&resources).ok()),
+        vec_a_spec.and_then(|vec_a_spec| vec_a_spec.resolve(resources).ok()),
     );
 
     Ok(())
@@ -521,7 +521,7 @@ async fn build_with_item_spec_params_returns_ok_when_params_not_provided_but_are
     ));
     assert_eq!(
         Some(VecA(vec![1u8])),
-        vec_a_spec.and_then(|vec_a_spec| vec_a_spec.resolve(&resources).ok()),
+        vec_a_spec.and_then(|vec_a_spec| vec_a_spec.resolve(resources).ok()),
     );
 
     Ok(())
@@ -575,7 +575,7 @@ async fn build_with_item_spec_params_returns_ok_and_uses_params_provided_when_pa
     ));
     assert_eq!(
         Some(VecA(vec![2u8])),
-        vec_a_spec.and_then(|vec_a_spec| vec_a_spec.resolve(&resources).ok()),
+        vec_a_spec.and_then(|vec_a_spec| vec_a_spec.resolve(resources).ok()),
     );
 
     Ok(())

@@ -273,6 +273,8 @@ fn variants_resolve(
     }
 }
 
+// Code gen, not user facing
+#[allow(clippy::too_many_arguments)]
 fn variant_fields_resolve(
     ty_generics: &TypeGenerics,
     params_name: &Ident,
@@ -580,6 +582,8 @@ impl<'name> ResolveMode<'name> {
 
     /// Returns `(*t).clone()` for `Params` and `Some((*t).clone())` for
     /// `Params::Partial`.
+    // this is the *from* clone expression, not something from "clone_expression"
+    #[allow(clippy::wrong_self_convention)]
     fn from_clone_expr(self) -> proc_macro2::TokenStream {
         match self {
             Self::Full { .. } => quote!((*t).clone()),
