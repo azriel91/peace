@@ -135,6 +135,7 @@ where
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
             flow,
+            params_specs,
             resources,
             ..
         } = cmd_ctx.scope_mut().view();
@@ -173,24 +174,24 @@ where
                     let (state_current_result, state_desired_result) = match discover_for {
                         DiscoverFor::Current => {
                             let state_current_result = item_spec
-                                .state_current_try_exec(fn_ctx, resources_ref)
+                                .state_current_try_exec(params_specs, resources_ref, fn_ctx)
                                 .await;
 
                             (Some(state_current_result), None)
                         }
                         DiscoverFor::Desired => {
                             let state_desired_result = item_spec
-                                .state_desired_try_exec(fn_ctx, resources_ref)
+                                .state_desired_try_exec(params_specs, resources_ref, fn_ctx)
                                 .await;
 
                             (None, Some(state_desired_result))
                         }
                         DiscoverFor::CurrentAndDesired => {
                             let state_current_result = item_spec
-                                .state_current_try_exec(fn_ctx, resources_ref)
+                                .state_current_try_exec(params_specs, resources_ref, fn_ctx)
                                 .await;
                             let state_desired_result = item_spec
-                                .state_desired_try_exec(fn_ctx, resources_ref)
+                                .state_desired_try_exec(params_specs, resources_ref, fn_ctx)
                                 .await;
 
                             (Some(state_current_result), Some(state_desired_result))

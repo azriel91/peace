@@ -5,6 +5,7 @@ use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
+use peace_params::ParamsSpecs;
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesDesiredFile, StatesSavedFile},
@@ -168,6 +169,7 @@ where
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
             flow,
+            params_specs,
             resources,
             ..
         } = cmd_ctx.view();
@@ -212,6 +214,7 @@ where
                     let (Ok(()) | Err(())) = item_spec_graph
                         .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
                             Self::item_apply_exec(
+                                params_specs,
                                 resources_ref,
                                 apply_for,
                                 #[cfg(feature = "output_progress")]
@@ -228,6 +231,7 @@ where
                     let (Ok(()) | Err(())) = item_spec_graph
                         .try_for_each_concurrent_rev(BUFFERED_FUTURES_MAX, |item_spec| {
                             Self::item_apply_exec(
+                                params_specs,
                                 resources_ref,
                                 apply_for,
                                 #[cfg(feature = "output_progress")]
@@ -361,6 +365,7 @@ where
     ///     Fut: Future<Output = Result<(), E>>,
     /// ```
     async fn item_apply_exec(
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         apply_for: ApplyFor,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
@@ -381,8 +386,12 @@ where
             ProgressSender::new(item_spec_id, progress_tx),
         );
         let item_apply = match apply_for {
-            ApplyFor::Ensure => ItemSpecRt::ensure_prepare(&**item_spec, fn_ctx, resources).await,
-            ApplyFor::Clean => ItemSpecRt::clean_prepare(&**item_spec, fn_ctx, resources).await,
+            ApplyFor::Ensure => {
+                ItemSpecRt::ensure_prepare(&**item_spec, params_specs, resources, fn_ctx).await
+            }
+            ApplyFor::Clean => {
+                ItemSpecRt::clean_prepare(&**item_spec, params_specs, resources, fn_ctx).await
+            }
         };
 
         match item_apply {
@@ -421,7 +430,15 @@ where
                         return Ok(());
                     }
                 }
-                match apply_fn(&**item_spec, fn_ctx, resources, &mut item_apply).await {
+                match apply_fn(
+                    &**item_spec,
+                    params_specs,
+                    resources,
+                    fn_ctx,
+                    &mut item_apply,
+                )
+                .await
+                {
                     Ok(()) => {
                         // apply succeeded
 

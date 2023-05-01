@@ -29,10 +29,16 @@ pub enum Error {
     ErrorSerialize(#[source] serde_yaml::Error),
 
     /// Failed to resolve values for a `Params` object from `resources`.
+    ///
+    /// This possibly indicates the user has provided a `Params::Spec` with a
+    /// `From` or `FromMap`, but no predecessor populates that type.
     #[error("Failed to resolve values for a `Params` object from `resources`.")]
     #[cfg_attr(
         feature = "error_reporting",
-        diagnostic(code(peace_rt_model::error_serialize))
+        diagnostic(
+            code(peace_rt_model::error_serialize),
+            help("Make sure that the value is populated by a predecessor.")
+        )
     )]
     ParamsResolveError(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
@@ -40,6 +46,29 @@ pub enum Error {
         #[from]
         ParamsResolveError,
     ),
+
+    /// A `Params::Spec` was not present for a given item spec ID.
+    ///
+    /// If this happens, this is a bug in the Peace framework.
+    #[error("A `Params::Spec` was not present for item spec: {item_spec_id}")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::params_spec_not_found),
+            help(
+                "If you are an end user, please ask for help from the providers of your automation tool.\n\
+                \n\
+                If you are developing a tool with the Peace framework,\n\
+                please open an issue in the Peace repository:\n\
+                \n\
+                https://github.com/azriel91/peace/"
+            )
+        )
+    )]
+    ParamsSpecNotFound {
+        /// Item spec ID for which the params spec was not found.
+        item_spec_id: ItemSpecId,
+    },
 
     /// Item spec params specs do not match with the item specs in the flow.
     ///
@@ -92,6 +121,26 @@ pub enum Error {
         params_specs_provided_mismatches: ParamsSpecs,
         /// Stored params specs with no matching item spec ID in the flow.
         params_specs_stored_mismatches: Option<ParamsSpecs>,
+    },
+
+    /// In a `MultiProfileSingleFlow` diff, neither profile had `Params::Specs`
+    /// defined.
+    #[error("Params specifications not defined for `{profile_a}` or `{profile_b}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::params_specs_not_defined_for_diff),
+            help(
+                "Make sure at least one of the flows has `.with_item_specs_params(..)`\n\
+                defined for every item in the flow."
+            )
+        )
+    )]
+    ParamsSpecsNotDefinedForDiff {
+        /// First profile looked up for params specs.
+        profile_a: Profile,
+        /// Second profile looked up for params specs.
+        profile_b: Profile,
     },
 
     /// Failed to serialize a presentable type.

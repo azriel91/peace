@@ -607,14 +607,6 @@ fn impl_build_for(
                 //     params_specs_provided,
                 //     params_specs_stored,
                 // )?;
-                // params_specs.values()
-                //     .for_each(|params_spec| {
-                //         let box_resource = params_spec.clone().into_inner().upcast();
-                //         resources.insert_raw(
-                //             crate::ctx::cmd_ctx_builder::Resource::type_id(&*box_resource),
-                //             box_resource
-                //         );
-                //     });
                 //
                 // crate::ctx::cmd_ctx_builder::params_specs_serialize(
                 //     &params_specs,
@@ -1608,14 +1600,6 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     params_specs_provided,
                     params_specs_stored,
                 )?;
-                params_specs.values()
-                    .for_each(|params_spec| {
-                        let box_resource = params_spec.clone().into_inner().upcast();
-                        resources.insert_raw(
-                            crate::ctx::cmd_ctx_builder::Resource::type_id(&*box_resource),
-                            box_resource
-                        );
-                    });
 
                 crate::ctx::cmd_ctx_builder::params_specs_serialize(
                     &params_specs,
