@@ -1,8 +1,8 @@
-use std::fmt;
+use std::fmt::{self, Debug};
 
 use serde::{Deserialize, Serialize};
 
-use crate::MappingFn;
+use crate::{MappingFn, MappingFnImpl};
 
 /// How to populate a field's value in an item spec's params.
 ///
@@ -36,6 +36,20 @@ where
     /// Look up some data populated by a predecessor, and compute the value
     /// from that data.
     FromMap(Box<dyn MappingFn<Output = T>>),
+}
+
+impl<T> ValueSpec<T>
+where
+    T: Clone + fmt::Debug + Send + Sync + 'static,
+{
+    pub fn from_map<F, U>(f: F) -> Self
+    where
+        F: Fn(&U) -> T + Clone + Send + Sync + 'static,
+        U: Clone + Debug + Send + Sync + 'static,
+    {
+        let mapping_fn = MappingFnImpl::from(f);
+        Self::FromMap(Box::new(mapping_fn))
+    }
 }
 
 impl<T> fmt::Debug for ValueSpec<T>
