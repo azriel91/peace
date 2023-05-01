@@ -5,9 +5,16 @@
 * Add `ItemSpec::Params` associated type. ([#116], [#117])
 * Rename `OpCtx` to `FnCtx`. ([#116], [#117])
 * Update `ItemSpec` functions to take in `Self::Params`. ([#116], [#117])
+* Implement referential item spec param values. ([#94], [#118])
+* Add `Params` derive. ([#94], [#118])
+* Add `ParamsSpecs` to `*SingleFlow` command context scopes. ([#94], [#118])
+* Take in `Params::Spec`s in `CmdCtxBuilder::with_item_spec_params`. ([#94], [#118])
+* Use `Params::Partial` in `ItemSpec::try_state_*` functions. ([#94], [#118])
 
 [#116]: https://github.com/azriel91/peace/issues/116
 [#117]: https://github.com/azriel91/peace/pull/117
+[#94]: https://github.com/azriel91/peace/issues/94
+[#118]: https://github.com/azriel91/peace/pull/118
 
 
 ## 0.0.9 (2023-04-13)
