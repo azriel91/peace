@@ -24,6 +24,16 @@ mod unit {
     fn params_partial_debug() {
         assert_eq!(r#"UnitParamsPartial"#, format!("{:?}", UnitParamsPartial));
     }
+
+    #[test]
+    fn params_try_from_partial_returns_ok() {
+        let params_partial = UnitParamsPartial;
+
+        assert!(matches!(
+            UnitParams::try_from(params_partial),
+            Ok(UnitParams)
+        ));
+    }
 }
 
 mod struct_params {
@@ -35,6 +45,8 @@ mod struct_params {
     pub struct StructParams {
         /// Source / desired value for the state.
         src: String,
+        /// Destination storage for the state.
+        dest: String,
     }
 
     super::params_tests!(StructParams, StructParamsSpec, StructParamsPartial, []);
@@ -43,25 +55,29 @@ mod struct_params {
     fn spec_from_params() {
         let params = StructParams {
             src: String::from("a"),
+            dest: String::from("b"),
         };
 
         assert!(matches!(
             StructParamsSpec::from(params),
             StructParamsSpec {
-                src: ValueSpec::Value(value),
+                src: ValueSpec::Value(src_value),
+                dest: ValueSpec::Value(dest_value),
             }
-            if value == "a"
+            if src_value == "a"
+            && dest_value == "b"
         ));
     }
 
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructParamsSpec { src: Value("a") }"#,
+            r#"StructParamsSpec { src: Value("a"), dest: Value("b") }"#,
             format!(
                 "{:?}",
                 StructParamsSpec {
                     src: ValueSpec::Value(String::from("a")),
+                    dest: ValueSpec::Value(String::from("b")),
                 }
             )
         );
@@ -70,14 +86,51 @@ mod struct_params {
     #[test]
     fn params_partial_debug() {
         assert_eq!(
-            r#"StructParamsPartial { src: Some("a") }"#,
+            r#"StructParamsPartial { src: Some("a"), dest: Some("b") }"#,
             format!(
                 "{:?}",
                 StructParamsPartial {
                     src: Some(String::from("a")),
+                    dest: Some(String::from("b")),
                 }
             )
         );
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_ok_when_all_fields_are_some() {
+        let params_partial = StructParamsPartial {
+            src: Some(String::from("a")),
+            dest: Some(String::from("b")),
+        };
+
+        assert!(matches!(
+            StructParams::try_from(params_partial),
+            Ok(StructParams {
+                src,
+                dest,
+            })
+            if src == "a"
+            && dest == "b"
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_err_when_some_fields_are_none() {
+        let params_partial = StructParamsPartial {
+            src: Some(String::from("a")),
+            dest: None,
+        };
+
+        assert!(matches!(
+            StructParams::try_from(params_partial),
+            Err(StructParamsPartial {
+                src,
+                dest,
+            })
+            if src == Some(String::from("a"))
+            && dest.is_none()
+        ));
     }
 }
 
@@ -90,6 +143,8 @@ mod struct_with_type_params {
     pub struct StructWithTypeParams<Id> {
         /// Source / desired value for the state.
         src: String,
+        /// Destination storage for the state.
+        dest: String,
         /// Marker for unique parameters type.
         marker: PhantomData<Id>,
     }
@@ -105,27 +160,31 @@ mod struct_with_type_params {
     fn spec_from_params() {
         let params = StructWithTypeParams::<()> {
             src: String::from("a"),
+            dest: String::from("b"),
             marker: PhantomData,
         };
 
         assert!(matches!(
             StructWithTypeParamsSpec::from(params),
-            StructWithTypeParamsSpec::<()> {
-                src: ValueSpec::Value(value),
+            StructWithTypeParamsSpec {
+                src: ValueSpec::Value(src_value),
+                dest: ValueSpec::Value(dest_value),
                 marker: PhantomData,
             }
-            if value == "a"
+            if src_value == "a"
+            && dest_value == "b"
         ));
     }
 
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructWithTypeParamsSpec { src: Value("a"), marker: PhantomData<()> }"#,
+            r#"StructWithTypeParamsSpec { src: Value("a"), dest: Value("b"), marker: PhantomData<()> }"#,
             format!(
                 "{:?}",
                 StructWithTypeParamsSpec::<()> {
                     src: ValueSpec::Value(String::from("a")),
+                    dest: ValueSpec::Value(String::from("b")),
                     marker: PhantomData,
                 }
             )
@@ -135,15 +194,56 @@ mod struct_with_type_params {
     #[test]
     fn params_partial_debug() {
         assert_eq!(
-            r#"StructWithTypeParamsPartial { src: Some("a"), marker: PhantomData<()> }"#,
+            r#"StructWithTypeParamsPartial { src: Some("a"), dest: Some("b"), marker: PhantomData<()> }"#,
             format!(
                 "{:?}",
                 StructWithTypeParamsPartial::<()> {
                     src: Some(String::from("a")),
+                    dest: Some(String::from("b")),
                     marker: PhantomData,
                 }
             )
         );
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_ok_when_all_fields_are_some() {
+        let params_partial = StructWithTypeParamsPartial::<()> {
+            src: Some(String::from("a")),
+            dest: Some(String::from("b")),
+            marker: PhantomData,
+        };
+
+        assert!(matches!(
+            StructWithTypeParams::try_from(params_partial),
+            Ok(StructWithTypeParams {
+                src,
+                dest,
+                marker: PhantomData,
+            })
+            if src == "a"
+            && dest == "b"
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_err_when_some_fields_are_none() {
+        let params_partial = StructWithTypeParamsPartial::<()> {
+            src: Some(String::from("a")),
+            dest: None,
+            marker: PhantomData,
+        };
+
+        assert!(matches!(
+            StructWithTypeParams::try_from(params_partial),
+            Err(StructWithTypeParamsPartial {
+                src,
+                dest,
+                marker: PhantomData,
+            })
+            if src == Some(String::from("a"))
+            && dest.is_none()
+        ));
     }
 }
 
@@ -153,37 +253,40 @@ mod tuple_params {
     use peace::params::{Params, ValueSpec};
 
     #[derive(Params)]
-    pub struct TupleParams {
+    pub struct TupleParams(
         /// Source / desired value for the state.
-        src: String,
-    }
+        String,
+        /// Destination storage for the state.
+        String,
+    );
 
     super::params_tests!(TupleParams, TupleParamsSpec, TupleParamsPartial, []);
 
     #[test]
     fn spec_from_params() {
-        let params = TupleParams {
-            src: String::from("a"),
-        };
+        let params = TupleParams(String::from("a"), String::from("b"));
 
         assert!(matches!(
             TupleParamsSpec::from(params),
-            TupleParamsSpec {
-                src: ValueSpec::Value(value),
-            }
-            if value == "a"
+            TupleParamsSpec (
+                ValueSpec::Value(src_value),
+                ValueSpec::Value(dest_value),
+            )
+            if src_value == "a"
+            && dest_value == "b"
         ));
     }
 
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"TupleParamsSpec { src: Value("a") }"#,
+            r#"TupleParamsSpec(Value("a"), Value("b"))"#,
             format!(
                 "{:?}",
-                TupleParamsSpec {
-                    src: ValueSpec::Value(String::from("a")),
-                }
+                TupleParamsSpec(
+                    ValueSpec::Value(String::from("a")),
+                    ValueSpec::Value(String::from("b")),
+                )
             )
         );
     }
@@ -191,14 +294,42 @@ mod tuple_params {
     #[test]
     fn params_partial_debug() {
         assert_eq!(
-            r#"TupleParamsPartial { src: Some("a") }"#,
+            r#"TupleParamsPartial(Some("a"), Some("b"))"#,
             format!(
                 "{:?}",
-                TupleParamsPartial {
-                    src: Some(String::from("a")),
-                }
+                TupleParamsPartial(Some(String::from("a")), Some(String::from("b")),)
             )
         );
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_ok_when_all_fields_are_some() {
+        let params_partial = TupleParamsPartial(Some(String::from("a")), Some(String::from("b")));
+
+        assert!(matches!(
+            TupleParams::try_from(params_partial),
+            Ok(TupleParams (
+                src,
+                dest,
+            ))
+            if src == "a"
+            && dest == "b"
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_err_when_some_fields_are_none() {
+        let params_partial = TupleParamsPartial(Some(String::from("a")), None);
+
+        assert!(matches!(
+            TupleParams::try_from(params_partial),
+            Err(TupleParamsPartial (
+                src,
+                dest,
+            ))
+            if src == Some(String::from("a"))
+            && dest.is_none()
+        ));
     }
 }
 
@@ -208,7 +339,7 @@ mod tuple_with_type_params {
     use peace::params::{Params, ValueSpec};
 
     #[derive(Params)]
-    pub struct TupleWithTypeParams<Id>(String, PhantomData<Id>);
+    pub struct TupleWithTypeParams<Id>(String, String, PhantomData<Id>);
 
     super::params_tests!(
         TupleWithTypeParams,
@@ -219,25 +350,31 @@ mod tuple_with_type_params {
 
     #[test]
     fn spec_from_params() {
-        let params = TupleWithTypeParams::<()>(String::from("a"), PhantomData);
+        let params = TupleWithTypeParams::<()>(String::from("a"), String::from("b"), PhantomData);
 
         assert!(matches!(
             TupleWithTypeParamsSpec::from(params),
             TupleWithTypeParamsSpec::<()>(
-                ValueSpec::Value(value),
+                ValueSpec::Value(src_value),
+                ValueSpec::Value(dest_value),
                 PhantomData,
             )
-            if value == "a"
+            if src_value == "a"
+            && dest_value == "b"
         ));
     }
 
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"TupleWithTypeParamsSpec(Value("a"), PhantomData<()>)"#,
+            r#"TupleWithTypeParamsSpec(Value("a"), Value("b"), PhantomData<()>)"#,
             format!(
                 "{:?}",
-                TupleWithTypeParamsSpec::<()>(ValueSpec::Value(String::from("a")), PhantomData,)
+                TupleWithTypeParamsSpec::<()>(
+                    ValueSpec::Value(String::from("a")),
+                    ValueSpec::Value(String::from("b")),
+                    PhantomData,
+                )
             )
         );
     }
@@ -245,12 +382,53 @@ mod tuple_with_type_params {
     #[test]
     fn params_partial_debug() {
         assert_eq!(
-            r#"TupleWithTypeParamsPartial(Some("a"), PhantomData<()>)"#,
+            r#"TupleWithTypeParamsPartial(Some("a"), Some("b"), PhantomData<()>)"#,
             format!(
                 "{:?}",
-                TupleWithTypeParamsPartial::<()>(Some(String::from("a")), PhantomData,)
+                TupleWithTypeParamsPartial::<()>(
+                    Some(String::from("a")),
+                    Some(String::from("b")),
+                    PhantomData,
+                )
             )
         );
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_ok_when_all_fields_are_some() {
+        let params_partial = TupleWithTypeParamsPartial::<()>(
+            Some(String::from("a")),
+            Some(String::from("b")),
+            PhantomData,
+        );
+
+        assert!(matches!(
+            TupleWithTypeParams::try_from(params_partial),
+            Ok(TupleWithTypeParams::<()> (
+                src,
+                dest,
+                PhantomData,
+            ))
+            if src == "a"
+            && dest == "b"
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_err_when_some_fields_are_none() {
+        let params_partial =
+            TupleWithTypeParamsPartial::<()>(Some(String::from("a")), None, PhantomData);
+
+        assert!(matches!(
+            TupleWithTypeParams::try_from(params_partial),
+            Err(TupleWithTypeParamsPartial::<()> (
+                src,
+                dest,
+                PhantomData,
+            ))
+            if src == Some(String::from("a"))
+            && dest.is_none()
+        ));
     }
 }
 
@@ -521,6 +699,89 @@ mod enum_params {
     #[test]
     fn params_partial_debug_unit() {
         assert_eq!(r#"Unit"#, format!("{:?}", EnumParamsPartial::<()>::Unit));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_ok_when_all_fields_are_some_named() {
+        let params_partial = EnumParamsPartial::<()>::Named {
+            src: Some(String::from("a")),
+            marker: PhantomData,
+        };
+
+        assert!(matches!(
+            EnumParams::<()>::try_from(params_partial),
+            Ok(EnumParams::<()>::Named{ src: value, marker: PhantomData})
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_err_when_some_fields_are_none_named() {
+        let params_partial = EnumParamsPartial::<()>::Named {
+            src: None,
+            marker: PhantomData,
+        };
+
+        assert!(matches!(
+            EnumParams::<()>::try_from(params_partial),
+            Err(EnumParamsPartial::<()>::Named {
+                src: None,
+                marker: PhantomData
+            })
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_ok_when_all_fields_are_some_tuple() {
+        let params_partial = EnumParamsPartial::<()>::Tuple(Some(String::from("a")));
+
+        assert!(matches!(
+            EnumParams::<()>::try_from(params_partial),
+            Ok(EnumParams::<()>::Tuple(value))
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_err_when_some_fields_are_none_tuple() {
+        let params_partial = EnumParamsPartial::<()>::Tuple(None);
+
+        assert!(matches!(
+            EnumParams::<()>::try_from(params_partial),
+            Err(EnumParamsPartial::<()>::Tuple(None))
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_ok_when_all_fields_are_some_tuple_marker() {
+        let params_partial =
+            EnumParamsPartial::<()>::TupleMarker(Some(String::from("a")), PhantomData);
+
+        assert!(matches!(
+            EnumParams::<()>::try_from(params_partial),
+            Ok(EnumParams::<()>::TupleMarker(value, PhantomData))
+            if value == "a"
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_err_when_some_fields_are_none_tuple_marker() {
+        let params_partial = EnumParamsPartial::<()>::TupleMarker(None, PhantomData);
+
+        assert!(matches!(
+            EnumParams::<()>::try_from(params_partial),
+            Err(EnumParamsPartial::<()>::TupleMarker(None, PhantomData))
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_ok_unit() {
+        let params_partial = EnumParamsPartial::<()>::Unit;
+
+        assert!(matches!(
+            EnumParams::<()>::try_from(params_partial),
+            Ok(EnumParams::<()>::Unit)
+        ));
     }
 }
 

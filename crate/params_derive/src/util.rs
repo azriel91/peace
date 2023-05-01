@@ -30,9 +30,26 @@ pub fn fields_deconstruct(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
     fields_deconstruct_retain(fields, false)
 }
 
+/// Returns a comma separated list of deconstructed fields, deconstructed as
+/// `field: Some(field)`.
+///
+/// Tuple fields are returned as `_n`, and marker fields are returned as
+/// `::std::marker::PhantomData`.
+pub fn fields_deconstruct_some(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
+    fields_deconstruct_retain_map(fields, false, Some(|field_name| quote!(Some(#field_name))))
+}
+
 pub fn fields_deconstruct_retain(
     fields: &Fields,
     retain_phantom_data: bool,
+) -> Vec<proc_macro2::TokenStream> {
+    fields_deconstruct_retain_map(fields, retain_phantom_data, None)
+}
+
+fn fields_deconstruct_retain_map(
+    fields: &Fields,
+    retain_phantom_data: bool,
+    fn_ident_map: Option<fn(&Ident) -> proc_macro2::TokenStream>,
 ) -> Vec<proc_macro2::TokenStream> {
     fields
         .iter()
@@ -45,10 +62,19 @@ pub fn fields_deconstruct_retain(
                     quote!(::std::marker::PhantomData)
                 }
             } else if let Some(field_ident) = field.ident.as_ref() {
-                quote!(#field_ident)
+                if let Some(fn_ident_map) = fn_ident_map {
+                    let field_further_deconstructed = fn_ident_map(field_ident);
+                    quote!(#field_ident: #field_further_deconstructed)
+                } else {
+                    quote!(#field_ident)
+                }
             } else {
                 let field_ident = tuple_ident_from_field_index(field_index);
-                quote!(#field_ident)
+                if let Some(fn_ident_map) = fn_ident_map {
+                    fn_ident_map(&field_ident)
+                } else {
+                    quote!(#field_ident)
+                }
             }
         })
         .collect::<Vec<proc_macro2::TokenStream>>()
