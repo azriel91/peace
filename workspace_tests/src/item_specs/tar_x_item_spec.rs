@@ -4,8 +4,9 @@ use peace::{
     cfg::{
         app_name, item_spec_id, profile, AppName, ApplyCheck, FlowId, ItemSpec, ItemSpecId, Profile,
     },
-    cmd::ctx::CmdCtx,
+    cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
     data::Data,
+    params::{Params, ParamsSpec},
     resources::{
         paths::{FlowDir, ProfileDir},
         states::StatesSaved,
@@ -504,11 +505,19 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         .unwrap();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
-    let resources = cmd_ctx.resources();
+    let SingleProfileSingleFlowView {
+        params_specs,
+        resources,
+        ..
+    } = cmd_ctx.view();
+    let tar_x_params_spec = params_specs
+        .get::<<<TarXItemSpec<TarXTest> as ItemSpec>::Params<'_> as Params>::Spec, _>(TarXTest::ID)
+        .unwrap();
+    let tar_x_params = tar_x_params_spec.resolve(resources).unwrap();
     assert_eq!(
         ApplyCheck::ExecNotRequired,
         <TarXItemSpec::<TarXTest> as ItemSpec>::apply_check(
-            &resources.borrow::<TarXParams<TarXTest>>(),
+            &tar_x_params,
             <TarXData<TarXTest> as Data>::borrow(TarXTest::ID, resources),
             state_current,
             state_desired,

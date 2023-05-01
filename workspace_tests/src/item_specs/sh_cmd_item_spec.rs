@@ -379,9 +379,19 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
 
     // Diff state after creation
     let SingleProfileSingleFlowView {
-        flow, resources, ..
+        flow,
+        params_specs,
+        resources,
+        ..
     } = cmd_ctx.view();
-    let state_diffs = DiffCmd::diff_any(flow, resources, &states_ensured, &states_desired).await?;
+    let state_diffs = DiffCmd::diff_any(
+        flow,
+        params_specs,
+        resources,
+        &states_ensured,
+        &states_desired,
+    )
+    .await?;
 
     let state_diff = state_diffs
         .get::<ShCmdStateDiff, _>(&TestFileCreationShCmdItemSpec::ID)

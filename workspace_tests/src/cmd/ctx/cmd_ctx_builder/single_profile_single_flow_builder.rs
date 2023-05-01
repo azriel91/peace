@@ -3,7 +3,7 @@ use peace::{
         app_name, flow_id, item_spec_id, profile, AppName, FlowId, ItemSpec, ItemSpecId, Profile,
     },
     cmd::ctx::CmdCtx,
-    params::{Params, ValueSpec},
+    params::{Params, ParamsSpec, ValueSpec},
     resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
@@ -429,12 +429,8 @@ async fn build_with_item_spec_params_returns_ok_when_params_provided()
         if value == &[1u8]
     ));
     assert_eq!(
-        Some(VecA(vec![1u8])).as_ref().map(|vec_a| &vec_a.0),
-        resources
-            .try_borrow::<<VecCopyItemSpec as ItemSpec>::Params<'_>>()
-            .ok()
-            .as_ref()
-            .map(|vec_a| &vec_a.0),
+        Some(VecA(vec![1u8])),
+        vec_a_spec.and_then(|vec_a_spec| vec_a_spec.resolve(&resources).ok()),
     );
 
     Ok(())
@@ -524,12 +520,8 @@ async fn build_with_item_spec_params_returns_ok_when_params_not_provided_but_are
         if value == &[1u8]
     ));
     assert_eq!(
-        Some(VecA(vec![1u8])).as_ref().map(|vec_a| &vec_a.0),
-        resources
-            .try_borrow::<<VecCopyItemSpec as ItemSpec>::Params<'_>>()
-            .ok()
-            .as_ref()
-            .map(|vec_a| &vec_a.0),
+        Some(VecA(vec![1u8])),
+        vec_a_spec.and_then(|vec_a_spec| vec_a_spec.resolve(&resources).ok()),
     );
 
     Ok(())
@@ -582,12 +574,8 @@ async fn build_with_item_spec_params_returns_ok_and_uses_params_provided_when_pa
         if value == &[2u8]
     ));
     assert_eq!(
-        Some(VecA(vec![2u8])).as_ref().map(|vec_a| &vec_a.0),
-        resources
-            .try_borrow::<<VecCopyItemSpec as ItemSpec>::Params<'_>>()
-            .ok()
-            .as_ref()
-            .map(|vec_a| &vec_a.0),
+        Some(VecA(vec![2u8])),
+        vec_a_spec.and_then(|vec_a_spec| vec_a_spec.resolve(&resources).ok()),
     );
 
     Ok(())
@@ -639,8 +627,11 @@ async fn build_with_item_spec_params_returns_err_when_params_provided_mismatch()
                 }
             ))
             if item_spec_ids_with_no_params_specs.is_empty()
-            && params_specs_provided_mismatches.get(&item_spec_id!("mismatch_id"))
-                == Some(&VecA(vec![2u8]))
+            && matches!(
+                params_specs_provided_mismatches.get(&item_spec_id!("mismatch_id")),
+                Some(VecASpec(ValueSpec::Value(value)))
+                if value == &vec![2u8]
+            )
             && matches!(
                 params_specs_stored_mismatches,
                 Some(params_specs_stored_mismatches)
@@ -709,8 +700,11 @@ async fn build_with_item_spec_params_returns_err_when_params_stored_mismatch()
                 }
             ))
             if item_spec_ids_with_no_params_specs == &vec![item_spec_id!("new_id")]
-            && params_specs_provided_mismatches.get(&item_spec_id!("mismatch_id"))
-                == Some(&VecA(vec![2u8]))
+            && matches!(
+                params_specs_provided_mismatches.get(&item_spec_id!("mismatch_id")),
+                Some(VecASpec(ValueSpec::Value(value)))
+                if value == &vec![2u8]
+            )
             && matches!(
                 params_specs_stored_mismatches,
                 Some(params_specs_stored_mismatches)
@@ -769,11 +763,11 @@ async fn build_with_item_spec_params_returns_deserialization_err_when_item_spec_
         matches!(
             &cmd_ctx_result,
             Err(PeaceTestError::PeaceRtError(
-                peace::rt_model::Error::ItemSpecParamsDeserialize {
+                peace::rt_model::Error::ParamsSpecsDeserialize {
                     profile,
                     flow_id,
                     #[cfg(feature = "error_reporting")]
-                    item_spec_params_file_source: _,
+                    params_specs_file_source: _,
                     #[cfg(feature = "error_reporting")]
                     error_span: _,
                     #[cfg(feature = "error_reporting")]
