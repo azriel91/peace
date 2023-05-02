@@ -1,11 +1,15 @@
 //! Manages a synchronization shell command for the peace framework.
 
 pub use crate::{
-    sh_sync_cmd::ShSyncCmd, sh_sync_cmd_apply_fns::ShSyncCmdApplyFns,
-    sh_sync_cmd_data::ShSyncCmdData, sh_sync_cmd_error::ShSyncCmdError,
+    sh_sync_cmd::ShSyncCmd,
+    sh_sync_cmd_apply_fns::ShSyncCmdApplyFns,
+    sh_sync_cmd_data::ShSyncCmdData,
+    sh_sync_cmd_error::ShSyncCmdError,
     sh_sync_cmd_execution_record::ShSyncCmdExecutionRecord,
-    sh_sync_cmd_item_spec::ShSyncCmdItemSpec, sh_sync_cmd_params::ShSyncCmdParams,
-    sh_sync_cmd_state_diff::ShSyncCmdStateDiff, sh_sync_cmd_state_diff_fn::ShSyncCmdStateDiffFn,
+    sh_sync_cmd_item_spec::ShSyncCmdItemSpec,
+    sh_sync_cmd_params::{ShSyncCmdParams, ShSyncCmdParamsPartial, ShSyncCmdParamsSpec},
+    sh_sync_cmd_state_diff::ShSyncCmdStateDiff,
+    sh_sync_cmd_state_diff_fn::ShSyncCmdStateDiffFn,
     sh_sync_cmd_sync_status::ShSyncCmdSyncStatus,
 };
 
