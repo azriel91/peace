@@ -9,7 +9,7 @@ impl fmt::Display for CliProgressFormatOptParseError {
         write!(
             f,
             "Failed to parse CLI progress format from string: `\"{}\"`.\n\
-            Valid values are [\"auto\", \"outcome\", \"pb\", \"progress_bar\"]",
+            Valid values are [\"auto\", \"outcome\", \"pb\", \"progress_bar\", \"none\"]",
             self.0
         )
     }

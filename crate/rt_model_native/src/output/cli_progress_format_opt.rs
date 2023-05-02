@@ -12,6 +12,8 @@ pub enum CliProgressFormatOpt {
     Outcome,
     /// Always render progress as a progress bar.
     ProgressBar,
+    /// Don't render progress.
+    None,
 }
 
 impl FromStr for CliProgressFormatOpt {
@@ -22,6 +24,7 @@ impl FromStr for CliProgressFormatOpt {
             "auto" => Ok(Self::Auto),
             "outcome" => Ok(Self::Outcome),
             "pb" | "progress_bar" => Ok(Self::ProgressBar),
+            "none" => Ok(Self::None),
             _ => Err(CliProgressFormatOptParseError(s.to_string())),
         }
     }

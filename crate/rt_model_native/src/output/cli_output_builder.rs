@@ -259,6 +259,7 @@ where
             }
             CliProgressFormatOpt::Outcome => CliProgressFormat::Outcome,
             CliProgressFormatOpt::ProgressBar => CliProgressFormat::ProgressBar,
+            CliProgressFormatOpt::None => CliProgressFormat::None,
         };
 
         CliOutput {

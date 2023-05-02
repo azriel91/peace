@@ -481,16 +481,16 @@ where
             }
         };
 
-        cmd_progress_tracker
-            .multi_progress()
-            .set_draw_target(progress_draw_target);
-
         // avoid reborrowing `self` within `for_each`
         #[cfg(feature = "output_colorized")]
         let colorize = self.colorize;
 
         match self.progress_format {
             CliProgressFormat::ProgressBar => {
+                cmd_progress_tracker
+                    .multi_progress()
+                    .set_draw_target(progress_draw_target);
+
                 cmd_progress_tracker
                     .progress_trackers()
                     .iter()
@@ -545,6 +545,7 @@ where
                     },
                 );
             }
+            CliProgressFormat::None => {}
         }
     }
 
@@ -625,31 +626,37 @@ where
                     }
                 }
             }
+            CliProgressFormat::None => {}
         }
     }
 
     #[cfg(feature = "output_progress")]
     async fn progress_end(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
-        // Hack: This should be done with a timer in `ApplyCmd`.
-        // This uses threads, which is not WASM compatible.
-        cmd_progress_tracker.progress_trackers().iter().for_each(
-            |(_item_spec_id, progress_tracker)| {
-                let progress_bar = progress_tracker.progress_bar();
-                progress_bar.disable_steady_tick();
-                progress_bar.tick();
-            },
-        );
+        match self.progress_format {
+            CliProgressFormat::ProgressBar => {
+                // Hack: This should be done with a timer in `ApplyCmd`.
+                // This uses threads, which is not WASM compatible.
+                cmd_progress_tracker.progress_trackers().iter().for_each(
+                    |(_item_spec_id, progress_tracker)| {
+                        let progress_bar = progress_tracker.progress_bar();
+                        progress_bar.disable_steady_tick();
+                        progress_bar.tick();
+                    },
+                );
 
-        // Prevents progress bars from drawing over error messages.
-        cmd_progress_tracker
-            .multi_progress
-            .set_draw_target(ProgressDrawTarget::hidden());
+                // Prevents progress bars from drawing over error messages.
+                cmd_progress_tracker
+                    .multi_progress
+                    .set_draw_target(ProgressDrawTarget::hidden());
 
-        // Add spacing between end of progress bars and next output.
-        //
-        // For some reason it needs two newlines, `indicatif` possibly
-        // moves the cursor up a line.
-        let (Ok(()) | Err(_)) = self.writer.write_all(b"\n\n").await;
+                // Add spacing between end of progress bars and next output.
+                //
+                // For some reason it needs two newlines, `indicatif` possibly
+                // moves the cursor up a line.
+                let (Ok(()) | Err(_)) = self.writer.write_all(b"\n\n").await;
+            }
+            CliProgressFormat::Outcome | CliProgressFormat::None => {}
+        }
     }
 
     async fn present<P>(&mut self, presentable: P) -> Result<(), E>
