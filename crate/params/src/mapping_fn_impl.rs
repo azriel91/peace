@@ -35,7 +35,7 @@ where
 impl<T, F, U> MappingFnImpl<T, F, U>
 where
     T: Clone + Debug + Send + Sync + 'static,
-    F: Fn(&U) -> T + Clone + Send + Sync + 'static,
+    F: Fn(&U) -> Option<T> + Clone + Send + Sync + 'static,
     U: Clone + Debug + Send + Sync + 'static,
 {
     pub fn map(
@@ -76,7 +76,7 @@ where
                 );
         };
         match resources.try_borrow::<U>() {
-            Ok(u) => Ok(Some(fn_map(&u))),
+            Ok(u) => Ok(fn_map(&u)),
             Err(borrow_fail) => match borrow_fail {
                 BorrowFail::ValueNotFound => Ok(None),
                 BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
@@ -102,7 +102,7 @@ impl<T, F, U> MappingFnImpl<T, F, U> {
 
     fn fn_map_stringify() -> String {
         format!(
-            "Fn(&{u}) -> {t}",
+            "Fn(&{u}) -> Option<{t}>",
             t = std::any::type_name::<T>(),
             u = std::any::type_name::<U>(),
         )
@@ -116,7 +116,7 @@ impl<T, F, U> MappingFnImpl<T, F, U> {
 impl<T, F, U> MappingFn for MappingFnImpl<T, F, U>
 where
     T: Clone + Debug + Send + Sync + 'static,
-    F: Fn(&U) -> T + Clone + Send + Sync + 'static,
+    F: Fn(&U) -> Option<T> + Clone + Send + Sync + 'static,
     U: Clone + Debug + Send + Sync + 'static,
 {
     type Output = T;
@@ -143,7 +143,7 @@ where
 impl<T, F, U> From<F> for MappingFnImpl<T, F, U>
 where
     T: Clone + Debug + Send + Sync + 'static,
-    F: Fn(&U) -> T + Clone + Send + Sync + 'static,
+    F: Fn(&U) -> Option<T> + Clone + Send + Sync + 'static,
     U: Clone + Debug + Send + Sync + 'static,
 {
     fn from(fn_map: F) -> Self {

@@ -44,7 +44,7 @@ where
 {
     pub fn from_map<F, U>(f: F) -> Self
     where
-        F: Fn(&U) -> T + Clone + Send + Sync + 'static,
+        F: Fn(&U) -> Option<T> + Clone + Send + Sync + 'static,
         U: Clone + Debug + Send + Sync + 'static,
     {
         let mapping_fn = MappingFnImpl::from(f);

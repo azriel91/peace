@@ -13,7 +13,7 @@ pub enum ValueSpecDe<T> {
     From,
     /// Look up some data populated by a predecessor, and compute the value
     /// from that data.
-    FromMap(MappingFnImpl<T, fn(&()) -> T, ()>),
+    FromMap(MappingFnImpl<T, fn(&()) -> Option<T>, ()>),
 }
 
 impl<T> fmt::Debug for ValueSpecDe<T>

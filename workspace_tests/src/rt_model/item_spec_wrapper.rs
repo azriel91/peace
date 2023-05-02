@@ -523,7 +523,7 @@ async fn resources_set_up(
     let mut params_specs = ParamsSpecs::new();
     params_specs.insert(
         VecCopyItemSpec::ID_DEFAULT.clone(),
-        VecASpec(ValueSpec::from_map(|vec_a: &VecA| vec_a.0.clone())),
+        VecASpec(ValueSpec::from_map(|vec_a: &VecA| Some(vec_a.0.clone()))),
     );
 
     let mut resources = Resources::new();

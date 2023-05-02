@@ -380,7 +380,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         // VecAPartial's inner field value resolves a `Vec<u8>`, not `VecA` itself.
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecASpec(ValueSpec::from_map(|vec_a: &VecA| vec_a.0.clone())),
+            VecASpec(ValueSpec::from_map(|vec_a: &VecA| Some(vec_a.0.clone()))),
         )
         .await?;
     // overwrite initial state
