@@ -33,8 +33,7 @@ where
 
                 Ok(Some(FileMetadatas::from(files_in_tar)))
             } else {
-                let tar_path = tar_path.to_path_buf();
-                Err(TarXError::TarFileNotExists { tar_path })
+                Ok(None)
             }
         } else {
             Ok(None)
