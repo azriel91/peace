@@ -7,8 +7,7 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_iam_policy::{
-    model::{ManagedPolicyArn, PolicyIdArnVersion},
-    IamPolicyData, IamPolicyError, IamPolicyParams, IamPolicyState,
+    model::PolicyIdArnVersion, IamPolicyData, IamPolicyError, IamPolicyParams, IamPolicyState,
 };
 
 #[cfg(feature = "output_progress")]
@@ -124,7 +123,7 @@ where
 
     async fn state_current_internal(
         fn_ctx: FnCtx<'_>,
-        mut data: IamPolicyData<'_, Id>,
+        data: IamPolicyData<'_, Id>,
         name: &str,
         path: &str,
     ) -> Result<IamPolicyState, IamPolicyError> {
@@ -268,11 +267,6 @@ where
                         })
                 })
                 .expect("Expected policy version document to exist.")?;
-
-            // Hack: Remove this when referential param values is implemented.
-            **data.managed_policy_arn_mut() = Some(ManagedPolicyArn::new(
-                policy_id_arn_version.arn().to_string(),
-            ));
 
             let state_current = IamPolicyState::Some {
                 name: policy_name,

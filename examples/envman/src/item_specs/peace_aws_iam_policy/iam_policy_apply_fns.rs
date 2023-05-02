@@ -10,8 +10,6 @@ use crate::item_specs::peace_aws_iam_policy::{
     IamPolicyStateDiff,
 };
 
-use super::model::ManagedPolicyArn;
-
 /// ApplyFns for the instance profile state.
 #[derive(Debug)]
 pub struct IamPolicyApplyFns<Id>(PhantomData<Id>);
@@ -22,7 +20,7 @@ where
 {
     pub async fn apply_check(
         _params: &IamPolicyParams<Id>,
-        mut data: IamPolicyData<'_, Id>,
+        _data: IamPolicyData<'_, Id>,
         state_current: &IamPolicyState,
         _state_desired: &IamPolicyState,
         diff: &IamPolicyStateDiff,
@@ -87,12 +85,9 @@ where
                 let IamPolicyState::Some { policy_id_arn_version, .. } = state_current else {
                     unreachable!()
                 };
-                let Generated::Value(policy_id_version_arn) = policy_id_arn_version else {
+                let Generated::Value(_policy_id_version_arn) = policy_id_arn_version else {
                     unreachable!()
                 };
-                **data.managed_policy_arn_mut() = Some(ManagedPolicyArn::new(
-                    policy_id_version_arn.arn().to_string(),
-                ));
 
                 Ok(ApplyCheck::ExecNotRequired)
             }
@@ -115,7 +110,7 @@ where
         #[cfg(not(feature = "output_progress"))] _fn_ctx: FnCtx<'_>,
         #[cfg(feature = "output_progress")] fn_ctx: FnCtx<'_>,
         _params: &IamPolicyParams<Id>,
-        mut data: IamPolicyData<'_, Id>,
+        data: IamPolicyData<'_, Id>,
         state_current: &IamPolicyState,
         state_desired: &IamPolicyState,
         diff: &IamPolicyStateDiff,
@@ -183,10 +178,6 @@ where
                             when create_policy is successful.",
                         )
                         .to_string();
-
-                    // Hack: Remove this when referential param values is implemented.
-                    **data.managed_policy_arn_mut() =
-                        Some(ManagedPolicyArn::new(policy_arn.to_string()));
 
                     let policy_id_arn_version =
                         PolicyIdArnVersion::new(policy_id, policy_arn, policy_version);
@@ -432,10 +423,6 @@ where
                         .version_id()
                         .expect("Expected policy_version version_id to be Some when create_policy is successful.")
                         .to_string();
-
-                    // Hack: Remove this when referential param values is implemented.
-                    **data.managed_policy_arn_mut() =
-                        Some(ManagedPolicyArn::new(policy_arn.to_string()));
 
                     let policy_id_arn_version =
                         PolicyIdArnVersion::new(policy_id, policy_arn, policy_version_id);

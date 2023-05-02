@@ -7,9 +7,8 @@ use peace::{
 };
 
 use crate::item_specs::peace_aws_iam_policy::{
-    model::ManagedPolicyArn, IamPolicyApplyFns, IamPolicyData, IamPolicyError, IamPolicyParams,
-    IamPolicyState, IamPolicyStateCurrentFn, IamPolicyStateDesiredFn, IamPolicyStateDiff,
-    IamPolicyStateDiffFn,
+    IamPolicyApplyFns, IamPolicyData, IamPolicyError, IamPolicyParams, IamPolicyState,
+    IamPolicyStateCurrentFn, IamPolicyStateDesiredFn, IamPolicyStateDiff, IamPolicyStateDiffFn,
 };
 
 /// Item spec to create an IAM instance profile and IAM role.
@@ -75,8 +74,6 @@ where
             let client = aws_sdk_iam::Client::new(&sdk_config);
             resources.insert(client);
         }
-        // Hack: Remove this when referential param values is implemented.
-        resources.insert(Option::<ManagedPolicyArn<Id>>::None);
         Ok(())
     }
 

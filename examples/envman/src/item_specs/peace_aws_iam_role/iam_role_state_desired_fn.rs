@@ -20,14 +20,20 @@ where
     pub async fn try_state_desired(
         _fn_ctx: FnCtx<'_>,
         params_partial: &<IamRoleParams<Id> as Params>::Partial,
-        data: IamRoleData<'_, Id>,
+        _data: IamRoleData<'_, Id>,
     ) -> Result<Option<IamRoleState>, IamRoleError> {
         let name = params_partial.name();
         let path = params_partial.path();
         if let Some((name, path)) = name.zip(path) {
-            Self::state_desired_internal(data, name.to_string(), path.to_string())
-                .await
-                .map(Some)
+            Self::state_desired_internal(
+                name.to_string(),
+                path.to_string(),
+                params_partial
+                    .managed_policy_arn()
+                    .map(|managed_policy_arn| managed_policy_arn.to_string()),
+            )
+            .await
+            .map(Some)
         } else {
             Ok(None)
         }
@@ -36,23 +42,24 @@ where
     pub async fn state_desired(
         _fn_ctx: FnCtx<'_>,
         params: &IamRoleParams<Id>,
-        data: IamRoleData<'_, Id>,
+        _data: IamRoleData<'_, Id>,
     ) -> Result<IamRoleState, IamRoleError> {
         let name = params.name().to_string();
         let path = params.path().to_string();
+        let managed_policy_arn = Some(params.managed_policy_arn().to_string());
 
-        Self::state_desired_internal(data, name, path).await
+        Self::state_desired_internal(name, path, managed_policy_arn).await
     }
 
     async fn state_desired_internal(
-        data: IamRoleData<'_, Id>,
         name: String,
         path: String,
+        managed_policy_arn: Option<String>,
     ) -> Result<IamRoleState, IamRoleError> {
         let managed_policy_attachment = ManagedPolicyAttachment::new(
-            data.managed_policy_arn()
+            managed_policy_arn
                 // Hack: Remove this when referential param values is implemented.
-                .map(|managed_policy_arn| Generated::Value(managed_policy_arn.to_string()))
+                .map(Generated::Value)
                 .unwrap_or(Generated::Tbd),
             true,
         );

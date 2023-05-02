@@ -10,7 +10,7 @@ use semver::Version;
 use url::Url;
 
 use crate::{
-    flows::{EnvDeployFlow, EnvDeployFlowParams},
+    flows::{EnvDeployFlow, EnvDeployFlowParamsSpecs},
     item_specs::{
         peace_aws_iam_policy::IamPolicyItemSpec, peace_aws_iam_role::IamRoleItemSpec,
         peace_aws_instance_profile::InstanceProfileItemSpec, peace_aws_s3_bucket::S3BucketItemSpec,
@@ -93,14 +93,14 @@ impl ProfileInitCmd {
 
         // --- //
 
-        let EnvDeployFlowParams {
-            app_download_params,
-            app_extract_params,
-            iam_policy_params,
-            iam_role_params,
-            instance_profile_params,
-            s3_bucket_params,
-            s3_object_params,
+        let EnvDeployFlowParamsSpecs {
+            app_download_params_spec,
+            app_extract_params_spec,
+            iam_policy_params_spec,
+            iam_role_params_spec,
+            instance_profile_params_spec,
+            s3_bucket_params_spec,
+            s3_object_params_spec,
         } = EnvDeployFlow::params(&profile_to_create, slug, version, url)?;
         let flow = EnvDeployFlow::flow().await?;
         let profile_key = WorkspaceParamsKey::Profile;
@@ -115,31 +115,31 @@ impl ProfileInitCmd {
                 .with_flow(&flow)
                 .with_item_spec_params::<FileDownloadItemSpec<WebAppFileId>>(
                     item_spec_id!("app_download"),
-                    app_download_params.into(),
+                    app_download_params_spec,
                 )
                 .with_item_spec_params::<TarXItemSpec<WebAppFileId>>(
                     item_spec_id!("app_extract"),
-                    app_extract_params.into(),
+                    app_extract_params_spec,
                 )
                 .with_item_spec_params::<IamPolicyItemSpec<WebAppFileId>>(
                     item_spec_id!("iam_policy"),
-                    iam_policy_params.into(),
+                    iam_policy_params_spec,
                 )
                 .with_item_spec_params::<IamRoleItemSpec<WebAppFileId>>(
                     item_spec_id!("iam_role"),
-                    iam_role_params.into(),
+                    iam_role_params_spec,
                 )
                 .with_item_spec_params::<InstanceProfileItemSpec<WebAppFileId>>(
                     item_spec_id!("instance_profile"),
-                    instance_profile_params.into(),
+                    instance_profile_params_spec,
                 )
                 .with_item_spec_params::<S3BucketItemSpec<WebAppFileId>>(
                     item_spec_id!("s3_bucket"),
-                    s3_bucket_params.into(),
+                    s3_bucket_params_spec,
                 )
                 .with_item_spec_params::<S3ObjectItemSpec<WebAppFileId>>(
                     item_spec_id!("s3_object"),
-                    s3_object_params.into(),
+                    s3_object_params_spec,
                 )
                 .await?
         };
