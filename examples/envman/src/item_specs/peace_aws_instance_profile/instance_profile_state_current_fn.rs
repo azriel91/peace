@@ -27,12 +27,8 @@ where
         params_partial: &<InstanceProfileParams<Id> as Params>::Partial,
         data: InstanceProfileData<'_, Id>,
     ) -> Result<Option<InstanceProfileState>, InstanceProfileError> {
-        let name = params_partial.name();
-        let path = params_partial.path();
-        if let Some((name, path)) = name.zip(path) {
-            Self::state_current_internal(fn_ctx, data, name, path)
-                .await
-                .map(Some)
+        if let Ok(params) = params_partial.try_into() {
+            Self::state_current(fn_ctx, &params, data).await.map(Some)
         } else {
             Ok(None)
         }
