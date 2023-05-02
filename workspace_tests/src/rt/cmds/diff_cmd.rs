@@ -5,6 +5,7 @@ use peace::{
     params::ValueSpec,
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{
+        outcomes::CmdOutcome,
         output::{CliOutput, OutputWrite},
         Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
@@ -39,8 +40,10 @@ async fn contains_state_diff_for_each_item_spec() -> Result<(), Box<dyn std::err
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Diff current and desired states.
     let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
@@ -91,7 +94,10 @@ async fn diff_profiles_current_with_multiple_profiles() -> Result<(), Box<dyn st
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let states_current_0 = StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
+    let CmdOutcome {
+        value: states_current_0,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
 
     // profile_1
     let profile_1 = profile!("test_profile_1");
@@ -105,7 +111,10 @@ async fn diff_profiles_current_with_multiple_profiles() -> Result<(), Box<dyn st
         .await?;
     let resources = cmd_ctx_1.resources_mut();
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-    let states_current_1 = StatesDiscoverCmd::current(&mut cmd_ctx_1).await?;
+    let CmdOutcome {
+        value: states_current_1,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx_1).await?;
 
     let mut cmd_ctx_multi = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
         .with_flow(&flow)
@@ -379,8 +388,10 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     #[rustfmt::skip]
     resources.insert(VecA(vec![0, 1, 2,    4, 5, 6, 8, 9]));
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Diff current and desired states.
     let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;

@@ -32,8 +32,10 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Dry-ensured states.
@@ -95,8 +97,10 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Alter states.
@@ -181,8 +185,10 @@ async fn resources_ensured_contains_state_ensured_for_each_item_spec_when_state_
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Alter states.

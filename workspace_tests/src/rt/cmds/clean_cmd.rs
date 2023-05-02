@@ -33,7 +33,10 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_current,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Dry-clean states
@@ -80,8 +83,10 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Ensure states.
@@ -95,7 +100,10 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
 
     // Re-read states from disk.
     CleanCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
-    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_current,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
 
     assert_eq!(
@@ -139,7 +147,10 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_current,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Clean states.
@@ -188,8 +199,10 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_spec_when_state_
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Ensure states.

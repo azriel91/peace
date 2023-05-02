@@ -64,7 +64,10 @@ async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_e
         )
         .await?;
 
-    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_current,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let state_current = states_current
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
@@ -104,7 +107,10 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
         )
         .await?;
 
-    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_current,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let state_current = states_current
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
@@ -145,7 +151,10 @@ async fn state_desired_returns_file_metadatas_from_tar() -> Result<(), Box<dyn s
         )
         .await?;
 
-    let states_desired = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_desired,
+        errors: _,
+    } = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
     let state_desired = states_desired
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
@@ -493,8 +502,10 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let state_current = states_current
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
@@ -551,8 +562,10 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     let CmdOutcome {
@@ -609,8 +622,10 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Overwrite changed files and remove extra files
@@ -675,8 +690,10 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
             TarXParams::<TarXTest>::new(tar_path, dest.clone()).into(),
         )
         .await?;
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     let CmdOutcome {

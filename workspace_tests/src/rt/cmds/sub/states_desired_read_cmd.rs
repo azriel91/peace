@@ -2,7 +2,7 @@ use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
     rt::cmds::{sub::StatesDesiredReadCmd, StatesDiscoverCmd},
-    rt_model::{Error, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{outcomes::CmdOutcome, Error, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItemSpec, VecCopyState};
@@ -31,7 +31,10 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let states_desired_from_discover = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_desired_from_discover,
+        errors: _,
+    } = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
 
     // Re-read states from disk.
     let mut output = NoOpOutput;

@@ -16,7 +16,9 @@ use peace_resources::{
     type_reg::untagged::BoxDtDisplay,
     Resources,
 };
-use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, IndexMap, Storage};
+use peace_rt_model::{
+    outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, IndexMap, Storage,
+};
 use tokio::sync::mpsc;
 
 use crate::BUFFERED_FUTURES_MAX;
@@ -63,10 +65,20 @@ where
     /// [`try_state_current`]: peace_cfg::ItemSpec::try_state_current
     pub async fn current(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<StatesCurrent, E> {
+    ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
         Self::exec(cmd_ctx, DiscoverFor::Current)
             .await
-            .map(|(states_current, _states_desired)| states_current)
+            .map(|cmd_outcome| {
+                let CmdOutcome {
+                    value: (states_current, _states_desired),
+                    errors,
+                } = cmd_outcome;
+
+                CmdOutcome {
+                    value: states_current,
+                    errors,
+                }
+            })
     }
 
     /// Runs [`try_state_desired`] for each [`ItemSpec`].
@@ -87,10 +99,20 @@ where
     /// [`try_state_desired`]: peace_cfg::ItemSpec::try_state_desired
     pub async fn desired(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<StatesDesired, E> {
+    ) -> Result<CmdOutcome<StatesDesired, E>, E> {
         Self::exec(cmd_ctx, DiscoverFor::Desired)
             .await
-            .map(|(_states_current, states_desired)| states_desired)
+            .map(|cmd_outcome| {
+                let CmdOutcome {
+                    value: (_states_current, states_desired),
+                    errors,
+                } = cmd_outcome;
+
+                CmdOutcome {
+                    value: states_desired,
+                    errors,
+                }
+            })
     }
 
     /// Runs [`try_state_current`] and [`try_state_desired`]` for each
@@ -120,7 +142,7 @@ where
     /// [`try_state_desired`]: peace_cfg::ItemSpec::try_state_desired
     pub async fn current_and_desired(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<(StatesCurrent, StatesDesired), E> {
+    ) -> Result<CmdOutcome<(StatesCurrent, StatesDesired), E>, E> {
         Self::exec(cmd_ctx, DiscoverFor::CurrentAndDesired).await
     }
 
@@ -128,7 +150,7 @@ where
     async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         discover_for: DiscoverFor,
-    ) -> Result<(StatesCurrent, StatesDesired), E> {
+    ) -> Result<CmdOutcome<(StatesCurrent, StatesDesired), E>, E> {
         let SingleProfileSingleFlowView {
             #[cfg(feature = "output_progress")]
             output,
@@ -354,7 +376,10 @@ where
             }
         }
 
-        Ok((states_current, states_desired))
+        Ok(CmdOutcome {
+            value: (states_current, states_desired),
+            errors,
+        })
     }
 
     // TODO: This duplicates a bit of code with `ApplyCmd`.

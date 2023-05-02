@@ -133,8 +133,10 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
         )
         .await?;
 
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
     CleanCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
     let state_clean = cmd_ctx
@@ -183,7 +185,10 @@ async fn state_current_returns_shell_command_current_state()
         )
         .await?;
 
-    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_current,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let state_current = states_current
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItemSpec::ID)
         .unwrap();
@@ -228,7 +233,10 @@ async fn state_desired_returns_shell_command_desired_state()
         )
         .await?;
 
-    let states_desired = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_desired,
+        errors: _,
+    } = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
     let state_desired = states_desired
         .get::<State<TestFileCreationShCmdStateLogical, ShCmdExecutionRecord>, _>(
             &TestFileCreationShCmdItemSpec::ID,
@@ -314,8 +322,10 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command()
         .await?;
 
     // Discover states current and desired
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Create the file
@@ -367,8 +377,10 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
         .await?;
 
     // Discover states current and desired
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Create the file
@@ -448,8 +460,10 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
         .await?;
 
     // Discover states current and desired
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Create the file
