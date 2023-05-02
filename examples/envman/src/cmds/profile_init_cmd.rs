@@ -1,9 +1,12 @@
 use peace::{
     cfg::{app_name, item_spec_id, AppName, ItemSpecId, Profile},
-    cmd::{ctx::CmdCtx, scopes::MultiProfileNoFlowView},
+    cmd::{
+        ctx::CmdCtx,
+        scopes::{MultiProfileNoFlowView, SingleProfileSingleFlowView},
+    },
     fmt::{presentable::CodeInline, presentln},
     rt::cmds::StatesDiscoverCmd,
-    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
+    rt_model::{outcomes::CmdOutcome, output::OutputWrite, Workspace, WorkspaceSpec},
 };
 use peace_item_specs::{file_download::FileDownloadItemSpec, tar_x::TarXItemSpec};
 use semver::Version;
@@ -144,18 +147,27 @@ impl ProfileInitCmd {
                 .await?
         };
 
-        let (_states_current, _states_desired) =
-            StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-        presentln!(
-            output,
-            [
-                "Initialized profile ",
-                &profile_to_create,
-                " using ",
-                &CodeInline::new(format!("{slug}@{version}").into()),
-                "."
-            ]
-        );
+        let states_discover_outcome = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+        let CmdOutcome {
+            value: (_states_current, _states_desired),
+            errors,
+        } = &states_discover_outcome;
+        let SingleProfileSingleFlowView { output, .. } = cmd_ctx.view();
+
+        if states_discover_outcome.is_ok() {
+            presentln!(
+                output,
+                [
+                    "Initialized profile ",
+                    &profile_to_create,
+                    " using ",
+                    &CodeInline::new(format!("{slug}@{version}").into()),
+                    "."
+                ]
+            );
+        } else {
+            crate::output::item_spec_errors_present(output, errors).await?;
+        }
 
         Ok(())
     }

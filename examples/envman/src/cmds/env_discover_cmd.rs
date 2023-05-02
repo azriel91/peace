@@ -3,7 +3,7 @@ use peace::{
     cmd::scopes::SingleProfileSingleFlowView,
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
     rt::cmds::StatesDiscoverCmd,
-    rt_model::output::OutputWrite,
+    rt_model::{outcomes::CmdOutcome, output::OutputWrite},
 };
 
 use crate::{cmds::EnvCmd, model::EnvManError};
@@ -27,8 +27,10 @@ impl EnvDiscoverCmd {
     {
         EnvCmd::run(output, true, |ctx| {
             async {
-                let (states_current, states_desired) =
-                    StatesDiscoverCmd::current_and_desired(ctx).await?;
+                let CmdOutcome {
+                    value: (states_current, states_desired),
+                    errors: _,
+                } = StatesDiscoverCmd::current_and_desired(ctx).await?;
                 let states_current_raw_map = &**states_current;
                 let states_desired_raw_map = &**states_desired;
 
