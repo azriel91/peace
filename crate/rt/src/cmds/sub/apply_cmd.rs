@@ -21,7 +21,7 @@ use peace_rt_model::{
 };
 use tokio::sync::{mpsc, mpsc::UnboundedSender};
 
-use crate::BUFFERED_FUTURES_MAX;
+use crate::{cmds::StatesDiscoverCmd, BUFFERED_FUTURES_MAX};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -55,75 +55,104 @@ where
     States<StatesTsApply>: From<StatesCurrent> + Send + Sync + 'static,
     States<StatesTsApplyDry>: From<StatesCurrent> + Send + Sync + 'static,
 {
-    /// Conditionally runs [`ApplyFns`]`::`[`exec_dry`] for each
+    /// Conditionally runs [`ItemSpec::apply_exec_dry`] for each
     /// [`ItemSpec`].
     ///
-    /// In practice this runs [`ApplyFns::check`], and only runs
-    /// [`exec_dry`] if execution is required.
+    /// In practice this runs [`ItemSpec::apply_check`], and only runs
+    /// [`apply_exec_dry`] if execution is required.
     ///
-    /// # Note
+    /// # Design
     ///
-    /// To only make changes when they are *all* likely to work, we execute the
-    /// functions as homogeneous groups instead of interleaving the functions
-    /// together per `ItemSpec`:
+    /// The grouping of item spec functions run for an `Ensure` execution to
+    /// work is as follows:
     ///
-    /// 1. Run [`ApplyFns::check`] for all `ItemSpec`s.
-    /// 2. Run [`ApplyFns::exec_dry`] for all `ItemSpec`s.
-    /// 3. Fetch `StatesCurrent` again, and compare.
+    /// 1. For each `ItemSpec` run `ItemSpecRt::ensure_prepare`, which runs:
     ///
-    /// State cannot be fetched interleaved with `exec_dry` as it may use
-    /// different `Data`.
+    ///     1. `ItemSpec::state_current`
+    ///     2. `ItemSpec::state_desired`
+    ///     3. `ItemSpec::apply_check`
     ///
-    /// [`exec_dry`]: peace_cfg::ApplyFns::exec_dry
-    /// [`ApplyFns::check`]: peace_cfg::ApplyFns::check
-    /// [`ApplyFns::exec_dry`]: peace_cfg::ApplyFns::exec_dry
+    /// 2. For `ItemSpec`s that return `ApplyCheck::ExecRequired`, run
+    ///    `ItemSpec::apply_exec_dry`.
+    ///
+    /// The grouping of item spec functions run for a `Clean` execution to work
+    /// is as follows:
+    ///
+    /// 1. Run [`StatesDiscoverCmd::current`] for all `ItemSpec`s in the
+    ///   *forward* direction.
+    ///
+    ///     This populates `resources` with `Current<IS::State>`, needed for
+    ///     `ItemSpec::try_state_current` during `ItemSpecRt::clean_prepare`.
+    ///
+    /// 2. In the *reverse* direction, for each `ItemSpec` run
+    ///    `ItemSpecRt::clean_prepare`, which runs:
+    ///
+    ///     1. `ItemSpec::try_state_current`, which resolves parameters from
+    ///        the *current* state.
+    ///     2. `ItemSpec::state_desired`
+    ///     3. `ItemSpec::apply_check`
+    ///
+    /// 3. For `ItemSpec`s that return `ApplyCheck::ExecRequired`, run
+    ///    `ItemSpec::apply_exec_dry`.
+    ///
+    /// [`apply_exec_dry`]: peace_cfg::ItemSpec::apply_exec_dry
+    /// [`ItemSpec::apply_check`]: peace_cfg::ItemSpec::apply_check
+    /// [`ItemSpec::apply_exec_dry`]: peace_cfg::ItemSpecRt::apply_exec_dry
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`ApplyFns`]: peace_cfg::ItemSpec::ApplyFns
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
         apply_for: ApplyFor,
-    ) -> CmdOutcome<States<StatesTsApplyDry>, E> {
-        let CmdOutcome {
-            value: (states_applied, _states_desired),
-            errors,
-        } = Self::exec_internal(cmd_ctx, states_saved, apply_for, true).await;
-
-        CmdOutcome {
-            value: states_applied,
-            errors,
-        }
+    ) -> Result<CmdOutcome<States<StatesTsApplyDry>, E>, E> {
+        Self::exec_internal(cmd_ctx, states_saved, apply_for, true)
+            .await
+            .map(|cmd_outcome| cmd_outcome.map(|(states_applied, _states_desired)| states_applied))
     }
 
-    /// Conditionally runs [`ApplyFns`]`::`[`exec`] for each
+    /// Conditionally runs [`ItemSpec::apply_exec`] for each
     /// [`ItemSpec`].
     ///
-    /// In practice this runs [`ApplyFns::check`], and only runs
-    /// [`exec`] if execution is required.
+    /// In practice this runs [`ItemSpec::apply_check`], and only runs
+    /// [`apply_exec`] if execution is required.
     ///
-    /// This function takes in a `StatesSaved`, but if you retrieve the state
-    /// within the same execution, and have a `StatesCurrent`, you can turn this
-    /// into `StatesSaved` by using `StatesSaved::from(states_current)` or
-    /// calling the `.into()` method.
+    /// # Design
     ///
-    /// # Note
+    /// The grouping of item spec functions run for an `Ensure` execution to
+    /// work is as follows:
     ///
-    /// To only make changes when they are *all* likely to work, we execute the
-    /// functions as homogeneous groups instead of interleaving the functions
-    /// together per `ItemSpec`:
+    /// 1. For each `ItemSpec` run `ItemSpecRt::ensure_prepare`, which runs:
     ///
-    /// 1. Run [`ApplyFns::check`] for all `ItemSpec`s.
-    /// 2. Run [`ApplyFns::exec`] for all `ItemSpec`s.
-    /// 3. Fetch `StatesCurrent` again, and compare.
+    ///     1. `ItemSpec::state_current`
+    ///     2. `ItemSpec::state_desired`
+    ///     3. `ItemSpec::apply_check`
     ///
-    /// State cannot be fetched interleaved with `exec` as it may use
-    /// different `Data`.
+    /// 2. For `ItemSpec`s that return `ApplyCheck::ExecRequired`, run
+    ///    `ItemSpec::apply_exec`.
     ///
-    /// [`exec`]: peace_cfg::ApplyFns::exec
-    /// [`ApplyFns::check`]: peace_cfg::ApplyFns::check
-    /// [`ApplyFns::exec`]: peace_cfg::ApplyFns::exec
+    /// The grouping of item spec functions run for a `Clean` execution to work
+    /// is as follows:
+    ///
+    /// 1. Run [`StatesDiscoverCmd::current`] for all `ItemSpec`s in the
+    ///   *forward* direction.
+    ///
+    ///     This populates `resources` with `Current<IS::State>`, needed for
+    ///     `ItemSpec::try_state_current` during `ItemSpecRt::clean_prepare`.
+    ///
+    /// 2. In the *reverse* direction, for each `ItemSpec` run
+    ///    `ItemSpecRt::clean_prepare`, which runs:
+    ///
+    ///     1. `ItemSpec::try_state_current`, which resolves parameters from
+    ///        the *current* state.
+    ///     2. `ItemSpec::state_desired`
+    ///     3. `ItemSpec::apply_check`
+    ///
+    /// 3. For `ItemSpec`s that return `ApplyCheck::ExecRequired`, run
+    ///    `ItemSpec::apply_exec`.
+    ///
+    /// [`apply_exec`]: peace_cfg::ItemSpec::apply_exec
+    /// [`ItemSpec::apply_check`]: peace_cfg::ItemSpec::apply_check
+    /// [`ItemSpec::apply_exec`]: peace_cfg::ItemSpecRt::apply_exec
     /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`ApplyFns`]: peace_cfg::ItemSpec::ApplyFns
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
@@ -132,7 +161,7 @@ where
         let CmdOutcome {
             value: (states_applied, states_desired),
             errors,
-        } = Self::exec_internal(cmd_ctx, states_saved, apply_for, false).await;
+        } = Self::exec_internal(cmd_ctx, states_saved, apply_for, false).await?;
         Self::serialize_saved(cmd_ctx.resources(), &states_applied).await?;
 
         match apply_for {
@@ -162,7 +191,40 @@ where
         states_saved: &StatesSaved,
         apply_for: ApplyFor,
         dry_run: bool,
-    ) -> CmdOutcome<(States<StatesTs>, StatesDesired), E> {
+    ) -> Result<CmdOutcome<(States<StatesTs>, StatesDesired), E>, E> {
+        let apply_for_internal = match apply_for {
+            ApplyFor::Ensure => ApplyForInternal::Ensure,
+            ApplyFor::Clean => {
+                let states_current_outcome = StatesDiscoverCmd::current(cmd_ctx).await?;
+                if states_current_outcome.is_err() {
+                    let outcome = states_current_outcome.map(|states_current| {
+                        (
+                            States::<StatesTs>::from(states_current.into_inner()),
+                            StatesDesired::new(),
+                        )
+                    });
+                    return Ok(outcome);
+                }
+                #[cfg(feature = "output_progress")]
+                cmd_ctx
+                    .cmd_progress_tracker_mut()
+                    .progress_trackers_mut()
+                    .values_mut()
+                    .for_each(|progress_tracker| progress_tracker.reset());
+
+                let CmdOutcome {
+                    value: states_current,
+                    errors: _,
+                } = states_current_outcome;
+
+                ApplyForInternal::Clean { states_current }
+            }
+        };
+        let apply_for_internal = &apply_for_internal;
+
+        // TODO: compare `StatesSaved` and `StatesCurrent` by delegating the equality
+        // check to `ItemSpecWrapper`.
+
         let SingleProfileSingleFlowView {
             #[cfg(feature = "output_progress")]
             output,
@@ -216,7 +278,7 @@ where
                             Self::item_apply_exec(
                                 params_specs,
                                 resources_ref,
-                                apply_for,
+                                apply_for_internal,
                                 #[cfg(feature = "output_progress")]
                                 progress_tx,
                                 outcomes_tx,
@@ -233,7 +295,7 @@ where
                             Self::item_apply_exec(
                                 params_specs,
                                 resources_ref,
-                                apply_for,
+                                apply_for_internal,
                                 #[cfg(feature = "output_progress")]
                                 progress_tx,
                                 outcomes_tx,
@@ -333,17 +395,17 @@ where
         //
         // * It may be duplication of code.
         // * `FileDownloadItemSpec` needs to know the ETag from the last request, which:
-        //     - in `StatesCurrentFn` comes from `StatesSaved`
+        //     - in `StatesCurrentFn` comes from `StatesCurrent`
         //     - in `ApplyCmd` comes from `StatesTsApply`
         // * `ShCmdItemSpec` doesn't return the state in the apply script, so in the
         //   item spec we run the state current script after the apply exec script.
         let states_applied = states_applied_mut.into();
         let states_desired = states_desired_mut.into();
 
-        CmdOutcome {
+        Ok(CmdOutcome {
             value: (states_applied, states_desired),
             errors,
-        }
+        })
     }
 
     ///
@@ -367,7 +429,7 @@ where
     async fn item_apply_exec(
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-        apply_for: ApplyFor,
+        apply_for_internal: &ApplyForInternal,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
         outcomes_tx: &UnboundedSender<ItemApplyOutcome<E>>,
         item_spec: &ItemSpecBoxed<E>,
@@ -385,12 +447,13 @@ where
             #[cfg(feature = "output_progress")]
             ProgressSender::new(item_spec_id, progress_tx),
         );
-        let item_apply = match apply_for {
-            ApplyFor::Ensure => {
+        let item_apply = match apply_for_internal {
+            ApplyForInternal::Ensure => {
                 ItemSpecRt::ensure_prepare(&**item_spec, params_specs, resources, fn_ctx).await
             }
-            ApplyFor::Clean => {
-                ItemSpecRt::clean_prepare(&**item_spec, params_specs, resources, fn_ctx).await
+            ApplyForInternal::Clean { states_current } => {
+                ItemSpecRt::clean_prepare(&**item_spec, states_current, params_specs, resources)
+                    .await
             }
         };
 
@@ -521,9 +584,9 @@ where
 
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_saved_file = StatesSavedFile::from(&*flow_dir);
+        let states_current_file = StatesSavedFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, states_applied, &states_saved_file).await?;
+        StatesSerializer::serialize(&storage, states_applied, &states_current_file).await?;
 
         drop(flow_dir);
         drop(storage);
@@ -585,4 +648,10 @@ enum ItemApplyOutcome<E> {
 pub enum ApplyFor {
     Ensure,
     Clean,
+}
+
+#[derive(Debug)]
+enum ApplyForInternal {
+    Ensure,
+    Clean { states_current: StatesCurrent },
 }

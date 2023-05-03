@@ -36,7 +36,7 @@ pub enum Error {
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
-            code(peace_rt_model::error_serialize),
+            code(peace_rt_model::params_resolve_error),
             help("Make sure that the value is populated by a predecessor.")
         )
     )]

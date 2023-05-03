@@ -421,14 +421,6 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         .as_ref(),
         vec_diff
     );
-    // `CliOutput` writes `\n\n`s in `progress_end` for better spacing with
-    // progress bars.
-    #[cfg(feature = "output_progress")]
-    assert_eq!(
-        "\n\n1. `vec_copy`: [(-)3..4, (~)7;1, (+)8;9, ]\n",
-        String::from_utf8(buffer)?
-    );
-    #[cfg(not(feature = "output_progress"))]
     assert_eq!(
         "1. `vec_copy`: [(-)3..4, (~)7;1, (+)8;9, ]\n",
         String::from_utf8(buffer)?

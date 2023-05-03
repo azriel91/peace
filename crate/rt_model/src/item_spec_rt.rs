@@ -6,6 +6,7 @@ use peace_cfg::{async_trait, FnCtx, ItemSpecId};
 use peace_params::ParamsSpecs;
 use peace_resources::{
     resources::ts::{Empty, SetUp},
+    states::StatesCurrent,
     type_reg::untagged::{BoxDtDisplay, TypeMap},
     Resources,
 };
@@ -160,9 +161,9 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`ApplyFns::check`]: peace_cfg::ItemSpec::ApplyFns
     async fn clean_prepare(
         &self,
+        states_current: &StatesCurrent,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-        fn_ctx: FnCtx<'_>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
     where
         E: Debug + std::error::Error;

@@ -19,4 +19,14 @@ impl<T, E> CmdOutcome<T, E> {
     pub fn is_err(&self) -> bool {
         !self.errors.is_empty()
     }
+
+    pub fn map<F, U>(self, f: F) -> CmdOutcome<U, E>
+    where
+        F: FnOnce(T) -> U,
+    {
+        let CmdOutcome { value: t, errors } = self;
+        let u = f(t);
+
+        CmdOutcome { value: u, errors }
+    }
 }

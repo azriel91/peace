@@ -13,6 +13,7 @@ use peace_data::{
 use peace_params::{Params, ParamsSpec, ParamsSpecs};
 use peace_resources::{
     resources::ts::{Empty, SetUp},
+    states::StatesCurrent,
     type_reg::untagged::{BoxDtDisplay, TypeMap},
     Resources,
 };
@@ -54,6 +55,8 @@ where
         + From<<IS as ItemSpec>::Error>
         + From<crate::Error>
         + 'static,
+    for<'params> <IS as ItemSpec>::Params<'params>:
+        TryFrom<<<IS as ItemSpec>::Params<'params> as Params>::Partial>,
 {
     async fn state_clean(
         &self,
@@ -243,13 +246,17 @@ where
             .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                 item_spec_id: item_spec_id.clone(),
             })?;
-        let params = params_spec
-            .resolve(resources)
+        let params_partial = params_spec
+            .resolve_partial(resources)
             .map_err(crate::Error::ParamsResolveError)?;
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
-        IS::apply_check(&params, data, state_current, state_desired, state_diff)
-            .await
-            .map_err(Into::<E>::into)
+        if let Ok(params) = params_partial.try_into() {
+            IS::apply_check(&params, data, state_current, state_desired, state_diff)
+                .await
+                .map_err(Into::<E>::into)
+        } else {
+            Ok(ApplyCheck::ExecNotRequired)
+        }
     }
 
     async fn apply_op_exec_dry(
@@ -401,6 +408,8 @@ where
         + From<<IS as ItemSpec>::Error>
         + From<crate::Error>
         + 'static,
+    for<'params> <IS as ItemSpec>::Params<'params>:
+        TryFrom<<<IS as ItemSpec>::Params<'params> as Params>::Partial>,
 {
     fn id(&self) -> &ItemSpecId {
         <IS as ItemSpec>::id(self)
@@ -648,28 +657,20 @@ where
 
     async fn clean_prepare(
         &self,
+        states_current: &StatesCurrent,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
-        fn_ctx: FnCtx<'_>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
         let mut item_apply_partial = ItemApplyPartial::<IS::State, IS::StateDiff>::new();
 
-        match self
-            .state_current_try_exec(params_specs, resources, fn_ctx)
-            .await
-        {
-            Ok(state_current) => {
-                // Hack: Setting ItemApplyPartial state_current to state_clean is a hack.
-                if let Some(state_current) = state_current {
-                    item_apply_partial.state_current = Some(state_current);
-                } else {
-                    match self.state_clean(params_specs, resources).await {
-                        Ok(state_clean) => item_apply_partial.state_current = Some(state_clean),
-                        Err(error) => return Err((error, item_apply_partial.into())),
-                    }
-                }
+        // Hack: Setting ItemApplyPartial state_current to state_clean is a hack.
+        if let Some(state_current) = states_current.get::<IS::State, _>(self.id()) {
+            item_apply_partial.state_current = Some(state_current.clone());
+        } else {
+            match self.state_clean(params_specs, resources).await {
+                Ok(state_clean) => item_apply_partial.state_current = Some(state_clean),
+                Err(error) => return Err((error, item_apply_partial.into())),
             }
-            Err(error) => return Err((error, item_apply_partial.into())),
         }
         match self.state_clean(params_specs, resources).await {
             Ok(state_clean) => item_apply_partial.state_target = Some(state_clean),
