@@ -255,6 +255,11 @@ where
                 .await
                 .map_err(Into::<E>::into)
         } else {
+            // > If we cannot resolve parameters, then this item, and its predecessor are
+            // > cleaned up.
+            //
+            // The above is not necessarily true -- the user may have provided an incorrect
+            // type to map from. However, it is more likely to be true than false.
             Ok(ApplyCheck::ExecNotRequired)
         }
     }
