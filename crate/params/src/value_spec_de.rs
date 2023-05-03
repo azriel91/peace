@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::{MappingFnImpl, ValueSpec};
 
+type FnPlaceholder<T> = fn(&()) -> Option<T>;
+
 /// Exists to deserialize `FromMap` with a non-type-erased `MappingFnImpl`
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ValueSpecDe<T> {
@@ -13,7 +15,7 @@ pub enum ValueSpecDe<T> {
     From,
     /// Look up some data populated by a predecessor, and compute the value
     /// from that data.
-    FromMap(MappingFnImpl<T, fn(&()) -> Option<T>, ()>),
+    FromMap(MappingFnImpl<T, FnPlaceholder<T>, ()>),
 }
 
 impl<T> fmt::Debug for ValueSpecDe<T>
