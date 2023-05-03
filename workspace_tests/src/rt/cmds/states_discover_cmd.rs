@@ -7,7 +7,7 @@ use peace::{
         type_reg::untagged::{BoxDtDisplay, TypeReg},
     },
     rt::cmds::StatesDiscoverCmd,
-    rt_model::{Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{outcomes::CmdOutcome, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItemSpec, VecCopyState};
@@ -32,12 +32,14 @@ async fn current_and_desired_discovers_both_states_current_and_desired()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
 
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT);
@@ -98,11 +100,14 @@ async fn current_runs_state_current_for_each_item_spec() -> Result<(), Box<dyn s
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
 
-    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_current,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT);
@@ -145,7 +150,7 @@ async fn current_inserts_states_saved_from_states_saved_file()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
 
@@ -158,7 +163,7 @@ async fn current_inserts_states_saved_from_states_saved_file()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx).await?;
@@ -204,11 +209,14 @@ async fn desired_runs_state_desired_for_each_item_spec() -> Result<(), Box<dyn s
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
 
-    let states_desired = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_desired,
+        errors: _,
+    } = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
     let vec_copy_desired_state = states_desired.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT);

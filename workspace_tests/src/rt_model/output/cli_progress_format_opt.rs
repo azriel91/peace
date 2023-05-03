@@ -35,6 +35,14 @@ fn from_str_returns_ok_for_progress_bar() {
 }
 
 #[test]
+fn from_str_returns_ok_for_none() {
+    assert_eq!(
+        Ok(CliProgressFormatOpt::None),
+        CliProgressFormatOpt::from_str("none")
+    )
+}
+
+#[test]
 fn from_str_returns_err_for_unknown_string() {
     assert_eq!(
         Err(CliProgressFormatOptParseError("rara".to_string())),

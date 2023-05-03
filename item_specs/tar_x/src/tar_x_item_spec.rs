@@ -2,6 +2,7 @@ use std::marker::PhantomData;
 
 use peace::{
     cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId},
+    params::Params,
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -73,14 +74,10 @@ where
 
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: TarXData<'_, Id>,
     ) -> Result<Option<Self::State>, TarXError> {
-        if let Some(params) = params_partial {
-            Self::state_current(fn_ctx, params, data).await.map(Some)
-        } else {
-            Ok(None)
-        }
+        TarXStateCurrentFn::try_state_current(fn_ctx, params_partial, data).await
     }
 
     async fn state_current(
@@ -93,7 +90,7 @@ where
 
     async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
-        params_partial: Option<&Self::Params<'_>>,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: TarXData<'_, Id>,
     ) -> Result<Option<Self::State>, TarXError> {
         TarXStateDesiredFn::try_state_desired(fn_ctx, params_partial, data).await
@@ -108,7 +105,7 @@ where
     }
 
     async fn state_diff(
-        _params_partial: Option<&Self::Params<'_>>,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,
@@ -117,7 +114,7 @@ where
     }
 
     async fn state_clean(
-        _params_partial: Option<&Self::Params<'_>>,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> Result<Self::State, TarXError> {
         Ok(FileMetadatas::default())

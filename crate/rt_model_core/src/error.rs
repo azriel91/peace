@@ -1,9 +1,8 @@
 use std::path::PathBuf;
 
 use peace_core::{FlowId, ItemSpecId, Profile};
-use peace_resources::paths::ItemSpecParamsFile;
-
-use crate::ItemSpecParams;
+use peace_params::{ParamsResolveError, ParamsSpecs};
+use peace_resources::paths::{ItemSpecParamsFile, ParamsSpecsFile};
 
 cfg_if::cfg_if! {
     if #[cfg(not(target_arch = "wasm32"))] {
@@ -29,18 +28,60 @@ pub enum Error {
     )]
     ErrorSerialize(#[source] serde_yaml::Error),
 
-    /// Item spec params do not match with the item specs in the flow.
+    /// Failed to resolve values for a `Params` object from `resources`.
+    ///
+    /// This possibly indicates the user has provided a `Params::Spec` with a
+    /// `From` or `FromMap`, but no predecessor populates that type.
+    #[error("Failed to resolve values for a `Params` object from `resources`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::params_resolve_error),
+            help("Make sure that the value is populated by a predecessor.")
+        )
+    )]
+    ParamsResolveError(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        ParamsResolveError,
+    ),
+
+    /// A `Params::Spec` was not present for a given item spec ID.
+    ///
+    /// If this happens, this is a bug in the Peace framework.
+    #[error("A `Params::Spec` was not present for item spec: {item_spec_id}")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::params_spec_not_found),
+            help(
+                "If you are an end user, please ask for help from the providers of your automation tool.\n\
+                \n\
+                If you are developing a tool with the Peace framework,\n\
+                please open an issue in the Peace repository:\n\
+                \n\
+                https://github.com/azriel91/peace/"
+            )
+        )
+    )]
+    ParamsSpecNotFound {
+        /// Item spec ID for which the params spec was not found.
+        item_spec_id: ItemSpecId,
+    },
+
+    /// Item spec params specs do not match with the item specs in the flow.
     ///
     /// # Symptoms
     ///
-    /// * Provided params for an item spec ID has no corresponding item spec ID
-    ///   in the flow.
-    /// * Stored params for an item spec ID has no corresponding item spec ID in
-    ///   the flow.
+    /// * Provided params specs for an item spec ID has no corresponding item
+    ///   spec ID in the flow.
+    /// * Stored params specs for an item spec ID has no corresponding item spec
+    ///   ID in the flow.
     /// * ID of an item spec in the flow does not have a corresponding provided
-    ///   param.
+    ///   params spec.
     /// * ID of an item spec in the flow does not have a corresponding stored
-    ///   param.
+    ///   params spec.
     ///
     /// # Causes
     ///
@@ -48,38 +89,58 @@ pub enum Error {
     ///
     /// * An item spec is added.
     ///
-    ///    - No corresponding provided param.
-    ///    - No corresponding stored param.
+    ///    - No corresponding provided params spec.
+    ///    - No corresponding stored params spec.
     ///
     /// * An item spec ID is renamed.
     ///
-    ///    - Provided param ID mismatch.
-    ///    - Stored param ID mismatch.
-    ///    - No corresponding provided param
+    ///    - Provided params spec ID mismatch.
+    ///    - Stored params spec ID mismatch.
+    ///    - No corresponding provided params spec.
     ///
     /// * An item spec is removed.
     ///
-    ///    - Provided param ID mismatch.
-    ///    - Stored param ID mismatch.
-    #[error("Item spec params do not match with the item specs in the flow.")]
+    ///    - Provided params spec ID mismatch.
+    ///    - Stored params spec ID mismatch.
+    #[error("Item spec params specs do not match with the item specs in the flow.")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
             code(peace_rt_model::item_spec_params_mismatch),
-            help("{}", item_spec_params_mismatch_display(
-                item_spec_ids_with_no_params,
-                provided_item_spec_params_mismatches,
-                stored_item_spec_params_mismatches.as_ref(),
+            help("{}", params_specs_mismatch_display(
+                item_spec_ids_with_no_params_specs,
+                params_specs_provided_mismatches,
+                params_specs_stored_mismatches.as_ref(),
             ))
         )
     )]
-    ItemSpecParamsMismatch {
-        /// Item spec IDs for which there are no provided or stored params.
-        item_spec_ids_with_no_params: Vec<ItemSpecId>,
-        /// Provided item spec params with no matching item spec ID in the flow.
-        provided_item_spec_params_mismatches: ItemSpecParams,
-        /// Stored item spec params with no matching item spec ID in the flow.
-        stored_item_spec_params_mismatches: Option<ItemSpecParams>,
+    ParamsSpecsMismatch {
+        /// Item spec IDs for which there are no provided or stored params spec.
+        item_spec_ids_with_no_params_specs: Vec<ItemSpecId>,
+        /// Provided params specs with no matching item spec ID in the flow.
+        params_specs_provided_mismatches: ParamsSpecs,
+        /// Stored params specs with no matching item spec ID in the flow.
+        params_specs_stored_mismatches: Option<ParamsSpecs>,
+    },
+
+    /// In a `MultiProfileSingleFlow` diff, neither profile had `Params::Specs`
+    /// defined.
+    #[error("Params specifications not defined for `{profile_a}` or `{profile_b}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::params_specs_not_defined_for_diff),
+            help(
+                "Make sure at least one of the flows has `.with_item_specs_params(..)`\n\
+                defined for every item in the flow."
+            )
+        )
+    )]
+    ParamsSpecsNotDefinedForDiff {
+        /// First profile looked up for params specs.
+        profile_a: Profile,
+        /// Second profile looked up for params specs.
+        profile_b: Profile,
     },
 
     /// Failed to serialize a presentable type.
@@ -223,6 +284,80 @@ pub enum Error {
         flow_id: FlowId,
         /// Path of the item spec params file.
         item_spec_params_file: ItemSpecParamsFile,
+    },
+
+    /// Failed to deserialize params specs.
+    #[error("Failed to deserialize params specs for `{profile}/{flow_id}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::params_specs_deserialize),
+            help(
+                "Make sure that all commands using the `{flow_id}` flow, also use the same item spec graph.\n\
+                This is because all ItemSpecs are used to deserialize state.\n\
+                \n\
+                If the item spec graph is different, it may make sense to use a different flow ID."
+            )
+        )
+    )]
+    ParamsSpecsDeserialize {
+        /// Profile of the flow.
+        profile: Profile,
+        /// Flow ID whose params specs are being deserialized.
+        flow_id: FlowId,
+        /// Source text to be deserialized.
+        #[cfg(feature = "error_reporting")]
+        #[source_code]
+        params_specs_file_source: miette::NamedSource,
+        /// Offset within the source text that the error occurred.
+        #[cfg(feature = "error_reporting")]
+        #[label("{}", error_message)]
+        error_span: Option<miette::SourceOffset>,
+        /// Message explaining the error.
+        #[cfg(feature = "error_reporting")]
+        error_message: String,
+        /// Offset within the source text surrounding the error.
+        #[cfg(feature = "error_reporting")]
+        #[label]
+        context_span: Option<miette::SourceOffset>,
+        /// Underlying error.
+        #[source]
+        error: serde_yaml::Error,
+    },
+
+    /// Failed to serialize params specs.
+    #[error("Failed to serialize params specs.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::params_specs_serialize))
+    )]
+    ParamsSpecsSerialize(#[source] serde_yaml::Error),
+
+    /// Params specs file does not exist.
+    ///
+    /// This is returned when `ParamsSpecs` is attempted to be
+    /// deserialized but the file does not exist.
+    ///
+    /// The automation tool implementor needs to ensure the
+    /// `SingleProfileSingleFlow` command context has been initialized for that
+    /// flow previously.
+    #[error("Params specs file does not exist for `{profile}/{flow_id}`.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(
+            code(peace_rt_model::params_specs_file_not_exists),
+            help(
+                "Ensure that a `SingleProfileSingleFlow` command context has previously been built."
+            )
+        )
+    )]
+    ParamsSpecsFileNotExists {
+        /// Profile of the flow.
+        profile: Profile,
+        /// Flow ID whose params are being deserialized.
+        flow_id: FlowId,
+        /// Path of the params specs file.
+        params_specs_file: ParamsSpecsFile,
     },
 
     /// Current states have not been discovered.
@@ -427,10 +562,10 @@ pub enum Error {
 }
 
 #[cfg(feature = "error_reporting")]
-fn item_spec_params_mismatch_display(
+fn params_specs_mismatch_display(
     item_spec_ids_with_no_params: &[ItemSpecId],
-    provided_item_spec_params_mismatches: &ItemSpecParams,
-    stored_item_spec_params_mismatches: Option<&ItemSpecParams>,
+    params_specs_provided_mismatches: &ParamsSpecs,
+    params_specs_stored_mismatches: Option<&ParamsSpecs>,
 ) -> String {
     let mut items = Vec::<String>::new();
 
@@ -447,30 +582,30 @@ fn item_spec_params_mismatch_display(
         ));
     }
 
-    if !provided_item_spec_params_mismatches.is_empty() {
+    if !params_specs_provided_mismatches.is_empty() {
+        let params_specs_provided_mismatches_list = params_specs_provided_mismatches
+            .keys()
+            .map(|item_spec_id| format!("* {item_spec_id}"))
+            .collect::<Vec<String>>()
+            .join("\n");
         items.push(format!(
-            "The following provided params do not correspond to any item specs in the flow:\n\
-                            \n\
-                            {}\n",
-            provided_item_spec_params_mismatches
-                .keys()
-                .map(|item_spec_id| format!("* {item_spec_id}"))
-                .collect::<Vec<String>>()
-                .join("\n")
+            "The following provided params specs do not correspond to any item specs in the flow:\n\
+            \n\
+            {params_specs_provided_mismatches_list}\n",
         ))
     }
 
-    if let Some(stored_item_spec_params_mismatches) = stored_item_spec_params_mismatches {
-        if !stored_item_spec_params_mismatches.is_empty() {
+    if let Some(params_specs_stored_mismatches) = params_specs_stored_mismatches {
+        if !params_specs_stored_mismatches.is_empty() {
+            let params_specs_stored_mismatches_list = params_specs_stored_mismatches
+                .keys()
+                .map(|item_spec_id| format!("* {item_spec_id}"))
+                .collect::<Vec<String>>()
+                .join("\n");
             items.push(format!(
-                "The following stored params do not correspond to any item specs in the flow:\n\
-                        \n\
-                        {}\n",
-                stored_item_spec_params_mismatches
-                    .keys()
-                    .map(|item_spec_id| format!("* {item_spec_id}"))
-                    .collect::<Vec<String>>()
-                    .join("\n")
+                "The following stored params specs do not correspond to any item specs in the flow:\n\
+                \n\
+                {params_specs_stored_mismatches_list}\n",
             ));
         }
     }

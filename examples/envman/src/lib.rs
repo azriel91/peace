@@ -51,4 +51,5 @@ pub mod cmds;
 pub mod flows;
 pub mod item_specs;
 pub mod model;
+pub mod output;
 pub mod rt_model;

@@ -4,6 +4,7 @@ use std::{
 };
 
 use derivative::Derivative;
+use peace::params::Params;
 use serde::{Deserialize, Serialize};
 
 /// S3Object item parameters.
@@ -15,7 +16,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// * `Id`: A zero-sized type used to distinguish different S3 object parameters
 ///   from each other.
-#[derive(Derivative, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Derivative, Params, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
 pub struct S3ObjectParams<Id> {
     /// Path to the file to upload.

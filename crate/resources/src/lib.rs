@@ -4,6 +4,7 @@
 //! are likely to be common use for all applications.
 
 // Re-exports
+pub use resman::*;
 pub use type_reg;
 
 pub use crate::{item_spec_rt_id::ItemSpecRtId, resources::Resources};

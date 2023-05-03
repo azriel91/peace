@@ -1,0 +1,30 @@
+[package]
+name = "peace_params"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+version = "0.0.9"
+edition = "2021"
+description = "Constraints and specifications for parameters for the peace automation framework."
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_params/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+dyn-clone = "1.0.11"
+erased-serde = "0.3.25"
+miette = { workspace = true, optional = true }
+peace_core = { version = "0.0.9", path = "../core" }
+peace_params_derive = { version = "0.0.9", path = "../params_derive" }
+peace_resources = { version = "0.0.9", path = "../resources" }
+serde = { version = "1.0.159", features = ["derive"] }
+thiserror = "1.0.40"
+
+[features]
+default = []
+error_reporting = ["dep:miette"]

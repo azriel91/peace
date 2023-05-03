@@ -10,15 +10,17 @@ use peace_data::{
     marker::{ApplyDry, Clean, Current, Desired},
     Data,
 };
+use peace_params::{Params, ParamsSpec, ParamsSpecs};
 use peace_resources::{
     resources::ts::{Empty, SetUp},
+    states::StatesCurrent,
     type_reg::untagged::{BoxDtDisplay, TypeMap},
     Resources,
 };
 
 use crate::{
     outcomes::{ItemApply, ItemApplyBoxed, ItemApplyPartial, ItemApplyPartialBoxed},
-    ItemSpecParamsTypeReg, ItemSpecRt, StatesTypeReg,
+    ItemSpecParamsTypeReg, ItemSpecRt, ParamsSpecsTypeReg, StatesTypeReg,
 };
 
 /// Wraps a type implementing [`ItemSpec`].
@@ -53,13 +55,26 @@ where
         + From<<IS as ItemSpec>::Error>
         + From<crate::Error>
         + 'static,
+    for<'params> <IS as ItemSpec>::Params<'params>:
+        TryFrom<<<IS as ItemSpec>::Params<'params> as Params>::Partial>,
 {
-    async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<IS::State, E> {
+    async fn state_clean(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<IS::State, E> {
         let state_clean = {
-            // TODO: #94, this should be per Params field type, not Params type.
-            let params = resources.try_borrow::<IS::Params<'_>>().ok();
+            let item_spec_id = self.id();
+            let params_spec = params_specs
+                .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_spec_id: item_spec_id.clone(),
+                })?;
+            let params_partial = params_spec
+                .resolve_partial(resources)
+                .map_err(crate::Error::ParamsResolveError)?;
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
-            IS::state_clean(params.as_deref(), data).await?
+            IS::state_clean(&params_partial, data).await?
         };
         resources.borrow_mut::<Clean<IS::State>>().0 = Some(state_clean.clone());
 
@@ -68,14 +83,22 @@ where
 
     async fn state_current_try_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<Option<IS::State>, E> {
         let state_current = {
-            // TODO: #94, this should be per Params field type, not Params type.
-            let params = resources.try_borrow::<IS::Params<'_>>().ok();
+            let item_spec_id = self.id();
+            let params_spec = params_specs
+                .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_spec_id: item_spec_id.clone(),
+                })?;
+            let params_partial = params_spec
+                .resolve_partial(resources)
+                .map_err(crate::Error::ParamsResolveError)?;
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
-            IS::try_state_current(fn_ctx, params.as_deref(), data).await?
+            IS::try_state_current(fn_ctx, &params_partial, data).await?
         };
         if let Some(state_current) = state_current.as_ref() {
             resources.borrow_mut::<Current<IS::State>>().0 = Some(state_current.clone());
@@ -86,12 +109,20 @@ where
 
     async fn state_current_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<IS::State, E> {
         let state_current = {
-            // TODO: #94, this should be constructing Params from ParamsSpec.
-            let params = resources.borrow::<IS::Params<'_>>();
+            let item_spec_id = self.id();
+            let params_spec = params_specs
+                .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_spec_id: item_spec_id.clone(),
+                })?;
+            let params = params_spec
+                .resolve(resources)
+                .map_err(crate::Error::ParamsResolveError)?;
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
             IS::state_current(fn_ctx, &params, data).await?
         };
@@ -102,13 +133,21 @@ where
 
     async fn state_desired_try_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<Option<IS::State>, E> {
-        // TODO: #94, this should be per Params field type, not Params type.
-        let params = resources.try_borrow::<IS::Params<'_>>().ok();
+        let item_spec_id = self.id();
+        let params_spec = params_specs
+            .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
+            .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                item_spec_id: item_spec_id.clone(),
+            })?;
+        let params_partial = params_spec
+            .resolve_partial(resources)
+            .map_err(crate::Error::ParamsResolveError)?;
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_desired = IS::try_state_desired(fn_ctx, params.as_deref(), data).await?;
+        let state_desired = IS::try_state_desired(fn_ctx, &params_partial, data).await?;
         if let Some(state_desired) = state_desired.as_ref() {
             resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
         }
@@ -118,11 +157,19 @@ where
 
     async fn state_desired_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<IS::State, E> {
-        // TODO: #94, this should be constructing Params from ParamsSpec.
-        let params = resources.borrow::<IS::Params<'_>>();
+        let item_spec_id = self.id();
+        let params_spec = params_specs
+            .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
+            .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                item_spec_id: item_spec_id.clone(),
+            })?;
+        let params = params_spec
+            .resolve(resources)
+            .map_err(crate::Error::ParamsResolveError)?;
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         let state_desired = IS::state_desired(fn_ctx, &params, data).await?;
         resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
@@ -132,6 +179,7 @@ where
 
     async fn state_diff_exec(
         &self,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemSpecId, BoxDtDisplay>,
         states_b: &TypeMap<ItemSpecId, BoxDtDisplay>,
@@ -142,7 +190,7 @@ where
 
         if let Some((state_base, state_desired)) = state_base.zip(state_desired) {
             let state_diff: IS::StateDiff = self
-                .state_diff_exec_with(resources, state_base, state_desired)
+                .state_diff_exec_with(params_specs, resources, state_base, state_desired)
                 .await?;
             Ok(Some(state_diff))
         } else {
@@ -160,15 +208,23 @@ where
 
     async fn state_diff_exec_with(
         &self,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         state_a: &IS::State,
         state_b: &IS::State,
     ) -> Result<IS::StateDiff, E> {
         let state_diff: IS::StateDiff = {
-            // TODO: #94, this should be per Params field type, not Params type.
-            let params = resources.try_borrow::<IS::Params<'_>>().ok();
+            let item_spec_id = self.id();
+            let params_spec = params_specs
+                .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_spec_id: item_spec_id.clone(),
+                })?;
+            let params_partial = params_spec
+                .resolve_partial(resources)
+                .map_err(crate::Error::ParamsResolveError)?;
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
-            IS::state_diff(params.as_deref(), data, state_a, state_b)
+            IS::state_diff(&params_partial, data, state_a, state_b)
                 .await
                 .map_err(Into::<E>::into)?
         };
@@ -176,31 +232,56 @@ where
         Ok(state_diff)
     }
 
-    async fn apply_op_check(
+    async fn apply_check(
         &self,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         state_current: &IS::State,
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<ApplyCheck, E> {
-        // TODO: #94, this should be constructing Params from ParamsSpec.
-        let params = resources.borrow::<IS::Params<'_>>();
+        let item_spec_id = self.id();
+        let params_spec = params_specs
+            .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
+            .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                item_spec_id: item_spec_id.clone(),
+            })?;
+        let params_partial = params_spec
+            .resolve_partial(resources)
+            .map_err(crate::Error::ParamsResolveError)?;
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
-        IS::apply_check(&params, data, state_current, state_desired, state_diff)
-            .await
-            .map_err(Into::<E>::into)
+        if let Ok(params) = params_partial.try_into() {
+            IS::apply_check(&params, data, state_current, state_desired, state_diff)
+                .await
+                .map_err(Into::<E>::into)
+        } else {
+            // > If we cannot resolve parameters, then this item, and its predecessor are
+            // > cleaned up.
+            //
+            // The above is not necessarily true -- the user may have provided an incorrect
+            // type to map from. However, it is more likely to be true than false.
+            Ok(ApplyCheck::ExecNotRequired)
+        }
     }
 
-    async fn apply_op_exec_dry(
+    async fn apply_exec_dry(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
         state_current: &IS::State,
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<IS::State, E> {
-        // TODO: #94, this should be constructing Params from ParamsSpec.
-        let params = resources.borrow::<IS::Params<'_>>();
+        let item_spec_id = self.id();
+        let params_spec = params_specs
+            .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
+            .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                item_spec_id: item_spec_id.clone(),
+            })?;
+        let params = params_spec
+            .resolve(resources)
+            .map_err(crate::Error::ParamsResolveError)?;
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured_dry = IS::apply_dry(
             fn_ctx,
@@ -218,16 +299,24 @@ where
         Ok(state_ensured_dry)
     }
 
-    async fn apply_op_exec(
+    async fn apply_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
         state_current: &IS::State,
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<IS::State, E> {
-        // TODO: #94, this should be constructing Params from ParamsSpec.
-        let params = resources.borrow::<IS::Params<'_>>();
+        let item_spec_id = self.id();
+        let params_spec = params_specs
+            .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
+            .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                item_spec_id: item_spec_id.clone(),
+            })?;
+        let params = params_spec
+            .resolve(resources)
+            .map_err(crate::Error::ParamsResolveError)?;
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured = IS::apply(
             fn_ctx,
@@ -324,6 +413,8 @@ where
         + From<<IS as ItemSpec>::Error>
         + From<crate::Error>
         + 'static,
+    for<'params> <IS as ItemSpec>::Params<'params>:
+        TryFrom<<<IS as ItemSpec>::Params<'params> as Params>::Partial>,
 {
     fn id(&self) -> &ItemSpecId {
         <IS as ItemSpec>::id(self)
@@ -346,14 +437,20 @@ where
     fn params_and_state_register(
         &self,
         item_spec_params_type_reg: &mut ItemSpecParamsTypeReg,
+        params_specs_type_reg: &mut ParamsSpecsTypeReg,
         states_type_reg: &mut StatesTypeReg,
     ) {
         item_spec_params_type_reg.register::<IS::Params<'_>>(IS::id(self).clone());
+        params_specs_type_reg.register::<<IS::Params<'_> as Params>::Spec>(IS::id(self).clone());
         states_type_reg.register::<IS::State>(IS::id(self).clone());
     }
 
-    async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E> {
-        self.state_clean(resources)
+    async fn state_clean(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<BoxDtDisplay, E> {
+        self.state_clean(params_specs, resources)
             .await
             .map(BoxDtDisplay::new)
             .map_err(Into::<E>::into)
@@ -361,10 +458,11 @@ where
 
     async fn state_current_try_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_current_try_exec(fn_ctx, resources)
+        self.state_current_try_exec(params_specs, resources, fn_ctx)
             .await
             .map(|state_current| state_current.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
@@ -372,10 +470,11 @@ where
 
     async fn state_current_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<BoxDtDisplay, E> {
-        self.state_current_exec(fn_ctx, resources)
+        self.state_current_exec(params_specs, resources, fn_ctx)
             .await
             .map(BoxDtDisplay::new)
             .map_err(Into::<E>::into)
@@ -383,10 +482,11 @@ where
 
     async fn state_desired_try_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_desired_try_exec(fn_ctx, resources)
+        self.state_desired_try_exec(params_specs, resources, fn_ctx)
             .await
             .map(|state_desired| state_desired.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
@@ -394,10 +494,11 @@ where
 
     async fn state_desired_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<BoxDtDisplay, E> {
-        self.state_desired_exec(fn_ctx, resources)
+        self.state_desired_exec(params_specs, resources, fn_ctx)
             .await
             .map(BoxDtDisplay::new)
             .map_err(Into::<E>::into)
@@ -405,11 +506,12 @@ where
 
     async fn state_diff_exec(
         &self,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemSpecId, BoxDtDisplay>,
         states_b: &TypeMap<ItemSpecId, BoxDtDisplay>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_diff_exec(resources, states_a, states_b)
+        self.state_diff_exec(params_specs, resources, states_a, states_b)
             .await
             .map(|state_diff_opt| state_diff_opt.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
@@ -417,18 +519,25 @@ where
 
     async fn ensure_prepare(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
         let mut item_apply_partial = ItemApplyPartial::<IS::State, IS::StateDiff>::new();
 
-        match self.state_current_exec(fn_ctx, resources).await {
+        match self
+            .state_current_exec(params_specs, resources, fn_ctx)
+            .await
+        {
             Ok(state_current) => item_apply_partial.state_current = Some(state_current),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
         #[cfg(feature = "output_progress")]
         fn_ctx.progress_sender().reset();
-        match self.state_desired_exec(fn_ctx, resources).await {
+        match self
+            .state_desired_exec(params_specs, resources, fn_ctx)
+            .await
+        {
             Ok(state_desired) => item_apply_partial.state_target = Some(state_desired),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
@@ -436,6 +545,7 @@ where
         fn_ctx.progress_sender().reset();
         match self
             .state_diff_exec_with(
+                params_specs,
                 resources,
                 item_apply_partial
                     .state_current
@@ -461,7 +571,13 @@ where
         };
 
         let state_applied = match self
-            .apply_op_check(resources, state_current, state_target, state_diff)
+            .apply_check(
+                params_specs,
+                resources,
+                state_current,
+                state_target,
+                state_diff,
+            )
             .await
         {
             Ok(apply_check) => {
@@ -486,8 +602,9 @@ where
 
     async fn apply_exec_dry(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
         item_apply_boxed: &mut ItemApplyBoxed,
     ) -> Result<(), E> {
         let Some(item_apply) =
@@ -510,7 +627,14 @@ where
             #[cfg(not(feature = "output_progress"))]
             ApplyCheck::ExecRequired => {
                 let state_applied_dry = self
-                    .apply_op_exec_dry(fn_ctx, resources, state_current, state_target, state_diff)
+                    .apply_exec_dry(
+                        params_specs,
+                        resources,
+                        fn_ctx,
+                        state_current,
+                        state_target,
+                        state_diff,
+                    )
                     .await?;
 
                 *state_applied = Some(state_applied_dry);
@@ -518,7 +642,14 @@ where
             #[cfg(feature = "output_progress")]
             ApplyCheck::ExecRequired { progress_limit: _ } => {
                 let state_applied_dry = self
-                    .apply_op_exec_dry(fn_ctx, resources, state_current, state_target, state_diff)
+                    .apply_exec_dry(
+                        params_specs,
+                        resources,
+                        fn_ctx,
+                        state_current,
+                        state_target,
+                        state_diff,
+                    )
                     .await?;
 
                 *state_applied = Some(state_applied_dry);
@@ -531,32 +662,29 @@ where
 
     async fn clean_prepare(
         &self,
-        fn_ctx: FnCtx<'_>,
+        states_current: &StatesCurrent,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
         let mut item_apply_partial = ItemApplyPartial::<IS::State, IS::StateDiff>::new();
 
-        match self.state_current_try_exec(fn_ctx, resources).await {
-            Ok(state_current) => {
-                // Hack: Setting ItemApplyPartial state_current to state_clean is a hack.
-                if let Some(state_current) = state_current {
-                    item_apply_partial.state_current = Some(state_current);
-                } else {
-                    match self.state_clean(resources).await {
-                        Ok(state_clean) => item_apply_partial.state_current = Some(state_clean),
-                        Err(error) => return Err((error, item_apply_partial.into())),
-                    }
-                }
+        // Hack: Setting ItemApplyPartial state_current to state_clean is a hack.
+        if let Some(state_current) = states_current.get::<IS::State, _>(self.id()) {
+            item_apply_partial.state_current = Some(state_current.clone());
+        } else {
+            match self.state_clean(params_specs, resources).await {
+                Ok(state_clean) => item_apply_partial.state_current = Some(state_clean),
+                Err(error) => return Err((error, item_apply_partial.into())),
             }
-            Err(error) => return Err((error, item_apply_partial.into())),
         }
-        match self.state_clean(resources).await {
+        match self.state_clean(params_specs, resources).await {
             Ok(state_clean) => item_apply_partial.state_target = Some(state_clean),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
 
         match self
             .state_diff_exec_with(
+                params_specs,
                 resources,
                 item_apply_partial
                     .state_current
@@ -582,7 +710,13 @@ where
         };
 
         let state_applied = match self
-            .apply_op_check(resources, state_current, state_target, state_diff)
+            .apply_check(
+                params_specs,
+                resources,
+                state_current,
+                state_target,
+                state_diff,
+            )
             .await
         {
             Ok(apply_check) => {
@@ -607,8 +741,9 @@ where
 
     async fn apply_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
         item_apply_boxed: &mut ItemApplyBoxed,
     ) -> Result<(), E> {
         let Some(item_apply) =
@@ -631,7 +766,14 @@ where
             #[cfg(not(feature = "output_progress"))]
             ApplyCheck::ExecRequired => {
                 let state_applied_next = self
-                    .apply_op_exec(fn_ctx, resources, state_current, state_target, state_diff)
+                    .apply_exec(
+                        params_specs,
+                        resources,
+                        fn_ctx,
+                        state_current,
+                        state_target,
+                        state_diff,
+                    )
                     .await?;
 
                 *state_applied = Some(state_applied_next);
@@ -639,7 +781,14 @@ where
             #[cfg(feature = "output_progress")]
             ApplyCheck::ExecRequired { progress_limit: _ } => {
                 let state_applied_next = self
-                    .apply_op_exec(fn_ctx, resources, state_current, state_target, state_diff)
+                    .apply_exec(
+                        params_specs,
+                        resources,
+                        fn_ctx,
+                        state_current,
+                        state_target,
+                        state_diff,
+                    )
                     .await?;
 
                 *state_applied = Some(state_applied_next);

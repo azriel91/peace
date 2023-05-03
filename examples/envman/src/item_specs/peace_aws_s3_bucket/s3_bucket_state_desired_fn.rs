@@ -1,6 +1,9 @@
 use std::marker::PhantomData;
 
-use peace::cfg::{state::Timestamped, FnCtx};
+use peace::{
+    cfg::{state::Timestamped, FnCtx},
+    params::Params,
+};
 
 use crate::item_specs::peace_aws_s3_bucket::{
     S3BucketData, S3BucketError, S3BucketParams, S3BucketState,
@@ -15,12 +18,14 @@ where
     Id: Send + Sync,
 {
     pub async fn try_state_desired(
-        fn_ctx: FnCtx<'_>,
-        params_partial: Option<&S3BucketParams<Id>>,
-        data: S3BucketData<'_, Id>,
+        _fn_ctx: FnCtx<'_>,
+        params_partial: &<S3BucketParams<Id> as Params>::Partial,
+        _data: S3BucketData<'_, Id>,
     ) -> Result<Option<S3BucketState>, S3BucketError> {
-        if let Some(params) = params_partial {
-            Self::state_desired(fn_ctx, params, data).await.map(Some)
+        if let Some(name) = params_partial.name() {
+            Self::state_desired_internal(name.to_string())
+                .await
+                .map(Some)
         } else {
             Ok(None)
         }
@@ -33,6 +38,10 @@ where
     ) -> Result<S3BucketState, S3BucketError> {
         let name = params.name().to_string();
 
+        Self::state_desired_internal(name).await
+    }
+
+    async fn state_desired_internal(name: String) -> Result<S3BucketState, S3BucketError> {
         Ok(S3BucketState::Some {
             name,
             creation_date: Timestamped::Tbd,

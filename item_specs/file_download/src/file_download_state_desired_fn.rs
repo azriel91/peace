@@ -1,7 +1,10 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, path::Path};
 
-use peace::cfg::{state::FetchedOpt, FnCtx, State};
-use reqwest::header::ETAG;
+use peace::{
+    cfg::{state::FetchedOpt, FnCtx, State},
+    params::Params,
+};
+use reqwest::{header::ETAG, Url};
 
 use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState};
 
@@ -14,35 +17,34 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn try_state_desired(
-        fn_ctx: FnCtx<'_>,
-        params_partial: Option<&FileDownloadParams<Id>>,
+        _fn_ctx: FnCtx<'_>,
+        params_partial: &<FileDownloadParams<Id> as Params>::Partial,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<State<FileDownloadState, FetchedOpt<ETag>>>, FileDownloadError> {
-        if let Some(params) = params_partial {
-            Self::state_desired(fn_ctx, params, data).await.map(Some)
+        if let Some((src, dest)) = params_partial.src().zip(params_partial.dest()) {
+            Self::file_state_desired(&data, src, dest).await.map(Some)
         } else {
             Ok(None)
         }
     }
 
     pub async fn state_desired(
-        fn_ctx: FnCtx<'_>,
+        _fn_ctx: FnCtx<'_>,
         params: &FileDownloadParams<Id>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
-        let file_state_desired = Self::file_state_desired(fn_ctx, params, &data).await?;
+        let file_state_desired =
+            Self::file_state_desired(&data, params.src(), params.dest()).await?;
 
         Ok(file_state_desired)
     }
 
     async fn file_state_desired(
-        _fn_ctx: FnCtx<'_>,
-        params: &FileDownloadParams<Id>,
         data: &FileDownloadData<'_, Id>,
+        src_url: &Url,
+        dest: &Path,
     ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
         let client = data.client();
-        let dest = params.dest();
-        let src_url = params.src();
         let response = client
             .get(src_url.clone())
             .send()

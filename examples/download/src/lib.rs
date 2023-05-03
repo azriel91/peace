@@ -7,6 +7,7 @@ use peace::{
         StatesDiscoverCmd, StatesSavedDisplayCmd,
     },
     rt_model::{
+        outcomes::CmdOutcome,
         output::OutputWrite,
         params::{KeyUnknown, ParamsKeysImpl},
         Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
@@ -101,7 +102,7 @@ where
     if let Some(file_download_params) = file_download_params {
         cmd_ctx_builder = cmd_ctx_builder.with_item_spec_params::<FileDownloadItemSpec<FileId>>(
             FILE_ITEM_SPEC_ID,
-            file_download_params,
+            file_download_params.into(),
         );
     }
 
@@ -112,8 +113,10 @@ pub async fn fetch<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Downloa
 where
     O: OutputWrite<DownloadError>,
 {
-    let (_states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(cmd_ctx).await?;
+    let CmdOutcome {
+        value: (_states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(cmd_ctx).await?;
     Ok(())
 }
 

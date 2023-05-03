@@ -1,7 +1,10 @@
 use std::marker::PhantomData;
 
 use chrono::{DateTime, NaiveDateTime, Utc};
-use peace::cfg::{state::Timestamped, FnCtx};
+use peace::{
+    cfg::{state::Timestamped, FnCtx},
+    params::Params,
+};
 
 use crate::item_specs::peace_aws_s3_bucket::{
     S3BucketData, S3BucketError, S3BucketParams, S3BucketState,
@@ -20,11 +23,13 @@ where
 {
     pub async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: Option<&S3BucketParams<Id>>,
+        params_partial: &<S3BucketParams<Id> as Params>::Partial,
         data: S3BucketData<'_, Id>,
     ) -> Result<Option<S3BucketState>, S3BucketError> {
-        if let Some(params) = params_partial {
-            Self::state_current(fn_ctx, params, data).await.map(Some)
+        if let Some(name) = params_partial.name() {
+            Self::state_current_internal(fn_ctx, data, name)
+                .await
+                .map(Some)
         } else {
             Ok(None)
         }
@@ -35,8 +40,16 @@ where
         params: &S3BucketParams<Id>,
         data: S3BucketData<'_, Id>,
     ) -> Result<S3BucketState, S3BucketError> {
-        let client = data.client();
         let name = params.name();
+        Self::state_current_internal(fn_ctx, data, name).await
+    }
+
+    async fn state_current_internal(
+        fn_ctx: FnCtx<'_>,
+        data: S3BucketData<'_, Id>,
+        name: &str,
+    ) -> Result<S3BucketState, S3BucketError> {
+        let client = data.client();
 
         #[cfg(not(feature = "output_progress"))]
         let _fn_ctx = fn_ctx;

@@ -82,7 +82,7 @@ pub fn struct_definition(scope_struct: &mut ScopeStruct) -> proc_macro2::TokenSt
 
         fields::profile_and_flow_selection_push(&mut fields, scope);
         fields::params_selection_push(&mut fields, scope);
-        fields::item_spec_params_push(&mut fields, scope);
+        fields::params_specs_push(&mut fields, scope);
         fields::marker_push(&mut fields);
 
         Fields::from(fields)
@@ -158,12 +158,13 @@ mod fields {
         }
     }
 
-    /// Appends a `item_spec_params: ItemSpecParams` field to the given fields.
-    pub fn item_spec_params_push(fields_named: &mut FieldsNamed, scope: Scope) {
+    /// Appends a `params_specs_provided: ParamsSpecs` field to the given
+    /// fields.
+    pub fn params_specs_push(fields_named: &mut FieldsNamed, scope: Scope) {
         if scope == Scope::SingleProfileSingleFlow {
             let fields_marker: FieldsNamed = parse_quote!({
                 /// Map of item spec ID to its parameters. `TypeMap<ItemSpecId, BoxDt>` newtype.
-                pub(crate) item_spec_params_provided: peace_rt_model::ItemSpecParams
+                pub(crate) params_specs_provided: peace_params::ParamsSpecs
             });
             fields_named.named.extend(fields_marker.named);
         }

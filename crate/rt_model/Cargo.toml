@@ -26,6 +26,7 @@ miette = { workspace = true, optional = true }
 peace_cfg = { path = "../cfg", version = "0.0.9" }
 peace_data = { path = "../data", version = "0.0.9" }
 peace_fmt = { path = "../fmt", version = "0.0.9" }
+peace_params = { path = "../params", version = "0.0.9" }
 peace_resources = { path = "../resources", version = "0.0.9" }
 peace_rt_model_core = { path = "../rt_model_core", version = "0.0.9" }
 peace_rt_model_hack = { path = "../rt_model_hack", version = "0.0.9", optional = true }
@@ -41,7 +42,11 @@ peace_rt_model_web = { path = "../rt_model_web", version = "0.0.9" }
 
 [features]
 default = []
-error_reporting = ["dep:miette", "peace_rt_model_hack/error_reporting"]
+error_reporting = [
+    "dep:miette",
+    "peace_params/error_reporting",
+    "peace_rt_model_hack/error_reporting",
+]
 output_colorized = ["peace_rt_model_native/output_colorized"]
 output_in_memory = ["peace_rt_model_native/output_in_memory"]
 output_json = ["peace_rt_model_hack/output_json"]

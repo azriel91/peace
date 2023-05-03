@@ -1,10 +1,16 @@
 //! Manages extracting a tar file for the peace framework
 
 pub use crate::{
-    file_metadata::FileMetadata, file_metadatas::FileMetadatas, tar_x_apply_fns::TarXApplyFns,
-    tar_x_data::TarXData, tar_x_error::TarXError, tar_x_item_spec::TarXItemSpec,
-    tar_x_params::TarXParams, tar_x_state_current_fn::TarXStateCurrentFn,
-    tar_x_state_desired_fn::TarXStateDesiredFn, tar_x_state_diff::TarXStateDiff,
+    file_metadata::FileMetadata,
+    file_metadatas::FileMetadatas,
+    tar_x_apply_fns::TarXApplyFns,
+    tar_x_data::TarXData,
+    tar_x_error::TarXError,
+    tar_x_item_spec::TarXItemSpec,
+    tar_x_params::{TarXParams, TarXParamsPartial, TarXParamsSpec},
+    tar_x_state_current_fn::TarXStateCurrentFn,
+    tar_x_state_desired_fn::TarXStateDesiredFn,
+    tar_x_state_diff::TarXStateDiff,
     tar_x_state_diff_fn::TarXStateDiffFn,
 };
 

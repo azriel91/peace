@@ -8,7 +8,7 @@ pub(crate) use crate::{
     no_op_output::NoOpOutput,
     peace_test_error::PeaceTestError,
     vec_copy_item_spec::{
-        VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper,
+        VecA, VecASpec, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper,
         VecCopyState,
     },
 };
@@ -19,6 +19,7 @@ mod cmd;
 mod data;
 mod diff;
 mod fmt;
+mod params;
 mod resources;
 mod rt;
 mod rt_model;

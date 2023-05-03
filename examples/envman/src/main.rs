@@ -13,6 +13,7 @@ use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
     rt_model::{output::CliOutput, WorkspaceSpec},
 };
+use tokio::io::Stdout;
 
 #[cfg(not(feature = "error_reporting"))]
 pub fn main() -> Result<(), EnvManError> {
@@ -79,71 +80,81 @@ pub fn run() -> Result<(), EnvManError> {
             builder.build()
         };
 
-        match command {
-            EnvManCommand::Init {
-                profile,
-                r#type,
-                slug,
-                version,
-                url,
-            } => {
-                ProfileInitCmd::run(&mut cli_output, profile, r#type, &slug, &version, url).await?;
-            }
-            EnvManCommand::Profile { command } => {
-                let command = command.unwrap_or(ProfileCommand::Show);
-                match command {
-                    ProfileCommand::List => ProfileListCmd::run(&mut cli_output).await?,
-                    ProfileCommand::Show => ProfileShowCmd::run(&mut cli_output).await?,
-                }
-            }
-            EnvManCommand::Switch {
-                profile,
-                create,
-                r#type,
-                slug,
-                version,
-                url,
-            } => {
-                let profile_switch = if create {
-                    let Some(((env_type, slug), version)) = r#type.zip(slug).zip(version) else {
-                        unreachable!("`clap` should ensure `env_type`, `slug`, and `version` are \
-                            `Some` when `create` is `true`.");
-                    };
-                    ProfileSwitch::CreateNew {
-                        profile,
-                        env_type,
-                        slug,
-                        version,
-                        url,
-                    }
-                } else {
-                    ProfileSwitch::ToExisting { profile }
-                };
-                ProfileSwitchCmd::run(&mut cli_output, profile_switch).await?
-            }
-            EnvManCommand::Discover => EnvDiscoverCmd::run(&mut cli_output).await?,
-            EnvManCommand::Status => EnvStatusCmd::run(&mut cli_output).await?,
-            EnvManCommand::Desired => EnvDesiredCmd::run(&mut cli_output).await?,
-            EnvManCommand::Diff {
-                profile_a,
-                profile_b,
-            } => {
-                let env_diff_selection = profile_a
-                    .zip(profile_b)
-                    .map(
-                        |(profile_a, profile_b)| EnvDiffSelection::DiffProfilesCurrent {
-                            profile_a,
-                            profile_b,
-                        },
-                    )
-                    .unwrap_or(EnvDiffSelection::CurrentAndDesired);
-
-                EnvDiffCmd::run(&mut cli_output, env_diff_selection).await?
-            }
-            EnvManCommand::Deploy => EnvDeployCmd::run(&mut cli_output).await?,
-            EnvManCommand::Clean => EnvCleanCmd::run(&mut cli_output).await?,
+        match run_command(command, &mut cli_output).await {
+            Ok(()) => Ok(()),
+            Err(error) => envman::output::errors_present(&mut cli_output, &[error]).await,
         }
-
-        Ok::<_, EnvManError>(())
     })
+}
+
+async fn run_command(
+    command: EnvManCommand,
+    cli_output: &mut CliOutput<Stdout>,
+) -> Result<(), EnvManError> {
+    match command {
+        EnvManCommand::Init {
+            profile,
+            r#type,
+            slug,
+            version,
+            url,
+        } => {
+            ProfileInitCmd::run(cli_output, profile, r#type, &slug, &version, url).await?;
+        }
+        EnvManCommand::Profile { command } => {
+            let command = command.unwrap_or(ProfileCommand::Show);
+            match command {
+                ProfileCommand::List => ProfileListCmd::run(cli_output).await?,
+                ProfileCommand::Show => ProfileShowCmd::run(cli_output).await?,
+            }
+        }
+        EnvManCommand::Switch {
+            profile,
+            create,
+            r#type,
+            slug,
+            version,
+            url,
+        } => {
+            let profile_switch = if create {
+                let Some(((env_type, slug), version)) = r#type.zip(slug).zip(version) else {
+                    unreachable!("`clap` should ensure `env_type`, `slug`, and `version` are \
+                        `Some` when `create` is `true`.");
+                };
+                ProfileSwitch::CreateNew {
+                    profile,
+                    env_type,
+                    slug,
+                    version,
+                    url,
+                }
+            } else {
+                ProfileSwitch::ToExisting { profile }
+            };
+            ProfileSwitchCmd::run(cli_output, profile_switch).await?
+        }
+        EnvManCommand::Discover => EnvDiscoverCmd::run(cli_output).await?,
+        EnvManCommand::Status => EnvStatusCmd::run(cli_output).await?,
+        EnvManCommand::Desired => EnvDesiredCmd::run(cli_output).await?,
+        EnvManCommand::Diff {
+            profile_a,
+            profile_b,
+        } => {
+            let env_diff_selection = profile_a
+                .zip(profile_b)
+                .map(
+                    |(profile_a, profile_b)| EnvDiffSelection::DiffProfilesCurrent {
+                        profile_a,
+                        profile_b,
+                    },
+                )
+                .unwrap_or(EnvDiffSelection::CurrentAndDesired);
+
+            EnvDiffCmd::run(cli_output, env_diff_selection).await?
+        }
+        EnvManCommand::Deploy => EnvDeployCmd::run(cli_output).await?,
+        EnvManCommand::Clean => EnvCleanCmd::run(cli_output).await?,
+    }
+
+    Ok::<_, EnvManError>(())
 }

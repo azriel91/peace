@@ -14,10 +14,16 @@
 //! * Clean execution.
 
 pub use crate::{
-    cmd_variant::CmdVariant, sh_cmd::ShCmd, sh_cmd_apply_fns::ShCmdApplyFns,
-    sh_cmd_data::ShCmdData, sh_cmd_error::ShCmdError,
-    sh_cmd_execution_record::ShCmdExecutionRecord, sh_cmd_item_spec::ShCmdItemSpec,
-    sh_cmd_params::ShCmdParams, sh_cmd_state::ShCmdState, sh_cmd_state_diff::ShCmdStateDiff,
+    cmd_variant::CmdVariant,
+    sh_cmd::ShCmd,
+    sh_cmd_apply_fns::ShCmdApplyFns,
+    sh_cmd_data::ShCmdData,
+    sh_cmd_error::ShCmdError,
+    sh_cmd_execution_record::ShCmdExecutionRecord,
+    sh_cmd_item_spec::ShCmdItemSpec,
+    sh_cmd_params::{ShCmdParams, ShCmdParamsPartial, ShCmdParamsSpec},
+    sh_cmd_state::ShCmdState,
+    sh_cmd_state_diff::ShCmdStateDiff,
     sh_cmd_state_diff_fn::ShCmdStateDiffFn,
 };
 

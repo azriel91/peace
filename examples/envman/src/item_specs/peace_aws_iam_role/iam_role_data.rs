@@ -1,9 +1,6 @@
-use peace::data::{
-    accessors::{ROpt, R},
-    Data,
-};
+use std::marker::PhantomData;
 
-use crate::item_specs::peace_aws_iam_policy::model::ManagedPolicyArn;
+use peace::data::{accessors::R, Data};
 
 /// Data used to manage instance profile state.
 ///
@@ -16,23 +13,17 @@ pub struct IamRoleData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    /// Workaround for managed policy ARN param.
-    ///
-    /// Hack: Remove this when referential param values is implemented.
-    managed_policy_arn: ROpt<'exec, ManagedPolicyArn<Id>>,
     /// IAM client to communicate with AWS.
     client: R<'exec, aws_sdk_iam::Client>,
+
+    /// Marker.
+    marker: PhantomData<Id>,
 }
 
 impl<'exec, Id> IamRoleData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    /// Hack: Remove this when referential param values is implemented.
-    pub fn managed_policy_arn(&self) -> Option<&ManagedPolicyArn<Id>> {
-        self.managed_policy_arn.as_ref()
-    }
-
     pub fn client(&self) -> &R<'exec, aws_sdk_iam::Client> {
         &self.client
     }

@@ -59,7 +59,7 @@ where
         _diff: &BlankStateDiff,
     ) -> Result<BlankState, BlankError> {
         let params = data.params_mut();
-        **params.dest_mut() = Some(**params.src());
+        params.dest.0 = Some(params.src.0);
 
         Ok(*state_desired)
     }

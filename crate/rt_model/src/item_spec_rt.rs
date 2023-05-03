@@ -3,15 +3,17 @@ use std::fmt::Debug;
 use dyn_clone::DynClone;
 use fn_graph::{DataAccess, DataAccessDyn};
 use peace_cfg::{async_trait, FnCtx, ItemSpecId};
+use peace_params::ParamsSpecs;
 use peace_resources::{
     resources::ts::{Empty, SetUp},
+    states::StatesCurrent,
     type_reg::untagged::{BoxDtDisplay, TypeMap},
     Resources,
 };
 
 use crate::{
     outcomes::{ItemApplyBoxed, ItemApplyPartialBoxed},
-    ItemSpecParamsTypeReg, StatesTypeReg,
+    ItemSpecParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg,
 };
 
 /// Internal trait that erases the types from [`ItemSpec`]
@@ -34,21 +36,26 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     where
         E: Debug + std::error::Error;
 
-    /// Registers state types with the type registry for deserializing from
-    /// disk.
+    /// Registers params and state types with the type registries for
+    /// deserializing from disk.
     ///
-    /// This is necessary to deserialize `StatesSavedFile` and
-    /// `StatesDesiredFile`.
+    /// This is necessary to deserialize `ItemSpecParamsFile`,
+    /// `ParamsSpecsFile`, `StatesSavedFile`, and `StatesDesiredFile`.
     fn params_and_state_register(
         &self,
         item_spec_params_type_reg: &mut ItemSpecParamsTypeReg,
+        params_specs_type_reg: &mut ParamsSpecsTypeReg,
         states_type_reg: &mut StatesTypeReg,
     );
 
     /// Runs [`ItemSpec::state_clean`].
     ///
     /// [`ItemSpec::state_clean`]: peace_cfg::ItemSpec::state_clean
-    async fn state_clean(&self, resources: &Resources<SetUp>) -> Result<BoxDtDisplay, E>
+    async fn state_clean(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
 
@@ -58,8 +65,9 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     async fn state_current_try_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<Option<BoxDtDisplay>, E>
     where
         E: Debug + std::error::Error;
@@ -70,8 +78,9 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`exec`]: peace_cfg::TryFnSpec::exec
     async fn state_current_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
@@ -82,8 +91,9 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
     async fn state_desired_try_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<Option<BoxDtDisplay>, E>
     where
         E: Debug + std::error::Error;
@@ -94,8 +104,9 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`exec`]: peace_cfg::TryFnSpec::exec
     async fn state_desired_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<BoxDtDisplay, E>
     where
         E: Debug + std::error::Error;
@@ -105,6 +116,7 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`State`]: peace_cfg::State
     async fn state_diff_exec(
         &self,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         states_a: &TypeMap<ItemSpecId, BoxDtDisplay>,
         states_b: &TypeMap<ItemSpecId, BoxDtDisplay>,
@@ -127,8 +139,9 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`ApplyFns::check`]: peace_cfg::ItemSpec::ApplyFns
     async fn ensure_prepare(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
     where
         E: Debug + std::error::Error;
@@ -148,7 +161,8 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`ApplyFns::check`]: peace_cfg::ItemSpec::ApplyFns
     async fn clean_prepare(
         &self,
-        fn_ctx: FnCtx<'_>,
+        states_current: &StatesCurrent,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)>
     where
@@ -169,8 +183,9 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`ApplyFns::exec_dry`]: peace_cfg::ItemSpec::ApplyFns
     async fn apply_exec_dry(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
         item_apply: &mut ItemApplyBoxed,
     ) -> Result<(), E>
     where
@@ -191,8 +206,9 @@ pub trait ItemSpecRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
     /// [`ApplyFns::exec`]: peace_cfg::ItemSpec::ApplyFns
     async fn apply_exec(
         &self,
-        fn_ctx: FnCtx<'_>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
         item_apply: &mut ItemApplyBoxed,
     ) -> Result<(), E>
     where

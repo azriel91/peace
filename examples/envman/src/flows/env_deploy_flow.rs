@@ -1,23 +1,27 @@
 use std::path::PathBuf;
 
 use peace::{
-    cfg::{app_name, flow_id, item_spec_id, AppName, FlowId, ItemSpecId, Profile},
+    cfg::{
+        app_name, flow_id, item_spec_id, state::Generated, AppName, FlowId, ItemSpecId, Profile,
+    },
+    data::marker::Current,
+    params::ValueSpec,
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
 use peace_item_specs::{
-    file_download::{FileDownloadItemSpec, FileDownloadParams},
-    tar_x::{TarXItemSpec, TarXParams},
+    file_download::{FileDownloadItemSpec, FileDownloadParamsSpec},
+    tar_x::{TarXItemSpec, TarXParamsSpec},
 };
 use semver::Version;
 use url::Url;
 
 use crate::{
     item_specs::{
-        peace_aws_iam_policy::{IamPolicyItemSpec, IamPolicyParams},
-        peace_aws_iam_role::{IamRoleItemSpec, IamRoleParams},
-        peace_aws_instance_profile::{InstanceProfileItemSpec, InstanceProfileParams},
-        peace_aws_s3_bucket::{S3BucketItemSpec, S3BucketParams},
-        peace_aws_s3_object::{S3ObjectItemSpec, S3ObjectParams},
+        peace_aws_iam_policy::{IamPolicyItemSpec, IamPolicyParamsSpec, IamPolicyState},
+        peace_aws_iam_role::{IamRoleItemSpec, IamRoleParamsSpec},
+        peace_aws_instance_profile::{InstanceProfileItemSpec, InstanceProfileParamsSpec},
+        peace_aws_s3_bucket::{S3BucketItemSpec, S3BucketParamsSpec},
+        peace_aws_s3_object::{S3ObjectItemSpec, S3ObjectParamsSpec},
     },
     model::{EnvManError, RepoSlug, WebAppFileId},
 };
@@ -83,48 +87,48 @@ impl EnvDeployFlow {
         slug: &RepoSlug,
         version: &Version,
         url: Option<Url>,
-    ) -> Result<EnvDeployFlowParams, EnvManError> {
+    ) -> Result<EnvDeployFlowParamsSpecs, EnvManError> {
         let account = slug.account();
         let repo_name = slug.repo_name();
         let app_download_dir = PathBuf::from_iter([account, repo_name, &format!("{version}")]);
 
-        let app_download_params = {
-            #[cfg(target_family = "windows")]
-            let file_ext = "zip";
-            #[cfg(any(target_family = "unix", target_family = "wasm"))]
-            let file_ext = "tar";
-            // windows:
-            // https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.zip
-            //
-            // linux:
-            // https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.tar
-            let web_app_file_url = {
-                match url {
-                    Some(url) => url,
-                    None => {
-                        let url_candidate = format!(
-                            "https://github.com/{account}/{repo_name}/releases/download/{version}/{repo_name}.{file_ext}"
-                        );
-                        Url::parse(&url_candidate).map_err(|error| EnvManError::EnvManUrlBuild {
-                            url_candidate,
-                            error,
-                        })?
-                    }
+        #[cfg(target_family = "windows")]
+        let file_ext = "zip";
+        #[cfg(any(target_family = "unix", target_family = "wasm"))]
+        let file_ext = "tar";
+        // windows:
+        // https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.zip
+        //
+        // linux:
+        // https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.tar
+        let web_app_file_url = {
+            match url {
+                Some(url) => url,
+                None => {
+                    let url_candidate = format!(
+                        "https://github.com/{account}/{repo_name}/releases/download/{version}/{repo_name}.{file_ext}"
+                    );
+                    Url::parse(&url_candidate).map_err(|error| EnvManError::EnvManUrlBuild {
+                        url_candidate,
+                        error,
+                    })?
                 }
-            };
-            let web_app_path_local = app_download_dir.join(format!("{repo_name}.{file_ext}"));
-            FileDownloadParams::new(
-                web_app_file_url,
-                web_app_path_local,
+            }
+        };
+        let web_app_path_local = app_download_dir.join(format!("{repo_name}.{file_ext}"));
+        let app_download_params_spec = {
+            FileDownloadParamsSpec::new(
+                ValueSpec::Value(web_app_file_url),
+                ValueSpec::Value(web_app_path_local.clone()),
                 #[cfg(target_arch = "wasm32")]
-                peace_item_specs::file_download::StorageForm::Base64,
+                ValueSpec::Value(peace_item_specs::file_download::StorageForm::Base64),
             )
         };
-        let app_extract_params = {
-            let tar_path = app_download_params.dest().to_path_buf();
+        let app_extract_params_spec = {
+            let tar_path = web_app_path_local.clone();
             let dest = app_download_dir.join("extracted");
 
-            TarXParams::<WebAppFileId>::new(tar_path, dest)
+            TarXParamsSpec::<WebAppFileId>::new(ValueSpec::Value(tar_path), ValueSpec::Value(dest))
         };
 
         let iam_policy_name = profile.to_string();
@@ -137,53 +141,74 @@ impl EnvDeployFlow {
         };
         let path = String::from("/");
 
-        let iam_policy_params = {
+        let iam_policy_params_spec = {
             let ec2_to_s3_bucket_policy = format!(
                 include_str!("ec2_to_s3_bucket_policy.json"),
                 bucket_name = bucket_name
             );
-            IamPolicyParams::<WebAppFileId>::new(
-                iam_policy_name,
-                path.clone(),
-                ec2_to_s3_bucket_policy,
+            IamPolicyParamsSpec::<WebAppFileId>::new(
+                ValueSpec::Value(iam_policy_name),
+                ValueSpec::Value(path.clone()),
+                ValueSpec::Value(ec2_to_s3_bucket_policy),
             )
         };
 
-        let iam_role_params = IamRoleParams::<WebAppFileId>::new(iam_role_name, path.clone());
-        let instance_profile_params =
-            InstanceProfileParams::<WebAppFileId>::new(instance_profile_name, path, true);
+        let iam_role_params_spec = IamRoleParamsSpec::<WebAppFileId>::new(
+            ValueSpec::Value(iam_role_name),
+            ValueSpec::Value(path.clone()),
+            ValueSpec::from_map(|iam_policy_state: &Current<IamPolicyState>| {
+                if let Some(IamPolicyState::Some {
+                    policy_id_arn_version: Generated::Value(policy_id_arn_version),
+                    ..
+                }) = iam_policy_state.0.as_ref()
+                {
+                    Some(policy_id_arn_version.arn().to_string())
+                } else {
+                    None
+                }
+            }),
+        );
+        let instance_profile_params_spec = InstanceProfileParamsSpec::<WebAppFileId>::new(
+            ValueSpec::Value(instance_profile_name),
+            ValueSpec::Value(path),
+            ValueSpec::Value(true),
+        );
 
-        let s3_bucket_params = S3BucketParams::<WebAppFileId>::new(bucket_name.clone());
-        let s3_object_params = {
-            let web_app_path_local = app_download_params.dest().to_path_buf();
+        let s3_bucket_params_spec =
+            S3BucketParamsSpec::<WebAppFileId>::new(ValueSpec::Value(bucket_name.clone()));
+        let s3_object_params_spec = {
             let object_key = web_app_path_local
                 .file_name()
                 .expect("Expected web app file name to exist.")
                 .to_string_lossy()
                 .to_string();
 
-            S3ObjectParams::<WebAppFileId>::new(web_app_path_local, bucket_name, object_key)
+            S3ObjectParamsSpec::<WebAppFileId>::new(
+                ValueSpec::Value(web_app_path_local),
+                ValueSpec::Value(bucket_name),
+                ValueSpec::Value(object_key),
+            )
         };
 
-        Ok(EnvDeployFlowParams {
-            app_download_params,
-            app_extract_params,
-            iam_policy_params,
-            iam_role_params,
-            instance_profile_params,
-            s3_bucket_params,
-            s3_object_params,
+        Ok(EnvDeployFlowParamsSpecs {
+            app_download_params_spec,
+            app_extract_params_spec,
+            iam_policy_params_spec,
+            iam_role_params_spec,
+            instance_profile_params_spec,
+            s3_bucket_params_spec,
+            s3_object_params_spec,
         })
     }
 }
 
 #[derive(Debug)]
-pub struct EnvDeployFlowParams {
-    pub app_download_params: FileDownloadParams<WebAppFileId>,
-    pub app_extract_params: TarXParams<WebAppFileId>,
-    pub iam_policy_params: IamPolicyParams<WebAppFileId>,
-    pub iam_role_params: IamRoleParams<WebAppFileId>,
-    pub instance_profile_params: InstanceProfileParams<WebAppFileId>,
-    pub s3_bucket_params: S3BucketParams<WebAppFileId>,
-    pub s3_object_params: S3ObjectParams<WebAppFileId>,
+pub struct EnvDeployFlowParamsSpecs {
+    pub app_download_params_spec: FileDownloadParamsSpec<WebAppFileId>,
+    pub app_extract_params_spec: TarXParamsSpec<WebAppFileId>,
+    pub iam_policy_params_spec: IamPolicyParamsSpec<WebAppFileId>,
+    pub iam_role_params_spec: IamRoleParamsSpec<WebAppFileId>,
+    pub instance_profile_params_spec: InstanceProfileParamsSpec<WebAppFileId>,
+    pub s3_bucket_params_spec: S3BucketParamsSpec<WebAppFileId>,
+    pub s3_object_params_spec: S3ObjectParamsSpec<WebAppFileId>,
 }

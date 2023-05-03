@@ -1,6 +1,9 @@
-use std::marker::PhantomData;
+use std::{marker::PhantomData, path::Path};
 
-use peace::cfg::{state::Generated, FnCtx};
+use peace::{
+    cfg::{state::Generated, FnCtx},
+    params::Params,
+};
 
 use crate::item_specs::peace_aws_s3_object::{
     S3ObjectData, S3ObjectError, S3ObjectParams, S3ObjectState,
@@ -19,15 +22,17 @@ where
 {
     pub async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
-        params_partial: Option<&S3ObjectParams<Id>>,
-        s3_object_data: S3ObjectData<'_, Id>,
+        params_partial: &<S3ObjectParams<Id> as Params>::Partial,
+        _data: S3ObjectData<'_, Id>,
     ) -> Result<Option<S3ObjectState>, S3ObjectError> {
-        if let Some(params) = params_partial {
+        let file_path = params_partial.file_path();
+        let bucket_name = params_partial.bucket_name();
+        let object_key = params_partial.object_key();
+        if let Some(((file_path, bucket_name), object_key)) =
+            file_path.zip(bucket_name).zip(object_key)
+        {
             #[cfg(not(target_arch = "wasm32"))]
             {
-                let file_path = params.file_path();
-                let bucket_name = params.bucket_name();
-                let object_key = params.object_key();
                 if !tokio::fs::try_exists(file_path).await.map_err(|error| {
                     S3ObjectError::ObjectFileExists {
                         file_path: file_path.to_path_buf(),
@@ -39,9 +44,14 @@ where
                     return Ok(None);
                 }
             }
-            Self::state_desired(fn_ctx, params, s3_object_data)
-                .await
-                .map(Some)
+            Self::state_desired_internal(
+                fn_ctx,
+                file_path,
+                bucket_name.to_string(),
+                object_key.to_string(),
+            )
+            .await
+            .map(Some)
         } else {
             Ok(None)
         }
@@ -55,7 +65,15 @@ where
         let file_path = params.file_path();
         let bucket_name = params.bucket_name().to_string();
         let object_key = params.object_key().to_string();
+        Self::state_desired_internal(fn_ctx, file_path, bucket_name, object_key).await
+    }
 
+    async fn state_desired_internal(
+        fn_ctx: FnCtx<'_>,
+        file_path: &Path,
+        bucket_name: String,
+        object_key: String,
+    ) -> Result<S3ObjectState, S3ObjectError> {
         #[cfg(not(feature = "output_progress"))]
         let _fn_ctx = fn_ctx;
         #[cfg(feature = "output_progress")]

@@ -2,15 +2,17 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
+    params::ValueSpec,
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{
+        outcomes::CmdOutcome,
         output::{CliOutput, OutputWrite},
         Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
 
 use crate::{
-    NoOpOutput, PeaceTestError, VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec,
+    NoOpOutput, PeaceTestError, VecA, VecASpec, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec,
     VecCopyState,
 };
 
@@ -35,11 +37,13 @@ async fn contains_state_diff_for_each_item_spec() -> Result<(), Box<dyn std::err
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Diff current and desired states.
     let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
@@ -87,10 +91,13 @@ async fn diff_profiles_current_with_multiple_profiles() -> Result<(), Box<dyn st
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let states_current_0 = StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
+    let CmdOutcome {
+        value: states_current_0,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
 
     // profile_1
     let profile_1 = profile!("test_profile_1");
@@ -99,12 +106,15 @@ async fn diff_profiles_current_with_multiple_profiles() -> Result<(), Box<dyn st
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     let resources = cmd_ctx_1.resources_mut();
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-    let states_current_1 = StatesDiscoverCmd::current(&mut cmd_ctx_1).await?;
+    let CmdOutcome {
+        value: states_current_1,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx_1).await?;
 
     let mut cmd_ctx_multi = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
         .with_flow(&flow)
@@ -160,7 +170,7 @@ async fn diff_profiles_current_with_missing_profile_0() -> Result<(), Box<dyn st
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     let resources = cmd_ctx_1.resources_mut();
@@ -206,7 +216,7 @@ async fn diff_profiles_current_with_missing_profile_1() -> Result<(), Box<dyn st
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
@@ -254,7 +264,7 @@ async fn diff_profiles_current_with_profile_0_missing_states_current()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     StatesDiscoverCmd::desired(&mut cmd_ctx_0).await?;
@@ -266,7 +276,7 @@ async fn diff_profiles_current_with_profile_0_missing_states_current()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     let resources = cmd_ctx_1.resources_mut();
@@ -313,7 +323,7 @@ async fn diff_profiles_current_with_profile_1_missing_states_current()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx_0).await?;
@@ -325,7 +335,7 @@ async fn diff_profiles_current_with_profile_1_missing_states_current()
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
     StatesDiscoverCmd::desired(&mut cmd_ctx_1).await?;
@@ -367,9 +377,10 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
+        // VecAPartial's inner field value resolves a `Vec<u8>`, not `VecA` itself.
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecASpec(ValueSpec::from_map(|vec_a: &VecA| Some(vec_a.0.clone()))),
         )
         .await?;
     // overwrite initial state
@@ -377,8 +388,10 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     #[rustfmt::skip]
     resources.insert(VecA(vec![0, 1, 2,    4, 5, 6, 8, 9]));
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
 
     // Diff current and desired states.
     let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
@@ -408,14 +421,6 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         .as_ref(),
         vec_diff
     );
-    // `CliOutput` writes `\n\n`s in `progress_end` for better spacing with
-    // progress bars.
-    #[cfg(feature = "output_progress")]
-    assert_eq!(
-        "\n\n1. `vec_copy`: [(-)3..4, (~)7;1, (+)8;9, ]\n",
-        String::from_utf8(buffer)?
-    );
-    #[cfg(not(feature = "output_progress"))]
     assert_eq!(
         "1. `vec_copy`: [(-)3..4, (~)7;1, (+)8;9, ]\n",
         String::from_utf8(buffer)?

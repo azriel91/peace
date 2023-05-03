@@ -2,7 +2,7 @@ use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
     rt::cmds::{StatesDiscoverCmd, StatesSavedDisplayCmd},
-    rt_model::{Error, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
+    rt_model::{outcomes::CmdOutcome, Error, Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec},
 };
 
 use crate::{
@@ -32,10 +32,13 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let states_saved_from_discover = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_saved_from_discover,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
 
     // Re-read states from disk in a new set of resources.
     let mut cmd_ctx =
@@ -44,7 +47,7 @@ async fn reads_states_saved_from_disk_when_present() -> Result<(), Box<dyn std::
             .with_flow(&flow)
             .with_item_spec_params::<VecCopyItemSpec>(
                 VecCopyItemSpec::ID_DEFAULT.clone(),
-                VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+                VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
             )
             .await?;
     let states_saved_from_read = StatesSavedDisplayCmd::exec(&mut cmd_ctx).await?;
@@ -88,7 +91,7 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
             .with_flow(&flow)
             .with_item_spec_params::<VecCopyItemSpec>(
                 VecCopyItemSpec::ID_DEFAULT.clone(),
-                VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]),
+                VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
             )
             .await?;
     let exec_result = StatesSavedDisplayCmd::exec(&mut cmd_ctx).await;

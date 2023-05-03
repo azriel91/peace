@@ -5,4 +5,6 @@ pub enum CliProgressFormat {
     Outcome,
     /// Always render progress as a progress bar.
     ProgressBar,
+    /// Don't render progress.
+    None,
 }

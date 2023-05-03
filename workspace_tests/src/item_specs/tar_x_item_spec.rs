@@ -4,8 +4,9 @@ use peace::{
     cfg::{
         app_name, item_spec_id, profile, AppName, ApplyCheck, FlowId, ItemSpec, ItemSpecId, Profile,
     },
-    cmd::ctx::CmdCtx,
+    cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
     data::Data,
+    params::{Params, ParamsSpec},
     resources::{
         paths::{FlowDir, ProfileDir},
         states::StatesSaved,
@@ -59,11 +60,14 @@ async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_e
         .with_flow(&flow)
         .with_item_spec_params::<TarXItemSpec<TarXTest>>(
             TarXTest::ID.clone(),
-            TarXParams::<TarXTest>::new(tar_path, dest),
+            TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
 
-    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_current,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let state_current = states_current
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
@@ -99,11 +103,14 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
         .with_flow(&flow)
         .with_item_spec_params::<TarXItemSpec<TarXTest>>(
             TarXTest::ID.clone(),
-            TarXParams::<TarXTest>::new(tar_path, dest),
+            TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
 
-    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_current,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let state_current = states_current
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
@@ -140,11 +147,14 @@ async fn state_desired_returns_file_metadatas_from_tar() -> Result<(), Box<dyn s
         .with_flow(&flow)
         .with_item_spec_params::<TarXItemSpec<TarXTest>>(
             TarXTest::ID.clone(),
-            TarXParams::<TarXTest>::new(tar_path, dest),
+            TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
 
-    let states_desired = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_desired,
+        errors: _,
+    } = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
     let state_desired = states_desired
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
@@ -182,7 +192,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
         .with_flow(&flow)
         .with_item_spec_params::<TarXItemSpec<TarXTest>>(
             TarXTest::ID.clone(),
-            TarXParams::<TarXTest>::new(tar_path, dest),
+            TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
     StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
@@ -234,7 +244,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
         .with_flow(&flow)
         .with_item_spec_params::<TarXItemSpec<TarXTest>>(
             TarXTest::ID.clone(),
-            TarXParams::<TarXTest>::new(tar_path, dest),
+            TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
     StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
@@ -288,7 +298,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
         .with_flow(&flow)
         .with_item_spec_params::<TarXItemSpec<TarXTest>>(
             TarXTest::ID.clone(),
-            TarXParams::<TarXTest>::new(tar_path, dest),
+            TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
     StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
@@ -340,7 +350,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
         .with_flow(&flow)
         .with_item_spec_params::<TarXItemSpec<TarXTest>>(
             TarXTest::ID.clone(),
-            TarXParams::<TarXTest>::new(tar_path, dest),
+            TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
     // Discover current and desired states.
@@ -398,7 +408,7 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
         .with_flow(&flow)
         .with_item_spec_params::<TarXItemSpec<TarXTest>>(
             TarXTest::ID.clone(),
-            TarXParams::<TarXTest>::new(tar_path, dest),
+            TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
     // Discover current and desired states.
@@ -450,7 +460,7 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
         .with_flow(&flow)
         .with_item_spec_params::<TarXItemSpec<TarXTest>>(
             TarXTest::ID.clone(),
-            TarXParams::<TarXTest>::new(tar_path, dest),
+            TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
     // Discover current and desired states.
@@ -489,11 +499,13 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         .with_flow(&flow)
         .with_item_spec_params::<TarXItemSpec<TarXTest>>(
             TarXTest::ID.clone(),
-            TarXParams::<TarXTest>::new(tar_path, dest),
+            TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let state_current = states_current
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
@@ -504,11 +516,19 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         .unwrap();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
-    let resources = cmd_ctx.resources();
+    let SingleProfileSingleFlowView {
+        params_specs,
+        resources,
+        ..
+    } = cmd_ctx.view();
+    let tar_x_params_spec = params_specs
+        .get::<<<TarXItemSpec<TarXTest> as ItemSpec>::Params<'_> as Params>::Spec, _>(TarXTest::ID)
+        .unwrap();
+    let tar_x_params = tar_x_params_spec.resolve(resources).unwrap();
     assert_eq!(
         ApplyCheck::ExecNotRequired,
         <TarXItemSpec::<TarXTest> as ItemSpec>::apply_check(
-            &resources.borrow::<TarXParams<TarXTest>>(),
+            &tar_x_params,
             <TarXData<TarXTest> as Data>::borrow(TarXTest::ID, resources),
             state_current,
             state_desired,
@@ -539,11 +559,13 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
         .with_flow(&flow)
         .with_item_spec_params::<TarXItemSpec<TarXTest>>(
             TarXTest::ID.clone(),
-            TarXParams::<TarXTest>::new(tar_path, dest),
+            TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     let CmdOutcome {
@@ -597,11 +619,13 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
         .with_flow(&flow)
         .with_item_spec_params::<TarXItemSpec<TarXTest>>(
             TarXTest::ID.clone(),
-            TarXParams::<TarXTest>::new(tar_path, dest),
+            TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Overwrite changed files and remove extra files
@@ -663,11 +687,13 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
         .with_flow(&flow)
         .with_item_spec_params::<TarXItemSpec<TarXTest>>(
             TarXTest::ID.clone(),
-            TarXParams::<TarXTest>::new(tar_path, dest.clone()),
+            TarXParams::<TarXTest>::new(tar_path, dest.clone()).into(),
         )
         .await?;
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     let CmdOutcome {

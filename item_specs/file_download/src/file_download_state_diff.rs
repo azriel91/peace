@@ -14,7 +14,7 @@ pub enum FileDownloadStateDiff {
     /// File does not exist both locally and on server.
     NoChangeNotExists {
         /// Path to the file.
-        path: PathBuf,
+        path: Option<PathBuf>,
     },
     /// File exists both locally and on server, and they are in sync.
     NoChangeSync {
@@ -40,11 +40,13 @@ impl fmt::Display for FileDownloadStateDiff {
                 "resource does not exist on server; locally `{}` exists, but ensure will not delete it",
                 path.display()
             ),
-            Self::NoChangeNotExists { path } => write!(
-                f,
-                "resource does not exist on server, and `{}` does not exist locally",
-                path.display()
-            ),
+            Self::NoChangeNotExists { path } => {
+                write!(f, "resource does not exist on server",)?;
+                if let Some(path) = path {
+                    write!(f, ", and `{}` does not exist locally", path.display())?;
+                }
+                Ok(())
+            }
             Self::NoChangeSync { path } => write!(f, "`{}` in sync with server", path.display()),
             Self::Change {
                 path,

@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use derivative::Derivative;
+use peace::params::Params;
 use serde::{Deserialize, Serialize};
 
 use crate::ShCmd;
@@ -14,7 +15,7 @@ use crate::ShCmd;
 ///
 /// * `Id`: A zero-sized type used to distinguish different command execution
 ///   parameters from each other.
-#[derive(Derivative, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Derivative, Params, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
 pub struct ShCmdParams<Id> {
     /// Shell command to run to discover the clean state.

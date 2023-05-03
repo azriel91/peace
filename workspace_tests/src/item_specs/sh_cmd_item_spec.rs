@@ -129,12 +129,14 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
     CleanCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
     let state_clean = cmd_ctx
@@ -179,11 +181,14 @@ async fn state_current_returns_shell_command_current_state()
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 
-    let states_current = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_current,
+        errors: _,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let state_current = states_current
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItemSpec::ID)
         .unwrap();
@@ -224,11 +229,14 @@ async fn state_desired_returns_shell_command_desired_state()
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 
-    let states_desired = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: states_desired,
+        errors: _,
+    } = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
     let state_desired = states_desired
         .get::<State<TestFileCreationShCmdStateLogical, ShCmdExecutionRecord>, _>(
             &TestFileCreationShCmdItemSpec::ID,
@@ -270,7 +278,7 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 
@@ -309,13 +317,15 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command()
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 
     // Discover states current and desired
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Create the file
@@ -362,13 +372,15 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 
     // Discover states current and desired
-    let (states_current, states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Create the file
@@ -379,9 +391,19 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
 
     // Diff state after creation
     let SingleProfileSingleFlowView {
-        flow, resources, ..
+        flow,
+        params_specs,
+        resources,
+        ..
     } = cmd_ctx.view();
-    let state_diffs = DiffCmd::diff_any(flow, resources, &states_ensured, &states_desired).await?;
+    let state_diffs = DiffCmd::diff_any(
+        flow,
+        params_specs,
+        resources,
+        &states_ensured,
+        &states_desired,
+    )
+    .await?;
 
     let state_diff = state_diffs
         .get::<ShCmdStateDiff, _>(&TestFileCreationShCmdItemSpec::ID)
@@ -433,13 +455,15 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
         .with_flow(&flow)
         .with_item_spec_params::<ShCmdItemSpec<TestFileCreationShCmdItemSpec>>(
             TestFileCreationShCmdItemSpec::ID,
-            TestFileCreationShCmdItemSpec::params(),
+            TestFileCreationShCmdItemSpec::params().into(),
         )
         .await?;
 
     // Discover states current and desired
-    let (states_current, _states_desired) =
-        StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    let CmdOutcome {
+        value: (states_current, _states_desired),
+        errors: _,
+    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Create the file

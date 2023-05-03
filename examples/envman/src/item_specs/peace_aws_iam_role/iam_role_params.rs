@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use derivative::Derivative;
+use peace::params::Params;
 use serde::{Deserialize, Serialize};
 
 /// IamRole item parameters.
@@ -12,7 +13,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// * `Id`: A zero-sized type used to distinguish different instance profile
 ///   parameters from each other.
-#[derive(Derivative, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Derivative, Params, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
 pub struct IamRoleParams<Id> {
     /// Name for both the instance profile and role.
@@ -28,9 +29,8 @@ pub struct IamRoleParams<Id> {
     /// e.g. `/demo/`
     #[serde(default = "path_default")]
     path: String,
-    // TODO: Uncomment once referential values are implemented.
-    // /// Managed policy ARN to attach to the role.
-    // managed_policy_arn: String,
+    /// Managed policy ARN to attach to the role.
+    managed_policy_arn: String,
     /// Marker for unique instance profile parameters type.
     marker: PhantomData<Id>,
 }
@@ -40,14 +40,6 @@ fn path_default() -> String {
 }
 
 impl<Id> IamRoleParams<Id> {
-    pub fn new(name: String, path: String) -> Self {
-        Self {
-            name,
-            path,
-            marker: PhantomData,
-        }
-    }
-
     /// Returns the name for both the instance profile and role.
     ///
     /// Alphanumeric characters and `_+=,.@-` are allowed.
@@ -62,5 +54,10 @@ impl<Id> IamRoleParams<Id> {
     /// e.g. `/demo/`
     pub fn path(&self) -> &str {
         self.path.as_ref()
+    }
+
+    /// Returns the ARN of the managed policy to attach.
+    pub fn managed_policy_arn(&self) -> &str {
+        self.managed_policy_arn.as_ref()
     }
 }

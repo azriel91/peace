@@ -9,6 +9,7 @@ use peace_cmd::{
         SingleProfileSingleFlowView,
     },
 };
+use peace_params::ParamsSpecs;
 use peace_resources::{
     internal::StateDiffsMut,
     resources::ts::SetUp,
@@ -45,10 +46,13 @@ where
         let states_b = StatesDesiredReadCmd::exec(cmd_ctx).await?;
 
         let SingleProfileSingleFlowView {
-            flow, resources, ..
+            flow,
+            params_specs,
+            resources,
+            ..
         } = cmd_ctx.view();
 
-        Self::diff_any(flow, resources, &states_a, &states_b).await
+        Self::diff_any(flow, params_specs, resources, &states_a, &states_b).await
     }
 
     /// Returns the [`state_diff`]`s between the saved current states of two
@@ -70,12 +74,24 @@ where
     {
         let MultiProfileSingleFlowView {
             flow,
-            resources,
             profiles,
+            profile_to_params_specs,
             profile_to_states_saved,
+            resources,
             ..
         } = cmd_ctx.view();
 
+        let params_specs = profile_to_params_specs
+            .get(profile_a)
+            .or_else(|| profile_to_params_specs.get(profile_b));
+        let params_specs = if let Some(Some(params_specs)) = params_specs {
+            params_specs
+        } else {
+            Err(Error::ParamsSpecsNotDefinedForDiff {
+                profile_a: profile_a.clone(),
+                profile_b: profile_b.clone(),
+            })?
+        };
         let states_a = profile_to_states_saved
             .get(profile_a)
             .ok_or_else(|| {
@@ -107,7 +123,7 @@ where
                 Error::ProfileStatesCurrentNotDiscovered { profile }
             })?;
 
-        Self::diff_any(flow, resources, states_a, states_b).await
+        Self::diff_any(flow, params_specs, resources, states_a, states_b).await
     }
 
     /// Returns the [`state_diff`]` for each [`ItemSpec`].
@@ -120,6 +136,7 @@ where
     /// [`state_diff`]: peace_cfg::ItemSpec::state_diff
     pub async fn diff_any<StatesTsA, StatesTsB>(
         flow: &Flow<E>,
+        params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         states_a: &States<StatesTsA>,
         states_b: &States<StatesTsB>,
@@ -131,7 +148,7 @@ where
                 .map(Result::<_, E>::Ok)
                 .try_filter_map(|item_spec| async move {
                     let state_diff_opt = item_spec
-                        .state_diff_exec(resources, states_a, states_b)
+                        .state_diff_exec(params_specs, resources, states_a, states_b)
                         .await?;
 
                     Ok(state_diff_opt.map(|state_diff| (item_spec.id().clone(), state_diff)))

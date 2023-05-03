@@ -2,10 +2,7 @@ use std::marker::PhantomData;
 
 use peace::cfg::State;
 
-use crate::{
-    ShCmdData, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdParams, ShCmdState,
-    ShCmdStateDiff,
-};
+use crate::{ShCmd, ShCmdError, ShCmdExecutionRecord, ShCmdExecutor, ShCmdState, ShCmdStateDiff};
 
 /// Runs a shell command to obtain the `ShCmd` diff.
 #[derive(Debug)]
@@ -16,8 +13,7 @@ where
     Id: Send + Sync + 'static,
 {
     pub async fn state_diff(
-        params: &ShCmdParams<Id>,
-        _data: ShCmdData<'_, Id>,
+        state_diff_sh_cmd: ShCmd,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
     ) -> Result<ShCmdStateDiff, ShCmdError> {
@@ -29,9 +25,7 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_diff_sh_cmd = params
-            .state_diff_sh_cmd()
-            .clone()
+        let state_diff_sh_cmd = state_diff_sh_cmd
             .arg(state_current_arg)
             .arg(state_desired_arg);
         ShCmdExecutor::<Id>::exec(&state_diff_sh_cmd)

@@ -235,7 +235,7 @@ fn field_names(fields: &Punctuated<Field, Comma>) -> FieldNames<'_> {
 
 fn is_phantom_data(field: &Field) -> bool {
     matches!(&field.ty, Type::Path(TypePath { path, .. })
-                if matches!(path.segments.last(), Some(segment) if segment.ident == "PhantomData"))
+        if matches!(path.segments.last(), Some(segment) if segment.ident == "PhantomData"))
 }
 
 #[derive(Debug, Default)]
