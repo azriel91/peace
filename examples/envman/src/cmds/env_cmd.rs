@@ -1,11 +1,13 @@
 use futures::future::LocalBoxFuture;
 use peace::{
-    cfg::{app_name, AppName, Profile},
+    cfg::{app_name, item_spec_id, state::Generated, AppName, ItemSpecId, Profile},
     cmd::{
         ctx::CmdCtx,
         scopes::{MultiProfileSingleFlow, SingleProfileSingleFlowView},
     },
+    data::marker::Current,
     fmt::presentln,
+    params::ValueSpec,
     resources::resources::ts::SetUp,
     rt_model::{
         output::OutputWrite,
@@ -16,7 +18,11 @@ use peace::{
 
 use crate::{
     flows::EnvDeployFlow,
-    model::{EnvManError, EnvType, ProfileParamsKey, WorkspaceParamsKey},
+    item_specs::{
+        peace_aws_iam_policy::IamPolicyState,
+        peace_aws_iam_role::{IamRoleItemSpec, IamRoleParamsSpec},
+    },
+    model::{EnvManError, EnvType, ProfileParamsKey, WebAppFileId, WorkspaceParamsKey},
     rt_model::EnvManCmdCtx,
 };
 
@@ -39,7 +45,24 @@ impl EnvCmd {
             &'fn_once mut EnvManCmdCtx<'_, O, SetUp>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
     {
-        cmd_ctx_init!(output, cmd_ctx);
+        let path = String::from("/");
+        let iam_role_params_spec = IamRoleParamsSpec::<WebAppFileId>::new(
+            ValueSpec::from_map(|profile: &Profile| Some(profile.to_string())),
+            ValueSpec::Value(path),
+            ValueSpec::from_map(|iam_policy_state: &Current<IamPolicyState>| {
+                if let Some(IamPolicyState::Some {
+                    policy_id_arn_version: Generated::Value(policy_id_arn_version),
+                    ..
+                }) = iam_policy_state.0.as_ref()
+                {
+                    Some(policy_id_arn_version.arn().to_string())
+                } else {
+                    None
+                }
+            }),
+        );
+
+        cmd_ctx_init!(output, cmd_ctx, iam_role_params_spec);
 
         if profile_print {
             Self::profile_print(&mut cmd_ctx).await?;
@@ -123,7 +146,7 @@ impl EnvCmd {
 }
 
 macro_rules! cmd_ctx_init {
-    ($output:ident, $cmd_ctx:ident) => {
+    ($output:ident, $cmd_ctx:ident, $iam_role_params_spec:ident) => {
         let workspace = Workspace::new(
             app_name!(),
             #[cfg(not(target_arch = "wasm32"))]
@@ -142,6 +165,10 @@ macro_rules! cmd_ctx_init {
             cmd_ctx_builder
                 .with_profile_from_workspace_param(&profile_key)
                 .with_flow(&flow)
+                .with_item_spec_params::<IamRoleItemSpec<WebAppFileId>>(
+                    item_spec_id!("iam_role"),
+                    $iam_role_params_spec,
+                )
                 .await?
         };
     };

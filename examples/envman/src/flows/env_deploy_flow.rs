@@ -1,7 +1,10 @@
 use std::path::PathBuf;
 
 use peace::{
-    cfg::{app_name, flow_id, item_spec_id, AppName, FlowId, ItemSpecId, Profile},
+    cfg::{
+        app_name, flow_id, item_spec_id, state::Generated, AppName, FlowId, ItemSpecId, Profile,
+    },
+    data::marker::Current,
     params::ValueSpec,
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
@@ -14,7 +17,7 @@ use url::Url;
 
 use crate::{
     item_specs::{
-        peace_aws_iam_policy::{model::PolicyIdArnVersion, IamPolicyItemSpec, IamPolicyParamsSpec},
+        peace_aws_iam_policy::{IamPolicyItemSpec, IamPolicyParamsSpec, IamPolicyState},
         peace_aws_iam_role::{IamRoleItemSpec, IamRoleParamsSpec},
         peace_aws_instance_profile::{InstanceProfileItemSpec, InstanceProfileParamsSpec},
         peace_aws_s3_bucket::{S3BucketItemSpec, S3BucketParamsSpec},
@@ -153,8 +156,16 @@ impl EnvDeployFlow {
         let iam_role_params_spec = IamRoleParamsSpec::<WebAppFileId>::new(
             ValueSpec::Value(iam_role_name),
             ValueSpec::Value(path.clone()),
-            ValueSpec::from_map(|policy_id_arn_version: &PolicyIdArnVersion| {
-                policy_id_arn_version.arn().to_string()
+            ValueSpec::from_map(|iam_policy_state: &Current<IamPolicyState>| {
+                if let Some(IamPolicyState::Some {
+                    policy_id_arn_version: Generated::Value(policy_id_arn_version),
+                    ..
+                }) = iam_policy_state.0.as_ref()
+                {
+                    Some(policy_id_arn_version.arn().to_string())
+                } else {
+                    None
+                }
             }),
         );
         let instance_profile_params_spec = InstanceProfileParamsSpec::<WebAppFileId>::new(
