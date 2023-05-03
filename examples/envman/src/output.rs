@@ -22,31 +22,21 @@ where
         let report_handler = GraphicalReportHandler::new().without_cause_chain();
         let mut err_buffer = String::new();
         for error in errors.iter() {
-            #[rustfmt::skip]
-            let diagnostic: &dyn Diagnostic = match error {
-                // EnvManError::EnvManUrlBuild { url_candidate, error } => todo!(),
-                // EnvManError::EnvTypeParseError(_) => todo!(),
-                // EnvManError::ProfileSwitchToNonExistent { profile_to_switch_to, app_name } => todo!(),
-                // EnvManError::ProfileToCreateExists { profile_to_create, app_name } => todo!(),
+            let mut diagnostic_opt: Option<&dyn Diagnostic> = Some(error);
+            while let Some(diagnostic) = diagnostic_opt {
+                if diagnostic.help().is_some()
+                    || diagnostic.labels().is_some()
+                    || diagnostic.diagnostic_source().is_none()
+                {
+                    // Ignore failures when writing errors
+                    let (Ok(()) | Err(_)) =
+                        report_handler.render_report(&mut err_buffer, diagnostic);
+                    let (Ok(()) | Err(_)) = output.present(&err_buffer).await;
+                    let (Ok(()) | Err(_)) = output.present("\n").await;
+                }
 
-                EnvManError::PeaceItemSpecFileDownload(e) => e,
-                EnvManError::PeaceItemSpecTarX(e) => e,
-                EnvManError::InstanceProfileItemSpec(e) => e,
-                EnvManError::IamPolicyItemSpec(e) => e,
-                EnvManError::IamRoleItemSpec(e) => e,
-                EnvManError::S3BucketItemSpec(e) => e,
-                EnvManError::S3ObjectItemSpec(e) => e,
-                EnvManError::PeaceRtError(e) => e,
-                // EnvManError::WouldCycleError(_) => todo!(),
-                // EnvManError::TokioRuntimeInit(_) => todo!(),
-
-                _ => error,
-            };
-
-            // Ignore failures when writing errors
-            let (Ok(()) | Err(_)) = report_handler.render_report(&mut err_buffer, diagnostic);
-            let (Ok(()) | Err(_)) = output.present(&err_buffer).await;
-            let (Ok(()) | Err(_)) = output.present("\n").await;
+                diagnostic_opt = diagnostic.diagnostic_source();
+            }
 
             err_buffer.clear();
         }
@@ -88,33 +78,25 @@ where
         let report_handler = GraphicalReportHandler::new().without_cause_chain();
         let mut err_buffer = String::new();
         for (item_spec_id, error) in errors.iter() {
-            #[rustfmt::skip]
-            let diagnostic: &dyn Diagnostic = match error {
-                // EnvManError::EnvManUrlBuild { url_candidate, error } => todo!(),
-                // EnvManError::EnvTypeParseError(_) => todo!(),
-                // EnvManError::ProfileSwitchToNonExistent { profile_to_switch_to, app_name } => todo!(),
-                // EnvManError::ProfileToCreateExists { profile_to_create, app_name } => todo!(),
-
-                EnvManError::PeaceItemSpecFileDownload(e) => e,
-                EnvManError::PeaceItemSpecTarX(e) => e,
-                EnvManError::InstanceProfileItemSpec(e) => e,
-                EnvManError::IamPolicyItemSpec(e) => e,
-                EnvManError::IamRoleItemSpec(e) => e,
-                EnvManError::S3BucketItemSpec(e) => e,
-                EnvManError::S3ObjectItemSpec(e) => e,
-                EnvManError::PeaceRtError(e) => e,
-                // EnvManError::WouldCycleError(_) => todo!(),
-                // EnvManError::TokioRuntimeInit(_) => todo!(),
-
-                _ => error,
-            };
-
             // Ignore failures when writing errors
             let (Ok(()) | Err(_)) = output.present(item_spec_id).await;
             let (Ok(()) | Err(_)) = output.present(":\n").await;
-            let (Ok(()) | Err(_)) = report_handler.render_report(&mut err_buffer, diagnostic);
-            let (Ok(()) | Err(_)) = output.present(&err_buffer).await;
-            let (Ok(()) | Err(_)) = output.present("\n").await;
+
+            let mut diagnostic_opt: Option<&dyn Diagnostic> = Some(error);
+            while let Some(diagnostic) = diagnostic_opt {
+                if diagnostic.help().is_some()
+                    || diagnostic.labels().is_some()
+                    || diagnostic.diagnostic_source().is_none()
+                {
+                    // Ignore failures when writing errors
+                    let (Ok(()) | Err(_)) =
+                        report_handler.render_report(&mut err_buffer, diagnostic);
+                    let (Ok(()) | Err(_)) = output.present(&err_buffer).await;
+                    let (Ok(()) | Err(_)) = output.present("\n").await;
+                }
+
+                diagnostic_opt = diagnostic.diagnostic_source();
+            }
 
             err_buffer.clear();
         }
