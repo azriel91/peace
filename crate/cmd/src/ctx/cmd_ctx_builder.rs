@@ -304,9 +304,15 @@ where
             // spec are detected.
             let params_spec_provided = params_specs_provided.remove_entry(item_spec_id);
             let params_spec_stored = params_specs_stored.remove_entry(item_spec_id);
-            if let Some((item_spec_id, params_boxed)) = params_spec_provided.or(params_spec_stored)
+            if let Some((item_spec_id, params_spec_boxed)) =
+                params_spec_provided.or(params_spec_stored)
             {
-                params_specs.insert_raw(item_spec_id, params_boxed);
+                // `ValueSpec::FromMap`s will be present in `params_spec_stored`, but will not
+                // be valid mapping functions as they cannot be serialized / deserialized.
+
+                // TODO: raise error.
+
+                params_specs.insert_raw(item_spec_id, params_spec_boxed);
             } else {
                 // Collect item specs that do not have parameters.
                 item_spec_ids_with_no_params_specs.push(item_spec_id.clone());
@@ -320,10 +326,10 @@ where
         item_spec_graph.iter_insertion().for_each(|item_spec_rt| {
             let item_spec_id = item_spec_rt.id();
 
-            if let Some((item_spec_id, params_boxed)) =
+            if let Some((item_spec_id, params_spec_boxed)) =
                 params_specs_provided.remove_entry(item_spec_id)
             {
-                params_specs.insert_raw(item_spec_id, params_boxed);
+                params_specs.insert_raw(item_spec_id, params_spec_boxed);
             } else {
                 // Collect item specs that do not have parameters.
                 item_spec_ids_with_no_params_specs.push(item_spec_id.clone());
