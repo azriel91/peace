@@ -232,7 +232,7 @@ where
         Ok(state_diff)
     }
 
-    async fn apply_op_check(
+    async fn apply_check(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
@@ -259,7 +259,7 @@ where
         }
     }
 
-    async fn apply_op_exec_dry(
+    async fn apply_exec_dry(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
@@ -294,7 +294,7 @@ where
         Ok(state_ensured_dry)
     }
 
-    async fn apply_op_exec(
+    async fn apply_exec(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
@@ -566,7 +566,7 @@ where
         };
 
         let state_applied = match self
-            .apply_op_check(
+            .apply_check(
                 params_specs,
                 resources,
                 state_current,
@@ -622,7 +622,7 @@ where
             #[cfg(not(feature = "output_progress"))]
             ApplyCheck::ExecRequired => {
                 let state_applied_dry = self
-                    .apply_op_exec_dry(
+                    .apply_exec_dry(
                         params_specs,
                         resources,
                         fn_ctx,
@@ -637,7 +637,7 @@ where
             #[cfg(feature = "output_progress")]
             ApplyCheck::ExecRequired { progress_limit: _ } => {
                 let state_applied_dry = self
-                    .apply_op_exec_dry(
+                    .apply_exec_dry(
                         params_specs,
                         resources,
                         fn_ctx,
@@ -705,7 +705,7 @@ where
         };
 
         let state_applied = match self
-            .apply_op_check(
+            .apply_check(
                 params_specs,
                 resources,
                 state_current,
@@ -761,7 +761,7 @@ where
             #[cfg(not(feature = "output_progress"))]
             ApplyCheck::ExecRequired => {
                 let state_applied_next = self
-                    .apply_op_exec(
+                    .apply_exec(
                         params_specs,
                         resources,
                         fn_ctx,
@@ -776,7 +776,7 @@ where
             #[cfg(feature = "output_progress")]
             ApplyCheck::ExecRequired { progress_limit: _ } => {
                 let state_applied_next = self
-                    .apply_op_exec(
+                    .apply_exec(
                         params_specs,
                         resources,
                         fn_ctx,
