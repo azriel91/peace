@@ -50,15 +50,13 @@ impl EnvCmd {
             ValueSpec::from_map(|profile: &Profile| Some(profile.to_string())),
             ValueSpec::Value(path),
             ValueSpec::from_map(|iam_policy_state: &Current<IamPolicyState>| {
-                if let Some(IamPolicyState::Some {
+                let IamPolicyState::Some {
                     policy_id_arn_version: Generated::Value(policy_id_arn_version),
                     ..
-                }) = iam_policy_state.0.as_ref()
-                {
-                    Some(policy_id_arn_version.arn().to_string())
-                } else {
-                    None
-                }
+                } = iam_policy_state.as_ref()? else {
+                    return None;
+                };
+                Some(policy_id_arn_version.arn().to_string())
             }),
         );
 

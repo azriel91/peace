@@ -148,10 +148,6 @@ impl ProfileInitCmd {
         };
 
         let states_discover_outcome = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-        let CmdOutcome {
-            value: (_states_current, _states_desired),
-            errors,
-        } = &states_discover_outcome;
         let SingleProfileSingleFlowView { output, .. } = cmd_ctx.view();
 
         if states_discover_outcome.is_ok() {
@@ -166,7 +162,8 @@ impl ProfileInitCmd {
                 ]
             );
         } else {
-            crate::output::item_spec_errors_present(output, errors).await?;
+            crate::output::item_spec_errors_present(output, &states_discover_outcome.errors)
+                .await?;
         }
 
         Ok(())
