@@ -6,7 +6,7 @@ use peace::{
     },
     fmt::{presentable::CodeInline, presentln},
     rt::cmds::StatesDiscoverCmd,
-    rt_model::{outcomes::CmdOutcome, output::OutputWrite, Workspace, WorkspaceSpec},
+    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
 use peace_item_specs::{file_download::FileDownloadItemSpec, tar_x::TarXItemSpec};
 use semver::Version;
