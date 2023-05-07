@@ -45,10 +45,20 @@ impl EnvCmd {
             &'fn_once mut EnvManCmdCtx<'_, O, SetUp>,
         ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
     {
-        let path = String::from("/");
+        let workspace = Workspace::new(
+            app_name!(),
+            #[cfg(not(target_arch = "wasm32"))]
+            WorkspaceSpec::WorkingDir,
+            #[cfg(target_arch = "wasm32")]
+            WorkspaceSpec::SessionStorage,
+        )?;
+        let flow = EnvDeployFlow::flow().await?;
+        let profile_key = WorkspaceParamsKey::Profile;
+
+        let iam_role_path = String::from("/");
         let iam_role_params_spec = IamRoleParamsSpec::<WebAppFileId>::new(
             ValueSpec::from_map(|profile: &Profile| Some(profile.to_string())),
-            ValueSpec::Value(path),
+            ValueSpec::Value(iam_role_path),
             ValueSpec::from_map(|iam_policy_state: &Current<IamPolicyState>| {
                 let IamPolicyState::Some {
                     policy_id_arn_version: Generated::Value(policy_id_arn_version),
@@ -60,7 +70,20 @@ impl EnvCmd {
             }),
         );
 
-        cmd_ctx_init!(output, cmd_ctx, iam_role_params_spec);
+        let mut cmd_ctx = {
+            let cmd_ctx_builder =
+                CmdCtx::builder_single_profile_single_flow::<EnvManError, _>(output, &workspace);
+            crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
+
+            cmd_ctx_builder
+                .with_profile_from_workspace_param(&profile_key)
+                .with_flow(&flow)
+                .with_item_spec_params::<IamRoleItemSpec<WebAppFileId>>(
+                    item_spec_id!("iam_role"),
+                    iam_role_params_spec,
+                )
+                .await?
+        };
 
         if profile_print {
             Self::profile_print(&mut cmd_ctx).await?;
@@ -142,34 +165,3 @@ impl EnvCmd {
         Ok(())
     }
 }
-
-macro_rules! cmd_ctx_init {
-    ($output:ident, $cmd_ctx:ident, $iam_role_params_spec:ident) => {
-        let workspace = Workspace::new(
-            app_name!(),
-            #[cfg(not(target_arch = "wasm32"))]
-            WorkspaceSpec::WorkingDir,
-            #[cfg(target_arch = "wasm32")]
-            WorkspaceSpec::SessionStorage,
-        )?;
-        let flow = EnvDeployFlow::flow().await?;
-        let profile_key = WorkspaceParamsKey::Profile;
-
-        let mut $cmd_ctx = {
-            let cmd_ctx_builder =
-                CmdCtx::builder_single_profile_single_flow::<EnvManError, _>($output, &workspace);
-            crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
-
-            cmd_ctx_builder
-                .with_profile_from_workspace_param(&profile_key)
-                .with_flow(&flow)
-                .with_item_spec_params::<IamRoleItemSpec<WebAppFileId>>(
-                    item_spec_id!("iam_role"),
-                    $iam_role_params_spec,
-                )
-                .await?
-        };
-    };
-}
-
-use cmd_ctx_init;
