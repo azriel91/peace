@@ -1,0 +1,11 @@
+.column_half {
+    display: inline-block;
+    width: 50%;
+    vertical-align: top;
+}
+
+hr {
+    border-top-width: 2px;
+    border-bottom-width: 0px;
+    border-color: #7f7f7f7f;
+}
