@@ -534,6 +534,10 @@ where
                     });
             }
             CliProgressFormat::Outcome => {
+                cmd_progress_tracker
+                    .multi_progress()
+                    .set_draw_target(progress_draw_target);
+
                 let progress_style = ProgressStyle::with_template("").unwrap_or_else(|error| {
                     panic!("`ProgressStyle` template was invalid. Template: `\"\"`. Error: {error}")
                 });
