@@ -33,10 +33,19 @@ pub fn fields_deconstruct(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
 /// Returns a comma separated list of deconstructed fields, deconstructed as
 /// `field: Some(field)`.
 ///
-/// Tuple fields are returned as `_n`, and marker fields are returned as
+/// Tuple fields are returned as `Some(_n)`, and marker fields are returned as
 /// `::std::marker::PhantomData`.
 pub fn fields_deconstruct_some(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
     fields_deconstruct_retain_map(fields, false, Some(|field_name| quote!(Some(#field_name))))
+}
+
+/// Returns a comma separated list of deconstructed fields, deconstructed as
+/// `field: None`.
+///
+/// Tuple fields are returned as `None`, and marker fields are returned as
+/// `::std::marker::PhantomData`.
+pub fn fields_deconstruct_none(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
+    fields_deconstruct_retain_map(fields, false, Some(|_field_name| quote!(None)))
 }
 
 pub fn fields_deconstruct_retain(

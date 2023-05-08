@@ -177,6 +177,6 @@ fn variant_fields_map_from_value(
                 #params_partial_name::#variant_name(#(#fields_deconstructed_some),*)
             }
         }
-        Fields::Unit => quote!(Ok(Self::#variant_name)),
+        Fields::Unit => quote!(Self::#variant_name),
     }
 }

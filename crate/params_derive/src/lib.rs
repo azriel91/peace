@@ -10,24 +10,25 @@ extern crate syn;
 use proc_macro::TokenStream;
 
 use syn::{
-    Attribute, DeriveInput, Generics, Ident, ImplGenerics, Path, TypeGenerics, WhereClause,
-    WherePredicate,
+    DeriveInput, Generics, Ident, ImplGenerics, Path, TypeGenerics, WhereClause, WherePredicate,
 };
 
 use crate::{
     fields_map::{fields_to_optional, fields_to_value_spec},
+    impl_default::impl_default,
     impl_from_params_for_params_field_wise::impl_from_params_for_params_field_wise,
     impl_from_params_for_params_partial::impl_from_params_for_params_partial,
-    impl_params_spec_resolve_field_wise::impl_params_spec_resolve_field_wise,
     impl_try_from_params_partial_for_params::impl_try_from_params_partial_for_params,
+    impl_value_spec_rt_for_field_wise::impl_value_spec_rt_for_field_wise,
     type_gen::type_gen,
 };
 
 mod fields_map;
+mod impl_default;
 mod impl_from_params_for_params_field_wise;
 mod impl_from_params_for_params_partial;
-mod impl_params_spec_resolve_field_wise;
 mod impl_try_from_params_partial_for_params;
+mod impl_value_spec_rt_for_field_wise;
 mod type_gen;
 mod util;
 
@@ -46,8 +47,18 @@ mod util;
 ///
 /// Maybe we should also generate a `SpecBuilder` -- see commit `10f63611` which
 /// removed builder generation.
-#[proc_macro_derive(Params, attributes(peace_internal))]
+#[proc_macro_derive(Params, attributes(peace_internal, crate_internal, default))]
 pub fn params_derive(input: TokenStream) -> TokenStream {
+    let ast = syn::parse(input)
+        .expect("`Params` derive: Failed to parse item as struct, enum, or union.");
+
+    let gen = impl_params(&ast);
+
+    gen.into()
+}
+
+#[proc_macro]
+pub fn params_impl(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input)
         .expect("`Params` derive: Failed to parse item as struct, enum, or union.");
 
@@ -62,8 +73,15 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
     let (peace_params_path, peace_resources_path): (Path, Path) = ast
         .attrs
         .iter()
-        .find(peace_internal)
-        .map(|_| (parse_quote!(peace_params), parse_quote!(peace_resources)))
+        .find_map(|attr| {
+            if attr.path().is_ident("peace_internal") {
+                Some((parse_quote!(peace_params), parse_quote!(peace_resources)))
+            } else if attr.path().is_ident("crate_internal") {
+                Some((parse_quote!(crate), parse_quote!(peace_resources)))
+            } else {
+                None
+            }
+        })
         .unwrap_or_else(|| (parse_quote!(peace::params), parse_quote!(peace::resources)));
 
     let mut generics = ast.generics.clone();
@@ -77,6 +95,9 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&params_partial_name, ast.ident.span())
     };
 
+    let params_partial = params_partial(ast, &generics_split, params_name, &params_partial_name);
+    let (impl_generics, ty_generics, where_clause) = &generics_split;
+
     // MyParams -> MyParamsFieldWise
     let params_field_wise_name = {
         let mut params_field_wise_name = ast.ident.to_string();
@@ -84,7 +105,6 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&params_field_wise_name, ast.ident.span())
     };
 
-    let params_partial = params_partial(ast, &generics_split, params_name, &params_partial_name);
     let params_field_wise = params_field_wise(
         ast,
         &generics_split,
@@ -95,25 +115,20 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
         &params_partial_name,
     );
 
-    let (impl_generics, ty_generics, where_clause) = generics_split;
-
     quote! {
         impl #impl_generics #peace_params_path::Params
         for #params_name #ty_generics
         #where_clause
         {
-            type Spec = #params_field_wise_name #ty_generics;
+            type Spec = #peace_params_path::ValueSpec<#params_name #ty_generics>;
             type Partial = #params_partial_name #ty_generics;
+            type FieldWiseSpec = #params_field_wise_name #ty_generics;
         }
 
         #params_field_wise
 
         #params_partial
     }
-}
-
-fn peace_internal(attr: &&Attribute) -> bool {
-    attr.path().is_ident("peace_internal")
 }
 
 /// Adds a `Send + Sync + 'static` bound on each of the type parameters.
@@ -179,6 +194,8 @@ fn params_partial(
         params_partial_name,
     ));
 
+    params_partial.extend(impl_default(ast, generics_split, params_partial_name));
+
     params_partial.extend(impl_from_params_for_params_partial(
         ast,
         generics_split,
@@ -222,7 +239,7 @@ fn params_field_wise(
         ],
     );
 
-    params_field_wise.extend(impl_params_spec_resolve_field_wise(
+    params_field_wise.extend(impl_value_spec_rt_for_field_wise(
         ast,
         generics_split,
         peace_params_path,

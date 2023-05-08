@@ -28,9 +28,9 @@
 //! :                            :   '-------------------'        :    '               :
 //! :                            :                                :  proc macro        :
 //! :                            : .----------------------------. :  generates         :
-//! :                            : | * MyParamsSpec             | :    .               :
-//! :                            : | * MyParamsSpecPartial      | :    |               :
-//! :                            : | * MyParamsSpecBuilder      | : <--'               :
+//! :                            : | * MyParamsFieldWise        | :    .               :
+//! :                            : | * MyParamsPartial          | :    |               :
+//! :                            : | * MyParamsFieldWiseBuilder | : <--'               :
 //! :                            : | * impl Params for MyParams | :                    :
 //! :                            : '----------------------------' :                    :
 //! :                            :                                :                    :

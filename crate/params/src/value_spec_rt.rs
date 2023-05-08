@@ -26,7 +26,7 @@ pub trait ValueSpecRt {
     fn resolve(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: ValueResolutionCtx,
+        value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Self::ValueType, ParamsResolveError>;
     /// Resolves the values to construct the item spec `Params`.
     ///
@@ -34,6 +34,6 @@ pub trait ValueSpecRt {
     fn resolve_partial(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: ValueResolutionCtx,
+        value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Self::Partial, ParamsResolveError>;
 }

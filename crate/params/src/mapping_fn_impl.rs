@@ -54,7 +54,7 @@ where
     pub fn map(
         &self,
         resources: &Resources<SetUp>,
-        mut value_resolution_ctx: ValueResolutionCtx,
+        mut value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
         if let Some(field_name) = self.field_name.as_deref() {
             value_resolution_ctx.push(FieldNameAndType::new(
@@ -77,17 +77,17 @@ where
         };
         match resources.try_borrow::<U>() {
             Ok(u) => fn_map(&u).ok_or(ParamsResolveError::FromMap {
-                value_resolution_ctx,
+                value_resolution_ctx: value_resolution_ctx.clone(),
                 from_type_name: std::any::type_name::<U>(),
             }),
             Err(borrow_fail) => match borrow_fail {
                 BorrowFail::ValueNotFound => Err(ParamsResolveError::FromMap {
-                    value_resolution_ctx,
+                    value_resolution_ctx: value_resolution_ctx.clone(),
                     from_type_name: std::any::type_name::<U>(),
                 }),
                 BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
                     Err(ParamsResolveError::FromMapBorrowConflict {
-                        value_resolution_ctx,
+                        value_resolution_ctx: value_resolution_ctx.clone(),
                         from_type_name: std::any::type_name::<U>(),
                     })
                 }
@@ -98,7 +98,7 @@ where
     pub fn try_map(
         &self,
         resources: &Resources<SetUp>,
-        mut value_resolution_ctx: ValueResolutionCtx,
+        mut value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Option<T>, ParamsResolveError> {
         if let Some(field_name) = self.field_name.as_deref() {
             value_resolution_ctx.push(FieldNameAndType::new(
@@ -125,7 +125,7 @@ where
                 BorrowFail::ValueNotFound => Ok(None),
                 BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
                     Err(ParamsResolveError::FromMapBorrowConflict {
-                        value_resolution_ctx,
+                        value_resolution_ctx: value_resolution_ctx.clone(),
                         from_type_name: std::any::type_name::<U>(),
                     })
                 }
@@ -166,7 +166,7 @@ where
     fn map(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: ValueResolutionCtx,
+        value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<<Self as MappingFn>::Output, ParamsResolveError> {
         MappingFnImpl::map(self, resources, value_resolution_ctx)
     }
@@ -174,7 +174,7 @@ where
     fn try_map(
         &self,
         resources: &Resources<SetUp>,
-        value_resolution_ctx: ValueResolutionCtx,
+        value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Option<<Self as MappingFn>::Output>, ParamsResolveError> {
         MappingFnImpl::try_map(self, resources, value_resolution_ctx)
     }

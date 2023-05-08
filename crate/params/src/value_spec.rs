@@ -4,7 +4,8 @@ use peace_resources::BorrowFail;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
-    MappingFn, MappingFnImpl, Params, ParamsResolveError, ValueResolutionCtx, ValueSpecRt,
+    FieldNameAndType, MappingFn, MappingFnImpl, Params, ParamsResolveError, ValueResolutionCtx,
+    ValueSpecRt,
 };
 
 /// How to populate a field's value in an item spec's params.
@@ -122,7 +123,7 @@ where
     fn resolve(
         &self,
         resources: &peace_resources::Resources<peace_resources::resources::ts::SetUp>,
-        value_resolution_ctx: ValueResolutionCtx,
+        value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Self::ValueType, crate::ParamsResolveError> {
         match self {
             ValueSpec::Value(t) => Ok(t.clone()),
@@ -130,11 +131,11 @@ where
                 Ok(t) => Ok((&*t).clone()),
                 Err(borrow_fail) => match borrow_fail {
                     BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
-                        value_resolution_ctx,
+                        value_resolution_ctx: value_resolution_ctx.clone(),
                     }),
                     BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
                         Err(ParamsResolveError::FromBorrowConflict {
-                            value_resolution_ctx,
+                            value_resolution_ctx: value_resolution_ctx.clone(),
                         })
                     }
                 },
@@ -149,7 +150,7 @@ where
     fn resolve_partial(
         &self,
         resources: &peace_resources::Resources<peace_resources::resources::ts::SetUp>,
-        value_resolution_ctx: ValueResolutionCtx,
+        value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Self::Partial, crate::ParamsResolveError> {
         match self {
             ValueSpec::Value(t) => Ok(T::Partial::from((&*t).clone())),
@@ -157,11 +158,11 @@ where
                 Ok(t) => Ok(T::Partial::from((&*t).clone())),
                 Err(borrow_fail) => match borrow_fail {
                     BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
-                        value_resolution_ctx,
+                        value_resolution_ctx: value_resolution_ctx.clone(),
                     }),
                     BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
                         Err(ParamsResolveError::FromBorrowConflict {
-                            value_resolution_ctx,
+                            value_resolution_ctx: value_resolution_ctx.clone(),
                         })
                     }
                 },

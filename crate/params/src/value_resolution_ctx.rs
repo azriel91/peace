@@ -44,6 +44,11 @@ impl ValueResolutionCtx {
     pub fn push(&mut self, field_name_and_type: FieldNameAndType) {
         self.resolution_chain.push(field_name_and_type);
     }
+
+    /// Removes a field name and type from the resolution chain.
+    pub fn pop(&mut self) {
+        self.resolution_chain.pop();
+    }
 }
 
 impl fmt::Display for ValueResolutionCtx {
