@@ -3,7 +3,7 @@ use peace::{
         app_name, flow_id, item_spec_id, profile, AppName, FlowId, ItemSpec, ItemSpecId, Profile,
     },
     cmd::ctx::CmdCtx,
-    params::{Params, ParamsSpec, ValueSpec},
+    params::{Params, ParamsSpecRt, ValueSpec},
     resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
     rt_model::{Flow, ItemSpecGraphBuilder},
 };

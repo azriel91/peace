@@ -6,7 +6,7 @@ use peace::{
     },
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
     data::Data,
-    params::{Params, ParamsSpec},
+    params::{Params, ParamsSpecRt},
     resources::{
         paths::{FlowDir, ProfileDir},
         states::StatesSaved,

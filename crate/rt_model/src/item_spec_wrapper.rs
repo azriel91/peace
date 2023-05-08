@@ -10,7 +10,7 @@ use peace_data::{
     marker::{ApplyDry, Clean, Current, Desired},
     Data,
 };
-use peace_params::{Params, ParamsSpec, ParamsSpecs};
+use peace_params::{Params, ParamsSpecRt, ParamsSpecs};
 use peace_resources::{
     resources::ts::{Empty, SetUp},
     states::StatesCurrent,

@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::ParamsSpec;
+use crate::ParamsSpecRt;
 
 /// Input parameters to an item spec.
 ///
@@ -12,7 +12,7 @@ pub trait Params {
     ///
     /// Specifies how to look up values for each field in the item spec's
     /// `Params`.
-    type Spec: ParamsSpec<Params = Self, Partial = Self::Partial>
+    type Spec: ParamsSpecRt<Params = Self, Partial = Self::Partial>
         + Clone
         + Debug
         + Serialize

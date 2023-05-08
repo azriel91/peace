@@ -10,7 +10,7 @@ use crate::ParamsResolveError;
 ///
 /// Nested parameters are not yet supported, though it is a possible improvement
 /// by adding a `#[nested_param]` attribute to a field.
-pub trait ParamsSpec {
+pub trait ParamsSpecRt {
     /// The `Params` type.
     type Params;
     /// The `Params` type, but with optional fields
