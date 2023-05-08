@@ -16,16 +16,18 @@ use syn::{
 
 use crate::{
     fields_map::{fields_to_optional, fields_to_value_spec},
-    impl_from_params_for_params_spec::impl_from_params_for_params_spec,
-    impl_params_spec_for_params_spec::impl_params_spec_for_params_spec,
-    impl_try_from_params_spec_for_params::impl_try_from_params_spec_for_params,
+    impl_from_params_for_params_field_wise::impl_from_params_for_params_field_wise,
+    impl_from_params_for_params_partial::impl_from_params_for_params_partial,
+    impl_params_spec_resolve_field_wise::impl_params_spec_resolve_field_wise,
+    impl_try_from_params_partial_for_params::impl_try_from_params_partial_for_params,
     type_gen::type_gen,
 };
 
 mod fields_map;
-mod impl_from_params_for_params_spec;
-mod impl_params_spec_for_params_spec;
-mod impl_try_from_params_spec_for_params;
+mod impl_from_params_for_params_field_wise;
+mod impl_from_params_for_params_partial;
+mod impl_params_spec_resolve_field_wise;
+mod impl_try_from_params_partial_for_params;
 mod type_gen;
 mod util;
 
@@ -45,16 +47,16 @@ mod util;
 /// Maybe we should also generate a `SpecBuilder` -- see commit `10f63611` which
 /// removed builder generation.
 #[proc_macro_derive(Params, attributes(peace_internal))]
-pub fn data_access(input: TokenStream) -> TokenStream {
+pub fn params_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input)
         .expect("`Params` derive: Failed to parse item as struct, enum, or union.");
 
-    let gen = impl_data_access(&ast);
+    let gen = impl_params(&ast);
 
     gen.into()
 }
 
-fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
+fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
     let params_name = &ast.ident;
 
     let (peace_params_path, peace_resources_path): (Path, Path) = ast
@@ -75,21 +77,21 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&params_partial_name, ast.ident.span())
     };
 
-    // MyParams -> MyParamsSpec
-    let params_spec_name = {
-        let mut params_spec_name = ast.ident.to_string();
-        params_spec_name.push_str("Spec");
-        Ident::new(&params_spec_name, ast.ident.span())
+    // MyParams -> MyParamsFieldWise
+    let params_field_wise_name = {
+        let mut params_field_wise_name = ast.ident.to_string();
+        params_field_wise_name.push_str("FieldWise");
+        Ident::new(&params_field_wise_name, ast.ident.span())
     };
 
     let params_partial = params_partial(ast, &generics_split, params_name, &params_partial_name);
-    let params_spec = params_spec(
+    let params_field_wise = params_field_wise(
         ast,
         &generics_split,
         &peace_params_path,
         &peace_resources_path,
         params_name,
-        &params_spec_name,
+        &params_field_wise_name,
         &params_partial_name,
     );
 
@@ -100,11 +102,11 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
         for #params_name #ty_generics
         #where_clause
         {
-            type Spec = #params_spec_name #ty_generics;
+            type Spec = #params_field_wise_name #ty_generics;
             type Partial = #params_partial_name #ty_generics;
         }
 
-        #params_spec
+        #params_field_wise
 
         #params_partial
     }
@@ -170,7 +172,14 @@ fn params_partial(
         ],
     );
 
-    params_partial.extend(impl_try_from_params_spec_for_params(
+    params_partial.extend(impl_try_from_params_partial_for_params(
+        ast,
+        generics_split,
+        params_name,
+        params_partial_name,
+    ));
+
+    params_partial.extend(impl_from_params_for_params_partial(
         ast,
         generics_split,
         params_name,
@@ -189,19 +198,19 @@ fn params_partial(
 ///     dest_path: peace_params::ValueSpec<PathBuf>,
 /// }
 /// ```
-fn params_spec(
+fn params_field_wise(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
     peace_params_path: &Path,
     peace_resources_path: &Path,
     params_name: &Ident,
-    params_spec_name: &Ident,
+    params_field_wise_name: &Ident,
     params_partial_name: &Ident,
 ) -> proc_macro2::TokenStream {
-    let mut params_spec = type_gen(
+    let mut params_field_wise = type_gen(
         ast,
         generics_split,
-        params_spec_name,
+        params_field_wise_name,
         |fields| fields_to_value_spec(fields, peace_params_path),
         &[
             parse_quote! {
@@ -213,23 +222,23 @@ fn params_spec(
         ],
     );
 
-    params_spec.extend(impl_params_spec_for_params_spec(
+    params_field_wise.extend(impl_params_spec_resolve_field_wise(
         ast,
         generics_split,
         peace_params_path,
         peace_resources_path,
         params_name,
-        params_spec_name,
+        params_field_wise_name,
         params_partial_name,
     ));
 
-    params_spec.extend(impl_from_params_for_params_spec(
+    params_field_wise.extend(impl_from_params_for_params_field_wise(
         ast,
         generics_split,
         peace_params_path,
         params_name,
-        params_spec_name,
+        params_field_wise_name,
     ));
 
-    params_spec
+    params_field_wise
 }

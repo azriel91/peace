@@ -6,15 +6,15 @@ use syn::{
 
 use crate::util::{fields_deconstruct, is_phantom_data, variant_match_arm};
 
-/// `impl ParamsSpec for ParamsSpec`, so that Peace can resolve the params type
+/// `impl ValueSpecRt for ParamsSpec`, so that Peace can resolve the params type
 /// as well as its values from the spec.
-pub fn impl_params_spec_for_params_spec(
+pub fn impl_params_spec_resolve_field_wise(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
     peace_params_path: &Path,
     peace_resources_path: &Path,
     params_name: &Ident,
-    params_spec_name: &Ident,
+    params_field_wise_name: &Ident,
     params_partial_name: &Ident,
 ) -> proc_macro2::TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics_split;
@@ -26,7 +26,7 @@ pub fn impl_params_spec_for_params_spec(
             struct_fields_resolve(
                 ty_generics,
                 params_name,
-                params_spec_name,
+                params_field_wise_name,
                 fields,
                 peace_params_path,
                 peace_resources_path,
@@ -39,7 +39,7 @@ pub fn impl_params_spec_for_params_spec(
             variants_resolve(
                 ty_generics,
                 params_name,
-                params_spec_name,
+                params_field_wise_name,
                 variants,
                 peace_params_path,
                 peace_resources_path,
@@ -52,7 +52,7 @@ pub fn impl_params_spec_for_params_spec(
             struct_fields_resolve(
                 ty_generics,
                 params_name,
-                params_spec_name,
+                params_field_wise_name,
                 &fields,
                 peace_params_path,
                 peace_resources_path,
@@ -68,7 +68,7 @@ pub fn impl_params_spec_for_params_spec(
             struct_fields_resolve(
                 ty_generics,
                 params_name,
-                params_spec_name,
+                params_field_wise_name,
                 fields,
                 peace_params_path,
                 peace_resources_path,
@@ -83,7 +83,7 @@ pub fn impl_params_spec_for_params_spec(
             variants_resolve(
                 ty_generics,
                 params_name,
-                params_spec_name,
+                params_field_wise_name,
                 variants,
                 peace_params_path,
                 peace_resources_path,
@@ -98,7 +98,7 @@ pub fn impl_params_spec_for_params_spec(
             struct_fields_resolve(
                 ty_generics,
                 params_name,
-                params_spec_name,
+                params_field_wise_name,
                 &fields,
                 peace_params_path,
                 peace_resources_path,
@@ -110,24 +110,20 @@ pub fn impl_params_spec_for_params_spec(
     };
 
     quote! {
-        impl #impl_generics #peace_params_path::ParamsSpec
-        for #params_spec_name #ty_generics
+        impl #impl_generics #params_field_wise_name #ty_generics
         #where_clause
         {
-            type Params = #params_name #ty_generics;
-            type Partial = #params_partial_name #ty_generics;
-
-            fn resolve(
+            pub fn resolve(
                 &self,
                 resources: &#peace_resources_path::Resources<#peace_resources_path::resources::ts::SetUp>
-            ) -> Result<Self::Params, #peace_params_path::ParamsResolveError> {
+            ) -> Result<#params_name #ty_generics, #peace_params_path::ParamsResolveError> {
                 #resolve_body
             }
 
-            fn resolve_partial(
+            pub fn resolve_partial(
                 &self,
                 resources: &#peace_resources_path::Resources<#peace_resources_path::resources::ts::SetUp>
-            ) -> Result<Self::Partial, #peace_params_path::ParamsResolveError> {
+            ) -> Result<#params_partial_name #ty_generics, #peace_params_path::ParamsResolveError> {
                 #resolve_partial_body
             }
         }
@@ -137,7 +133,7 @@ pub fn impl_params_spec_for_params_spec(
 fn struct_fields_resolve(
     ty_generics: &TypeGenerics,
     params_name: &Ident,
-    params_spec_name: &Ident,
+    params_field_wise_name: &Ident,
     fields: &Fields,
     peace_params_path: &Path,
     peace_resources_path: &Path,
@@ -159,7 +155,7 @@ fn struct_fields_resolve(
             // Generates:
             //
             // ```rust
-            // let #params_spec_name {
+            // let #params_field_wise_name {
             //     field_1,
             //     field_2,
             //     marker: PhantomData,
@@ -177,7 +173,7 @@ fn struct_fields_resolve(
             // ```
 
             quote! {
-                let #params_spec_name {
+                let #params_field_wise_name {
                     #(#fields_deconstructed),*
                 } = self;
 
@@ -202,7 +198,7 @@ fn struct_fields_resolve(
             // ```
 
             quote! {
-                let #params_spec_name(#(#fields_deconstructed),*) = self;
+                let #params_field_wise_name(#(#fields_deconstructed),*) = self;
 
                 #fields_resolution
 
@@ -217,7 +213,7 @@ fn struct_fields_resolve(
 fn variants_resolve(
     ty_generics: &TypeGenerics,
     params_name: &Ident,
-    params_spec_name: &Ident,
+    params_field_wise_name: &Ident,
     variants: &Punctuated<Variant, Token![,]>,
     peace_params_path: &Path,
     peace_resources_path: &Path,
@@ -257,7 +253,7 @@ fn variants_resolve(
                     resolve_mode,
                 );
                 tokens.extend(variant_match_arm(
-                    params_spec_name,
+                    params_field_wise_name,
                     variant,
                     &fields_deconstructed,
                     variant_fields_resolve,
