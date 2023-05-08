@@ -1,7 +1,7 @@
 use peace_resources::{resources::ts::SetUp, type_reg::untagged::DataType, Resources};
 use serde::{Serialize, Serializer};
 
-use crate::ParamsResolveError;
+use crate::{ParamsResolveError, ValueResolutionCtx};
 
 /// Type erased mapping function.
 ///
@@ -19,13 +19,11 @@ pub trait MappingFn: DataType {
     /// # Parameters
     ///
     /// * `resources`: Resources to resolve values from.
-    /// * `params_type_name_fn`: Function to retrieve the params type name.
-    /// * `field_name_fn`: Function to retrieve the field name.
+    /// * `value_resolution_ctx`: Fields traversed during this value resolution.
     fn map(
         &self,
         resources: &Resources<SetUp>,
-        params_type_name_fn: fn() -> &'static str,
-        field_name: &'static str,
+        value_resolution_ctx: ValueResolutionCtx,
     ) -> Result<Self::Output, ParamsResolveError>;
 
     /// Maps data in resources to the output type.
@@ -36,13 +34,11 @@ pub trait MappingFn: DataType {
     /// # Parameters
     ///
     /// * `resources`: Resources to resolve values from.
-    /// * `params_type_name_fn`: Function to retrieve the params type name.
-    /// * `field_name_fn`: Function to retrieve the field name.
+    /// * `value_resolution_ctx`: Fields traversed during this value resolution.
     fn try_map(
         &self,
         resources: &Resources<SetUp>,
-        params_type_name_fn: fn() -> &'static str,
-        field_name: &'static str,
+        value_resolution_ctx: ValueResolutionCtx,
     ) -> Result<Option<Self::Output>, ParamsResolveError>;
 }
 
