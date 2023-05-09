@@ -7,7 +7,14 @@ use peace_params_derive::value_impl;
 
 impl_value_for!(
     bool, u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, usize, isize, String, PathBuf,
-    OsString,
+);
+
+// WASM doesn't support serialization of `OsString`s.
+#[cfg(not(target_arch = "wasm32"))]
+value_impl!(
+    #[crate_internal]
+    #[params(external)]
+    struct OsString;
 );
 
 value_impl!(
