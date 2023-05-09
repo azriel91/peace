@@ -47,8 +47,7 @@ pub fn impl_default(
                     variant
                         .attrs
                         .iter()
-                        .find(|attr| attr.path().is_ident("default"))
-                        .is_some()
+                        .any(|attr| attr.path().is_ident("default"))
                 })
                 .or(data_enum.variants.last());
 

@@ -134,7 +134,7 @@ where
         match self {
             ParamsSpec::Value(t) => Ok(t.clone()),
             ParamsSpec::Stored | ParamsSpec::From => match resources.try_borrow::<T>() {
-                Ok(t) => Ok((&*t).clone()),
+                Ok(t) => Ok((*t).clone()),
                 Err(borrow_fail) => match borrow_fail {
                     BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
                         value_resolution_ctx: value_resolution_ctx.clone(),
@@ -159,9 +159,9 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T::Partial, ParamsResolveError> {
         match self {
-            ParamsSpec::Value(t) => Ok(T::Partial::from((&*t).clone())),
+            ParamsSpec::Value(t) => Ok(T::Partial::from((*t).clone())),
             ParamsSpec::Stored | ParamsSpec::From => match resources.try_borrow::<T>() {
-                Ok(t) => Ok(T::Partial::from((&*t).clone())),
+                Ok(t) => Ok(T::Partial::from((*t).clone())),
                 Err(borrow_fail) => match borrow_fail {
                     BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
                         value_resolution_ctx: value_resolution_ctx.clone(),

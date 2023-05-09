@@ -68,7 +68,7 @@ impl ExternalType {
             wrapper_name,
             generics,
             wrapped_ty,
-            &wrapper_partial_name,
+            wrapper_partial_name,
         );
         tokens.extend(Self::wrapper_partial_gen(
             wrapper_name,
@@ -201,21 +201,21 @@ impl ExternalType {
                 parse_quote!(#wrapper_type_name #field_generics)
             }
 
-            Type::Array(_)
-            | Type::BareFn(_)
-            | Type::Group(_)
-            | Type::ImplTrait(_)
-            | Type::Infer(_)
-            | Type::Macro(_)
-            | Type::Never(_)
-            | Type::Paren(_)
-            | Type::Ptr(_)
-            | Type::Reference(_)
-            | Type::Slice(_)
-            | Type::TraitObject(_)
-            | Type::Tuple(_)
-            | Type::Verbatim(_)
-            | _ => panic!(
+            // Type::Array(_)
+            // | Type::BareFn(_)
+            // | Type::Group(_)
+            // | Type::ImplTrait(_)
+            // | Type::Infer(_)
+            // | Type::Macro(_)
+            // | Type::Never(_)
+            // | Type::Paren(_)
+            // | Type::Ptr(_)
+            // | Type::Reference(_)
+            // | Type::Slice(_)
+            // | Type::TraitObject(_)
+            // | Type::Tuple(_)
+            // | Type::Verbatim(_)
+            _ => panic!(
                 "Unsupported type to generate wrapper: {ty}",
                 ty = quote!(#ty)
             ),
@@ -242,21 +242,21 @@ impl ExternalType {
                 parse_quote!(#wrapper_partial_type_name #field_generics)
             }
 
-            Type::Array(_)
-            | Type::BareFn(_)
-            | Type::Group(_)
-            | Type::ImplTrait(_)
-            | Type::Infer(_)
-            | Type::Macro(_)
-            | Type::Never(_)
-            | Type::Paren(_)
-            | Type::Ptr(_)
-            | Type::Reference(_)
-            | Type::Slice(_)
-            | Type::TraitObject(_)
-            | Type::Tuple(_)
-            | Type::Verbatim(_)
-            | _ => panic!(
+            // Type::Array(_)
+            // | Type::BareFn(_)
+            // | Type::Group(_)
+            // | Type::ImplTrait(_)
+            // | Type::Infer(_)
+            // | Type::Macro(_)
+            // | Type::Never(_)
+            // | Type::Paren(_)
+            // | Type::Ptr(_)
+            // | Type::Reference(_)
+            // | Type::Slice(_)
+            // | Type::TraitObject(_)
+            // | Type::Tuple(_)
+            // | Type::Verbatim(_)
+            _ => panic!(
                 "Unsupported type to generate wrapper: {ty}",
                 ty = quote!(#ty)
             ),
