@@ -10,7 +10,8 @@ extern crate syn;
 use proc_macro::TokenStream;
 
 use syn::{
-    DeriveInput, Generics, Ident, ImplGenerics, Path, TypeGenerics, WhereClause, WherePredicate,
+    DeriveInput, Generics, Ident, ImplGenerics, Path, Type, TypeGenerics, WhereClause,
+    WherePredicate,
 };
 use type_gen_external::External;
 
@@ -163,12 +164,15 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
     };
 
     let (t_partial, t_field_wise) = if is_external(&ast.attrs) {
-        let t_partial = t_partial_external(ast, &generics_split, params_name, &t_partial_name);
+        let ty_generics = &generics_split.1;
+        let params_ty: Type = parse_quote!(#params_name #ty_generics);
+        let t_partial = t_partial_external(ast, &generics_split, &params_ty, &t_partial_name);
         let t_field_wise = t_field_wise_external(
             ast,
             &generics_split,
             &peace_params_path,
             &peace_resources_path,
+            &params_ty,
             params_name,
             &t_field_wise_name,
             &t_partial_name,
@@ -255,12 +259,15 @@ fn impl_value(ast: &DeriveInput) -> proc_macro2::TokenStream {
     };
 
     let (t_partial, t_field_wise) = if is_external(&ast.attrs) {
-        let t_partial = t_partial_external(ast, &generics_split, value_name, &t_partial_name);
+        let ty_generics = &generics_split.1;
+        let value_ty: Type = parse_quote!(#value_name #ty_generics);
+        let t_partial = t_partial_external(ast, &generics_split, &value_ty, &t_partial_name);
         let t_field_wise = t_field_wise_external(
             ast,
             &generics_split,
             &peace_params_path,
             &peace_resources_path,
+            &value_ty,
             value_name,
             &t_field_wise_name,
             &t_partial_name,
@@ -386,15 +393,13 @@ fn t_partial(
 fn t_partial_external(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
-    params_name: &Ident,
+    value_ty: &Type,
     t_partial_name: &Ident,
 ) -> proc_macro2::TokenStream {
     type_gen_external(
         ast,
         generics_split,
-        External::Direct {
-            value_name: params_name,
-        },
+        External::Direct { value_ty },
         t_partial_name,
         &[
             parse_quote! {
@@ -485,6 +490,7 @@ fn t_field_wise_external(
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
     peace_params_path: &Path,
     peace_resources_path: &Path,
+    params_ty: &Type,
     params_name: &Ident,
     t_field_wise_name: &Ident,
     t_partial_name: &Ident,
@@ -493,7 +499,7 @@ fn t_field_wise_external(
         ast,
         generics_split,
         External::Direct {
-            value_name: params_name,
+            value_ty: params_ty,
         },
         t_field_wise_name,
         &[

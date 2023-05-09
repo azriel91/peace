@@ -1,7 +1,9 @@
 //! Trait and struct impls for standard library types.
 #![allow(non_camel_case_types)]
 
-use std::{ffi::OsString, path::PathBuf};
+#[cfg(not(target_arch = "wasm32"))]
+use std::ffi::OsString;
+use std::path::PathBuf;
 
 use peace_params_derive::value_impl;
 

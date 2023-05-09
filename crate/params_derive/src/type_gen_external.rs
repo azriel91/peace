@@ -1,4 +1,4 @@
-use syn::{Attribute, DeriveInput, Ident, ImplGenerics, TypeGenerics, WhereClause};
+use syn::{Attribute, DeriveInput, Ident, ImplGenerics, Type, TypeGenerics, WhereClause};
 
 /// Generates a type based off an external `Value` type.
 ///
@@ -31,25 +31,25 @@ pub fn type_gen_external(
     generics_for_ref.params.insert(0, parse_quote!('generated));
     let (impl_generics_for_ref, _type_generics, _where_clause) = generics_for_ref.split_for_impl();
 
-    let (value_name, wrapper_name) = match external_type {
-        External::Direct { value_name } => (value_name, None),
+    let (value_ty, wrapper_name) = match external_type {
+        External::Direct { value_ty } => (value_ty, None),
         External::Wrapper {
-            value_name,
+            value_ty,
             wrapper_name,
-        } => (value_name, Some(wrapper_name)),
+        } => (value_ty, Some(wrapper_name)),
     };
 
     let mut tokens = quote! {
         #(#attrs)*
-        pub struct #type_name #ty_generics(Option<#value_name #ty_generics>);
+        pub struct #type_name #ty_generics(Option<#value_ty>);
 
         impl #impl_generics #type_name #ty_generics {
             #[doc = #constructor_doc]
-            pub fn new(value: Option<#value_name #ty_generics>) -> Self {
+            pub fn new(value: Option<#value_ty>) -> Self {
                 Self(value)
             }
 
-            pub fn into_inner(self) -> Option<#value_name #ty_generics> {
+            pub fn into_inner(self) -> Option<#value_ty> {
                 self.0
             }
         }
@@ -87,7 +87,7 @@ pub fn type_gen_external(
         for #type_name #ty_generics
         #where_clause
         {
-            type Target = Option<#value_name #ty_generics>;
+            type Target = Option<#value_ty>;
 
             fn deref(&self) -> &Self::Target {
                 &self.0
@@ -104,11 +104,11 @@ pub fn type_gen_external(
         }
 
         // impl From<Value> for ValuePartial
-        impl #impl_generics ::std::convert::From<#value_name #ty_generics>
+        impl #impl_generics ::std::convert::From<#value_ty>
         for #type_name #ty_generics
         #where_clause
         {
-            fn from(value: #value_name #ty_generics) -> Self {
+            fn from(value: #value_ty) -> Self {
                 Self::new(Some(value))
             }
         }
@@ -118,7 +118,7 @@ pub fn type_gen_external(
         tokens.extend(quote! {
             // impl TryFrom<ValuePartial> for Value
             impl #impl_generics ::std::convert::TryFrom<#type_name #ty_generics>
-            for #value_name #ty_generics
+            for #value_ty
             #where_clause
             {
                 type Error = #type_name #ty_generics;
@@ -133,7 +133,7 @@ pub fn type_gen_external(
             }
 
             impl #impl_generics_for_ref ::std::convert::TryFrom<&'generated #type_name #ty_generics>
-            for #value_name #ty_generics
+            for #value_ty
             #where_clause
             {
                 type Error = &'generated #type_name #ty_generics;
@@ -192,7 +192,7 @@ pub fn type_gen_external(
         tokens.extend(quote! {
             // impl TryFrom<ValuePartial> for Value
             impl #impl_generics ::std::convert::TryFrom<#type_name #ty_generics>
-            for #value_name #ty_generics
+            for #value_ty
             #where_clause
             {
                 type Error = #type_name #ty_generics;
@@ -207,7 +207,7 @@ pub fn type_gen_external(
             }
 
             impl #impl_generics_for_ref ::std::convert::TryFrom<&'generated #type_name #ty_generics>
-            for #value_name #ty_generics
+            for #value_ty
             #where_clause
             {
                 type Error = &'generated #type_name #ty_generics;
@@ -226,15 +226,15 @@ pub fn type_gen_external(
     tokens
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub enum External<'name> {
     Direct {
-        /// Name of the original value type, e.g. `Thing`
-        value_name: &'name Ident,
+        /// `Type` of the original value type, e.g. `module::Thing`
+        value_ty: &'name Type,
     },
     Wrapper {
-        /// Name of the original value type, e.g. `Thing`
-        value_name: &'name Ident,
+        /// `Type` of the original value type, e.g. `module::Thing`
+        value_ty: &'name Type,
         /// Name of the wrapping value type, e.g. `ThingWrapper`
         wrapper_name: &'name Ident,
     },

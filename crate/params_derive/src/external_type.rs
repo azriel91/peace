@@ -162,20 +162,21 @@ impl ExternalType {
         wrapper_partial_type: &Type,
         wrapped_ty: &Type,
     ) -> proc_macro2::TokenStream {
-        let ast: DeriveInput = parse_quote!(pub struct #wrapped_ty;);
-        let generics_split = ast.generics.split_for_impl();
         let Some(wrapper_partial_name) = type_path_simple_name(wrapper_partial_type) else {
             unreachable!("Type must be present at this stage.");
         };
-        let Some(value_name) = type_path_simple_name(wrapped_ty) else {
+        let Some((wrapped_name, generics)) = type_path_name_and_generics(wrapped_ty) else {
             unreachable!("Type must be present at this stage.");
         };
+
+        let ast: DeriveInput = parse_quote!(pub struct #wrapped_name #generics;);
+        let generics_split = ast.generics.split_for_impl();
 
         type_gen_external(
             &ast,
             &generics_split,
             External::Wrapper {
-                value_name,
+                value_ty: wrapped_ty,
                 wrapper_name,
             },
             wrapper_partial_name,
