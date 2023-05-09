@@ -60,12 +60,13 @@
 //! ```
 
 // Re-exports
-pub use peace_params_derive::Params;
+pub use peace_params_derive::{value_impl, Params, Value};
 
 pub use crate::{
     field_name_and_type::FieldNameAndType, field_wise_spec_rt::FieldWiseSpecRt,
     mapping_fn::MappingFn, mapping_fn_impl::MappingFnImpl, params::Params,
-    params_resolve_error::ParamsResolveError, params_specs::ParamsSpecs,
+    params_resolve_error::ParamsResolveError, params_spec::ParamsSpec,
+    params_spec_de::ParamsSpecDe, params_specs::ParamsSpecs, value::Value,
     value_resolution_ctx::ValueResolutionCtx, value_spec::ValueSpec, value_spec_de::ValueSpecDe,
     value_spec_rt::ValueSpecRt,
 };
@@ -76,8 +77,11 @@ mod mapping_fn;
 mod mapping_fn_impl;
 mod params;
 mod params_resolve_error;
+mod params_spec;
+mod params_spec_de;
 mod params_specs;
 mod std_impl;
+mod value;
 mod value_resolution_ctx;
 mod value_spec;
 mod value_spec_de;

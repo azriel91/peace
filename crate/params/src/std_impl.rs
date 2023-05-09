@@ -3,13 +3,13 @@
 
 use std::path::PathBuf;
 
-use peace_params_derive::params_impl;
+use peace_params_derive::value_impl;
 
-impl_params_for!(
+impl_value_for!(
     bool, u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, usize, isize, String, PathBuf,
 );
 
-params_impl!(
+value_impl!(
     #[crate_internal]
     #[params(external)]
     struct Option<T>
@@ -17,7 +17,7 @@ params_impl!(
         T: Clone + std::fmt::Debug + serde::Serialize + serde::de::DeserializeOwned;
 );
 
-params_impl!(
+value_impl!(
     #[crate_internal]
     #[params(external)]
     struct Vec<T>
@@ -25,10 +25,10 @@ params_impl!(
         T: Clone + std::fmt::Debug + serde::Serialize + serde::de::DeserializeOwned;
 );
 
-macro_rules! impl_params_for {
+macro_rules! impl_value_for {
     ($($T:ident),*,) => {
         $(
-            params_impl!(
+            value_impl!(
                 #[crate_internal]
                 #[params(external)]
                 struct $T;
@@ -37,4 +37,4 @@ macro_rules! impl_params_for {
     }
 }
 
-use impl_params_for;
+use impl_value_for;
