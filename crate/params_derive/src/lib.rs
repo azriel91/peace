@@ -485,6 +485,8 @@ fn t_field_wise(
 /// ```rust,ignore
 /// struct MyParamsFieldWise(peace_params::ValueSpec<MyParams>)
 /// ```
+// TODO: Refactor this crate to not pass redundant information, or use a context object.
+#[allow(clippy::too_many_arguments)]
 fn t_field_wise_external(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
