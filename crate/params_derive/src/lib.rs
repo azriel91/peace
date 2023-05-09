@@ -12,8 +12,10 @@ use proc_macro::TokenStream;
 use syn::{
     DeriveInput, Generics, Ident, ImplGenerics, Path, TypeGenerics, WhereClause, WherePredicate,
 };
+use type_gen_external::External;
 
 use crate::{
+    external_type::ExternalType,
     fields_map::{fields_to_optional, fields_to_value_spec},
     impl_default::impl_default,
     impl_field_wise_spec_rt_for_field_wise::impl_field_wise_spec_rt_for_field_wise,
@@ -22,11 +24,12 @@ use crate::{
     impl_from_params_for_params_partial::impl_from_params_for_params_partial,
     impl_try_from_params_partial_for_params::impl_try_from_params_partial_for_params,
     impl_value_spec_rt_for_field_wise::impl_value_spec_rt_for_field_wise,
-    type_gen::type_gen,
+    type_gen::TypeGen,
     type_gen_external::type_gen_external,
-    util::is_external_struct,
+    util::is_external,
 };
 
+mod external_type;
 mod fields_map;
 mod impl_default;
 mod impl_field_wise_spec_rt_for_field_wise;
@@ -63,8 +66,13 @@ mod util;
 /// * `crate_internal`: Type level attribute indicating the `peace_params` crate
 ///   is referenced by `crate` instead of the default `peace::params`.
 ///
-/// * `params(external)`: Type level attribute indicating fields are not known,
-///   and so `ParamsPartial` will instead hold an `Option<Params>` field.
+/// * `params(external)`: Used as either of:
+///
+///     - Type level attribute indicating fields are not known, and so
+///       `ParamsPartial` will instead hold an `Option<Params>` field.
+///     - Field level attribute indicating a third party type is in use, and a
+///       newtype wrapper should be generated to implement the
+///       `peace_params::Value` trait.
 ///
 /// * `default`: Enum variant attribute to indicate which variant to instantiate
 ///   for `ParamsPartial::default()`.
@@ -154,7 +162,7 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&t_field_wise_name, ast.ident.span())
     };
 
-    let (t_partial, t_field_wise) = if is_external_struct(ast) {
+    let (t_partial, t_field_wise) = if is_external(&ast.attrs) {
         let t_partial = t_partial_external(ast, &generics_split, params_name, &t_partial_name);
         let t_field_wise = t_field_wise_external(
             ast,
@@ -183,6 +191,8 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
     };
     let (impl_generics, ty_generics, where_clause) = &generics_split;
 
+    let external_wrapper_types = ExternalType::external_wrapper_types(ast, &peace_params_path);
+
     quote! {
         impl #impl_generics #peace_params_path::Params
         for #params_name #ty_generics
@@ -204,6 +214,8 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
         #t_field_wise
 
         #t_partial
+
+        #external_wrapper_types
     }
 }
 
@@ -242,7 +254,7 @@ fn impl_value(ast: &DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&t_field_wise_name, ast.ident.span())
     };
 
-    let (t_partial, t_field_wise) = if is_external_struct(ast) {
+    let (t_partial, t_field_wise) = if is_external(&ast.attrs) {
         let t_partial = t_partial_external(ast, &generics_split, value_name, &t_partial_name);
         let t_field_wise = t_field_wise_external(
             ast,
@@ -271,6 +283,8 @@ fn impl_value(ast: &DeriveInput) -> proc_macro2::TokenStream {
     };
     let (impl_generics, ty_generics, where_clause) = &generics_split;
 
+    let external_wrapper_types = ExternalType::external_wrapper_types(ast, &peace_params_path);
+
     quote! {
         impl #impl_generics #peace_params_path::Value
         for #value_name #ty_generics
@@ -283,6 +297,8 @@ fn impl_value(ast: &DeriveInput) -> proc_macro2::TokenStream {
         #t_field_wise
 
         #t_partial
+
+        #external_wrapper_types
     }
 }
 
@@ -322,7 +338,7 @@ fn t_partial(
     params_name: &Ident,
     t_partial_name: &Ident,
 ) -> proc_macro2::TokenStream {
-    let mut t_partial = type_gen(
+    let mut t_partial = TypeGen::gen_from_value_type(
         ast,
         generics_split,
         t_partial_name,
@@ -376,7 +392,9 @@ fn t_partial_external(
     type_gen_external(
         ast,
         generics_split,
-        params_name,
+        External::Direct {
+            value_name: params_name,
+        },
         t_partial_name,
         &[
             parse_quote! {
@@ -412,7 +430,7 @@ fn t_field_wise(
     t_field_wise_name: &Ident,
     t_partial_name: &Ident,
 ) -> proc_macro2::TokenStream {
-    let mut t_field_wise = type_gen(
+    let mut t_field_wise = TypeGen::gen_from_value_type(
         ast,
         generics_split,
         t_field_wise_name,
@@ -474,7 +492,9 @@ fn t_field_wise_external(
     let mut t_field_wise = type_gen_external(
         ast,
         generics_split,
-        params_name,
+        External::Direct {
+            value_name: params_name,
+        },
         t_field_wise_name,
         &[
             parse_quote! {

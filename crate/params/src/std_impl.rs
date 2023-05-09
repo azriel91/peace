@@ -1,12 +1,13 @@
 //! Trait and struct impls for standard library types.
 #![allow(non_camel_case_types)]
 
-use std::path::PathBuf;
+use std::{ffi::OsString, path::PathBuf};
 
 use peace_params_derive::value_impl;
 
 impl_value_for!(
     bool, u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, usize, isize, String, PathBuf,
+    OsString,
 );
 
 value_impl!(

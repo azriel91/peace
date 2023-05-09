@@ -1,6 +1,9 @@
 use syn::{Fields, Path, Type};
 
-use crate::util::is_phantom_data;
+use crate::{
+    util::{is_external, is_phantom_data},
+    ExternalType,
+};
 
 pub fn fields_to_optional(fields: &mut Fields) {
     fields_map(fields, |field_ty| {
@@ -12,7 +15,19 @@ pub fn fields_to_optional(fields: &mut Fields) {
     })
 }
 
+/// Maps each field from `MyType` to `ValueSpec<MyType>`.
+///
+/// If the type is marked with `#[params(external)]`, then it is wrapped as
+/// `ValueSpec<MyTypeWrapper>`.
 pub fn fields_to_value_spec(fields: &mut Fields, peace_params_path: &Path) {
+    // This has to come before `fields_map` because the attributes are cleared in
+    // it.
+    fields.iter_mut().for_each(|field| {
+        if is_external(&field.attrs) {
+            field.ty = ExternalType::wrapper_type(&field.ty);
+        }
+    });
+
     fields_map(fields, |field_ty| {
         if is_phantom_data(field_ty) {
             field_ty.clone()
@@ -32,7 +47,7 @@ where
                 // Don't copy across attributes, e.g. `#[serde(default)].
                 field.attrs.clear();
 
-                let field_ty = &mut field.ty;
+                let field_ty = &field.ty;
                 field.ty = f(field_ty);
             });
         }

@@ -3,8 +3,12 @@ use syn::{
     WhereClause,
 };
 
-use crate::util::{
-    fields_deconstruct, is_phantom_data, tuple_ident_from_field_index, variant_match_arm,
+use crate::{
+    external_type::ExternalType,
+    util::{
+        fields_deconstruct, is_external, is_phantom_data, tuple_ident_from_field_index,
+        type_path_simple_name, variant_match_arm,
+    },
 };
 
 /// `impl From<Params> for ParamsFieldWise`, so that users can provide
@@ -128,9 +132,13 @@ fn variants_map_to_value(
     //     Params::Variant1 => Params::Variant1,
     //     Params::Variant2(_0, _1, PhantomData) => {
     //         Params::Variant2(
-    //              #peace_params_path::ValueSpec::Value(_0),
-    //              #peace_params_path::ValueSpec::Value(_1),
-    //              PhantomData,
+    //             #peace_params_path::ValueSpec::Value(_0),
+    //             #peace_params_path::ValueSpec::Value(_1),
+    //             PhantomData,
+    //
+    //             // or
+    //             // #peace_params_path::ValueSpec::Value(Wrapper(_0)),
+    //             // #peace_params_path::ValueSpec::Value(Wrapper(_1)),
     //         )
     //     }
     //     Params::Variant3 { field_1, field_2, marker: PhantomData } => {
@@ -138,6 +146,10 @@ fn variants_map_to_value(
     //             field_1: #peace_params_path::ValueSpec::Value(field_1),
     //             field_2: #peace_params_path::ValueSpec::Value(field_2),
     //             marker: PhantomData,
+    //
+    //             // or
+    //             // field_1: #peace_params_path::ValueSpec::Value(Wrapper(_0)),
+    //             // field_2: #peace_params_path::ValueSpec::Value(Wrapper(_1)),
     //         }
     //     }
     // }
@@ -216,6 +228,10 @@ fn fields_map_to_value(fields: &Fields, peace_params_path: &Path) -> proc_macro2
             // field_1: #peace_params_path::ValueSpec::Value(field_1),
             // field_2: #peace_params_path::ValueSpec::Value(field_2),
             // marker: PhantomData,
+            //
+            // // or
+            // // field_1: #peace_params_path::ValueSpec::Value(Wrapper(field_1)),
+            // // field_2: #peace_params_path::ValueSpec::Value(Wrapper(field_2)),
             // ```
 
             fields_named
@@ -228,8 +244,16 @@ fn fields_map_to_value(fields: &Fields, peace_params_path: &Path) -> proc_macro2
                                 #field_name: std::marker::PhantomData,
                             });
                         } else {
+                            let field_deconstruct = if is_external(&field.attrs) {
+                                let external_type = ExternalType::wrapper_type(&field.ty);
+                                let wrapper_type_simple_name = type_path_simple_name(&external_type);
+                                quote!(#wrapper_type_simple_name(#field_name))
+                            } else {
+                                quote!(#field_name)
+                            };
+
                             tokens.extend(quote! {
-                                #field_name: #peace_params_path::ValueSpec::Value(#field_name),
+                                #field_name: #peace_params_path::ValueSpec::Value(#field_deconstruct),
                             });
                         }
                     }
@@ -243,6 +267,10 @@ fn fields_map_to_value(fields: &Fields, peace_params_path: &Path) -> proc_macro2
             // #peace_params_path::ValueSpec::Value(_0),
             // #peace_params_path::ValueSpec::Value(_1),
             // PhantomData,
+            //
+            // // or
+            // // #peace_params_path::ValueSpec::Value(Wrapper(_0)),
+            // // #peace_params_path::ValueSpec::Value(Wrapper(_1)),
             // ```
             fields_unnamed.unnamed.iter().enumerate().fold(
                 proc_macro2::TokenStream::new(),
@@ -252,7 +280,17 @@ fn fields_map_to_value(fields: &Fields, peace_params_path: &Path) -> proc_macro2
                     if is_phantom_data(&field.ty) {
                         tokens.extend(quote!(std::marker::PhantomData,));
                     } else {
-                        tokens.extend(quote!(#peace_params_path::ValueSpec::Value(#field_name),));
+                        let field_deconstruct = if is_external(&field.attrs) {
+                            let external_type = ExternalType::wrapper_type(&field.ty);
+                            let wrapper_type_simple_name = type_path_simple_name(&external_type);
+                            quote!(#wrapper_type_simple_name(#field_name))
+                        } else {
+                            quote!(#field_name)
+                        };
+
+                        tokens.extend(
+                            quote!(#peace_params_path::ValueSpec::Value(#field_deconstruct),),
+                        );
                     }
 
                     tokens

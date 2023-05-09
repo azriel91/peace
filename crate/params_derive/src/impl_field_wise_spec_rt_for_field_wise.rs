@@ -1,10 +1,13 @@
 use proc_macro2::Span;
 use syn::{
-    punctuated::Punctuated, DeriveInput, Fields, Ident, ImplGenerics, LitInt, Path, Type,
+    punctuated::Punctuated, DeriveInput, Field, Fields, Ident, ImplGenerics, LitInt, Path,
     TypeGenerics, Variant, WhereClause,
 };
 
-use crate::util::{fields_deconstruct, is_phantom_data, variant_match_arm};
+use crate::{
+    external_type::ExternalType,
+    util::{fields_deconstruct, is_external, is_phantom_data, variant_match_arm},
+};
 
 /// `impl FieldWiseSpecRt for ParamsSpec`, so that Peace can resolve the params
 /// type as well as its values from the spec.
@@ -327,7 +330,7 @@ fn fields_resolution(
                     |mut tokens, (field, field_name)| {
                         let field_ty = &field.ty;
                         let resolve_method =
-                            resolve_mode.resolve_method(peace_params_path, field_name, field_ty);
+                            resolve_mode.resolve_method(peace_params_path, field_name, field);
 
                         tokens.extend(quote! {
                             value_resolution_ctx.push(#peace_params_path::FieldNameAndType::new(
@@ -366,7 +369,7 @@ fn fields_resolution(
                         let field_index = LitInt::new(&format!("{field_index}"), Span::call_site());
                         let field_ty = &field.ty;
                         let resolve_method =
-                            resolve_mode.resolve_method(peace_params_path, &field_ident, field_ty);
+                            resolve_mode.resolve_method(peace_params_path, &field_ident, field);
 
                         tokens.extend(quote! {
                             value_resolution_ctx.push(#peace_params_path::FieldNameAndType::new(
@@ -411,18 +414,24 @@ impl<'name> ResolveMode<'name> {
         self,
         peace_params_path: &Path,
         field_name: &Ident,
-        field_ty: &Type,
+        field: &Field,
     ) -> proc_macro2::TokenStream {
+        let external_type = ExternalType::wrapper_type(&field.ty);
+        let wrapper_field_ty = if is_external(&field.attrs) {
+            &external_type
+        } else {
+            &field.ty
+        };
         match self {
             Self::Full { .. } => quote! {
-                let #field_name = #peace_params_path::ValueSpec::<#field_ty>::resolve(
+                let #field_name = #peace_params_path::ValueSpec::<#wrapper_field_ty>::resolve(
                     #field_name,
                     resources,
                     value_resolution_ctx,
-                )?;
+                )?.into();
             },
             Self::Partial { .. } => quote! {
-                let #field_name = #peace_params_path::ValueSpec::<#field_ty>::resolve_partial(
+                let #field_name = #peace_params_path::ValueSpec::<#wrapper_field_ty>::resolve_partial(
                     #field_name,
                     resources,
                     value_resolution_ctx,

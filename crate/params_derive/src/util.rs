@@ -1,12 +1,12 @@
 use proc_macro2::Span;
 use syn::{
-    AngleBracketedGenericArguments, DeriveInput, Fields, GenericArgument, Ident, LitInt,
+    AngleBracketedGenericArguments, Attribute, Fields, GenericArgument, Ident, LitInt, Path,
     PathArguments, PathSegment, Type, TypePath, Variant,
 };
 
-/// Returns whether the type is managed by a third party.
-pub fn is_external_struct(ast: &DeriveInput) -> bool {
-    ast.attrs.iter().any(|attr| {
+/// Returns whether the type or field is defined outside the crate.
+pub fn is_external(attrs: &[Attribute]) -> bool {
+    attrs.iter().any(|attr| {
         if attr.path().is_ident("params") {
             let mut is_external = false;
             let _ = attr.parse_nested_meta(|parse_nested_meta| {
@@ -37,6 +37,32 @@ pub fn tuple_index_from_field_index(field_index: usize) -> LitInt {
     // Need to convert this to a `LitInt`,
     // because `quote` outputs a usize index as `0usize` instead of `0`
     LitInt::new(&format!("{field_index}"), Span::call_site())
+}
+
+/// Returns `MyType` for a given `path::to::MyType<T>`.
+///
+/// If the type is not a `TypePath`, then this returns `None`.
+pub fn type_path_simple_name(ty: &Type) -> Option<&Ident> {
+    let Type::Path(TypePath { path: Path {
+        segments, ..
+    }, .. }) = ty else {
+        return None;
+    };
+    segments.last().map(|segment| &segment.ident)
+}
+
+/// Returns `MyType` for a given `path::to::MyType<T>`.
+///
+/// If the type is not a `TypePath`, then this returns `None`.
+pub fn type_path_name_and_generics(ty: &Type) -> Option<(&Ident, &PathArguments)> {
+    let Type::Path(TypePath { path: Path {
+        segments, ..
+    }, .. }) = ty else {
+        return None;
+    };
+    segments
+        .last()
+        .map(|segment| (&segment.ident, &segment.arguments))
 }
 
 /// Returns a comma separated list of deconstructed fields.
