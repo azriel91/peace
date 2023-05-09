@@ -2,7 +2,7 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{ApplyCheck, FnCtx},
     data::marker::{ApplyDry, Clean, Current, Desired},
-    params::{ParamsSpecs, ValueSpec},
+    params::{ParamsSpec, ParamsSpecs},
     resources::{
         internal::StatesMut,
         resources::ts::SetUp,
@@ -20,8 +20,7 @@ cfg_if::cfg_if! {
 }
 
 use crate::{
-    VecA, VecASpec, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper,
-    VecCopyState,
+    VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper, VecCopyState,
 };
 
 #[tokio::test]
@@ -492,13 +491,12 @@ async fn resources_set_up(
     let mut params_specs = ParamsSpecs::new();
     params_specs.insert(
         VecCopyItemSpec::ID_DEFAULT.clone(),
-        VecASpec(ValueSpec::from_map(|vec_a: &VecA| Some(vec_a.0.clone()))),
+        ParamsSpec::Value(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7])),
     );
 
     let mut resources = Resources::new();
     <dyn ItemSpecRt<_>>::setup(item_spec_wrapper, &mut resources).await?;
-    let mut resources = Resources::<SetUp>::from(resources);
-    resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
+    let resources = Resources::<SetUp>::from(resources);
 
     Ok((params_specs, resources))
 }

@@ -105,6 +105,15 @@ where
     }
 }
 
+impl<T> From<T> for ParamsSpec<T>
+where
+    T: Params + Clone + Debug + Send + Sync + 'static,
+{
+    fn from(t: T) -> Self {
+        Self::Value(t)
+    }
+}
+
 impl<T> ParamsSpec<T>
 where
     T: Params<Spec = ParamsSpec<T>>

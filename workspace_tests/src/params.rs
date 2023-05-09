@@ -1,23 +1,31 @@
 mod unit {
     use std::any::TypeId;
 
+    use serde::{Deserialize, Serialize};
+
     use peace::params::Params;
 
-    #[derive(Params)]
+    #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct UnitParams;
 
-    super::params_tests!(UnitParams, UnitParamsSpec, UnitParamsPartial, []);
+    super::params_tests!(UnitParams, UnitParamsFieldWise, UnitParamsPartial, []);
 
     #[test]
     fn spec_from_params() {
         let params = UnitParams;
 
-        assert!(matches!(UnitParamsSpec::from(params), UnitParamsSpec));
+        assert!(matches!(
+            UnitParamsFieldWise::from(params),
+            UnitParamsFieldWise
+        ));
     }
 
     #[test]
     fn spec_debug() {
-        assert_eq!(r#"UnitParamsSpec"#, format!("{:?}", UnitParamsSpec));
+        assert_eq!(
+            r#"UnitParamsFieldWise"#,
+            format!("{:?}", UnitParamsFieldWise)
+        );
     }
 
     #[test]
@@ -49,9 +57,11 @@ mod unit {
 mod struct_params {
     use std::any::TypeId;
 
+    use serde::{Deserialize, Serialize};
+
     use peace::params::{Params, ValueSpec};
 
-    #[derive(Params)]
+    #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct StructParams {
         /// Source / desired value for the state.
         src: String,
@@ -59,7 +69,7 @@ mod struct_params {
         dest: String,
     }
 
-    super::params_tests!(StructParams, StructParamsSpec, StructParamsPartial, []);
+    super::params_tests!(StructParams, StructParamsFieldWise, StructParamsPartial, []);
 
     #[test]
     fn spec_from_params() {
@@ -69,8 +79,8 @@ mod struct_params {
         };
 
         assert!(matches!(
-            StructParamsSpec::from(params),
-            StructParamsSpec {
+            StructParamsFieldWise::from(params),
+            StructParamsFieldWise {
                 src: ValueSpec::Value(src_value),
                 dest: ValueSpec::Value(dest_value),
             }
@@ -82,10 +92,10 @@ mod struct_params {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructParamsSpec { src: Value("a"), dest: Value("b") }"#,
+            r#"StructParamsFieldWise { src: Value("a"), dest: Value("b") }"#,
             format!(
                 "{:?}",
-                StructParamsSpec {
+                StructParamsFieldWise {
                     src: ValueSpec::Value(String::from("a")),
                     dest: ValueSpec::Value(String::from("b")),
                 }
@@ -181,12 +191,17 @@ mod struct_params {
 }
 
 mod struct_with_type_params {
-    use std::{any::TypeId, marker::PhantomData};
+    use std::{any::TypeId, fmt::Debug, marker::PhantomData};
+
+    use serde::{Deserialize, Serialize};
 
     use peace::params::{Params, ValueSpec};
 
-    #[derive(Params)]
-    pub struct StructWithTypeParams<Id> {
+    #[derive(Clone, Debug, Params, Serialize, Deserialize)]
+    pub struct StructWithTypeParams<Id>
+    where
+        Id: Clone + Debug,
+    {
         /// Source / desired value for the state.
         src: String,
         /// Destination storage for the state.
@@ -197,7 +212,7 @@ mod struct_with_type_params {
 
     super::params_tests!(
         StructWithTypeParams,
-        StructWithTypeParamsSpec,
+        StructWithTypeParamsFieldWise,
         StructWithTypeParamsPartial,
         [<()>]
     );
@@ -211,8 +226,8 @@ mod struct_with_type_params {
         };
 
         assert!(matches!(
-            StructWithTypeParamsSpec::from(params),
-            StructWithTypeParamsSpec {
+            StructWithTypeParamsFieldWise::from(params),
+            StructWithTypeParamsFieldWise {
                 src: ValueSpec::Value(src_value),
                 dest: ValueSpec::Value(dest_value),
                 marker: PhantomData,
@@ -225,10 +240,10 @@ mod struct_with_type_params {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructWithTypeParamsSpec { src: Value("a"), dest: Value("b"), marker: PhantomData<()> }"#,
+            r#"StructWithTypeParamsFieldWise { src: Value("a"), dest: Value("b"), marker: PhantomData<()> }"#,
             format!(
                 "{:?}",
-                StructWithTypeParamsSpec::<()> {
+                StructWithTypeParamsFieldWise::<()> {
                     src: ValueSpec::Value(String::from("a")),
                     dest: ValueSpec::Value(String::from("b")),
                     marker: PhantomData,
@@ -336,9 +351,11 @@ mod struct_with_type_params {
 mod tuple_params {
     use std::any::TypeId;
 
+    use serde::{Deserialize, Serialize};
+
     use peace::params::{Params, ValueSpec};
 
-    #[derive(Params)]
+    #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct TupleParams(
         /// Source / desired value for the state.
         String,
@@ -346,15 +363,15 @@ mod tuple_params {
         String,
     );
 
-    super::params_tests!(TupleParams, TupleParamsSpec, TupleParamsPartial, []);
+    super::params_tests!(TupleParams, TupleParamsFieldWise, TupleParamsPartial, []);
 
     #[test]
     fn spec_from_params() {
         let params = TupleParams(String::from("a"), String::from("b"));
 
         assert!(matches!(
-            TupleParamsSpec::from(params),
-            TupleParamsSpec (
+            TupleParamsFieldWise::from(params),
+            TupleParamsFieldWise (
                 ValueSpec::Value(src_value),
                 ValueSpec::Value(dest_value),
             )
@@ -366,10 +383,10 @@ mod tuple_params {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"TupleParamsSpec(Value("a"), Value("b"))"#,
+            r#"TupleParamsFieldWise(Value("a"), Value("b"))"#,
             format!(
                 "{:?}",
-                TupleParamsSpec(
+                TupleParamsFieldWise(
                     ValueSpec::Value(String::from("a")),
                     ValueSpec::Value(String::from("b")),
                 )
@@ -450,16 +467,20 @@ mod tuple_params {
 }
 
 mod tuple_with_type_params {
-    use std::{any::TypeId, marker::PhantomData};
+    use std::{any::TypeId, fmt::Debug, marker::PhantomData};
+
+    use serde::{Deserialize, Serialize};
 
     use peace::params::{Params, ValueSpec};
 
-    #[derive(Params)]
-    pub struct TupleWithTypeParams<Id>(String, String, PhantomData<Id>);
+    #[derive(Clone, Debug, Params, Serialize, Deserialize)]
+    pub struct TupleWithTypeParams<Id>(String, String, PhantomData<Id>)
+    where
+        Id: Clone + Debug;
 
     super::params_tests!(
         TupleWithTypeParams,
-        TupleWithTypeParamsSpec,
+        TupleWithTypeParamsFieldWise,
         TupleWithTypeParamsPartial,
         [<()>]
     );
@@ -469,8 +490,8 @@ mod tuple_with_type_params {
         let params = TupleWithTypeParams::<()>(String::from("a"), String::from("b"), PhantomData);
 
         assert!(matches!(
-            TupleWithTypeParamsSpec::from(params),
-            TupleWithTypeParamsSpec::<()>(
+            TupleWithTypeParamsFieldWise::from(params),
+            TupleWithTypeParamsFieldWise::<()>(
                 ValueSpec::Value(src_value),
                 ValueSpec::Value(dest_value),
                 PhantomData,
@@ -483,10 +504,10 @@ mod tuple_with_type_params {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"TupleWithTypeParamsSpec(Value("a"), Value("b"), PhantomData<()>)"#,
+            r#"TupleWithTypeParamsFieldWise(Value("a"), Value("b"), PhantomData<()>)"#,
             format!(
                 "{:?}",
-                TupleWithTypeParamsSpec::<()>(
+                TupleWithTypeParamsFieldWise::<()>(
                     ValueSpec::Value(String::from("a")),
                     ValueSpec::Value(String::from("b")),
                     PhantomData,
@@ -586,12 +607,17 @@ mod tuple_with_type_params {
 }
 
 mod enum_params {
-    use std::{any::TypeId, marker::PhantomData};
+    use std::{any::TypeId, fmt::Debug, marker::PhantomData};
+
+    use serde::{Deserialize, Serialize};
 
     use peace::params::{Params, ValueSpec};
 
-    #[derive(Params)]
-    pub enum EnumParams<Id> {
+    #[derive(Clone, Debug, Params, Serialize, Deserialize)]
+    pub enum EnumParams<Id>
+    where
+        Id: Clone + Debug,
+    {
         Named {
             /// Source / desired value for the state.
             src: String,
@@ -605,7 +631,7 @@ mod enum_params {
 
     super::params_tests!(
         EnumParams,
-        EnumParamsSpec,
+        EnumParamsFieldWise,
         EnumParamsPartial,
         [<()>]
     );
@@ -618,8 +644,8 @@ mod enum_params {
         };
 
         assert!(matches!(
-            EnumParamsSpec::from(params),
-            EnumParamsSpec::<()>::Named {
+            EnumParamsFieldWise::from(params),
+            EnumParamsFieldWise::<()>::Named {
                 src: ValueSpec::Value(value),
                 marker: PhantomData,
             }
@@ -632,8 +658,8 @@ mod enum_params {
         let params = EnumParams::<()>::Tuple(String::from("a"));
 
         assert!(matches!(
-            EnumParamsSpec::from(params),
-            EnumParamsSpec::<()>::Tuple(ValueSpec::Value(value))
+            EnumParamsFieldWise::from(params),
+            EnumParamsFieldWise::<()>::Tuple(ValueSpec::Value(value))
             if value == "a"
         ));
     }
@@ -643,8 +669,8 @@ mod enum_params {
         let params = EnumParams::<()>::TupleMarker(String::from("a"), PhantomData);
 
         assert!(matches!(
-            EnumParamsSpec::from(params),
-            EnumParamsSpec::<()>::TupleMarker(ValueSpec::Value(value), PhantomData)
+            EnumParamsFieldWise::from(params),
+            EnumParamsFieldWise::<()>::TupleMarker(ValueSpec::Value(value), PhantomData)
             if value == "a"
         ));
     }
@@ -654,14 +680,14 @@ mod enum_params {
         let params = EnumParams::<()>::Unit;
 
         assert!(matches!(
-            EnumParamsSpec::from(params),
-            EnumParamsSpec::<()>::Unit
+            EnumParamsFieldWise::from(params),
+            EnumParamsFieldWise::<()>::Unit
         ));
     }
 
     #[test]
     fn spec_clone_named() {
-        let spec = EnumParamsSpec::<()>::Named {
+        let spec = EnumParamsFieldWise::<()>::Named {
             src: ValueSpec::Value(String::from("a")),
             marker: PhantomData,
         };
@@ -670,7 +696,7 @@ mod enum_params {
 
         assert!(matches!(
             spec_clone,
-            EnumParamsSpec::<()>::Named {
+            EnumParamsFieldWise::<()>::Named {
                 src: ValueSpec::Value(value),
                 marker: PhantomData
             }
@@ -680,38 +706,40 @@ mod enum_params {
 
     #[test]
     fn spec_clone_tuple() {
-        let spec = EnumParamsSpec::<()>::Tuple(ValueSpec::Value(String::from("a")));
+        let spec = EnumParamsFieldWise::<()>::Tuple(ValueSpec::Value(String::from("a")));
         let spec_clone = spec.clone();
         drop(spec);
 
         assert!(matches!(
             spec_clone,
-            EnumParamsSpec::<()>::Tuple(ValueSpec::Value(value))
+            EnumParamsFieldWise::<()>::Tuple(ValueSpec::Value(value))
             if value == "a"
         ));
     }
 
     #[test]
     fn spec_clone_tuple_marker() {
-        let spec =
-            EnumParamsSpec::<()>::TupleMarker(ValueSpec::Value(String::from("a")), PhantomData);
+        let spec = EnumParamsFieldWise::<()>::TupleMarker(
+            ValueSpec::Value(String::from("a")),
+            PhantomData,
+        );
         let spec_clone = spec.clone();
         drop(spec);
 
         assert!(matches!(
             spec_clone,
-            EnumParamsSpec::<()>::TupleMarker(ValueSpec::Value(value), PhantomData)
+            EnumParamsFieldWise::<()>::TupleMarker(ValueSpec::Value(value), PhantomData)
             if value == "a"
         ));
     }
 
     #[test]
     fn spec_clone_unit() {
-        let spec = EnumParamsSpec::<()>::Unit;
+        let spec = EnumParamsFieldWise::<()>::Unit;
         let spec_clone = spec.clone();
         drop(spec);
 
-        assert!(matches!(spec_clone, EnumParamsSpec::<()>::Unit));
+        assert!(matches!(spec_clone, EnumParamsFieldWise::<()>::Unit));
     }
 
     #[test]
@@ -720,7 +748,7 @@ mod enum_params {
             r#"Named { src: Value("a"), marker: PhantomData<()> }"#,
             format!(
                 "{:?}",
-                EnumParamsSpec::<()>::Named {
+                EnumParamsFieldWise::<()>::Named {
                     src: ValueSpec::Value(String::from("a")),
                     marker: PhantomData,
                 }
@@ -734,7 +762,7 @@ mod enum_params {
             r#"Tuple(Value("a"))"#,
             format!(
                 "{:?}",
-                EnumParamsSpec::<()>::Tuple(ValueSpec::Value(String::from("a")))
+                EnumParamsFieldWise::<()>::Tuple(ValueSpec::Value(String::from("a")))
             )
         );
     }
@@ -745,14 +773,17 @@ mod enum_params {
             r#"TupleMarker(Value("a"), PhantomData<()>)"#,
             format!(
                 "{:?}",
-                EnumParamsSpec::<()>::TupleMarker(ValueSpec::Value(String::from("a")), PhantomData)
+                EnumParamsFieldWise::<()>::TupleMarker(
+                    ValueSpec::Value(String::from("a")),
+                    PhantomData
+                )
             )
         );
     }
 
     #[test]
     fn spec_debug_unit() {
-        assert_eq!(r#"Unit"#, format!("{:?}", EnumParamsSpec::<()>::Unit));
+        assert_eq!(r#"Unit"#, format!("{:?}", EnumParamsFieldWise::<()>::Unit));
     }
 
     #[test]
@@ -1024,15 +1055,15 @@ mod enum_params {
 macro_rules! params_tests {
     (
         $params_ty:ident,
-        $params_spec_ty:ident,
+        $params_field_wise_ty:ident,
         $params_partial_ty:ident,
         [$($generics:tt)*]
     ) => {
         #[test]
-        fn params_spec_associated_type_is_params_spec() {
+        fn params_field_wise_spec_associated_type_is_params_field_wise() {
             assert_eq!(
-                TypeId::of::<<$params_ty $($generics)* as Params>::Spec>(),
-                TypeId::of::<$params_spec_ty $($generics)*>()
+                TypeId::of::<<$params_ty $($generics)* as Params>::FieldWiseSpec>(),
+                TypeId::of::<$params_field_wise_ty $($generics)*>()
             );
         }
 

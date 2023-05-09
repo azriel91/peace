@@ -2,7 +2,7 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
-    params::ValueSpec,
+    params::ParamsSpec,
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{
         outcomes::CmdOutcome,
@@ -12,7 +12,7 @@ use peace::{
 };
 
 use crate::{
-    NoOpOutput, PeaceTestError, VecA, VecASpec, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec,
+    NoOpOutput, PeaceTestError, VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec,
     VecCopyState,
 };
 
@@ -377,10 +377,9 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
-        // VecAPartial's inner field value resolves a `Vec<u8>`, not `VecA` itself.
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            VecASpec(ValueSpec::from_map(|vec_a: &VecA| Some(vec_a.0.clone()))),
+            ParamsSpec::From,
         )
         .await?;
     // overwrite initial state

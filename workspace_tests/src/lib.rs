@@ -8,7 +8,7 @@ pub(crate) use crate::{
     no_op_output::NoOpOutput,
     peace_test_error::PeaceTestError,
     vec_copy_item_spec::{
-        VecA, VecASpec, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper,
+        VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper,
         VecCopyState,
     },
 };

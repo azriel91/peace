@@ -6,7 +6,7 @@ use peace::{
     },
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
     data::Data,
-    params::{Params, ParamsSpecRt},
+    params::{ParamsSpec, ValueResolutionCtx},
     resources::{
         paths::{FlowDir, ProfileDir},
         states::StatesSaved,
@@ -522,9 +522,15 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         ..
     } = cmd_ctx.view();
     let tar_x_params_spec = params_specs
-        .get::<<<TarXItemSpec<TarXTest> as ItemSpec>::Params<'_> as Params>::Spec, _>(TarXTest::ID)
+        .get::<ParamsSpec<TarXParams<TarXTest>>, _>(TarXTest::ID)
         .unwrap();
-    let tar_x_params = tar_x_params_spec.resolve(resources).unwrap();
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        TarXTest::ID.clone(),
+        std::any::type_name::<TarXParams<TarXTest>>(),
+    );
+    let tar_x_params = tar_x_params_spec
+        .resolve(resources, &mut value_resolution_ctx)
+        .unwrap();
     assert_eq!(
         ApplyCheck::ExecNotRequired,
         <TarXItemSpec::<TarXTest> as ItemSpec>::apply_check(
