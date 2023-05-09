@@ -6,15 +6,16 @@ use syn::{
 
 use crate::util::{fields_deconstruct, is_phantom_data, variant_match_arm};
 
-/// `impl ValueSpecRt for ParamsSpec`, so that Peace can resolve the params type
-/// as well as its values from the spec.
-pub fn impl_value_spec_rt_for_field_wise(
+/// `impl FieldWiseSpecRt for ParamsSpec`, so that Peace can resolve the params
+/// type as well as its values from the spec.
+pub fn impl_field_wise_spec_rt_for_field_wise(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
     peace_params_path: &Path,
     peace_resources_path: &Path,
     params_name: &Ident,
     params_field_wise_name: &Ident,
+    params_partial_name: &Ident,
 ) -> proc_macro2::TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics_split;
 
@@ -23,79 +24,80 @@ pub fn impl_value_spec_rt_for_field_wise(
             let fields = &data_struct.fields;
 
             struct_fields_resolve(
-                params_name,
                 params_field_wise_name,
                 fields,
                 peace_params_path,
-                ResolveMode::Resolve,
+                ResolveMode::Full { params_name },
             )
         }
         syn::Data::Enum(data_enum) => {
             let variants = &data_enum.variants;
 
             variants_resolve(
-                params_name,
                 params_field_wise_name,
                 variants,
                 peace_params_path,
-                ResolveMode::Resolve,
+                ResolveMode::Full { params_name },
             )
         }
         syn::Data::Union(data_union) => {
             let fields = Fields::from(data_union.fields.clone());
 
             struct_fields_resolve(
-                params_name,
                 params_field_wise_name,
                 &fields,
                 peace_params_path,
-                ResolveMode::Resolve,
+                ResolveMode::Full { params_name },
             )
         }
     };
 
-    let try_resolve_body = match &ast.data {
+    let resolve_partial_body = match &ast.data {
         syn::Data::Struct(data_struct) => {
             let fields = &data_struct.fields;
 
             struct_fields_resolve(
-                params_name,
                 params_field_wise_name,
                 fields,
                 peace_params_path,
-                ResolveMode::TryResolve,
+                ResolveMode::Partial {
+                    params_partial_name,
+                },
             )
         }
         syn::Data::Enum(data_enum) => {
             let variants = &data_enum.variants;
 
             variants_resolve(
-                params_name,
                 params_field_wise_name,
                 variants,
                 peace_params_path,
-                ResolveMode::TryResolve,
+                ResolveMode::Partial {
+                    params_partial_name,
+                },
             )
         }
         syn::Data::Union(data_union) => {
             let fields = Fields::from(data_union.fields.clone());
 
             struct_fields_resolve(
-                params_name,
                 params_field_wise_name,
                 &fields,
                 peace_params_path,
-                ResolveMode::TryResolve,
+                ResolveMode::Partial {
+                    params_partial_name,
+                },
             )
         }
     };
 
     quote! {
-        impl #impl_generics #peace_params_path::ValueSpecRt
+        impl #impl_generics #peace_params_path::FieldWiseSpecRt
         for #params_field_wise_name #ty_generics
         #where_clause
         {
             type ValueType = #params_name #ty_generics;
+            type Partial = #params_partial_name #ty_generics;
 
             fn resolve(
                 &self,
@@ -105,19 +107,18 @@ pub fn impl_value_spec_rt_for_field_wise(
                 #resolve_body
             }
 
-            fn try_resolve(
+            fn resolve_partial(
                 &self,
                 resources: &#peace_resources_path::Resources<#peace_resources_path::resources::ts::SetUp>,
                 value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
-            ) -> Result<Option<#params_name #ty_generics>, #peace_params_path::ParamsResolveError> {
-                #try_resolve_body
+            ) -> Result<#params_partial_name #ty_generics, #peace_params_path::ParamsResolveError> {
+                #resolve_partial_body
             }
         }
     }
 }
 
 fn struct_fields_resolve(
-    params_name: &Ident,
     params_field_wise_name: &Ident,
     fields: &Fields,
     peace_params_path: &Path,
@@ -125,7 +126,7 @@ fn struct_fields_resolve(
 ) -> proc_macro2::TokenStream {
     let fields_resolution = fields_resolution(fields, peace_params_path, resolve_mode);
     let fields_deconstructed = fields_deconstruct(fields);
-    let return_expr = resolve_mode.return_expr();
+    let params_return_type_name = resolve_mode.params_return_type_name();
 
     match fields {
         Fields::Named(_fields_named) => {
@@ -140,13 +141,13 @@ fn struct_fields_resolve(
             //
             // #fields_resolution
             //
-            // let params = #params_name {
+            // let params = #params_return_type_name {
             //     field_1,
             //     field_2,
             //     marker: PhantomData,
             // };
             //
-            // Ok(params) // or Ok(Some(params))
+            // Ok(params)
             // ```
 
             quote! {
@@ -156,11 +157,10 @@ fn struct_fields_resolve(
 
                 #fields_resolution
 
-                let params = #params_name {
+                let params = #params_return_type_name {
                     #(#fields_deconstructed),*
                 };
-
-                #return_expr
+                Ok(params)
             }
         }
         Fields::Unnamed(_fields_unnamed) => {
@@ -171,8 +171,8 @@ fn struct_fields_resolve(
             //
             // #fields_resolution
             //
-            // let params = #params_name(_0, _1, PhantomData,);
-            // Ok(params) // or Ok(Some(params))
+            // let params = #params_return_type_name(_0, _1, PhantomData,);
+            // Ok(params)
             // ```
 
             quote! {
@@ -180,20 +180,15 @@ fn struct_fields_resolve(
 
                 #fields_resolution
 
-                let params = #params_name(#(#fields_deconstructed),*);
-
-                #return_expr
+                let params = #params_return_type_name(#(#fields_deconstructed),*);
+                Ok(params)
             }
         }
-        Fields::Unit => quote! {
-            let params = #params_name;
-            #return_expr
-        },
+        Fields::Unit => quote!(Ok(#params_return_type_name)),
     }
 }
 
 fn variants_resolve(
-    params_name: &Ident,
     params_field_wise_name: &Ident,
     variants: &Punctuated<Variant, Token![,]>,
     peace_params_path: &Path,
@@ -208,11 +203,10 @@ fn variants_resolve(
     //         let _0 = ..?;
     //         let _1 = ..?;
     //         let params = Params::Variant2(_0, _1, PhantomData);
-    //         Ok(params) // or Ok(Some(params))
+    //         Ok(params)
     //     }
     //     ParamsSpec::Variant3 { field_1, field_2, marker: PhantomData } => {
     //         #variant_fields_resolve
-    //         Ok(params) // or Ok(Some(params))
     //     }
     // }
     // ```
@@ -224,7 +218,6 @@ fn variants_resolve(
                 let fields_deconstructed = fields_deconstruct(&variant.fields);
 
                 let variant_fields_resolve = variant_fields_resolve(
-                    params_name,
                     &variant.ident,
                     &variant.fields,
                     &fields_deconstructed,
@@ -251,7 +244,6 @@ fn variants_resolve(
 // Code gen, not user facing
 #[allow(clippy::too_many_arguments)]
 fn variant_fields_resolve(
-    params_name: &Ident,
     variant_name: &Ident,
     fields: &Fields,
     fields_deconstructed: &[proc_macro2::TokenStream],
@@ -259,7 +251,7 @@ fn variant_fields_resolve(
     resolve_mode: ResolveMode,
 ) -> proc_macro2::TokenStream {
     let fields_resolution = fields_resolution(fields, peace_params_path, resolve_mode);
-    let return_expr = resolve_mode.return_expr();
+    let params_return_type_name = resolve_mode.params_return_type_name();
 
     match fields {
         Fields::Named(_fields_named) => {
@@ -268,23 +260,22 @@ fn variant_fields_resolve(
             // ```rust
             // #fields_resolution
             //
-            // let params = #params_name::Variant {
+            // let params = #params_return_type_name::Variant {
             //     field_1,
             //     field_2,
             //     marker: PhantomData,
             // };
             //
-            // Ok(params) // or Ok(Some(params))
+            // Ok(params)
             // ```
 
             quote! {
                 #fields_resolution
 
-                let params = #params_name::#variant_name {
+                let params = #params_return_type_name::#variant_name {
                     #(#fields_deconstructed),*
                 };
-
-                #return_expr
+                Ok(params)
             }
         }
         Fields::Unnamed(_fields_unnamed) => {
@@ -293,23 +284,18 @@ fn variant_fields_resolve(
             // ```rust
             // #fields_resolution
             //
-            // let params = #params_name::Variant(_0, _1, PhantomData,);
-            // Ok(params) // or Ok(Some(params))
+            // let params = #params_return_type_name::Variant(_0, _1, PhantomData,);
+            // Ok(params)
             // ```
 
             quote! {
                 #fields_resolution
 
-                let params = #params_name::#variant_name(#(#fields_deconstructed),*);
-
-                #return_expr
+                let params = #params_return_type_name::#variant_name(#(#fields_deconstructed),*);
+                Ok(params)
             }
         }
-        Fields::Unit => quote! {
-            let params = #params_name::#variant_name;
-
-            #return_expr
-        },
+        Fields::Unit => quote!(Ok(#params_return_type_name::#variant_name)),
     }
 }
 
@@ -340,15 +326,15 @@ fn fields_resolution(
                     proc_macro2::TokenStream::new(),
                     |mut tokens, (field, field_name)| {
                         let field_ty = &field.ty;
-                        let resolve_value =
-                            resolve_mode.resolve_value(peace_params_path, field_name, field_ty);
+                        let resolve_method =
+                            resolve_mode.resolve_method(peace_params_path, field_name, field_ty);
 
                         tokens.extend(quote! {
                             value_resolution_ctx.push(#peace_params_path::FieldNameAndType::new(
                                 String::from(stringify!(#field_name)),
                                 String::from(::std::any::type_name::<#field_ty>())),
                             );
-                            #resolve_value
+                            #resolve_method
                             value_resolution_ctx.pop();
                         });
                         tokens
@@ -379,15 +365,15 @@ fn fields_resolution(
                         // because `quote` outputs the index as `0usize` instead of `0`
                         let field_index = LitInt::new(&format!("{field_index}"), Span::call_site());
                         let field_ty = &field.ty;
-                        let resolve_value =
-                            resolve_mode.resolve_value(peace_params_path, &field_ident, field_ty);
+                        let resolve_method =
+                            resolve_mode.resolve_method(peace_params_path, &field_ident, field_ty);
 
                         tokens.extend(quote! {
                             value_resolution_ctx.push(#peace_params_path::FieldNameAndType::new(
                                 String::from(stringify!(#field_index)),
                                 String::from(::std::any::type_name::<#field_ty>())),
                             );
-                            #resolve_value
+                            #resolve_method
                             value_resolution_ctx.pop();
                         });
                         tokens
@@ -400,47 +386,49 @@ fn fields_resolution(
 
 /// Whether all `Params` values must be resolved.
 #[derive(Clone, Copy, Debug)]
-enum ResolveMode {
+enum ResolveMode<'name> {
     /// Resolving all values for params.
-    Resolve,
+    Full { params_name: &'name Ident },
     /// Resolving whatever values are available.
-    TryResolve,
+    Partial { params_partial_name: &'name Ident },
 }
 
-impl ResolveMode {
-    // Returns `resolve` for `Full` resolution, and `try_resolve` for `Partial`
+impl<'name> ResolveMode<'name> {
+    /// Returns `params_name` for `Params` and `params_partial_name` for
+    /// `Params::Partial`.
+    fn params_return_type_name(self) -> &'name Ident {
+        match self {
+            Self::Full { params_name } => params_name,
+            Self::Partial {
+                params_partial_name,
+            } => params_partial_name,
+        }
+    }
+
+    // Returns `resolve` for `Full` resolution, and `resolve_partial` for `Partial`
     // resolution.
-    fn resolve_value(
+    fn resolve_method(
         self,
         peace_params_path: &Path,
         field_name: &Ident,
         field_ty: &Type,
     ) -> proc_macro2::TokenStream {
         match self {
-            Self::Resolve => quote! {
-                let #field_name = <#peace_params_path::ValueSpec<#field_ty> as #peace_params_path::ValueSpecRt>
-                    ::resolve(#field_name, resources, value_resolution_ctx)?;
+            Self::Full { .. } => quote! {
+                let #field_name = #peace_params_path::ValueSpec::<#field_ty>::resolve(
+                    #field_name,
+                    resources,
+                    value_resolution_ctx,
+                )?;
             },
-            Self::TryResolve => quote! {
-                let #field_name = <#peace_params_path::ValueSpec<#field_ty> as #peace_params_path::ValueSpecRt>
-                    ::try_resolve(#field_name, resources, value_resolution_ctx)?
-                    .map(::std::convert::TryFrom::try_from)
-                    .and_then(::std::result::Result::ok);
-
-                let Some(#field_name) = #field_name else {
-                    return Ok(None);
-                };
-            },
-        }
-    }
-
-    fn return_expr(self) -> proc_macro2::TokenStream {
-        match self {
-            Self::Resolve => quote! {
-                Ok(params)
-            },
-            Self::TryResolve => quote! {
-                Ok(Some(params))
+            Self::Partial { .. } => quote! {
+                let #field_name = #peace_params_path::ValueSpec::<#field_ty>::resolve_partial(
+                    #field_name,
+                    resources,
+                    value_resolution_ctx,
+                )?
+                .try_into()
+                .ok();
             },
         }
     }

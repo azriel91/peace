@@ -1,10 +1,10 @@
 use std::fmt::{self, Debug};
 
-use peace_resources::BorrowFail;
+use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
-    FieldNameAndType, MappingFn, MappingFnImpl, Params, ParamsResolveError, ValueResolutionCtx,
+    FieldWiseSpecRt, MappingFn, MappingFnImpl, Params, ParamsResolveError, ValueResolutionCtx,
     ValueSpecRt,
 };
 
@@ -105,7 +105,7 @@ where
     }
 }
 
-impl<T> ValueSpecRt for ValueSpec<T>
+impl<T> ValueSpec<T>
 where
     T: Params<Spec = ValueSpec<T>>
         + Clone
@@ -117,14 +117,11 @@ where
         + 'static,
     T::Partial: From<T>,
 {
-    type Partial = T::Partial;
-    type ValueType = T;
-
-    fn resolve(
+    pub fn resolve(
         &self,
-        resources: &peace_resources::Resources<peace_resources::resources::ts::SetUp>,
+        resources: &Resources<peace_resources::resources::ts::SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
-    ) -> Result<Self::ValueType, crate::ParamsResolveError> {
+    ) -> Result<T, ParamsResolveError> {
         match self {
             ValueSpec::Value(t) => Ok(t.clone()),
             ValueSpec::Stored | ValueSpec::From => match resources.try_borrow::<T>() {
@@ -147,11 +144,11 @@ where
         }
     }
 
-    fn resolve_partial(
+    pub fn resolve_partial(
         &self,
-        resources: &peace_resources::Resources<peace_resources::resources::ts::SetUp>,
+        resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
-    ) -> Result<Self::Partial, crate::ParamsResolveError> {
+    ) -> Result<T::Partial, ParamsResolveError> {
         match self {
             ValueSpec::Value(t) => Ok(T::Partial::from((&*t).clone())),
             ValueSpec::Stored | ValueSpec::From => match resources.try_borrow::<T>() {
@@ -174,5 +171,39 @@ where
                 field_wise_spec.resolve_partial(resources, value_resolution_ctx)
             }
         }
+    }
+}
+
+impl<T> ValueSpecRt for ValueSpec<T>
+where
+    T: Params<Spec = ValueSpec<T>>
+        + Clone
+        + Debug
+        + Serialize
+        + DeserializeOwned
+        + Send
+        + Sync
+        + 'static,
+    T::Partial: From<T>,
+    T: TryFrom<T::Partial>,
+{
+    type ValueType = T;
+
+    fn resolve(
+        &self,
+        resources: &Resources<SetUp>,
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<T, ParamsResolveError> {
+        ValueSpec::<T>::resolve(self, resources, value_resolution_ctx)
+    }
+
+    fn try_resolve(
+        &self,
+        resources: &Resources<SetUp>,
+        value_resolution_ctx: &mut ValueResolutionCtx,
+    ) -> Result<Option<T>, ParamsResolveError> {
+        ValueSpec::<T>::resolve_partial(self, resources, value_resolution_ctx)
+            .map(T::try_from)
+            .map(Result::ok)
     }
 }

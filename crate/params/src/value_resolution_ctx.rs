@@ -16,15 +16,11 @@ pub struct ValueResolutionCtx {
 }
 
 impl ValueResolutionCtx {
-    pub fn new(
-        item_spec_id: ItemSpecId,
-        params_type_name: &'static str,
-        resolution_chain: Vec<FieldNameAndType>,
-    ) -> Self {
+    pub fn new(item_spec_id: ItemSpecId, params_type_name: &'static str) -> Self {
         Self {
             item_spec_id,
             params_type_name,
-            resolution_chain,
+            resolution_chain: Vec::new(),
         }
     }
 

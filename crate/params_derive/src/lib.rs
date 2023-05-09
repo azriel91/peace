@@ -16,20 +16,27 @@ use syn::{
 use crate::{
     fields_map::{fields_to_optional, fields_to_value_spec},
     impl_default::impl_default,
+    impl_field_wise_spec_rt_for_field_wise::impl_field_wise_spec_rt_for_field_wise,
+    impl_field_wise_spec_rt_for_field_wise_external::impl_field_wise_spec_rt_for_field_wise_external,
     impl_from_params_for_params_field_wise::impl_from_params_for_params_field_wise,
     impl_from_params_for_params_partial::impl_from_params_for_params_partial,
     impl_try_from_params_partial_for_params::impl_try_from_params_partial_for_params,
     impl_value_spec_rt_for_field_wise::impl_value_spec_rt_for_field_wise,
     type_gen::type_gen,
+    type_gen_external::type_gen_external,
+    util::is_external_struct,
 };
 
 mod fields_map;
 mod impl_default;
+mod impl_field_wise_spec_rt_for_field_wise;
+mod impl_field_wise_spec_rt_for_field_wise_external;
 mod impl_from_params_for_params_field_wise;
 mod impl_from_params_for_params_partial;
 mod impl_try_from_params_partial_for_params;
 mod impl_value_spec_rt_for_field_wise;
 mod type_gen;
+mod type_gen_external;
 mod util;
 
 /// Used to `#[derive]` the `Params` trait.
@@ -47,7 +54,21 @@ mod util;
 ///
 /// Maybe we should also generate a `SpecBuilder` -- see commit `10f63611` which
 /// removed builder generation.
-#[proc_macro_derive(Params, attributes(peace_internal, crate_internal, default))]
+///
+/// # Attributes:
+///
+/// * `peace_internal`: Type level attribute indicating the `peace_params` crate
+///   is referenced by `peace_params` instead of the default `peace::params`.
+///
+/// * `crate_internal`: Type level attribute indicating the `peace_params` crate
+///   is referenced by `crate` instead of the default `peace::params`.
+///
+/// * `params(external)`: Type level attribute indicating fields are not known,
+///   and so `ParamsPartial` will instead hold an `Option<Params>` field.
+///
+/// * `default`: Enum variant attribute to indicate which variant to instantiate
+///   for `ParamsPartial::default()`.
+#[proc_macro_derive(Params, attributes(peace_internal, crate_internal, params, default))]
 pub fn params_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input)
         .expect("`Params` derive: Failed to parse item as struct, enum, or union.");
@@ -95,9 +116,6 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&params_partial_name, ast.ident.span())
     };
 
-    let params_partial = params_partial(ast, &generics_split, params_name, &params_partial_name);
-    let (impl_generics, ty_generics, where_clause) = &generics_split;
-
     // MyParams -> MyParamsFieldWise
     let params_field_wise_name = {
         let mut params_field_wise_name = ast.ident.to_string();
@@ -105,15 +123,36 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&params_field_wise_name, ast.ident.span())
     };
 
-    let params_field_wise = params_field_wise(
-        ast,
-        &generics_split,
-        &peace_params_path,
-        &peace_resources_path,
-        params_name,
-        &params_field_wise_name,
-        &params_partial_name,
-    );
+    let (params_partial, params_field_wise) = if is_external_struct(ast) {
+        let params_partial =
+            params_partial_external(ast, &generics_split, params_name, &params_partial_name);
+        let params_field_wise = params_field_wise_external(
+            ast,
+            &generics_split,
+            &peace_params_path,
+            &peace_resources_path,
+            params_name,
+            &params_field_wise_name,
+            &params_partial_name,
+        );
+
+        (params_partial, params_field_wise)
+    } else {
+        let params_partial =
+            params_partial(ast, &generics_split, params_name, &params_partial_name);
+        let params_field_wise = params_field_wise(
+            ast,
+            &generics_split,
+            &peace_params_path,
+            &peace_resources_path,
+            params_name,
+            &params_field_wise_name,
+            &params_partial_name,
+        );
+
+        (params_partial, params_field_wise)
+    };
+    let (impl_generics, ty_generics, where_clause) = &generics_split;
 
     quote! {
         impl #impl_generics #peace_params_path::Params
@@ -209,7 +248,40 @@ fn params_partial(
 /// Generates something like the following:
 ///
 /// ```rust,ignore
-/// struct MyParamsSpec {
+/// #[derive(Clone, Debug, PartialEq, Eq)]
+/// struct MyParamsPartial(Option<MyParams>)
+/// ```
+fn params_partial_external(
+    ast: &DeriveInput,
+    generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
+    params_name: &Ident,
+    params_partial_name: &Ident,
+) -> proc_macro2::TokenStream {
+    type_gen_external(
+        ast,
+        generics_split,
+        params_name,
+        params_partial_name,
+        &[
+            parse_quote! {
+                #[doc="\
+                    Item spec parameters that may not necessarily have values.\n\
+                    \n\
+                    This is used for `try_state_current` and `try_state_desired` where values \n\
+                    could be referenced from predecessors, which may not yet be available, such \n\
+                    as the IP address of a server that is yet to be launched, or may change, \n\
+                    such as the content hash of a file which is to be re-downloaded.\n\
+                "]
+            },
+            parse_quote!(#[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]),
+        ],
+    )
+}
+
+/// Generates something like the following:
+///
+/// ```rust,ignore
+/// struct MyParamsFieldWise {
 ///     src: peace_params::ValueSpec<PathBuf>,
 ///     dest_ip: peace_params::ValueSpec<IpAddr>,
 ///     dest_path: peace_params::ValueSpec<PathBuf>,
@@ -239,7 +311,7 @@ fn params_field_wise(
         ],
     );
 
-    params_field_wise.extend(impl_value_spec_rt_for_field_wise(
+    params_field_wise.extend(impl_field_wise_spec_rt_for_field_wise(
         ast,
         generics_split,
         peace_params_path,
@@ -249,6 +321,15 @@ fn params_field_wise(
         params_partial_name,
     ));
 
+    params_field_wise.extend(impl_value_spec_rt_for_field_wise(
+        ast,
+        generics_split,
+        peace_params_path,
+        peace_resources_path,
+        params_name,
+        params_field_wise_name,
+    ));
+
     params_field_wise.extend(impl_from_params_for_params_field_wise(
         ast,
         generics_split,
@@ -256,6 +337,55 @@ fn params_field_wise(
         params_name,
         params_field_wise_name,
     ));
+
+    params_field_wise
+}
+
+/// Generates something like the following:
+///
+/// ```rust,ignore
+/// struct MyParamsFieldWise(peace_params::ValueSpec<MyParams>)
+/// ```
+fn params_field_wise_external(
+    ast: &DeriveInput,
+    generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
+    peace_params_path: &Path,
+    peace_resources_path: &Path,
+    params_name: &Ident,
+    params_field_wise_name: &Ident,
+    params_partial_name: &Ident,
+) -> proc_macro2::TokenStream {
+    let mut params_field_wise = type_gen_external(
+        ast,
+        generics_split,
+        params_name,
+        params_field_wise_name,
+        &[
+            parse_quote! {
+                #[doc="Specification of how to look up values for an item spec's parameters."]
+            },
+            parse_quote!(#[derive(serde::Serialize, serde::Deserialize)]),
+        ],
+    );
+
+    params_field_wise.extend(impl_field_wise_spec_rt_for_field_wise_external(
+        generics_split,
+        peace_params_path,
+        peace_resources_path,
+        params_name,
+        params_field_wise_name,
+        params_partial_name,
+    ));
+
+    // TODO: Do we need this?
+    // params_field_wise.extend(impl_value_spec_rt_for_field_wise_external(
+    //     ast,
+    //     generics_split,
+    //     peace_params_path,
+    //     peace_resources_path,
+    //     params_name,
+    //     params_field_wise_name,
+    // ));
 
     params_field_wise
 }

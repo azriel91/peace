@@ -54,7 +54,7 @@ where
     pub fn map(
         &self,
         resources: &Resources<SetUp>,
-        mut value_resolution_ctx: &mut ValueResolutionCtx,
+        value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
         if let Some(field_name) = self.field_name.as_deref() {
             value_resolution_ctx.push(FieldNameAndType::new(
@@ -98,7 +98,7 @@ where
     pub fn try_map(
         &self,
         resources: &Resources<SetUp>,
-        mut value_resolution_ctx: &mut ValueResolutionCtx,
+        value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Option<T>, ParamsResolveError> {
         if let Some(field_name) = self.field_name.as_deref() {
             value_resolution_ctx.push(FieldNameAndType::new(

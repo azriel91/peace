@@ -1,4 +1,5 @@
 use std::{
+    any::type_name,
     fmt::{self, Debug},
     marker::PhantomData,
     ops::{Deref, DerefMut},
@@ -10,7 +11,7 @@ use peace_data::{
     marker::{ApplyDry, Clean, Current, Desired},
     Data,
 };
-use peace_params::{Params, ParamsSpecRt, ParamsSpecs};
+use peace_params::{Params, ParamsSpecs, ValueResolutionCtx, ValueSpec};
 use peace_resources::{
     resources::ts::{Empty, SetUp},
     states::StatesCurrent,
@@ -57,6 +58,8 @@ where
         + 'static,
     for<'params> <IS as ItemSpec>::Params<'params>:
         TryFrom<<<IS as ItemSpec>::Params<'params> as Params>::Partial>,
+
+    for<'params> <IS::Params<'params> as Params>::Partial: From<IS::Params<'params>>,
 {
     async fn state_clean(
         &self,
@@ -64,15 +67,19 @@ where
         resources: &Resources<SetUp>,
     ) -> Result<IS::State, E> {
         let state_clean = {
-            let item_spec_id = self.id();
-            let params_spec = params_specs
-                .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
-                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_spec_id: item_spec_id.clone(),
-                })?;
-            let params_partial = params_spec
-                .resolve_partial(resources)
-                .map_err(crate::Error::ParamsResolveError)?;
+            let params_partial = {
+                let item_spec_id = self.id();
+                let params_spec = params_specs
+                    .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                    .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                        item_spec_id: item_spec_id.clone(),
+                    })?;
+                let mut value_resolution_ctx =
+                    ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+                params_spec
+                    .resolve_partial(resources, &mut value_resolution_ctx)
+                    .map_err(crate::Error::ParamsResolveError)?
+            };
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
             IS::state_clean(&params_partial, data).await?
         };
@@ -88,15 +95,19 @@ where
         fn_ctx: FnCtx<'_>,
     ) -> Result<Option<IS::State>, E> {
         let state_current = {
-            let item_spec_id = self.id();
-            let params_spec = params_specs
-                .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
-                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_spec_id: item_spec_id.clone(),
-                })?;
-            let params_partial = params_spec
-                .resolve_partial(resources)
-                .map_err(crate::Error::ParamsResolveError)?;
+            let params_partial = {
+                let item_spec_id = self.id();
+                let params_spec = params_specs
+                    .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                    .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                        item_spec_id: item_spec_id.clone(),
+                    })?;
+                let mut value_resolution_ctx =
+                    ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+                params_spec
+                    .resolve_partial(resources, &mut value_resolution_ctx)
+                    .map_err(crate::Error::ParamsResolveError)?
+            };
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
             IS::try_state_current(fn_ctx, &params_partial, data).await?
         };
@@ -114,15 +125,19 @@ where
         fn_ctx: FnCtx<'_>,
     ) -> Result<IS::State, E> {
         let state_current = {
-            let item_spec_id = self.id();
-            let params_spec = params_specs
-                .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
-                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_spec_id: item_spec_id.clone(),
-                })?;
-            let params = params_spec
-                .resolve(resources)
-                .map_err(crate::Error::ParamsResolveError)?;
+            let params = {
+                let item_spec_id = self.id();
+                let params_spec = params_specs
+                    .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                    .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                        item_spec_id: item_spec_id.clone(),
+                    })?;
+                let mut value_resolution_ctx =
+                    ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+                params_spec
+                    .resolve(resources, &mut value_resolution_ctx)
+                    .map_err(crate::Error::ParamsResolveError)?
+            };
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
             IS::state_current(fn_ctx, &params, data).await?
         };
@@ -137,15 +152,19 @@ where
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<Option<IS::State>, E> {
-        let item_spec_id = self.id();
-        let params_spec = params_specs
-            .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
-            .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                item_spec_id: item_spec_id.clone(),
-            })?;
-        let params_partial = params_spec
-            .resolve_partial(resources)
-            .map_err(crate::Error::ParamsResolveError)?;
+        let params_partial = {
+            let item_spec_id = self.id();
+            let params_spec = params_specs
+                .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_spec_id: item_spec_id.clone(),
+                })?;
+            let mut value_resolution_ctx =
+                ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+            params_spec
+                .resolve_partial(resources, &mut value_resolution_ctx)
+                .map_err(crate::Error::ParamsResolveError)?
+        };
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         let state_desired = IS::try_state_desired(fn_ctx, &params_partial, data).await?;
         if let Some(state_desired) = state_desired.as_ref() {
@@ -161,15 +180,19 @@ where
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<IS::State, E> {
-        let item_spec_id = self.id();
-        let params_spec = params_specs
-            .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
-            .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                item_spec_id: item_spec_id.clone(),
-            })?;
-        let params = params_spec
-            .resolve(resources)
-            .map_err(crate::Error::ParamsResolveError)?;
+        let params = {
+            let item_spec_id = self.id();
+            let params_spec = params_specs
+                .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_spec_id: item_spec_id.clone(),
+                })?;
+            let mut value_resolution_ctx =
+                ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+            params_spec
+                .resolve(resources, &mut value_resolution_ctx)
+                .map_err(crate::Error::ParamsResolveError)?
+        };
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         let state_desired = IS::state_desired(fn_ctx, &params, data).await?;
         resources.borrow_mut::<Desired<IS::State>>().0 = Some(state_desired.clone());
@@ -214,15 +237,19 @@ where
         state_b: &IS::State,
     ) -> Result<IS::StateDiff, E> {
         let state_diff: IS::StateDiff = {
-            let item_spec_id = self.id();
-            let params_spec = params_specs
-                .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
-                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                    item_spec_id: item_spec_id.clone(),
-                })?;
-            let params_partial = params_spec
-                .resolve_partial(resources)
-                .map_err(crate::Error::ParamsResolveError)?;
+            let params_partial = {
+                let item_spec_id = self.id();
+                let params_spec = params_specs
+                    .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                    .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                        item_spec_id: item_spec_id.clone(),
+                    })?;
+                let mut value_resolution_ctx =
+                    ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+                params_spec
+                    .resolve_partial(resources, &mut value_resolution_ctx)
+                    .map_err(crate::Error::ParamsResolveError)?
+            };
             let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
             IS::state_diff(&params_partial, data, state_a, state_b)
                 .await
@@ -240,15 +267,19 @@ where
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<ApplyCheck, E> {
-        let item_spec_id = self.id();
-        let params_spec = params_specs
-            .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
-            .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                item_spec_id: item_spec_id.clone(),
-            })?;
-        let params_partial = params_spec
-            .resolve_partial(resources)
-            .map_err(crate::Error::ParamsResolveError)?;
+        let params_partial = {
+            let item_spec_id = self.id();
+            let params_spec = params_specs
+                .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_spec_id: item_spec_id.clone(),
+                })?;
+            let mut value_resolution_ctx =
+                ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+            params_spec
+                .resolve_partial(resources, &mut value_resolution_ctx)
+                .map_err(crate::Error::ParamsResolveError)?
+        };
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         if let Ok(params) = params_partial.try_into() {
             IS::apply_check(&params, data, state_current, state_desired, state_diff)
@@ -273,15 +304,19 @@ where
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<IS::State, E> {
-        let item_spec_id = self.id();
-        let params_spec = params_specs
-            .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
-            .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                item_spec_id: item_spec_id.clone(),
-            })?;
-        let params = params_spec
-            .resolve(resources)
-            .map_err(crate::Error::ParamsResolveError)?;
+        let params = {
+            let item_spec_id = self.id();
+            let params_spec = params_specs
+                .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_spec_id: item_spec_id.clone(),
+                })?;
+            let mut value_resolution_ctx =
+                ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+            params_spec
+                .resolve(resources, &mut value_resolution_ctx)
+                .map_err(crate::Error::ParamsResolveError)?
+        };
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured_dry = IS::apply_dry(
             fn_ctx,
@@ -308,15 +343,19 @@ where
         state_desired: &IS::State,
         state_diff: &IS::StateDiff,
     ) -> Result<IS::State, E> {
-        let item_spec_id = self.id();
-        let params_spec = params_specs
-            .get::<<IS::Params<'_> as Params>::Spec, _>(item_spec_id)
-            .ok_or_else(|| crate::Error::ParamsSpecNotFound {
-                item_spec_id: item_spec_id.clone(),
-            })?;
-        let params = params_spec
-            .resolve(resources)
-            .map_err(crate::Error::ParamsResolveError)?;
+        let params = {
+            let item_spec_id = self.id();
+            let params_spec = params_specs
+                .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_spec_id: item_spec_id.clone(),
+                })?;
+            let mut value_resolution_ctx =
+                ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+            params_spec
+                .resolve(resources, &mut value_resolution_ctx)
+                .map_err(crate::Error::ParamsResolveError)?
+        };
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         let state_ensured = IS::apply(
             fn_ctx,
@@ -415,6 +454,7 @@ where
         + 'static,
     for<'params> <IS as ItemSpec>::Params<'params>:
         TryFrom<<<IS as ItemSpec>::Params<'params> as Params>::Partial>,
+    for<'params> <IS::Params<'params> as Params>::Partial: From<IS::Params<'params>>,
 {
     fn id(&self) -> &ItemSpecId {
         <IS as ItemSpec>::id(self)
@@ -441,7 +481,7 @@ where
         states_type_reg: &mut StatesTypeReg,
     ) {
         item_spec_params_type_reg.register::<IS::Params<'_>>(IS::id(self).clone());
-        params_specs_type_reg.register::<<IS::Params<'_> as Params>::Spec>(IS::id(self).clone());
+        params_specs_type_reg.register::<ValueSpec<IS::Params<'_>>>(IS::id(self).clone());
         states_type_reg.register::<IS::State>(IS::id(self).clone());
     }
 

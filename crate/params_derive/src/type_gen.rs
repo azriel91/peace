@@ -29,7 +29,7 @@ pub fn type_gen<F>(
 where
     F: Fn(&mut Fields),
 {
-    let (impl_generics, ty_generics, _where_clause) = generics_split;
+    let (impl_generics, ty_generics, where_clause) = generics_split;
 
     match &ast.data {
         syn::Data::Struct(data_struct) => {
@@ -56,13 +56,19 @@ where
                     #struct_getters_and_mut_getters
                 }
 
-                impl #impl_generics ::std::clone::Clone for #type_name #ty_generics {
+                impl #impl_generics ::std::clone::Clone
+                for #type_name #ty_generics
+                #where_clause
+                {
                     fn clone(&self) -> Self {
                         #struct_fields_clone
                     }
                 }
 
-                impl #impl_generics ::std::fmt::Debug for #type_name #ty_generics {
+                impl #impl_generics ::std::fmt::Debug
+                for #type_name #ty_generics
+                #where_clause
+                {
                     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
                         #struct_fields_debug
                     }
@@ -84,13 +90,19 @@ where
                     #variants
                 }
 
-                impl #impl_generics ::std::clone::Clone for #type_name #ty_generics {
+                impl #impl_generics ::std::clone::Clone
+                for #type_name #ty_generics
+                #where_clause
+                {
                     fn clone(&self) -> Self {
                         #variants_clone
                     }
                 }
 
-                impl #impl_generics ::std::fmt::Debug for #type_name #ty_generics {
+                impl #impl_generics ::std::fmt::Debug
+                for #type_name #ty_generics
+                #where_clause
+                {
                     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
                         #variants_debug
                     }

@@ -1,8 +1,25 @@
 use proc_macro2::Span;
 use syn::{
-    AngleBracketedGenericArguments, Fields, GenericArgument, Ident, LitInt, PathArguments,
-    PathSegment, Type, TypePath, Variant,
+    AngleBracketedGenericArguments, DeriveInput, Fields, GenericArgument, Ident, LitInt,
+    PathArguments, PathSegment, Type, TypePath, Variant,
 };
+
+/// Returns whether the type is managed by a third party.
+pub fn is_external_struct(ast: &DeriveInput) -> bool {
+    ast.attrs.iter().any(|attr| {
+        if attr.path().is_ident("params") {
+            let mut is_external = false;
+            let _ = attr.parse_nested_meta(|parse_nested_meta| {
+                is_external = parse_nested_meta.path.is_ident("external");
+                Ok(())
+            });
+
+            is_external
+        } else {
+            false
+        }
+    })
+}
 
 /// Returns whether the given field is a `PhantomData`.
 pub fn is_phantom_data(field_ty: &Type) -> bool {

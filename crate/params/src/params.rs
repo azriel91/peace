@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::ValueSpecRt;
+use crate::FieldWiseSpecRt;
 
 /// Input parameters to an item spec.
 ///
@@ -16,7 +16,7 @@ pub trait Params {
     ///
     /// Specifies how to look up values for each field in the item spec's
     /// `Params`.
-    type FieldWiseSpec: ValueSpecRt<ValueType = Self, Partial = Self::Partial>
+    type FieldWiseSpec: FieldWiseSpecRt<ValueType = Self, Partial = Self::Partial>
         + Clone
         + Debug
         + Serialize
