@@ -7,7 +7,7 @@ pub use crate::{
     tar_x_data::TarXData,
     tar_x_error::TarXError,
     tar_x_item_spec::TarXItemSpec,
-    tar_x_params::{TarXParams, TarXParamsPartial, TarXParamsSpec},
+    tar_x_params::{TarXParams, TarXParamsFieldWise, TarXParamsPartial},
     tar_x_state_current_fn::TarXStateCurrentFn,
     tar_x_state_desired_fn::TarXStateDesiredFn,
     tar_x_state_diff::TarXStateDiff,

@@ -6,7 +6,7 @@ pub use crate::{
     blank_dest::BlankDest,
     blank_error::BlankError,
     blank_item_spec::BlankItemSpec,
-    blank_params::{BlankParams, BlankParamsPartial, BlankParamsSpec},
+    blank_params::{BlankParams, BlankParamsFieldWise, BlankParamsPartial},
     blank_src::BlankSrc,
     blank_state::BlankState,
     blank_state_diff::BlankStateDiff,

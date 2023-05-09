@@ -7,7 +7,7 @@ use peace::{
     },
     data::marker::Current,
     fmt::presentln,
-    params::ValueSpec,
+    params::{ParamsSpec, ValueSpec},
     resources::resources::ts::SetUp,
     rt_model::{
         output::OutputWrite,
@@ -20,7 +20,7 @@ use crate::{
     flows::EnvDeployFlow,
     item_specs::{
         peace_aws_iam_policy::IamPolicyState,
-        peace_aws_iam_role::{IamRoleItemSpec, IamRoleParamsSpec},
+        peace_aws_iam_role::{IamRoleItemSpec, IamRoleParams, IamRoleParamsFieldWise},
     },
     model::{EnvManError, EnvType, ProfileParamsKey, WebAppFileId, WorkspaceParamsKey},
     rt_model::EnvManCmdCtx,
@@ -56,19 +56,27 @@ impl EnvCmd {
         let profile_key = WorkspaceParamsKey::Profile;
 
         let iam_role_path = String::from("/");
-        let iam_role_params_spec = IamRoleParamsSpec::<WebAppFileId>::new(
-            ValueSpec::from_map(|profile: &Profile| Some(profile.to_string())),
-            ValueSpec::Value(iam_role_path),
-            ValueSpec::from_map(|iam_policy_state: &Current<IamPolicyState>| {
-                let IamPolicyState::Some {
+        let iam_role_params_spec =
+            ParamsSpec::<IamRoleParams<WebAppFileId>>::FieldWise(IamRoleParamsFieldWise::<
+                WebAppFileId,
+            >::new(
+                ValueSpec::from_map(Some(String::from("name")), |profile: &Profile| {
+                    Some(profile.to_string())
+                }),
+                ValueSpec::Value(iam_role_path),
+                ValueSpec::from_map(
+                    Some(String::from("managed_policy_arn")),
+                    |iam_policy_state: &Current<IamPolicyState>| {
+                        let IamPolicyState::Some {
                     policy_id_arn_version: Generated::Value(policy_id_arn_version),
                     ..
                 } = iam_policy_state.as_ref()? else {
                     return None;
                 };
-                Some(policy_id_arn_version.arn().to_string())
-            }),
-        );
+                        Some(policy_id_arn_version.arn().to_string())
+                    },
+                ),
+            ));
 
         let mut cmd_ctx = {
             let cmd_ctx_builder =

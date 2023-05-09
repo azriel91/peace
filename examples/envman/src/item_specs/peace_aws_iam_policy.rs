@@ -5,7 +5,7 @@ pub use self::{
     iam_policy_data::IamPolicyData,
     iam_policy_error::IamPolicyError,
     iam_policy_item_spec::IamPolicyItemSpec,
-    iam_policy_params::{IamPolicyParams, IamPolicyParamsPartial, IamPolicyParamsSpec},
+    iam_policy_params::{IamPolicyParams, IamPolicyParamsFieldWise, IamPolicyParamsPartial},
     iam_policy_state::IamPolicyState,
     iam_policy_state_current_fn::IamPolicyStateCurrentFn,
     iam_policy_state_desired_fn::IamPolicyStateDesiredFn,

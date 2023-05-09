@@ -20,6 +20,7 @@ use url::Url;
 #[derive(Params, PartialEq, Eq, Deserialize, Serialize)]
 pub struct FileDownloadParams<Id> {
     /// Url of the file to download.
+    #[params(external)]
     src: Url,
     /// Path of the destination.
     ///
@@ -30,6 +31,7 @@ pub struct FileDownloadParams<Id> {
     /// For URLs that return binary content, this must be `Base64` as browser
     /// storage can only store text.
     #[cfg(target_arch = "wasm32")]
+    #[params(external)]
     storage_form: crate::StorageForm,
     /// Marker for unique download parameters type.
     marker: PhantomData<Id>,
@@ -44,6 +46,15 @@ impl<Id> Clone for FileDownloadParams<Id> {
             storage_form: self.storage_form.clone(),
             marker: PhantomData,
         }
+    }
+}
+
+impl<Id> fmt::Debug for FileDownloadParams<Id> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("FileDownloadParams")
+            .field("src", &self.src)
+            .field("dest", &self.dest)
+            .finish()
     }
 }
 
@@ -79,14 +90,5 @@ impl<Id> FileDownloadParams<Id> {
     #[cfg(target_arch = "wasm32")]
     pub fn storage_form(&self) -> crate::StorageForm {
         self.storage_form
-    }
-}
-
-impl<Id> fmt::Debug for FileDownloadParams<Id> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("FileDownloadParams")
-            .field("src", &self.src)
-            .field("dest", &self.dest)
-            .finish()
     }
 }

@@ -5,7 +5,7 @@ pub use self::{
     iam_role_data::IamRoleData,
     iam_role_error::IamRoleError,
     iam_role_item_spec::IamRoleItemSpec,
-    iam_role_params::{IamRoleParams, IamRoleParamsPartial, IamRoleParamsSpec},
+    iam_role_params::{IamRoleParams, IamRoleParamsFieldWise, IamRoleParamsPartial},
     iam_role_state::IamRoleState,
     iam_role_state_current_fn::IamRoleStateCurrentFn,
     iam_role_state_desired_fn::IamRoleStateDesiredFn,
