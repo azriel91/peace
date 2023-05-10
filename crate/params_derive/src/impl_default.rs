@@ -23,14 +23,17 @@ pub fn impl_default(
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
     type_name: &Ident,
 ) -> Option<proc_macro2::TokenStream> {
-    let (impl_generics, ty_generics, _where_clause) = generics_split;
+    let (impl_generics, ty_generics, where_clause) = generics_split;
     match &ast.data {
         Data::Struct(data_struct) => {
             let fields = &data_struct.fields;
             let impl_default_body = impl_default_body(&parse_quote!(#type_name), fields);
 
             let tokens = quote! {
-                impl #impl_generics ::std::default::Default for #type_name #ty_generics {
+                impl #impl_generics ::std::default::Default
+                for #type_name #ty_generics
+                #where_clause
+                {
                     fn default() -> Self {
                         #impl_default_body
                     }
@@ -58,7 +61,10 @@ pub fn impl_default(
                     impl_default_body(&parse_quote!(#type_name::#variant_name), fields);
 
                 let tokens = quote! {
-                    impl #impl_generics ::std::default::Default for #type_name #ty_generics {
+                    impl #impl_generics ::std::default::Default
+                    for #type_name #ty_generics
+                    #where_clause
+                    {
                         fn default() -> Self {
                             #impl_default_body
                         }

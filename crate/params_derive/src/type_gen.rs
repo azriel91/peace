@@ -7,7 +7,8 @@ use syn::{
 
 use crate::util::{
     field_ty_to_ref_ty, fields_deconstruct, fields_deconstruct_retain, is_phantom_data,
-    tuple_ident_from_field_index, tuple_index_from_field_index, variant_match_arm, RefTypeAndExpr,
+    is_serde_bound_attr, tuple_ident_from_field_index, tuple_index_from_field_index,
+    variant_match_arm, RefTypeAndExpr,
 };
 
 pub struct TypeGen;
@@ -22,27 +23,35 @@ impl TypeGen {
     /// * `type_name`: Name of the type to generate.
     /// * `fields_map`: Transformation function to apply to the type of the
     ///   fields.
-    /// * `attrs`: Attributes to attach to the generated type.
+    /// * `attrs_to_add`: Attributes to attach to the generated type.
     pub fn gen_from_value_type<F>(
         ast: &DeriveInput,
         generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
         type_name: &Ident,
         fields_map: F,
-        attrs: &[Attribute],
+        attrs_to_add: &[Attribute],
     ) -> proc_macro2::TokenStream
     where
         F: Fn(&mut Fields),
     {
         let (impl_generics, ty_generics, where_clause) = generics_split;
+        let serde_bound_attrs = ast.attrs.iter().filter(|attr| is_serde_bound_attr(*attr));
 
         match &ast.data {
             syn::Data::Struct(data_struct) => {
                 let mut fields = data_struct.fields.clone();
                 fields_map(&mut fields);
-                let semi_colon_maybe = if matches!(&fields, Fields::Unnamed(_) | Fields::Unit) {
-                    quote!(;)
+                let struct_definition = if matches!(&fields, Fields::Unnamed(_) | Fields::Unit) {
+                    quote! {
+                        pub struct #type_name #ty_generics #fields
+                        #where_clause;
+                    }
                 } else {
-                    quote!()
+                    quote! {
+                        pub struct #type_name #ty_generics
+                        #where_clause
+                        #fields
+                    }
                 };
 
                 let struct_constructor = Self::struct_constructor(type_name, &fields);
@@ -51,10 +60,13 @@ impl TypeGen {
                 let struct_getters_and_mut_getters = Self::struct_getters_and_mut_getters(&fields);
 
                 quote! {
-                    #(#attrs)*
-                    pub struct #type_name #ty_generics #fields #semi_colon_maybe
+                    #(#attrs_to_add)*
+                    #(#serde_bound_attrs)*
+                    #struct_definition
 
-                    impl #impl_generics #type_name #ty_generics {
+                    impl #impl_generics #type_name #ty_generics
+                    #where_clause
+                    {
                         #struct_constructor
 
                         #struct_getters_and_mut_getters
@@ -89,8 +101,11 @@ impl TypeGen {
                 let variants_debug = Self::variants_debug(&variants);
 
                 quote! {
-                    #(#attrs)*
-                    pub enum #type_name #ty_generics {
+                    #(#attrs_to_add)*
+                    #(#serde_bound_attrs)*
+                    pub enum #type_name #ty_generics
+                    #where_clause
+                    {
                         #variants
                     }
 
@@ -118,8 +133,11 @@ impl TypeGen {
                 fields_map(&mut fields);
 
                 quote! {
-                    #(#attrs)*
-                    pub union #type_name #ty_generics #fields
+                    #(#attrs_to_add)*
+                    #(#serde_bound_attrs)*
+                    pub union #type_name #ty_generics
+                    #where_clause
+                    #fields
                 }
             }
         }

@@ -21,6 +21,21 @@ pub fn is_external(attrs: &[Attribute]) -> bool {
     })
 }
 
+/// Returns whether the attribute is a `#[serde(bound = "..")]` attribute.
+pub fn is_serde_bound_attr(attr: &Attribute) -> bool {
+    if attr.path().is_ident("serde") {
+        let mut is_bound = false;
+        let _ = attr.parse_nested_meta(|parse_nested_meta| {
+            is_bound = parse_nested_meta.path.is_ident("bound");
+            Ok(())
+        });
+
+        is_bound
+    } else {
+        false
+    }
+}
+
 /// Returns whether the given field is a `PhantomData`.
 pub fn is_phantom_data(field_ty: &Type) -> bool {
     matches!(&field_ty, Type::Path(TypePath { path, .. })

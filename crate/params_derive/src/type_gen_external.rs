@@ -43,7 +43,9 @@ pub fn type_gen_external(
         #(#attrs)*
         pub struct #type_name #ty_generics(Option<#value_ty>);
 
-        impl #impl_generics #type_name #ty_generics {
+        impl #impl_generics #type_name #ty_generics
+        #where_clause
+        {
             #[doc = #constructor_doc]
             pub fn new(value: Option<#value_ty>) -> Self {
                 Self(value)

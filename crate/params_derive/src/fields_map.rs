@@ -1,7 +1,7 @@
-use syn::{Fields, Path, Type};
+use syn::{Attribute, Fields, Path, Type};
 
 use crate::{
-    util::{is_external, is_phantom_data},
+    util::{is_external, is_phantom_data, is_serde_bound_attr},
     ExternalType,
 };
 
@@ -44,7 +44,13 @@ where
     match fields {
         Fields::Named(fields_named) => {
             fields_named.named.iter_mut().for_each(|field| {
-                // Don't copy across attributes, e.g. `#[serde(default)].
+                // Don't copy across most attributes.
+                // The only attribute we copy across is `#[serde(bound = "..")]`
+                field.attrs = field
+                    .attrs
+                    .drain(..)
+                    .filter(is_serde_bound_attr)
+                    .collect::<Vec<Attribute>>();
                 field.attrs.clear();
 
                 let field_ty = &field.ty;
@@ -53,7 +59,13 @@ where
         }
         Fields::Unnamed(fields_unnamed) => {
             fields_unnamed.unnamed.iter_mut().for_each(|field| {
-                // Don't copy across attributes, e.g. `#[serde(default)].
+                // Don't copy across most attributes.
+                // The only attribute we copy across is `#[serde(bound = "..")]`
+                field.attrs = field
+                    .attrs
+                    .drain(..)
+                    .filter(is_serde_bound_attr)
+                    .collect::<Vec<Attribute>>();
                 field.attrs.clear();
 
                 let field_ty = &field.ty;

@@ -77,7 +77,10 @@ mod util;
 ///
 /// * `default`: Enum variant attribute to indicate which variant to instantiate
 ///   for `ParamsPartial::default()`.
-#[proc_macro_derive(Params, attributes(peace_internal, crate_internal, params, default))]
+#[proc_macro_derive(
+    Params,
+    attributes(peace_internal, crate_internal, params, default, serde)
+)]
 pub fn params_derive(input: TokenStream) -> TokenStream {
     let ast = syn::parse(input)
         .expect("`Params` derive: Failed to parse item as struct, enum, or union.");
