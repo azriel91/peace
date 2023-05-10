@@ -116,14 +116,7 @@ where
 
 impl<T> ParamsSpec<T>
 where
-    T: Params<Spec = ParamsSpec<T>>
-        + Clone
-        + Debug
-        + Serialize
-        + DeserializeOwned
-        + Send
-        + Sync
-        + 'static,
+    T: Params<Spec = ParamsSpec<T>> + Clone + Debug + Send + Sync + 'static,
     T::Partial: From<T>,
 {
     pub fn resolve(

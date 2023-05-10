@@ -10,8 +10,8 @@ extern crate syn;
 use proc_macro::TokenStream;
 
 use syn::{
-    DeriveInput, Generics, Ident, ImplGenerics, Path, Type, TypeGenerics, WhereClause,
-    WherePredicate,
+    DeriveInput, GenericParam, Generics, Ident, ImplGenerics, Path, Type, TypeGenerics,
+    WhereClause, WherePredicate,
 };
 use type_gen_external::External;
 
@@ -27,7 +27,7 @@ use crate::{
     impl_value_spec_rt_for_field_wise::impl_value_spec_rt_for_field_wise,
     type_gen::TypeGen,
     type_gen_external::type_gen_external,
-    util::is_external,
+    util::{is_external, serde_bounds_for_trait},
 };
 
 mod external_type;
@@ -196,14 +196,19 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
 
         (t_partial, t_field_wise)
     };
-    let (impl_generics, ty_generics, where_clause) = &generics_split;
+    let (impl_generics, ty_generics, _where_clause) = &generics_split;
 
+    let mut generics_for_trait = generics.clone();
+    let where_clause_for_trait = generics_for_trait.make_where_clause();
+    where_clause_for_trait
+        .predicates
+        .extend(serde_bounds_for_trait(&ast));
     let external_wrapper_types = ExternalType::external_wrapper_types(ast, &peace_params_path);
 
     quote! {
         impl #impl_generics #peace_params_path::Params
         for #params_name #ty_generics
-        #where_clause
+        #where_clause_for_trait
         {
             type Spec = #peace_params_path::ParamsSpec<#params_name #ty_generics>;
             type Partial = #t_partial_name #ty_generics;
@@ -212,7 +217,7 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
 
         impl #impl_generics #peace_params_path::Value
         for #params_name #ty_generics
-        #where_clause
+        #where_clause_for_trait
         {
             type Spec = #peace_params_path::ValueSpec<#params_name #ty_generics>;
             type Partial = #t_partial_name #ty_generics;
@@ -291,14 +296,19 @@ fn impl_value(ast: &DeriveInput) -> proc_macro2::TokenStream {
 
         (t_partial, t_field_wise)
     };
-    let (impl_generics, ty_generics, where_clause) = &generics_split;
+    let (impl_generics, ty_generics, _where_clause) = &generics_split;
 
+    let mut generics_for_trait = generics.clone();
+    let where_clause_for_trait = generics_for_trait.make_where_clause();
+    where_clause_for_trait
+        .predicates
+        .extend(serde_bounds_for_trait(&ast));
     let external_wrapper_types = ExternalType::external_wrapper_types(ast, &peace_params_path);
 
     quote! {
         impl #impl_generics #peace_params_path::Value
         for #value_name #ty_generics
-        #where_clause
+        #where_clause_for_trait
         {
             type Spec = #peace_params_path::ValueSpec<#value_name #ty_generics>;
             type Partial = #t_partial_name #ty_generics;
@@ -319,9 +329,9 @@ fn type_parameters_constrain(generics: &mut Generics) {
     let where_predicates = generic_params
         .iter()
         .filter_map(|generic_param| match generic_param {
-            syn::GenericParam::Lifetime(_) => None,
-            syn::GenericParam::Type(type_param) => Some(type_param),
-            syn::GenericParam::Const(_) => None,
+            GenericParam::Lifetime(_) => None,
+            GenericParam::Type(type_param) => Some(type_param),
+            GenericParam::Const(_) => None,
         })
         .map(|type_param| parse_quote!(#type_param: Send + Sync + 'static))
         .collect::<Vec<WherePredicate>>();

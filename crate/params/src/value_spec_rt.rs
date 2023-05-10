@@ -1,7 +1,6 @@
 use std::fmt::Debug;
 
 use peace_resources::{resources::ts::SetUp, Resources};
-use serde::{de::DeserializeOwned, Serialize};
 
 use crate::{ParamsResolveError, ValueResolutionCtx};
 
@@ -12,7 +11,7 @@ use crate::{ParamsResolveError, ValueResolutionCtx};
 /// types.
 pub trait ValueSpecRt {
     /// The original value type. `MyParamsValueSpec::ValueType` is `MyParams`.
-    type ValueType: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static;
+    type ValueType: Clone + Debug + Send + Sync + 'static;
 
     /// Resolves the value from resources.
     ///

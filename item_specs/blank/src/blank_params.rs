@@ -17,6 +17,7 @@ use crate::{BlankDest, BlankSrc};
 ///   from each other.
 #[derive(Derivative, Params, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
+#[serde(bound = "")]
 pub struct BlankParams<Id> {
     /// Source / desired value for the state.
     pub src: BlankSrc,

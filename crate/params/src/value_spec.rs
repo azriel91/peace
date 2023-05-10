@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug};
 
 use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 use crate::{MappingFn, MappingFnImpl, ParamsResolveError, Value, ValueResolutionCtx, ValueSpecRt};
 
@@ -97,14 +97,7 @@ where
 
 impl<T> ValueSpec<T>
 where
-    T: Value<Spec = ValueSpec<T>>
-        + Clone
-        + Debug
-        + Serialize
-        + DeserializeOwned
-        + Send
-        + Sync
-        + 'static,
+    T: Value<Spec = ValueSpec<T>> + Clone + Debug + Send + Sync + 'static,
     T::Partial: From<T>,
 {
     pub fn resolve(
@@ -160,14 +153,7 @@ where
 
 impl<T> ValueSpecRt for ValueSpec<T>
 where
-    T: Value<Spec = ValueSpec<T>>
-        + Clone
-        + Debug
-        + Serialize
-        + DeserializeOwned
-        + Send
-        + Sync
-        + 'static,
+    T: Value<Spec = ValueSpec<T>> + Clone + Debug + Send + Sync + 'static,
     T::Partial: From<T>,
     T: TryFrom<T::Partial>,
 {

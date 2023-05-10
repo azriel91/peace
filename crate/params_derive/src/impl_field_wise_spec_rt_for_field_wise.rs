@@ -6,7 +6,9 @@ use syn::{
 
 use crate::{
     external_type::ExternalType,
-    util::{fields_deconstruct, is_external, is_phantom_data, variant_match_arm},
+    util::{
+        fields_deconstruct, is_external, is_phantom_data, serde_bounds_for_trait, variant_match_arm,
+    },
 };
 
 /// `impl FieldWiseSpecRt for ParamsSpec`, so that Peace can resolve the params
@@ -20,7 +22,12 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
     params_field_wise_name: &Ident,
     params_partial_name: &Ident,
 ) -> proc_macro2::TokenStream {
-    let (impl_generics, ty_generics, where_clause) = generics_split;
+    let (impl_generics, ty_generics, _where_clause) = generics_split;
+    let mut generics_for_trait = ast.generics.clone();
+    let where_clause_for_trait = generics_for_trait.make_where_clause();
+    where_clause_for_trait
+        .predicates
+        .extend(serde_bounds_for_trait(&ast));
 
     let resolve_body = match &ast.data {
         syn::Data::Struct(data_struct) => {
@@ -97,7 +104,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
     quote! {
         impl #impl_generics #peace_params_path::FieldWiseSpecRt
         for #params_field_wise_name #ty_generics
-        #where_clause
+        #where_clause_for_trait
         {
             type ValueType = #params_name #ty_generics;
             type Partial = #params_partial_name #ty_generics;

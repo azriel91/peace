@@ -3,7 +3,7 @@ mod unit {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::Params;
+    use peace::params::{Params, ParamsSpec};
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct UnitParams;
@@ -12,6 +12,16 @@ mod unit {
 
     #[test]
     fn spec_from_params() {
+        let params = UnitParams;
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(UnitParams)
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_params() {
         let params = UnitParams;
 
         assert!(matches!(
@@ -59,7 +69,7 @@ mod struct_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec};
+    use peace::params::{Params, ParamsSpec, ValueSpec};
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct StructParams {
@@ -73,6 +83,24 @@ mod struct_params {
 
     #[test]
     fn spec_from_params() {
+        let params = StructParams {
+            src: String::from("a"),
+            dest: String::from("b"),
+        };
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(StructParams {
+                src,
+                dest,
+            })
+            if src == "a"
+            && dest == "b"
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_params() {
         let params = StructParams {
             src: String::from("a"),
             dest: String::from("b"),
@@ -191,17 +219,16 @@ mod struct_params {
 }
 
 mod struct_with_type_params {
-    use std::{any::TypeId, fmt::Debug, marker::PhantomData};
+    use std::{any::TypeId, marker::PhantomData};
 
+    use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec};
+    use peace::params::{Params, ParamsSpec, ValueSpec};
 
-    #[derive(Clone, Debug, Params, Serialize, Deserialize)]
-    pub struct StructWithTypeParams<Id>
-    where
-        Id: Clone + Debug,
-    {
+    #[derive(Derivative, Params, Serialize, Deserialize)]
+    #[derivative(Clone, Debug)]
+    pub struct StructWithTypeParams<Id> {
         /// Source / desired value for the state.
         src: String,
         /// Destination storage for the state.
@@ -219,6 +246,26 @@ mod struct_with_type_params {
 
     #[test]
     fn spec_from_params() {
+        let params = StructWithTypeParams::<()> {
+            src: String::from("a"),
+            dest: String::from("b"),
+            marker: PhantomData,
+        };
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(StructWithTypeParams {
+                src,
+                dest,
+                marker: PhantomData,
+            })
+            if src == "a"
+            && dest == "b"
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_params() {
         let params = StructWithTypeParams::<()> {
             src: String::from("a"),
             dest: String::from("b"),
@@ -353,7 +400,7 @@ mod tuple_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec};
+    use peace::params::{Params, ParamsSpec, ValueSpec};
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct TupleParams(
@@ -367,6 +414,21 @@ mod tuple_params {
 
     #[test]
     fn spec_from_params() {
+        let params = TupleParams(String::from("a"), String::from("b"));
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(TupleParams (
+                src,
+                dest,
+            ))
+            if src == "a"
+            && dest == "b"
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_params() {
         let params = TupleParams(String::from("a"), String::from("b"));
 
         assert!(matches!(
@@ -471,7 +533,7 @@ mod tuple_with_type_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec};
+    use peace::params::{Params, ParamsSpec, ValueSpec};
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct TupleWithTypeParams<Id>(String, String, PhantomData<Id>)
@@ -487,6 +549,22 @@ mod tuple_with_type_params {
 
     #[test]
     fn spec_from_params() {
+        let params = TupleWithTypeParams::<()>(String::from("a"), String::from("b"), PhantomData);
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(TupleWithTypeParams (
+                src,
+                dest,
+                PhantomData,
+            ))
+            if src == "a"
+            && dest == "b"
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_params() {
         let params = TupleWithTypeParams::<()>(String::from("a"), String::from("b"), PhantomData);
 
         assert!(matches!(
@@ -607,17 +685,16 @@ mod tuple_with_type_params {
 }
 
 mod enum_params {
-    use std::{any::TypeId, fmt::Debug, marker::PhantomData};
+    use std::{any::TypeId, marker::PhantomData};
 
+    use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec};
+    use peace::params::{Params, ParamsSpec, ValueSpec};
 
-    #[derive(Clone, Debug, Params, Serialize, Deserialize)]
-    pub enum EnumParams<Id>
-    where
-        Id: Clone + Debug,
-    {
+    #[derive(Derivative, Params, Serialize, Deserialize)]
+    #[derivative(Clone, Debug)]
+    pub enum EnumParams<Id> {
         Named {
             /// Source / desired value for the state.
             src: String,
@@ -644,6 +721,55 @@ mod enum_params {
         };
 
         assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumParams::Named {
+                src,
+                marker: PhantomData,
+            })
+            if src == "a"
+        ));
+    }
+
+    #[test]
+    fn spec_tuple_from_params() {
+        let params = EnumParams::<()>::Tuple(String::from("a"));
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumParams::Tuple(src))
+            if src == "a"
+        ));
+    }
+
+    #[test]
+    fn spec_tuple_marker_from_params() {
+        let params = EnumParams::<()>::TupleMarker(String::from("a"), PhantomData);
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumParams::TupleMarker(src, PhantomData))
+            if src == "a"
+        ));
+    }
+
+    #[test]
+    fn spec_unit_from_params() {
+        let params = EnumParams::<()>::Unit;
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumParams::Unit)
+        ));
+    }
+
+    #[test]
+    fn field_wise_named_from_params() {
+        let params = EnumParams::<()>::Named {
+            src: String::from("a"),
+            marker: PhantomData,
+        };
+
+        assert!(matches!(
             EnumParamsFieldWise::from(params),
             EnumParamsFieldWise::<()>::Named {
                 src: ValueSpec::Value(value),
@@ -654,7 +780,7 @@ mod enum_params {
     }
 
     #[test]
-    fn spec_tuple_from_params() {
+    fn field_wise_tuple_from_params() {
         let params = EnumParams::<()>::Tuple(String::from("a"));
 
         assert!(matches!(
@@ -665,7 +791,7 @@ mod enum_params {
     }
 
     #[test]
-    fn spec_tuple_marker_from_params() {
+    fn field_wise_tuple_marker_from_params() {
         let params = EnumParams::<()>::TupleMarker(String::from("a"), PhantomData);
 
         assert!(matches!(
@@ -676,7 +802,7 @@ mod enum_params {
     }
 
     #[test]
-    fn spec_unit_from_params() {
+    fn field_wise_unit_from_params() {
         let params = EnumParams::<()>::Unit;
 
         assert!(matches!(
@@ -1048,6 +1174,190 @@ mod enum_params {
         assert!(matches!(
             EnumParams::<()>::try_from(&params_partial),
             Ok(EnumParams::<()>::Unit)
+        ));
+    }
+}
+
+mod struct_recursive_value_no_bounds {
+    use std::{any::TypeId, marker::PhantomData};
+
+    use derivative::Derivative;
+    use serde::{Deserialize, Serialize};
+
+    use peace::params::{Params, ParamsSpec, Value, ValueSpec};
+
+    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, Value)]
+    #[derivative(Clone, Debug)]
+    #[serde(bound = "")]
+    pub struct InnerValue<Id> {
+        /// Inner u32
+        inner: u32,
+        /// Marker for unique parameters type.
+        #[serde(bound = "")]
+        marker: PhantomData<Id>,
+    }
+
+    impl<Id> InnerValue<Id> {
+        fn new(inner: u32) -> Self {
+            Self {
+                inner,
+                marker: PhantomData,
+            }
+        }
+    }
+
+    #[derive(Derivative, Params, PartialEq, Eq, Serialize, Deserialize)]
+    #[derivative(Clone, Debug)]
+    #[serde(bound = "")]
+    pub struct StructRecursiveValueNoBounds<Id> {
+        /// Source / desired value for the state.
+        #[derivative(Clone(bound = ""), Debug(bound = ""))]
+        #[serde(bound = "")]
+        src: InnerValue<Id>,
+        /// Destination storage for the state.
+        dest: u32,
+    }
+
+    super::params_tests!(
+        StructRecursiveValueNoBounds,
+        StructRecursiveValueNoBoundsFieldWise,
+        StructRecursiveValueNoBoundsPartial,
+        [<()>]
+    );
+
+    #[test]
+    fn spec_from_params() {
+        let params = StructRecursiveValueNoBounds::<()> {
+            src: InnerValue::new(123),
+            dest: 456,
+        };
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(StructRecursiveValueNoBounds {
+                src,
+                dest,
+            })
+            if src.inner == 123
+            && dest == 456
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_params() {
+        let params = StructRecursiveValueNoBounds::<()> {
+            src: InnerValue::new(123),
+            dest: 456,
+        };
+
+        assert!(matches!(
+            StructRecursiveValueNoBoundsFieldWise::from(params),
+            StructRecursiveValueNoBoundsFieldWise {
+                src: ValueSpec::Value(src_value),
+                dest: ValueSpec::Value(dest_value),
+            }
+            if src_value.inner == 123
+            && dest_value == 456
+        ));
+    }
+
+    #[test]
+    fn spec_debug() {
+        assert_eq!(
+            r#"StructRecursiveValueNoBoundsFieldWise { src: Value(InnerValue { inner: 123, marker: PhantomData<()> }), dest: Value(456) }"#,
+            format!(
+                "{:?}",
+                StructRecursiveValueNoBoundsFieldWise::<()> {
+                    src: ValueSpec::Value(InnerValue::new(123)),
+                    dest: ValueSpec::Value(456),
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn params_partial_debug() {
+        assert_eq!(
+            r#"StructRecursiveValueNoBoundsPartial { src: Some(InnerValue { inner: 123, marker: PhantomData<()> }), dest: Some(456) }"#,
+            format!(
+                "{:?}",
+                StructRecursiveValueNoBoundsPartial::<()> {
+                    src: Some(InnerValue::new(123)),
+                    dest: Some(456),
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_ok_when_all_fields_are_some() {
+        let params_partial = StructRecursiveValueNoBoundsPartial::<()> {
+            src: Some(InnerValue::new(123)),
+            dest: Some(456),
+        };
+
+        assert!(matches!(
+            StructRecursiveValueNoBounds::try_from(params_partial),
+            Ok(StructRecursiveValueNoBounds {
+                src,
+                dest,
+            })
+            if src.inner == 123
+            && dest == 456
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_err_when_some_fields_are_none() {
+        let params_partial = StructRecursiveValueNoBoundsPartial::<()> {
+            src: Some(InnerValue::new(123)),
+            dest: None,
+        };
+
+        assert!(matches!(
+            StructRecursiveValueNoBounds::try_from(params_partial),
+            Err(StructRecursiveValueNoBoundsPartial {
+                src,
+                dest,
+            })
+            if src == Some(InnerValue::new(123))
+            && dest.is_none()
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_ref_returns_ok_when_all_fields_are_some() {
+        let params_partial = StructRecursiveValueNoBoundsPartial::<()> {
+            src: Some(InnerValue::new(123)),
+            dest: Some(456),
+        };
+
+        assert!(matches!(
+            StructRecursiveValueNoBounds::try_from(&params_partial),
+            Ok(StructRecursiveValueNoBounds {
+                src,
+                dest,
+            })
+            if src.inner == 123
+            && dest == 456
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_ref_returns_err_when_some_fields_are_none() {
+        let params_partial = StructRecursiveValueNoBoundsPartial::<()> {
+            src: Some(InnerValue::new(123)),
+            dest: None,
+        };
+
+        assert!(matches!(
+            StructRecursiveValueNoBounds::try_from(&params_partial),
+            Err(StructRecursiveValueNoBoundsPartial {
+                src,
+                dest,
+            })
+            if src == &Some(InnerValue::new(123))
+            && dest.is_none()
         ));
     }
 }

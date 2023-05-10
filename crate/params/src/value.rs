@@ -14,5 +14,5 @@ pub trait Value {
     /// Convenience associated type for `ValueSpec<Self>`.
     type Spec: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static;
     /// The `Value` type, but with optional fields.
-    type Partial: Clone + Debug + Default + Serialize + DeserializeOwned + Send + Sync + 'static;
+    type Partial: Clone + Debug + Default + Send + Sync + 'static;
 }

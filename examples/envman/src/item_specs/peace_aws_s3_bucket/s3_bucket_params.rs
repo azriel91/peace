@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 ///   from each other.
 #[derive(Derivative, Params, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
+#[serde(bound = "")]
 pub struct S3BucketParams<Id> {
     /// Name for both the S3 bucket and role.
     ///

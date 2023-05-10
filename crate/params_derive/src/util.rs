@@ -1,7 +1,8 @@
 use proc_macro2::Span;
 use syn::{
-    AngleBracketedGenericArguments, Attribute, Fields, GenericArgument, Ident, LitInt, Path,
-    PathArguments, PathSegment, Type, TypePath, Variant,
+    meta::ParseNestedMeta, punctuated::Punctuated, AngleBracketedGenericArguments, Attribute,
+    DeriveInput, Fields, GenericArgument, GenericParam, Ident, LitInt, Path, PathArguments,
+    PathSegment, Type, TypePath, Variant, WherePredicate,
 };
 
 /// Returns whether the type or field is defined outside the crate.
@@ -33,6 +34,118 @@ pub fn is_serde_bound_attr(attr: &Attribute) -> bool {
         is_bound
     } else {
         false
+    }
+}
+
+/// Returns the `T: Serialize + DeserializeOwned` bounds to use for each type
+/// parameter.
+///
+/// This will be either:
+///
+/// * whatever is provided in a user specified `#[serde(bound = "..")]`, or
+/// * `T: Serialize + DeserializeOwned` if the bound has not been specified.
+pub fn serde_bounds_for_trait(ast: &DeriveInput) -> Vec<WherePredicate> {
+    let mut serde_bounds_for_trait = ast.attrs.iter().map(serde_bounds).fold(
+        None::<Vec<WherePredicate>>,
+        |mut where_predicates_all, where_predicates_for_bound| {
+            if let Some(where_predicates_all) = where_predicates_all.as_mut() {
+                if let Some(where_predicates_for_bound) = where_predicates_for_bound {
+                    where_predicates_all.extend(where_predicates_for_bound);
+                }
+            } else if let Some(where_predicates_for_bound) = where_predicates_for_bound {
+                where_predicates_all = Some(where_predicates_for_bound);
+            }
+
+            where_predicates_all
+        },
+    );
+
+    if serde_bounds_for_trait.is_none() {
+        serde_bounds_for_trait = Some(
+            ast.generics
+                .params
+                .iter()
+                .filter_map(|generic_param| match generic_param {
+                    GenericParam::Lifetime(_) => None,
+                    GenericParam::Type(type_param) => Some(type_param),
+                    GenericParam::Const(_) => None,
+                })
+                .map(|type_param| {
+                    parse_quote! {
+                        #type_param: serde::Serialize + serde::de::DeserializeOwned
+                    }
+                })
+                .collect::<Vec<WherePredicate>>(),
+        );
+    }
+
+    if let Some(serde_bounds_for_trait) = serde_bounds_for_trait.as_mut() {
+        serde_bounds_for_trait.extend(
+            ast.generics
+                .params
+                .iter()
+                .filter_map(|generic_param| match generic_param {
+                    GenericParam::Lifetime(_) => None,
+                    GenericParam::Type(type_param) => Some(type_param),
+                    GenericParam::Const(_) => None,
+                })
+                .map(|type_param| parse_quote!(#type_param: Send + Sync + 'static))
+                .collect::<Vec<WherePredicate>>(),
+        );
+    }
+
+    serde_bounds_for_trait.unwrap_or_else(Vec::new)
+}
+
+/// Returns the where predicate within a `#[serde(bound = "WherePredicate")]`
+/// attribute.
+///
+/// See [`serde_derive::internals::attr::parse_lit_into_where`][parse_lit_into_where].
+///
+/// [parse_lit_into_where]: https://github.com/serde-rs/serde/blob/3e4a23cbd064f983e0029404e69b1210d232f94f/serde_derive/src/internals/attr.rs#L1469
+pub fn serde_bounds(attr: &Attribute) -> Option<Vec<WherePredicate>> {
+    let mut where_predicates = None::<Vec<WherePredicate>>;
+    if attr.path().is_ident("serde") {
+        let _ = attr.parse_nested_meta(|parse_nested_meta| {
+            if parse_nested_meta.path.is_ident("bound") {
+                let string = match get_lit_str(&parse_nested_meta)? {
+                    Some(string) => string,
+                    None => return Ok(()),
+                };
+
+                match string.parse_with(Punctuated::<WherePredicate, Token![,]>::parse_terminated) {
+                    Ok(predicates) => {
+                        if let Some(where_predicates) = where_predicates.as_mut() {
+                            where_predicates.extend(predicates);
+                        } else {
+                            where_predicates =
+                                Some(predicates.into_iter().collect::<Vec<WherePredicate>>());
+                        }
+                    }
+                    Err(_error) => {}
+                }
+            }
+            Ok(())
+        });
+    }
+
+    where_predicates
+}
+
+fn get_lit_str(meta: &ParseNestedMeta) -> syn::Result<Option<syn::LitStr>> {
+    let expr: syn::Expr = meta.value()?.parse()?;
+    let mut value = &expr;
+    while let syn::Expr::Group(e) = value {
+        value = &e.expr;
+    }
+    if let syn::Expr::Lit(syn::ExprLit {
+        lit: syn::Lit::Str(lit),
+        ..
+    }) = value
+    {
+        Ok(Some(lit.clone()))
+    } else {
+        Ok(None)
     }
 }
 

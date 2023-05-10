@@ -22,6 +22,7 @@ use serde::{Deserialize, Serialize};
 // * force re-extraction
 #[derive(Derivative, Params, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
+#[serde(bound = "")]
 pub struct TarXParams<Id> {
     /// Path of the tar file to extract.
     tar_path: PathBuf,

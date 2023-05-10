@@ -17,6 +17,7 @@ use crate::ShCmd;
 ///   parameters from each other.
 #[derive(Derivative, Params, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
+#[serde(bound = "")]
 pub struct ShCmdParams<Id> {
     /// Shell command to run to discover the clean state.
     ///
