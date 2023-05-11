@@ -1,5 +1,7 @@
 use syn::{Attribute, DeriveInput, Ident, ImplGenerics, Type, TypeGenerics, WhereClause};
 
+use crate::util::is_serde_bound_attr;
+
 /// Generates a type based off an external `Value` type.
 ///
 /// ```rust,ignore
@@ -23,6 +25,16 @@ pub fn type_gen_external(
     type_name: &Ident,
     attrs: &[Attribute],
 ) -> proc_macro2::TokenStream {
+    let mut serde_bound_attrs = ast
+        .attrs
+        .iter()
+        .filter(|attr| is_serde_bound_attr(attr))
+        .collect::<Vec<&Attribute>>();
+    let serde_bound_empty = parse_quote!(#[serde(bound = "")]);
+    if serde_bound_attrs.is_empty() {
+        serde_bound_attrs.push(&serde_bound_empty);
+    }
+
     let (impl_generics, ty_generics, where_clause) = generics_split;
 
     let constructor_doc = format!("Returns a new `{type_name}`.");
@@ -41,7 +53,9 @@ pub fn type_gen_external(
 
     let mut tokens = quote! {
         #(#attrs)*
-        pub struct #type_name #ty_generics(Option<#value_ty>);
+        #(#serde_bound_attrs)*
+        pub struct #type_name #ty_generics(Option<#value_ty>)
+        #where_clause;
 
         impl #impl_generics #type_name #ty_generics
         #where_clause

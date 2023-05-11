@@ -1178,6 +1178,189 @@ mod enum_params {
     }
 }
 
+mod struct_recursive_value {
+    use std::{any::TypeId, fmt::Debug};
+
+    use serde::{Deserialize, Serialize};
+
+    use peace::params::{Params, ParamsSpec, Value, ValueSpec};
+
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Value)]
+    pub struct InnerValue<T>(T)
+    where
+        T: Clone + Debug + Value;
+
+    impl<T> InnerValue<T>
+    where
+        T: Clone + Debug + Value,
+    {
+        fn new(inner: T) -> Self {
+            Self(inner)
+        }
+    }
+
+    #[derive(Clone, Debug, Params, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct StructRecursiveValue<T>
+    where
+        T: Clone
+            + Debug
+            + Value<Spec = ValueSpec<T>>
+            + TryFrom<<T as Value>::Partial>
+            + Send
+            + Sync
+            + 'static,
+        T::Partial: From<T>,
+    {
+        /// Source / desired value for the state.
+        src: InnerValue<T>,
+        /// Destination storage for the state.
+        dest: u32,
+    }
+
+    super::params_tests!(
+        StructRecursiveValue,
+        StructRecursiveValueFieldWise,
+        StructRecursiveValuePartial,
+        [<u8>]
+    );
+
+    #[test]
+    fn spec_from_params() {
+        let params = StructRecursiveValue::<u16> {
+            src: InnerValue::<u16>::new(123),
+            dest: 456,
+        };
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(StructRecursiveValue {
+                src,
+                dest,
+            })
+            if src == InnerValue::<u16>(123)
+            && dest == 456
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_params() {
+        let params = StructRecursiveValue::<u16> {
+            src: InnerValue::<u16>::new(123),
+            dest: 456,
+        };
+
+        assert!(matches!(
+            StructRecursiveValueFieldWise::from(params),
+            StructRecursiveValueFieldWise {
+                src: ValueSpec::Value(src_value),
+                dest: ValueSpec::Value(dest_value),
+            }
+            if src_value == InnerValue::<u16>(123)
+            && dest_value == 456
+        ));
+    }
+
+    #[test]
+    fn spec_debug() {
+        assert_eq!(
+            r#"StructRecursiveValueFieldWise { src: Value(InnerValue(123)), dest: Value(456) }"#,
+            format!(
+                "{:?}",
+                StructRecursiveValueFieldWise::<u16> {
+                    src: ValueSpec::Value(InnerValue::<u16>::new(123)),
+                    dest: ValueSpec::Value(456),
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn params_partial_debug() {
+        assert_eq!(
+            r#"StructRecursiveValuePartial { src: Some(InnerValue(123)), dest: Some(456) }"#,
+            format!(
+                "{:?}",
+                StructRecursiveValuePartial::<u16> {
+                    src: Some(InnerValue::<u16>::new(123)),
+                    dest: Some(456),
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_ok_when_all_fields_are_some() {
+        let params_partial = StructRecursiveValuePartial::<u16> {
+            src: Some(InnerValue::<u16>::new(123)),
+            dest: Some(456),
+        };
+
+        assert!(matches!(
+            StructRecursiveValue::try_from(params_partial),
+            Ok(StructRecursiveValue {
+                src,
+                dest,
+            })
+            if src == InnerValue::<u16>(123)
+            && dest == 456
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_err_when_some_fields_are_none() {
+        let params_partial = StructRecursiveValuePartial::<u16> {
+            src: Some(InnerValue::<u16>::new(123)),
+            dest: None,
+        };
+
+        assert!(matches!(
+            StructRecursiveValue::try_from(params_partial),
+            Err(StructRecursiveValuePartial {
+                src,
+                dest,
+            })
+            if src == Some(InnerValue::<u16>::new(123))
+            && dest.is_none()
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_ref_returns_ok_when_all_fields_are_some() {
+        let params_partial = StructRecursiveValuePartial::<u16> {
+            src: Some(InnerValue::<u16>::new(123)),
+            dest: Some(456),
+        };
+
+        assert!(matches!(
+            StructRecursiveValue::try_from(&params_partial),
+            Ok(StructRecursiveValue {
+                src,
+                dest,
+            })
+            if src == InnerValue::<u16>(123)
+            && dest == 456
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_ref_returns_err_when_some_fields_are_none() {
+        let params_partial = StructRecursiveValuePartial::<u16> {
+            src: Some(InnerValue::<u16>::new(123)),
+            dest: None,
+        };
+
+        assert!(matches!(
+            StructRecursiveValue::try_from(&params_partial),
+            Err(StructRecursiveValuePartial {
+                src,
+                dest,
+            })
+            if src == &Some(InnerValue::<u16>::new(123))
+            && dest.is_none()
+        ));
+    }
+}
+
 mod struct_recursive_value_no_bounds {
     use std::{any::TypeId, marker::PhantomData};
 
@@ -1212,7 +1395,6 @@ mod struct_recursive_value_no_bounds {
     pub struct StructRecursiveValueNoBounds<Id> {
         /// Source / desired value for the state.
         #[derivative(Clone(bound = ""), Debug(bound = ""))]
-        #[serde(bound = "")]
         src: InnerValue<Id>,
         /// Destination storage for the state.
         dest: u32,

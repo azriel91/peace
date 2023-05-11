@@ -10,8 +10,8 @@ extern crate syn;
 use proc_macro::TokenStream;
 
 use syn::{
-    DeriveInput, GenericParam, Generics, Ident, ImplGenerics, Path, Type, TypeGenerics,
-    WhereClause, WherePredicate,
+    DeriveInput, GenericParam, Ident, ImplGenerics, Path, Type, TypeGenerics, WhereClause,
+    WherePredicate,
 };
 use type_gen_external::External;
 
@@ -27,7 +27,7 @@ use crate::{
     impl_value_spec_rt_for_field_wise::impl_value_spec_rt_for_field_wise,
     type_gen::TypeGen,
     type_gen_external::type_gen_external,
-    util::{is_external, serde_bounds_for_trait},
+    util::{is_external, serde_bounds_for_type_params},
 };
 
 mod external_type;
@@ -82,10 +82,10 @@ mod util;
     attributes(peace_internal, crate_internal, params, default, serde)
 )]
 pub fn params_derive(input: TokenStream) -> TokenStream {
-    let ast = syn::parse(input)
+    let mut ast = syn::parse(input)
         .expect("`Params` derive: Failed to parse item as struct, enum, or union.");
 
-    let gen = impl_params(&ast);
+    let gen = impl_params(&mut ast);
 
     gen.into()
 }
@@ -113,27 +113,25 @@ pub fn params_derive(input: TokenStream) -> TokenStream {
 ///   for `ParamsPartial::default()`.
 #[proc_macro_derive(Value, attributes(peace_internal, crate_internal, params, default))]
 pub fn value_derive(input: TokenStream) -> TokenStream {
-    let ast =
+    let mut ast =
         syn::parse(input).expect("`Value` derive: Failed to parse item as struct, enum, or union.");
 
-    let gen = impl_value(&ast);
+    let gen = impl_value(&mut ast);
 
     gen.into()
 }
 
 #[proc_macro]
 pub fn value_impl(input: TokenStream) -> TokenStream {
-    let ast =
+    let mut ast =
         syn::parse(input).expect("`Value` impl: Failed to parse item as struct, enum, or union.");
 
-    let gen = impl_value(&ast);
+    let gen = impl_value(&mut ast);
 
     gen.into()
 }
 
-fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
-    let params_name = &ast.ident;
-
+fn impl_params(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
     let (peace_params_path, peace_resources_path): (Path, Path) = ast
         .attrs
         .iter()
@@ -148,8 +146,9 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
         })
         .unwrap_or_else(|| (parse_quote!(peace::params), parse_quote!(peace::resources)));
 
-    let mut generics = ast.generics.clone();
-    type_parameters_constrain(&mut generics);
+    type_parameters_constrain(ast);
+    let params_name = &ast.ident;
+    let generics = &ast.generics;
     let generics_split = generics.split_for_impl();
 
     // MyParams -> MyParamsPartial
@@ -196,19 +195,14 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
 
         (t_partial, t_field_wise)
     };
-    let (impl_generics, ty_generics, _where_clause) = &generics_split;
+    let (impl_generics, ty_generics, where_clause) = &generics_split;
 
-    let mut generics_for_trait = generics.clone();
-    let where_clause_for_trait = generics_for_trait.make_where_clause();
-    where_clause_for_trait
-        .predicates
-        .extend(serde_bounds_for_trait(&ast));
     let external_wrapper_types = ExternalType::external_wrapper_types(ast, &peace_params_path);
 
     quote! {
         impl #impl_generics #peace_params_path::Params
         for #params_name #ty_generics
-        #where_clause_for_trait
+        #where_clause
         {
             type Spec = #peace_params_path::ParamsSpec<#params_name #ty_generics>;
             type Partial = #t_partial_name #ty_generics;
@@ -217,7 +211,7 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
 
         impl #impl_generics #peace_params_path::Value
         for #params_name #ty_generics
-        #where_clause_for_trait
+        #where_clause
         {
             type Spec = #peace_params_path::ValueSpec<#params_name #ty_generics>;
             type Partial = #t_partial_name #ty_generics;
@@ -231,9 +225,7 @@ fn impl_params(ast: &DeriveInput) -> proc_macro2::TokenStream {
     }
 }
 
-fn impl_value(ast: &DeriveInput) -> proc_macro2::TokenStream {
-    let value_name = &ast.ident;
-
+fn impl_value(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
     let (peace_params_path, peace_resources_path): (Path, Path) = ast
         .attrs
         .iter()
@@ -248,8 +240,9 @@ fn impl_value(ast: &DeriveInput) -> proc_macro2::TokenStream {
         })
         .unwrap_or_else(|| (parse_quote!(peace::params), parse_quote!(peace::resources)));
 
-    let mut generics = ast.generics.clone();
-    type_parameters_constrain(&mut generics);
+    type_parameters_constrain(ast);
+    let value_name = &ast.ident;
+    let generics = &ast.generics;
     let generics_split = generics.split_for_impl();
 
     // MyValue -> MyValuePartial
@@ -296,19 +289,14 @@ fn impl_value(ast: &DeriveInput) -> proc_macro2::TokenStream {
 
         (t_partial, t_field_wise)
     };
-    let (impl_generics, ty_generics, _where_clause) = &generics_split;
+    let (impl_generics, ty_generics, where_clause) = &generics_split;
 
-    let mut generics_for_trait = generics.clone();
-    let where_clause_for_trait = generics_for_trait.make_where_clause();
-    where_clause_for_trait
-        .predicates
-        .extend(serde_bounds_for_trait(&ast));
     let external_wrapper_types = ExternalType::external_wrapper_types(ast, &peace_params_path);
 
     quote! {
         impl #impl_generics #peace_params_path::Value
         for #value_name #ty_generics
-        #where_clause_for_trait
+        #where_clause
         {
             type Spec = #peace_params_path::ValueSpec<#value_name #ty_generics>;
             type Partial = #t_partial_name #ty_generics;
@@ -322,11 +310,17 @@ fn impl_value(ast: &DeriveInput) -> proc_macro2::TokenStream {
     }
 }
 
-/// Adds a `Send + Sync + 'static` bound on each of the type parameters.
-fn type_parameters_constrain(generics: &mut Generics) {
-    let generic_params = &generics.params;
-
-    let where_predicates = generic_params
+/// Adds trait bounds on each of the type parameters.
+///
+/// * `Send + Sync + 'static` is always added
+/// * If a type has `#[serde(bound = "<Bound>")]`s, those bounds are used.
+/// * If a type does not have `#[serde(bound = "")]`, `Serialize +
+///   DeserializeOwned` is added for each type parameter.
+fn type_parameters_constrain(ast: &mut DeriveInput) {
+    let serde_bounds_for_type_params = serde_bounds_for_type_params(ast);
+    let additional_bounds = ast
+        .generics
+        .params
         .iter()
         .filter_map(|generic_param| match generic_param {
             GenericParam::Lifetime(_) => None,
@@ -336,10 +330,12 @@ fn type_parameters_constrain(generics: &mut Generics) {
         .map(|type_param| parse_quote!(#type_param: Send + Sync + 'static))
         .collect::<Vec<WherePredicate>>();
 
-    let where_clause = generics.make_where_clause();
+    let generics = &mut ast.generics;
+    let where_predicates = generics.make_where_clause();
+    where_predicates.predicates.extend(additional_bounds);
     where_predicates
-        .into_iter()
-        .for_each(|where_predicate| where_clause.predicates.push(where_predicate));
+        .predicates
+        .extend(serde_bounds_for_type_params);
 }
 
 /// Generates something like the following:
@@ -526,6 +522,7 @@ fn t_field_wise_external(
     );
 
     t_field_wise.extend(impl_field_wise_spec_rt_for_field_wise_external(
+        ast,
         generics_split,
         peace_params_path,
         peace_resources_path,

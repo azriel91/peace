@@ -44,8 +44,8 @@ pub fn is_serde_bound_attr(attr: &Attribute) -> bool {
 ///
 /// * whatever is provided in a user specified `#[serde(bound = "..")]`, or
 /// * `T: Serialize + DeserializeOwned` if the bound has not been specified.
-pub fn serde_bounds_for_trait(ast: &DeriveInput) -> Vec<WherePredicate> {
-    let mut serde_bounds_for_trait = ast.attrs.iter().map(serde_bounds).fold(
+pub fn serde_bounds_for_type_params(ast: &DeriveInput) -> Vec<WherePredicate> {
+    let mut serde_bounds_for_type_params = ast.attrs.iter().map(serde_bounds).fold(
         None::<Vec<WherePredicate>>,
         |mut where_predicates_all, where_predicates_for_bound| {
             if let Some(where_predicates_all) = where_predicates_all.as_mut() {
@@ -60,8 +60,8 @@ pub fn serde_bounds_for_trait(ast: &DeriveInput) -> Vec<WherePredicate> {
         },
     );
 
-    if serde_bounds_for_trait.is_none() {
-        serde_bounds_for_trait = Some(
+    if serde_bounds_for_type_params.is_none() {
+        serde_bounds_for_type_params = Some(
             ast.generics
                 .params
                 .iter()
@@ -79,22 +79,7 @@ pub fn serde_bounds_for_trait(ast: &DeriveInput) -> Vec<WherePredicate> {
         );
     }
 
-    if let Some(serde_bounds_for_trait) = serde_bounds_for_trait.as_mut() {
-        serde_bounds_for_trait.extend(
-            ast.generics
-                .params
-                .iter()
-                .filter_map(|generic_param| match generic_param {
-                    GenericParam::Lifetime(_) => None,
-                    GenericParam::Type(type_param) => Some(type_param),
-                    GenericParam::Const(_) => None,
-                })
-                .map(|type_param| parse_quote!(#type_param: Send + Sync + 'static))
-                .collect::<Vec<WherePredicate>>(),
-        );
-    }
-
-    serde_bounds_for_trait.unwrap_or_else(Vec::new)
+    serde_bounds_for_type_params.unwrap_or_default()
 }
 
 /// Returns the where predicate within a `#[serde(bound = "WherePredicate")]`
@@ -147,6 +132,44 @@ fn get_lit_str(meta: &ParseNestedMeta) -> syn::Result<Option<syn::LitStr>> {
     } else {
         Ok(None)
     }
+}
+
+/// Returns bounds for `T: Value + TryFrom<TPartial, T::Partial: From<T>`.
+///
+/// ```rust,ignore
+/// T: Value<Spec = ValueSpec<T>> + TryFrom<<T as Value>::Partial>,
+/// <T as Value>::Partial: From<T>,
+/// ```
+pub fn t_value_and_try_from_partial_bounds<'f>(
+    ast: &'f DeriveInput,
+    peace_params_path: &'f Path,
+) -> impl Iterator<Item = WherePredicate> + 'f {
+    ast.generics
+        .params
+        .iter()
+        .filter_map(|generic_param| match generic_param {
+            GenericParam::Lifetime(_) => None,
+            GenericParam::Type(type_param) => {
+                if type_param.ident == "Id" {
+                    None
+                } else {
+                    Some(type_param)
+                }
+            }
+            GenericParam::Const(_) => None,
+        })
+        .flat_map(move |type_param| {
+            let t_value_and_try_from_partial: WherePredicate = parse_quote! {
+                #type_param:
+                    #peace_params_path::Value<Spec = #peace_params_path::ValueSpec<#type_param>>
+                    + ::std::convert::TryFrom<<#type_param as #peace_params_path::Value>::Partial>
+            };
+            let t_partial_from_t = parse_quote! {
+                <#type_param as #peace_params_path::Value>::Partial:
+                    ::std::convert::From<#type_param>
+            };
+            [t_value_and_try_from_partial, t_partial_from_t]
+        })
 }
 
 /// Returns whether the given field is a `PhantomData`.

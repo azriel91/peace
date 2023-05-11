@@ -1,8 +1,11 @@
-use syn::{Ident, ImplGenerics, Path, TypeGenerics, WhereClause};
+use syn::{DeriveInput, Ident, ImplGenerics, Path, TypeGenerics, WhereClause};
+
+use crate::util::t_value_and_try_from_partial_bounds;
 
 /// `impl FieldWiseSpecRt for ParamsSpec`, so that Peace can resolve the params
 /// type as well as its values from the spec.
 pub fn impl_field_wise_spec_rt_for_field_wise_external(
+    ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
     peace_params_path: &Path,
     peace_resources_path: &Path,
@@ -11,6 +14,14 @@ pub fn impl_field_wise_spec_rt_for_field_wise_external(
     params_partial_name: &Ident,
 ) -> proc_macro2::TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics_split;
+    // Needed for type parameterized type.
+    let where_clause = where_clause.cloned().map(|mut where_clause| {
+        where_clause
+            .predicates
+            .extend(t_value_and_try_from_partial_bounds(ast, peace_params_path));
+
+        where_clause
+    });
 
     quote! {
         impl #impl_generics #peace_params_path::FieldWiseSpecRt

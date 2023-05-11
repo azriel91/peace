@@ -35,7 +35,15 @@ impl TypeGen {
         F: Fn(&mut Fields),
     {
         let (impl_generics, ty_generics, where_clause) = generics_split;
-        let serde_bound_attrs = ast.attrs.iter().filter(|attr| is_serde_bound_attr(*attr));
+        let mut serde_bound_attrs = ast
+            .attrs
+            .iter()
+            .filter(|attr| is_serde_bound_attr(attr))
+            .collect::<Vec<&Attribute>>();
+        let serde_bound_empty = parse_quote!(#[serde(bound = "")]);
+        if serde_bound_attrs.is_empty() {
+            serde_bound_attrs.push(&serde_bound_empty);
+        }
 
         match &ast.data {
             syn::Data::Struct(data_struct) => {

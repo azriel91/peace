@@ -107,6 +107,7 @@ impl ExternalType {
 
         quote! {
             #[derive(serde::Serialize, serde::Deserialize)]
+            #[serde(bound = "")]
             pub struct #wrapper_name #generics #fields;
 
             impl #generics #wrapper_name #generics {
