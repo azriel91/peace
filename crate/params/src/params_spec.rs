@@ -70,7 +70,19 @@ where
     FromMap(Box<dyn MappingFn<Output = T>>),
     /// Resolves this value through `ParamsSpec`s for each of its fields.
     ///
-    /// This is like `T`, but with each field wrapped in `ParamsSpec<T>`.
+    /// This is like `T`, but with each field wrapped in `ValueSpec<T>`.
+    //
+    // Wrap each in `ParamsSpec`, but for unit / external values, fail on field wise
+    // resolution, and also don't generate a builder method for field wise (even if is present in
+    // the `ParamsSpec` API).
+    //
+    // Need to decide on:
+    //
+    // * Every non-recursive field is annotated with `#[params(non_recursive)]`
+    // * Every recursive field is annotated with `#[params(recursive)]`
+    //
+    // There shouldn't need to be automatic detection of non-recursive fields for stdlib types,
+    // because `peace_params` should just implement `ParamsSpec` for those types.
     FieldWise(T::FieldWiseSpec),
 }
 
