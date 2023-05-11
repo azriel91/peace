@@ -71,12 +71,11 @@ impl<T> ValueSpec<T>
 where
     T: Value + Clone + Debug + Send + Sync + 'static,
 {
-    pub fn from_map<F, U>(field_name: Option<String>, f: F) -> Self
+    pub fn from_map<F, Args>(field_name: Option<String>, f: F) -> Self
     where
-        F: Fn(&U) -> Option<T> + Clone + Send + Sync + 'static,
-        U: Clone + Debug + Send + Sync + 'static,
+        MappingFnImpl<T, F, Args>: From<(Option<String>, F)> + MappingFn<Output = T>,
     {
-        let mapping_fn = MappingFnImpl::new(field_name, f);
+        let mapping_fn = MappingFnImpl::from((field_name, f));
         Self::FromMap(Box::new(mapping_fn))
     }
 }

@@ -38,106 +38,6 @@ where
     }
 }
 
-impl<T, F, A0> MappingFnImpl<T, F, (A0,)>
-where
-    T: Clone + Debug + Send + Sync + 'static,
-    F: Fn(&A0) -> Option<T> + Clone + Send + Sync + 'static,
-    A0: Clone + Debug + Send + Sync + 'static,
-{
-    pub fn new(field_name: Option<String>, fn_map: F) -> Self {
-        Self {
-            fn_map: Some(fn_map),
-            field_name,
-            marker: PhantomData,
-        }
-    }
-
-    pub fn map(
-        &self,
-        resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx,
-    ) -> Result<T, ParamsResolveError> {
-        if let Some(field_name) = self.field_name.as_deref() {
-            value_resolution_ctx.push(FieldNameAndType::new(
-                field_name.to_string(),
-                std::any::type_name::<T>().to_string(),
-            ));
-        }
-        let Some(fn_map) = self.fn_map.as_ref() else {
-            panic!("`MappingFnImpl::map` called when `fn_map` is `None`.\n\
-                This is a bug in the Peace framework.\n\
-                \n\
-                Type parameters are:\n\
-                \n\
-                * `T`: {t}\n\
-                * `Args`: ({a0})\n\
-                ",
-                t = std::any::type_name::<T>(),
-                a0 = std::any::type_name::<A0>(),
-                );
-        };
-
-        let a0 = resources.try_borrow::<A0>().map(|a0| (a0,));
-
-        match a0 {
-            Ok((a0,)) => fn_map(&a0).ok_or(ParamsResolveError::FromMap {
-                value_resolution_ctx: value_resolution_ctx.clone(),
-                from_type_name: std::any::type_name::<A0>(),
-            }),
-            Err(borrow_fail) => match borrow_fail {
-                BorrowFail::ValueNotFound => Err(ParamsResolveError::FromMap {
-                    value_resolution_ctx: value_resolution_ctx.clone(),
-                    from_type_name: std::any::type_name::<A0>(),
-                }),
-                BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                    Err(ParamsResolveError::FromMapBorrowConflict {
-                        value_resolution_ctx: value_resolution_ctx.clone(),
-                        from_type_name: std::any::type_name::<A0>(),
-                    })
-                }
-            },
-        }
-    }
-
-    pub fn try_map(
-        &self,
-        resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx,
-    ) -> Result<Option<T>, ParamsResolveError> {
-        if let Some(field_name) = self.field_name.as_deref() {
-            value_resolution_ctx.push(FieldNameAndType::new(
-                field_name.to_string(),
-                std::any::type_name::<T>().to_string(),
-            ));
-        }
-        let Some(fn_map) = self.fn_map.as_ref() else {
-            panic!("`MappingFnImpl::try_map` called when `fn_map` is `None`.\n\
-                This is a bug in the Peace framework.\n\
-                \n\
-                Type parameters are:\n\
-                \n\
-                * `T`: {t}\n\
-                * `Args`: ({a0})\n\
-                ",
-                t = std::any::type_name::<T>(),
-                a0 = std::any::type_name::<A0>(),
-                );
-        };
-        match resources.try_borrow::<A0>() {
-            Ok(u) => Ok(fn_map(&u)),
-            Err(borrow_fail) => match borrow_fail {
-                BorrowFail::ValueNotFound => Ok(None),
-                BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                    Err(ParamsResolveError::FromMapBorrowConflict {
-                        value_resolution_ctx: value_resolution_ctx.clone(),
-                        from_type_name: std::any::type_name::<A0>(),
-                    })
-                }
-            },
-        }
-    }
-}
-
 impl<T, F, Args> MappingFnImpl<T, F, Args> {
     fn fn_map_serialize<S>(_fn_map: &Option<F>, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -159,38 +59,167 @@ impl<T, F, Args> MappingFnImpl<T, F, Args> {
     }
 }
 
-impl<T, F, A0> MappingFn for MappingFnImpl<T, F, (A0,)>
-where
-    T: Clone + Debug + Send + Sync + 'static,
-    F: Fn(&A0) -> Option<T> + Clone + Send + Sync + 'static,
-    A0: Clone + Debug + Send + Sync + 'static,
-{
-    type Output = T;
+macro_rules! impl_mapping_fn_impl {
+    ($($Arg:ident $var:ident),+) => {
+        // impl<T, F, A0> MappingFnImpl<T, F, (A0,)>
+        impl<T, F, $($Arg,)+> MappingFnImpl<T, F, ($($Arg,)+)>
+        where
+            T: Clone + Debug + Send + Sync + 'static,
+            F: Fn($(&$Arg,)+) -> Option<T> + Clone + Send + Sync + 'static,
+            $($Arg: Clone + Debug + Send + Sync + 'static,)+
+        {
+            pub fn new(field_name: Option<String>, fn_map: F) -> Self {
+                Self {
+                    fn_map: Some(fn_map),
+                    field_name,
+                    marker: PhantomData,
+                }
+            }
 
-    fn map(
-        &self,
-        resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx,
-    ) -> Result<<Self as MappingFn>::Output, ParamsResolveError> {
-        MappingFnImpl::map(self, resources, value_resolution_ctx)
-    }
+            pub fn map(
+                &self,
+                resources: &Resources<SetUp>,
+                value_resolution_ctx: &mut ValueResolutionCtx,
+            ) -> Result<T, ParamsResolveError> {
+                if let Some(field_name) = self.field_name.as_deref() {
+                    value_resolution_ctx.push(FieldNameAndType::new(
+                        field_name.to_string(),
+                        std::any::type_name::<T>().to_string(),
+                    ));
+                }
+                let Some(fn_map) = self.fn_map.as_ref() else {
+                    panic!("`MappingFnImpl::map` called when `fn_map` is `None`.\n\
+                        This is a bug in the Peace framework.\n\
+                        \n\
+                        Type parameters are:\n\
+                        \n\
+                        * `T`: {t}\n\
+                        * `Args`: ({Args})\n\
+                        ",
+                        t = std::any::type_name::<T>(),
+                        Args = std::any::type_name::<($($Arg,)+)>(),
+                        );
+                };
 
-    fn try_map(
-        &self,
-        resources: &Resources<SetUp>,
-        value_resolution_ctx: &mut ValueResolutionCtx,
-    ) -> Result<Option<<Self as MappingFn>::Output>, ParamsResolveError> {
-        MappingFnImpl::try_map(self, resources, value_resolution_ctx)
-    }
+                $(
+                    let $var = resources.try_borrow::<$Arg>();
+                    let $var = match $var {
+                        Ok($var) => $var,
+                        Err(borrow_fail) => match borrow_fail {
+                            BorrowFail::ValueNotFound => {
+                                return Err(ParamsResolveError::FromMap {
+                                    value_resolution_ctx: value_resolution_ctx.clone(),
+                                    from_type_name: std::any::type_name::<$Arg>(),
+                                });
+                            },
+                            BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
+                                return Err(ParamsResolveError::FromMapBorrowConflict {
+                                    value_resolution_ctx: value_resolution_ctx.clone(),
+                                    from_type_name: std::any::type_name::<$Arg>(),
+                                });
+                            }
+                        },
+                    };
+                )+
+
+                fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                    value_resolution_ctx: value_resolution_ctx.clone(),
+                    from_type_name: std::any::type_name::<($($Arg,)+)>(),
+                })
+
+            }
+
+            pub fn try_map(
+                &self,
+                resources: &Resources<SetUp>,
+                value_resolution_ctx: &mut ValueResolutionCtx,
+            ) -> Result<Option<T>, ParamsResolveError> {
+                if let Some(field_name) = self.field_name.as_deref() {
+                    value_resolution_ctx.push(FieldNameAndType::new(
+                        field_name.to_string(),
+                        std::any::type_name::<T>().to_string(),
+                    ));
+                }
+                let Some(fn_map) = self.fn_map.as_ref() else {
+                    panic!("`MappingFnImpl::try_map` called when `fn_map` is `None`.\n\
+                        This is a bug in the Peace framework.\n\
+                        \n\
+                        Type parameters are:\n\
+                        \n\
+                        * `T`: {t}\n\
+                        * `Args`: ({Args})\n\
+                        ",
+                        t = std::any::type_name::<T>(),
+                        Args = std::any::type_name::<($($Arg,)+)>(),
+                        );
+                };
+
+                $(
+                    let $var = resources.try_borrow::<$Arg>();
+                    let $var = match $var {
+                        Ok($var) => $var,
+                        Err(borrow_fail) => match borrow_fail {
+                            BorrowFail::ValueNotFound => return Ok(None),
+                            BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
+                                return Err(ParamsResolveError::FromMapBorrowConflict {
+                                    value_resolution_ctx: value_resolution_ctx.clone(),
+                                    from_type_name: std::any::type_name::<$Arg>(),
+                                });
+                            }
+                        },
+                    };
+                )+
+
+                Ok(fn_map($(&$var,)+))
+            }
+        }
+
+        impl<T, F, $($Arg,)+> From<(Option<String>, F)> for MappingFnImpl<T, F, ($($Arg,)+)>
+        where
+            T: Clone + Debug + Send + Sync + 'static,
+            F: Fn($(&$Arg,)+) -> Option<T> + Clone + Send + Sync + 'static,
+            $($Arg: Clone + Debug + Send + Sync + 'static,)+
+        {
+            fn from((field_name, f): (Option<String>, F)) -> Self {
+                Self::new(field_name, f)
+            }
+        }
+
+        impl<T, F, $($Arg,)+> MappingFn for MappingFnImpl<T, F, ($($Arg,)+)>
+        where
+            T: Clone + Debug + Send + Sync + 'static,
+            F: Fn($(&$Arg,)+) -> Option<T> + Clone + Send + Sync + 'static,
+            $($Arg: Clone + Debug + Send + Sync + 'static,)+
+        {
+            type Output = T;
+
+            fn map(
+                &self,
+                resources: &Resources<SetUp>,
+                value_resolution_ctx: &mut ValueResolutionCtx,
+            ) -> Result<<Self as MappingFn>::Output, ParamsResolveError> {
+                MappingFnImpl::<T, F, ($($Arg,)+)>::map(self, resources, value_resolution_ctx)
+            }
+
+            fn try_map(
+                &self,
+                resources: &Resources<SetUp>,
+                value_resolution_ctx: &mut ValueResolutionCtx,
+            ) -> Result<Option<<Self as MappingFn>::Output>, ParamsResolveError> {
+                MappingFnImpl::<T, F, ($($Arg,)+)>::try_map(self, resources, value_resolution_ctx)
+            }
+        }
+    };
 }
 
-impl<T, F, A0> From<(Option<String>, F)> for MappingFnImpl<T, F, (A0,)>
-where
-    T: Clone + Debug + Send + Sync + 'static,
-    F: Fn(&A0) -> Option<T> + Clone + Send + Sync + 'static,
-    A0: Clone + Debug + Send + Sync + 'static,
-{
-    fn from((field_name, f): (Option<String>, F)) -> Self {
-        Self::new(field_name, f)
-    }
-}
+use impl_mapping_fn_impl;
+
+// We can add more if we need to support more args.
+//
+// There is a compile time / Rust analyzer startup cost to it, so it's better to
+// not generate more than we need.
+impl_mapping_fn_impl!(A0 a0);
+impl_mapping_fn_impl!(A0 a0, A1 a1);
+impl_mapping_fn_impl!(A0 a0, A1 a1, A2 a2);
+impl_mapping_fn_impl!(A0 a0, A1 a1, A2 a2, A3 a3);
+impl_mapping_fn_impl!(A0 a0, A1 a1, A2 a2, A3 a3, A4 a4);
