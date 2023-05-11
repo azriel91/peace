@@ -3,7 +3,7 @@ use peace::{
         app_name, flow_id, item_spec_id, profile, AppName, FlowId, ItemSpec, ItemSpecId, Profile,
     },
     cmd::ctx::CmdCtx,
-    params::{ParamsSpec, ValueResolutionCtx},
+    params::{ParamsSpec, ValueResolutionCtx, ValueResolutionMode},
     resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
@@ -424,6 +424,7 @@ async fn build_with_item_spec_params_returns_ok_when_params_provided()
         VecCopyItemSpec::ID_DEFAULT,
     );
     let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
         VecCopyItemSpec::ID_DEFAULT.clone(),
         std::any::type_name::<VecA>(),
     );
@@ -520,6 +521,7 @@ async fn build_with_item_spec_params_returns_ok_when_params_not_provided_but_are
         VecCopyItemSpec::ID_DEFAULT,
     );
     let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
         VecCopyItemSpec::ID_DEFAULT.clone(),
         std::any::type_name::<VecA>(),
     );
@@ -579,6 +581,7 @@ async fn build_with_item_spec_params_returns_ok_and_uses_params_provided_when_pa
         VecCopyItemSpec::ID_DEFAULT,
     );
     let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
         VecCopyItemSpec::ID_DEFAULT.clone(),
         std::any::type_name::<VecA>(),
     );

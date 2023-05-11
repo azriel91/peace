@@ -67,8 +67,8 @@ pub use crate::{
     mapping_fn::MappingFn, mapping_fn_impl::MappingFnImpl, params::Params,
     params_resolve_error::ParamsResolveError, params_spec::ParamsSpec,
     params_spec_de::ParamsSpecDe, params_specs::ParamsSpecs, value::Value,
-    value_resolution_ctx::ValueResolutionCtx, value_spec::ValueSpec, value_spec_de::ValueSpecDe,
-    value_spec_rt::ValueSpecRt,
+    value_resolution_ctx::ValueResolutionCtx, value_resolution_mode::ValueResolutionMode,
+    value_spec::ValueSpec, value_spec_de::ValueSpecDe, value_spec_rt::ValueSpecRt,
 };
 
 mod field_name_and_type;
@@ -83,6 +83,7 @@ mod params_specs;
 mod std_impl;
 mod value;
 mod value_resolution_ctx;
+mod value_resolution_mode;
 mod value_spec;
 mod value_spec_de;
 mod value_spec_rt;

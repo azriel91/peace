@@ -11,7 +11,7 @@ use peace_data::{
     marker::{ApplyDry, Clean, Current, Desired},
     Data,
 };
-use peace_params::{Params, ParamsSpec, ParamsSpecs, ValueResolutionCtx};
+use peace_params::{Params, ParamsSpec, ParamsSpecs, ValueResolutionCtx, ValueResolutionMode};
 use peace_resources::{
     resources::ts::{Empty, SetUp},
     states::StatesCurrent,
@@ -74,8 +74,11 @@ where
                     .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                         item_spec_id: item_spec_id.clone(),
                     })?;
-                let mut value_resolution_ctx =
-                    ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::Clean,
+                    item_spec_id.clone(),
+                    type_name::<IS::Params<'_>>(),
+                );
                 params_spec
                     .resolve_partial(resources, &mut value_resolution_ctx)
                     .map_err(crate::Error::ParamsResolveError)?
@@ -102,8 +105,11 @@ where
                     .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                         item_spec_id: item_spec_id.clone(),
                     })?;
-                let mut value_resolution_ctx =
-                    ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::Current,
+                    item_spec_id.clone(),
+                    type_name::<IS::Params<'_>>(),
+                );
                 params_spec
                     .resolve_partial(resources, &mut value_resolution_ctx)
                     .map_err(crate::Error::ParamsResolveError)?
@@ -132,8 +138,11 @@ where
                     .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                         item_spec_id: item_spec_id.clone(),
                     })?;
-                let mut value_resolution_ctx =
-                    ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::Current,
+                    item_spec_id.clone(),
+                    type_name::<IS::Params<'_>>(),
+                );
                 params_spec
                     .resolve(resources, &mut value_resolution_ctx)
                     .map_err(crate::Error::ParamsResolveError)?
@@ -159,8 +168,11 @@ where
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                     item_spec_id: item_spec_id.clone(),
                 })?;
-            let mut value_resolution_ctx =
-                ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+            let mut value_resolution_ctx = ValueResolutionCtx::new(
+                ValueResolutionMode::Desired,
+                item_spec_id.clone(),
+                type_name::<IS::Params<'_>>(),
+            );
             params_spec
                 .resolve_partial(resources, &mut value_resolution_ctx)
                 .map_err(crate::Error::ParamsResolveError)?
@@ -187,8 +199,11 @@ where
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                     item_spec_id: item_spec_id.clone(),
                 })?;
-            let mut value_resolution_ctx =
-                ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+            let mut value_resolution_ctx = ValueResolutionCtx::new(
+                ValueResolutionMode::Desired,
+                item_spec_id.clone(),
+                type_name::<IS::Params<'_>>(),
+            );
             params_spec
                 .resolve(resources, &mut value_resolution_ctx)
                 .map_err(crate::Error::ParamsResolveError)?
@@ -244,8 +259,25 @@ where
                     .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                         item_spec_id: item_spec_id.clone(),
                     })?;
-                let mut value_resolution_ctx =
-                    ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+
+                // Running `diff` for a single profile will be between the current and desired
+                // states, and parameters are not really intended to be used for diffing.
+                //
+                // However for `ShCmdItemSpec`, the shell script for diffing's path is in
+                // params, which *likely* would be provided as direct `Value`s instead of
+                // mapped from predecessors' state(s). Iff the values are mapped from a
+                // predecessor's state, then we would want it to be the desired state, as that
+                // is closest to the correct value -- `ValueResolutionMode::ApplyDry` is used in
+                // `ItemSpec::apply_dry`, and `ValueResolutionMode::Apply` is used in
+                // `ItemSpec::apply`.
+                //
+                // Running `diff` for multiple profiles will likely be between two profiles'
+                // current states.
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::Desired,
+                    item_spec_id.clone(),
+                    type_name::<IS::Params<'_>>(),
+                );
                 params_spec
                     .resolve_partial(resources, &mut value_resolution_ctx)
                     .map_err(crate::Error::ParamsResolveError)?
@@ -274,8 +306,19 @@ where
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                     item_spec_id: item_spec_id.clone(),
                 })?;
-            let mut value_resolution_ctx =
-                ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+
+            // Normally an `apply_check` only compares the states / state diff.
+            //
+            // We use `ValueResolutionMode::Desired` because an apply is between the current
+            // and desired states, and when resolving values, we want the target state's
+            // parameters to be used. Note that during an apply, the desired state is
+            // resolved as execution happens -- values that rely on predecessors' applied
+            // state will be fed into successors' desired state.
+            let mut value_resolution_ctx = ValueResolutionCtx::new(
+                ValueResolutionMode::Desired,
+                item_spec_id.clone(),
+                type_name::<IS::Params<'_>>(),
+            );
             params_spec
                 .resolve_partial(resources, &mut value_resolution_ctx)
                 .map_err(crate::Error::ParamsResolveError)?
@@ -311,8 +354,11 @@ where
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                     item_spec_id: item_spec_id.clone(),
                 })?;
-            let mut value_resolution_ctx =
-                ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+            let mut value_resolution_ctx = ValueResolutionCtx::new(
+                ValueResolutionMode::ApplyDry,
+                item_spec_id.clone(),
+                type_name::<IS::Params<'_>>(),
+            );
             params_spec
                 .resolve(resources, &mut value_resolution_ctx)
                 .map_err(crate::Error::ParamsResolveError)?
@@ -350,8 +396,11 @@ where
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                     item_spec_id: item_spec_id.clone(),
                 })?;
-            let mut value_resolution_ctx =
-                ValueResolutionCtx::new(item_spec_id.clone(), type_name::<IS::Params<'_>>());
+            let mut value_resolution_ctx = ValueResolutionCtx::new(
+                ValueResolutionMode::Current,
+                item_spec_id.clone(),
+                type_name::<IS::Params<'_>>(),
+            );
             params_spec
                 .resolve(resources, &mut value_resolution_ctx)
                 .map_err(crate::Error::ParamsResolveError)?

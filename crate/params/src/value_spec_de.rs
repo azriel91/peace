@@ -38,7 +38,7 @@ where
     From,
     /// Look up some data populated by a predecessor, and compute the value
     /// from that data.
-    FromMap(MappingFnImpl<T, FnPlaceholder<T>, ()>),
+    FromMap(MappingFnImpl<T, FnPlaceholder<T>, ((),)>),
 }
 
 impl<T> Debug for ValueSpecDe<T>

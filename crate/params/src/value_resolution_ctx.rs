@@ -2,11 +2,14 @@ use std::fmt;
 
 use peace_core::ItemSpecId;
 
-use crate::FieldNameAndType;
+use crate::{FieldNameAndType, ValueResolutionMode};
 
 /// Collects information about how a value is resolved.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ValueResolutionCtx {
+    /// When resolving `Value`s, whether to look up `Current<T>` or
+    /// `Desired<T>`.
+    value_resolution_mode: ValueResolutionMode,
     /// ID of the item spec whose params are being resolved.
     item_spec_id: ItemSpecId,
     /// Name of the `ItemSpec::Params` type.
@@ -16,12 +19,21 @@ pub struct ValueResolutionCtx {
 }
 
 impl ValueResolutionCtx {
-    pub fn new(item_spec_id: ItemSpecId, params_type_name: &'static str) -> Self {
+    pub fn new(
+        value_resolution_mode: ValueResolutionMode,
+        item_spec_id: ItemSpecId,
+        params_type_name: &'static str,
+    ) -> Self {
         Self {
+            value_resolution_mode,
             item_spec_id,
             params_type_name,
             resolution_chain: Vec::new(),
         }
+    }
+
+    pub fn value_resolution_mode(&self) -> ValueResolutionMode {
+        self.value_resolution_mode
     }
 
     pub fn item_spec_id(&self) -> &ItemSpecId {

@@ -6,7 +6,7 @@ use peace::{
     },
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
     data::Data,
-    params::{ParamsSpec, ValueResolutionCtx},
+    params::{ParamsSpec, ValueResolutionCtx, ValueResolutionMode},
     resources::{
         paths::{FlowDir, ProfileDir},
         states::StatesSaved,
@@ -525,6 +525,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         .get::<ParamsSpec<TarXParams<TarXTest>>, _>(TarXTest::ID)
         .unwrap();
     let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
         TarXTest::ID.clone(),
         std::any::type_name::<TarXParams<TarXTest>>(),
     );

@@ -10,22 +10,22 @@ use crate::{FieldNameAndType, MappingFn, ParamsResolveError, ValueResolutionCtx}
 
 /// Wrapper around a mapping function so that it can be serialized.
 #[derive(Clone, Serialize, Deserialize)]
-pub struct MappingFnImpl<T, F, U> {
+pub struct MappingFnImpl<T, F, Args> {
     /// This field's name within its parent struct.
     ///
     /// `None` if this is the top level value type.
     field_name: Option<String>,
     #[serde(
-        default = "MappingFnImpl::<T, F, U>::fn_map_none",
+        default = "MappingFnImpl::<T, F, Args>::fn_map_none",
         skip_deserializing,
-        serialize_with = "MappingFnImpl::<T, F, U>::fn_map_serialize"
+        serialize_with = "MappingFnImpl::<T, F, Args>::fn_map_serialize"
     )]
     fn_map: Option<F>,
     /// Marker.
-    marker: PhantomData<(T, U)>,
+    marker: PhantomData<(T, Args)>,
 }
 
-impl<T, F, U> Debug for MappingFnImpl<T, F, U>
+impl<T, F, Args> Debug for MappingFnImpl<T, F, Args>
 where
     T: Debug,
 {
@@ -37,11 +37,12 @@ where
             .finish()
     }
 }
-impl<T, F, U> MappingFnImpl<T, F, U>
+
+impl<T, F, A0> MappingFnImpl<T, F, (A0,)>
 where
     T: Clone + Debug + Send + Sync + 'static,
-    F: Fn(&U) -> Option<T> + Clone + Send + Sync + 'static,
-    U: Clone + Debug + Send + Sync + 'static,
+    F: Fn(&A0) -> Option<T> + Clone + Send + Sync + 'static,
+    A0: Clone + Debug + Send + Sync + 'static,
 {
     pub fn new(field_name: Option<String>, fn_map: F) -> Self {
         Self {
@@ -69,26 +70,29 @@ where
                 Type parameters are:\n\
                 \n\
                 * `T`: {t}\n\
-                * `U`: {u}\n\
+                * `Args`: ({a0})\n\
                 ",
                 t = std::any::type_name::<T>(),
-                u = std::any::type_name::<U>(),
+                a0 = std::any::type_name::<A0>(),
                 );
         };
-        match resources.try_borrow::<U>() {
-            Ok(u) => fn_map(&u).ok_or(ParamsResolveError::FromMap {
+
+        let a0 = resources.try_borrow::<A0>().map(|a0| (a0,));
+
+        match a0 {
+            Ok((a0,)) => fn_map(&a0).ok_or(ParamsResolveError::FromMap {
                 value_resolution_ctx: value_resolution_ctx.clone(),
-                from_type_name: std::any::type_name::<U>(),
+                from_type_name: std::any::type_name::<A0>(),
             }),
             Err(borrow_fail) => match borrow_fail {
                 BorrowFail::ValueNotFound => Err(ParamsResolveError::FromMap {
                     value_resolution_ctx: value_resolution_ctx.clone(),
-                    from_type_name: std::any::type_name::<U>(),
+                    from_type_name: std::any::type_name::<A0>(),
                 }),
                 BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
                     Err(ParamsResolveError::FromMapBorrowConflict {
                         value_resolution_ctx: value_resolution_ctx.clone(),
-                        from_type_name: std::any::type_name::<U>(),
+                        from_type_name: std::any::type_name::<A0>(),
                     })
                 }
             },
@@ -113,20 +117,20 @@ where
                 Type parameters are:\n\
                 \n\
                 * `T`: {t}\n\
-                * `U`: {u}\n\
+                * `Args`: ({a0})\n\
                 ",
                 t = std::any::type_name::<T>(),
-                u = std::any::type_name::<U>(),
+                a0 = std::any::type_name::<A0>(),
                 );
         };
-        match resources.try_borrow::<U>() {
+        match resources.try_borrow::<A0>() {
             Ok(u) => Ok(fn_map(&u)),
             Err(borrow_fail) => match borrow_fail {
                 BorrowFail::ValueNotFound => Ok(None),
                 BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
                     Err(ParamsResolveError::FromMapBorrowConflict {
                         value_resolution_ctx: value_resolution_ctx.clone(),
-                        from_type_name: std::any::type_name::<U>(),
+                        from_type_name: std::any::type_name::<A0>(),
                     })
                 }
             },
@@ -134,7 +138,7 @@ where
     }
 }
 
-impl<T, F, U> MappingFnImpl<T, F, U> {
+impl<T, F, Args> MappingFnImpl<T, F, Args> {
     fn fn_map_serialize<S>(_fn_map: &Option<F>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -144,9 +148,9 @@ impl<T, F, U> MappingFnImpl<T, F, U> {
 
     fn fn_map_stringify() -> String {
         format!(
-            "Fn(&{u}) -> Option<{t}>",
+            "Fn&{args} -> Option<{t}>",
             t = std::any::type_name::<T>(),
-            u = std::any::type_name::<U>(),
+            args = std::any::type_name::<Args>(),
         )
     }
 
@@ -155,11 +159,11 @@ impl<T, F, U> MappingFnImpl<T, F, U> {
     }
 }
 
-impl<T, F, U> MappingFn for MappingFnImpl<T, F, U>
+impl<T, F, A0> MappingFn for MappingFnImpl<T, F, (A0,)>
 where
     T: Clone + Debug + Send + Sync + 'static,
-    F: Fn(&U) -> Option<T> + Clone + Send + Sync + 'static,
-    U: Clone + Debug + Send + Sync + 'static,
+    F: Fn(&A0) -> Option<T> + Clone + Send + Sync + 'static,
+    A0: Clone + Debug + Send + Sync + 'static,
 {
     type Output = T;
 
@@ -177,5 +181,16 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Option<<Self as MappingFn>::Output>, ParamsResolveError> {
         MappingFnImpl::try_map(self, resources, value_resolution_ctx)
+    }
+}
+
+impl<T, F, A0> From<(Option<String>, F)> for MappingFnImpl<T, F, (A0,)>
+where
+    T: Clone + Debug + Send + Sync + 'static,
+    F: Fn(&A0) -> Option<T> + Clone + Send + Sync + 'static,
+    A0: Clone + Debug + Send + Sync + 'static,
+{
+    fn from((field_name, f): (Option<String>, F)) -> Self {
+        Self::new(field_name, f)
     }
 }

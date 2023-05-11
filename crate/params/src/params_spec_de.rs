@@ -38,7 +38,7 @@ where
     From,
     /// Look up some data populated by a predecessor, and compute the value
     /// from that data.
-    FromMap(MappingFnImpl<T, FnPlaceholder<T>, ()>),
+    FromMap(MappingFnImpl<T, FnPlaceholder<T>, ((),)>),
     /// Resolves this value through `ParamsSpec`s for each of its fields.
     ///
     /// This is like `T`, but with each field wrapped in `ParamsSpecDe<T>`.
