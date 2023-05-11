@@ -1,5 +1,5 @@
 use proc_macro2::Span;
-use syn::{DeriveInput, Fields, FieldsUnnamed, Ident, Path, PathArguments, Type};
+use syn::{DeriveInput, Fields, FieldsUnnamed, Ident, Path, Type};
 
 use crate::{
     type_gen_external::{type_gen_external, External},
@@ -59,14 +59,13 @@ impl ExternalType {
         let Some(wrapper_partial_name) = type_path_simple_name(&wrapper_partial_type) else {
             unreachable!("Type must be present at this stage.");
         };
-        let Some((wrapper_name, generics)) = type_path_name_and_generics(wrapper_type) else {
+        let Some(wrapper_name) = type_path_simple_name(wrapper_type) else {
             unreachable!("Type must be present at this stage.");
         };
 
         let mut tokens = Self::wrapper_gen(
             peace_params_path,
-            wrapper_name,
-            generics,
+            wrapper_type,
             wrapped_ty,
             wrapper_partial_name,
         );
@@ -79,7 +78,7 @@ impl ExternalType {
         tokens
     }
 
-    /// Generates `ThingWrapper` and `ThingWrapperPartial`.
+    /// Generates `struct ThingWrapper(Thing)` for a given `Thing`.
     ///
     /// This used when `Thing` is an external type to both `peace` and the item
     /// spec crate, but is used as a `Value` within an `ItemSpec::Params`.
@@ -93,11 +92,16 @@ impl ExternalType {
     /// * `wrapped_ty`: `Type` of the field that is external, e.g. `Thing`.
     fn wrapper_gen(
         peace_params_path: &Path,
-        wrapper_name: &Ident,
-        generics: &PathArguments,
+        wrapper_type: &Type,
         wrapped_ty: &Type,
         wrapper_partial_name: &Ident,
     ) -> proc_macro2::TokenStream {
+        // TODO: we need to copy the type bounds from the params type onto any field
+        // that uses that type parameter.
+        let ast: DeriveInput = parse_quote!(pub struct #wrapper_type;);
+        let wrapper_name = &ast.ident;
+        let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
+
         let fields_unnamed: FieldsUnnamed = parse_quote!((#wrapped_ty));
         let fields = Fields::from(fields_unnamed);
 
@@ -108,42 +112,48 @@ impl ExternalType {
         quote! {
             #[derive(serde::Serialize, serde::Deserialize)]
             #[serde(bound = "")]
-            pub struct #wrapper_name #generics #fields;
+            pub struct #wrapper_name #ty_generics #fields;
 
-            impl #generics #wrapper_name #generics {
+            impl #impl_generics #wrapper_name #ty_generics
+            #where_clause
+            {
                 #struct_constructor
             }
 
-            impl #generics ::std::clone::Clone
-            for #wrapper_name #generics
+            impl #impl_generics ::std::clone::Clone
+            for #wrapper_name #ty_generics
+            #where_clause
             {
                 fn clone(&self) -> Self {
                     #struct_fields_clone
                 }
             }
 
-            impl #generics ::std::fmt::Debug
-            for #wrapper_name #generics
+            impl #impl_generics ::std::fmt::Debug
+            for #wrapper_name #ty_generics
+            #where_clause
             {
                 fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
                     #struct_fields_debug
                 }
             }
 
-            impl #generics #peace_params_path::Value
-            for #wrapper_name #generics
-            {
-                type Spec = #peace_params_path::ValueSpec<#wrapper_name #generics>;
-                type Partial = #wrapper_partial_name #generics;
-            }
-
             // impl From<ThingWrapper> for Thing
-            impl #generics ::std::convert::From<#wrapper_name #generics>
+            impl #impl_generics ::std::convert::From<#wrapper_name #ty_generics>
             for #wrapped_ty
+            #where_clause
             {
-                fn from(wrapper: #wrapper_name #generics) -> Self {
+                fn from(wrapper: #wrapper_name #ty_generics) -> Self {
                     wrapper.0
                 }
+            }
+
+            impl #impl_generics #peace_params_path::Value
+            for #wrapper_name #ty_generics
+            #where_clause
+            {
+                type Spec = #peace_params_path::ValueSpec<#wrapper_name #ty_generics>;
+                type Partial = #wrapper_partial_name #ty_generics;
             }
         }
     }

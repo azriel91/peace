@@ -2062,6 +2062,171 @@ mod enum_recursive_marker_no_bounds {
     }
 }
 
+/// Tests `Value` derivation of external types in `Params`.
+mod external_fields {
+    use std::{any::TypeId, fmt::Debug};
+
+    use serde::{Deserialize, Serialize};
+
+    use peace::params::{Params, ParamsSpec, ValueSpec};
+
+    // Note: no `Value` derive.
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct InnerValue(u32);
+
+    #[derive(Clone, Debug, Params, PartialEq, Eq, Serialize, Deserialize)]
+    pub struct StructExternalValue {
+        /// Source / desired value for the state.
+        #[params(external)]
+        src: InnerValue,
+        /// Destination storage for the state.
+        dest: u32,
+    }
+
+    super::params_tests!(
+        StructExternalValue,
+        StructExternalValueFieldWise,
+        StructExternalValuePartial,
+        []
+    );
+
+    #[test]
+    fn spec_from_params() {
+        let params = StructExternalValue {
+            src: InnerValue(123),
+            dest: 456,
+        };
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(StructExternalValue {
+                src,
+                dest,
+            })
+            if src == InnerValue(123)
+            && dest == 456
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_params() {
+        let params = StructExternalValue {
+            src: InnerValue(123),
+            dest: 456,
+        };
+
+        assert!(matches!(
+            StructExternalValueFieldWise::from(params),
+            StructExternalValueFieldWise {
+                src: ValueSpec::Value(InnerValueWrapper(InnerValue(src_value))),
+                dest: ValueSpec::Value(dest_value),
+            }
+            if src_value == 123
+            && dest_value == 456
+        ));
+    }
+
+    #[test]
+    fn spec_debug() {
+        assert_eq!(
+            r#"StructExternalValueFieldWise { src: Value(InnerValueWrapper(InnerValue(123))), dest: Value(456) }"#,
+            format!(
+                "{:?}",
+                StructExternalValueFieldWise {
+                    src: ValueSpec::Value(InnerValueWrapper(InnerValue(123))),
+                    dest: ValueSpec::Value(456),
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn params_partial_debug() {
+        assert_eq!(
+            r#"StructExternalValuePartial { src: Some(InnerValue(123)), dest: Some(456) }"#,
+            format!(
+                "{:?}",
+                StructExternalValuePartial {
+                    src: Some(InnerValue(123)),
+                    dest: Some(456),
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_ok_when_all_fields_are_some() {
+        let params_partial = StructExternalValuePartial {
+            src: Some(InnerValue(123)),
+            dest: Some(456),
+        };
+
+        assert!(matches!(
+            StructExternalValue::try_from(params_partial),
+            Ok(StructExternalValue {
+                src: InnerValue(src_value),
+                dest,
+            })
+            if src_value == 123
+            && dest == 456
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_err_when_some_fields_are_none() {
+        let params_partial = StructExternalValuePartial {
+            src: Some(InnerValue(123)),
+            dest: None,
+        };
+
+        assert!(matches!(
+            StructExternalValue::try_from(params_partial),
+            Err(StructExternalValuePartial {
+                src: Some(InnerValue(src_value)),
+                dest,
+            })
+            if src_value == 123
+            && dest.is_none()
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_ref_returns_ok_when_all_fields_are_some() {
+        let params_partial = StructExternalValuePartial {
+            src: Some(InnerValue(123)),
+            dest: Some(456),
+        };
+
+        assert!(matches!(
+            StructExternalValue::try_from(&params_partial),
+            Ok(StructExternalValue {
+                src: InnerValue(src_value),
+                dest,
+            })
+            if src_value == 123
+            && dest == 456
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_ref_returns_err_when_some_fields_are_none() {
+        let params_partial = StructExternalValuePartial {
+            src: Some(InnerValue(123)),
+            dest: None,
+        };
+
+        assert!(matches!(
+            StructExternalValue::try_from(&params_partial),
+            Err(StructExternalValuePartial {
+                src: Some(InnerValue(src_value)),
+                dest,
+            })
+            if src_value == &123
+            && dest.is_none()
+        ));
+    }
+}
+
 macro_rules! params_tests {
     (
         $params_ty:ident,

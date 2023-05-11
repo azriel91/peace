@@ -4,6 +4,8 @@ use crate::util::is_serde_bound_attr;
 
 /// Generates a type based off an external `Value` type.
 ///
+/// A `MyValue` wrapped type will produce:
+///
 /// ```rust,ignore
 /// pub struct Generated(Option<MyValue>);
 /// ```
