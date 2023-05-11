@@ -1020,7 +1020,7 @@ mod enum_params {
 
         assert!(matches!(
             EnumParams::<()>::try_from(params_partial),
-            Ok(EnumParams::<()>::Named{ src: value, marker: PhantomData})
+            Ok(EnumParams::<()>::Named { src: value, marker: PhantomData})
             if value == "a"
         ));
     }
@@ -1103,7 +1103,7 @@ mod enum_params {
 
         assert!(matches!(
             EnumParams::<()>::try_from(&params_partial),
-            Ok(EnumParams::<()>::Named{ src: value, marker: PhantomData})
+            Ok(EnumParams::<()>::Named { src: value, marker: PhantomData})
             if value == "a"
         ));
     }
@@ -1540,6 +1540,524 @@ mod struct_recursive_value_no_bounds {
             })
             if src == &Some(InnerValue::new(123))
             && dest.is_none()
+        ));
+    }
+}
+
+mod enum_recursive_value {
+    use std::{any::TypeId, fmt::Debug};
+
+    use serde::{Deserialize, Serialize};
+
+    use peace::params::{Params, ParamsSpec, Value, ValueSpec};
+
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Value)]
+    pub enum InnerValue<T>
+    where
+        T: Clone + Debug + Value,
+    {
+        Tuple(T),
+        Named { value: T },
+    }
+
+    #[derive(Clone, Debug, Params, PartialEq, Eq, Serialize, Deserialize)]
+    pub enum EnumRecursiveValue<T>
+    where
+        T: Clone
+            + Debug
+            + Value<Spec = ValueSpec<T>>
+            + TryFrom<<T as Value>::Partial>
+            + Send
+            + Sync
+            + 'static,
+        T::Partial: From<T>,
+    {
+        Tuple(InnerValue<T>, u32),
+        Named { src: InnerValue<T>, dest: u32 },
+    }
+
+    super::params_tests!(
+        EnumRecursiveValue,
+        EnumRecursiveValueFieldWise,
+        EnumRecursiveValuePartial,
+        [<u8>]
+    );
+
+    #[test]
+    fn spec_from_params() {
+        let params = EnumRecursiveValue::Named::<u16> {
+            src: InnerValue::<u16>::Tuple(123),
+            dest: 456,
+        };
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumRecursiveValue::Named {
+                src,
+                dest,
+            })
+            if src == InnerValue::<u16>::Tuple(123)
+            && dest == 456
+        ));
+
+        let params = EnumRecursiveValue::Tuple::<u16>(InnerValue::<u16>::Named { value: 123 }, 456);
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumRecursiveValue::Tuple(
+                src,
+                dest,
+            ))
+            if src == InnerValue::<u16>::Named { value: 123 }
+            && dest == 456
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_params() {
+        let params = EnumRecursiveValue::Named::<u16> {
+            src: InnerValue::<u16>::Tuple(123),
+            dest: 456,
+        };
+
+        assert!(matches!(
+            EnumRecursiveValueFieldWise::from(params),
+            EnumRecursiveValueFieldWise::Named {
+                src: ValueSpec::Value(src_value),
+                dest: ValueSpec::Value(dest_value),
+            }
+            if src_value == InnerValue::<u16>::Tuple(123)
+            && dest_value == 456
+        ));
+
+        let params = EnumRecursiveValue::Tuple::<u16>(InnerValue::<u16>::Named { value: 123 }, 456);
+
+        assert!(matches!(
+            EnumRecursiveValueFieldWise::from(params),
+            EnumRecursiveValueFieldWise::Tuple(
+                ValueSpec::Value(src_value),
+                ValueSpec::Value(dest_value),
+            )
+            if src_value == InnerValue::<u16>::Named { value: 123}
+            && dest_value == 456
+        ));
+    }
+
+    #[test]
+    fn spec_debug() {
+        assert_eq!(
+            r#"Named { src: Value(Tuple(123)), dest: Value(456) }"#,
+            format!(
+                "{:?}",
+                EnumRecursiveValueFieldWise::Named::<u16> {
+                    src: ValueSpec::Value(InnerValue::<u16>::Tuple(123)),
+                    dest: ValueSpec::Value(456),
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn params_partial_debug() {
+        assert_eq!(
+            r#"Named { src: Some(Tuple(123)), dest: Some(456) }"#,
+            format!(
+                "{:?}",
+                EnumRecursiveValuePartial::Named::<u16> {
+                    src: Some(InnerValue::<u16>::Tuple(123)),
+                    dest: Some(456),
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_ok_when_all_fields_are_some() {
+        let params_partial = EnumRecursiveValuePartial::Named::<u16> {
+            src: Some(InnerValue::<u16>::Tuple(123)),
+            dest: Some(456),
+        };
+
+        assert!(matches!(
+            EnumRecursiveValue::try_from(params_partial),
+            Ok(EnumRecursiveValue::Named {
+                src,
+                dest,
+            })
+            if src == InnerValue::<u16>::Tuple(123)
+            && dest == 456
+        ));
+
+        let params_partial = EnumRecursiveValuePartial::Tuple::<u16>(
+            Some(InnerValue::<u16>::Named { value: 123 }),
+            Some(456),
+        );
+
+        assert!(matches!(
+            EnumRecursiveValue::try_from(params_partial),
+            Ok(EnumRecursiveValue::Tuple(
+                src,
+                dest,
+            ))
+            if src == InnerValue::<u16>::Named { value: 123 }
+            && dest == 456
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_err_when_some_fields_are_none() {
+        let params_partial = EnumRecursiveValuePartial::Named::<u16> {
+            src: Some(InnerValue::<u16>::Tuple(123)),
+            dest: None,
+        };
+
+        assert!(matches!(
+            EnumRecursiveValue::try_from(params_partial),
+            Err(EnumRecursiveValuePartial::Named {
+                src,
+                dest,
+            })
+            if src == Some(InnerValue::<u16>::Tuple(123))
+            && dest.is_none()
+        ));
+
+        let params_partial = EnumRecursiveValuePartial::Tuple::<u16>(
+            Some(InnerValue::<u16>::Named { value: 123 }),
+            None,
+        );
+
+        assert!(matches!(
+            EnumRecursiveValue::try_from(params_partial),
+            Err(EnumRecursiveValuePartial::Tuple(
+                src,
+                dest,
+            ))
+            if src == Some(InnerValue::<u16>::Named { value: 123 })
+            && dest.is_none()
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_ref_returns_ok_when_all_fields_are_some() {
+        let params_partial = EnumRecursiveValuePartial::Named::<u16> {
+            src: Some(InnerValue::<u16>::Tuple(123)),
+            dest: Some(456),
+        };
+
+        assert!(matches!(
+            EnumRecursiveValue::try_from(&params_partial),
+            Ok(EnumRecursiveValue::Named {
+                src,
+                dest,
+            })
+            if src == InnerValue::<u16>::Tuple(123)
+            && dest == 456
+        ));
+
+        let params_partial = EnumRecursiveValuePartial::Tuple::<u16>(
+            Some(InnerValue::<u16>::Named { value: 123 }),
+            Some(456),
+        );
+
+        assert!(matches!(
+            EnumRecursiveValue::try_from(&params_partial),
+            Ok(EnumRecursiveValue::Tuple(
+                src,
+                dest,
+            ))
+            if src == InnerValue::<u16>::Named { value: 123 }
+            && dest == 456
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_ref_returns_err_when_some_fields_are_none() {
+        let params_partial = EnumRecursiveValuePartial::Named::<u16> {
+            src: Some(InnerValue::<u16>::Tuple(123)),
+            dest: None,
+        };
+
+        assert!(matches!(
+            EnumRecursiveValue::try_from(&params_partial),
+            Err(EnumRecursiveValuePartial::Named {
+                src,
+                dest,
+            })
+            if src == &Some(InnerValue::<u16>::Tuple(123))
+            && dest.is_none()
+        ));
+
+        let params_partial = EnumRecursiveValuePartial::Tuple::<u16>(
+            Some(InnerValue::<u16>::Named { value: 123 }),
+            None,
+        );
+
+        assert!(matches!(
+            EnumRecursiveValue::try_from(&params_partial),
+            Err(EnumRecursiveValuePartial::Tuple(
+                src,
+                dest,
+            ))
+            if src == &Some(InnerValue::<u16>::Named { value: 123 })
+            && dest.is_none()
+        ));
+    }
+}
+
+mod enum_recursive_marker_no_bounds {
+    use std::{any::TypeId, marker::PhantomData};
+
+    use derivative::Derivative;
+    use serde::{Deserialize, Serialize};
+
+    use peace::params::{Params, ParamsSpec, Value, ValueSpec};
+
+    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, Value)]
+    #[derivative(Clone(bound = ""), Debug(bound = ""))]
+    #[serde(bound = "")]
+    pub enum InnerValue<Id> {
+        Tuple(PhantomData<Id>),
+        Named { marker: PhantomData<Id> },
+    }
+
+    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, Params)]
+    #[derivative(Clone(bound = ""), Debug(bound = ""))]
+    #[serde(bound = "")]
+    pub enum EnumRecursiveNoBounds<Id> {
+        Tuple(InnerValue<Id>, u32),
+        Named { src: InnerValue<Id>, dest: u32 },
+    }
+
+    super::params_tests!(
+        EnumRecursiveNoBounds,
+        EnumRecursiveNoBoundsFieldWise,
+        EnumRecursiveNoBoundsPartial,
+        [<u8>]
+    );
+
+    #[test]
+    fn spec_from_params() {
+        let params = EnumRecursiveNoBounds::Named::<u16> {
+            src: InnerValue::<u16>::Tuple(PhantomData),
+            dest: 456,
+        };
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumRecursiveNoBounds::Named {
+                src: InnerValue::<u16>::Tuple(PhantomData),
+                dest,
+            })
+            if dest == 456
+        ));
+
+        let params = EnumRecursiveNoBounds::Tuple::<u16>(
+            InnerValue::<u16>::Named {
+                marker: PhantomData,
+            },
+            456,
+        );
+
+        assert!(matches!(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumRecursiveNoBounds::Tuple(
+                InnerValue::<u16>::Named { marker: PhantomData },
+                dest,
+            ))
+            if dest == 456
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_params() {
+        let params = EnumRecursiveNoBounds::Named::<u16> {
+            src: InnerValue::<u16>::Tuple(PhantomData),
+            dest: 456,
+        };
+
+        assert!(matches!(
+            EnumRecursiveNoBoundsFieldWise::from(params),
+            EnumRecursiveNoBoundsFieldWise::Named {
+                src: ValueSpec::Value(InnerValue::<u16>::Tuple(PhantomData)),
+                dest: ValueSpec::Value(dest_marker),
+            }
+            if dest_marker == 456
+        ));
+
+        let params = EnumRecursiveNoBounds::Tuple::<u16>(
+            InnerValue::<u16>::Named {
+                marker: PhantomData,
+            },
+            456,
+        );
+
+        assert!(matches!(
+            EnumRecursiveNoBoundsFieldWise::from(params),
+            EnumRecursiveNoBoundsFieldWise::Tuple(
+                ValueSpec::Value(InnerValue::<u16>::Named { marker: PhantomData }),
+                ValueSpec::Value(dest_marker),
+            )
+            if dest_marker == 456
+        ));
+    }
+
+    #[test]
+    fn spec_debug() {
+        assert_eq!(
+            r#"Named { src: Value(Tuple(PhantomData<u16>)), dest: Value(456) }"#,
+            format!(
+                "{:?}",
+                EnumRecursiveNoBoundsFieldWise::Named::<u16> {
+                    src: ValueSpec::Value(InnerValue::<u16>::Tuple(PhantomData)),
+                    dest: ValueSpec::Value(456),
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn params_partial_debug() {
+        assert_eq!(
+            r#"Named { src: Some(Tuple(PhantomData<u16>)), dest: Some(456) }"#,
+            format!(
+                "{:?}",
+                EnumRecursiveNoBoundsPartial::Named::<u16> {
+                    src: Some(InnerValue::<u16>::Tuple(PhantomData)),
+                    dest: Some(456),
+                }
+            )
+        );
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_ok_when_all_fields_are_some() {
+        let params_partial = EnumRecursiveNoBoundsPartial::Named::<u16> {
+            src: Some(InnerValue::<u16>::Tuple(PhantomData)),
+            dest: Some(456),
+        };
+
+        assert!(matches!(
+            EnumRecursiveNoBounds::try_from(params_partial),
+            Ok(EnumRecursiveNoBounds::Named {
+                src: InnerValue::<u16>::Tuple(PhantomData),
+                dest,
+            })
+            if dest == 456
+        ));
+
+        let params_partial = EnumRecursiveNoBoundsPartial::Tuple::<u16>(
+            Some(InnerValue::<u16>::Named {
+                marker: PhantomData,
+            }),
+            Some(456),
+        );
+
+        assert!(matches!(
+            EnumRecursiveNoBounds::try_from(params_partial),
+            Ok(EnumRecursiveNoBounds::Tuple(
+                InnerValue::<u16>::Named { marker: PhantomData },
+                dest,
+            ))
+            if dest == 456
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_returns_err_when_some_fields_are_none() {
+        let params_partial = EnumRecursiveNoBoundsPartial::Named::<u16> {
+            src: Some(InnerValue::<u16>::Tuple(PhantomData)),
+            dest: None,
+        };
+
+        assert!(matches!(
+            EnumRecursiveNoBounds::try_from(params_partial),
+            Err(EnumRecursiveNoBoundsPartial::Named {
+                src: Some(InnerValue::<u16>::Tuple(PhantomData)),
+                dest,
+            })
+            if dest.is_none()
+        ));
+
+        let params_partial = EnumRecursiveNoBoundsPartial::Tuple::<u16>(
+            Some(InnerValue::<u16>::Named {
+                marker: PhantomData,
+            }),
+            None,
+        );
+
+        assert!(matches!(
+            EnumRecursiveNoBounds::try_from(params_partial),
+            Err(EnumRecursiveNoBoundsPartial::Tuple(
+                Some(InnerValue::<u16>::Named { marker: PhantomData }),
+                dest,
+            ))
+            if dest.is_none()
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_ref_returns_ok_when_all_fields_are_some() {
+        let params_partial = EnumRecursiveNoBoundsPartial::Named::<u16> {
+            src: Some(InnerValue::<u16>::Tuple(PhantomData)),
+            dest: Some(456),
+        };
+
+        assert!(matches!(
+            EnumRecursiveNoBounds::try_from(&params_partial),
+            Ok(EnumRecursiveNoBounds::Named {
+                src: InnerValue::<u16>::Tuple(PhantomData),
+                dest,
+            })
+            if dest == 456
+        ));
+
+        let params_partial = EnumRecursiveNoBoundsPartial::Tuple::<u16>(
+            Some(InnerValue::<u16>::Named {
+                marker: PhantomData,
+            }),
+            Some(456),
+        );
+
+        assert!(matches!(
+            EnumRecursiveNoBounds::try_from(&params_partial),
+            Ok(EnumRecursiveNoBounds::Tuple(
+                InnerValue::<u16>::Named { marker: PhantomData },
+                dest,
+            ))
+            if dest == 456
+        ));
+    }
+
+    #[test]
+    fn params_try_from_partial_ref_returns_err_when_some_fields_are_none() {
+        let params_partial = EnumRecursiveNoBoundsPartial::Named::<u16> {
+            src: Some(InnerValue::<u16>::Tuple(PhantomData)),
+            dest: None,
+        };
+
+        assert!(matches!(
+            EnumRecursiveNoBounds::try_from(&params_partial),
+            Err(EnumRecursiveNoBoundsPartial::Named {
+                src: Some(InnerValue::<u16>::Tuple(PhantomData)),
+                dest,
+            })
+            if dest.is_none()
+        ));
+
+        let params_partial = EnumRecursiveNoBoundsPartial::Tuple::<u16>(
+            Some(InnerValue::<u16>::Named {
+                marker: PhantomData,
+            }),
+            None,
+        );
+
+        assert!(matches!(
+            EnumRecursiveNoBounds::try_from(&params_partial),
+            Err(EnumRecursiveNoBoundsPartial::Tuple(
+                Some(InnerValue::<u16>::Named { marker: PhantomData }),
+                dest,
+            ))
+            if dest.is_none()
         ));
     }
 }
