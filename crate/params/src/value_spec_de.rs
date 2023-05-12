@@ -8,7 +8,7 @@ type FnPlaceholder<T> = fn(&()) -> Option<T>;
 
 /// Exists to deserialize `FromMap` with a non-type-erased `MappingFnImpl`
 #[derive(Clone, Serialize, Deserialize)]
-pub enum ParamsSpecDe<T>
+pub enum ValueSpecDe<T>
 where
     T: Params,
 {
@@ -41,11 +41,11 @@ where
     FromMap(MappingFnImpl<T, FnPlaceholder<T>, ((),)>),
     /// Resolves this value through `ParamsSpec`s for each of its fields.
     ///
-    /// This is like `T`, but with each field wrapped in `ParamsSpecDe<T>`.
+    /// This is like `T`, but with each field wrapped in `ValueSpecDe<T>`.
     FieldWise(T::FieldWiseSpec),
 }
 
-impl<T> Debug for ParamsSpecDe<T>
+impl<T> Debug for ValueSpecDe<T>
 where
     T: Params + Debug,
 {
@@ -64,19 +64,17 @@ where
     }
 }
 
-impl<T> From<ParamsSpecDe<T>> for ParamsSpec<T>
+impl<T> From<ValueSpecDe<T>> for ParamsSpec<T>
 where
     T: Params + Clone + Debug + Send + Sync + 'static,
 {
-    fn from(value_spec_de: ParamsSpecDe<T>) -> Self {
+    fn from(value_spec_de: ValueSpecDe<T>) -> Self {
         match value_spec_de {
-            ParamsSpecDe::Stored => ParamsSpec::Stored,
-            ParamsSpecDe::Value(t) => ParamsSpec::Value(t),
-            ParamsSpecDe::From => ParamsSpec::From,
-            ParamsSpecDe::FromMap(mapping_fn_impl) => {
-                ParamsSpec::FromMap(Box::new(mapping_fn_impl))
-            }
-            ParamsSpecDe::FieldWise(field_wise_spec) => ParamsSpec::FieldWise(field_wise_spec),
+            ValueSpecDe::Stored => ParamsSpec::Stored,
+            ValueSpecDe::Value(t) => ParamsSpec::Value(t),
+            ValueSpecDe::From => ParamsSpec::From,
+            ValueSpecDe::FromMap(mapping_fn_impl) => ParamsSpec::FromMap(Box::new(mapping_fn_impl)),
+            ValueSpecDe::FieldWise(field_wise_spec) => ParamsSpec::FieldWise(field_wise_spec),
         }
     }
 }
