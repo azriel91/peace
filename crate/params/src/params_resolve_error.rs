@@ -88,7 +88,7 @@ pub enum ParamsResolveError {
         /// Name of the type from which to map the field value from.
         ///
         /// Corresponds to `U` in `Fn(&U) -> T`.
-        from_type_name: &'static str,
+        from_type_name: String,
     },
 
     /// Failed to borrow a value to map to a field from `resources`.
@@ -112,6 +112,6 @@ pub enum ParamsResolveError {
         /// Name of the type from which to map the field value from.
         ///
         /// Corresponds to `U` in `Fn(&U) -> T`.
-        from_type_name: &'static str,
+        from_type_name: String,
     },
 }

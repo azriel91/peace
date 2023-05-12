@@ -45,6 +45,7 @@ indicatif = { version = "0.17.3" }
 miette = { version = "5.7.0" }
 tar = "0.4.38"
 tokio = "1.27.0"
+tynm = "0.1.7"
 type_reg = { version = "0.5.0", features = ["debug", "untagged", "ordered"] }
 
 [features]

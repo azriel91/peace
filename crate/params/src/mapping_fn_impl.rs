@@ -32,26 +32,59 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MappingFnImpl")
             .field("field_name", &self.field_name)
-            .field("fn_map", &Self::fn_map_stringify())
+            .field("fn_map", &Self::fn_map_stringify(&self.fn_map))
             .field("marker", &self.marker)
             .finish()
     }
 }
 
 impl<T, F, Args> MappingFnImpl<T, F, Args> {
-    fn fn_map_serialize<S>(_fn_map: &Option<F>, serializer: S) -> Result<S::Ok, S::Error>
+    fn fn_map_serialize<S>(fn_map: &Option<F>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        serializer.serialize_str(&Self::fn_map_stringify())
+        serializer.serialize_str(&Self::fn_map_stringify(fn_map))
     }
 
-    fn fn_map_stringify() -> String {
-        format!(
-            "Fn&{args} -> Option<{t}>",
-            t = std::any::type_name::<T>(),
-            args = std::any::type_name::<Args>(),
-        )
+    fn fn_map_stringify(fn_map: &Option<F>) -> String {
+        match fn_map {
+            Some(_) => {
+                let args = {
+                    let args_type_name = tynm::type_name::<Args>();
+                    let mut buffer = String::with_capacity(args_type_name.len() + 32);
+                    args_type_name.chars().fold(0, |mut nesting_level, c| {
+                        buffer.push(c);
+
+                        match c {
+                            '(' => {
+                                nesting_level += 1;
+                                if nesting_level == 1 {
+                                    buffer.push('&');
+                                }
+                            }
+                            ')' => nesting_level -= 1,
+                            ' ' => {
+                                if nesting_level == 1 {
+                                    buffer.push('&');
+                                }
+                            }
+                            _ => (),
+                        }
+
+                        nesting_level
+                    });
+
+                    buffer
+                };
+
+                format!(
+                    "Some(Fn{args} -> Option<{t}>)",
+                    t = tynm::type_name::<T>(),
+                    args = args,
+                )
+            }
+            None => String::from("None"),
+        }
     }
 
     fn fn_map_none() -> Option<F> {
@@ -84,7 +117,7 @@ macro_rules! impl_mapping_fn_impl {
                 if let Some(field_name) = self.field_name.as_deref() {
                     value_resolution_ctx.push(FieldNameAndType::new(
                         field_name.to_string(),
-                        std::any::type_name::<T>().to_string(),
+                        tynm::type_name::<T>().to_string(),
                     ));
                 }
                 let Some(fn_map) = self.fn_map.as_ref() else {
@@ -96,8 +129,8 @@ macro_rules! impl_mapping_fn_impl {
                         * `T`: {t}\n\
                         * `Args`: ({Args})\n\
                         ",
-                        t = std::any::type_name::<T>(),
-                        Args = std::any::type_name::<($($Arg,)+)>(),
+                        t = tynm::type_name::<T>(),
+                        Args = tynm::type_name::<($($Arg,)+)>(),
                         );
                 };
 
@@ -109,13 +142,13 @@ macro_rules! impl_mapping_fn_impl {
                             BorrowFail::ValueNotFound => {
                                 return Err(ParamsResolveError::FromMap {
                                     value_resolution_ctx: value_resolution_ctx.clone(),
-                                    from_type_name: std::any::type_name::<$Arg>(),
+                                    from_type_name: tynm::type_name::<$Arg>(),
                                 });
                             },
                             BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
                                 return Err(ParamsResolveError::FromMapBorrowConflict {
                                     value_resolution_ctx: value_resolution_ctx.clone(),
-                                    from_type_name: std::any::type_name::<$Arg>(),
+                                    from_type_name: tynm::type_name::<$Arg>(),
                                 });
                             }
                         },
@@ -124,7 +157,7 @@ macro_rules! impl_mapping_fn_impl {
 
                 fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                     value_resolution_ctx: value_resolution_ctx.clone(),
-                    from_type_name: std::any::type_name::<($($Arg,)+)>(),
+                    from_type_name: tynm::type_name::<($($Arg,)+)>(),
                 })
 
             }
@@ -137,7 +170,7 @@ macro_rules! impl_mapping_fn_impl {
                 if let Some(field_name) = self.field_name.as_deref() {
                     value_resolution_ctx.push(FieldNameAndType::new(
                         field_name.to_string(),
-                        std::any::type_name::<T>().to_string(),
+                        tynm::type_name::<T>().to_string(),
                     ));
                 }
                 let Some(fn_map) = self.fn_map.as_ref() else {
@@ -149,8 +182,8 @@ macro_rules! impl_mapping_fn_impl {
                         * `T`: {t}\n\
                         * `Args`: ({Args})\n\
                         ",
-                        t = std::any::type_name::<T>(),
-                        Args = std::any::type_name::<($($Arg,)+)>(),
+                        t = tynm::type_name::<T>(),
+                        Args = tynm::type_name::<($($Arg,)+)>(),
                         );
                 };
 
@@ -163,7 +196,7 @@ macro_rules! impl_mapping_fn_impl {
                             BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
                                 return Err(ParamsResolveError::FromMapBorrowConflict {
                                     value_resolution_ctx: value_resolution_ctx.clone(),
-                                    from_type_name: std::any::type_name::<$Arg>(),
+                                    from_type_name: tynm::type_name::<$Arg>(),
                                 });
                             }
                         },
