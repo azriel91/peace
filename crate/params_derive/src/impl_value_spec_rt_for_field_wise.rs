@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-/// `impl ValueSpecRt for ParamsSpec`, so that Peace can resolve the params type
+/// `impl ValueSpecRt for ValueSpec`, so that Peace can resolve the params type
 /// as well as its values from the spec.
 pub fn impl_value_spec_rt_for_field_wise(
     ast: &DeriveInput,
@@ -218,14 +218,14 @@ fn variants_resolve(
     //
     // ```rust
     // match self {
-    //     ParamsSpec::Variant1 => Ok(Params::Variant1),
-    //     ParamsSpec::Variant2(_0, _1, PhantomData) => {
+    //     ValueSpec::Variant1 => Ok(Params::Variant1),
+    //     ValueSpec::Variant2(_0, _1, PhantomData) => {
     //         let _0 = ..?;
     //         let _1 = ..?;
     //         let params = Params::Variant2(_0, _1, PhantomData);
     //         Ok(params) // or Ok(Some(params))
     //     }
-    //     ParamsSpec::Variant3 { field_1, field_2, marker: PhantomData } => {
+    //     ValueSpec::Variant3 { field_1, field_2, marker: PhantomData } => {
     //         #variant_fields_resolve
     //         Ok(params) // or Ok(Some(params))
     //     }

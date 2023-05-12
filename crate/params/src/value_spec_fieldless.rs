@@ -15,7 +15,7 @@ use crate::{MappingFn, MappingFnImpl, ParamsResolveError, Value, ValueResolution
 ///
 /// 1. A `ParamsSpecsTypeReg` is constructed, and deserialization functions are
 ///    registered from `ItemSpecId` to `ValueSpecFieldlessDe<T, F, U>`, where
-///    `F` and `U` are derived from the `ParamsSpec` provided by the user.
+///    `F` and `U` are derived from the `ValueSpec` provided by the user.
 ///
 /// 2. `value_specs.yaml` is deserialized using that type registry.
 ///

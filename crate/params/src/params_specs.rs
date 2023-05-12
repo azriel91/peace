@@ -7,7 +7,7 @@ use serde::Serialize;
 /// Map of item spec ID to its params' specs. `TypeMap<ItemSpecId, BoxDt>`
 /// newtype.
 ///
-/// The concrete `*ParamsSpec` type can be obtained by calling
+/// The concrete `*ValueSpec` type can be obtained by calling
 /// `.get(item_spec_id)` with the correct type:
 ///
 /// ```rust,ignore

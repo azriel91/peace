@@ -204,7 +204,7 @@ fn impl_params(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
         for #params_name #ty_generics
         #where_clause
         {
-            type Spec = #peace_params_path::ParamsSpec<#params_name #ty_generics>;
+            type Spec = #peace_params_path::ValueSpec<#params_name #ty_generics>;
             type Partial = #t_partial_name #ty_generics;
             type FieldWiseSpec = #t_field_wise_name #ty_generics;
         }

@@ -2,7 +2,7 @@ use std::fmt::{self, Debug};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{MappingFnImpl, Params, ParamsSpec};
+use crate::{MappingFnImpl, Params, ValueSpec};
 
 type FnPlaceholder<T> = fn(&()) -> Option<T>;
 
@@ -39,7 +39,7 @@ where
     /// Look up some data populated by a predecessor, and compute the value
     /// from that data.
     FromMap(MappingFnImpl<T, FnPlaceholder<T>, ((),)>),
-    /// Resolves this value through `ParamsSpec`s for each of its fields.
+    /// Resolves this value through `ValueSpec`s for each of its fields.
     ///
     /// This is like `T`, but with each field wrapped in `ValueSpecDe<T>`.
     FieldWise(T::FieldWiseSpec),
@@ -64,17 +64,17 @@ where
     }
 }
 
-impl<T> From<ValueSpecDe<T>> for ParamsSpec<T>
+impl<T> From<ValueSpecDe<T>> for ValueSpec<T>
 where
     T: Params + Clone + Debug + Send + Sync + 'static,
 {
     fn from(value_spec_de: ValueSpecDe<T>) -> Self {
         match value_spec_de {
-            ValueSpecDe::Stored => ParamsSpec::Stored,
-            ValueSpecDe::Value(t) => ParamsSpec::Value(t),
-            ValueSpecDe::From => ParamsSpec::From,
-            ValueSpecDe::FromMap(mapping_fn_impl) => ParamsSpec::FromMap(Box::new(mapping_fn_impl)),
-            ValueSpecDe::FieldWise(field_wise_spec) => ParamsSpec::FieldWise(field_wise_spec),
+            ValueSpecDe::Stored => ValueSpec::Stored,
+            ValueSpecDe::Value(t) => ValueSpec::Value(t),
+            ValueSpecDe::From => ValueSpec::From,
+            ValueSpecDe::FromMap(mapping_fn_impl) => ValueSpec::FromMap(Box::new(mapping_fn_impl)),
+            ValueSpecDe::FieldWise(field_wise_spec) => ValueSpec::FieldWise(field_wise_spec),
         }
     }
 }

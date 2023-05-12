@@ -2,7 +2,7 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{ApplyCheck, FnCtx},
     data::marker::{ApplyDry, Clean, Current, Desired},
-    params::{ParamsSpec, ParamsSpecs},
+    params::{ParamsSpecs, ValueSpec},
     resources::{
         internal::StatesMut,
         resources::ts::SetUp,
@@ -491,7 +491,7 @@ async fn resources_set_up(
     let mut params_specs = ParamsSpecs::new();
     params_specs.insert(
         VecCopyItemSpec::ID_DEFAULT.clone(),
-        ParamsSpec::Value(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7])),
+        ValueSpec::Value(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7])),
     );
 
     let mut resources = Resources::new();

@@ -18,18 +18,18 @@ use crate::{
 ///
 /// 1. A `ParamsSpecsTypeReg` is constructed, and deserialization functions are
 ///    registered from `ItemSpecId` to `ValueSpecDe<T, F, U>`, where `F` and
-/// `U`    are derived from the `ParamsSpec` provided by the user.
+///    `U` are derived from the `ValueSpec` provided by the user.
 ///
 /// 2. `value_specs.yaml` is deserialized using that type registry.
 ///
-/// 3. Each `ValueSpecDe<T>` is mapped into a `ParamsSpec<T>`, and
+/// 3. Each `ValueSpecDe<T>` is mapped into a `ValueSpec<T>`, and
 ///    subsequently `BoxDt` to be passed around in a `CmdCtx`.
 ///
-/// 4. These `BoxDt`s are downcasted back to `ParamsSpec<T>` when resolving
+/// 4. These `BoxDt`s are downcasted back to `ValueSpec<T>` when resolving
 ///    values for item spec params and params partials.
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(from = "crate::ValueSpecDe<T>")]
-pub enum ParamsSpec<T>
+pub enum ValueSpec<T>
 where
     T: Params + Clone + Debug + Send + Sync + 'static,
 {
@@ -68,14 +68,14 @@ where
     /// the user must provide the `FromMap` in subsequent command
     /// context builds.
     FromMap(Box<dyn MappingFn<Output = T>>),
-    /// Resolves this value through `ParamsSpec`s for each of its fields.
+    /// Resolves this value through `ValueSpec`s for each of its fields.
     ///
     /// This is like `T`, but with each field wrapped in
     /// `ValueSpecFieldless<T>`.
     //
-    // Wrap each in `ParamsSpec`, but for unit / external values, fail on field wise
+    // Wrap each in `ValueSpec`, but for unit / external values, fail on field wise
     // resolution, and also don't generate a builder method for field wise (even if is present in
-    // the `ParamsSpec` API).
+    // the `ValueSpec` API).
     //
     // Need to decide on:
     //
@@ -83,11 +83,11 @@ where
     // * Every recursive field is annotated with `#[params(recursive)]`
     //
     // There shouldn't need to be automatic detection of non-recursive fields for stdlib types,
-    // because `peace_params` should just implement `ParamsSpec` for those types.
+    // because `peace_params` should just implement `ValueSpec` for those types.
     FieldWise(T::FieldWiseSpec),
 }
 
-impl<T> ParamsSpec<T>
+impl<T> ValueSpec<T>
 where
     T: Params + Clone + Debug + Send + Sync + 'static,
 {
@@ -100,7 +100,7 @@ where
     }
 }
 
-impl<T> Debug for ParamsSpec<T>
+impl<T> Debug for ValueSpec<T>
 where
     T: Params + Clone + Debug + Send + Sync + 'static,
 {
@@ -117,7 +117,7 @@ where
     }
 }
 
-impl<T> From<T> for ParamsSpec<T>
+impl<T> From<T> for ValueSpec<T>
 where
     T: Params + Clone + Debug + Send + Sync + 'static,
 {
@@ -126,9 +126,9 @@ where
     }
 }
 
-impl<T> ParamsSpec<T>
+impl<T> ValueSpec<T>
 where
-    T: Params<Spec = ParamsSpec<T>> + Clone + Debug + Send + Sync + 'static,
+    T: Params<Spec = ValueSpec<T>> + Clone + Debug + Send + Sync + 'static,
     T::Partial: From<T>,
 {
     pub fn resolve(
@@ -137,8 +137,8 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
         match self {
-            ParamsSpec::Value(t) => Ok(t.clone()),
-            ParamsSpec::Stored | ParamsSpec::From => match resources.try_borrow::<T>() {
+            ValueSpec::Value(t) => Ok(t.clone()),
+            ValueSpec::Stored | ValueSpec::From => match resources.try_borrow::<T>() {
                 Ok(t) => Ok((*t).clone()),
                 Err(borrow_fail) => match borrow_fail {
                     BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
@@ -151,8 +151,8 @@ where
                     }
                 },
             },
-            ParamsSpec::FromMap(mapping_fn) => mapping_fn.map(resources, value_resolution_ctx),
-            ParamsSpec::FieldWise(field_wise_spec) => {
+            ValueSpec::FromMap(mapping_fn) => mapping_fn.map(resources, value_resolution_ctx),
+            ValueSpec::FieldWise(field_wise_spec) => {
                 field_wise_spec.resolve(resources, value_resolution_ctx)
             }
         }
@@ -164,8 +164,8 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T::Partial, ParamsResolveError> {
         match self {
-            ParamsSpec::Value(t) => Ok(T::Partial::from((*t).clone())),
-            ParamsSpec::Stored | ParamsSpec::From => match resources.try_borrow::<T>() {
+            ValueSpec::Value(t) => Ok(T::Partial::from((*t).clone())),
+            ValueSpec::Stored | ValueSpec::From => match resources.try_borrow::<T>() {
                 Ok(t) => Ok(T::Partial::from((*t).clone())),
                 Err(borrow_fail) => match borrow_fail {
                     BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
@@ -178,19 +178,19 @@ where
                     }
                 },
             },
-            ParamsSpec::FromMap(mapping_fn) => mapping_fn
+            ValueSpec::FromMap(mapping_fn) => mapping_fn
                 .try_map(resources, value_resolution_ctx)
                 .map(|t| t.map(T::Partial::from).unwrap_or_else(T::Partial::default)),
-            ParamsSpec::FieldWise(field_wise_spec) => {
+            ValueSpec::FieldWise(field_wise_spec) => {
                 field_wise_spec.resolve_partial(resources, value_resolution_ctx)
             }
         }
     }
 }
 
-impl<T> ValueSpecRt for ParamsSpec<T>
+impl<T> ValueSpecRt for ValueSpec<T>
 where
-    T: Params<Spec = ParamsSpec<T>>
+    T: Params<Spec = ValueSpec<T>>
         + Clone
         + Debug
         + Serialize
@@ -208,7 +208,7 @@ where
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
-        ParamsSpec::<T>::resolve(self, resources, value_resolution_ctx)
+        ValueSpec::<T>::resolve(self, resources, value_resolution_ctx)
     }
 
     fn try_resolve(
@@ -216,7 +216,7 @@ where
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Option<T>, ParamsResolveError> {
-        ParamsSpec::<T>::resolve_partial(self, resources, value_resolution_ctx)
+        ValueSpec::<T>::resolve_partial(self, resources, value_resolution_ctx)
             .map(T::try_from)
             .map(Result::ok)
     }

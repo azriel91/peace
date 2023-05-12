@@ -2,7 +2,7 @@ use syn::{DeriveInput, Ident, ImplGenerics, Path, TypeGenerics, WhereClause};
 
 use crate::util::t_value_and_try_from_partial_bounds;
 
-/// `impl FieldWiseSpecRt for ParamsSpec`, so that Peace can resolve the params
+/// `impl FieldWiseSpecRt for ValueSpec`, so that Peace can resolve the params
 /// type as well as its values from the spec.
 pub fn impl_field_wise_spec_rt_for_field_wise_external(
     ast: &DeriveInput,
