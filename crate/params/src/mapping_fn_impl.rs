@@ -3,10 +3,13 @@ use std::{
     marker::PhantomData,
 };
 
+use peace_data::marker::{ApplyDry, Clean, Current, Desired};
 use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{Deserialize, Serialize, Serializer};
 
-use crate::{FieldNameAndType, MappingFn, ParamsResolveError, ValueResolutionCtx};
+use crate::{
+    FieldNameAndType, MappingFn, ParamsResolveError, ValueResolutionCtx, ValueResolutionMode,
+};
 
 /// Wrapper around a mapping function so that it can be serialized.
 #[derive(Clone, Serialize, Deserialize)]
@@ -131,35 +134,45 @@ macro_rules! impl_mapping_fn_impl {
                         ",
                         t = tynm::type_name::<T>(),
                         Args = tynm::type_name::<($($Arg,)+)>(),
-                        );
+                    );
                 };
 
-                $(
-                    let $var = resources.try_borrow::<$Arg>();
-                    let $var = match $var {
-                        Ok($var) => $var,
-                        Err(borrow_fail) => match borrow_fail {
-                            BorrowFail::ValueNotFound => {
-                                return Err(ParamsResolveError::FromMap {
-                                    value_resolution_ctx: value_resolution_ctx.clone(),
-                                    from_type_name: tynm::type_name::<$Arg>(),
-                                });
-                            },
-                            BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                                return Err(ParamsResolveError::FromMapBorrowConflict {
-                                    value_resolution_ctx: value_resolution_ctx.clone(),
-                                    from_type_name: tynm::type_name::<$Arg>(),
-                                });
-                            }
-                        },
-                    };
-                )+
+                // We have to duplicate code because the return type from
+                // `resources.try_borrow` is different per branch.
+                match value_resolution_ctx.value_resolution_mode() {
+                    ValueResolutionMode::ApplyDry => {
+                        $(arg_resolve!(resources, value_resolution_ctx, ApplyDry, $var, $Arg);)+
 
-                fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
-                    value_resolution_ctx: value_resolution_ctx.clone(),
-                    from_type_name: tynm::type_name::<($($Arg,)+)>(),
-                })
+                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                            value_resolution_ctx: value_resolution_ctx.clone(),
+                            from_type_name: tynm::type_name::<($($Arg,)+)>(),
+                        })
+                    }
+                    ValueResolutionMode::Current => {
+                        $(arg_resolve!(resources, value_resolution_ctx, Current, $var, $Arg);)+
 
+                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                            value_resolution_ctx: value_resolution_ctx.clone(),
+                            from_type_name: tynm::type_name::<($($Arg,)+)>(),
+                        })
+                    }
+                    ValueResolutionMode::Desired => {
+                        $(arg_resolve!(resources, value_resolution_ctx, Desired, $var, $Arg);)+
+
+                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                            value_resolution_ctx: value_resolution_ctx.clone(),
+                            from_type_name: tynm::type_name::<($($Arg,)+)>(),
+                        })
+                    }
+                    ValueResolutionMode::Clean => {
+                        $(arg_resolve!(resources, value_resolution_ctx, Clean, $var, $Arg);)+
+
+                        fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
+                            value_resolution_ctx: value_resolution_ctx.clone(),
+                            from_type_name: tynm::type_name::<($($Arg,)+)>(),
+                        })
+                    }
+                }
             }
 
             pub fn try_map(
@@ -184,26 +197,33 @@ macro_rules! impl_mapping_fn_impl {
                         ",
                         t = tynm::type_name::<T>(),
                         Args = tynm::type_name::<($($Arg,)+)>(),
-                        );
+                    );
                 };
 
-                $(
-                    let $var = resources.try_borrow::<$Arg>();
-                    let $var = match $var {
-                        Ok($var) => $var,
-                        Err(borrow_fail) => match borrow_fail {
-                            BorrowFail::ValueNotFound => return Ok(None),
-                            BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                                return Err(ParamsResolveError::FromMapBorrowConflict {
-                                    value_resolution_ctx: value_resolution_ctx.clone(),
-                                    from_type_name: tynm::type_name::<$Arg>(),
-                                });
-                            }
-                        },
-                    };
-                )+
+                // We have to duplicate code because the return type from
+                // `resources.try_borrow` is different per branch.
+                match value_resolution_ctx.value_resolution_mode() {
+                    ValueResolutionMode::ApplyDry => {
+                        $(try_arg_resolve!(resources, value_resolution_ctx, ApplyDry, $var, $Arg);)+
 
-                Ok(fn_map($(&$var,)+))
+                        Ok(fn_map($(&$var,)+))
+                    }
+                    ValueResolutionMode::Current => {
+                        $(try_arg_resolve!(resources, value_resolution_ctx, Current, $var, $Arg);)+
+
+                        Ok(fn_map($(&$var,)+))
+                    }
+                    ValueResolutionMode::Desired => {
+                        $(try_arg_resolve!(resources, value_resolution_ctx, Desired, $var, $Arg);)+
+
+                        Ok(fn_map($(&$var,)+))
+                    }
+                    ValueResolutionMode::Clean => {
+                        $(try_arg_resolve!(resources, value_resolution_ctx, Clean, $var, $Arg);)+
+
+                        Ok(fn_map($(&$var,)+))
+                    }
+                }
             }
         }
 
@@ -245,7 +265,135 @@ macro_rules! impl_mapping_fn_impl {
     };
 }
 
+#[derive(Debug)]
+enum BorrowedData<Marked, T> {
+    Marked(Marked),
+    Direct(T),
+}
+
+macro_rules! arg_resolve {
+    (
+        $resources:ident,
+        $value_resolution_ctx:ident,
+        $value_resolution_mode:ident,
+        $arg:ident,
+        $Arg:ident
+    ) => {
+        // Prioritize data marker wrapper over direct data borrow.
+        let borrow_marked_data_result = $resources.try_borrow::<$value_resolution_mode<$Arg>>();
+        let borrow_direct = $resources.try_borrow::<$Arg>();
+
+        let borrowed_data = match borrow_marked_data_result {
+            Ok(borrow_marked_data) => BorrowedData::Marked(borrow_marked_data),
+            Err(borrow_fail) => match borrow_fail {
+                // Either:
+                //
+                // * `A0` in the function is incorrect, so `Current<A0>` is not registered by any
+                //   item spec, or
+                // * There is a bug in Peace.
+                BorrowFail::ValueNotFound => match borrow_direct {
+                    Ok(arg) => BorrowedData::Direct(arg),
+                    Err(borrow_fail) => match borrow_fail {
+                        // Either:
+                        //
+                        // * `A0` in the function is incorrect, so `Current<A0>` is not registered
+                        //   by any item spec, or
+                        // * There is a bug in Peace.
+                        BorrowFail::ValueNotFound => {
+                            return Err(ParamsResolveError::FromMap {
+                                value_resolution_ctx: $value_resolution_ctx.clone(),
+                                from_type_name: tynm::type_name::<$Arg>(),
+                            });
+                        }
+                        BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
+                            return Err(ParamsResolveError::FromMapBorrowConflict {
+                                value_resolution_ctx: $value_resolution_ctx.clone(),
+                                from_type_name: tynm::type_name::<$Arg>(),
+                            });
+                        }
+                    },
+                },
+                BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
+                    return Err(ParamsResolveError::FromMapBorrowConflict {
+                        value_resolution_ctx: $value_resolution_ctx.clone(),
+                        from_type_name: tynm::type_name::<$Arg>(),
+                    });
+                }
+            },
+        };
+        let $arg = match &borrowed_data {
+            BorrowedData::Marked(marked_data) => match marked_data.as_ref() {
+                Some(data) => data,
+                None => {
+                    return Err(ParamsResolveError::FromMap {
+                        value_resolution_ctx: $value_resolution_ctx.clone(),
+                        from_type_name: tynm::type_name::<$Arg>(),
+                    });
+                }
+            },
+            BorrowedData::Direct(data) => data,
+        };
+    };
+}
+
+macro_rules! try_arg_resolve {
+    (
+        $resources:ident,
+        $value_resolution_ctx:ident,
+        $value_resolution_mode:ident,
+        $arg:ident,
+        $Arg:ident
+    ) => {
+        // Prioritize data marker wrapper over direct data borrow.
+        let borrow_marked_data_result = $resources.try_borrow::<$value_resolution_mode<$Arg>>();
+        let borrow_direct = $resources.try_borrow::<$Arg>();
+
+        let borrowed_data = match borrow_marked_data_result {
+            Ok(borrow_marked_data) => BorrowedData::Marked(borrow_marked_data),
+            Err(borrow_fail) => match borrow_fail {
+                // Either:
+                //
+                // * `A0` in the function is incorrect, so `Current<A0>` is not registered by any
+                //   item spec, or
+                // * There is a bug in Peace.
+                BorrowFail::ValueNotFound => match borrow_direct {
+                    Ok(arg) => BorrowedData::Direct(arg),
+                    Err(borrow_fail) => match borrow_fail {
+                        // Either:
+                        //
+                        // * `A0` in the function is incorrect, so `Current<A0>` is not registered
+                        //   by any item spec, or
+                        // * There is a bug in Peace.
+                        BorrowFail::ValueNotFound => return Ok(None),
+                        BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
+                            return Err(ParamsResolveError::FromMapBorrowConflict {
+                                value_resolution_ctx: $value_resolution_ctx.clone(),
+                                from_type_name: tynm::type_name::<$Arg>(),
+                            });
+                        }
+                    },
+                },
+                BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
+                    return Err(ParamsResolveError::FromMapBorrowConflict {
+                        value_resolution_ctx: $value_resolution_ctx.clone(),
+                        from_type_name: tynm::type_name::<$Arg>(),
+                    });
+                }
+            },
+        };
+        let $arg = match &borrowed_data {
+            BorrowedData::Marked(marked_data) => match marked_data.as_ref() {
+                Some(data) => data,
+                None => return Ok(None),
+            },
+            BorrowedData::Direct(data) => &data,
+        };
+    };
+}
+
+use arg_resolve;
 use impl_mapping_fn_impl;
+use try_arg_resolve;
 
 // We can add more if we need to support more args.
 //

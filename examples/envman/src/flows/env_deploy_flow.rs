@@ -4,7 +4,6 @@ use peace::{
     cfg::{
         app_name, flow_id, item_spec_id, state::Generated, AppName, FlowId, ItemSpecId, Profile,
     },
-    data::marker::Current,
     params::{ParamsSpec, ValueSpec},
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
@@ -157,11 +156,11 @@ impl EnvDeployFlow {
                 ValueSpec::Value(path.clone()),
                 ValueSpec::from_map(
                     Some(String::from("managed_policy_arn")),
-                    |iam_policy_state: &Current<IamPolicyState>| {
-                        if let Some(IamPolicyState::Some {
+                    |iam_policy_state: &IamPolicyState| {
+                        if let IamPolicyState::Some {
                             policy_id_arn_version: Generated::Value(policy_id_arn_version),
                             ..
-                        }) = iam_policy_state.0.as_ref()
+                        } = iam_policy_state
                         {
                             Some(policy_id_arn_version.arn().to_string())
                         } else {

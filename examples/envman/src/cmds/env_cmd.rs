@@ -5,7 +5,6 @@ use peace::{
         ctx::CmdCtx,
         scopes::{MultiProfileSingleFlow, SingleProfileSingleFlowView},
     },
-    data::marker::Current,
     fmt::presentln,
     params::{ParamsSpec, ValueSpec},
     resources::resources::ts::SetUp,
@@ -66,13 +65,13 @@ impl EnvCmd {
                 ValueSpec::Value(iam_role_path),
                 ValueSpec::from_map(
                     Some(String::from("managed_policy_arn")),
-                    |iam_policy_state: &Current<IamPolicyState>| {
+                    |iam_policy_state: &IamPolicyState| {
                         let IamPolicyState::Some {
-                    policy_id_arn_version: Generated::Value(policy_id_arn_version),
-                    ..
-                } = iam_policy_state.as_ref()? else {
-                    return None;
-                };
+                            policy_id_arn_version: Generated::Value(policy_id_arn_version),
+                            ..
+                        } = iam_policy_state else {
+                            return None;
+                        };
                         Some(policy_id_arn_version.arn().to_string())
                     },
                 ),

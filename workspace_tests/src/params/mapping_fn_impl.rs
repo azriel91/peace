@@ -1,14 +1,19 @@
-use peace::{
-    cfg::{item_spec_id, ItemSpecId},
-    params::{
-        FieldNameAndType, MappingFn, MappingFnImpl, ParamsResolveError, ValueResolutionCtx,
-        ValueResolutionMode,
-    },
-    resources::{resources::ts::SetUp, Resources},
-};
+use peace::params::MappingFnImpl;
 
 #[test]
 fn debug() {
+    let mapping_fn_impl = MappingFnImpl::from((Some(String::from("field_name")), |_: &bool| {
+        None::<Option<u16>>
+    }));
+    assert_eq!(
+        "MappingFnImpl { \
+            field_name: Some(\"field_name\"), \
+            fn_map: \"Some(Fn(&bool,) -> Option<Option<u16>>)\", \
+            marker: PhantomData<(core::option::Option<u16>, (bool,))> \
+        }",
+        format!("{mapping_fn_impl:?}")
+    );
+
     let mapping_fn_impl =
         MappingFnImpl::from((Some(String::from("field_name")), |_: &u32, _: &u64| {
             None::<Option<u16>>
@@ -23,131 +28,288 @@ fn debug() {
     );
 }
 
-#[test]
-fn mapping_fn_map_returns_ok_when_referenced_values_are_present() -> Result<(), ParamsResolveError>
-{
-    let mapping_fn_impl =
-        MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
-            let a = u16::try_from(*a).ok()?;
-            let b = u16::try_from(*b).ok()?;
-            a.checked_add(b)
-        }));
-    let resources = {
-        let mut resources = Resources::new();
-        resources.insert(1u32);
-        resources.insert(2u64);
-        Resources::<SetUp>::from(resources)
+mapping_tests!(apply_dry, ApplyDry);
+mapping_tests!(current, Current);
+mapping_tests!(desired, Desired);
+mapping_tests!(clean, Clean);
+
+macro_rules! mapping_tests {
+    ($module_name:ident, $value_resolution_mode:ident) => {
+        mod $module_name {
+            use peace::{
+                data::marker::$value_resolution_mode,
+                cfg::{item_spec_id, ItemSpecId},
+                params::{
+                    FieldNameAndType, MappingFn, MappingFnImpl, ParamsResolveError,
+                    ValueResolutionCtx, ValueResolutionMode,
+                },
+                resources::{resources::ts::SetUp, Resources},
+            };
+
+            #[test]
+            fn mapping_fn_map_returns_ok_when_referenced_values_are_present_directly()
+            -> Result<(), ParamsResolveError> {
+                let mapping_fn_impl =
+                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                        let a = u16::try_from(*a).ok()?;
+                        let b = u16::try_from(*b).ok()?;
+                        a.checked_add(b)
+                    }));
+                let resources = {
+                    let mut resources = Resources::new();
+                    resources.insert(1u32);
+                    resources.insert(2u64);
+                    Resources::<SetUp>::from(resources)
+                };
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::$value_resolution_mode,
+                    item_spec_id!("mapping_fn_map"),
+                    "mapping_fn_map",
+                );
+
+                let sum = MappingFn::map(
+                    &mapping_fn_impl,
+                    &resources,
+                    &mut value_resolution_ctx,
+                )?;
+                assert_eq!(3, sum);
+
+                Ok(())
+            }
+
+            #[test]
+            fn mapping_fn_map_returns_ok_when_referenced_values_are_present_through_data_marker()
+            -> Result<(), ParamsResolveError> {
+                let mapping_fn_impl =
+                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                        let a = u16::try_from(*a).ok()?;
+                        let b = u16::try_from(*b).ok()?;
+                        a.checked_add(b)
+                    }));
+                let resources = {
+                    let mut resources = Resources::new();
+                    resources.insert($value_resolution_mode(Some(1u32)));
+                    resources.insert($value_resolution_mode(Some(2u64)));
+                    Resources::<SetUp>::from(resources)
+                };
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::$value_resolution_mode,
+                    item_spec_id!("mapping_fn_map"),
+                    "mapping_fn_map",
+                );
+
+                let sum = MappingFn::map(
+                    &mapping_fn_impl,
+                    &resources,
+                    &mut value_resolution_ctx,
+                )?;
+                assert_eq!(3, sum);
+
+                Ok(())
+            }
+
+            #[test]
+            fn mapping_fn_map_returns_err_when_referenced_value_is_none()
+            -> Result<(), ParamsResolveError> {
+                let mapping_fn_impl =
+                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                        let a = u16::try_from(*a).ok()?;
+                        let b = u16::try_from(*b).ok()?;
+                        a.checked_add(b)
+                    }));
+                let resources = {
+                    let mut resources = Resources::new();
+                    resources.insert($value_resolution_mode(Some(1u32)));
+                    resources.insert($value_resolution_mode(None::<u64>));
+                    Resources::<SetUp>::from(resources)
+                };
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::$value_resolution_mode,
+                    item_spec_id!("mapping_fn_map"),
+                    "mapping_fn_map_test",
+                );
+
+                let sum_result = MappingFn::map(
+                    &mapping_fn_impl,
+                    &resources,
+                    &mut value_resolution_ctx,
+                );
+                assert!(
+                    matches!(
+                        &sum_result,
+                        Err(ParamsResolveError::FromMap {
+                            value_resolution_ctx,
+                            from_type_name
+                        })
+                        if matches!(
+                            value_resolution_ctx,
+                            value_resolution_ctx
+                            if value_resolution_ctx.value_resolution_mode()
+                                == ValueResolutionMode::$value_resolution_mode
+                            && value_resolution_ctx.item_spec_id()
+                                == &item_spec_id!("mapping_fn_map")
+                            && value_resolution_ctx.params_type_name() == "mapping_fn_map_test"
+                            && value_resolution_ctx.resolution_chain() == [FieldNameAndType::new(
+                                String::from("field_name"),
+                                std::any::type_name::<u16>().to_string()
+                            )]
+                        )
+                        && from_type_name == "u64" // u64 is missing from `resources`
+                    ),
+                    "was {sum_result:?}"
+                );
+
+                Ok(())
+            }
+
+            #[test]
+            fn mapping_fn_map_returns_err_when_referenced_value_is_absent()
+            -> Result<(), ParamsResolveError> {
+                let mapping_fn_impl =
+                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                        let a = u16::try_from(*a).ok()?;
+                        let b = u16::try_from(*b).ok()?;
+                        a.checked_add(b)
+                    }));
+                let resources = {
+                    let mut resources = Resources::new();
+                    resources.insert($value_resolution_mode(Some(1u32)));
+                    // resources.insert($value_resolution_mode(Some(2u64)));
+                    Resources::<SetUp>::from(resources)
+                };
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::$value_resolution_mode,
+                    item_spec_id!("mapping_fn_map"),
+                    "mapping_fn_map_test",
+                );
+
+                let sum_result = MappingFn::map(
+                    &mapping_fn_impl,
+                    &resources,
+                    &mut value_resolution_ctx,
+                );
+                assert!(
+                    matches!(
+                        &sum_result,
+                        Err(ParamsResolveError::FromMap {
+                            value_resolution_ctx,
+                            from_type_name
+                        })
+                        if matches!(
+                            value_resolution_ctx,
+                            value_resolution_ctx
+                            if value_resolution_ctx.value_resolution_mode()
+                                == ValueResolutionMode::$value_resolution_mode
+                            && value_resolution_ctx.item_spec_id()
+                                == &item_spec_id!("mapping_fn_map")
+                            && value_resolution_ctx.params_type_name() == "mapping_fn_map_test"
+                            && value_resolution_ctx.resolution_chain() == [FieldNameAndType::new(
+                                String::from("field_name"),
+                                std::any::type_name::<u16>().to_string()
+                            )]
+                        )
+                        && from_type_name == "u64" // u64 is missing from `resources`
+                    ),
+                    "was {sum_result:?}"
+                );
+
+                Ok(())
+            }
+
+            #[test]
+            fn mapping_fn_try_map_returns_ok_some_when_referenced_values_are_present()
+            -> Result<(), ParamsResolveError> {
+                let mapping_fn_impl =
+                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                        let a = u16::try_from(*a).ok()?;
+                        let b = u16::try_from(*b).ok()?;
+                        a.checked_add(b)
+                    }));
+                let resources = {
+                    let mut resources = Resources::new();
+                    resources.insert($value_resolution_mode(Some(1u32)));
+                    resources.insert($value_resolution_mode(Some(2u64)));
+                    Resources::<SetUp>::from(resources)
+                };
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::$value_resolution_mode,
+                    item_spec_id!("mapping_fn_map"),
+                    "mapping_fn_map",
+                );
+
+                let sum = MappingFn::try_map(
+                    &mapping_fn_impl,
+                    &resources,
+                    &mut value_resolution_ctx,
+                )?;
+                assert_eq!(Some(3), sum);
+
+                Ok(())
+            }
+
+            #[test]
+            fn mapping_fn_try_map_returns_ok_none_when_referenced_value_is_none()
+            -> Result<(), ParamsResolveError> {
+                let mapping_fn_impl =
+                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                        let a = u16::try_from(*a).ok()?;
+                        let b = u16::try_from(*b).ok()?;
+                        a.checked_add(b)
+                    }));
+                let resources = {
+                    let mut resources = Resources::new();
+                    resources.insert($value_resolution_mode(Some(1u32)));
+                    resources.insert($value_resolution_mode(None::<u64>));
+                    Resources::<SetUp>::from(resources)
+                };
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::$value_resolution_mode,
+                    item_spec_id!("mapping_fn_map"),
+                    "mapping_fn_map",
+                );
+
+                let sum = MappingFn::try_map(
+                    &mapping_fn_impl,
+                    &resources,
+                    &mut value_resolution_ctx,
+                )?;
+                assert_eq!(None, sum);
+
+                Ok(())
+            }
+
+            #[test]
+            fn mapping_fn_try_map_returns_ok_none_when_referenced_value_is_absent()
+            -> Result<(), ParamsResolveError> {
+                let mapping_fn_impl =
+                    MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
+                        let a = u16::try_from(*a).ok()?;
+                        let b = u16::try_from(*b).ok()?;
+                        a.checked_add(b)
+                    }));
+                let resources = {
+                    let mut resources = Resources::new();
+                    resources.insert($value_resolution_mode(Some(1u32)));
+                    // resources.insert($value_resolution_mode(Some(2u64)));
+                    Resources::<SetUp>::from(resources)
+                };
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::$value_resolution_mode,
+                    item_spec_id!("mapping_fn_map"),
+                    "mapping_fn_map",
+                );
+
+                let sum = MappingFn::try_map(
+                    &mapping_fn_impl,
+                    &resources,
+                    &mut value_resolution_ctx,
+                )?;
+                assert_eq!(None, sum);
+
+                Ok(())
+            }
+        }
     };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
-        ValueResolutionMode::Current,
-        item_spec_id!("mapping_fn_map"),
-        "mapping_fn_map",
-    );
-
-    let sum = MappingFn::map(&mapping_fn_impl, &resources, &mut value_resolution_ctx)?;
-    assert_eq!(3, sum);
-
-    Ok(())
 }
 
-#[test]
-fn mapping_fn_map_returns_err_when_referenced_values_are_absent() -> Result<(), ParamsResolveError>
-{
-    let mapping_fn_impl =
-        MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
-            let a = u16::try_from(*a).ok()?;
-            let b = u16::try_from(*b).ok()?;
-            a.checked_add(b)
-        }));
-    let resources = {
-        let mut resources = Resources::new();
-        resources.insert(1u32);
-        // resources.insert(2u64);
-        Resources::<SetUp>::from(resources)
-    };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
-        ValueResolutionMode::Current,
-        item_spec_id!("mapping_fn_map"),
-        "mapping_fn_map_test",
-    );
-
-    let sum_result = MappingFn::map(&mapping_fn_impl, &resources, &mut value_resolution_ctx);
-    assert!(
-        matches!(
-            &sum_result,
-            Err(ParamsResolveError::FromMap {
-                value_resolution_ctx,
-                from_type_name
-            })
-            if matches!(
-                value_resolution_ctx,
-                value_resolution_ctx
-                if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
-                && value_resolution_ctx.item_spec_id() == &item_spec_id!("mapping_fn_map")
-                && value_resolution_ctx.params_type_name() == "mapping_fn_map_test"
-                && value_resolution_ctx.resolution_chain() == [FieldNameAndType::new(
-                    String::from("field_name"),
-                    std::any::type_name::<u16>().to_string()
-                )]
-            )
-            && from_type_name == "u64" // u64 is missing from `resources`
-        ),
-        "was {sum_result:?}"
-    );
-
-    Ok(())
-}
-
-#[test]
-fn mapping_fn_try_map_returns_ok_some_when_referenced_values_are_present()
--> Result<(), ParamsResolveError> {
-    let mapping_fn_impl =
-        MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
-            let a = u16::try_from(*a).ok()?;
-            let b = u16::try_from(*b).ok()?;
-            a.checked_add(b)
-        }));
-    let resources = {
-        let mut resources = Resources::new();
-        resources.insert(1u32);
-        resources.insert(2u64);
-        Resources::<SetUp>::from(resources)
-    };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
-        ValueResolutionMode::Current,
-        item_spec_id!("mapping_fn_map"),
-        "mapping_fn_map",
-    );
-
-    let sum = MappingFn::try_map(&mapping_fn_impl, &resources, &mut value_resolution_ctx)?;
-    assert_eq!(Some(3), sum);
-
-    Ok(())
-}
-
-#[test]
-fn mapping_fn_try_map_returns_ok_none_when_referenced_values_are_present()
--> Result<(), ParamsResolveError> {
-    let mapping_fn_impl =
-        MappingFnImpl::from((Some(String::from("field_name")), |a: &u32, b: &u64| {
-            let a = u16::try_from(*a).ok()?;
-            let b = u16::try_from(*b).ok()?;
-            a.checked_add(b)
-        }));
-    let resources = {
-        let mut resources = Resources::new();
-        resources.insert(1u32);
-        // resources.insert(2u64);
-        Resources::<SetUp>::from(resources)
-    };
-    let mut value_resolution_ctx = ValueResolutionCtx::new(
-        ValueResolutionMode::Current,
-        item_spec_id!("mapping_fn_map"),
-        "mapping_fn_map",
-    );
-
-    let sum = MappingFn::try_map(&mapping_fn_impl, &resources, &mut value_resolution_ctx)?;
-    assert_eq!(None, sum);
-
-    Ok(())
-}
+use mapping_tests;
