@@ -426,7 +426,7 @@ async fn build_with_item_spec_params_returns_ok_when_params_provided()
     let mut value_resolution_ctx = ValueResolutionCtx::new(
         ValueResolutionMode::Current,
         VecCopyItemSpec::ID_DEFAULT.clone(),
-        std::any::type_name::<VecA>(),
+        tynm::type_name::<VecA>(),
     );
     assert!(matches!(vec_a_spec,
         Some(ParamsSpec::Value(VecA(value)))
@@ -523,7 +523,7 @@ async fn build_with_item_spec_params_returns_ok_when_params_not_provided_but_are
     let mut value_resolution_ctx = ValueResolutionCtx::new(
         ValueResolutionMode::Current,
         VecCopyItemSpec::ID_DEFAULT.clone(),
-        std::any::type_name::<VecA>(),
+        tynm::type_name::<VecA>(),
     );
     assert!(matches!(vec_a_spec,
         Some(ParamsSpec::Value(VecA(value)))
@@ -583,7 +583,7 @@ async fn build_with_item_spec_params_returns_ok_and_uses_params_provided_when_pa
     let mut value_resolution_ctx = ValueResolutionCtx::new(
         ValueResolutionMode::Current,
         VecCopyItemSpec::ID_DEFAULT.clone(),
-        std::any::type_name::<VecA>(),
+        tynm::type_name::<VecA>(),
     );
     assert!(matches!(vec_a_spec,
         Some(ParamsSpec::Value(VecA(value)))

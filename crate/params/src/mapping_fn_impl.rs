@@ -288,7 +288,7 @@ macro_rules! arg_resolve {
                         BorrowFail::ValueNotFound => {
                             return Err(ParamsResolveError::FromMap {
                                 value_resolution_ctx: $value_resolution_ctx.clone(),
-                                from_type_name: tynm::type_name::<$value_resolution_mode<$Arg>>(),
+                                from_type_name: tynm::type_name::<$Arg>(),
                             });
                         }
                         BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
@@ -313,7 +313,7 @@ macro_rules! arg_resolve {
                 None => {
                     return Err(ParamsResolveError::FromMap {
                         value_resolution_ctx: $value_resolution_ctx.clone(),
-                        from_type_name: tynm::type_name::<$value_resolution_mode<$Arg>>(),
+                        from_type_name: tynm::type_name::<$Arg>(),
                     });
                 }
             },

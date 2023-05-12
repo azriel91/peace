@@ -527,7 +527,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
     let mut value_resolution_ctx = ValueResolutionCtx::new(
         ValueResolutionMode::Current,
         TarXTest::ID.clone(),
-        std::any::type_name::<TarXParams<TarXTest>>(),
+        tynm::type_name::<TarXParams<TarXTest>>(),
     );
     let tar_x_params = tar_x_params_spec
         .resolve(resources, &mut value_resolution_ctx)

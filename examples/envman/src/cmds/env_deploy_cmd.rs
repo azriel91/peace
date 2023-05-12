@@ -37,7 +37,12 @@ impl EnvDeployCmd {
                     value: states_ensured,
                     errors,
                 } = &states_ensured_outcome;
-                let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
+                let SingleProfileSingleFlowView {
+                    output,
+                    flow,
+                    resources,
+                    ..
+                } = ctx.view();
 
                 if states_ensured_outcome.is_ok() {
                     let states_ensured_raw_map = &***states_ensured;
@@ -73,6 +78,7 @@ impl EnvDeployCmd {
                         .await?;
                 } else {
                     crate::output::item_spec_errors_present(output, errors).await?;
+                    let _ = tokio::fs::write("resources.ron", format!("{resources:#?}")).await;
                 }
 
                 Ok(())

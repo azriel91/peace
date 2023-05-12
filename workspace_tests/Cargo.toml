@@ -32,6 +32,7 @@ tar = { workspace = true }
 tempfile = "3.5.0"
 thiserror = "1.0.40"
 tokio = { workspace = true, features = ["rt", "macros"] }
+tynm = { workspace = true }
 
 [features]
 default = ["item_specs", "output_in_memory"]

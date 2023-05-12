@@ -185,8 +185,24 @@ where
         Ok(state_desired)
     }
 
+    /// Returns the desired state for this item spec.
+    ///
+    /// `value_resolution_ctx` is passed in because:
+    ///
+    /// * When discovering the desired state for a flow, without altering any
+    ///   items, the desired state of a successor is dependent on the desired
+    ///   state of a predecessor.
+    /// * When discovering the desired state of a successor, after a predecessor
+    ///   has had state applied, the predecessor's desired state does not
+    ///   necessarily contain the generated values, so we need to tell the
+    ///   successor to look up the predecessor's newly current state.
+    /// * When cleaning up, the predecessor's current state must be used to
+    ///   resolve a successor's params. Since clean up is applied in reverse,
+    ///   the `Desired` state of a predecessor may not exist, and cause the
+    ///   successor to not be cleaned up.
     async fn state_desired_exec(
         &self,
+        value_resolution_mode: ValueResolutionMode,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
@@ -199,7 +215,7 @@ where
                     item_spec_id: item_spec_id.clone(),
                 })?;
             let mut value_resolution_ctx = ValueResolutionCtx::new(
-                ValueResolutionMode::Desired,
+                value_resolution_mode,
                 item_spec_id.clone(),
                 tynm::type_name::<IS::Params<'_>>(),
             );
@@ -295,8 +311,9 @@ where
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         state_current: &IS::State,
-        state_desired: &IS::State,
+        state_target: &IS::State,
         state_diff: &IS::StateDiff,
+        value_resolution_mode: ValueResolutionMode,
     ) -> Result<ApplyCheck, E> {
         let params_partial = {
             let item_spec_id = self.id();
@@ -314,7 +331,7 @@ where
             // resolved as execution happens -- values that rely on predecessors' applied
             // state will be fed into successors' desired state.
             let mut value_resolution_ctx = ValueResolutionCtx::new(
-                ValueResolutionMode::Desired,
+                value_resolution_mode,
                 item_spec_id.clone(),
                 tynm::type_name::<IS::Params<'_>>(),
             );
@@ -324,7 +341,7 @@ where
         };
         let data = <IS::Data<'_> as Data>::borrow(self.id(), resources);
         if let Ok(params) = params_partial.try_into() {
-            IS::apply_check(&params, data, state_current, state_desired, state_diff)
+            IS::apply_check(&params, data, state_current, state_target, state_diff)
                 .await
                 .map_err(Into::<E>::into)
         } else {
@@ -586,10 +603,22 @@ where
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<BoxDtDisplay, E> {
-        self.state_desired_exec(params_specs, resources, fn_ctx)
-            .await
-            .map(BoxDtDisplay::new)
-            .map_err(Into::<E>::into)
+        self.state_desired_exec(
+            // Use the would-be state of predecessor to discover desired state of this item spec.
+            //
+            // TODO: this means we may need to overlay the desired state with the predecessor's
+            // current state.
+            //
+            // Or more feasibly, if predecessor's ApplyCheck is ExecNotRequired, then we can use
+            // predecessor's current state.
+            ValueResolutionMode::Desired,
+            params_specs,
+            resources,
+            fn_ctx,
+        )
+        .await
+        .map(BoxDtDisplay::new)
+        .map_err(Into::<E>::into)
     }
 
     async fn state_diff_exec(
@@ -623,7 +652,13 @@ where
         #[cfg(feature = "output_progress")]
         fn_ctx.progress_sender().reset();
         match self
-            .state_desired_exec(params_specs, resources, fn_ctx)
+            .state_desired_exec(
+                // Use current state of predecessor to discover desired state.
+                ValueResolutionMode::Current,
+                params_specs,
+                resources,
+                fn_ctx,
+            )
             .await
         {
             Ok(state_desired) => item_apply_partial.state_target = Some(state_desired),
@@ -650,7 +685,7 @@ where
             Err(error) => return Err((error, item_apply_partial.into())),
         }
 
-        let (Some(state_current), Some(state_target), Some(state_diff)) = (
+        let (Some(state_current), Some(state_desired), Some(state_diff)) = (
             item_apply_partial.state_current.as_ref(),
             item_apply_partial.state_target.as_ref(),
             item_apply_partial.state_diff.as_ref(),
@@ -658,16 +693,18 @@ where
             unreachable!("These are set just above.");
         };
 
-        let state_applied = match self
+        let apply_check = self
             .apply_check(
                 params_specs,
                 resources,
                 state_current,
-                state_target,
+                state_desired,
                 state_diff,
+                // Use current state of predecessor to discover desired state.
+                ValueResolutionMode::Current,
             )
-            .await
-        {
+            .await;
+        let state_applied = match apply_check {
             Ok(apply_check) => {
                 item_apply_partial.apply_check = Some(apply_check);
 
@@ -756,10 +793,14 @@ where
     ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
         let mut item_apply_partial = ItemApplyPartial::<IS::State, IS::StateDiff>::new();
 
-        // Hack: Setting ItemApplyPartial state_current to state_clean is a hack.
         if let Some(state_current) = states_current.get::<IS::State, _>(self.id()) {
             item_apply_partial.state_current = Some(state_current.clone());
         } else {
+            // Hack: Setting ItemApplyPartial state_current to state_clean is a hack,
+            // which allows successor item specs to read the state of a predecessor, when
+            // none can be discovered.
+            //
+            // This may not necessarily be a hack.
             match self.state_clean(params_specs, resources).await {
                 Ok(state_clean) => item_apply_partial.state_current = Some(state_clean),
                 Err(error) => return Err((error, item_apply_partial.into())),
@@ -789,7 +830,7 @@ where
             Err(error) => return Err((error, item_apply_partial.into())),
         }
 
-        let (Some(state_current), Some(state_target), Some(state_diff)) = (
+        let (Some(state_current), Some(state_clean), Some(state_diff)) = (
             item_apply_partial.state_current.as_ref(),
             item_apply_partial.state_target.as_ref(),
             item_apply_partial.state_diff.as_ref(),
@@ -797,16 +838,19 @@ where
             unreachable!("These are set just above.");
         };
 
-        let state_applied = match self
+        let apply_check = self
             .apply_check(
                 params_specs,
                 resources,
                 state_current,
-                state_target,
+                state_clean,
                 state_diff,
+                // Use current state of predecessor to discover desired state.
+                ValueResolutionMode::Current,
             )
-            .await
-        {
+            .await;
+
+        let state_applied = match apply_check {
             Ok(apply_check) => {
                 item_apply_partial.apply_check = Some(apply_check);
 
