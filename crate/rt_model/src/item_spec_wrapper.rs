@@ -1,5 +1,4 @@
 use std::{
-    any::type_name,
     fmt::{self, Debug},
     marker::PhantomData,
     ops::{Deref, DerefMut},
@@ -77,7 +76,7 @@ where
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::Clean,
                     item_spec_id.clone(),
-                    type_name::<IS::Params<'_>>(),
+                    tynm::type_name::<IS::Params<'_>>(),
                 );
                 params_spec
                     .resolve_partial(resources, &mut value_resolution_ctx)
@@ -108,7 +107,7 @@ where
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::Current,
                     item_spec_id.clone(),
-                    type_name::<IS::Params<'_>>(),
+                    tynm::type_name::<IS::Params<'_>>(),
                 );
                 params_spec
                     .resolve_partial(resources, &mut value_resolution_ctx)
@@ -141,7 +140,7 @@ where
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::Current,
                     item_spec_id.clone(),
-                    type_name::<IS::Params<'_>>(),
+                    tynm::type_name::<IS::Params<'_>>(),
                 );
                 params_spec
                     .resolve(resources, &mut value_resolution_ctx)
@@ -171,7 +170,7 @@ where
             let mut value_resolution_ctx = ValueResolutionCtx::new(
                 ValueResolutionMode::Desired,
                 item_spec_id.clone(),
-                type_name::<IS::Params<'_>>(),
+                tynm::type_name::<IS::Params<'_>>(),
             );
             params_spec
                 .resolve_partial(resources, &mut value_resolution_ctx)
@@ -202,7 +201,7 @@ where
             let mut value_resolution_ctx = ValueResolutionCtx::new(
                 ValueResolutionMode::Desired,
                 item_spec_id.clone(),
-                type_name::<IS::Params<'_>>(),
+                tynm::type_name::<IS::Params<'_>>(),
             );
             params_spec
                 .resolve(resources, &mut value_resolution_ctx)
@@ -276,7 +275,7 @@ where
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::Desired,
                     item_spec_id.clone(),
-                    type_name::<IS::Params<'_>>(),
+                    tynm::type_name::<IS::Params<'_>>(),
                 );
                 params_spec
                     .resolve_partial(resources, &mut value_resolution_ctx)
@@ -317,7 +316,7 @@ where
             let mut value_resolution_ctx = ValueResolutionCtx::new(
                 ValueResolutionMode::Desired,
                 item_spec_id.clone(),
-                type_name::<IS::Params<'_>>(),
+                tynm::type_name::<IS::Params<'_>>(),
             );
             params_spec
                 .resolve_partial(resources, &mut value_resolution_ctx)
@@ -357,7 +356,7 @@ where
             let mut value_resolution_ctx = ValueResolutionCtx::new(
                 ValueResolutionMode::ApplyDry,
                 item_spec_id.clone(),
-                type_name::<IS::Params<'_>>(),
+                tynm::type_name::<IS::Params<'_>>(),
             );
             params_spec
                 .resolve(resources, &mut value_resolution_ctx)
@@ -399,7 +398,7 @@ where
             let mut value_resolution_ctx = ValueResolutionCtx::new(
                 ValueResolutionMode::Current,
                 item_spec_id.clone(),
-                type_name::<IS::Params<'_>>(),
+                tynm::type_name::<IS::Params<'_>>(),
             );
             params_spec
                 .resolve(resources, &mut value_resolution_ctx)

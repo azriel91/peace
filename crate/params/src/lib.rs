@@ -61,6 +61,7 @@
 
 // Re-exports
 pub use peace_params_derive::{value_impl, Params, Value};
+pub use tynm;
 
 pub use crate::{
     field_name_and_type::FieldNameAndType, field_wise_spec_rt::FieldWiseSpecRt,

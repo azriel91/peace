@@ -340,7 +340,7 @@ fn fields_resolution(
             // ```rust
             // value_resolution_ctx.push(#peace_params_path::FieldNameAndType::new(
             //     String::from(stringify!(field_1)),
-            //     String::from(::std::any::type_name::<#field_ty>())),
+            //     String::from(#peace_params_path::tynm::type_name::<#field_ty>())),
             // );
             // let field_1 = field_1.resolve(resources, value_resolution_ctx)?;
             // value_resolution_ctx.pop();
@@ -361,7 +361,7 @@ fn fields_resolution(
                         tokens.extend(quote! {
                             value_resolution_ctx.push(#peace_params_path::FieldNameAndType::new(
                                 String::from(stringify!(#field_name)),
-                                String::from(::std::any::type_name::<#field_ty>())),
+                                String::from(#peace_params_path::tynm::type_name::<#field_ty>())),
                             );
                             #resolve_value
                             value_resolution_ctx.pop();
@@ -376,7 +376,7 @@ fn fields_resolution(
             // ```rust
             // value_resolution_ctx.push(#peace_params_path::FieldNameAndType::new(
             //     String::from(stringify!(1)),
-            //     String::from(::std::any::type_name::<#field_ty>())),
+            //     String::from(#peace_params_path::tynm::type_name::<#field_ty>())),
             // );
             // let _1 = _1.resolve(resources, value_resolution_ctx)?;
             // value_resolution_ctx.pop();
@@ -400,7 +400,7 @@ fn fields_resolution(
                         tokens.extend(quote! {
                             value_resolution_ctx.push(#peace_params_path::FieldNameAndType::new(
                                 String::from(stringify!(#field_index)),
-                                String::from(::std::any::type_name::<#field_ty>())),
+                                String::from(#peace_params_path::tynm::type_name::<#field_ty>())),
                             );
                             #resolve_value
                             value_resolution_ctx.pop();

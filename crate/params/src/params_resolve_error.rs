@@ -72,7 +72,11 @@ pub enum ParamsResolveError {
         feature = "error_reporting",
         diagnostic(
             code(peace_params::params_resolve_error::from_map),
-            help("Make sure `{from_type_name}` has been inserted into `resources`.")
+            help(
+                "Make sure `{from_type_name}` has been inserted into `resources`.\n\
+                Value resolution mode is: {value_resolution_mode:?}",
+                value_resolution_mode = value_resolution_ctx.value_resolution_mode()
+            )
         )
     )]
     #[error(

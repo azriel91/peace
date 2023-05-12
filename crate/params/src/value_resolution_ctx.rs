@@ -13,7 +13,7 @@ pub struct ValueResolutionCtx {
     /// ID of the item spec whose params are being resolved.
     item_spec_id: ItemSpecId,
     /// Name of the `ItemSpec::Params` type.
-    params_type_name: &'static str,
+    params_type_name: String,
     /// Hierarchy of fields traversed to resolve this value.
     resolution_chain: Vec<FieldNameAndType>,
 }
@@ -22,7 +22,7 @@ impl ValueResolutionCtx {
     pub fn new(
         value_resolution_mode: ValueResolutionMode,
         item_spec_id: ItemSpecId,
-        params_type_name: &'static str,
+        params_type_name: String,
     ) -> Self {
         Self {
             value_resolution_mode,
@@ -41,7 +41,7 @@ impl ValueResolutionCtx {
     }
 
     pub fn params_type_name(&self) -> &str {
-        self.params_type_name
+        &self.params_type_name
     }
 
     pub fn resolution_chain(&self) -> &[FieldNameAndType] {
@@ -62,28 +62,45 @@ impl ValueResolutionCtx {
 impl fmt::Display for ValueResolutionCtx {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let params_type_name = self.params_type_name();
-        write!(f, "{params_type_name} {{\n}}")?;
+        writeln!(f, "{params_type_name} {{")?;
 
-        self.resolution_chain().iter().enumerate().try_for_each(
-            |(indentation, field_name_and_type)| {
-                (0..indentation).try_for_each(|_| write!(f, "    "))?;
+        if let Some((last, chain)) = self.resolution_chain().split_last() {
+            chain
+                .iter()
+                .enumerate()
+                .try_for_each(|(indentation, field_name_and_type)| {
+                    let indentation = indentation + 1;
+                    (0..indentation).try_for_each(|_| write!(f, "    "))?;
 
-                let field_name = field_name_and_type.field_name();
-                let type_name = field_name_and_type.type_name();
-                write!(f, "{field_name}: {type_name} {{")?;
+                    let field_name = field_name_and_type.field_name();
+                    let type_name = field_name_and_type.type_name();
+                    write!(f, "{field_name}: {type_name} {{\n")?;
 
-                (0..indentation).try_for_each(|_| write!(f, "    "))?;
-                write!(f, "..\n")
-            },
-        )?;
+                    (0..indentation).try_for_each(|_| write!(f, "    "))?;
+                    write!(f, "..\n")
+                })?;
+
+            // Don't add opening `{` for the actual field.
+            let indentation = self.resolution_chain().len();
+            (0..indentation).try_for_each(|_| write!(f, "    "))?;
+
+            let field_name = last.field_name();
+            let type_name = last.type_name();
+            writeln!(f, "{field_name}: {type_name},")?;
+
+            (0..indentation).try_for_each(|_| write!(f, "    "))?;
+            writeln!(f, "..")?;
+        }
+
         (0..self.resolution_chain().len())
             .rev()
             .skip(1)
             .try_for_each(|indentation| {
+                let indentation = indentation + 1;
                 (0..indentation).try_for_each(|_| write!(f, "    "))?;
-                write!(f, "}}")
+                write!(f, "}}\n")
             })?;
 
-        write!(f, "\n}}")
+        write!(f, "}}")
     }
 }

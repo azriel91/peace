@@ -7,9 +7,7 @@ use peace_data::marker::{ApplyDry, Clean, Current, Desired};
 use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{Deserialize, Serialize, Serializer};
 
-use crate::{
-    FieldNameAndType, MappingFn, ParamsResolveError, ValueResolutionCtx, ValueResolutionMode,
-};
+use crate::{MappingFn, ParamsResolveError, ValueResolutionCtx, ValueResolutionMode};
 
 /// Wrapper around a mapping function so that it can be serialized.
 #[derive(Clone, Serialize, Deserialize)]
@@ -117,12 +115,6 @@ macro_rules! impl_mapping_fn_impl {
                 resources: &Resources<SetUp>,
                 value_resolution_ctx: &mut ValueResolutionCtx,
             ) -> Result<T, ParamsResolveError> {
-                if let Some(field_name) = self.field_name.as_deref() {
-                    value_resolution_ctx.push(FieldNameAndType::new(
-                        field_name.to_string(),
-                        tynm::type_name::<T>().to_string(),
-                    ));
-                }
                 let Some(fn_map) = self.fn_map.as_ref() else {
                     panic!("`MappingFnImpl::map` called when `fn_map` is `None`.\n\
                         This is a bug in the Peace framework.\n\
@@ -180,12 +172,6 @@ macro_rules! impl_mapping_fn_impl {
                 resources: &Resources<SetUp>,
                 value_resolution_ctx: &mut ValueResolutionCtx,
             ) -> Result<Option<T>, ParamsResolveError> {
-                if let Some(field_name) = self.field_name.as_deref() {
-                    value_resolution_ctx.push(FieldNameAndType::new(
-                        field_name.to_string(),
-                        tynm::type_name::<T>().to_string(),
-                    ));
-                }
                 let Some(fn_map) = self.fn_map.as_ref() else {
                     panic!("`MappingFnImpl::try_map` called when `fn_map` is `None`.\n\
                         This is a bug in the Peace framework.\n\
@@ -302,7 +288,7 @@ macro_rules! arg_resolve {
                         BorrowFail::ValueNotFound => {
                             return Err(ParamsResolveError::FromMap {
                                 value_resolution_ctx: $value_resolution_ctx.clone(),
-                                from_type_name: tynm::type_name::<$Arg>(),
+                                from_type_name: tynm::type_name::<$value_resolution_mode<$Arg>>(),
                             });
                         }
                         BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
@@ -327,7 +313,7 @@ macro_rules! arg_resolve {
                 None => {
                     return Err(ParamsResolveError::FromMap {
                         value_resolution_ctx: $value_resolution_ctx.clone(),
-                        from_type_name: tynm::type_name::<$Arg>(),
+                        from_type_name: tynm::type_name::<$value_resolution_mode<$Arg>>(),
                     });
                 }
             },
