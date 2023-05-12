@@ -14,18 +14,18 @@ use crate::{MappingFn, MappingFnImpl, ParamsResolveError, Value, ValueResolution
 /// For deserialization:
 ///
 /// 1. A `ParamsSpecsTypeReg` is constructed, and deserialization functions are
-///    registered from `ItemSpecId` to `ValueSpecDe<T, F, U>`, where `F` and `U`
-///    are derived from the `ParamsSpec` provided by the user.
+///    registered from `ItemSpecId` to `ValueSpecFieldlessDe<T, F, U>`, where
+///    `F` and `U` are derived from the `ParamsSpec` provided by the user.
 ///
 /// 2. `value_specs.yaml` is deserialized using that type registry.
 ///
-/// 3. Each `ValueSpecDe<T>` is mapped into a `ValueSpec<T>`, and
+/// 3. Each `ValueSpecFieldlessDe<T>` is mapped into a `ValueSpec<T>`, and
 ///    subsequently `BoxDt` to be passed around in a `CmdCtx`.
 ///
 /// 4. These `BoxDt`s are downcasted back to `ValueSpec<T>` when resolving
 ///    values for item spec params and params partials.
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(from = "crate::ValueSpecDe<T>")]
+#[serde(from = "crate::ValueSpecFieldlessDe<T>")]
 pub enum ValueSpec<T>
 where
     T: Value + Clone + Debug + Send + Sync + 'static,

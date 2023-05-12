@@ -8,7 +8,7 @@ type FnPlaceholder<T> = fn(&()) -> Option<T>;
 
 /// Exists to deserialize `FromMap` with a non-type-erased `MappingFnImpl`
 #[derive(Clone, Serialize, Deserialize)]
-pub enum ValueSpecDe<T>
+pub enum ValueSpecFieldlessDe<T>
 where
     T: Value,
 {
@@ -41,7 +41,7 @@ where
     FromMap(MappingFnImpl<T, FnPlaceholder<T>, ((),)>),
 }
 
-impl<T> Debug for ValueSpecDe<T>
+impl<T> Debug for ValueSpecFieldlessDe<T>
 where
     T: Value + Debug,
 {
@@ -57,16 +57,18 @@ where
     }
 }
 
-impl<T> From<ValueSpecDe<T>> for ValueSpec<T>
+impl<T> From<ValueSpecFieldlessDe<T>> for ValueSpec<T>
 where
     T: Value + Clone + Debug + Send + Sync + 'static,
 {
-    fn from(value_spec_de: ValueSpecDe<T>) -> Self {
+    fn from(value_spec_de: ValueSpecFieldlessDe<T>) -> Self {
         match value_spec_de {
-            ValueSpecDe::Stored => ValueSpec::Stored,
-            ValueSpecDe::Value(t) => ValueSpec::Value(t),
-            ValueSpecDe::From => ValueSpec::From,
-            ValueSpecDe::FromMap(mapping_fn_impl) => ValueSpec::FromMap(Box::new(mapping_fn_impl)),
+            ValueSpecFieldlessDe::Stored => ValueSpec::Stored,
+            ValueSpecFieldlessDe::Value(t) => ValueSpec::Value(t),
+            ValueSpecFieldlessDe::From => ValueSpec::From,
+            ValueSpecFieldlessDe::FromMap(mapping_fn_impl) => {
+                ValueSpec::FromMap(Box::new(mapping_fn_impl))
+            }
         }
     }
 }

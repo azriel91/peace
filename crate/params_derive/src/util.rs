@@ -5,7 +5,12 @@ use syn::{
     PathSegment, Type, TypePath, Variant, WherePredicate,
 };
 
-/// Returns whether the type or field is defined outside the crate.
+/// Returns whether the type or field is annotated with `#[params(external)]`.
+///
+/// This attribute must be:
+///
+/// * attached to std library types defined outside the `peace_params` crate.
+/// * attached to each `Params`' field defined outside the item spec crate.
 pub fn is_external(attrs: &[Attribute]) -> bool {
     attrs.iter().any(|attr| {
         if attr.path().is_ident("params") {
