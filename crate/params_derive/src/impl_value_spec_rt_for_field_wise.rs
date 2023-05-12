@@ -439,11 +439,11 @@ impl ResolveMode {
         };
         match self {
             Self::Resolve => quote! {
-                let #field_name = <#peace_params_path::ValueSpec<#wrapper_field_ty> as #peace_params_path::ValueSpecRt>
+                let #field_name = <#peace_params_path::ValueSpecFieldless<#wrapper_field_ty> as #peace_params_path::ValueSpecRt>
                     ::resolve(#field_name, resources, value_resolution_ctx)?.into();
             },
             Self::TryResolve => quote! {
-                let #field_name = <#peace_params_path::ValueSpec<#wrapper_field_ty> as #peace_params_path::ValueSpecRt>
+                let #field_name = <#peace_params_path::ValueSpecFieldless<#wrapper_field_ty> as #peace_params_path::ValueSpecRt>
                     ::try_resolve(#field_name, resources, value_resolution_ctx)?
                     .map(::std::convert::TryFrom::try_from)
                     .and_then(::std::result::Result::ok);

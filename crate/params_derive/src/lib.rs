@@ -213,7 +213,7 @@ fn impl_params(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
         for #params_name #ty_generics
         #where_clause
         {
-            type Spec = #peace_params_path::ValueSpec<#params_name #ty_generics>;
+            type Spec = #peace_params_path::ValueSpecFieldless<#params_name #ty_generics>;
             type Partial = #t_partial_name #ty_generics;
         }
 
@@ -298,7 +298,7 @@ fn impl_value(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
         for #value_name #ty_generics
         #where_clause
         {
-            type Spec = #peace_params_path::ValueSpec<#value_name #ty_generics>;
+            type Spec = #peace_params_path::ValueSpecFieldless<#value_name #ty_generics>;
             type Partial = #t_partial_name #ty_generics;
         }
 
@@ -430,9 +430,9 @@ fn t_partial_external(
 ///
 /// ```rust,ignore
 /// struct MyParamsFieldWise {
-///     src: peace_params::ValueSpec<PathBuf>,
-///     dest_ip: peace_params::ValueSpec<IpAddr>,
-///     dest_path: peace_params::ValueSpec<PathBuf>,
+///     src: peace_params::ValueSpecFieldless<PathBuf>,
+///     dest_ip: peace_params::ValueSpecFieldless<IpAddr>,
+///     dest_path: peace_params::ValueSpecFieldless<PathBuf>,
 /// }
 /// ```
 fn t_field_wise(
@@ -492,7 +492,7 @@ fn t_field_wise(
 /// Generates something like the following:
 ///
 /// ```rust,ignore
-/// struct MyParamsFieldWise(peace_params::ValueSpec<MyParams>)
+/// struct MyParamsFieldWise(peace_params::ValueSpecFieldless<MyParams>)
 /// ```
 // TODO: Refactor this crate to not pass redundant information, or use a context object.
 #[allow(clippy::too_many_arguments)]

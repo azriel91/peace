@@ -12,7 +12,8 @@ pub trait Params {
     type Spec: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static;
     /// The `Params` type, but with optional fields.
     type Partial: Clone + Debug + Default + Send + Sync + 'static;
-    /// The `Params` type, but each field is wrapped with `ValueSpec<T>`.
+    /// The `Params` type, but each field is wrapped with
+    /// `ValueSpecFieldless<T>`.
     ///
     /// Specifies how to look up values for each field in the item spec's
     /// `Params`.

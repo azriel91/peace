@@ -19,14 +19,14 @@ use crate::{MappingFn, MappingFnImpl, ParamsResolveError, Value, ValueResolution
 ///
 /// 2. `value_specs.yaml` is deserialized using that type registry.
 ///
-/// 3. Each `ValueSpecFieldlessDe<T>` is mapped into a `ValueSpec<T>`, and
-///    subsequently `BoxDt` to be passed around in a `CmdCtx`.
+/// 3. Each `ValueSpecFieldlessDe<T>` is mapped into a `ValueSpecFieldless<T>`,
+/// and    subsequently `BoxDt` to be passed around in a `CmdCtx`.
 ///
-/// 4. These `BoxDt`s are downcasted back to `ValueSpec<T>` when resolving
-///    values for item spec params and params partials.
+/// 4. These `BoxDt`s are downcasted back to `ValueSpecFieldless<T>` when
+/// resolving    values for item spec params and params partials.
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(from = "crate::ValueSpecFieldlessDe<T>")]
-pub enum ValueSpec<T>
+pub enum ValueSpecFieldless<T>
 where
     T: Value + Clone + Debug + Send + Sync + 'static,
 {
@@ -67,7 +67,7 @@ where
     FromMap(Box<dyn MappingFn<Output = T>>),
 }
 
-impl<T> ValueSpec<T>
+impl<T> ValueSpecFieldless<T>
 where
     T: Value + Clone + Debug + Send + Sync + 'static,
 {
@@ -80,7 +80,7 @@ where
     }
 }
 
-impl<T> Debug for ValueSpec<T>
+impl<T> Debug for ValueSpecFieldless<T>
 where
     T: Value + Clone + Debug + Send + Sync + 'static,
 {
@@ -94,9 +94,9 @@ where
     }
 }
 
-impl<T> ValueSpec<T>
+impl<T> ValueSpecFieldless<T>
 where
-    T: Value<Spec = ValueSpec<T>> + Clone + Debug + Send + Sync + 'static,
+    T: Value<Spec = ValueSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
     T::Partial: From<T>,
 {
     pub fn resolve(
@@ -105,21 +105,25 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
         match self {
-            ValueSpec::Value(t) => Ok(t.clone()),
-            ValueSpec::Stored | ValueSpec::From => match resources.try_borrow::<T>() {
-                Ok(t) => Ok((*t).clone()),
-                Err(borrow_fail) => match borrow_fail {
-                    BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
-                        value_resolution_ctx: value_resolution_ctx.clone(),
-                    }),
-                    BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                        Err(ParamsResolveError::FromBorrowConflict {
+            ValueSpecFieldless::Value(t) => Ok(t.clone()),
+            ValueSpecFieldless::Stored | ValueSpecFieldless::From => {
+                match resources.try_borrow::<T>() {
+                    Ok(t) => Ok((*t).clone()),
+                    Err(borrow_fail) => match borrow_fail {
+                        BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
                             value_resolution_ctx: value_resolution_ctx.clone(),
-                        })
-                    }
-                },
-            },
-            ValueSpec::FromMap(mapping_fn) => mapping_fn.map(resources, value_resolution_ctx),
+                        }),
+                        BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
+                            Err(ParamsResolveError::FromBorrowConflict {
+                                value_resolution_ctx: value_resolution_ctx.clone(),
+                            })
+                        }
+                    },
+                }
+            }
+            ValueSpecFieldless::FromMap(mapping_fn) => {
+                mapping_fn.map(resources, value_resolution_ctx)
+            }
         }
     }
 
@@ -129,30 +133,32 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T::Partial, ParamsResolveError> {
         match self {
-            ValueSpec::Value(t) => Ok(T::Partial::from((*t).clone())),
-            ValueSpec::Stored | ValueSpec::From => match resources.try_borrow::<T>() {
-                Ok(t) => Ok(T::Partial::from((*t).clone())),
-                Err(borrow_fail) => match borrow_fail {
-                    BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
-                        value_resolution_ctx: value_resolution_ctx.clone(),
-                    }),
-                    BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                        Err(ParamsResolveError::FromBorrowConflict {
+            ValueSpecFieldless::Value(t) => Ok(T::Partial::from((*t).clone())),
+            ValueSpecFieldless::Stored | ValueSpecFieldless::From => {
+                match resources.try_borrow::<T>() {
+                    Ok(t) => Ok(T::Partial::from((*t).clone())),
+                    Err(borrow_fail) => match borrow_fail {
+                        BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
                             value_resolution_ctx: value_resolution_ctx.clone(),
-                        })
-                    }
-                },
-            },
-            ValueSpec::FromMap(mapping_fn) => mapping_fn
+                        }),
+                        BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
+                            Err(ParamsResolveError::FromBorrowConflict {
+                                value_resolution_ctx: value_resolution_ctx.clone(),
+                            })
+                        }
+                    },
+                }
+            }
+            ValueSpecFieldless::FromMap(mapping_fn) => mapping_fn
                 .try_map(resources, value_resolution_ctx)
                 .map(|t| t.map(T::Partial::from).unwrap_or_else(T::Partial::default)),
         }
     }
 }
 
-impl<T> ValueSpecRt for ValueSpec<T>
+impl<T> ValueSpecRt for ValueSpecFieldless<T>
 where
-    T: Value<Spec = ValueSpec<T>> + Clone + Debug + Send + Sync + 'static,
+    T: Value<Spec = ValueSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
     T::Partial: From<T>,
     T: TryFrom<T::Partial>,
 {
@@ -163,7 +169,7 @@ where
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
-        ValueSpec::<T>::resolve(self, resources, value_resolution_ctx)
+        ValueSpecFieldless::<T>::resolve(self, resources, value_resolution_ctx)
     }
 
     fn try_resolve(
@@ -171,7 +177,7 @@ where
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Option<T>, ParamsResolveError> {
-        ValueSpec::<T>::resolve_partial(self, resources, value_resolution_ctx)
+        ValueSpecFieldless::<T>::resolve_partial(self, resources, value_resolution_ctx)
             .map(T::try_from)
             .map(Result::ok)
     }

@@ -32,7 +32,7 @@ pub fn fields_to_value_spec(fields: &mut Fields, peace_params_path: &Path) {
         if is_phantom_data(field_ty) {
             field_ty.clone()
         } else {
-            parse_quote!(#peace_params_path::ValueSpec<#field_ty>)
+            parse_quote!(#peace_params_path::ValueSpecFieldless<#field_ty>)
         }
     })
 }

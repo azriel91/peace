@@ -69,7 +69,7 @@ pub use crate::{
     params_resolve_error::ParamsResolveError, params_spec::ParamsSpec,
     params_spec_de::ParamsSpecDe, params_specs::ParamsSpecs, value::Value,
     value_resolution_ctx::ValueResolutionCtx, value_resolution_mode::ValueResolutionMode,
-    value_spec::ValueSpec, value_spec_fieldless_de::ValueSpecFieldlessDe,
+    value_spec_fieldless::ValueSpecFieldless, value_spec_fieldless_de::ValueSpecFieldlessDe,
     value_spec_rt::ValueSpecRt,
 };
 
@@ -86,6 +86,6 @@ mod std_impl;
 mod value;
 mod value_resolution_ctx;
 mod value_resolution_mode;
-mod value_spec;
+mod value_spec_fieldless;
 mod value_spec_fieldless_de;
 mod value_spec_rt;

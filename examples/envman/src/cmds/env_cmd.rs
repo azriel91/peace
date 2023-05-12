@@ -6,7 +6,7 @@ use peace::{
         scopes::{MultiProfileSingleFlow, SingleProfileSingleFlowView},
     },
     fmt::presentln,
-    params::{ParamsSpec, ValueSpec},
+    params::{ParamsSpec, ValueSpecFieldless},
     resources::resources::ts::SetUp,
     rt_model::{
         output::OutputWrite,
@@ -59,11 +59,11 @@ impl EnvCmd {
             ParamsSpec::<IamRoleParams<WebAppFileId>>::FieldWise(IamRoleParamsFieldWise::<
                 WebAppFileId,
             >::new(
-                ValueSpec::from_map(Some(String::from("name")), |profile: &Profile| {
+                ValueSpecFieldless::from_map(Some(String::from("name")), |profile: &Profile| {
                     Some(profile.to_string())
                 }),
-                ValueSpec::Value(iam_role_path),
-                ValueSpec::from_map(
+                ValueSpecFieldless::Value(iam_role_path),
+                ValueSpecFieldless::from_map(
                     Some(String::from("managed_policy_arn")),
                     |iam_policy_state: &IamPolicyState| {
                         let IamPolicyState::Some {

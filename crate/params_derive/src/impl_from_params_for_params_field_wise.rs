@@ -128,31 +128,33 @@ fn variants_map_to_value(
 ) -> proc_macro2::TokenStream {
     // Generates:
     //
+    // ```rust
     // match params {
     //     Params::Variant1 => Params::Variant1,
     //     Params::Variant2(_0, _1, PhantomData) => {
     //         Params::Variant2(
-    //             #peace_params_path::ValueSpec::Value(_0),
-    //             #peace_params_path::ValueSpec::Value(_1),
+    //             #peace_params_path::ValueSpecFieldless::Value(_0),
+    //             #peace_params_path::ValueSpecFieldless::Value(_1),
     //             PhantomData,
     //
     //             // or
-    //             // #peace_params_path::ValueSpec::Value(Wrapper(_0)),
-    //             // #peace_params_path::ValueSpec::Value(Wrapper(_1)),
+    //             // #peace_params_path::ValueSpecFieldless::Value(Wrapper(_0)),
+    //             // #peace_params_path::ValueSpecFieldless::Value(Wrapper(_1)),
     //         )
     //     }
     //     Params::Variant3 { field_1, field_2, marker: PhantomData } => {
     //         Params::Variant3 {
-    //             field_1: #peace_params_path::ValueSpec::Value(field_1),
-    //             field_2: #peace_params_path::ValueSpec::Value(field_2),
+    //             field_1: #peace_params_path::ValueSpecFieldless::Value(field_1),
+    //             field_2: #peace_params_path::ValueSpecFieldless::Value(field_2),
     //             marker: PhantomData,
     //
     //             // or
-    //             // field_1: #peace_params_path::ValueSpec::Value(Wrapper(_0)),
-    //             // field_2: #peace_params_path::ValueSpec::Value(Wrapper(_1)),
+    //             // field_1: #peace_params_path::ValueSpecFieldless::Value(Wrapper(_0)),
+    //             // field_2: #peace_params_path::ValueSpecFieldless::Value(Wrapper(_1)),
     //         }
     //     }
     // }
+    // ```
 
     let variant_map_to_value_arms =
         variants
@@ -225,13 +227,13 @@ fn fields_map_to_value(fields: &Fields, peace_params_path: &Path) -> proc_macro2
             // Generates:
             //
             // ```rust
-            // field_1: #peace_params_path::ValueSpec::Value(field_1),
-            // field_2: #peace_params_path::ValueSpec::Value(field_2),
+            // field_1: #peace_params_path::ValueSpecFieldless::Value(field_1),
+            // field_2: #peace_params_path::ValueSpecFieldless::Value(field_2),
             // marker: PhantomData,
             //
             // // or
-            // // field_1: #peace_params_path::ValueSpec::Value(Wrapper(field_1)),
-            // // field_2: #peace_params_path::ValueSpec::Value(Wrapper(field_2)),
+            // // field_1: #peace_params_path::ValueSpecFieldless::Value(Wrapper(field_1)),
+            // // field_2: #peace_params_path::ValueSpecFieldless::Value(Wrapper(field_2)),
             // ```
 
             fields_named
@@ -253,7 +255,7 @@ fn fields_map_to_value(fields: &Fields, peace_params_path: &Path) -> proc_macro2
                             };
 
                             tokens.extend(quote! {
-                                #field_name: #peace_params_path::ValueSpec::Value(#field_deconstruct),
+                                #field_name: #peace_params_path::ValueSpecFieldless::Value(#field_deconstruct),
                             });
                         }
                     }
@@ -264,13 +266,13 @@ fn fields_map_to_value(fields: &Fields, peace_params_path: &Path) -> proc_macro2
             // Generates:
             //
             // ```rust
-            // #peace_params_path::ValueSpec::Value(_0),
-            // #peace_params_path::ValueSpec::Value(_1),
+            // #peace_params_path::ValueSpecFieldless::Value(_0),
+            // #peace_params_path::ValueSpecFieldless::Value(_1),
             // PhantomData,
             //
             // // or
-            // // #peace_params_path::ValueSpec::Value(Wrapper(_0)),
-            // // #peace_params_path::ValueSpec::Value(Wrapper(_1)),
+            // // #peace_params_path::ValueSpecFieldless::Value(Wrapper(_0)),
+            // // #peace_params_path::ValueSpecFieldless::Value(Wrapper(_1)),
             // ```
             fields_unnamed.unnamed.iter().enumerate().fold(
                 proc_macro2::TokenStream::new(),
@@ -289,7 +291,7 @@ fn fields_map_to_value(fields: &Fields, peace_params_path: &Path) -> proc_macro2
                         };
 
                         tokens.extend(
-                            quote!(#peace_params_path::ValueSpec::Value(#field_deconstruct),),
+                            quote!(#peace_params_path::ValueSpecFieldless::Value(#field_deconstruct),),
                         );
                     }
 

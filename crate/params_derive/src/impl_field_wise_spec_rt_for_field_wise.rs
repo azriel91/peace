@@ -436,14 +436,14 @@ impl<'name> ResolveMode<'name> {
         };
         match self {
             Self::Full { .. } => quote! {
-                let #field_name = #peace_params_path::ValueSpec::<#wrapper_field_ty>::resolve(
+                let #field_name = #peace_params_path::ValueSpecFieldless::<#wrapper_field_ty>::resolve(
                     #field_name,
                     resources,
                     value_resolution_ctx,
                 )?.into();
             },
             Self::Partial { .. } => quote! {
-                let #field_name = #peace_params_path::ValueSpec::<#wrapper_field_ty>::resolve_partial(
+                let #field_name = #peace_params_path::ValueSpecFieldless::<#wrapper_field_ty>::resolve_partial(
                     #field_name,
                     resources,
                     value_resolution_ctx,

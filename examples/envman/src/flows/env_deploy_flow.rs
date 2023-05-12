@@ -4,7 +4,7 @@ use peace::{
     cfg::{
         app_name, flow_id, item_spec_id, state::Generated, AppName, FlowId, ItemSpecId, Profile,
     },
-    params::{ParamsSpec, ValueSpec},
+    params::{ParamsSpec, ValueSpecFieldless},
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
 use peace_item_specs::{
@@ -152,9 +152,9 @@ impl EnvDeployFlow {
 
         let iam_role_params_spec =
             ParamsSpec::FieldWise(IamRoleParamsFieldWise::<WebAppFileId>::new(
-                ValueSpec::Value(iam_role_name),
-                ValueSpec::Value(path.clone()),
-                ValueSpec::from_map(
+                ValueSpecFieldless::Value(iam_role_name),
+                ValueSpecFieldless::Value(path.clone()),
+                ValueSpecFieldless::from_map(
                     Some(String::from("managed_policy_arn")),
                     |iam_policy_state: &IamPolicyState| {
                         if let IamPolicyState::Some {
