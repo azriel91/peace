@@ -209,7 +209,7 @@ fn impl_params(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
             type FieldWiseSpec = #t_field_wise_name #ty_generics;
         }
 
-        impl #impl_generics #peace_params_path::Value
+        impl #impl_generics #peace_params_path::ValueFieldless
         for #params_name #ty_generics
         #where_clause
         {
@@ -294,7 +294,7 @@ fn impl_value(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
     let external_wrapper_types = ExternalType::external_wrapper_types(ast, &peace_params_path);
 
     quote! {
-        impl #impl_generics #peace_params_path::Value
+        impl #impl_generics #peace_params_path::ValueFieldless
         for #value_name #ty_generics
         #where_clause
         {

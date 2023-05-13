@@ -143,7 +143,7 @@ fn get_lit_str(meta: &ParseNestedMeta) -> syn::Result<Option<syn::LitStr>> {
 ///
 /// ```rust,ignore
 /// T: Value<Spec = ValueSpecFieldless<T>> + TryFrom<<T as Value>::Partial>,
-/// <T as Value>::Partial: From<T>,
+/// <T as ValueFieldless>::Partial: From<T>,
 /// ```
 pub fn t_value_and_try_from_partial_bounds<'f>(
     ast: &'f DeriveInput,
@@ -166,11 +166,11 @@ pub fn t_value_and_try_from_partial_bounds<'f>(
         .flat_map(move |type_param| {
             let t_value_and_try_from_partial: WherePredicate = parse_quote! {
                 #type_param:
-                    #peace_params_path::Value<Spec = #peace_params_path::ValueSpecFieldless<#type_param>>
-                    + ::std::convert::TryFrom<<#type_param as #peace_params_path::Value>::Partial>
+                    #peace_params_path::ValueFieldless<Spec = #peace_params_path::ValueSpecFieldless<#type_param>>
+                    + ::std::convert::TryFrom<<#type_param as #peace_params_path::ValueFieldless>::Partial>
             };
             let t_partial_from_t = parse_quote! {
-                <#type_param as #peace_params_path::Value>::Partial:
+                <#type_param as #peace_params_path::ValueFieldless>::Partial:
                     ::std::convert::From<#type_param>
             };
             [t_value_and_try_from_partial, t_partial_from_t]

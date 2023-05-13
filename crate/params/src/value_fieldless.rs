@@ -10,7 +10,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// resolution functionality.
 ///
 /// [`Params`]: crate::Params
-pub trait Value {
+pub trait ValueFieldless {
     /// Convenience associated type for `ValueSpec<Self>`.
     type Spec: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static;
     /// The `Value` type, but with optional fields.

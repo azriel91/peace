@@ -3,7 +3,9 @@ use std::fmt::{self, Debug};
 use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{Deserialize, Serialize};
 
-use crate::{MappingFn, MappingFnImpl, ParamsResolveError, Value, ValueResolutionCtx, ValueSpecRt};
+use crate::{
+    MappingFn, MappingFnImpl, ParamsResolveError, ValueFieldless, ValueResolutionCtx, ValueSpecRt,
+};
 
 /// How to populate a field's value in an item spec's params.
 ///
@@ -28,7 +30,7 @@ use crate::{MappingFn, MappingFnImpl, ParamsResolveError, Value, ValueResolution
 #[serde(from = "crate::ValueSpecFieldlessDe<T>")]
 pub enum ValueSpecFieldless<T>
 where
-    T: Value + Clone + Debug + Send + Sync + 'static,
+    T: ValueFieldless + Clone + Debug + Send + Sync + 'static,
 {
     /// Loads a stored value spec.
     ///
@@ -69,7 +71,7 @@ where
 
 impl<T> ValueSpecFieldless<T>
 where
-    T: Value + Clone + Debug + Send + Sync + 'static,
+    T: ValueFieldless + Clone + Debug + Send + Sync + 'static,
 {
     pub fn from_map<F, Args>(field_name: Option<String>, f: F) -> Self
     where
@@ -82,7 +84,7 @@ where
 
 impl<T> Debug for ValueSpecFieldless<T>
 where
-    T: Value + Clone + Debug + Send + Sync + 'static,
+    T: ValueFieldless + Clone + Debug + Send + Sync + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -96,7 +98,7 @@ where
 
 impl<T> ValueSpecFieldless<T>
 where
-    T: Value<Spec = ValueSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
+    T: ValueFieldless<Spec = ValueSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
     T::Partial: From<T>,
 {
     pub fn resolve(
@@ -158,7 +160,7 @@ where
 
 impl<T> ValueSpecRt for ValueSpecFieldless<T>
 where
-    T: Value<Spec = ValueSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
+    T: ValueFieldless<Spec = ValueSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
     T::Partial: From<T>,
     T: TryFrom<T::Partial>,
 {

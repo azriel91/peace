@@ -148,7 +148,7 @@ impl ExternalType {
                 }
             }
 
-            impl #impl_generics #peace_params_path::Value
+            impl #impl_generics #peace_params_path::ValueFieldless
             for #wrapper_name #ty_generics
             #where_clause
             {

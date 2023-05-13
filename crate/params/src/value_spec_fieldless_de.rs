@@ -2,7 +2,7 @@ use std::fmt::{self, Debug};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{MappingFnImpl, Value, ValueSpecFieldless};
+use crate::{MappingFnImpl, ValueFieldless, ValueSpecFieldless};
 
 type FnPlaceholder<T> = fn(&()) -> Option<T>;
 
@@ -10,7 +10,7 @@ type FnPlaceholder<T> = fn(&()) -> Option<T>;
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ValueSpecFieldlessDe<T>
 where
-    T: Value,
+    T: ValueFieldless,
 {
     /// Loads a stored value spec.
     ///
@@ -43,7 +43,7 @@ where
 
 impl<T> Debug for ValueSpecFieldlessDe<T>
 where
-    T: Value + Debug,
+    T: ValueFieldless + Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -59,7 +59,7 @@ where
 
 impl<T> From<ValueSpecFieldlessDe<T>> for ValueSpecFieldless<T>
 where
-    T: Value + Clone + Debug + Send + Sync + 'static,
+    T: ValueFieldless + Clone + Debug + Send + Sync + 'static,
 {
     fn from(value_spec_de: ValueSpecFieldlessDe<T>) -> Self {
         match value_spec_de {
