@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use aws_sdk_iam::{error::SdkError, operation::get_instance_profile::GetInstanceProfileError};
 use peace::{
     cfg::{state::Generated, FnCtx},
-    params::Params,
+    params::Value,
 };
 
 use crate::item_specs::peace_aws_instance_profile::{
@@ -24,7 +24,7 @@ where
 {
     pub async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: &<InstanceProfileParams<Id> as Params>::Partial,
+        params_partial: &<InstanceProfileParams<Id> as Value>::Partial,
         data: InstanceProfileData<'_, Id>,
     ) -> Result<Option<InstanceProfileState>, InstanceProfileError> {
         if let Ok(params) = params_partial.try_into() {

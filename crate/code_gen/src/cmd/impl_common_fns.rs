@@ -27,7 +27,7 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             pub fn with_item_spec_params<IS>(
                 mut self,
                 item_spec_id: peace_cfg::ItemSpecId,
-                params_spec: <IS::Params<'_> as peace_params::Params>::Spec,
+                params_spec: <IS::Params<'_> as peace_params::Value>::Spec,
             ) -> Self
             where
                 IS: peace_cfg::ItemSpec,

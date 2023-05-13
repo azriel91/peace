@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use aws_sdk_iam::{error::SdkError, operation::get_role::GetRoleError};
 use peace::{
     cfg::{state::Generated, FnCtx},
-    params::Params,
+    params::Value,
 };
 
 use crate::item_specs::peace_aws_iam_role::{
@@ -24,7 +24,7 @@ where
 {
     pub async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: &<IamRoleParams<Id> as Params>::Partial,
+        params_partial: &<IamRoleParams<Id> as Value>::Partial,
         data: IamRoleData<'_, Id>,
     ) -> Result<Option<IamRoleState>, IamRoleError> {
         let name = params_partial.name();

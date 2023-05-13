@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use peace::{
     cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId},
-    params::Params,
+    params::Value,
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -65,7 +65,7 @@ where
 
     async fn try_state_current(
         _fn_ctx: FnCtx<'_>,
-        params_partial: &<Self::Params<'_> as Params>::Partial,
+        params_partial: &<Self::Params<'_> as Value>::Partial,
         _data: BlankData<'_, Id>,
     ) -> Result<Option<Self::State>, BlankError> {
         Ok(params_partial.dest.clone().map(|dest| BlankState(dest.0)))
@@ -81,7 +81,7 @@ where
 
     async fn try_state_desired(
         _fn_ctx: FnCtx<'_>,
-        params_partial: &<Self::Params<'_> as Params>::Partial,
+        params_partial: &<Self::Params<'_> as Value>::Partial,
         _data: BlankData<'_, Id>,
     ) -> Result<Option<Self::State>, BlankError> {
         Ok(params_partial
@@ -99,7 +99,7 @@ where
     }
 
     async fn state_diff(
-        _params_partial: &<Self::Params<'_> as Params>::Partial,
+        _params_partial: &<Self::Params<'_> as Value>::Partial,
         _data: Self::Data<'_>,
         state_current: &BlankState,
         state_desired: &BlankState,
@@ -121,7 +121,7 @@ where
     }
 
     async fn state_clean(
-        _params_partial: &<Self::Params<'_> as Params>::Partial,
+        _params_partial: &<Self::Params<'_> as Value>::Partial,
         _data: Self::Data<'_>,
     ) -> Result<BlankState, BlankError> {
         Ok(BlankState(None))

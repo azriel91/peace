@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use aws_sdk_iam::{error::SdkError, operation::get_policy::GetPolicyError};
 use peace::{
     cfg::{state::Generated, FnCtx},
-    params::Params,
+    params::Value,
 };
 
 use crate::item_specs::peace_aws_iam_policy::{
@@ -96,7 +96,7 @@ where
 {
     pub async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: &<IamPolicyParams<Id> as Params>::Partial,
+        params_partial: &<IamPolicyParams<Id> as Value>::Partial,
         data: IamPolicyData<'_, Id>,
     ) -> Result<Option<IamPolicyState>, IamPolicyError> {
         let name = params_partial.name();

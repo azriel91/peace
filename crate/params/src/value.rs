@@ -7,7 +7,7 @@ use crate::FieldWiseSpecRt;
 /// Input parameters to an item spec.
 ///
 /// This trait is automatically implemented by `#[derive(Params)]`.
-pub trait Params {
+pub trait Value {
     /// Convenience associated type for `ValueSpec<Self>`.
     type Spec: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static;
     /// The `Params` type, but with optional fields.

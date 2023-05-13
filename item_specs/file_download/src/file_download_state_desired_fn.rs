@@ -2,7 +2,7 @@ use std::{marker::PhantomData, path::Path};
 
 use peace::{
     cfg::{state::FetchedOpt, FnCtx, State},
-    params::Params,
+    params::Value,
 };
 use reqwest::{header::ETAG, Url};
 
@@ -18,7 +18,7 @@ where
 {
     pub async fn try_state_desired(
         _fn_ctx: FnCtx<'_>,
-        params_partial: &<FileDownloadParams<Id> as Params>::Partial,
+        params_partial: &<FileDownloadParams<Id> as Value>::Partial,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<State<FileDownloadState, FetchedOpt<ETag>>>, FileDownloadError> {
         if let Some((src, dest)) = params_partial.src().zip(params_partial.dest()) {

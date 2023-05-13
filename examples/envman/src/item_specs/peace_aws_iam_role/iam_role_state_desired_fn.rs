@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use peace::{
     cfg::{state::Generated, FnCtx},
-    params::Params,
+    params::Value,
 };
 
 use crate::item_specs::peace_aws_iam_role::{
@@ -19,7 +19,7 @@ where
 {
     pub async fn try_state_desired(
         _fn_ctx: FnCtx<'_>,
-        params_partial: &<IamRoleParams<Id> as Params>::Partial,
+        params_partial: &<IamRoleParams<Id> as Value>::Partial,
         _data: IamRoleData<'_, Id>,
     ) -> Result<Option<IamRoleState>, IamRoleError> {
         let name = params_partial.name();

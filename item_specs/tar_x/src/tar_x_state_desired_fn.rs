@@ -1,6 +1,6 @@
 use std::{io::Read, marker::PhantomData, path::Path};
 
-use peace::{cfg::FnCtx, params::Params, rt_model::Storage};
+use peace::{cfg::FnCtx, params::Value, rt_model::Storage};
 use tar::Archive;
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError, TarXParams};
@@ -15,7 +15,7 @@ where
 {
     pub async fn try_state_desired(
         _fn_ctx: FnCtx<'_>,
-        params_partial: &<TarXParams<Id> as Params>::Partial,
+        params_partial: &<TarXParams<Id> as Value>::Partial,
         data: TarXData<'_, Id>,
     ) -> Result<Option<FileMetadatas>, TarXError> {
         let storage = data.storage();

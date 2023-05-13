@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use peace::{
     cfg::{state::Generated, FnCtx},
-    params::Params,
+    params::Value,
 };
 
 use crate::item_specs::peace_aws_instance_profile::{
@@ -19,7 +19,7 @@ where
 {
     pub async fn try_state_desired(
         _fn_ctx: FnCtx<'_>,
-        params_partial: &<InstanceProfileParams<Id> as Params>::Partial,
+        params_partial: &<InstanceProfileParams<Id> as Value>::Partial,
         _data: InstanceProfileData<'_, Id>,
     ) -> Result<Option<InstanceProfileState>, InstanceProfileError> {
         let name = params_partial.name();

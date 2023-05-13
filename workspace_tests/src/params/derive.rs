@@ -3,7 +3,7 @@ mod unit {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec};
+    use peace::params::{Value, ValueSpec};
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct UnitParams;
@@ -69,7 +69,7 @@ mod struct_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct StructParams {
@@ -224,9 +224,9 @@ mod struct_with_type_params {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
 
-    #[derive(Derivative, Params, Serialize, Deserialize)]
+    #[derive(Derivative, Value, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
     pub struct StructWithTypeParams<Id> {
         /// Source / desired value for the state.
@@ -400,7 +400,7 @@ mod tuple_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct TupleParams(
@@ -533,7 +533,7 @@ mod tuple_with_type_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct TupleWithTypeParams<Id>(String, String, PhantomData<Id>)
@@ -690,9 +690,9 @@ mod enum_params {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
 
-    #[derive(Derivative, Params, Serialize, Deserialize)]
+    #[derive(Derivative, Value, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
     pub enum EnumParams<Id> {
         Named {
@@ -1183,7 +1183,7 @@ mod struct_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, Value, ValueFieldless, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Value, ValueFieldless, ValueSpec, ValueSpecFieldless};
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Value)]
     pub struct InnerValue<T>(T)
@@ -1367,7 +1367,7 @@ mod struct_recursive_value_no_bounds {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, Value, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
 
     #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, Value)]
     #[derivative(Clone, Debug)]
@@ -1389,7 +1389,7 @@ mod struct_recursive_value_no_bounds {
         }
     }
 
-    #[derive(Derivative, Params, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Derivative, Value, PartialEq, Eq, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
     #[serde(bound = "")]
     pub struct StructRecursiveValueNoBounds<Id> {
@@ -1549,7 +1549,7 @@ mod enum_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, Value, ValueFieldless, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Value, ValueFieldless, ValueSpec, ValueSpecFieldless};
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Value)]
     pub enum InnerValue<T>
@@ -1810,7 +1810,7 @@ mod enum_recursive_marker_no_bounds {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, Value, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
 
     #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, Value)]
     #[derivative(Clone(bound = ""), Debug(bound = ""))]
@@ -2068,7 +2068,7 @@ mod external_fields {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
 
     // Note: no `Value` derive.
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -2237,7 +2237,7 @@ macro_rules! params_tests {
         #[test]
         fn params_field_wise_spec_associated_type_is_params_field_wise() {
             assert_eq!(
-                TypeId::of::<<$params_ty $($generics)* as Params>::FieldWiseSpec>(),
+                TypeId::of::<<$params_ty $($generics)* as Value>::FieldWiseSpec>(),
                 TypeId::of::<$params_field_wise_ty $($generics)*>()
             );
         }
@@ -2245,7 +2245,7 @@ macro_rules! params_tests {
         #[test]
         fn params_partial_associated_type_is_params_partial() {
             assert_eq!(
-                TypeId::of::<<$params_ty $($generics)* as Params>::Partial>(),
+                TypeId::of::<<$params_ty $($generics)* as Value>::Partial>(),
                 TypeId::of::<$params_partial_ty $($generics)*>()
             );
         }

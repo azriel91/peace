@@ -200,7 +200,7 @@ fn impl_params(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
     let external_wrapper_types = ExternalType::external_wrapper_types(ast, &peace_params_path);
 
     quote! {
-        impl #impl_generics #peace_params_path::Params
+        impl #impl_generics #peace_params_path::Value
         for #params_name #ty_generics
         #where_clause
         {
