@@ -78,14 +78,14 @@ mod util;
 /// * `default`: Enum variant attribute to indicate which variant to instantiate
 ///   for `ParamsPartial::default()`.
 #[proc_macro_derive(
-    Params,
+    Value,
     attributes(peace_internal, crate_internal, params, default, serde)
 )]
 pub fn params_derive(input: TokenStream) -> TokenStream {
-    let mut ast = syn::parse(input)
-        .expect("`Params` derive: Failed to parse item as struct, enum, or union.");
+    let mut ast =
+        syn::parse(input).expect("`Value` derive: Failed to parse item as struct, enum, or union.");
 
-    let gen = impl_params(&mut ast);
+    let gen = impl_value(&mut ast);
 
     gen.into()
 }
@@ -107,31 +107,31 @@ pub fn params_derive(input: TokenStream) -> TokenStream {
 ///   is referenced by `crate` instead of the default `peace::params`.
 ///
 /// * `params(external)`: Type level attribute indicating fields are not known,
-///   and so `ParamsPartial` will instead hold an `Option<Params>` field.
+///   and so `ParamsPartial` will instead hold an `Option<Value>` field.
 ///
 /// * `default`: Enum variant attribute to indicate which variant to instantiate
 ///   for `ParamsPartial::default()`.
-#[proc_macro_derive(Value, attributes(peace_internal, crate_internal, params, default))]
-pub fn value_derive(input: TokenStream) -> TokenStream {
-    let mut ast =
-        syn::parse(input).expect("`Value` derive: Failed to parse item as struct, enum, or union.");
+#[proc_macro_derive(ValueExt, attributes(peace_internal, crate_internal, params, default))]
+pub fn value_ext(input: TokenStream) -> TokenStream {
+    let mut ast = syn::parse(input)
+        .expect("`ValueExt` derive: Failed to parse item as struct, enum, or union.");
 
-    let gen = impl_value(&mut ast);
+    let gen = impl_value_fieldless(&mut ast);
 
     gen.into()
 }
 
 #[proc_macro]
 pub fn value_impl(input: TokenStream) -> TokenStream {
-    let mut ast =
-        syn::parse(input).expect("`Value` impl: Failed to parse item as struct, enum, or union.");
+    let mut ast = syn::parse(input)
+        .expect("`ValueExt` impl: Failed to parse item as struct, enum, or union.");
 
-    let gen = impl_value(&mut ast);
+    let gen = impl_value_fieldless(&mut ast);
 
     gen.into()
 }
 
-fn impl_params(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
+fn impl_value(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
     let (peace_params_path, peace_resources_path): (Path, Path) = ast
         .attrs
         .iter()
@@ -225,7 +225,7 @@ fn impl_params(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
     }
 }
 
-fn impl_value(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
+fn impl_value_fieldless(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
     let (peace_params_path, peace_resources_path): (Path, Path) = ast
         .attrs
         .iter()
