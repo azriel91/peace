@@ -1,17 +1,107 @@
 use proc_macro2::Span;
 use syn::{
     meta::ParseNestedMeta, punctuated::Punctuated, AngleBracketedGenericArguments, Attribute,
-    DeriveInput, Fields, GenericArgument, GenericParam, Ident, LitInt, Path, PathArguments,
-    PathSegment, Type, TypePath, Variant, WherePredicate,
+    DeriveInput, Field, Fields, GenericArgument, GenericParam, Generics, Ident, LitInt, Path,
+    PathArguments, PathSegment, Type, TypePath, Variant, WherePredicate,
 };
 
-/// Returns whether the type or field is annotated with `#[params(external)]`.
+// Remember to update `params/src/std_impl.rs` when updating this.
+//
+// This can be replaced by `std::cell::OnceCell` when Rust 1.70.0 is released.
+static STD_LIB_TYPES: &[&str] = &[
+    "bool",
+    "u8",
+    "u16",
+    "u32",
+    "u64",
+    "u128",
+    "i8",
+    "i16",
+    "i32",
+    "i64",
+    "i128",
+    "usize",
+    "isize",
+    "String",
+    "PathBuf",
+    #[cfg(not(target_arch = "wasm32"))]
+    "OsString",
+    "Option",
+];
+
+/// Returns whether the type is annotated with `#[params(external)]`, which
+/// means its spec should be fieldless.
 ///
 /// This attribute must be:
 ///
 /// * attached to std library types defined outside the `peace_params` crate.
 /// * attached to each `Params`' field defined outside the item spec crate.
-pub fn is_external(attrs: &[Attribute]) -> bool {
+pub fn is_external_type(ast: &DeriveInput) -> bool {
+    is_known_fieldless_std_lib_spec(&ast.ident) || is_external(&ast.attrs)
+}
+
+/// Returns whether the field is annotated with `#[params(external)]`, which
+/// means its spec should be fieldless.
+///
+/// This attribute must be:
+///
+/// * attached to std library types defined outside the `peace_params` crate.
+/// * attached to each `Params`' field defined outside the item spec crate.
+pub fn is_external_field(field: &Field) -> bool {
+    is_known_fieldless_type_spec(&field.ty) || is_external(&field.attrs)
+}
+
+/// Returns if the given `Type`'s spec should be fieldless.
+///
+/// This applies to std library types, as well as non-`Path` types.
+fn is_known_fieldless_type_spec(ty: &Type) -> bool {
+    match ty {
+        Type::Path(TypePath {
+            path: Path { segments, .. },
+            ..
+        }) => segments
+            .last()
+            .map(|path_segment| is_known_fieldless_std_lib_spec(&path_segment.ident))
+            .unwrap_or(false),
+
+        // If we cannot detect the type, we don't generate a fieldwise spec for it.
+        //
+        // Type::Array(_) |
+        // Type::BareFn(_) |
+        // Type::Group(_) |
+        // Type::ImplTrait(_) |
+        // Type::Infer(_) |
+        // Type::Macro(_) |
+        // Type::Never(_) |
+        // Type::Paren(_) |
+        // Type::Ptr(_) => |
+        // Type::Reference(_) => |
+        // Type::Slice(_) => |
+        // Type::TraitObject(_) => |
+        // Type::Tuple(_) => |
+        // Type::Verbatim(_) => |
+        _ => true,
+    }
+}
+
+/// Returns if the given `Type`'s spec should be fieldless.
+///
+/// This applies to std library types, as well as non-`Path` types.
+fn is_known_fieldless_std_lib_spec(ty_name: &Ident) -> bool {
+    STD_LIB_TYPES
+        .iter()
+        .any(|std_lib_type| ty_name == std_lib_type)
+}
+
+/// Returns whether any of the attributes contains `#[params(external)]`.
+///
+/// This attribute should be:
+///
+/// * attached to std library types defined outside the `peace_params` crate, if
+///   it isn't already covered by `STD_LIB_TYPES`.
+/// * attached to each field in `Params` that is defined outside the item spec
+///   crate.
+fn is_external(attrs: &[Attribute]) -> bool {
     attrs.iter().any(|attr| {
         if attr.path().is_ident("params") {
             let mut is_external = false;
@@ -24,6 +114,37 @@ pub fn is_external(attrs: &[Attribute]) -> bool {
         } else {
             false
         }
+    })
+}
+
+/// Returns the field wrapper generics to use, which is the intersection of the
+/// field type arguments and the parent type arguments.
+pub fn field_wrapper_generics(
+    parent_type_generics: Option<&Generics>,
+    field_generics: &PathArguments,
+) -> Option<proc_macro2::TokenStream> {
+    parent_type_generics.and_then(|parent_type_generics| match field_generics {
+        PathArguments::None => None,
+        PathArguments::AngleBracketed(angle_bracketed) => {
+            let field_generics = &angle_bracketed.args;
+            let field_wrapper_generics = field_generics
+                .iter()
+                .filter(|field_generic| {
+                    let field_argument_as_param: GenericParam = parse_quote!(#field_generic);
+
+                    parent_type_generics
+                        .params
+                        .iter()
+                        .any(|parent_generic| parent_generic == &field_argument_as_param)
+                })
+                .collect::<Vec<&GenericArgument>>();
+            if field_wrapper_generics.is_empty() {
+                None
+            } else {
+                Some(quote!(<#(#field_wrapper_generics,)*>))
+            }
+        }
+        PathArguments::Parenthesized(_) => None,
     })
 }
 
@@ -205,20 +326,6 @@ pub fn type_path_simple_name(ty: &Type) -> Option<&Ident> {
         return None;
     };
     segments.last().map(|segment| &segment.ident)
-}
-
-/// Returns `MyType` for a given `path::to::MyType<T>`.
-///
-/// If the type is not a `TypePath`, then this returns `None`.
-pub fn type_path_name_and_generics(ty: &Type) -> Option<(&Ident, &PathArguments)> {
-    let Type::Path(TypePath { path: Path {
-        segments, ..
-    }, .. }) = ty else {
-        return None;
-    };
-    segments
-        .last()
-        .map(|segment| (&segment.ident, &segment.arguments))
 }
 
 /// Returns a comma separated list of deconstructed fields.

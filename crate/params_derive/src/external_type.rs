@@ -1,9 +1,9 @@
 use proc_macro2::Span;
-use syn::{DeriveInput, Fields, FieldsUnnamed, Ident, Path, Type};
+use syn::{DeriveInput, Fields, FieldsUnnamed, Generics, Ident, Path, Type};
 
 use crate::{
     type_gen_external::{type_gen_external, External},
-    util::{is_external, type_path_name_and_generics, type_path_simple_name},
+    util::{field_wrapper_generics, is_external_field, type_path_simple_name},
     TypeGen,
 };
 
@@ -20,21 +20,22 @@ impl ExternalType {
         ast: &DeriveInput,
         peace_params_path: &Path,
     ) -> proc_macro2::TokenStream {
+        let parent_type_generics = &ast.generics;
         match &ast.data {
             syn::Data::Struct(data_struct) => {
                 let fields_iter = data_struct.fields.iter();
-                external_wrapper_types_impl!(fields_iter, peace_params_path)
+                external_wrapper_types_impl!(parent_type_generics, fields_iter, peace_params_path)
             }
             syn::Data::Enum(data_enum) => {
                 let fields_iter = data_enum
                     .variants
                     .iter()
                     .flat_map(|variant| variant.fields.iter());
-                external_wrapper_types_impl!(fields_iter, peace_params_path)
+                external_wrapper_types_impl!(parent_type_generics, fields_iter, peace_params_path)
             }
             syn::Data::Union(data_union) => {
                 let fields_iter = data_union.fields.named.iter();
-                external_wrapper_types_impl!(fields_iter, peace_params_path)
+                external_wrapper_types_impl!(parent_type_generics, fields_iter, peace_params_path)
             }
         }
     }
@@ -51,11 +52,12 @@ impl ExternalType {
     ///   `ExternalType::wrapper_type`.
     /// * `wrapped_ty`: `Type` of the field that is external, e.g. `Thing`.
     pub fn wrapper_and_related_types_gen(
+        parent_type_generics: Option<&Generics>,
         peace_params_path: &Path,
         wrapper_type: &Type,
         wrapped_ty: &Type,
     ) -> proc_macro2::TokenStream {
-        let wrapper_partial_type = Self::wrapper_partial_type(wrapped_ty);
+        let wrapper_partial_type = Self::wrapper_partial_type(parent_type_generics, wrapped_ty);
         let Some(wrapper_partial_name) = type_path_simple_name(&wrapper_partial_type) else {
             unreachable!("Type must be present at this stage.");
         };
@@ -176,11 +178,8 @@ impl ExternalType {
         let Some(wrapper_partial_name) = type_path_simple_name(wrapper_partial_type) else {
             unreachable!("Type must be present at this stage.");
         };
-        let Some((wrapped_name, generics)) = type_path_name_and_generics(wrapped_ty) else {
-            unreachable!("Type must be present at this stage.");
-        };
 
-        let ast: DeriveInput = parse_quote!(pub struct #wrapped_name #generics;);
+        let ast: DeriveInput = parse_quote!(pub struct #wrapper_partial_type;);
         let generics_split = ast.generics.split_for_impl();
 
         type_gen_external(
@@ -199,7 +198,7 @@ impl ExternalType {
     ///
     /// In practice, `Thing<T>` will generate `ThingWrapper<T>`, but this may
     /// change in the future, e.g. to avoid name collisions.
-    pub fn wrapper_type(ty: &Type) -> Type {
+    pub fn wrapper_type(parent_type_generics: Option<&Generics>, ty: &Type) -> Type {
         match ty {
             Type::Path(type_path) => {
                 let Some(field_type_segment) = type_path.path.segments.last() else {
@@ -207,10 +206,18 @@ impl ExternalType {
                 };
                 let field_type_name = &field_type_segment.ident;
                 let field_generics = &field_type_segment.arguments;
-                let wrapper_type_name =
-                    Ident::new(&format!("{field_type_name}Wrapper"), Span::call_site());
+                let wrapper_type_name = {
+                    let mut wrapper_type_name = format!("{field_type_name}Wrapper");
+                    wrapper_type_name
+                        .get_mut(0..1)
+                        .map(|first_char| first_char.make_ascii_uppercase());
+                    Ident::new(&wrapper_type_name, Span::call_site())
+                };
 
-                parse_quote!(#wrapper_type_name #field_generics)
+                let field_wrapper_generics =
+                    field_wrapper_generics(parent_type_generics, field_generics);
+
+                parse_quote!(#wrapper_type_name #field_wrapper_generics)
             }
 
             // Type::Array(_)
@@ -238,7 +245,7 @@ impl ExternalType {
     ///
     /// In practice, `Thing<T>` will generate `ThingWrapperPartial<T>`, but this
     /// may change in the future, e.g. to avoid name collisions.
-    pub fn wrapper_partial_type(ty: &Type) -> Type {
+    pub fn wrapper_partial_type(parent_type_generics: Option<&Generics>, ty: &Type) -> Type {
         match ty {
             Type::Path(type_path) => {
                 let Some(field_type_segment) = type_path.path.segments.last() else {
@@ -246,12 +253,18 @@ impl ExternalType {
                 };
                 let field_type_name = &field_type_segment.ident;
                 let field_generics = &field_type_segment.arguments;
-                let wrapper_partial_type_name = Ident::new(
-                    &format!("{field_type_name}WrapperPartial"),
-                    Span::call_site(),
-                );
+                let wrapper_partial_type_name = {
+                    let mut wrapper_partial_type_name = format!("{field_type_name}WrapperPartial");
+                    wrapper_partial_type_name
+                        .get_mut(0..1)
+                        .map(|first_char| first_char.make_ascii_uppercase());
+                    Ident::new(&wrapper_partial_type_name, Span::call_site())
+                };
 
-                parse_quote!(#wrapper_partial_type_name #field_generics)
+                let field_wrapper_generics =
+                    field_wrapper_generics(parent_type_generics, field_generics);
+
+                parse_quote!(#wrapper_partial_type_name #field_wrapper_generics)
             }
 
             // Type::Array(_)
@@ -277,12 +290,13 @@ impl ExternalType {
 }
 
 macro_rules! external_wrapper_types_impl {
-    ($fields_iter:ident, $peace_params_path:ident) => {
+    ($parent_type_generics:ident, $fields_iter:ident, $peace_params_path:ident) => {
         $fields_iter
             .filter_map(|field| {
-                if is_external(&field.attrs) {
+                if is_external_field(field) {
                     let field_ty = &field.ty;
-                    let wrapper_type = ExternalType::wrapper_type(field_ty);
+                    let wrapper_type =
+                        ExternalType::wrapper_type(Some($parent_type_generics), field_ty);
                     Some((wrapper_type, field_ty))
                 } else {
                     None
@@ -292,6 +306,7 @@ macro_rules! external_wrapper_types_impl {
                 proc_macro2::TokenStream::new(),
                 |mut tokens, (wrapper_type, field_ty)| {
                     tokens.extend(ExternalType::wrapper_and_related_types_gen(
+                        Some($parent_type_generics),
                         $peace_params_path,
                         &wrapper_type,
                         field_ty,

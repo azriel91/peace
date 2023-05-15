@@ -1,14 +1,14 @@
 use proc_macro2::Span;
 use syn::{
-    punctuated::Punctuated, DeriveInput, Field, Fields, Ident, ImplGenerics, LitInt, Path,
-    TypeGenerics, Variant, WhereClause,
+    punctuated::Punctuated, DeriveInput, Field, Fields, Generics, Ident, ImplGenerics, LitInt,
+    Path, TypeGenerics, Variant, WhereClause,
 };
 
 use crate::{
     external_type::ExternalType,
     util::{
-        fields_deconstruct, is_external, is_phantom_data, t_value_and_try_from_partial_bounds,
-        variant_match_arm,
+        fields_deconstruct, is_external_field, is_phantom_data,
+        t_value_and_try_from_partial_bounds, variant_match_arm,
     },
 };
 
@@ -38,6 +38,7 @@ pub fn impl_value_spec_rt_for_field_wise(
             let fields = &data_struct.fields;
 
             struct_fields_resolve(
+                &ast.generics,
                 params_name,
                 params_field_wise_name,
                 fields,
@@ -49,6 +50,7 @@ pub fn impl_value_spec_rt_for_field_wise(
             let variants = &data_enum.variants;
 
             variants_resolve(
+                &ast.generics,
                 params_name,
                 params_field_wise_name,
                 variants,
@@ -60,6 +62,7 @@ pub fn impl_value_spec_rt_for_field_wise(
             let fields = Fields::from(data_union.fields.clone());
 
             struct_fields_resolve(
+                &ast.generics,
                 params_name,
                 params_field_wise_name,
                 &fields,
@@ -74,6 +77,7 @@ pub fn impl_value_spec_rt_for_field_wise(
             let fields = &data_struct.fields;
 
             struct_fields_resolve(
+                &ast.generics,
                 params_name,
                 params_field_wise_name,
                 fields,
@@ -85,6 +89,7 @@ pub fn impl_value_spec_rt_for_field_wise(
             let variants = &data_enum.variants;
 
             variants_resolve(
+                &ast.generics,
                 params_name,
                 params_field_wise_name,
                 variants,
@@ -96,6 +101,7 @@ pub fn impl_value_spec_rt_for_field_wise(
             let fields = Fields::from(data_union.fields.clone());
 
             struct_fields_resolve(
+                &ast.generics,
                 params_name,
                 params_field_wise_name,
                 &fields,
@@ -132,13 +138,19 @@ pub fn impl_value_spec_rt_for_field_wise(
 }
 
 fn struct_fields_resolve(
+    parent_type_generics: &Generics,
     params_name: &Ident,
     params_field_wise_name: &Ident,
     fields: &Fields,
     peace_params_path: &Path,
     resolve_mode: ResolveMode,
 ) -> proc_macro2::TokenStream {
-    let fields_resolution = fields_resolution(fields, peace_params_path, resolve_mode);
+    let fields_resolution = fields_resolution(
+        parent_type_generics,
+        fields,
+        peace_params_path,
+        resolve_mode,
+    );
     let fields_deconstructed = fields_deconstruct(fields);
     let return_expr = resolve_mode.return_expr();
 
@@ -208,6 +220,7 @@ fn struct_fields_resolve(
 }
 
 fn variants_resolve(
+    parent_type_generics: &Generics,
     params_name: &Ident,
     params_field_wise_name: &Ident,
     variants: &Punctuated<Variant, Token![,]>,
@@ -239,6 +252,7 @@ fn variants_resolve(
                 let fields_deconstructed = fields_deconstruct(&variant.fields);
 
                 let variant_fields_resolve = variant_fields_resolve(
+                    parent_type_generics,
                     params_name,
                     &variant.ident,
                     &variant.fields,
@@ -266,6 +280,7 @@ fn variants_resolve(
 // Code gen, not user facing
 #[allow(clippy::too_many_arguments)]
 fn variant_fields_resolve(
+    parent_type_generics: &Generics,
     params_name: &Ident,
     variant_name: &Ident,
     fields: &Fields,
@@ -273,7 +288,12 @@ fn variant_fields_resolve(
     peace_params_path: &Path,
     resolve_mode: ResolveMode,
 ) -> proc_macro2::TokenStream {
-    let fields_resolution = fields_resolution(fields, peace_params_path, resolve_mode);
+    let fields_resolution = fields_resolution(
+        parent_type_generics,
+        fields,
+        peace_params_path,
+        resolve_mode,
+    );
     let return_expr = resolve_mode.return_expr();
 
     match fields {
@@ -329,6 +349,7 @@ fn variant_fields_resolve(
 }
 
 fn fields_resolution(
+    parent_type_generics: &Generics,
     fields: &Fields,
     peace_params_path: &Path,
     resolve_mode: ResolveMode,
@@ -355,8 +376,12 @@ fn fields_resolution(
                     proc_macro2::TokenStream::new(),
                     |mut tokens, (field, field_name)| {
                         let field_ty = &field.ty;
-                        let resolve_value =
-                            resolve_mode.resolve_value(peace_params_path, field_name, field);
+                        let resolve_value = resolve_mode.resolve_value(
+                            parent_type_generics,
+                            peace_params_path,
+                            field_name,
+                            field,
+                        );
 
                         tokens.extend(quote! {
                             value_resolution_ctx.push(#peace_params_path::FieldNameAndType::new(
@@ -394,8 +419,12 @@ fn fields_resolution(
                         // because `quote` outputs the index as `0usize` instead of `0`
                         let field_index = LitInt::new(&format!("{field_index}"), Span::call_site());
                         let field_ty = &field.ty;
-                        let resolve_value =
-                            resolve_mode.resolve_value(peace_params_path, &field_ident, field);
+                        let resolve_value = resolve_mode.resolve_value(
+                            parent_type_generics,
+                            peace_params_path,
+                            &field_ident,
+                            field,
+                        );
 
                         tokens.extend(quote! {
                             value_resolution_ctx.push(#peace_params_path::FieldNameAndType::new(
@@ -427,23 +456,26 @@ impl ResolveMode {
     // resolution.
     fn resolve_value(
         self,
+        parent_type_generics: &Generics,
         peace_params_path: &Path,
         field_name: &Ident,
         field: &Field,
     ) -> proc_macro2::TokenStream {
-        let external_type = ExternalType::wrapper_type(&field.ty);
-        let wrapper_field_ty = if is_external(&field.attrs) {
-            &external_type
+        let wrapper_type = ExternalType::wrapper_type(Some(parent_type_generics), &field.ty);
+        let field_ty = &field.ty;
+        let spec_field_ty = if is_external_field(field) {
+            quote!(#peace_params_path::ValueSpecFieldless<#wrapper_type>)
         } else {
-            &field.ty
+            quote!(#peace_params_path::ValueSpec<#field_ty>)
         };
         match self {
             Self::Resolve => quote! {
-                let #field_name = <#peace_params_path::ValueSpecFieldless<#wrapper_field_ty> as #peace_params_path::ValueSpecRt>
+                // Corresponds to `fields_map.rs#fields_to_value_spec`.
+                let #field_name = <#spec_field_ty as #peace_params_path::ValueSpecRt>
                     ::resolve(#field_name, resources, value_resolution_ctx)?.into();
             },
             Self::TryResolve => quote! {
-                let #field_name = <#peace_params_path::ValueSpecFieldless<#wrapper_field_ty> as #peace_params_path::ValueSpecRt>
+                let #field_name = <#spec_field_ty as #peace_params_path::ValueSpecRt>
                     ::try_resolve(#field_name, resources, value_resolution_ctx)?
                     .map(::std::convert::TryFrom::try_from)
                     .and_then(::std::result::Result::ok);

@@ -27,7 +27,7 @@ use crate::{
     impl_value_spec_rt_for_field_wise::impl_value_spec_rt_for_field_wise,
     type_gen::TypeGen,
     type_gen_external::type_gen_external,
-    util::{is_external, serde_bounds_for_type_params},
+    util::{is_external_type, serde_bounds_for_type_params},
 };
 
 mod external_type;
@@ -165,7 +165,7 @@ fn impl_value(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&t_field_wise_name, ast.ident.span())
     };
 
-    let (t_partial, t_field_wise) = if is_external(&ast.attrs) {
+    let (t_partial, t_field_wise) = if is_external_type(ast) {
         let ty_generics = &generics_split.1;
         let params_ty: Type = parse_quote!(#params_name #ty_generics);
         let t_partial = t_partial_external(ast, &generics_split, &params_ty, &t_partial_name);
@@ -259,7 +259,7 @@ fn impl_value_fieldless(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&t_field_wise_name, ast.ident.span())
     };
 
-    let (t_partial, t_field_wise) = if is_external(&ast.attrs) {
+    let (t_partial, t_field_wise) = if is_external_type(ast) {
         let ty_generics = &generics_split.1;
         let value_ty: Type = parse_quote!(#value_name #ty_generics);
         let t_partial = t_partial_external(ast, &generics_split, &value_ty, &t_partial_name);
@@ -448,7 +448,7 @@ fn t_field_wise(
         ast,
         generics_split,
         t_field_wise_name,
-        |fields| fields_to_value_spec(fields, peace_params_path),
+        |fields| fields_to_value_spec(Some(&ast.generics), fields, peace_params_path),
         &[
             parse_quote! {
                 #[doc="Specification of how to look up values for an item spec's parameters."]

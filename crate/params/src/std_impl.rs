@@ -7,6 +7,14 @@ use std::path::PathBuf;
 
 use peace_params_derive::value_impl;
 
+// IMPORTANT!
+//
+// When updating the types that implement `ValueFieldless`, make sure to update
+// `params_derive/src/util.rs#STD_LIB_TYPES`.
+//
+// These are the types that we don't require users to annotate with
+// `#[params(external)]`, but will be treated as such.
+
 impl_value_for!(
     bool, u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, usize, isize, String, PathBuf,
 );
