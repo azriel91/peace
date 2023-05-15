@@ -112,12 +112,12 @@ pub fn params_derive(input: TokenStream) -> TokenStream {
 /// * `default`: Enum variant attribute to indicate which variant to instantiate
 ///   for `ParamsPartial::default()`.
 #[proc_macro_derive(
-    ValueExt,
+    ValueSpecFieldless,
     attributes(peace_internal, crate_internal, value_spec, default)
 )]
 pub fn value_ext(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
-        .expect("`ValueExt` derive: Failed to parse item as struct, enum, or union.");
+        .expect("`ValueSpecFieldless` derive: Failed to parse item as struct, enum, or union.");
 
     let gen = impl_value_fieldless(&mut ast);
 
@@ -127,7 +127,7 @@ pub fn value_ext(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn value_impl(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
-        .expect("`ValueExt` impl: Failed to parse item as struct, enum, or union.");
+        .expect("`ValueSpecFieldless` impl: Failed to parse item as struct, enum, or union.");
 
     let gen = impl_value_fieldless(&mut ast);
 

@@ -1183,9 +1183,9 @@ mod struct_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Value, ValueExt, ValueFieldless, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Value, ValueFieldless, ValueSpec, ValueSpecFieldless};
 
-    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ValueExt)]
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ValueSpecFieldless)]
     pub struct InnerValue<T>(T)
     where
         T: Clone + Debug + ValueFieldless;
@@ -1549,9 +1549,9 @@ mod enum_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Value, ValueExt, ValueFieldless, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Value, ValueFieldless, ValueSpec, ValueSpecFieldless};
 
-    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ValueExt)]
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ValueSpecFieldless)]
     pub enum InnerValue<T>
     where
         T: Clone + Debug + ValueFieldless,
