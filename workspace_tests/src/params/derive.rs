@@ -2118,7 +2118,7 @@ mod external_fields {
         assert!(matches!(
             StructExternalValueFieldWise::from(params),
             StructExternalValueFieldWise {
-                src: ValueSpecFieldless::Value(InnerValueWrapper(InnerValue(src_value))),
+                src: ValueSpecFieldless::Value(StructExternalValueInnerValueWrapper(InnerValue(src_value))),
                 dest: ValueSpecFieldless::Value(dest_value),
             }
             if src_value == 123
@@ -2129,11 +2129,13 @@ mod external_fields {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructExternalValueFieldWise { src: Value(InnerValueWrapper(InnerValue(123))), dest: Value(456) }"#,
+            r#"StructExternalValueFieldWise { src: Value(StructExternalValueInnerValueWrapper(InnerValue(123))), dest: Value(456) }"#,
             format!(
                 "{:?}",
                 StructExternalValueFieldWise {
-                    src: ValueSpecFieldless::Value(InnerValueWrapper(InnerValue(123))),
+                    src: ValueSpecFieldless::Value(StructExternalValueInnerValueWrapper(
+                        InnerValue(123)
+                    )),
                     dest: ValueSpecFieldless::Value(456),
                 }
             )

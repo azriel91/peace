@@ -4,12 +4,9 @@ use syn::{
     TypeGenerics, Variant, WhereClause,
 };
 
-use crate::{
-    external_type::ExternalType,
-    util::{
-        fields_deconstruct, is_external_field, is_phantom_data,
-        t_value_and_try_from_partial_bounds, variant_match_arm,
-    },
+use crate::util::{
+    field_spec_ty, fields_deconstruct, is_phantom_data, t_value_and_try_from_partial_bounds,
+    variant_match_arm,
 };
 
 /// `impl ValueSpecRt for ValueSpec`, so that Peace can resolve the params type
@@ -451,21 +448,15 @@ impl ResolveMode {
         field_name: &Ident,
         field: &Field,
     ) -> proc_macro2::TokenStream {
-        let wrapper_type = ExternalType::wrapper_type(Some(parent_ast), &field.ty);
-        let field_ty = &field.ty;
-        let spec_field_ty = if is_external_field(field) {
-            quote!(#peace_params_path::ValueSpecFieldless<#wrapper_type>)
-        } else {
-            quote!(#peace_params_path::ValueSpec<#field_ty>)
-        };
+        let field_spec_ty = field_spec_ty(Some(parent_ast), peace_params_path, field);
+
         match self {
             Self::Resolve => quote! {
-                // Corresponds to `fields_map.rs#fields_to_value_spec`.
-                let #field_name = <#spec_field_ty as #peace_params_path::ValueSpecRt>
+                let #field_name = <#field_spec_ty as #peace_params_path::ValueSpecRt>
                     ::resolve(#field_name, resources, value_resolution_ctx)?.into();
             },
             Self::TryResolve => quote! {
-                let #field_name = <#spec_field_ty as #peace_params_path::ValueSpecRt>
+                let #field_name = <#field_spec_ty as #peace_params_path::ValueSpecRt>
                     ::try_resolve(#field_name, resources, value_resolution_ctx)?
                     .map(::std::convert::TryFrom::try_from)
                     .and_then(::std::result::Result::ok);

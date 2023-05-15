@@ -3,7 +3,7 @@ use syn::{DeriveInput, Fields, FieldsUnnamed, Ident, Path, Type};
 
 use crate::{
     type_gen_external::{type_gen_external, External},
-    util::{field_wrapper_generics, is_external_field, type_path_simple_name},
+    util::{field_wrapper_generics, is_tagged_external, type_path_simple_name},
     TypeGen,
 };
 
@@ -212,7 +212,10 @@ impl ExternalType {
                 let field_type_name = &field_type_segment.ident;
                 let field_generics = &field_type_segment.arguments;
                 let wrapper_type_name = {
-                    let mut wrapper_type_name = format!("{field_type_name}Wrapper");
+                    let prefix = parent_ast
+                        .map(|parent_ast| format!("{}", parent_ast.ident))
+                        .unwrap_or_else(|| String::from(""));
+                    let mut wrapper_type_name = format!("{prefix}{field_type_name}Wrapper");
                     wrapper_type_name
                         .get_mut(0..1)
                         .map(|first_char| first_char.make_ascii_uppercase());
@@ -258,7 +261,11 @@ impl ExternalType {
                 let field_type_name = &field_type_segment.ident;
                 let field_generics = &field_type_segment.arguments;
                 let wrapper_partial_type_name = {
-                    let mut wrapper_partial_type_name = format!("{field_type_name}WrapperPartial");
+                    let prefix = parent_ast
+                        .map(|parent_ast| format!("{}", parent_ast.ident))
+                        .unwrap_or_else(|| String::from(""));
+                    let mut wrapper_partial_type_name =
+                        format!("{prefix}{field_type_name}WrapperPartial");
                     wrapper_partial_type_name
                         .get_mut(0..1)
                         .map(|first_char| first_char.make_ascii_uppercase());
@@ -296,7 +303,10 @@ macro_rules! external_wrapper_types_impl {
     ($parent_ast:ident, $fields_iter:ident, $peace_params_path:ident) => {
         $fields_iter
             .filter_map(|field| {
-                if is_external_field(field) {
+                // We don't want to generate wrapper types for std external fields.
+                //
+                // Else we'd use `is_external_field`
+                if is_tagged_external(&field.attrs) {
                     let field_ty = &field.ty;
                     let wrapper_type = ExternalType::wrapper_type(Some($parent_ast), field_ty);
                     Some((wrapper_type, field_ty))

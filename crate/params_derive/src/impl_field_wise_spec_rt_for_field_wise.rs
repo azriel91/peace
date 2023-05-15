@@ -4,12 +4,9 @@ use syn::{
     TypeGenerics, Variant, WhereClause,
 };
 
-use crate::{
-    external_type::ExternalType,
-    util::{
-        fields_deconstruct, is_external_field, is_phantom_data,
-        t_value_and_try_from_partial_bounds, variant_match_arm,
-    },
+use crate::util::{
+    field_spec_ty_path, fields_deconstruct, is_phantom_data, t_value_and_try_from_partial_bounds,
+    variant_match_arm,
 };
 
 /// `impl FieldWiseSpecRt for ValueSpec`, so that Peace can resolve the params
@@ -448,23 +445,17 @@ impl<'name> ResolveMode<'name> {
         field_name: &Ident,
         field: &Field,
     ) -> proc_macro2::TokenStream {
-        let external_type = ExternalType::wrapper_type(Some(parent_ast), &field.ty);
-        let wrapper_field_deconstructed = if is_external_field(field) {
-            quote!(#peace_params_path::ValueSpecFieldless::<#external_type>)
-        } else {
-            let field_ty = &field.ty;
-            quote!(#peace_params_path::ValueSpec::<#field_ty>)
-        };
+        let field_spec_ty_path = field_spec_ty_path(Some(parent_ast), peace_params_path, field);
         match self {
             Self::Full { .. } => quote! {
-                let #field_name = #wrapper_field_deconstructed::resolve(
+                let #field_name = #field_spec_ty_path::resolve(
                     #field_name,
                     resources,
                     value_resolution_ctx,
                 )?.into();
             },
             Self::Partial { .. } => quote! {
-                let #field_name = #wrapper_field_deconstructed::resolve_partial(
+                let #field_name = #field_spec_ty_path::resolve_partial(
                     #field_name,
                     resources,
                     value_resolution_ctx,

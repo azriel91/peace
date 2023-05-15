@@ -5,6 +5,8 @@ use syn::{
     PathSegment, Type, TypePath, Variant, WherePredicate,
 };
 
+use crate::external_type::ExternalType;
+
 // Remember to update `params/src/std_impl.rs` when updating this.
 //
 // This can be replaced by `std::cell::OnceCell` when Rust 1.70.0 is released.
@@ -48,14 +50,24 @@ pub fn is_external_type(ast: &DeriveInput) -> bool {
 ///
 /// * attached to std library types defined outside the `peace_params` crate.
 /// * attached to each `Params`' field defined outside the item spec crate.
-pub fn is_external_field(field: &Field) -> bool {
-    is_known_fieldless_type_spec(&field.ty) || is_tagged_external(&field.attrs)
+///
+/// # Unused
+///
+/// Part of #119 was an attempt to implement recursive value specs. However,
+/// implementation wise the rabbit hole kept crawling deeper and deeper.
+pub fn _is_external_field(field: &Field) -> bool {
+    _is_known_fieldless_type_spec(&field.ty) || is_tagged_external(&field.attrs)
 }
 
 /// Returns if the given `Type`'s spec should be fieldless.
 ///
 /// This applies to std library types, as well as non-`Path` types.
-fn is_known_fieldless_type_spec(ty: &Type) -> bool {
+///
+/// # Unused
+///
+/// Part of #119 was an attempt to implement recursive value specs. However,
+/// implementation wise the rabbit hole kept crawling deeper and deeper.
+fn _is_known_fieldless_type_spec(ty: &Type) -> bool {
     match ty {
         Type::Path(TypePath {
             path: Path { segments, .. },
@@ -102,7 +114,7 @@ fn is_known_fieldless_std_lib_spec(ty_name: &Ident) -> bool {
 ///   it isn't already covered by `STD_LIB_TYPES`.
 /// * attached to each field in `Params` that is defined outside the item spec
 ///   crate.
-fn is_tagged_external(attrs: &[Attribute]) -> bool {
+pub fn is_tagged_external(attrs: &[Attribute]) -> bool {
     attrs.iter().any(|attr| {
         if attr.path().is_ident("params") {
             let mut is_external = false;
@@ -298,6 +310,54 @@ pub fn t_value_and_try_from_partial_bounds<'f>(
             };
             [t_value_and_try_from_partial, t_partial_from_t]
         })
+}
+
+/// Returns the type of a value spec field, e.g. `ValueSpecFieldless<MyValue>`.
+pub fn field_spec_ty(
+    parent_ast: Option<&DeriveInput>,
+    peace_params_path: &Path,
+    field: &Field,
+) -> proc_macro2::TokenStream {
+    let field_ty = &field.ty;
+    let wrapper_type = ExternalType::wrapper_type(parent_ast, field_ty);
+    if is_tagged_external(&field.attrs) {
+        quote!(#peace_params_path::ValueSpecFieldless<#wrapper_type>)
+    } else {
+        quote!(#peace_params_path::ValueSpecFieldless<#field_ty>)
+    }
+}
+
+/// Returns the type of a value spec field, e.g.
+/// `ValueSpecFieldless::<MyValue>`.
+pub fn field_spec_ty_path(
+    parent_ast: Option<&DeriveInput>,
+    peace_params_path: &Path,
+    field: &Field,
+) -> proc_macro2::TokenStream {
+    let field_ty = &field.ty;
+    let wrapper_type = ExternalType::wrapper_type(parent_ast, field_ty);
+    if is_tagged_external(&field.attrs) {
+        quote!(#peace_params_path::ValueSpecFieldless::<#wrapper_type>)
+    } else {
+        quote!(#peace_params_path::ValueSpecFieldless::<#field_ty>)
+    }
+}
+
+/// Returns the type of a value spec field, e.g.
+/// `ValueSpecFieldless::<MyValue>`.
+pub fn field_spec_ty_deconstruct(
+    parent_ast: Option<&DeriveInput>,
+    peace_params_path: &Path,
+    field: &Field,
+    field_name: &Ident,
+) -> proc_macro2::TokenStream {
+    if is_tagged_external(&field.attrs) {
+        let external_type = ExternalType::wrapper_type(parent_ast, &field.ty);
+        let wrapper_type_simple_name = type_path_simple_name(&external_type);
+        quote!(#peace_params_path::ValueSpecFieldless::Value(#wrapper_type_simple_name(#field_name)))
+    } else {
+        quote!(#peace_params_path::ValueSpecFieldless::Value(#field_name))
+    }
 }
 
 /// Returns whether the given field is a `PhantomData`.

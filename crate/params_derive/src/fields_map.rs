@@ -1,9 +1,6 @@
 use syn::{Attribute, DeriveInput, Field, Fields, Path, Type};
 
-use crate::{
-    util::{is_external_field, is_phantom_data, is_serde_bound_attr},
-    ExternalType,
-};
+use crate::util::{field_spec_ty, is_phantom_data, is_serde_bound_attr};
 
 pub fn fields_to_optional(fields: &mut Fields) {
     fields_map(fields, |field| {
@@ -30,22 +27,18 @@ pub fn fields_to_value_spec(
         if is_phantom_data(field_ty) {
             field_ty.clone()
         } else {
-            if is_external_field(field) {
-                // For external types, we don't know if they implement `ValueSpec`, so we treat
-                // fields with this attribute as `ValueSpecFieldless`. Have tried to hold a
-                // `Box<dyn ValueSpecRt>`, so it could delegate to either the `ValueSpec` or
-                // `ValueSpecFieldless`. However, it makes it hard to deserialize from a
-                // serialized `ValueSpec` because we would have to generate a concrete type with
-                // the `field_ty`, which may make it impossible to handle upgrades / evolving
-                // params types.
-                //
-                // When updating this, also update
-                // `impl_value_spec_rt_for_field_wise.rs#ResolveMode::resolve_value`.
-                let wrapper_type = ExternalType::wrapper_type(parent_ast, &field.ty);
-                parse_quote!(#peace_params_path::ValueSpecFieldless<#wrapper_type>)
-            } else {
-                parse_quote!(#peace_params_path::ValueSpec<#field_ty>)
-            }
+            // For external types, we don't know if they implement `ValueSpec`, so we treat
+            // fields with this attribute as `ValueSpecFieldless`. Have tried to hold a
+            // `Box<dyn ValueSpecRt>`, so it could delegate to either the `ValueSpec` or
+            // `ValueSpecFieldless`. However, it makes it hard to deserialize from a
+            // serialized `ValueSpec` because we would have to generate a concrete type with
+            // the `field_ty`, which may make it impossible to handle upgrades / evolving
+            // params types.
+            //
+            // In #119, we tried using `ValueSpec` for recursive value spec resolution, but
+            // it proved too difficult.
+            syn::parse2(field_spec_ty(parent_ast, peace_params_path, field))
+                .expect("Failed to parse field to value spec.")
         }
     })
 }

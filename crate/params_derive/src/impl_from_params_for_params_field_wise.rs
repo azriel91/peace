@@ -3,12 +3,9 @@ use syn::{
     WhereClause,
 };
 
-use crate::{
-    external_type::ExternalType,
-    util::{
-        fields_deconstruct, is_external_field, is_phantom_data, tuple_ident_from_field_index,
-        type_path_simple_name, variant_match_arm,
-    },
+use crate::util::{
+    field_spec_ty_deconstruct, fields_deconstruct, is_phantom_data, tuple_ident_from_field_index,
+    variant_match_arm,
 };
 
 /// `impl From<Params> for ParamsFieldWise`, so that users can provide
@@ -257,16 +254,15 @@ fn fields_map_to_value(
                                 #field_name: std::marker::PhantomData,
                             });
                         } else {
-                            let field_deconstruct = if is_external_field(field) {
-                                let external_type = ExternalType::wrapper_type(Some(parent_ast), &field.ty);
-                                let wrapper_type_simple_name = type_path_simple_name(&external_type);
-                                quote!(#peace_params_path::ValueSpecFieldless::Value(#wrapper_type_simple_name(#field_name)))
-                            } else {
-                                quote!(#peace_params_path::ValueSpec::Value(#field_name))
-                            };
+                            let field_spec_ty_deconstruct = field_spec_ty_deconstruct(
+                                Some(parent_ast),
+                                peace_params_path,
+                                field,
+                                &field_name,
+                            );
 
                             tokens.extend(quote! {
-                                #field_name: #field_deconstruct,
+                                #field_name: #field_spec_ty_deconstruct,
                             });
                         }
                     }
@@ -293,15 +289,14 @@ fn fields_map_to_value(
                     if is_phantom_data(&field.ty) {
                         tokens.extend(quote!(std::marker::PhantomData,));
                     } else {
-                        let field_deconstruct = if is_external_field(field) {
-                            let external_type = ExternalType::wrapper_type(Some(parent_ast), &field.ty);
-                            let wrapper_type_simple_name = type_path_simple_name(&external_type);
-                            quote!(#peace_params_path::ValueSpecFieldless::Value(#wrapper_type_simple_name(#field_name)),)
-                        } else {
-                            quote!(#peace_params_path::ValueSpec::Value(#field_name),)
-                        };
+                        let field_spec_ty_deconstruct = field_spec_ty_deconstruct(
+                            Some(parent_ast),
+                            peace_params_path,
+                            field,
+                            &field_name,
+                        );
 
-                        tokens.extend(field_deconstruct);
+                        tokens.extend(quote!(#field_spec_ty_deconstruct,));
                     }
 
                     tokens
