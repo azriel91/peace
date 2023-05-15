@@ -448,7 +448,7 @@ fn t_field_wise(
         ast,
         generics_split,
         t_field_wise_name,
-        |fields| fields_to_value_spec(Some(&ast.generics), fields, peace_params_path),
+        |fields| fields_to_value_spec(Some(ast), fields, peace_params_path),
         &[
             parse_quote! {
                 #[doc="Specification of how to look up values for an item spec's parameters."]

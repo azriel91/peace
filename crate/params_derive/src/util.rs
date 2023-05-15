@@ -1,8 +1,8 @@
 use proc_macro2::Span;
 use syn::{
     meta::ParseNestedMeta, punctuated::Punctuated, AngleBracketedGenericArguments, Attribute,
-    DeriveInput, Field, Fields, GenericArgument, GenericParam, Generics, Ident, LitInt, Path,
-    PathArguments, PathSegment, Type, TypePath, Variant, WherePredicate,
+    DeriveInput, Field, Fields, GenericArgument, GenericParam, Ident, LitInt, Path, PathArguments,
+    PathSegment, Type, TypePath, Variant, WherePredicate,
 };
 
 // Remember to update `params/src/std_impl.rs` when updating this.
@@ -38,7 +38,7 @@ static STD_LIB_TYPES: &[&str] = &[
 /// * attached to std library types defined outside the `peace_params` crate.
 /// * attached to each `Params`' field defined outside the item spec crate.
 pub fn is_external_type(ast: &DeriveInput) -> bool {
-    is_known_fieldless_std_lib_spec(&ast.ident) || is_external(&ast.attrs)
+    is_known_fieldless_std_lib_spec(&ast.ident) || is_tagged_external(&ast.attrs)
 }
 
 /// Returns whether the field is annotated with `#[params(external)]`, which
@@ -49,7 +49,7 @@ pub fn is_external_type(ast: &DeriveInput) -> bool {
 /// * attached to std library types defined outside the `peace_params` crate.
 /// * attached to each `Params`' field defined outside the item spec crate.
 pub fn is_external_field(field: &Field) -> bool {
-    is_known_fieldless_type_spec(&field.ty) || is_external(&field.attrs)
+    is_known_fieldless_type_spec(&field.ty) || is_tagged_external(&field.attrs)
 }
 
 /// Returns if the given `Type`'s spec should be fieldless.
@@ -102,7 +102,7 @@ fn is_known_fieldless_std_lib_spec(ty_name: &Ident) -> bool {
 ///   it isn't already covered by `STD_LIB_TYPES`.
 /// * attached to each field in `Params` that is defined outside the item spec
 ///   crate.
-fn is_external(attrs: &[Attribute]) -> bool {
+fn is_tagged_external(attrs: &[Attribute]) -> bool {
     attrs.iter().any(|attr| {
         if attr.path().is_ident("params") {
             let mut is_external = false;
@@ -121,10 +121,10 @@ fn is_external(attrs: &[Attribute]) -> bool {
 /// Returns the field wrapper generics to use, which is the intersection of the
 /// field type arguments and the parent type arguments.
 pub fn field_wrapper_generics(
-    parent_type_generics: Option<&Generics>,
+    parent_ast: Option<&DeriveInput>,
     field_generics: &PathArguments,
 ) -> Option<proc_macro2::TokenStream> {
-    parent_type_generics.and_then(|parent_type_generics| match field_generics {
+    parent_ast.and_then(|parent_ast| match field_generics {
         PathArguments::None => None,
         PathArguments::AngleBracketed(angle_bracketed) => {
             let field_generics = &angle_bracketed.args;
@@ -133,7 +133,8 @@ pub fn field_wrapper_generics(
                 .filter(|field_generic| {
                     let field_argument_as_param: GenericParam = parse_quote!(#field_generic);
 
-                    parent_type_generics
+                    parent_ast
+                        .generics
                         .params
                         .iter()
                         .any(|parent_generic| parent_generic == &field_argument_as_param)

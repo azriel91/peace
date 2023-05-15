@@ -1,4 +1,4 @@
-use syn::{Attribute, Field, Fields, Generics, Path, Type};
+use syn::{Attribute, DeriveInput, Field, Fields, Path, Type};
 
 use crate::{
     util::{is_external_field, is_phantom_data, is_serde_bound_attr},
@@ -21,7 +21,7 @@ pub fn fields_to_optional(fields: &mut Fields) {
 /// If the type is marked with `#[params(external)]`, then it is wrapped as
 /// `ValueSpec<MyTypeWrapper>`.
 pub fn fields_to_value_spec(
-    parent_type_generics: Option<&Generics>,
+    parent_ast: Option<&DeriveInput>,
     fields: &mut Fields,
     peace_params_path: &Path,
 ) {
@@ -41,7 +41,7 @@ pub fn fields_to_value_spec(
                 //
                 // When updating this, also update
                 // `impl_value_spec_rt_for_field_wise.rs#ResolveMode::resolve_value`.
-                let wrapper_type = ExternalType::wrapper_type(parent_type_generics, &field.ty);
+                let wrapper_type = ExternalType::wrapper_type(parent_ast, &field.ty);
                 parse_quote!(#peace_params_path::ValueSpecFieldless<#wrapper_type>)
             } else {
                 parse_quote!(#peace_params_path::ValueSpec<#field_ty>)

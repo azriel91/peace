@@ -1,7 +1,7 @@
 use proc_macro2::Span;
 use syn::{
-    punctuated::Punctuated, DeriveInput, Field, Fields, Generics, Ident, ImplGenerics, LitInt,
-    Path, TypeGenerics, Variant, WhereClause,
+    punctuated::Punctuated, DeriveInput, Field, Fields, Ident, ImplGenerics, LitInt, Path,
+    TypeGenerics, Variant, WhereClause,
 };
 
 use crate::{
@@ -39,7 +39,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
             let fields = &data_struct.fields;
 
             struct_fields_resolve(
-                &ast.generics,
+                ast,
                 params_field_wise_name,
                 fields,
                 peace_params_path,
@@ -50,7 +50,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
             let variants = &data_enum.variants;
 
             variants_resolve(
-                &ast.generics,
+                ast,
                 params_field_wise_name,
                 variants,
                 peace_params_path,
@@ -61,7 +61,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
             let fields = Fields::from(data_union.fields.clone());
 
             struct_fields_resolve(
-                &ast.generics,
+                ast,
                 params_field_wise_name,
                 &fields,
                 peace_params_path,
@@ -75,7 +75,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
             let fields = &data_struct.fields;
 
             struct_fields_resolve(
-                &ast.generics,
+                ast,
                 params_field_wise_name,
                 fields,
                 peace_params_path,
@@ -88,7 +88,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
             let variants = &data_enum.variants;
 
             variants_resolve(
-                &ast.generics,
+                ast,
                 params_field_wise_name,
                 variants,
                 peace_params_path,
@@ -101,7 +101,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
             let fields = Fields::from(data_union.fields.clone());
 
             struct_fields_resolve(
-                &ast.generics,
+                ast,
                 params_field_wise_name,
                 &fields,
                 peace_params_path,
@@ -140,18 +140,13 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
 }
 
 fn struct_fields_resolve(
-    parent_type_generics: &Generics,
+    parent_ast: &DeriveInput,
     params_field_wise_name: &Ident,
     fields: &Fields,
     peace_params_path: &Path,
     resolve_mode: ResolveMode,
 ) -> proc_macro2::TokenStream {
-    let fields_resolution = fields_resolution(
-        parent_type_generics,
-        fields,
-        peace_params_path,
-        resolve_mode,
-    );
+    let fields_resolution = fields_resolution(parent_ast, fields, peace_params_path, resolve_mode);
     let fields_deconstructed = fields_deconstruct(fields);
     let params_return_type_name = resolve_mode.params_return_type_name();
 
@@ -216,7 +211,7 @@ fn struct_fields_resolve(
 }
 
 fn variants_resolve(
-    parent_type_generics: &Generics,
+    parent_ast: &DeriveInput,
     params_field_wise_name: &Ident,
     variants: &Punctuated<Variant, Token![,]>,
     peace_params_path: &Path,
@@ -246,7 +241,7 @@ fn variants_resolve(
                 let fields_deconstructed = fields_deconstruct(&variant.fields);
 
                 let variant_fields_resolve = variant_fields_resolve(
-                    parent_type_generics,
+                    parent_ast,
                     &variant.ident,
                     &variant.fields,
                     &fields_deconstructed,
@@ -273,19 +268,14 @@ fn variants_resolve(
 // Code gen, not user facing
 #[allow(clippy::too_many_arguments)]
 fn variant_fields_resolve(
-    parent_type_generics: &Generics,
+    parent_ast: &DeriveInput,
     variant_name: &Ident,
     fields: &Fields,
     fields_deconstructed: &[proc_macro2::TokenStream],
     peace_params_path: &Path,
     resolve_mode: ResolveMode,
 ) -> proc_macro2::TokenStream {
-    let fields_resolution = fields_resolution(
-        parent_type_generics,
-        fields,
-        peace_params_path,
-        resolve_mode,
-    );
+    let fields_resolution = fields_resolution(parent_ast, fields, peace_params_path, resolve_mode);
     let params_return_type_name = resolve_mode.params_return_type_name();
 
     match fields {
@@ -335,7 +325,7 @@ fn variant_fields_resolve(
 }
 
 fn fields_resolution(
-    parent_type_generics: &Generics,
+    parent_ast: &DeriveInput,
     fields: &Fields,
     peace_params_path: &Path,
     resolve_mode: ResolveMode,
@@ -363,7 +353,7 @@ fn fields_resolution(
                     |mut tokens, (field, field_name)| {
                         let field_ty = &field.ty;
                         let resolve_method = resolve_mode.resolve_method(
-                            parent_type_generics,
+                            parent_ast,
                             peace_params_path,
                             field_name,
                             field,
@@ -406,7 +396,7 @@ fn fields_resolution(
                         let field_index = LitInt::new(&format!("{field_index}"), Span::call_site());
                         let field_ty = &field.ty;
                         let resolve_method = resolve_mode.resolve_method(
-                            parent_type_generics,
+                            parent_ast,
                             peace_params_path,
                             &field_ident,
                             field,
@@ -453,12 +443,12 @@ impl<'name> ResolveMode<'name> {
     // resolution.
     fn resolve_method(
         self,
-        parent_type_generics: &Generics,
+        parent_ast: &DeriveInput,
         peace_params_path: &Path,
         field_name: &Ident,
         field: &Field,
     ) -> proc_macro2::TokenStream {
-        let external_type = ExternalType::wrapper_type(Some(parent_type_generics), &field.ty);
+        let external_type = ExternalType::wrapper_type(Some(parent_ast), &field.ty);
         let wrapper_field_deconstructed = if is_external_field(field) {
             quote!(#peace_params_path::ValueSpecFieldless::<#external_type>)
         } else {

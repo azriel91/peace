@@ -1,6 +1,6 @@
 use syn::{
-    punctuated::Punctuated, DeriveInput, Fields, Generics, Ident, ImplGenerics, Path, TypeGenerics,
-    Variant, WhereClause,
+    punctuated::Punctuated, DeriveInput, Fields, Ident, ImplGenerics, Path, TypeGenerics, Variant,
+    WhereClause,
 };
 
 use crate::{
@@ -28,7 +28,7 @@ pub fn impl_from_params_for_params_field_wise(
             let fields = &data_struct.fields;
 
             struct_fields_map_to_value(
-                &ast.generics,
+                ast,
                 params_name,
                 params_field_wise_name,
                 fields,
@@ -39,7 +39,7 @@ pub fn impl_from_params_for_params_field_wise(
             let variants = &data_enum.variants;
 
             variants_map_to_value(
-                &ast.generics,
+                ast,
                 params_name,
                 params_field_wise_name,
                 variants,
@@ -50,7 +50,7 @@ pub fn impl_from_params_for_params_field_wise(
             let fields = Fields::from(data_union.fields.clone());
 
             struct_fields_map_to_value(
-                &ast.generics,
+                ast,
                 params_name,
                 params_field_wise_name,
                 &fields,
@@ -72,14 +72,14 @@ pub fn impl_from_params_for_params_field_wise(
 }
 
 fn struct_fields_map_to_value(
-    parent_type_generics: &Generics,
+    parent_ast: &DeriveInput,
     params_name: &Ident,
     params_field_wise_name: &Ident,
     fields: &Fields,
     peace_params_path: &Path,
 ) -> proc_macro2::TokenStream {
     let fields_deconstructed = fields_deconstruct(fields);
-    let fields_map_to_value = fields_map_to_value(parent_type_generics, fields, peace_params_path);
+    let fields_map_to_value = fields_map_to_value(parent_ast, fields, peace_params_path);
 
     match fields {
         Fields::Named(_fields_named) => {
@@ -125,7 +125,7 @@ fn struct_fields_map_to_value(
 }
 
 fn variants_map_to_value(
-    parent_type_generics: &Generics,
+    parent_ast: &DeriveInput,
     params_name: &Ident,
     params_field_wise_name: &Ident,
     variants: &Punctuated<Variant, Token![,]>,
@@ -167,7 +167,7 @@ fn variants_map_to_value(
             .fold(proc_macro2::TokenStream::new(), |mut tokens, variant| {
                 let variant_fields = fields_deconstruct(&variant.fields);
                 let variant_fields_map_to_value = variant_fields_map_to_value(
-                    parent_type_generics,
+                    parent_ast,
                     params_field_wise_name,
                     &variant.ident,
                     &variant.fields,
@@ -191,13 +191,13 @@ fn variants_map_to_value(
 }
 
 fn variant_fields_map_to_value(
-    parent_type_generics: &Generics,
+    parent_ast: &DeriveInput,
     params_field_wise_name: &Ident,
     variant_name: &Ident,
     fields: &Fields,
     peace_params_path: &Path,
 ) -> proc_macro2::TokenStream {
-    let fields_map_to_value = fields_map_to_value(parent_type_generics, fields, peace_params_path);
+    let fields_map_to_value = fields_map_to_value(parent_ast, fields, peace_params_path);
     match fields {
         Fields::Named(_fields_named) => {
             // Generates:
@@ -229,7 +229,7 @@ fn variant_fields_map_to_value(
 }
 
 fn fields_map_to_value(
-    parent_type_generics: &Generics,
+    parent_ast: &DeriveInput,
     fields: &Fields,
     peace_params_path: &Path,
 ) -> proc_macro2::TokenStream {
@@ -258,7 +258,7 @@ fn fields_map_to_value(
                             });
                         } else {
                             let field_deconstruct = if is_external_field(field) {
-                                let external_type = ExternalType::wrapper_type(Some(parent_type_generics), &field.ty);
+                                let external_type = ExternalType::wrapper_type(Some(parent_ast), &field.ty);
                                 let wrapper_type_simple_name = type_path_simple_name(&external_type);
                                 quote!(#peace_params_path::ValueSpecFieldless::Value(#wrapper_type_simple_name(#field_name)))
                             } else {
@@ -294,7 +294,7 @@ fn fields_map_to_value(
                         tokens.extend(quote!(std::marker::PhantomData,));
                     } else {
                         let field_deconstruct = if is_external_field(field) {
-                            let external_type = ExternalType::wrapper_type(Some(parent_type_generics), &field.ty);
+                            let external_type = ExternalType::wrapper_type(Some(parent_ast), &field.ty);
                             let wrapper_type_simple_name = type_path_simple_name(&external_type);
                             quote!(#peace_params_path::ValueSpecFieldless::Value(#wrapper_type_simple_name(#field_name)),)
                         } else {

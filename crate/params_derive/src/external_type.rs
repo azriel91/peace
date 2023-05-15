@@ -1,5 +1,5 @@
 use proc_macro2::Span;
-use syn::{DeriveInput, Fields, FieldsUnnamed, Generics, Ident, Path, Type};
+use syn::{DeriveInput, Fields, FieldsUnnamed, Ident, Path, Type};
 
 use crate::{
     type_gen_external::{type_gen_external, External},
@@ -20,15 +20,11 @@ impl ExternalType {
         ast: &DeriveInput,
         peace_params_path: &Path,
     ) -> proc_macro2::TokenStream {
-        let parent_type_generics = &ast.generics;
         match &ast.data {
             syn::Data::Struct(data_struct) => {
                 let fields_iter = data_struct.fields.iter();
-                let (_, external_wrapper_types) = external_wrapper_types_impl!(
-                    parent_type_generics,
-                    fields_iter,
-                    peace_params_path
-                );
+                let (_, external_wrapper_types) =
+                    external_wrapper_types_impl!(ast, fields_iter, peace_params_path);
                 external_wrapper_types
             }
             syn::Data::Enum(data_enum) => {
@@ -36,20 +32,14 @@ impl ExternalType {
                     .variants
                     .iter()
                     .flat_map(|variant| variant.fields.iter());
-                let (_, external_wrapper_types) = external_wrapper_types_impl!(
-                    parent_type_generics,
-                    fields_iter,
-                    peace_params_path
-                );
+                let (_, external_wrapper_types) =
+                    external_wrapper_types_impl!(ast, fields_iter, peace_params_path);
                 external_wrapper_types
             }
             syn::Data::Union(data_union) => {
                 let fields_iter = data_union.fields.named.iter();
-                let (_, external_wrapper_types) = external_wrapper_types_impl!(
-                    parent_type_generics,
-                    fields_iter,
-                    peace_params_path
-                );
+                let (_, external_wrapper_types) =
+                    external_wrapper_types_impl!(ast, fields_iter, peace_params_path);
                 external_wrapper_types
             }
         }
@@ -67,12 +57,12 @@ impl ExternalType {
     ///   `ExternalType::wrapper_type`.
     /// * `wrapped_ty`: `Type` of the field that is external, e.g. `Thing`.
     pub fn wrapper_and_related_types_gen(
-        parent_type_generics: Option<&Generics>,
+        parent_ast: Option<&DeriveInput>,
         peace_params_path: &Path,
         wrapper_type: &Type,
         wrapped_ty: &Type,
     ) -> proc_macro2::TokenStream {
-        let wrapper_partial_type = Self::wrapper_partial_type(parent_type_generics, wrapped_ty);
+        let wrapper_partial_type = Self::wrapper_partial_type(parent_ast, wrapped_ty);
         let Some(wrapper_partial_name) = type_path_simple_name(&wrapper_partial_type) else {
             unreachable!("Type must be present at this stage.");
         };
@@ -213,7 +203,7 @@ impl ExternalType {
     ///
     /// In practice, `Thing<T>` will generate `ThingWrapper<T>`, but this may
     /// change in the future, e.g. to avoid name collisions.
-    pub fn wrapper_type(parent_type_generics: Option<&Generics>, ty: &Type) -> Type {
+    pub fn wrapper_type(parent_ast: Option<&DeriveInput>, ty: &Type) -> Type {
         match ty {
             Type::Path(type_path) => {
                 let Some(field_type_segment) = type_path.path.segments.last() else {
@@ -229,8 +219,7 @@ impl ExternalType {
                     Ident::new(&wrapper_type_name, Span::call_site())
                 };
 
-                let field_wrapper_generics =
-                    field_wrapper_generics(parent_type_generics, field_generics);
+                let field_wrapper_generics = field_wrapper_generics(parent_ast, field_generics);
 
                 parse_quote!(#wrapper_type_name #field_wrapper_generics)
             }
@@ -260,7 +249,7 @@ impl ExternalType {
     ///
     /// In practice, `Thing<T>` will generate `ThingWrapperPartial<T>`, but this
     /// may change in the future, e.g. to avoid name collisions.
-    pub fn wrapper_partial_type(parent_type_generics: Option<&Generics>, ty: &Type) -> Type {
+    pub fn wrapper_partial_type(parent_ast: Option<&DeriveInput>, ty: &Type) -> Type {
         match ty {
             Type::Path(type_path) => {
                 let Some(field_type_segment) = type_path.path.segments.last() else {
@@ -276,8 +265,7 @@ impl ExternalType {
                     Ident::new(&wrapper_partial_type_name, Span::call_site())
                 };
 
-                let field_wrapper_generics =
-                    field_wrapper_generics(parent_type_generics, field_generics);
+                let field_wrapper_generics = field_wrapper_generics(parent_ast, field_generics);
 
                 parse_quote!(#wrapper_partial_type_name #field_wrapper_generics)
             }
@@ -305,13 +293,12 @@ impl ExternalType {
 }
 
 macro_rules! external_wrapper_types_impl {
-    ($parent_type_generics:ident, $fields_iter:ident, $peace_params_path:ident) => {
+    ($parent_ast:ident, $fields_iter:ident, $peace_params_path:ident) => {
         $fields_iter
             .filter_map(|field| {
                 if is_external_field(field) {
                     let field_ty = &field.ty;
-                    let wrapper_type =
-                        ExternalType::wrapper_type(Some($parent_type_generics), field_ty);
+                    let wrapper_type = ExternalType::wrapper_type(Some($parent_ast), field_ty);
                     Some((wrapper_type, field_ty))
                 } else {
                     None
@@ -325,7 +312,7 @@ macro_rules! external_wrapper_types_impl {
                 |(mut generated_types, mut tokens), (wrapper_type, field_ty)| {
                     if !generated_types.contains(field_ty) {
                         tokens.extend(ExternalType::wrapper_and_related_types_gen(
-                            Some($parent_type_generics),
+                            Some($parent_ast),
                             $peace_params_path,
                             &wrapper_type,
                             field_ty,
