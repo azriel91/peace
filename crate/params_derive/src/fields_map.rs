@@ -15,8 +15,8 @@ pub fn fields_to_optional(fields: &mut Fields) {
 
 /// Maps each field from `MyType` to `ValueSpec<MyType>`.
 ///
-/// If the type is marked with `#[params(external)]`, then it is wrapped as
-/// `ValueSpec<MyTypeWrapper>`.
+/// If the type is marked with `#[value_spec(fieldless)]`, then it is wrapped
+/// as `ValueSpec<MyTypeWrapper>`.
 pub fn fields_to_value_spec(
     parent_ast: Option<&DeriveInput>,
     fields: &mut Fields,

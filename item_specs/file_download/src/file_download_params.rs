@@ -21,7 +21,7 @@ use url::Url;
 #[serde(bound = "")]
 pub struct FileDownloadParams<Id> {
     /// Url of the file to download.
-    #[params(external)]
+    #[value_spec(fieldless)]
     src: Url,
     /// Path of the destination.
     ///
@@ -32,7 +32,7 @@ pub struct FileDownloadParams<Id> {
     /// For URLs that return binary content, this must be `Base64` as browser
     /// storage can only store text.
     #[cfg(target_arch = "wasm32")]
-    #[params(external)]
+    #[value_spec(fieldless)]
     storage_form: crate::StorageForm,
     /// Marker for unique download parameters type.
     marker: PhantomData<Id>,

@@ -32,19 +32,19 @@ static STD_LIB_TYPES: &[&str] = &[
     "Vec",
 ];
 
-/// Returns whether the type is annotated with `#[params(external)]`, which
-/// means its spec should be fieldless.
+/// Returns whether the type is annotated with `#[value_spec(fieldless)]`,
+/// which means its spec should be fieldless.
 ///
 /// This attribute must be:
 ///
 /// * attached to std library types defined outside the `peace_params` crate.
 /// * attached to each `Params`' field defined outside the item spec crate.
-pub fn is_external_type(ast: &DeriveInput) -> bool {
-    is_known_fieldless_std_lib_spec(&ast.ident) || is_tagged_external(&ast.attrs)
+pub fn is_fieldless_type(ast: &DeriveInput) -> bool {
+    is_known_fieldless_std_lib_spec(&ast.ident) || is_tagged_fieldless(&ast.attrs)
 }
 
-/// Returns whether the field is annotated with `#[params(external)]`, which
-/// means its spec should be fieldless.
+/// Returns whether the field is annotated with `#[value_spec(fieldless)]`,
+/// which means its spec should be fieldless.
 ///
 /// This attribute must be:
 ///
@@ -56,7 +56,7 @@ pub fn is_external_type(ast: &DeriveInput) -> bool {
 /// Part of #119 was an attempt to implement recursive value specs. However,
 /// implementation wise the rabbit hole kept crawling deeper and deeper.
 pub fn _is_external_field(field: &Field) -> bool {
-    _is_known_fieldless_type_spec(&field.ty) || is_tagged_external(&field.attrs)
+    _is_known_fieldless_type_spec(&field.ty) || is_tagged_fieldless(&field.attrs)
 }
 
 /// Returns if the given `Type`'s spec should be fieldless.
@@ -106,7 +106,7 @@ fn is_known_fieldless_std_lib_spec(ty_name: &Ident) -> bool {
         .any(|std_lib_type| ty_name == std_lib_type)
 }
 
-/// Returns whether any of the attributes contains `#[params(external)]`.
+/// Returns whether any of the attributes contains `#[value_spec(fieldless)]`.
 ///
 /// This attribute should be:
 ///
@@ -114,12 +114,12 @@ fn is_known_fieldless_std_lib_spec(ty_name: &Ident) -> bool {
 ///   it isn't already covered by `STD_LIB_TYPES`.
 /// * attached to each field in `Params` that is defined outside the item spec
 ///   crate.
-pub fn is_tagged_external(attrs: &[Attribute]) -> bool {
+pub fn is_tagged_fieldless(attrs: &[Attribute]) -> bool {
     attrs.iter().any(|attr| {
-        if attr.path().is_ident("params") {
+        if attr.path().is_ident("value_spec") {
             let mut is_external = false;
             let _ = attr.parse_nested_meta(|parse_nested_meta| {
-                is_external = parse_nested_meta.path.is_ident("external");
+                is_external = parse_nested_meta.path.is_ident("fieldless");
                 Ok(())
             });
 
@@ -320,7 +320,7 @@ pub fn field_spec_ty(
 ) -> proc_macro2::TokenStream {
     let field_ty = &field.ty;
     let wrapper_type = ExternalType::wrapper_type(parent_ast, field_ty);
-    if is_tagged_external(&field.attrs) {
+    if is_tagged_fieldless(&field.attrs) {
         quote!(#peace_params_path::ValueSpecFieldless<#wrapper_type>)
     } else {
         quote!(#peace_params_path::ValueSpecFieldless<#field_ty>)
@@ -336,7 +336,7 @@ pub fn field_spec_ty_path(
 ) -> proc_macro2::TokenStream {
     let field_ty = &field.ty;
     let wrapper_type = ExternalType::wrapper_type(parent_ast, field_ty);
-    if is_tagged_external(&field.attrs) {
+    if is_tagged_fieldless(&field.attrs) {
         quote!(#peace_params_path::ValueSpecFieldless::<#wrapper_type>)
     } else {
         quote!(#peace_params_path::ValueSpecFieldless::<#field_ty>)
@@ -351,7 +351,7 @@ pub fn field_spec_ty_deconstruct(
     field: &Field,
     field_name: &Ident,
 ) -> proc_macro2::TokenStream {
-    if is_tagged_external(&field.attrs) {
+    if is_tagged_fieldless(&field.attrs) {
         let external_type = ExternalType::wrapper_type(parent_ast, &field.ty);
         let wrapper_type_simple_name = type_path_simple_name(&external_type);
         quote!(#peace_params_path::ValueSpecFieldless::Value(#wrapper_type_simple_name(#field_name)))

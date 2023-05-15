@@ -27,7 +27,7 @@ use crate::{
     impl_value_spec_rt_for_field_wise::impl_value_spec_rt_for_field_wise,
     type_gen::TypeGen,
     type_gen_external::type_gen_external,
-    util::{is_external_type, serde_bounds_for_type_params},
+    util::{is_fieldless_type, serde_bounds_for_type_params},
 };
 
 mod external_type;
@@ -79,7 +79,7 @@ mod util;
 ///   for `ParamsPartial::default()`.
 #[proc_macro_derive(
     Value,
-    attributes(peace_internal, crate_internal, params, default, serde)
+    attributes(peace_internal, crate_internal, value_spec, default, serde)
 )]
 pub fn params_derive(input: TokenStream) -> TokenStream {
     let mut ast =
@@ -106,12 +106,15 @@ pub fn params_derive(input: TokenStream) -> TokenStream {
 /// * `crate_internal`: Type level attribute indicating the `peace_params` crate
 ///   is referenced by `crate` instead of the default `peace::params`.
 ///
-/// * `params(external)`: Type level attribute indicating fields are not known,
-///   and so `ParamsPartial` will instead hold an `Option<Value>` field.
+/// * `value_spec(fieldless)`: Type level attribute indicating fields are not
+///   known, and so `ParamsPartial` will instead hold an `Option<Value>` field.
 ///
 /// * `default`: Enum variant attribute to indicate which variant to instantiate
 ///   for `ParamsPartial::default()`.
-#[proc_macro_derive(ValueExt, attributes(peace_internal, crate_internal, params, default))]
+#[proc_macro_derive(
+    ValueExt,
+    attributes(peace_internal, crate_internal, value_spec, default)
+)]
 pub fn value_ext(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
         .expect("`ValueExt` derive: Failed to parse item as struct, enum, or union.");
@@ -165,7 +168,7 @@ fn impl_value(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&t_field_wise_name, ast.ident.span())
     };
 
-    let (t_partial, t_field_wise) = if is_external_type(ast) {
+    let (t_partial, t_field_wise) = if is_fieldless_type(ast) {
         let ty_generics = &generics_split.1;
         let params_ty: Type = parse_quote!(#params_name #ty_generics);
         let t_partial = t_partial_external(ast, &generics_split, &params_ty, &t_partial_name);
@@ -259,7 +262,7 @@ fn impl_value_fieldless(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
         Ident::new(&t_field_wise_name, ast.ident.span())
     };
 
-    let (t_partial, t_field_wise) = if is_external_type(ast) {
+    let (t_partial, t_field_wise) = if is_fieldless_type(ast) {
         let ty_generics = &generics_split.1;
         let value_ty: Type = parse_quote!(#value_name #ty_generics);
         let t_partial = t_partial_external(ast, &generics_split, &value_ty, &t_partial_name);

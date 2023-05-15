@@ -2077,7 +2077,7 @@ mod external_fields {
     #[derive(Clone, Debug, Value, PartialEq, Eq, Serialize, Deserialize)]
     pub struct StructExternalValue {
         /// Source / desired value for the state.
-        #[params(external)]
+        #[value_spec(fieldless)]
         src: InnerValue,
         /// Destination storage for the state.
         dest: u32,

@@ -13,7 +13,7 @@ use peace_params_derive::value_impl;
 // `params_derive/src/util.rs#STD_LIB_TYPES`.
 //
 // These are the types that we don't require users to annotate with
-// `#[params(external)]`, but will be treated as such.
+// `#[value_spec(fieldless)]`, but will be treated as such.
 
 impl_value_for!(
     bool, u8, u16, u32, u64, u128, i8, i16, i32, i64, i128, usize, isize, String, PathBuf,
@@ -23,13 +23,13 @@ impl_value_for!(
 #[cfg(not(target_arch = "wasm32"))]
 value_impl!(
     #[crate_internal]
-    #[params(external)]
+    #[value_spec(fieldless)]
     struct OsString;
 );
 
 value_impl!(
     #[crate_internal]
-    #[params(external)]
+    #[value_spec(fieldless)]
     struct Option<T>
     where
         T: Clone + std::fmt::Debug + serde::Serialize + serde::de::DeserializeOwned;
@@ -37,7 +37,7 @@ value_impl!(
 
 value_impl!(
     #[crate_internal]
-    #[params(external)]
+    #[value_spec(fieldless)]
     struct Vec<T>
     where
         T: Clone + std::fmt::Debug + serde::Serialize + serde::de::DeserializeOwned;
@@ -48,7 +48,7 @@ macro_rules! impl_value_for {
         $(
             value_impl!(
                 #[crate_internal]
-                #[params(external)]
+                #[value_spec(fieldless)]
                 struct $T;
             );
         )*

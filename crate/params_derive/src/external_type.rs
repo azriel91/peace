@@ -3,7 +3,7 @@ use syn::{DeriveInput, Fields, FieldsUnnamed, Ident, Path, Type};
 
 use crate::{
     type_gen_external::{type_gen_external, External},
-    util::{field_wrapper_generics, is_tagged_external, type_path_simple_name},
+    util::{field_wrapper_generics, is_tagged_fieldless, type_path_simple_name},
     TypeGen,
 };
 
@@ -306,7 +306,7 @@ macro_rules! external_wrapper_types_impl {
                 // We don't want to generate wrapper types for std external fields.
                 //
                 // Else we'd use `is_external_field`
-                if is_tagged_external(&field.attrs) {
+                if is_tagged_fieldless(&field.attrs) {
                     let field_ty = &field.ty;
                     let wrapper_type = ExternalType::wrapper_type(Some($parent_ast), field_ty);
                     Some((wrapper_type, field_ty))
