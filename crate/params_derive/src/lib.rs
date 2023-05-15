@@ -85,7 +85,7 @@ pub fn value_spec(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
         .expect("`ValueSpec` derive: Failed to parse item as struct, enum, or union.");
 
-    let gen = impl_value(&mut ast);
+    let gen = impl_value(&mut ast, ImplMode::Fieldwise);
 
     gen.into()
 }
@@ -119,7 +119,7 @@ pub fn value_ext(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
         .expect("`ValueSpecFieldless` derive: Failed to parse item as struct, enum, or union.");
 
-    let gen = impl_value_fieldless(&mut ast);
+    let gen = impl_value(&mut ast, ImplMode::Fieldless);
 
     gen.into()
 }
@@ -129,106 +129,12 @@ pub fn value_impl(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
         .expect("`ValueSpecFieldless` impl: Failed to parse item as struct, enum, or union.");
 
-    let gen = impl_value_fieldless(&mut ast);
+    let gen = impl_value(&mut ast, ImplMode::Fieldless);
 
     gen.into()
 }
 
-fn impl_value(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
-    let (peace_params_path, peace_resources_path): (Path, Path) = ast
-        .attrs
-        .iter()
-        .find_map(|attr| {
-            if attr.path().is_ident("peace_internal") {
-                Some((parse_quote!(peace_params), parse_quote!(peace_resources)))
-            } else if attr.path().is_ident("crate_internal") {
-                Some((parse_quote!(crate), parse_quote!(peace_resources)))
-            } else {
-                None
-            }
-        })
-        .unwrap_or_else(|| (parse_quote!(peace::params), parse_quote!(peace::resources)));
-
-    type_parameters_constrain(ast);
-    let params_name = &ast.ident;
-    let generics = &ast.generics;
-    let generics_split = generics.split_for_impl();
-
-    // MyParams -> MyParamsPartial
-    let t_partial_name = {
-        let mut t_partial_name = ast.ident.to_string();
-        t_partial_name.push_str("Partial");
-        Ident::new(&t_partial_name, ast.ident.span())
-    };
-
-    // MyParams -> MyParamsFieldWise
-    let t_field_wise_name = {
-        let mut t_field_wise_name = ast.ident.to_string();
-        t_field_wise_name.push_str("FieldWise");
-        Ident::new(&t_field_wise_name, ast.ident.span())
-    };
-
-    let (t_partial, t_field_wise) = if is_fieldless_type(ast) {
-        let ty_generics = &generics_split.1;
-        let params_ty: Type = parse_quote!(#params_name #ty_generics);
-        let t_partial = t_partial_external(ast, &generics_split, &params_ty, &t_partial_name);
-        let t_field_wise = t_field_wise_external(
-            ast,
-            &generics_split,
-            &peace_params_path,
-            &peace_resources_path,
-            &params_ty,
-            params_name,
-            &t_field_wise_name,
-            &t_partial_name,
-        );
-
-        (t_partial, t_field_wise)
-    } else {
-        let t_partial = t_partial(ast, &generics_split, params_name, &t_partial_name);
-        let t_field_wise = t_field_wise(
-            ast,
-            &generics_split,
-            &peace_params_path,
-            &peace_resources_path,
-            params_name,
-            &t_field_wise_name,
-            &t_partial_name,
-        );
-
-        (t_partial, t_field_wise)
-    };
-    let (impl_generics, ty_generics, where_clause) = &generics_split;
-
-    let external_wrapper_types = ExternalType::external_wrapper_types(ast, &peace_params_path);
-
-    quote! {
-        impl #impl_generics #peace_params_path::Value
-        for #params_name #ty_generics
-        #where_clause
-        {
-            type Spec = #peace_params_path::ValueSpec<#params_name #ty_generics>;
-            type Partial = #t_partial_name #ty_generics;
-            type FieldWiseSpec = #t_field_wise_name #ty_generics;
-        }
-
-        impl #impl_generics #peace_params_path::ValueFieldless
-        for #params_name #ty_generics
-        #where_clause
-        {
-            type Spec = #peace_params_path::ValueSpecFieldless<#params_name #ty_generics>;
-            type Partial = #t_partial_name #ty_generics;
-        }
-
-        #t_field_wise
-
-        #t_partial
-
-        #external_wrapper_types
-    }
-}
-
-fn impl_value_fieldless(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
+fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenStream {
     let (peace_params_path, peace_resources_path): (Path, Path) = ast
         .attrs
         .iter()
@@ -296,7 +202,22 @@ fn impl_value_fieldless(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
 
     let external_wrapper_types = ExternalType::external_wrapper_types(ast, &peace_params_path);
 
-    quote! {
+    let mut impl_value_tokens = proc_macro2::TokenStream::new();
+    match impl_mode {
+        ImplMode::Fieldwise => impl_value_tokens.extend(quote! {
+            impl #impl_generics #peace_params_path::Value
+            for #value_name #ty_generics
+            #where_clause
+            {
+                type Spec = #peace_params_path::ValueSpec<#value_name #ty_generics>;
+                type Partial = #t_partial_name #ty_generics;
+                type FieldWiseSpec = #t_field_wise_name #ty_generics;
+            }
+        }),
+        ImplMode::Fieldless => {}
+    }
+
+    impl_value_tokens.extend(quote! {
         impl #impl_generics #peace_params_path::ValueFieldless
         for #value_name #ty_generics
         #where_clause
@@ -310,7 +231,9 @@ fn impl_value_fieldless(ast: &mut DeriveInput) -> proc_macro2::TokenStream {
         #t_partial
 
         #external_wrapper_types
-    }
+    });
+
+    impl_value_tokens
 }
 
 /// Adds trait bounds on each of the type parameters.
@@ -545,4 +468,13 @@ fn t_field_wise_external(
     // ));
 
     t_field_wise
+}
+
+/// Whether to implement a fieldwise or fieldless spec.
+#[derive(Clone, Copy, Debug)]
+enum ImplMode {
+    /// Fields of the value type are known and accessible.
+    Fieldwise,
+    /// Fields of the value type are unknown or inaccessible.
+    Fieldless,
 }
