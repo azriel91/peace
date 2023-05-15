@@ -27,6 +27,7 @@ static STD_LIB_TYPES: &[&str] = &[
     #[cfg(not(target_arch = "wasm32"))]
     "OsString",
     "Option",
+    "Vec",
 ];
 
 /// Returns whether the type is annotated with `#[params(external)]`, which

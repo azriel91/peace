@@ -24,18 +24,33 @@ impl ExternalType {
         match &ast.data {
             syn::Data::Struct(data_struct) => {
                 let fields_iter = data_struct.fields.iter();
-                external_wrapper_types_impl!(parent_type_generics, fields_iter, peace_params_path)
+                let (_, external_wrapper_types) = external_wrapper_types_impl!(
+                    parent_type_generics,
+                    fields_iter,
+                    peace_params_path
+                );
+                external_wrapper_types
             }
             syn::Data::Enum(data_enum) => {
                 let fields_iter = data_enum
                     .variants
                     .iter()
                     .flat_map(|variant| variant.fields.iter());
-                external_wrapper_types_impl!(parent_type_generics, fields_iter, peace_params_path)
+                let (_, external_wrapper_types) = external_wrapper_types_impl!(
+                    parent_type_generics,
+                    fields_iter,
+                    peace_params_path
+                );
+                external_wrapper_types
             }
             syn::Data::Union(data_union) => {
                 let fields_iter = data_union.fields.named.iter();
-                external_wrapper_types_impl!(parent_type_generics, fields_iter, peace_params_path)
+                let (_, external_wrapper_types) = external_wrapper_types_impl!(
+                    parent_type_generics,
+                    fields_iter,
+                    peace_params_path
+                );
+                external_wrapper_types
             }
         }
     }
@@ -303,15 +318,22 @@ macro_rules! external_wrapper_types_impl {
                 }
             })
             .fold(
-                proc_macro2::TokenStream::new(),
-                |mut tokens, (wrapper_type, field_ty)| {
-                    tokens.extend(ExternalType::wrapper_and_related_types_gen(
-                        Some($parent_type_generics),
-                        $peace_params_path,
-                        &wrapper_type,
-                        field_ty,
-                    ));
-                    tokens
+                (
+                    std::collections::HashSet::new(),
+                    proc_macro2::TokenStream::new(),
+                ),
+                |(mut generated_types, mut tokens), (wrapper_type, field_ty)| {
+                    if !generated_types.contains(field_ty) {
+                        tokens.extend(ExternalType::wrapper_and_related_types_gen(
+                            Some($parent_type_generics),
+                            $peace_params_path,
+                            &wrapper_type,
+                            field_ty,
+                        ));
+
+                        generated_types.insert(field_ty.clone());
+                    }
+                    (generated_types, tokens)
                 },
             )
     };
