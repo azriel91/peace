@@ -216,9 +216,9 @@ impl ExternalType {
                         .map(|parent_ast| format!("{}", parent_ast.ident))
                         .unwrap_or_else(|| String::from(""));
                     let mut wrapper_type_name = format!("{prefix}{field_type_name}Wrapper");
-                    wrapper_type_name
-                        .get_mut(0..1)
-                        .map(|first_char| first_char.make_ascii_uppercase());
+                    if let Some(first_char) = wrapper_type_name.get_mut(0..1) {
+                        first_char.make_ascii_uppercase()
+                    }
                     Ident::new(&wrapper_type_name, Span::call_site())
                 };
 
@@ -266,9 +266,9 @@ impl ExternalType {
                         .unwrap_or_else(|| String::from(""));
                     let mut wrapper_partial_type_name =
                         format!("{prefix}{field_type_name}WrapperPartial");
-                    wrapper_partial_type_name
-                        .get_mut(0..1)
-                        .map(|first_char| first_char.make_ascii_uppercase());
+                    if let Some(first_char) = wrapper_partial_type_name.get_mut(0..1) {
+                        first_char.make_ascii_uppercase()
+                    }
                     Ident::new(&wrapper_partial_type_name, Span::call_site())
                 };
 

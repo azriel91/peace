@@ -50,7 +50,7 @@ where
     match fields {
         Fields::Named(fields_named) => {
             fields_named.named.iter_mut().for_each(|field| {
-                field.ty = f(&field);
+                field.ty = f(field);
 
                 // Don't copy across most attributes.
                 // The only attribute we copy across is `#[serde(bound = "..")]`
@@ -63,7 +63,7 @@ where
         }
         Fields::Unnamed(fields_unnamed) => {
             fields_unnamed.unnamed.iter_mut().for_each(|field| {
-                field.ty = f(&field);
+                field.ty = f(field);
 
                 // Don't copy across most attributes.
                 // The only attribute we copy across is `#[serde(bound = "..")]`

@@ -258,7 +258,7 @@ fn fields_map_to_value(
                                 Some(parent_ast),
                                 peace_params_path,
                                 field,
-                                &field_name,
+                                field_name,
                             );
 
                             tokens.extend(quote! {
