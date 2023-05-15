@@ -1,6 +1,6 @@
 use proc_macro2::Span;
 use syn::{
-    punctuated::Punctuated, DeriveInput, Field, Fields, Ident, ImplGenerics, LitInt, Path,
+    punctuated::Punctuated, Data, DeriveInput, Field, Fields, Ident, ImplGenerics, LitInt, Path,
     TypeGenerics, Variant, WhereClause,
 };
 
@@ -32,7 +32,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
     });
 
     let resolve_body = match &ast.data {
-        syn::Data::Struct(data_struct) => {
+        Data::Struct(data_struct) => {
             let fields = &data_struct.fields;
 
             struct_fields_resolve(
@@ -43,7 +43,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
                 ResolveMode::Full { params_name },
             )
         }
-        syn::Data::Enum(data_enum) => {
+        Data::Enum(data_enum) => {
             let variants = &data_enum.variants;
 
             variants_resolve(
@@ -54,7 +54,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
                 ResolveMode::Full { params_name },
             )
         }
-        syn::Data::Union(data_union) => {
+        Data::Union(data_union) => {
             let fields = Fields::from(data_union.fields.clone());
 
             struct_fields_resolve(
@@ -68,7 +68,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
     };
 
     let resolve_partial_body = match &ast.data {
-        syn::Data::Struct(data_struct) => {
+        Data::Struct(data_struct) => {
             let fields = &data_struct.fields;
 
             struct_fields_resolve(
@@ -81,7 +81,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
                 },
             )
         }
-        syn::Data::Enum(data_enum) => {
+        Data::Enum(data_enum) => {
             let variants = &data_enum.variants;
 
             variants_resolve(
@@ -94,7 +94,7 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
                 },
             )
         }
-        syn::Data::Union(data_union) => {
+        Data::Union(data_union) => {
             let fields = Fields::from(data_union.fields.clone());
 
             struct_fields_resolve(
