@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use derivative::Derivative;
-use peace::params::Value;
+use peace::params::ValueSpec;
 use serde::{Deserialize, Serialize};
 
 /// S3Bucket item parameters.
@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// * `Id`: A zero-sized type used to distinguish different S3 bucket parameters
 ///   from each other.
-#[derive(Derivative, Value, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Derivative, ValueSpec, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
 #[serde(bound = "")]
 pub struct S3BucketParams<Id> {

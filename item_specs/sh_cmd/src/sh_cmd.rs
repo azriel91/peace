@@ -1,11 +1,11 @@
 use std::{ffi::OsString, fmt};
 
-use peace::params::Value;
+use peace::params::ValueSpec;
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 
 /// Shell command to execute.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, Value)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, ValueSpec)]
 pub struct ShCmd {
     /// Command to run.
     program: OsString,

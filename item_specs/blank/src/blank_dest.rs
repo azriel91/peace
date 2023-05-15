@@ -1,10 +1,10 @@
 use std::fmt;
 
-use peace::params::Value;
+use peace::params::ValueSpec;
 use serde::{Deserialize, Serialize};
 
 /// Destination for blank state.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, Value)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, ValueSpec)]
 pub struct BlankDest(pub Option<u32>);
 
 impl fmt::Display for BlankDest {

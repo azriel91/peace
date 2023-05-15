@@ -43,9 +43,9 @@ mod type_gen;
 mod type_gen_external;
 mod util;
 
-/// Used to `#[derive]` the `Params` and `Value` traits.
+/// Used to `#[derive]` the `ValueSpec` and `ValueSpecRt` traits.
 ///
-/// For regular usage, use `#[derive(Params)]`
+/// For regular usage, use `#[derive(ValueSpec)]`
 ///
 /// For peace crates, also add the `#[peace_internal]` attribute, which
 /// references the `peace_params` crate instead of the `peace::params`
@@ -67,7 +67,7 @@ mod util;
 /// * `crate_internal`: Type level attribute indicating the `peace_params` crate
 ///   is referenced by `crate` instead of the default `peace::params`.
 ///
-/// * `params(external)`: Used as either of:
+/// * `value_spec(fieldless)`: Used as either of:
 ///
 ///     - Type level attribute indicating fields are not known, and so
 ///       `ParamsPartial` will instead hold an `Option<Params>` field.
@@ -78,21 +78,21 @@ mod util;
 /// * `default`: Enum variant attribute to indicate which variant to instantiate
 ///   for `ParamsPartial::default()`.
 #[proc_macro_derive(
-    Value,
+    ValueSpec,
     attributes(peace_internal, crate_internal, value_spec, default, serde)
 )]
-pub fn params_derive(input: TokenStream) -> TokenStream {
-    let mut ast =
-        syn::parse(input).expect("`Value` derive: Failed to parse item as struct, enum, or union.");
+pub fn value_spec(input: TokenStream) -> TokenStream {
+    let mut ast = syn::parse(input)
+        .expect("`ValueSpec` derive: Failed to parse item as struct, enum, or union.");
 
     let gen = impl_value(&mut ast);
 
     gen.into()
 }
 
-/// Used to `#[derive]` the `Value` trait.
+/// Used to `#[derive]` the `ValueSpecFieldless` and `ValueSpecRt` traits.
 ///
-/// For regular usage, use `#[derive(Value)]`
+/// For regular usage, use `#[derive(ValueSpecFieldless)]`
 ///
 /// For peace crates, also add the `#[peace_internal]` attribute, which
 /// references the `peace_params` crate instead of the `peace::params`

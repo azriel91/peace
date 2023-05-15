@@ -4,7 +4,7 @@ use std::{
 };
 
 use derivative::Derivative;
-use peace::params::Value;
+use peace::params::ValueSpec;
 use serde::{Deserialize, Serialize};
 
 /// Tar extraction parameters.
@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 //
 // * keep or remove unknown files
 // * force re-extraction
-#[derive(Derivative, Value, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Derivative, ValueSpec, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
 #[serde(bound = "")]
 pub struct TarXParams<Id> {

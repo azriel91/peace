@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use peace::params::Value;
+use peace::params::ValueSpec;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
@@ -17,7 +17,7 @@ use url::Url;
 ///
 /// * `Id`: A zero-sized type used to distinguish different file download
 ///   parameters from each other.
-#[derive(Value, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(ValueSpec, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(bound = "")]
 pub struct FileDownloadParams<Id> {
     /// Url of the file to download.
