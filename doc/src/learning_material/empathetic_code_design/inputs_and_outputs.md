@@ -34,7 +34,7 @@ digraph {
 
     subgraph cluster_a {
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <file<br/>download>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>download>]
 
         subgraph cluster_a_params {
             a_params_src [
@@ -96,7 +96,7 @@ digraph {
 
     subgraph cluster_b {
         b [label = <<b>b</b>>]
-        b_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <server<br/>instance>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>instance>]
 
         subgraph cluster_b_params {
             b_params_image [
@@ -162,7 +162,7 @@ digraph {
 
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
 
         subgraph cluster_c_params {
             c_params_src_path [

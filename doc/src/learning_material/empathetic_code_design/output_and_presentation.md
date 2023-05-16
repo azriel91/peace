@@ -79,20 +79,20 @@ digraph {
     subgraph cluster_a {
         node [color="#449966" fillcolor="#99dd99"]
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <file<br/>download>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>download>]
         a -> a_text [style = invis]
     }
 
     subgraph cluster_b {
         node [color="#446699" fillcolor="#99aaee"]
         b [label = <<b>b</b>> class="item_b_in_progress" style="dashed,filled"]
-        b_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <server<br/>instance>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>instance>]
         b -> b_text [style = invis]
     }
 
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
         c -> c_text [style = invis]
     }
 
