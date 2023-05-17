@@ -121,7 +121,7 @@ mod struct_params {
     fn field_wise_from_field_wise_builder() {
         let field_wise = StructParams::field_wise_spec()
             .with_src(String::from("a"))
-            .with_dest(String::from("b"))
+            .with_dest_from_map(|_: &u32| String::from("b"))
             .build();
 
         assert!(matches!(

@@ -344,17 +344,6 @@ pub fn value_spec_ty_path(
     }
 }
 
-/// Returns the value spec field or its wrapper, e.g. `MyField` or
-/// `MyFieldWrapper` if it is an external type.
-pub fn field_or_wrapper_ty(parent_ast: Option<&DeriveInput>, field: &Field) -> Type {
-    let field_ty = &field.ty;
-    if is_tagged_fieldless(&field.attrs) {
-        ExternalType::wrapper_type(parent_ast, field_ty)
-    } else {
-        field_ty.clone()
-    }
-}
-
 /// Returns the type of a value spec field, e.g. `ValueSpecFieldless<MyValue>`.
 pub fn field_spec_ty(
     parent_ast: Option<&DeriveInput>,

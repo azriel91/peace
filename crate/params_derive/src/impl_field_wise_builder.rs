@@ -3,10 +3,9 @@ use quote::ToTokens;
 use syn::{Data, DeriveInput, Fields, Ident, ImplGenerics, Path, TypeGenerics, WhereClause};
 
 use crate::util::{
-    field_or_wrapper_ty, field_spec_ty_deconstruct, field_spec_ty_path, fields_deconstruct,
-    fields_vars_map, is_phantom_data, t_value_and_try_from_partial_bounds,
-    tuple_ident_from_field_index, tuple_index_from_field_index, value_spec_ty, value_spec_ty_path,
-    ImplMode,
+    field_spec_ty_deconstruct, field_spec_ty_path, fields_deconstruct, fields_vars_map,
+    is_phantom_data, t_value_and_try_from_partial_bounds, tuple_ident_from_field_index,
+    tuple_index_from_field_index, value_spec_ty, value_spec_ty_path, ImplMode,
 };
 
 /// `impl MyParamsFieldWiseBuilder`, so that Peace can resolve the params
@@ -101,8 +100,6 @@ pub fn builder_field_methods(
             let field_spec_ty_deconstruct =
                 field_spec_ty_deconstruct(Some(parent_ast), peace_params_path, field, &field_name);
 
-            let field_or_wrapper_ty = field_or_wrapper_ty(Some(parent_ast), field);
-
             // Specifies how to determine the value of this field.
             //
             // # Example
@@ -132,9 +129,9 @@ pub fn builder_field_methods(
 
                 pub fn #with_field_name_from_map<F, Args>(mut self, f: F) -> Self
                 where
-                    #peace_params_path::MappingFnImpl<#field_or_wrapper_ty, F, Args>:
+                    #peace_params_path::MappingFnImpl<#field_ty, F, Args>:
                         From<(Option<String>, F)>
-                        + #peace_params_path::MappingFn<Output = #field_or_wrapper_ty>
+                        + #peace_params_path::MappingFn<Output = #field_ty>
                 {
                     self.#self_field_name = Some(#field_spec_ty_path::from_map(
                         Some(String::from(stringify!(#field_name))),
