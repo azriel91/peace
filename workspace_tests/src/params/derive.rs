@@ -118,6 +118,24 @@ mod struct_params {
     }
 
     #[test]
+    fn field_wise_from_field_wise_builder() {
+        let field_wise = StructParams::field_wise_spec()
+            .with_src(String::from("a"))
+            .with_dest(String::from("b"))
+            .build();
+
+        assert!(matches!(
+            field_wise,
+            ValueSpec::FieldWise(StructParamsFieldWise {
+                src: ValueSpecFieldless::Value(src_value),
+                dest: ValueSpecFieldless::Value(dest_value),
+            })
+            if src_value == "a"
+            && dest_value == "b"
+        ));
+    }
+
+    #[test]
     fn spec_debug() {
         assert_eq!(
             r#"StructParamsFieldWise { src: Value("a"), dest: Value("b") }"#,
@@ -1376,7 +1394,6 @@ mod struct_recursive_value_no_bounds {
         /// Inner u32
         inner: u32,
         /// Marker for unique parameters type.
-        #[serde(bound = "")]
         marker: PhantomData<Id>,
     }
 

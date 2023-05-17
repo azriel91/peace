@@ -7,6 +7,7 @@ extern crate quote;
 #[macro_use]
 extern crate syn;
 
+use fields_map::fields_to_optional_value_spec;
 use proc_macro::TokenStream;
 
 use syn::{
@@ -19,6 +20,7 @@ use crate::{
     external_type::ExternalType,
     fields_map::{fields_to_optional, fields_to_value_spec},
     impl_default::impl_default,
+    impl_field_wise_builder::impl_field_wise_builder,
     impl_field_wise_spec_rt_for_field_wise::impl_field_wise_spec_rt_for_field_wise,
     impl_field_wise_spec_rt_for_field_wise_external::impl_field_wise_spec_rt_for_field_wise_external,
     impl_from_params_for_params_field_wise::impl_from_params_for_params_field_wise,
@@ -27,12 +29,13 @@ use crate::{
     impl_value_spec_rt_for_field_wise::impl_value_spec_rt_for_field_wise,
     type_gen::TypeGen,
     type_gen_external::type_gen_external,
-    util::{is_fieldless_type, serde_bounds_for_type_params},
+    util::{is_fieldless_type, serde_bounds_for_type_params, ImplMode},
 };
 
 mod external_type;
 mod fields_map;
 mod impl_default;
+mod impl_field_wise_builder;
 mod impl_field_wise_spec_rt_for_field_wise;
 mod impl_field_wise_spec_rt_for_field_wise_external;
 mod impl_from_params_for_params_field_wise;
@@ -115,7 +118,7 @@ pub fn value_spec(input: TokenStream) -> TokenStream {
     ValueSpecFieldless,
     attributes(peace_internal, crate_internal, value_spec, default)
 )]
-pub fn value_ext(input: TokenStream) -> TokenStream {
+pub fn value_spec_fieldless(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
         .expect("`ValueSpecFieldless` derive: Failed to parse item as struct, enum, or union.");
 
@@ -168,36 +171,53 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
         Ident::new(&t_field_wise_name, ast.ident.span())
     };
 
-    let (t_partial, t_field_wise) = if is_fieldless_type(ast) {
-        let ty_generics = &generics_split.1;
-        let value_ty: Type = parse_quote!(#value_name #ty_generics);
-        let t_partial = t_partial_external(ast, &generics_split, &value_ty, &t_partial_name);
-        let t_field_wise = t_field_wise_external(
-            ast,
-            &generics_split,
-            &peace_params_path,
-            &peace_resources_path,
-            &value_ty,
-            value_name,
-            &t_field_wise_name,
-            &t_partial_name,
-        );
-
-        (t_partial, t_field_wise)
-    } else {
-        let t_partial = t_partial(ast, &generics_split, value_name, &t_partial_name);
-        let t_field_wise = t_field_wise(
-            ast,
-            &generics_split,
-            &peace_params_path,
-            &peace_resources_path,
-            value_name,
-            &t_field_wise_name,
-            &t_partial_name,
-        );
-
-        (t_partial, t_field_wise)
+    // MyValue -> MyValueFieldWiseBuilder
+    let t_field_wise_builder_name = {
+        let mut t_field_wise_builder_name = ast.ident.to_string();
+        t_field_wise_builder_name.push_str("FieldWiseBuilder");
+        Ident::new(&t_field_wise_builder_name, ast.ident.span())
     };
+
+    let (t_partial, t_field_wise, t_field_wise_builder) =
+        if is_fieldless_type(ast) || impl_mode == ImplMode::Fieldless {
+            let ty_generics = &generics_split.1;
+            let value_ty: Type = parse_quote!(#value_name #ty_generics);
+            let t_partial = t_partial_external(ast, &generics_split, &value_ty, &t_partial_name);
+            let t_field_wise = t_field_wise_external(
+                ast,
+                &generics_split,
+                &peace_params_path,
+                &peace_resources_path,
+                &value_ty,
+                value_name,
+                &t_field_wise_name,
+                &t_partial_name,
+            );
+
+            (t_partial, t_field_wise, None)
+        } else {
+            let t_partial = t_partial(ast, &generics_split, value_name, &t_partial_name);
+            let t_field_wise = t_field_wise(
+                ast,
+                &generics_split,
+                &peace_params_path,
+                &peace_resources_path,
+                value_name,
+                &t_field_wise_name,
+                &t_partial_name,
+            );
+
+            let t_field_wise_builder = t_field_wise_builder(
+                ast,
+                &generics_split,
+                &peace_params_path,
+                &t_field_wise_name,
+                &t_field_wise_builder_name,
+                impl_mode,
+            );
+
+            (t_partial, t_field_wise, Some(t_field_wise_builder))
+        };
     let (impl_generics, ty_generics, where_clause) = &generics_split;
 
     let external_wrapper_types = ExternalType::external_wrapper_types(ast, &peace_params_path);
@@ -212,6 +232,11 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
                 type Spec = #peace_params_path::ValueSpec<#value_name #ty_generics>;
                 type Partial = #t_partial_name #ty_generics;
                 type FieldWiseSpec = #t_field_wise_name #ty_generics;
+                type FieldWiseBuilder = #t_field_wise_builder_name #ty_generics;
+
+                fn field_wise_spec() -> Self::FieldWiseBuilder {
+                    Self::FieldWiseBuilder::default()
+                }
             }
         }),
         ImplMode::Fieldless => {}
@@ -226,9 +251,11 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
             type Partial = #t_partial_name #ty_generics;
         }
 
+        #t_partial
+
         #t_field_wise
 
-        #t_partial
+        #t_field_wise_builder
 
         #external_wrapper_types
     });
@@ -298,6 +325,7 @@ fn t_partial(
             },
             parse_quote!(#[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]),
         ],
+        true,
     );
 
     t_partial.extend(impl_try_from_params_partial_for_params(
@@ -383,6 +411,7 @@ fn t_field_wise(
             // the `Clone` and `Debug` bounds.
             parse_quote!(#[derive(serde::Serialize, serde::Deserialize)]),
         ],
+        true,
     );
 
     t_field_wise.extend(impl_field_wise_spec_rt_for_field_wise(
@@ -470,11 +499,46 @@ fn t_field_wise_external(
     t_field_wise
 }
 
-/// Whether to implement a fieldwise or fieldless spec.
-#[derive(Clone, Copy, Debug)]
-enum ImplMode {
-    /// Fields of the value type are known and accessible.
-    Fieldwise,
-    /// Fields of the value type are unknown or inaccessible.
-    Fieldless,
+/// Generates something like the following:
+///
+/// ```rust,ignore
+/// struct MyParamsSpecBuilder {
+///     src: Option<peace::params::ValueSpec<PathBuf>>,
+///     dest_ip: Option<peace::params::ValueSpec<IpAddr>>,
+///     dest_path: Option<peace::params::ValueSpec<PathBuf>>,
+/// }
+/// ```
+fn t_field_wise_builder(
+    ast: &DeriveInput,
+    generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
+    peace_params_path: &Path,
+    value_field_wise_name: &Ident,
+    t_field_wise_builder_name: &Ident,
+    impl_mode: ImplMode,
+) -> proc_macro2::TokenStream {
+    let mut t_field_wise_builder = TypeGen::gen_from_value_type(
+        ast,
+        generics_split,
+        t_field_wise_builder_name,
+        |fields| fields_to_optional_value_spec(Some(ast), fields, peace_params_path),
+        &[parse_quote! {
+            #[doc="\
+                Builder for specification of how to look up the values for an item spec's \n\
+                parameters.\
+            "]
+        }],
+        false,
+    );
+
+    t_field_wise_builder.extend(impl_default(ast, generics_split, t_field_wise_builder_name));
+
+    t_field_wise_builder.extend(impl_field_wise_builder(
+        ast,
+        generics_split,
+        peace_params_path,
+        value_field_wise_name,
+        t_field_wise_builder_name,
+        impl_mode,
+    ));
+    t_field_wise_builder
 }

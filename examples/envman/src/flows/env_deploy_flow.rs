@@ -153,7 +153,9 @@ impl EnvDeployFlow {
         let iam_role_params_spec =
             ValueSpec::FieldWise(IamRoleParamsFieldWise::<WebAppFileId>::new(
                 ValueSpecFieldless::Value(iam_role_name),
-                ValueSpecFieldless::Value(path.clone()),
+                ValueSpecFieldless::from_map(None, |_iam_policy_state: &IamPolicyState| {
+                    path.clone()
+                }),
                 ValueSpecFieldless::from_map(
                     Some(String::from("managed_policy_arn")),
                     |iam_policy_state: &IamPolicyState| {

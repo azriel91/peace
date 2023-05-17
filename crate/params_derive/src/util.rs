@@ -2,7 +2,7 @@ use proc_macro2::Span;
 use syn::{
     meta::ParseNestedMeta, punctuated::Punctuated, AngleBracketedGenericArguments, Attribute,
     DeriveInput, Field, Fields, GenericArgument, GenericParam, Ident, LitInt, Path, PathArguments,
-    PathSegment, Type, TypePath, Variant, WherePredicate,
+    PathSegment, Type, TypeGenerics, TypePath, Variant, WherePredicate,
 };
 
 use crate::external_type::ExternalType;
@@ -55,7 +55,7 @@ pub fn is_fieldless_type(ast: &DeriveInput) -> bool {
 ///
 /// Part of #119 was an attempt to implement recursive value specs. However,
 /// implementation wise the rabbit hole kept crawling deeper and deeper.
-pub fn _is_external_field(field: &Field) -> bool {
+pub fn _is_fieldless_field(field: &Field) -> bool {
     _is_known_fieldless_type_spec(&field.ty) || is_tagged_fieldless(&field.attrs)
 }
 
@@ -312,6 +312,49 @@ pub fn t_value_and_try_from_partial_bounds<'f>(
         })
 }
 
+/// Returns the value spec type for a value, e.g. `ValueSpec<MyValue>` or
+/// `ValueSpecFieldless<String>`.
+pub fn value_spec_ty(
+    ast: &DeriveInput,
+    ty_generics: &TypeGenerics,
+    peace_params_path: &Path,
+    impl_mode: ImplMode,
+) -> proc_macro2::TokenStream {
+    let value_name = &ast.ident;
+    if is_fieldless_type(ast) || impl_mode == ImplMode::Fieldless {
+        quote!(#peace_params_path::ValueSpecFieldless<#value_name #ty_generics>)
+    } else {
+        quote!(#peace_params_path::ValueSpec<#value_name #ty_generics>)
+    }
+}
+
+/// Returns the value spec type for a value, e.g. `ValueSpec::<MyValue>` or
+/// `ValueSpecFieldless::<String>`.
+pub fn value_spec_ty_path(
+    ast: &DeriveInput,
+    ty_generics: &TypeGenerics,
+    peace_params_path: &Path,
+    impl_mode: ImplMode,
+) -> proc_macro2::TokenStream {
+    let value_name = &ast.ident;
+    if is_fieldless_type(ast) || impl_mode == ImplMode::Fieldless {
+        quote!(#peace_params_path::ValueSpecFieldless::<#value_name #ty_generics>)
+    } else {
+        quote!(#peace_params_path::ValueSpec::<#value_name #ty_generics>)
+    }
+}
+
+/// Returns the value spec field or its wrapper, e.g. `MyField` or
+/// `MyFieldWrapper` if it is an external type.
+pub fn field_or_wrapper_ty(parent_ast: Option<&DeriveInput>, field: &Field) -> Type {
+    let field_ty = &field.ty;
+    if is_tagged_fieldless(&field.attrs) {
+        ExternalType::wrapper_type(parent_ast, field_ty)
+    } else {
+        field_ty.clone()
+    }
+}
+
 /// Returns the type of a value spec field, e.g. `ValueSpecFieldless<MyValue>`.
 pub fn field_spec_ty(
     parent_ast: Option<&DeriveInput>,
@@ -344,7 +387,8 @@ pub fn field_spec_ty_path(
 }
 
 /// Returns the type of a value spec field, e.g.
-/// `ValueSpecFieldless::<MyValue>`.
+/// `ValueSpecFieldless::<MyValue>(#field_name)` or
+/// `ValueSpecFieldless::<MyValue>(FieldTypeWrapper(#field_name))`.
 pub fn field_spec_ty_deconstruct(
     parent_ast: Option<&DeriveInput>,
     peace_params_path: &Path,
@@ -457,6 +501,30 @@ fn fields_deconstruct_retain_map(
         .collect::<Vec<proc_macro2::TokenStream>>()
 }
 
+/// Returns `let field_name = #expr;` where `expr` is determined by the provided
+/// function.
+///
+/// `PhantomData` fields are skipped.
+pub fn fields_vars_map<'f>(
+    fields: &'f Fields,
+    fn_expr: impl Fn(&Field, &Ident) -> proc_macro2::TokenStream + 'f,
+) -> impl Iterator<Item = proc_macro2::TokenStream> + 'f {
+    fields
+        .iter()
+        .enumerate()
+        .filter(|(_field_index, field)| !is_phantom_data(&field.ty))
+        .map(move |(field_index, field)| {
+            if let Some(field_ident) = field.ident.as_ref() {
+                let expr = fn_expr(field, field_ident);
+                quote!(let #field_ident = #expr;)
+            } else {
+                let field_ident = tuple_ident_from_field_index(field_index);
+                let expr = fn_expr(field, &field_ident);
+                quote!(let #field_ident = #expr;)
+            }
+        })
+}
+
 /// Generates an enum variant match arm.
 ///
 /// # Parameters
@@ -507,13 +575,15 @@ pub fn variant_match_arm(
 /// * `Vec<T>`: returns `&[T]`.
 /// * `String`: returns `&str`.
 pub fn field_ty_to_ref_ty(field_ty: &Type, field_var: &proc_macro2::TokenStream) -> RefTypeAndExpr {
-    if let Some((type_path, inner_args)) = type_path_simple(field_ty) {
+    if let Some((type_path, inner_args)) = type_path_simple_and_args(field_ty) {
         let type_name = &type_path.ident;
         if type_name == "Option" {
             if let Some(inner_args) = inner_args {
                 if inner_args.args.len() == 1 {
                     if let Some(GenericArgument::Type(inner_type)) = inner_args.args.first() {
-                        if let Some((inner_type_path, _inner_args)) = type_path_simple(inner_type) {
+                        if let Some((inner_type_path, _inner_args)) =
+                            type_path_simple_and_args(inner_type)
+                        {
                             let inner_type_name = &inner_type_path.ident;
                             if inner_type_name == "String" {
                                 return RefTypeAndExpr {
@@ -576,7 +646,9 @@ pub fn field_ty_to_ref_ty(field_ty: &Type, field_var: &proc_macro2::TokenStream)
     }
 }
 
-fn type_path_simple(ty: &Type) -> Option<(&PathSegment, Option<&AngleBracketedGenericArguments>)> {
+pub fn type_path_simple_and_args(
+    ty: &Type,
+) -> Option<(&PathSegment, Option<&AngleBracketedGenericArguments>)> {
     if let Type::Path(type_path) = ty {
         if let Some(segment) = type_path.path.segments.last() {
             let arguments = if let PathArguments::AngleBracketed(inner_args) = &segment.arguments {
@@ -603,4 +675,13 @@ pub struct RefTypeAndExpr {
     pub ref_expr: proc_macro2::TokenStream,
     /// e.g. `&mut field`, `field.as_mut()`
     pub ref_mut_expr: proc_macro2::TokenStream,
+}
+
+/// Whether to implement a fieldwise or fieldless spec.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ImplMode {
+    /// Fields of the value type are known and accessible.
+    Fieldwise,
+    /// Fields of the value type are unknown or inaccessible.
+    Fieldless,
 }

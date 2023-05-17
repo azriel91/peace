@@ -30,20 +30,26 @@ impl TypeGen {
         type_name: &Ident,
         fields_map: F,
         attrs_to_add: &[Attribute],
+        generated_type_is_serializable: bool,
     ) -> proc_macro2::TokenStream
     where
         F: Fn(&mut Fields),
     {
         let (impl_generics, ty_generics, where_clause) = generics_split;
-        let mut serde_bound_attrs = ast
-            .attrs
-            .iter()
-            .filter(|attr| is_serde_bound_attr(attr))
-            .collect::<Vec<&Attribute>>();
         let serde_bound_empty = parse_quote!(#[serde(bound = "")]);
-        if serde_bound_attrs.is_empty() {
-            serde_bound_attrs.push(&serde_bound_empty);
-        }
+        let serde_bound_attrs = if generated_type_is_serializable {
+            let mut serde_bound_attrs = ast
+                .attrs
+                .iter()
+                .filter(|attr| is_serde_bound_attr(attr))
+                .collect::<Vec<&Attribute>>();
+            if serde_bound_attrs.is_empty() {
+                serde_bound_attrs.push(&serde_bound_empty);
+            }
+            serde_bound_attrs
+        } else {
+            Vec::new()
+        };
 
         match &ast.data {
             syn::Data::Struct(data_struct) => {

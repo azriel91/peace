@@ -43,6 +43,33 @@ pub fn fields_to_value_spec(
     })
 }
 
+/// Maps each field from `MyType` to `Option<ValueSpec<MyType>>`.
+///
+/// If the type is marked with `#[value_spec(fieldless)]`, then it is wrapped
+/// as `Option<ValueSpec<MyTypeWrapper>>`.
+///
+/// Fieldless types -- stdlib types or types annotated with
+/// `#[value_spec(fieldless)]` -- are wrapped as:
+///
+/// ```rust,ignore
+/// `Option<ValueSpecFieldless<MyTypeWrapper>>`.
+/// ```
+pub fn fields_to_optional_value_spec(
+    parent_ast: Option<&DeriveInput>,
+    fields: &mut Fields,
+    peace_params_path: &Path,
+) {
+    fields_map(fields, |field| {
+        let field_ty = &field.ty;
+        if is_phantom_data(field_ty) {
+            field_ty.clone()
+        } else {
+            let field_spec_ty = field_spec_ty(parent_ast, peace_params_path, field);
+            parse_quote!(Option<#field_spec_ty>)
+        }
+    })
+}
+
 fn fields_map<F>(fields: &mut Fields, f: F)
 where
     F: Fn(&Field) -> Type,
