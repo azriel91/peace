@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use dyn_clone::DynClone;
 use peace_core::{ApplyCheck, ItemSpecId};
 use peace_data::Data;
-use peace_params::{Value, ValueSpec};
+use peace_params::{Params, ValueSpec};
 use peace_resources::{resources::ts::Empty, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -114,7 +114,7 @@ pub trait ItemSpec: DynClone {
     ///
     /// Peace will automatically save and load these into `Resources` when a
     /// command context is built.
-    type Params<'exec>: Value<Spec = ValueSpec<Self::Params<'exec>>>
+    type Params<'exec>: Params<Spec = ValueSpec<Self::Params<'exec>>>
         + Clone
         + Debug
         + Serialize
@@ -177,7 +177,7 @@ pub trait ItemSpec: DynClone {
     /// an error.
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: &<Self::Params<'_> as Value>::Partial,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, Self::Error>;
 
@@ -198,7 +198,7 @@ pub trait ItemSpec: DynClone {
     /// determine its content hash, instead of returning an error.
     async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
-        params_partial: &<Self::Params<'_> as Value>::Partial,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, Self::Error>;
 
@@ -239,7 +239,7 @@ pub trait ItemSpec: DynClone {
     /// * For a web application service item spec, the desired state could be
     ///   the application version changing from 1 to 2.
     async fn state_diff(
-        params_partial: &<Self::Params<'_> as Value>::Partial,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
         state_a: &Self::State,
         state_b: &Self::State,
@@ -254,7 +254,7 @@ pub trait ItemSpec: DynClone {
     /// user when they want to see what would be cleaned up by the clean
     /// command.
     async fn state_clean(
-        params_partial: &<Self::Params<'_> as Value>::Partial,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
     ) -> Result<Self::State, Self::Error>;
 

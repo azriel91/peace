@@ -225,7 +225,7 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
     let mut impl_value_tokens = proc_macro2::TokenStream::new();
     match impl_mode {
         ImplMode::Fieldwise => impl_value_tokens.extend(quote! {
-            impl #impl_generics #peace_params_path::Value
+            impl #impl_generics #peace_params_path::Params
             for #value_name #ty_generics
             #where_clause
             {

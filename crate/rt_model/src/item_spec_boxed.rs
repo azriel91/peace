@@ -17,7 +17,7 @@ use std::{
 
 use fn_graph::{DataAccessDyn, TypeIds};
 use peace_cfg::ItemSpec;
-use peace_params::Value;
+use peace_params::Params;
 
 use crate::{ItemSpecRt, ItemSpecWrapper};
 
@@ -65,8 +65,8 @@ where
         + From<crate::Error>
         + 'static,
     for<'params> <IS as ItemSpec>::Params<'params>:
-        TryFrom<<<IS as ItemSpec>::Params<'params> as Value>::Partial>,
-    for<'params> <IS::Params<'params> as Value>::Partial: From<IS::Params<'params>>,
+        TryFrom<<<IS as ItemSpec>::Params<'params> as Params>::Partial>,
+    for<'params> <IS::Params<'params> as Params>::Partial: From<IS::Params<'params>>,
 {
     fn from(item_spec: IS) -> Self {
         Self(Box::new(ItemSpecWrapper::from(item_spec)))

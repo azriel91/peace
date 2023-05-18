@@ -4,7 +4,7 @@ use aws_sdk_iam::error::SdkError;
 use aws_sdk_s3::operation::head_object::HeadObjectError;
 use peace::{
     cfg::{state::Generated, FnCtx},
-    params::Value,
+    params::Params,
 };
 
 use crate::item_specs::peace_aws_s3_object::{
@@ -24,7 +24,7 @@ where
 {
     pub async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: &<S3ObjectParams<Id> as Value>::Partial,
+        params_partial: &<S3ObjectParams<Id> as Params>::Partial,
         data: S3ObjectData<'_, Id>,
     ) -> Result<Option<S3ObjectState>, S3ObjectError> {
         let bucket_name = params_partial.bucket_name();

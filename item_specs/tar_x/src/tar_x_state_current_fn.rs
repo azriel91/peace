@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, path::Path};
 
-use peace::{cfg::FnCtx, params::Value};
+use peace::{cfg::FnCtx, params::Params};
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError, TarXParams};
 
@@ -14,7 +14,7 @@ where
 {
     pub async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: &<TarXParams<Id> as Value>::Partial,
+        params_partial: &<TarXParams<Id> as Params>::Partial,
         data: TarXData<'_, Id>,
     ) -> Result<Option<FileMetadatas>, TarXError> {
         #[cfg(not(target_arch = "wasm32"))]

@@ -3,7 +3,7 @@ mod unit {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Value, ValueSpec};
+    use peace::params::{Params, ValueSpec};
 
     #[derive(Clone, Debug, ValueSpec, Serialize, Deserialize)]
     pub struct UnitParams;
@@ -69,7 +69,7 @@ mod struct_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
 
     #[derive(Clone, Debug, ValueSpec, Serialize, Deserialize)]
     pub struct StructParams {
@@ -242,7 +242,7 @@ mod struct_with_type_params {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
 
     #[derive(Derivative, ValueSpec, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
@@ -418,7 +418,7 @@ mod tuple_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
 
     #[derive(Clone, Debug, ValueSpec, Serialize, Deserialize)]
     pub struct TupleParams(
@@ -551,7 +551,7 @@ mod tuple_with_type_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
 
     #[derive(Clone, Debug, ValueSpec, Serialize, Deserialize)]
     pub struct TupleWithTypeParams<Id>(String, String, PhantomData<Id>)
@@ -708,7 +708,7 @@ mod enum_params {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
 
     #[derive(Derivative, ValueSpec, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
@@ -1201,7 +1201,7 @@ mod struct_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Value, ValueFieldless, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ValueFieldless, ValueSpec, ValueSpecFieldless};
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ValueSpecFieldless)]
     pub struct InnerValue<T>(T)
@@ -1385,7 +1385,7 @@ mod struct_recursive_value_no_bounds {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
 
     #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, ValueSpec)]
     #[derivative(Clone, Debug)]
@@ -1566,7 +1566,7 @@ mod enum_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Value, ValueFieldless, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ValueFieldless, ValueSpec, ValueSpecFieldless};
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ValueSpecFieldless)]
     pub enum InnerValue<T>
@@ -1827,7 +1827,7 @@ mod enum_recursive_marker_no_bounds {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
 
     #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, ValueSpec)]
     #[derivative(Clone(bound = ""), Debug(bound = ""))]
@@ -2085,7 +2085,7 @@ mod external_fields {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Value, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
 
     // Note: no `Value` derive.
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

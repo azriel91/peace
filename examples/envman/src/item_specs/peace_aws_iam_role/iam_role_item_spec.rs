@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use peace::{
     cfg::{async_trait, ApplyCheck, FnCtx, ItemSpec, ItemSpecId},
-    params::Value,
+    params::Params,
     resources::{resources::ts::Empty, Resources},
 };
 
@@ -79,7 +79,7 @@ where
 
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: &<Self::Params<'_> as Value>::Partial,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: IamRoleData<'_, Id>,
     ) -> Result<Option<Self::State>, IamRoleError> {
         IamRoleStateCurrentFn::try_state_current(fn_ctx, params_partial, data).await
@@ -95,7 +95,7 @@ where
 
     async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
-        params_partial: &<Self::Params<'_> as Value>::Partial,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         data: IamRoleData<'_, Id>,
     ) -> Result<Option<Self::State>, IamRoleError> {
         IamRoleStateDesiredFn::try_state_desired(fn_ctx, params_partial, data).await
@@ -110,7 +110,7 @@ where
     }
 
     async fn state_diff(
-        _params_partial: &<Self::Params<'_> as Value>::Partial,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
         state_current: &Self::State,
         state_desired: &Self::State,
@@ -119,7 +119,7 @@ where
     }
 
     async fn state_clean(
-        _params_partial: &<Self::Params<'_> as Value>::Partial,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> Result<Self::State, IamRoleError> {
         Ok(IamRoleState::None)

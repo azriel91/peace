@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use chrono::{DateTime, NaiveDateTime, Utc};
 use peace::{
     cfg::{state::Timestamped, FnCtx},
-    params::Value,
+    params::Params,
 };
 
 use crate::item_specs::peace_aws_s3_bucket::{
@@ -23,7 +23,7 @@ where
 {
     pub async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        params_partial: &<S3BucketParams<Id> as Value>::Partial,
+        params_partial: &<S3BucketParams<Id> as Params>::Partial,
         data: S3BucketData<'_, Id>,
     ) -> Result<Option<S3BucketState>, S3BucketError> {
         if let Some(name) = params_partial.name() {

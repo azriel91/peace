@@ -4,7 +4,7 @@ use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
-    FieldWiseSpecRt, MappingFn, MappingFnImpl, ParamsResolveError, Value, ValueResolutionCtx,
+    FieldWiseSpecRt, MappingFn, MappingFnImpl, Params, ParamsResolveError, ValueResolutionCtx,
     ValueSpecRt,
 };
 
@@ -31,7 +31,7 @@ use crate::{
 #[serde(from = "crate::ValueSpecDe<T>")]
 pub enum ValueSpec<T>
 where
-    T: Value + Clone + Debug + Send + Sync + 'static,
+    T: Params + Clone + Debug + Send + Sync + 'static,
 {
     /// Loads a stored value spec.
     ///
@@ -89,7 +89,7 @@ where
 
 impl<T> ValueSpec<T>
 where
-    T: Value + Clone + Debug + Send + Sync + 'static,
+    T: Params + Clone + Debug + Send + Sync + 'static,
 {
     pub fn from_map<F, Args>(field_name: Option<String>, f: F) -> Self
     where
@@ -102,7 +102,7 @@ where
 
 impl<T> Debug for ValueSpec<T>
 where
-    T: Value + Clone + Debug + Send + Sync + 'static,
+    T: Params + Clone + Debug + Send + Sync + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -119,7 +119,7 @@ where
 
 impl<T> From<T> for ValueSpec<T>
 where
-    T: Value + Clone + Debug + Send + Sync + 'static,
+    T: Params + Clone + Debug + Send + Sync + 'static,
 {
     fn from(t: T) -> Self {
         Self::Value(t)
@@ -128,7 +128,7 @@ where
 
 impl<T> ValueSpec<T>
 where
-    T: Value<Spec = ValueSpec<T>> + Clone + Debug + Send + Sync + 'static,
+    T: Params<Spec = ValueSpec<T>> + Clone + Debug + Send + Sync + 'static,
     T::Partial: From<T>,
 {
     pub fn resolve(
@@ -190,7 +190,7 @@ where
 
 impl<T> ValueSpecRt for ValueSpec<T>
 where
-    T: Value<Spec = ValueSpec<T>>
+    T: Params<Spec = ValueSpec<T>>
         + Clone
         + Debug
         + Serialize

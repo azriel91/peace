@@ -10,7 +10,7 @@ use peace_data::{
     marker::{ApplyDry, Clean, Current, Desired},
     Data,
 };
-use peace_params::{ParamsSpecs, Value, ValueResolutionCtx, ValueResolutionMode, ValueSpec};
+use peace_params::{Params, ParamsSpecs, ValueResolutionCtx, ValueResolutionMode, ValueSpec};
 use peace_resources::{
     resources::ts::{Empty, SetUp},
     states::StatesCurrent,
@@ -56,9 +56,9 @@ where
         + From<crate::Error>
         + 'static,
     for<'params> <IS as ItemSpec>::Params<'params>:
-        TryFrom<<<IS as ItemSpec>::Params<'params> as Value>::Partial>,
+        TryFrom<<<IS as ItemSpec>::Params<'params> as Params>::Partial>,
 
-    for<'params> <IS::Params<'params> as Value>::Partial: From<IS::Params<'params>>,
+    for<'params> <IS::Params<'params> as Params>::Partial: From<IS::Params<'params>>,
 {
     async fn state_clean(
         &self,
@@ -518,8 +518,8 @@ where
         + From<crate::Error>
         + 'static,
     for<'params> <IS as ItemSpec>::Params<'params>:
-        TryFrom<<<IS as ItemSpec>::Params<'params> as Value>::Partial>,
-    for<'params> <IS::Params<'params> as Value>::Partial: From<IS::Params<'params>>,
+        TryFrom<<<IS as ItemSpec>::Params<'params> as Params>::Partial>,
+    for<'params> <IS::Params<'params> as Params>::Partial: From<IS::Params<'params>>,
 {
     fn id(&self) -> &ItemSpecId {
         <IS as ItemSpec>::id(self)

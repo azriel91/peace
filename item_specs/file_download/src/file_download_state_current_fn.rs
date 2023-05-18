@@ -2,7 +2,7 @@ use std::{marker::PhantomData, path::Path};
 
 use peace::{
     cfg::{state::FetchedOpt, FnCtx, State},
-    params::Value,
+    params::Params,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use tokio::{fs::File, io::AsyncReadExt};
@@ -22,7 +22,7 @@ where
 {
     pub async fn try_state_current(
         _fn_ctx: FnCtx<'_>,
-        params_partial: &<FileDownloadParams<Id> as Value>::Partial,
+        params_partial: &<FileDownloadParams<Id> as Params>::Partial,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<State<FileDownloadState, FetchedOpt<ETag>>>, FileDownloadError> {
         if let Some(dest) = params_partial.dest() {

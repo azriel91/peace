@@ -12,7 +12,7 @@ use peace::{
         accessors::{RMaybe, W},
         Data,
     },
-    params::{Value, ValueSpec},
+    params::{Params, ValueSpec},
     resources::{resources::ts::Empty, states::StatesSaved, Resources},
     rt_model::ItemSpecWrapper,
 };
@@ -93,7 +93,7 @@ impl ItemSpec for VecCopyItemSpec {
 
     async fn try_state_current(
         fn_ctx: FnCtx<'_>,
-        _params_partial: &<Self::Params<'_> as Value>::Partial,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, VecCopyError> {
         Self::state_current_internal(fn_ctx, data).await.map(Some)
@@ -109,7 +109,7 @@ impl ItemSpec for VecCopyItemSpec {
 
     async fn try_state_desired(
         fn_ctx: FnCtx<'_>,
-        params_partial: &<Self::Params<'_> as Value>::Partial,
+        params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, VecCopyError> {
         if let Some(vec_a) = params_partial.0.as_ref() {
@@ -128,7 +128,7 @@ impl ItemSpec for VecCopyItemSpec {
     }
 
     async fn state_diff(
-        _params_partial: &<Self::Params<'_> as Value>::Partial,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: VecCopyData<'_>,
         state_current: &VecCopyState,
         state_desired: &VecCopyState,
@@ -137,7 +137,7 @@ impl ItemSpec for VecCopyItemSpec {
     }
 
     async fn state_clean(
-        _params_partial: &<Self::Params<'_> as Value>::Partial,
+        _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> Result<Self::State, VecCopyError> {
         Ok(VecCopyState::new())

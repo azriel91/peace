@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use peace::{
     cfg::{state::Generated, FnCtx},
-    params::Value,
+    params::Params,
 };
 
 use crate::item_specs::peace_aws_iam_policy::{
@@ -19,7 +19,7 @@ where
 {
     pub async fn try_state_desired(
         _fn_ctx: FnCtx<'_>,
-        params_partial: &<IamPolicyParams<Id> as Value>::Partial,
+        params_partial: &<IamPolicyParams<Id> as Params>::Partial,
         _data: IamPolicyData<'_, Id>,
     ) -> Result<Option<IamPolicyState>, IamPolicyError> {
         let name = params_partial.name();
