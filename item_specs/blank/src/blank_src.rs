@@ -1,8 +1,8 @@
-use peace::params::ValueSpec;
+use peace::params::ParamsSpec;
 use serde::{Deserialize, Serialize};
 
 /// Source for blank state.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, ValueSpec)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, ParamsSpec)]
 pub struct BlankSrc(pub u32);
 
 impl std::ops::Deref for BlankSrc {

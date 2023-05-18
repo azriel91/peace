@@ -3,9 +3,9 @@ mod unit {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec};
+    use peace::params::{Params, ParamsSpec};
 
-    #[derive(Clone, Debug, ValueSpec, Serialize, Deserialize)]
+    #[derive(Clone, Debug, ParamsSpec, Serialize, Deserialize)]
     pub struct UnitParams;
 
     super::params_tests!(UnitParams, UnitParamsFieldWise, UnitParamsPartial, []);
@@ -15,8 +15,8 @@ mod unit {
         let params = UnitParams;
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(UnitParams)
+            ParamsSpec::from(params),
+            ParamsSpec::Value(UnitParams)
         ));
     }
 
@@ -69,9 +69,9 @@ mod struct_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Clone, Debug, ValueSpec, Serialize, Deserialize)]
+    #[derive(Clone, Debug, ParamsSpec, Serialize, Deserialize)]
     pub struct StructParams {
         /// Source / desired value for the state.
         src: String,
@@ -89,8 +89,8 @@ mod struct_params {
         };
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(StructParams {
+            ParamsSpec::from(params),
+            ParamsSpec::Value(StructParams {
                 src,
                 dest,
             })
@@ -126,7 +126,7 @@ mod struct_params {
 
         assert!(matches!(
             field_wise,
-            ValueSpec::FieldWise(StructParamsFieldWise {
+            ParamsSpec::FieldWise(StructParamsFieldWise {
                 src: ValueSpecFieldless::Value(src_value),
                 dest: ValueSpecFieldless::Value(dest_value),
             })
@@ -242,9 +242,9 @@ mod struct_with_type_params {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Derivative, ValueSpec, Serialize, Deserialize)]
+    #[derive(Derivative, ParamsSpec, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
     pub struct StructWithTypeParams<Id> {
         /// Source / desired value for the state.
@@ -271,8 +271,8 @@ mod struct_with_type_params {
         };
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(StructWithTypeParams {
+            ParamsSpec::from(params),
+            ParamsSpec::Value(StructWithTypeParams {
                 src,
                 dest,
                 marker: PhantomData,
@@ -418,9 +418,9 @@ mod tuple_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Clone, Debug, ValueSpec, Serialize, Deserialize)]
+    #[derive(Clone, Debug, ParamsSpec, Serialize, Deserialize)]
     pub struct TupleParams(
         /// Source / desired value for the state.
         String,
@@ -435,8 +435,8 @@ mod tuple_params {
         let params = TupleParams(String::from("a"), String::from("b"));
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(TupleParams (
+            ParamsSpec::from(params),
+            ParamsSpec::Value(TupleParams (
                 src,
                 dest,
             ))
@@ -551,9 +551,9 @@ mod tuple_with_type_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Clone, Debug, ValueSpec, Serialize, Deserialize)]
+    #[derive(Clone, Debug, ParamsSpec, Serialize, Deserialize)]
     pub struct TupleWithTypeParams<Id>(String, String, PhantomData<Id>)
     where
         Id: Clone + Debug;
@@ -570,8 +570,8 @@ mod tuple_with_type_params {
         let params = TupleWithTypeParams::<()>(String::from("a"), String::from("b"), PhantomData);
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(TupleWithTypeParams (
+            ParamsSpec::from(params),
+            ParamsSpec::Value(TupleWithTypeParams (
                 src,
                 dest,
                 PhantomData,
@@ -708,9 +708,9 @@ mod enum_params {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Derivative, ValueSpec, Serialize, Deserialize)]
+    #[derive(Derivative, ParamsSpec, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
     pub enum EnumParams<Id> {
         Named {
@@ -739,8 +739,8 @@ mod enum_params {
         };
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(EnumParams::Named {
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumParams::Named {
                 src,
                 marker: PhantomData,
             })
@@ -753,8 +753,8 @@ mod enum_params {
         let params = EnumParams::<()>::Tuple(String::from("a"));
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(EnumParams::Tuple(src))
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumParams::Tuple(src))
             if src == "a"
         ));
     }
@@ -764,8 +764,8 @@ mod enum_params {
         let params = EnumParams::<()>::TupleMarker(String::from("a"), PhantomData);
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(EnumParams::TupleMarker(src, PhantomData))
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumParams::TupleMarker(src, PhantomData))
             if src == "a"
         ));
     }
@@ -775,8 +775,8 @@ mod enum_params {
         let params = EnumParams::<()>::Unit;
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(EnumParams::Unit)
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumParams::Unit)
         ));
     }
 
@@ -1201,7 +1201,7 @@ mod struct_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueFieldless, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueFieldless, ValueSpecFieldless};
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ValueSpecFieldless)]
     pub struct InnerValue<T>(T)
@@ -1217,7 +1217,7 @@ mod struct_recursive_value {
         }
     }
 
-    #[derive(Clone, Debug, ValueSpec, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, ParamsSpec, PartialEq, Eq, Serialize, Deserialize)]
     pub struct StructRecursiveValue<T>
     where
         T: Clone
@@ -1250,8 +1250,8 @@ mod struct_recursive_value {
         };
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(StructRecursiveValue {
+            ParamsSpec::from(params),
+            ParamsSpec::Value(StructRecursiveValue {
                 src,
                 dest,
             })
@@ -1385,9 +1385,9 @@ mod struct_recursive_value_no_bounds {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, ValueSpec)]
+    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, ParamsSpec)]
     #[derivative(Clone, Debug)]
     #[serde(bound = "")]
     pub struct InnerValue<Id> {
@@ -1406,7 +1406,7 @@ mod struct_recursive_value_no_bounds {
         }
     }
 
-    #[derive(Derivative, ValueSpec, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Derivative, ParamsSpec, PartialEq, Eq, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
     #[serde(bound = "")]
     pub struct StructRecursiveValueNoBounds<Id> {
@@ -1432,8 +1432,8 @@ mod struct_recursive_value_no_bounds {
         };
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(StructRecursiveValueNoBounds {
+            ParamsSpec::from(params),
+            ParamsSpec::Value(StructRecursiveValueNoBounds {
                 src,
                 dest,
             })
@@ -1566,7 +1566,7 @@ mod enum_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueFieldless, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueFieldless, ValueSpecFieldless};
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ValueSpecFieldless)]
     pub enum InnerValue<T>
@@ -1577,7 +1577,7 @@ mod enum_recursive_value {
         Named { value: T },
     }
 
-    #[derive(Clone, Debug, ValueSpec, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, ParamsSpec, PartialEq, Eq, Serialize, Deserialize)]
     pub enum EnumRecursiveValue<T>
     where
         T: Clone
@@ -1608,8 +1608,8 @@ mod enum_recursive_value {
         };
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(EnumRecursiveValue::Named {
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumRecursiveValue::Named {
                 src,
                 dest,
             })
@@ -1620,8 +1620,8 @@ mod enum_recursive_value {
         let params = EnumRecursiveValue::Tuple::<u16>(InnerValue::<u16>::Named { value: 123 }, 456);
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(EnumRecursiveValue::Tuple(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumRecursiveValue::Tuple(
                 src,
                 dest,
             ))
@@ -1827,9 +1827,9 @@ mod enum_recursive_marker_no_bounds {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, ValueSpec)]
+    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, ParamsSpec)]
     #[derivative(Clone(bound = ""), Debug(bound = ""))]
     #[serde(bound = "")]
     pub enum InnerValue<Id> {
@@ -1837,7 +1837,7 @@ mod enum_recursive_marker_no_bounds {
         Named { marker: PhantomData<Id> },
     }
 
-    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, ValueSpec)]
+    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, ParamsSpec)]
     #[derivative(Clone(bound = ""), Debug(bound = ""))]
     #[serde(bound = "")]
     pub enum EnumRecursiveNoBounds<Id> {
@@ -1860,8 +1860,8 @@ mod enum_recursive_marker_no_bounds {
         };
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(EnumRecursiveNoBounds::Named {
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumRecursiveNoBounds::Named {
                 src: InnerValue::<u16>::Tuple(PhantomData),
                 dest,
             })
@@ -1876,8 +1876,8 @@ mod enum_recursive_marker_no_bounds {
         );
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(EnumRecursiveNoBounds::Tuple(
+            ParamsSpec::from(params),
+            ParamsSpec::Value(EnumRecursiveNoBounds::Tuple(
                 InnerValue::<u16>::Named { marker: PhantomData },
                 dest,
             ))
@@ -2085,13 +2085,13 @@ mod external_fields {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ValueSpec, ValueSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
     // Note: no `Value` derive.
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub struct InnerValue(u32);
 
-    #[derive(Clone, Debug, ValueSpec, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, ParamsSpec, PartialEq, Eq, Serialize, Deserialize)]
     pub struct StructExternalValue {
         /// Source / desired value for the state.
         #[value_spec(fieldless)]
@@ -2115,8 +2115,8 @@ mod external_fields {
         };
 
         assert!(matches!(
-            ValueSpec::from(params),
-            ValueSpec::Value(StructExternalValue {
+            ParamsSpec::from(params),
+            ParamsSpec::Value(StructExternalValue {
                 src,
                 dest,
             })

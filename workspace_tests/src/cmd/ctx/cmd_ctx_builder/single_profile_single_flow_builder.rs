@@ -3,7 +3,7 @@ use peace::{
         app_name, flow_id, item_spec_id, profile, AppName, FlowId, ItemSpec, ItemSpecId, Profile,
     },
     cmd::ctx::CmdCtx,
-    params::{ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+    params::{ParamsSpec, ValueResolutionCtx, ValueResolutionMode},
     resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
@@ -420,7 +420,7 @@ async fn build_with_item_spec_params_returns_ok_when_params_provided()
     let scope = cmd_ctx.scope();
     let params_specs = scope.params_specs();
     let resources = scope.resources();
-    let vec_a_spec = params_specs.get::<ValueSpec<<VecCopyItemSpec as ItemSpec>::Params<'_>>, _>(
+    let vec_a_spec = params_specs.get::<ParamsSpec<<VecCopyItemSpec as ItemSpec>::Params<'_>>, _>(
         VecCopyItemSpec::ID_DEFAULT,
     );
     let mut value_resolution_ctx = ValueResolutionCtx::new(
@@ -429,7 +429,7 @@ async fn build_with_item_spec_params_returns_ok_when_params_provided()
         tynm::type_name::<VecA>(),
     );
     assert!(matches!(vec_a_spec,
-        Some(ValueSpec::Value(VecA(value)))
+        Some(ParamsSpec::Value(VecA(value)))
         if value == &[1u8]
     ));
     assert_eq!(
@@ -517,7 +517,7 @@ async fn build_with_item_spec_params_returns_ok_when_params_not_provided_but_are
     let scope = cmd_ctx_from_stored.scope();
     let params_specs = scope.params_specs();
     let resources = scope.resources();
-    let vec_a_spec = params_specs.get::<ValueSpec<<VecCopyItemSpec as ItemSpec>::Params<'_>>, _>(
+    let vec_a_spec = params_specs.get::<ParamsSpec<<VecCopyItemSpec as ItemSpec>::Params<'_>>, _>(
         VecCopyItemSpec::ID_DEFAULT,
     );
     let mut value_resolution_ctx = ValueResolutionCtx::new(
@@ -526,7 +526,7 @@ async fn build_with_item_spec_params_returns_ok_when_params_not_provided_but_are
         tynm::type_name::<VecA>(),
     );
     assert!(matches!(vec_a_spec,
-        Some(ValueSpec::Value(VecA(value)))
+        Some(ParamsSpec::Value(VecA(value)))
         if value == &[1u8]
     ));
     assert_eq!(
@@ -577,7 +577,7 @@ async fn build_with_item_spec_params_returns_ok_and_uses_params_provided_when_pa
     let scope = cmd_ctx_from_stored.scope();
     let params_specs = scope.params_specs();
     let resources = scope.resources();
-    let vec_a_spec = params_specs.get::<ValueSpec<<VecCopyItemSpec as ItemSpec>::Params<'_>>, _>(
+    let vec_a_spec = params_specs.get::<ParamsSpec<<VecCopyItemSpec as ItemSpec>::Params<'_>>, _>(
         VecCopyItemSpec::ID_DEFAULT,
     );
     let mut value_resolution_ctx = ValueResolutionCtx::new(
@@ -586,7 +586,7 @@ async fn build_with_item_spec_params_returns_ok_and_uses_params_provided_when_pa
         tynm::type_name::<VecA>(),
     );
     assert!(matches!(vec_a_spec,
-        Some(ValueSpec::Value(VecA(value)))
+        Some(ParamsSpec::Value(VecA(value)))
         if value == &[2u8]
     ));
     assert_eq!(
@@ -647,7 +647,7 @@ async fn build_with_item_spec_params_returns_err_when_params_provided_mismatch()
             if item_spec_ids_with_no_params_specs.is_empty()
             && matches!(
                 params_specs_provided_mismatches.get(&item_spec_id!("mismatch_id")),
-                Some(ValueSpec::Value(VecA(value)))
+                Some(ParamsSpec::Value(VecA(value)))
                 if value == &vec![2u8]
             )
             && matches!(
@@ -720,7 +720,7 @@ async fn build_with_item_spec_params_returns_err_when_params_stored_mismatch()
             if item_spec_ids_with_no_params_specs == &vec![item_spec_id!("new_id")]
             && matches!(
                 params_specs_provided_mismatches.get(&item_spec_id!("mismatch_id")),
-                Some(ValueSpec::Value(VecA(value)))
+                Some(ParamsSpec::Value(VecA(value)))
                 if value == &vec![2u8]
             )
             && matches!(

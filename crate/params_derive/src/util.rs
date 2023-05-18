@@ -312,7 +312,7 @@ pub fn t_value_and_try_from_partial_bounds<'f>(
         })
 }
 
-/// Returns the value spec type for a value, e.g. `ValueSpec<MyValue>` or
+/// Returns the value spec type for a value, e.g. `ParamsSpec<MyValue>` or
 /// `ValueSpecFieldless<String>`.
 pub fn value_spec_ty(
     ast: &DeriveInput,
@@ -324,11 +324,11 @@ pub fn value_spec_ty(
     if is_fieldless_type(ast) || impl_mode == ImplMode::Fieldless {
         quote!(#peace_params_path::ValueSpecFieldless<#value_name #ty_generics>)
     } else {
-        quote!(#peace_params_path::ValueSpec<#value_name #ty_generics>)
+        quote!(#peace_params_path::ParamsSpec<#value_name #ty_generics>)
     }
 }
 
-/// Returns the value spec type for a value, e.g. `ValueSpec::<MyValue>` or
+/// Returns the value spec type for a value, e.g. `ParamsSpec::<MyValue>` or
 /// `ValueSpecFieldless::<String>`.
 pub fn value_spec_ty_path(
     ast: &DeriveInput,
@@ -340,7 +340,7 @@ pub fn value_spec_ty_path(
     if is_fieldless_type(ast) || impl_mode == ImplMode::Fieldless {
         quote!(#peace_params_path::ValueSpecFieldless::<#value_name #ty_generics>)
     } else {
-        quote!(#peace_params_path::ValueSpec::<#value_name #ty_generics>)
+        quote!(#peace_params_path::ParamsSpec::<#value_name #ty_generics>)
     }
 }
 

@@ -4,7 +4,7 @@ use std::{
 };
 
 use derivative::Derivative;
-use peace::params::ValueSpec;
+use peace::params::ParamsSpec;
 use serde::{Deserialize, Serialize};
 
 /// S3Object item parameters.
@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// * `Id`: A zero-sized type used to distinguish different S3 object parameters
 ///   from each other.
-#[derive(Derivative, ValueSpec, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Derivative, ParamsSpec, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
 #[serde(bound = "")]
 pub struct S3ObjectParams<Id> {

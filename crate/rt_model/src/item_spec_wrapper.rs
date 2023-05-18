@@ -10,7 +10,7 @@ use peace_data::{
     marker::{ApplyDry, Clean, Current, Desired},
     Data,
 };
-use peace_params::{Params, ParamsSpecs, ValueResolutionCtx, ValueResolutionMode, ValueSpec};
+use peace_params::{Params, ParamsSpec, ParamsSpecs, ValueResolutionCtx, ValueResolutionMode};
 use peace_resources::{
     resources::ts::{Empty, SetUp},
     states::StatesCurrent,
@@ -69,7 +69,7 @@ where
             let params_partial = {
                 let item_spec_id = self.id();
                 let params_spec = params_specs
-                    .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                    .get::<ParamsSpec<IS::Params<'_>>, _>(item_spec_id)
                     .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                         item_spec_id: item_spec_id.clone(),
                     })?;
@@ -100,7 +100,7 @@ where
             let params_partial = {
                 let item_spec_id = self.id();
                 let params_spec = params_specs
-                    .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                    .get::<ParamsSpec<IS::Params<'_>>, _>(item_spec_id)
                     .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                         item_spec_id: item_spec_id.clone(),
                     })?;
@@ -133,7 +133,7 @@ where
             let params = {
                 let item_spec_id = self.id();
                 let params_spec = params_specs
-                    .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                    .get::<ParamsSpec<IS::Params<'_>>, _>(item_spec_id)
                     .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                         item_spec_id: item_spec_id.clone(),
                     })?;
@@ -163,7 +163,7 @@ where
         let params_partial = {
             let item_spec_id = self.id();
             let params_spec = params_specs
-                .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                .get::<ParamsSpec<IS::Params<'_>>, _>(item_spec_id)
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                     item_spec_id: item_spec_id.clone(),
                 })?;
@@ -210,7 +210,7 @@ where
         let params = {
             let item_spec_id = self.id();
             let params_spec = params_specs
-                .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                .get::<ParamsSpec<IS::Params<'_>>, _>(item_spec_id)
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                     item_spec_id: item_spec_id.clone(),
                 })?;
@@ -270,7 +270,7 @@ where
             let params_partial = {
                 let item_spec_id = self.id();
                 let params_spec = params_specs
-                    .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                    .get::<ParamsSpec<IS::Params<'_>>, _>(item_spec_id)
                     .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                         item_spec_id: item_spec_id.clone(),
                     })?;
@@ -318,7 +318,7 @@ where
         let params_partial = {
             let item_spec_id = self.id();
             let params_spec = params_specs
-                .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                .get::<ParamsSpec<IS::Params<'_>>, _>(item_spec_id)
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                     item_spec_id: item_spec_id.clone(),
                 })?;
@@ -366,7 +366,7 @@ where
         let params = {
             let item_spec_id = self.id();
             let params_spec = params_specs
-                .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                .get::<ParamsSpec<IS::Params<'_>>, _>(item_spec_id)
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                     item_spec_id: item_spec_id.clone(),
                 })?;
@@ -408,7 +408,7 @@ where
         let params = {
             let item_spec_id = self.id();
             let params_spec = params_specs
-                .get::<ValueSpec<IS::Params<'_>>, _>(item_spec_id)
+                .get::<ParamsSpec<IS::Params<'_>>, _>(item_spec_id)
                 .ok_or_else(|| crate::Error::ParamsSpecNotFound {
                     item_spec_id: item_spec_id.clone(),
                 })?;
@@ -546,7 +546,7 @@ where
         states_type_reg: &mut StatesTypeReg,
     ) {
         item_spec_params_type_reg.register::<IS::Params<'_>>(IS::id(self).clone());
-        params_specs_type_reg.register::<ValueSpec<IS::Params<'_>>>(IS::id(self).clone());
+        params_specs_type_reg.register::<ParamsSpec<IS::Params<'_>>>(IS::id(self).clone());
         states_type_reg.register::<IS::State>(IS::id(self).clone());
     }
 

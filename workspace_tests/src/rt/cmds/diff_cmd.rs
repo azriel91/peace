@@ -2,7 +2,7 @@ use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
-    params::ValueSpec,
+    params::ParamsSpec,
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{
         outcomes::CmdOutcome,
@@ -379,7 +379,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            ValueSpec::From,
+            ParamsSpec::From,
         )
         .await?;
     // overwrite initial state

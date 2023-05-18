@@ -48,7 +48,7 @@ mod util;
 
 /// Used to `#[derive]` the `ValueSpec` and `ValueSpecRt` traits.
 ///
-/// For regular usage, use `#[derive(ValueSpec)]`
+/// For regular usage, use `#[derive(ParamsSpec)]`
 ///
 /// For peace crates, also add the `#[peace_internal]` attribute, which
 /// references the `peace_params` crate instead of the `peace::params`
@@ -81,7 +81,7 @@ mod util;
 /// * `default`: Enum variant attribute to indicate which variant to instantiate
 ///   for `ParamsPartial::default()`.
 #[proc_macro_derive(
-    ValueSpec,
+    ParamsSpec,
     attributes(peace_internal, crate_internal, value_spec, default, serde)
 )]
 pub fn value_spec(input: TokenStream) -> TokenStream {
@@ -229,7 +229,7 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
             for #value_name #ty_generics
             #where_clause
             {
-                type Spec = #peace_params_path::ValueSpec<#value_name #ty_generics>;
+                type Spec = #peace_params_path::ParamsSpec<#value_name #ty_generics>;
                 type Partial = #t_partial_name #ty_generics;
                 type FieldWiseSpec = #t_field_wise_name #ty_generics;
                 type FieldWiseBuilder = #t_field_wise_builder_name #ty_generics;

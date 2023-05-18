@@ -1,10 +1,10 @@
 use std::ffi::OsString;
 
-use peace::params::ValueSpec;
+use peace::params::ParamsSpec;
 use serde::{Deserialize, Serialize};
 
 /// Shell command to execute.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, ValueSpec)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, ParamsSpec)]
 pub struct ShSyncCmd {
     /// Command to run.
     program: OsString,

@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use derivative::Derivative;
-use peace::params::ValueSpec;
+use peace::params::ParamsSpec;
 use serde::{Deserialize, Serialize};
 
 use crate::{BlankDest, BlankSrc};
@@ -15,7 +15,7 @@ use crate::{BlankDest, BlankSrc};
 ///
 /// * `Id`: A zero-sized type used to distinguish different blank parameters
 ///   from each other.
-#[derive(Derivative, ValueSpec, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Derivative, ParamsSpec, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
 #[serde(bound = "")]
 pub struct BlankParams<Id> {

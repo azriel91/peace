@@ -4,7 +4,7 @@ use peace::{
     cfg::{
         app_name, flow_id, item_spec_id, state::Generated, AppName, FlowId, ItemSpecId, Profile,
     },
-    params::{ValueSpec, ValueSpecFieldless},
+    params::{ParamsSpec, ValueSpecFieldless},
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
 use peace_item_specs::{
@@ -115,7 +115,7 @@ impl EnvDeployFlow {
             }
         };
         let web_app_path_local = app_download_dir.join(format!("{repo_name}.{file_ext}"));
-        let app_download_params_spec = ValueSpec::Value(FileDownloadParams::new(
+        let app_download_params_spec = ParamsSpec::Value(FileDownloadParams::new(
             web_app_file_url,
             web_app_path_local.clone(),
             #[cfg(target_arch = "wasm32")]
@@ -125,7 +125,7 @@ impl EnvDeployFlow {
             let tar_path = web_app_path_local.clone();
             let dest = app_download_dir.join("extracted");
 
-            ValueSpec::Value(TarXParams::<WebAppFileId>::new(tar_path, dest))
+            ParamsSpec::Value(TarXParams::<WebAppFileId>::new(tar_path, dest))
         };
 
         let iam_policy_name = profile.to_string();
@@ -143,7 +143,7 @@ impl EnvDeployFlow {
                 include_str!("ec2_to_s3_bucket_policy.json"),
                 bucket_name = bucket_name
             );
-            ValueSpec::Value(IamPolicyParams::<WebAppFileId>::new(
+            ParamsSpec::Value(IamPolicyParams::<WebAppFileId>::new(
                 iam_policy_name,
                 path.clone(),
                 ec2_to_s3_bucket_policy,
@@ -151,7 +151,7 @@ impl EnvDeployFlow {
         };
 
         let iam_role_params_spec =
-            ValueSpec::FieldWise(IamRoleParamsFieldWise::<WebAppFileId>::new(
+            ParamsSpec::FieldWise(IamRoleParamsFieldWise::<WebAppFileId>::new(
                 ValueSpecFieldless::Value(iam_role_name),
                 ValueSpecFieldless::from_map(None, |_iam_policy_state: &IamPolicyState| {
                     path.clone()
@@ -171,12 +171,12 @@ impl EnvDeployFlow {
                     },
                 ),
             ));
-        let instance_profile_params_spec = ValueSpec::Value(
+        let instance_profile_params_spec = ParamsSpec::Value(
             InstanceProfileParams::<WebAppFileId>::new(instance_profile_name, path, true),
         );
 
         let s3_bucket_params_spec =
-            ValueSpec::Value(S3BucketParams::<WebAppFileId>::new(bucket_name.clone()));
+            ParamsSpec::Value(S3BucketParams::<WebAppFileId>::new(bucket_name.clone()));
         let s3_object_params_spec = {
             let object_key = web_app_path_local
                 .file_name()
@@ -184,7 +184,7 @@ impl EnvDeployFlow {
                 .to_string_lossy()
                 .to_string();
 
-            ValueSpec::Value(S3ObjectParams::<WebAppFileId>::new(
+            ParamsSpec::Value(S3ObjectParams::<WebAppFileId>::new(
                 web_app_path_local,
                 bucket_name,
                 object_key,
@@ -205,11 +205,11 @@ impl EnvDeployFlow {
 
 #[derive(Debug)]
 pub struct EnvDeployFlowParamsSpecs {
-    pub app_download_params_spec: ValueSpec<FileDownloadParams<WebAppFileId>>,
-    pub app_extract_params_spec: ValueSpec<TarXParams<WebAppFileId>>,
-    pub iam_policy_params_spec: ValueSpec<IamPolicyParams<WebAppFileId>>,
-    pub iam_role_params_spec: ValueSpec<IamRoleParams<WebAppFileId>>,
-    pub instance_profile_params_spec: ValueSpec<InstanceProfileParams<WebAppFileId>>,
-    pub s3_bucket_params_spec: ValueSpec<S3BucketParams<WebAppFileId>>,
-    pub s3_object_params_spec: ValueSpec<S3ObjectParams<WebAppFileId>>,
+    pub app_download_params_spec: ParamsSpec<FileDownloadParams<WebAppFileId>>,
+    pub app_extract_params_spec: ParamsSpec<TarXParams<WebAppFileId>>,
+    pub iam_policy_params_spec: ParamsSpec<IamPolicyParams<WebAppFileId>>,
+    pub iam_role_params_spec: ParamsSpec<IamRoleParams<WebAppFileId>>,
+    pub instance_profile_params_spec: ParamsSpec<InstanceProfileParams<WebAppFileId>>,
+    pub s3_bucket_params_spec: ParamsSpec<S3BucketParams<WebAppFileId>>,
+    pub s3_object_params_spec: ParamsSpec<S3ObjectParams<WebAppFileId>>,
 }
