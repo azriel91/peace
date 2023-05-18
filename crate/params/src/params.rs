@@ -13,7 +13,7 @@ pub trait Params {
     /// The `Value` type, but with optional fields.
     type Partial: Clone + Debug + Default + Send + Sync + 'static;
     /// The `Value` type, but each field is wrapped with
-    /// `ValueSpecFieldless<T>`.
+    /// `ParamsSpecFieldless<T>`.
     ///
     /// Specifies how to look up values for each field in the `Value`.
     type FieldWiseSpec: FieldWiseSpecRt<ValueType = Self, Partial = Self::Partial>

@@ -28,9 +28,9 @@ pub fn fields_to_value_spec(
             field_ty.clone()
         } else {
             // For external types, we don't know if they implement `ValueSpec`, so we treat
-            // fields with this attribute as `ValueSpecFieldless`. Have tried to hold a
+            // fields with this attribute as `ParamsSpecFieldless`. Have tried to hold a
             // `Box<dyn ValueSpecRt>`, so it could delegate to either the `ValueSpec` or
-            // `ValueSpecFieldless`. However, it makes it hard to deserialize from a
+            // `ParamsSpecFieldless`. However, it makes it hard to deserialize from a
             // serialized `ValueSpec` because we would have to generate a concrete type with
             // the `field_ty`, which may make it impossible to handle upgrades / evolving
             // params types.
@@ -52,7 +52,7 @@ pub fn fields_to_value_spec(
 /// `#[value_spec(fieldless)]` -- are wrapped as:
 ///
 /// ```rust,ignore
-/// `Option<ValueSpecFieldless<MyTypeWrapper>>`.
+/// `Option<ParamsSpecFieldless<MyTypeWrapper>>`.
 /// ```
 pub fn fields_to_optional_value_spec(
     parent_ast: Option<&DeriveInput>,

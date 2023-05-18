@@ -71,7 +71,7 @@ where
     /// Resolves this value through `ValueSpec`s for each of its fields.
     ///
     /// This is like `T`, but with each field wrapped in
-    /// `ValueSpecFieldless<T>`.
+    /// `ParamsSpecFieldless<T>`.
     //
     // Wrap each in `ValueSpec`, but for unit / external values, fail on field wise
     // resolution, and also don't generate a builder method for field wise (even if is present in

@@ -277,7 +277,7 @@ fn get_lit_str(meta: &ParseNestedMeta) -> syn::Result<Option<syn::LitStr>> {
 /// Returns bounds for `T: Value + TryFrom<TPartial, T::Partial: From<T>`.
 ///
 /// ```rust,ignore
-/// T: Value<Spec = ValueSpecFieldless<T>> + TryFrom<<T as Value>::Partial>,
+/// T: Value<Spec = ParamsSpecFieldless<T>> + TryFrom<<T as Value>::Partial>,
 /// <T as ValueFieldless>::Partial: From<T>,
 /// ```
 pub fn t_value_and_try_from_partial_bounds<'f>(
@@ -301,7 +301,7 @@ pub fn t_value_and_try_from_partial_bounds<'f>(
         .flat_map(move |type_param| {
             let t_value_and_try_from_partial: WherePredicate = parse_quote! {
                 #type_param:
-                    #peace_params_path::ValueFieldless<Spec = #peace_params_path::ValueSpecFieldless<#type_param>>
+                    #peace_params_path::ValueFieldless<Spec = #peace_params_path::ParamsSpecFieldless<#type_param>>
                     + ::std::convert::TryFrom<<#type_param as #peace_params_path::ValueFieldless>::Partial>
             };
             let t_partial_from_t = parse_quote! {
@@ -313,7 +313,7 @@ pub fn t_value_and_try_from_partial_bounds<'f>(
 }
 
 /// Returns the value spec type for a value, e.g. `ParamsSpec<MyValue>` or
-/// `ValueSpecFieldless<String>`.
+/// `ParamsSpecFieldless<String>`.
 pub fn value_spec_ty(
     ast: &DeriveInput,
     ty_generics: &TypeGenerics,
@@ -322,14 +322,14 @@ pub fn value_spec_ty(
 ) -> proc_macro2::TokenStream {
     let value_name = &ast.ident;
     if is_fieldless_type(ast) || impl_mode == ImplMode::Fieldless {
-        quote!(#peace_params_path::ValueSpecFieldless<#value_name #ty_generics>)
+        quote!(#peace_params_path::ParamsSpecFieldless<#value_name #ty_generics>)
     } else {
         quote!(#peace_params_path::ParamsSpec<#value_name #ty_generics>)
     }
 }
 
 /// Returns the value spec type for a value, e.g. `ParamsSpec::<MyValue>` or
-/// `ValueSpecFieldless::<String>`.
+/// `ParamsSpecFieldless::<String>`.
 pub fn value_spec_ty_path(
     ast: &DeriveInput,
     ty_generics: &TypeGenerics,
@@ -338,13 +338,13 @@ pub fn value_spec_ty_path(
 ) -> proc_macro2::TokenStream {
     let value_name = &ast.ident;
     if is_fieldless_type(ast) || impl_mode == ImplMode::Fieldless {
-        quote!(#peace_params_path::ValueSpecFieldless::<#value_name #ty_generics>)
+        quote!(#peace_params_path::ParamsSpecFieldless::<#value_name #ty_generics>)
     } else {
         quote!(#peace_params_path::ParamsSpec::<#value_name #ty_generics>)
     }
 }
 
-/// Returns the type of a value spec field, e.g. `ValueSpecFieldless<MyValue>`.
+/// Returns the type of a value spec field, e.g. `ParamsSpecFieldless<MyValue>`.
 pub fn field_spec_ty(
     parent_ast: Option<&DeriveInput>,
     peace_params_path: &Path,
@@ -353,14 +353,14 @@ pub fn field_spec_ty(
     let field_ty = &field.ty;
     let wrapper_type = ExternalType::wrapper_type(parent_ast, field_ty);
     if is_tagged_fieldless(&field.attrs) {
-        quote!(#peace_params_path::ValueSpecFieldless<#wrapper_type>)
+        quote!(#peace_params_path::ParamsSpecFieldless<#wrapper_type>)
     } else {
-        quote!(#peace_params_path::ValueSpecFieldless<#field_ty>)
+        quote!(#peace_params_path::ParamsSpecFieldless<#field_ty>)
     }
 }
 
 /// Returns the type of a value spec field, e.g.
-/// `ValueSpecFieldless::<MyValue>`.
+/// `ParamsSpecFieldless::<MyValue>`.
 pub fn field_spec_ty_path(
     parent_ast: Option<&DeriveInput>,
     peace_params_path: &Path,
@@ -369,15 +369,15 @@ pub fn field_spec_ty_path(
     let field_ty = &field.ty;
     let wrapper_type = ExternalType::wrapper_type(parent_ast, field_ty);
     if is_tagged_fieldless(&field.attrs) {
-        quote!(#peace_params_path::ValueSpecFieldless::<#wrapper_type>)
+        quote!(#peace_params_path::ParamsSpecFieldless::<#wrapper_type>)
     } else {
-        quote!(#peace_params_path::ValueSpecFieldless::<#field_ty>)
+        quote!(#peace_params_path::ParamsSpecFieldless::<#field_ty>)
     }
 }
 
 /// Returns the type of a value spec field, e.g.
-/// `ValueSpecFieldless::<MyValue>(#field_name)` or
-/// `ValueSpecFieldless::<MyValue>(FieldTypeWrapper(#field_name))`.
+/// `ParamsSpecFieldless::<MyValue>(#field_name)` or
+/// `ParamsSpecFieldless::<MyValue>(FieldTypeWrapper(#field_name))`.
 pub fn field_spec_ty_deconstruct(
     parent_ast: Option<&DeriveInput>,
     peace_params_path: &Path,
@@ -387,9 +387,9 @@ pub fn field_spec_ty_deconstruct(
     if is_tagged_fieldless(&field.attrs) {
         let external_type = ExternalType::wrapper_type(parent_ast, &field.ty);
         let wrapper_type_simple_name = type_path_simple_name(&external_type);
-        quote!(#peace_params_path::ValueSpecFieldless::Value(#wrapper_type_simple_name(#field_name)))
+        quote!(#peace_params_path::ParamsSpecFieldless::Value(#wrapper_type_simple_name(#field_name)))
     } else {
-        quote!(#peace_params_path::ValueSpecFieldless::Value(#field_name))
+        quote!(#peace_params_path::ParamsSpecFieldless::Value(#field_name))
     }
 }
 

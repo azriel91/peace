@@ -93,9 +93,9 @@ pub fn value_spec(input: TokenStream) -> TokenStream {
     gen.into()
 }
 
-/// Used to `#[derive]` the `ValueSpecFieldless` and `ValueSpecRt` traits.
+/// Used to `#[derive]` the `ParamsSpecFieldless` and `ValueSpecRt` traits.
 ///
-/// For regular usage, use `#[derive(ValueSpecFieldless)]`
+/// For regular usage, use `#[derive(ParamsSpecFieldless)]`
 ///
 /// For peace crates, also add the `#[peace_internal]` attribute, which
 /// references the `peace_params` crate instead of the `peace::params`
@@ -115,12 +115,12 @@ pub fn value_spec(input: TokenStream) -> TokenStream {
 /// * `default`: Enum variant attribute to indicate which variant to instantiate
 ///   for `ParamsPartial::default()`.
 #[proc_macro_derive(
-    ValueSpecFieldless,
+    ParamsSpecFieldless,
     attributes(peace_internal, crate_internal, value_spec, default)
 )]
 pub fn value_spec_fieldless(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
-        .expect("`ValueSpecFieldless` derive: Failed to parse item as struct, enum, or union.");
+        .expect("`ParamsSpecFieldless` derive: Failed to parse item as struct, enum, or union.");
 
     let gen = impl_value(&mut ast, ImplMode::Fieldless);
 
@@ -130,7 +130,7 @@ pub fn value_spec_fieldless(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn value_impl(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
-        .expect("`ValueSpecFieldless` impl: Failed to parse item as struct, enum, or union.");
+        .expect("`ParamsSpecFieldless` impl: Failed to parse item as struct, enum, or union.");
 
     let gen = impl_value(&mut ast, ImplMode::Fieldless);
 
@@ -247,7 +247,7 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
         for #value_name #ty_generics
         #where_clause
         {
-            type Spec = #peace_params_path::ValueSpecFieldless<#value_name #ty_generics>;
+            type Spec = #peace_params_path::ParamsSpecFieldless<#value_name #ty_generics>;
             type Partial = #t_partial_name #ty_generics;
         }
 
@@ -384,9 +384,9 @@ fn t_partial_external(
 ///
 /// ```rust,ignore
 /// struct MyParamsFieldWise {
-///     src: peace_params::ValueSpecFieldless<PathBuf>,
-///     dest_ip: peace_params::ValueSpecFieldless<IpAddr>,
-///     dest_path: peace_params::ValueSpecFieldless<PathBuf>,
+///     src: peace_params::ParamsSpecFieldless<PathBuf>,
+///     dest_ip: peace_params::ParamsSpecFieldless<IpAddr>,
+///     dest_path: peace_params::ParamsSpecFieldless<PathBuf>,
 /// }
 /// ```
 fn t_field_wise(
@@ -447,7 +447,7 @@ fn t_field_wise(
 /// Generates something like the following:
 ///
 /// ```rust,ignore
-/// struct MyParamsFieldWise(peace_params::ValueSpecFieldless<MyParams>)
+/// struct MyParamsFieldWise(peace_params::ParamsSpecFieldless<MyParams>)
 /// ```
 // TODO: Refactor this crate to not pass redundant information, or use a context object.
 #[allow(clippy::too_many_arguments)]

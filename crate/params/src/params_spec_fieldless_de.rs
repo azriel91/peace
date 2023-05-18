@@ -2,7 +2,7 @@ use std::fmt::{self, Debug};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{MappingFnImpl, ValueFieldless, ValueSpecFieldless};
+use crate::{MappingFnImpl, ParamsSpecFieldless, ValueFieldless};
 
 type FnPlaceholder<T> = fn(&()) -> Option<T>;
 
@@ -57,17 +57,17 @@ where
     }
 }
 
-impl<T> From<ParamsSpecFieldlessDe<T>> for ValueSpecFieldless<T>
+impl<T> From<ParamsSpecFieldlessDe<T>> for ParamsSpecFieldless<T>
 where
     T: ValueFieldless + Clone + Debug + Send + Sync + 'static,
 {
     fn from(value_spec_de: ParamsSpecFieldlessDe<T>) -> Self {
         match value_spec_de {
-            ParamsSpecFieldlessDe::Stored => ValueSpecFieldless::Stored,
-            ParamsSpecFieldlessDe::Value(t) => ValueSpecFieldless::Value(t),
-            ParamsSpecFieldlessDe::From => ValueSpecFieldless::From,
+            ParamsSpecFieldlessDe::Stored => ParamsSpecFieldless::Stored,
+            ParamsSpecFieldlessDe::Value(t) => ParamsSpecFieldless::Value(t),
+            ParamsSpecFieldlessDe::From => ParamsSpecFieldless::From,
             ParamsSpecFieldlessDe::FromMap(mapping_fn_impl) => {
-                ValueSpecFieldless::FromMap(Box::new(mapping_fn_impl))
+                ParamsSpecFieldless::FromMap(Box::new(mapping_fn_impl))
             }
         }
     }

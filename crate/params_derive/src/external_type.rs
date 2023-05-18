@@ -159,7 +159,7 @@ impl ExternalType {
             for #wrapper_name #ty_generics
             #where_clause
             {
-                type Spec = #peace_params_path::ValueSpecFieldless<#wrapper_name #ty_generics>;
+                type Spec = #peace_params_path::ParamsSpecFieldless<#wrapper_name #ty_generics>;
                 type Partial = #wrapper_partial_name #ty_generics;
             }
         }
