@@ -14,10 +14,8 @@ use syn::{
     DeriveInput, GenericParam, Ident, ImplGenerics, Path, Type, TypeGenerics, WhereClause,
     WherePredicate,
 };
-use type_gen_external::External;
 
 use crate::{
-    external_type::ExternalType,
     fields_map::{fields_to_optional, fields_to_value_spec},
     impl_default::impl_default,
     impl_field_wise_builder::impl_field_wise_builder,
@@ -32,7 +30,6 @@ use crate::{
     util::{is_fieldless_type, serde_bounds_for_type_params, ImplMode},
 };
 
-mod external_type;
 mod fields_map;
 mod impl_default;
 mod impl_field_wise_builder;
@@ -220,8 +217,6 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
         };
     let (impl_generics, ty_generics, where_clause) = &generics_split;
 
-    let external_wrapper_types = ExternalType::external_wrapper_types(ast, &peace_params_path);
-
     let mut impl_value_tokens = proc_macro2::TokenStream::new();
     match impl_mode {
         ImplMode::Fieldwise => impl_value_tokens.extend(quote! {
@@ -256,8 +251,6 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
         #t_field_wise
 
         #t_field_wise_builder
-
-        #external_wrapper_types
     });
 
     impl_value_tokens
@@ -362,7 +355,7 @@ fn t_partial_external(
     type_gen_external(
         ast,
         generics_split,
-        External::Direct { value_ty },
+        value_ty,
         t_partial_name,
         &[
             parse_quote! {
@@ -402,7 +395,7 @@ fn t_field_wise(
         ast,
         generics_split,
         t_field_wise_name,
-        |fields| fields_to_value_spec(Some(ast), fields, peace_params_path),
+        |fields| fields_to_value_spec(fields, peace_params_path),
         &[
             parse_quote! {
                 #[doc="Specification of how to look up values for an item spec's parameters."]
@@ -464,9 +457,7 @@ fn t_field_wise_external(
     let mut t_field_wise = type_gen_external(
         ast,
         generics_split,
-        External::Direct {
-            value_ty: params_ty,
-        },
+        params_ty,
         t_field_wise_name,
         &[
             parse_quote! {
@@ -477,7 +468,6 @@ fn t_field_wise_external(
     );
 
     t_field_wise.extend(impl_field_wise_spec_rt_for_field_wise_external(
-        ast,
         generics_split,
         peace_params_path,
         peace_resources_path,
@@ -520,7 +510,7 @@ fn t_field_wise_builder(
         ast,
         generics_split,
         t_field_wise_builder_name,
-        |fields| fields_to_optional_value_spec(Some(ast), fields, peace_params_path),
+        |fields| fields_to_optional_value_spec(fields, peace_params_path),
         &[parse_quote! {
             #[doc="\
                 Builder for specification of how to look up the values for an item spec's \n\

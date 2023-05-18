@@ -21,7 +21,6 @@ use url::Url;
 #[serde(bound = "")]
 pub struct FileDownloadParams<Id> {
     /// Url of the file to download.
-    #[value_spec(fieldless)]
     src: Url,
     /// Path of the destination.
     ///

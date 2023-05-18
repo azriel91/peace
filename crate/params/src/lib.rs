@@ -70,7 +70,8 @@ pub use crate::{
     params_spec::ParamsSpec, params_spec_de::ParamsSpecDe,
     params_spec_fieldless::ParamsSpecFieldless, params_spec_fieldless_de::ParamsSpecFieldlessDe,
     params_specs::ParamsSpecs, value_resolution_ctx::ValueResolutionCtx,
-    value_resolution_mode::ValueResolutionMode, value_spec_rt::ValueSpecRt,
+    value_resolution_mode::ValueResolutionMode, value_spec::ValueSpec, value_spec_de::ValueSpecDe,
+    value_spec_rt::ValueSpecRt,
 };
 
 mod field_name_and_type;
@@ -88,4 +89,6 @@ mod params_specs;
 mod std_impl;
 mod value_resolution_ctx;
 mod value_resolution_mode;
+mod value_spec;
+mod value_spec_de;
 mod value_spec_rt;

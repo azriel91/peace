@@ -5,8 +5,6 @@ use syn::{
     PathSegment, Type, TypeGenerics, TypePath, Variant, WherePredicate,
 };
 
-use crate::external_type::ExternalType;
-
 // Remember to update `params/src/std_impl.rs` when updating this.
 //
 // This can be replaced by `std::cell::OnceCell` when Rust 1.70.0 is released.
@@ -43,60 +41,6 @@ pub fn is_fieldless_type(ast: &DeriveInput) -> bool {
     is_known_fieldless_std_lib_spec(&ast.ident) || is_tagged_fieldless(&ast.attrs)
 }
 
-/// Returns whether the field is annotated with `#[value_spec(fieldless)]`,
-/// which means its spec should be fieldless.
-///
-/// This attribute must be:
-///
-/// * attached to std library types defined outside the `peace_params` crate.
-/// * attached to each `Params`' field defined outside the item spec crate.
-///
-/// # Unused
-///
-/// Part of #119 was an attempt to implement recursive value specs. However,
-/// implementation wise the rabbit hole kept crawling deeper and deeper.
-pub fn _is_fieldless_field(field: &Field) -> bool {
-    _is_known_fieldless_type_spec(&field.ty) || is_tagged_fieldless(&field.attrs)
-}
-
-/// Returns if the given `Type`'s spec should be fieldless.
-///
-/// This applies to std library types, as well as non-`Path` types.
-///
-/// # Unused
-///
-/// Part of #119 was an attempt to implement recursive value specs. However,
-/// implementation wise the rabbit hole kept crawling deeper and deeper.
-fn _is_known_fieldless_type_spec(ty: &Type) -> bool {
-    match ty {
-        Type::Path(TypePath {
-            path: Path { segments, .. },
-            ..
-        }) => segments
-            .last()
-            .map(|path_segment| is_known_fieldless_std_lib_spec(&path_segment.ident))
-            .unwrap_or(false),
-
-        // If we cannot detect the type, we don't generate a fieldwise spec for it.
-        //
-        // Type::Array(_) |
-        // Type::BareFn(_) |
-        // Type::Group(_) |
-        // Type::ImplTrait(_) |
-        // Type::Infer(_) |
-        // Type::Macro(_) |
-        // Type::Never(_) |
-        // Type::Paren(_) |
-        // Type::Ptr(_) => |
-        // Type::Reference(_) => |
-        // Type::Slice(_) => |
-        // Type::TraitObject(_) => |
-        // Type::Tuple(_) => |
-        // Type::Verbatim(_) => |
-        _ => true,
-    }
-}
-
 /// Returns if the given `Type`'s spec should be fieldless.
 ///
 /// This applies to std library types, as well as non-`Path` types.
@@ -127,38 +71,6 @@ pub fn is_tagged_fieldless(attrs: &[Attribute]) -> bool {
         } else {
             false
         }
-    })
-}
-
-/// Returns the field wrapper generics to use, which is the intersection of the
-/// field type arguments and the parent type arguments.
-pub fn field_wrapper_generics(
-    parent_ast: Option<&DeriveInput>,
-    field_generics: &PathArguments,
-) -> Option<proc_macro2::TokenStream> {
-    parent_ast.and_then(|parent_ast| match field_generics {
-        PathArguments::None => None,
-        PathArguments::AngleBracketed(angle_bracketed) => {
-            let field_generics = &angle_bracketed.args;
-            let field_wrapper_generics = field_generics
-                .iter()
-                .filter(|field_generic| {
-                    let field_argument_as_param: GenericParam = parse_quote!(#field_generic);
-
-                    parent_ast
-                        .generics
-                        .params
-                        .iter()
-                        .any(|parent_generic| parent_generic == &field_argument_as_param)
-                })
-                .collect::<Vec<&GenericArgument>>();
-            if field_wrapper_generics.is_empty() {
-                None
-            } else {
-                Some(quote!(<#(#field_wrapper_generics,)*>))
-            }
-        }
-        PathArguments::Parenthesized(_) => None,
     })
 }
 
@@ -274,44 +186,6 @@ fn get_lit_str(meta: &ParseNestedMeta) -> syn::Result<Option<syn::LitStr>> {
     }
 }
 
-/// Returns bounds for `T: Value + TryFrom<TPartial, T::Partial: From<T>`.
-///
-/// ```rust,ignore
-/// T: Value<Spec = ParamsSpecFieldless<T>> + TryFrom<<T as Value>::Partial>,
-/// <T as ParamsFieldless>::Partial: From<T>,
-/// ```
-pub fn t_value_and_try_from_partial_bounds<'f>(
-    ast: &'f DeriveInput,
-    peace_params_path: &'f Path,
-) -> impl Iterator<Item = WherePredicate> + 'f {
-    ast.generics
-        .params
-        .iter()
-        .filter_map(|generic_param| match generic_param {
-            GenericParam::Lifetime(_) => None,
-            GenericParam::Type(type_param) => {
-                if type_param.ident == "Id" {
-                    None
-                } else {
-                    Some(type_param)
-                }
-            }
-            GenericParam::Const(_) => None,
-        })
-        .flat_map(move |type_param| {
-            let t_value_and_try_from_partial: WherePredicate = parse_quote! {
-                #type_param:
-                    #peace_params_path::ParamsFieldless<Spec = #peace_params_path::ParamsSpecFieldless<#type_param>>
-                    + ::std::convert::TryFrom<<#type_param as #peace_params_path::ParamsFieldless>::Partial>
-            };
-            let t_partial_from_t = parse_quote! {
-                <#type_param as #peace_params_path::ParamsFieldless>::Partial:
-                    ::std::convert::From<#type_param>
-            };
-            [t_value_and_try_from_partial, t_partial_from_t]
-        })
-}
-
 /// Returns the value spec type for a value, e.g. `ParamsSpec<MyValue>` or
 /// `ParamsSpecFieldless<String>`.
 pub fn value_spec_ty(
@@ -345,52 +219,24 @@ pub fn value_spec_ty_path(
 }
 
 /// Returns the type of a value spec field, e.g. `ParamsSpecFieldless<MyValue>`.
-pub fn field_spec_ty(
-    parent_ast: Option<&DeriveInput>,
-    peace_params_path: &Path,
-    field: &Field,
-) -> proc_macro2::TokenStream {
-    let field_ty = &field.ty;
-    let wrapper_type = ExternalType::wrapper_type(parent_ast, field_ty);
-    if is_tagged_fieldless(&field.attrs) {
-        quote!(#peace_params_path::ParamsSpecFieldless<#wrapper_type>)
-    } else {
-        quote!(#peace_params_path::ParamsSpecFieldless<#field_ty>)
-    }
+pub fn field_spec_ty(peace_params_path: &Path, field_ty: &Type) -> proc_macro2::TokenStream {
+    quote!(#peace_params_path::ValueSpec<#field_ty>)
 }
 
 /// Returns the type of a value spec field, e.g.
 /// `ParamsSpecFieldless::<MyValue>`.
-pub fn field_spec_ty_path(
-    parent_ast: Option<&DeriveInput>,
-    peace_params_path: &Path,
-    field: &Field,
-) -> proc_macro2::TokenStream {
-    let field_ty = &field.ty;
-    let wrapper_type = ExternalType::wrapper_type(parent_ast, field_ty);
-    if is_tagged_fieldless(&field.attrs) {
-        quote!(#peace_params_path::ParamsSpecFieldless::<#wrapper_type>)
-    } else {
-        quote!(#peace_params_path::ParamsSpecFieldless::<#field_ty>)
-    }
+pub fn field_spec_ty_path(peace_params_path: &Path, field_ty: &Type) -> proc_macro2::TokenStream {
+    quote!(#peace_params_path::ValueSpec::<#field_ty>)
 }
 
 /// Returns the type of a value spec field, e.g.
 /// `ParamsSpecFieldless::<MyValue>(#field_name)` or
 /// `ParamsSpecFieldless::<MyValue>(FieldTypeWrapper(#field_name))`.
 pub fn field_spec_ty_deconstruct(
-    parent_ast: Option<&DeriveInput>,
     peace_params_path: &Path,
-    field: &Field,
     field_name: &Ident,
 ) -> proc_macro2::TokenStream {
-    if is_tagged_fieldless(&field.attrs) {
-        let external_type = ExternalType::wrapper_type(parent_ast, &field.ty);
-        let wrapper_type_simple_name = type_path_simple_name(&external_type);
-        quote!(#peace_params_path::ParamsSpecFieldless::Value(#wrapper_type_simple_name(#field_name)))
-    } else {
-        quote!(#peace_params_path::ParamsSpecFieldless::Value(#field_name))
-    }
+    quote!(#peace_params_path::ValueSpec::Value(#field_name))
 }
 
 /// Returns whether the given field is a `PhantomData`.
@@ -409,18 +255,6 @@ pub fn tuple_index_from_field_index(field_index: usize) -> LitInt {
     // Need to convert this to a `LitInt`,
     // because `quote` outputs a usize index as `0usize` instead of `0`
     LitInt::new(&format!("{field_index}"), Span::call_site())
-}
-
-/// Returns `MyType` for a given `path::to::MyType<T>`.
-///
-/// If the type is not a `TypePath`, then this returns `None`.
-pub fn type_path_simple_name(ty: &Type) -> Option<&Ident> {
-    let Type::Path(TypePath { path: Path {
-        segments, ..
-    }, .. }) = ty else {
-        return None;
-    };
-    segments.last().map(|segment| &segment.ident)
 }
 
 /// Returns a comma separated list of deconstructed fields.

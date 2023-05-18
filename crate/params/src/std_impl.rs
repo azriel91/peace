@@ -9,7 +9,7 @@ use peace_params_derive::value_impl;
 
 // IMPORTANT!
 //
-// When updating the types that implement `ValueFieldless`, make sure to update
+// When updating the types that implement `ParamsFieldless`, make sure to update
 // `params_derive/src/util.rs#STD_LIB_TYPES`.
 //
 // These are the types that we don't require users to annotate with

@@ -23,7 +23,7 @@ use crate::util::is_serde_bound_attr;
 pub fn type_gen_external(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
-    external_type: External<'_>,
+    value_ty: &Type,
     type_name: &Ident,
     attrs: &[Attribute],
 ) -> proc_macro2::TokenStream {
@@ -44,14 +44,6 @@ pub fn type_gen_external(
     let mut generics_for_ref = ast.generics.clone();
     generics_for_ref.params.insert(0, parse_quote!('generated));
     let (impl_generics_for_ref, _type_generics, _where_clause) = generics_for_ref.split_for_impl();
-
-    let (value_ty, wrapper_name) = match external_type {
-        External::Direct { value_ty } => (value_ty, None),
-        External::Wrapper {
-            value_ty,
-            wrapper_name,
-        } => (value_ty, Some(wrapper_name)),
-    };
 
     let mut tokens = quote! {
         #(#attrs)*
@@ -132,128 +124,38 @@ pub fn type_gen_external(
         }
     };
 
-    if let Some(wrapper_name) = wrapper_name {
-        tokens.extend(quote! {
-            // impl TryFrom<ValuePartial> for Value
-            impl #impl_generics ::std::convert::TryFrom<#type_name #ty_generics>
-            for #value_ty
-            #where_clause
-            {
-                type Error = #type_name #ty_generics;
+    tokens.extend(quote! {
+        // impl TryFrom<ValuePartial> for Value
+        impl #impl_generics ::std::convert::TryFrom<#type_name #ty_generics>
+        for #value_ty
+        #where_clause
+        {
+            type Error = #type_name #ty_generics;
 
-                fn try_from(generated: #type_name #ty_generics) -> Result<Self, Self::Error> {
-                    if let Some(value) = generated.0 {
-                        Ok(value)
-                    } else {
-                        Err(generated)
-                    }
+            fn try_from(generated: #type_name #ty_generics) -> Result<Self, Self::Error> {
+                if let Some(value) = generated.0 {
+                    Ok(value)
+                } else {
+                    Err(generated)
                 }
             }
+        }
 
-            impl #impl_generics_for_ref ::std::convert::TryFrom<&'generated #type_name #ty_generics>
-            for #value_ty
-            #where_clause
-            {
-                type Error = &'generated #type_name #ty_generics;
+        impl #impl_generics_for_ref ::std::convert::TryFrom<&'generated #type_name #ty_generics>
+        for #value_ty
+        #where_clause
+        {
+            type Error = &'generated #type_name #ty_generics;
 
-                fn try_from(generated: &'generated #type_name #ty_generics) -> Result<Self, Self::Error> {
-                    if let Some(value) = generated.0.as_ref() {
-                        Ok(value.clone())
-                    } else {
-                        Err(generated)
-                    }
+            fn try_from(generated: &'generated #type_name #ty_generics) -> Result<Self, Self::Error> {
+                if let Some(value) = generated.0.as_ref() {
+                    Ok(value.clone())
+                } else {
+                    Err(generated)
                 }
             }
-
-            // impl TryFrom<ValuePartial> for ValueWrapper
-            impl #impl_generics ::std::convert::TryFrom<#type_name #ty_generics>
-            for #wrapper_name #ty_generics
-            #where_clause
-            {
-                type Error = #type_name #ty_generics;
-
-                fn try_from(generated: #type_name #ty_generics) -> Result<Self, Self::Error> {
-                    if let Some(value) = generated.0 {
-                        Ok(#wrapper_name(value))
-                    } else {
-                        Err(generated)
-                    }
-                }
-            }
-
-            impl #impl_generics_for_ref ::std::convert::TryFrom<&'generated #type_name #ty_generics>
-            for #wrapper_name #ty_generics
-            #where_clause
-            {
-                type Error = &'generated #type_name #ty_generics;
-
-                fn try_from(generated: &'generated #type_name #ty_generics) -> Result<Self, Self::Error> {
-                    if let Some(value) = generated.0.as_ref() {
-                        Ok(#wrapper_name(value.clone()))
-                    } else {
-                        Err(generated)
-                    }
-                }
-            }
-
-            // impl From<ValueWrapper> for ValuePartial
-            impl #impl_generics ::std::convert::From<#wrapper_name #ty_generics>
-            for #type_name #ty_generics
-            #where_clause
-            {
-                fn from(wrapper: #wrapper_name #ty_generics) -> Self {
-                    Self::new(Some(wrapper.0))
-                }
-            }
-        });
-    } else {
-        tokens.extend(quote! {
-            // impl TryFrom<ValuePartial> for Value
-            impl #impl_generics ::std::convert::TryFrom<#type_name #ty_generics>
-            for #value_ty
-            #where_clause
-            {
-                type Error = #type_name #ty_generics;
-
-                fn try_from(generated: #type_name #ty_generics) -> Result<Self, Self::Error> {
-                    if let Some(value) = generated.0 {
-                        Ok(value)
-                    } else {
-                        Err(generated)
-                    }
-                }
-            }
-
-            impl #impl_generics_for_ref ::std::convert::TryFrom<&'generated #type_name #ty_generics>
-            for #value_ty
-            #where_clause
-            {
-                type Error = &'generated #type_name #ty_generics;
-
-                fn try_from(generated: &'generated #type_name #ty_generics) -> Result<Self, Self::Error> {
-                    if let Some(value) = generated.0.as_ref() {
-                        Ok(value.clone())
-                    } else {
-                        Err(generated)
-                    }
-                }
-            }
-        });
-    }
+        }
+    });
 
     tokens
-}
-
-#[derive(Clone, Copy)]
-pub enum External<'name> {
-    Direct {
-        /// `Type` of the original value type, e.g. `module::Thing`
-        value_ty: &'name Type,
-    },
-    Wrapper {
-        /// `Type` of the original value type, e.g. `module::Thing`
-        value_ty: &'name Type,
-        /// Name of the wrapping value type, e.g. `ThingWrapper`
-        wrapper_name: &'name Ident,
-    },
 }

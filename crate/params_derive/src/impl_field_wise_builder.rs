@@ -4,8 +4,8 @@ use syn::{Data, DeriveInput, Fields, Ident, ImplGenerics, Path, TypeGenerics, Wh
 
 use crate::util::{
     field_spec_ty_deconstruct, field_spec_ty_path, fields_deconstruct, fields_vars_map,
-    is_phantom_data, t_value_and_try_from_partial_bounds, tuple_ident_from_field_index,
-    tuple_index_from_field_index, value_spec_ty, value_spec_ty_path, ImplMode,
+    is_phantom_data, tuple_ident_from_field_index, tuple_index_from_field_index, value_spec_ty,
+    value_spec_ty_path, ImplMode,
 };
 
 /// `impl MyParamsFieldWiseBuilder`, so that Peace can resolve the params
@@ -19,15 +19,6 @@ pub fn impl_field_wise_builder(
     impl_mode: ImplMode,
 ) -> proc_macro2::TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics_split;
-    // Needed for type parameterized type, only if the type parameter is an actual
-    // value / not a marker.
-    let where_clause = where_clause.cloned().map(|mut where_clause| {
-        where_clause
-            .predicates
-            .extend(t_value_and_try_from_partial_bounds(ast, peace_params_path));
-
-        where_clause
-    });
 
     // enum builder should only expose builder methods for the variant it is in,
     // which means it needs a type state parameter for its variant.
@@ -39,7 +30,7 @@ pub fn impl_field_wise_builder(
 
             let fields = &data_struct.fields;
 
-            let builder_field_methods = builder_field_methods(ast, fields, peace_params_path);
+            let builder_field_methods = builder_field_methods(fields, peace_params_path);
             let build_method_body = build_method_body(
                 ast,
                 ty_generics,
@@ -71,7 +62,6 @@ pub fn impl_field_wise_builder(
 /// Returns `with_field(mut self, value_spec: ValueSpec<FieldType>) -> Self` for
 /// all non-`PhantomData` fields.
 pub fn builder_field_methods(
-    parent_ast: &DeriveInput,
     fields: &Fields,
     peace_params_path: &Path,
 ) -> proc_macro2::TokenStream {
@@ -90,15 +80,17 @@ pub fn builder_field_methods(
                 let field_name = tuple_ident_from_field_index(field_index);
                 (self_field_name, field_name)
             };
-            let field_spec_ty_path = field_spec_ty_path(Some(parent_ast), peace_params_path, field);
-            let with_field_name = Ident::new(&format!("with_{field_name}"), Span::call_site());
+            let field_spec_ty_path = field_spec_ty_path(peace_params_path, field_ty);
+            let with_field_name = Ident::new(&format!("with_{self_field_name}"), Span::call_site());
             let with_field_name_from =
-                Ident::new(&format!("with_{field_name}_from"), Span::call_site());
-            let with_field_name_from_map =
-                Ident::new(&format!("with_{field_name}_from_map"), Span::call_site());
+                Ident::new(&format!("with_{self_field_name}_from"), Span::call_site());
+            let with_field_name_from_map = Ident::new(
+                &format!("with_{self_field_name}_from_map"),
+                Span::call_site(),
+            );
 
             let field_spec_ty_deconstruct =
-                field_spec_ty_deconstruct(Some(parent_ast), peace_params_path, field, &field_name);
+                field_spec_ty_deconstruct(peace_params_path, &field_name);
 
             // Specifies how to determine the value of this field.
             //
@@ -156,16 +148,14 @@ fn build_method_body(
     fields: &Fields,
     impl_mode: ImplMode,
 ) -> proc_macro2::TokenStream {
-    // let field_spec_ty_path = field_spec_ty_path(Some(parent_ast),
-    // peace_params_path, field);
-
     let value_spec_ty_path =
         value_spec_ty_path(parent_ast, ty_generics, peace_params_path, impl_mode);
 
     let fields_deconstruct = fields_deconstruct(fields);
     // let field_name = field_name.unwrap_or(ValueSpec::<FieldTy>::Stored);
     let fields_unwrap_to_value_spec_fieldless = fields_vars_map(fields, |field, field_name| {
-        let field_spec_ty_path = field_spec_ty_path(Some(parent_ast), peace_params_path, field);
+        let field_ty = &field.ty;
+        let field_spec_ty_path = field_spec_ty_path(peace_params_path, field_ty);
 
         quote! {
             #field_name.unwrap_or(#field_spec_ty_path::Stored)

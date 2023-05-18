@@ -25,7 +25,6 @@ pub fn impl_from_params_for_params_field_wise(
             let fields = &data_struct.fields;
 
             struct_fields_map_to_value(
-                ast,
                 params_name,
                 params_field_wise_name,
                 fields,
@@ -36,7 +35,6 @@ pub fn impl_from_params_for_params_field_wise(
             let variants = &data_enum.variants;
 
             variants_map_to_value(
-                ast,
                 params_name,
                 params_field_wise_name,
                 variants,
@@ -47,7 +45,6 @@ pub fn impl_from_params_for_params_field_wise(
             let fields = Fields::from(data_union.fields.clone());
 
             struct_fields_map_to_value(
-                ast,
                 params_name,
                 params_field_wise_name,
                 &fields,
@@ -69,14 +66,13 @@ pub fn impl_from_params_for_params_field_wise(
 }
 
 fn struct_fields_map_to_value(
-    parent_ast: &DeriveInput,
     params_name: &Ident,
     params_field_wise_name: &Ident,
     fields: &Fields,
     peace_params_path: &Path,
 ) -> proc_macro2::TokenStream {
     let fields_deconstructed = fields_deconstruct(fields);
-    let fields_map_to_value = fields_map_to_value(parent_ast, fields, peace_params_path);
+    let fields_map_to_value = fields_map_to_value(fields, peace_params_path);
 
     match fields {
         Fields::Named(_fields_named) => {
@@ -122,7 +118,6 @@ fn struct_fields_map_to_value(
 }
 
 fn variants_map_to_value(
-    parent_ast: &DeriveInput,
     params_name: &Ident,
     params_field_wise_name: &Ident,
     variants: &Punctuated<Variant, Token![,]>,
@@ -164,7 +159,6 @@ fn variants_map_to_value(
             .fold(proc_macro2::TokenStream::new(), |mut tokens, variant| {
                 let variant_fields = fields_deconstruct(&variant.fields);
                 let variant_fields_map_to_value = variant_fields_map_to_value(
-                    parent_ast,
                     params_field_wise_name,
                     &variant.ident,
                     &variant.fields,
@@ -188,13 +182,12 @@ fn variants_map_to_value(
 }
 
 fn variant_fields_map_to_value(
-    parent_ast: &DeriveInput,
     params_field_wise_name: &Ident,
     variant_name: &Ident,
     fields: &Fields,
     peace_params_path: &Path,
 ) -> proc_macro2::TokenStream {
-    let fields_map_to_value = fields_map_to_value(parent_ast, fields, peace_params_path);
+    let fields_map_to_value = fields_map_to_value(fields, peace_params_path);
     match fields {
         Fields::Named(_fields_named) => {
             // Generates:
@@ -225,11 +218,7 @@ fn variant_fields_map_to_value(
     }
 }
 
-fn fields_map_to_value(
-    parent_ast: &DeriveInput,
-    fields: &Fields,
-    peace_params_path: &Path,
-) -> proc_macro2::TokenStream {
+fn fields_map_to_value(fields: &Fields, peace_params_path: &Path) -> proc_macro2::TokenStream {
     match fields {
         Fields::Named(fields_named) => {
             // Generates:
@@ -254,12 +243,8 @@ fn fields_map_to_value(
                                 #field_name: std::marker::PhantomData,
                             });
                         } else {
-                            let field_spec_ty_deconstruct = field_spec_ty_deconstruct(
-                                Some(parent_ast),
-                                peace_params_path,
-                                field,
-                                field_name,
-                            );
+                            let field_spec_ty_deconstruct =
+                                field_spec_ty_deconstruct(peace_params_path, field_name);
 
                             tokens.extend(quote! {
                                 #field_name: #field_spec_ty_deconstruct,
@@ -289,12 +274,8 @@ fn fields_map_to_value(
                     if is_phantom_data(&field.ty) {
                         tokens.extend(quote!(std::marker::PhantomData,));
                     } else {
-                        let field_spec_ty_deconstruct = field_spec_ty_deconstruct(
-                            Some(parent_ast),
-                            peace_params_path,
-                            field,
-                            &field_name,
-                        );
+                        let field_spec_ty_deconstruct =
+                            field_spec_ty_deconstruct(peace_params_path, &field_name);
 
                         tokens.extend(quote!(#field_spec_ty_deconstruct,));
                     }

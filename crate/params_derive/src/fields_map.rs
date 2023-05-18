@@ -1,4 +1,4 @@
-use syn::{Attribute, DeriveInput, Field, Fields, Path, Type};
+use syn::{Attribute, Field, Fields, Path, Type};
 
 use crate::util::{field_spec_ty, is_phantom_data, is_serde_bound_attr};
 
@@ -17,11 +17,7 @@ pub fn fields_to_optional(fields: &mut Fields) {
 ///
 /// If the type is marked with `#[value_spec(fieldless)]`, then it is wrapped
 /// as `ValueSpec<MyTypeWrapper>`.
-pub fn fields_to_value_spec(
-    parent_ast: Option<&DeriveInput>,
-    fields: &mut Fields,
-    peace_params_path: &Path,
-) {
+pub fn fields_to_value_spec(fields: &mut Fields, peace_params_path: &Path) {
     fields_map(fields, |field| {
         let field_ty = &field.ty;
         if is_phantom_data(field_ty) {
@@ -37,7 +33,7 @@ pub fn fields_to_value_spec(
             //
             // In #119, we tried using `ValueSpec` for recursive value spec resolution, but
             // it proved too difficult.
-            syn::parse2(field_spec_ty(parent_ast, peace_params_path, field))
+            syn::parse2(field_spec_ty(peace_params_path, field_ty))
                 .expect("Failed to parse field to value spec.")
         }
     })
@@ -54,17 +50,13 @@ pub fn fields_to_value_spec(
 /// ```rust,ignore
 /// `Option<ParamsSpecFieldless<MyTypeWrapper>>`.
 /// ```
-pub fn fields_to_optional_value_spec(
-    parent_ast: Option<&DeriveInput>,
-    fields: &mut Fields,
-    peace_params_path: &Path,
-) {
+pub fn fields_to_optional_value_spec(fields: &mut Fields, peace_params_path: &Path) {
     fields_map(fields, |field| {
         let field_ty = &field.ty;
         if is_phantom_data(field_ty) {
             field_ty.clone()
         } else {
-            let field_spec_ty = field_spec_ty(parent_ast, peace_params_path, field);
+            let field_spec_ty = field_spec_ty(peace_params_path, field_ty);
             parse_quote!(Option<#field_spec_ty>)
         }
     })

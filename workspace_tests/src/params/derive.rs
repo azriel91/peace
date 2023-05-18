@@ -69,7 +69,11 @@ mod struct_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsSpec, ParamsSpecFieldless};
+    use peace::{
+        cfg::{item_spec_id, ItemSpecId},
+        params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+        resources::{resources::ts::SetUp, Resources},
+    };
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct StructParams {
@@ -109,8 +113,8 @@ mod struct_params {
         assert!(matches!(
             StructParamsFieldWise::from(params),
             StructParamsFieldWise {
-                src: ParamsSpecFieldless::Value(src_value),
-                dest: ParamsSpecFieldless::Value(dest_value),
+                src: ValueSpec::Value(src_value),
+                dest: ValueSpec::Value(dest_value),
             }
             if src_value == "a"
             && dest_value == "b"
@@ -121,17 +125,31 @@ mod struct_params {
     fn field_wise_from_field_wise_builder() {
         let field_wise = StructParams::field_wise_spec()
             .with_src(String::from("a"))
-            .with_dest_from_map(|_: &u32| String::from("b"))
+            .with_dest_from_map(|_: &u32| Some(String::from("b")))
             .build();
+        let resources: Resources<SetUp> = {
+            let mut resources = Resources::new();
+            resources.insert(1u32);
+            Resources::from(resources)
+        };
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
+            ValueResolutionMode::ApplyDry,
+            item_spec_id!("field_wise_from_field_wise_builder"),
+            String::from("StructParams"),
+        );
 
         assert!(matches!(
             field_wise,
             ParamsSpec::FieldWise(StructParamsFieldWise {
-                src: ParamsSpecFieldless::Value(src_value),
-                dest: ParamsSpecFieldless::Value(dest_value),
+                src: ValueSpec::Value(src_value),
+                dest: ValueSpec::FromMap(mapping_fn),
             })
             if src_value == "a"
-            && dest_value == "b"
+            && matches!(
+                mapping_fn.map(&resources, &mut value_resolution_ctx),
+                Ok(dest_mapped)
+                if dest_mapped == "b"
+            )
         ));
     }
 
@@ -142,8 +160,8 @@ mod struct_params {
             format!(
                 "{:?}",
                 StructParamsFieldWise {
-                    src: ParamsSpecFieldless::Value(String::from("a")),
-                    dest: ParamsSpecFieldless::Value(String::from("b")),
+                    src: ValueSpec::Value(String::from("a")),
+                    dest: ValueSpec::Value(String::from("b")),
                 }
             )
         );
@@ -242,7 +260,11 @@ mod struct_with_type_params {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsSpec, ParamsSpecFieldless};
+    use peace::{
+        cfg::{item_spec_id, ItemSpecId},
+        params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+        resources::{resources::ts::SetUp, Resources},
+    };
 
     #[derive(Derivative, Params, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
@@ -293,12 +315,44 @@ mod struct_with_type_params {
         assert!(matches!(
             StructWithTypeParamsFieldWise::from(params),
             StructWithTypeParamsFieldWise {
-                src: ParamsSpecFieldless::Value(src_value),
-                dest: ParamsSpecFieldless::Value(dest_value),
+                src: ValueSpec::Value(src_value),
+                dest: ValueSpec::Value(dest_value),
                 marker: PhantomData,
             }
             if src_value == "a"
             && dest_value == "b"
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_field_wise_builder() {
+        let field_wise = StructWithTypeParams::<()>::field_wise_spec()
+            .with_src_from()
+            .with_dest_from_map(|_: &u32| Some(String::from("b")))
+            .build();
+        let resources: Resources<SetUp> = {
+            let mut resources = Resources::new();
+            resources.insert(1u32);
+            Resources::from(resources)
+        };
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
+            ValueResolutionMode::ApplyDry,
+            item_spec_id!("field_wise_from_field_wise_builder"),
+            String::from("StructWithTypeParams<()>"),
+        );
+
+        assert!(matches!(
+            field_wise,
+            ParamsSpec::FieldWise(StructWithTypeParamsFieldWise {
+                src: ValueSpec::From,
+                dest: ValueSpec::FromMap(mapping_fn),
+                marker: PhantomData,
+            })
+            if matches!(
+                mapping_fn.map(&resources, &mut value_resolution_ctx),
+                Ok(dest_mapped)
+                if dest_mapped == "b"
+            )
         ));
     }
 
@@ -309,8 +363,8 @@ mod struct_with_type_params {
             format!(
                 "{:?}",
                 StructWithTypeParamsFieldWise::<()> {
-                    src: ParamsSpecFieldless::Value(String::from("a")),
-                    dest: ParamsSpecFieldless::Value(String::from("b")),
+                    src: ValueSpec::Value(String::from("a")),
+                    dest: ValueSpec::Value(String::from("b")),
                     marker: PhantomData,
                 }
             )
@@ -418,7 +472,11 @@ mod tuple_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsSpec, ParamsSpecFieldless};
+    use peace::{
+        cfg::{item_spec_id, ItemSpecId},
+        params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+        resources::{resources::ts::SetUp, Resources},
+    };
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct TupleParams(
@@ -452,11 +510,42 @@ mod tuple_params {
         assert!(matches!(
             TupleParamsFieldWise::from(params),
             TupleParamsFieldWise (
-                ParamsSpecFieldless::Value(src_value),
-                ParamsSpecFieldless::Value(dest_value),
+                ValueSpec::Value(src_value),
+                ValueSpec::Value(dest_value),
             )
             if src_value == "a"
             && dest_value == "b"
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_field_wise_builder() {
+        let field_wise = TupleParams::field_wise_spec()
+            .with_0_from()
+            .with_1_from_map(|_: &u32| Some(String::from("b")))
+            .build();
+        let resources: Resources<SetUp> = {
+            let mut resources = Resources::new();
+            resources.insert(1u32);
+            Resources::from(resources)
+        };
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
+            ValueResolutionMode::ApplyDry,
+            item_spec_id!("field_wise_from_field_wise_builder"),
+            String::from("TupleParams"),
+        );
+
+        assert!(matches!(
+            field_wise,
+            ParamsSpec::FieldWise(TupleParamsFieldWise(
+                ValueSpec::From,
+                ValueSpec::FromMap(mapping_fn),
+            ))
+            if matches!(
+                mapping_fn.map(&resources, &mut value_resolution_ctx),
+                Ok(dest_mapped)
+                if dest_mapped == "b"
+            )
         ));
     }
 
@@ -467,8 +556,8 @@ mod tuple_params {
             format!(
                 "{:?}",
                 TupleParamsFieldWise(
-                    ParamsSpecFieldless::Value(String::from("a")),
-                    ParamsSpecFieldless::Value(String::from("b")),
+                    ValueSpec::Value(String::from("a")),
+                    ValueSpec::Value(String::from("b")),
                 )
             )
         );
@@ -551,7 +640,11 @@ mod tuple_with_type_params {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsSpec, ParamsSpecFieldless};
+    use peace::{
+        cfg::{item_spec_id, ItemSpecId},
+        params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+        resources::{resources::ts::SetUp, Resources},
+    };
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct TupleWithTypeParams<Id>(String, String, PhantomData<Id>)
@@ -588,12 +681,44 @@ mod tuple_with_type_params {
         assert!(matches!(
             TupleWithTypeParamsFieldWise::from(params),
             TupleWithTypeParamsFieldWise::<()>(
-                ParamsSpecFieldless::Value(src_value),
-                ParamsSpecFieldless::Value(dest_value),
+                ValueSpec::Value(src_value),
+                ValueSpec::Value(dest_value),
                 PhantomData,
             )
             if src_value == "a"
             && dest_value == "b"
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_field_wise_builder() {
+        let field_wise = TupleWithTypeParams::<()>::field_wise_spec()
+            .with_0_from()
+            .with_1_from_map(|_: &u32| Some(String::from("b")))
+            .build();
+        let resources: Resources<SetUp> = {
+            let mut resources = Resources::new();
+            resources.insert(1u32);
+            Resources::from(resources)
+        };
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
+            ValueResolutionMode::ApplyDry,
+            item_spec_id!("field_wise_from_field_wise_builder"),
+            String::from("TupleWithTypeParams<()>"),
+        );
+
+        assert!(matches!(
+            field_wise,
+            ParamsSpec::FieldWise(TupleWithTypeParamsFieldWise(
+                ValueSpec::From,
+                ValueSpec::FromMap(mapping_fn),
+                PhantomData,
+            ))
+            if matches!(
+                mapping_fn.map(&resources, &mut value_resolution_ctx),
+                Ok(dest_mapped)
+                if dest_mapped == "b"
+            )
         ));
     }
 
@@ -604,8 +729,8 @@ mod tuple_with_type_params {
             format!(
                 "{:?}",
                 TupleWithTypeParamsFieldWise::<()>(
-                    ParamsSpecFieldless::Value(String::from("a")),
-                    ParamsSpecFieldless::Value(String::from("b")),
+                    ValueSpec::Value(String::from("a")),
+                    ValueSpec::Value(String::from("b")),
                     PhantomData,
                 )
             )
@@ -708,7 +833,7 @@ mod enum_params {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsSpec, ParamsSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueSpec};
 
     #[derive(Derivative, Params, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
@@ -790,7 +915,7 @@ mod enum_params {
         assert!(matches!(
             EnumParamsFieldWise::from(params),
             EnumParamsFieldWise::<()>::Named {
-                src: ParamsSpecFieldless::Value(value),
+                src: ValueSpec::Value(value),
                 marker: PhantomData,
             }
             if value == "a"
@@ -803,7 +928,7 @@ mod enum_params {
 
         assert!(matches!(
             EnumParamsFieldWise::from(params),
-            EnumParamsFieldWise::<()>::Tuple(ParamsSpecFieldless::Value(value))
+            EnumParamsFieldWise::<()>::Tuple(ValueSpec::Value(value))
             if value == "a"
         ));
     }
@@ -814,7 +939,7 @@ mod enum_params {
 
         assert!(matches!(
             EnumParamsFieldWise::from(params),
-            EnumParamsFieldWise::<()>::TupleMarker(ParamsSpecFieldless::Value(value), PhantomData)
+            EnumParamsFieldWise::<()>::TupleMarker(ValueSpec::Value(value), PhantomData)
             if value == "a"
         ));
     }
@@ -832,7 +957,7 @@ mod enum_params {
     #[test]
     fn spec_clone_named() {
         let spec = EnumParamsFieldWise::<()>::Named {
-            src: ParamsSpecFieldless::Value(String::from("a")),
+            src: ValueSpec::Value(String::from("a")),
             marker: PhantomData,
         };
         let spec_clone = spec.clone();
@@ -841,7 +966,7 @@ mod enum_params {
         assert!(matches!(
             spec_clone,
             EnumParamsFieldWise::<()>::Named {
-                src: ParamsSpecFieldless::Value(value),
+                src: ValueSpec::Value(value),
                 marker: PhantomData
             }
             if value == "a"
@@ -850,13 +975,13 @@ mod enum_params {
 
     #[test]
     fn spec_clone_tuple() {
-        let spec = EnumParamsFieldWise::<()>::Tuple(ParamsSpecFieldless::Value(String::from("a")));
+        let spec = EnumParamsFieldWise::<()>::Tuple(ValueSpec::Value(String::from("a")));
         let spec_clone = spec.clone();
         drop(spec);
 
         assert!(matches!(
             spec_clone,
-            EnumParamsFieldWise::<()>::Tuple(ParamsSpecFieldless::Value(value))
+            EnumParamsFieldWise::<()>::Tuple(ValueSpec::Value(value))
             if value == "a"
         ));
     }
@@ -864,7 +989,7 @@ mod enum_params {
     #[test]
     fn spec_clone_tuple_marker() {
         let spec = EnumParamsFieldWise::<()>::TupleMarker(
-            ParamsSpecFieldless::Value(String::from("a")),
+            ValueSpec::Value(String::from("a")),
             PhantomData,
         );
         let spec_clone = spec.clone();
@@ -872,7 +997,7 @@ mod enum_params {
 
         assert!(matches!(
             spec_clone,
-            EnumParamsFieldWise::<()>::TupleMarker(ParamsSpecFieldless::Value(value), PhantomData)
+            EnumParamsFieldWise::<()>::TupleMarker(ValueSpec::Value(value), PhantomData)
             if value == "a"
         ));
     }
@@ -893,7 +1018,7 @@ mod enum_params {
             format!(
                 "{:?}",
                 EnumParamsFieldWise::<()>::Named {
-                    src: ParamsSpecFieldless::Value(String::from("a")),
+                    src: ValueSpec::Value(String::from("a")),
                     marker: PhantomData,
                 }
             )
@@ -906,7 +1031,7 @@ mod enum_params {
             r#"Tuple(Value("a"))"#,
             format!(
                 "{:?}",
-                EnumParamsFieldWise::<()>::Tuple(ParamsSpecFieldless::Value(String::from("a")))
+                EnumParamsFieldWise::<()>::Tuple(ValueSpec::Value(String::from("a")))
             )
         );
     }
@@ -918,7 +1043,7 @@ mod enum_params {
             format!(
                 "{:?}",
                 EnumParamsFieldWise::<()>::TupleMarker(
-                    ParamsSpecFieldless::Value(String::from("a")),
+                    ValueSpec::Value(String::from("a")),
                     PhantomData
                 )
             )
@@ -1201,16 +1326,16 @@ mod struct_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsFieldless, ParamsSpec, ParamsSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueSpec};
 
-    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ParamsFieldless)]
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub struct InnerValue<T>(T)
     where
-        T: Clone + Debug + ParamsFieldless;
+        T: Clone + Debug;
 
     impl<T> InnerValue<T>
     where
-        T: Clone + Debug + ParamsFieldless,
+        T: Clone + Debug,
     {
         fn new(inner: T) -> Self {
             Self(inner)
@@ -1220,14 +1345,7 @@ mod struct_recursive_value {
     #[derive(Clone, Debug, Params, PartialEq, Eq, Serialize, Deserialize)]
     pub struct StructRecursiveValue<T>
     where
-        T: Clone
-            + Debug
-            + ParamsFieldless<Spec = ParamsSpecFieldless<T>>
-            + TryFrom<<T as ParamsFieldless>::Partial>
-            + Send
-            + Sync
-            + 'static,
-        T::Partial: From<T>,
+        T: Clone + Debug + Send + Sync + 'static,
     {
         /// Source / desired value for the state.
         src: InnerValue<T>,
@@ -1270,8 +1388,8 @@ mod struct_recursive_value {
         assert!(matches!(
             StructRecursiveValueFieldWise::from(params),
             StructRecursiveValueFieldWise {
-                src: ParamsSpecFieldless::Value(src_value),
-                dest: ParamsSpecFieldless::Value(dest_value),
+                src: ValueSpec::Value(src_value),
+                dest: ValueSpec::Value(dest_value),
             }
             if src_value == InnerValue::<u16>(123)
             && dest_value == 456
@@ -1285,8 +1403,8 @@ mod struct_recursive_value {
             format!(
                 "{:?}",
                 StructRecursiveValueFieldWise::<u16> {
-                    src: ParamsSpecFieldless::Value(InnerValue::<u16>::new(123)),
-                    dest: ParamsSpecFieldless::Value(456),
+                    src: ValueSpec::Value(InnerValue::<u16>::new(123)),
+                    dest: ValueSpec::Value(456),
                 }
             )
         );
@@ -1385,7 +1503,7 @@ mod struct_recursive_value_no_bounds {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsSpec, ParamsSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueSpec};
 
     #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, Params)]
     #[derivative(Clone, Debug)]
@@ -1452,8 +1570,8 @@ mod struct_recursive_value_no_bounds {
         assert!(matches!(
             StructRecursiveValueNoBoundsFieldWise::from(params),
             StructRecursiveValueNoBoundsFieldWise {
-                src: ParamsSpecFieldless::Value(src_value),
-                dest: ParamsSpecFieldless::Value(dest_value),
+                src: ValueSpec::Value(src_value),
+                dest: ValueSpec::Value(dest_value),
             }
             if src_value.inner == 123
             && dest_value == 456
@@ -1467,8 +1585,8 @@ mod struct_recursive_value_no_bounds {
             format!(
                 "{:?}",
                 StructRecursiveValueNoBoundsFieldWise::<()> {
-                    src: ParamsSpecFieldless::Value(InnerValue::new(123)),
-                    dest: ParamsSpecFieldless::Value(456),
+                    src: ValueSpec::Value(InnerValue::new(123)),
+                    dest: ValueSpec::Value(456),
                 }
             )
         );
@@ -1566,7 +1684,7 @@ mod enum_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsFieldless, ParamsSpec, ParamsSpecFieldless};
+    use peace::params::{Params, ParamsFieldless, ParamsSpec, ParamsSpecFieldless, ValueSpec};
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ParamsFieldless)]
     pub enum InnerValue<T>
@@ -1640,8 +1758,8 @@ mod enum_recursive_value {
         assert!(matches!(
             EnumRecursiveValueFieldWise::from(params),
             EnumRecursiveValueFieldWise::Named {
-                src: ParamsSpecFieldless::Value(src_value),
-                dest: ParamsSpecFieldless::Value(dest_value),
+                src: ValueSpec::Value(src_value),
+                dest: ValueSpec::Value(dest_value),
             }
             if src_value == InnerValue::<u16>::Tuple(123)
             && dest_value == 456
@@ -1652,8 +1770,8 @@ mod enum_recursive_value {
         assert!(matches!(
             EnumRecursiveValueFieldWise::from(params),
             EnumRecursiveValueFieldWise::Tuple(
-                ParamsSpecFieldless::Value(src_value),
-                ParamsSpecFieldless::Value(dest_value),
+                ValueSpec::Value(src_value),
+                ValueSpec::Value(dest_value),
             )
             if src_value == InnerValue::<u16>::Named { value: 123}
             && dest_value == 456
@@ -1667,8 +1785,8 @@ mod enum_recursive_value {
             format!(
                 "{:?}",
                 EnumRecursiveValueFieldWise::Named::<u16> {
-                    src: ParamsSpecFieldless::Value(InnerValue::<u16>::Tuple(123)),
-                    dest: ParamsSpecFieldless::Value(456),
+                    src: ValueSpec::Value(InnerValue::<u16>::Tuple(123)),
+                    dest: ValueSpec::Value(456),
                 }
             )
         );
@@ -1827,7 +1945,7 @@ mod enum_recursive_marker_no_bounds {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsSpec, ParamsSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueSpec};
 
     #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, Params)]
     #[derivative(Clone(bound = ""), Debug(bound = ""))]
@@ -1895,8 +2013,8 @@ mod enum_recursive_marker_no_bounds {
         assert!(matches!(
             EnumRecursiveNoBoundsFieldWise::from(params),
             EnumRecursiveNoBoundsFieldWise::Named {
-                src: ParamsSpecFieldless::Value(InnerValue::<u16>::Tuple(PhantomData)),
-                dest: ParamsSpecFieldless::Value(dest_marker),
+                src: ValueSpec::Value(InnerValue::<u16>::Tuple(PhantomData)),
+                dest: ValueSpec::Value(dest_marker),
             }
             if dest_marker == 456
         ));
@@ -1911,8 +2029,8 @@ mod enum_recursive_marker_no_bounds {
         assert!(matches!(
             EnumRecursiveNoBoundsFieldWise::from(params),
             EnumRecursiveNoBoundsFieldWise::Tuple(
-                ParamsSpecFieldless::Value(InnerValue::<u16>::Named { marker: PhantomData }),
-                ParamsSpecFieldless::Value(dest_marker),
+                ValueSpec::Value(InnerValue::<u16>::Named { marker: PhantomData }),
+                ValueSpec::Value(dest_marker),
             )
             if dest_marker == 456
         ));
@@ -1925,8 +2043,8 @@ mod enum_recursive_marker_no_bounds {
             format!(
                 "{:?}",
                 EnumRecursiveNoBoundsFieldWise::Named::<u16> {
-                    src: ParamsSpecFieldless::Value(InnerValue::<u16>::Tuple(PhantomData)),
-                    dest: ParamsSpecFieldless::Value(456),
+                    src: ValueSpec::Value(InnerValue::<u16>::Tuple(PhantomData)),
+                    dest: ValueSpec::Value(456),
                 }
             )
         );
@@ -2085,7 +2203,7 @@ mod external_fields {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsSpec, ParamsSpecFieldless};
+    use peace::params::{Params, ParamsSpec, ValueSpec};
 
     // Note: no `Value` derive.
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -2135,8 +2253,8 @@ mod external_fields {
         assert!(matches!(
             StructExternalValueFieldWise::from(params),
             StructExternalValueFieldWise {
-                src: ParamsSpecFieldless::Value(StructExternalValueInnerValueWrapper(InnerValue(src_value))),
-                dest: ParamsSpecFieldless::Value(dest_value),
+                src: ValueSpec::Value(InnerValue(src_value)),
+                dest: ValueSpec::Value(dest_value),
             }
             if src_value == 123
             && dest_value == 456
@@ -2146,14 +2264,12 @@ mod external_fields {
     #[test]
     fn spec_debug() {
         assert_eq!(
-            r#"StructExternalValueFieldWise { src: Value(StructExternalValueInnerValueWrapper(InnerValue(123))), dest: Value(456) }"#,
+            r#"StructExternalValueFieldWise { src: Value(InnerValue(123)), dest: Value(456) }"#,
             format!(
                 "{:?}",
                 StructExternalValueFieldWise {
-                    src: ParamsSpecFieldless::Value(StructExternalValueInnerValueWrapper(
-                        InnerValue(123)
-                    )),
-                    dest: ParamsSpecFieldless::Value(456),
+                    src: ValueSpec::Value(InnerValue(123)),
+                    dest: ValueSpec::Value(456),
                 }
             )
         );
@@ -2256,7 +2372,7 @@ macro_rules! params_tests {
         #[test]
         fn params_field_wise_spec_associated_type_is_params_field_wise() {
             assert_eq!(
-                TypeId::of::<<$params_ty $($generics)* as Value>::FieldWiseSpec>(),
+                TypeId::of::<<$params_ty $($generics)* as Params>::FieldWiseSpec>(),
                 TypeId::of::<$params_field_wise_ty $($generics)*>()
             );
         }
@@ -2264,7 +2380,7 @@ macro_rules! params_tests {
         #[test]
         fn params_partial_associated_type_is_params_partial() {
             assert_eq!(
-                TypeId::of::<<$params_ty $($generics)* as Value>::Partial>(),
+                TypeId::of::<<$params_ty $($generics)* as Params>::Partial>(),
                 TypeId::of::<$params_partial_ty $($generics)*>()
             );
         }

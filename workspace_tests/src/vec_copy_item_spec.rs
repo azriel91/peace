@@ -12,7 +12,7 @@ use peace::{
         accessors::{RMaybe, W},
         Data,
     },
-    params::{Params, ParamsSpec},
+    params::Params,
     resources::{resources::ts::Empty, states::StatesSaved, Resources},
     rt_model::ItemSpecWrapper,
 };
