@@ -17,6 +17,7 @@ doctest = false
 test = false
 
 [dependencies]
-syn = { version = "2.0.13", features = ["extra-traits"] }
-quote = "1.0.26"
+heck = "0.4.1"
 proc-macro2 = "1.0.56"
+quote = "1.0.26"
+syn = { version = "2.0.13", features = ["extra-traits"] }

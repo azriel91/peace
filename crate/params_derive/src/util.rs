@@ -1,8 +1,8 @@
 use proc_macro2::Span;
 use syn::{
     meta::ParseNestedMeta, punctuated::Punctuated, AngleBracketedGenericArguments, Attribute,
-    DeriveInput, Field, Fields, GenericArgument, GenericParam, Ident, LitInt, Path, PathArguments,
-    PathSegment, Type, TypeGenerics, TypePath, Variant, WherePredicate,
+    DeriveInput, Field, Fields, GenericArgument, GenericParam, Generics, Ident, LitInt, Path,
+    PathArguments, PathSegment, ReturnType, Type, TypeGenerics, TypePath, Variant, WherePredicate,
 };
 
 // Remember to update `params/src/std_impl.rs` when updating this.
@@ -322,6 +322,117 @@ fn fields_deconstruct_retain_map(
             }
         })
         .collect::<Vec<proc_macro2::TokenStream>>()
+}
+
+/// Returns the intersection of parent type arguments and variant field types.
+///
+/// This is the part between the angle brackets -- `T1, T2, ..`.
+pub fn variant_generics_intersect(
+    parent_generics: &Generics,
+    variant: &Variant,
+) -> Vec<GenericParam> {
+    let field_generics_maybe = variant
+        .fields
+        .iter()
+        .flat_map(|field| field_generics_maybe(&field.ty));
+
+    field_generics_maybe
+        .filter(|field_generic| {
+            parent_generics
+                .params
+                .iter()
+                .any(|parent_generic_param| field_generic == parent_generic_param)
+        })
+        .collect::<Vec<GenericParam>>()
+}
+
+/// Returns the simple types found in this type.
+///
+/// * If the type has no type parameters, then itself it returned.
+/// * If the type has type parameters, then its type parameters are returned.
+/// * This is applied recursively.
+fn field_generics_maybe(ty: &Type) -> Vec<GenericParam> {
+    match ty {
+        Type::Array(type_array) => field_generics_maybe(&type_array.elem),
+        Type::BareFn(bare_fn) => {
+            let output_types = match &bare_fn.output {
+                ReturnType::Default => Vec::new(),
+                ReturnType::Type(_r_arrow, return_type) => field_generics_maybe(&return_type),
+            };
+
+            bare_fn
+                .inputs
+                .iter()
+                .flat_map(|fn_arg| field_generics_maybe(&fn_arg.ty))
+                .chain(output_types.into_iter())
+                .collect::<Vec<GenericParam>>()
+        }
+        Type::Group(type_group) => field_generics_maybe(&type_group.elem),
+        Type::ImplTrait(_) => {
+            unreachable!("Cannot have impl trait in field type position.")
+        }
+        Type::Infer(_) => unreachable!("Cannot have inferred type `_` in field type position."),
+        Type::Macro(_) => Vec::new(),
+        Type::Never(_) => Vec::new(),
+        Type::Paren(type_paren) => field_generics_maybe(&type_paren.elem),
+        Type::Path(type_path) => {
+            if let Some(segment) = type_path.path.segments.last() {
+                if let PathArguments::AngleBracketed(inner_args) = &segment.arguments {
+                    if inner_args.args.is_empty() {
+                        if type_path.path.segments.len() == 1 {
+                            // Return this type if there's no leading double colon, because a
+                            // leading double colon means it cannot be a type parameter.
+                            vec![parse_quote!(#ty)]
+                        } else {
+                            Vec::new()
+                        }
+                    } else {
+                        // Recurse
+                        inner_args
+                            .args
+                            .iter()
+                            .flat_map(|generic_arg| {
+                                match generic_arg {
+                                    GenericArgument::Type(generic_ty) => {
+                                        field_generics_maybe(generic_ty)
+                                    }
+
+                                    GenericArgument::Lifetime(lifetime) => {
+                                        vec![parse_quote!(lifetime)]
+                                    }
+                                    // GenericArgument::Const(_) |
+                                    // GenericArgument::AssocType(_) |
+                                    // GenericArgument::AssocConst(_) |
+                                    // GenericArgument::Constraint(_) |
+                                    _ => Vec::new(),
+                                }
+                            })
+                            .collect::<Vec<GenericParam>>()
+                    }
+                } else if type_path.path.segments.len() == 1 {
+                    // Return this type if there's no leading double colon, because a
+                    // leading double colon means it cannot be a type parameter.
+                    vec![parse_quote!(#ty)]
+                } else {
+                    Vec::new()
+                }
+            } else {
+                unreachable!("Field type must have at least one segment");
+            }
+        }
+        Type::Ptr(type_ptr) => field_generics_maybe(&type_ptr.elem),
+        Type::Reference(type_reference) => field_generics_maybe(&type_reference.elem),
+        Type::Slice(type_slice) => field_generics_maybe(&type_slice.elem),
+        // trait objects with associated type params are not a likely use case
+        Type::TraitObject(_) => Vec::new(),
+        Type::Tuple(type_tuple) => type_tuple
+            .elems
+            .iter()
+            .flat_map(field_generics_maybe)
+            .collect::<Vec<GenericParam>>(),
+        // Type::Verbatim(_) |
+        _ => Vec::new(),
+    }
 }
 
 /// Returns `let field_name = #expr;` where `expr` is determined by the provided

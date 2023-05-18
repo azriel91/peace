@@ -12,7 +12,7 @@ use crate::{
     util::{
         field_spec_ty_deconstruct, field_spec_ty_path, fields_deconstruct, fields_vars_map,
         is_phantom_data, tuple_ident_from_field_index, tuple_index_from_field_index, value_spec_ty,
-        value_spec_ty_path, ImplMode,
+        value_spec_ty_path, variant_generics_intersect, ImplMode,
     },
 };
 
@@ -143,6 +143,54 @@ fn impl_enum_builder(
     let ty_generics_idents = &field_wise_enum_builder_ctx.ty_generics_idents;
     let type_params_with_variant_none = &field_wise_enum_builder_ctx.type_params_with_variant_none;
 
+    let variant_selection_struct_and_builder_fns = data_enum.variants.iter().map(|variant| {
+        let variant_name = &variant.ident;
+
+        let variant_name_snake_case = Ident::new(
+            &format!("{}", heck::AsSnakeCase(format!("{variant_name}"))),
+            Span::call_site(),
+        );
+
+        let variant_selection_name = format_ident!("{}Variant{}", value_field_wise_builder_name, variant_name);
+        let variant_selection_ty_params = variant_generics_intersect(&ast.generics,variant);
+        let variant_selection_ty_params_angle_bracketed = if variant_selection_ty_params.is_empty() {
+            quote!()
+        } else {
+            quote!(<#(#variant_selection_ty_params,)*>)
+        };
+
+        let variant_selection_struct = {
+            let variant_marker_field = quote!((::std::marker::PhantomData<(#(#variant_selection_ty_params,)*)>));
+            quote! {
+                #[derive(Debug)]
+                pub struct #variant_selection_name #variant_selection_ty_params_angle_bracketed #variant_marker_field;
+            }
+        };
+
+        let variant_builder_fn = quote! {
+            pub fn #variant_name_snake_case(self)
+            -> #value_field_wise_builder_name<
+                    #variant_selection_name #variant_selection_ty_params_angle_bracketed,
+                    #ty_generics_idents
+                >
+            {
+                #value_field_wise_builder_name {
+                    variant_selection: #variant_selection_name(::std::marker::PhantomData),
+                    marker: ::std::marker::PhantomData,
+                }
+            }
+        };
+
+        (variant_selection_struct, variant_builder_fn)
+    })
+    .collect::<Vec<_>>();
+    let variant_selection_structs = variant_selection_struct_and_builder_fns
+        .iter()
+        .map(|(variant_selection_struct, _variant_builder_fn)| variant_selection_struct);
+    let variant_builder_fns = variant_selection_struct_and_builder_fns
+        .iter()
+        .map(|(_variant_selection_struct, variant_builder_fn)| variant_builder_fn);
+
     let (impl_generics, _ty_generics, _where_clause) = generics_split;
     let (builder_impl_generics, builder_ty_generics, builder_where_clause) =
         enum_builder_generics.split_for_impl();
@@ -174,13 +222,15 @@ fn impl_enum_builder(
         impl #builder_impl_generics #value_field_wise_builder_name #builder_ty_generics
         #builder_where_clause
         {
-            // #(#variant_builder_fns)*
+            #(#variant_builder_fns)*
         }
 
         // VariantSelections
 
-        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        #[derive(Clone, Copy, Debug)]
         pub struct #enum_params_variant_none;
+
+        #(#variant_selection_structs)*
     }
 }
 
