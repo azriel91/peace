@@ -95,7 +95,7 @@ pub fn value_spec(input: TokenStream) -> TokenStream {
 
 /// Used to `#[derive]` the `ParamsSpecFieldless` and `ValueSpecRt` traits.
 ///
-/// For regular usage, use `#[derive(ParamsSpecFieldless)]`
+/// For regular usage, use `#[derive(ParamsFieldless)]`
 ///
 /// For peace crates, also add the `#[peace_internal]` attribute, which
 /// references the `peace_params` crate instead of the `peace::params`
@@ -115,12 +115,12 @@ pub fn value_spec(input: TokenStream) -> TokenStream {
 /// * `default`: Enum variant attribute to indicate which variant to instantiate
 ///   for `ParamsPartial::default()`.
 #[proc_macro_derive(
-    ParamsSpecFieldless,
+    ParamsFieldless,
     attributes(peace_internal, crate_internal, value_spec, default)
 )]
 pub fn value_spec_fieldless(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
-        .expect("`ParamsSpecFieldless` derive: Failed to parse item as struct, enum, or union.");
+        .expect("`ParamsFieldless` derive: Failed to parse item as struct, enum, or union.");
 
     let gen = impl_value(&mut ast, ImplMode::Fieldless);
 
@@ -130,7 +130,7 @@ pub fn value_spec_fieldless(input: TokenStream) -> TokenStream {
 #[proc_macro]
 pub fn value_impl(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
-        .expect("`ParamsSpecFieldless` impl: Failed to parse item as struct, enum, or union.");
+        .expect("`peace_params::value_impl`: Failed to parse item as struct, enum, or union.");
 
     let gen = impl_value(&mut ast, ImplMode::Fieldless);
 

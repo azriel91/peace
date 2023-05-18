@@ -1203,7 +1203,7 @@ mod struct_recursive_value {
 
     use peace::params::{Params, ParamsFieldless, ParamsSpec, ParamsSpecFieldless};
 
-    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ParamsSpecFieldless)]
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ParamsFieldless)]
     pub struct InnerValue<T>(T)
     where
         T: Clone + Debug + ParamsFieldless;
@@ -1568,7 +1568,7 @@ mod enum_recursive_value {
 
     use peace::params::{Params, ParamsFieldless, ParamsSpec, ParamsSpecFieldless};
 
-    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ParamsSpecFieldless)]
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ParamsFieldless)]
     pub enum InnerValue<T>
     where
         T: Clone + Debug + ParamsFieldless,

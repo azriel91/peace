@@ -60,7 +60,7 @@
 //! ```
 
 // Re-exports
-pub use peace_params_derive::{value_impl, Params, ParamsSpecFieldless};
+pub use peace_params_derive::{value_impl, Params, ParamsFieldless};
 pub use tynm;
 
 pub use crate::{
