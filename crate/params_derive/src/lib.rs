@@ -48,7 +48,7 @@ mod util;
 
 /// Used to `#[derive]` the `ValueSpec` and `ValueSpecRt` traits.
 ///
-/// For regular usage, use `#[derive(ParamsSpec)]`
+/// For regular usage, use `#[derive(Params)]`
 ///
 /// For peace crates, also add the `#[peace_internal]` attribute, which
 /// references the `peace_params` crate instead of the `peace::params`
@@ -81,12 +81,12 @@ mod util;
 /// * `default`: Enum variant attribute to indicate which variant to instantiate
 ///   for `ParamsPartial::default()`.
 #[proc_macro_derive(
-    ParamsSpec,
+    Params,
     attributes(peace_internal, crate_internal, value_spec, default, serde)
 )]
 pub fn value_spec(input: TokenStream) -> TokenStream {
     let mut ast = syn::parse(input)
-        .expect("`ValueSpec` derive: Failed to parse item as struct, enum, or union.");
+        .expect("`Params` derive: Failed to parse item as struct, enum, or union.");
 
     let gen = impl_value(&mut ast, ImplMode::Fieldwise);
 

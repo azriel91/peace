@@ -5,7 +5,7 @@ mod unit {
 
     use peace::params::{Params, ParamsSpec};
 
-    #[derive(Clone, Debug, ParamsSpec, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct UnitParams;
 
     super::params_tests!(UnitParams, UnitParamsFieldWise, UnitParamsPartial, []);
@@ -71,7 +71,7 @@ mod struct_params {
 
     use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Clone, Debug, ParamsSpec, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct StructParams {
         /// Source / desired value for the state.
         src: String,
@@ -244,7 +244,7 @@ mod struct_with_type_params {
 
     use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Derivative, ParamsSpec, Serialize, Deserialize)]
+    #[derive(Derivative, Params, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
     pub struct StructWithTypeParams<Id> {
         /// Source / desired value for the state.
@@ -420,7 +420,7 @@ mod tuple_params {
 
     use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Clone, Debug, ParamsSpec, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct TupleParams(
         /// Source / desired value for the state.
         String,
@@ -553,7 +553,7 @@ mod tuple_with_type_params {
 
     use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Clone, Debug, ParamsSpec, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct TupleWithTypeParams<Id>(String, String, PhantomData<Id>)
     where
         Id: Clone + Debug;
@@ -710,7 +710,7 @@ mod enum_params {
 
     use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Derivative, ParamsSpec, Serialize, Deserialize)]
+    #[derive(Derivative, Params, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
     pub enum EnumParams<Id> {
         Named {
@@ -1217,7 +1217,7 @@ mod struct_recursive_value {
         }
     }
 
-    #[derive(Clone, Debug, ParamsSpec, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Params, PartialEq, Eq, Serialize, Deserialize)]
     pub struct StructRecursiveValue<T>
     where
         T: Clone
@@ -1387,7 +1387,7 @@ mod struct_recursive_value_no_bounds {
 
     use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, ParamsSpec)]
+    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, Params)]
     #[derivative(Clone, Debug)]
     #[serde(bound = "")]
     pub struct InnerValue<Id> {
@@ -1406,7 +1406,7 @@ mod struct_recursive_value_no_bounds {
         }
     }
 
-    #[derive(Derivative, ParamsSpec, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Derivative, Params, PartialEq, Eq, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
     #[serde(bound = "")]
     pub struct StructRecursiveValueNoBounds<Id> {
@@ -1577,7 +1577,7 @@ mod enum_recursive_value {
         Named { value: T },
     }
 
-    #[derive(Clone, Debug, ParamsSpec, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Params, PartialEq, Eq, Serialize, Deserialize)]
     pub enum EnumRecursiveValue<T>
     where
         T: Clone
@@ -1829,7 +1829,7 @@ mod enum_recursive_marker_no_bounds {
 
     use peace::params::{Params, ParamsSpec, ValueSpecFieldless};
 
-    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, ParamsSpec)]
+    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, Params)]
     #[derivative(Clone(bound = ""), Debug(bound = ""))]
     #[serde(bound = "")]
     pub enum InnerValue<Id> {
@@ -1837,7 +1837,7 @@ mod enum_recursive_marker_no_bounds {
         Named { marker: PhantomData<Id> },
     }
 
-    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, ParamsSpec)]
+    #[derive(Derivative, PartialEq, Eq, Serialize, Deserialize, Params)]
     #[derivative(Clone(bound = ""), Debug(bound = ""))]
     #[serde(bound = "")]
     pub enum EnumRecursiveNoBounds<Id> {
@@ -2091,7 +2091,7 @@ mod external_fields {
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub struct InnerValue(u32);
 
-    #[derive(Clone, Debug, ParamsSpec, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Params, PartialEq, Eq, Serialize, Deserialize)]
     pub struct StructExternalValue {
         /// Source / desired value for the state.
         #[value_spec(fieldless)]
