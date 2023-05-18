@@ -16,18 +16,18 @@ use crate::{
 /// For deserialization:
 ///
 /// 1. A `ParamsSpecsTypeReg` is constructed, and deserialization functions are
-///    registered from `ItemSpecId` to `ValueSpecFieldlessDe<T, F, U>`, where
+///    registered from `ItemSpecId` to `ParamsSpecFieldlessDe<T, F, U>`, where
 ///    `F` and `U` are derived from the `ValueSpec` provided by the user.
 ///
 /// 2. `value_specs.yaml` is deserialized using that type registry.
 ///
-/// 3. Each `ValueSpecFieldlessDe<T>` is mapped into a `ValueSpecFieldless<T>`,
+/// 3. Each `ParamsSpecFieldlessDe<T>` is mapped into a `ValueSpecFieldless<T>`,
 /// and    subsequently `BoxDt` to be passed around in a `CmdCtx`.
 ///
 /// 4. These `BoxDt`s are downcasted back to `ValueSpecFieldless<T>` when
 /// resolving    values for item spec params and params partials.
 #[derive(Clone, Serialize, Deserialize)]
-#[serde(from = "crate::ValueSpecFieldlessDe<T>")]
+#[serde(from = "crate::ParamsSpecFieldlessDe<T>")]
 pub enum ValueSpecFieldless<T>
 where
     T: ValueFieldless + Clone + Debug + Send + Sync + 'static,
