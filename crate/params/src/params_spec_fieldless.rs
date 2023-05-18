@@ -4,7 +4,7 @@ use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    MappingFn, MappingFnImpl, ParamsResolveError, ValueFieldless, ValueResolutionCtx, ValueSpecRt,
+    MappingFn, MappingFnImpl, ParamsFieldless, ParamsResolveError, ValueResolutionCtx, ValueSpecRt,
 };
 
 /// How to populate a field's value in an item spec's params.
@@ -31,7 +31,7 @@ use crate::{
 #[serde(from = "crate::ParamsSpecFieldlessDe<T>")]
 pub enum ParamsSpecFieldless<T>
 where
-    T: ValueFieldless + Clone + Debug + Send + Sync + 'static,
+    T: ParamsFieldless + Clone + Debug + Send + Sync + 'static,
 {
     /// Loads a stored value spec.
     ///
@@ -72,7 +72,7 @@ where
 
 impl<T> ParamsSpecFieldless<T>
 where
-    T: ValueFieldless + Clone + Debug + Send + Sync + 'static,
+    T: ParamsFieldless + Clone + Debug + Send + Sync + 'static,
 {
     pub fn from_map<F, Args>(field_name: Option<String>, f: F) -> Self
     where
@@ -85,7 +85,7 @@ where
 
 impl<T> Debug for ParamsSpecFieldless<T>
 where
-    T: ValueFieldless + Clone + Debug + Send + Sync + 'static,
+    T: ParamsFieldless + Clone + Debug + Send + Sync + 'static,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -99,7 +99,7 @@ where
 
 impl<T> ParamsSpecFieldless<T>
 where
-    T: ValueFieldless<Spec = ParamsSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
+    T: ParamsFieldless<Spec = ParamsSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
     T::Partial: From<T>,
 {
     pub fn resolve(
@@ -161,7 +161,7 @@ where
 
 impl<T> ValueSpecRt for ParamsSpecFieldless<T>
 where
-    T: ValueFieldless<Spec = ParamsSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
+    T: ParamsFieldless<Spec = ParamsSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,
     T::Partial: From<T>,
     T: TryFrom<T::Partial>,
 {

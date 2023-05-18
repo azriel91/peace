@@ -1201,16 +1201,16 @@ mod struct_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsSpec, ParamsSpecFieldless, ValueFieldless};
+    use peace::params::{Params, ParamsFieldless, ParamsSpec, ParamsSpecFieldless};
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ParamsSpecFieldless)]
     pub struct InnerValue<T>(T)
     where
-        T: Clone + Debug + ValueFieldless;
+        T: Clone + Debug + ParamsFieldless;
 
     impl<T> InnerValue<T>
     where
-        T: Clone + Debug + ValueFieldless,
+        T: Clone + Debug + ParamsFieldless,
     {
         fn new(inner: T) -> Self {
             Self(inner)
@@ -1222,8 +1222,8 @@ mod struct_recursive_value {
     where
         T: Clone
             + Debug
-            + ValueFieldless<Spec = ParamsSpecFieldless<T>>
-            + TryFrom<<T as ValueFieldless>::Partial>
+            + ParamsFieldless<Spec = ParamsSpecFieldless<T>>
+            + TryFrom<<T as ParamsFieldless>::Partial>
             + Send
             + Sync
             + 'static,
@@ -1566,12 +1566,12 @@ mod enum_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsSpec, ParamsSpecFieldless, ValueFieldless};
+    use peace::params::{Params, ParamsFieldless, ParamsSpec, ParamsSpecFieldless};
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ParamsSpecFieldless)]
     pub enum InnerValue<T>
     where
-        T: Clone + Debug + ValueFieldless,
+        T: Clone + Debug + ParamsFieldless,
     {
         Tuple(T),
         Named { value: T },
@@ -1582,8 +1582,8 @@ mod enum_recursive_value {
     where
         T: Clone
             + Debug
-            + ValueFieldless<Spec = ParamsSpecFieldless<T>>
-            + TryFrom<<T as ValueFieldless>::Partial>
+            + ParamsFieldless<Spec = ParamsSpecFieldless<T>>
+            + TryFrom<<T as ParamsFieldless>::Partial>
             + Send
             + Sync
             + 'static,

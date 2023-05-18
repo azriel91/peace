@@ -243,7 +243,7 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
     }
 
     impl_value_tokens.extend(quote! {
-        impl #impl_generics #peace_params_path::ValueFieldless
+        impl #impl_generics #peace_params_path::ParamsFieldless
         for #value_name #ty_generics
         #where_clause
         {
