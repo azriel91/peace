@@ -1,11 +1,19 @@
 use proc_macro2::Span;
 use quote::ToTokens;
-use syn::{Data, DeriveInput, Fields, Ident, ImplGenerics, Path, TypeGenerics, WhereClause};
+use syn::{
+    Data, DataEnum, DeriveInput, Fields, Ident, ImplGenerics, Path, Type, TypeGenerics, WhereClause,
+};
 
-use crate::util::{
-    field_spec_ty_deconstruct, field_spec_ty_path, fields_deconstruct, fields_vars_map,
-    is_phantom_data, tuple_ident_from_field_index, tuple_index_from_field_index, value_spec_ty,
-    value_spec_ty_path, ImplMode,
+use crate::{
+    field_wise_enum_builder_ctx::FieldWiseEnumBuilderCtx,
+    fields_map::fields_to_optional_value_spec,
+    impl_default,
+    type_gen::TypeGen,
+    util::{
+        field_spec_ty_deconstruct, field_spec_ty_path, fields_deconstruct, fields_vars_map,
+        is_phantom_data, tuple_ident_from_field_index, tuple_index_from_field_index, value_spec_ty,
+        value_spec_ty_path, ImplMode,
+    },
 };
 
 /// `impl MyParamsFieldWiseBuilder`, so that Peace can resolve the params
@@ -17,6 +25,7 @@ pub fn impl_field_wise_builder(
     value_field_wise_name: &Ident,
     value_field_wise_builder_name: &Ident,
     impl_mode: ImplMode,
+    field_wise_enum_builder_ctx: &FieldWiseEnumBuilderCtx,
 ) -> proc_macro2::TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics_split;
 
@@ -25,8 +34,23 @@ pub fn impl_field_wise_builder(
 
     match &ast.data {
         Data::Struct(data_struct) => {
+            let field_wise_builder = TypeGen::gen_from_value_type(
+                ast,
+                generics_split,
+                value_field_wise_builder_name,
+                |fields| fields_to_optional_value_spec(fields, peace_params_path),
+                &[parse_quote! {
+                    #[doc="\
+                        Builder for specification of how to look up the values for an item spec's \n\
+                        parameters.\
+                    "]
+                }],
+                false,
+            );
             // Note: struct builder has getters / setters generated in
             // `TypeGen::gen_from_value_type`.
+
+            let impl_default = impl_default(ast, generics_split, value_field_wise_builder_name);
 
             let fields = &data_struct.fields;
 
@@ -43,6 +67,10 @@ pub fn impl_field_wise_builder(
             let value_spec_ty = value_spec_ty(ast, ty_generics, peace_params_path, impl_mode);
 
             quote! {
+                #field_wise_builder
+
+                #impl_default
+
                 impl #impl_generics #value_field_wise_builder_name #ty_generics
                 #where_clause
                 {
@@ -54,17 +82,111 @@ pub fn impl_field_wise_builder(
                 }
             }
         }
-        Data::Enum(_data_enum) => quote!(),
+        Data::Enum(data_enum) => impl_enum_builder(
+            ast,
+            generics_split,
+            peace_params_path,
+            value_field_wise_name,
+            value_field_wise_builder_name,
+            field_wise_enum_builder_ctx,
+            data_enum,
+        ),
         Data::Union(_data_union) => quote!(),
+    }
+}
+
+/// From a given enum:
+///
+/// ```rust,ignore
+/// pub enum EnumParams<T1, T2> {
+///     Variant1 {
+///         field_1: T1,
+///     },
+///     Variant2(T2),
+///     Variant3
+/// }
+/// ```
+///
+/// Generates a builder like the following:
+///
+/// ```rust,ignore
+/// pub struct EnumParamsBuilder<VariantSelection, T1, T2> {
+///     variant_selection: VariantSelection,
+///     marker: PhantomData<(T1, T2)>,
+/// }
+///
+/// impl Default for EnumParamsBuilder<EnumParamsBuilderVariantNone> {
+///     fn default() -> Self {
+///         Self { variant_selection: EnumParamsBuilderVariantNone, }
+///     }
+/// }
+///
+/// pub struct EnumParamsBuilderVariantNone;
+///
+/// pub struct EnumParamsVariant1Builder<T1> {
+///     field_1: Option<T1>,
+/// }
+///
+/// pub struct EnumParamsVariant2Builder<T2>(Option<T2>);
+/// ```
+fn impl_enum_builder(
+    ast: &DeriveInput,
+    generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
+    peace_params_path: &Path,
+    value_field_wise_name: &Ident,
+    value_field_wise_builder_name: &Ident,
+    field_wise_enum_builder_ctx: &FieldWiseEnumBuilderCtx,
+    data_enum: &DataEnum,
+) -> proc_macro2::TokenStream {
+    let enum_builder_generics = &field_wise_enum_builder_ctx.generics;
+    let enum_params_variant_none = &field_wise_enum_builder_ctx.variant_none;
+    let ty_generics_idents = &field_wise_enum_builder_ctx.ty_generics_idents;
+    let type_params_with_variant_none = &field_wise_enum_builder_ctx.type_params_with_variant_none;
+
+    let (impl_generics, _ty_generics, _where_clause) = generics_split;
+    let (builder_impl_generics, builder_ty_generics, builder_where_clause) =
+        enum_builder_generics.split_for_impl();
+
+    let marker_type: Type = if ast.generics.params.is_empty() {
+        parse_quote!(::std::marker::PhantomData<()>)
+    } else {
+        parse_quote!(::std::marker::PhantomData<(#ty_generics_idents)>)
+    };
+
+    quote! {
+        pub struct #value_field_wise_builder_name #builder_ty_generics {
+            variant_selection: VariantSelection,
+            marker: #marker_type,
+        }
+
+        impl #impl_generics ::std::default::Default
+        for #value_field_wise_builder_name #type_params_with_variant_none
+        #builder_where_clause
+        {
+            fn default() -> Self {
+                #value_field_wise_builder_name {
+                    variant_selection: #enum_params_variant_none,
+                    marker: ::std::marker::PhantomData,
+                }
+            }
+        }
+
+        impl #builder_impl_generics #value_field_wise_builder_name #builder_ty_generics
+        #builder_where_clause
+        {
+            // #(#variant_builder_fns)*
+        }
+
+        // VariantSelections
+
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        pub struct #enum_params_variant_none;
     }
 }
 
 /// Returns `with_field(mut self, value_spec: ValueSpec<FieldType>) -> Self` for
 /// all non-`PhantomData` fields.
-pub fn builder_field_methods(
-    fields: &Fields,
-    peace_params_path: &Path,
-) -> proc_macro2::TokenStream {
+fn builder_field_methods(fields: &Fields, peace_params_path: &Path) -> proc_macro2::TokenStream {
     let fields_as_params = fields
         .iter()
         .enumerate()

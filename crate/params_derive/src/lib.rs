@@ -9,13 +9,15 @@ extern crate syn;
 
 use fields_map::fields_to_optional_value_spec;
 use proc_macro::TokenStream;
+use quote::ToTokens;
 
 use syn::{
-    DeriveInput, GenericParam, Ident, ImplGenerics, Path, Type, TypeGenerics, WhereClause,
+    Data, DeriveInput, GenericParam, Ident, ImplGenerics, Path, Type, TypeGenerics, WhereClause,
     WherePredicate,
 };
 
 use crate::{
+    field_wise_enum_builder_ctx::FieldWiseEnumBuilderCtx,
     fields_map::{fields_to_optional, fields_to_value_spec},
     impl_default::impl_default,
     impl_field_wise_builder::impl_field_wise_builder,
@@ -30,6 +32,7 @@ use crate::{
     util::{is_fieldless_type, serde_bounds_for_type_params, ImplMode},
 };
 
+mod field_wise_enum_builder_ctx;
 mod fields_map;
 mod impl_default;
 mod impl_field_wise_builder;
@@ -175,6 +178,52 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
         Ident::new(&t_field_wise_builder_name, ast.ident.span())
     };
 
+    let field_wise_enum_builder_ctx = {
+        // `EnumParams`' generics with `VariantSelection` inserted beforehand.
+        let generics = {
+            let mut generics = ast.generics.clone();
+            generics.params.insert(0, parse_quote!(VariantSelection));
+            generics
+        };
+        let variant_none = format_ident!("{}VariantNone", t_field_wise_builder_name);
+        // Used for PhantomData type parameters, as well as `Default` impl type
+        // parameters.
+        let ty_generics_idents = ast.generics.params.iter().fold(
+            proc_macro2::TokenStream::new(),
+            |mut tokens, generic_param| {
+                match generic_param {
+                    GenericParam::Lifetime(_) => {
+                        panic!("Lifetime generics are not supported in Params derive.")
+                    }
+                    GenericParam::Type(type_param) => {
+                        tokens.extend(type_param.ident.to_token_stream())
+                    }
+                    GenericParam::Const(const_param) => {
+                        tokens.extend(const_param.ident.to_token_stream())
+                    }
+                }
+                tokens
+            },
+        );
+        let type_params_with_variant_none = quote!(<#variant_none, #ty_generics_idents>);
+
+        FieldWiseEnumBuilderCtx {
+            generics,
+            variant_none,
+            ty_generics_idents,
+            type_params_with_variant_none,
+        }
+    };
+
+    let builder_generics = if matches!(&ast.data, Data::Enum(_)) {
+        field_wise_enum_builder_ctx
+            .type_params_with_variant_none
+            .clone()
+    } else {
+        let ty_generics = &generics_split.1;
+        quote!(#ty_generics)
+    };
+
     let (t_partial, t_field_wise, t_field_wise_builder) =
         if is_fieldless_type(ast) || impl_mode == ImplMode::Fieldless {
             let ty_generics = &generics_split.1;
@@ -204,13 +253,14 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
                 &t_partial_name,
             );
 
-            let t_field_wise_builder = t_field_wise_builder(
+            let t_field_wise_builder = impl_field_wise_builder(
                 ast,
                 &generics_split,
                 &peace_params_path,
                 &t_field_wise_name,
                 &t_field_wise_builder_name,
                 impl_mode,
+                &field_wise_enum_builder_ctx,
             );
 
             (t_partial, t_field_wise, Some(t_field_wise_builder))
@@ -227,7 +277,7 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
                 type Spec = #peace_params_path::ParamsSpec<#value_name #ty_generics>;
                 type Partial = #t_partial_name #ty_generics;
                 type FieldWiseSpec = #t_field_wise_name #ty_generics;
-                type FieldWiseBuilder = #t_field_wise_builder_name #ty_generics;
+                type FieldWiseBuilder = #t_field_wise_builder_name #builder_generics;
 
                 fn field_wise_spec() -> Self::FieldWiseBuilder {
                     Self::FieldWiseBuilder::default()
@@ -487,48 +537,4 @@ fn t_field_wise_external(
     // ));
 
     t_field_wise
-}
-
-/// Generates something like the following:
-///
-/// ```rust,ignore
-/// struct MyParamsSpecBuilder {
-///     src: Option<peace::params::ValueSpec<PathBuf>>,
-///     dest_ip: Option<peace::params::ValueSpec<IpAddr>>,
-///     dest_path: Option<peace::params::ValueSpec<PathBuf>>,
-/// }
-/// ```
-fn t_field_wise_builder(
-    ast: &DeriveInput,
-    generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
-    peace_params_path: &Path,
-    value_field_wise_name: &Ident,
-    t_field_wise_builder_name: &Ident,
-    impl_mode: ImplMode,
-) -> proc_macro2::TokenStream {
-    let mut t_field_wise_builder = TypeGen::gen_from_value_type(
-        ast,
-        generics_split,
-        t_field_wise_builder_name,
-        |fields| fields_to_optional_value_spec(fields, peace_params_path),
-        &[parse_quote! {
-            #[doc="\
-                Builder for specification of how to look up the values for an item spec's \n\
-                parameters.\
-            "]
-        }],
-        false,
-    );
-
-    t_field_wise_builder.extend(impl_default(ast, generics_split, t_field_wise_builder_name));
-
-    t_field_wise_builder.extend(impl_field_wise_builder(
-        ast,
-        generics_split,
-        peace_params_path,
-        value_field_wise_name,
-        t_field_wise_builder_name,
-        impl_mode,
-    ));
-    t_field_wise_builder
 }
