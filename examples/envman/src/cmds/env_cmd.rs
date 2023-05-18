@@ -6,7 +6,7 @@ use peace::{
         scopes::{MultiProfileSingleFlow, SingleProfileSingleFlowView},
     },
     fmt::presentln,
-    params::{ParamsSpec, ParamsSpecFieldless},
+    params::Params,
     resources::resources::ts::SetUp,
     rt_model::{
         output::OutputWrite,
@@ -19,7 +19,7 @@ use crate::{
     flows::EnvDeployFlow,
     item_specs::{
         peace_aws_iam_policy::IamPolicyState,
-        peace_aws_iam_role::{IamRoleItemSpec, IamRoleParams, IamRoleParamsFieldWise},
+        peace_aws_iam_role::{IamRoleItemSpec, IamRoleParams},
     },
     model::{EnvManError, EnvType, ProfileParamsKey, WebAppFileId, WorkspaceParamsKey},
     rt_model::EnvManCmdCtx,
@@ -55,27 +55,19 @@ impl EnvCmd {
         let profile_key = WorkspaceParamsKey::Profile;
 
         let iam_role_path = String::from("/");
-        let iam_role_params_spec =
-            ParamsSpec::<IamRoleParams<WebAppFileId>>::FieldWise(IamRoleParamsFieldWise::<
-                WebAppFileId,
-            >::new(
-                ParamsSpecFieldless::from_map(Some(String::from("name")), |profile: &Profile| {
-                    Some(profile.to_string())
-                }),
-                ParamsSpecFieldless::Value(iam_role_path),
-                ParamsSpecFieldless::from_map(
-                    Some(String::from("managed_policy_arn")),
-                    |iam_policy_state: &IamPolicyState| {
-                        let IamPolicyState::Some {
-                            policy_id_arn_version: Generated::Value(policy_id_arn_version),
-                            ..
-                        } = iam_policy_state else {
-                            return None;
-                        };
-                        Some(policy_id_arn_version.arn().to_string())
-                    },
-                ),
-            ));
+        let iam_role_params_spec = IamRoleParams::<WebAppFileId>::field_wise_spec()
+            .with_name_from_map(|profile: &Profile| Some(profile.to_string()))
+            .with_path(iam_role_path)
+            .with_managed_policy_arn_from_map(|iam_policy_state: &IamPolicyState| {
+                let IamPolicyState::Some {
+                    policy_id_arn_version: Generated::Value(policy_id_arn_version),
+                    ..
+                } = iam_policy_state else {
+                    return None;
+                };
+                Some(policy_id_arn_version.arn().to_string())
+            })
+            .build();
 
         let mut cmd_ctx = {
             let cmd_ctx_builder =

@@ -4,7 +4,7 @@ use peace::{
     cfg::{
         app_name, flow_id, item_spec_id, state::Generated, AppName, FlowId, ItemSpecId, Profile,
     },
-    params::{ParamsSpec, ParamsSpecFieldless},
+    params::{Params, ParamsSpec},
     rt_model::{Flow, ItemSpecGraphBuilder},
 };
 use peace_item_specs::{
@@ -17,7 +17,7 @@ use url::Url;
 use crate::{
     item_specs::{
         peace_aws_iam_policy::{IamPolicyItemSpec, IamPolicyParams, IamPolicyState},
-        peace_aws_iam_role::{IamRoleItemSpec, IamRoleParams, IamRoleParamsFieldWise},
+        peace_aws_iam_role::{IamRoleItemSpec, IamRoleParams},
         peace_aws_instance_profile::{InstanceProfileItemSpec, InstanceProfileParams},
         peace_aws_s3_bucket::{S3BucketItemSpec, S3BucketParams},
         peace_aws_s3_object::{S3ObjectItemSpec, S3ObjectParams},
@@ -115,18 +115,17 @@ impl EnvDeployFlow {
             }
         };
         let web_app_path_local = app_download_dir.join(format!("{repo_name}.{file_ext}"));
-        let app_download_params_spec = ParamsSpec::Value(FileDownloadParams::new(
+        let app_download_params_spec = FileDownloadParams::new(
             web_app_file_url,
             web_app_path_local.clone(),
             #[cfg(target_arch = "wasm32")]
             peace_item_specs::file_download::StorageForm::Base64,
-        ));
-        let app_extract_params_spec = {
-            let tar_path = web_app_path_local.clone();
-            let dest = app_download_dir.join("extracted");
-
-            ParamsSpec::Value(TarXParams::<WebAppFileId>::new(tar_path, dest))
-        };
+        )
+        .into();
+        let app_extract_params_spec = TarXParams::<WebAppFileId>::field_wise_spec()
+            .with_tar_path(web_app_path_local.clone())
+            .with_dest(app_download_dir.join("extracted"))
+            .build();
 
         let iam_policy_name = profile.to_string();
         let iam_role_name = profile.to_string();
@@ -138,58 +137,48 @@ impl EnvDeployFlow {
         };
         let path = String::from("/");
 
-        let iam_policy_params_spec = {
-            let ec2_to_s3_bucket_policy = format!(
+        let iam_policy_params_spec = IamPolicyParams::<WebAppFileId>::field_wise_spec()
+            .with_name(iam_policy_name)
+            .with_path(path.clone())
+            .with_policy_document(format!(
                 include_str!("ec2_to_s3_bucket_policy.json"),
                 bucket_name = bucket_name
-            );
-            ParamsSpec::Value(IamPolicyParams::<WebAppFileId>::new(
-                iam_policy_name,
-                path.clone(),
-                ec2_to_s3_bucket_policy,
             ))
-        };
+            .build();
 
-        let iam_role_params_spec =
-            ParamsSpec::FieldWise(IamRoleParamsFieldWise::<WebAppFileId>::new(
-                ParamsSpecFieldless::Value(iam_role_name),
-                ParamsSpecFieldless::from_map(None, |_iam_policy_state: &IamPolicyState| {
-                    path.clone()
-                }),
-                ParamsSpecFieldless::from_map(
-                    Some(String::from("managed_policy_arn")),
-                    |iam_policy_state: &IamPolicyState| {
-                        if let IamPolicyState::Some {
-                            policy_id_arn_version: Generated::Value(policy_id_arn_version),
-                            ..
-                        } = iam_policy_state
-                        {
-                            Some(policy_id_arn_version.arn().to_string())
-                        } else {
-                            None
-                        }
-                    },
-                ),
-            ));
-        let instance_profile_params_spec = ParamsSpec::Value(
-            InstanceProfileParams::<WebAppFileId>::new(instance_profile_name, path, true),
-        );
-
-        let s3_bucket_params_spec =
-            ParamsSpec::Value(S3BucketParams::<WebAppFileId>::new(bucket_name.clone()));
-        let s3_object_params_spec = {
-            let object_key = web_app_path_local
-                .file_name()
-                .expect("Expected web app file name to exist.")
-                .to_string_lossy()
-                .to_string();
-
-            ParamsSpec::Value(S3ObjectParams::<WebAppFileId>::new(
-                web_app_path_local,
-                bucket_name,
-                object_key,
-            ))
-        };
+        let iam_role_params_spec = IamRoleParams::<WebAppFileId>::field_wise_spec()
+            .with_name(iam_role_name)
+            .with_path(path.clone())
+            .with_managed_policy_arn_from_map(|iam_policy_state: &IamPolicyState| {
+                if let IamPolicyState::Some {
+                    policy_id_arn_version: Generated::Value(policy_id_arn_version),
+                    ..
+                } = iam_policy_state
+                {
+                    Some(policy_id_arn_version.arn().to_string())
+                } else {
+                    None
+                }
+            })
+            .build();
+        let instance_profile_params_spec = InstanceProfileParams::<WebAppFileId>::field_wise_spec()
+            .with_name(instance_profile_name)
+            .with_path(path)
+            .with_role_associate(true)
+            .build();
+        let object_key = web_app_path_local
+            .file_name()
+            .expect("Expected web app file name to exist.")
+            .to_string_lossy()
+            .to_string();
+        let s3_bucket_params_spec = S3BucketParams::<WebAppFileId>::field_wise_spec()
+            .with_name(bucket_name.clone())
+            .build();
+        let s3_object_params_spec = S3ObjectParams::<WebAppFileId>::field_wise_spec()
+            .with_file_path(web_app_path_local)
+            .with_bucket_name(bucket_name)
+            .with_object_key(object_key)
+            .build();
 
         Ok(EnvDeployFlowParamsSpecs {
             app_download_params_spec,
