@@ -237,7 +237,7 @@ pub fn field_spec_ty_deconstruct(
     peace_params_path: &Path,
     field_name: &Ident,
 ) -> proc_macro2::TokenStream {
-    quote!(#peace_params_path::ValueSpec::Value(#field_name))
+    quote!(#peace_params_path::ValueSpec::Value { value: #field_name })
 }
 
 /// Returns whether the given field is a `PhantomData`.

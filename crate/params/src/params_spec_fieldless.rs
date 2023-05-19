@@ -51,7 +51,10 @@ where
     ///
     /// The value used is whatever is passed in to the command context
     /// builder.
-    Value(T),
+    Value {
+        /// The value to use.
+        value: T,
+    },
     /// Uses a value loaded from `resources` at runtime.
     ///
     /// The value may have been provided by workspace params, or
@@ -90,7 +93,7 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Stored => f.write_str("Stored"),
-            Self::Value(t) => f.debug_tuple("Value").field(t).finish(),
+            Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::From => f.write_str("From"),
             Self::FromMap(_) => f.debug_tuple("FromMap").field(&"..").finish(),
         }
@@ -108,10 +111,10 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
         match self {
-            ParamsSpecFieldless::Value(t) => Ok(t.clone()),
+            ParamsSpecFieldless::Value { value } => Ok(value.clone()),
             ParamsSpecFieldless::Stored | ParamsSpecFieldless::From => {
                 match resources.try_borrow::<T>() {
-                    Ok(t) => Ok((*t).clone()),
+                    Ok(value) => Ok((*value).clone()),
                     Err(borrow_fail) => match borrow_fail {
                         BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
                             value_resolution_ctx: value_resolution_ctx.clone(),
@@ -136,10 +139,10 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T::Partial, ParamsResolveError> {
         match self {
-            ParamsSpecFieldless::Value(t) => Ok(T::Partial::from((*t).clone())),
+            ParamsSpecFieldless::Value { value } => Ok(T::Partial::from((*value).clone())),
             ParamsSpecFieldless::Stored | ParamsSpecFieldless::From => {
                 match resources.try_borrow::<T>() {
-                    Ok(t) => Ok(T::Partial::from((*t).clone())),
+                    Ok(value) => Ok(T::Partial::from((*value).clone())),
                     Err(borrow_fail) => match borrow_fail {
                         BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
                             value_resolution_ctx: value_resolution_ctx.clone(),

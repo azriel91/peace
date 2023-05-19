@@ -27,7 +27,10 @@ pub enum ValueSpecDe<T> {
     ///
     /// The value used is whatever is passed in to the command context
     /// builder.
-    Value(T),
+    Value {
+        /// The value to use.
+        value: T,
+    },
     /// Uses a value loaded from `resources` at runtime.
     ///
     /// The value may have been provided by workspace params, or
@@ -45,7 +48,7 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Stored => f.write_str("Stored"),
-            Self::Value(t) => f.debug_tuple("Value").field(t).finish(),
+            Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::From => f.write_str("From"),
             Self::FromMap(mapping_fn_impl) => {
                 f.debug_tuple("FromMap").field(&mapping_fn_impl).finish()
@@ -61,7 +64,7 @@ where
     fn from(value_spec_de: ValueSpecDe<T>) -> Self {
         match value_spec_de {
             ValueSpecDe::Stored => ValueSpec::Stored,
-            ValueSpecDe::Value(t) => ValueSpec::Value(t),
+            ValueSpecDe::Value { value } => ValueSpec::Value { value },
             ValueSpecDe::From => ValueSpec::From,
             ValueSpecDe::FromMap(mapping_fn_impl) => ValueSpec::FromMap(Box::new(mapping_fn_impl)),
         }
