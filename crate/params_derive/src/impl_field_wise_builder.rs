@@ -379,8 +379,10 @@ fn builder_field_methods(
             };
             let field_spec_ty_path = field_spec_ty_path(peace_params_path, field_ty);
             let with_field_name = Ident::new(&format!("with_{self_field_name}"), Span::call_site());
-            let with_field_name_from =
-                Ident::new(&format!("with_{self_field_name}_from"), Span::call_site());
+            let with_field_name_in_memory = Ident::new(
+                &format!("with_{self_field_name}_in_memory"),
+                Span::call_site(),
+            );
             let with_field_name_from_map = Ident::new(
                 &format!("with_{self_field_name}_from_map"),
                 Span::call_site(),
@@ -411,8 +413,8 @@ fn builder_field_methods(
                     self
                 }
 
-                pub fn #with_field_name_from(mut self) -> Self {
-                    self #proxy_call.#self_field_name = Some(#field_spec_ty_path::From);
+                pub fn #with_field_name_in_memory(mut self) -> Self {
+                    self #proxy_call.#self_field_name = Some(#field_spec_ty_path::InMemory);
                     self
                 }
 

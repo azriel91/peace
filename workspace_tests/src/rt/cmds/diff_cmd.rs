@@ -379,7 +379,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         .with_flow(&flow)
         .with_item_spec_params::<VecCopyItemSpec>(
             VecCopyItemSpec::ID_DEFAULT.clone(),
-            ParamsSpec::From,
+            ParamsSpec::InMemory,
         )
         .await?;
     // overwrite initial state

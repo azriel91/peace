@@ -35,10 +35,10 @@ value:
 }
 
 #[test]
-fn serialize_from() -> Result<(), serde_yaml::Error> {
-    let vec_a_spec: <VecA as Params>::Spec = <VecA as Params>::Spec::From;
+fn serialize_in_memory() -> Result<(), serde_yaml::Error> {
+    let vec_a_spec: <VecA as Params>::Spec = <VecA as Params>::Spec::InMemory;
     assert_eq!(
-        r#"From
+        r#"InMemory
 "#,
         serde_yaml::to_string(&vec_a_spec)?,
     );
@@ -91,11 +91,11 @@ field_wise_spec: !Value
 }
 
 #[test]
-fn serialize_field_wise_from() -> Result<(), serde_yaml::Error> {
-    let vec_a_spec: <VecA as Params>::Spec = VecA::field_wise_spec().with_0_from().build();
+fn serialize_field_wise_in_memory() -> Result<(), serde_yaml::Error> {
+    let vec_a_spec: <VecA as Params>::Spec = VecA::field_wise_spec().with_0_in_memory().build();
     assert_eq!(
         r#"!FieldWise
-field_wise_spec: From
+field_wise_spec: InMemory
 "#,
         serde_yaml::to_string(&vec_a_spec)?,
     );
@@ -153,14 +153,14 @@ value:
 }
 
 #[test]
-fn deserialize_from() -> Result<(), serde_yaml::Error> {
+fn deserialize_in_memory() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
-        r#"From
+        r#"InMemory
 "#,
     )?;
 
     assert!(
-        matches!(&deserialized, ParamsSpec::<VecA>::From),
+        matches!(&deserialized, ParamsSpec::<VecA>::InMemory),
         "was {deserialized:?}"
     );
 
@@ -226,10 +226,10 @@ field_wise_spec: !Value
 }
 
 #[test]
-fn deserialize_field_wise_from() -> Result<(), serde_yaml::Error> {
+fn deserialize_field_wise_in_memory() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
         r#"!FieldWise
-field_wise_spec: From
+field_wise_spec: InMemory
 "#,
     )?;
 
@@ -237,7 +237,7 @@ field_wise_spec: From
         matches!(
             &deserialized,
             ParamsSpec::<VecA>::FieldWise {
-                field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::From)
+                field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::InMemory)
             }
         ),
         "was {deserialized:?}"

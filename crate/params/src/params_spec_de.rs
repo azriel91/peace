@@ -38,7 +38,7 @@ where
     ///
     /// The value may have been provided by workspace params, or
     /// inserted by a predecessor at runtime.
-    From,
+    InMemory,
     /// Look up some data populated by a predecessor, and compute the value
     /// from that data.
     FromMap(MappingFnImpl<T, FnPlaceholder<T>, ((),)>),
@@ -59,7 +59,7 @@ where
         match self {
             Self::Stored => f.write_str("Stored"),
             Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
-            Self::From => f.write_str("From"),
+            Self::InMemory => f.write_str("From"),
             Self::FromMap(mapping_fn_impl) => {
                 f.debug_tuple("FromMap").field(&mapping_fn_impl).finish()
             }
@@ -78,7 +78,7 @@ where
         match value_spec_de {
             ParamsSpecDe::Stored => ParamsSpec::Stored,
             ParamsSpecDe::Value { value } => ParamsSpec::Value { value },
-            ParamsSpecDe::From => ParamsSpec::From,
+            ParamsSpecDe::InMemory => ParamsSpec::InMemory,
             ParamsSpecDe::FromMap(mapping_fn_impl) => {
                 ParamsSpec::FromMap(Box::new(mapping_fn_impl))
             }

@@ -337,7 +337,7 @@ mod struct_with_type_params {
     #[test]
     fn field_wise_from_field_wise_builder() {
         let field_wise = StructWithTypeParams::<()>::field_wise_spec()
-            .with_src_from()
+            .with_src_in_memory()
             .with_dest_from_map(|_: &u32| Some(String::from("b")))
             .build();
         let resources: Resources<SetUp> = {
@@ -355,7 +355,7 @@ mod struct_with_type_params {
             field_wise,
             ParamsSpec::FieldWise {
                 field_wise_spec: StructWithTypeParamsFieldWise {
-                    src: ValueSpec::From,
+                    src: ValueSpec::InMemory,
                     dest: ValueSpec::FromMap(mapping_fn),
                     marker: PhantomData,
                 }
@@ -539,7 +539,7 @@ mod tuple_params {
     #[test]
     fn field_wise_from_field_wise_builder() {
         let field_wise = TupleParams::field_wise_spec()
-            .with_0_from()
+            .with_0_in_memory()
             .with_1_from_map(|_: &u32| Some(String::from("b")))
             .build();
         let resources: Resources<SetUp> = {
@@ -557,7 +557,7 @@ mod tuple_params {
             field_wise,
             ParamsSpec::FieldWise {
                 field_wise_spec: TupleParamsFieldWise(
-                    ValueSpec::From,
+                    ValueSpec::InMemory,
                     ValueSpec::FromMap(mapping_fn),
                 )
             }
@@ -719,7 +719,7 @@ mod tuple_with_type_params {
     #[test]
     fn field_wise_from_field_wise_builder() {
         let field_wise = TupleWithTypeParams::<()>::field_wise_spec()
-            .with_0_from()
+            .with_0_in_memory()
             .with_1_from_map(|_: &u32| Some(String::from("b")))
             .build();
         let resources: Resources<SetUp> = {
@@ -737,7 +737,7 @@ mod tuple_with_type_params {
             field_wise,
             ParamsSpec::FieldWise {
                 field_wise_spec: TupleWithTypeParamsFieldWise(
-                    ValueSpec::From,
+                    ValueSpec::InMemory,
                     ValueSpec::FromMap(mapping_fn),
                     PhantomData,
                 )
@@ -1003,7 +1003,7 @@ mod enum_params {
         let field_wise = EnumParams::<()>::field_wise_spec()
             .named()
             .with_src(String::from("a"))
-            .with_src_from()
+            .with_src_in_memory()
             .with_src_from_map(|_: &u32| Some(String::from("b")))
             .build();
         let resources: Resources<SetUp> = {
@@ -1038,7 +1038,7 @@ mod enum_params {
         let field_wise = EnumParams::<()>::field_wise_spec()
             .tuple()
             .with_0(String::from("a"))
-            .with_0_from()
+            .with_0_in_memory()
             .with_0_from_map(|_: &u32| Some(String::from("b")))
             .build();
         let resources: Resources<SetUp> = {
@@ -1072,7 +1072,7 @@ mod enum_params {
         let field_wise = EnumParams::<()>::field_wise_spec()
             .tuple_marker()
             .with_0(String::from("a"))
-            .with_0_from()
+            .with_0_in_memory()
             .with_0_from_map(|_: &u32| Some(String::from("b")))
             .build();
         let resources: Resources<SetUp> = {
@@ -1577,7 +1577,7 @@ mod struct_recursive_value {
     #[test]
     fn field_wise_from_field_wise_builder() {
         let field_wise = StructRecursiveValue::<()>::field_wise_spec()
-            .with_src_from()
+            .with_src_in_memory()
             .with_dest_from_map(|_: &u32| Some(456))
             .build();
         let resources: Resources<SetUp> = {
@@ -1595,7 +1595,7 @@ mod struct_recursive_value {
             field_wise,
             ParamsSpec::FieldWise {
                 field_wise_spec: StructRecursiveValueFieldWise {
-                    src: ValueSpec::From,
+                    src: ValueSpec::InMemory,
                     dest: ValueSpec::FromMap(mapping_fn),
                 }
             }

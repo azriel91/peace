@@ -59,7 +59,7 @@ where
     ///
     /// The value may have been provided by workspace params, or
     /// inserted by a predecessor at runtime.
-    From,
+    InMemory,
     /// Uses a mapped value loaded from `resources` at runtime.
     ///
     /// The value may have been provided by workspace params, or
@@ -114,7 +114,7 @@ where
         match self {
             Self::Stored => f.write_str("Stored"),
             Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
-            Self::From => f.write_str("From"),
+            Self::InMemory => f.write_str("From"),
             Self::FromMap(_) => f.debug_tuple("FromMap").field(&"..").finish(),
             Self::FieldWise { field_wise_spec } => {
                 f.debug_tuple("FieldWise").field(field_wise_spec).finish()
@@ -144,7 +144,7 @@ where
     ) -> Result<T, ParamsResolveError> {
         match self {
             ParamsSpec::Value { value } => Ok(value.clone()),
-            ParamsSpec::Stored | ParamsSpec::From => match resources.try_borrow::<T>() {
+            ParamsSpec::Stored | ParamsSpec::InMemory => match resources.try_borrow::<T>() {
                 Ok(value) => Ok((*value).clone()),
                 Err(borrow_fail) => match borrow_fail {
                     BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
@@ -171,7 +171,7 @@ where
     ) -> Result<T::Partial, ParamsResolveError> {
         match self {
             ParamsSpec::Value { value } => Ok(T::Partial::from((*value).clone())),
-            ParamsSpec::Stored | ParamsSpec::From => match resources.try_borrow::<T>() {
+            ParamsSpec::Stored | ParamsSpec::InMemory => match resources.try_borrow::<T>() {
                 Ok(value) => Ok(T::Partial::from((*value).clone())),
                 Err(borrow_fail) => match borrow_fail {
                     BorrowFail::ValueNotFound => Err(ParamsResolveError::From {

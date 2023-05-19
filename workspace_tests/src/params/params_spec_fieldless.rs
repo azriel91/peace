@@ -26,10 +26,10 @@ value: 1
 }
 
 #[test]
-fn serialize_from() -> Result<(), serde_yaml::Error> {
-    let u8_spec: <u8 as ParamsFieldless>::Spec = ParamsSpecFieldless::<u8>::From;
+fn serialize_in_memory() -> Result<(), serde_yaml::Error> {
+    let u8_spec: <u8 as ParamsFieldless>::Spec = ParamsSpecFieldless::<u8>::InMemory;
     assert_eq!(
-        r#"From
+        r#"InMemory
 "#,
         serde_yaml::to_string(&u8_spec)?,
     );
@@ -82,14 +82,14 @@ value: 1
 }
 
 #[test]
-fn deserialize_from() -> Result<(), serde_yaml::Error> {
+fn deserialize_in_memory() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
-        r#"From
+        r#"InMemory
 "#,
     )?;
 
     assert!(
-        matches!(&deserialized, ParamsSpecFieldless::<u8>::From),
+        matches!(&deserialized, ParamsSpecFieldless::<u8>::InMemory),
         "was {deserialized:?}"
     );
 
