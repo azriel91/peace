@@ -132,6 +132,7 @@ pub fn impl_field_wise_builder(
 ///
 /// pub struct EnumParamsVariant2Builder<T2>(Option<T2>);
 /// ```
+#[allow(clippy::too_many_arguments)]
 fn impl_enum_builder(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),

@@ -407,7 +407,7 @@ fn field_generics_maybe(ty: &Type) -> Vec<GenericParam> {
         Type::BareFn(bare_fn) => {
             let output_types = match &bare_fn.output {
                 ReturnType::Default => Vec::new(),
-                ReturnType::Type(_r_arrow, return_type) => field_generics_maybe(&return_type),
+                ReturnType::Type(_r_arrow, return_type) => field_generics_maybe(return_type),
             };
 
             bare_fn

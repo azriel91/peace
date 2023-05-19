@@ -215,6 +215,7 @@ fn impl_value(ast: &mut DeriveInput, impl_mode: ImplMode) -> proc_macro2::TokenS
     };
 
     let builder_generics = if matches!(&ast.data, Data::Enum(_)) {
+        #[allow(clippy::redundant_clone)] // False positive 2023-05-19
         field_wise_enum_builder_ctx
             .type_params_with_variant_none
             .clone()
