@@ -7,7 +7,7 @@ pub use crate::{
     sh_sync_cmd_error::ShSyncCmdError,
     sh_sync_cmd_execution_record::ShSyncCmdExecutionRecord,
     sh_sync_cmd_item_spec::ShSyncCmdItemSpec,
-    sh_sync_cmd_params::{ShSyncCmdParams, ShSyncCmdParamsPartial, ShSyncCmdParamsSpec},
+    sh_sync_cmd_params::{ShSyncCmdParams, ShSyncCmdParamsFieldWise, ShSyncCmdParamsPartial},
     sh_sync_cmd_state_diff::ShSyncCmdStateDiff,
     sh_sync_cmd_state_diff_fn::ShSyncCmdStateDiffFn,
     sh_sync_cmd_sync_status::ShSyncCmdSyncStatus,

@@ -20,10 +20,12 @@ dyn-clone = "1.0.11"
 erased-serde = "0.3.25"
 miette = { workspace = true, optional = true }
 peace_core = { version = "0.0.9", path = "../core" }
+peace_data = { version = "0.0.9", path = "../data" }
 peace_params_derive = { version = "0.0.9", path = "../params_derive" }
 peace_resources = { version = "0.0.9", path = "../resources" }
 serde = { version = "1.0.159", features = ["derive"] }
 thiserror = "1.0.40"
+tynm = { workspace = true }
 
 [features]
 default = []

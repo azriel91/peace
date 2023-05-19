@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 ///   parameters from each other.
 #[derive(Derivative, Params, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
+#[serde(bound = "")]
 pub struct InstanceProfileParams<Id> {
     /// Name for both the instance profile and role.
     ///

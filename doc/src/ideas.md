@@ -196,6 +196,32 @@ When workspace params / item specs are removed from a flow, leftover params / st
 </div>
 </details>
 
+<details>
+<summary>14. Store params per execution, pass previous execution's params to clean cmd</summary>
+<div>
+
+Instead of requiring `ItemSpec::State` to store the params used when applied, maybe we should store the params used in the last ensure alongside that item spec's state.
+
+Users are concerned with the current state of the item. They also may be concerned with the parameters used to produce that state. Requiring item spec implementors to store paths / IP addresses within the state that has been ensured feels like unnecessary duplication.
+
+However, when comparing diffs, we would hope either:
+
+* The params used to discover the current and desired states are the same, or
+* The "params and states" pairs are both compared.
+
+Also:
+
+* `apply_check` needs to have both the old and new params to determine whether apply needs to be executed.
+* `State` as the output API, should not necessarily include params.
+* When parameters change, and an apply is interrupted, then we may have earlier items using the new parameters, and later items still on the previous parameters. More complicated still, is if parameters change *in the middle of an interruption*, and re-applied.
+
+Perhaps there should be a `(dest_parameters, ItemSpec::State)` current state, and a `(src_parameters, ItemSpec::State)` desired state. That makes sense for file downloads if we care about cleaning up the previous `dest_path`, to move a file to the new `dest_path`.
+
+Or, all dest parameters should be in `ItemSpec::State`, because that's what's needed to know if something needs to change.
+
+</div>
+</details>
+
 
 ## Notes
 

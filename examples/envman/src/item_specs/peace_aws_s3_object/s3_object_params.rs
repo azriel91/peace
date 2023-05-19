@@ -18,6 +18,7 @@ use serde::{Deserialize, Serialize};
 ///   from each other.
 #[derive(Derivative, Params, PartialEq, Eq, Deserialize, Serialize)]
 #[derivative(Clone, Debug)]
+#[serde(bound = "")]
 pub struct S3ObjectParams<Id> {
     /// Path to the file to upload.
     file_path: PathBuf,

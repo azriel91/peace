@@ -20,6 +20,7 @@ test = true
 cfg-if = { workspace = true }
 console = "0.15.5"
 diff-struct = "0.5.1"
+derivative = { workspace = true }
 futures = "0.3.28"
 peace = { path = "..", version = "0.0.9", default-features = false }
 peace_item_specs = { path = "../item_specs", version = "0.0.9" }
@@ -31,6 +32,7 @@ tar = { workspace = true }
 tempfile = "3.5.0"
 thiserror = "1.0.40"
 tokio = { workspace = true, features = ["rt", "macros"] }
+tynm = { workspace = true }
 
 [features]
 default = ["item_specs", "output_in_memory"]

@@ -11,7 +11,7 @@ use crate::util::{
 /// `impl TryFrom<ParamsPartial> for Params`, so that users can use
 /// `params_partial.try_into()` in `ItemSpec::try_state_*` without needing to
 /// deconstruct the `Params::Partial`.
-pub fn impl_try_from_params_spec_for_params(
+pub fn impl_try_from_params_partial_for_params(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
     params_name: &Ident,

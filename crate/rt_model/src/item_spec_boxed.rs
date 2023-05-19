@@ -66,6 +66,7 @@ where
         + 'static,
     for<'params> <IS as ItemSpec>::Params<'params>:
         TryFrom<<<IS as ItemSpec>::Params<'params> as Params>::Partial>,
+    for<'params> <IS::Params<'params> as Params>::Partial: From<IS::Params<'params>>,
 {
     fn from(item_spec: IS) -> Self {
         Self(Box::new(ItemSpecWrapper::from(item_spec)))

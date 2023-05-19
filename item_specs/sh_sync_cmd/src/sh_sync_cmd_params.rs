@@ -15,6 +15,7 @@ use crate::ShSyncCmd;
 /// * `Id`: A zero-sized type used to distinguish different command execution
 ///   parameters from each other.
 #[derive(Params, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(bound = "")]
 pub struct ShSyncCmdParams<Id> {
     /// Shell command to run that does the work.
     work_sh_command: ShSyncCmd,

@@ -206,6 +206,7 @@ where
                     #[cfg(not(feature = "error_reporting"))]
                     {
                         Error::ItemSpecParamsDeserialize {
+                            profile: profile.clone(),
                             flow_id: flow_id.clone(),
                             error,
                         }

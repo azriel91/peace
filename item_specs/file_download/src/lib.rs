@@ -6,7 +6,9 @@ pub use crate::{
     file_download_data::FileDownloadData,
     file_download_error::FileDownloadError,
     file_download_item_spec::FileDownloadItemSpec,
-    file_download_params::{FileDownloadParams, FileDownloadParamsPartial, FileDownloadParamsSpec},
+    file_download_params::{
+        FileDownloadParams, FileDownloadParamsFieldWise, FileDownloadParamsPartial,
+    },
     file_download_state::FileDownloadState,
     file_download_state_current_fn::FileDownloadStateCurrentFn,
     file_download_state_desired_fn::FileDownloadStateDesiredFn,

@@ -21,7 +21,7 @@ pub use crate::{
     sh_cmd_error::ShCmdError,
     sh_cmd_execution_record::ShCmdExecutionRecord,
     sh_cmd_item_spec::ShCmdItemSpec,
-    sh_cmd_params::{ShCmdParams, ShCmdParamsPartial, ShCmdParamsSpec},
+    sh_cmd_params::{ShCmdParams, ShCmdParamsFieldWise, ShCmdParamsPartial},
     sh_cmd_state::ShCmdState,
     sh_cmd_state_diff::ShCmdStateDiff,
     sh_cmd_state_diff_fn::ShCmdStateDiffFn,

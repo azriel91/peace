@@ -9,10 +9,7 @@ use envman::{
         EnvDiffSelection, EnvManError, ProfileSwitch,
     },
 };
-use peace::{
-    cfg::{flow_id, profile, FlowId, Profile},
-    rt_model::{output::CliOutput, WorkspaceSpec},
-};
+use peace::rt_model::output::CliOutput;
 use tokio::io::Stdout;
 
 #[cfg(not(feature = "error_reporting"))]
@@ -62,11 +59,7 @@ pub fn run() -> Result<(), EnvManError> {
     .build()
     .map_err(EnvManError::TokioRuntimeInit)?;
 
-    #[allow(unused_assignments)]
     runtime.block_on(async {
-        let _workspace_spec = WorkspaceSpec::WorkingDir;
-        let _profile = profile!("default");
-        let _flow_id = flow_id!("file");
         let mut cli_output = {
             let mut builder = CliOutput::builder();
             if let Some(format) = format {

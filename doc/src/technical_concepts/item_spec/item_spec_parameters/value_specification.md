@@ -35,7 +35,7 @@ digraph {
 
     subgraph cluster_a {
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <app<br/>compile>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <app<br/>compile>]
 
         a_params [
             margin   = 0.0
@@ -61,7 +61,7 @@ digraph {
         margin = 0
 
         b [label = <<b>b</b>>]
-        b_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <server<br/>launch>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>launch>]
 
         b_params [
             margin   = 0.0
@@ -88,7 +88,7 @@ digraph {
     }
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
 
         c_params [
             margin   = 0.0
@@ -155,7 +155,7 @@ digraph {
 
     subgraph cluster_a {
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <app<br/>compile>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <app<br/>compile>]
 
         a_params [
             margin   = 0.0
@@ -181,7 +181,7 @@ digraph {
         margin = 0
 
         b [label = <<b>b</b>>]
-        b_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <server<br/>launch>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>launch>]
 
         b_params [
             margin   = 0.0
@@ -208,7 +208,7 @@ digraph {
     }
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
 
         c_params [
             margin   = 0.0
@@ -297,7 +297,7 @@ digraph {
 
     subgraph cluster_a {
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <app<br/>compile>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <app<br/>compile>]
 
         a_params [
             margin   = 0.0
@@ -323,7 +323,7 @@ digraph {
         margin = 0
 
         b [label = <<b>b</b>>]
-        b_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <server<br/>launch>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>launch>]
 
         b_params [
             margin   = 0.0
@@ -350,7 +350,7 @@ digraph {
     }
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
 
         c_params [
             margin   = 0.0
@@ -450,7 +450,7 @@ digraph {
 
     subgraph cluster_a {
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <app<br/>compile>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <app<br/>compile>]
 
         a_params [
             margin   = 0.0
@@ -476,7 +476,7 @@ digraph {
         margin = 0
 
         b [label = <<b>b</b>>]
-        b_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <server<br/>launch>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>launch>]
 
         b_params [
             margin   = 0.0
@@ -503,7 +503,7 @@ digraph {
     }
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="none" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
 
         c_params [
             margin   = 0.0

@@ -5,7 +5,7 @@ pub use self::{
     s3_bucket_data::S3BucketData,
     s3_bucket_error::S3BucketError,
     s3_bucket_item_spec::S3BucketItemSpec,
-    s3_bucket_params::{S3BucketParams, S3BucketParamsPartial, S3BucketParamsSpec},
+    s3_bucket_params::{S3BucketParams, S3BucketParamsFieldWise, S3BucketParamsPartial},
     s3_bucket_state::S3BucketState,
     s3_bucket_state_current_fn::S3BucketStateCurrentFn,
     s3_bucket_state_desired_fn::S3BucketStateDesiredFn,

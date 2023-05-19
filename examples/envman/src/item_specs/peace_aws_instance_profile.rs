@@ -6,7 +6,7 @@ pub use self::{
     instance_profile_error::InstanceProfileError,
     instance_profile_item_spec::InstanceProfileItemSpec,
     instance_profile_params::{
-        InstanceProfileParams, InstanceProfileParamsPartial, InstanceProfileParamsSpec,
+        InstanceProfileParams, InstanceProfileParamsFieldWise, InstanceProfileParamsPartial,
     },
     instance_profile_state::InstanceProfileState,
     instance_profile_state_current_fn::InstanceProfileStateCurrentFn,
