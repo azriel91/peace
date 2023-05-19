@@ -30,7 +30,10 @@ where
     ///
     /// The value used is whatever is passed in to the command context
     /// builder.
-    Value(T),
+    Value {
+        /// The value to use.
+        value: T,
+    },
     /// Uses a value loaded from `resources` at runtime.
     ///
     /// The value may have been provided by workspace params, or
@@ -42,7 +45,10 @@ where
     /// Resolves this value through `ValueSpec`s for each of its fields.
     ///
     /// This is like `T`, but with each field wrapped in `ValueSpecDe<T>`.
-    FieldWise(T::FieldWiseSpec),
+    FieldWise {
+        /// The field wise spec.
+        field_wise_spec: T::FieldWiseSpec,
+    },
 }
 
 impl<T> Debug for ParamsSpecDe<T>
@@ -52,12 +58,12 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Stored => f.write_str("Stored"),
-            Self::Value(t) => f.debug_tuple("Value").field(t).finish(),
+            Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::From => f.write_str("From"),
             Self::FromMap(mapping_fn_impl) => {
                 f.debug_tuple("FromMap").field(&mapping_fn_impl).finish()
             }
-            Self::FieldWise(field_wise_spec) => {
+            Self::FieldWise { field_wise_spec } => {
                 f.debug_tuple("FieldWise").field(field_wise_spec).finish()
             }
         }
@@ -71,12 +77,14 @@ where
     fn from(value_spec_de: ParamsSpecDe<T>) -> Self {
         match value_spec_de {
             ParamsSpecDe::Stored => ParamsSpec::Stored,
-            ParamsSpecDe::Value(t) => ParamsSpec::Value(t),
+            ParamsSpecDe::Value { value } => ParamsSpec::Value { value },
             ParamsSpecDe::From => ParamsSpec::From,
             ParamsSpecDe::FromMap(mapping_fn_impl) => {
                 ParamsSpec::FromMap(Box::new(mapping_fn_impl))
             }
-            ParamsSpecDe::FieldWise(field_wise_spec) => ParamsSpec::FieldWise(field_wise_spec),
+            ParamsSpecDe::FieldWise { field_wise_spec } => {
+                ParamsSpec::FieldWise { field_wise_spec }
+            }
         }
     }
 }

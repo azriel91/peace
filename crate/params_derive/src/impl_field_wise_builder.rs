@@ -492,11 +492,11 @@ fn build_method_body(
 
                 #(#fields_unwrap_to_value_spec_fieldless)*
 
-                let field_wise = #value_field_wise_type_or_variant {
+                let field_wise_spec = #value_field_wise_type_or_variant {
                     #(#fields_deconstruct),*
                 };
 
-                #value_spec_ty_path::FieldWise(field_wise)
+                #value_spec_ty_path::FieldWise { field_wise_spec }
             }
         }
         Fields::Unnamed(_) => {
@@ -505,12 +505,14 @@ fn build_method_body(
 
                 #(#fields_unwrap_to_value_spec_fieldless)*
 
-                let field_wise = #value_field_wise_type_or_variant(#(#fields_deconstruct),*);
+                let field_wise_spec = #value_field_wise_type_or_variant(#(#fields_deconstruct),*);
 
-                #value_spec_ty_path::FieldWise(field_wise)
+                #value_spec_ty_path::FieldWise { field_wise_spec }
             }
         }
-        Fields::Unit => quote!(#value_spec_ty_path::FieldWise(#value_field_wise_type_or_variant)),
+        Fields::Unit => quote!(#value_spec_ty_path::FieldWise {
+            field_wise_spec: #value_field_wise_type_or_variant,
+        }),
     }
 }
 

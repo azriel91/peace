@@ -429,7 +429,7 @@ async fn build_with_item_spec_params_returns_ok_when_params_provided()
         tynm::type_name::<VecA>(),
     );
     assert!(matches!(vec_a_spec,
-        Some(ParamsSpec::Value(VecA(value)))
+        Some(ParamsSpec::Value { value: VecA(value) })
         if value == &[1u8]
     ));
     assert_eq!(
@@ -526,7 +526,7 @@ async fn build_with_item_spec_params_returns_ok_when_params_not_provided_but_are
         tynm::type_name::<VecA>(),
     );
     assert!(matches!(vec_a_spec,
-        Some(ParamsSpec::Value(VecA(value)))
+        Some(ParamsSpec::Value { value: VecA(value) })
         if value == &[1u8]
     ));
     assert_eq!(
@@ -586,7 +586,7 @@ async fn build_with_item_spec_params_returns_ok_and_uses_params_provided_when_pa
         tynm::type_name::<VecA>(),
     );
     assert!(matches!(vec_a_spec,
-        Some(ParamsSpec::Value(VecA(value)))
+        Some(ParamsSpec::Value { value: VecA(value) })
         if value == &[2u8]
     ));
     assert_eq!(
@@ -647,7 +647,7 @@ async fn build_with_item_spec_params_returns_err_when_params_provided_mismatch()
             if item_spec_ids_with_no_params_specs.is_empty()
             && matches!(
                 params_specs_provided_mismatches.get(&item_spec_id!("mismatch_id")),
-                Some(ParamsSpec::Value(VecA(value)))
+                Some(ParamsSpec::Value { value: VecA(value) })
                 if value == &vec![2u8]
             )
             && matches!(
@@ -720,7 +720,7 @@ async fn build_with_item_spec_params_returns_err_when_params_stored_mismatch()
             if item_spec_ids_with_no_params_specs == &vec![item_spec_id!("new_id")]
             && matches!(
                 params_specs_provided_mismatches.get(&item_spec_id!("mismatch_id")),
-                Some(ParamsSpec::Value(VecA(value)))
+                Some(ParamsSpec::Value { value: VecA(value) })
                 if value == &vec![2u8]
             )
             && matches!(

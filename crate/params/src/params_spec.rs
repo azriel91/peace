@@ -51,7 +51,10 @@ where
     ///
     /// The value used is whatever is passed in to the command context
     /// builder.
-    Value(T),
+    Value {
+        /// The value to use.
+        value: T,
+    },
     /// Uses a value loaded from `resources` at runtime.
     ///
     /// The value may have been provided by workspace params, or
@@ -84,7 +87,10 @@ where
     //
     // There shouldn't need to be automatic detection of non-recursive fields for stdlib types,
     // because `peace_params` should just implement `ValueSpec` for those types.
-    FieldWise(T::FieldWiseSpec),
+    FieldWise {
+        /// The field wise spec.
+        field_wise_spec: T::FieldWiseSpec,
+    },
 }
 
 impl<T> ParamsSpec<T>
@@ -107,10 +113,10 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Stored => f.write_str("Stored"),
-            Self::Value(t) => f.debug_tuple("Value").field(t).finish(),
+            Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::From => f.write_str("From"),
             Self::FromMap(_) => f.debug_tuple("FromMap").field(&"..").finish(),
-            Self::FieldWise(field_wise_spec) => {
+            Self::FieldWise { field_wise_spec } => {
                 f.debug_tuple("FieldWise").field(field_wise_spec).finish()
             }
         }
@@ -121,8 +127,8 @@ impl<T> From<T> for ParamsSpec<T>
 where
     T: Params + Clone + Debug + Send + Sync + 'static,
 {
-    fn from(t: T) -> Self {
-        Self::Value(t)
+    fn from(value: T) -> Self {
+        Self::Value { value }
     }
 }
 
@@ -137,9 +143,9 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
         match self {
-            ParamsSpec::Value(t) => Ok(t.clone()),
+            ParamsSpec::Value { value } => Ok(value.clone()),
             ParamsSpec::Stored | ParamsSpec::From => match resources.try_borrow::<T>() {
-                Ok(t) => Ok((*t).clone()),
+                Ok(value) => Ok((*value).clone()),
                 Err(borrow_fail) => match borrow_fail {
                     BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
                         value_resolution_ctx: value_resolution_ctx.clone(),
@@ -152,7 +158,7 @@ where
                 },
             },
             ParamsSpec::FromMap(mapping_fn) => mapping_fn.map(resources, value_resolution_ctx),
-            ParamsSpec::FieldWise(field_wise_spec) => {
+            ParamsSpec::FieldWise { field_wise_spec } => {
                 field_wise_spec.resolve(resources, value_resolution_ctx)
             }
         }
@@ -164,9 +170,9 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T::Partial, ParamsResolveError> {
         match self {
-            ParamsSpec::Value(t) => Ok(T::Partial::from((*t).clone())),
+            ParamsSpec::Value { value } => Ok(T::Partial::from((*value).clone())),
             ParamsSpec::Stored | ParamsSpec::From => match resources.try_borrow::<T>() {
-                Ok(t) => Ok(T::Partial::from((*t).clone())),
+                Ok(value) => Ok(T::Partial::from((*value).clone())),
                 Err(borrow_fail) => match borrow_fail {
                     BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
                         value_resolution_ctx: value_resolution_ctx.clone(),
@@ -181,7 +187,7 @@ where
             ParamsSpec::FromMap(mapping_fn) => mapping_fn
                 .try_map(resources, value_resolution_ctx)
                 .map(|t| t.map(T::Partial::from).unwrap_or_else(T::Partial::default)),
-            ParamsSpec::FieldWise(field_wise_spec) => {
+            ParamsSpec::FieldWise { field_wise_spec } => {
                 field_wise_spec.resolve_partial(resources, value_resolution_ctx)
             }
         }

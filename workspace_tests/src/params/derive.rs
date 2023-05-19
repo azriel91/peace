@@ -16,7 +16,7 @@ mod unit {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(UnitParams)
+            ParamsSpec::Value { value: UnitParams }
         ));
     }
 
@@ -94,10 +94,12 @@ mod struct_params {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(StructParams {
-                src,
-                dest,
-            })
+            ParamsSpec::Value {
+                value: StructParams {
+                    src,
+                    dest,
+                }
+            }
             if src == "a"
             && dest == "b"
         ));
@@ -140,10 +142,12 @@ mod struct_params {
 
         assert!(matches!(
             field_wise,
-            ParamsSpec::FieldWise(StructParamsFieldWise {
-                src: ValueSpec::Value(src_value),
-                dest: ValueSpec::FromMap(mapping_fn),
-            })
+            ParamsSpec::FieldWise {
+                field_wise_spec: StructParamsFieldWise {
+                    src: ValueSpec::Value(src_value),
+                    dest: ValueSpec::FromMap(mapping_fn),
+                }
+            }
             if src_value == "a"
             && matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
@@ -294,11 +298,13 @@ mod struct_with_type_params {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(StructWithTypeParams {
-                src,
-                dest,
-                marker: PhantomData,
-            })
+            ParamsSpec::Value {
+                value: StructWithTypeParams {
+                    src,
+                    dest,
+                    marker: PhantomData,
+                }
+            }
             if src == "a"
             && dest == "b"
         ));
@@ -343,11 +349,13 @@ mod struct_with_type_params {
 
         assert!(matches!(
             field_wise,
-            ParamsSpec::FieldWise(StructWithTypeParamsFieldWise {
-                src: ValueSpec::From,
-                dest: ValueSpec::FromMap(mapping_fn),
-                marker: PhantomData,
-            })
+            ParamsSpec::FieldWise {
+                field_wise_spec: StructWithTypeParamsFieldWise {
+                    src: ValueSpec::From,
+                    dest: ValueSpec::FromMap(mapping_fn),
+                    marker: PhantomData,
+                }
+            }
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(dest_mapped)
@@ -494,10 +502,12 @@ mod tuple_params {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(TupleParams (
-                src,
-                dest,
-            ))
+            ParamsSpec::Value {
+                value: TupleParams (
+                    src,
+                    dest,
+                )
+            }
             if src == "a"
             && dest == "b"
         ));
@@ -537,10 +547,12 @@ mod tuple_params {
 
         assert!(matches!(
             field_wise,
-            ParamsSpec::FieldWise(TupleParamsFieldWise(
-                ValueSpec::From,
-                ValueSpec::FromMap(mapping_fn),
-            ))
+            ParamsSpec::FieldWise {
+                field_wise_spec: TupleParamsFieldWise(
+                    ValueSpec::From,
+                    ValueSpec::FromMap(mapping_fn),
+                )
+            }
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(dest_mapped)
@@ -664,11 +676,13 @@ mod tuple_with_type_params {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(TupleWithTypeParams (
-                src,
-                dest,
-                PhantomData,
-            ))
+            ParamsSpec::Value {
+                value: TupleWithTypeParams (
+                    src,
+                    dest,
+                    PhantomData,
+                )
+            }
             if src == "a"
             && dest == "b"
         ));
@@ -709,11 +723,13 @@ mod tuple_with_type_params {
 
         assert!(matches!(
             field_wise,
-            ParamsSpec::FieldWise(TupleWithTypeParamsFieldWise(
-                ValueSpec::From,
-                ValueSpec::FromMap(mapping_fn),
-                PhantomData,
-            ))
+            ParamsSpec::FieldWise {
+                field_wise_spec: TupleWithTypeParamsFieldWise(
+                    ValueSpec::From,
+                    ValueSpec::FromMap(mapping_fn),
+                    PhantomData,
+                )
+            }
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(dest_mapped)
@@ -869,10 +885,12 @@ mod enum_params {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(EnumParams::Named {
-                src,
-                marker: PhantomData,
-            })
+            ParamsSpec::Value {
+                value: EnumParams::Named {
+                    src,
+                    marker: PhantomData,
+                }
+            }
             if src == "a"
         ));
     }
@@ -883,7 +901,9 @@ mod enum_params {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(EnumParams::Tuple(src))
+            ParamsSpec::Value {
+                    value: EnumParams::Tuple(src)}
+
             if src == "a"
         ));
     }
@@ -894,7 +914,9 @@ mod enum_params {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(EnumParams::TupleMarker(src, PhantomData))
+            ParamsSpec::Value {
+                    value: EnumParams::TupleMarker(src, PhantomData)}
+
             if src == "a"
         ));
     }
@@ -905,7 +927,9 @@ mod enum_params {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(EnumParams::Unit)
+            ParamsSpec::Value {
+                value: EnumParams::Unit
+            }
         ));
     }
 
@@ -979,10 +1003,12 @@ mod enum_params {
 
         assert!(matches!(
             field_wise,
-            ParamsSpec::FieldWise(EnumParamsFieldWise::Named {
-                src: ValueSpec::FromMap(mapping_fn),
-                marker: PhantomData,
-            })
+            ParamsSpec::FieldWise {
+                field_wise_spec: EnumParamsFieldWise::Named {
+                    src: ValueSpec::FromMap(mapping_fn),
+                    marker: PhantomData,
+                }
+            }
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(src_mapped)
@@ -1012,9 +1038,11 @@ mod enum_params {
 
         assert!(matches!(
             field_wise,
-            ParamsSpec::FieldWise(EnumParamsFieldWise::Tuple(
-                ValueSpec::FromMap(mapping_fn),
-            ))
+            ParamsSpec::FieldWise {
+                field_wise_spec: EnumParamsFieldWise::Tuple(
+                    ValueSpec::FromMap(mapping_fn),
+                )
+            }
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(src_mapped)
@@ -1044,10 +1072,12 @@ mod enum_params {
 
         assert!(matches!(
             field_wise,
-            ParamsSpec::FieldWise(EnumParamsFieldWise::TupleMarker(
-                ValueSpec::FromMap(mapping_fn),
-                PhantomData,
-            ))
+            ParamsSpec::FieldWise {
+                field_wise_spec: EnumParamsFieldWise::TupleMarker(
+                    ValueSpec::FromMap(mapping_fn),
+                    PhantomData,
+                )
+            }
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(src_mapped)
@@ -1062,7 +1092,9 @@ mod enum_params {
 
         assert!(matches!(
             field_wise,
-            ParamsSpec::FieldWise(EnumParamsFieldWise::Unit)
+            ParamsSpec::FieldWise {
+                field_wise_spec: EnumParamsFieldWise::Unit
+            }
         ));
     }
 
@@ -1485,10 +1517,12 @@ mod struct_recursive_value {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(StructRecursiveValue {
-                src,
-                dest,
-            })
+            ParamsSpec::Value {
+                value: StructRecursiveValue {
+                    src,
+                    dest,
+                }
+            }
             if src == InnerValue::<u16>(123)
             && dest == 456
         ));
@@ -1531,10 +1565,12 @@ mod struct_recursive_value {
 
         assert!(matches!(
             field_wise,
-            ParamsSpec::FieldWise(StructRecursiveValueFieldWise {
-                src: ValueSpec::From,
-                dest: ValueSpec::FromMap(mapping_fn),
-            })
+            ParamsSpec::FieldWise {
+                field_wise_spec: StructRecursiveValueFieldWise {
+                    src: ValueSpec::From,
+                    dest: ValueSpec::FromMap(mapping_fn),
+                }
+            }
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
                 Ok(dest_mapped)
@@ -1698,10 +1734,12 @@ mod struct_recursive_value_no_bounds {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(StructRecursiveValueNoBounds {
-                src,
-                dest,
-            })
+            ParamsSpec::Value {
+                value: StructRecursiveValueNoBounds {
+                    src,
+                    dest,
+                }
+            }
             if src.inner == 123
             && dest == 456
         ));
@@ -1874,10 +1912,12 @@ mod enum_recursive_value {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(EnumRecursiveValue::Named {
-                src,
-                dest,
-            })
+            ParamsSpec::Value {
+                value: EnumRecursiveValue::Named {
+                    src,
+                    dest,
+                }
+            }
             if src == InnerValue::<u16>::Tuple(123)
             && dest == 456
         ));
@@ -1886,10 +1926,12 @@ mod enum_recursive_value {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(EnumRecursiveValue::Tuple(
-                src,
-                dest,
-            ))
+            ParamsSpec::Value {
+                value: EnumRecursiveValue::Tuple(
+                    src,
+                    dest,
+                )
+            }
             if src == InnerValue::<u16>::Named { value: 123 }
             && dest == 456
         ));
@@ -2126,10 +2168,12 @@ mod enum_recursive_marker_no_bounds {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(EnumRecursiveNoBounds::Named {
-                src: InnerValue::<u16>::Tuple(PhantomData),
-                dest,
-            })
+            ParamsSpec::Value {
+                value: EnumRecursiveNoBounds::Named {
+                    src: InnerValue::<u16>::Tuple(PhantomData),
+                    dest,
+                }
+            }
             if dest == 456
         ));
 
@@ -2142,10 +2186,12 @@ mod enum_recursive_marker_no_bounds {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(EnumRecursiveNoBounds::Tuple(
-                InnerValue::<u16>::Named { marker: PhantomData },
-                dest,
-            ))
+            ParamsSpec::Value {
+                value: EnumRecursiveNoBounds::Tuple(
+                    InnerValue::<u16>::Named { marker: PhantomData },
+                    dest,
+                )
+            }
             if dest == 456
         ));
     }
@@ -2381,10 +2427,12 @@ mod external_fields {
 
         assert!(matches!(
             ParamsSpec::from(params),
-            ParamsSpec::Value(StructExternalValue {
-                src,
-                dest,
-            })
+            ParamsSpec::Value {
+                value: StructExternalValue {
+                    src,
+                    dest,
+                }
+            }
             if src == InnerValue(123)
             && dest == 456
         ));
