@@ -32,20 +32,21 @@ pub fn impl_field_wise_builder(
     // enum builder should only expose builder methods for the variant it is in,
     // which means it needs a type state parameter for its variant.
 
+    let is_serializable = false;
     match &ast.data {
         Data::Struct(data_struct) => {
             let field_wise_builder = TypeGen::gen_from_value_type(
                 ast,
                 generics_split,
                 value_field_wise_builder_name,
-                |fields| fields_to_optional_value_spec(fields, peace_params_path),
+                |fields| fields_to_optional_value_spec(fields, peace_params_path, is_serializable),
                 &[parse_quote! {
                     #[doc="\
                         Builder for specification of how to look up the values for an item spec's \n\
                         parameters.\
                     "]
                 }],
-                false,
+                is_serializable,
             );
             // Note: struct builder has getters / setters generated in
             // `TypeGen::gen_from_value_type`.

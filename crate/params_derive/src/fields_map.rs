@@ -1,6 +1,6 @@
 use syn::{Attribute, Field, Fields, FieldsNamed, FieldsUnnamed, Path, Type};
 
-use crate::util::{field_spec_ty, is_phantom_data, is_serde_bound_attr};
+use crate::util::{field_spec_ty, is_phantom_data, is_serde_attr};
 
 /// Maps fields into different fields, wrapping them with the appropriate braces
 /// / parenthesis if necessary.
@@ -29,8 +29,8 @@ where
     }
 }
 
-pub fn fields_to_optional(fields: &mut Fields) {
-    fields_each_map(fields, |field| {
+pub fn fields_to_optional(fields: &mut Fields, is_serializable: bool) {
+    fields_each_map(fields, is_serializable, |field| {
         let field_ty = &field.ty;
         if is_phantom_data(field_ty) {
             field_ty.clone()
@@ -44,8 +44,8 @@ pub fn fields_to_optional(fields: &mut Fields) {
 ///
 /// If the type is marked with `#[value_spec(fieldless)]`, then it is wrapped
 /// as `ValueSpec<MyTypeWrapper>`.
-pub fn fields_to_value_spec(fields: &mut Fields, peace_params_path: &Path) {
-    fields_each_map(fields, |field| {
+pub fn fields_to_value_spec(fields: &mut Fields, peace_params_path: &Path, is_serializable: bool) {
+    fields_each_map(fields, is_serializable, |field| {
         let field_ty = &field.ty;
         if is_phantom_data(field_ty) {
             field_ty.clone()
@@ -77,8 +77,12 @@ pub fn fields_to_value_spec(fields: &mut Fields, peace_params_path: &Path) {
 /// ```rust,ignore
 /// `Option<ParamsSpecFieldless<MyTypeWrapper>>`.
 /// ```
-pub fn fields_to_optional_value_spec(fields: &mut Fields, peace_params_path: &Path) {
-    fields_each_map(fields, |field| {
+pub fn fields_to_optional_value_spec(
+    fields: &mut Fields,
+    peace_params_path: &Path,
+    is_serializable: bool,
+) {
+    fields_each_map(fields, is_serializable, |field| {
         field_to_optional_value_spec(field, peace_params_path)
     })
 }
@@ -95,7 +99,7 @@ pub fn field_to_optional_value_spec(field: &Field, peace_params_path: &Path) -> 
     }
 }
 
-fn fields_each_map<F>(fields: &mut Fields, f: F)
+fn fields_each_map<F>(fields: &mut Fields, is_serializable: bool, f: F)
 where
     F: Fn(&Field) -> Type,
 {
@@ -105,12 +109,16 @@ where
                 field.ty = f(field);
 
                 // Don't copy across most attributes.
-                // The only attribute we copy across is `#[serde(bound = "..")]`
-                field.attrs = field
-                    .attrs
-                    .drain(..)
-                    .filter(is_serde_bound_attr)
-                    .collect::<Vec<Attribute>>();
+                // The only attributes we copy across are `#[serde(..)]` ones.
+                if is_serializable {
+                    field.attrs = field
+                        .attrs
+                        .drain(..)
+                        .filter(is_serde_attr)
+                        .collect::<Vec<Attribute>>();
+                } else {
+                    field.attrs.clear();
+                }
             });
         }
         Fields::Unnamed(fields_unnamed) => {
@@ -118,12 +126,16 @@ where
                 field.ty = f(field);
 
                 // Don't copy across most attributes.
-                // The only attribute we copy across is `#[serde(bound = "..")]`
-                field.attrs = field
-                    .attrs
-                    .drain(..)
-                    .filter(is_serde_bound_attr)
-                    .collect::<Vec<Attribute>>();
+                // The only attributes we copy across are `#[serde(..)]` ones.
+                if is_serializable {
+                    field.attrs = field
+                        .attrs
+                        .drain(..)
+                        .filter(is_serde_attr)
+                        .collect::<Vec<Attribute>>();
+                } else {
+                    field.attrs.clear();
+                }
             });
         }
         Fields::Unit => {}

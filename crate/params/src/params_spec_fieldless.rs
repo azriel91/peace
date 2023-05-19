@@ -51,6 +51,7 @@ where
     ///
     /// The value used is whatever is passed in to the command context
     /// builder.
+    #[serde(with = "serde_yaml::with::singleton_map")]
     Value(T),
     /// Uses a value loaded from `resources` at runtime.
     ///
