@@ -279,10 +279,10 @@ fn params_specs_merge<E>(
 where
     E: From<Error>,
 {
-    // Combine provided and stored params  specs. Provided params  specs take
+    // Combine provided and stored params specs. Provided params specs take
     // precedence.
     //
-    // We construct a new TypeMap because we want to make sure params  specs are
+    // We construct a new TypeMap because we want to make sure params specs are
     // serialized in order of the item specs in the graph.
     let item_spec_graph = flow.graph();
     let mut params_specs = ParamsSpecs::with_capacity(item_spec_graph.node_count());
@@ -291,7 +291,7 @@ where
     //
     // * item spec IDs may have changed.
     // * item specs may have been removed, but params specs remain.
-    // * item specs may have been added, but params  specs forgotten to be added.
+    // * item specs may have been added, but params specs forgotten to be added.
     let mut item_spec_ids_with_no_params_specs = Vec::<ItemSpecId>::new();
     let mut params_specs_stored_mismatches = None;
 
@@ -299,9 +299,9 @@ where
         item_spec_graph.iter_insertion().for_each(|item_spec_rt| {
             let item_spec_id = item_spec_rt.id();
 
-            // Removing the entry from stored params  specs is deliberate, so filtering for
-            // stored params  specs that no longer have a corresponding item
-            // spec are detected.
+            // Removing the entry from stored params specs is deliberate, so filtering for
+            // stored params specs that no longer have a corresponding item spec are
+            // detected.
             let params_spec_provided = params_specs_provided.remove_entry(item_spec_id);
             let params_spec_stored = params_specs_stored.remove_entry(item_spec_id);
             if let Some((item_spec_id, params_spec_boxed)) =
