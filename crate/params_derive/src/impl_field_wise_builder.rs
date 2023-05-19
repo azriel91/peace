@@ -54,7 +54,7 @@ pub fn impl_field_wise_builder(
 
             let fields = &data_struct.fields;
 
-            let builder_field_methods = builder_field_methods(fields, peace_params_path);
+            let builder_field_methods = builder_field_methods(fields, peace_params_path, None);
             let build_method_body = build_method_body(
                 ast,
                 ty_generics,
@@ -86,7 +86,6 @@ pub fn impl_field_wise_builder(
             ast,
             generics_split,
             peace_params_path,
-            value_field_wise_name,
             value_field_wise_builder_name,
             field_wise_enum_builder_ctx,
             data_enum,
@@ -133,15 +132,18 @@ fn impl_enum_builder(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
     peace_params_path: &Path,
-    value_field_wise_name: &Ident,
     value_field_wise_builder_name: &Ident,
     field_wise_enum_builder_ctx: &FieldWiseEnumBuilderCtx,
     data_enum: &DataEnum,
 ) -> proc_macro2::TokenStream {
+    let variant_selection_ident = Ident::new("variant_selection", Span::call_site());
     let enum_builder_generics = &field_wise_enum_builder_ctx.generics;
     let enum_params_variant_none = &field_wise_enum_builder_ctx.variant_none;
     let ty_generics_idents = &field_wise_enum_builder_ctx.ty_generics_idents;
     let type_params_with_variant_none = &field_wise_enum_builder_ctx.type_params_with_variant_none;
+    let (impl_generics, _ty_generics, _where_clause) = generics_split;
+    let (builder_impl_generics, builder_ty_generics, builder_where_clause) =
+        enum_builder_generics.split_for_impl();
 
     let variant_selection_struct_tokenses = data_enum
         .variants
@@ -197,7 +199,7 @@ fn impl_enum_builder(
 
             let impl_builder_fns = {
                 let builder_field_methods =
-                    builder_field_methods(&variant.fields, peace_params_path);
+                    builder_field_methods(&variant.fields, peace_params_path, None);
                 let (
                     variant_selection_impl_generics,
                     variant_selection_ty_generics,
@@ -214,16 +216,40 @@ fn impl_enum_builder(
                 }
             };
 
+            // The enum builder, with this variant selection selected as its first type param.
+            let value_field_wise_builder_with_variant_selected = quote! {
+                #value_field_wise_builder_name<
+                    #variant_selection_name #variant_selection_ty_params_angle_bracketed,
+                    #ty_generics_idents
+                >
+            };
+
             let variant_builder_fn = quote! {
                 pub fn #variant_name_snake_case(self)
-                -> #value_field_wise_builder_name<
-                        #variant_selection_name #variant_selection_ty_params_angle_bracketed,
-                        #ty_generics_idents
-                    >
+                -> #value_field_wise_builder_with_variant_selected
                 {
                     #value_field_wise_builder_name {
-                        variant_selection: #variant_selection_name::default(),
+                        #variant_selection_ident: #variant_selection_name::default(),
                         marker: ::std::marker::PhantomData,
+                    }
+                }
+            };
+
+            let proxy_impl_builder_fns = {
+                let builder_field_methods = builder_field_methods(
+                    &variant.fields,
+                    peace_params_path,
+                    Some(&variant_selection_ident),
+                );
+
+                // Note: We use `impl_generics` instead of `builder_impl_generics`
+                // because we don't need the `VariantSelection` type parameter.
+                quote! {
+                    impl #impl_generics
+                    #value_field_wise_builder_with_variant_selected
+                    #builder_where_clause
+                    {
+                        #builder_field_methods
                     }
                 }
             };
@@ -233,6 +259,7 @@ fn impl_enum_builder(
                 impl_default,
                 impl_builder_fns,
                 variant_builder_fn,
+                proxy_impl_builder_fns,
             }
         })
         .collect::<Vec<VariantSelectionStructTokens>>();
@@ -245,6 +272,7 @@ fn impl_enum_builder(
                     impl_default,
                     impl_builder_fns,
                     variant_builder_fn: _,
+                    proxy_impl_builder_fns,
                 } = variant_selection_struct_tokens;
 
                 quote! {
@@ -253,15 +281,13 @@ fn impl_enum_builder(
                     #impl_default
 
                     #impl_builder_fns
+
+                    #proxy_impl_builder_fns
                 }
             });
     let variant_builder_fns = variant_selection_struct_tokenses
         .iter()
         .map(|variant_selection_struct_tokens| &variant_selection_struct_tokens.variant_builder_fn);
-
-    let (impl_generics, _ty_generics, _where_clause) = generics_split;
-    let (builder_impl_generics, builder_ty_generics, builder_where_clause) =
-        enum_builder_generics.split_for_impl();
 
     let marker_type: Type = if ast.generics.params.is_empty() {
         parse_quote!(::std::marker::PhantomData<()>)
@@ -271,7 +297,7 @@ fn impl_enum_builder(
 
     quote! {
         pub struct #value_field_wise_builder_name #builder_ty_generics {
-            variant_selection: VariantSelection,
+            #variant_selection_ident: VariantSelection,
             marker: #marker_type,
         }
 
@@ -281,7 +307,7 @@ fn impl_enum_builder(
         {
             fn default() -> Self {
                 #value_field_wise_builder_name {
-                    variant_selection: #enum_params_variant_none,
+                    #variant_selection_ident: #enum_params_variant_none,
                     marker: ::std::marker::PhantomData,
                 }
             }
@@ -304,7 +330,12 @@ fn impl_enum_builder(
 
 /// Returns `with_field(mut self, value_spec: ValueSpec<FieldType>) -> Self` for
 /// all non-`PhantomData` fields.
-fn builder_field_methods(fields: &Fields, peace_params_path: &Path) -> proc_macro2::TokenStream {
+fn builder_field_methods(
+    fields: &Fields,
+    peace_params_path: &Path,
+    proxy_field: Option<&Ident>,
+) -> proc_macro2::TokenStream {
+    let proxy_call = proxy_field.map(|proxy_field| quote!(.#proxy_field));
     let fields_as_params = fields
         .iter()
         .enumerate()
@@ -350,12 +381,12 @@ fn builder_field_methods(fields: &Fields, peace_params_path: &Path) -> proc_macr
             // ```
             quote! {
                 pub fn #with_field_name(mut self, #field_name: #field_ty) -> Self {
-                    self.#self_field_name = Some(#field_spec_ty_deconstruct);
+                    self #proxy_call.#self_field_name = Some(#field_spec_ty_deconstruct);
                     self
                 }
 
                 pub fn #with_field_name_from(mut self) -> Self {
-                    self.#self_field_name = Some(#field_spec_ty_path::From);
+                    self #proxy_call.#self_field_name = Some(#field_spec_ty_path::From);
                     self
                 }
 
@@ -365,7 +396,7 @@ fn builder_field_methods(fields: &Fields, peace_params_path: &Path) -> proc_macr
                         From<(Option<String>, F)>
                         + #peace_params_path::MappingFn<Output = #field_ty>
                 {
-                    self.#self_field_name = Some(#field_spec_ty_path::from_map(
+                    self #proxy_call.#self_field_name = Some(#field_spec_ty_path::from_map(
                         Some(String::from(stringify!(#field_name))),
                         f,
                     ));
@@ -434,6 +465,7 @@ fn build_method_body(
 }
 
 struct VariantSelectionStructTokens {
+    /// AST of the variant selection struct.
     struct_declaration: DeriveInput,
     /// impl Default for `VariantSelectionStruct`
     impl_default: Option<proc_macro2::TokenStream>,
@@ -441,4 +473,7 @@ struct VariantSelectionStructTokens {
     impl_builder_fns: proc_macro2::TokenStream,
     /// Function to return the variant builder, from the enum builder.
     variant_builder_fn: proc_macro2::TokenStream,
+    /// Builder functions for the enum to proxy to the variant selection
+    /// builder.
+    proxy_impl_builder_fns: proc_macro2::TokenStream,
 }

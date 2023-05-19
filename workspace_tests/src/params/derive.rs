@@ -962,8 +962,9 @@ mod enum_params {
     fn field_wise_from_field_wise_builder() {
         let field_wise = EnumParams::<()>::field_wise_spec()
             .named()
+            .with_src(String::from("a"))
             .with_src_from()
-            .with_dest_from_map(|_: &u32| Some(String::from("b")))
+            .with_src_from_map(|_: &u32| Some(String::from("b")))
             .build();
         let resources: Resources<SetUp> = {
             let mut resources = Resources::new();
@@ -978,15 +979,14 @@ mod enum_params {
 
         assert!(matches!(
             field_wise,
-            ParamsSpec::FieldWise(EnumParamsFieldWise {
-                src: ValueSpec::From,
-                dest: ValueSpec::FromMap(mapping_fn),
+            ParamsSpec::FieldWise(EnumParamsFieldWise::Named {
+                src: ValueSpec::FromMap(mapping_fn),
                 marker: PhantomData,
             })
             if matches!(
                 mapping_fn.map(&resources, &mut value_resolution_ctx),
-                Ok(dest_mapped)
-                if dest_mapped == "b"
+                Ok(src_mapped)
+                if src_mapped == "b"
             )
         ));
     }

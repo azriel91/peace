@@ -7,7 +7,6 @@ extern crate quote;
 #[macro_use]
 extern crate syn;
 
-use fields_map::fields_to_optional_value_spec;
 use proc_macro::TokenStream;
 use quote::ToTokens;
 
