@@ -40,6 +40,12 @@ pub trait MappingFn: DataType {
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Option<Self::Output>, ParamsResolveError>;
+
+    /// Returns whether this mapping function actually holds the function logic.
+    ///
+    /// Deserialized mapping functions will not hold any function logic, and
+    /// Peace uses this function to determine if this is an empty `MappingFn`.
+    fn is_valued(&self) -> bool;
 }
 
 impl<T> Clone for Box<dyn MappingFn<Output = T>> {

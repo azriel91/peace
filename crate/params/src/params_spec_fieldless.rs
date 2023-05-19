@@ -100,6 +100,15 @@ where
     }
 }
 
+impl<T> From<T> for ParamsSpecFieldless<T>
+where
+    T: ParamsFieldless + Clone + Debug + Send + Sync + 'static,
+{
+    fn from(value: T) -> Self {
+        Self::Value { value }
+    }
+}
+
 impl<T> ParamsSpecFieldless<T>
 where
     T: ParamsFieldless<Spec = ParamsSpecFieldless<T>> + Clone + Debug + Send + Sync + 'static,

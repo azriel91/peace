@@ -247,6 +247,10 @@ macro_rules! impl_mapping_fn_impl {
             ) -> Result<Option<<Self as MappingFn>::Output>, ParamsResolveError> {
                 MappingFnImpl::<T, F, ($($Arg,)+)>::try_map(self, resources, value_resolution_ctx)
             }
+
+            fn is_valued(&self) -> bool {
+                self.fn_map.is_some()
+            }
         }
     };
 }
