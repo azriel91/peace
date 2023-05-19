@@ -10,11 +10,14 @@
 * Add `ParamsSpecs` to `*SingleFlow` command context scopes. ([#94], [#118])
 * Take in `Params::Spec`s in `CmdCtxBuilder::with_item_spec_params`. ([#94], [#118])
 * Use `Params::Partial` in `ItemSpec::try_state_*` functions. ([#94], [#118])
+* Implement one level recursion referential item spec params. ([#119], [#121])
 
 [#116]: https://github.com/azriel91/peace/issues/116
 [#117]: https://github.com/azriel91/peace/pull/117
 [#94]: https://github.com/azriel91/peace/issues/94
 [#118]: https://github.com/azriel91/peace/pull/118
+[#119]: https://github.com/azriel91/peace/issues/119
+[#121]: https://github.com/azriel91/peace/pull/121
 
 
 ## 0.0.9 (2023-04-13)
