@@ -32,13 +32,13 @@ pub fn impl_field_wise_spec_rt_for_field_wise_external(
                         Ok(t) => Ok((&*t).clone()),
                         Err(borrow_fail) => match borrow_fail {
                             #peace_resources_path::BorrowFail::ValueNotFound => {
-                                Err(#peace_params_path::ParamsResolveError::From {
+                                Err(#peace_params_path::ParamsResolveError::InMemory {
                                     value_resolution_ctx: value_resolution_ctx.clone(),
                                 })
                             }
                             #peace_resources_path::BorrowFail::BorrowConflictImm |
                             #peace_resources_path::BorrowFail::BorrowConflictMut => {
-                                Err(#peace_params_path::ParamsResolveError::FromBorrowConflict {
+                                Err(#peace_params_path::ParamsResolveError::InMemoryBorrowConflict {
                                     value_resolution_ctx: value_resolution_ctx.clone(),
                                 })
                             }
@@ -59,13 +59,13 @@ pub fn impl_field_wise_spec_rt_for_field_wise_external(
                         Ok(t) => Ok((&*t).clone().into()),
                         Err(borrow_fail) => match borrow_fail {
                             #peace_resources_path::BorrowFail::ValueNotFound => {
-                                Err(#peace_params_path::ParamsResolveError::From {
+                                Err(#peace_params_path::ParamsResolveError::InMemory {
                                     value_resolution_ctx: value_resolution_ctx.clone(),
                                 })
                             }
                             #peace_resources_path::BorrowFail::BorrowConflictImm |
                             #peace_resources_path::BorrowFail::BorrowConflictMut => {
-                                Err(#peace_params_path::ParamsResolveError::FromBorrowConflict {
+                                Err(#peace_params_path::ParamsResolveError::InMemoryBorrowConflict {
                                     value_resolution_ctx: value_resolution_ctx.clone(),
                                 })
                             }

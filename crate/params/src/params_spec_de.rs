@@ -6,7 +6,7 @@ use crate::{MappingFnImpl, Params, ParamsSpec};
 
 type FnPlaceholder<T> = fn(&()) -> Option<T>;
 
-/// Exists to deserialize `FromMap` with a non-type-erased `MappingFnImpl`
+/// Exists to deserialize `MappingFn` with a non-type-erased `MappingFnImpl`
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ParamsSpecDe<T>
 where
@@ -41,7 +41,7 @@ where
     InMemory,
     /// Look up some data populated by a predecessor, and compute the value
     /// from that data.
-    FromMap(MappingFnImpl<T, FnPlaceholder<T>, ((),)>),
+    MappingFn(MappingFnImpl<T, FnPlaceholder<T>, ((),)>),
     /// Resolves this value through `ValueSpec`s for each of its fields.
     ///
     /// This is like `T`, but with each field wrapped in `ValueSpecDe<T>`.
@@ -60,8 +60,8 @@ where
             Self::Stored => f.write_str("Stored"),
             Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::InMemory => f.write_str("From"),
-            Self::FromMap(mapping_fn_impl) => {
-                f.debug_tuple("FromMap").field(&mapping_fn_impl).finish()
+            Self::MappingFn(mapping_fn_impl) => {
+                f.debug_tuple("MappingFn").field(&mapping_fn_impl).finish()
             }
             Self::FieldWise { field_wise_spec } => {
                 f.debug_tuple("FieldWise").field(field_wise_spec).finish()
@@ -79,8 +79,8 @@ where
             ParamsSpecDe::Stored => ParamsSpec::Stored,
             ParamsSpecDe::Value { value } => ParamsSpec::Value { value },
             ParamsSpecDe::InMemory => ParamsSpec::InMemory,
-            ParamsSpecDe::FromMap(mapping_fn_impl) => {
-                ParamsSpec::FromMap(Box::new(mapping_fn_impl))
+            ParamsSpecDe::MappingFn(mapping_fn_impl) => {
+                ParamsSpec::MappingFn(Box::new(mapping_fn_impl))
             }
             ParamsSpecDe::FieldWise { field_wise_spec } => {
                 ParamsSpec::FieldWise { field_wise_spec }

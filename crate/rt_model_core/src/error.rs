@@ -30,8 +30,8 @@ pub enum Error {
 
     /// Failed to resolve values for a `Params` object from `resources`.
     ///
-    /// This possibly indicates the user has provided a `Params::Spec` with a
-    /// `From` or `FromMap`, but no predecessor populates that type.
+    /// This possibly indicates the user has provided a `Params::Spec` with
+    /// `InMemory` or `MappingFn`, but no predecessor populates that type.
     #[error("Failed to resolve values for a `Params` object from `resources`.")]
     #[cfg_attr(
         feature = "error_reporting",

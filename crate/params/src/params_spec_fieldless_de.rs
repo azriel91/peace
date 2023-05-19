@@ -6,7 +6,7 @@ use crate::{MappingFnImpl, ParamsFieldless, ParamsSpecFieldless};
 
 type FnPlaceholder<T> = fn(&()) -> Option<T>;
 
-/// Exists to deserialize `FromMap` with a non-type-erased `MappingFnImpl`
+/// Exists to deserialize `MappingFn` with a non-type-erased `MappingFnImpl`
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ParamsSpecFieldlessDe<T>
 where
@@ -41,7 +41,7 @@ where
     InMemory,
     /// Look up some data populated by a predecessor, and compute the value
     /// from that data.
-    FromMap(MappingFnImpl<T, FnPlaceholder<T>, ((),)>),
+    MappingFn(MappingFnImpl<T, FnPlaceholder<T>, ((),)>),
 }
 
 impl<T> Debug for ParamsSpecFieldlessDe<T>
@@ -53,8 +53,8 @@ where
             Self::Stored => f.write_str("Stored"),
             Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::InMemory => f.write_str("From"),
-            Self::FromMap(mapping_fn_impl) => {
-                f.debug_tuple("FromMap").field(&mapping_fn_impl).finish()
+            Self::MappingFn(mapping_fn_impl) => {
+                f.debug_tuple("MappingFn").field(&mapping_fn_impl).finish()
             }
         }
     }
@@ -69,8 +69,8 @@ where
             ParamsSpecFieldlessDe::Stored => ParamsSpecFieldless::Stored,
             ParamsSpecFieldlessDe::Value { value } => ParamsSpecFieldless::Value { value },
             ParamsSpecFieldlessDe::InMemory => ParamsSpecFieldless::InMemory,
-            ParamsSpecFieldlessDe::FromMap(mapping_fn_impl) => {
-                ParamsSpecFieldless::FromMap(Box::new(mapping_fn_impl))
+            ParamsSpecFieldlessDe::MappingFn(mapping_fn_impl) => {
+                ParamsSpecFieldless::MappingFn(Box::new(mapping_fn_impl))
             }
         }
     }

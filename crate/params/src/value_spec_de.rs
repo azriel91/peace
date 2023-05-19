@@ -6,7 +6,7 @@ use crate::{MappingFnImpl, ValueSpec};
 
 type FnPlaceholder<T> = fn(&()) -> Option<T>;
 
-/// Exists to deserialize `FromMap` with a non-type-erased `MappingFnImpl`
+/// Exists to deserialize `MappingFn` with a non-type-erased `MappingFnImpl`
 #[derive(Clone, Serialize, Deserialize)]
 pub enum ValueSpecDe<T> {
     /// Loads a stored value spec.
@@ -38,7 +38,7 @@ pub enum ValueSpecDe<T> {
     InMemory,
     /// Look up some data populated by a predecessor, and compute the value
     /// from that data.
-    FromMap(MappingFnImpl<T, FnPlaceholder<T>, ((),)>),
+    MappingFn(MappingFnImpl<T, FnPlaceholder<T>, ((),)>),
 }
 
 impl<T> Debug for ValueSpecDe<T>
@@ -50,8 +50,8 @@ where
             Self::Stored => f.write_str("Stored"),
             Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::InMemory => f.write_str("From"),
-            Self::FromMap(mapping_fn_impl) => {
-                f.debug_tuple("FromMap").field(&mapping_fn_impl).finish()
+            Self::MappingFn(mapping_fn_impl) => {
+                f.debug_tuple("MappingFn").field(&mapping_fn_impl).finish()
             }
         }
     }
@@ -66,7 +66,9 @@ where
             ValueSpecDe::Stored => ValueSpec::Stored,
             ValueSpecDe::Value { value } => ValueSpec::Value { value },
             ValueSpecDe::InMemory => ValueSpec::InMemory,
-            ValueSpecDe::FromMap(mapping_fn_impl) => ValueSpec::FromMap(Box::new(mapping_fn_impl)),
+            ValueSpecDe::MappingFn(mapping_fn_impl) => {
+                ValueSpec::MappingFn(Box::new(mapping_fn_impl))
+            }
         }
     }
 }

@@ -42,7 +42,7 @@ fn serialize_from_map() -> Result<(), serde_yaml::Error> {
     let u8_spec: <u8 as ParamsFieldless>::Spec =
         ParamsSpecFieldless::<u8>::from_map(None, |_: &bool, _: &u16| Some(1u8));
     assert_eq!(
-        r#"!FromMap
+        r#"!MappingFn
 field_name: null
 fn_map: Some(Fn(&bool, &u16) -> Option<u8>)
 marker: null
@@ -99,7 +99,7 @@ fn deserialize_in_memory() -> Result<(), serde_yaml::Error> {
 #[test]
 fn deserialize_from_map() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
-        r#"!FromMap
+        r#"!MappingFn
 field_name: null
 fn_map: Some(Fn(&bool, &u16) -> Option<Vec<u8>>)
 marker: null
@@ -109,7 +109,7 @@ marker: null
     assert!(
         matches!(
             &deserialized,
-            ParamsSpecFieldless::<u8>::FromMap(mapping_fn)
+            ParamsSpecFieldless::<u8>::MappingFn(mapping_fn)
             if !mapping_fn.is_valued()
         ),
         "was {deserialized:?}"

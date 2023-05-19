@@ -145,7 +145,7 @@ mod struct_params {
             ParamsSpec::FieldWise {
                 field_wise_spec: StructParamsFieldWise {
                     src: ValueSpec::Value { value: src_value },
-                    dest: ValueSpec::FromMap(mapping_fn),
+                    dest: ValueSpec::MappingFn(mapping_fn),
                 }
             }
             if src_value == "a"
@@ -356,7 +356,7 @@ mod struct_with_type_params {
             ParamsSpec::FieldWise {
                 field_wise_spec: StructWithTypeParamsFieldWise {
                     src: ValueSpec::InMemory,
-                    dest: ValueSpec::FromMap(mapping_fn),
+                    dest: ValueSpec::MappingFn(mapping_fn),
                     marker: PhantomData,
                 }
             }
@@ -558,7 +558,7 @@ mod tuple_params {
             ParamsSpec::FieldWise {
                 field_wise_spec: TupleParamsFieldWise(
                     ValueSpec::InMemory,
-                    ValueSpec::FromMap(mapping_fn),
+                    ValueSpec::MappingFn(mapping_fn),
                 )
             }
             if matches!(
@@ -738,7 +738,7 @@ mod tuple_with_type_params {
             ParamsSpec::FieldWise {
                 field_wise_spec: TupleWithTypeParamsFieldWise(
                     ValueSpec::InMemory,
-                    ValueSpec::FromMap(mapping_fn),
+                    ValueSpec::MappingFn(mapping_fn),
                     PhantomData,
                 )
             }
@@ -1021,7 +1021,7 @@ mod enum_params {
             field_wise,
             ParamsSpec::FieldWise {
                 field_wise_spec: EnumParamsFieldWise::Named {
-                    src: ValueSpec::FromMap(mapping_fn),
+                    src: ValueSpec::MappingFn(mapping_fn),
                     marker: PhantomData,
                 }
             }
@@ -1056,7 +1056,7 @@ mod enum_params {
             field_wise,
             ParamsSpec::FieldWise {
                 field_wise_spec: EnumParamsFieldWise::Tuple(
-                    ValueSpec::FromMap(mapping_fn),
+                    ValueSpec::MappingFn(mapping_fn),
                 )
             }
             if matches!(
@@ -1090,7 +1090,7 @@ mod enum_params {
             field_wise,
             ParamsSpec::FieldWise {
                 field_wise_spec: EnumParamsFieldWise::TupleMarker(
-                    ValueSpec::FromMap(mapping_fn),
+                    ValueSpec::MappingFn(mapping_fn),
                     PhantomData,
                 )
             }
@@ -1596,7 +1596,7 @@ mod struct_recursive_value {
             ParamsSpec::FieldWise {
                 field_wise_spec: StructRecursiveValueFieldWise {
                     src: ValueSpec::InMemory,
-                    dest: ValueSpec::FromMap(mapping_fn),
+                    dest: ValueSpec::MappingFn(mapping_fn),
                 }
             }
             if matches!(

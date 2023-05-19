@@ -31,7 +31,7 @@ pub enum ParamsResolveError {
             .last()
             .map(FieldNameAndType::type_name)
             .unwrap_or(value_resolution_ctx.params_type_name()))]
-    From {
+    InMemory {
         /// Hierarchy of fields traversed to resolve the value.
         value_resolution_ctx: ValueResolutionCtx,
     },
@@ -62,7 +62,7 @@ pub enum ParamsResolveError {
             .unwrap_or(value_resolution_ctx.params_type_name())
         )
     ]
-    FromBorrowConflict {
+    InMemoryBorrowConflict {
         /// Hierarchy of fields traversed to resolve the value.
         value_resolution_ctx: ValueResolutionCtx,
     },

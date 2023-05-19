@@ -307,7 +307,7 @@ where
             if let Some((item_spec_id, params_spec_boxed)) =
                 params_spec_provided.or(params_spec_stored)
             {
-                // `ValueSpec::FromMap`s will be present in `params_spec_stored`, but will not
+                // `ValueSpec::MappingFn`s will be present in `params_spec_stored`, but will not
                 // be valid mapping functions as they cannot be serialized / deserialized.
 
                 // TODO: raise error.

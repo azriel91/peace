@@ -51,7 +51,7 @@ fn serialize_from_map() -> Result<(), serde_yaml::Error> {
     let vec_a_spec: <VecA as Params>::Spec =
         <VecA as Params>::Spec::from_map(None, |_: &bool, _: &u16| Some(VecA(vec![1u8])));
     assert_eq!(
-        r#"!FromMap
+        r#"!MappingFn
 field_name: null
 fn_map: Some(Fn(&bool, &u16) -> Option<VecA>)
 marker: null
@@ -110,7 +110,7 @@ fn serialize_field_wise_from_map() -> Result<(), serde_yaml::Error> {
         .build();
     assert_eq!(
         r#"!FieldWise
-field_wise_spec: !FromMap
+field_wise_spec: !MappingFn
   field_name: _0
   fn_map: Some(Fn(&bool, &u16) -> Option<Vec<u8>>)
   marker: null
@@ -170,7 +170,7 @@ fn deserialize_in_memory() -> Result<(), serde_yaml::Error> {
 #[test]
 fn deserialize_from_map() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
-        r#"!FromMap
+        r#"!MappingFn
 field_name: null
 fn_map: Some(Fn(&bool, &u16) -> Option<Vec<u8>>)
 marker: null
@@ -180,7 +180,7 @@ marker: null
     assert!(
         matches!(
             &deserialized,
-            ParamsSpec::<VecA>::FromMap(mapping_fn)
+            ParamsSpec::<VecA>::MappingFn(mapping_fn)
             if !mapping_fn.is_valued()
         ),
         "was {deserialized:?}"
@@ -250,7 +250,7 @@ field_wise_spec: InMemory
 fn deserialize_field_wise_from_map() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
         r#"!FieldWise
-field_wise_spec: !FromMap
+field_wise_spec: !MappingFn
   field_name: _0
   fn_map: Some(Fn(&bool, &u16) -> Option<Vec<u8>>)
   marker: null
@@ -261,7 +261,7 @@ field_wise_spec: !FromMap
         matches!(
             &deserialized,
             ParamsSpec::<VecA>::FieldWise {
-                field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::FromMap(mapping_fn))
+                field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn(mapping_fn))
             }
             if !mapping_fn.is_valued()
         ),

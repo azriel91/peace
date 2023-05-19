@@ -9,8 +9,8 @@ use crate::{
 
 /// How to populate a field's value in an item spec's params.
 ///
-/// The `FromMap` variant's mapping function is `None` when deserialized, as it
-/// is impossible to determine the underlying `F` and `U` type parameters for
+/// The `MappingFn` variant's mapping function is `None` when deserialized, as
+/// it is impossible to determine the underlying `F` and `U` type parameters for
 /// the backing `MappingFnImpl`.
 ///
 /// For deserialization:
@@ -66,11 +66,11 @@ where
     /// inserted by a predecessor at runtime, and is mapped by the
     /// given function.
     ///
-    /// This is serialized as `FromMap` with a string value. For
+    /// This is serialized as `MappingFn` with a string value. For
     /// deserialization, there is no actual backing function, so
-    /// the user must provide the `FromMap` in subsequent command
+    /// the user must provide the `MappingFn` in subsequent command
     /// context builds.
-    FromMap(Box<dyn MappingFn<Output = T>>),
+    MappingFn(Box<dyn MappingFn<Output = T>>),
 }
 
 impl<T> ParamsSpecFieldless<T>
@@ -82,7 +82,7 @@ where
         MappingFnImpl<T, F, Args>: From<(Option<String>, F)> + MappingFn<Output = T>,
     {
         let mapping_fn = MappingFnImpl::from((field_name, f));
-        Self::FromMap(Box::new(mapping_fn))
+        Self::MappingFn(Box::new(mapping_fn))
     }
 }
 
@@ -95,7 +95,7 @@ where
             Self::Stored => f.write_str("Stored"),
             Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::InMemory => f.write_str("From"),
-            Self::FromMap(_) => f.debug_tuple("FromMap").field(&"..").finish(),
+            Self::MappingFn(_) => f.debug_tuple("MappingFn").field(&"..").finish(),
         }
     }
 }
@@ -125,18 +125,18 @@ where
                 match resources.try_borrow::<T>() {
                     Ok(value) => Ok((*value).clone()),
                     Err(borrow_fail) => match borrow_fail {
-                        BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
+                        BorrowFail::ValueNotFound => Err(ParamsResolveError::InMemory {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                         }),
                         BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                            Err(ParamsResolveError::FromBorrowConflict {
+                            Err(ParamsResolveError::InMemoryBorrowConflict {
                                 value_resolution_ctx: value_resolution_ctx.clone(),
                             })
                         }
                     },
                 }
             }
-            ParamsSpecFieldless::FromMap(mapping_fn) => {
+            ParamsSpecFieldless::MappingFn(mapping_fn) => {
                 mapping_fn.map(resources, value_resolution_ctx)
             }
         }
@@ -153,18 +153,18 @@ where
                 match resources.try_borrow::<T>() {
                     Ok(value) => Ok(T::Partial::from((*value).clone())),
                     Err(borrow_fail) => match borrow_fail {
-                        BorrowFail::ValueNotFound => Err(ParamsResolveError::From {
+                        BorrowFail::ValueNotFound => Err(ParamsResolveError::InMemory {
                             value_resolution_ctx: value_resolution_ctx.clone(),
                         }),
                         BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
-                            Err(ParamsResolveError::FromBorrowConflict {
+                            Err(ParamsResolveError::InMemoryBorrowConflict {
                                 value_resolution_ctx: value_resolution_ctx.clone(),
                             })
                         }
                     },
                 }
             }
-            ParamsSpecFieldless::FromMap(mapping_fn) => mapping_fn
+            ParamsSpecFieldless::MappingFn(mapping_fn) => mapping_fn
                 .try_map(resources, value_resolution_ctx)
                 .map(|t| t.map(T::Partial::from).unwrap_or_else(T::Partial::default)),
         }
