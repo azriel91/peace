@@ -59,7 +59,9 @@ pub fn impl_field_wise_builder(
                 ast,
                 ty_generics,
                 peace_params_path,
-                value_field_wise_name,
+                BuildMode::Struct {
+                    value_field_wise_name,
+                },
                 fields,
                 impl_mode,
             );
@@ -86,8 +88,10 @@ pub fn impl_field_wise_builder(
             ast,
             generics_split,
             peace_params_path,
+            value_field_wise_name,
             value_field_wise_builder_name,
             field_wise_enum_builder_ctx,
+            impl_mode,
             data_enum,
         ),
         Data::Union(_data_union) => quote!(),
@@ -132,24 +136,28 @@ fn impl_enum_builder(
     ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
     peace_params_path: &Path,
+    value_field_wise_name: &Ident,
     value_field_wise_builder_name: &Ident,
     field_wise_enum_builder_ctx: &FieldWiseEnumBuilderCtx,
+    impl_mode: ImplMode,
     data_enum: &DataEnum,
 ) -> proc_macro2::TokenStream {
-    let variant_selection_ident = Ident::new("variant_selection", Span::call_site());
+    let variant_selection_ident = &Ident::new("variant_selection", Span::call_site());
     let enum_builder_generics = &field_wise_enum_builder_ctx.generics;
     let enum_params_variant_none = &field_wise_enum_builder_ctx.variant_none;
     let ty_generics_idents = &field_wise_enum_builder_ctx.ty_generics_idents;
     let type_params_with_variant_none = &field_wise_enum_builder_ctx.type_params_with_variant_none;
-    let (impl_generics, _ty_generics, _where_clause) = generics_split;
+    let (impl_generics, ty_generics, _where_clause) = generics_split;
     let (builder_impl_generics, builder_ty_generics, builder_where_clause) =
         enum_builder_generics.split_for_impl();
+    let value_spec_ty = value_spec_ty(ast, ty_generics, peace_params_path, impl_mode);
 
     let variant_selection_struct_tokenses = data_enum
         .variants
         .iter()
         .map(|variant| {
             let variant_name = &variant.ident;
+            let fields = &variant.fields;
 
             let variant_name_snake_case = Ident::new(
                 &format!("{}", heck::AsSnakeCase(format!("{variant_name}"))),
@@ -157,7 +165,7 @@ fn impl_enum_builder(
             );
 
             let variant_selection_name =
-                format_ident!("{}Variant{}", value_field_wise_builder_name, variant_name);
+                &format_ident!("{}Variant{}", value_field_wise_builder_name, variant_name);
             let variant_selection_ty_params = variant_generics_intersect(&ast.generics, variant);
             let variant_selection_ty_params_angle_bracketed =
                 if variant_selection_ty_params.is_empty() {
@@ -171,7 +179,7 @@ fn impl_enum_builder(
             );
 
             let variant_selection_struct: DeriveInput = {
-                let variant_selection_struct_fields = fields_map(&variant.fields, |field| {
+                let variant_selection_struct_fields = fields_map(fields, |field| {
                     field_to_optional_value_spec(field, peace_params_path).to_token_stream()
                 });
                 if matches!(&variant_selection_struct_fields, Fields::Named(_)) {
@@ -194,12 +202,12 @@ fn impl_enum_builder(
             let impl_default = impl_default(
                 &variant_selection_struct,
                 &variant_selection_generics_split,
-                &variant_selection_name,
+                variant_selection_name,
             );
 
             let impl_builder_fns = {
                 let builder_field_methods =
-                    builder_field_methods(&variant.fields, peace_params_path, None);
+                    builder_field_methods(fields, peace_params_path, None);
                 let (
                     variant_selection_impl_generics,
                     variant_selection_ty_generics,
@@ -237,9 +245,22 @@ fn impl_enum_builder(
 
             let proxy_impl_builder_fns = {
                 let builder_field_methods = builder_field_methods(
-                    &variant.fields,
+                    fields,
                     peace_params_path,
-                    Some(&variant_selection_ident),
+                    Some(variant_selection_ident),
+                );
+                let build_method_body = build_method_body(
+                    ast,
+                    ty_generics,
+                    peace_params_path,
+                    BuildMode::Enum {
+                        value_field_wise_name,
+                        variant_name,
+                        variant_selection_name,
+                        variant_selection_ident,
+                    },
+                    fields,
+                    impl_mode,
                 );
 
                 // Note: We use `impl_generics` instead of `builder_impl_generics`
@@ -250,6 +271,10 @@ fn impl_enum_builder(
                     #builder_where_clause
                     {
                         #builder_field_methods
+
+                        pub fn build(self) -> #value_spec_ty {
+                            #build_method_body
+                        }
                     }
                 }
             };
@@ -415,7 +440,7 @@ fn build_method_body(
     parent_ast: &DeriveInput,
     ty_generics: &TypeGenerics,
     peace_params_path: &Path,
-    value_field_wise_name: &Ident,
+    build_mode: BuildMode<'_>,
     fields: &Fields,
     impl_mode: ImplMode,
 ) -> proc_macro2::TokenStream {
@@ -433,16 +458,40 @@ fn build_method_body(
         }
     });
 
+    let (deconstructed_type, deconstructed_object) = match build_mode {
+        BuildMode::Struct { .. } => (quote!(Self), quote!(self)),
+        BuildMode::Enum {
+            variant_selection_name,
+            variant_selection_ident,
+            ..
+        } => (
+            quote!(#variant_selection_name),
+            quote!(self.#variant_selection_ident),
+        ),
+    };
+
+    let value_field_wise_type_or_variant = match build_mode {
+        BuildMode::Struct {
+            value_field_wise_name,
+        } => quote!(#value_field_wise_name),
+        BuildMode::Enum {
+            value_field_wise_name,
+            variant_name,
+            variant_selection_name: _,
+            variant_selection_ident: _,
+        } => quote!(#value_field_wise_name::#variant_name),
+    };
+
     match fields {
         Fields::Named(_) => {
             quote! {
-                let Self {
+                let #deconstructed_type {
                     #(#fields_deconstruct),*
-                } = self;
+                } = #deconstructed_object;
 
                 #(#fields_unwrap_to_value_spec_fieldless)*
 
-                let field_wise = #value_field_wise_name {
+                let field_wise = #value_field_wise_type_or_variant {
                     #(#fields_deconstruct),*
                 };
 
@@ -451,16 +500,16 @@ fn build_method_body(
         }
         Fields::Unnamed(_) => {
             quote! {
-                let Self(#(#fields_deconstruct),*) = self;
+                let #deconstructed_type(#(#fields_deconstruct),*) = #deconstructed_object;
 
                 #(#fields_unwrap_to_value_spec_fieldless)*
 
-                let field_wise = #value_field_wise_name(#(#fields_deconstruct),*);
+                let field_wise = #value_field_wise_type_or_variant(#(#fields_deconstruct),*);
 
                 #value_spec_ty_path::FieldWise(field_wise)
             }
         }
-        Fields::Unit => quote!(#value_spec_ty_path::FieldWise(#value_field_wise_name)),
+        Fields::Unit => quote!(#value_spec_ty_path::FieldWise(#value_field_wise_type_or_variant)),
     }
 }
 
@@ -476,4 +525,21 @@ struct VariantSelectionStructTokens {
     /// Builder functions for the enum to proxy to the variant selection
     /// builder.
     proxy_impl_builder_fns: proc_macro2::TokenStream,
+}
+
+enum BuildMode<'name> {
+    Struct {
+        /// Name of the FieldWise type to build.
+        value_field_wise_name: &'name Ident,
+    },
+    Enum {
+        /// Name of the FieldWise type to build.
+        value_field_wise_name: &'name Ident,
+        /// Variant within the type to build.
+        variant_name: &'name Ident,
+        /// Name of the variant selection type within the enum builder.
+        variant_selection_name: &'name Ident,
+        /// Name of the variant selection field within the enum builder.
+        variant_selection_ident: &'name Ident,
+    },
 }

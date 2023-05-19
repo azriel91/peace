@@ -959,7 +959,7 @@ mod enum_params {
     }
 
     #[test]
-    fn field_wise_from_field_wise_builder() {
+    fn field_wise_named_from_field_wise_builder() {
         let field_wise = EnumParams::<()>::field_wise_spec()
             .named()
             .with_src(String::from("a"))
@@ -973,7 +973,7 @@ mod enum_params {
         };
         let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
-            item_spec_id!("field_wise_from_field_wise_builder"),
+            item_spec_id!("field_wise_named_from_field_wise_builder"),
             String::from("EnumParams<()>"),
         );
 
@@ -988,6 +988,81 @@ mod enum_params {
                 Ok(src_mapped)
                 if src_mapped == "b"
             )
+        ));
+    }
+
+    #[test]
+    fn field_wise_tuple_from_field_wise_builder() {
+        let field_wise = EnumParams::<()>::field_wise_spec()
+            .tuple()
+            .with_0(String::from("a"))
+            .with_0_from()
+            .with_0_from_map(|_: &u32| Some(String::from("b")))
+            .build();
+        let resources: Resources<SetUp> = {
+            let mut resources = Resources::new();
+            resources.insert(1u32);
+            Resources::from(resources)
+        };
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
+            ValueResolutionMode::ApplyDry,
+            item_spec_id!("field_wise_tuple_from_field_wise_builder"),
+            String::from("EnumParams<()>"),
+        );
+
+        assert!(matches!(
+            field_wise,
+            ParamsSpec::FieldWise(EnumParamsFieldWise::Tuple(
+                ValueSpec::FromMap(mapping_fn),
+            ))
+            if matches!(
+                mapping_fn.map(&resources, &mut value_resolution_ctx),
+                Ok(src_mapped)
+                if src_mapped == "b"
+            )
+        ));
+    }
+
+    #[test]
+    fn field_wise_tuple_marker_from_field_wise_builder() {
+        let field_wise = EnumParams::<()>::field_wise_spec()
+            .tuple_marker()
+            .with_0(String::from("a"))
+            .with_0_from()
+            .with_0_from_map(|_: &u32| Some(String::from("b")))
+            .build();
+        let resources: Resources<SetUp> = {
+            let mut resources = Resources::new();
+            resources.insert(1u32);
+            Resources::from(resources)
+        };
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
+            ValueResolutionMode::ApplyDry,
+            item_spec_id!("field_wise_tuple_marker_from_field_wise_builder"),
+            String::from("EnumParams<()>"),
+        );
+
+        assert!(matches!(
+            field_wise,
+            ParamsSpec::FieldWise(EnumParamsFieldWise::TupleMarker(
+                ValueSpec::FromMap(mapping_fn),
+                PhantomData,
+            ))
+            if matches!(
+                mapping_fn.map(&resources, &mut value_resolution_ctx),
+                Ok(src_mapped)
+                if src_mapped == "b"
+            )
+        ));
+    }
+
+    #[test]
+    fn field_wise_unit_from_field_wise_builder() {
+        let field_wise = EnumParams::<()>::field_wise_spec().unit().build();
+
+        assert!(matches!(
+            field_wise,
+            ParamsSpec::FieldWise(EnumParamsFieldWise::Unit)
         ));
     }
 
@@ -1363,7 +1438,11 @@ mod struct_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsSpec, ValueSpec};
+    use peace::{
+        cfg::{item_spec_id, ItemSpecId},
+        params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+        resources::{resources::ts::SetUp, Resources},
+    };
 
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub struct InnerValue<T>(T)
@@ -1430,6 +1509,37 @@ mod struct_recursive_value {
             }
             if src_value == InnerValue::<u16>(123)
             && dest_value == 456
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_field_wise_builder() {
+        let field_wise = StructRecursiveValue::<()>::field_wise_spec()
+            .with_src_from()
+            .with_dest_from_map(|_: &u32| Some(456))
+            .build();
+        let resources: Resources<SetUp> = {
+            let mut resources = Resources::new();
+            resources.insert(1u32);
+            Resources::from(resources)
+        };
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
+            ValueResolutionMode::ApplyDry,
+            item_spec_id!("field_wise_from_field_wise_builder"),
+            String::from("StructRecursiveValue<()>"),
+        );
+
+        assert!(matches!(
+            field_wise,
+            ParamsSpec::FieldWise(StructRecursiveValueFieldWise {
+                src: ValueSpec::From,
+                dest: ValueSpec::FromMap(mapping_fn),
+            })
+            if matches!(
+                mapping_fn.map(&resources, &mut value_resolution_ctx),
+                Ok(dest_mapped)
+                if dest_mapped == 456
+            )
         ));
     }
 
