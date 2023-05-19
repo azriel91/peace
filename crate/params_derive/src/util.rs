@@ -75,11 +75,6 @@ pub fn is_tagged_fieldless(attrs: &[Attribute]) -> bool {
     })
 }
 
-/// Returns whether the attribute is a `#[serde(..)]` attribute.
-pub fn is_serde_attr(attr: &Attribute) -> bool {
-    attr.path().is_ident("serde")
-}
-
 /// Returns whether the attribute is a `#[serde(bound = "..")]` attribute.
 pub fn is_serde_bound_attr(attr: &Attribute) -> bool {
     if attr.path().is_ident("serde") {

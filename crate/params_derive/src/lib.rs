@@ -350,12 +350,11 @@ fn t_partial(
     params_name: &Ident,
     t_partial_name: &Ident,
 ) -> proc_macro2::TokenStream {
-    let is_serializable = true;
     let mut t_partial = TypeGen::gen_from_value_type(
         ast,
         generics_split,
         t_partial_name,
-        |field| fields_to_optional(field, is_serializable),
+        fields_to_optional,
         &[
             parse_quote! {
                 #[doc="\
@@ -369,7 +368,7 @@ fn t_partial(
             },
             parse_quote!(#[derive(PartialEq, Eq, serde::Serialize, serde::Deserialize)]),
         ],
-        is_serializable,
+        true,
     );
 
     t_partial.extend(impl_try_from_params_partial_for_params(
@@ -442,12 +441,11 @@ fn t_field_wise(
     t_field_wise_name: &Ident,
     t_partial_name: &Ident,
 ) -> proc_macro2::TokenStream {
-    let is_serializable = true;
     let mut t_field_wise = TypeGen::gen_from_value_type(
         ast,
         generics_split,
         t_field_wise_name,
-        |fields| fields_to_value_spec(fields, peace_params_path, is_serializable),
+        |fields| fields_to_value_spec(fields, peace_params_path),
         &[
             parse_quote! {
                 #[doc="Specification of how to look up values for an item spec's parameters."]
@@ -456,7 +454,7 @@ fn t_field_wise(
             // the `Clone` and `Debug` bounds.
             parse_quote!(#[derive(serde::Serialize, serde::Deserialize)]),
         ],
-        is_serializable,
+        true,
     );
 
     t_field_wise.extend(impl_field_wise_spec_rt_for_field_wise(

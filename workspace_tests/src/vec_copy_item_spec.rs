@@ -258,7 +258,7 @@ impl<'exec> VecCopyData<'exec> {
 }
 
 #[derive(Clone, Debug, Default, Params, PartialEq, Eq, Serialize, Deserialize)]
-pub struct VecA(#[serde(with = "serde_yaml::with::singleton_map")] pub Vec<u8>);
+pub struct VecA(pub Vec<u8>);
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VecB(pub Vec<u8>);

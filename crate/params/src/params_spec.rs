@@ -51,7 +51,6 @@ where
     ///
     /// The value used is whatever is passed in to the command context
     /// builder.
-    #[serde(with = "serde_yaml::with::singleton_map")]
     Value(T),
     /// Uses a value loaded from `resources` at runtime.
     ///
@@ -85,7 +84,6 @@ where
     //
     // There shouldn't need to be automatic detection of non-recursive fields for stdlib types,
     // because `peace_params` should just implement `ValueSpec` for those types.
-    #[serde(with = "serde_yaml::with::singleton_map")]
     FieldWise(T::FieldWiseSpec),
 }
 
