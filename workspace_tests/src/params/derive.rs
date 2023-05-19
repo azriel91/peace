@@ -833,7 +833,11 @@ mod enum_params {
     use derivative::Derivative;
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsSpec, ValueSpec};
+    use peace::{
+        cfg::{item_spec_id, ItemSpecId},
+        params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
+        resources::{resources::ts::SetUp, Resources},
+    };
 
     #[derive(Derivative, Params, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
@@ -951,6 +955,39 @@ mod enum_params {
         assert!(matches!(
             EnumParamsFieldWise::from(params),
             EnumParamsFieldWise::<()>::Unit
+        ));
+    }
+
+    #[test]
+    fn field_wise_from_field_wise_builder() {
+        let field_wise = EnumParams::<()>::field_wise_spec()
+            .named()
+            .with_src_from()
+            .with_dest_from_map(|_: &u32| Some(String::from("b")))
+            .build();
+        let resources: Resources<SetUp> = {
+            let mut resources = Resources::new();
+            resources.insert(1u32);
+            Resources::from(resources)
+        };
+        let mut value_resolution_ctx = ValueResolutionCtx::new(
+            ValueResolutionMode::ApplyDry,
+            item_spec_id!("field_wise_from_field_wise_builder"),
+            String::from("EnumParams<()>"),
+        );
+
+        assert!(matches!(
+            field_wise,
+            ParamsSpec::FieldWise(EnumParamsFieldWise {
+                src: ValueSpec::From,
+                dest: ValueSpec::FromMap(mapping_fn),
+                marker: PhantomData,
+            })
+            if matches!(
+                mapping_fn.map(&resources, &mut value_resolution_ctx),
+                Ok(dest_mapped)
+                if dest_mapped == "b"
+            )
         ));
     }
 

@@ -1,9 +1,36 @@
-use syn::{Attribute, Field, Fields, Path, Type};
+use syn::{Attribute, Field, Fields, FieldsNamed, FieldsUnnamed, Path, Type};
 
 use crate::util::{field_spec_ty, is_phantom_data, is_serde_bound_attr};
 
+/// Maps fields into different fields, wrapping them with the appropriate braces
+/// / parenthesis if necessary.
+pub fn fields_map<F>(fields: &Fields, f: F) -> Fields
+where
+    F: Fn(&Field) -> proc_macro2::TokenStream,
+{
+    let fields_mapped = fields.iter().map(|field| (field, f(field)));
+    match fields {
+        Fields::Named(_fields_named) => {
+            let fields_mapped = fields_mapped.map(|(field, expr)| {
+                let field_name = &field.ident;
+                quote!(#field_name: #expr)
+            });
+            let fields_named: FieldsNamed = parse_quote!({
+                #(#fields_mapped,)*
+            });
+            Fields::from(fields_named)
+        }
+        Fields::Unnamed(_fields_unnamed) => {
+            let fields_mapped = fields_mapped.map(|(_field, expr)| expr);
+            let fields_unnamed: FieldsUnnamed = parse_quote!((#(#fields_mapped,)*));
+            Fields::from(fields_unnamed)
+        }
+        Fields::Unit => fields.clone(),
+    }
+}
+
 pub fn fields_to_optional(fields: &mut Fields) {
-    fields_map(fields, |field| {
+    fields_each_map(fields, |field| {
         let field_ty = &field.ty;
         if is_phantom_data(field_ty) {
             field_ty.clone()
@@ -18,7 +45,7 @@ pub fn fields_to_optional(fields: &mut Fields) {
 /// If the type is marked with `#[value_spec(fieldless)]`, then it is wrapped
 /// as `ValueSpec<MyTypeWrapper>`.
 pub fn fields_to_value_spec(fields: &mut Fields, peace_params_path: &Path) {
-    fields_map(fields, |field| {
+    fields_each_map(fields, |field| {
         let field_ty = &field.ty;
         if is_phantom_data(field_ty) {
             field_ty.clone()
@@ -51,18 +78,24 @@ pub fn fields_to_value_spec(fields: &mut Fields, peace_params_path: &Path) {
 /// `Option<ParamsSpecFieldless<MyTypeWrapper>>`.
 /// ```
 pub fn fields_to_optional_value_spec(fields: &mut Fields, peace_params_path: &Path) {
-    fields_map(fields, |field| {
-        let field_ty = &field.ty;
-        if is_phantom_data(field_ty) {
-            field_ty.clone()
-        } else {
-            let field_spec_ty = field_spec_ty(peace_params_path, field_ty);
-            parse_quote!(Option<#field_spec_ty>)
-        }
+    fields_each_map(fields, |field| {
+        field_to_optional_value_spec(field, peace_params_path)
     })
 }
 
-fn fields_map<F>(fields: &mut Fields, f: F)
+/// Maps a field to `Option<ValueSpec<#field_ty>>`, `PhantomData` is returned as
+/// is.
+pub fn field_to_optional_value_spec(field: &Field, peace_params_path: &Path) -> Type {
+    let field_ty = &field.ty;
+    if is_phantom_data(field_ty) {
+        field_ty.clone()
+    } else {
+        let field_spec_ty = field_spec_ty(peace_params_path, field_ty);
+        parse_quote!(Option<#field_spec_ty>)
+    }
+}
+
+fn fields_each_map<F>(fields: &mut Fields, f: F)
 where
     F: Fn(&Field) -> Type,
 {

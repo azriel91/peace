@@ -2,7 +2,8 @@ use proc_macro2::Span;
 use syn::{
     meta::ParseNestedMeta, punctuated::Punctuated, AngleBracketedGenericArguments, Attribute,
     DeriveInput, Field, Fields, GenericArgument, GenericParam, Generics, Ident, LitInt, Path,
-    PathArguments, PathSegment, ReturnType, Type, TypeGenerics, TypePath, Variant, WherePredicate,
+    PathArguments, PathSegment, ReturnType, Type, TypeGenerics, TypePath, Variant, WhereClause,
+    WherePredicate,
 };
 
 // Remember to update `params/src/std_impl.rs` when updating this.
@@ -327,6 +328,9 @@ fn fields_deconstruct_retain_map(
 /// Returns the intersection of parent type arguments and variant field types.
 ///
 /// This is the part between the angle brackets -- `T1, T2, ..`.
+///
+/// Note: This doesn't copy across any `WherePredicate`s. See
+/// `variant_generics_where_clause` below.
 pub fn variant_generics_intersect(
     parent_generics: &Generics,
     variant: &Variant,
@@ -344,6 +348,52 @@ pub fn variant_generics_intersect(
                 .any(|parent_generic_param| field_generic == parent_generic_param)
         })
         .collect::<Vec<GenericParam>>()
+}
+
+/// Returns the where clause to apply to an enum variant
+pub fn variant_generics_where_clause(
+    parent_generics: &Generics,
+    variant_generics: &[GenericParam],
+) -> Option<WhereClause> {
+    let filtered_predicates = parent_generics.where_clause.as_ref().map(|where_clause| {
+        where_clause
+            .predicates
+            .iter()
+            .filter(|where_predicate| match where_predicate {
+                WherePredicate::Lifetime(predicate_lifetime) => {
+                    variant_generics
+                        .iter()
+                        .any(|variant_generic| match variant_generic {
+                            GenericParam::Lifetime(variant_generic_lifetime) => {
+                                variant_generic_lifetime.lifetime == predicate_lifetime.lifetime
+                            }
+                            GenericParam::Type(_) | GenericParam::Const(_) => false,
+                        })
+                }
+                WherePredicate::Type(predicate_type) => {
+                    variant_generics
+                        .iter()
+                        .any(|variant_generic| match variant_generic {
+                            GenericParam::Type(variant_generic_type) => {
+                                if let Type::Path(type_path) = &predicate_type.bounded_ty {
+                                    type_path.path.is_ident(&variant_generic_type.ident)
+                                } else {
+                                    false
+                                }
+                            }
+                            GenericParam::Lifetime(_) | GenericParam::Const(_) => false,
+                        })
+                }
+                _ => false,
+            })
+    });
+
+    filtered_predicates.map(|filtered_predicates| {
+        parse_quote! {
+            where
+                #(#filtered_predicates,)*
+        }
+    })
 }
 
 /// Returns the simple types found in this type.
@@ -398,7 +448,7 @@ fn field_generics_maybe(ty: &Type) -> Vec<GenericParam> {
                                     }
 
                                     GenericArgument::Lifetime(lifetime) => {
-                                        vec![parse_quote!(lifetime)]
+                                        vec![parse_quote!(#lifetime)]
                                     }
                                     // GenericArgument::Const(_) |
                                     // GenericArgument::AssocType(_) |

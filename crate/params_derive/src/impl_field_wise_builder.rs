@@ -6,13 +6,13 @@ use syn::{
 
 use crate::{
     field_wise_enum_builder_ctx::FieldWiseEnumBuilderCtx,
-    fields_map::fields_to_optional_value_spec,
+    fields_map::{field_to_optional_value_spec, fields_map, fields_to_optional_value_spec},
     impl_default,
     type_gen::TypeGen,
     util::{
         field_spec_ty_deconstruct, field_spec_ty_path, fields_deconstruct, fields_vars_map,
         is_phantom_data, tuple_ident_from_field_index, tuple_index_from_field_index, value_spec_ty,
-        value_spec_ty_path, variant_generics_intersect, ImplMode,
+        value_spec_ty_path, variant_generics_intersect, variant_generics_where_clause, ImplMode,
     },
 };
 
@@ -143,53 +143,121 @@ fn impl_enum_builder(
     let ty_generics_idents = &field_wise_enum_builder_ctx.ty_generics_idents;
     let type_params_with_variant_none = &field_wise_enum_builder_ctx.type_params_with_variant_none;
 
-    let variant_selection_struct_and_builder_fns = data_enum.variants.iter().map(|variant| {
-        let variant_name = &variant.ident;
+    let variant_selection_struct_tokenses = data_enum
+        .variants
+        .iter()
+        .map(|variant| {
+            let variant_name = &variant.ident;
 
-        let variant_name_snake_case = Ident::new(
-            &format!("{}", heck::AsSnakeCase(format!("{variant_name}"))),
-            Span::call_site(),
-        );
+            let variant_name_snake_case = Ident::new(
+                &format!("{}", heck::AsSnakeCase(format!("{variant_name}"))),
+                Span::call_site(),
+            );
 
-        let variant_selection_name = format_ident!("{}Variant{}", value_field_wise_builder_name, variant_name);
-        let variant_selection_ty_params = variant_generics_intersect(&ast.generics,variant);
-        let variant_selection_ty_params_angle_bracketed = if variant_selection_ty_params.is_empty() {
-            quote!()
-        } else {
-            quote!(<#(#variant_selection_ty_params,)*>)
-        };
+            let variant_selection_name =
+                format_ident!("{}Variant{}", value_field_wise_builder_name, variant_name);
+            let variant_selection_ty_params = variant_generics_intersect(&ast.generics, variant);
+            let variant_selection_ty_params_angle_bracketed =
+                if variant_selection_ty_params.is_empty() {
+                    quote!()
+                } else {
+                    quote!(<#(#variant_selection_ty_params,)*>)
+                };
+            let variant_generics_where_clause = variant_generics_where_clause(
+                &ast.generics,
+                &variant_selection_ty_params
+            );
 
-        let variant_selection_struct = {
-            let variant_marker_field = quote!((::std::marker::PhantomData<(#(#variant_selection_ty_params,)*)>));
-            quote! {
-                #[derive(Debug)]
-                pub struct #variant_selection_name #variant_selection_ty_params_angle_bracketed #variant_marker_field;
-            }
-        };
-
-        let variant_builder_fn = quote! {
-            pub fn #variant_name_snake_case(self)
-            -> #value_field_wise_builder_name<
-                    #variant_selection_name #variant_selection_ty_params_angle_bracketed,
-                    #ty_generics_idents
-                >
-            {
-                #value_field_wise_builder_name {
-                    variant_selection: #variant_selection_name(::std::marker::PhantomData),
-                    marker: ::std::marker::PhantomData,
+            let variant_selection_struct: DeriveInput = {
+                let variant_selection_struct_fields = fields_map(&variant.fields, |field| {
+                    field_to_optional_value_spec(field, peace_params_path).to_token_stream()
+                });
+                if matches!(&variant_selection_struct_fields, Fields::Named(_)) {
+                    parse_quote! {
+                        #[derive(Debug)]
+                        pub struct #variant_selection_name #variant_selection_ty_params_angle_bracketed
+                        #variant_generics_where_clause
+                        #variant_selection_struct_fields
+                    }
+                } else {
+                    parse_quote! {
+                        #[derive(Debug)]
+                        pub struct #variant_selection_name #variant_selection_ty_params_angle_bracketed
+                        #variant_selection_struct_fields #variant_generics_where_clause;
+                    }
                 }
-            }
-        };
+            };
+            let variant_selection_generics_split =
+                variant_selection_struct.generics.split_for_impl();
+            let impl_default = impl_default(
+                &variant_selection_struct,
+                &variant_selection_generics_split,
+                &variant_selection_name,
+            );
 
-        (variant_selection_struct, variant_builder_fn)
-    })
-    .collect::<Vec<_>>();
-    let variant_selection_structs = variant_selection_struct_and_builder_fns
+            let impl_builder_fns = {
+                let builder_field_methods =
+                    builder_field_methods(&variant.fields, peace_params_path);
+                let (
+                    variant_selection_impl_generics,
+                    variant_selection_ty_generics,
+                    variant_selection_where_clause,
+                ) = &variant_selection_generics_split;
+
+                quote! {
+                    impl #variant_selection_impl_generics
+                    #variant_selection_name #variant_selection_ty_generics
+                    #variant_selection_where_clause
+                    {
+                        #builder_field_methods
+                    }
+                }
+            };
+
+            let variant_builder_fn = quote! {
+                pub fn #variant_name_snake_case(self)
+                -> #value_field_wise_builder_name<
+                        #variant_selection_name #variant_selection_ty_params_angle_bracketed,
+                        #ty_generics_idents
+                    >
+                {
+                    #value_field_wise_builder_name {
+                        variant_selection: #variant_selection_name::default(),
+                        marker: ::std::marker::PhantomData,
+                    }
+                }
+            };
+
+            VariantSelectionStructTokens {
+                struct_declaration: variant_selection_struct,
+                impl_default,
+                impl_builder_fns,
+                variant_builder_fn,
+            }
+        })
+        .collect::<Vec<VariantSelectionStructTokens>>();
+    let variant_selection_structs_and_impls =
+        variant_selection_struct_tokenses
+            .iter()
+            .map(|variant_selection_struct_tokens| {
+                let VariantSelectionStructTokens {
+                    struct_declaration,
+                    impl_default,
+                    impl_builder_fns,
+                    variant_builder_fn: _,
+                } = variant_selection_struct_tokens;
+
+                quote! {
+                    #struct_declaration
+
+                    #impl_default
+
+                    #impl_builder_fns
+                }
+            });
+    let variant_builder_fns = variant_selection_struct_tokenses
         .iter()
-        .map(|(variant_selection_struct, _variant_builder_fn)| variant_selection_struct);
-    let variant_builder_fns = variant_selection_struct_and_builder_fns
-        .iter()
-        .map(|(_variant_selection_struct, variant_builder_fn)| variant_builder_fn);
+        .map(|variant_selection_struct_tokens| &variant_selection_struct_tokens.variant_builder_fn);
 
     let (impl_generics, _ty_generics, _where_clause) = generics_split;
     let (builder_impl_generics, builder_ty_generics, builder_where_clause) =
@@ -230,7 +298,7 @@ fn impl_enum_builder(
         #[derive(Clone, Copy, Debug)]
         pub struct #enum_params_variant_none;
 
-        #(#variant_selection_structs)*
+        #(#variant_selection_structs_and_impls)*
     }
 }
 
@@ -363,4 +431,14 @@ fn build_method_body(
         }
         Fields::Unit => quote!(#value_spec_ty_path::FieldWise(#value_field_wise_name)),
     }
+}
+
+struct VariantSelectionStructTokens {
+    struct_declaration: DeriveInput,
+    /// impl Default for `VariantSelectionStruct`
+    impl_default: Option<proc_macro2::TokenStream>,
+    /// Functions on the variant builder itself
+    impl_builder_fns: proc_macro2::TokenStream,
+    /// Function to return the variant builder, from the enum builder.
+    variant_builder_fn: proc_macro2::TokenStream,
 }
