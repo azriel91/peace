@@ -48,8 +48,8 @@ pub fn struct_fields_is_usable(
             // } = self;
             //
             // let mut is_usable = true;
-            // is_usable &= ValueSpecRt::is_usable(field_1);
-            // is_usable &= ValueSpecRt::is_usable(field_2);
+            // is_usable &= AnySpecRt::is_usable(field_1);
+            // is_usable &= AnySpecRt::is_usable(field_2);
             //
             // is_usable
             // ```
@@ -72,8 +72,8 @@ pub fn struct_fields_is_usable(
             // let #params_name(_0, _1, PhantomData,) = self;
             //
             // let mut is_usable = true;
-            // is_usable &= ValueSpecRt::is_usable(_0);
-            // is_usable &= ValueSpecRt::is_usable(_1);
+            // is_usable &= AnySpecRt::is_usable(_0);
+            // is_usable &= AnySpecRt::is_usable(_1);
             //
             // is_usable
             // ```
@@ -105,8 +105,8 @@ pub fn variants_is_usable(
     //     ValueSpec::Variant1 => true,
     //     ValueSpec::Variant2(_0, _1, PhantomData) => {
     //         let mut is_usable = true;
-    //         is_usable &= ValueSpecRt::is_usable(_0);
-    //         is_usable &= ValueSpecRt::is_usable(_1);
+    //         is_usable &= AnySpecRt::is_usable(_0);
+    //         is_usable &= AnySpecRt::is_usable(_1);
     //         is_usable
     //     }
     //     ValueSpec::Variant3 {
@@ -115,8 +115,8 @@ pub fn variants_is_usable(
     //         marker: PhantomData,
     //     } => {
     //         let mut is_usable = true;
-    //         is_usable &= ValueSpecRt::is_usable(field_1);
-    //         is_usable &= ValueSpecRt::is_usable(field_2);
+    //         is_usable &= AnySpecRt::is_usable(field_1);
+    //         is_usable &= AnySpecRt::is_usable(field_2);
     //         is_usable
     //     }
     // }
@@ -159,7 +159,7 @@ pub fn variants_is_usable(
 fn fields_is_usable(fields: &Fields, peace_params_path: &Path) -> proc_macro2::TokenStream {
     fields_stmt_map(fields, move |_field, field_name, _field_index| {
         quote! {
-            is_usable &= #peace_params_path::ValueSpecRt::is_usable(#field_name);
+            is_usable &= #peace_params_path::AnySpecRt::is_usable(#field_name);
         }
     })
     .fold(

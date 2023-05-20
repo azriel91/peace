@@ -294,6 +294,7 @@ where
     // * item specs may have been added, but params specs forgotten to be added.
     let mut item_spec_ids_with_no_params_specs = Vec::<ItemSpecId>::new();
     let mut params_specs_stored_mismatches = None;
+    let mut spec_not_provided_for_previously_stored_mapping_fn = Vec::<ItemSpecId>::new();
 
     if let Some(mut params_specs_stored) = params_specs_stored {
         item_spec_graph.iter_insertion().for_each(|item_spec_rt| {
@@ -310,9 +311,11 @@ where
                 // `ValueSpec::MappingFn`s will be present in `params_spec_stored`, but will not
                 // be valid mapping functions as they cannot be serialized / deserialized.
 
-                // TODO: raise error.
-
-                params_specs.insert_raw(item_spec_id, params_spec_boxed);
+                if params_spec_boxed.is_usable() {
+                    params_specs.insert_raw(item_spec_id, params_spec_boxed);
+                } else {
+                    spec_not_provided_for_previously_stored_mapping_fn.push(item_spec_id);
+                }
             } else {
                 // Collect item specs that do not have parameters.
                 item_spec_ids_with_no_params_specs.push(item_spec_id.clone());
@@ -341,20 +344,22 @@ where
     // graph.
     let params_specs_provided_mismatches = params_specs_provided;
 
-    let params_all_match = item_spec_ids_with_no_params_specs.is_empty()
+    let params_no_issues = item_spec_ids_with_no_params_specs.is_empty()
         && params_specs_provided_mismatches.is_empty()
         && params_specs_stored_mismatches
             .as_ref()
             .map(|params_specs_stored_mismatches| params_specs_stored_mismatches.is_empty())
-            .unwrap_or(true);
+            .unwrap_or(true)
+        && spec_not_provided_for_previously_stored_mapping_fn.is_empty();
 
-    if params_all_match {
+    if params_no_issues {
         Ok(params_specs)
     } else {
         Err(Error::ParamsSpecsMismatch {
             item_spec_ids_with_no_params_specs,
             params_specs_provided_mismatches,
             params_specs_stored_mismatches,
+            spec_not_provided_for_previously_stored_mapping_fn,
         }
         .into())
     }

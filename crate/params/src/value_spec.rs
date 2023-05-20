@@ -3,7 +3,9 @@ use std::fmt::{self, Debug};
 use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{Deserialize, Serialize};
 
-use crate::{MappingFn, MappingFnImpl, ParamsResolveError, ValueResolutionCtx, ValueSpecRt};
+use crate::{
+    AnySpecRt, MappingFn, MappingFnImpl, ParamsResolveError, ValueResolutionCtx, ValueSpecRt,
+};
 
 /// How to populate a field's value in an item spec's params.
 ///
@@ -159,6 +161,18 @@ where
     }
 }
 
+impl<T> AnySpecRt for ValueSpec<T>
+where
+    T: Clone + Debug + Send + Sync + 'static,
+{
+    fn is_usable(&self) -> bool {
+        match self {
+            Self::Stored | Self::Value { value: _ } | Self::InMemory => true,
+            Self::MappingFn(mapping_fn) => mapping_fn.is_valued(),
+        }
+    }
+}
+
 impl<T> ValueSpecRt for ValueSpec<T>
 where
     T: Clone + Debug + Send + Sync + 'static,
@@ -179,12 +193,5 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Option<T>, ParamsResolveError> {
         ValueSpec::<T>::resolve_partial(self, resources, value_resolution_ctx)
-    }
-
-    fn is_usable(&self) -> bool {
-        match self {
-            Self::Stored | Self::Value { value: _ } | Self::InMemory => true,
-            Self::MappingFn(mapping_fn) => mapping_fn.is_valued(),
-        }
     }
 }

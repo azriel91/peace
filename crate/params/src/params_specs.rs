@@ -1,11 +1,13 @@
 use std::ops::{Deref, DerefMut};
 
 use peace_core::ItemSpecId;
-use peace_resources::type_reg::untagged::{BoxDt, TypeMap};
+use peace_resources::type_reg::untagged::TypeMap;
 use serde::Serialize;
 
-/// Map of item spec ID to its params' specs. `TypeMap<ItemSpecId, BoxDt>`
-/// newtype.
+use crate::AnySpecRtBoxed;
+
+/// Map of item spec ID to its params' specs. `TypeMap<ItemSpecId,
+/// AnySpecRtBoxed>` newtype.
 ///
 /// The concrete `*ValueSpec` type can be obtained by calling
 /// `.get(item_spec_id)` with the correct type:
@@ -24,7 +26,7 @@ use serde::Serialize;
 /// different in what they are doing.
 #[derive(Clone, Debug, Default, Serialize)]
 #[serde(transparent)] // Needed to serialize as a map instead of a list.
-pub struct ParamsSpecs(TypeMap<ItemSpecId, BoxDt>);
+pub struct ParamsSpecs(TypeMap<ItemSpecId, AnySpecRtBoxed>);
 
 impl ParamsSpecs {
     /// Returns a new `ParamsSpecs` map.
@@ -42,13 +44,13 @@ impl ParamsSpecs {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<ItemSpecId, BoxDt> {
+    pub fn into_inner(self) -> TypeMap<ItemSpecId, AnySpecRtBoxed> {
         self.0
     }
 }
 
 impl Deref for ParamsSpecs {
-    type Target = TypeMap<ItemSpecId, BoxDt>;
+    type Target = TypeMap<ItemSpecId, AnySpecRtBoxed>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -61,8 +63,8 @@ impl DerefMut for ParamsSpecs {
     }
 }
 
-impl From<TypeMap<ItemSpecId, BoxDt>> for ParamsSpecs {
-    fn from(type_map: TypeMap<ItemSpecId, BoxDt>) -> Self {
+impl From<TypeMap<ItemSpecId, AnySpecRtBoxed>> for ParamsSpecs {
+    fn from(type_map: TypeMap<ItemSpecId, AnySpecRtBoxed>) -> Self {
         Self(type_map)
     }
 }

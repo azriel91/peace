@@ -97,6 +97,15 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
     let is_usable_body = is_usable_body(ast, params_field_wise_name, peace_params_path);
 
     quote! {
+        impl #impl_generics #peace_params_path::AnySpecRt
+        for #params_field_wise_name #ty_generics
+        #where_clause
+        {
+            fn is_usable(&self) -> bool {
+                #is_usable_body
+            }
+        }
+
         impl #impl_generics #peace_params_path::FieldWiseSpecRt
         for #params_field_wise_name #ty_generics
         #where_clause
@@ -118,10 +127,6 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
                 value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
             ) -> Result<#params_partial_name #ty_generics, #peace_params_path::ParamsResolveError> {
                 #resolve_partial_body
-            }
-
-            fn is_usable(&self) -> bool {
-                #is_usable_body
             }
         }
     }

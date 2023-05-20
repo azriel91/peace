@@ -18,6 +18,15 @@ pub fn impl_field_wise_spec_rt_for_field_wise_external(
     let is_usable_body = is_usable_body(ast, params_field_wise_name, peace_params_path);
 
     quote! {
+        impl #impl_generics #peace_params_path::AnySpecRt
+        for #params_field_wise_name #ty_generics
+        #where_clause
+        {
+            fn is_usable(&self) -> bool {
+                #is_usable_body
+            }
+        }
+
         impl #impl_generics #peace_params_path::FieldWiseSpecRt
         for #params_field_wise_name #ty_generics
         #where_clause
@@ -77,10 +86,6 @@ pub fn impl_field_wise_spec_rt_for_field_wise_external(
                         },
                     }
                 }
-            }
-
-            fn is_usable(&self) -> bool {
-                #is_usable_body
             }
         }
     }

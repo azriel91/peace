@@ -4,8 +4,8 @@ use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
-    FieldWiseSpecRt, MappingFn, MappingFnImpl, Params, ParamsResolveError, ValueResolutionCtx,
-    ValueSpecRt,
+    AnySpecRt, FieldWiseSpecRt, MappingFn, MappingFnImpl, Params, ParamsResolveError,
+    ValueResolutionCtx, ValueSpecRt,
 };
 
 /// How to populate a field's value in an item spec's params.
@@ -194,6 +194,26 @@ where
     }
 }
 
+impl<T> AnySpecRt for ParamsSpec<T>
+where
+    T: Params<Spec = ParamsSpec<T>>
+        + Clone
+        + Debug
+        + Serialize
+        + DeserializeOwned
+        + Send
+        + Sync
+        + 'static,
+{
+    fn is_usable(&self) -> bool {
+        match self {
+            Self::Stored | Self::Value { value: _ } | Self::InMemory => true,
+            Self::MappingFn(mapping_fn) => mapping_fn.is_valued(),
+            Self::FieldWise { field_wise_spec } => field_wise_spec.is_usable(),
+        }
+    }
+}
+
 impl<T> ValueSpecRt for ParamsSpec<T>
 where
     T: Params<Spec = ParamsSpec<T>>
@@ -225,13 +245,5 @@ where
         ParamsSpec::<T>::resolve_partial(self, resources, value_resolution_ctx)
             .map(T::try_from)
             .map(Result::ok)
-    }
-
-    fn is_usable(&self) -> bool {
-        match self {
-            Self::Stored | Self::Value { value: _ } | Self::InMemory => true,
-            Self::MappingFn(mapping_fn) => mapping_fn.is_valued(),
-            Self::FieldWise { field_wise_spec } => field_wise_spec.is_usable(),
-        }
     }
 }

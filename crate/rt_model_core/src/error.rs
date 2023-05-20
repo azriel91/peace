@@ -111,6 +111,7 @@ pub enum Error {
                 item_spec_ids_with_no_params_specs,
                 params_specs_provided_mismatches,
                 params_specs_stored_mismatches.as_ref(),
+                spec_not_provided_for_previously_stored_mapping_fn,
             ))
         )
     )]
@@ -121,6 +122,10 @@ pub enum Error {
         params_specs_provided_mismatches: ParamsSpecs,
         /// Stored params specs with no matching item spec ID in the flow.
         params_specs_stored_mismatches: Option<ParamsSpecs>,
+        /// Item spec IDs which had a mapping function previously provided in
+        /// its params spec, but on a subsequent invocation nothing was
+        /// provided.
+        spec_not_provided_for_previously_stored_mapping_fn: Vec<ItemSpecId>,
     },
 
     /// In a `MultiProfileSingleFlow` diff, neither profile had `Params::Specs`
@@ -566,6 +571,7 @@ fn params_specs_mismatch_display(
     item_spec_ids_with_no_params: &[ItemSpecId],
     params_specs_provided_mismatches: &ParamsSpecs,
     params_specs_stored_mismatches: Option<&ParamsSpecs>,
+    spec_not_provided_for_previously_stored_mapping_fn: &[ItemSpecId],
 ) -> String {
     let mut items = Vec::<String>::new();
 
@@ -608,6 +614,20 @@ fn params_specs_mismatch_display(
                 {params_specs_stored_mismatches_list}\n",
             ));
         }
+    }
+
+    if !spec_not_provided_for_previously_stored_mapping_fn.is_empty() {
+        items.push(format!(
+            "The following item specs had a mapping function in its previous execution,\n\
+            and subsequent execution requires a spec:\n\
+            \n\
+            {}\n",
+            spec_not_provided_for_previously_stored_mapping_fn
+                .iter()
+                .map(|item_spec_id| format!("* {item_spec_id}"))
+                .collect::<Vec<String>>()
+                .join("\n")
+        ));
     }
 
     items.join("\n")

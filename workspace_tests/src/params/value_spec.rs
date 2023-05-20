@@ -1,4 +1,4 @@
-use peace::params::{ValueSpec, ValueSpecRt};
+use peace::params::{AnySpecRt, ValueSpec};
 
 #[test]
 fn serialize_stored() -> Result<(), serde_yaml::Error> {
