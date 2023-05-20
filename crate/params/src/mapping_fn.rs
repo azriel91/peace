@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use peace_resources::{resources::ts::SetUp, type_reg::untagged::DataType, Resources};
 use serde::{Serialize, Serializer};
 
@@ -7,7 +9,7 @@ use crate::{ParamsResolveError, ValueResolutionCtx};
 ///
 /// This is used by Peace to hold type-erased mapping functions, and is not
 /// intended to be implemented by users or implementors.
-pub trait MappingFn: DataType {
+pub trait MappingFn: Debug + DataType {
     /// Type that is output by the function.
     type Output;
 

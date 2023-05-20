@@ -94,7 +94,7 @@ where
             Self::Stored => f.write_str("Stored"),
             Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::InMemory => f.write_str("From"),
-            Self::MappingFn(_) => f.debug_tuple("MappingFn").field(&"..").finish(),
+            Self::MappingFn(mapping_fn) => f.debug_tuple("MappingFn").field(mapping_fn).finish(),
         }
     }
 }
