@@ -1,8 +1,11 @@
-use syn::{Ident, ImplGenerics, Path, TypeGenerics, WhereClause};
+use syn::{DeriveInput, Ident, ImplGenerics, Path, TypeGenerics, WhereClause};
+
+use crate::spec_is_usable::is_usable_body;
 
 /// `impl FieldWiseSpecRt for ValueSpec`, so that Peace can resolve the params
 /// type as well as its values from the spec.
 pub fn impl_field_wise_spec_rt_for_field_wise_external(
+    ast: &DeriveInput,
     generics_split: &(ImplGenerics, TypeGenerics, Option<&WhereClause>),
     peace_params_path: &Path,
     peace_resources_path: &Path,
@@ -11,6 +14,8 @@ pub fn impl_field_wise_spec_rt_for_field_wise_external(
     params_partial_name: &Ident,
 ) -> proc_macro2::TokenStream {
     let (impl_generics, ty_generics, where_clause) = generics_split;
+
+    let is_usable_body = is_usable_body(ast, params_field_wise_name, peace_params_path);
 
     quote! {
         impl #impl_generics #peace_params_path::FieldWiseSpecRt
@@ -72,6 +77,10 @@ pub fn impl_field_wise_spec_rt_for_field_wise_external(
                         },
                     }
                 }
+            }
+
+            fn is_usable(&self) -> bool {
+                #is_usable_body
             }
         }
     }

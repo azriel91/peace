@@ -4,7 +4,10 @@ use syn::{
     TypeGenerics, Variant, WhereClause,
 };
 
-use crate::util::{field_spec_ty_path, fields_deconstruct, is_phantom_data, variant_match_arm};
+use crate::{
+    spec_is_usable::is_usable_body,
+    util::{field_spec_ty_path, fields_deconstruct, is_phantom_data, variant_match_arm},
+};
 
 /// `impl FieldWiseSpecRt for ValueSpec`, so that Peace can resolve the params
 /// type as well as its values from the spec.
@@ -91,6 +94,8 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
         }
     };
 
+    let is_usable_body = is_usable_body(ast, params_field_wise_name, peace_params_path);
+
     quote! {
         impl #impl_generics #peace_params_path::FieldWiseSpecRt
         for #params_field_wise_name #ty_generics
@@ -113,6 +118,10 @@ pub fn impl_field_wise_spec_rt_for_field_wise(
                 value_resolution_ctx: &mut #peace_params_path::ValueResolutionCtx,
             ) -> Result<#params_partial_name #ty_generics, #peace_params_path::ParamsResolveError> {
                 #resolve_partial_body
+            }
+
+            fn is_usable(&self) -> bool {
+                #is_usable_body
             }
         }
     }

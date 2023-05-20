@@ -1,4 +1,4 @@
-use peace::params::{ParamsFieldless, ParamsSpecFieldless};
+use peace::params::{ParamsFieldless, ParamsSpecFieldless, ValueSpecRt};
 
 #[test]
 fn serialize_stored() -> Result<(), serde_yaml::Error> {
@@ -115,5 +115,31 @@ marker: null
         "was {deserialized:?}"
     );
 
+    Ok(())
+}
+
+#[test]
+fn is_usable_returns_true_for_stored_value_in_memory() {
+    assert!(ParamsSpecFieldless::<u8>::Stored.is_usable());
+    assert!(ParamsSpecFieldless::<u8>::Value { value: 1u8 }.is_usable());
+    assert!(ParamsSpecFieldless::<u8>::InMemory.is_usable());
+}
+
+#[test]
+fn is_usable_returns_true_when_mapping_fn_is_some() {
+    assert!(ParamsSpecFieldless::<u8>::from_map(None, |_: &u8| None).is_usable());
+}
+
+#[test]
+fn is_usable_returns_false_when_mapping_fn_is_none() -> Result<(), serde_yaml::Error> {
+    let params_spec: ParamsSpecFieldless<u8> = serde_yaml::from_str(
+        r#"!MappingFn
+field_name: null
+fn_map: Some(Fn(&bool, &u16) -> Option<u8>)
+marker: null
+"#,
+    )?;
+
+    assert!(!params_spec.is_usable());
     Ok(())
 }

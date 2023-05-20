@@ -196,4 +196,11 @@ where
             .map(T::try_from)
             .map(Result::ok)
     }
+
+    fn is_usable(&self) -> bool {
+        match self {
+            Self::Stored | Self::Value { value: _ } | Self::InMemory => true,
+            Self::MappingFn(mapping_fn) => mapping_fn.is_valued(),
+        }
+    }
 }

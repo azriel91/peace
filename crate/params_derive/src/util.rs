@@ -493,18 +493,34 @@ pub fn fields_vars_map<'f>(
     fields: &'f Fields,
     fn_expr: impl Fn(&Field, &Ident) -> proc_macro2::TokenStream + 'f,
 ) -> impl Iterator<Item = proc_macro2::TokenStream> + 'f {
+    fields_stmt_map(fields, move |field, field_name, _field_index| {
+        let expr = fn_expr(field, field_name);
+        quote!(let #field_name = #expr;)
+    })
+}
+
+/// Returns `#stmt` for each field, where `stmt` is determined by the provided
+/// function.
+///
+/// * The `&Ident` passed into the closure is `_0` for tuple fields.
+/// * The `LitInt` passed into the closure is `0` for the tuple index.
+///
+/// `PhantomData` fields are skipped.
+pub fn fields_stmt_map<'f>(
+    fields: &'f Fields,
+    fn_stmt: impl Fn(&Field, &Ident, LitInt) -> proc_macro2::TokenStream + 'f,
+) -> impl Iterator<Item = proc_macro2::TokenStream> + 'f {
     fields
         .iter()
         .enumerate()
         .filter(|(_field_index, field)| !is_phantom_data(&field.ty))
         .map(move |(field_index, field)| {
+            let field_lit_int = tuple_index_from_field_index(field_index);
             if let Some(field_ident) = field.ident.as_ref() {
-                let expr = fn_expr(field, field_ident);
-                quote!(let #field_ident = #expr;)
+                fn_stmt(field, field_ident, field_lit_int)
             } else {
                 let field_ident = tuple_ident_from_field_index(field_index);
-                let expr = fn_expr(field, &field_ident);
-                quote!(let #field_ident = #expr;)
+                fn_stmt(field, &field_ident, field_lit_int)
             }
         })
 }

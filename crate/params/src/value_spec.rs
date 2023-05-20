@@ -97,6 +97,15 @@ where
     }
 }
 
+impl<T> From<T> for ValueSpec<T>
+where
+    T: Clone + Debug + Send + Sync + 'static,
+{
+    fn from(value: T) -> Self {
+        Self::Value { value }
+    }
+}
+
 impl<T> ValueSpec<T>
 where
     T: Clone + Debug + Send + Sync + 'static,
@@ -170,5 +179,12 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Option<T>, ParamsResolveError> {
         ValueSpec::<T>::resolve_partial(self, resources, value_resolution_ctx)
+    }
+
+    fn is_usable(&self) -> bool {
+        match self {
+            Self::Stored | Self::Value { value: _ } | Self::InMemory => true,
+            Self::MappingFn(mapping_fn) => mapping_fn.is_valued(),
+        }
     }
 }

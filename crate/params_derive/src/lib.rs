@@ -41,6 +41,7 @@ mod impl_from_params_for_params_field_wise;
 mod impl_from_params_for_params_partial;
 mod impl_try_from_params_partial_for_params;
 mod impl_value_spec_rt_for_field_wise;
+mod spec_is_usable;
 mod type_gen;
 mod type_gen_external;
 mod util;
@@ -518,6 +519,7 @@ fn t_field_wise_external(
     );
 
     t_field_wise.extend(impl_field_wise_spec_rt_for_field_wise_external(
+        ast,
         generics_split,
         peace_params_path,
         peace_resources_path,
@@ -525,16 +527,6 @@ fn t_field_wise_external(
         t_field_wise_name,
         t_partial_name,
     ));
-
-    // TODO: Do we need this?
-    // t_field_wise.extend(impl_value_spec_rt_for_field_wise_external(
-    //     ast,
-    //     generics_split,
-    //     peace_params_path,
-    //     peace_resources_path,
-    //     params_name,
-    //     t_field_wise_name,
-    // ));
 
     t_field_wise
 }

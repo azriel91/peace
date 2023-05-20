@@ -37,4 +37,11 @@ pub trait FieldWiseSpecRt {
         resources: &Resources<SetUp>,
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Self::Partial, ParamsResolveError>;
+
+    /// Whether this `Spec` is usable to resolve values.
+    ///
+    /// This is only `false` for `*Spec::MappingFn`s that have been
+    /// deserialized, as mapping functions cannot be deserialized back into
+    /// logic without embedding a script interpreter or compiler.
+    fn is_usable(&self) -> bool;
 }
