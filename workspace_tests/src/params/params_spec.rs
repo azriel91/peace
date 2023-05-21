@@ -273,8 +273,12 @@ field_wise_spec: !MappingFn
 }
 
 #[test]
-fn is_usable_returns_true_for_stored_value_in_memory() {
-    assert!(ParamsSpec::<VecA>::Stored.is_usable());
+fn is_usable_returns_false_for_stored() {
+    assert!(!ParamsSpec::<VecA>::Stored.is_usable());
+}
+
+#[test]
+fn is_usable_returns_true_for_value_and_in_memory() {
     assert!(
         ParamsSpec::<VecA>::Value {
             value: VecA::default()

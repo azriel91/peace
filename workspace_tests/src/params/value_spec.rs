@@ -118,8 +118,12 @@ marker: null
 }
 
 #[test]
-fn is_usable_returns_true_for_stored_value_in_memory() {
-    assert!(ValueSpec::<u8>::Stored.is_usable());
+fn is_usable_returns_false_for_stored() {
+    assert!(!ValueSpec::<u8>::Stored.is_usable());
+}
+
+#[test]
+fn is_usable_returns_true_for_value_and_in_memory() {
     assert!(ValueSpec::<u8>::Value { value: 1u8 }.is_usable());
     assert!(ValueSpec::<u8>::InMemory.is_usable());
 }

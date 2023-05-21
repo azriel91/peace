@@ -184,7 +184,8 @@ where
 {
     fn is_usable(&self) -> bool {
         match self {
-            Self::Stored | Self::Value { value: _ } | Self::InMemory => true,
+            Self::Stored => false,
+            Self::Value { .. } | Self::InMemory => true,
             Self::MappingFn(mapping_fn) => mapping_fn.is_valued(),
         }
     }

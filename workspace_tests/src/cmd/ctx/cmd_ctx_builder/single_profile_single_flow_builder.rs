@@ -471,13 +471,13 @@ async fn build_with_item_spec_params_returns_err_when_params_not_provided_and_no
                     item_spec_ids_with_no_params_specs,
                     params_specs_provided_mismatches,
                     params_specs_stored_mismatches,
-                    spec_not_provided_for_previously_stored_mapping_fn,
+                    params_specs_not_usable,
                 }
             ))
             if item_spec_ids_with_no_params_specs == &vec![VecCopyItemSpec::ID_DEFAULT.clone()]
             && params_specs_provided_mismatches.is_empty()
             && params_specs_stored_mismatches.is_none()
-            && spec_not_provided_for_previously_stored_mapping_fn.is_empty(),
+            && params_specs_not_usable.is_empty(),
         ),
         "was {cmd_ctx_result:#?}"
     );
@@ -644,7 +644,7 @@ async fn build_with_item_spec_params_returns_err_when_params_provided_mismatch()
                     item_spec_ids_with_no_params_specs,
                     params_specs_provided_mismatches,
                     params_specs_stored_mismatches,
-                    spec_not_provided_for_previously_stored_mapping_fn,
+                    params_specs_not_usable,
                 }
             ))
             if item_spec_ids_with_no_params_specs.is_empty()
@@ -658,7 +658,7 @@ async fn build_with_item_spec_params_returns_err_when_params_provided_mismatch()
                 Some(params_specs_stored_mismatches)
                 if params_specs_stored_mismatches.is_empty()
             )
-            && spec_not_provided_for_previously_stored_mapping_fn.is_empty(),
+            && params_specs_not_usable.is_empty(),
         ),
         "was {cmd_ctx_result:#?}"
     );
@@ -719,7 +719,7 @@ async fn build_with_item_spec_params_returns_err_when_params_stored_mismatch()
                     item_spec_ids_with_no_params_specs,
                     params_specs_provided_mismatches,
                     params_specs_stored_mismatches,
-                    spec_not_provided_for_previously_stored_mapping_fn,
+                    params_specs_not_usable,
                 }
             ))
             if item_spec_ids_with_no_params_specs == &vec![item_spec_id!("new_id")]
@@ -733,7 +733,7 @@ async fn build_with_item_spec_params_returns_err_when_params_stored_mismatch()
                 Some(params_specs_stored_mismatches)
                 if params_specs_stored_mismatches.is_empty()
             )
-            && spec_not_provided_for_previously_stored_mapping_fn.is_empty(),
+            && params_specs_not_usable.is_empty(),
         ),
         "was {cmd_ctx_result:#?}"
     );
@@ -869,7 +869,7 @@ async fn build_with_item_spec_params_returns_err_when_spec_fully_not_provided_fo
                     item_spec_ids_with_no_params_specs,
                     params_specs_provided_mismatches,
                     params_specs_stored_mismatches,
-                    spec_not_provided_for_previously_stored_mapping_fn,
+                    params_specs_not_usable,
                 }
             ))
             if item_spec_ids_with_no_params_specs.is_empty()
@@ -879,7 +879,7 @@ async fn build_with_item_spec_params_returns_err_when_spec_fully_not_provided_fo
                 Some(params_specs_stored_mismatches)
                 if params_specs_stored_mismatches.is_empty()
             )
-            && spec_not_provided_for_previously_stored_mapping_fn == &[VecCopyItemSpec::ID_DEFAULT.clone()],
+            && params_specs_not_usable == &[VecCopyItemSpec::ID_DEFAULT.clone()],
         ),
         "was {cmd_ctx_result:#?}"
     );
@@ -941,7 +941,7 @@ async fn build_with_item_spec_params_returns_err_when_value_spec_not_provided_fo
                     item_spec_ids_with_no_params_specs,
                     params_specs_provided_mismatches,
                     params_specs_stored_mismatches,
-                    spec_not_provided_for_previously_stored_mapping_fn,
+                    params_specs_not_usable,
                 }
             ))
             if item_spec_ids_with_no_params_specs.is_empty()
@@ -951,7 +951,7 @@ async fn build_with_item_spec_params_returns_err_when_value_spec_not_provided_fo
                 Some(params_specs_stored_mismatches)
                 if params_specs_stored_mismatches.is_empty()
             )
-            && spec_not_provided_for_previously_stored_mapping_fn == &[VecCopyItemSpec::ID_DEFAULT.clone()],
+            && params_specs_not_usable == &[VecCopyItemSpec::ID_DEFAULT.clone()],
         ),
         "was {cmd_ctx_result:#?}"
     );

@@ -111,7 +111,7 @@ pub enum Error {
                 item_spec_ids_with_no_params_specs,
                 params_specs_provided_mismatches,
                 params_specs_stored_mismatches.as_ref(),
-                spec_not_provided_for_previously_stored_mapping_fn,
+                params_specs_not_usable,
             ))
         )
     )]
@@ -125,7 +125,7 @@ pub enum Error {
         /// Item spec IDs which had a mapping function previously provided in
         /// its params spec, but on a subsequent invocation nothing was
         /// provided.
-        spec_not_provided_for_previously_stored_mapping_fn: Vec<ItemSpecId>,
+        params_specs_not_usable: Vec<ItemSpecId>,
     },
 
     /// In a `MultiProfileSingleFlow` diff, neither profile had `Params::Specs`
@@ -571,7 +571,7 @@ fn params_specs_mismatch_display(
     item_spec_ids_with_no_params: &[ItemSpecId],
     params_specs_provided_mismatches: &ParamsSpecs,
     params_specs_stored_mismatches: Option<&ParamsSpecs>,
-    spec_not_provided_for_previously_stored_mapping_fn: &[ItemSpecId],
+    params_specs_not_usable: &[ItemSpecId],
 ) -> String {
     let mut items = Vec::<String>::new();
 
@@ -616,13 +616,14 @@ fn params_specs_mismatch_display(
         }
     }
 
-    if !spec_not_provided_for_previously_stored_mapping_fn.is_empty() {
+    if !params_specs_not_usable.is_empty() {
         items.push(format!(
-            "The following item specs had a mapping function in its previous execution,\n\
-            and subsequent execution requires a spec:\n\
+            "The following item specs either have not had a params spec provided previously,\n\
+            or previously had a mapping function provided which cannot be automatically loaded.\n\
+            So the current execution requires the spec to be provided:\n\
             \n\
             {}\n",
-            spec_not_provided_for_previously_stored_mapping_fn
+            params_specs_not_usable
                 .iter()
                 .map(|item_spec_id| format!("* {item_spec_id}"))
                 .collect::<Vec<String>>()
