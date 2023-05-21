@@ -35,7 +35,17 @@ pub fn spec_merge(
             let other: Option<&Self> = other_boxed.downcast_ref();
             let Some(other) = other else {
                 let self_ty_name = #peace_params_path::tynm::type_name::<Self>();
-                panic!("Failed to downcast value into `{self_ty_name}`. Value: `{other_boxed:#?}`.");
+
+                // Args need to be manually specified because Rust 1.69.0 does not allow
+                // capturing args from scope within generated macro.
+                //
+                // ```ignore
+                // to avoid ambiguity, `format_args!` cannot capture variables when the format string is expanded from a macro
+                // ```
+                panic!("Failed to downcast value into `{self_ty_name}`. Value: `{other_boxed:#?}`.",
+                    self_ty_name = self_ty_name,
+                    other_boxed = other_boxed,
+                );
             };
 
             #merge_logic
