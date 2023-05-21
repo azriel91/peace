@@ -11,6 +11,7 @@
 * Take in `Params::Spec`s in `CmdCtxBuilder::with_item_spec_params`. ([#94], [#118])
 * Use `Params::Partial` in `ItemSpec::try_state_*` functions. ([#94], [#118])
 * Implement one level recursion referential item spec params. ([#119], [#121])
+* Implement deep merging of params specs. ([#122], [#123])
 
 [#116]: https://github.com/azriel91/peace/issues/116
 [#117]: https://github.com/azriel91/peace/pull/117
@@ -18,6 +19,8 @@
 [#118]: https://github.com/azriel91/peace/pull/118
 [#119]: https://github.com/azriel91/peace/issues/119
 [#121]: https://github.com/azriel91/peace/pull/121
+[#122]: https://github.com/azriel91/peace/issues/122
+[#123]: https://github.com/azriel91/peace/pull/123
 
 
 ## 0.0.9 (2023-04-13)

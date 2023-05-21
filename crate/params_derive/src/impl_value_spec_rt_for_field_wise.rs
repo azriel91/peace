@@ -248,8 +248,7 @@ fn variants_resolve(
     }
 }
 
-// Code gen, not user facing
-#[allow(clippy::too_many_arguments)]
+#[allow(clippy::too_many_arguments)] // Code gen, not user facing
 fn variant_fields_resolve(
     params_name: &Ident,
     variant_name: &Ident,

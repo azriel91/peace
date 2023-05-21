@@ -18,6 +18,7 @@ use syn::{
 use crate::{
     field_wise_enum_builder_ctx::FieldWiseEnumBuilderCtx,
     fields_map::{fields_to_optional, fields_to_value_spec},
+    impl_any_spec_rt_for_field_wise::impl_any_spec_rt_for_field_wise,
     impl_default::impl_default,
     impl_field_wise_builder::impl_field_wise_builder,
     impl_field_wise_spec_rt_for_field_wise::impl_field_wise_spec_rt_for_field_wise,
@@ -33,6 +34,7 @@ use crate::{
 
 mod field_wise_enum_builder_ctx;
 mod fields_map;
+mod impl_any_spec_rt_for_field_wise;
 mod impl_default;
 mod impl_field_wise_builder;
 mod impl_field_wise_spec_rt_for_field_wise;
@@ -41,6 +43,8 @@ mod impl_from_params_for_params_field_wise;
 mod impl_from_params_for_params_partial;
 mod impl_try_from_params_partial_for_params;
 mod impl_value_spec_rt_for_field_wise;
+mod spec_is_usable;
+mod spec_merge;
 mod type_gen;
 mod type_gen_external;
 mod util;
@@ -484,6 +488,13 @@ fn t_field_wise(
         t_field_wise_name,
     ));
 
+    t_field_wise.extend(impl_any_spec_rt_for_field_wise(
+        ast,
+        generics_split,
+        peace_params_path,
+        t_field_wise_name,
+    ));
+
     t_field_wise
 }
 
@@ -526,15 +537,12 @@ fn t_field_wise_external(
         t_partial_name,
     ));
 
-    // TODO: Do we need this?
-    // t_field_wise.extend(impl_value_spec_rt_for_field_wise_external(
-    //     ast,
-    //     generics_split,
-    //     peace_params_path,
-    //     peace_resources_path,
-    //     params_name,
-    //     t_field_wise_name,
-    // ));
+    t_field_wise.extend(impl_any_spec_rt_for_field_wise(
+        ast,
+        generics_split,
+        peace_params_path,
+        t_field_wise_name,
+    ));
 
     t_field_wise
 }

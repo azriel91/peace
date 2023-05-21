@@ -1,7 +1,8 @@
 use peace::{
     cfg::{item_spec_id, ItemSpecId},
     params::{
-        FieldWiseSpecRt, Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec,
+        AnySpecRt, FieldWiseSpecRt, Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode,
+        ValueSpec,
     },
     resources::{resources::ts::SetUp, Resources},
 };
@@ -216,7 +217,7 @@ field_wise_spec: !Value
                     })
             }
             if value == &[1u8]
-            && field_wise_spec.resolve(&resources, &mut value_resolution_ctx)?
+            && FieldWiseSpecRt::resolve(field_wise_spec, &resources, &mut value_resolution_ctx)?
             == VecA(vec![1u8])
         ),
         "was {deserialized:?}"
@@ -268,5 +269,67 @@ field_wise_spec: !MappingFn
         "was {deserialized:?}"
     );
 
+    Ok(())
+}
+
+#[test]
+fn is_usable_returns_false_for_stored() {
+    assert!(!ParamsSpec::<VecA>::Stored.is_usable());
+}
+
+#[test]
+fn is_usable_returns_true_for_value_and_in_memory() {
+    assert!(
+        ParamsSpec::<VecA>::Value {
+            value: VecA::default()
+        }
+        .is_usable()
+    );
+    assert!(ParamsSpec::<VecA>::InMemory.is_usable());
+}
+
+#[test]
+fn is_usable_returns_true_when_mapping_fn_is_some() {
+    assert!(ParamsSpec::<VecA>::from_map(None, |_: &u8| None).is_usable());
+}
+
+#[test]
+fn is_usable_returns_false_when_mapping_fn_is_none() -> Result<(), serde_yaml::Error> {
+    let params_spec: ParamsSpec<VecA> = serde_yaml::from_str(
+        r#"!MappingFn
+field_name: null
+fn_map: Some(Fn(&bool, &u16) -> Option<Vec<u8>>)
+marker: null
+"#,
+    )?;
+
+    assert!(!params_spec.is_usable());
+    Ok(())
+}
+
+#[test]
+fn is_usable_returns_true_when_field_wise_is_usable() -> Result<(), serde_yaml::Error> {
+    let params_spec: ParamsSpec<VecA> = serde_yaml::from_str(
+        r#"!FieldWise
+field_wise_spec: InMemory
+"#,
+    )?;
+
+    assert!(params_spec.is_usable());
+    Ok(())
+}
+
+#[test]
+fn is_usable_returns_false_when_field_wise_is_not_usable() -> Result<(), serde_yaml::Error> {
+    let params_spec: ParamsSpec<VecA> = serde_yaml::from_str(
+        r#"!FieldWise
+field_wise_spec: !MappingFn
+  field_name: _0
+  fn_map: Some(Fn(&bool, &u16) -> Option<Vec<u8>>)
+  marker: null
+"#,
+    )?;
+
+    assert!(!params_spec.is_usable());
     Ok(())
 }

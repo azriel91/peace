@@ -211,7 +211,7 @@ jobs:
       - name: 'Install `wasm-pack`'
         uses: jetli/wasm-pack-action@v0.4.0
         with:
-          version: 'v0.10.3'
+          version: 'v0.11.1'
 
       # When updating this, also update book.yml
       - name: 'Build examples'

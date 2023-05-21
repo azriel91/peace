@@ -1,8 +1,8 @@
-use peace::params::{AnySpecRt, ParamsFieldless, ParamsSpecFieldless};
+use peace::params::{AnySpecRt, ValueSpec};
 
 #[test]
 fn serialize_stored() -> Result<(), serde_yaml::Error> {
-    let u8_spec: <u8 as ParamsFieldless>::Spec = <u8 as ParamsFieldless>::Spec::Stored;
+    let u8_spec = ValueSpec::<u8>::Stored;
     assert_eq!(
         r#"Stored
 "#,
@@ -14,7 +14,7 @@ fn serialize_stored() -> Result<(), serde_yaml::Error> {
 
 #[test]
 fn serialize_value() -> Result<(), serde_yaml::Error> {
-    let u8_spec: <u8 as ParamsFieldless>::Spec = 1u8.into();
+    let u8_spec: ValueSpec<u8> = 1u8.into();
     assert_eq!(
         r#"!Value
 value: 1
@@ -27,7 +27,7 @@ value: 1
 
 #[test]
 fn serialize_in_memory() -> Result<(), serde_yaml::Error> {
-    let u8_spec: <u8 as ParamsFieldless>::Spec = ParamsSpecFieldless::<u8>::InMemory;
+    let u8_spec = ValueSpec::<u8>::InMemory;
     assert_eq!(
         r#"InMemory
 "#,
@@ -39,8 +39,7 @@ fn serialize_in_memory() -> Result<(), serde_yaml::Error> {
 
 #[test]
 fn serialize_from_map() -> Result<(), serde_yaml::Error> {
-    let u8_spec: <u8 as ParamsFieldless>::Spec =
-        ParamsSpecFieldless::<u8>::from_map(None, |_: &bool, _: &u16| Some(1u8));
+    let u8_spec: ValueSpec<u8> = ValueSpec::<u8>::from_map(None, |_: &bool, _: &u16| Some(1u8));
     assert_eq!(
         r#"!MappingFn
 field_name: null
@@ -60,7 +59,7 @@ fn deserialize_stored() -> Result<(), serde_yaml::Error> {
             r#"Stored
         "#
         )?,
-        ParamsSpecFieldless::<u8>::Stored
+        ValueSpec::<u8>::Stored
     ));
 
     Ok(())
@@ -74,7 +73,7 @@ fn deserialize_value() -> Result<(), serde_yaml::Error> {
 value: 1
 "#
         )?,
-        ParamsSpecFieldless::<u8>::Value { value }
+        ValueSpec::<u8>::Value { value }
         if value == 1u8
     ));
 
@@ -89,7 +88,7 @@ fn deserialize_in_memory() -> Result<(), serde_yaml::Error> {
     )?;
 
     assert!(
-        matches!(&deserialized, ParamsSpecFieldless::<u8>::InMemory),
+        matches!(&deserialized, ValueSpec::<u8>::InMemory),
         "was {deserialized:?}"
     );
 
@@ -101,7 +100,7 @@ fn deserialize_from_map() -> Result<(), serde_yaml::Error> {
     let deserialized = serde_yaml::from_str(
         r#"!MappingFn
 field_name: null
-fn_map: Some(Fn(&bool, &u16) -> Option<Vec<u8>>)
+fn_map: Some(Fn(&bool, &u16) -> Option<u8>)
 marker: null
 "#,
     )?;
@@ -109,7 +108,7 @@ marker: null
     assert!(
         matches!(
             &deserialized,
-            ParamsSpecFieldless::<u8>::MappingFn(mapping_fn)
+            ValueSpec::<u8>::MappingFn(mapping_fn)
             if !mapping_fn.is_valued()
         ),
         "was {deserialized:?}"
@@ -120,23 +119,23 @@ marker: null
 
 #[test]
 fn is_usable_returns_false_for_stored() {
-    assert!(!ParamsSpecFieldless::<u8>::Stored.is_usable());
+    assert!(!ValueSpec::<u8>::Stored.is_usable());
 }
 
 #[test]
 fn is_usable_returns_true_for_value_and_in_memory() {
-    assert!(ParamsSpecFieldless::<u8>::Value { value: 1u8 }.is_usable());
-    assert!(ParamsSpecFieldless::<u8>::InMemory.is_usable());
+    assert!(ValueSpec::<u8>::Value { value: 1u8 }.is_usable());
+    assert!(ValueSpec::<u8>::InMemory.is_usable());
 }
 
 #[test]
 fn is_usable_returns_true_when_mapping_fn_is_some() {
-    assert!(ParamsSpecFieldless::<u8>::from_map(None, |_: &u8| None).is_usable());
+    assert!(ValueSpec::<u8>::from_map(None, |_: &u8| None).is_usable());
 }
 
 #[test]
 fn is_usable_returns_false_when_mapping_fn_is_none() -> Result<(), serde_yaml::Error> {
-    let params_spec: ParamsSpecFieldless<u8> = serde_yaml::from_str(
+    let params_spec: ValueSpec<u8> = serde_yaml::from_str(
         r#"!MappingFn
 field_name: null
 fn_map: Some(Fn(&bool, &u16) -> Option<u8>)

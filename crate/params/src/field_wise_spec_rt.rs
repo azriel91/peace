@@ -3,14 +3,14 @@ use std::fmt::Debug;
 use peace_resources::{resources::ts::SetUp, Resources};
 use serde::{de::DeserializeOwned, Serialize};
 
-use crate::{ParamsResolveError, ValueResolutionCtx};
+use crate::{AnySpecRt, ParamsResolveError, ValueResolutionCtx};
 
 /// Runtime logic of how to look up values for each field in this struct.
 ///
 /// This trait is automatically implemented by `#[derive(Params)]` on an
 /// `ItemSpec::Params`, as well as manual implementations for standard library
 /// types.
-pub trait FieldWiseSpecRt {
+pub trait FieldWiseSpecRt: AnySpecRt {
     /// The original value type. `MyParamsFieldWiseSpec::ValueType` is
     /// `MyParams`.
     type ValueType: Clone + Debug + Serialize + DeserializeOwned + Send + Sync + 'static;

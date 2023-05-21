@@ -3,7 +3,10 @@ use std::fmt::{self, Debug};
 use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{Deserialize, Serialize};
 
-use crate::{MappingFn, MappingFnImpl, ParamsResolveError, ValueResolutionCtx, ValueSpecRt};
+use crate::{
+    AnySpecDataType, AnySpecRt, MappingFn, MappingFnImpl, ParamsResolveError, ValueResolutionCtx,
+    ValueSpecRt,
+};
 
 /// How to populate a field's value in an item spec's params.
 ///
@@ -92,8 +95,17 @@ where
             Self::Stored => f.write_str("Stored"),
             Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::InMemory => f.write_str("From"),
-            Self::MappingFn(_) => f.debug_tuple("MappingFn").field(&"..").finish(),
+            Self::MappingFn(mapping_fn) => f.debug_tuple("MappingFn").field(mapping_fn).finish(),
         }
+    }
+}
+
+impl<T> From<T> for ValueSpec<T>
+where
+    T: Clone + Debug + Send + Sync + 'static,
+{
+    fn from(value: T) -> Self {
+        Self::Value { value }
     }
 }
 
@@ -150,9 +162,41 @@ where
     }
 }
 
+impl<T> AnySpecRt for ValueSpec<T>
+where
+    T: Clone + Debug + Serialize + Send + Sync + 'static,
+{
+    fn is_usable(&self) -> bool {
+        match self {
+            Self::Stored => false,
+            Self::Value { .. } | Self::InMemory => true,
+            Self::MappingFn(mapping_fn) => mapping_fn.is_valued(),
+        }
+    }
+
+    fn merge(&mut self, other_boxed: &dyn AnySpecDataType)
+    where
+        Self: Sized,
+    {
+        let other: Option<&Self> = other_boxed.downcast_ref();
+        let Some(other) = other else {
+            let self_ty_name = tynm::type_name::<Self>();
+            panic!("Failed to downcast value into `{self_ty_name}`. Value: `{other_boxed:#?}`.");
+        };
+        match self {
+            // Use the spec that was previously stored
+            // (as opposed to previous value).
+            Self::Stored => *self = other.clone(),
+
+            // Use set value / no change on these variants
+            Self::Value { .. } | Self::InMemory | Self::MappingFn(_) => {}
+        }
+    }
+}
+
 impl<T> ValueSpecRt for ValueSpec<T>
 where
-    T: Clone + Debug + Send + Sync + 'static,
+    T: Clone + Debug + Serialize + Send + Sync + 'static,
 {
     type ValueType = T;
 

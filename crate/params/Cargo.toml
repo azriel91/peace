@@ -16,6 +16,7 @@ doctest = false
 test = false
 
 [dependencies]
+downcast-rs = "1.2.0"
 dyn-clone = "1.0.11"
 erased-serde = "0.3.25"
 miette = { workspace = true, optional = true }

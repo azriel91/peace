@@ -294,6 +294,7 @@ where
     // * item specs may have been added, but params specs forgotten to be added.
     let mut item_spec_ids_with_no_params_specs = Vec::<ItemSpecId>::new();
     let mut params_specs_stored_mismatches = None;
+    let mut params_specs_not_usable = Vec::<ItemSpecId>::new();
 
     if let Some(mut params_specs_stored) = params_specs_stored {
         item_spec_graph.iter_insertion().for_each(|item_spec_rt| {
@@ -304,15 +305,32 @@ where
             // detected.
             let params_spec_provided = params_specs_provided.remove_entry(item_spec_id);
             let params_spec_stored = params_specs_stored.remove_entry(item_spec_id);
-            if let Some((item_spec_id, params_spec_boxed)) =
-                params_spec_provided.or(params_spec_stored)
-            {
-                // `ValueSpec::MappingFn`s will be present in `params_spec_stored`, but will not
+
+            // TODO: deep merge params specs.
+            let params_spec_to_use = match (params_spec_provided, params_spec_stored) {
+                (None, None) => None,
+                (None, Some(params_spec_stored)) => Some(params_spec_stored),
+                (Some(params_spec_provided), None) => Some(params_spec_provided),
+                (
+                    Some((item_spec_id, mut params_spec_provided)),
+                    Some((_item_spec_id, params_spec_stored)),
+                ) => {
+                    params_spec_provided.merge(&*params_spec_stored);
+                    Some((item_spec_id, params_spec_provided))
+                }
+            };
+
+            if let Some((item_spec_id, params_spec_boxed)) = params_spec_to_use {
+                // `*Spec::MappingFn`s will be present in `params_spec_stored`, but will not
                 // be valid mapping functions as they cannot be serialized / deserialized.
-
-                // TODO: raise error.
-
-                params_specs.insert_raw(item_spec_id, params_spec_boxed);
+                //
+                // Also, field wise `ParamsSpec`s may contain `ValueSpec::Stored` for fields
+                // which never had specifications, which are also unusable.
+                if params_spec_boxed.is_usable() {
+                    params_specs.insert_raw(item_spec_id, params_spec_boxed);
+                } else {
+                    params_specs_not_usable.push(item_spec_id);
+                }
             } else {
                 // Collect item specs that do not have parameters.
                 item_spec_ids_with_no_params_specs.push(item_spec_id.clone());
@@ -341,20 +359,22 @@ where
     // graph.
     let params_specs_provided_mismatches = params_specs_provided;
 
-    let params_all_match = item_spec_ids_with_no_params_specs.is_empty()
+    let params_no_issues = item_spec_ids_with_no_params_specs.is_empty()
         && params_specs_provided_mismatches.is_empty()
         && params_specs_stored_mismatches
             .as_ref()
             .map(|params_specs_stored_mismatches| params_specs_stored_mismatches.is_empty())
-            .unwrap_or(true);
+            .unwrap_or(true)
+        && params_specs_not_usable.is_empty();
 
-    if params_all_match {
+    if params_no_issues {
         Ok(params_specs)
     } else {
         Err(Error::ParamsSpecsMismatch {
             item_spec_ids_with_no_params_specs,
             params_specs_provided_mismatches,
             params_specs_stored_mismatches,
+            params_specs_not_usable,
         }
         .into())
     }

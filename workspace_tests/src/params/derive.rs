@@ -1901,12 +1901,12 @@ mod enum_recursive_value {
 
     use serde::{Deserialize, Serialize};
 
-    use peace::params::{Params, ParamsFieldless, ParamsSpec, ParamsSpecFieldless, ValueSpec};
+    use peace::params::{Params, ParamsSpec, ValueSpec};
 
-    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, ParamsFieldless)]
+    #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
     pub enum InnerValue<T>
     where
-        T: Clone + Debug + ParamsFieldless,
+        T: Clone + Debug,
     {
         Tuple(T),
         Named { value: T },
@@ -1915,14 +1915,7 @@ mod enum_recursive_value {
     #[derive(Clone, Debug, Params, PartialEq, Eq, Serialize, Deserialize)]
     pub enum EnumRecursiveValue<T>
     where
-        T: Clone
-            + Debug
-            + ParamsFieldless<Spec = ParamsSpecFieldless<T>>
-            + TryFrom<<T as ParamsFieldless>::Partial>
-            + Send
-            + Sync
-            + 'static,
-        T::Partial: From<T>,
+        T: Clone + Debug + Send + Sync + 'static,
     {
         Tuple(InnerValue<T>, u32),
         Named { src: InnerValue<T>, dest: u32 },
