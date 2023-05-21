@@ -28,13 +28,13 @@ pub fn spec_merge(
     };
 
     quote! {
-        fn merge(&mut self, other_boxed: &#peace_params_path::AnySpecRtBoxed)
+        fn merge(&mut self, other_boxed: &dyn #peace_params_path::AnySpecDataType)
         where
             Self: Sized,
         {
             let other: Option<&Self> = other_boxed.downcast_ref();
             let Some(other) = other else {
-                let self_ty_name = tynm::type_name::<Self>();
+                let self_ty_name = #peace_params_path::tynm::type_name::<Self>();
                 panic!("Failed to downcast value into `{self_ty_name}`. Value: `{other_boxed:#?}`.");
             };
 
@@ -102,8 +102,6 @@ pub fn struct_fields_spec_merge(
                 let #params_field_wise_name(#(#fields_deconstructed_other),*) = other;
 
                 #fields_spec_merge
-
-                spec_merge
             }
         }
         Fields::Unit => quote!(),
@@ -142,17 +140,32 @@ pub fn variants_spec_merge(
             .fold(proc_macro2::TokenStream::new(), |mut tokens, variant| {
                 let fields = &variant.fields;
                 let fields_deconstructed = fields_deconstruct(fields);
+                let fields_deconstructed_other = fields_deconstruct_rename_other(fields);
 
                 let variant_fields_spec_merge = {
                     let fields_spec_merge = fields_spec_merge(fields, peace_params_path);
 
-                    quote! {
-                        let mut spec_merge = true;
-                        #fields_spec_merge
+                    let variant_deconstruct_other_and_merge = variant_match_arm(
+                        params_field_wise_name,
+                        variant,
+                        &fields_deconstructed_other,
+                        fields_spec_merge,
+                    );
 
-                        spec_merge
+                    // Note: This only merges fields of the same variant.
+                    //
+                    // If we wanted to compare different variants, then we'd have to generate a
+                    // `variant_match_arm` for each of the variants.
+                    quote! {
+                        match other {
+                            #variant_deconstruct_other_and_merge
+
+                            // If `other` is a different variant, we don't mutate this spec.
+                            _ => {},
+                        }
                     }
                 };
+
                 tokens.extend(variant_match_arm(
                     params_field_wise_name,
                     variant,

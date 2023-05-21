@@ -1,4 +1,4 @@
-use crate::AnySpecRtBoxed;
+use crate::AnySpecDataType;
 
 /// Runtime logic of how to look up values for each field in this struct.
 ///
@@ -27,7 +27,7 @@ pub trait AnySpecRt {
     /// This can't be `Self` or `&Self` because that makes the trait non-object
     /// safe. Adding a `where: Self: Sized` bound prevents the method from being
     /// called from `cmd_ctx_builder`.
-    fn merge(&mut self, other: &AnySpecRtBoxed);
+    fn merge(&mut self, other: &dyn AnySpecDataType);
 }
 
 impl<T> AnySpecRt for Box<T>
@@ -38,7 +38,7 @@ where
         self.as_ref().is_usable()
     }
 
-    fn merge(&mut self, other: &AnySpecRtBoxed)
+    fn merge(&mut self, other: &dyn AnySpecDataType)
     where
         Self: Sized,
     {

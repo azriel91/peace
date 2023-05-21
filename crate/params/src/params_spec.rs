@@ -4,7 +4,7 @@ use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::{
-    AnySpecRt, AnySpecRtBoxed, FieldWiseSpecRt, MappingFn, MappingFnImpl, Params,
+    AnySpecDataType, AnySpecRt, FieldWiseSpecRt, MappingFn, MappingFnImpl, Params,
     ParamsResolveError, ValueResolutionCtx, ValueSpecRt,
 };
 
@@ -213,7 +213,7 @@ where
         }
     }
 
-    fn merge(&mut self, other_boxed: &AnySpecRtBoxed)
+    fn merge(&mut self, other_boxed: &dyn AnySpecDataType)
     where
         Self: Sized,
     {

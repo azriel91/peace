@@ -315,7 +315,7 @@ where
                     Some((item_spec_id, mut params_spec_provided)),
                     Some((_item_spec_id, params_spec_stored)),
                 ) => {
-                    params_spec_provided.merge(&params_spec_stored);
+                    params_spec_provided.merge(&*params_spec_stored);
                     Some((item_spec_id, params_spec_provided))
                 }
             };
