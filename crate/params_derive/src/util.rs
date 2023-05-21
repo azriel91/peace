@@ -284,6 +284,22 @@ pub fn fields_deconstruct_none(fields: &Fields) -> Vec<proc_macro2::TokenStream>
     fields_deconstruct_retain_map(fields, false, Some(|_field_name| quote!(None)))
 }
 
+/// Returns a comma separated list of deconstructed fields, deconstructed as
+/// `field: field_other`.
+///
+/// Tuple fields are returned as `_n_other`, and marker fields are returned as
+/// `::std::marker::PhantomData`.
+pub fn fields_deconstruct_rename_other(fields: &Fields) -> Vec<proc_macro2::TokenStream> {
+    fields_deconstruct_retain_map(
+        fields,
+        false,
+        Some(|field_name| {
+            let field_name_other = format_ident!("{}_other", field_name);
+            quote!(#field_name_other)
+        }),
+    )
+}
+
 pub fn fields_deconstruct_retain(
     fields: &Fields,
     retain_phantom_data: bool,

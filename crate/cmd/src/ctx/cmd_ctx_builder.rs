@@ -305,12 +305,24 @@ where
             // detected.
             let params_spec_provided = params_specs_provided.remove_entry(item_spec_id);
             let params_spec_stored = params_specs_stored.remove_entry(item_spec_id);
-            if let Some((item_spec_id, params_spec_boxed)) =
-                params_spec_provided.or(params_spec_stored)
-            {
+
+            // TODO: deep merge params specs.
+            let params_spec_to_use = match (params_spec_provided, params_spec_stored) {
+                (None, None) => None,
+                (None, Some(params_spec_stored)) => Some(params_spec_stored),
+                (Some(params_spec_provided), None) => Some(params_spec_provided),
+                (
+                    Some((item_spec_id, mut params_spec_provided)),
+                    Some((_item_spec_id, params_spec_stored)),
+                ) => {
+                    params_spec_provided.merge(&params_spec_stored);
+                    Some((item_spec_id, params_spec_provided))
+                }
+            };
+
+            if let Some((item_spec_id, params_spec_boxed)) = params_spec_to_use {
                 // `ValueSpec::MappingFn`s will be present in `params_spec_stored`, but will not
                 // be valid mapping functions as they cannot be serialized / deserialized.
-
                 if params_spec_boxed.is_usable() {
                     params_specs.insert_raw(item_spec_id, params_spec_boxed);
                 } else {

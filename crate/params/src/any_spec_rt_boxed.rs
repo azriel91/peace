@@ -31,13 +31,13 @@ impl Deref for AnySpecRtBoxed {
     type Target = dyn AnySpecDataType;
 
     fn deref(&self) -> &Self::Target {
-        &self.0
+        self.0.as_ref()
     }
 }
 
 impl DerefMut for AnySpecRtBoxed {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+        self.0.as_mut()
     }
 }
 

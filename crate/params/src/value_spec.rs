@@ -4,7 +4,8 @@ use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    AnySpecRt, MappingFn, MappingFnImpl, ParamsResolveError, ValueResolutionCtx, ValueSpecRt,
+    AnySpecRt, AnySpecRtBoxed, MappingFn, MappingFnImpl, ParamsResolveError, ValueResolutionCtx,
+    ValueSpecRt,
 };
 
 /// How to populate a field's value in an item spec's params.
@@ -163,7 +164,7 @@ where
 
 impl<T> AnySpecRt for ValueSpec<T>
 where
-    T: Clone + Debug + Send + Sync + 'static,
+    T: Clone + Debug + Serialize + Send + Sync + 'static,
 {
     fn is_usable(&self) -> bool {
         match self {
@@ -171,11 +172,30 @@ where
             Self::MappingFn(mapping_fn) => mapping_fn.is_valued(),
         }
     }
+
+    fn merge(&mut self, other_boxed: &AnySpecRtBoxed)
+    where
+        Self: Sized,
+    {
+        let other: Option<&Self> = other_boxed.downcast_ref();
+        let Some(other) = other else {
+            let self_ty_name = tynm::type_name::<Self>();
+            panic!("Failed to downcast value into `{self_ty_name}`. Value: `{other_boxed:#?}`.");
+        };
+        match self {
+            // Use the spec that was previously stored
+            // (as opposed to previous value).
+            Self::Stored => *self = other.clone(),
+
+            // Use set value / no change on these variants
+            Self::Value { .. } | Self::InMemory | Self::MappingFn(_) => {}
+        }
+    }
 }
 
 impl<T> ValueSpecRt for ValueSpec<T>
 where
-    T: Clone + Debug + Send + Sync + 'static,
+    T: Clone + Debug + Serialize + Send + Sync + 'static,
 {
     type ValueType = T;
 
