@@ -5,7 +5,7 @@
 ```rust ,ignore
 let mut cmd_context = CmdContext::builder()
     .with_flow(flow!(Step1, Step2, Step3))
-    .with_item_spec_params([
+    .with_item_params([
         Step1Params::spec()
             .with_a(A(1))
             .build(),

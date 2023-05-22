@@ -8,7 +8,7 @@ use crate::{
     ValueResolutionCtx, ValueSpecRt,
 };
 
-/// How to populate a field's value in an item spec's params.
+/// How to populate a field's value in an item's params.
 ///
 /// The `MappingFn` variant's mapping function is `None` when deserialized, as
 /// it is impossible to determine the underlying `F` and `U` type parameters for
@@ -17,17 +17,17 @@ use crate::{
 /// For deserialization:
 ///
 /// 1. A `ParamsSpecsTypeReg` is constructed, and deserialization functions are
-///    registered from `ItemSpecId` to `ParamsSpecFieldlessDe<T, F, U>`, where
-///    `F` and `U` are derived from the `ValueSpec` provided by the user.
+///    registered from `ItemId` to `ParamsSpecFieldlessDe<T, F, U>`, where `F`
+///    and `U` are derived from the `ValueSpec` provided by the user.
 ///
 /// 2. `value_specs.yaml` is deserialized using that type registry.
 ///
 /// 3. Each `ParamsSpecFieldlessDe<T>` is mapped into a
-/// `ParamsSpecFieldless<T>`, and    subsequently `BoxDt` to be passed around in
-/// a `CmdCtx`.
+///    `ParamsSpecFieldless<T>`, and subsequently `AnySpecRtBoxed` to be passed
+///    around in a `CmdCtx`.
 ///
-/// 4. These `BoxDt`s are downcasted back to `ParamsSpecFieldless<T>` when
-/// resolving    values for item spec params and params partials.
+/// 4. These `AnySpecRtBoxed`s are downcasted back to `ParamsSpecFieldless<T>`
+///    when resolving values for item params and params partials.
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(from = "crate::ParamsSpecFieldlessDe<T>")]
 pub enum ParamsSpecFieldless<T>

@@ -54,7 +54,7 @@ digraph {
 ```rust ,ignore
 let mut cmd_context = CmdContext::builder()
     .with_flow(&flow)
-    .with_item_spec_params::<_>(..) // per item
+    .with_item_params::<_>(..) // per item
     .with_output(&mut cli_output)
     .build();
 

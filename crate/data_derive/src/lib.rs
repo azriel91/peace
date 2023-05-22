@@ -117,7 +117,7 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
             for #name #ty_generics
             #where_clause
         {
-            fn borrow(item_spec_id: & #impl_borrow_lt #peace_cfg_path::ItemSpecId, resources: & #impl_borrow_lt #peace_data_path::Resources) -> Self {
+            fn borrow(item_id: & #impl_borrow_lt #peace_cfg_path::ItemId, resources: & #impl_borrow_lt #peace_data_path::Resources) -> Self {
                 #borrow_return
             }
         }
@@ -178,7 +178,7 @@ fn data_borrow_impl<'ast>(
 
             let borrow_return = quote! {
                 #name {
-                    #( #field_names_tokens: Data::borrow(item_spec_id, resources) ),*
+                    #( #field_names_tokens: Data::borrow(item_id, resources) ),*
                     #(, #phantom_data_fields: ::std::marker::PhantomData)*
                 }
             };
@@ -192,7 +192,7 @@ fn data_borrow_impl<'ast>(
                 .map(|n| quote!(#n))
                 .collect::<Vec<_>>();
 
-            let borrow = vec![quote! { Data::borrow(item_spec_id, resources) }; count];
+            let borrow = vec![quote! { Data::borrow(item_id, resources) }; count];
             let borrow_return = quote! {
                 #name ( #( #borrow ),* )
             };

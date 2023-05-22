@@ -7,11 +7,11 @@ use peace::miette;
 pub enum DownloadError {
     /// A `FileDownload` error occurred.
     #[error("A `FileDownload` error occurred.")]
-    PeaceItemSpecFileDownload(
+    PeaceItemFileDownload(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
         #[from]
-        peace_item_specs::file_download::FileDownloadError,
+        peace_items::file_download::FileDownloadError,
     ),
 
     // === Framework errors === //

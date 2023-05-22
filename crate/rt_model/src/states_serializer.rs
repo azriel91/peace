@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, path::Path};
 
-use peace_cfg::{FlowId, ItemSpecId};
+use peace_cfg::{FlowId, ItemId};
 use peace_resources::{
     paths::{StatesDesiredFile, StatesSavedFile},
     states::{
@@ -19,8 +19,7 @@ impl<E> StatesSerializer<E>
 where
     E: std::error::Error + From<Error> + Send,
 {
-    /// Returns the [`StatesSaved`] of all [`ItemSpec`]s if it exists on
-    /// disk.
+    /// Returns the [`StatesSaved`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
@@ -28,7 +27,7 @@ where
     /// * `states`: States to serialize.
     /// * `states_file_path`: Path to save the serialized states to.
     ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`Item`]: peace_cfg::Item
     pub async fn serialize<TS>(
         storage: &Storage,
         states: &States<TS>,
@@ -50,21 +49,20 @@ where
         Ok(())
     }
 
-    /// Returns the [`StatesSaved`] of all [`ItemSpec`]s if it exists on
-    /// disk.
+    /// Returns the [`StatesSaved`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
-    ///   item spec state.
+    ///   item state.
     /// * `states_saved_file`: `StatesSavedFile` to deserialize.
     ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`Item`]: peace_cfg::Item
     pub async fn deserialize_saved(
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
         states_saved_file: &StatesSavedFile,
     ) -> Result<StatesSaved, E> {
         let states = Self::deserialize_internal::<Saved>(
@@ -80,21 +78,20 @@ where
         states.ok_or_else(|| E::from(Error::StatesCurrentDiscoverRequired))
     }
 
-    /// Returns the [`StatesDesired`] of all [`ItemSpec`]s if it exists on
-    /// disk.
+    /// Returns the [`StatesDesired`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
-    ///   item spec state.
+    ///   item state.
     /// * `states_desired_file`: `StatesDesiredFile` to deserialize.
     ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`Item`]: peace_cfg::Item
     pub async fn deserialize_desired(
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
         states_desired_file: &StatesDesiredFile,
     ) -> Result<StatesDesired, E> {
         let states = Self::deserialize_internal::<Desired>(
@@ -110,21 +107,20 @@ where
         states.ok_or_else(|| E::from(Error::StatesDesiredDiscoverRequired))
     }
 
-    /// Returns the [`StatesSaved`] of all [`ItemSpec`]s if it exists on
-    /// disk.
+    /// Returns the [`StatesSaved`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
-    ///   item spec state.
+    ///   item state.
     /// * `states_saved_file`: `StatesSavedFile` to deserialize.
     ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`Item`]: peace_cfg::Item
     pub async fn deserialize_saved_opt(
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
         states_saved_file: &StatesSavedFile,
     ) -> Result<Option<StatesSaved>, E> {
         Self::deserialize_internal(
@@ -138,13 +134,13 @@ where
         .await
     }
 
-    /// Returns the [`States`] of all [`ItemSpec`]s if it exists on disk.
+    /// Returns the [`States`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
-    ///   item spec state.
+    ///   item state.
     /// * `states_saved_file`: `StatesSavedFile` to deserialize.
     ///
     /// # Type Parameters
@@ -152,7 +148,7 @@ where
     /// * `TS`: The states type state to use, such as [`ts::Current`] or
     ///   [`ts::Saved`].
     ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`Item`]: peace_cfg::Item
     /// [`ts::Current`]: peace_resources::states::ts::Current
     /// [`ts::Saved`]: peace_resources::states::ts::Saved
     #[cfg(not(target_arch = "wasm32"))]
@@ -160,7 +156,7 @@ where
         thread_name: String,
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
         states_file_path: &Path,
     ) -> Result<Option<States<TS>>, E>
     where
@@ -201,13 +197,13 @@ where
         Ok(states_opt)
     }
 
-    /// Returns the [`States`] of all [`ItemSpec`]s if it exists on disk.
+    /// Returns the [`States`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
-    ///   item spec state.
+    ///   item state.
     /// * `states_saved_file`: `StatesSavedFile` to deserialize.
     ///
     /// # Type Parameters
@@ -215,14 +211,14 @@ where
     /// * `TS`: The states type state to use, such as [`ts::Current`] or
     ///   [`ts::Saved`].
     ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`Item`]: peace_cfg::Item
     /// [`ts::Current`]: peace_resources::states::ts::Current
     /// [`ts::Saved`]: peace_resources::states::ts::Saved
     #[cfg(target_arch = "wasm32")]
     async fn deserialize_internal<TS>(
         flow_id: &FlowId,
         storage: &Storage,
-        states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
         states_file_path: &Path,
     ) -> Result<Option<States<TS>>, E>
     where

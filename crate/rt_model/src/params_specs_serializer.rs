@@ -13,8 +13,7 @@ impl<E> ParamsSpecsSerializer<E>
 where
     E: std::error::Error + From<Error> + Send,
 {
-    /// Returns the [`ParamsSpecs`] of all [`ItemSpec`]s if it exists on
-    /// disk.
+    /// Returns the [`ParamsSpecs`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
@@ -22,7 +21,7 @@ where
     /// * `params_specs`: ParamsSpecs to serialize.
     /// * `params_specs_file`: Path to save the serialized params_specs to.
     ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`Item`]: peace_cfg::Item
     pub async fn serialize(
         storage: &Storage,
         params_specs: &ParamsSpecs,
@@ -41,8 +40,7 @@ where
         Ok(())
     }
 
-    /// Returns the [`ParamsSpecs`] of all [`ItemSpec`]s if it exists on
-    /// disk.
+    /// Returns the [`ParamsSpecs`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
@@ -51,7 +49,7 @@ where
     ///   each params spec.
     /// * `params_specs_file`: `ParamsSpecsFile` to deserialize.
     ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`Item`]: peace_cfg::Item
     pub async fn deserialize(
         profile: &Profile,
         flow_id: &FlowId,
@@ -79,8 +77,7 @@ where
         })
     }
 
-    /// Returns the [`ParamsSpecs`] of all [`ItemSpec`]s if it exists on
-    /// disk.
+    /// Returns the [`ParamsSpecs`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
@@ -89,7 +86,7 @@ where
     ///   each params spec.
     /// * `params_specs_file`: `ParamsSpecsFile` to deserialize.
     ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`Item`]: peace_cfg::Item
     pub async fn deserialize_opt(
         profile: &Profile,
         flow_id: &FlowId,
@@ -109,8 +106,7 @@ where
         .await
     }
 
-    /// Returns the [`ParamsSpecs`] of all [`ItemSpec`]s if it exists on
-    /// disk.
+    /// Returns the [`ParamsSpecs`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
@@ -119,7 +115,7 @@ where
     ///   each params spec.
     /// * `params_specs_file`: `ParamsSpecsFile` to deserialize.
     ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`Item`]: peace_cfg::Item
     #[cfg(not(target_arch = "wasm32"))]
     async fn deserialize_internal(
         thread_name: String,
@@ -174,8 +170,7 @@ where
         Ok(params_specs_opt)
     }
 
-    /// Returns the [`ParamsSpecs`] of all [`ItemSpec`]s if it exists on
-    /// disk.
+    /// Returns the [`ParamsSpecs`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
@@ -184,7 +179,7 @@ where
     ///   each params spec.
     /// * `params_specs_file`: `ParamsSpecsFile` to deserialize.
     ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`Item`]: peace_cfg::Item
     #[cfg(target_arch = "wasm32")]
     async fn deserialize_internal(
         profile: &Profile,

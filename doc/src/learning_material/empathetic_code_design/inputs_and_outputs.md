@@ -244,10 +244,10 @@ digraph {
 }
 ```
 
-### Item Spec API
+### Item API
 
 ```rust ,ignore
-impl<Id> ItemSpec for FileDownloadItemSpec<Id>
+impl<Id> Item for FileDownloadItem<Id>
 {
     type Params<'exec> = FileDownloadParams<Id>;
     type State = FileDownloadState;

@@ -12,12 +12,12 @@ use crate::outcomes::ItemApplyPartialRt;
 ///
 /// 1. `ApplyCmd` calls the following function for each item.
 ///
-///     - [`ItemSpec::state_current`]
-///     - [`ItemSpec::state_desired`] or [`ItemSpec::state_clean`]
-///     - [`ItemSpec::state_diff`]
+///     - [`Item::state_current`]
+///     - [`Item::state_desired`] or [`Item::state_clean`]
+///     - [`Item::state_diff`]
 ///     - [`ApplyFns::check`]
 ///     - [`ApplyFns::exec`]
-///     - [`ItemSpec::state_current`]
+///     - [`Item::state_current`]
 ///
 /// 2. Each function call *may* fail.
 /// 3. If we have an enum representing the state after each function call, we
@@ -26,11 +26,11 @@ use crate::outcomes::ItemApplyPartialRt;
 /// It is not likely to be error prone or too unergonomic to store each field as
 /// optional.
 ///
-/// [`ItemSpec::state_current`]: peace_cfg::ItemSpec::state_current
-/// [`ItemSpec::state_desired`]: peace_cfg::ItemSpec::state_desired
-/// [`ItemSpec::state_diff`]: peace_cfg::ItemSpec::state_diff
-/// [`ApplyFns::check`]: peace_cfg::ItemSpec::ApplyFns
-/// [`ApplyFns::exec`]: peace_cfg::ItemSpec::ApplyFns
+/// [`Item::state_current`]: peace_cfg::Item::state_current
+/// [`Item::state_desired`]: peace_cfg::Item::state_desired
+/// [`Item::state_diff`]: peace_cfg::Item::state_diff
+/// [`ApplyFns::check`]: peace_cfg::Item::ApplyFns
+/// [`ApplyFns::exec`]: peace_cfg::Item::ApplyFns
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct ItemApplyPartial<State, StateDiff> {
     /// State saved on disk before the execution.

@@ -23,7 +23,7 @@ diff-struct = "0.5.1"
 derivative = { workspace = true }
 futures = "0.3.28"
 peace = { path = "..", version = "0.0.9", default-features = false }
-peace_item_specs = { path = "../item_specs", version = "0.0.9" }
+peace_items = { path = "../items", version = "0.0.9" }
 pretty_assertions = "1.3.0"
 serde = { version = "1.0.159", features = ["derive"] }
 serde_json = "1.0.95"
@@ -35,20 +35,20 @@ tokio = { workspace = true, features = ["rt", "macros"] }
 tynm = { workspace = true }
 
 [features]
-default = ["item_specs", "output_in_memory"]
+default = ["items", "output_in_memory"]
 
 # `peace` features
 error_reporting = ["peace/error_reporting"]
 output_colorized = ["peace/output_colorized"]
 output_in_memory = ["peace/output_in_memory"]
 output_json = ["peace/output_json"]
-output_progress = ["peace/output_progress", "peace_item_specs/output_progress"]
+output_progress = ["peace/output_progress", "peace_items/output_progress"]
 
-# `peace_item_specs` features
-item_specs = [
-    "peace_item_specs/blank",
-    "peace_item_specs/file_download",
-    "peace_item_specs/sh_cmd",
-    "peace_item_specs/sh_sync_cmd",
-    "peace_item_specs/tar_x",
+# `peace_items` features
+items = [
+    "peace_items/blank",
+    "peace_items/file_download",
+    "peace_items/sh_cmd",
+    "peace_items/sh_sync_cmd",
+    "peace_items/tar_x",
 ]

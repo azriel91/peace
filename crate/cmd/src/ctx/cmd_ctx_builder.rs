@@ -3,7 +3,7 @@
 use std::{fmt::Debug, hash::Hash};
 
 use futures::stream::{StreamExt, TryStreamExt};
-use peace_cfg::ItemSpecId;
+use peace_cfg::ItemId;
 use peace_params::ParamsSpecs;
 use peace_resources::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
@@ -14,7 +14,7 @@ use peace_resources::{
 use peace_rt_model::{
     fn_graph::resman::Resource,
     params::{FlowParams, ProfileParams, WorkspaceParams},
-    Error, Flow, ItemSpecGraph, ItemSpecParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg, Storage,
+    Error, Flow, ItemGraph, ItemParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg, Storage,
     Workspace, WorkspaceInitializer,
 };
 use serde::{de::DeserializeOwned, Serialize};
@@ -131,7 +131,7 @@ where
     Ok(())
 }
 
-/// Serializes item spec params to storage.
+/// Serializes item params to storage.
 async fn params_specs_serialize(
     params_specs: &ParamsSpecs,
     storage: &Storage,
@@ -238,38 +238,33 @@ pub(crate) async fn profiles_from_peace_app_dir(
     Ok(profiles)
 }
 
-/// Registers each item spec's `Params` and `State` for stateful
+/// Registers each item's `Params` and `State` for stateful
 /// deserialization.
 fn params_and_states_type_reg<E>(
-    item_spec_graph: &ItemSpecGraph<E>,
-) -> (ItemSpecParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg) {
-    item_spec_graph.iter().fold(
+    item_graph: &ItemGraph<E>,
+) -> (ItemParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg) {
+    item_graph.iter().fold(
         (
-            ItemSpecParamsTypeReg::new(),
+            ItemParamsTypeReg::new(),
             ParamsSpecsTypeReg::new(),
             StatesTypeReg::new(),
         ),
-        |(mut item_spec_params_type_reg, mut params_specs_type_reg, mut states_type_reg),
-         item_spec| {
-            item_spec.params_and_state_register(
-                &mut item_spec_params_type_reg,
+        |(mut item_params_type_reg, mut params_specs_type_reg, mut states_type_reg), item| {
+            item.params_and_state_register(
+                &mut item_params_type_reg,
                 &mut params_specs_type_reg,
                 &mut states_type_reg,
             );
 
-            (
-                item_spec_params_type_reg,
-                params_specs_type_reg,
-                states_type_reg,
-            )
+            (item_params_type_reg, params_specs_type_reg, states_type_reg)
         },
     )
 }
 
-/// Merges provided item spec parameters with previously stored item spec
+/// Merges provided item parameters with previously stored item
 /// parameters.
 ///
-/// If an item spec's parameters are not provided, and nothing was previously
+/// If an item's parameters are not provided, and nothing was previously
 /// stored, then an error is returned.
 fn params_specs_merge<E>(
     flow: &Flow<E>,
@@ -283,83 +278,82 @@ where
     // precedence.
     //
     // We construct a new TypeMap because we want to make sure params specs are
-    // serialized in order of the item specs in the graph.
-    let item_spec_graph = flow.graph();
-    let mut params_specs = ParamsSpecs::with_capacity(item_spec_graph.node_count());
+    // serialized in order of the items in the graph.
+    let item_graph = flow.graph();
+    let mut params_specs = ParamsSpecs::with_capacity(item_graph.node_count());
 
     // Collected erroneous data -- parameters may have been valid in the past, but:
     //
-    // * item spec IDs may have changed.
-    // * item specs may have been removed, but params specs remain.
-    // * item specs may have been added, but params specs forgotten to be added.
-    let mut item_spec_ids_with_no_params_specs = Vec::<ItemSpecId>::new();
+    // * item IDs may have changed.
+    // * items may have been removed, but params specs remain.
+    // * items may have been added, but params specs forgotten to be added.
+    let mut item_ids_with_no_params_specs = Vec::<ItemId>::new();
     let mut params_specs_stored_mismatches = None;
-    let mut params_specs_not_usable = Vec::<ItemSpecId>::new();
+    let mut params_specs_not_usable = Vec::<ItemId>::new();
 
     if let Some(mut params_specs_stored) = params_specs_stored {
-        item_spec_graph.iter_insertion().for_each(|item_spec_rt| {
-            let item_spec_id = item_spec_rt.id();
+        item_graph.iter_insertion().for_each(|item_rt| {
+            let item_id = item_rt.id();
 
             // Removing the entry from stored params specs is deliberate, so filtering for
-            // stored params specs that no longer have a corresponding item spec are
+            // stored params specs that no longer have a corresponding item are
             // detected.
-            let params_spec_provided = params_specs_provided.remove_entry(item_spec_id);
-            let params_spec_stored = params_specs_stored.remove_entry(item_spec_id);
+            let params_spec_provided = params_specs_provided.remove_entry(item_id);
+            let params_spec_stored = params_specs_stored.remove_entry(item_id);
 
-            // TODO: deep merge params specs.
+            // Deep merge params specs.
             let params_spec_to_use = match (params_spec_provided, params_spec_stored) {
                 (None, None) => None,
                 (None, Some(params_spec_stored)) => Some(params_spec_stored),
                 (Some(params_spec_provided), None) => Some(params_spec_provided),
                 (
-                    Some((item_spec_id, mut params_spec_provided)),
-                    Some((_item_spec_id, params_spec_stored)),
+                    Some((item_id, mut params_spec_provided)),
+                    Some((_item_id, params_spec_stored)),
                 ) => {
                     params_spec_provided.merge(&*params_spec_stored);
-                    Some((item_spec_id, params_spec_provided))
+                    Some((item_id, params_spec_provided))
                 }
             };
 
-            if let Some((item_spec_id, params_spec_boxed)) = params_spec_to_use {
+            if let Some((item_id, params_spec_boxed)) = params_spec_to_use {
                 // `*Spec::MappingFn`s will be present in `params_spec_stored`, but will not
                 // be valid mapping functions as they cannot be serialized / deserialized.
                 //
                 // Also, field wise `ParamsSpec`s may contain `ValueSpec::Stored` for fields
                 // which never had specifications, which are also unusable.
                 if params_spec_boxed.is_usable() {
-                    params_specs.insert_raw(item_spec_id, params_spec_boxed);
+                    params_specs.insert_raw(item_id, params_spec_boxed);
                 } else {
-                    params_specs_not_usable.push(item_spec_id);
+                    params_specs_not_usable.push(item_id);
                 }
             } else {
-                // Collect item specs that do not have parameters.
-                item_spec_ids_with_no_params_specs.push(item_spec_id.clone());
+                // Collect items that do not have parameters.
+                item_ids_with_no_params_specs.push(item_id.clone());
             }
         });
 
-        // Stored parameters whose IDs do not correspond to any item spec IDs in the
+        // Stored parameters whose IDs do not correspond to any item IDs in the
         // graph. May be empty.
         params_specs_stored_mismatches = Some(params_specs_stored);
     } else {
-        item_spec_graph.iter_insertion().for_each(|item_spec_rt| {
-            let item_spec_id = item_spec_rt.id();
+        item_graph.iter_insertion().for_each(|item_rt| {
+            let item_id = item_rt.id();
 
-            if let Some((item_spec_id, params_spec_boxed)) =
-                params_specs_provided.remove_entry(item_spec_id)
+            if let Some((item_id, params_spec_boxed)) = params_specs_provided.remove_entry(item_id)
             {
-                params_specs.insert_raw(item_spec_id, params_spec_boxed);
+                params_specs.insert_raw(item_id, params_spec_boxed);
             } else {
-                // Collect item specs that do not have parameters.
-                item_spec_ids_with_no_params_specs.push(item_spec_id.clone());
+                // Collect items that do not have parameters.
+                item_ids_with_no_params_specs.push(item_id.clone());
             }
         });
     }
 
-    // Provided parameters whose IDs do not correspond to any item spec IDs in the
+    // Provided parameters whose IDs do not correspond to any item IDs in the
     // graph.
     let params_specs_provided_mismatches = params_specs_provided;
 
-    let params_no_issues = item_spec_ids_with_no_params_specs.is_empty()
+    let params_no_issues = item_ids_with_no_params_specs.is_empty()
         && params_specs_provided_mismatches.is_empty()
         && params_specs_stored_mismatches
             .as_ref()
@@ -371,7 +365,7 @@ where
         Ok(params_specs)
     } else {
         Err(Error::ParamsSpecsMismatch {
-            item_spec_ids_with_no_params_specs,
+            item_ids_with_no_params_specs,
             params_specs_provided_mismatches,
             params_specs_stored_mismatches,
             params_specs_not_usable,
@@ -380,18 +374,18 @@ where
     }
 }
 
-async fn item_spec_graph_setup<E>(
-    item_spec_graph: &ItemSpecGraph<E>,
+async fn item_graph_setup<E>(
+    item_graph: &ItemGraph<E>,
     resources: Resources<Empty>,
 ) -> Result<Resources<SetUp>, E>
 where
     E: std::error::Error,
 {
-    let resources = item_spec_graph
+    let resources = item_graph
         .stream()
         .map(Ok::<_, E>)
-        .try_fold(resources, |mut resources, item_spec| async move {
-            item_spec.setup(&mut resources).await?;
+        .try_fold(resources, |mut resources, item| async move {
+            item.setup(&mut resources).await?;
             Ok(resources)
         })
         .await?;

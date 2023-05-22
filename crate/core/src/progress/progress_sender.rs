@@ -2,26 +2,23 @@ use tokio::sync::mpsc::Sender;
 
 use crate::{
     progress::{ProgressDelta, ProgressMsgUpdate, ProgressUpdate, ProgressUpdateAndId},
-    ItemSpecId,
+    ItemId,
 };
 
-/// Submits progress for an item spec's `ApplyFns::exec` method.
+/// Submits progress for an item's `ApplyFns::exec` method.
 #[derive(Clone, Copy, Debug)]
 pub struct ProgressSender<'exec> {
-    /// ID of the item spec this belongs to.
-    item_spec_id: &'exec ItemSpecId,
+    /// ID of the item this belongs to.
+    item_id: &'exec ItemId,
     /// Channel sender to send progress updates to.
     progress_tx: &'exec Sender<ProgressUpdateAndId>,
 }
 
 impl<'exec> ProgressSender<'exec> {
     /// Returns a new `ProgressSender`.
-    pub fn new(
-        item_spec_id: &'exec ItemSpecId,
-        progress_tx: &'exec Sender<ProgressUpdateAndId>,
-    ) -> Self {
+    pub fn new(item_id: &'exec ItemId, progress_tx: &'exec Sender<ProgressUpdateAndId>) -> Self {
         Self {
-            item_spec_id,
+            item_id,
             progress_tx,
         }
     }
@@ -29,7 +26,7 @@ impl<'exec> ProgressSender<'exec> {
     /// Increments the progress by the given unit count.
     pub fn inc(&self, unit_count: u64, msg_update: ProgressMsgUpdate) {
         let _progress_send_unused = self.progress_tx.try_send(ProgressUpdateAndId {
-            item_spec_id: self.item_spec_id.clone(),
+            item_id: self.item_id.clone(),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(unit_count)),
             msg_update,
         });
@@ -45,7 +42,7 @@ impl<'exec> ProgressSender<'exec> {
     /// change.
     pub fn tick(&self, msg_update: ProgressMsgUpdate) {
         let _progress_send_unused = self.progress_tx.try_send(ProgressUpdateAndId {
-            item_spec_id: self.item_spec_id.clone(),
+            item_id: self.item_id.clone(),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
             msg_update,
         });
@@ -54,7 +51,7 @@ impl<'exec> ProgressSender<'exec> {
     /// Resets the progress tracker to a clean state.
     pub fn reset(&self) {
         let _progress_send_unused = self.progress_tx.try_send(ProgressUpdateAndId {
-            item_spec_id: self.item_spec_id.clone(),
+            item_id: self.item_id.clone(),
             progress_update: ProgressUpdate::Reset,
             msg_update: ProgressMsgUpdate::Clear,
         });

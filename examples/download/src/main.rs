@@ -3,7 +3,7 @@ use peace::{
     cfg::{flow_id, profile, FlowId, Profile},
     rt_model::{output::CliOutput, WorkspaceSpec},
 };
-use peace_item_specs::file_download::FileDownloadParams;
+use peace_items::file_download::FileDownloadParams;
 
 use download::{
     clean, clean_dry, cmd_ctx, desired, diff, ensure, ensure_dry, fetch, status,
@@ -30,7 +30,7 @@ pub fn main() -> peace::miette::Result<(), peace::miette::Report> {
     // This is fixed by <https://github.com/zkat/miette/pull/170>.
 
     run().map_err(|file_download_error| match file_download_error {
-        DownloadError::PeaceItemSpecFileDownload(err) => peace::miette::Report::from(err),
+        DownloadError::PeaceItemFileDownload(err) => peace::miette::Report::from(err),
         DownloadError::PeaceRtError(err) => peace::miette::Report::from(err),
         other => peace::miette::Report::from(other),
     })

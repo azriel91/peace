@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cfg::{ApplyCheck, FnCtx, ItemSpecId};
+use peace_cfg::{ApplyCheck, FnCtx, ItemId};
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
@@ -17,7 +17,7 @@ use peace_rt_model::{
     outcomes::{CmdOutcome, ItemApplyBoxed, ItemApplyPartialBoxed},
     output::OutputWrite,
     params::ParamsKeys,
-    Error, IndexMap, ItemSpecBoxed, ItemSpecRt, Storage,
+    Error, IndexMap, ItemBoxed, ItemRt, Storage,
 };
 use tokio::sync::{mpsc, mpsc::UnboundedSender};
 
@@ -55,50 +55,50 @@ where
     States<StatesTsApply>: From<StatesCurrent> + Send + Sync + 'static,
     States<StatesTsApplyDry>: From<StatesCurrent> + Send + Sync + 'static,
 {
-    /// Conditionally runs [`ItemSpec::apply_exec_dry`] for each
-    /// [`ItemSpec`].
+    /// Conditionally runs [`Item::apply_exec_dry`] for each
+    /// [`Item`].
     ///
-    /// In practice this runs [`ItemSpec::apply_check`], and only runs
+    /// In practice this runs [`Item::apply_check`], and only runs
     /// [`apply_exec_dry`] if execution is required.
     ///
     /// # Design
     ///
-    /// The grouping of item spec functions run for an `Ensure` execution to
+    /// The grouping of item functions run for an `Ensure` execution to
     /// work is as follows:
     ///
-    /// 1. For each `ItemSpec` run `ItemSpecRt::ensure_prepare`, which runs:
+    /// 1. For each `Item` run `ItemRt::ensure_prepare`, which runs:
     ///
-    ///     1. `ItemSpec::state_current`
-    ///     2. `ItemSpec::state_desired`
-    ///     3. `ItemSpec::apply_check`
+    ///     1. `Item::state_current`
+    ///     2. `Item::state_desired`
+    ///     3. `Item::apply_check`
     ///
-    /// 2. For `ItemSpec`s that return `ApplyCheck::ExecRequired`, run
-    ///    `ItemSpec::apply_exec_dry`.
+    /// 2. For `Item`s that return `ApplyCheck::ExecRequired`, run
+    ///    `Item::apply_exec_dry`.
     ///
-    /// The grouping of item spec functions run for a `Clean` execution to work
+    /// The grouping of item functions run for a `Clean` execution to work
     /// is as follows:
     ///
-    /// 1. Run [`StatesDiscoverCmd::current`] for all `ItemSpec`s in the
+    /// 1. Run [`StatesDiscoverCmd::current`] for all `Item`s in the
     ///   *forward* direction.
     ///
     ///     This populates `resources` with `Current<IS::State>`, needed for
-    ///     `ItemSpec::try_state_current` during `ItemSpecRt::clean_prepare`.
+    ///     `Item::try_state_current` during `ItemRt::clean_prepare`.
     ///
-    /// 2. In the *reverse* direction, for each `ItemSpec` run
-    ///    `ItemSpecRt::clean_prepare`, which runs:
+    /// 2. In the *reverse* direction, for each `Item` run
+    ///    `ItemRt::clean_prepare`, which runs:
     ///
-    ///     1. `ItemSpec::try_state_current`, which resolves parameters from
+    ///     1. `Item::try_state_current`, which resolves parameters from
     ///        the *current* state.
-    ///     2. `ItemSpec::state_desired`
-    ///     3. `ItemSpec::apply_check`
+    ///     2. `Item::state_desired`
+    ///     3. `Item::apply_check`
     ///
-    /// 3. For `ItemSpec`s that return `ApplyCheck::ExecRequired`, run
-    ///    `ItemSpec::apply_exec_dry`.
+    /// 3. For `Item`s that return `ApplyCheck::ExecRequired`, run
+    ///    `Item::apply_exec_dry`.
     ///
-    /// [`apply_exec_dry`]: peace_cfg::ItemSpec::apply_exec_dry
-    /// [`ItemSpec::apply_check`]: peace_cfg::ItemSpec::apply_check
-    /// [`ItemSpec::apply_exec_dry`]: peace_cfg::ItemSpecRt::apply_exec_dry
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`apply_exec_dry`]: peace_cfg::Item::apply_exec_dry
+    /// [`Item::apply_check`]: peace_cfg::Item::apply_check
+    /// [`Item::apply_exec_dry`]: peace_cfg::ItemRt::apply_exec_dry
+    /// [`Item`]: peace_cfg::Item
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
@@ -109,50 +109,50 @@ where
             .map(|cmd_outcome| cmd_outcome.map(|(states_applied, _states_desired)| states_applied))
     }
 
-    /// Conditionally runs [`ItemSpec::apply_exec`] for each
-    /// [`ItemSpec`].
+    /// Conditionally runs [`Item::apply_exec`] for each
+    /// [`Item`].
     ///
-    /// In practice this runs [`ItemSpec::apply_check`], and only runs
+    /// In practice this runs [`Item::apply_check`], and only runs
     /// [`apply_exec`] if execution is required.
     ///
     /// # Design
     ///
-    /// The grouping of item spec functions run for an `Ensure` execution to
+    /// The grouping of item functions run for an `Ensure` execution to
     /// work is as follows:
     ///
-    /// 1. For each `ItemSpec` run `ItemSpecRt::ensure_prepare`, which runs:
+    /// 1. For each `Item` run `ItemRt::ensure_prepare`, which runs:
     ///
-    ///     1. `ItemSpec::state_current`
-    ///     2. `ItemSpec::state_desired`
-    ///     3. `ItemSpec::apply_check`
+    ///     1. `Item::state_current`
+    ///     2. `Item::state_desired`
+    ///     3. `Item::apply_check`
     ///
-    /// 2. For `ItemSpec`s that return `ApplyCheck::ExecRequired`, run
-    ///    `ItemSpec::apply_exec`.
+    /// 2. For `Item`s that return `ApplyCheck::ExecRequired`, run
+    ///    `Item::apply_exec`.
     ///
-    /// The grouping of item spec functions run for a `Clean` execution to work
+    /// The grouping of item functions run for a `Clean` execution to work
     /// is as follows:
     ///
-    /// 1. Run [`StatesDiscoverCmd::current`] for all `ItemSpec`s in the
+    /// 1. Run [`StatesDiscoverCmd::current`] for all `Item`s in the
     ///   *forward* direction.
     ///
     ///     This populates `resources` with `Current<IS::State>`, needed for
-    ///     `ItemSpec::try_state_current` during `ItemSpecRt::clean_prepare`.
+    ///     `Item::try_state_current` during `ItemRt::clean_prepare`.
     ///
-    /// 2. In the *reverse* direction, for each `ItemSpec` run
-    ///    `ItemSpecRt::clean_prepare`, which runs:
+    /// 2. In the *reverse* direction, for each `Item` run
+    ///    `ItemRt::clean_prepare`, which runs:
     ///
-    ///     1. `ItemSpec::try_state_current`, which resolves parameters from
+    ///     1. `Item::try_state_current`, which resolves parameters from
     ///        the *current* state.
-    ///     2. `ItemSpec::state_desired`
-    ///     3. `ItemSpec::apply_check`
+    ///     2. `Item::state_desired`
+    ///     3. `Item::apply_check`
     ///
-    /// 3. For `ItemSpec`s that return `ApplyCheck::ExecRequired`, run
-    ///    `ItemSpec::apply_exec`.
+    /// 3. For `Item`s that return `ApplyCheck::ExecRequired`, run
+    ///    `Item::apply_exec`.
     ///
-    /// [`apply_exec`]: peace_cfg::ItemSpec::apply_exec
-    /// [`ItemSpec::apply_check`]: peace_cfg::ItemSpec::apply_check
-    /// [`ItemSpec::apply_exec`]: peace_cfg::ItemSpecRt::apply_exec
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`apply_exec`]: peace_cfg::Item::apply_exec
+    /// [`Item::apply_check`]: peace_cfg::Item::apply_check
+    /// [`Item::apply_exec`]: peace_cfg::ItemRt::apply_exec
+    /// [`Item`]: peace_cfg::Item
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
@@ -178,14 +178,14 @@ where
         Ok(cmd_outcome)
     }
 
-    /// Conditionally runs [`ApplyFns`]`::`[`exec`] for each [`ItemSpec`].
+    /// Conditionally runs [`ApplyFns`]`::`[`exec`] for each [`Item`].
     ///
     /// Same as [`Self::exec`], but does not change the type state, and returns
     /// [`States<StatesTsApply>`].
     ///
     /// [`exec`]: peace_cfg::ApplyFns::exec
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`ApplyFns`]: peace_cfg::ItemSpec::ApplyFns
+    /// [`Item`]: peace_cfg::Item
+    /// [`ApplyFns`]: peace_cfg::Item::ApplyFns
     async fn exec_internal<StatesTs>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
@@ -223,7 +223,7 @@ where
         let apply_for_internal = &apply_for_internal;
 
         // TODO: compare `StatesSaved` and `StatesCurrent` by delegating the equality
-        // check to `ItemSpecWrapper`.
+        // check to `ItemWrapper`.
 
         let SingleProfileSingleFlowView {
             #[cfg(feature = "output_progress")]
@@ -235,7 +235,7 @@ where
             resources,
             ..
         } = cmd_ctx.view();
-        let item_spec_graph = flow.graph();
+        let item_graph = flow.graph();
 
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_progress")] {
@@ -257,7 +257,7 @@ where
         // re-discovered.
         //
         // Notably, the initial `StatesSaved` / `StatesCurrent` may not contain a state
-        // for item specs whose state cannot be discovered, e.g. a file on a remote
+        // for items whose state cannot be discovered, e.g. a file on a remote
         // server, when the remote server doesn't exist.
         let mut states_applied_mut =
             StatesMut::<StatesTs>::from((*states_saved).clone().into_inner());
@@ -273,8 +273,8 @@ where
 
             match apply_for {
                 ApplyFor::Ensure => {
-                    let (Ok(()) | Err(())) = item_spec_graph
-                        .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item_spec| {
+                    let (Ok(()) | Err(())) = item_graph
+                        .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
                             Self::item_apply_exec(
                                 params_specs,
                                 resources_ref,
@@ -282,7 +282,7 @@ where
                                 #[cfg(feature = "output_progress")]
                                 progress_tx,
                                 outcomes_tx,
-                                item_spec,
+                                item,
                                 dry_run,
                             )
                         })
@@ -290,8 +290,8 @@ where
                         .map_err(|_vec_units: Vec<()>| ());
                 }
                 ApplyFor::Clean => {
-                    let (Ok(()) | Err(())) = item_spec_graph
-                        .try_for_each_concurrent_rev(BUFFERED_FUTURES_MAX, |item_spec| {
+                    let (Ok(()) | Err(())) = item_graph
+                        .try_for_each_concurrent_rev(BUFFERED_FUTURES_MAX, |item| {
                             Self::item_apply_exec(
                                 params_specs,
                                 resources_ref,
@@ -299,7 +299,7 @@ where
                                 #[cfg(feature = "output_progress")]
                                 progress_tx,
                                 outcomes_tx,
-                                item_spec,
+                                item,
                                 dry_run,
                             )
                         })
@@ -315,33 +315,33 @@ where
         let progress_render_task =
             crate::progress::Progress::progress_render(output, progress_trackers, progress_rx);
 
-        let mut errors = IndexMap::<ItemSpecId, E>::new();
+        let mut errors = IndexMap::<ItemId, E>::new();
         let outcomes_rx_task = async {
             while let Some(outcome) = outcomes_rx.recv().await {
                 match outcome {
                     ItemApplyOutcome::PrepareFail {
-                        item_spec_id,
+                        item_id,
                         item_apply_partial,
                         error,
                     } => {
-                        errors.insert(item_spec_id.clone(), error);
+                        errors.insert(item_id.clone(), error);
 
                         // Save `state_target` (which is state_desired) if we are not cleaning up.
                         match apply_for {
                             ApplyFor::Ensure => {
                                 if let Some(state_desired) = item_apply_partial.state_target() {
-                                    states_desired_mut.insert_raw(item_spec_id, state_desired);
+                                    states_desired_mut.insert_raw(item_id, state_desired);
                                 }
                             }
                             ApplyFor::Clean => {}
                         }
                     }
                     ItemApplyOutcome::Success {
-                        item_spec_id,
+                        item_id,
                         item_apply,
                     } => {
                         if let Some(state_applied) = item_apply.state_applied() {
-                            states_applied_mut.insert_raw(item_spec_id.clone(), state_applied);
+                            states_applied_mut.insert_raw(item_id.clone(), state_applied);
                         } else {
                             // Item was already in the desired state.
                             // No change to saved state.
@@ -351,26 +351,26 @@ where
                         match apply_for {
                             ApplyFor::Ensure => {
                                 let state_desired = item_apply.state_target();
-                                states_desired_mut.insert_raw(item_spec_id, state_desired);
+                                states_desired_mut.insert_raw(item_id, state_desired);
                             }
                             ApplyFor::Clean => {}
                         }
                     }
                     ItemApplyOutcome::Fail {
-                        item_spec_id,
+                        item_id,
                         item_apply,
                         error,
                     } => {
-                        errors.insert(item_spec_id.clone(), error);
+                        errors.insert(item_id.clone(), error);
                         if let Some(state_applied) = item_apply.state_applied() {
-                            states_applied_mut.insert_raw(item_spec_id.clone(), state_applied);
+                            states_applied_mut.insert_raw(item_id.clone(), state_applied);
                         }
 
                         // Save `state_target` (which is state_desired) if we are not cleaning up.
                         match apply_for {
                             ApplyFor::Ensure => {
                                 let state_desired = item_apply.state_target();
-                                states_desired_mut.insert_raw(item_spec_id, state_desired);
+                                states_desired_mut.insert_raw(item_id, state_desired);
                             }
                             ApplyFor::Clean => {}
                         }
@@ -394,11 +394,11 @@ where
         // i.e. is it part of `ApplyFns::exec`'s contract to return the state.
         //
         // * It may be duplication of code.
-        // * `FileDownloadItemSpec` needs to know the ETag from the last request, which:
+        // * `FileDownloadItem` needs to know the ETag from the last request, which:
         //     - in `StatesCurrentFn` comes from `StatesCurrent`
         //     - in `ApplyCmd` comes from `StatesTsApply`
-        // * `ShCmdItemSpec` doesn't return the state in the apply script, so in the
-        //   item spec we run the state current script after the apply exec script.
+        // * `ShCmdItem` doesn't return the state in the apply script, so in the item we
+        //   run the state current script after the apply exec script.
         let states_applied = states_applied_mut.into();
         let states_desired = states_desired_mut.into();
 
@@ -419,11 +419,11 @@ where
     /// async fn item_apply_exec<F, Fut>(
     ///     resources: &Resources<SetUp>,
     ///     outcomes_tx: &UnboundedSender<ItemApplyOutcome<E>>,
-    ///     item_spec: FnRef<'_, ItemSpecBoxed<E>>,
+    ///     item: FnRef<'_, ItemBoxed<E>>,
     ///     f: F,
     /// ) -> bool
     /// where
-    ///     F: (Fn(&dyn ItemSpecRt<E>, fn_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemApplyBoxed) -> Fut) + Copy,
+    ///     F: (Fn(&dyn ItemRt<E>, fn_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemApplyBoxed) -> Fut) + Copy,
     ///     Fut: Future<Output = Result<(), E>>,
     /// ```
     async fn item_apply_exec(
@@ -432,28 +432,27 @@ where
         apply_for_internal: &ApplyForInternal,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
         outcomes_tx: &UnboundedSender<ItemApplyOutcome<E>>,
-        item_spec: &ItemSpecBoxed<E>,
+        item: &ItemBoxed<E>,
         dry_run: bool,
     ) -> Result<(), ()> {
         let apply_fn = if dry_run {
-            ItemSpecRt::apply_exec_dry
+            ItemRt::apply_exec_dry
         } else {
-            ItemSpecRt::apply_exec
+            ItemRt::apply_exec
         };
 
-        let item_spec_id = item_spec.id();
+        let item_id = item.id();
         let fn_ctx = FnCtx::new(
-            item_spec_id,
+            item_id,
             #[cfg(feature = "output_progress")]
-            ProgressSender::new(item_spec_id, progress_tx),
+            ProgressSender::new(item_id, progress_tx),
         );
         let item_apply = match apply_for_internal {
             ApplyForInternal::Ensure => {
-                ItemSpecRt::ensure_prepare(&**item_spec, params_specs, resources, fn_ctx).await
+                ItemRt::ensure_prepare(&**item, params_specs, resources, fn_ctx).await
             }
             ApplyForInternal::Clean { states_current } => {
-                ItemSpecRt::clean_prepare(&**item_spec, states_current, params_specs, resources)
-                    .await
+                ItemRt::clean_prepare(&**item, states_current, params_specs, resources).await
             }
         };
 
@@ -466,7 +465,7 @@ where
                     ApplyCheck::ExecRequired { progress_limit } => {
                         // Update `OutputWrite`s with progress limit.
                         let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                            item_spec_id: item_spec_id.clone(),
+                            item_id: item_id.clone(),
                             progress_update: ProgressUpdate::Limit(progress_limit),
                             msg_update: ProgressMsgUpdate::Set(String::from("in progress")),
                         });
@@ -474,7 +473,7 @@ where
                     ApplyCheck::ExecNotRequired => {
                         #[cfg(feature = "output_progress")]
                         let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                            item_spec_id: item_spec_id.clone(),
+                            item_id: item_id.clone(),
                             progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
                             msg_update: ProgressMsgUpdate::Set(String::from("nothing to do!")),
                         });
@@ -484,7 +483,7 @@ where
                         // to disk.
                         outcomes_tx
                             .send(ItemApplyOutcome::Success {
-                                item_spec_id: item_spec.id().clone(),
+                                item_id: item.id().clone(),
                                 item_apply,
                             })
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
@@ -493,28 +492,20 @@ where
                         return Ok(());
                     }
                 }
-                match apply_fn(
-                    &**item_spec,
-                    params_specs,
-                    resources,
-                    fn_ctx,
-                    &mut item_apply,
-                )
-                .await
-                {
+                match apply_fn(&**item, params_specs, resources, fn_ctx, &mut item_apply).await {
                     Ok(()) => {
                         // apply succeeded
 
                         #[cfg(feature = "output_progress")]
                         let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                            item_spec_id: item_spec_id.clone(),
+                            item_id: item_id.clone(),
                             progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
                             msg_update: ProgressMsgUpdate::Set(String::from("done!")),
                         });
 
                         outcomes_tx
                             .send(ItemApplyOutcome::Success {
-                                item_spec_id: item_spec.id().clone(),
+                                item_id: item.id().clone(),
                                 item_apply,
                             })
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
@@ -526,7 +517,7 @@ where
 
                         #[cfg(feature = "output_progress")]
                         let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                            item_spec_id: item_spec_id.clone(),
+                            item_id: item_id.clone(),
                             progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
                             msg_update: ProgressMsgUpdate::Set(
                                 error
@@ -538,7 +529,7 @@ where
 
                         outcomes_tx
                             .send(ItemApplyOutcome::Fail {
-                                item_spec_id: item_spec.id().clone(),
+                                item_id: item.id().clone(),
                                 item_apply,
                                 error,
                             })
@@ -552,7 +543,7 @@ where
             Err((error, item_apply_partial)) => {
                 #[cfg(feature = "output_progress")]
                 let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                    item_spec_id: item_spec.id().clone(),
+                    item_id: item.id().clone(),
                     progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
                     msg_update: ProgressMsgUpdate::Set(
                         error
@@ -564,7 +555,7 @@ where
 
                 outcomes_tx
                     .send(ItemApplyOutcome::PrepareFail {
-                        item_spec_id: item_spec.id().clone(),
+                        item_id: item.id().clone(),
                         item_apply_partial,
                         error,
                     })
@@ -627,18 +618,18 @@ enum ItemApplyOutcome<E> {
     /// Error occurred when discovering current state, desired states, state
     /// diff, or `ApplyCheck`.
     PrepareFail {
-        item_spec_id: ItemSpecId,
+        item_id: ItemId,
         item_apply_partial: ItemApplyPartialBoxed,
         error: E,
     },
     /// Ensure execution succeeded.
     Success {
-        item_spec_id: ItemSpecId,
+        item_id: ItemId,
         item_apply: ItemApplyBoxed,
     },
     /// Ensure execution failed.
     Fail {
-        item_spec_id: ItemSpecId,
+        item_id: ItemId,
         item_apply: ItemApplyBoxed,
         error: E,
     },

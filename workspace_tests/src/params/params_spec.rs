@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{item_spec_id, ItemSpecId},
+    cfg::{item_id, ItemId},
     params::{
         AnySpecRt, FieldWiseSpecRt, Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode,
         ValueSpec,
@@ -7,7 +7,7 @@ use peace::{
     resources::{resources::ts::SetUp, Resources},
 };
 
-use crate::vec_copy_item_spec::{VecA, VecAFieldWise};
+use crate::vec_copy_item::{VecA, VecAFieldWise};
 
 #[test]
 fn serialize_stored() -> Result<(), serde_yaml::Error> {
@@ -195,7 +195,7 @@ fn deserialize_field_wise_value() -> Result<(), Box<dyn std::error::Error>> {
     let resources = Resources::<SetUp>::from(Resources::new());
     let mut value_resolution_ctx = ValueResolutionCtx::new(
         ValueResolutionMode::ApplyDry,
-        item_spec_id!("deserialize_field_wise"),
+        item_id!("deserialize_field_wise"),
         tynm::type_name::<VecA>(),
     );
 

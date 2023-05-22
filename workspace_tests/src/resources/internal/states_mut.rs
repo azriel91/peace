@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{item_spec_id, ItemSpecId},
+    cfg::{item_id, ItemId},
     resources::{internal::StatesMut, states::ts::Current, type_reg::untagged::TypeMap},
 };
 
@@ -23,7 +23,7 @@ fn deref_and_deref_mut() {
     let mut states = StatesMut::<Current>::new();
 
     // deref_mut
-    states.insert(item_spec_id!("key"), 123);
+    states.insert(item_id!("key"), 123);
 
     // deref
     assert_eq!(1, states.len())
@@ -41,15 +41,15 @@ fn debug() {
     let debug_str = format!("{states:?}");
     assert!(
         debug_str
-            == r#"StatesMut({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData<peace_resources::states::ts::Current>)"#
+            == r#"StatesMut({ItemId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData<peace_resources::states::ts::Current>)"#
             || debug_str
-                == r#"StatesMut({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData)"#
+                == r#"StatesMut({ItemId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData)"#
     );
 }
 
 fn test_states() -> StatesMut<Current> {
     let mut states = StatesMut::<Current>::new();
-    states.insert(item_spec_id!("key"), 123);
+    states.insert(item_id!("key"), 123);
 
     states
 }

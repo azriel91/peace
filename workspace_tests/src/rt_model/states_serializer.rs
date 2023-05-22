@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{flow_id, item_spec_id, FlowId, ItemSpecId},
+    cfg::{flow_id, item_id, FlowId, ItemId},
     resources::{
         internal::StatesMut, paths::StatesSavedFile, states::StatesSaved,
         type_reg::untagged::TypeReg,
@@ -16,7 +16,7 @@ async fn serialize() -> Result<(), Box<dyn std::error::Error>> {
 
     let states = {
         let mut states = StatesMut::new();
-        states.insert(item_spec_id!("a"), 123u32);
+        states.insert(item_id!("a"), 123u32);
         StatesSaved::from(states)
     };
     StatesSerializer::<Error>::serialize(&storage, &states, &states_saved_file).await?;
@@ -32,14 +32,14 @@ async fn deserialize_saved() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let flow_id = flow_id!("test_flow");
     let storage = Storage;
-    let item_spec_id = item_spec_id!("a");
+    let item_id = item_id!("a");
     let mut states_type_reg = TypeReg::new_typed();
-    states_type_reg.register::<u32>(item_spec_id.clone());
+    states_type_reg.register::<u32>(item_id.clone());
     let states_saved_file = StatesSavedFile::new(tempdir.path().join("states_saved.yaml"));
 
     let states = {
         let mut states = StatesMut::new();
-        states.insert(item_spec_id.clone(), 123u32);
+        states.insert(item_id.clone(), 123u32);
         StatesSaved::from(states)
     };
     StatesSerializer::<Error>::serialize(&storage, &states, &states_saved_file).await?;
@@ -54,7 +54,7 @@ async fn deserialize_saved() -> Result<(), Box<dyn std::error::Error>> {
 
     assert_eq!(
         Some(123),
-        states_deserialized.get::<u32, _>(&item_spec_id).copied()
+        states_deserialized.get::<u32, _>(&item_id).copied()
     );
 
     Ok(())
@@ -65,9 +65,9 @@ async fn deserialize_saved_error_maps_byte_indices() -> Result<(), Box<dyn std::
     let tempdir = tempfile::tempdir()?;
     let flow_id = flow_id!("test_flow");
     let storage = Storage;
-    let item_spec_id = item_spec_id!("a");
+    let item_id = item_id!("a");
     let mut states_type_reg = TypeReg::new_typed();
-    states_type_reg.register::<u32>(item_spec_id.clone());
+    states_type_reg.register::<u32>(item_id.clone());
     let states_saved_file = StatesSavedFile::new(tempdir.path().join("states_saved.yaml"));
 
     let contents = "a: [123]\n";

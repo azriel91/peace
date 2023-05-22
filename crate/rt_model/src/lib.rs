@@ -21,11 +21,10 @@ pub use peace_rt_model_native::*;
 pub use peace_rt_model_web::*;
 
 pub use crate::{
-    flow::Flow, in_memory_text_output::InMemoryTextOutput, item_spec_boxed::ItemSpecBoxed,
-    item_spec_graph::ItemSpecGraph, item_spec_graph_builder::ItemSpecGraphBuilder,
-    item_spec_params_serializer::ItemSpecParamsSerializer,
-    item_spec_params_type_reg::ItemSpecParamsTypeReg, item_spec_rt::ItemSpecRt,
-    item_spec_wrapper::ItemSpecWrapper, params_specs_serializer::ParamsSpecsSerializer,
+    flow::Flow, in_memory_text_output::InMemoryTextOutput, item_boxed::ItemBoxed,
+    item_graph::ItemGraph, item_graph_builder::ItemGraphBuilder,
+    item_params_serializer::ItemParamsSerializer, item_params_type_reg::ItemParamsTypeReg,
+    item_rt::ItemRt, item_wrapper::ItemWrapper, params_specs_serializer::ParamsSpecsSerializer,
     params_specs_type_reg::ParamsSpecsTypeReg, states_serializer::StatesSerializer,
     states_type_reg::StatesTypeReg,
 };
@@ -34,13 +33,13 @@ pub mod outcomes;
 
 mod flow;
 mod in_memory_text_output;
-mod item_spec_boxed;
-mod item_spec_graph;
-mod item_spec_graph_builder;
-mod item_spec_params_serializer;
-mod item_spec_params_type_reg;
-mod item_spec_rt;
-mod item_spec_wrapper;
+mod item_boxed;
+mod item_graph;
+mod item_graph_builder;
+mod item_params_serializer;
+mod item_params_type_reg;
+mod item_rt;
+mod item_wrapper;
 mod params_specs_serializer;
 mod params_specs_type_reg;
 mod states_serializer;

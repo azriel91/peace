@@ -49,20 +49,20 @@ pub fn app_name(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     ensure_valid_id(input, "AppName", Some(crate_name))
 }
 
-/// Returns a `const ItemSpecId` validated at compile time.
+/// Returns a `const ItemId` validated at compile time.
 ///
 /// # Examples
 ///
-/// Instantiate a valid `ItemSpecId` at compile time:
+/// Instantiate a valid `ItemId` at compile time:
 ///
 /// ```rust
-/// # use peace_static_check_macros::item_spec_id;
-/// // use peace::cfg::{item_spec_id, ItemSpecId};
+/// # use peace_static_check_macros::item_id;
+/// // use peace::cfg::{item_id, ItemId};
 ///
-/// let _my_item_spec_id: ItemSpecId = item_spec_id!("valid_id"); // Ok!
+/// let _my_item_id: ItemId = item_id!("valid_id"); // Ok!
 ///
-/// # struct ItemSpecId(&'static str);
-/// # impl ItemSpecId {
+/// # struct ItemId(&'static str);
+/// # impl ItemId {
 /// #     fn new_unchecked(s: &'static str) -> Self { Self(s) }
 /// # }
 /// ```
@@ -70,22 +70,22 @@ pub fn app_name(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// If the ID is invalid, a compilation error is produced:
 ///
 /// ```rust,compile_fail
-/// # use peace_static_check_macros::item_spec_id;
-/// // use peace::cfg::{item_spec_id, ItemSpecId};
+/// # use peace_static_check_macros::item_id;
+/// // use peace::cfg::{item_id, ItemId};
 ///
-/// let _my_item_spec_id: ItemSpecId = item_spec_id!("-invalid_id"); // Compile error
+/// let _my_item_id: ItemId = item_id!("-invalid_id"); // Compile error
 /// //                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-/// // error: "-invalid_id" is not a valid `ItemSpecId`.
-/// //        `ItemSpecId`s must begin with a letter or underscore, and contain only letters, numbers, or underscores.
+/// // error: "-invalid_id" is not a valid `ItemId`.
+/// //        `ItemId`s must begin with a letter or underscore, and contain only letters, numbers, or underscores.
 /// #
-/// # struct ItemSpecId(&'static str);
-/// # impl ItemSpecId {
+/// # struct ItemId(&'static str);
+/// # impl ItemId {
 /// #     fn new_unchecked(s: &'static str) -> Self { Self(s) }
 /// # }
 /// ```
 #[proc_macro]
-pub fn item_spec_id(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    ensure_valid_id(input, "ItemSpecId", None)
+pub fn item_id(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    ensure_valid_id(input, "ItemId", None)
 }
 
 /// Returns a `const Profile` validated at compile time.

@@ -10,7 +10,7 @@ pub mod ts;
 
 use std::{marker::PhantomData, ops::Deref};
 
-use peace_core::ItemSpecId;
+use peace_core::ItemId;
 use peace_fmt::{Presentable, Presenter};
 use serde::Serialize;
 use type_reg::untagged::{BoxDtDisplay, TypeMap};
@@ -26,10 +26,10 @@ mod states_ensured;
 mod states_ensured_dry;
 mod states_saved;
 
-/// Current `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId>` newtype.
+/// Current `State`s for all `Item`s. `TypeMap<ItemId>` newtype.
 ///
-/// Conceptually you can think of this as a `Map<ItemSpecId,
-/// ItemSpec::State<..>>`.
+/// Conceptually you can think of this as a `Map<ItemId,
+/// Item::State<..>>`.
 ///
 /// # Type Parameters
 ///
@@ -37,7 +37,7 @@ mod states_saved;
 #[derive(Debug, Serialize)]
 #[serde(transparent)] // Needed to serialize as a map instead of a list.
 pub struct States<TS>(
-    pub(crate) TypeMap<ItemSpecId, BoxDtDisplay>,
+    pub(crate) TypeMap<ItemId, BoxDtDisplay>,
     pub(crate) PhantomData<TS>,
 );
 
@@ -56,7 +56,7 @@ impl<TS> States<TS> {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<ItemSpecId, BoxDtDisplay> {
+    pub fn into_inner(self) -> TypeMap<ItemId, BoxDtDisplay> {
         self.0
     }
 }
@@ -67,7 +67,7 @@ impl<TS> Clone for States<TS> {
         clone.0.extend(
             self.0
                 .iter()
-                .map(|(item_spec_id, state)| (item_spec_id.clone(), state.clone())),
+                .map(|(item_id, state)| (item_id.clone(), state.clone())),
         );
 
         clone
@@ -81,15 +81,15 @@ impl<TS> Default for States<TS> {
 }
 
 impl<TS> Deref for States<TS> {
-    type Target = TypeMap<ItemSpecId, BoxDtDisplay>;
+    type Target = TypeMap<ItemId, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<TS> From<TypeMap<ItemSpecId, BoxDtDisplay>> for States<TS> {
-    fn from(type_map: TypeMap<ItemSpecId, BoxDtDisplay>) -> Self {
+impl<TS> From<TypeMap<ItemId, BoxDtDisplay>> for States<TS> {
+    fn from(type_map: TypeMap<ItemId, BoxDtDisplay>) -> Self {
         Self(type_map, PhantomData)
     }
 }
@@ -107,8 +107,8 @@ impl<TS> Presentable for States<TS> {
         PR: Presenter<'output>,
     {
         presenter
-            .list_numbered_with(self.iter(), |(item_spec_id, state)| {
-                (item_spec_id, format!(": {state}"))
+            .list_numbered_with(self.iter(), |(item_id, state)| {
+                (item_id, format!(": {state}"))
             })
             .await
     }

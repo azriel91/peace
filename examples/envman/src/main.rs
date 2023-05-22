@@ -32,7 +32,7 @@ pub fn main() -> peace::miette::Result<(), peace::miette::Report> {
     // This is fixed by <https://github.com/zkat/miette/pull/170>.
 
     run().map_err(|envman_error| match envman_error {
-        EnvManError::PeaceItemSpecFileDownload(err) => peace::miette::Report::from(err),
+        EnvManError::PeaceItemFileDownload(err) => peace::miette::Report::from(err),
         EnvManError::PeaceRtError(err) => peace::miette::Report::from(err),
         other => peace::miette::Report::from(other),
     })

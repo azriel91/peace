@@ -39,8 +39,8 @@ use crate::cmd::{scope_struct::ScopeStruct, type_parameters_impl};
 ///     pub(crate) profile_params_selection: ProfileParamsSelection,
 ///     /// Flow parameters.
 ///     pub(crate) flow_params_selection: FlowParamsSelection,
-///     /// Map of item spec ID to its parameters. `TypeMap<ItemSpecId, BoxDt>` newtype.
-///     pub(crate) item_spec_params: peace_rt_model::ItemSpecParams,
+///     /// Map of item ID to its parameters. `TypeMap<ItemId, AnySpecRtBoxed>` newtype.
+///     pub(crate) item_params: peace_rt_model::ItemParams,
 ///     /// Marker.
 ///     pub(crate) marker: std::marker::PhantomData<E>,
 /// }
@@ -163,7 +163,7 @@ mod fields {
     pub fn params_specs_push(fields_named: &mut FieldsNamed, scope: Scope) {
         if scope == Scope::SingleProfileSingleFlow {
             let fields_marker: FieldsNamed = parse_quote!({
-                /// Map of item spec ID to its parameters. `TypeMap<ItemSpecId, BoxDt>` newtype.
+                /// Map of item ID to its parameters. `TypeMap<ItemId, AnySpecRtBoxed>` newtype.
                 pub(crate) params_specs_provided: peace_params::ParamsSpecs
             });
             fields_named.named.extend(fields_marker.named);

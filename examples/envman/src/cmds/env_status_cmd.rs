@@ -35,17 +35,14 @@ impl EnvStatusCmd {
                     let states_saved_presentables = flow
                         .graph()
                         .iter_insertion()
-                        .map(|item_spec| {
-                            let item_spec_id = item_spec.id();
+                        .map(|item| {
+                            let item_id = item.id();
                             // Hack: for alignment
-                            let padding = " ".repeat(
-                                18usize.saturating_sub(format!("{item_spec_id}").len() + 2),
-                            );
-                            match states_saved_raw_map.get(item_spec_id) {
-                                Some(state_saved) => {
-                                    (item_spec_id, format!("{padding}: {state_saved}"))
-                                }
-                                None => (item_spec_id, format!("{padding}: <unknown>")),
+                            let padding =
+                                " ".repeat(18usize.saturating_sub(format!("{item_id}").len() + 2));
+                            match states_saved_raw_map.get(item_id) {
+                                Some(state_saved) => (item_id, format!("{padding}: {state_saved}")),
+                                None => (item_id, format!("{padding}: <unknown>")),
                             }
                         })
                         .collect::<Vec<_>>();

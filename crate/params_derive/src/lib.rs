@@ -362,7 +362,7 @@ fn t_partial(
         &[
             parse_quote! {
                 #[doc="\
-                    Item spec parameters that may not necessarily have values.\n\
+                    Item parameters that may not necessarily have values.\n\
                     \n\
                     This is used for `try_state_current` and `try_state_desired` where values \n\
                     could be referenced from predecessors, which may not yet be available, such \n\
@@ -414,7 +414,7 @@ fn t_partial_external(
         &[
             parse_quote! {
                 #[doc="\
-                    Item spec parameters that may not necessarily have values.\n\
+                    Item parameters that may not necessarily have values.\n\
                     \n\
                     This is used for `try_state_current` and `try_state_desired` where values \n\
                     could be referenced from predecessors, which may not yet be available, such \n\
@@ -452,7 +452,7 @@ fn t_field_wise(
         |fields| fields_to_value_spec(fields, peace_params_path),
         &[
             parse_quote! {
-                #[doc="Specification of how to look up values for an item spec's parameters."]
+                #[doc="Specification of how to look up values for an item's parameters."]
             },
             // `Clone` and `Debug` are implemented manually, so that type parameters do not receive
             // the `Clone` and `Debug` bounds.
@@ -522,7 +522,7 @@ fn t_field_wise_external(
         t_field_wise_name,
         &[
             parse_quote! {
-                #[doc="Specification of how to look up values for an item spec's parameters."]
+                #[doc="Specification of how to look up values for an item's parameters."]
             },
             parse_quote!(#[derive(serde::Serialize, serde::Deserialize)]),
         ],

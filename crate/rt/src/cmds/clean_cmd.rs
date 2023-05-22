@@ -21,38 +21,38 @@ where
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
-    /// Conditionally runs [`ItemSpec::apply_exec_dry`] for each
-    /// [`ItemSpec`].
+    /// Conditionally runs [`Item::apply_exec_dry`] for each
+    /// [`Item`].
     ///
-    /// In practice this runs [`ItemSpec::apply_check`], and only runs
+    /// In practice this runs [`Item::apply_check`], and only runs
     /// [`apply_exec_dry`] if execution is required.
     ///
     /// # Design
     ///
-    /// The grouping of item spec functions run for a `Clean` execution to work
+    /// The grouping of item functions run for a `Clean` execution to work
     /// is as follows:
     ///
-    /// 1. Run [`StatesDiscoverCmd::current`] for all `ItemSpec`s in the
+    /// 1. Run [`StatesDiscoverCmd::current`] for all `Item`s in the
     ///   *forward* direction.
     ///
     ///     This populates `resources` with `Current<IS::State>`, needed for
-    ///     `ItemSpec::try_state_current` during `ItemSpecRt::clean_prepare`.
+    ///     `Item::try_state_current` during `ItemRt::clean_prepare`.
     ///
-    /// 2. In the *reverse* direction, for each `ItemSpec` run
-    ///    `ItemSpecRt::clean_prepare`, which runs:
+    /// 2. In the *reverse* direction, for each `Item` run
+    ///    `ItemRt::clean_prepare`, which runs:
     ///
-    ///     1. `ItemSpec::try_state_current`, which resolves parameters from
+    ///     1. `Item::try_state_current`, which resolves parameters from
     ///        the *current* state.
-    ///     2. `ItemSpec::state_desired`
-    ///     3. `ItemSpec::apply_check`
+    ///     2. `Item::state_desired`
+    ///     3. `Item::apply_check`
     ///
-    /// 3. For `ItemSpec`s that return `ApplyCheck::ExecRequired`, run
-    ///    `ItemSpec::apply_exec_dry`.
+    /// 3. For `Item`s that return `ApplyCheck::ExecRequired`, run
+    ///    `Item::apply_exec_dry`.
     ///
-    /// [`apply_exec_dry`]: peace_cfg::ItemSpec::apply_exec_dry
-    /// [`ItemSpec::apply_check`]: peace_cfg::ItemSpec::apply_check
-    /// [`ItemSpec::apply_exec_dry`]: peace_cfg::ItemSpecRt::apply_exec_dry
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`apply_exec_dry`]: peace_cfg::Item::apply_exec_dry
+    /// [`Item::apply_check`]: peace_cfg::Item::apply_check
+    /// [`Item::apply_exec_dry`]: peace_cfg::ItemRt::apply_exec_dry
+    /// [`Item`]: peace_cfg::Item
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,
@@ -65,38 +65,38 @@ where
         .await
     }
 
-    /// Conditionally runs [`ItemSpec::apply_exec`] for each
-    /// [`ItemSpec`].
+    /// Conditionally runs [`Item::apply_exec`] for each
+    /// [`Item`].
     ///
-    /// In practice this runs [`ItemSpec::apply_check`], and only runs
+    /// In practice this runs [`Item::apply_check`], and only runs
     /// [`apply_exec`] if execution is required.
     ///
     /// # Design
     ///
-    /// The grouping of item spec functions run for a `Clean` execution to work
+    /// The grouping of item functions run for a `Clean` execution to work
     /// is as follows:
     ///
-    /// 1. Run [`StatesDiscoverCmd::current`] for all `ItemSpec`s in the
-    ///   *forward* direction.
+    /// 1. Run [`StatesDiscoverCmd::current`] for all `Item`s in the *forward*
+    ///    direction.
     ///
     ///     This populates `resources` with `Current<IS::State>`, needed for
-    ///     `ItemSpec::try_state_current` during `ItemSpecRt::clean_prepare`.
+    ///     `Item::try_state_current` during `ItemRt::clean_prepare`.
     ///
-    /// 2. In the *reverse* direction, for each `ItemSpec` run
-    ///    `ItemSpecRt::clean_prepare`, which runs:
+    /// 2. In the *reverse* direction, for each `Item` run
+    ///    `ItemRt::clean_prepare`, which runs:
     ///
-    ///     1. `ItemSpec::try_state_current`, which resolves parameters from
+    ///     1. `Item::try_state_current`, which resolves parameters from
     ///        the *current* state.
-    ///     2. `ItemSpec::state_desired`
-    ///     3. `ItemSpec::apply_check`
+    ///     2. `Item::state_desired`
+    ///     3. `Item::apply_check`
     ///
-    /// 3. For `ItemSpec`s that return `ApplyCheck::ExecRequired`, run
-    ///    `ItemSpec::apply_exec`.
+    /// 3. For `Item`s that return `ApplyCheck::ExecRequired`, run
+    ///    `Item::apply_exec`.
     ///
-    /// [`apply_exec`]: peace_cfg::ItemSpec::apply_exec
-    /// [`ItemSpec::apply_check`]: peace_cfg::ItemSpec::apply_check
-    /// [`ItemSpec::apply_exec`]: peace_cfg::ItemSpecRt::apply_exec
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
+    /// [`apply_exec`]: peace_cfg::Item::apply_exec
+    /// [`Item::apply_check`]: peace_cfg::Item::apply_check
+    /// [`Item::apply_exec`]: peace_cfg::ItemRt::apply_exec
+    /// [`Item`]: peace_cfg::Item
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         states_saved: &StatesSaved,

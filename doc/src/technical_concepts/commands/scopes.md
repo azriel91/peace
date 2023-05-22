@@ -48,9 +48,9 @@ path/to/repo/.peace/envman
 See each page for details of each scope:
 
 * **[No Profile No Flow]\:** Commands that only work with workspace parameters.
-* **[Single Profile No Flow]\:** Commands that work with a single profile, without any item specs.
+* **[Single Profile No Flow]\:** Commands that work with a single profile, without any items.
 * **[Single Profile Single Flow]\:** Commands that work with one profile and one flow.
-* **[Multi Profile No Flow]\:** Commands that work with multiple profiles, without any item specs.
+* **[Multi Profile No Flow]\:** Commands that work with multiple profiles, without any items.
 * **[Multi Profile Single Flow]\:** Commands that work with multiple profiles, and a single flow.
 
 [No Profile No Flow]: scopes/no_profile_no_flow.md

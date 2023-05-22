@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{app_name, item_spec_id, AppName, ItemSpecId, Profile},
+    cfg::{app_name, item_id, AppName, ItemId, Profile},
     cmd::{
         ctx::CmdCtx,
         scopes::{MultiProfileNoFlowView, SingleProfileSingleFlowView},
@@ -8,16 +8,16 @@ use peace::{
     rt::cmds::StatesDiscoverCmd,
     rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
 };
-use peace_item_specs::{file_download::FileDownloadItemSpec, tar_x::TarXItemSpec};
+use peace_items::{file_download::FileDownloadItem, tar_x::TarXItem};
 use semver::Version;
 use url::Url;
 
 use crate::{
     flows::{EnvDeployFlow, EnvDeployFlowParamsSpecs},
-    item_specs::{
-        peace_aws_iam_policy::IamPolicyItemSpec, peace_aws_iam_role::IamRoleItemSpec,
-        peace_aws_instance_profile::InstanceProfileItemSpec, peace_aws_s3_bucket::S3BucketItemSpec,
-        peace_aws_s3_object::S3ObjectItemSpec,
+    items::{
+        peace_aws_iam_policy::IamPolicyItem, peace_aws_iam_role::IamRoleItem,
+        peace_aws_instance_profile::InstanceProfileItem, peace_aws_s3_bucket::S3BucketItem,
+        peace_aws_s3_object::S3ObjectItem,
     },
     model::{EnvManError, EnvType, ProfileParamsKey, RepoSlug, WebAppFileId, WorkspaceParamsKey},
 };
@@ -116,32 +116,32 @@ impl ProfileInitCmd {
             cmd_ctx_builder
                 .with_profile_from_workspace_param(&profile_key)
                 .with_flow(&flow)
-                .with_item_spec_params::<FileDownloadItemSpec<WebAppFileId>>(
-                    item_spec_id!("app_download"),
+                .with_item_params::<FileDownloadItem<WebAppFileId>>(
+                    item_id!("app_download"),
                     app_download_params_spec,
                 )
-                .with_item_spec_params::<TarXItemSpec<WebAppFileId>>(
-                    item_spec_id!("app_extract"),
+                .with_item_params::<TarXItem<WebAppFileId>>(
+                    item_id!("app_extract"),
                     app_extract_params_spec,
                 )
-                .with_item_spec_params::<IamPolicyItemSpec<WebAppFileId>>(
-                    item_spec_id!("iam_policy"),
+                .with_item_params::<IamPolicyItem<WebAppFileId>>(
+                    item_id!("iam_policy"),
                     iam_policy_params_spec,
                 )
-                .with_item_spec_params::<IamRoleItemSpec<WebAppFileId>>(
-                    item_spec_id!("iam_role"),
+                .with_item_params::<IamRoleItem<WebAppFileId>>(
+                    item_id!("iam_role"),
                     iam_role_params_spec,
                 )
-                .with_item_spec_params::<InstanceProfileItemSpec<WebAppFileId>>(
-                    item_spec_id!("instance_profile"),
+                .with_item_params::<InstanceProfileItem<WebAppFileId>>(
+                    item_id!("instance_profile"),
                     instance_profile_params_spec,
                 )
-                .with_item_spec_params::<S3BucketItemSpec<WebAppFileId>>(
-                    item_spec_id!("s3_bucket"),
+                .with_item_params::<S3BucketItem<WebAppFileId>>(
+                    item_id!("s3_bucket"),
                     s3_bucket_params_spec,
                 )
-                .with_item_spec_params::<S3ObjectItemSpec<WebAppFileId>>(
-                    item_spec_id!("s3_object"),
+                .with_item_params::<S3ObjectItem<WebAppFileId>>(
+                    item_id!("s3_object"),
                     s3_object_params_spec,
                 )
                 .await?
@@ -162,8 +162,7 @@ impl ProfileInitCmd {
                 ]
             );
         } else {
-            crate::output::item_spec_errors_present(output, &states_discover_outcome.errors)
-                .await?;
+            crate::output::item_errors_present(output, &states_discover_outcome.errors).await?;
         }
 
         Ok(())

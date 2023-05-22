@@ -7,11 +7,11 @@
 pub use resman::*;
 pub use type_reg;
 
-pub use crate::{item_spec_rt_id::ItemSpecRtId, resources::Resources};
+pub use crate::{item_rt_id::ItemRtId, resources::Resources};
 
 pub mod internal;
 pub mod paths;
 pub mod resources;
 pub mod states;
 
-mod item_spec_rt_id;
+mod item_rt_id;

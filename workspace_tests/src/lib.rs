@@ -7,9 +7,8 @@ pub(crate) use crate::{
     fn_tracker_presenter::FnTrackerPresenter,
     no_op_output::NoOpOutput,
     peace_test_error::PeaceTestError,
-    vec_copy_item_spec::{
-        VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec, VecCopyItemSpecWrapper,
-        VecCopyState,
+    vec_copy_item::{
+        VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItem, VecCopyItemWrapper, VecCopyState,
     },
 };
 
@@ -24,9 +23,9 @@ mod resources;
 mod rt;
 mod rt_model;
 
-// `peace_item_specs` test modules
-#[cfg(feature = "item_specs")]
-mod item_specs;
+// `peace_items` test modules
+#[cfg(feature = "items")]
+mod items;
 
 // `workspace_tests` support code
 mod fn_invocation;
@@ -35,4 +34,4 @@ mod fn_tracker_output;
 mod fn_tracker_presenter;
 mod no_op_output;
 mod peace_test_error;
-mod vec_copy_item_spec;
+mod vec_copy_item;

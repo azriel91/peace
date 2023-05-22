@@ -1,0 +1,38 @@
+[package]
+name = "peace_item_file_download"
+version = "0.0.9"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+edition = "2021"
+description = "Manages downloading a file for the peace framework"
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_item_file_download/"
+readme = "../../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+bytes = "1.4.0"
+cfg-if = { workspace = true }
+futures = "0.3.28"
+miette = { workspace = true, optional = true }
+peace = { path = "../..", version = "0.0.9", default-features = false }
+reqwest = { version = "0.11.16", features = ["stream"] }
+serde = { version = "1.0.159", features = ["derive"] }
+thiserror = "1.0.40"
+url = { version = "2.3.1", features = ["serde"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tokio = { workspace = true, features = ["net", "time", "rt"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+tokio = { workspace = true }
+
+[features]
+default = []
+error_reporting = ["peace/error_reporting"]
+output_progress = ["peace/output_progress"]

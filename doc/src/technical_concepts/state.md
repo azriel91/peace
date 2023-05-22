@@ -62,6 +62,6 @@ For example, running a compilation command only if the compilation artifact does
 
 ---
 
-The remaining pages in this section explain how to define the logical and physical state types when implementing an item spec.
+The remaining pages in this section explain how to define the logical and physical state types when implementing an item.
 
 [`State`]: https://docs.rs/peace_cfg/latest/peace_cfg/state/struct.State.html

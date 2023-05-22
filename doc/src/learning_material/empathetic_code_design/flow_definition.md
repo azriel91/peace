@@ -61,9 +61,9 @@ let flow = {
         .with_flow_id(flow_id!("app_deploy"));
 
     let [a, b, c] = flow_builder.add_items([
-        FileDownloadItemSpec::<WebApp>::new(item_spec_id!("a")).into(),
-        ServerInstanceItemSpec::<WebApp>::new(item_spec_id!("b")).into(),
-        FileUploadItemSpec::<WebApp>::new(item_spec_id!("c")).into(),
+        FileDownloadItem::<WebApp>::new(item_id!("a")).into(),
+        ServerInstanceItem::<WebApp>::new(item_id!("b")).into(),
+        FileUploadItem::<WebApp>::new(item_id!("c")).into(),
     ]);
 
     flow_builder.add_edges([
@@ -74,11 +74,11 @@ let flow = {
     flow_builder.build()
 };
 # let flow = {
-#     let mut graph_builder = ItemSpecGraphBuilder::new();
+#     let mut graph_builder = ItemGraphBuilder::new();
 #     let [a, b, c] = graph_builder.add_fns([
-#         FileDownloadItemSpec::<WebApp>::new(item_spec_id!("a")).into(),
-#         ServerInstanceItemSpec::<WebApp>::new(item_spec_id!("b")).into(),
-#         FileUploadItemSpec::<WebApp>::new(item_spec_id!("c")).into(),
+#         FileDownloadItem::<WebApp>::new(item_id!("a")).into(),
+#         ServerInstanceItem::<WebApp>::new(item_id!("b")).into(),
+#         FileUploadItem::<WebApp>::new(item_id!("c")).into(),
 #     ]);
 #
 #     graph_builder.add_edges([

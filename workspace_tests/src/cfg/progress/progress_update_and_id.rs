@@ -1,16 +1,16 @@
 use peace::cfg::{
-    item_spec_id,
+    item_id,
     progress::{
         ProgressComplete, ProgressDelta, ProgressLimit, ProgressMsgUpdate, ProgressUpdate,
         ProgressUpdateAndId,
     },
-    ItemSpecId,
+    ItemId,
 };
 
 #[test]
 fn clone() {
     let progress_update_and_id_0 = ProgressUpdateAndId {
-        item_spec_id: item_spec_id!("test_item_spec_id"),
+        item_id: item_id!("test_item_id"),
         progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
         msg_update: ProgressMsgUpdate::NoChange,
     };
@@ -24,12 +24,12 @@ fn clone() {
 fn deserialize() {
     assert_eq!(
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(3)),
             msg_update: ProgressMsgUpdate::NoChange,
         },
         serde_yaml::from_str(
-            r#"item_spec_id: test_item_spec_id
+            r#"item_id: test_item_id
 progress_update: !Delta
   Inc: 3
 msg_update: NoChange
@@ -42,13 +42,13 @@ msg_update: NoChange
 #[test]
 fn serialize() {
     assert_eq!(
-        r#"item_spec_id: test_item_spec_id
+        r#"item_id: test_item_id
 progress_update: !Delta
   Inc: 3
 msg_update: NoChange
 "#,
         serde_yaml::to_string(&ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(3)),
             msg_update: ProgressMsgUpdate::NoChange,
         })
@@ -61,12 +61,12 @@ msg_update: NoChange
 fn deserialize_json() {
     assert_eq!(
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(3)),
             msg_update: ProgressMsgUpdate::NoChange,
         },
         serde_json::from_str(
-            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":3}},"msg_update":"NoChange"}"#
+            r#"{"item_id":"test_item_id","progress_update":{"Delta":{"Inc":3}},"msg_update":"NoChange"}"#
         )
         .unwrap()
     )
@@ -76,9 +76,9 @@ fn deserialize_json() {
 #[cfg(feature = "output_json")]
 fn serialize_json() {
     assert_eq!(
-        r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":3}},"msg_update":"NoChange"}"#,
+        r#"{"item_id":"test_item_id","progress_update":{"Delta":{"Inc":3}},"msg_update":"NoChange"}"#,
         serde_json::to_string(&ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(3)),
             msg_update: ProgressMsgUpdate::NoChange,
         })
@@ -90,36 +90,36 @@ fn serialize_json() {
 fn eq() {
     assert_eq!(
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(3)),
             msg_update: ProgressMsgUpdate::NoChange,
         },
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(3)),
             msg_update: ProgressMsgUpdate::NoChange,
         }
     );
     assert_eq!(
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(3)),
             msg_update: ProgressMsgUpdate::NoChange,
         },
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(3)),
             msg_update: ProgressMsgUpdate::NoChange,
         }
     );
     assert_eq!(
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
             msg_update: ProgressMsgUpdate::NoChange,
         },
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
             msg_update: ProgressMsgUpdate::NoChange,
         }
@@ -130,36 +130,36 @@ fn eq() {
 fn ne() {
     assert_ne!(
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(3)),
             msg_update: ProgressMsgUpdate::NoChange,
         },
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(4)),
             msg_update: ProgressMsgUpdate::Clear,
         }
     );
     assert_ne!(
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(3)),
             msg_update: ProgressMsgUpdate::NoChange,
         },
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(4)),
             msg_update: ProgressMsgUpdate::Clear,
         }
     );
     assert_ne!(
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
             msg_update: ProgressMsgUpdate::NoChange,
         },
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Complete(ProgressComplete::Fail),
             msg_update: ProgressMsgUpdate::Clear,
         }
@@ -169,33 +169,33 @@ fn ne() {
 #[test]
 fn debug() {
     assert_eq!(
-        r#"ProgressUpdateAndId { item_spec_id: ItemSpecId("test_item_spec_id"), progress_update: Limit(Steps(3)), msg_update: NoChange }"#,
+        r#"ProgressUpdateAndId { item_id: ItemId("test_item_id"), progress_update: Limit(Steps(3)), msg_update: NoChange }"#,
         format!(
             "{:?}",
             ProgressUpdateAndId {
-                item_spec_id: item_spec_id!("test_item_spec_id"),
+                item_id: item_id!("test_item_id"),
                 progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(3)),
                 msg_update: ProgressMsgUpdate::NoChange,
             }
         )
     );
     assert_eq!(
-        r#"ProgressUpdateAndId { item_spec_id: ItemSpecId("test_item_spec_id"), progress_update: Delta(Inc(3)), msg_update: NoChange }"#,
+        r#"ProgressUpdateAndId { item_id: ItemId("test_item_id"), progress_update: Delta(Inc(3)), msg_update: NoChange }"#,
         format!(
             "{:?}",
             ProgressUpdateAndId {
-                item_spec_id: item_spec_id!("test_item_spec_id"),
+                item_id: item_id!("test_item_id"),
                 progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(3)),
                 msg_update: ProgressMsgUpdate::NoChange,
             }
         )
     );
     assert_eq!(
-        r#"ProgressUpdateAndId { item_spec_id: ItemSpecId("test_item_spec_id"), progress_update: Complete(Success), msg_update: NoChange }"#,
+        r#"ProgressUpdateAndId { item_id: ItemId("test_item_id"), progress_update: Complete(Success), msg_update: NoChange }"#,
         format!(
             "{:?}",
             ProgressUpdateAndId {
-                item_spec_id: item_spec_id!("test_item_spec_id"),
+                item_id: item_id!("test_item_id"),
                 progress_update: ProgressUpdate::Complete(ProgressComplete::Success),
                 msg_update: ProgressMsgUpdate::NoChange,
             }

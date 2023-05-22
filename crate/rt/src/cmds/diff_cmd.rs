@@ -33,7 +33,7 @@ where
     /// Both current and desired states must have been discovered prior to
     /// running this. See [`StatesDiscoverCmd::current_and_desired`].
     ///
-    /// [`state_diff`]: peace_cfg::ItemSpec::state_diff
+    /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current_and_desired`]: crate::cmds::StatesDiscoverCmd::current_and_desired
     pub async fn current_and_desired<O, PKeys>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
@@ -61,7 +61,7 @@ where
     /// Both profiles' current states must have been discovered prior to
     /// running this. See [`StatesDiscoverCmd::current`].
     ///
-    /// [`state_diff`]: peace_cfg::ItemSpec::state_diff
+    /// [`state_diff`]: peace_cfg::Item::state_diff
     /// [`StatesDiscoverCmd::current`]: crate::cmds::StatesDiscoverCmd::current
     pub async fn diff_profiles_current<O, PKeys>(
         cmd_ctx: &mut CmdCtx<MultiProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
@@ -126,14 +126,14 @@ where
         Self::diff_any(flow, params_specs, resources, states_a, states_b).await
     }
 
-    /// Returns the [`state_diff`]` for each [`ItemSpec`].
+    /// Returns the [`state_diff`]` for each [`Item`].
     ///
     /// This does not take in `CmdCtx` as it may be used by both
     /// `SingleProfileSingleFlow` and `MultiProfileSingleFlow`
     /// commands.
     ///
-    /// [`ItemSpec`]: peace_cfg::ItemSpec
-    /// [`state_diff`]: peace_cfg::ItemSpec::state_diff
+    /// [`Item`]: peace_cfg::Item
+    /// [`state_diff`]: peace_cfg::Item::state_diff
     pub async fn diff_any<StatesTsA, StatesTsB>(
         flow: &Flow<E>,
         params_specs: &ParamsSpecs,
@@ -146,12 +146,12 @@ where
                 .graph()
                 .stream()
                 .map(Result::<_, E>::Ok)
-                .try_filter_map(|item_spec| async move {
-                    let state_diff_opt = item_spec
+                .try_filter_map(|item| async move {
+                    let state_diff_opt = item
                         .state_diff_exec(params_specs, resources, states_a, states_b)
                         .await?;
 
-                    Ok(state_diff_opt.map(|state_diff| (item_spec.id().clone(), state_diff)))
+                    Ok(state_diff_opt.map(|state_diff| (item.id().clone(), state_diff)))
                 })
                 .try_collect::<StateDiffsMut>()
                 .await?;

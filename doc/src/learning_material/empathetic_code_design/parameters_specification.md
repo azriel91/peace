@@ -1,6 +1,6 @@
 # Parameters Specification
 
-Specify *where to get the value* for each item spec input. The value may not necessarily exist until the flow is executed.
+Specify *where to get the value* for each item input. The value may not necessarily exist until the flow is executed.
 
 ```dot process
 digraph {
@@ -274,16 +274,16 @@ let file_upload_params_spec = FileUploadParamsSpec::<WebApp>::builder()
 ```rust ,ignore
 let mut cmd_context = CmdContext::builder()
     .with_flow(&flow);
-    .with_item_spec_params::<FileDownloadItemSpec::<WebApp>>(
-        item_spec_id!("a"),
+    .with_item_params::<FileDownloadItem::<WebApp>>(
+        item_id!("a"),
         file_download_params.into(),
     )
-    .with_item_spec_params::<ServerInstanceParams::<WebApp>>(
-        item_spec_id!("b"),
+    .with_item_params::<ServerInstanceParams::<WebApp>>(
+        item_id!("b"),
         server_instance_params.into(),
     )
-    .with_item_spec_params::<FileUploadParams::<WebApp>>(
-        item_spec_id!("c"),
+    .with_item_params::<FileUploadParams::<WebApp>>(
+        item_id!("c"),
         file_upload_params_spec,
     )
     .build();

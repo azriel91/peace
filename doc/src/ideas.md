@@ -12,7 +12,7 @@ This page records ideas that I'd like, but there isn't enough mental capacity an
 <summary>2. Graphical user interface that renders each flow's graph.</summary>
 <div>
 
-1. Each item spec is a node.
+1. Each item is a node.
 2. User can select which nodes to run &ndash; these may be a subset of the flow.
 3. User can select beginning and ending nodes &ndash; and these can be in reverse order.
 
@@ -81,15 +81,15 @@ This may be dependent on profile params &ndash; sort env based on env type, last
 <summary>7. Cancel-safe state storage</summary>
 <div>
 
-When an item spec ensure does multiple writes, there is a possibility of not all of those writes occur during execution:
+When an item ensure does multiple writes, there is a possibility of not all of those writes occur during execution:
 
 * user interrupts the execution.
 * internet connection drops.
 * machine loses power.
 
-In the last case, we cannot safely write state to disk, so a `StateCurrent` discover is needed to bring `StatesSaved` up to date. However, the previous two cases, it is possible for `ItemSpec`s to return `State` that has been partially ensured, without making any further outgoing calls -- i.e. infer `StatesEnsured` based on the successful writes so far.
+In the last case, we cannot safely write state to disk, so a `StateCurrent` discover is needed to bring `StatesSaved` up to date. However, the previous two cases, it is possible for `Item`s to return `State` that has been partially ensured, without making any further outgoing calls -- i.e. infer `StatesEnsured` based on the successful writes so far.
 
-Note that this places a burden on the `ItemSpec` implementor to return the partial state ensured (which may conflict with keeping the `State` simple), as well as make the `ApplyFns::exec` return value more complex.
+Note that this places a burden on the `Item` implementor to return the partial state ensured (which may conflict with keeping the `State` simple), as well as make the `ApplyFns::exec` return value more complex.
 
 The trade off may not be worthwhile.
 
@@ -97,16 +97,16 @@ The trade off may not be worthwhile.
 </details>
 
 <details>
-<summary>8. Adding / removing / modifying item specs in flows</summary>
+<summary>8. Adding / removing / modifying items in flows</summary>
 <div>
 
-Implementors may add/remove/modify item specs in flows.
+Implementors may add/remove/modify items in flows.
 
 Peace needs to be designed such that these changes do not cause already-existent flows to not be loadable, i.e. when:
 
-* `states_*.yaml` contains state for which an item spec no longer exists in the flow.
-* `states_*.yaml` does not contain state for an item spec that is newly added to the flow.
-* `states_*.yaml` contains state whose fields are different to a new version of an item spec.
+* `states_*.yaml` contains state for which an item no longer exists in the flow.
+* `states_*.yaml` does not contain state for an item that is newly added to the flow.
+* `states_*.yaml` contains state whose fields are different to a new version of an item.
 
     This one can be addressed by having `State` be an enum, with versioned variants.
 
@@ -130,7 +130,7 @@ For items that cost, it is useful to have an expiry time that causes it to be de
 <summary>10. Interrupt / cancel safety</summary>
 <div>
 
-The [`tokio-graceful-shutdown`] library can be used to introduce interrupt safety into item spec executions. This is particularly useful for write functions.
+The [`tokio-graceful-shutdown`] library can be used to introduce interrupt safety into item executions. This is particularly useful for write functions.
 
 See the [`is_shutdown_requested`] method in particular.
 
@@ -141,35 +141,35 @@ See the [`is_shutdown_requested`] method in particular.
 </details>
 
 <details>
-<summary>11. Diffable item spec params</summary>
+<summary>11. Diffable item params</summary>
 <div>
 
 `DiffCmd` originally was written to diff the current and desired states. However, with the second use case of "diff states between two profiles", it is also apparent that other related functionality is useful:
 
 * Diff profile params / flow params.
-* Diff item spec params between profiles for a given flow.
+* Diff item params between profiles for a given flow.
 
-Because of diffable params, and [#94], the `ItemSpec` should likely have:
+Because of diffable params, and [#94], the `Item` should likely have:
 
-* `type Params: ItemSpecParams + Serialize + DeserializeOwned`.
-* feature gated `fn item_spec_params_diff(..)`.
+* `type Params: ItemParams + Serialize + DeserializeOwned`.
+* feature gated `fn item_params_diff(..)`.
 
-`fn item_spec_params_diff(..)` should likely have a similar signature to `fn state_diff(..)`, whereby if one uses  `XData<'_>`, the other should as well for consistency:
+`fn item_params_diff(..)` should likely have a similar signature to `fn state_diff(..)`, whereby if one uses  `XData<'_>`, the other should as well for consistency:
 
-* For `MultiProfileSingleFlow` commands, a diff for item spec params which contains a referential value (e.g. "use the `some_predecessor.ip_address()`") may(?) need information about `some_predecessor` through `Resources` / `Data`.
+* For `MultiProfileSingleFlow` commands, a diff for item params which contains a referential value (e.g. "use the `some_predecessor.ip_address()`") may(?) need information about `some_predecessor` through `Resources` / `Data`.
 
-We should work out the design of that before settling on what `state_diff` and `item_spec_params_diff`'s function parameters will be. See **Design Thoughts** on [#94] for how it may look like.
+We should work out the design of that before settling on what `state_diff` and `item_params_diff`'s function parameters will be. See **Design Thoughts** on [#94] for how it may look like.
 
 </div>
 </details>
 
 <details>
-<summary>12. Default item spec params</summary>
+<summary>12. Default item params</summary>
 <div>
 
-An `ItemSpec`'s params may not necessarily be mandatory. From the `Params` type (and corresponding trait), Peace may:
+An `Item`'s params may not necessarily be mandatory. From the `Params` type (and corresponding trait), Peace may:
 
-* Insert default param values, if the `ItemSpec` implementor provides a default
+* Insert default param values, if the `Item` implementor provides a default
 * Still make the params required if there is no default.
 * Provide a way for `ParamsSpec` for each field to be the default, or a mapping function.
 
@@ -177,21 +177,21 @@ An `ItemSpec`'s params may not necessarily be mandatory. From the `Params` type 
 </details>
 
 <details>
-<summary>13. Upgrades: Tolerate optional or different workspace params / item spec params / states</summary>
+<summary>13. Upgrades: Tolerate optional or different workspace params / item params / states</summary>
 <div>
 
-When new workspace params are added, or new item specs are added to a flow, existing `*_params.yaml`, `item_spec_params.yaml`, and `states_*.yaml` may not contain values for those newly added params / item specs.
+When new workspace params are added, or new items are added to a flow, existing `*_params.yaml`, `item_params.yaml`, and `states_*.yaml` may not contain values for those newly added params / items.
 
 Automation software should be able to:
 
 * Work with missing parameters.
 * Work with changed parameter types.
 
-When workspace params / item specs are removed from a flow, leftover params / state are no longer used. However, we may want to do one of:
+When workspace params / items are removed from a flow, leftover params / state are no longer used. However, we may want to do one of:
 
 * Notify the user to clean up unused params
 * Peace should ignore it
-* Inform the automator to still register the item spec, so that old execution may be loaded.
+* Inform the automator to still register the item, so that old execution may be loaded.
 
 </div>
 </details>
@@ -200,9 +200,9 @@ When workspace params / item specs are removed from a flow, leftover params / st
 <summary>14. Store params per execution, pass previous execution's params to clean cmd</summary>
 <div>
 
-Instead of requiring `ItemSpec::State` to store the params used when applied, maybe we should store the params used in the last ensure alongside that item spec's state.
+Instead of requiring `Item::State` to store the params used when applied, maybe we should store the params used in the last ensure alongside that item's state.
 
-Users are concerned with the current state of the item. They also may be concerned with the parameters used to produce that state. Requiring item spec implementors to store paths / IP addresses within the state that has been ensured feels like unnecessary duplication.
+Users are concerned with the current state of the item. They also may be concerned with the parameters used to produce that state. Requiring item implementors to store paths / IP addresses within the state that has been ensured feels like unnecessary duplication.
 
 However, when comparing diffs, we would hope either:
 
@@ -215,9 +215,9 @@ Also:
 * `State` as the output API, should not necessarily include params.
 * When parameters change, and an apply is interrupted, then we may have earlier items using the new parameters, and later items still on the previous parameters. More complicated still, is if parameters change *in the middle of an interruption*, and re-applied.
 
-Perhaps there should be a `(dest_parameters, ItemSpec::State)` current state, and a `(src_parameters, ItemSpec::State)` desired state. That makes sense for file downloads if we care about cleaning up the previous `dest_path`, to move a file to the new `dest_path`.
+Perhaps there should be a `(dest_parameters, Item::State)` current state, and a `(src_parameters, Item::State)` desired state. That makes sense for file downloads if we care about cleaning up the previous `dest_path`, to move a file to the new `dest_path`.
 
-Or, all dest parameters should be in `ItemSpec::State`, because that's what's needed to know if something needs to change.
+Or, all dest parameters should be in `Item::State`, because that's what's needed to know if something needs to change.
 
 </div>
 </details>
@@ -239,12 +239,12 @@ Or, all dest parameters should be in `ItemSpec::State`, because that's what's ne
 <summary>2. Learnings from envman end-to-end implementation.</summary>
 <div>
 
-1. Referential lookup of values in state / item spec params. ([#94])
+1. Referential lookup of values in state / item params. ([#94])
 2. AWS SDK is not WASM ready -- includes `mio` unconditionally through `tokio` (calls UDP). ([aws-sdk-rust#59])
 3. AWS SDK does not always include error detail -- S3 `head_object`. ([aws-sdk-rust#227])
 4. Progress output should enable-able for state current / desired discover / clean functions.
-5. Flow params are annoying to register every time we add another item spec. Maybe split end user provided params from item spec params.
-6. Blank item spec needs a lot of rework to be easier to implement an item spec. ([67], [#96])
+5. Flow params are annoying to register every time we add another item. Maybe split end user provided params from item params.
+6. Blank item needs a lot of rework to be easier to implement an item. ([67], [#96])
 7. For `ApplyCmd`, collect `StateCurrent`, `StateDesired`, `StateDiff` in execution report.
 8. AWS errors' `code` and `message` should be shown to the user.
 9. Progress limit should not be returned in `ApplyFns::check`, but sent through `progress_sender.limit(ProgressLimit)`. This simplifies `check`, and allows state current/desired discovery to set the limits easily.

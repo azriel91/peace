@@ -41,7 +41,7 @@ pub fn impl_field_wise_builder(
                 |fields| fields_to_optional_value_spec(fields, peace_params_path),
                 &[parse_quote! {
                     #[doc="\
-                        Builder for specification of how to look up the values for an item spec's \n\
+                        Builder for specification of how to look up the values for an item's \n\
                         parameters.\
                     "]
                 }],
@@ -404,7 +404,7 @@ fn builder_field_methods(
             //     .build();
             //
             // let mut cmd_ctx = // ..
-            //     .with_item_spec_params::<_>(item_spec_id, params_spec)
+            //     .with_item_params::<_>(item_id, params_spec)
             //     .await?;
             // ```
             quote! {

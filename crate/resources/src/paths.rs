@@ -38,7 +38,7 @@
 //!     |   |   |- 00000007_2022-08-23T13_07_31_artifact_publish.yaml
 //!     |   |
 //!     |   |- .meta.yaml  # Store the last discovered time so we can inform the user.
-//!     |   |              # Should time be stored per item spec, or per invocation?
+//!     |   |              # Should time be stored per item, or per invocation?
 //!     |   |
 //!     |   |- dev_env  # flow name
 //!     |   |   |- states_desired.yaml
@@ -70,15 +70,14 @@
 //! ```
 
 pub use self::{
-    flow_dir::FlowDir, item_spec_params_file::ItemSpecParamsFile,
-    params_specs_file::ParamsSpecsFile, peace_app_dir::PeaceAppDir, peace_dir::PeaceDir,
-    profile_dir::ProfileDir, profile_history_dir::ProfileHistoryDir,
-    states_desired_file::StatesDesiredFile, states_saved_file::StatesSavedFile,
-    workspace_dir::WorkspaceDir,
+    flow_dir::FlowDir, item_params_file::ItemParamsFile, params_specs_file::ParamsSpecsFile,
+    peace_app_dir::PeaceAppDir, peace_dir::PeaceDir, profile_dir::ProfileDir,
+    profile_history_dir::ProfileHistoryDir, states_desired_file::StatesDesiredFile,
+    states_saved_file::StatesSavedFile, workspace_dir::WorkspaceDir,
 };
 
 mod flow_dir;
-mod item_spec_params_file;
+mod item_params_file;
 mod params_specs_file;
 mod peace_app_dir;
 mod peace_dir;

@@ -4,7 +4,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 use crate::FieldWiseSpecRt;
 
-/// Input parameters to an item spec.
+/// Input parameters to an item.
 ///
 /// This trait is automatically implemented by `#[derive(Value)]`.
 pub trait Params {

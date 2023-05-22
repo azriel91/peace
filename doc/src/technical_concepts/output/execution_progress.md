@@ -3,7 +3,7 @@
 Execution progress output is most useful as it happens. Execution progress output should fulfill the following concerns:
 
 * easy for a human to understand
-* easy to be sent from an item spec implementation
+* easy to be sent from an item implementation
 * pushed to output in real time
 * pulled from client in real time
 
@@ -24,14 +24,14 @@ Whether a task has started, is in-progress, stalled, or completed.
 
     - **Units total:** Unknown (spinner) / known (progress bar).
     - **Units current**
-    - **Function:** `ItemSpec::{state_current, state_desired, apply}`.
+    - **Function:** `Item::{state_current, state_desired, apply}`.
 
         Certain functions will not be applicable, e.g. when `StateCurrent` is feature gated, then the function won't be available when the feature is not enabled.
 
 * **Running Stalled:** Progress updates have not been received for a given period.
 
 
-    Item spec implementations are responsible for sending progress updates, but if there are no progress updates, or an identical "it's running" progress update is continuously received, then Peace may determine that the task may have stalled, and user attention is required.
+    Item implementations are responsible for sending progress updates, but if there are no progress updates, or an identical "it's running" progress update is continuously received, then Peace may determine that the task may have stalled, and user attention is required.
 
     Peace may also provide a hook for implementors to output a suggestion to the user.
 
@@ -41,7 +41,7 @@ Whether a task has started, is in-progress, stalled, or completed.
     This status is best conveyed alongside the following information:
 
     - **Completion Status**: Success, Failed.
-    - **Function:** `ItemSpec::{state_current, state_desired, apply}`.
+    - **Function:** `Item::{state_current, state_desired, apply}`.
 
 
 The following variant is possible conceptually, but not applicable to the Peace framework:

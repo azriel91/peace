@@ -4,7 +4,7 @@
 //! Each endpoint is responsible for receiving the parameters from the user.
 //!
 //! The `*Cmd` types map between the parameters received from users, to each
-//! `ItemSpec`'s params type.
+//! `Item`'s params type.
 
 pub use self::{
     cmd_ctx_builder::{ws_and_profile_params_augment, ws_params_augment},

@@ -1,11 +1,11 @@
 # Feature Gated Incremental Functionality
 
-Tried the following parameter type for `ItemSpec::apply`:
+Tried the following parameter type for `Item::apply`:
 
 ```rust ,ignore
 use std::marker::PhantomData;
 
-/// Parameters to `ItemSpec::apply`.
+/// Parameters to `Item::apply`.
 #[derive(Debug)]
 pub struct EnsureExecParams<
     'params,

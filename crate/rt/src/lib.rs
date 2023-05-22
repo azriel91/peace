@@ -1,6 +1,6 @@
 //! Runtime logic for the peace automation library.
 
-/// Maximum number of item specs to execute simultaneously.
+/// Maximum number of items to execute simultaneously.
 ///
 /// 64 is arbitrarily chosen, as there is not enough data to inform us what a
 /// suitable number is.

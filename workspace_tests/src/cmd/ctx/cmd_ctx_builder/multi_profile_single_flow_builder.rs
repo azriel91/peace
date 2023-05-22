@@ -4,7 +4,7 @@ use peace::{
     cfg::{app_name, flow_id, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
     resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
-    rt_model::{Flow, ItemSpecGraphBuilder},
+    rt_model::{Flow, ItemGraphBuilder},
 };
 
 use crate::{cmd::ctx::cmd_ctx_builder::workspace_with, no_op_output::NoOpOutput, PeaceTestError};
@@ -15,7 +15,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -73,7 +73,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -142,7 +142,7 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -203,7 +203,7 @@ async fn build_with_flow_params() -> Result<(), Box<dyn std::error::Error>> {
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -271,7 +271,7 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -350,7 +350,7 @@ async fn build_with_workspace_params_with_profile_params_with_flow_params()
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -438,7 +438,7 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),
@@ -502,7 +502,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
     let profile = profile!("test_profile");
     let profile_other = profile!("test_profile_other");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id, ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
     let workspace = workspace_with(
         &tempdir,
         app_name!("test_multi_profile_single_flow"),

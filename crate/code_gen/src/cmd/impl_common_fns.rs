@@ -21,19 +21,19 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
 
     let common_fns = if scope == Scope::SingleProfileSingleFlow {
         quote! {
-            /// Sets an item spec's parameters.
+            /// Sets an item's parameters.
             ///
-            /// Note: this **must** be called for each item spec in the flow.
-            pub fn with_item_spec_params<IS>(
+            /// Note: this **must** be called for each item in the flow.
+            pub fn with_item_params<IS>(
                 mut self,
-                item_spec_id: peace_cfg::ItemSpecId,
+                item_id: peace_cfg::ItemId,
                 params_spec: <IS::Params<'_> as peace_params::Params>::Spec,
             ) -> Self
             where
-                IS: peace_cfg::ItemSpec,
+                IS: peace_cfg::Item,
                 E: From<IS::Error>
             {
-                self.scope_builder.params_specs_provided.insert(item_spec_id, params_spec);
+                self.scope_builder.params_specs_provided.insert(item_id, params_spec);
                 self
             }
         }

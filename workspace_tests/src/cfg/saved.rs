@@ -1,16 +1,16 @@
 use std::any::TypeId;
 
 use peace::{
-    cfg::{accessors::Saved, item_spec_id, ItemSpecId},
+    cfg::{accessors::Saved, item_id, ItemId},
     data::{fn_graph::Resources, Data, DataAccess, DataAccessDyn, TypeIds},
     resources::{internal::StatesMut, states::StatesSaved},
 };
 
-const ITEM_SPEC_ID_TEST: &ItemSpecId = &item_spec_id!("item_spec_id_test");
-const ITEM_SPEC_ID_OTHER: &ItemSpecId = &item_spec_id!("item_spec_id_other");
+const ITEM_SPEC_ID_TEST: &ItemId = &item_id!("item_id_test");
+const ITEM_SPEC_ID_OTHER: &ItemId = &item_id!("item_id_other");
 
 #[test]
-fn retrieves_state_for_item_spec() {
+fn retrieves_state_for_item() {
     let mut resources = Resources::new();
     let states_saved = {
         let mut states_mut = StatesMut::new();
@@ -26,7 +26,7 @@ fn retrieves_state_for_item_spec() {
 }
 
 #[test]
-fn does_not_retrieve_state_for_item_spec_other() {
+fn does_not_retrieve_state_for_item_other() {
     let mut resources = Resources::new();
     let states_saved = {
         let mut states_mut = StatesMut::new();
@@ -100,13 +100,13 @@ fn debug() {
 
     let saved = Saved::<'_, u8>::borrow(ITEM_SPEC_ID_TEST, &resources);
     assert_eq!(
-        r#"Saved { item_spec_id: ItemSpecId("item_spec_id_test"), states_saved: Some(Ref { inner: States({ItemSpecId("item_spec_id_test"): TypedValue { type: "u8", value: 123 }}, PhantomData<peace_resources::states::ts::Saved>) }), marker: PhantomData<u8> }"#,
+        r#"Saved { item_id: ItemId("item_id_test"), states_saved: Some(Ref { inner: States({ItemId("item_id_test"): TypedValue { type: "u8", value: 123 }}, PhantomData<peace_resources::states::ts::Saved>) }), marker: PhantomData<u8> }"#,
         format!("{saved:?}")
     );
 
     let saved = Saved::<'_, u8>::borrow(ITEM_SPEC_ID_OTHER, &resources);
     assert_eq!(
-        r#"Saved { item_spec_id: ItemSpecId("item_spec_id_other"), states_saved: Some(Ref { inner: States({ItemSpecId("item_spec_id_test"): TypedValue { type: "u8", value: 123 }}, PhantomData<peace_resources::states::ts::Saved>) }), marker: PhantomData<u8> }"#,
+        r#"Saved { item_id: ItemId("item_id_other"), states_saved: Some(Ref { inner: States({ItemId("item_id_test"): TypedValue { type: "u8", value: 123 }}, PhantomData<peace_resources::states::ts::Saved>) }), marker: PhantomData<u8> }"#,
         format!("{saved:?}")
     );
 }

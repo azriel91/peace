@@ -10,7 +10,7 @@ use peace::cfg::Profile;
 /// * previous vs current workspace params
 /// * previous vs current profile params
 /// * previous vs current flow params
-/// * previous vs current item spec params
+/// * previous vs current item params
 /// * previous vs current state
 /// * current vs desired state
 ///
@@ -18,7 +18,7 @@ use peace::cfg::Profile;
 ///
 /// * profile params
 /// * flow params
-/// * item spec params
+/// * item params
 /// * current states
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum EnvDiffSelection {

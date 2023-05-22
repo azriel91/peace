@@ -4,7 +4,7 @@ use std::{
     marker::PhantomData,
 };
 
-use peace_core::ItemSpecId;
+use peace_core::ItemId;
 use peace_data::{
     fn_graph::{
         resman::{BorrowFail, Ref},
@@ -18,8 +18,8 @@ use serde::Serialize;
 /// The previously saved `T` state, if any.
 #[derive(Debug)]
 pub struct Saved<'borrow, T> {
-    /// ID of the item spec the state should be retrieved for.
-    item_spec_id: &'borrow ItemSpecId,
+    /// ID of the item the state should be retrieved for.
+    item_id: &'borrow ItemId,
     /// The borrowed `StatesSaved`.
     states_saved: Option<Ref<'borrow, StatesSaved>>,
     /// Marker.
@@ -33,7 +33,7 @@ where
     pub fn get(&'borrow self) -> Option<&'borrow T> {
         self.states_saved
             .as_ref()
-            .and_then(|states_saved| states_saved.get(self.item_spec_id))
+            .and_then(|states_saved| states_saved.get(self.item_id))
     }
 }
 
@@ -41,7 +41,7 @@ impl<'borrow, T> Data<'borrow> for Saved<'borrow, T>
 where
     T: Debug + Send + Sync + 'static,
 {
-    fn borrow(item_spec_id: &'borrow ItemSpecId, resources: &'borrow Resources) -> Self {
+    fn borrow(item_id: &'borrow ItemId, resources: &'borrow Resources) -> Self {
         let states_saved = resources
             .try_borrow::<StatesSaved>()
             .map_err(|borrow_fail| match borrow_fail {
@@ -53,7 +53,7 @@ where
             .ok();
 
         Self {
-            item_spec_id,
+            item_id,
             states_saved,
             marker: PhantomData,
         }

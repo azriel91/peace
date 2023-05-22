@@ -75,62 +75,62 @@ pub enum EnvManError {
         app_name: AppName,
     },
 
-    // === Item Spec errors === //
-    /// A `FileDownload` item spec error occurred.
-    #[error("A `FileDownload` item spec error occurred.")]
-    PeaceItemSpecFileDownload(
+    // === Item errors === //
+    /// A `FileDownload` item error occurred.
+    #[error("A `FileDownload` item error occurred.")]
+    PeaceItemFileDownload(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
         #[from]
-        peace_item_specs::file_download::FileDownloadError,
+        peace_items::file_download::FileDownloadError,
     ),
-    /// A `TarX` item spec error occurred.
-    #[error("A `TarX` item spec error occurred.")]
-    PeaceItemSpecTarX(
+    /// A `TarX` item error occurred.
+    #[error("A `TarX` item error occurred.")]
+    PeaceItemTarX(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
         #[from]
-        peace_item_specs::tar_x::TarXError,
+        peace_items::tar_x::TarXError,
     ),
-    /// An `InstanceProfile` item spec error occurred.
-    #[error("An `InstanceProfile` item spec error occurred.")]
-    InstanceProfileItemSpec(
+    /// An `InstanceProfile` item error occurred.
+    #[error("An `InstanceProfile` item error occurred.")]
+    InstanceProfileItem(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
         #[from]
-        crate::item_specs::peace_aws_instance_profile::InstanceProfileError,
+        crate::items::peace_aws_instance_profile::InstanceProfileError,
     ),
-    /// An `IamPolicy` item spec error occurred.
-    #[error("An `IamPolicy` item spec error occurred.")]
-    IamPolicyItemSpec(
+    /// An `IamPolicy` item error occurred.
+    #[error("An `IamPolicy` item error occurred.")]
+    IamPolicyItem(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
         #[from]
-        crate::item_specs::peace_aws_iam_policy::IamPolicyError,
+        crate::items::peace_aws_iam_policy::IamPolicyError,
     ),
-    /// An `IamRole` item spec error occurred.
-    #[error("An `IamRole` item spec error occurred.")]
-    IamRoleItemSpec(
+    /// An `IamRole` item error occurred.
+    #[error("An `IamRole` item error occurred.")]
+    IamRoleItem(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
         #[from]
-        crate::item_specs::peace_aws_iam_role::IamRoleError,
+        crate::items::peace_aws_iam_role::IamRoleError,
     ),
-    /// An `S3Bucket` item spec error occurred.
-    #[error("An `S3Bucket` item spec error occurred.")]
-    S3BucketItemSpec(
+    /// An `S3Bucket` item error occurred.
+    #[error("An `S3Bucket` item error occurred.")]
+    S3BucketItem(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
         #[from]
-        crate::item_specs::peace_aws_s3_bucket::S3BucketError,
+        crate::items::peace_aws_s3_bucket::S3BucketError,
     ),
-    /// An `S3Object` item spec error occurred.
-    #[error("An `S3Object` item spec error occurred.")]
-    S3ObjectItemSpec(
+    /// An `S3Object` item error occurred.
+    #[error("An `S3Object` item error occurred.")]
+    S3ObjectItem(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
         #[from]
-        crate::item_specs::peace_aws_s3_object::S3ObjectError,
+        crate::items::peace_aws_s3_object::S3ObjectError,
     ),
 
     // === Framework errors === //

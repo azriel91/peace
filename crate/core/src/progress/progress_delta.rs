@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-/// The amount that the item spec progressed by.
+/// The amount that the item progressed by.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ProgressDelta {
     /// Ticks the progress bar without incrementing its value.

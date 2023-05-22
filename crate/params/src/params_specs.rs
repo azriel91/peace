@@ -1,32 +1,32 @@
 use std::ops::{Deref, DerefMut};
 
-use peace_core::ItemSpecId;
+use peace_core::ItemId;
 use peace_resources::type_reg::untagged::TypeMap;
 use serde::Serialize;
 
 use crate::AnySpecRtBoxed;
 
-/// Map of item spec ID to its params' specs. `TypeMap<ItemSpecId,
+/// Map of item ID to its params' specs. `TypeMap<ItemId,
 /// AnySpecRtBoxed>` newtype.
 ///
 /// The concrete `*ValueSpec` type can be obtained by calling
-/// `.get(item_spec_id)` with the correct type:
+/// `.get(item_id)` with the correct type:
 ///
 /// ```rust,ignore
-/// let item_spec_params_spec = MyItemSpecParams::spec().build();
+/// let item_params_spec = MyItemParams::spec().build();
 /// let mut params_specs = ParamsSpecs::new();
-/// params_specs.insert(item_spec_id!("my_item"), item_spec_params_spec);
+/// params_specs.insert(item_id!("my_item"), item_params_spec);
 ///
 /// // later
 ///
-/// let item_spec_params_spec = params_specs.get::<MyItemSpecParams, _>(&item_spec_id!("my_item"));
+/// let item_params_spec = params_specs.get::<MyItemParams, _>(&item_id!("my_item"));
 /// ```
 ///
 /// The information may not be of the same type across flows, as flows are
 /// different in what they are doing.
 #[derive(Clone, Debug, Default, Serialize)]
 #[serde(transparent)] // Needed to serialize as a map instead of a list.
-pub struct ParamsSpecs(TypeMap<ItemSpecId, AnySpecRtBoxed>);
+pub struct ParamsSpecs(TypeMap<ItemId, AnySpecRtBoxed>);
 
 impl ParamsSpecs {
     /// Returns a new `ParamsSpecs` map.
@@ -44,13 +44,13 @@ impl ParamsSpecs {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<ItemSpecId, AnySpecRtBoxed> {
+    pub fn into_inner(self) -> TypeMap<ItemId, AnySpecRtBoxed> {
         self.0
     }
 }
 
 impl Deref for ParamsSpecs {
-    type Target = TypeMap<ItemSpecId, AnySpecRtBoxed>;
+    type Target = TypeMap<ItemId, AnySpecRtBoxed>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -63,8 +63,8 @@ impl DerefMut for ParamsSpecs {
     }
 }
 
-impl From<TypeMap<ItemSpecId, AnySpecRtBoxed>> for ParamsSpecs {
-    fn from(type_map: TypeMap<ItemSpecId, AnySpecRtBoxed>) -> Self {
+impl From<TypeMap<ItemId, AnySpecRtBoxed>> for ParamsSpecs {
+    fn from(type_map: TypeMap<ItemId, AnySpecRtBoxed>) -> Self {
         Self(type_map)
     }
 }

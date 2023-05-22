@@ -1,8 +1,8 @@
 use peace::{
     cfg::{
-        item_spec_id,
+        item_id,
         progress::{ProgressDelta, ProgressMsgUpdate, ProgressSender, ProgressUpdateAndId},
-        ItemSpecId,
+        ItemId,
     },
     rt_model::ProgressUpdate,
 };
@@ -10,9 +10,9 @@ use tokio::sync::mpsc::{self, error::TryRecvError};
 
 #[test]
 fn inc_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
-    let item_spec_id = item_spec_id!("test_item_spec_id");
+    let item_id = item_id!("test_item_id");
     let (progress_tx, mut progress_rx) = mpsc::channel(10);
-    let progress_sender = ProgressSender::new(&item_spec_id, &progress_tx);
+    let progress_sender = ProgressSender::new(&item_id, &progress_tx);
 
     progress_sender.inc(123, ProgressMsgUpdate::NoChange);
 
@@ -20,7 +20,7 @@ fn inc_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
 
     assert_eq!(
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
             msg_update: ProgressMsgUpdate::NoChange,
         },
@@ -34,9 +34,9 @@ fn inc_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn inc_is_received_if_sent_before_progress_channel_is_closed()
 -> Result<(), Box<dyn std::error::Error>> {
-    let item_spec_id = item_spec_id!("test_item_spec_id");
+    let item_id = item_id!("test_item_id");
     let (progress_tx, mut progress_rx) = mpsc::channel(10);
-    let progress_sender = ProgressSender::new(&item_spec_id, &progress_tx);
+    let progress_sender = ProgressSender::new(&item_id, &progress_tx);
 
     progress_sender.inc(123, ProgressMsgUpdate::NoChange);
     progress_rx.close();
@@ -45,7 +45,7 @@ fn inc_is_received_if_sent_before_progress_channel_is_closed()
 
     assert_eq!(
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
             msg_update: ProgressMsgUpdate::NoChange,
         },
@@ -58,9 +58,9 @@ fn inc_is_received_if_sent_before_progress_channel_is_closed()
 
 #[test]
 fn inc_does_not_panic_when_progress_channel_is_closed() -> Result<(), Box<dyn std::error::Error>> {
-    let item_spec_id = item_spec_id!("test_item_spec_id");
+    let item_id = item_id!("test_item_id");
     let (progress_tx, mut progress_rx) = mpsc::channel(10);
-    let progress_sender = ProgressSender::new(&item_spec_id, &progress_tx);
+    let progress_sender = ProgressSender::new(&item_id, &progress_tx);
 
     progress_rx.close();
     progress_sender.inc(123, ProgressMsgUpdate::NoChange);
@@ -72,9 +72,9 @@ fn inc_does_not_panic_when_progress_channel_is_closed() -> Result<(), Box<dyn st
 
 #[test]
 fn tick_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
-    let item_spec_id = item_spec_id!("test_item_spec_id");
+    let item_id = item_id!("test_item_id");
     let (progress_tx, mut progress_rx) = mpsc::channel(10);
-    let progress_sender = ProgressSender::new(&item_spec_id, &progress_tx);
+    let progress_sender = ProgressSender::new(&item_id, &progress_tx);
 
     progress_sender.tick(ProgressMsgUpdate::NoChange);
 
@@ -82,7 +82,7 @@ fn tick_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
 
     assert_eq!(
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
             msg_update: ProgressMsgUpdate::NoChange,
         },
@@ -96,9 +96,9 @@ fn tick_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn tick_is_received_if_sent_before_progress_channel_is_closed()
 -> Result<(), Box<dyn std::error::Error>> {
-    let item_spec_id = item_spec_id!("test_item_spec_id");
+    let item_id = item_id!("test_item_id");
     let (progress_tx, mut progress_rx) = mpsc::channel(10);
-    let progress_sender = ProgressSender::new(&item_spec_id, &progress_tx);
+    let progress_sender = ProgressSender::new(&item_id, &progress_tx);
 
     progress_sender.tick(ProgressMsgUpdate::NoChange);
     progress_rx.close();
@@ -107,7 +107,7 @@ fn tick_is_received_if_sent_before_progress_channel_is_closed()
 
     assert_eq!(
         ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Tick),
             msg_update: ProgressMsgUpdate::NoChange,
         },
@@ -120,9 +120,9 @@ fn tick_is_received_if_sent_before_progress_channel_is_closed()
 
 #[test]
 fn tick_does_not_panic_when_progress_channel_is_closed() -> Result<(), Box<dyn std::error::Error>> {
-    let item_spec_id = item_spec_id!("test_item_spec_id");
+    let item_id = item_id!("test_item_id");
     let (progress_tx, mut progress_rx) = mpsc::channel(10);
-    let progress_sender = ProgressSender::new(&item_spec_id, &progress_tx);
+    let progress_sender = ProgressSender::new(&item_id, &progress_tx);
 
     progress_rx.close();
     progress_sender.tick(ProgressMsgUpdate::NoChange);
@@ -134,11 +134,13 @@ fn tick_does_not_panic_when_progress_channel_is_closed() -> Result<(), Box<dyn s
 
 #[test]
 fn debug() {
-    let item_spec_id = item_spec_id!("test_item_spec_id");
+    let item_id = item_id!("test_item_id");
     let (progress_tx, _progress_rx) = mpsc::channel(10);
-    let progress_sender = ProgressSender::new(&item_spec_id, &progress_tx);
+    let progress_sender = ProgressSender::new(&item_id, &progress_tx);
 
-    assert!(format!("{progress_sender:?}").starts_with(
-        r#"ProgressSender { item_spec_id: ItemSpecId("test_item_spec_id"), progress_tx: Sender"#
-    ));
+    assert!(
+        format!("{progress_sender:?}").starts_with(
+            r#"ProgressSender { item_id: ItemId("test_item_id"), progress_tx: Sender"#
+        )
+    );
 }

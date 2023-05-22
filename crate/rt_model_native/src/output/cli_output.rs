@@ -316,7 +316,7 @@ where
                 //  32: blue pale (running)
                 //  17: blue dark (running background)
                 // 222: yellow pale (stalled)
-                //  75: indigo pale (user pending, item spec id)
+                //  75: indigo pale (user pending, item id)
                 //  35: green pale (success)
                 //  22: green dark (success background)
                 // 160: red slightly dim (fail)
@@ -439,7 +439,7 @@ where
             }
         };
 
-        // `prefix` is the item spec ID.
+        // `prefix` is the item ID.
         let mut format_str = format!("{icon} {prefix} {bar_or_spinner}");
         if let Some(units) = units {
             format_str.push_str(units);
@@ -495,7 +495,7 @@ where
                     .progress_trackers()
                     .iter()
                     .enumerate()
-                    .for_each(|(index, (item_spec_id, progress_tracker))| {
+                    .for_each(|(index, (item_id, progress_tracker))| {
                         let progress_bar = progress_tracker.progress_bar();
 
                         // Hack: colourization done in `progress_begin` to get
@@ -510,19 +510,19 @@ where
                                             .color256(15)
                                             .apply_to(format!("{index}."));
                                         // blue
-                                        let item_spec_id_colorized = console::Style::new()
+                                        let item_id_colorized = console::Style::new()
                                             .color256(75)
-                                            .apply_to(format!("{item_spec_id}"));
+                                            .apply_to(format!("{item_id}"));
                                         progress_bar.set_prefix(
-                                            format!("{index_colorized} {item_spec_id_colorized}")
+                                            format!("{index_colorized} {item_id_colorized}")
                                         );
                                     }
                                     CliColorize::Uncolored => {
-                                        progress_bar.set_prefix(format!("{index}. {item_spec_id}"));
+                                        progress_bar.set_prefix(format!("{index}. {item_id}"));
                                     }
                                 }
                             } else {
-                                progress_bar.set_prefix(format!("{index}. {item_spec_id}"));
+                                progress_bar.set_prefix(format!("{index}. {item_id}"));
                             }
                         }
 
@@ -542,9 +542,9 @@ where
                     panic!("`ProgressStyle` template was invalid. Template: `\"\"`. Error: {error}")
                 });
                 cmd_progress_tracker.progress_trackers().iter().for_each(
-                    |(item_spec_id, progress_tracker)| {
+                    |(item_id, progress_tracker)| {
                         let progress_bar = progress_tracker.progress_bar();
-                        progress_bar.set_prefix(format!("{item_spec_id}"));
+                        progress_bar.set_prefix(format!("{item_id}"));
                         progress_bar.set_style(progress_style.clone());
                     },
                 );
@@ -641,7 +641,7 @@ where
                 // Hack: This should be done with a timer in `ApplyCmd`.
                 // This uses threads, which is not WASM compatible.
                 cmd_progress_tracker.progress_trackers().iter().for_each(
-                    |(_item_spec_id, progress_tracker)| {
+                    |(_item_id, progress_tracker)| {
                         let progress_bar = progress_tracker.progress_bar();
                         progress_bar.disable_steady_tick();
                         progress_bar.tick();

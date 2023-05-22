@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{item_spec_id, ItemSpecId},
+    cfg::{item_id, ItemId},
     resources::{internal::StatesMut, states::StatesCurrent, type_reg::untagged::TypeMap},
 };
 
@@ -45,15 +45,15 @@ fn debug() {
     let debug_str = format!("{states:?}");
     assert!(
         debug_str
-            == r#"States({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData<peace_resources::states::ts::Current>)"#
+            == r#"States({ItemId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData<peace_resources::states::ts::Current>)"#
             || debug_str
-                == r#"States({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData)"#
+                == r#"States({ItemId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData)"#
     );
 }
 
 fn test_states() -> StatesCurrent {
     let mut states = StatesMut::new();
-    states.insert(item_spec_id!("key"), 123);
+    states.insert(item_id!("key"), 123);
 
     StatesCurrent::from(states)
 }

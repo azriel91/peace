@@ -31,7 +31,7 @@ Using profile <span style='color:#ffafff'><b>⦗demo⦘</b></span> -- type <span
 ```json
 // GET /api/v1/demo/env_deploy/progress
 {
-    "item_spec_id": "server_instance",
+    "item_id": "server_instance",
     "progress_update": { "Delta": "Tick" },
     "msg_update": { "Set": "starting up" }
     // ..
