@@ -169,6 +169,7 @@ where
                 let CmdProgressTracker {
                     multi_progress: _,
                     progress_trackers,
+                    ..
                 } = cmd_progress_tracker;
 
                 let (progress_tx, progress_rx) =

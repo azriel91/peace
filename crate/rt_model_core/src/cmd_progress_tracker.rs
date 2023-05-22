@@ -19,6 +19,9 @@ pub struct CmdProgressTracker {
     pub multi_progress: MultiProgress,
     /// Tracks progress for each item.
     pub progress_trackers: IndexMap<ItemId, ProgressTracker>,
+    /// Hack: Whether to clear progress bars when progress is done.
+    // Hack: Remove this when #120 is implemented.
+    clear_when_done: bool,
 }
 
 impl CmdProgressTracker {
@@ -30,6 +33,7 @@ impl CmdProgressTracker {
         Self {
             multi_progress,
             progress_trackers,
+            clear_when_done: false,
         }
     }
 
@@ -53,5 +57,17 @@ impl CmdProgressTracker {
     /// spec.
     pub fn progress_trackers_mut(&mut self) -> &mut IndexMap<ItemId, ProgressTracker> {
         &mut self.progress_trackers
+    }
+
+    /// Hack: Whether to clear progress bars when progress is done.
+    // Hack: Remove this when #120 is implemented.
+    pub fn clear_when_done(&self) -> bool {
+        self.clear_when_done
+    }
+
+    /// Hack: Sets whether to clear progress bars when progress is done.
+    // Hack: Remove this when #120 is implemented.
+    pub fn clear_when_done_set(&mut self, clear_when_done: bool) {
+        self.clear_when_done = clear_when_done;
     }
 }

@@ -195,6 +195,10 @@ where
         let apply_for_internal = match apply_for {
             ApplyFor::Ensure => ApplyForInternal::Ensure,
             ApplyFor::Clean => {
+                // Hack: Remove this when #120 is implemented.
+                #[cfg(feature = "output_progress")]
+                cmd_ctx.cmd_progress_tracker_mut().clear_when_done_set(true);
+
                 let states_current_outcome = StatesDiscoverCmd::current(cmd_ctx).await?;
                 if states_current_outcome.is_err() {
                     let outcome = states_current_outcome.map(|states_current| {
@@ -211,6 +215,12 @@ where
                     .progress_trackers_mut()
                     .values_mut()
                     .for_each(|progress_tracker| progress_tracker.reset());
+
+                // Hack: Remove this when #120 is implemented.
+                #[cfg(feature = "output_progress")]
+                cmd_ctx
+                    .cmd_progress_tracker_mut()
+                    .clear_when_done_set(false);
 
                 let CmdOutcome {
                     value: states_current,
@@ -244,6 +254,7 @@ where
                 let CmdProgressTracker {
                     multi_progress: _,
                     progress_trackers,
+                    ..
                 } = cmd_progress_tracker;
 
                 let (progress_tx, progress_rx) =

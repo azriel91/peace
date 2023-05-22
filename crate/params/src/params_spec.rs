@@ -223,6 +223,7 @@ where
             let self_ty_name = tynm::type_name::<Self>();
             panic!("Failed to downcast value into `{self_ty_name}`. Value: `{other_boxed:#?}`.");
         };
+
         match self {
             // Use the spec that was previously stored
             // (as opposed to previous value).
