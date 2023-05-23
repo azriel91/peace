@@ -34,21 +34,23 @@ impl EnvDeployFlow {
             let graph = {
                 let mut graph_builder = ItemGraphBuilder::<EnvManError>::new();
 
-                let app_download_id = graph_builder
-                    .add_fn(FileDownloadItem::<WebApp>::new(item_id!("app_download")).into());
-                let app_extract_id =
-                    graph_builder.add_fn(TarXItem::<WebApp>::new(item_id!("app_extract")).into());
-                let iam_policy_item_id = graph_builder
-                    .add_fn(IamPolicyItem::<WebApp>::new(item_id!("iam_policy")).into());
-                let iam_role_item_id =
-                    graph_builder.add_fn(IamRoleItem::<WebApp>::new(item_id!("iam_role")).into());
-                let instance_profile_item_id = graph_builder.add_fn(
+                let [
+                    app_download_id,
+                    app_extract_id,
+                    iam_policy_item_id,
+                    iam_role_item_id,
+                    instance_profile_item_id,
+                    s3_bucket_id,
+                    s3_object_id,
+                ] = graph_builder.add_fns([
+                    FileDownloadItem::<WebApp>::new(item_id!("app_download")).into(),
+                    TarXItem::<WebApp>::new(item_id!("app_extract")).into(),
+                    IamPolicyItem::<WebApp>::new(item_id!("iam_policy")).into(),
+                    IamRoleItem::<WebApp>::new(item_id!("iam_role")).into(),
                     InstanceProfileItem::<WebApp>::new(item_id!("instance_profile")).into(),
-                );
-                let s3_bucket_id =
-                    graph_builder.add_fn(S3BucketItem::<WebApp>::new(item_id!("s3_bucket")).into());
-                let s3_object_id =
-                    graph_builder.add_fn(S3ObjectItem::<WebApp>::new(item_id!("s3_object")).into());
+                    S3BucketItem::<WebApp>::new(item_id!("s3_bucket")).into(),
+                    S3ObjectItem::<WebApp>::new(item_id!("s3_object")).into(),
+                ]);
 
                 graph_builder.add_edges([
                     (app_download_id, app_extract_id),
