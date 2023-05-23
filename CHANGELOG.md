@@ -12,6 +12,7 @@
 * Use `Params::Partial` in `Item::try_state_*` functions. ([#94], [#118])
 * Implement one level recursion referential item params. ([#119], [#121])
 * Implement deep merging of params specs. ([#122], [#123])
+* Calculate padding for progress bar item IDs. ([#46], [#124])
 
 [#116]: https://github.com/azriel91/peace/issues/116
 [#117]: https://github.com/azriel91/peace/pull/117
@@ -21,6 +22,8 @@
 [#121]: https://github.com/azriel91/peace/pull/121
 [#122]: https://github.com/azriel91/peace/issues/122
 [#123]: https://github.com/azriel91/peace/pull/123
+[#46]: https://github.com/azriel91/peace/issues/46
+[#124]: https://github.com/azriel91/peace/pull/124
 
 
 ## 0.0.9 (2023-04-13)
