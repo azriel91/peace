@@ -28,9 +28,12 @@ impl AppUploadFlow {
             let graph = {
                 let mut graph_builder = ItemGraphBuilder::<EnvManError>::new();
 
-                let a = graph_builder.add_fn(FileDownloadItem::<WebApp>::new(item_id!("a")).into());
-                let b = graph_builder.add_fn(S3BucketItem::<WebApp>::new(item_id!("b")).into());
-                let c = graph_builder.add_fn(S3ObjectItem::<WebApp>::new(item_id!("c")).into());
+                let a = graph_builder
+                    .add_fn(FileDownloadItem::<WebApp>::new(item_id!("app_download")).into());
+                let b =
+                    graph_builder.add_fn(S3BucketItem::<WebApp>::new(item_id!("s3_bucket")).into());
+                let c =
+                    graph_builder.add_fn(S3ObjectItem::<WebApp>::new(item_id!("s3_object")).into());
 
                 graph_builder.add_edges([(a, b), (b, c)])?;
                 graph_builder.build()

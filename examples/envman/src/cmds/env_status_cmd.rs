@@ -31,7 +31,7 @@ impl EnvStatusCmd {
         let workspace = workspace()?;
         let env_man_flow = env_man_flow(output, &workspace).await?;
         match env_man_flow {
-            EnvManFlow::AppUpload => run!(output, AppUploadCmd, 3usize),
+            EnvManFlow::AppUpload => run!(output, AppUploadCmd, 14usize),
             EnvManFlow::EnvDeploy => run!(output, EnvCmd, 18usize),
         }
 

@@ -204,9 +204,12 @@ where
         cmd_ctx_builder
             .with_profile_from_workspace_param(profile_key)
             .with_flow(flow)
-            .with_item_params::<FileDownloadItem<WebApp>>(item_id!("a"), app_download_params_spec)
-            .with_item_params::<S3BucketItem<WebApp>>(item_id!("b"), s3_bucket_params_spec)
-            .with_item_params::<S3ObjectItem<WebApp>>(item_id!("c"), s3_object_params_spec)
+            .with_item_params::<FileDownloadItem<WebApp>>(
+                item_id!("app_download"),
+                app_download_params_spec,
+            )
+            .with_item_params::<S3BucketItem<WebApp>>(item_id!("s3_bucket"), s3_bucket_params_spec)
+            .with_item_params::<S3ObjectItem<WebApp>>(item_id!("s3_object"), s3_object_params_spec)
             .await?
     };
     Ok(cmd_ctx)

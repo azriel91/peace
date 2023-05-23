@@ -55,7 +55,7 @@ impl EnvDiffCmd {
         O: OutputWrite<EnvManError> + Send,
     {
         match env_man_flow {
-            EnvManFlow::AppUpload => run!(output, AppUploadCmd, 3usize),
+            EnvManFlow::AppUpload => run!(output, AppUploadCmd, 14usize),
             EnvManFlow::EnvDeploy => run!(output, EnvCmd, 18usize),
         }
     }
@@ -70,7 +70,9 @@ impl EnvDiffCmd {
         O: OutputWrite<EnvManError> + Send,
     {
         match env_man_flow {
-            EnvManFlow::AppUpload => run_multi!(output, AppUploadCmd, 3usize, profile_a, profile_b),
+            EnvManFlow::AppUpload => {
+                run_multi!(output, AppUploadCmd, 14usize, profile_a, profile_b)
+            }
             EnvManFlow::EnvDeploy => run_multi!(output, EnvCmd, 18usize, profile_a, profile_b),
         };
 
