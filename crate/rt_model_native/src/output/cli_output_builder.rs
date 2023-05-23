@@ -271,6 +271,8 @@ where
             progress_target,
             #[cfg(feature = "output_progress")]
             progress_format,
+            #[cfg(feature = "output_progress")]
+            pb_item_id_width: None,
         }
     }
 }

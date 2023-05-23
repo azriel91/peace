@@ -328,9 +328,9 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
-            //    ^                  ^ ^                                      ^
-            //    '---- 20 chars ----' '-------------- 40 chars --------------'
+            r#"⏳ 1. test_item_id ▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
+            //    ^             ^ ^                                      ^
+            //    '-- 15 chars -' '-------------- 40 chars --------------'
             in_memory_term.contents()
         );
     }
@@ -386,17 +386,17 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -449,7 +449,7 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -471,7 +471,7 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"✅ 1. test_item_id      ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
+            r#"✅ 1. test_item_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
             in_memory_term.contents(),
         );
     }
@@ -524,7 +524,7 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -546,7 +546,7 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"❌ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
+            r#"❌ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
             in_memory_term.contents()
         );
     }
@@ -718,9 +718,9 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
-            //    ^                  ^ ^                                      ^
-            //    '---- 20 chars ----' '-------------- 40 chars --------------'
+            r#"⏳ 1. test_item_id ▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
+            //    ^             ^ ^                                      ^
+            //    '-- 15 chars -' '-------------- 40 chars --------------'
             in_memory_term.contents()
         );
     }
@@ -773,17 +773,17 @@ mod color_never {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -836,7 +836,7 @@ mod color_never {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -858,7 +858,7 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"✅ 1. test_item_id      ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
+            r#"✅ 1. test_item_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
             in_memory_term.contents(),
         );
     }
@@ -911,7 +911,7 @@ mod color_never {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -933,7 +933,7 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"❌ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
+            r#"❌ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
             in_memory_term.contents()
         );
     }
@@ -1104,9 +1104,9 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
-            //    ^                  ^ ^                                      ^
-            //    '---- 20 chars ----' '-------------- 40 chars --------------'
+            r#"⏳ 1. test_item_id ▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
+            //    ^             ^ ^                                      ^
+            //    '-- 15 chars -' '-------------- 40 chars --------------'
             in_memory_term.contents()
         );
     }
@@ -1158,17 +1158,17 @@ mod color_disabled {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -1220,7 +1220,7 @@ mod color_disabled {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -1242,7 +1242,7 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"✅ 1. test_item_id      ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
+            r#"✅ 1. test_item_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
             in_memory_term.contents(),
         );
     }
@@ -1294,7 +1294,7 @@ mod color_disabled {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -1316,7 +1316,7 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"❌ 1. test_item_id      ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
+            r#"❌ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
             in_memory_term.contents()
         );
     }
