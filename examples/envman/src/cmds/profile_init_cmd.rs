@@ -25,8 +25,7 @@ use crate::{
         peace_aws_s3_object::S3ObjectItem,
     },
     model::{
-        EnvManError, EnvManFlow, EnvType, ProfileParamsKey, RepoSlug, WebAppFileId,
-        WorkspaceParamsKey,
+        EnvManError, EnvManFlow, EnvType, ProfileParamsKey, RepoSlug, WebApp, WorkspaceParamsKey,
     },
 };
 
@@ -167,7 +166,7 @@ impl ProfileInitCmd {
     }
 }
 
-#[allow(clippy::too_many_args)]
+#[allow(clippy::too_many_arguments)]
 async fn app_upload_flow_init<'f, O>(
     profile_to_create: &'f Profile,
     profile_key: &'f WorkspaceParamsKey,
@@ -205,18 +204,15 @@ where
         cmd_ctx_builder
             .with_profile_from_workspace_param(profile_key)
             .with_flow(flow)
-            .with_item_params::<FileDownloadItem<WebAppFileId>>(
-                item_id!("a"),
-                app_download_params_spec,
-            )
-            .with_item_params::<S3BucketItem<WebAppFileId>>(item_id!("b"), s3_bucket_params_spec)
-            .with_item_params::<S3ObjectItem<WebAppFileId>>(item_id!("c"), s3_object_params_spec)
+            .with_item_params::<FileDownloadItem<WebApp>>(item_id!("a"), app_download_params_spec)
+            .with_item_params::<S3BucketItem<WebApp>>(item_id!("b"), s3_bucket_params_spec)
+            .with_item_params::<S3ObjectItem<WebApp>>(item_id!("c"), s3_object_params_spec)
             .await?
     };
     Ok(cmd_ctx)
 }
 
-#[allow(clippy::too_many_args)]
+#[allow(clippy::too_many_arguments)]
 async fn env_deploy_flow_init<'f, O>(
     profile_to_create: &'f Profile,
     profile_key: &'f WorkspaceParamsKey,
@@ -258,34 +254,22 @@ where
         cmd_ctx_builder
             .with_profile_from_workspace_param(profile_key)
             .with_flow(flow)
-            .with_item_params::<FileDownloadItem<WebAppFileId>>(
+            .with_item_params::<FileDownloadItem<WebApp>>(
                 item_id!("app_download"),
                 app_download_params_spec,
             )
-            .with_item_params::<TarXItem<WebAppFileId>>(
-                item_id!("app_extract"),
-                app_extract_params_spec,
-            )
-            .with_item_params::<IamPolicyItem<WebAppFileId>>(
+            .with_item_params::<TarXItem<WebApp>>(item_id!("app_extract"), app_extract_params_spec)
+            .with_item_params::<IamPolicyItem<WebApp>>(
                 item_id!("iam_policy"),
                 iam_policy_params_spec,
             )
-            .with_item_params::<IamRoleItem<WebAppFileId>>(
-                item_id!("iam_role"),
-                iam_role_params_spec,
-            )
-            .with_item_params::<InstanceProfileItem<WebAppFileId>>(
+            .with_item_params::<IamRoleItem<WebApp>>(item_id!("iam_role"), iam_role_params_spec)
+            .with_item_params::<InstanceProfileItem<WebApp>>(
                 item_id!("instance_profile"),
                 instance_profile_params_spec,
             )
-            .with_item_params::<S3BucketItem<WebAppFileId>>(
-                item_id!("s3_bucket"),
-                s3_bucket_params_spec,
-            )
-            .with_item_params::<S3ObjectItem<WebAppFileId>>(
-                item_id!("s3_object"),
-                s3_object_params_spec,
-            )
+            .with_item_params::<S3BucketItem<WebApp>>(item_id!("s3_bucket"), s3_bucket_params_spec)
+            .with_item_params::<S3ObjectItem<WebApp>>(item_id!("s3_object"), s3_object_params_spec)
             .await?
     };
     Ok(cmd_ctx)

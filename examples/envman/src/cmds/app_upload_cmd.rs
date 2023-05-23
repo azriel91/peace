@@ -21,7 +21,7 @@ use crate::{
         peace_aws_s3_bucket::S3BucketState,
         peace_aws_s3_object::{S3ObjectItem, S3ObjectParams},
     },
-    model::{EnvManError, EnvType, ProfileParamsKey, WebAppFileId, WorkspaceParamsKey},
+    model::{EnvManError, EnvType, ProfileParamsKey, WebApp, WorkspaceParamsKey},
     rt_model::EnvManCmdCtx,
 };
 
@@ -54,7 +54,7 @@ impl AppUploadCmd {
         let flow = AppUploadFlow::flow().await?;
         let profile_key = WorkspaceParamsKey::Profile;
 
-        let s3_object_params_spec = S3ObjectParams::<WebAppFileId>::field_wise_spec()
+        let s3_object_params_spec = S3ObjectParams::<WebApp>::field_wise_spec()
             .with_bucket_name_from_map(|s3_bucket_state: &S3BucketState| match s3_bucket_state {
                 S3BucketState::None => None,
                 S3BucketState::Some {
@@ -72,10 +72,7 @@ impl AppUploadCmd {
             cmd_ctx_builder
                 .with_profile_from_workspace_param(&profile_key)
                 .with_flow(&flow)
-                .with_item_params::<S3ObjectItem<WebAppFileId>>(
-                    item_id!("c"),
-                    s3_object_params_spec,
-                )
+                .with_item_params::<S3ObjectItem<WebApp>>(item_id!("c"), s3_object_params_spec)
                 .await?
         };
 

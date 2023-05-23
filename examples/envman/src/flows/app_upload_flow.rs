@@ -14,10 +14,10 @@ use crate::{
         peace_aws_s3_bucket::{S3BucketItem, S3BucketParams, S3BucketState},
         peace_aws_s3_object::{S3ObjectItem, S3ObjectParams},
     },
-    model::{EnvManError, RepoSlug, WebAppFileId},
+    model::{EnvManError, RepoSlug, WebApp},
 };
 
-/// Flow to deploy a web application.
+/// Flow to upload a web application to S3.
 #[derive(Debug)]
 pub struct AppUploadFlow;
 
@@ -28,12 +28,9 @@ impl AppUploadFlow {
             let graph = {
                 let mut graph_builder = ItemGraphBuilder::<EnvManError>::new();
 
-                let a = graph_builder
-                    .add_fn(FileDownloadItem::<WebAppFileId>::new(item_id!("a")).into());
-                let b =
-                    graph_builder.add_fn(S3BucketItem::<WebAppFileId>::new(item_id!("b")).into());
-                let c =
-                    graph_builder.add_fn(S3ObjectItem::<WebAppFileId>::new(item_id!("c")).into());
+                let a = graph_builder.add_fn(FileDownloadItem::<WebApp>::new(item_id!("a")).into());
+                let b = graph_builder.add_fn(S3BucketItem::<WebApp>::new(item_id!("b")).into());
+                let c = graph_builder.add_fn(S3ObjectItem::<WebApp>::new(item_id!("c")).into());
 
                 graph_builder.add_edges([(a, b), (b, c)])?;
                 graph_builder.build()
@@ -93,10 +90,10 @@ impl AppUploadFlow {
             .expect("Expected web app file name to exist.")
             .to_string_lossy()
             .to_string();
-        let s3_bucket_params_spec = S3BucketParams::<WebAppFileId>::field_wise_spec()
-            .with_name(bucket_name.clone())
+        let s3_bucket_params_spec = S3BucketParams::<WebApp>::field_wise_spec()
+            .with_name(bucket_name)
             .build();
-        let s3_object_params_spec = S3ObjectParams::<WebAppFileId>::field_wise_spec()
+        let s3_object_params_spec = S3ObjectParams::<WebApp>::field_wise_spec()
             .with_file_path(web_app_path_local)
             .with_bucket_name_from_map(|s3_bucket_state: &S3BucketState| match s3_bucket_state {
                 S3BucketState::None => None,
@@ -118,7 +115,7 @@ impl AppUploadFlow {
 
 #[derive(Debug)]
 pub struct AppUploadFlowParamsSpecs {
-    pub app_download_params_spec: ParamsSpec<FileDownloadParams<WebAppFileId>>,
-    pub s3_bucket_params_spec: ParamsSpec<S3BucketParams<WebAppFileId>>,
-    pub s3_object_params_spec: ParamsSpec<S3ObjectParams<WebAppFileId>>,
+    pub app_download_params_spec: ParamsSpec<FileDownloadParams<WebApp>>,
+    pub s3_bucket_params_spec: ParamsSpec<S3BucketParams<WebApp>>,
+    pub s3_object_params_spec: ParamsSpec<S3ObjectParams<WebApp>>,
 }

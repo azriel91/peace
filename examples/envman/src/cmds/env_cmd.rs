@@ -21,7 +21,7 @@ use crate::{
         peace_aws_iam_policy::IamPolicyState,
         peace_aws_iam_role::{IamRoleItem, IamRoleParams},
     },
-    model::{EnvManError, EnvType, ProfileParamsKey, WebAppFileId, WorkspaceParamsKey},
+    model::{EnvManError, EnvType, ProfileParamsKey, WebApp, WorkspaceParamsKey},
     rt_model::EnvManCmdCtx,
 };
 
@@ -55,7 +55,7 @@ impl EnvCmd {
         let profile_key = WorkspaceParamsKey::Profile;
 
         let iam_role_path = String::from("/");
-        let iam_role_params_spec = IamRoleParams::<WebAppFileId>::field_wise_spec()
+        let iam_role_params_spec = IamRoleParams::<WebApp>::field_wise_spec()
             .with_name_from_map(|profile: &Profile| Some(profile.to_string()))
             .with_path(iam_role_path)
             .with_managed_policy_arn_from_map(|iam_policy_state: &IamPolicyState| {
@@ -77,10 +77,7 @@ impl EnvCmd {
             cmd_ctx_builder
                 .with_profile_from_workspace_param(&profile_key)
                 .with_flow(&flow)
-                .with_item_params::<IamRoleItem<WebAppFileId>>(
-                    item_id!("iam_role"),
-                    iam_role_params_spec,
-                )
+                .with_item_params::<IamRoleItem<WebApp>>(item_id!("iam_role"), iam_role_params_spec)
                 .await?
         };
 
