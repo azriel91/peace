@@ -3,7 +3,7 @@ use peace::{cfg::Profile, rt_model::output::OutputFormat};
 use semver::Version;
 use url::Url;
 
-use crate::model::{EnvType, RepoSlug};
+use crate::model::{EnvManFlow, EnvType, RepoSlug};
 
 #[cfg(feature = "output_colorized")]
 use peace::rt_model::output::CliColorizeOpt;
@@ -48,6 +48,9 @@ pub enum EnvManCommand {
         /// Type of the profile's deployed environment.
         #[arg(short, long)]
         r#type: EnvType,
+        /// Which flow to use: `"upload"` or `"deploy"`.
+        #[arg(long, default_value = "deploy")]
+        flow: EnvManFlow,
         /// Username and repository of the application to download.
         slug: RepoSlug,
         /// Version of the application to download.

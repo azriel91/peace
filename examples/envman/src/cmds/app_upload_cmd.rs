@@ -1,0 +1,161 @@
+use futures::future::LocalBoxFuture;
+use peace::{
+    cfg::{app_name, item_id, AppName, ItemId, Profile},
+    cmd::{
+        ctx::CmdCtx,
+        scopes::{MultiProfileSingleFlow, SingleProfileSingleFlowView},
+    },
+    fmt::presentln,
+    params::Params,
+    resources::resources::ts::SetUp,
+    rt_model::{
+        output::OutputWrite,
+        params::{KeyKnown, KeyUnknown, ParamsKeysImpl},
+        Workspace, WorkspaceSpec,
+    },
+};
+
+use crate::{
+    flows::AppUploadFlow,
+    items::{
+        peace_aws_s3_bucket::S3BucketState,
+        peace_aws_s3_object::{S3ObjectItem, S3ObjectParams},
+    },
+    model::{EnvManError, EnvType, ProfileParamsKey, WebAppFileId, WorkspaceParamsKey},
+    rt_model::EnvManCmdCtx,
+};
+
+/// Runs a `*Cmd` that interacts with the application upload.
+#[derive(Debug)]
+pub struct AppUploadCmd;
+
+impl AppUploadCmd {
+    /// Runs a command on the environment with the active profile.
+    ///
+    /// # Parameters
+    ///
+    /// * `output`: Output to write the execution outcome.
+    /// * `profile_print`: Whether to print the profile used.
+    /// * `f`: The command to run.
+    pub async fn run<O, T, F>(output: &mut O, profile_print: bool, f: F) -> Result<T, EnvManError>
+    where
+        O: OutputWrite<EnvManError>,
+        for<'fn_once> F: FnOnce(
+            &'fn_once mut EnvManCmdCtx<'_, O, SetUp>,
+        ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
+    {
+        let workspace = Workspace::new(
+            app_name!(),
+            #[cfg(not(target_arch = "wasm32"))]
+            WorkspaceSpec::WorkingDir,
+            #[cfg(target_arch = "wasm32")]
+            WorkspaceSpec::SessionStorage,
+        )?;
+        let flow = AppUploadFlow::flow().await?;
+        let profile_key = WorkspaceParamsKey::Profile;
+
+        let s3_object_params_spec = S3ObjectParams::<WebAppFileId>::field_wise_spec()
+            .with_bucket_name_from_map(|s3_bucket_state: &S3BucketState| match s3_bucket_state {
+                S3BucketState::None => None,
+                S3BucketState::Some {
+                    name,
+                    creation_date: _,
+                } => Some(name.clone()),
+            })
+            .build();
+
+        let mut cmd_ctx = {
+            let cmd_ctx_builder =
+                CmdCtx::builder_single_profile_single_flow::<EnvManError, _>(output, &workspace);
+            crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
+
+            cmd_ctx_builder
+                .with_profile_from_workspace_param(&profile_key)
+                .with_flow(&flow)
+                .with_item_params::<S3ObjectItem<WebAppFileId>>(
+                    item_id!("c"),
+                    s3_object_params_spec,
+                )
+                .await?
+        };
+
+        if profile_print {
+            Self::profile_print(&mut cmd_ctx).await?;
+        }
+
+        let t = f(&mut cmd_ctx).await?;
+
+        Ok(t)
+    }
+
+    /// Runs a multi-profile command using the `EnvDeploy` flow..
+    ///
+    /// # Parameters
+    ///
+    /// * `output`: Output to write the execution outcome.
+    /// * `f`: The command to run.
+    pub async fn multi_profile<O, T, F>(output: &mut O, f: F) -> Result<T, EnvManError>
+    where
+        O: OutputWrite<EnvManError>,
+        for<'fn_once> F: FnOnce(
+            &'fn_once mut CmdCtx<
+                MultiProfileSingleFlow<
+                    '_,
+                    EnvManError,
+                    O,
+                    ParamsKeysImpl<
+                        KeyKnown<WorkspaceParamsKey>,
+                        KeyKnown<ProfileParamsKey>,
+                        KeyUnknown,
+                    >,
+                    SetUp,
+                >,
+            >,
+        ) -> LocalBoxFuture<'fn_once, Result<T, EnvManError>>,
+    {
+        let workspace = Workspace::new(
+            app_name!(),
+            #[cfg(not(target_arch = "wasm32"))]
+            WorkspaceSpec::WorkingDir,
+            #[cfg(target_arch = "wasm32")]
+            WorkspaceSpec::SessionStorage,
+        )?;
+        let flow = AppUploadFlow::flow().await?;
+
+        let mut cmd_ctx = {
+            let cmd_ctx_builder =
+                CmdCtx::builder_multi_profile_single_flow::<EnvManError, _>(output, &workspace);
+            crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
+
+            cmd_ctx_builder.with_flow(&flow).await?
+        };
+
+        let t = f(&mut cmd_ctx).await?;
+
+        Ok(t)
+    }
+
+    async fn profile_print<O>(cmd_ctx: &mut EnvManCmdCtx<'_, O, SetUp>) -> Result<(), EnvManError>
+    where
+        O: OutputWrite<EnvManError>,
+    {
+        let SingleProfileSingleFlowView {
+            output,
+            workspace_params,
+            profile_params,
+            ..
+        } = cmd_ctx.view();
+
+        let profile = workspace_params.get::<Profile, _>(&WorkspaceParamsKey::Profile);
+        let env_type = profile_params.get::<EnvType, _>(&ProfileParamsKey::EnvType);
+
+        if let Some((profile, env_type)) = profile.zip(env_type) {
+            presentln!(
+                output,
+                ["Using profile ", profile, " -- type ", env_type, "\n"]
+            );
+        }
+
+        Ok(())
+    }
+}

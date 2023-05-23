@@ -73,7 +73,7 @@ pub fn run() -> Result<(), EnvManError> {
             builder.build()
         };
 
-        match run_command(command, &mut cli_output).await {
+        match run_command(&mut cli_output, command).await {
             Ok(()) => Ok(()),
             Err(error) => envman::output::errors_present(&mut cli_output, &[error]).await,
         }
@@ -81,18 +81,22 @@ pub fn run() -> Result<(), EnvManError> {
 }
 
 async fn run_command(
-    command: EnvManCommand,
     cli_output: &mut CliOutput<Stdout>,
+    command: EnvManCommand,
 ) -> Result<(), EnvManError> {
     match command {
         EnvManCommand::Init {
             profile,
+            flow,
             r#type,
             slug,
             version,
             url,
         } => {
-            ProfileInitCmd::run(cli_output, profile, r#type, &slug, &version, url).await?;
+            ProfileInitCmd::run(
+                cli_output, profile, flow, r#type, &slug, &version, url, true,
+            )
+            .await?;
         }
         EnvManCommand::Profile { command } => {
             let command = command.unwrap_or(ProfileCommand::Show);

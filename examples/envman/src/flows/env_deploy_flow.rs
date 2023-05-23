@@ -31,7 +31,6 @@ impl EnvDeployFlow {
     /// Returns the `Flow` graph.
     pub async fn flow() -> Result<Flow<EnvManError>, EnvManError> {
         let flow = {
-            let flow_id = flow_id!("env_deploy");
             let graph = {
                 let mut graph_builder = ItemGraphBuilder::<EnvManError>::new();
 
@@ -39,17 +38,13 @@ impl EnvDeployFlow {
                     .add_fn(FileDownloadItem::<WebAppFileId>::new(item_id!("app_download")).into());
                 let app_extract_id = graph_builder
                     .add_fn(TarXItem::<WebAppFileId>::new(item_id!("app_extract")).into());
-
                 let iam_policy_item_id = graph_builder
                     .add_fn(IamPolicyItem::<WebAppFileId>::new(item_id!("iam_policy")).into());
-
                 let iam_role_item_id = graph_builder
                     .add_fn(IamRoleItem::<WebAppFileId>::new(item_id!("iam_role")).into());
-
                 let instance_profile_item_id = graph_builder.add_fn(
                     InstanceProfileItem::<WebAppFileId>::new(item_id!("instance_profile")).into(),
                 );
-
                 let s3_bucket_id = graph_builder
                     .add_fn(S3BucketItem::<WebAppFileId>::new(item_id!("s3_bucket")).into());
                 let s3_object_id = graph_builder
@@ -67,7 +62,7 @@ impl EnvDeployFlow {
                 graph_builder.build()
             };
 
-            Flow::new(flow_id, graph)
+            Flow::new(flow_id!("env_deploy"), graph)
         };
 
         Ok(flow)
@@ -93,20 +88,15 @@ impl EnvDeployFlow {
         //
         // linux:
         // https://github.com/azriel91/web_app/releases/download/0.1.0/web_app.tar
-        let web_app_file_url = {
-            match url {
-                Some(url) => url,
-                None => {
-                    let url_candidate = format!(
-                        "https://github.com/{account}/{repo_name}/releases/download/{version}/{repo_name}.{file_ext}"
-                    );
-                    Url::parse(&url_candidate).map_err(|error| EnvManError::EnvManUrlBuild {
-                        url_candidate,
-                        error,
-                    })?
-                }
-            }
-        };
+        let web_app_file_url = url.map(Result::Ok).unwrap_or_else(|| {
+            let url_candidate = format!(
+                "https://github.com/{account}/{repo_name}/releases/download/{version}/{repo_name}.{file_ext}"
+            );
+            Url::parse(&url_candidate).map_err(|error| EnvManError::EnvManUrlBuild {
+                url_candidate,
+                error,
+            })
+        })?;
         let web_app_path_local = app_download_dir.join(format!("{repo_name}.{file_ext}"));
         let app_download_params_spec = FileDownloadParams::new(
             web_app_file_url,

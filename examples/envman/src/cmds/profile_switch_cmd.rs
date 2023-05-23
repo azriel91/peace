@@ -1,11 +1,14 @@
 use peace::{
     cfg::{app_name, AppName, Profile},
     cmd::{ctx::CmdCtx, scopes::MultiProfileNoFlowView},
-    rt_model::{output::OutputWrite, Workspace, WorkspaceSpec},
+    rt_model::output::OutputWrite,
 };
 
 use crate::{
-    cmds::ProfileInitCmd,
+    cmds::{
+        common::{env_man_flow, workspace},
+        ProfileInitCmd,
+    },
     model::{EnvManError, ProfileSwitch, WorkspaceParamsKey},
 };
 
@@ -24,13 +27,9 @@ impl ProfileSwitchCmd {
         O: OutputWrite<EnvManError>,
     {
         let app_name = app_name!();
-        let workspace = Workspace::new(
-            app_name!(),
-            #[cfg(not(target_arch = "wasm32"))]
-            WorkspaceSpec::WorkingDir,
-            #[cfg(target_arch = "wasm32")]
-            WorkspaceSpec::SessionStorage,
-        )?;
+        let workspace = workspace()?;
+
+        let env_man_flow = env_man_flow(output, &workspace).await?;
 
         let profile_workspace_init = Profile::workspace_init();
         let cmd_ctx_builder =
@@ -87,10 +86,12 @@ impl ProfileSwitchCmd {
                 ProfileInitCmd::run(
                     output,
                     profile_to_create.clone(),
+                    env_man_flow,
                     env_type,
                     &slug,
                     &version,
                     url,
+                    false,
                 )
                 .await?;
 

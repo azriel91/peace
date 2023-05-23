@@ -7,6 +7,7 @@
 //! `Item`'s params type.
 
 pub use self::{
+    app_upload_cmd::AppUploadCmd,
     cmd_ctx_builder::{ws_and_profile_params_augment, ws_params_augment},
     env_clean_cmd::EnvCleanCmd,
     env_cmd::EnvCmd,
@@ -21,7 +22,9 @@ pub use self::{
     profile_switch_cmd::ProfileSwitchCmd,
 };
 
+mod app_upload_cmd;
 mod cmd_ctx_builder;
+mod common;
 mod env_clean_cmd;
 mod env_cmd;
 mod env_deploy_cmd;

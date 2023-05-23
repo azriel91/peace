@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 pub enum WorkspaceParamsKey {
     /// Default profile to use.
     Profile,
+    /// Which flow this workspace is using.
+    Flow,
 }
 
 /// Keys for profile parameters.
