@@ -4,8 +4,67 @@
     vertical-align: top;
 }
 
+.centered_container {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.centered_container > * {
+    flex-basis: auto;
+    flex-grow: 0;
+    flex-shrink: 1;
+}
+
+code {
+    border-radius: 4px;
+}
+main pre code.hljs {
+    padding: 0.6em; /* override hljs padding */
+}
+
 hr {
     border-top-width: 2px;
     border-bottom-width: 0px;
     border-color: #7f7f7f7f;
+}
+
+/* === highlightjs-line-numbers === */
+/* main table */
+
+.hljs-ln > tbody > tr:nth-child(2n) {
+    background: none; /* undo general.css colouring */
+}
+.hljs-ln {
+    display: flex;
+    align-items: flex-start;
+}
+
+.hljs-ln-line {
+    border: none;
+    padding: 0.1em 0.5em; /* undo general.css spacing */
+}
+
+/* for block of numbers */
+.hljs-ln-numbers {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    text-align: right;
+    color: #aaaaaa;
+    border-right: 1px solid #bbbbbb;
+    vertical-align: top;
+    padding-right: 5px;
+
+    /* your custom style here */
+}
+
+/* for block of code */
+.hljs-ln-line .hljs-ln-code {
+    flex-grow: 1;
 }
