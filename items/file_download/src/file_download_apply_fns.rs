@@ -43,6 +43,12 @@ where
     ) -> Result<FetchedOpt<ETag>, FileDownloadError> {
         let client = data.client();
         let src_url = params.src();
+
+        #[cfg(feature = "output_progress")]
+        fn_ctx
+            .progress_sender
+            .tick(ProgressMsgUpdate::Set(String::from("starting download")));
+
         let response = client
             .get(src_url.clone())
             .send()
@@ -350,6 +356,11 @@ where
     ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
         match diff {
             FileDownloadStateDiff::Deleted { path } => {
+                #[cfg(feature = "output_progress")]
+                fn_ctx
+                    .progress_sender
+                    .tick(ProgressMsgUpdate::Set(String::from("removing file")));
+
                 #[cfg(not(target_arch = "wasm32"))]
                 tokio::fs::remove_file(path)
                     .await
