@@ -619,8 +619,9 @@ fn params_specs_mismatch_display(
     if !params_specs_not_usable.is_empty() {
         items.push(format!(
             "The following items either have not had a params spec provided previously,\n\
-            or previously had a mapping function provided which cannot be automatically loaded.\n\
-            So the current execution requires the spec to be provided:\n\
+            or had contained a mapping function, which cannot be loaded from disk.\n\
+            \n\
+            So the params spec needs to be provided to the command context for:\n\
             \n\
             {}\n",
             params_specs_not_usable
