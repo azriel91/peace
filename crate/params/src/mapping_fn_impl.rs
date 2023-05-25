@@ -116,7 +116,7 @@ macro_rules! impl_mapping_fn_impl {
                 value_resolution_ctx: &mut ValueResolutionCtx,
             ) -> Result<T, ParamsResolveError> {
                 let Some(fn_map) = self.fn_map.as_ref() else {
-                    panic!("`MappingFnImpl::map` called when `fn_map` is `None`.\n\
+                    panic!("`MappingFnImpl::map` called when `fn_map` is `None`{field_name}.\n\
                         This is a bug in the Peace framework.\n\
                         \n\
                         Type parameters are:\n\
@@ -124,6 +124,10 @@ macro_rules! impl_mapping_fn_impl {
                         * `T`: {t}\n\
                         * `Args`: ({Args})\n\
                         ",
+                        field_name = self.field_name
+                            .as_ref()
+                            .map(|field_name| format!(" for field: `{field_name}`"))
+                            .unwrap_or("".to_string()),
                         t = tynm::type_name::<T>(),
                         Args = tynm::type_name::<($($Arg,)+)>(),
                     );
@@ -173,7 +177,7 @@ macro_rules! impl_mapping_fn_impl {
                 value_resolution_ctx: &mut ValueResolutionCtx,
             ) -> Result<Option<T>, ParamsResolveError> {
                 let Some(fn_map) = self.fn_map.as_ref() else {
-                    panic!("`MappingFnImpl::try_map` called when `fn_map` is `None`.\n\
+                    panic!("`MappingFnImpl::try_map` called when `fn_map` is `None`{field_name}.\n\
                         This is a bug in the Peace framework.\n\
                         \n\
                         Type parameters are:\n\
@@ -181,6 +185,10 @@ macro_rules! impl_mapping_fn_impl {
                         * `T`: {t}\n\
                         * `Args`: ({Args})\n\
                         ",
+                        field_name = self.field_name
+                            .as_ref()
+                            .map(|field_name| format!(" for field: `{field_name}`"))
+                            .unwrap_or("".to_string()),
                         t = tynm::type_name::<T>(),
                         Args = tynm::type_name::<($($Arg,)+)>(),
                     );
