@@ -518,22 +518,38 @@ fn impl_build_for(
                 //         .iter()
                 //         .map(Result::<_, peace_rt_model::Error>::Ok)
                 //     )
-                //     .and_then(|(profile, flow_dir)| async move {
-                //         let params_specs_file =
-                //             peace_resources::paths::ParamsSpecsFile::from(flow_dir);
+                //     .and_then(|(profile, flow_dir)| {
+                //         let params_specs_provided = params_specs_provided.clone();
+                //         async move {
+                //             let params_specs_file =
+                //                 peace_resources::paths::ParamsSpecsFile::from(flow_dir);
                 //
-                //         let params_specs = peace_rt_model::ParamsSpecsSerializer::<
-                //             peace_rt_model::Error
-                //         >::deserialize_opt(
-                //             profile,
-                //             flow_id,
-                //             storage,
-                //             params_specs_type_reg_ref,
-                //             &params_specs_file,
-                //         )
-                //         .await?;
+                //             let params_specs_stored = peace_rt_model::ParamsSpecsSerializer::<
+                //                 peace_rt_model::Error
+                //             >::deserialize_opt(
+                //                 profile,
+                //                 flow_id,
+                //                 storage,
+                //                 params_specs_type_reg_ref,
+                //                 &params_specs_file,
+                //             )
+                //             .await?;
                 //
-                //         Ok((profile.clone(), params_specs))
+                //             // For mapping fns, we still need the developer to provide the params spec
+                //             // so that multi-profile diffs can be done.
+                //             let params_specs = params_specs_stored.map(|params_specs_stored| {
+                //                 crate::ctx::cmd_ctx_builder::params_specs_merge(
+                //                     &flow,
+                //                     params_specs_provided,
+                //                     Some(params_specs_stored),
+                //                 )
+                //             })
+                //             .transpose()?;
+                //
+                //             // Note: we don't serialize params specs back to disk.
+                //
+                //             Ok((profile.clone(), params_specs))
+                //         }
                 //     })
                 //     .try_collect::<
                 //         std::collections::BTreeMap<
@@ -831,7 +847,7 @@ fn scope_builder_deconstruct(
         scope_builder_fields.push(flow_params_selection.deconstruct());
     }
 
-    if scope == Scope::SingleProfileSingleFlow {
+    if scope.flow_count() == FlowCount::One {
         scope_builder_fields.push(parse_quote! {
             params_specs_provided
         });
@@ -1492,22 +1508,38 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                         .iter()
                         .map(Result::<_, peace_rt_model::Error>::Ok)
                     )
-                    .and_then(|(profile, flow_dir)| async move {
-                        let params_specs_file =
-                            peace_resources::paths::ParamsSpecsFile::from(flow_dir);
+                    .and_then(|(profile, flow_dir)| {
+                        let params_specs_provided = params_specs_provided.clone();
+                        async move {
+                            let params_specs_file =
+                                peace_resources::paths::ParamsSpecsFile::from(flow_dir);
 
-                        let params_specs = peace_rt_model::ParamsSpecsSerializer::<
-                            peace_rt_model::Error
-                        >::deserialize_opt(
-                            profile,
-                            flow_id,
-                            storage,
-                            params_specs_type_reg_ref,
-                            &params_specs_file,
-                        )
-                        .await?;
+                            let params_specs_stored = peace_rt_model::ParamsSpecsSerializer::<
+                                peace_rt_model::Error
+                            >::deserialize_opt(
+                                profile,
+                                flow_id,
+                                storage,
+                                params_specs_type_reg_ref,
+                                &params_specs_file,
+                            )
+                            .await?;
 
-                        Ok((profile.clone(), params_specs))
+                            // For mapping fns, we still need the developer to provide the params spec
+                            // so that multi-profile diffs can be done.
+                            let params_specs = params_specs_stored.map(|params_specs_stored| {
+                                crate::ctx::cmd_ctx_builder::params_specs_merge(
+                                    &flow,
+                                    params_specs_provided,
+                                    Some(params_specs_stored),
+                                )
+                            })
+                            .transpose()?;
+
+                            // Note: we don't serialize params specs back to disk.
+
+                            Ok((profile.clone(), params_specs))
+                        }
                     })
                     .try_collect::<
                         std::collections::BTreeMap<

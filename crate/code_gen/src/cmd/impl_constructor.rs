@@ -2,7 +2,7 @@ use proc_macro2::{Ident, Span};
 use quote::quote;
 use syn::{parse_quote, punctuated::Punctuated, FieldValue, GenericArgument, Token};
 
-use crate::cmd::{Scope, ScopeStruct};
+use crate::cmd::{FlowCount, ScopeStruct};
 
 /// Generates the constructor for the command context builder for a given scope.
 pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
@@ -25,7 +25,7 @@ pub fn impl_constructor(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream 
         scope_field_values::profile_and_flow_selection_push(&mut type_params, scope);
         scope_field_values::params_selection_push(&mut type_params, scope);
 
-        if scope == Scope::SingleProfileSingleFlow {
+        if scope.flow_count() == FlowCount::One {
             type_params.push(parse_quote!(
                 params_specs_provided: peace_params::ParamsSpecs::new()
             ));

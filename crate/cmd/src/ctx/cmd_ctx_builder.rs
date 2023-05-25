@@ -270,7 +270,7 @@ fn params_specs_merge<E>(
     flow: &Flow<E>,
     mut params_specs_provided: ParamsSpecs,
     params_specs_stored: Option<ParamsSpecs>,
-) -> Result<ParamsSpecs, E>
+) -> Result<ParamsSpecs, Error>
 where
     E: From<Error>,
 {

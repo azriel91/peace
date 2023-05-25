@@ -1,7 +1,7 @@
 use quote::quote;
 use syn::{parse_quote, punctuated::Punctuated, GenericArgument, Path, Token};
 
-use crate::cmd::{type_parameters_impl, Scope, ScopeStruct};
+use crate::cmd::{type_parameters_impl, FlowCount, ScopeStruct};
 
 /// Generates functions for the command context builder that are not constrained
 /// by type parameters.
@@ -19,7 +19,7 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
         type_params
     };
 
-    let common_fns = if scope == Scope::SingleProfileSingleFlow {
+    let common_fns = if scope.flow_count() == FlowCount::One {
         quote! {
             /// Sets an item's parameters.
             ///

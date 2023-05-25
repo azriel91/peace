@@ -161,7 +161,7 @@ mod fields {
     /// Appends a `params_specs_provided: ParamsSpecs` field to the given
     /// fields.
     pub fn params_specs_push(fields_named: &mut FieldsNamed, scope: Scope) {
-        if scope == Scope::SingleProfileSingleFlow {
+        if scope.flow_count() == FlowCount::One {
             let fields_marker: FieldsNamed = parse_quote!({
                 /// Map of item ID to its parameters. `TypeMap<ItemId, AnySpecRtBoxed>` newtype.
                 pub(crate) params_specs_provided: peace_params::ParamsSpecs
