@@ -122,12 +122,28 @@ impl AppUploadCmd {
         )?;
         let flow = AppUploadFlow::flow().await?;
 
+        let s3_object_params_spec = S3ObjectParams::<WebApp>::field_wise_spec()
+            .with_bucket_name_from_map(|s3_bucket_state: &S3BucketState| match s3_bucket_state {
+                S3BucketState::None => None,
+                S3BucketState::Some {
+                    name,
+                    creation_date: _,
+                } => Some(name.clone()),
+            })
+            .build();
+
         let mut cmd_ctx = {
             let cmd_ctx_builder =
                 CmdCtx::builder_multi_profile_single_flow::<EnvManError, _>(output, &workspace);
             crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
-            cmd_ctx_builder.with_flow(&flow).await?
+            cmd_ctx_builder
+                .with_flow(&flow)
+                .with_item_params::<S3ObjectItem<WebApp>>(
+                    item_id!("s3_object"),
+                    s3_object_params_spec,
+                )
+                .await?
         };
 
         let t = f(&mut cmd_ctx).await?;
