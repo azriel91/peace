@@ -10,19 +10,18 @@ When the workflow is defined, we want to interact with it in different ways.
 <span class='shell'>&gt; </span><span class='cmd'>./envman</span> <span class='arg'>deploy</span>
 Using profile <span style='color:#ffafff'><b>⦗demo⦘</b></span> -- type <span style='color:#5fafff'>`development`</span>
 
-✅ <span style='color:#fff'>1.</span> <span style='color:#5fafff'>file_download</span>    <span style='color:#00af5f00; background-color:#00af5f' class="shell_progress_bar">▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰</span> done!
-⏳ <span style='color:#fff'>2.</span> <span style='color:#5fafff'>server_instance</span>  <span style='color:#0087d700; background-color:#0087d7' class="shell_progress_bar">▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱</span> starting up <span style='color:#af00d7'>(el: 6s, eta: 0s)</span>
-⏳ <span style='color:#fff'>3.</span> <span style='color:#5fafff'>file_upload</span>      <span style='color:#555'>▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱</span> <span style='color:#af00d7'>(el: 0s, eta: 0s)</span>
+✅ <span style='color:#fff'>1.</span> <span style='color:#5fafff'>app_download</span> <span style='color:#00af5f00; background-color:#00af5f' class="shell_progress_bar">▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰</span> done!
+⏳ <span style='color:#fff'>2.</span> <span style='color:#5fafff'>s3_bucket</span>    <span style='color:#0087d700; background-color:#0087d7' class="shell_progress_bar">▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱</span> 0/1 creating bucket <span style='color:#af00d7'>(el: 6s, eta: 0s)</span>
+⏳ <span style='color:#fff'>3.</span> <span style='color:#5fafff'>s3_object</span>    <span style='color:#555'>▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱</span> <span style='color:#af00d7'>(el: 0s, eta: 0s)</span>
 </pre>
 
 
 ### Continuous Integration
 
 ```text
-2023-05-07T01:30:31.135Z | file_download   | downloaded at /tmp/.a9efb2/web_app.tar
-2023-05-07T01:30:31.754Z | server_instance | launched: inst-12345
-2023-05-07T01:30:32.246Z | server_instance | ip address: 10.0.0.17
-2023-05-07T01:30:32.687Z | server_instance | starting up
+2023-05-07T01:30:31.135Z | app_download | downloaded at /tmp/.a9efb2/web_app.tar
+2023-05-07T01:30:31.754Z | s3_bucket    | creating bucket
+2023-05-07T01:30:32.687Z | s3_bucket    | bucket created
 ```
 
 
@@ -31,9 +30,9 @@ Using profile <span style='color:#ffafff'><b>⦗demo⦘</b></span> -- type <span
 ```json
 // GET /api/v1/demo/env_deploy/progress
 {
-    "item_id": "server_instance",
+    "item_id": "s3_bucket",
     "progress_update": { "Delta": "Tick" },
-    "msg_update": { "Set": "starting up" }
+    "msg_update": { "Set": "creating bucket" }
     // ..
 }
 ```
@@ -79,20 +78,29 @@ digraph {
     subgraph cluster_a {
         node [color="#449966" fillcolor="#99dd99"]
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>download>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📥</font></td>
+            <td balign="left">file<br/>download</td>
+        </tr></table>>]
         a -> a_text [style = invis]
     }
 
     subgraph cluster_b {
         node [color="#446699" fillcolor="#99aaee"]
         b [label = <<b>b</b>> class="item_b_in_progress" style="dashed,filled"]
-        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>instance>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">🪣</font></td>
+            <td balign="left">s3<br/>bucket</td>
+        </tr></table>>]
         b -> b_text [style = invis]
     }
 
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📤</font></td>
+            <td balign="left">s3<br/>object</td>
+        </tr></table>>]
         c -> c_text [style = invis]
     }
 
@@ -124,82 +132,24 @@ digraph {
 </div>
 
 
-## Code Structure
-
-All these endpoints and interfaces means, output code must be completely separate from the process automation logic.
-
-### Swappable
-
-#### CLI
 
 ```rust ,ignore
-// defaults to:
-//
-// * stdout for outcome
-// * stderr for progress
+// outputs to CLI
 let mut output = CliOutput::new();
-let mut cmd_context = CmdContext::builder()
-    .with_output(&mut output)
-    // ..
-    .build();
 
-StatusCmd::exec(&mut cmd_context).await?;
+// === Used in tests === //
+// discards all output
+let mut output = NoOpOutput;
+
+// records which output functions were called
+// and what parameters they were called with
+let mut output = FnTrackerOutput::new();
+
+// === Write your own === //
+// writes JSON to HTTP response
+let mut output = JsonResponseOutput::new();
 ```
 
-#### Web API: Synchronous Execution
-
-Execute automation within request:
-
-```diff
--let mut output = CliOutput::new();
-+// Writes execution outcome to the response stream, no progress is written.
-+let mut output = ResponseWriter::new(outcome_tx);
- let mut cmd_context = CmdContext::builder()
-     // ..
-```
-
-
-#### Web API: Asynchronous Execution
-
-* Asynchronous to a web request.
-* Write outcome to a database, write progress to in-memory map.
-* Return outcome or progress based on subsequent requests.
-
-```diff
--let mut output = CliOutput::new();
-+let mut output = SplitWriter {
-+    outcome_writer: db_writer,       // persistent
-+    progress_writer: session_writer, // transient
-+}
- let mut cmd_context = CmdContext::builder()
-     // ..
-```
-
-<details style="display: none;">
-<summary>How To Hold Output</summary>
-
-`output` is passed into the commands to output progress. Presenting the outcome of a command is still a responsibility of the caller.
-
-```rust ,ignore
-let mut output = CliOutput::new();
-let mut cmd_context = CmdContext::builder()
-    .with_output(&mut output)
-    // ..
-    .build();
-
-StatusCmd::exec(&mut cmd_context).await?;
-```
-
-```rust ,ignore
-let mut flow_context = FlowContext::builder()
-    // ..
-    .build();
-
-let mut output = CliOutput::new();
-StatusCmd::exec(&mut flow_context, &mut output).await?;
-```
-
-</details>
 
 <style type="text/css">
 .peace_button_container {
@@ -285,11 +235,13 @@ StatusCmd::exec(&mut flow_context, &mut output).await?;
 }
 @keyframes item_b_in_progress {
     0% {
-        transform-origin: 101px -196.31px;
+        transform-origin: 131px -204.31px;
+/*        transform-origin: attr(cx px) attr(cy px);*/
         transform: rotate(0deg);
     }
     100% {
-        transform-origin: 101px -196.31px;
+        transform-origin: 131px -204.31px;
+/*        transform-origin: attr(cx px) attr(cy px);*/
         transform: rotate(360deg);
     }
 }

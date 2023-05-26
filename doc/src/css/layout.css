@@ -30,6 +30,11 @@ hr {
     border-color: #7f7f7f7f;
 }
 
+/* === highlightjs code === */
+code.hljs.language-undefined {
+    --inline-code-color: #eeeeee;
+}
+
 /* === highlightjs-line-numbers === */
 /* main table */
 

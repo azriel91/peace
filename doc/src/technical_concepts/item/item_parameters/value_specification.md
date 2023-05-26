@@ -35,7 +35,10 @@ digraph {
 
     subgraph cluster_a {
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <app<br/>compile>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">⚙️</font></td>
+            <td balign="left">app<br/>compile</td>
+        </tr></table>>]
 
         a_params [
             margin   = 0.0
@@ -61,7 +64,10 @@ digraph {
         margin = 0
 
         b [label = <<b>b</b>>]
-        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>launch>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">🖥️</font></td>
+            <td balign="left">server<br/>launch</td>
+        </tr></table>>]
 
         b_params [
             margin   = 0.0
@@ -88,7 +94,10 @@ digraph {
     }
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📤</font></td>
+            <td balign="left">file<br/>upload</td>
+        </tr></table>>]
 
         c_params [
             margin   = 0.0
@@ -155,7 +164,10 @@ digraph {
 
     subgraph cluster_a {
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <app<br/>compile>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">⚙️</font></td>
+            <td balign="left">app<br/>compile</td>
+        </tr></table>>]
 
         a_params [
             margin   = 0.0
@@ -181,7 +193,10 @@ digraph {
         margin = 0
 
         b [label = <<b>b</b>>]
-        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>launch>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">🖥️</font></td>
+            <td balign="left">server<br/>launch</td>
+        </tr></table>>]
 
         b_params [
             margin   = 0.0
@@ -208,7 +223,10 @@ digraph {
     }
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📤</font></td>
+            <td balign="left">file<br/>upload</td>
+        </tr></table>>]
 
         c_params [
             margin   = 0.0
@@ -297,7 +315,10 @@ digraph {
 
     subgraph cluster_a {
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <app<br/>compile>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">⚙️</font></td>
+            <td balign="left">app<br/>compile</td>
+        </tr></table>>]
 
         a_params [
             margin   = 0.0
@@ -323,7 +344,10 @@ digraph {
         margin = 0
 
         b [label = <<b>b</b>>]
-        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>launch>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">🖥️</font></td>
+            <td balign="left">server<br/>launch</td>
+        </tr></table>>]
 
         b_params [
             margin   = 0.0
@@ -350,7 +374,10 @@ digraph {
     }
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📤</font></td>
+            <td balign="left">file<br/>upload</td>
+        </tr></table>>]
 
         c_params [
             margin   = 0.0
@@ -450,7 +477,10 @@ digraph {
 
     subgraph cluster_a {
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <app<br/>compile>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">⚙️</font></td>
+            <td balign="left">app<br/>compile</td>
+        </tr></table>>]
 
         a_params [
             margin   = 0.0
@@ -476,7 +506,10 @@ digraph {
         margin = 0
 
         b [label = <<b>b</b>>]
-        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>launch>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">🖥️</font></td>
+            <td balign="left">server<br/>launch</td>
+        </tr></table>>]
 
         b_params [
             margin   = 0.0
@@ -503,7 +536,10 @@ digraph {
     }
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📤</font></td>
+            <td balign="left">file<br/>upload</td>
+        </tr></table>>]
 
         c_params [
             margin   = 0.0

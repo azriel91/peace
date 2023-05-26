@@ -1,9 +1,9 @@
 # Flow Definition
 
-Specify:
+* **Items:** Steps of a process.
+* **Ordering:** Sequence between steps.
 
-1. Items: Steps of a process.
-2. Ordering between items.
+<div class="centered_container" style="transform: scale(1.25);">
 
 ```dot process
 digraph {
@@ -37,17 +37,26 @@ digraph {
 
     subgraph cluster_a {
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>download>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📥</font></td>
+            <td balign="left">file<br/>download</td>
+        </tr></table>>]
     }
 
     subgraph cluster_b {
         b [label = <<b>b</b>>]
-        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>instance>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">🪣</font></td>
+            <td balign="left">s3<br/>bucket</td>
+        </tr></table>>]
     }
 
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📤</font></td>
+            <td balign="left">s3<br/>object</td>
+        </tr></table>>]
     }
 
     a -> b [minlen = 9]
@@ -55,42 +64,31 @@ digraph {
 }
 ```
 
+</div>
+
 ```rust ,ignore
+// examples/envman/src/flows/app_upload_flow.rs
 let flow = {
-    let mut flow_builder = Flow::builder()
-        .with_flow_id(flow_id!("app_deploy"));
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<EnvManError>::new();
 
-    let [a, b, c] = flow_builder.add_items([
-        FileDownloadItem::<WebApp>::new(item_id!("a")).into(),
-        ServerInstanceItem::<WebApp>::new(item_id!("b")).into(),
-        FileUploadItem::<WebApp>::new(item_id!("c")).into(),
-    ]);
+        let [a, b, c] = graph_builder.add_fns([
+            FileDownloadItem::<WebApp>::new(item_id!("app_download")).into(),
+            S3BucketItem::<WebApp>::new(item_id!("s3_bucket")).into(),
+            S3ObjectItem::<WebApp>::new(item_id!("s3_object")).into(),
+        ]);
 
-    flow_builder.add_edges([
-        (a, b),
-        (b, c),
-    ])?;
+        graph_builder.add_edges([(a, b), (b, c)])?;
+        graph_builder.build()
+    };
 
-    flow_builder.build()
+    Flow::new(flow_id!("app_upload"), graph)
 };
-# let flow = {
-#     let mut graph_builder = ItemGraphBuilder::new();
-#     let [a, b, c] = graph_builder.add_fns([
-#         FileDownloadItem::<WebApp>::new(item_id!("a")).into(),
-#         ServerInstanceItem::<WebApp>::new(item_id!("b")).into(),
-#         FileUploadItem::<WebApp>::new(item_id!("c")).into(),
-#     ]);
-#
-#     graph_builder.add_edges([
-#         (a, b),
-#         (b, c),
-#     ])?;
-#
-#     Flow::new(flow_id!("app_deploy"), graph_builder.build())
-# };
 ```
 
 ## Non-linear Ordering
+
+<div class="centered_container" style="transform: scale(1.25);">
 
 ```dot process
 digraph {
@@ -125,17 +123,26 @@ digraph {
 
     subgraph cluster_a {
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>download>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📥</font></td>
+            <td balign="left">file<br/>download</td>
+        </tr></table>>]
     }
 
     subgraph cluster_b {
         b [label = <<b>b</b>>]
-        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>instance>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">🪣</font></td>
+            <td balign="left">s3<br/>bucket</td>
+        </tr></table>>]
     }
 
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📤</font></td>
+            <td balign="left">s3<br/>object</td>
+        </tr></table>>]
     }
 
     a -> c [minlen = 9]
@@ -143,20 +150,12 @@ digraph {
 }
 ```
 
+</div>
+
 ```diff
  graph_builder.add_edges([
 -    (a, b),
 +    (a, c),
      (b, c),
  ])?;
-```
-
----
-
-### Command Context
-
-```rust ,ignore
-let mut cmd_context = CmdContext::builder()
-    .with_flow(&flow)
-    .build();
 ```

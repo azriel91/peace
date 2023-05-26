@@ -1,6 +1,8 @@
 # Parameters Specification
 
-Specify *where to get the value* for each item input. The value may not necessarily exist until the flow is executed.
+Specify *where to get the value* for each item's input.
+
+The value may not necessarily exist until the flow is executed.
 
 ```dot process
 digraph {
@@ -35,14 +37,17 @@ digraph {
 
     subgraph cluster_a {
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>download>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📥</font></td>
+            <td balign="left">file<br/>download</td>
+        </tr></table>>]
 
         subgraph cluster_a_params {
             a_params_src [
                 label     = "src"
                 margin    = 0.0
                 fontsize  = 8
-                width     = 0.36
+                width     = 0.78
                 height    = 0.19
                 shape     = "rectangle"
                 style     = "filled,rounded"
@@ -54,7 +59,7 @@ digraph {
                 label     = "dest"
                 margin    = 0.0
                 fontsize  = 8
-                width     = 0.36
+                width     = 0.78
                 height    = 0.19
                 shape     = "rectangle"
                 style     = "filled,rounded"
@@ -63,7 +68,7 @@ digraph {
             ]
 
             a_state [
-                label     = <file_state<br align="left"/>&nbsp;&nbsp;..<br align="left"/>>
+                label     = <&nbsp;..&nbsp;<br align="left"/>>
                 margin    = 0.05
                 fontsize  = 8
                 shape     = "rectangle"
@@ -81,26 +86,17 @@ digraph {
 
     subgraph cluster_b {
         b [label = <<b>b</b>>]
-        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>instance>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">🪣</font></td>
+            <td balign="left">s3<br/>bucket</td>
+        </tr></table>>]
 
         subgraph cluster_b_params {
-            b_params_image [
-                label     = "image"
+            b_params_name [
+                label     = "name"
                 margin    = 0.0
                 fontsize  = 8
-                width     = 0.36
-                height    = 0.19
-                shape     = "rectangle"
-                style     = "filled,rounded"
-                fillcolor = "#ffaaff"
-                color     = "#773377"
-            ]
-
-            b_params_size [
-                label     = "size"
-                margin    = 0.0
-                fontsize  = 8
-                width     = 0.36
+                width     = 0.78
                 height    = 0.19
                 shape     = "rectangle"
                 style     = "filled,rounded"
@@ -109,7 +105,7 @@ digraph {
             ]
 
             b_state [
-                label     = <server<br align="left"/>&nbsp;&nbsp;..<br align="left"/>>
+                label     = <<b>S3BucketState</b>&nbsp;<br align="left"/>&nbsp;&nbsp;name<br align="left"/>>
                 margin    = 0.05
                 fontsize  = 8
                 shape     = "rectangle"
@@ -119,21 +115,23 @@ digraph {
             ]
         }
 
-        b_params_image -> b_state [style = invis]
-        b_params_size -> b_state [style = invis]
+        b_params_name -> b_state [style = invis]
         b -> b_state [style = invis]
     }
 
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📤</font></td>
+            <td balign="left">s3<br/>object</td>
+        </tr></table>>]
 
         subgraph cluster_c_params {
-            c_params_src_path [
-                label     = "src"
+            c_params_file_path [
+                label     = "file_path"
                 margin    = 0.0
                 fontsize  = 8
-                width     = 0.36
+                width     = 0.78
                 height    = 0.19
                 shape     = "rectangle"
                 style     = "filled,rounded"
@@ -141,11 +139,11 @@ digraph {
                 color     = "#773377"
             ]
 
-            c_params_dest_ip [
-                label     = "ip"
+            c_params_bucket_name [
+                label     = "bucket_name"
                 margin    = 0.0
                 fontsize  = 8
-                width     = 0.36
+                width     = 0.78
                 height    = 0.19
                 shape     = "rectangle"
                 style     = "filled,rounded"
@@ -153,11 +151,11 @@ digraph {
                 color     = "#773377"
             ]
 
-            c_params_dest_path [
-                label     = "path"
+            c_params_object_key [
+                label     = "object_key"
                 margin    = 0.0
                 fontsize  = 8
-                width     = 0.36
+                width     = 0.78
                 height    = 0.19
                 shape     = "rectangle"
                 style     = "filled,rounded"
@@ -166,7 +164,7 @@ digraph {
             ]
 
             c_state [
-                label     = <remote_file<br align="left"/>&nbsp;&nbsp;..<br align="left"/>>
+                label     = <&nbsp;..&nbsp;<br align="left"/>>
                 margin    = 0.05
                 fontsize  = 8
                 shape     = "rectangle"
@@ -176,9 +174,9 @@ digraph {
             ]
         }
 
-        c_params_src_path -> c_state [style = invis]
-        c_params_dest_ip -> c_state [style = invis]
-        c_params_dest_path -> c_state [style = invis]
+        c_params_file_path -> c_state [style = invis]
+        c_params_bucket_name -> c_state [style = invis]
+        c_params_object_key -> c_state [style = invis]
         c -> c_state [style = invis]
     }
 
@@ -204,9 +202,8 @@ digraph {
 
         web_app_url;
         web_app_path;
-        instance_image;
-        instance_size;
-        app_upload_path;
+        bucket_name;
+        object_key;
 
         web_app_url -> a_params_src [constraint = true]
         web_app_path -> a_params_dest [constraint = true]
@@ -215,76 +212,56 @@ digraph {
             edge [
                 color     = "#cc7744"
             ]
-            instance_image -> b_params_image [constraint = true, minlen = 10]
-            instance_size -> b_params_size [constraint = true, minlen = 10]
+            bucket_name -> b_params_name [constraint = true, minlen = 10]
         }
 
         {
             edge [
                 color     = "#449988"
             ]
-            a_state -> c_params_src_path [constraint = false, style = invis]
-            b_state -> c_params_dest_ip [constraint = true]
+            a_state -> c_params_file_path [constraint = false, style = invis]
+            b_state -> c_params_bucket_name [constraint = true]
         }
-        web_app_path -> c_params_src_path [constraint = true, color = "#44dd77", minlen = 19]
-        app_upload_path -> c_params_dest_path [constraint = true, color = "#44dd77", minlen = 19]
+        web_app_path -> c_params_file_path [constraint = true, color = "#44dd77", minlen = 19]
+        object_key -> c_params_object_key [constraint = true, color = "#44dd77", minlen = 19]
     }
 }
 ```
 
 ```rust ,ignore
-let file_download_params = FileDownloadParams::<WebApp> {
+let app_download_params = FileDownloadParams::<WebApp> {
     src: Url::parse("https://example.com/web_app.tar")?,
-    dest: PathBuf::from("/tmp/path/to/app.tar"),
+    dest: PathBuf::from("/tmp/path/to/web_app.tar"),
     marker: PhantomData,
 };
 
-let server_instance_params = ServerInstanceParams::<WebApp> {
-    image: ImageId::new("img-12345"),
-    size: InstSize::XLarge,
-    marker: PhantomData,
-};
+let s3_bucket_params = S3BucketParams::<WebApp>::new(bucket_name);
 
-let file_upload_params = FileUploadParams::<WebApp> {
-    src: PathBuf::from("/tmp/path/to/app.tar")
-    dest_path: PathBuf::from("/opt/peace/demo/app")
-    dest_ip: !?, /* IpAddr: get the server IP from `b` */
+let s3_object_params = S3ObjectParams::<WebApp> {
+    file_path: PathBuf::from("/tmp/path/to/web_app.tar"),
+    object_key: String::from("web_app.tar"),
+    bucket_name: !?, /* Somehow get the bucket name from `b` */
 };
 ```
 
 ## Deferred Values
 
 ```rust ,ignore
-let file_upload_params_spec = FileUploadParamsSpec::<WebApp>::builder()
-    .with_src(PathBuf::from("/tmp/path/to/app.tar"))
-    .with_path(PathBuf::from("/opt/peace/demo/app"))
-    .with_ip_from_map(|server: &Server<WebApp>| {
-        *server.ip() // type safe!
+// examples/envman/src/flows/app_upload_flow.rs
+let s3_object_params_spec = S3ObjectParams::<WebApp>::field_wise_spec()
+    .with_file_path(PathBuf::from("/tmp/path/to/web_app.tar"))
+    .with_object_key(String::from("web_app.tar"))
+    .with_bucket_name_from_map(|s3_bucket_state: &S3BucketState| {
+        match s3_bucket_state {
+            S3BucketState::None => None,
+            S3BucketState::Some {
+                name,
+                creation_date: _,
+            } => Some(name.clone()), // type safe!
+        }
     })
     .build();
 #
 # let file_download_params_spec = file_download_params.into();
 # let server_instance_params_spec = server_instance_params.into();
-```
-
----
-
-### Command Context
-
-```rust ,ignore
-let mut cmd_context = CmdContext::builder()
-    .with_flow(&flow);
-    .with_item_params::<FileDownloadItem::<WebApp>>(
-        item_id!("a"),
-        file_download_params.into(),
-    )
-    .with_item_params::<ServerInstanceParams::<WebApp>>(
-        item_id!("b"),
-        server_instance_params.into(),
-    )
-    .with_item_params::<FileUploadParams::<WebApp>>(
-        item_id!("c"),
-        file_upload_params_spec,
-    )
-    .build();
 ```

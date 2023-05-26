@@ -1,4 +1,6 @@
-# Command Invocation
+# Scenario
+
+<div class="centered_container" style="transform: scale(1.25);">
 
 ```dot process
 digraph {
@@ -11,7 +13,6 @@ digraph {
         fontname  = "helvetica"
         fontcolor = "#7f7f7f"
         rankdir   = LR
-        // splines   = curved
     ]
     node [
         fontcolor = "#111111"
@@ -55,37 +56,71 @@ digraph {
         </tr></table>>]
     }
 
-    a -> b [minlen = 15, weight = 5]
-    b -> c [minlen = 15, weight = 5]
+    a -> b [minlen = 9]
+    b -> c [minlen = 9]
 }
 ```
 
-```rust ,ignore
-// examples/envman/src/cmds/profile_init_cmd.rs
-// fn app_upload_flow_init
-let cmd_ctx = CmdCtx::builder_single_profile_single_flow
-    ::<EnvManError, _>(output, workspace)
-    .with_profile_from_workspace_param(profile_key)
-    .with_flow(flow)
-    .with_item_params::<FileDownloadItem<WebApp>>(
-        item_id!("app_download"),
-        app_download_params_spec,
-    )
-    .with_item_params::<S3BucketItem<WebApp>>(
-        item_id!("s3_bucket"),
-        s3_bucket_params_spec,
-    )
-    .with_item_params::<S3ObjectItem<WebApp>>(
-        item_id!("s3_object"),
-        s3_object_params_spec,
-    )
-    .await?;
+</div>
 
-// examples/envman/src/cmds/env_status_cmd.rs
-// envman status
-StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
+## Shell Script
 
-// examples/envman/src/cmds/env_deploy_cmd.rs
-// envman deploy
-EnsureCmd::exec(&mut cmd_ctx).await?;
+```bash
+bucket_name='azriel-peace-demo-bash'
+file_path='web_app.tar'
+object_key='web_app.tar'
+
+curl --fail \
+  -o "${file_path}" \
+  --location \
+  https://github.com/azriel91/web_app/releases/download/0.1.1/web_app.tar
+
+aws s3api create-bucket \
+  --bucket "${bucket_name}" \
+  --acl private \
+  --create-bucket-configuration LocationConstraint=ap-southeast-2 |
+  bat -l json
+
+aws s3api put-object \
+  --bucket "${bucket_name}" \
+  --key "${object_key}" \
+  --body "${file_path}" |
+  bat -l json
 ```
+
+```bash
+aws s3api delete-object \
+  --bucket "${bucket_name}" \
+  --key "${object_key}" |
+  bat -l json
+
+aws s3api delete-bucket --bucket "${bucket_name}" | bat -l json
+
+rm -f "${file_path}"
+```
+
+<div class="presentation_notes">
+
+What does automation look like, from the perspective of an automation tool developer, or a workflow designer.
+
+* Clarity between concept and code.
+* Easy to write.
+* Fast feedback when developing automation.
+* Provide good UX without needing to write UI code.
+
+---
+
+### Command Context
+
+At the bottom of every page, we will be building up a `cmd_context`, which holds the information about a workflow. Different commands can be invoked with the `cmd_context` to gather information about the workflow.
+
+```rust ,ignore
+let mut cmd_context = CmdContext::builder()
+    /* ?? */
+    .build();
+
+StatusCmd(&mut cmd_context).await?;
+DeployCmd(&mut cmd_context).await?;
+```
+
+</div>
