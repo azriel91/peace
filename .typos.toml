@@ -1,6 +1,8 @@
 [files]
-extend-exclude = ["doc/book/*", "doc/src/licenses.html"]
+extend-exclude = [
+    "doc/book/*",
+    "doc/src/licenses.html",
+    "doc/theme/highlight.js",
+]
 
 [default.extend-words]
-# HTML tag is incorrectly identified.
-thead = "thead"
