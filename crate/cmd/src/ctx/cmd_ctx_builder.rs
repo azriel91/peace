@@ -369,8 +369,7 @@ where
             params_specs_provided_mismatches,
             params_specs_stored_mismatches,
             params_specs_not_usable,
-        }
-        .into())
+        })
     }
 }
 

@@ -41,6 +41,7 @@ impl ProfileInitCmd {
     /// * `output`: Output to write the execution outcome.
     /// * `profile`: Name of the profile to create.
     /// * `type`: Type of the environment.
+    #[allow(clippy::too_many_arguments)] // TODO: consolidate cmd ctx building.
     pub async fn run<O>(
         output: &mut O,
         profile_to_create: Profile,
