@@ -9,8 +9,11 @@ use peace::{
 };
 
 use crate::{
-    cmds::EnvCmd,
-    model::{EnvDiffSelection, EnvManError},
+    cmds::{
+        common::{env_man_flow, workspace},
+        AppUploadCmd, EnvCmd,
+    },
+    model::{EnvDiffSelection, EnvManError, EnvManFlow},
 };
 
 /// Shows the diff between current and desired states of the environment.
@@ -23,7 +26,7 @@ impl EnvDiffCmd {
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    /// * `profiles`: Profiles to compare.
+    /// * `env_diff_selection`: Profiles to compare.
     pub async fn run<O>(
         output: &mut O,
         env_diff_selection: EnvDiffSelection,
@@ -31,56 +34,47 @@ impl EnvDiffCmd {
     where
         O: OutputWrite<EnvManError> + Send,
     {
+        let workspace = workspace()?;
+        let env_man_flow = env_man_flow(output, &workspace).await?;
         match env_diff_selection {
             EnvDiffSelection::CurrentAndDesired => {
-                Self::active_profile_current_vs_desired(output).await
+                Self::active_profile_current_vs_desired(output, env_man_flow).await
             }
             EnvDiffSelection::DiffProfilesCurrent {
                 profile_a,
                 profile_b,
-            } => Self::diff_profiles_current(output, profile_a, profile_b).await,
+            } => Self::diff_profiles_current(output, env_man_flow, profile_a, profile_b).await,
         }
     }
 
-    async fn active_profile_current_vs_desired<O>(output: &mut O) -> Result<(), EnvManError>
+    async fn active_profile_current_vs_desired<O>(
+        output: &mut O,
+        env_man_flow: EnvManFlow,
+    ) -> Result<(), EnvManError>
     where
         O: OutputWrite<EnvManError> + Send,
     {
-        EnvCmd::run(output, true, |ctx| {
-            async {
-                let state_diffs = DiffCmd::current_and_desired(ctx).await?;
-
-                let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
-                Self::state_diffs_present(output, flow, &state_diffs).await?;
-
-                Ok(())
-            }
-            .boxed_local()
-        })
-        .await
+        match env_man_flow {
+            EnvManFlow::AppUpload => run!(output, AppUploadCmd, 14usize),
+            EnvManFlow::EnvDeploy => run!(output, EnvCmd, 18usize),
+        }
     }
 
     async fn diff_profiles_current<O>(
         output: &mut O,
+        env_man_flow: EnvManFlow,
         profile_a: Profile,
         profile_b: Profile,
     ) -> Result<(), EnvManError>
     where
         O: OutputWrite<EnvManError> + Send,
     {
-        EnvCmd::multi_profile(output, move |ctx| {
-            async move {
-                let state_diffs =
-                    DiffCmd::diff_profiles_current(ctx, &profile_a, &profile_b).await?;
-                let MultiProfileSingleFlowView { output, flow, .. } = ctx.view();
-
-                Self::state_diffs_present(output, flow, &state_diffs).await?;
-
-                Ok(())
+        match env_man_flow {
+            EnvManFlow::AppUpload => {
+                run_multi!(output, AppUploadCmd, 14usize, profile_a, profile_b)
             }
-            .boxed_local()
-        })
-        .await?;
+            EnvManFlow::EnvDeploy => run_multi!(output, EnvCmd, 18usize, profile_a, profile_b),
+        };
 
         Ok(())
     }
@@ -89,6 +83,7 @@ impl EnvDiffCmd {
         output: &mut O,
         flow: &Flow<EnvManError>,
         state_diffs: &StateDiffs,
+        padding: usize,
     ) -> Result<(), EnvManError>
     where
         O: OutputWrite<EnvManError> + Send,
@@ -99,16 +94,14 @@ impl EnvDiffCmd {
             let state_diffs_presentables = flow
                 .graph()
                 .iter_insertion()
-                .map(|item_spec| {
-                    let item_spec_id = item_spec.id();
+                .map(|item| {
+                    let item_id = item.id();
                     // Hack: for alignment
                     let padding =
-                        " ".repeat(18usize.saturating_sub(format!("{item_spec_id}").len() + 2));
-                    match state_diffs_raw_map.get(item_spec_id) {
-                        Some(state_current) => {
-                            (item_spec_id, format!("{padding}: {state_current}"))
-                        }
-                        None => (item_spec_id, format!("{padding}: <unknown>")),
+                        " ".repeat(padding.saturating_sub(format!("{item_id}").len() + 2));
+                    match state_diffs_raw_map.get(item_id) {
+                        Some(state_current) => (item_id, format!("{padding}: {state_current}")),
+                        None => (item_id, format!("{padding}: <unknown>")),
                     }
                 })
                 .collect::<Vec<_>>();
@@ -127,3 +120,41 @@ impl EnvDiffCmd {
         Ok(())
     }
 }
+
+macro_rules! run {
+    ($output:ident, $flow_cmd:ident, $padding:expr) => {{
+        $flow_cmd::run($output, true, |ctx| {
+            async {
+                let state_diffs = DiffCmd::current_and_desired(ctx).await?;
+
+                let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
+                Self::state_diffs_present(output, flow, &state_diffs, $padding).await?;
+
+                Ok(())
+            }
+            .boxed_local()
+        })
+        .await
+    }};
+}
+
+macro_rules! run_multi {
+    ($output:ident, $flow_cmd:ident, $padding:expr, $profile_a:ident, $profile_b:ident) => {{
+        $flow_cmd::multi_profile($output, move |ctx| {
+            async move {
+                let state_diffs =
+                    DiffCmd::diff_profiles_current(ctx, &$profile_a, &$profile_b).await?;
+                let MultiProfileSingleFlowView { output, flow, .. } = ctx.view();
+
+                Self::state_diffs_present(output, flow, &state_diffs, $padding).await?;
+
+                Ok(())
+            }
+            .boxed_local()
+        })
+        .await?;
+    }};
+}
+
+use run;
+use run_multi;

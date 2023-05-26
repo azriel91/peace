@@ -162,7 +162,7 @@ fn scope_builder_fields_flow_not_selected(scope: Scope) -> Punctuated<FieldValue
     if scope.flow_params_supported() {
         field_values.push(parse_quote!(flow_params_selection));
     }
-    if scope == Scope::SingleProfileSingleFlow {
+    if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(params_specs_provided));
     }
     field_values.push(parse_quote!(marker: std::marker::PhantomData));
@@ -184,7 +184,7 @@ fn scope_builder_fields_flow_selected(scope: Scope) -> Punctuated<FieldValue, Co
     if scope.flow_params_supported() {
         field_values.push(parse_quote!(flow_params_selection));
     }
-    if scope == Scope::SingleProfileSingleFlow {
+    if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(params_specs_provided));
     }
     field_values.push(parse_quote!(marker: std::marker::PhantomData));

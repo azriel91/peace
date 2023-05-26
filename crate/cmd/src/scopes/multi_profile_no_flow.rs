@@ -11,7 +11,7 @@ use peace_rt_model::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
-/// A command that works with multiple profiles, without any item specs.
+/// A command that works with multiple profiles, without any items.
 ///
 /// ```bash
 /// path/to/repo/.peace/envman
@@ -82,7 +82,7 @@ where
     marker: PhantomData<E>,
 }
 
-/// A command that works with multiple profiles, without any item specs.
+/// A command that works with multiple profiles, without any items.
 ///
 /// ```bash
 /// path/to/repo/.peace/envman

@@ -6,13 +6,13 @@ use crate::cmd::{FlowCount, ProfileCount};
 #[allow(clippy::enum_variant_names)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Scope {
-    /// A command that works with multiple profiles, without any item specs.
+    /// A command that works with multiple profiles, without any items.
     MultiProfileNoFlow,
     /// A command that works with multiple profiles, and a single flow.
     MultiProfileSingleFlow,
     /// A command that only works with workspace parameters.
     NoProfileNoFlow,
-    /// A command that works with a single profile, without any item specs.
+    /// A command that works with a single profile, without any items.
     SingleProfileNoFlow,
     /// A command that works with one profile and one flow.
     SingleProfileSingleFlow,

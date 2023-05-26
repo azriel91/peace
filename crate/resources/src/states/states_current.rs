@@ -1,6 +1,6 @@
 use crate::states::{ts::Current, States};
 
-/// Current `State`s for all `ItemSpec`s.
+/// Current `State`s for all `Item`s.
 ///
 /// This is strictly only present when the [`States`] are discovered in the
 /// current execution. `States` read from the [`StatesSavedFile`] are
@@ -9,8 +9,8 @@ use crate::states::{ts::Current, States};
 ///
 /// # Implementors
 ///
-/// If an `ItemSpec`'s state discovery depends on the `State` of a previous
-/// `ItemSpec`, then you should insert the predecessor's state into
+/// If an `Item`'s state discovery depends on the `State` of a previous
+/// `Item`, then you should insert the predecessor's state into
 /// [`Resources`], and reference that in the subsequent `TryFnSpec`'s [`Data`]:
 ///
 /// ```rust
@@ -37,7 +37,7 @@ use crate::states::{ts::Current, States};
 ///
 /// You may reference [`StatesCurrent`] in `ApplyFns::Data` for reading. It
 /// is not mutable as `StatesCurrent` must remain unchanged so that all
-/// `ItemSpec`s operate over consistent data.
+/// `Item`s operate over consistent data.
 ///
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources

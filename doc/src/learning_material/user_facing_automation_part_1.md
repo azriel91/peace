@@ -1189,7 +1189,7 @@ download -v init http://non_existent_domain file.txt
 ```
 
 <pre class="terminal">
-Error: <span style='color:#f44'>peace_item_spec_file_download::src_get</span>
+Error: <span style='color:#f44'>peace_item_file_download::src_get</span>
 
   <span style='color:#f44'>×</span> Failed to download file.
 <span style='color:#f44'>  ├─▶ </span>error sending request for url (http://non_existent_domain/): error
@@ -1205,7 +1205,7 @@ Error: <span style='color:#f44'>peace_item_spec_file_download::src_get</span>
 
 
 <pre class="terminal">
-Error: <span style='color:#f44'>peace_item_spec_file_download::src_get</span>
+Error: <span style='color:#f44'>peace_item_file_download::src_get</span>
 
   <span style='color:#f44'>×</span> Failed to download file.
    ╭────
@@ -1240,7 +1240,7 @@ download ensure
 ```
 
 <!-- <pre class="terminal">
-Error: <span style='color:#f44'>peace_item_spec_file_download::src_get</span>
+Error: <span style='color:#f44'>peace_item_file_download::src_get</span>
 
   <span style='color:#f44'>×</span> Failed to download file.
 <span style='color:#f44'>  ├─▶ </span>error sending request for url (http://localhost:3000/): error trying to
@@ -1252,7 +1252,7 @@ Error: <span style='color:#f44'>peace_item_spec_file_download::src_get</span>
 </pre> -->
 
 <pre class="terminal">
-Error: <span style='color:#f44'>peace_item_spec_file_download::src_get</span>
+Error: <span style='color:#f44'>peace_item_file_download::src_get</span>
 
   <span style='color:#f44'>×</span> Failed to download file.
    ╭────

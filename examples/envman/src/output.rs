@@ -1,5 +1,5 @@
 use peace::{
-    cfg::ItemSpecId,
+    cfg::ItemId,
     fmt::presentable::{Heading, HeadingLevel},
     rt_model::{output::OutputWrite, IndexMap},
 };
@@ -59,10 +59,10 @@ where
     Ok(())
 }
 
-/// Presents item spec errors.
-pub async fn item_spec_errors_present<O>(
+/// Presents item errors.
+pub async fn item_errors_present<O>(
     output: &mut O,
-    errors: &IndexMap<ItemSpecId, EnvManError>,
+    errors: &IndexMap<ItemId, EnvManError>,
 ) -> Result<(), EnvManError>
 where
     O: OutputWrite<EnvManError>,
@@ -77,9 +77,9 @@ where
 
         let report_handler = GraphicalReportHandler::new().without_cause_chain();
         let mut err_buffer = String::new();
-        for (item_spec_id, error) in errors.iter() {
+        for (item_id, error) in errors.iter() {
             // Ignore failures when writing errors
-            let (Ok(()) | Err(_)) = output.present(item_spec_id).await;
+            let (Ok(()) | Err(_)) = output.present(item_id).await;
             let (Ok(()) | Err(_)) = output.present(":\n").await;
 
             let mut diagnostic_opt: Option<&dyn Diagnostic> = Some(error);
@@ -106,8 +106,8 @@ where
     {
         use std::error::Error;
 
-        errors.iter().for_each(|(item_spec_id, error)| {
-            eprintln!("\n{item_spec_id}: {error}");
+        errors.iter().for_each(|(item_id, error)| {
+            eprintln!("\n{item_id}: {error}");
             let mut error = error.source();
             while let Some(source) = error {
                 eprintln!("  caused by: {source}");

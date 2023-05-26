@@ -1,14 +1,14 @@
 use crate::states::{ts::Desired, States};
 
-/// Desired `State`s for all `ItemSpec`s.
+/// Desired `State`s for all `Item`s.
 ///
-/// This is typically `TypeMap<ItemSpecId, State>`,
+/// This is typically `TypeMap<ItemId, State>`,
 /// where [`External`] is not necessarily used in `StateDiff` computations.
 ///
 /// # Implementors
 ///
-/// If an `ItemSpec`'s desired state discovery depends on the desired `State` of
-/// a previous `ItemSpec`, then you should insert the predecessor's desired
+/// If an `Item`'s desired state discovery depends on the desired `State` of
+/// a previous `Item`, then you should insert the predecessor's desired
 /// state into [`Resources`], and reference that in the subsequent
 /// `TryFnSpec`'s [`Data`]:
 ///
@@ -36,7 +36,7 @@ use crate::states::{ts::Desired, States};
 ///
 /// You may reference [`StatesDesired`] in `ApplyFns::Data` for reading. It
 /// is not mutable as `StatesDesired` must remain unchanged so that all
-/// `ItemSpec`s operate over consistent data.
+/// `Item`s operate over consistent data.
 ///
 /// [`External`]: peace_cfg::state::External
 /// [`Data`]: peace_data::Data

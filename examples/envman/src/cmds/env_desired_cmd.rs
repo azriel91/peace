@@ -6,7 +6,13 @@ use peace::{
     rt_model::output::OutputWrite,
 };
 
-use crate::{cmds::EnvCmd, model::EnvManError};
+use crate::{
+    cmds::{
+        common::{env_man_flow, workspace},
+        AppUploadCmd, EnvCmd,
+    },
+    model::{EnvManError, EnvManFlow},
+};
 
 /// Shows the desired state of the environment.
 #[derive(Debug)]
@@ -18,14 +24,24 @@ impl EnvDesiredCmd {
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    /// * `slug`: Username and repository of the application to download.
-    /// * `version`: Version of the application to download.
-    /// * `url`: URL to override where to download the application from.
     pub async fn run<O>(output: &mut O) -> Result<(), EnvManError>
     where
         O: OutputWrite<EnvManError> + Send,
     {
-        EnvCmd::run(output, true, |ctx| {
+        let workspace = workspace()?;
+        let env_man_flow = env_man_flow(output, &workspace).await?;
+        match env_man_flow {
+            EnvManFlow::AppUpload => run!(output, AppUploadCmd, 14usize),
+            EnvManFlow::EnvDeploy => run!(output, EnvCmd, 18usize),
+        }
+
+        Ok(())
+    }
+}
+
+macro_rules! run {
+    ($output:ident, $flow_cmd:ident, $padding:expr) => {{
+        $flow_cmd::run($output, true, |ctx| {
             async {
                 let states_desired = StatesDesiredReadCmd::exec(ctx).await?;
                 let states_desired_raw_map = &**states_desired;
@@ -35,17 +51,16 @@ impl EnvDesiredCmd {
                     let states_desired_presentables = flow
                         .graph()
                         .iter_insertion()
-                        .map(|item_spec| {
-                            let item_spec_id = item_spec.id();
+                        .map(|item| {
+                            let item_id = item.id();
                             // Hack: for alignment
-                            let padding = " ".repeat(
-                                18usize.saturating_sub(format!("{item_spec_id}").len() + 2),
-                            );
-                            match states_desired_raw_map.get(item_spec_id) {
+                            let padding =
+                                " ".repeat($padding.saturating_sub(format!("{item_id}").len() + 2));
+                            match states_desired_raw_map.get(item_id) {
                                 Some(state_desired) => {
-                                    (item_spec_id, format!("{padding}: {state_desired}"))
+                                    (item_id, format!("{padding}: {state_desired}"))
                                 }
-                                None => (item_spec_id, format!("{padding}: <unknown>")),
+                                None => (item_id, format!("{padding}: <unknown>")),
                             }
                         })
                         .collect::<Vec<_>>();
@@ -66,7 +81,7 @@ impl EnvDesiredCmd {
             .boxed_local()
         })
         .await?;
-
-        Ok(())
-    }
+    }};
 }
+
+use run;

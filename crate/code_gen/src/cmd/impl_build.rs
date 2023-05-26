@@ -507,10 +507,10 @@ fn impl_build_for(
 
                 // === MultiProfileSingleFlow === //
                 // let flow_id = flow.flow_id();
-                // let item_spec_graph = flow.graph();
+                // let item_graph = flow.graph();
                 //
-                // let (item_spec_params_type_reg, params_specs_type_reg, states_type_reg) =
-                //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
+                // let (item_params_type_reg, params_specs_type_reg, states_type_reg) =
+                //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
                 //
                 // let params_specs_type_reg_ref = &params_specs_type_reg;
                 // let profile_to_params_specs = futures::stream::iter(
@@ -518,22 +518,38 @@ fn impl_build_for(
                 //         .iter()
                 //         .map(Result::<_, peace_rt_model::Error>::Ok)
                 //     )
-                //     .and_then(|(profile, flow_dir)| async move {
-                //         let params_specs_file =
-                //             peace_resources::paths::ParamsSpecsFile::from(flow_dir);
+                //     .and_then(|(profile, flow_dir)| {
+                //         let params_specs_provided = params_specs_provided.clone();
+                //         async move {
+                //             let params_specs_file =
+                //                 peace_resources::paths::ParamsSpecsFile::from(flow_dir);
                 //
-                //         let params_specs = peace_rt_model::ParamsSpecsSerializer::<
-                //             peace_rt_model::Error
-                //         >::deserialize_opt(
-                //             profile,
-                //             flow_id,
-                //             storage,
-                //             params_specs_type_reg_ref,
-                //             &params_specs_file,
-                //         )
-                //         .await?;
+                //             let params_specs_stored = peace_rt_model::ParamsSpecsSerializer::<
+                //                 peace_rt_model::Error
+                //             >::deserialize_opt(
+                //                 profile,
+                //                 flow_id,
+                //                 storage,
+                //                 params_specs_type_reg_ref,
+                //                 &params_specs_file,
+                //             )
+                //             .await?;
                 //
-                //         Ok((profile.clone(), params_specs))
+                //             // For mapping fns, we still need the developer to provide the params spec
+                //             // so that multi-profile diffs can be done.
+                //             let params_specs = params_specs_stored.map(|params_specs_stored| {
+                //                 crate::ctx::cmd_ctx_builder::params_specs_merge(
+                //                     &flow,
+                //                     params_specs_provided,
+                //                     Some(params_specs_stored),
+                //                 )
+                //             })
+                //             .transpose()?;
+                //
+                //             // Note: we don't serialize params specs back to disk.
+                //
+                //             Ok((profile.clone(), params_specs))
+                //         }
                 //     })
                 //     .try_collect::<
                 //         std::collections::BTreeMap<
@@ -573,20 +589,20 @@ fn impl_build_for(
                 //     >()
                 //     .await?;
                 //
-                // // Call each `ItemSpec`'s initialization function.
-                // let resources = crate::ctx::cmd_ctx_builder::item_spec_graph_setup(
-                //     item_spec_graph,
+                // // Call each `Item`'s initialization function.
+                // let resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
+                //     item_graph,
                 //     resources
                 // )
                 // .await?;
                 //
                 // === SingleProfileSingleFlow === //
-                // // Set up resources for the flow's item spec graph
+                // // Set up resources for the flow's item graph
                 // let flow_id = flow.flow_id();
-                // let item_spec_graph = flow.graph();
+                // let item_graph = flow.graph();
                 //
-                // let (item_spec_params_type_reg, params_specs_type_reg, states_type_reg) =
-                //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
+                // let (item_params_type_reg, params_specs_type_reg, states_type_reg) =
+                //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
                 //
                 // // Params specs loading and storage.
                 // let params_specs_type_reg_ref = &params_specs_type_reg;
@@ -632,9 +648,9 @@ fn impl_build_for(
                 //     resources.insert(states_saved);
                 // }
                 //
-                // // Call each `ItemSpec`'s initialization function.
-                // let resources = crate::ctx::cmd_ctx_builder::item_spec_graph_setup(
-                //     item_spec_graph,
+                // // Call each `Item`'s initialization function.
+                // let resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
+                //     item_graph,
                 //     resources
                 // )
                 // .await?;
@@ -645,12 +661,12 @@ fn impl_build_for(
                 //     let multi_progress = indicatif::MultiProgress::with_draw_target(
                 //         indicatif::ProgressDrawTarget::hidden()
                 //     );
-                //     let progress_trackers = item_spec_graph.iter_insertion().fold(
-                //         peace_rt_model::IndexMap::with_capacity(item_spec_graph.node_count()),
-                //         |mut progress_trackers, item_spec| {
+                //     let progress_trackers = item_graph.iter_insertion().fold(
+                //         peace_rt_model::IndexMap::with_capacity(item_graph.node_count()),
+                //         |mut progress_trackers, item| {
                 //             let progress_bar = multi_progress.add(indicatif::ProgressBar::hidden());
                 //             let progress_tracker = peace_core::progress::ProgressTracker::new(progress_bar);
-                //             progress_trackers.insert(item_spec.id().clone(), progress_tracker);
+                //             progress_trackers.insert(item.id().clone(), progress_tracker);
                 //             progress_trackers
                 //         },
                 //     );
@@ -699,13 +715,13 @@ fn impl_build_for(
 
                     // === MultiProfileSingleFlow === //
                     // profile_to_states_saved,
-                    // item_spec_params_type_reg,
+                    // item_params_type_reg,
                     // params_specs_type_reg,
                     // profile_to_params_specs,
                     // states_type_reg,
                     // resources,
                     // === SingleProfileSingleFlow === //
-                    // item_spec_params_type_reg,
+                    // item_params_type_reg,
                     // params_specs_type_reg,
                     // params_specs,
                     // states_type_reg,
@@ -831,7 +847,7 @@ fn scope_builder_deconstruct(
         scope_builder_fields.push(flow_params_selection.deconstruct());
     }
 
-    if scope == Scope::SingleProfileSingleFlow {
+    if scope.flow_count() == FlowCount::One {
         scope_builder_fields.push(parse_quote! {
             params_specs_provided
         });
@@ -1450,14 +1466,14 @@ fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
         Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {}
         Scope::MultiProfileSingleFlow => {
             scope_fields.push(parse_quote!(profile_to_states_saved));
-            scope_fields.push(parse_quote!(item_spec_params_type_reg));
+            scope_fields.push(parse_quote!(item_params_type_reg));
             scope_fields.push(parse_quote!(params_specs_type_reg));
             scope_fields.push(parse_quote!(profile_to_params_specs));
             scope_fields.push(parse_quote!(states_type_reg));
             scope_fields.push(parse_quote!(resources));
         }
         Scope::SingleProfileSingleFlow => {
-            scope_fields.push(parse_quote!(item_spec_params_type_reg));
+            scope_fields.push(parse_quote!(item_params_type_reg));
             scope_fields.push(parse_quote!(params_specs_type_reg));
             scope_fields.push(parse_quote!(params_specs));
             scope_fields.push(parse_quote!(states_type_reg));
@@ -1474,18 +1490,17 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
             proc_macro2::TokenStream::new()
         }
         Scope::MultiProfileSingleFlow => {
-            // * Reads previous item spec params and stores them in a `Map<Profile,
-            //   ItemSpecParams>`.
+            // * Reads previous item params and stores them in a `Map<Profile, ItemParams>`.
             // * Reads previously saved states and stores them in a `Map<Profile,
             //   StatesSaved>`.
             //
             // These are then saved in the scope for easy use by consumers.
             quote! {
                 let flow_id = flow.flow_id();
-                let item_spec_graph = flow.graph();
+                let item_graph = flow.graph();
 
-                let (item_spec_params_type_reg, params_specs_type_reg, states_type_reg) =
-                    crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
+                let (item_params_type_reg, params_specs_type_reg, states_type_reg) =
+                    crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
 
                 let params_specs_type_reg_ref = &params_specs_type_reg;
                 let profile_to_params_specs = futures::stream::iter(
@@ -1493,22 +1508,38 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                         .iter()
                         .map(Result::<_, peace_rt_model::Error>::Ok)
                     )
-                    .and_then(|(profile, flow_dir)| async move {
-                        let params_specs_file =
-                            peace_resources::paths::ParamsSpecsFile::from(flow_dir);
+                    .and_then(|(profile, flow_dir)| {
+                        let params_specs_provided = params_specs_provided.clone();
+                        async move {
+                            let params_specs_file =
+                                peace_resources::paths::ParamsSpecsFile::from(flow_dir);
 
-                        let params_specs = peace_rt_model::ParamsSpecsSerializer::<
-                            peace_rt_model::Error
-                        >::deserialize_opt(
-                            profile,
-                            flow_id,
-                            storage,
-                            params_specs_type_reg_ref,
-                            &params_specs_file,
-                        )
-                        .await?;
+                            let params_specs_stored = peace_rt_model::ParamsSpecsSerializer::<
+                                peace_rt_model::Error
+                            >::deserialize_opt(
+                                profile,
+                                flow_id,
+                                storage,
+                                params_specs_type_reg_ref,
+                                &params_specs_file,
+                            )
+                            .await?;
 
-                        Ok((profile.clone(), params_specs))
+                            // For mapping fns, we still need the developer to provide the params spec
+                            // so that multi-profile diffs can be done.
+                            let params_specs = params_specs_stored.map(|params_specs_stored| {
+                                crate::ctx::cmd_ctx_builder::params_specs_merge(
+                                    &flow,
+                                    params_specs_provided,
+                                    Some(params_specs_stored),
+                                )
+                            })
+                            .transpose()?;
+
+                            // Note: we don't serialize params specs back to disk.
+
+                            Ok((profile.clone(), params_specs))
+                        }
                     })
                     .try_collect::<
                         std::collections::BTreeMap<
@@ -1548,9 +1579,9 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     >()
                     .await?;
 
-                // Call each `ItemSpec`'s initialization function.
-                let resources = crate::ctx::cmd_ctx_builder::item_spec_graph_setup(
-                    item_spec_graph,
+                // Call each `Item`'s initialization function.
+                let resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
+                    item_graph,
                     resources
                 )
                 .await?;
@@ -1562,9 +1593,9 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
             //
             // It is not possible to insert saved states into resources when running a
             // command with multiple flows, as the flows will have different
-            // item specs and their state (type)s will be different.
+            // items and their state (type)s will be different.
             //
-            // An example is workspace initialization, where the states saved per item spec
+            // An example is workspace initialization, where the states saved per item
             // for workspace initialization are likely different to application specific
             // flows.
             //
@@ -1572,14 +1603,14 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
             // commands. That would require either multiple `Resources` maps, or a
             // `Resources` map that contains `Map<Profile, _>`.
             //
-            // It also requires multiple item spec graph setups to work without conflicting
+            // It also requires multiple item graph setups to work without conflicting
             // with each other.
             quote! {
                 let flow_id = flow.flow_id();
-                let item_spec_graph = flow.graph();
+                let item_graph = flow.graph();
 
-                let (item_spec_params_type_reg, params_specs_type_reg, states_type_reg) =
-                    crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_spec_graph);
+                let (item_params_type_reg, params_specs_type_reg, states_type_reg) =
+                    crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
 
                 // Params specs loading and storage.
                 let params_specs_type_reg_ref = &params_specs_type_reg;
@@ -1625,9 +1656,9 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     resources.insert(states_saved);
                 }
 
-                // Call each `ItemSpec`'s initialization function.
-                let resources = crate::ctx::cmd_ctx_builder::item_spec_graph_setup(
-                    item_spec_graph,
+                // Call each `Item`'s initialization function.
+                let resources = crate::ctx::cmd_ctx_builder::item_graph_setup(
+                    item_graph,
                     resources
                 )
                 .await?;
@@ -1638,12 +1669,12 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     let multi_progress = indicatif::MultiProgress::with_draw_target(
                         indicatif::ProgressDrawTarget::hidden()
                     );
-                    let progress_trackers = item_spec_graph.iter_insertion().fold(
-                        peace_rt_model::IndexMap::with_capacity(item_spec_graph.node_count()),
-                        |mut progress_trackers, item_spec| {
+                    let progress_trackers = item_graph.iter_insertion().fold(
+                        peace_rt_model::IndexMap::with_capacity(item_graph.node_count()),
+                        |mut progress_trackers, item| {
                             let progress_bar = multi_progress.add(indicatif::ProgressBar::hidden());
                             let progress_tracker = peace_core::progress::ProgressTracker::new(progress_bar);
-                            progress_trackers.insert(item_spec.id().clone(), progress_tracker);
+                            progress_trackers.insert(item.id().clone(), progress_tracker);
                             progress_trackers
                         },
                     );

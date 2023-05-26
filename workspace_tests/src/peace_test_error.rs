@@ -3,13 +3,13 @@ use peace::miette;
 
 /// Error while running a workspace test.
 ///
-/// Error type for tests that need an error for their item spec graphs and
+/// Error type for tests that need an error for their item graphs and
 /// command contexts.
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 pub enum PeaceTestError {
-    /// A VecCopy item spec error occurred.
-    #[error("A VecCopy item spec error occurred.")]
+    /// A VecCopy item error occurred.
+    #[error("A VecCopy item error occurred.")]
     VecCopyError(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]

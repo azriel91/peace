@@ -1,13 +1,13 @@
 use std::ops::Deref;
 
-use peace_core::ItemSpecId;
+use peace_core::ItemId;
 use peace_fmt::{Presentable, Presenter};
 use serde::Serialize;
 use type_reg::untagged::{BoxDtDisplay, TypeMap};
 
 use crate::internal::StateDiffsMut;
 
-/// Diffs of `State`s for each `ItemSpec`s. `TypeMap<ItemSpecId, BoxDtDisplay>`
+/// Diffs of `State`s for each `Item`s. `TypeMap<ItemId, BoxDtDisplay>`
 /// newtype.
 ///
 /// # Implementors
@@ -17,7 +17,7 @@ use crate::internal::StateDiffsMut;
 ///
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]
-pub struct StateDiffs(TypeMap<ItemSpecId, BoxDtDisplay>);
+pub struct StateDiffs(TypeMap<ItemId, BoxDtDisplay>);
 
 impl StateDiffs {
     /// Returns a new `StateDiffs` map.
@@ -34,21 +34,21 @@ impl StateDiffs {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<ItemSpecId, BoxDtDisplay> {
+    pub fn into_inner(self) -> TypeMap<ItemId, BoxDtDisplay> {
         self.0
     }
 }
 
 impl Deref for StateDiffs {
-    type Target = TypeMap<ItemSpecId, BoxDtDisplay>;
+    type Target = TypeMap<ItemId, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl From<TypeMap<ItemSpecId, BoxDtDisplay>> for StateDiffs {
-    fn from(type_map: TypeMap<ItemSpecId, BoxDtDisplay>) -> Self {
+impl From<TypeMap<ItemId, BoxDtDisplay>> for StateDiffs {
+    fn from(type_map: TypeMap<ItemId, BoxDtDisplay>) -> Self {
         Self(type_map)
     }
 }
@@ -66,8 +66,8 @@ impl Presentable for StateDiffs {
         PR: Presenter<'output>,
     {
         presenter
-            .list_numbered_with(self.iter(), |(item_spec_id, state_diff)| {
-                (item_spec_id, format!(": {state_diff}"))
+            .list_numbered_with(self.iter(), |(item_id, state_diff)| {
+                (item_id, format!(": {state_diff}"))
             })
             .await
     }

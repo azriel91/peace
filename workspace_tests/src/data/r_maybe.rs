@@ -1,11 +1,11 @@
 use std::any::TypeId;
 
 use peace::{
-    cfg::{item_spec_id, ItemSpecId},
+    cfg::{item_id, ItemId},
     data::{accessors::RMaybe, Data, DataAccess, DataAccessDyn, Resources, TypeIds},
 };
 
-const ITEM_SPEC_ID_UNUSED: &ItemSpecId = &item_spec_id!("test_item_spec_id");
+const ITEM_SPEC_ID_UNUSED: &ItemId = &item_id!("test_item_id");
 
 #[test]
 fn data_borrow_returns_t_when_present() {

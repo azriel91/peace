@@ -1,0 +1,933 @@
+use std::{
+    fmt::{self, Debug},
+    marker::PhantomData,
+    ops::{Deref, DerefMut},
+};
+
+use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
+use peace_cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId};
+use peace_data::{
+    marker::{ApplyDry, Clean, Current, Desired},
+    Data,
+};
+use peace_params::{Params, ParamsSpec, ParamsSpecs, ValueResolutionCtx, ValueResolutionMode};
+use peace_resources::{
+    resources::ts::{Empty, SetUp},
+    states::StatesCurrent,
+    type_reg::untagged::{BoxDtDisplay, TypeMap},
+    Resources,
+};
+
+use crate::{
+    outcomes::{ItemApply, ItemApplyBoxed, ItemApplyPartial, ItemApplyPartialBoxed},
+    ItemParamsTypeReg, ItemRt, ParamsSpecsTypeReg, StatesTypeReg,
+};
+
+/// Wraps a type implementing [`Item`].
+///
+/// # Type Parameters
+///
+/// * `I`: Item type to wrap.
+/// * `E`: Application specific error type.
+///
+///     Notably, `E` here should be the application's error type, which is not
+///     necessarily the item's error type (unless you have only one item
+///     spec in the application).
+#[allow(clippy::type_complexity)]
+pub struct ItemWrapper<I, E>(I, PhantomData<E>);
+
+impl<I, E> Clone for ItemWrapper<I, E>
+where
+    I: Clone,
+{
+    fn clone(&self) -> Self {
+        Self(self.0.clone(), PhantomData)
+    }
+}
+
+impl<I, E> ItemWrapper<I, E>
+where
+    I: Debug + Item + Send + Sync,
+    E: Debug
+        + Send
+        + Sync
+        + std::error::Error
+        + From<<I as Item>::Error>
+        + From<crate::Error>
+        + 'static,
+    for<'params> <I as Item>::Params<'params>:
+        TryFrom<<<I as Item>::Params<'params> as Params>::Partial>,
+
+    for<'params> <I::Params<'params> as Params>::Partial: From<I::Params<'params>>,
+{
+    async fn state_clean(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<I::State, E> {
+        let state_clean = {
+            let params_partial = {
+                let item_id = self.id();
+                let params_spec = params_specs
+                    .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                    .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                        item_id: item_id.clone(),
+                    })?;
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::Clean,
+                    item_id.clone(),
+                    tynm::type_name::<I::Params<'_>>(),
+                );
+                params_spec
+                    .resolve_partial(resources, &mut value_resolution_ctx)
+                    .map_err(crate::Error::ParamsResolveError)?
+            };
+            let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
+            I::state_clean(&params_partial, data).await?
+        };
+        resources.borrow_mut::<Clean<I::State>>().0 = Some(state_clean.clone());
+
+        Ok(state_clean)
+    }
+
+    async fn state_current_try_exec(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+    ) -> Result<Option<I::State>, E> {
+        let state_current = {
+            let params_partial = {
+                let item_id = self.id();
+                let params_spec = params_specs
+                    .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                    .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                        item_id: item_id.clone(),
+                    })?;
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::Current,
+                    item_id.clone(),
+                    tynm::type_name::<I::Params<'_>>(),
+                );
+                params_spec
+                    .resolve_partial(resources, &mut value_resolution_ctx)
+                    .map_err(crate::Error::ParamsResolveError)?
+            };
+            let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
+            I::try_state_current(fn_ctx, &params_partial, data).await?
+        };
+        if let Some(state_current) = state_current.as_ref() {
+            resources.borrow_mut::<Current<I::State>>().0 = Some(state_current.clone());
+        }
+
+        Ok(state_current)
+    }
+
+    async fn state_current_exec(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+    ) -> Result<I::State, E> {
+        let state_current = {
+            let params = {
+                let item_id = self.id();
+                let params_spec = params_specs
+                    .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                    .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                        item_id: item_id.clone(),
+                    })?;
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::Current,
+                    item_id.clone(),
+                    tynm::type_name::<I::Params<'_>>(),
+                );
+                params_spec
+                    .resolve(resources, &mut value_resolution_ctx)
+                    .map_err(crate::Error::ParamsResolveError)?
+            };
+            let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
+            I::state_current(fn_ctx, &params, data).await?
+        };
+        resources.borrow_mut::<Current<I::State>>().0 = Some(state_current.clone());
+
+        Ok(state_current)
+    }
+
+    async fn state_desired_try_exec(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+    ) -> Result<Option<I::State>, E> {
+        let params_partial = {
+            let item_id = self.id();
+            let params_spec = params_specs
+                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_id: item_id.clone(),
+                })?;
+            let mut value_resolution_ctx = ValueResolutionCtx::new(
+                ValueResolutionMode::Desired,
+                item_id.clone(),
+                tynm::type_name::<I::Params<'_>>(),
+            );
+            params_spec
+                .resolve_partial(resources, &mut value_resolution_ctx)
+                .map_err(crate::Error::ParamsResolveError)?
+        };
+        let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_desired = I::try_state_desired(fn_ctx, &params_partial, data).await?;
+        if let Some(state_desired) = state_desired.as_ref() {
+            resources.borrow_mut::<Desired<I::State>>().0 = Some(state_desired.clone());
+        }
+
+        Ok(state_desired)
+    }
+
+    /// Returns the desired state for this item.
+    ///
+    /// `value_resolution_ctx` is passed in because:
+    ///
+    /// * When discovering the desired state for a flow, without altering any
+    ///   items, the desired state of a successor is dependent on the desired
+    ///   state of a predecessor.
+    /// * When discovering the desired state of a successor, after a predecessor
+    ///   has had state applied, the predecessor's desired state does not
+    ///   necessarily contain the generated values, so we need to tell the
+    ///   successor to look up the predecessor's newly current state.
+    /// * When cleaning up, the predecessor's current state must be used to
+    ///   resolve a successor's params. Since clean up is applied in reverse,
+    ///   the `Desired` state of a predecessor may not exist, and cause the
+    ///   successor to not be cleaned up.
+    async fn state_desired_exec(
+        &self,
+        value_resolution_mode: ValueResolutionMode,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+    ) -> Result<I::State, E> {
+        let params = {
+            let item_id = self.id();
+            let params_spec = params_specs
+                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_id: item_id.clone(),
+                })?;
+            let mut value_resolution_ctx = ValueResolutionCtx::new(
+                value_resolution_mode,
+                item_id.clone(),
+                tynm::type_name::<I::Params<'_>>(),
+            );
+            params_spec
+                .resolve(resources, &mut value_resolution_ctx)
+                .map_err(crate::Error::ParamsResolveError)?
+        };
+        let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_desired = I::state_desired(fn_ctx, &params, data).await?;
+        resources.borrow_mut::<Desired<I::State>>().0 = Some(state_desired.clone());
+
+        Ok(state_desired)
+    }
+
+    async fn state_diff_exec(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        states_a: &TypeMap<ItemId, BoxDtDisplay>,
+        states_b: &TypeMap<ItemId, BoxDtDisplay>,
+    ) -> Result<Option<I::StateDiff>, E> {
+        let item_id = <I as Item>::id(self);
+        let state_base = states_a.get::<I::State, _>(item_id);
+        let state_desired = states_b.get::<I::State, _>(item_id);
+
+        if let Some((state_base, state_desired)) = state_base.zip(state_desired) {
+            let state_diff: I::StateDiff = self
+                .state_diff_exec_with(params_specs, resources, state_base, state_desired)
+                .await?;
+            Ok(Some(state_diff))
+        } else {
+            // When we reach here, one of the following is true:
+            //
+            // * The current state cannot be retrieved, due to a predecessor's state not
+            //   existing.
+            // * The desired state cannot be retrieved, due to a predecessor's state not
+            //   existing.
+            // * A bug exists, e.g. the state is stored against the wrong type parameter.
+
+            Ok(None)
+        }
+    }
+
+    async fn state_diff_exec_with(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        state_a: &I::State,
+        state_b: &I::State,
+    ) -> Result<I::StateDiff, E> {
+        let state_diff: I::StateDiff = {
+            let params_partial = {
+                let item_id = self.id();
+                let params_spec = params_specs
+                    .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                    .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                        item_id: item_id.clone(),
+                    })?;
+
+                // Running `diff` for a single profile will be between the current and desired
+                // states, and parameters are not really intended to be used for diffing.
+                //
+                // However for `ShCmdItem`, the shell script for diffing's path is in
+                // params, which *likely* would be provided as direct `Value`s instead of
+                // mapped from predecessors' state(s). Iff the values are mapped from a
+                // predecessor's state, then we would want it to be the desired state, as that
+                // is closest to the correct value -- `ValueResolutionMode::ApplyDry` is used in
+                // `Item::apply_dry`, and `ValueResolutionMode::Apply` is used in
+                // `Item::apply`.
+                //
+                // Running `diff` for multiple profiles will likely be between two profiles'
+                // current states.
+                let mut value_resolution_ctx = ValueResolutionCtx::new(
+                    ValueResolutionMode::Desired,
+                    item_id.clone(),
+                    tynm::type_name::<I::Params<'_>>(),
+                );
+                params_spec
+                    .resolve_partial(resources, &mut value_resolution_ctx)
+                    .map_err(crate::Error::ParamsResolveError)?
+            };
+            let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
+            I::state_diff(&params_partial, data, state_a, state_b)
+                .await
+                .map_err(Into::<E>::into)?
+        };
+
+        Ok(state_diff)
+    }
+
+    async fn apply_check(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        state_current: &I::State,
+        state_target: &I::State,
+        state_diff: &I::StateDiff,
+        value_resolution_mode: ValueResolutionMode,
+    ) -> Result<ApplyCheck, E> {
+        let params_partial = {
+            let item_id = self.id();
+            let params_spec = params_specs
+                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_id: item_id.clone(),
+                })?;
+
+            // Normally an `apply_check` only compares the states / state diff.
+            //
+            // We use `ValueResolutionMode::Desired` because an apply is between the current
+            // and desired states, and when resolving values, we want the target state's
+            // parameters to be used. Note that during an apply, the desired state is
+            // resolved as execution happens -- values that rely on predecessors' applied
+            // state will be fed into successors' desired state.
+            let mut value_resolution_ctx = ValueResolutionCtx::new(
+                value_resolution_mode,
+                item_id.clone(),
+                tynm::type_name::<I::Params<'_>>(),
+            );
+            params_spec
+                .resolve_partial(resources, &mut value_resolution_ctx)
+                .map_err(crate::Error::ParamsResolveError)?
+        };
+        let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
+        if let Ok(params) = params_partial.try_into() {
+            I::apply_check(&params, data, state_current, state_target, state_diff)
+                .await
+                .map_err(Into::<E>::into)
+        } else {
+            // > If we cannot resolve parameters, then this item, and its predecessor are
+            // > cleaned up.
+            //
+            // The above is not necessarily true -- the user may have provided an incorrect
+            // type to map from. However, it is more likely to be true than false.
+            Ok(ApplyCheck::ExecNotRequired)
+        }
+    }
+
+    async fn apply_exec_dry(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+        state_current: &I::State,
+        state_desired: &I::State,
+        state_diff: &I::StateDiff,
+    ) -> Result<I::State, E> {
+        let params = {
+            let item_id = self.id();
+            let params_spec = params_specs
+                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_id: item_id.clone(),
+                })?;
+            let mut value_resolution_ctx = ValueResolutionCtx::new(
+                ValueResolutionMode::ApplyDry,
+                item_id.clone(),
+                tynm::type_name::<I::Params<'_>>(),
+            );
+            params_spec
+                .resolve(resources, &mut value_resolution_ctx)
+                .map_err(crate::Error::ParamsResolveError)?
+        };
+        let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_ensured_dry = I::apply_dry(
+            fn_ctx,
+            &params,
+            data,
+            state_current,
+            state_desired,
+            state_diff,
+        )
+        .await
+        .map_err(Into::<E>::into)?;
+
+        resources.borrow_mut::<ApplyDry<I::State>>().0 = Some(state_ensured_dry.clone());
+
+        Ok(state_ensured_dry)
+    }
+
+    async fn apply_exec(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+        state_current: &I::State,
+        state_desired: &I::State,
+        state_diff: &I::StateDiff,
+    ) -> Result<I::State, E> {
+        let params = {
+            let item_id = self.id();
+            let params_spec = params_specs
+                .get::<ParamsSpec<I::Params<'_>>, _>(item_id)
+                .ok_or_else(|| crate::Error::ParamsSpecNotFound {
+                    item_id: item_id.clone(),
+                })?;
+            let mut value_resolution_ctx = ValueResolutionCtx::new(
+                ValueResolutionMode::Current,
+                item_id.clone(),
+                tynm::type_name::<I::Params<'_>>(),
+            );
+            params_spec
+                .resolve(resources, &mut value_resolution_ctx)
+                .map_err(crate::Error::ParamsResolveError)?
+        };
+        let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
+        let state_ensured = I::apply(
+            fn_ctx,
+            &params,
+            data,
+            state_current,
+            state_desired,
+            state_diff,
+        )
+        .await
+        .map_err(Into::<E>::into)?;
+
+        resources.borrow_mut::<Current<I::State>>().0 = Some(state_ensured.clone());
+
+        Ok(state_ensured)
+    }
+}
+
+impl<I, E> Debug for ItemWrapper<I, E>
+where
+    I: Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl<I, E> Deref for ItemWrapper<I, E> {
+    type Target = I;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<I, E> DerefMut for ItemWrapper<I, E> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl<I, E> From<I> for ItemWrapper<I, E>
+where
+    I: Debug + Item + Send + Sync,
+    E: Debug + Send + Sync + std::error::Error + From<<I as Item>::Error> + 'static,
+{
+    fn from(item: I) -> Self {
+        Self(item, PhantomData)
+    }
+}
+
+impl<I, E> DataAccess for ItemWrapper<I, E>
+where
+    I: Debug + Item + Send + Sync,
+    E: Debug + Send + Sync + std::error::Error + From<<I as Item>::Error> + 'static,
+{
+    fn borrows() -> TypeIds {
+        let mut type_ids = <I::Data<'_> as DataAccess>::borrows();
+        type_ids.push(std::any::TypeId::of::<I::Params<'_>>());
+
+        type_ids
+    }
+
+    fn borrow_muts() -> TypeIds {
+        <I::Data<'_> as DataAccess>::borrow_muts()
+    }
+}
+
+impl<I, E> DataAccessDyn for ItemWrapper<I, E>
+where
+    I: Debug + Item + Send + Sync,
+    E: Debug + Send + Sync + std::error::Error + From<<I as Item>::Error> + 'static,
+{
+    fn borrows(&self) -> TypeIds {
+        let mut type_ids = <I::Data<'_> as DataAccess>::borrows();
+        type_ids.push(std::any::TypeId::of::<I::Params<'_>>());
+
+        type_ids
+    }
+
+    fn borrow_muts(&self) -> TypeIds {
+        <I::Data<'_> as DataAccess>::borrow_muts()
+    }
+}
+
+#[async_trait(?Send)]
+impl<I, E> ItemRt<E> for ItemWrapper<I, E>
+where
+    I: Clone + Debug + Item + Send + Sync,
+    E: Debug
+        + Send
+        + Sync
+        + std::error::Error
+        + From<<I as Item>::Error>
+        + From<crate::Error>
+        + 'static,
+    for<'params> <I as Item>::Params<'params>:
+        TryFrom<<<I as Item>::Params<'params> as Params>::Partial>,
+    for<'params> <I::Params<'params> as Params>::Partial: From<I::Params<'params>>,
+{
+    fn id(&self) -> &ItemId {
+        <I as Item>::id(self)
+    }
+
+    async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E> {
+        // Insert `XMarker<I::State>` to create entries in `Resources`.
+        // This is used for referential param values (#94)
+        resources.insert(Clean::<I::State>(None));
+        resources.insert(Current::<I::State>(None));
+        resources.insert(Desired::<I::State>(None));
+        resources.insert(ApplyDry::<I::State>(None));
+
+        // Run user defined setup.
+        <I as Item>::setup(self, resources)
+            .await
+            .map_err(Into::<E>::into)
+    }
+
+    fn params_and_state_register(
+        &self,
+        item_params_type_reg: &mut ItemParamsTypeReg,
+        params_specs_type_reg: &mut ParamsSpecsTypeReg,
+        states_type_reg: &mut StatesTypeReg,
+    ) {
+        item_params_type_reg.register::<I::Params<'_>>(I::id(self).clone());
+        params_specs_type_reg.register::<ParamsSpec<I::Params<'_>>>(I::id(self).clone());
+        states_type_reg.register::<I::State>(I::id(self).clone());
+    }
+
+    async fn state_clean(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<BoxDtDisplay, E> {
+        self.state_clean(params_specs, resources)
+            .await
+            .map(BoxDtDisplay::new)
+            .map_err(Into::<E>::into)
+    }
+
+    async fn state_current_try_exec(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+    ) -> Result<Option<BoxDtDisplay>, E> {
+        self.state_current_try_exec(params_specs, resources, fn_ctx)
+            .await
+            .map(|state_current| state_current.map(BoxDtDisplay::new))
+            .map_err(Into::<E>::into)
+    }
+
+    async fn state_current_exec(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+    ) -> Result<BoxDtDisplay, E> {
+        self.state_current_exec(params_specs, resources, fn_ctx)
+            .await
+            .map(BoxDtDisplay::new)
+            .map_err(Into::<E>::into)
+    }
+
+    async fn state_desired_try_exec(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+    ) -> Result<Option<BoxDtDisplay>, E> {
+        self.state_desired_try_exec(params_specs, resources, fn_ctx)
+            .await
+            .map(|state_desired| state_desired.map(BoxDtDisplay::new))
+            .map_err(Into::<E>::into)
+    }
+
+    async fn state_desired_exec(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+    ) -> Result<BoxDtDisplay, E> {
+        self.state_desired_exec(
+            // Use the would-be state of predecessor to discover desired state of this item.
+            //
+            // TODO: this means we may need to overlay the desired state with the predecessor's
+            // current state.
+            //
+            // Or more feasibly, if predecessor's ApplyCheck is ExecNotRequired, then we can use
+            // predecessor's current state.
+            ValueResolutionMode::Desired,
+            params_specs,
+            resources,
+            fn_ctx,
+        )
+        .await
+        .map(BoxDtDisplay::new)
+        .map_err(Into::<E>::into)
+    }
+
+    async fn state_diff_exec(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        states_a: &TypeMap<ItemId, BoxDtDisplay>,
+        states_b: &TypeMap<ItemId, BoxDtDisplay>,
+    ) -> Result<Option<BoxDtDisplay>, E> {
+        self.state_diff_exec(params_specs, resources, states_a, states_b)
+            .await
+            .map(|state_diff_opt| state_diff_opt.map(BoxDtDisplay::new))
+            .map_err(Into::<E>::into)
+    }
+
+    async fn ensure_prepare(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+    ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
+        let mut item_apply_partial = ItemApplyPartial::<I::State, I::StateDiff>::new();
+
+        match self
+            .state_current_exec(params_specs, resources, fn_ctx)
+            .await
+        {
+            Ok(state_current) => item_apply_partial.state_current = Some(state_current),
+            Err(error) => return Err((error, item_apply_partial.into())),
+        }
+        #[cfg(feature = "output_progress")]
+        fn_ctx.progress_sender().reset();
+        match self
+            .state_desired_exec(
+                // Use current state of predecessor to discover desired state.
+                ValueResolutionMode::Current,
+                params_specs,
+                resources,
+                fn_ctx,
+            )
+            .await
+        {
+            Ok(state_desired) => item_apply_partial.state_target = Some(state_desired),
+            Err(error) => return Err((error, item_apply_partial.into())),
+        }
+        #[cfg(feature = "output_progress")]
+        fn_ctx.progress_sender().reset();
+        match self
+            .state_diff_exec_with(
+                params_specs,
+                resources,
+                item_apply_partial
+                    .state_current
+                    .as_ref()
+                    .expect("unreachable: This is set just above."),
+                item_apply_partial
+                    .state_target
+                    .as_ref()
+                    .expect("unreachable: This is set just above."),
+            )
+            .await
+        {
+            Ok(state_diff) => item_apply_partial.state_diff = Some(state_diff),
+            Err(error) => return Err((error, item_apply_partial.into())),
+        }
+
+        let (Some(state_current), Some(state_desired), Some(state_diff)) = (
+            item_apply_partial.state_current.as_ref(),
+            item_apply_partial.state_target.as_ref(),
+            item_apply_partial.state_diff.as_ref(),
+        ) else {
+            unreachable!("These are set just above.");
+        };
+
+        let apply_check = self
+            .apply_check(
+                params_specs,
+                resources,
+                state_current,
+                state_desired,
+                state_diff,
+                // Use current state of predecessor to discover desired state.
+                ValueResolutionMode::Current,
+            )
+            .await;
+        let state_applied = match apply_check {
+            Ok(apply_check) => {
+                item_apply_partial.apply_check = Some(apply_check);
+
+                // TODO: write test for this case
+                match apply_check {
+                    #[cfg(not(feature = "output_progress"))]
+                    ApplyCheck::ExecRequired => None,
+                    #[cfg(feature = "output_progress")]
+                    ApplyCheck::ExecRequired { .. } => None,
+                    ApplyCheck::ExecNotRequired => item_apply_partial.state_current.clone(),
+                }
+            }
+            Err(error) => return Err((error, item_apply_partial.into())),
+        };
+
+        Ok(ItemApply::try_from((item_apply_partial, state_applied))
+            .expect("unreachable: All the fields are set above.")
+            .into())
+    }
+
+    async fn apply_exec_dry(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+        item_apply_boxed: &mut ItemApplyBoxed,
+    ) -> Result<(), E> {
+        let Some(item_apply) =
+            item_apply_boxed.as_data_type_mut().downcast_mut::<ItemApply<I::State, I::StateDiff>>() else {
+                panic!("Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
+                    This is a bug in the Peace framework.",
+                    concrete_type = std::any::type_name::<ItemApply<I::State, I::StateDiff>>())
+            };
+
+        let ItemApply {
+            state_saved: _,
+            state_current,
+            state_target,
+            state_diff,
+            apply_check,
+            state_applied,
+        } = item_apply;
+
+        match apply_check {
+            #[cfg(not(feature = "output_progress"))]
+            ApplyCheck::ExecRequired => {
+                let state_applied_dry = self
+                    .apply_exec_dry(
+                        params_specs,
+                        resources,
+                        fn_ctx,
+                        state_current,
+                        state_target,
+                        state_diff,
+                    )
+                    .await?;
+
+                *state_applied = Some(state_applied_dry);
+            }
+            #[cfg(feature = "output_progress")]
+            ApplyCheck::ExecRequired { progress_limit: _ } => {
+                let state_applied_dry = self
+                    .apply_exec_dry(
+                        params_specs,
+                        resources,
+                        fn_ctx,
+                        state_current,
+                        state_target,
+                        state_diff,
+                    )
+                    .await?;
+
+                *state_applied = Some(state_applied_dry);
+            }
+            ApplyCheck::ExecNotRequired => {}
+        }
+
+        Ok(())
+    }
+
+    async fn clean_prepare(
+        &self,
+        states_current: &StatesCurrent,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+    ) -> Result<ItemApplyBoxed, (E, ItemApplyPartialBoxed)> {
+        let mut item_apply_partial = ItemApplyPartial::<I::State, I::StateDiff>::new();
+
+        if let Some(state_current) = states_current.get::<I::State, _>(self.id()) {
+            item_apply_partial.state_current = Some(state_current.clone());
+        } else {
+            // Hack: Setting ItemApplyPartial state_current to state_clean is a hack,
+            // which allows successor items to read the state of a predecessor, when
+            // none can be discovered.
+            //
+            // This may not necessarily be a hack.
+            match self.state_clean(params_specs, resources).await {
+                Ok(state_clean) => item_apply_partial.state_current = Some(state_clean),
+                Err(error) => return Err((error, item_apply_partial.into())),
+            }
+        }
+        match self.state_clean(params_specs, resources).await {
+            Ok(state_clean) => item_apply_partial.state_target = Some(state_clean),
+            Err(error) => return Err((error, item_apply_partial.into())),
+        }
+
+        match self
+            .state_diff_exec_with(
+                params_specs,
+                resources,
+                item_apply_partial
+                    .state_current
+                    .as_ref()
+                    .expect("unreachable: This is confirmed just above."),
+                item_apply_partial
+                    .state_target
+                    .as_ref()
+                    .expect("unreachable: This is set just above."),
+            )
+            .await
+        {
+            Ok(state_diff) => item_apply_partial.state_diff = Some(state_diff),
+            Err(error) => return Err((error, item_apply_partial.into())),
+        }
+
+        let (Some(state_current), Some(state_clean), Some(state_diff)) = (
+            item_apply_partial.state_current.as_ref(),
+            item_apply_partial.state_target.as_ref(),
+            item_apply_partial.state_diff.as_ref(),
+        ) else {
+            unreachable!("These are set just above.");
+        };
+
+        let apply_check = self
+            .apply_check(
+                params_specs,
+                resources,
+                state_current,
+                state_clean,
+                state_diff,
+                // Use current state of predecessor to discover desired state.
+                ValueResolutionMode::Current,
+            )
+            .await;
+
+        let state_applied = match apply_check {
+            Ok(apply_check) => {
+                item_apply_partial.apply_check = Some(apply_check);
+
+                // TODO: write test for this case
+                match apply_check {
+                    #[cfg(not(feature = "output_progress"))]
+                    ApplyCheck::ExecRequired => None,
+                    #[cfg(feature = "output_progress")]
+                    ApplyCheck::ExecRequired { .. } => None,
+                    ApplyCheck::ExecNotRequired => item_apply_partial.state_current.clone(),
+                }
+            }
+            Err(error) => return Err((error, item_apply_partial.into())),
+        };
+
+        Ok(ItemApply::try_from((item_apply_partial, state_applied))
+            .expect("unreachable: All the fields are set above.")
+            .into())
+    }
+
+    async fn apply_exec(
+        &self,
+        params_specs: &ParamsSpecs,
+        resources: &Resources<SetUp>,
+        fn_ctx: FnCtx<'_>,
+        item_apply_boxed: &mut ItemApplyBoxed,
+    ) -> Result<(), E> {
+        let Some(item_apply) =
+            item_apply_boxed.as_data_type_mut().downcast_mut::<ItemApply<I::State, I::StateDiff>>() else {
+                panic!("Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
+                    This is a bug in the Peace framework.",
+                    concrete_type = std::any::type_name::<ItemApply<I::State, I::StateDiff>>())
+            };
+
+        let ItemApply {
+            state_saved: _,
+            state_current,
+            state_target,
+            state_diff,
+            apply_check,
+            state_applied,
+        } = item_apply;
+
+        match apply_check {
+            #[cfg(not(feature = "output_progress"))]
+            ApplyCheck::ExecRequired => {
+                let state_applied_next = self
+                    .apply_exec(
+                        params_specs,
+                        resources,
+                        fn_ctx,
+                        state_current,
+                        state_target,
+                        state_diff,
+                    )
+                    .await?;
+
+                *state_applied = Some(state_applied_next);
+            }
+            #[cfg(feature = "output_progress")]
+            ApplyCheck::ExecRequired { progress_limit: _ } => {
+                let state_applied_next = self
+                    .apply_exec(
+                        params_specs,
+                        resources,
+                        fn_ctx,
+                        state_current,
+                        state_target,
+                        state_diff,
+                    )
+                    .await?;
+
+                *state_applied = Some(state_applied_next);
+            }
+            ApplyCheck::ExecNotRequired => {}
+        }
+
+        Ok(())
+    }
+}

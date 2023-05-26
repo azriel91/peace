@@ -6,7 +6,7 @@ When initializing a project workspace, the suitable scope is different depending
 
 ## Command Creation
 
-* If it only stores parameters provided by the user, shared across profiles, and does not use any item spec, use `NoProfileNoFlow`.
+* If it only stores parameters provided by the user, shared across profiles, and does not use any item, use `NoProfileNoFlow`.
 
     To create this command:
 
@@ -16,7 +16,7 @@ When initializing a project workspace, the suitable scope is different depending
 
     - Workspace parameters are written to `workspace_params.yaml`.
 
-* If it stores parameters for a *default* profile, and does not use any item spec, use `SingleProfileNoFlow`.
+* If it stores parameters for a *default* profile, and does not use any item, use `SingleProfileNoFlow`.
 
     To create this command:
 

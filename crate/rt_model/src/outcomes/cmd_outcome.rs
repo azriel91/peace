@@ -1,4 +1,4 @@
-use peace_cfg::ItemSpecId;
+use peace_cfg::ItemId;
 use peace_rt_model_core::IndexMap;
 
 #[derive(Clone, Debug)]
@@ -6,7 +6,7 @@ pub struct CmdOutcome<T, E> {
     /// The outcome value.
     pub value: T,
     /// Errors from the command execution.
-    pub errors: IndexMap<ItemSpecId, E>,
+    pub errors: IndexMap<ItemId, E>,
 }
 
 impl<T, E> CmdOutcome<T, E> {

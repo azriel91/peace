@@ -1,10 +1,10 @@
 use std::ops::{Deref, DerefMut};
 
-use peace_core::ItemSpecId;
+use peace_core::ItemId;
 use serde::Serialize;
 use type_reg::untagged::{BoxDtDisplay, TypeMap};
 
-/// Diffs of `State`s for each `ItemSpec`s. `TypeMap<ItemSpecId, BoxDtDisplay>`
+/// Diffs of `State`s for each `Item`s. `TypeMap<ItemId, BoxDtDisplay>`
 /// newtype.
 ///
 /// # Implementors
@@ -15,7 +15,7 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 /// [`StateDiffs`]: crate::StateDiffs
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]
-pub struct StateDiffsMut(TypeMap<ItemSpecId, BoxDtDisplay>);
+pub struct StateDiffsMut(TypeMap<ItemId, BoxDtDisplay>);
 
 impl StateDiffsMut {
     /// Returns a new `StateDiffsMut` map.
@@ -32,13 +32,13 @@ impl StateDiffsMut {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<ItemSpecId, BoxDtDisplay> {
+    pub fn into_inner(self) -> TypeMap<ItemId, BoxDtDisplay> {
         self.0
     }
 }
 
 impl Deref for StateDiffsMut {
-    type Target = TypeMap<ItemSpecId, BoxDtDisplay>;
+    type Target = TypeMap<ItemId, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -51,16 +51,16 @@ impl DerefMut for StateDiffsMut {
     }
 }
 
-impl From<TypeMap<ItemSpecId, BoxDtDisplay>> for StateDiffsMut {
-    fn from(type_map: TypeMap<ItemSpecId, BoxDtDisplay>) -> Self {
+impl From<TypeMap<ItemId, BoxDtDisplay>> for StateDiffsMut {
+    fn from(type_map: TypeMap<ItemId, BoxDtDisplay>) -> Self {
         Self(type_map)
     }
 }
 
-impl Extend<(ItemSpecId, BoxDtDisplay)> for StateDiffsMut {
-    fn extend<T: IntoIterator<Item = (ItemSpecId, BoxDtDisplay)>>(&mut self, iter: T) {
-        iter.into_iter().for_each(|(item_spec_id, state_diff)| {
-            self.insert_raw(item_spec_id, state_diff);
+impl Extend<(ItemId, BoxDtDisplay)> for StateDiffsMut {
+    fn extend<T: IntoIterator<Item = (ItemId, BoxDtDisplay)>>(&mut self, iter: T) {
+        iter.into_iter().for_each(|(item_id, state_diff)| {
+            self.insert_raw(item_id, state_diff);
         });
     }
 }

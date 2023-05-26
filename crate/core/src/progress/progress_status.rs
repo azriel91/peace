@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::progress::ProgressComplete;
 
-/// Status of an item spec's execution progress.
+/// Status of an item's execution progress.
 ///
 /// # Implementation Notes
 ///
@@ -44,7 +44,7 @@ pub enum ProgressStatus {
     ///
     /// * **Units total:** Unknown (spinner) / known (progress bar).
     /// * **Units current**
-    /// * **Function:** `ItemSpec::{state_current, state_desired, apply}`.
+    /// * **Function:** `Item::{state_current, state_desired, apply}`.
     ///
     ///     Certain functions will not be applicable, e.g. when `StateCurrent`
     ///     is feature gated, then the function won't be available when the
@@ -52,7 +52,7 @@ pub enum ProgressStatus {
     Running,
     /// Progress updates have not been received for a given period.
     ///
-    /// Item spec implementations are responsible for sending progress updates,
+    /// Item implementations are responsible for sending progress updates,
     /// but if there are no progress updates, or an identical "it's running"
     /// progress update is continuously received, then Peace may determine that
     /// the task may have stalled, and user attention is required.
@@ -67,6 +67,6 @@ pub enum ProgressStatus {
     /// This status is best conveyed alongside additional information:
     ///
     /// * **Completion Status**: Success, Failed.
-    /// * **Function:** `ItemSpec::{state_current, state_desired, apply}`.
+    /// * **Function:** `Item::{state_current, state_desired, apply}`.
     Complete(ProgressComplete),
 }

@@ -3,17 +3,17 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use peace_core::ItemSpecId;
+use peace_core::ItemId;
 use serde::Serialize;
 use type_reg::untagged::{BoxDtDisplay, TypeMap};
 
-/// `State`s for all `ItemSpec`s. `TypeMap<ItemSpecId, BoxDtDisplay>` newtype.
+/// `State`s for all `Item`s. `TypeMap<ItemId, BoxDtDisplay>` newtype.
 ///
 /// # Implementors
 ///
-/// To reference State from another `ItemSpec`, in `ItemSpec::Data`, you should
+/// To reference State from another `Item`, in `Item::Data`, you should
 /// reference [`Current<T>`] or [`Desired<T>`], where `T` is the predecessor
-/// item spec's state.
+/// item's state.
 ///
 /// # Type Parameters
 ///
@@ -26,7 +26,7 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 /// [`StatesCurrent`]: crate::StatesCurrent
 /// [`StatesRw`]: crate::StatesRw
 #[derive(Debug, Serialize)]
-pub struct StatesMut<TS>(TypeMap<ItemSpecId, BoxDtDisplay>, PhantomData<TS>);
+pub struct StatesMut<TS>(TypeMap<ItemId, BoxDtDisplay>, PhantomData<TS>);
 
 impl<TS> StatesMut<TS> {
     /// Returns a new `StatesMut` map.
@@ -43,7 +43,7 @@ impl<TS> StatesMut<TS> {
     }
 
     /// Returns the inner map.
-    pub fn into_inner(self) -> TypeMap<ItemSpecId, BoxDtDisplay> {
+    pub fn into_inner(self) -> TypeMap<ItemId, BoxDtDisplay> {
         self.0
     }
 }
@@ -55,7 +55,7 @@ impl<TS> Default for StatesMut<TS> {
 }
 
 impl<TS> Deref for StatesMut<TS> {
-    type Target = TypeMap<ItemSpecId, BoxDtDisplay>;
+    type Target = TypeMap<ItemId, BoxDtDisplay>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -68,16 +68,16 @@ impl<TS> DerefMut for StatesMut<TS> {
     }
 }
 
-impl<TS> From<TypeMap<ItemSpecId, BoxDtDisplay>> for StatesMut<TS> {
-    fn from(type_map: TypeMap<ItemSpecId, BoxDtDisplay>) -> Self {
+impl<TS> From<TypeMap<ItemId, BoxDtDisplay>> for StatesMut<TS> {
+    fn from(type_map: TypeMap<ItemId, BoxDtDisplay>) -> Self {
         Self(type_map, PhantomData)
     }
 }
 
-impl<TS> Extend<(ItemSpecId, BoxDtDisplay)> for StatesMut<TS> {
-    fn extend<T: IntoIterator<Item = (ItemSpecId, BoxDtDisplay)>>(&mut self, iter: T) {
-        iter.into_iter().for_each(|(item_spec_id, state)| {
-            self.insert_raw(item_spec_id, state);
+impl<TS> Extend<(ItemId, BoxDtDisplay)> for StatesMut<TS> {
+    fn extend<T: IntoIterator<Item = (ItemId, BoxDtDisplay)>>(&mut self, iter: T) {
+        iter.into_iter().for_each(|(item_id, state)| {
+            self.insert_raw(item_id, state);
         });
     }
 }

@@ -29,7 +29,7 @@ derivative = { workspace = true }
 futures = "0.3.28"
 md5-rs = "0.1.5"  # WASM compatible, and reads bytes as stream
 peace = { path = "../..", default-features = false }
-peace_item_specs = { path = "../../item_specs", features = ["file_download", "tar_x"] }
+peace_items = { path = "../../items", features = ["file_download", "tar_x"] }
 semver = "1.0.17"
 serde = { version = "1.0.159", features = ["derive"] }
 thiserror = "1.0.40"
@@ -53,11 +53,11 @@ web-sys = "0.3.61"
 default = []
 error_reporting = [
     "peace/error_reporting",
-    "peace_item_specs/error_reporting",
+    "peace_items/error_reporting",
 ]
 output_colorized = ["peace/output_colorized"]
 output_json = ["peace/output_json"]
 output_progress = [
     "peace/output_progress",
-    "peace_item_specs/output_progress",
+    "peace_items/output_progress",
 ]

@@ -1,0 +1,59 @@
+[package]
+name = "peace_items"
+version = "0.0.9"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+edition = "2021"
+description = "Collection of items the peace framework"
+repository = "https://github.com/azriel91/peace"
+documentation = "https://docs.rs/peace_items/"
+readme = "../README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[lib]
+doctest = true
+test = false
+
+[dependencies]
+peace_item_blank = { path = "blank", version = "0.0.9", optional = true }
+peace_item_file_download = { path = "file_download", version = "0.0.9", optional = true }
+peace_item_sh_cmd = { path = "sh_cmd", version = "0.0.9", optional = true }
+peace_item_sh_sync_cmd = { path = "sh_sync_cmd", version = "0.0.9", optional = true }
+peace_item_tar_x = { path = "tar_x", version = "0.0.9", optional = true }
+
+[dev-dependencies]
+peace = { path = "..", version = "0.0.9", default-features = false }
+
+[features]
+default = []
+
+# `peace` features
+error_reporting = [
+    "peace/error_reporting",
+    "peace_item_blank?/error_reporting",
+    "peace_item_file_download?/error_reporting",
+    "peace_item_sh_cmd?/error_reporting",
+    "peace_item_sh_sync_cmd?/error_reporting",
+    "peace_item_tar_x?/error_reporting",
+]
+output_colorized = ["peace/output_colorized"]
+output_json = ["peace/output_json"]
+output_progress = [
+    "peace/output_progress",
+    "peace_item_blank?/output_progress",
+    "peace_item_file_download?/output_progress",
+    "peace_item_sh_cmd?/output_progress",
+    "peace_item_sh_sync_cmd?/output_progress",
+    "peace_item_tar_x?/output_progress",
+]
+
+# Subcrates
+blank = ["dep:peace_item_blank"]
+file_download = ["dep:peace_item_file_download"]
+sh_cmd = ["dep:peace_item_sh_cmd"]
+sh_sync_cmd = ["dep:peace_item_sh_sync_cmd"]
+tar_x = ["dep:peace_item_tar_x"]

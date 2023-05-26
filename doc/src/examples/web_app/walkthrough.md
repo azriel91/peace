@@ -34,7 +34,7 @@ For automation to be useful to users, users should be able to easily choose to e
 
 ### Peace Model
 
-When using Peace, this can be modelled using the following [item spec]s:
+When using Peace, this can be modelled using the following [item]s:
 
 | Name              | Description                                          |
 |:------------------|:-----------------------------------------------------|
@@ -46,7 +46,7 @@ When using Peace, this can be modelled using the following [item spec]s:
 | Domain Allocation | Manages the domain name allocation for the service.  |
 | Domain Attachment | Handles linking the domain name to the server.       |
 
-Notably the mapping of steps to item specs is nearly one to one. It is recommended that item specs are named after the state it manages rather than an action, because `"the server has been cleaned up"` makes more sense than `"the server launch has been cleaned up"`<sup>1</sup>.
+Notably the mapping of steps to items is nearly one to one. It is recommended that items are named after the state it manages rather than an action, because `"the server has been cleaned up"` makes more sense than `"the server launch has been cleaned up"`<sup>1</sup>.
 
 ---
 

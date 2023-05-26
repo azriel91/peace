@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{item_spec_id, ItemSpecId, State},
+    cfg::{item_id, ItemId, State},
     resources::{
         internal::{StateDiffsMut, StatesMut},
         states::{StateDiffs, StatesSaved},
@@ -39,8 +39,8 @@ async fn outputs_states_as_text() -> Result<(), Box<dyn std::error::Error>> {
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Text);
     let states_saved = {
         let mut states = StatesMut::new();
-        states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
-        states.insert(item_spec_id!("item_1"), State::new(1u8, true));
+        states.insert(item_id!("item_0"), State::new("logical", 1.1));
+        states.insert(item_id!("item_1"), State::new(1u8, true));
         StatesSaved::from(states)
     };
 
@@ -62,8 +62,8 @@ async fn outputs_state_diffs_as_text() -> Result<(), Box<dyn std::error::Error>>
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Text);
     let state_diffs = {
         let mut state_diffs_mut = StateDiffsMut::new();
-        state_diffs_mut.insert(item_spec_id!("item_0"), "need one more server");
-        state_diffs_mut.insert(item_spec_id!("item_1"), 1);
+        state_diffs_mut.insert(item_id!("item_0"), "need one more server");
+        state_diffs_mut.insert(item_id!("item_1"), 1);
         StateDiffs::from(state_diffs_mut)
     };
 
@@ -101,8 +101,8 @@ async fn outputs_states_as_text_colorized() -> Result<(), Box<dyn std::error::Er
     let mut cli_output = cli_output_colorized(&mut buffer, OutputFormat::Text);
     let states_saved = {
         let mut states = StatesMut::new();
-        states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
-        states.insert(item_spec_id!("item_1"), State::new(1u8, true));
+        states.insert(item_id!("item_0"), State::new("logical", 1.1));
+        states.insert(item_id!("item_1"), State::new(1u8, true));
         StatesSaved::from(states)
     };
 
@@ -132,8 +132,8 @@ async fn outputs_state_diffs_as_text_colorized() -> Result<(), Box<dyn std::erro
     let mut cli_output = cli_output_colorized(&mut buffer, OutputFormat::Text);
     let state_diffs = {
         let mut state_diffs_mut = StateDiffsMut::new();
-        state_diffs_mut.insert(item_spec_id!("item_0"), "need one more server");
-        state_diffs_mut.insert(item_spec_id!("item_1"), 1);
+        state_diffs_mut.insert(item_id!("item_0"), "need one more server");
+        state_diffs_mut.insert(item_id!("item_1"), 1);
         StateDiffs::from(state_diffs_mut)
     };
 
@@ -178,8 +178,8 @@ async fn outputs_states_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Yaml);
     let states_saved = {
         let mut states = StatesMut::new();
-        states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
-        states.insert(item_spec_id!("item_1"), State::new(1u8, true));
+        states.insert(item_id!("item_0"), State::new("logical", 1.1));
+        states.insert(item_id!("item_1"), State::new(1u8, true));
         StatesSaved::from(states)
     };
 
@@ -204,8 +204,8 @@ async fn outputs_state_diffs_as_yaml() -> Result<(), Box<dyn std::error::Error>>
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Yaml);
     let state_diffs = {
         let mut state_diffs_mut = StateDiffsMut::new();
-        state_diffs_mut.insert(item_spec_id!("item_0"), "need one more server");
-        state_diffs_mut.insert(item_spec_id!("item_1"), 1);
+        state_diffs_mut.insert(item_id!("item_0"), "need one more server");
+        state_diffs_mut.insert(item_id!("item_1"), 1);
         StateDiffs::from(state_diffs_mut)
     };
 
@@ -243,8 +243,8 @@ async fn outputs_states_as_json() -> Result<(), Box<dyn std::error::Error>> {
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Json);
     let states_saved = {
         let mut states = StatesMut::new();
-        states.insert(item_spec_id!("item_0"), State::new("logical", 1.1));
-        states.insert(item_spec_id!("item_1"), State::new(1u8, true));
+        states.insert(item_id!("item_0"), State::new("logical", 1.1));
+        states.insert(item_id!("item_1"), State::new(1u8, true));
         StatesSaved::from(states)
     };
 
@@ -264,8 +264,8 @@ async fn outputs_state_diffs_as_json() -> Result<(), Box<dyn std::error::Error>>
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Json);
     let state_diffs = {
         let mut state_diffs_mut = StateDiffsMut::new();
-        state_diffs_mut.insert(item_spec_id!("item_0"), "need one more server");
-        state_diffs_mut.insert(item_spec_id!("item_1"), 1);
+        state_diffs_mut.insert(item_id!("item_0"), "need one more server");
+        state_diffs_mut.insert(item_id!("item_1"), 1);
         StateDiffs::from(state_diffs_mut)
     };
 
@@ -321,16 +321,16 @@ mod color_always {
         // We can't inspect `ProgressStyle`'s fields, so we have to render the progress
         // and compare the output.
         assert_eq!(
-            "\u{1b}[38;5;15m1.\u{1b}[0m \u{1b}[38;5;75mtest_item_spec_id\u{1b}[0m",
+            "\u{1b}[38;5;15m1.\u{1b}[0m \u{1b}[38;5;75mtest_item_id\u{1b}[0m",
             progress_bar.prefix()
         );
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
-            //    ^                  ^ ^                                      ^
-            //    '---- 20 chars ----' '-------------- 40 chars --------------'
+            r#"⏳ 1. test_item_id ▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
+            //    ^             ^ ^                                      ^
+            //    '-- 15 chars -' '-------------- 40 chars --------------'
             in_memory_term.contents()
         );
     }
@@ -357,7 +357,7 @@ mod color_always {
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         // Adjust progress_bar length and units.
@@ -366,7 +366,7 @@ mod color_always {
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -378,7 +378,7 @@ mod color_always {
         .await;
 
         assert_eq!(
-            "\u{1b}[38;5;15m1.\u{1b}[0m \u{1b}[38;5;75mtest_item_spec_id\u{1b}[0m",
+            "\u{1b}[38;5;15m1.\u{1b}[0m \u{1b}[38;5;75mtest_item_id\u{1b}[0m",
             progress_bar.prefix()
         );
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
@@ -386,17 +386,17 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -423,7 +423,7 @@ mod color_always {
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         // Adjust progress_bar length and units.
@@ -432,7 +432,7 @@ mod color_always {
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -449,7 +449,7 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -457,7 +457,7 @@ mod color_always {
         progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
         progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
@@ -471,7 +471,7 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"✅ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
+            r#"✅ 1. test_item_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
             in_memory_term.contents(),
         );
     }
@@ -498,7 +498,7 @@ mod color_always {
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         // Adjust progress_bar length and units.
@@ -507,7 +507,7 @@ mod color_always {
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -524,7 +524,7 @@ mod color_always {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -532,7 +532,7 @@ mod color_always {
         progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
         progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
@@ -546,7 +546,7 @@ mod color_always {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"❌ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
+            r#"❌ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
             in_memory_term.contents()
         );
     }
@@ -573,11 +573,11 @@ mod color_always {
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -594,7 +594,7 @@ mod color_always {
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -609,12 +609,12 @@ mod color_always {
         };
         assert_eq!(
             r#"---
-item_spec_id: test_item_spec_id
+item_id: test_item_id
 progress_update: !Limit
   Steps: 100
 msg_update: NoChange
 ---
-item_spec_id: test_item_spec_id
+item_id: test_item_id
 progress_update: !Delta
   Inc: 21
 msg_update: NoChange"#,
@@ -645,11 +645,11 @@ msg_update: NoChange"#,
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -666,7 +666,7 @@ msg_update: NoChange"#,
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -680,8 +680,8 @@ msg_update: NoChange"#,
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}
-{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}"#,
+            r#"{"item_id":"test_item_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}
+{"item_id":"test_item_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}"#,
             in_memory_term.contents()
         );
     }
@@ -713,14 +713,14 @@ mod color_never {
 
         // We can't inspect `ProgressStyle`'s fields, so we have to render the progress
         // and compare the output.
-        assert_eq!("1. test_item_spec_id", progress_bar.prefix());
+        assert_eq!("1. test_item_id", progress_bar.prefix());
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
-            //    ^                  ^ ^                                      ^
-            //    '---- 20 chars ----' '-------------- 40 chars --------------'
+            r#"⏳ 1. test_item_id ▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
+            //    ^             ^ ^                                      ^
+            //    '-- 15 chars -' '-------------- 40 chars --------------'
             in_memory_term.contents()
         );
     }
@@ -747,7 +747,7 @@ mod color_never {
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         // Adjust progress_bar length and units.
@@ -756,7 +756,7 @@ mod color_never {
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -767,23 +767,23 @@ mod color_never {
         )
         .await;
 
-        assert_eq!("1. test_item_spec_id", progress_bar.prefix());
+        assert_eq!("1. test_item_id", progress_bar.prefix());
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -810,7 +810,7 @@ mod color_never {
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         // Adjust progress_bar length and units.
@@ -819,7 +819,7 @@ mod color_never {
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -836,7 +836,7 @@ mod color_never {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -844,7 +844,7 @@ mod color_never {
         progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
         progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
@@ -858,7 +858,7 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"✅ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
+            r#"✅ 1. test_item_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
             in_memory_term.contents(),
         );
     }
@@ -885,7 +885,7 @@ mod color_never {
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         // Adjust progress_bar length and units.
@@ -894,7 +894,7 @@ mod color_never {
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -911,7 +911,7 @@ mod color_never {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -919,7 +919,7 @@ mod color_never {
         progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
         progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
@@ -933,7 +933,7 @@ mod color_never {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"❌ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
+            r#"❌ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
             in_memory_term.contents()
         );
     }
@@ -960,11 +960,11 @@ mod color_never {
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -981,7 +981,7 @@ mod color_never {
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -996,12 +996,12 @@ mod color_never {
         };
         assert_eq!(
             r#"---
-item_spec_id: test_item_spec_id
+item_id: test_item_id
 progress_update: !Limit
   Steps: 100
 msg_update: NoChange
 ---
-item_spec_id: test_item_spec_id
+item_id: test_item_id
 progress_update: !Delta
   Inc: 21
 msg_update: NoChange"#,
@@ -1032,11 +1032,11 @@ msg_update: NoChange"#,
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -1053,7 +1053,7 @@ msg_update: NoChange"#,
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -1067,8 +1067,8 @@ msg_update: NoChange"#,
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}
-{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}"#,
+            r#"{"item_id":"test_item_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}
+{"item_id":"test_item_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}"#,
             in_memory_term.contents()
         );
     }
@@ -1099,14 +1099,14 @@ mod color_disabled {
 
         // We can't inspect `ProgressStyle`'s fields, so we have to render the progress
         // and compare the output.
-        assert_eq!("1. test_item_spec_id", progress_bar.prefix());
+        assert_eq!("1. test_item_id", progress_bar.prefix());
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
-            //    ^                  ^ ^                                      ^
-            //    '---- 20 chars ----' '-------------- 40 chars --------------'
+            r#"⏳ 1. test_item_id ▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
+            //    ^             ^ ^                                      ^
+            //    '-- 15 chars -' '-------------- 40 chars --------------'
             in_memory_term.contents()
         );
     }
@@ -1132,7 +1132,7 @@ mod color_disabled {
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         // Adjust progress_bar length and units.
@@ -1141,7 +1141,7 @@ mod color_disabled {
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -1152,23 +1152,23 @@ mod color_disabled {
         )
         .await;
 
-        assert_eq!("1. test_item_spec_id", progress_bar.prefix());
+        assert_eq!("1. test_item_id", progress_bar.prefix());
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             unreachable!("This is set in `cli_output_progress`.");
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(21);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
         progress_bar.set_position(22);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
     }
@@ -1194,7 +1194,7 @@ mod color_disabled {
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         // Adjust progress_bar length and units.
@@ -1203,7 +1203,7 @@ mod color_disabled {
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -1220,7 +1220,7 @@ mod color_disabled {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -1228,7 +1228,7 @@ mod color_disabled {
         progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
         progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
@@ -1242,7 +1242,7 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"✅ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
+            r#"✅ 1. test_item_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
             in_memory_term.contents(),
         );
     }
@@ -1268,7 +1268,7 @@ mod color_disabled {
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         // Adjust progress_bar length and units.
@@ -1277,7 +1277,7 @@ mod color_disabled {
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -1294,7 +1294,7 @@ mod color_disabled {
         };
         progress_bar.set_position(20);
         assert_eq!(
-            r#"⏳ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
+            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
             in_memory_term.contents()
         );
 
@@ -1302,7 +1302,7 @@ mod color_disabled {
         progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
         progress_tracker.set_message(Some(String::from("done")));
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Complete(progress_complete),
             msg_update: ProgressMsgUpdate::Set(String::from("done")),
         };
@@ -1316,7 +1316,7 @@ mod color_disabled {
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"❌ 1. test_item_spec_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
+            r#"❌ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
             in_memory_term.contents()
         );
     }
@@ -1342,11 +1342,11 @@ mod color_disabled {
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -1363,7 +1363,7 @@ mod color_disabled {
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -1378,12 +1378,12 @@ mod color_disabled {
         };
         assert_eq!(
             r#"---
-item_spec_id: test_item_spec_id
+item_id: test_item_id
 progress_update: !Limit
   Steps: 100
 msg_update: NoChange
 ---
-item_spec_id: test_item_spec_id
+item_id: test_item_id
 progress_update: !Delta
   Inc: 21
 msg_update: NoChange"#,
@@ -1413,11 +1413,11 @@ msg_update: NoChange"#,
 
         let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
         let progress_tracker = progress_trackers
-            .get_mut(&item_spec_id!("test_item_spec_id"))
+            .get_mut(&item_id!("test_item_id"))
             .unwrap();
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -1434,7 +1434,7 @@ msg_update: NoChange"#,
         progress_bar.set_length(100);
 
         let progress_update_and_id = ProgressUpdateAndId {
-            item_spec_id: item_spec_id!("test_item_spec_id"),
+            item_id: item_id!("test_item_id"),
             progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
             msg_update: ProgressMsgUpdate::NoChange,
         };
@@ -1448,8 +1448,8 @@ msg_update: NoChange"#,
             unreachable!("This is set in `cli_output_progress`.");
         };
         assert_eq!(
-            r#"{"item_spec_id":"test_item_spec_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}}
-{"item_spec_id":"test_item_spec_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}}"#,
+            r#"{"item_id":"test_item_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}}
+{"item_id":"test_item_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}}"#,
             in_memory_term.contents()
         );
     }
@@ -1523,7 +1523,7 @@ fn cmd_progress_tracker(cli_output: &CliOutput<&mut Vec<u8>>) -> (CmdProgressTra
     let mut progress_trackers = IndexMap::new();
     let progress_bar = multi_progress.add(ProgressBar::hidden());
     let progress_tracker = ProgressTracker::new(progress_bar.clone());
-    progress_trackers.insert(item_spec_id!("test_item_spec_id"), progress_tracker);
+    progress_trackers.insert(item_id!("test_item_id"), progress_tracker);
     let cmd_progress_tracker = CmdProgressTracker::new(multi_progress, progress_trackers);
 
     (cmd_progress_tracker, progress_bar)

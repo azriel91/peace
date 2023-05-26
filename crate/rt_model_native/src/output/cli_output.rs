@@ -89,6 +89,9 @@ pub struct CliOutput<W> {
     /// This is detected on instantiation.
     #[cfg(feature = "output_progress")]
     pub(crate) progress_format: CliProgressFormat,
+    /// Width of the item ID column for progress bars
+    #[cfg(feature = "output_progress")]
+    pub(crate) pb_item_id_width: Option<usize>,
 }
 
 impl CliOutput<Stdout> {
@@ -169,6 +172,12 @@ where
     #[cfg(feature = "output_progress")]
     pub fn progress_format(&self) -> CliProgressFormat {
         self.progress_format
+    }
+
+    /// Returns the number of characters used for the progress bar item ID.
+    #[cfg(feature = "output_progress")]
+    pub fn pb_item_id_width(&self) -> Option<usize> {
+        self.pb_item_id_width
     }
 
     async fn output_presentable<E, P>(&mut self, presentable: P) -> Result<(), E>
@@ -316,7 +325,7 @@ where
                 //  32: blue pale (running)
                 //  17: blue dark (running background)
                 // 222: yellow pale (stalled)
-                //  75: indigo pale (user pending, item spec id)
+                //  75: indigo pale (user pending, item id)
                 //  35: green pale (success)
                 //  22: green dark (success background)
                 // 160: red slightly dim (fail)
@@ -403,7 +412,8 @@ where
                 };
             }
         }
-        let prefix = "{prefix:20}";
+        let prefix_width = self.pb_item_id_width.unwrap_or(20);
+        let prefix = format!("{{prefix:{prefix_width}}}");
 
         let (progress_is_complete, completion_is_successful) =
             match progress_tracker.progress_status() {
@@ -439,7 +449,7 @@ where
             }
         };
 
-        // `prefix` is the item spec ID.
+        // `prefix` is the item ID.
         let mut format_str = format!("{icon} {prefix} {bar_or_spinner}");
         if let Some(units) = units {
             format_str.push_str(units);
@@ -491,11 +501,38 @@ where
                     .multi_progress()
                     .set_draw_target(progress_draw_target);
 
+                // TODO: test with multiple item IDs of varying length
+                self.pb_item_id_width = {
+                    if cmd_progress_tracker.progress_trackers().is_empty() {
+                        Some(0)
+                    } else {
+                        let list_digit_width = {
+                            usize::checked_ilog10(cmd_progress_tracker.progress_trackers().len())
+                                .and_then(|digit_width_u32| usize::try_from(digit_width_u32).ok())
+                                .map(|digit_width| {
+                                    let dot_width = 1;
+                                    let space_width = 1;
+
+                                    // +1 to cater for ilog10 rounding down
+                                    digit_width + dot_width + space_width + 1
+                                })
+                                .unwrap_or(0)
+                        };
+                        let item_id_width = cmd_progress_tracker.progress_trackers().iter().fold(
+                            0,
+                            |pb_item_id_width, (item_id, _progress_tracker)| {
+                                std::cmp::max(item_id.len(), pb_item_id_width)
+                            },
+                        );
+
+                        Some(list_digit_width + item_id_width)
+                    }
+                };
                 cmd_progress_tracker
                     .progress_trackers()
                     .iter()
                     .enumerate()
-                    .for_each(|(index, (item_spec_id, progress_tracker))| {
+                    .for_each(|(index, (item_id, progress_tracker))| {
                         let progress_bar = progress_tracker.progress_bar();
 
                         // Hack: colourization done in `progress_begin` to get
@@ -510,19 +547,19 @@ where
                                             .color256(15)
                                             .apply_to(format!("{index}."));
                                         // blue
-                                        let item_spec_id_colorized = console::Style::new()
+                                        let item_id_colorized = console::Style::new()
                                             .color256(75)
-                                            .apply_to(format!("{item_spec_id}"));
+                                            .apply_to(format!("{item_id}"));
                                         progress_bar.set_prefix(
-                                            format!("{index_colorized} {item_spec_id_colorized}")
+                                            format!("{index_colorized} {item_id_colorized}")
                                         );
                                     }
                                     CliColorize::Uncolored => {
-                                        progress_bar.set_prefix(format!("{index}. {item_spec_id}"));
+                                        progress_bar.set_prefix(format!("{index}. {item_id}"));
                                     }
                                 }
                             } else {
-                                progress_bar.set_prefix(format!("{index}. {item_spec_id}"));
+                                progress_bar.set_prefix(format!("{index}. {item_id}"));
                             }
                         }
 
@@ -542,9 +579,9 @@ where
                     panic!("`ProgressStyle` template was invalid. Template: `\"\"`. Error: {error}")
                 });
                 cmd_progress_tracker.progress_trackers().iter().for_each(
-                    |(item_spec_id, progress_tracker)| {
+                    |(item_id, progress_tracker)| {
                         let progress_bar = progress_tracker.progress_bar();
-                        progress_bar.set_prefix(format!("{item_spec_id}"));
+                        progress_bar.set_prefix(format!("{item_id}"));
                         progress_bar.set_style(progress_style.clone());
                     },
                 );
@@ -638,20 +675,32 @@ where
     async fn progress_end(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
         match self.progress_format {
             CliProgressFormat::ProgressBar => {
+                self.pb_item_id_width = None;
+
                 // Hack: This should be done with a timer in `ApplyCmd`.
                 // This uses threads, which is not WASM compatible.
                 cmd_progress_tracker.progress_trackers().iter().for_each(
-                    |(_item_spec_id, progress_tracker)| {
+                    |(_item_id, progress_tracker)| {
                         let progress_bar = progress_tracker.progress_bar();
                         progress_bar.disable_steady_tick();
                         progress_bar.tick();
                     },
                 );
 
+                // Hack: Remove this when #120 is implemented.
+                if cmd_progress_tracker.clear_when_done() {
+                    let (Ok(()) | Err(_)) = cmd_progress_tracker.multi_progress.clear();
+                }
+
                 // Prevents progress bars from drawing over error messages.
                 cmd_progress_tracker
                     .multi_progress
                     .set_draw_target(ProgressDrawTarget::hidden());
+
+                // Hack: Remove this when #120 is implemented.
+                if cmd_progress_tracker.clear_when_done() {
+                    return;
+                }
 
                 // Add spacing between end of progress bars and next output.
                 //

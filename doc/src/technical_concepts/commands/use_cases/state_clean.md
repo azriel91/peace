@@ -20,4 +20,4 @@ To create this command:
 
 2. Call the `CleanCmd`.
 
-    This will call `CleanOpSpec::exec` for each item spec, beginning from the last item spec, until the first item spec.
+    This will call `CleanOpSpec::exec` for each item, beginning from the last item, until the first item.

@@ -1,8 +1,8 @@
 use indexmap::IndexMap;
 use indicatif::MultiProgress;
-use peace_core::{progress::ProgressTracker, ItemSpecId};
+use peace_core::{progress::ProgressTracker, ItemId};
 
-/// Tracks command execution progress for all item specs.
+/// Tracks command execution progress for all items.
 ///
 /// The Peace framework initializes the `multi_progress` and `progress_trackers`
 /// and manages updating the `ProgressBar` values.
@@ -17,19 +17,23 @@ use peace_core::{progress::ProgressTracker, ItemSpecId};
 pub struct CmdProgressTracker {
     /// `MultiProgress` that tracks the remaining progress bars.
     pub multi_progress: MultiProgress,
-    /// Tracks progress for each item spec.
-    pub progress_trackers: IndexMap<ItemSpecId, ProgressTracker>,
+    /// Tracks progress for each item.
+    pub progress_trackers: IndexMap<ItemId, ProgressTracker>,
+    /// Hack: Whether to clear progress bars when progress is done.
+    // Hack: Remove this when #120 is implemented.
+    clear_when_done: bool,
 }
 
 impl CmdProgressTracker {
     /// Returns a new `CmdProgressTracker`.
     pub fn new(
         multi_progress: MultiProgress,
-        progress_trackers: IndexMap<ItemSpecId, ProgressTracker>,
+        progress_trackers: IndexMap<ItemId, ProgressTracker>,
     ) -> Self {
         Self {
             multi_progress,
             progress_trackers,
+            clear_when_done: false,
         }
     }
 
@@ -44,14 +48,26 @@ impl CmdProgressTracker {
         &mut self.multi_progress
     }
 
-    /// Returns the `ProgressTracker`s for each item spec.
-    pub fn progress_trackers(&self) -> &IndexMap<ItemSpecId, ProgressTracker> {
+    /// Returns the `ProgressTracker`s for each item.
+    pub fn progress_trackers(&self) -> &IndexMap<ItemId, ProgressTracker> {
         &self.progress_trackers
     }
 
     /// Returns a mutable reference to the `ProgressTracker`s for each item
     /// spec.
-    pub fn progress_trackers_mut(&mut self) -> &mut IndexMap<ItemSpecId, ProgressTracker> {
+    pub fn progress_trackers_mut(&mut self) -> &mut IndexMap<ItemId, ProgressTracker> {
         &mut self.progress_trackers
+    }
+
+    /// Hack: Whether to clear progress bars when progress is done.
+    // Hack: Remove this when #120 is implemented.
+    pub fn clear_when_done(&self) -> bool {
+        self.clear_when_done
+    }
+
+    /// Hack: Sets whether to clear progress bars when progress is done.
+    // Hack: Remove this when #120 is implemented.
+    pub fn clear_when_done_set(&mut self, clear_when_done: bool) {
+        self.clear_when_done = clear_when_done;
     }
 }

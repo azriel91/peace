@@ -49,7 +49,7 @@ pub(crate) fn passthrough(
         }
     }
 
-    if scope == Scope::SingleProfileSingleFlow {
+    if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(params_specs_provided));
     }
 
@@ -111,7 +111,7 @@ pub(crate) fn params_none(
         }
     }
 
-    if scope == Scope::SingleProfileSingleFlow {
+    if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(params_specs_provided));
     }
 
@@ -164,7 +164,7 @@ pub(crate) fn params_some(scope: Scope, params_scope: ParamsScope) -> Punctuated
         }
     }
 
-    if scope == Scope::SingleProfileSingleFlow {
+    if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(params_specs_provided));
     }
 
@@ -229,7 +229,7 @@ pub(crate) fn params_some_new(
         }
     }
 
-    if scope == Scope::SingleProfileSingleFlow {
+    if scope.flow_count() == FlowCount::One {
         field_values.push(parse_quote!(params_specs_provided));
     }
 

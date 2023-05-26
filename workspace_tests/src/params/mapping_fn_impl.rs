@@ -38,7 +38,7 @@ macro_rules! mapping_tests {
         mod $module_name {
             use peace::{
                 data::marker::$value_resolution_mode,
-                cfg::{item_spec_id, ItemSpecId},
+                cfg::{item_id, ItemId},
                 params::{
                     MappingFn, MappingFnImpl, ParamsResolveError,
                     ValueResolutionCtx, ValueResolutionMode,
@@ -63,7 +63,7 @@ macro_rules! mapping_tests {
                 };
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::$value_resolution_mode,
-                    item_spec_id!("mapping_fn_map"),
+                    item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),
                 );
 
@@ -94,7 +94,7 @@ macro_rules! mapping_tests {
                 };
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::$value_resolution_mode,
-                    item_spec_id!("mapping_fn_map"),
+                    item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),
                 );
 
@@ -125,7 +125,7 @@ macro_rules! mapping_tests {
                 };
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::$value_resolution_mode,
-                    item_spec_id!("mapping_fn_map"),
+                    item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),
                 );
 
@@ -146,8 +146,8 @@ macro_rules! mapping_tests {
                             value_resolution_ctx
                             if value_resolution_ctx.value_resolution_mode()
                                 == ValueResolutionMode::$value_resolution_mode
-                            && value_resolution_ctx.item_spec_id()
-                                == &item_spec_id!("mapping_fn_map")
+                            && value_resolution_ctx.item_id()
+                                == &item_id!("mapping_fn_map")
                             && value_resolution_ctx.params_type_name() == crate::fn_name_short!()
                             && value_resolution_ctx.resolution_chain() == []
                         )
@@ -176,7 +176,7 @@ macro_rules! mapping_tests {
                 };
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::$value_resolution_mode,
-                    item_spec_id!("mapping_fn_map"),
+                    item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),
                 );
 
@@ -197,8 +197,8 @@ macro_rules! mapping_tests {
                             value_resolution_ctx
                             if value_resolution_ctx.value_resolution_mode()
                                 == ValueResolutionMode::$value_resolution_mode
-                            && value_resolution_ctx.item_spec_id()
-                                == &item_spec_id!("mapping_fn_map")
+                            && value_resolution_ctx.item_id()
+                                == &item_id!("mapping_fn_map")
                             && value_resolution_ctx.params_type_name() == crate::fn_name_short!()
                             && value_resolution_ctx.resolution_chain() == []
                         )
@@ -227,7 +227,7 @@ macro_rules! mapping_tests {
                 };
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::$value_resolution_mode,
-                    item_spec_id!("mapping_fn_map"),
+                    item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),
                 );
 
@@ -258,7 +258,7 @@ macro_rules! mapping_tests {
                 };
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::$value_resolution_mode,
-                    item_spec_id!("mapping_fn_map"),
+                    item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),
                 );
 
@@ -289,7 +289,7 @@ macro_rules! mapping_tests {
                 };
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
                     ValueResolutionMode::$value_resolution_mode,
-                    item_spec_id!("mapping_fn_map"),
+                    item_id!("mapping_fn_map"),
                     String::from(crate::fn_name_short!()),
                 );
 

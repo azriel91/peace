@@ -7,25 +7,24 @@ use peace::{
     rt_model::{
         outcomes::CmdOutcome,
         output::{CliOutput, OutputWrite},
-        Flow, ItemSpecGraphBuilder, Workspace, WorkspaceSpec,
+        Flow, ItemGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
 
 use crate::{
-    NoOpOutput, PeaceTestError, VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItemSpec,
-    VecCopyState,
+    NoOpOutput, PeaceTestError, VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItem, VecCopyState,
 };
 
 #[tokio::test]
-async fn contains_state_diff_for_each_item_spec() -> Result<(), Box<dyn std::error::Error>> {
+async fn contains_state_diff_for_each_item() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItemSpec::default().into());
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -35,8 +34,8 @@ async fn contains_state_diff_for_each_item_spec() -> Result<(), Box<dyn std::err
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(
-            VecCopyItemSpec::ID_DEFAULT.clone(),
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
@@ -48,14 +47,14 @@ async fn contains_state_diff_for_each_item_spec() -> Result<(), Box<dyn std::err
     // Diff current and desired states.
     let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
 
-    let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec::ID_DEFAULT);
+    let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
-        states_current.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT)
+        states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_desired.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT)
+        states_desired.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
@@ -77,8 +76,8 @@ async fn diff_profiles_current_with_multiple_profiles() -> Result<(), Box<dyn st
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItemSpec::default().into());
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -89,8 +88,8 @@ async fn diff_profiles_current_with_multiple_profiles() -> Result<(), Box<dyn st
     let mut cmd_ctx_0 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile_0.clone())
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(
-            VecCopyItemSpec::ID_DEFAULT.clone(),
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
@@ -104,8 +103,8 @@ async fn diff_profiles_current_with_multiple_profiles() -> Result<(), Box<dyn st
     let mut cmd_ctx_1 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile_1.clone())
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(
-            VecCopyItemSpec::ID_DEFAULT.clone(),
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
@@ -124,14 +123,14 @@ async fn diff_profiles_current_with_multiple_profiles() -> Result<(), Box<dyn st
     let state_diffs =
         DiffCmd::diff_profiles_current(&mut cmd_ctx_multi, &profile_0, &profile_1).await?;
 
-    let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec::ID_DEFAULT);
+    let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
-        states_current_0.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT)
+        states_current_0.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_current_1.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT)
+        states_current_1.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
@@ -153,8 +152,8 @@ async fn diff_profiles_current_with_missing_profile_0() -> Result<(), Box<dyn st
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItemSpec::default().into());
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -168,8 +167,8 @@ async fn diff_profiles_current_with_missing_profile_0() -> Result<(), Box<dyn st
     let mut cmd_ctx_1 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile_1.clone())
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(
-            VecCopyItemSpec::ID_DEFAULT.clone(),
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
@@ -202,8 +201,8 @@ async fn diff_profiles_current_with_missing_profile_1() -> Result<(), Box<dyn st
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItemSpec::default().into());
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -214,8 +213,8 @@ async fn diff_profiles_current_with_missing_profile_1() -> Result<(), Box<dyn st
     let mut cmd_ctx_0 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile_0.clone())
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(
-            VecCopyItemSpec::ID_DEFAULT.clone(),
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
@@ -250,8 +249,8 @@ async fn diff_profiles_current_with_profile_0_missing_states_current()
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItemSpec::default().into());
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -262,8 +261,8 @@ async fn diff_profiles_current_with_profile_0_missing_states_current()
     let mut cmd_ctx_0 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile_0.clone())
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(
-            VecCopyItemSpec::ID_DEFAULT.clone(),
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
@@ -274,8 +273,8 @@ async fn diff_profiles_current_with_profile_0_missing_states_current()
     let mut cmd_ctx_1 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile_1.clone())
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(
-            VecCopyItemSpec::ID_DEFAULT.clone(),
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
@@ -309,8 +308,8 @@ async fn diff_profiles_current_with_profile_1_missing_states_current()
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItemSpec::default().into());
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -321,8 +320,8 @@ async fn diff_profiles_current_with_profile_1_missing_states_current()
     let mut cmd_ctx_0 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile_0.clone())
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(
-            VecCopyItemSpec::ID_DEFAULT.clone(),
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
@@ -333,8 +332,8 @@ async fn diff_profiles_current_with_profile_1_missing_states_current()
     let mut cmd_ctx_1 = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile_1.clone())
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(
-            VecCopyItemSpec::ID_DEFAULT.clone(),
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
@@ -365,8 +364,8 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
         WorkspaceSpec::Path(tempdir.path().to_path_buf()),
     )?;
     let graph = {
-        let mut graph_builder = ItemSpecGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItemSpec::default().into());
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -377,10 +376,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
-        .with_item_spec_params::<VecCopyItemSpec>(
-            VecCopyItemSpec::ID_DEFAULT.clone(),
-            ParamsSpec::InMemory,
-        )
+        .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), ParamsSpec::InMemory)
         .await?;
     // overwrite initial state
     let resources = cmd_ctx.resources_mut();
@@ -396,14 +392,14 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
     <_ as OutputWrite<PeaceTestError>>::present(cmd_ctx.output_mut(), &state_diffs).await?;
 
-    let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItemSpec::ID_DEFAULT);
+    let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7]),).as_ref(),
-        states_current.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT)
+        states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 4, 5, 6, 8, 9])).as_ref(),
-        states_desired.get::<VecCopyState, _>(VecCopyItemSpec::ID_DEFAULT)
+        states_desired.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![
@@ -432,7 +428,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
 fn debug() {
     let debug_str = format!("{:?}", DiffCmd::<VecCopyError>::default());
     assert!(
-        debug_str == r#"DiffCmd(PhantomData<workspace_tests::vec_copy_item_spec::VecCopyError>)"#
+        debug_str == r#"DiffCmd(PhantomData<workspace_tests::vec_copy_item::VecCopyError>)"#
             || debug_str == r#"DiffCmd(PhantomData)"#
     );
 }

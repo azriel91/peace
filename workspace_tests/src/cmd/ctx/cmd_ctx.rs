@@ -1,7 +1,7 @@
 use peace::{
     cfg::{app_name, flow_id, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtxBuilder,
-    rt_model::{Flow, ItemSpecGraphBuilder, Workspace},
+    rt_model::{Flow, ItemGraphBuilder, Workspace},
 };
 
 use crate::{no_op_output::NoOpOutput, PeaceTestError};
@@ -12,7 +12,7 @@ async fn single_profile_single_flow_getters() -> Result<(), Box<dyn std::error::
     let workspace = workspace(tempdir, app_name!("test_single_profile_single_flow"))?;
     let profile = profile!("test_profile");
     let flow_id = flow_id!("test_flow_id");
-    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemSpecGraphBuilder::new().build());
+    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), ItemGraphBuilder::new().build());
 
     let mut output = NoOpOutput;
     let cmd_ctx = CmdCtxBuilder::single_profile_single_flow(&mut output, &workspace)

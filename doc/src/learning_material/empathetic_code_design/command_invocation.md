@@ -33,17 +33,26 @@ digraph {
 
     subgraph cluster_a {
         a [label = <<b>a</b>>]
-        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>download>]
+        a_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📥</font></td>
+            <td balign="left">file<br/>download</td>
+        </tr></table>>]
     }
 
     subgraph cluster_b {
         b [label = <<b>b</b>>]
-        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <server<br/>instance>]
+        b_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">🪣</font></td>
+            <td balign="left">s3<br/>bucket</td>
+        </tr></table>>]
     }
 
     subgraph cluster_c {
         c [label = <<b>c</b>>]
-        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <file<br/>upload>]
+        c_text [shape="plain" style="" fontcolor="#7f7f7f" label = <<table border="0" cellborder="0" cellpadding="0"><tr>
+            <td><font point-size="15">📤</font></td>
+            <td balign="left">s3<br/>object</td>
+        </tr></table>>]
     }
 
     a -> b [minlen = 15, weight = 5]
@@ -52,36 +61,31 @@ digraph {
 ```
 
 ```rust ,ignore
-let mut cmd_context = CmdContext::builder()
-    .with_flow(&flow)
-    .with_item_spec_params::<_>(..) // per item
-    .with_output(&mut cli_output)
-    .build();
+// examples/envman/src/cmds/profile_init_cmd.rs
+// fn app_upload_flow_init
+let cmd_ctx = CmdCtx::builder_single_profile_single_flow
+    ::<EnvManError, _>(output, workspace)
+    .with_profile_from_workspace_param(profile_key)
+    .with_flow(flow)
+    .with_item_params::<FileDownloadItem<WebApp>>(
+        item_id!("app_download"),
+        app_download_params_spec,
+    )
+    .with_item_params::<S3BucketItem<WebApp>>(
+        item_id!("s3_bucket"),
+        s3_bucket_params_spec,
+    )
+    .with_item_params::<S3ObjectItem<WebApp>>(
+        item_id!("s3_object"),
+        s3_object_params_spec,
+    )
+    .await?;
 
-StatusCmd::exec(&mut cmd_context).await?;
-DeployCmd::exec(&mut cmd_context).await?;
+// examples/envman/src/cmds/env_status_cmd.rs
+// envman status
+StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
+
+// examples/envman/src/cmds/env_deploy_cmd.rs
+// envman deploy
+EnsureCmd::exec(&mut cmd_ctx).await?;
 ```
-
-That's nice, but:
-
-```bash
-envman init \
-  --url https://example.com/app.tar \
-  --image-id img-12345 \
-  --instance-size xlarge
-
-# yay!
-
-# oh..
-envman status \
-  --url https://example.com/app.tar \
-  --image-id img-12345 \
-  --instance-size xlarge
-
-envman deploy \
-  --url https://example.com/app.tar \
-  --image-id img-12345 \
-  --instance-size xlarge
-```
-
-We need to store and reload the parameters passed in previously.

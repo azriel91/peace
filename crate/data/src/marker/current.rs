@@ -2,12 +2,12 @@ use serde::{Deserialize, Serialize};
 
 /// Marker for current state.
 ///
-/// This is used for referential param values, where an item spec param value is
+/// This is used for referential param values, where an item param value is
 /// dependent on the state of a predecessor's state.
 ///
-/// A `Current<ItemSpec::State>` is set to `Some` whenever an item spec's
-/// current state is discovered. enabling a subsequent successor's params to
-/// access that value when the successor's **desired** state function is run.
+/// A `Current<Item::State>` is set to `Some` whenever an item's current state
+/// is discovered. enabling a subsequent successor's params to access that value
+/// when the successor's **desired** state function is run.
 ///
 /// Note: A successor's desired state is dependent on the predecessor's desired
 /// state, which should be in sync with its current state after

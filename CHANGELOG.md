@@ -2,16 +2,17 @@
 
 ## unreleased
 
-* Add `ItemSpec::Params` associated type. ([#116], [#117])
+* Add `Item::Params` associated type. ([#116], [#117])
 * Rename `OpCtx` to `FnCtx`. ([#116], [#117])
-* Update `ItemSpec` functions to take in `Self::Params`. ([#116], [#117])
-* Implement referential item spec param values. ([#94], [#118])
+* Update `Item` functions to take in `Self::Params`. ([#116], [#117])
+* Implement referential item param values. ([#94], [#118])
 * Add `Params` derive. ([#94], [#118])
 * Add `ParamsSpecs` to `*SingleFlow` command context scopes. ([#94], [#118])
-* Take in `Params::Spec`s in `CmdCtxBuilder::with_item_spec_params`. ([#94], [#118])
-* Use `Params::Partial` in `ItemSpec::try_state_*` functions. ([#94], [#118])
-* Implement one level recursion referential item spec params. ([#119], [#121])
+* Take in `Params::Spec`s in `CmdCtxBuilder::with_item_params`. ([#94], [#118])
+* Use `Params::Partial` in `Item::try_state_*` functions. ([#94], [#118])
+* Implement one level recursion referential item params. ([#119], [#121])
 * Implement deep merging of params specs. ([#122], [#123])
+* Calculate padding for progress bar item IDs. ([#46], [#124])
 
 [#116]: https://github.com/azriel91/peace/issues/116
 [#117]: https://github.com/azriel91/peace/pull/117
@@ -21,6 +22,8 @@
 [#121]: https://github.com/azriel91/peace/pull/121
 [#122]: https://github.com/azriel91/peace/issues/122
 [#123]: https://github.com/azriel91/peace/pull/123
+[#46]: https://github.com/azriel91/peace/issues/46
+[#124]: https://github.com/azriel91/peace/pull/124
 
 
 ## 0.0.9 (2023-04-13)
@@ -30,7 +33,7 @@
 * Return both command outcome and errors in `ApplyCmd`. ([#107])
 * `StatesDiscoverCmd` discovers states concurrently. ([#107])
 * Serialize `StatesDesired` as part of `ApplyCmd`. ([#107])
-* Consolidate `ItemSpec` functions into single trait. ([#96], [#109])
+* Consolidate `Item` functions into single trait. ([#96], [#109])
 * Remove `StatesCurrentDiscoverCmd` and `StatesDesiredDiscoverCmd`. ([#110], [#111])
 * Update `DiffCmd` to take in states to diff. ([#101], [#112])
 * Add `DiffCmd::current_and_desired` to diff current and desired states of a profile. ([#113], [#114])
@@ -50,8 +53,8 @@
 ## 0.0.8 (2023-03-25)
 
 * Move `R, W, ROpt, WOpt, RMaybe, WMaybe` to `peace_data::accessors`. ([#94], [#95])
-* Automatically insert `Current<ItemSpec::State>` after state current and ensure exec executions. ([#94], [#95])
-* Automatically insert `Desired<ItemSpec::State>` after state desired discover execution. ([#94], [#95])
+* Automatically insert `Current<Item::State>` after state current and ensure exec executions. ([#94], [#95])
+* Automatically insert `Desired<Item::State>` after state desired discover execution. ([#94], [#95])
 * Consolidate `EnsureOpSpec` and `CleanOpSpec` into `ApplyOpSpec`. ([#67], [#99])
 * Add icons to CLI progress bars. ([#102], [#103])
 * Add elapsed / ETA time to CLI progress bars. ([#102], [#103])
@@ -99,11 +102,11 @@
 
 ## 0.0.6 (2023-01-21)
 
-* `FileDownload` item spec now supports base64 storage for WASM target. ([#62])
-* Implement `TarXItemSpec` for native target. ([#62])
+* `FileDownload` item now supports base64 storage for WASM target. ([#62])
+* Implement `TarXItem` for native target. ([#62])
 * Support multiple workspace, profile, and flow parameters. ([#45], [#63])
 * Support progress bars in `CliOutput`. ([#42], [#66])
-* Consolidate `StateLogical` and `StatePhysical` into `ItemSpec::State`. ([#69], [#70])
+* Consolidate `StateLogical` and `StatePhysical` into `Item::State`. ([#69], [#70])
 * Use [ETag] to determine if a file needs to be re-downloaded. ([#68], [#71])
 * Add `PeaceAppDir` layer so different Peace tools don't conflict with each other. ([#35], [#72])
 * Move `profile` and `flow_id` parameters to `CmdContextBuilder`. ([#35], [#73])
@@ -127,8 +130,8 @@
 ## 0.0.5 (2022-12-18)
 
 * `ShCmdStateDiffFn` correctly runs `state_diff_sh_cmd` for state diff. ([#57])
-* `ShCmdParams` now uses the `Id` type parameter so that different `ShCmdItemSpec`s can be used correctly. ([#57])
-* `ShCmdItemSpec` takes in optional `ShCmdParams<Id>` and inserts it into `resources`. ([#57])
+* `ShCmdParams` now uses the `Id` type parameter so that different `ShCmdItem`s can be used correctly. ([#57])
+* `ShCmdItem` takes in optional `ShCmdParams<Id>` and inserts it into `resources`. ([#57])
 * `CmdContextBuilder` sets the current directory to the workspace directory. ([#57])
 * `StatesDesired` is now stored as `State<Logical, Placeholder>`. ([#52], [#58])
 * Re-read discovered `States` are now named `StatesSaved`. ([#52], [#60])
@@ -150,9 +153,9 @@
 * Support CLI output as YAML. ([#28], [#39])
 * Support CLI output as JSON with the `"output_json"` feature. ([#28], [#39])
 * Error compatibility with `miette` with the `"error_reporting"` feature. ([#28], [#40])
-* Item specs are published as part of the `peace_item_specs` crate. ([#44])
-* `file_download` item spec is type parameterized. ([#44])
-* Add `ShCmdItemSpec`, which allows item spec logic to be defined by shell commands. ([#53], [#54])
+* Items are published as part of the `peace_items` crate. ([#44])
+* `file_download` item is type parameterized. ([#44])
+* Add `ShCmdItem`, which allows item logic to be defined by shell commands. ([#53], [#54])
 
 [#28]: https://github.com/azriel91/peace/issues/28
 [#37]: https://github.com/azriel91/peace/pull/37

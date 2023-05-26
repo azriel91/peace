@@ -12,7 +12,7 @@ use peace_rt_model::{
         FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
         WorkspaceParams,
     },
-    Flow, ItemSpecParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg, Workspace,
+    Flow, ItemParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -88,23 +88,23 @@ where
     profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
     /// Flow params for the selected flow.
     flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
-    /// Type registry for each item spec's [`Params`].
+    /// Type registry for each item's [`Params`].
     ///
-    /// This is used to deserialize [`ItemSpecParamsFile`].
+    /// This is used to deserialize [`ItemParamsFile`].
     ///
-    /// [`Params`]: peace_cfg::ItemSpec::Params
-    /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
-    item_spec_params_type_reg: ItemSpecParamsTypeReg,
-    /// Type registry for each item spec's [`Params`]`::Spec`.
+    /// [`Params`]: peace_cfg::Item::Params
+    /// [`ItemParamsFile`]: peace_resources::paths::ItemParamsFile
+    item_params_type_reg: ItemParamsTypeReg,
+    /// Type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
-    /// [`Params`]: peace_cfg::ItemSpec::Params
+    /// [`Params`]: peace_cfg::Item::Params
     /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
     params_specs_type_reg: ParamsSpecsTypeReg,
-    /// Item spec params specs for the selected flow.
+    /// Item params specs for the selected flow.
     params_specs: ParamsSpecs,
-    /// Type registry for each item spec's `State`.
+    /// Type registry for each item's `State`.
     ///
     /// This is used to deserialize [`StatesSavedFile`] and
     /// [`StatesDesiredFile`].
@@ -188,23 +188,23 @@ where
     pub profile_params: &'view ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
     /// Flow params for the selected flow.
     pub flow_params: &'view FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
-    /// Type registry for each item spec's [`Params`].
+    /// Type registry for each item's [`Params`].
     ///
-    /// This is used to deserialize [`ItemSpecParamsFile`].
+    /// This is used to deserialize [`ItemParamsFile`].
     ///
-    /// [`Params`]: peace_cfg::ItemSpec::Params
-    /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
-    pub item_spec_params_type_reg: &'view ItemSpecParamsTypeReg,
-    /// Type registry for each item spec's [`Params`]`::Spec`.
+    /// [`Params`]: peace_cfg::Item::Params
+    /// [`ItemParamsFile`]: peace_resources::paths::ItemParamsFile
+    pub item_params_type_reg: &'view ItemParamsTypeReg,
+    /// Type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
-    /// [`Params`]: peace_cfg::ItemSpec::Params
+    /// [`Params`]: peace_cfg::Item::Params
     /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
     pub params_specs_type_reg: &'view ParamsSpecsTypeReg,
-    /// Item spec params specs for the selected flow.
+    /// Item params specs for the selected flow.
     pub params_specs: &'view ParamsSpecs,
-    /// Type registry for each item spec's `State`.
+    /// Type registry for each item's `State`.
     ///
     /// This is used to deserialize [`StatesSavedFile`] and
     /// [`StatesDesiredFile`].
@@ -236,7 +236,7 @@ where
         workspace_params: WorkspaceParams<<PKeys::WorkspaceParamsKMaybe as KeyMaybe>::Key>,
         profile_params: ProfileParams<<PKeys::ProfileParamsKMaybe as KeyMaybe>::Key>,
         flow_params: FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
-        item_spec_params_type_reg: ItemSpecParamsTypeReg,
+        item_params_type_reg: ItemParamsTypeReg,
         params_specs_type_reg: ParamsSpecsTypeReg,
         params_specs: ParamsSpecs,
         states_type_reg: StatesTypeReg,
@@ -256,7 +256,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
-            item_spec_params_type_reg,
+            item_params_type_reg,
             params_specs_type_reg,
             params_specs,
             states_type_reg,
@@ -287,7 +287,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
-            item_spec_params_type_reg,
+            item_params_type_reg,
             params_specs_type_reg,
             params_specs,
             states_type_reg,
@@ -308,7 +308,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
-            item_spec_params_type_reg,
+            item_params_type_reg,
             params_specs_type_reg,
             params_specs,
             states_type_reg,
@@ -387,44 +387,44 @@ where
     /// Returns the type registries for [`WorkspaceParams`], [`ProfileParams`],
     /// and [`FlowParams`] deserialization.
     ///
-    /// Not to be confused with [`item_spec_params_type_reg`], which is used to
-    /// deserialize [`ItemSpecParams`]
+    /// Not to be confused with [`item_params_type_reg`], which is used to
+    /// deserialize [`ItemParams`]
     ///
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
-    /// [`ItemSpecParams`]: peace_rt_model::ItemSpecParams
+    /// [`ItemParams`]: peace_rt_model::ItemParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
-    /// [`item_spec_params_type_reg`]: Self::item_spec_params_type_reg
+    /// [`item_params_type_reg`]: Self::item_params_type_reg
     pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
         &self.params_type_regs
     }
 
-    /// Returns the type registry for each item spec's [`Params`].
+    /// Returns the type registry for each item's [`Params`].
     ///
-    /// This is used to deserialize [`ItemSpecParamsFile`].
+    /// This is used to deserialize [`ItemParamsFile`].
     ///
-    /// [`Params`]: peace_cfg::ItemSpec::Params
-    /// [`ItemSpecParamsFile`]: peace_resources::paths::ItemSpecParamsFile
-    pub fn item_spec_params_type_reg(&self) -> &ItemSpecParamsTypeReg {
-        &self.item_spec_params_type_reg
+    /// [`Params`]: peace_cfg::Item::Params
+    /// [`ItemParamsFile`]: peace_resources::paths::ItemParamsFile
+    pub fn item_params_type_reg(&self) -> &ItemParamsTypeReg {
+        &self.item_params_type_reg
     }
 
-    /// Returns the type registry for each item spec's [`Params`]`::Spec`.
+    /// Returns the type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
     ///
-    /// [`Params`]: peace_cfg::ItemSpec::Params
+    /// [`Params`]: peace_cfg::Item::Params
     /// [`ParamsSpecsFile`]: peace_resources::paths::ParamsSpecsFile
     pub fn params_specs_type_reg(&self) -> &ParamsSpecsTypeReg {
         &self.params_specs_type_reg
     }
 
-    /// Returns the item spec params specs for the selected flow.
+    /// Returns the item params specs for the selected flow.
     pub fn params_specs(&self) -> &ParamsSpecs {
         &self.params_specs
     }
 
-    /// Returns the type registry for each item spec's `State`.
+    /// Returns the type registry for each item's `State`.
     ///
     /// This is used to deserialize [`StatesSavedFile`] and
     /// [`StatesDesiredFile`].
@@ -468,7 +468,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
-            item_spec_params_type_reg,
+            item_params_type_reg,
             params_specs_type_reg,
             params_specs,
             states_type_reg,
@@ -491,7 +491,7 @@ where
             workspace_params,
             profile_params,
             flow_params,
-            item_spec_params_type_reg,
+            item_params_type_reg,
             params_specs_type_reg,
             params_specs,
             states_type_reg,

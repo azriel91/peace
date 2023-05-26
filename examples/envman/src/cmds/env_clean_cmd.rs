@@ -6,7 +6,13 @@ use peace::{
     rt_model::{outcomes::CmdOutcome, output::OutputWrite},
 };
 
-use crate::{cmds::EnvCmd, model::EnvManError};
+use crate::{
+    cmds::{
+        common::{env_man_flow, workspace},
+        AppUploadCmd, EnvCmd,
+    },
+    model::{EnvManError, EnvManFlow},
+};
 
 /// Cleans up (deletes) the environment.
 #[derive(Debug)]
@@ -18,18 +24,28 @@ impl EnvCleanCmd {
     /// # Parameters
     ///
     /// * `output`: Output to write the execution outcome.
-    /// * `slug`: Username and repository of the application to download.
-    /// * `version`: Version of the application to download.
-    /// * `url`: URL to override where to download the application from.
     pub async fn run<O>(output: &mut O) -> Result<(), EnvManError>
     where
         O: OutputWrite<EnvManError> + Send,
     {
-        let states_saved = EnvCmd::run(output, true, |ctx| {
+        let workspace = workspace()?;
+        let env_man_flow = env_man_flow(output, &workspace).await?;
+        match env_man_flow {
+            EnvManFlow::AppUpload => run!(output, AppUploadCmd, 14usize),
+            EnvManFlow::EnvDeploy => run!(output, EnvCmd, 18usize),
+        };
+
+        Ok(())
+    }
+}
+
+macro_rules! run {
+    ($output:ident, $flow_cmd:ident, $padding:expr) => {{
+        let states_saved = $flow_cmd::run($output, true, |ctx| {
             StatesSavedReadCmd::exec(ctx).boxed_local()
         })
         .await?;
-        EnvCmd::run(output, false, |ctx| {
+        $flow_cmd::run($output, false, |ctx| {
             async move {
                 let states_saved_ref = &states_saved;
                 let states_cleaned_outcome = CleanCmd::exec(ctx, states_saved_ref).await?;
@@ -46,17 +62,17 @@ impl EnvCleanCmd {
                         let states_cleaned_presentables = flow
                             .graph()
                             .iter_insertion()
-                            .map(|item_spec| {
-                                let item_spec_id = item_spec.id();
+                            .map(|item| {
+                                let item_id = item.id();
                                 // Hack: for alignment
                                 let padding = " ".repeat(
-                                    18usize.saturating_sub(format!("{item_spec_id}").len() + 2),
+                                    $padding.saturating_sub(format!("{item_id}").len() + 2),
                                 );
-                                match states_cleaned_raw_map.get(item_spec_id) {
+                                match states_cleaned_raw_map.get(item_id) {
                                     Some(state_cleaned) => {
-                                        (item_spec_id, format!("{padding}: {state_cleaned}"))
+                                        (item_id, format!("{padding}: {state_cleaned}"))
                                     }
-                                    None => (item_spec_id, format!("{padding}: <unknown>")),
+                                    None => (item_id, format!("{padding}: <unknown>")),
                                 }
                             })
                             .collect::<Vec<_>>();
@@ -72,7 +88,7 @@ impl EnvCleanCmd {
                         ))
                         .await?;
                 } else {
-                    crate::output::item_spec_errors_present(output, errors).await?;
+                    crate::output::item_errors_present(output, errors).await?;
                 }
 
                 Ok(())
@@ -80,7 +96,7 @@ impl EnvCleanCmd {
             .boxed_local()
         })
         .await?;
-
-        Ok(())
-    }
+    }};
 }
+
+use run;

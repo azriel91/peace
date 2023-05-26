@@ -5,7 +5,7 @@ use crate::states::{
     States,
 };
 
-/// Saved `State`s for all `ItemSpec`s.
+/// Saved `State`s for all `Item`s.
 ///
 /// This is loaded into [`Resources`] at the beginning of any command execution,
 /// from the [`StatesSavedFile`].
@@ -19,8 +19,8 @@ use crate::states::{
 ///
 /// # Implementors
 ///
-/// If an `ItemSpec`'s state discovery depends on the `State` of a previous
-/// `ItemSpec`, then you should insert the predecessor's state into
+/// If an `Item`'s state discovery depends on the `State` of a previous
+/// `Item`, then you should insert the predecessor's state into
 /// [`Resources`], and reference that in the subsequent `TryFnSpec`'s [`Data`]:
 ///
 /// ```rust
@@ -47,7 +47,7 @@ use crate::states::{
 ///
 /// You may reference [`StatesSaved`] in `ApplyFns::Data` for reading. It
 /// is not mutable as `StatesSaved` must remain unchanged so that all
-/// `ItemSpec`s operate over consistent data.
+/// `Item`s operate over consistent data.
 ///
 /// [`StatesSavedFile`]: crate::paths::StatesSavedFile
 /// [`Data`]: peace_data::Data

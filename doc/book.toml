@@ -12,10 +12,13 @@ edition = "2021"
 command = "mdbook-graphviz"
 
 [output.html]
+theme = "theme"
 additional-css = [
     "src/css/layout.css",
+    "src/css/presentation.css",
     "src/css/terminal.css",
 ]
+additional-js = ["src/js/highlightjs-line-numbers.min.js"]
 cname = "peace.mk"
 git-repository-url = "https://github.com/azriel91/peace"
 edit-url-template = "https://github.com/azriel91/peace/edit/main/doc/{path}"

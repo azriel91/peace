@@ -1,7 +1,7 @@
-mod item_spec_boxed;
-mod item_spec_graph;
-mod item_spec_graph_builder;
-mod item_spec_wrapper;
+mod item_boxed;
+mod item_graph;
+mod item_graph_builder;
+mod item_wrapper;
 mod outcomes;
 mod output;
 mod states_serializer;

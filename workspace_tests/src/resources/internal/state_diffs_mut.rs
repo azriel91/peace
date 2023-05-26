@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{item_spec_id, ItemSpecId},
+    cfg::{item_id, ItemId},
     resources::{internal::StateDiffsMut, type_reg::untagged::TypeMap},
 };
 
@@ -23,7 +23,7 @@ fn deref_and_deref_mut() {
     let mut state_diffs_mut = StateDiffsMut::new();
 
     // deref_mut
-    state_diffs_mut.insert(item_spec_id!("key"), 123);
+    state_diffs_mut.insert(item_id!("key"), 123);
 
     // deref
     assert_eq!(1, state_diffs_mut.len())
@@ -39,14 +39,14 @@ fn debug() {
     let state_diffs_mut = test_state_diffs_mut();
 
     assert_eq!(
-        r#"StateDiffsMut({ItemSpecId("key"): TypedValue { type: "i32", value: 123 }})"#,
+        r#"StateDiffsMut({ItemId("key"): TypedValue { type: "i32", value: 123 }})"#,
         format!("{state_diffs_mut:?}")
     );
 }
 
 fn test_state_diffs_mut() -> StateDiffsMut {
     let mut state_diffs_mut = StateDiffsMut::new();
-    state_diffs_mut.insert(item_spec_id!("key"), 123);
+    state_diffs_mut.insert(item_id!("key"), 123);
 
     state_diffs_mut
 }

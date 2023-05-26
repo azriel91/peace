@@ -1,6 +1,6 @@
 # Multi Profile No Flow
 
-This scope is for a command that works with multiple profiles, without any item specs.
+This scope is for a command that works with multiple profiles, without any items.
 
 ```bash
 path/to/repo/.peace/envman

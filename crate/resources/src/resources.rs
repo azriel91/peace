@@ -20,7 +20,7 @@ pub mod ts;
 ///
 /// * `TS`: The type state of the `Resources` map.
 ///
-/// [`ItemSpecId`]: peace_cfg::ItemSpecId
+/// [`ItemId`]: peace_cfg::ItemId
 #[derive(Debug)]
 pub struct Resources<TS> {
     inner: resman::Resources,
@@ -64,7 +64,7 @@ impl<TS> DerefMut for Resources<TS> {
     }
 }
 
-// For `ItemSpecGraph` after resources have been set up.
+// For `ItemGraph` after resources have been set up.
 impl From<Resources<Empty>> for Resources<SetUp> {
     fn from(resources: Resources<Empty>) -> Self {
         Self {

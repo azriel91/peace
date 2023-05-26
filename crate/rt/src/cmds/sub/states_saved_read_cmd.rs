@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cfg::{FlowId, ItemSpecId};
+use peace_cfg::{FlowId, ItemId};
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
@@ -46,7 +46,7 @@ where
 
     pub(crate) async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
-        states_type_reg: &TypeReg<ItemSpecId, BoxDtDisplay>,
+        states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
     ) -> Result<StatesSaved, E> {
         let flow_id = resources.borrow::<FlowId>();
         let flow_dir = resources.borrow::<FlowDir>();

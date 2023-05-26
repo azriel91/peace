@@ -2,12 +2,12 @@
 //! framework.
 //!
 //! This crate defines types and traits for implementors and users to work with
-//! item spec params.
+//! item params.
 //!
 //! # Design
 //!
-//! When an item spec is defined, implementors define the parameters type for
-//! that item spec.
+//! When an item is defined, implementors define the parameters type for
+//! that item.
 //!
 //! For Peace to derive additional functionality from that type, this crate:
 //!
@@ -34,21 +34,21 @@
 //! :                            : | * impl Params for MyParams | :                    :
 //! :                            : '----------------------------' :                    :
 //! :                            :                                :                    :
-//! :                            :   .--------------------.       :                    :
-//! :                            :   | struct MyItemSpec; |       :                    :
-//! :                            :   |                    |       : ---.               :
-//! :                            :   | impl ItemSpec for  |       :    |               :
-//! :                            :   |   MyItemSpec {     |       :    |               :
-//! :                            :   |     type Params =  |       :    '               :
-//! :                            :   |     MyParams;      |       :  exposes API       :
-//! :                            :   | }                  |       :  with constraints  :
-//! :                            :   '--------------------'       :  from              :
-//! :                            :                                :  <ItemSpec::Params :
+//! :                            :   .-------------------.        :                    :
+//! :                            :   | struct MyItem;    |        :                    :
+//! :                            :   |                   |        : ---.               :
+//! :                            :   | impl Item for     |        :    |               :
+//! :                            :   |   MyItem {        |        :    |               :
+//! :                            :   |     type Params = |        :    '               :
+//! :                            :   |     MyParams;     |        :  exposes API       :
+//! :                            :   | }                 |        :  with constraints  :
+//! :                            :   '-------------------'        :  from              :
+//! :                            :                                :  <Item::Params     :
 //! : .------------------------. :                                :    as Params>      :
 //! : | cmd_ctx_builder        | :                                :    .               :
-//! : | .with_item_spec_params | <-------------------------------------'               :
+//! : | .with_item_params      | <-------------------------------------'               :
 //! : |    ::<IS>(             | :                                :                    :
-//! : |     item_spec_id,      | :                                :                    :
+//! : |     item_id,           | :                                :                    :
 //! : |     my_p_spec_builder  | :                                :                    :
 //! : |       .with_f(123)     | :                                :                    :
 //! : |       .with_from(..)   | :                                :                    :

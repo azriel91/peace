@@ -70,7 +70,7 @@ mod struct_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
-        cfg::{item_spec_id, ItemSpecId},
+        cfg::{item_id, ItemId},
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
         resources::{resources::ts::SetUp, Resources},
     };
@@ -136,7 +136,7 @@ mod struct_params {
         };
         let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
-            item_spec_id!("field_wise_from_field_wise_builder"),
+            item_id!("field_wise_from_field_wise_builder"),
             String::from("StructParams"),
         );
 
@@ -269,7 +269,7 @@ mod struct_with_type_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
-        cfg::{item_spec_id, ItemSpecId},
+        cfg::{item_id, ItemId},
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
         resources::{resources::ts::SetUp, Resources},
     };
@@ -347,7 +347,7 @@ mod struct_with_type_params {
         };
         let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
-            item_spec_id!("field_wise_from_field_wise_builder"),
+            item_id!("field_wise_from_field_wise_builder"),
             String::from("StructWithTypeParams<()>"),
         );
 
@@ -489,7 +489,7 @@ mod tuple_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
-        cfg::{item_spec_id, ItemSpecId},
+        cfg::{item_id, ItemId},
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
         resources::{resources::ts::SetUp, Resources},
     };
@@ -549,7 +549,7 @@ mod tuple_params {
         };
         let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
-            item_spec_id!("field_wise_from_field_wise_builder"),
+            item_id!("field_wise_from_field_wise_builder"),
             String::from("TupleParams"),
         );
 
@@ -665,7 +665,7 @@ mod tuple_with_type_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
-        cfg::{item_spec_id, ItemSpecId},
+        cfg::{item_id, ItemId},
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
         resources::{resources::ts::SetUp, Resources},
     };
@@ -729,7 +729,7 @@ mod tuple_with_type_params {
         };
         let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
-            item_spec_id!("field_wise_from_field_wise_builder"),
+            item_id!("field_wise_from_field_wise_builder"),
             String::from("TupleWithTypeParams<()>"),
         );
 
@@ -866,7 +866,7 @@ mod enum_params {
     use serde::{Deserialize, Serialize};
 
     use peace::{
-        cfg::{item_spec_id, ItemSpecId},
+        cfg::{item_id, ItemId},
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
         resources::{resources::ts::SetUp, Resources},
     };
@@ -1013,7 +1013,7 @@ mod enum_params {
         };
         let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
-            item_spec_id!("field_wise_named_from_field_wise_builder"),
+            item_id!("field_wise_named_from_field_wise_builder"),
             String::from("EnumParams<()>"),
         );
 
@@ -1048,7 +1048,7 @@ mod enum_params {
         };
         let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
-            item_spec_id!("field_wise_tuple_from_field_wise_builder"),
+            item_id!("field_wise_tuple_from_field_wise_builder"),
             String::from("EnumParams<()>"),
         );
 
@@ -1082,7 +1082,7 @@ mod enum_params {
         };
         let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
-            item_spec_id!("field_wise_tuple_marker_from_field_wise_builder"),
+            item_id!("field_wise_tuple_marker_from_field_wise_builder"),
             String::from("EnumParams<()>"),
         );
 
@@ -1499,7 +1499,7 @@ mod struct_recursive_value {
     use serde::{Deserialize, Serialize};
 
     use peace::{
-        cfg::{item_spec_id, ItemSpecId},
+        cfg::{item_id, ItemId},
         params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
         resources::{resources::ts::SetUp, Resources},
     };
@@ -1587,7 +1587,7 @@ mod struct_recursive_value {
         };
         let mut value_resolution_ctx = ValueResolutionCtx::new(
             ValueResolutionMode::ApplyDry,
-            item_spec_id!("field_wise_from_field_wise_builder"),
+            item_id!("field_wise_from_field_wise_builder"),
             String::from("StructRecursiveValue<()>"),
         );
 

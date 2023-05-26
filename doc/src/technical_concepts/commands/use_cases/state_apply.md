@@ -20,4 +20,4 @@ To create this command:
 
 2. Call the `EnsureCmd`.
 
-    This will call `ApplyFns::exec` for each item spec, beginning from the first item spec, until the last item spec.
+    This will call `ApplyFns::exec` for each item, beginning from the first item, until the last item.
