@@ -148,3 +148,9 @@ impl FlowDotRenderer {
         format!(r#"{src_item_id} -> {target_item_id} [minlen = 9]"#)
     }
 }
+
+impl Default for FlowDotRenderer {
+    fn default() -> Self {
+        Self::new()
+    }
+}

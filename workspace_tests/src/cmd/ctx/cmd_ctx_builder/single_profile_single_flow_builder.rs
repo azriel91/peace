@@ -460,7 +460,7 @@ async fn build_with_item_params_returns_err_when_params_not_provided_and_not_sto
     assert!(
         matches!(
             &cmd_ctx_result,
-            Err(PeaceTestError::PeaceRtError(
+            Err(PeaceTestError::PeaceRt(
                 peace::rt_model::Error::ParamsSpecsMismatch {
                     item_ids_with_no_params_specs,
                     params_specs_provided_mismatches,
@@ -616,7 +616,7 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch()
     assert!(
         matches!(
             &cmd_ctx_result,
-            Err(PeaceTestError::PeaceRtError(
+            Err(PeaceTestError::PeaceRt(
                 peace::rt_model::Error::ParamsSpecsMismatch {
                     item_ids_with_no_params_specs,
                     params_specs_provided_mismatches,
@@ -685,7 +685,7 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch()
     assert!(
         matches!(
             &cmd_ctx_result,
-            Err(PeaceTestError::PeaceRtError(
+            Err(PeaceTestError::PeaceRt(
                 peace::rt_model::Error::ParamsSpecsMismatch {
                     item_ids_with_no_params_specs,
                     params_specs_provided_mismatches,
@@ -830,7 +830,7 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
     assert!(
         matches!(
             &cmd_ctx_result,
-            Err(PeaceTestError::PeaceRtError(
+            Err(PeaceTestError::PeaceRt(
                 peace::rt_model::Error::ParamsSpecsMismatch {
                     item_ids_with_no_params_specs,
                     params_specs_provided_mismatches,
@@ -900,7 +900,7 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
     assert!(
         matches!(
             &cmd_ctx_result,
-            Err(PeaceTestError::PeaceRtError(
+            Err(PeaceTestError::PeaceRt(
                 peace::rt_model::Error::ParamsSpecsMismatch {
                     item_ids_with_no_params_specs,
                     params_specs_provided_mismatches,
@@ -962,7 +962,7 @@ async fn build_with_item_params_returns_deserialization_err_when_item_renamed()
     assert!(
         matches!(
             &cmd_ctx_result,
-            Err(PeaceTestError::PeaceRtError(
+            Err(PeaceTestError::PeaceRt(
                 peace::rt_model::Error::ParamsSpecsDeserialize {
                     profile,
                     flow_id,
