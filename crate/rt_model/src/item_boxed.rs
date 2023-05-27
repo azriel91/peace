@@ -15,8 +15,8 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use fn_graph::{DataAccessDyn, TypeIds};
 use peace_cfg::Item;
+use peace_data::fn_graph::{DataAccessDyn, TypeIds};
 use peace_params::Params;
 
 use crate::{ItemRt, ItemWrapper};

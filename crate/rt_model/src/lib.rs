@@ -4,7 +4,7 @@
 //! `peace_rt_model_web` depending on the compilation target architecture.
 
 // Re-exports
-pub use fn_graph::{self, FnRef};
+pub use peace_data::fn_graph::{self, FnRef};
 pub use peace_rt_model_core::*;
 
 pub mod output {

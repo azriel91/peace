@@ -4,9 +4,9 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use fn_graph::{DataAccess, DataAccessDyn, TypeIds};
 use peace_cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId};
 use peace_data::{
+    fn_graph::{DataAccess, DataAccessDyn, TypeIds},
     marker::{ApplyDry, Clean, Current, Desired},
     Data,
 };

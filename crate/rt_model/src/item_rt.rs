@@ -1,8 +1,8 @@
 use std::fmt::Debug;
 
 use dyn_clone::DynClone;
-use fn_graph::{DataAccess, DataAccessDyn};
 use peace_cfg::{async_trait, FnCtx, ItemId};
+use peace_data::fn_graph::{DataAccess, DataAccessDyn};
 use peace_params::ParamsSpecs;
 use peace_resources::{
     resources::ts::{Empty, SetUp},
