@@ -1,3 +1,6 @@
+#[cfg(feature = "web_server")]
+use std::net::IpAddr;
+
 use clap::{Parser, Subcommand, ValueHint};
 use peace::{cfg::Profile, rt_model::output::OutputFormat};
 use semver::Version;
@@ -116,6 +119,18 @@ pub enum EnvManCommand {
     Deploy,
     /// Cleans the current environment.
     Clean,
+    /// Runs `envman` as a web server.
+    #[cfg(feature = "web_server")]
+    Web {
+        /// The address to bind to, defaults to `127.0.0.1`.
+        ///
+        /// If you want to listen on all interfaces, use `0.0.0.0`.
+        #[arg(long, default_value = "127.0.0.1", value_hint(ValueHint::Other))]
+        address: IpAddr,
+        /// Port to listen on, defaults to `7890`.
+        #[arg(short, long, default_value = "7890", value_hint(ValueHint::Other))]
+        port: u16,
+    },
 }
 
 #[derive(Subcommand)]

@@ -53,3 +53,6 @@ pub mod items;
 pub mod model;
 pub mod output;
 pub mod rt_model;
+
+#[cfg(feature = "web_server")]
+pub mod web;

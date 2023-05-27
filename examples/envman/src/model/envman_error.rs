@@ -154,4 +154,18 @@ pub enum EnvManError {
     // === Scaffolding errors === //
     #[error("Failed to initialize tokio runtime.")]
     TokioRuntimeInit(#[source] std::io::Error),
+
+    // === Web Server errors === //
+    /// Web server ended due to an error.
+    #[cfg(feature = "web_server")]
+    #[error("Web server ended due to an error.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(envman::web_server_serve),)
+    )]
+    WebServerServe {
+        /// Underlying error.
+        #[source]
+        error: hyper::Error,
+    },
 }

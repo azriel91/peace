@@ -37,6 +37,13 @@ url = { version = "2.3.1", features = ["serde"] }
 urlencoding = "2.1.2"
 whoami = "1.4.0"
 
+# web_server
+axum = { version = "0.6.18", optional = true }
+dioxus = { version = "0.3.2", optional = true }
+dioxus-ssr = { version = "0.3.0", optional = true }
+hyper = { version = "0.14.26", optional = true }
+tower-http = { version = "0.4.0", optional = true, features = ["fs"] }
+
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 clap = { version = "4.2.1", features = ["derive"] }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
@@ -50,7 +57,7 @@ js-sys = "0.3.61"
 web-sys = "0.3.61"
 
 [features]
-default = []
+default = ["web_server"]
 error_reporting = [
     "peace/error_reporting",
     "peace_items/error_reporting",
@@ -60,4 +67,11 @@ output_json = ["peace/output_json"]
 output_progress = [
     "peace/output_progress",
     "peace_items/output_progress",
+]
+web_server = [
+    "dep:axum",
+    "dep:dioxus",
+    "dep:dioxus-ssr",
+    "dep:hyper",
+    "dep:tower-http",
 ]

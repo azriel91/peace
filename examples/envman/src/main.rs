@@ -12,6 +12,9 @@ use envman::{
 use peace::rt_model::output::CliOutput;
 use tokio::io::Stdout;
 
+#[cfg(feature = "web_server")]
+use envman::web::WebServer;
+
 #[cfg(not(feature = "error_reporting"))]
 pub fn main() -> Result<(), EnvManError> {
     run()
@@ -151,6 +154,8 @@ async fn run_command(
         }
         EnvManCommand::Deploy => EnvDeployCmd::run(cli_output).await?,
         EnvManCommand::Clean => EnvCleanCmd::run(cli_output).await?,
+        #[cfg(feature = "web_server")]
+        EnvManCommand::Web { address, port } => WebServer::start(address, port).await?,
     }
 
     Ok::<_, EnvManError>(())
