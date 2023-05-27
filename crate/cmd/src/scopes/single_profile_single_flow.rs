@@ -51,6 +51,7 @@ use serde::{de::DeserializeOwned, Serialize};
 #[derive(Debug)]
 pub struct SingleProfileSingleFlow<'ctx, E, O, PKeys, TS>
 where
+    E: 'static,
     PKeys: ParamsKeys + 'static,
 {
     /// Output endpoint to return values / errors, and write progress
@@ -151,6 +152,7 @@ where
 #[derive(Debug)]
 pub struct SingleProfileSingleFlowView<'view, E, O, PKeys, TS>
 where
+    E: 'static,
     PKeys: ParamsKeys + 'static,
 {
     /// Output endpoint to return values / errors, and write progress
