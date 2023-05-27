@@ -40,6 +40,7 @@ whoami = "1.4.0"
 # web_server
 axum = { version = "0.6.18", optional = true }
 dioxus = { version = "0.3.2", optional = true }
+dioxus-liveview = { version = "0.3.0", optional = true, features = ["axum"] }
 dioxus-ssr = { version = "0.3.0", optional = true }
 hyper = { version = "0.14.26", optional = true }
 tower-http = { version = "0.4.0", optional = true, features = ["fs"] }
@@ -71,6 +72,7 @@ output_progress = [
 web_server = [
     "dep:axum",
     "dep:dioxus",
+    "dep:dioxus-liveview",
     "dep:dioxus-ssr",
     "dep:hyper",
     "dep:tower-http",

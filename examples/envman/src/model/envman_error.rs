@@ -168,4 +168,17 @@ pub enum EnvManError {
         #[source]
         error: hyper::Error,
     },
+
+    /// Failed to join thread that rendered web server home page.
+    #[cfg(feature = "web_server")]
+    #[error("Failed to join thread that rendered web server home page.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(envman::web_server_render_join))
+    )]
+    WebServerRenderJoin {
+        /// Underlying error.
+        #[source]
+        error: tokio::task::JoinError,
+    },
 }
