@@ -1,4 +1,5 @@
 use std::{
+    any::Any,
     fmt::{self, Debug},
     marker::PhantomData,
     ops::{Deref, DerefMut},
@@ -44,6 +45,14 @@ where
         Self(self.0.clone(), PhantomData)
     }
 }
+
+impl<I, E> PartialEq for ItemWrapper<I, E> {
+    fn eq(&self, _other: &Self) -> bool {
+        true
+    }
+}
+
+impl<I, E> Eq for ItemWrapper<I, E> {}
 
 impl<I, E> ItemWrapper<I, E>
 where
@@ -509,7 +518,7 @@ where
 #[async_trait(?Send)]
 impl<I, E> ItemRt<E> for ItemWrapper<I, E>
 where
-    I: Clone + Debug + Item + Send + Sync,
+    I: Clone + Debug + Item + Send + Sync + 'static,
     E: Debug
         + Send
         + Sync
@@ -523,6 +532,26 @@ where
 {
     fn id(&self) -> &ItemId {
         <I as Item>::id(self)
+    }
+
+    fn eq(&self, other: &dyn ItemRt<E>) -> bool {
+        if self.id() == other.id() {
+            let other = other.as_any();
+            if let Some(item_wrapper) = other.downcast_ref::<Self>() {
+                self == item_wrapper
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    }
+
+    fn as_any(&self) -> &dyn Any
+    where
+        Self: 'static,
+    {
+        self
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E> {

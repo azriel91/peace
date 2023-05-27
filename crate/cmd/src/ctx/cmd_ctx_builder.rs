@@ -242,7 +242,10 @@ pub(crate) async fn profiles_from_peace_app_dir(
 /// deserialization.
 fn params_and_states_type_reg<E>(
     item_graph: &ItemGraph<E>,
-) -> (ItemParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg) {
+) -> (ItemParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg)
+where
+    E: 'static,
+{
     item_graph.iter().fold(
         (
             ItemParamsTypeReg::new(),
@@ -272,7 +275,7 @@ fn params_specs_merge<E>(
     params_specs_stored: Option<ParamsSpecs>,
 ) -> Result<ParamsSpecs, Error>
 where
-    E: From<Error>,
+    E: From<Error> + 'static,
 {
     // Combine provided and stored params specs. Provided params specs take
     // precedence.
@@ -378,7 +381,7 @@ async fn item_graph_setup<E>(
     resources: Resources<Empty>,
 ) -> Result<Resources<SetUp>, E>
 where
-    E: std::error::Error,
+    E: std::error::Error + 'static,
 {
     let resources = item_graph
         .stream()

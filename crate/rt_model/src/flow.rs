@@ -8,8 +8,11 @@ use crate::ItemGraph;
 /// contains the definitions to read and write the items' [`State`]s.
 ///
 /// [`State`]: peace_cfg::Item::State
-#[derive(Debug)]
-pub struct Flow<E> {
+#[derive(Debug, PartialEq, Eq)]
+pub struct Flow<E>
+where
+    E: 'static,
+{
     /// ID of this flow.
     flow_id: FlowId,
     /// Graph of [`Item`]s in this flow.

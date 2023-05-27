@@ -18,6 +18,17 @@ impl<E> Clone for ItemGraph<E> {
     }
 }
 
+impl<E> PartialEq for ItemGraph<E>
+where
+    E: 'static,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<E> Eq for ItemGraph<E> where E: 'static {}
+
 impl<E> ItemGraph<E> {
     /// Returns the inner [`FnGraph`].
     pub fn into_inner(self) -> FnGraph<ItemBoxed<E>> {

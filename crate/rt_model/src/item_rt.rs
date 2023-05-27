@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{any::Any, fmt::Debug};
 
 use dyn_clone::DynClone;
 use peace_cfg::{async_trait, FnCtx, ItemId};
@@ -23,13 +23,24 @@ use crate::{
 ///
 /// [`Item`]: peace_cfg::Item
 #[async_trait(?Send)]
-pub trait ItemRt<E>: Debug + DataAccess + DataAccessDyn + DynClone {
+pub trait ItemRt<E>:
+    Any + Debug + DataAccess + DataAccessDyn + DynClone + Send + Sync + 'static
+{
     /// Returns the ID of this item.
     ///
     /// See [`Item::id`];
     ///
     /// [`Item::id`]: peace_cfg::Item::id
     fn id(&self) -> &ItemId;
+
+    /// Returns whether this item is equal to the other.
+    fn eq(&self, other: &dyn ItemRt<E>) -> bool;
+
+    /// Returns `&self` as `&dyn Any`.
+    ///
+    /// This is needed to upcast to `&dyn Any` and satisfy the upcast lifetime
+    /// requirement.
+    fn as_any(&self) -> &dyn Any;
 
     /// Initializes data for the item's functions.
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), E>

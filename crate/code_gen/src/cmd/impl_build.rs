@@ -205,7 +205,7 @@ fn impl_build_for(
                 >,
             >
         where
-            E: std::error::Error + From<peace_rt_model::Error>,
+            E: std::error::Error + From<peace_rt_model::Error> + 'static,
             PKeys: #params_module::ParamsKeys + 'static,
         {
             /// Builds the command context.

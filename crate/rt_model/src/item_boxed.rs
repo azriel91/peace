@@ -53,6 +53,17 @@ impl<E> DerefMut for ItemBoxed<E> {
     }
 }
 
+impl<E> PartialEq for ItemBoxed<E>
+where
+    E: 'static,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0.eq(&*other.0)
+    }
+}
+
+impl<E> Eq for ItemBoxed<E> where E: 'static {}
+
 impl<I, E> From<I> for ItemBoxed<E>
 where
     I: Clone + Debug + Item + Send + Sync + 'static,

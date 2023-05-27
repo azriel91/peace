@@ -17,6 +17,15 @@ pub enum PeaceTestError {
         crate::VecCopyError,
     ),
 
+    /// A Blank item error occurred.
+    #[error("A Blank item error occurred.")]
+    BlankError(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        peace_items::blank::BlankError,
+    ),
+
     /// A `peace` runtime error occurred.
     #[error("A `peace` runtime error occurred.")]
     PeaceRtError(
