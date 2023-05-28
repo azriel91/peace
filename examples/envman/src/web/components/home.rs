@@ -11,7 +11,12 @@ pub struct HomeProps {
 pub fn Home(cx: Scope<HomeProps>) -> Element {
     let socket_addr = &cx.props.socket_addr;
     cx.render(rsx!(
-        head {}
+        head {
+            link {
+                href: "/public/css/tailwind.css",
+                rel: "stylesheet",
+            }
+        }
         body {
             div {
                 id: "main",

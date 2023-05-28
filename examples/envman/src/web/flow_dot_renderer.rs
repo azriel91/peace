@@ -121,13 +121,22 @@ impl FlowDotRenderer {
 
     fn item_cluster(&self, item_id: &ItemId) -> String {
         let plain_text_color = self.plain_text_color;
+        let classes = "\
+            [&>ellipse]:fill-slate-300 \
+            [&>ellipse]:stroke-1 \
+            [&>ellipse]:stroke-slate-600 \
+            [&>ellipse]:hover:fill-slate-200 \
+            [&>ellipse]:hover:stroke-slate-600 \
+            [&>ellipse]:hover:stroke-2 \
+            cursor-pointer \
+        ";
         format!(
             r#"
             subgraph cluster_{item_id} {{
-                {item_id} [label = ""]
+                {item_id} [label = "" class = "{classes}"]
                 {item_id}_text [
                     shape="plain"
-                    style=""\
+                    style=""
                     fontcolor="{plain_text_color}"
                     label = <<table
                         border="0"

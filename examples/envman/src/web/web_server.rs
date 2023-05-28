@@ -51,7 +51,7 @@ impl WebServer {
             );
 
         let (Ok(()) | Err(_)) = tokio::io::stderr()
-            .write_all(format!("listening on http://{}", socket_addr).as_bytes())
+            .write_all(format!("listening on http://{}\n", socket_addr).as_bytes())
             .await;
         axum::Server::bind(&socket_addr)
             .serve(app.into_make_service())
