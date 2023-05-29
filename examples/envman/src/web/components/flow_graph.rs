@@ -22,9 +22,13 @@ pub fn FlowGraph(cx: Scope<FlowGraphProps>) -> Element {
 
     cx.render(rsx! {
         div {
-            id: "flow_dot_diagram",
-            "hello axum! {num}"
-            button { onclick: move |_| num += 1, "Increment" }
+            class: "flex items-center justify-center",
+            div {
+                id: "flow_dot_diagram",
+
+                "hello axum! {num}"
+                button { onclick: move |_| num += 1, "Increment" }
+            }
         }
         script {
             r#type: "module",

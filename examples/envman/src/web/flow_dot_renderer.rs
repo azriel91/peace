@@ -69,10 +69,13 @@ impl FlowDotRenderer {
 
     fn graph_attrs(&self) -> String {
         let plain_text_color = self.plain_text_color;
+        // Note: `margin` is set to 0.1 because some text lies outside the viewport.
+        // This may be due to incorrect width calculation for emoji characters, which
+        // GraphViz falls back to the space character width.
         format!(
             "\
                 graph [\n\
-                    margin    = 0.0\n\
+                    margin    = 0.1\n\
                     penwidth  = 0\n\
                     nodesep   = 0.0\n\
                     ranksep   = 0.02\n\
