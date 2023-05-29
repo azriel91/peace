@@ -79,6 +79,7 @@ impl FlowDotRenderer {
                     bgcolor   = \"transparent\"\n\
                     fontname  = \"helvetica\"\n\
                     fontcolor = \"{plain_text_color}\"\n\
+                    splines   = line\n\
                     rankdir   = LR\n\
                 ]\n\
             "
