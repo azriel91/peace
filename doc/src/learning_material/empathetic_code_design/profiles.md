@@ -7,6 +7,9 @@ First execution / init:
 ```rust ,ignore
 let cmd_ctx_builder = CmdCtx::builder_single_profile_no_flow
     ::<EnvManError, _>(output, &workspace)
+    .with_profile(profile!("demo"))
+
+    // for recall
     .with_workspace_param_value(
         WorkspaceParamsKey::Profile,
         Some(profile!("demo")),
