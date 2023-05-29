@@ -64,14 +64,26 @@ pub use peace_params_derive::{value_impl, Params, ParamsFieldless};
 pub use tynm;
 
 pub use crate::{
-    any_spec_data_type::AnySpecDataType, any_spec_rt::AnySpecRt, any_spec_rt_boxed::AnySpecRtBoxed,
-    field_name_and_type::FieldNameAndType, field_wise_spec_rt::FieldWiseSpecRt,
-    mapping_fn::MappingFn, mapping_fn_impl::MappingFnImpl, params::Params,
-    params_fieldless::ParamsFieldless, params_resolve_error::ParamsResolveError,
-    params_spec::ParamsSpec, params_spec_de::ParamsSpecDe,
-    params_spec_fieldless::ParamsSpecFieldless, params_spec_fieldless_de::ParamsSpecFieldlessDe,
-    params_specs::ParamsSpecs, value_resolution_ctx::ValueResolutionCtx,
-    value_resolution_mode::ValueResolutionMode, value_spec::ValueSpec, value_spec_de::ValueSpecDe,
+    any_spec_data_type::AnySpecDataType,
+    any_spec_rt::AnySpecRt,
+    any_spec_rt_boxed::AnySpecRtBoxed,
+    field_name_and_type::FieldNameAndType,
+    field_wise_spec_rt::FieldWiseSpecRt,
+    func::{FromFunc, Func},
+    mapping_fn::MappingFn,
+    mapping_fn_impl::MappingFnImpl,
+    params::Params,
+    params_fieldless::ParamsFieldless,
+    params_resolve_error::ParamsResolveError,
+    params_spec::ParamsSpec,
+    params_spec_de::ParamsSpecDe,
+    params_spec_fieldless::ParamsSpecFieldless,
+    params_spec_fieldless_de::ParamsSpecFieldlessDe,
+    params_specs::ParamsSpecs,
+    value_resolution_ctx::ValueResolutionCtx,
+    value_resolution_mode::ValueResolutionMode,
+    value_spec::ValueSpec,
+    value_spec_de::ValueSpecDe,
     value_spec_rt::ValueSpecRt,
 };
 
@@ -80,6 +92,7 @@ mod any_spec_rt;
 mod any_spec_rt_boxed;
 mod field_name_and_type;
 mod field_wise_spec_rt;
+mod func;
 mod mapping_fn;
 mod mapping_fn_impl;
 mod params;

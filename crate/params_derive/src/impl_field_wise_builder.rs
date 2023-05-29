@@ -420,14 +420,25 @@ fn builder_field_methods(
 
                 pub fn #with_field_name_from_map<F, Args>(mut self, f: F) -> Self
                 where
+                    F: #peace_params_path::Func<
+                        Option<#field_ty>,
+                        Args,
+                    >,
                     #peace_params_path::MappingFnImpl<#field_ty, F, Args>:
-                        From<(Option<String>, F)>
+                        #peace_params_path::FromFunc<F>
                         + #peace_params_path::MappingFn<Output = #field_ty>
                 {
-                    self #proxy_call.#self_field_name = Some(#field_spec_ty_path::from_map(
-                        Some(String::from(stringify!(#field_name))),
-                        f,
-                    ));
+                    let spec = {
+                        let mapping_fn = <
+                                #peace_params_path::MappingFnImpl<#field_ty, F, Args>
+                                as #peace_params_path::FromFunc<F>
+                            >::from_func(
+                            Some(String::from(stringify!(#field_name))),
+                            f,
+                        );
+                        #field_spec_ty_path::MappingFn(Box::new(mapping_fn))
+                    };
+                    self #proxy_call.#self_field_name = Some(spec);
                     self
                 }
             }
