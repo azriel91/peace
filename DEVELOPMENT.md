@@ -94,10 +94,10 @@ These instructions are for Linux. They may work on OS X, but for Windows, please
     pnpm install --global tailwindcss
     ```
 
-5. Install [`cargo-watch`]
+5. Install [`cargo-leptos`]:
 
     ```bash
-    cargo install cargo-watch
+    cargo install --git https://github.com/leptos-rs/cargo-leptos.git --locked cargo-leptos
     ```
 
 
@@ -107,7 +107,7 @@ These instructions are for Linux. They may work on OS X, but for Windows, please
 * This is installed as a global binary instead of as a dev dependency within the repository. This is more aligned with Rust's single-binary installation model.
 
 
-[`cargo-watch`]: https://github.com/watchexec/cargo-watch
+[`cargo-leptos`]: https://github.com/leptos-rs/cargo-leptos
 [`nvm`]: https://github.com/nvm-sh/nvm
 [tailwindcss]: https://tailwindcss.com/
 
@@ -116,26 +116,10 @@ These instructions are for Linux. They may work on OS X, but for Windows, please
 
 > ℹ️ These commands assume you are running them from the repository root directory.
 
-Run the `tailwindcss` command to generate the example's CSS:
+Build and serve the `envman` example:
 
 ```bash
-tailwindcss \
-  -i examples/envman/src/web/tailwind.css \
-  -o target/web/envman/public/css/tailwind.css \
-  --watch
-```
-
-Build and serve the example:
-
-```bash
-# For watching and auto reloading
-cargo watch \
-  -x 'build --package envman --all-features' \
-  -s "bash -c '(cd target/web/envman && ../../debug/envman web)'"
-
-# For a single execution
-cargo build --package envman --all-features &&
-  (cd target/web/envman && ../../debug/envman web)
+cargo leptos serve --project "envman" -v
 ```
 
 ### Uninstallation
