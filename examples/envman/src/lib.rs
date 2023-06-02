@@ -47,12 +47,16 @@
 //! envman diff dev demo
 //! ```
 
-pub mod cmds;
-pub mod flows;
-pub mod items;
-pub mod model;
-pub mod output;
-pub mod rt_model;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "flow_logic")] {
+        pub mod cmds;
+        pub mod flows;
+        pub mod items;
+        pub mod model;
+        pub mod output;
+        pub mod rt_model;
+    }
+}
 
 #[cfg(feature = "web_server")]
 pub mod web;

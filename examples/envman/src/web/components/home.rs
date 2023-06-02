@@ -1,27 +1,26 @@
-use std::net::SocketAddr;
+use leptos::{component, create_signal, view, IntoView, Scope, SignalGet};
+use leptos_meta::{Link, Stylesheet};
+use leptos_router::{Route, Router, Routes};
+use peace::rt_model::Flow;
 
-use dioxus::prelude::*;
+use crate::{model::EnvManError, web::components::FlowGraph};
 
-/// Parameters for the homepage.
-#[derive(PartialEq, Props)]
-pub struct HomeProps {
-    pub socket_addr: SocketAddr,
-}
-
-pub fn Home(cx: Scope<HomeProps>) -> Element {
-    let socket_addr = &cx.props.socket_addr;
-    cx.render(rsx!(
-        head {
-            link {
-                href: "/public/css/tailwind.css",
-                rel: "stylesheet",
-            }
-        }
-        body {
-            div {
-                id: "main",
-            }
-            dioxus_liveview::interpreter_glue(&format!("ws://{socket_addr}/ws"))
-        }
-    ))
+#[component]
+pub fn Home(cx: Scope, flow: Flow<EnvManError>) -> impl IntoView {
+    let (flow, _set_flow) = create_signal(cx, flow);
+    view! {
+        cx,
+        <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico"/>
+        <Stylesheet id="tailwind" href="/pkg/envman.css"/>
+        <Router>
+            <main>
+                <Routes>
+                    <Route path="" view=move |cx| view! {
+                        cx,
+                        <FlowGraph flow=flow.get() />
+                    }/>
+                </Routes>
+            </main>
+        </Router>
+    }
 }

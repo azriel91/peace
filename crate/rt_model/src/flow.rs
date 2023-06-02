@@ -27,6 +27,15 @@ where
     }
 }
 
+impl<E> Clone for Flow<E> {
+    fn clone(&self) -> Self {
+        Self {
+            flow_id: self.flow_id.clone(),
+            graph: self.graph.clone(),
+        }
+    }
+}
+
 impl<E> Eq for Flow<E> where E: 'static {}
 
 impl<E> Flow<E> {

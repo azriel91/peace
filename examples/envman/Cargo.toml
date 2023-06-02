@@ -18,36 +18,40 @@ test = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-aws-config = "0.55.0"
-aws-sdk-iam = "0.25.1"
-aws-sdk-s3 = "0.25.1"
-aws-smithy-http = "0.55.0" # used to reference error type, otherwise not recommended for direct usage
-base64 = "0.21.0"
+aws-config = { version = "0.55.0", optional = true }
+aws-sdk-iam = { version = "0.25.1", optional = true }
+aws-sdk-s3 = { version = "0.25.1", optional = true }
+aws-smithy-http = { version = "0.55.0", optional = true } # used to reference error type, otherwise not recommended for direct usage
+base64 = { version = "0.21.0", optional = true }
 cfg-if = { workspace = true }
-chrono = { version = "0.4.24", default-features = false, features = ["clock", "serde"] }
-derivative = { workspace = true }
-futures = "0.3.28"
-md5-rs = "0.1.5"  # WASM compatible, and reads bytes as stream
+chrono = { version = "0.4.24", default-features = false, features = ["clock", "serde"], optional = true }
+derivative = { workspace = true, optional = true }
+futures = { version = "0.3.28", optional = true }
+md5-rs = { version = "0.1.5", optional = true }  # WASM compatible, and reads bytes as stream
 peace = { path = "../..", default-features = false }
 peace_items = { path = "../../items", features = ["file_download", "tar_x"] }
-semver = "1.0.17"
+semver = { version = "1.0.17", optional = true }
 serde = { version = "1.0.159", features = ["derive"] }
-thiserror = "1.0.40"
+thiserror = { version = "1.0.40", optional = true }
 url = { version = "2.3.1", features = ["serde"] }
-urlencoding = "2.1.2"
-whoami = "1.4.0"
+urlencoding = { version = "2.1.2", optional = true }
+whoami = { version = "1.4.0", optional = true }
 
 # web_server
+# ssr
 axum = { version = "0.6.18", optional = true }
-dioxus = { version = "0.3.2", optional = true }
-dioxus-liveview = { version = "0.3.0", optional = true, features = ["axum"] }
-dioxus-ssr = { version = "0.3.0", optional = true }
 hyper = { version = "0.14.26", optional = true }
+leptos = { version = "0.3.0", default-features = false, features = ["serde", "stable"] }
+leptos_axum = { version = "0.3.0", optional = true }
+leptos_meta = { version = "0.3.0", default-features = false }
+leptos_router = { version = "0.3.0", default-features = false }
+tower = { version = "0.4.13", optional = true }
 tower-http = { version = "0.4.0", optional = true, features = ["fs"] }
+tracing = { version = "0.1.37", optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-clap = { version = "4.2.1", features = ["derive"] }
-tokio = { workspace = true, features = ["rt", "rt-multi-thread"] }
+clap = { version = "4.2.1", features = ["derive"], optional = true }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread"], optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 serde-wasm-bindgen = "0.5.0"
@@ -58,7 +62,9 @@ js-sys = "0.3.61"
 web-sys = "0.3.61"
 
 [features]
-default = ["web_server"]
+default = ["flow_logic", "web_server"]
+
+# peace features
 error_reporting = [
     "peace/error_reporting",
     "peace_items/error_reporting",
@@ -69,11 +75,104 @@ output_progress = [
     "peace/output_progress",
     "peace_items/output_progress",
 ]
-web_server = [
-    "dep:axum",
-    "dep:dioxus",
-    "dep:dioxus-liveview",
-    "dep:dioxus-ssr",
-    "dep:hyper",
-    "dep:tower-http",
+
+# envman
+flow_logic = [
+    "dep:aws-config",
+    "dep:aws-sdk-iam",
+    "dep:aws-sdk-s3",
+    "dep:aws-smithy-http",
+    "dep:base64",
+    "dep:chrono",
+    "dep:clap",
+    "dep:derivative",
+    "dep:futures",
+    "dep:md5-rs",
+    "dep:semver",
+    "dep:thiserror",
+    "dep:tokio",
+    "dep:urlencoding",
+    "dep:whoami",
 ]
+
+# web related
+web_server = [
+    "flow_logic",
+    "dep:axum",
+    "dep:hyper",
+    "dep:leptos_axum",
+    "dep:tokio",
+    "dep:tower",
+    "dep:tower-http",
+    "dep:tracing",
+    "leptos/ssr",
+    "leptos_meta/ssr",
+    "leptos_router/ssr",
+]
+
+# leptos
+# with ssr, the `main` function runs the server directly, without other CLI commands.
+ssr = ["web_server"]
+hydrate = [
+    "leptos/hydrate",
+    "leptos_meta/hydrate",
+    "leptos_router/hydrate",
+]
+
+[package.metadata.leptos]
+# See <https://github.com/leptos-rs/cargo-leptos/blob/main/README.md>
+# The name used by wasm-bindgen/cargo-leptos for the JS/WASM bundle. Defaults to the crate name
+output-name = "envman"
+# The site root folder is where cargo-leptos generate all output. WARNING: all content of this folder will be erased on a rebuild. Use it in your server setup.
+site-root = "target/web/envman"
+# The site-root relative folder where all compiled output (JS, WASM and CSS) is written
+# Defaults to pkg
+site-pkg-dir = "pkg"
+
+# The source style file. If it ends with _.sass_ or _.scss_ then it will be compiled by `dart-sass`
+# into CSS and processed by lightning css. When release is set, then it will also be minified.
+#
+# Optional. Env: LEPTOS_STYLE_FILE.
+# style-file = "../../target/web/envman/public/css/tailwind.css"
+tailwind-input-file = "src/web/tailwind.css"
+tailwind-config-file = "src/web/tailwind.config.js"
+
+# Assets source dir. All files found here will be copied and synchronized to site-root.
+# The assets-dir cannot have a sub directory with the same name/path as site-pkg-dir.
+#
+# Optional. Env: LEPTOS_ASSETS_DIR.
+# assets-dir = "assets"
+# The IP and port (ex: 127.0.0.1:3000) where the server serves the content. Use it in your server setup.
+site-addr = "127.0.0.1:7890"
+# The port to use for automatic reload monitoring
+reload-port = 7891
+# [Optional] Command to use when running end2end tests. It will run in the end2end dir.
+#   [Windows] for non-WSL use "npx.cmd playwright test"
+#   This binary name can be checked in Powershell with Get-Command npx
+# end2end-cmd = "npx playwright test"
+# end2end-dir = "end2end"
+#  The browserlist query used for optimizing the CSS.
+browserquery = "defaults"
+# Set by cargo-leptos watch when building with that tool. Controls whether autoreload JS will be included in the head
+watch = true
+# The environment Leptos will run in, usually either "DEV" or "PROD"
+env = "DEV"
+# The features to use when compiling the bin target
+#
+# Optional. Can be over-ridden with the command line parameter --bin-features
+bin-features = ["ssr"]
+
+# If the --no-default-features flag should be used when compiling the bin target
+#
+# Optional. Defaults to false.
+bin-default-features = false
+
+# The features to use when compiling the lib target
+#
+# Optional. Can be over-ridden with the command line parameter --lib-features
+lib-features = ["hydrate"]
+
+# If the --no-default-features flag should be used when compiling the lib target
+#
+# Optional. Defaults to false.
+lib-default-features = false
