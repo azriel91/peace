@@ -42,7 +42,7 @@ where
         ShCmdExecutor::<Id>::exec(&apply_check_sh_cmd)
             .await
             .and_then(|state| match state.logical {
-                ShCmdState::Some { stdout, .. } => match stdout.trim().lines().rev().next() {
+                ShCmdState::Some { stdout, .. } => match stdout.trim().lines().next_back() {
                     Some("true") => {
                         #[cfg(not(feature = "output_progress"))]
                         {
