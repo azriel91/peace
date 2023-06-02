@@ -200,7 +200,7 @@ jobs:
   build_examples:
     name: Build examples -- Native, WASM, leptos
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
       - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
