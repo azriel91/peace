@@ -65,7 +65,7 @@ js-sys = "0.3.61"
 web-sys = "0.3.61"
 
 [features]
-default = ["cli"]
+default = []
 
 # === envman modes === #
 cli = [
