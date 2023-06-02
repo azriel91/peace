@@ -75,11 +75,6 @@ notice = "warn"
 # output a note when they are encountered.
 ignore = [
     #"RUSTSEC-0000-0000",
-
-    # atty has a soundness issue, depended on by miette
-    # https://github.com/softprops/atty/issues/50
-    # https://github.com/zkat/miette/issues/228
-    "RUSTSEC-2021-0145",
 ]
 # Threshold for security vulnerabilities, any vulnerability with a CVSS score
 # lower than the range specified will be ignored. Note that ignored advisories
@@ -110,12 +105,15 @@ unlicensed = "deny"
 # Keep in sync with about.toml
 allow = [
     "Apache-2.0",
-    # "BSD-3-Clause", # wasm
+    "BSD-2-Clause",
+    "BSD-3-Clause", # wasm
+    "BSL-1.0",
     "ISC",
     "MIT",
     "Unicode-DFS-2016",
     "NOASSERTION",
     "OpenSSL",
+    "Zlib",
 ]
 # List of explicitly disallowed licenses
 # See https://spdx.org/licenses/ for list of possible licenses
@@ -246,11 +244,6 @@ deny = [
 # Certain crates/versions that will be skipped when doing duplicate detection.
 skip = [
     #{ name = "ansi_term", version = "=0.11.0" },
-
-    # miette -> atty -> hermit-abi
-    # Would be resolved by:
-    # # https://github.com/zkat/miette/issues/228
-    { name = "hermit-abi", version = "=0.1.19" },
 ]
 # Similarly to `skip` allows you to skip certain crates during duplicate
 # detection. Unlike skip, it also includes the entire tree of transitive
