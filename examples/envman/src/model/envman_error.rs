@@ -157,7 +157,7 @@ pub enum EnvManError {
 
     // === Web Server errors === //
     /// Web server ended due to an error.
-    #[cfg(feature = "web_server")]
+    #[cfg(feature = "ssr")]
     #[error("Web server ended due to an error.")]
     #[cfg_attr(
         feature = "error_reporting",
@@ -170,7 +170,7 @@ pub enum EnvManError {
     },
 
     /// Failed to join thread that rendered web server home page.
-    #[cfg(feature = "web_server")]
+    #[cfg(feature = "ssr")]
     #[error("Failed to join thread that rendered web server home page.")]
     #[cfg_attr(
         feature = "error_reporting",

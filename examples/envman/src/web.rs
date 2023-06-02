@@ -1,7 +1,17 @@
 //! Runs `envman` as a web application.
 
-pub use self::{flow_dot_renderer::FlowDotRenderer, web_server::WebServer};
+pub use self::flow_dot_renderer::FlowDotRenderer;
 
-mod components;
+pub mod components;
+
 mod flow_dot_renderer;
-mod web_server;
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "ssr")] {
+        pub use self::web_server::WebServer;
+
+        mod web_server;
+    } else if #[cfg(feature = "csr")] {
+        pub mod client;
+    }
+}

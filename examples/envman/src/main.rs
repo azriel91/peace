@@ -1,5 +1,5 @@
 cfg_if::cfg_if! {
-    if #[cfg(all(feature = "flow_logic", not(feature = "ssr")))] {
+    if #[cfg(feature = "cli")] {
         // CLI app
 
         use envman::model::EnvManError;
@@ -31,8 +31,7 @@ cfg_if::cfg_if! {
                 other => peace::miette::Report::from(other),
             })
         }
-    }
-    else if #[cfg(all(feature = "flow_logic", feature = "ssr"))] {
+    } else if #[cfg(feature = "ssr")] {
         // web server
         use envman::{
             model::EnvManError,
@@ -49,7 +48,7 @@ cfg_if::cfg_if! {
                 .build()
                 .map_err(EnvManError::TokioRuntimeInit)?;
 
-            runtime.block_on(WebServer::start(Some(SocketAddr::from((ip_addr, port)))))
+            runtime.block_on(WebServer::start(None))
         }
 
         #[cfg(feature = "error_reporting")]
@@ -78,8 +77,16 @@ cfg_if::cfg_if! {
                 .block_on(WebServer::start(None))
                 .map_err(peace::miette::Report::from)
         }
-    } else {
+    } else if #[cfg(feature = "csr")] {
         // web client logic
         fn main() {}
+    } else {
+        compile_error!(
+            r#"Please enable one of the following features:
+
+* "cli"
+* "ssr"
+* "csr"
+"#);
     }
 }

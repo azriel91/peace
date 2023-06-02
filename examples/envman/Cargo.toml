@@ -54,6 +54,9 @@ clap = { version = "4.2.1", features = ["derive"], optional = true }
 tokio = { workspace = true, features = ["rt", "rt-multi-thread"], optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+console_error_panic_hook = "0.1.7"
+console_log = { version = "1.0.0", features = ["color"] }
+log = "0.4.18"
 serde-wasm-bindgen = "0.5.0"
 tokio = { workspace = true }
 wasm-bindgen = "0.2.84"
@@ -62,9 +65,46 @@ js-sys = "0.3.61"
 web-sys = "0.3.61"
 
 [features]
-default = ["flow_logic", "web_server"]
+default = ["cli"]
 
-# peace features
+# === envman modes === #
+cli = [
+    "error_reporting",
+    "output_colorized",
+    "output_json",
+    "output_progress",
+
+    "flow_logic",
+    "web_server",
+]
+# The `"ssr"` feature is used for two purposes:
+#
+# * To enable web server features.
+# * Without the `"cli"` feature enabled, that this is a plain web server binary.
+#
+# The reason we use "ssr" to enable web server features is because:
+#
+# * we need them enabled when the application is built as a CLI tool with web server capabilities.
+# * we need them enabled when the application is built as a plain web server.
+# * `cargo-leptos` enables the `"ssr"` feature.
+# * proc macros from `leptos` *probably* depend on `#[cfg(feature = "ssr")]`, which don't get
+#   enabled when we use `"web_server"` as the web server feature without enabling `"ssr"` as well.
+ssr = [
+    "flow_logic",
+    "web_components",
+    "dep:axum",
+    "dep:hyper",
+    "dep:leptos_axum",
+    "dep:tokio",
+    "dep:tower",
+    "dep:tower-http",
+    "leptos/ssr",
+    "leptos_meta/ssr",
+    "leptos_router/ssr",
+]
+csr = ["web_components"]
+
+# === peace passthrough features === #
 error_reporting = [
     "peace/error_reporting",
     "peace_items/error_reporting",
@@ -76,7 +116,7 @@ output_progress = [
     "peace_items/output_progress",
 ]
 
-# envman
+# === envman low level === #
 flow_logic = [
     "dep:aws-config",
     "dep:aws-sdk-iam",
@@ -96,28 +136,24 @@ flow_logic = [
 ]
 
 # web related
-web_server = [
-    "flow_logic",
-    "dep:axum",
-    "dep:hyper",
-    "dep:leptos_axum",
-    "dep:tokio",
-    "dep:tower",
-    "dep:tower-http",
+web_components = [
     "dep:tracing",
-    "leptos/ssr",
-    "leptos_meta/ssr",
-    "leptos_router/ssr",
+]
+web_server = [
+    "ssr", # leptos generates functions that depend on this feature in the application crate.
 ]
 
-# leptos
-# with ssr, the `main` function runs the server directly, without other CLI commands.
-ssr = ["web_server"]
+# leptos csr
 hydrate = [
+    "web_components",
     "leptos/hydrate",
     "leptos_meta/hydrate",
     "leptos_router/hydrate",
 ]
+
+[package.metadata.cargo-all-features]
+denylist = ["axum", "tower", "tower-http", "tokio", "leptos_axum"]
+skip_feature_sets = [["csr", "ssr"], ["csr", "hydrate"], ["ssr", "hydrate"]]
 
 [package.metadata.leptos]
 # See <https://github.com/leptos-rs/cargo-leptos/blob/main/README.md>
@@ -162,7 +198,7 @@ env = "DEV"
 # Optional. Can be over-ridden with the command line parameter --bin-features
 bin-features = ["ssr"]
 
-# If the --no-default-features flag should be used when compiling the bin target
+# Whether default features should be enabled when compiling the bin target
 #
 # Optional. Defaults to false.
 bin-default-features = false
@@ -172,7 +208,7 @@ bin-default-features = false
 # Optional. Can be over-ridden with the command line parameter --lib-features
 lib-features = ["hydrate"]
 
-# If the --no-default-features flag should be used when compiling the lib target
+# Whether default features should be enabled when compiling the lib target
 #
 # Optional. Defaults to false.
 lib-default-features = false

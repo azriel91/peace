@@ -1,13 +1,14 @@
-use leptos::{component, create_signal, view, IntoView, Scope, SignalGet};
-use leptos_meta::{Link, Stylesheet};
+use leptos::{component, view, IntoView, Scope};
+use leptos_meta::{provide_meta_context, Link, Stylesheet};
 use leptos_router::{Route, Router, Routes};
-use peace::rt_model::Flow;
 
-use crate::{model::EnvManError, web::components::FlowGraph};
+use crate::web::components::FlowGraph;
 
 #[component]
-pub fn Home(cx: Scope, flow: Flow<EnvManError>) -> impl IntoView {
-    let (flow, _set_flow) = create_signal(cx, flow);
+pub fn Home(cx: Scope) -> impl IntoView {
+    // Provides context that manages stylesheets, titles, meta tags, etc.
+    provide_meta_context(cx);
+
     view! {
         cx,
         <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico"/>
@@ -17,7 +18,7 @@ pub fn Home(cx: Scope, flow: Flow<EnvManError>) -> impl IntoView {
                 <Routes>
                     <Route path="" view=move |cx| view! {
                         cx,
-                        <FlowGraph flow=flow.get() />
+                        <FlowGraph />
                     }/>
                 </Routes>
             </main>
