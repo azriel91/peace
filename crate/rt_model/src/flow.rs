@@ -18,6 +18,26 @@ pub struct Flow<E> {
     graph: ItemGraph<E>,
 }
 
+impl<E> PartialEq for Flow<E>
+where
+    E: 'static,
+{
+    fn eq(&self, other: &Flow<E>) -> bool {
+        self.flow_id == other.flow_id && self.graph == other.graph
+    }
+}
+
+impl<E> Clone for Flow<E> {
+    fn clone(&self) -> Self {
+        Self {
+            flow_id: self.flow_id.clone(),
+            graph: self.graph.clone(),
+        }
+    }
+}
+
+impl<E> Eq for Flow<E> where E: 'static {}
+
 impl<E> Flow<E> {
     /// Returns a new `Flow`.
     pub fn new(flow_id: FlowId, graph: ItemGraph<E>) -> Self {

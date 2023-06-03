@@ -222,6 +222,15 @@ Or, all dest parameters should be in `Item::State`, because that's what's needed
 </div>
 </details>
 
+<details>
+<summary>15. Use <a href="https://openlayers.org/">openlayers</a> for tiling level of detail</summary>
+<div>
+
+Generate dot diagram using graphviz with full resolution, and then convert to tiles, then display different styling depending on the state of each item.
+
+</div>
+</details>
+
 
 ## Notes
 

@@ -7,7 +7,9 @@ use peace_data::marker::{ApplyDry, Clean, Current, Desired};
 use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{Deserialize, Serialize, Serializer};
 
-use crate::{MappingFn, ParamsResolveError, ValueResolutionCtx, ValueResolutionMode};
+use crate::{
+    FromFunc, Func, MappingFn, ParamsResolveError, ValueResolutionCtx, ValueResolutionMode,
+};
 
 /// Wrapper around a mapping function so that it can be serialized.
 #[derive(Clone, Serialize, Deserialize)]
@@ -218,6 +220,26 @@ macro_rules! impl_mapping_fn_impl {
                         Ok(fn_map($(&$var,)+))
                     }
                 }
+            }
+        }
+
+        impl<T, F, $($Arg,)+> FromFunc<F> for MappingFnImpl<T, F, ($($Arg,)+)>
+        where
+            T: Clone + Debug + Send + Sync + 'static,
+            // Ideally we can do:
+            //
+            // ```rust
+            // F: Fn<($($Arg,)+), Output = Option<T>>
+            // ```
+            //
+            // But this is pending <rust-lang/rust#29625>
+            F: Func<Option<T>, ($($Arg,)+)>
+                + Fn($(&$Arg,)+) -> Option<T>
+                + Clone + Send + Sync + 'static,
+            $($Arg: Clone + Debug + Send + Sync + 'static,)+
+        {
+            fn from_func(field_name: Option<String>, f: F) -> Self {
+                Self::new(field_name, f)
             }
         }
 

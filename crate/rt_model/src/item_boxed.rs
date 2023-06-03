@@ -15,8 +15,8 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use fn_graph::{DataAccessDyn, TypeIds};
 use peace_cfg::Item;
+use peace_data::fn_graph::{DataAccessDyn, TypeIds};
 use peace_params::Params;
 
 use crate::{ItemRt, ItemWrapper};
@@ -52,6 +52,17 @@ impl<E> DerefMut for ItemBoxed<E> {
         &mut *self.0
     }
 }
+
+impl<E> PartialEq for ItemBoxed<E>
+where
+    E: 'static,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0.eq(&*other.0)
+    }
+}
+
+impl<E> Eq for ItemBoxed<E> where E: 'static {}
 
 impl<I, E> From<I> for ItemBoxed<E>
 where

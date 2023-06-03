@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use fn_graph::FnGraphBuilder;
+use peace_data::fn_graph::FnGraphBuilder;
 
 use crate::{ItemBoxed, ItemGraph};
 

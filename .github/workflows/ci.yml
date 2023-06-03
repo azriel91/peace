@@ -100,10 +100,11 @@ jobs:
           components: clippy
 
       - name: 'Run clippy'
+        # we cannot use `--all-features` because `envman` has features that are mutually exclusive.
         run: |
           cargo clippy \
             --workspace \
-            --all-features \
+            --features "cli error_reporting output_colorized output_json output_progress" \
             --fix \
             --exclude peace_rt_model_web \
             -- -D warnings
@@ -161,7 +162,7 @@ jobs:
   build_and_test_linux:
     name: Build and Test (Linux)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
       - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
@@ -173,7 +174,8 @@ jobs:
 
       - uses: taiki-e/install-action@nextest
       - name: 'Build and test'
-        run: cargo nextest run --workspace --all-features
+        run: |
+          for j in {0..4}; do cargo test_$j || break; done
 
   build_and_test_windows:
     name: Build and Test (Windows)
@@ -195,10 +197,10 @@ jobs:
       - name: 'Build and test'
         run: cargo nextest run --workspace --all-features
 
-  build_examples_wasm:
-    name: Build examples (WASM)
+  build_examples:
+    name: Build examples -- Native, WASM, leptos
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
       - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
@@ -211,10 +213,30 @@ jobs:
       - name: 'Install `wasm-pack`'
         uses: jetli/wasm-pack-action@v0.4.0
         with:
-          version: 'v0.11.1'
+          version: 'latest'
+
+      - name: cargo-leptos cache
+        id: cargo-leptos-cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/bin/cargo-leptos
+          key: cargo-leptos-${{ runner.os }}
+
+      - name: cargo-leptos install
+        if: steps.cargo-leptos-cache.outputs.cache-hit != 'true'
+        run: cargo install --git https://github.com/leptos-rs/cargo-leptos.git --locked cargo-leptos
+
+      - name: 'Example: download (native)'
+        run: cargo build --package download --all-features
+
+      - name: 'Example: envman (native)'
+        run: cargo build --package envman --features cli
+
+      - name: 'Example: envman (leptos)'
+        run: cargo leptos build --project "envman" -v
 
       # When updating this, also update book.yml
-      - name: 'Build examples'
+      - name: 'Example: download (WASM)'
         # The following no longer works, because the AWS SDK uses tokio with UDP features enabled:
         # for example in $(ls examples)
         run: |
@@ -226,3 +248,4 @@ jobs:
             "examples/${example}" \
             --features 'error_reporting output_colorized output_json'
           done
+

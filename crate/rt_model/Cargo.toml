@@ -19,7 +19,6 @@ test = false
 cfg-if = { workspace = true }
 dyn-clone = "1.0.11"
 erased-serde = "0.3.25"
-fn_graph = { version = "0.8.2", features = ["resman"] }
 futures = "0.3.28"
 indicatif = { workspace = true, features = ["tokio"] }
 miette = { workspace = true, optional = true }

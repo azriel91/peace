@@ -154,4 +154,31 @@ pub enum EnvManError {
     // === Scaffolding errors === //
     #[error("Failed to initialize tokio runtime.")]
     TokioRuntimeInit(#[source] std::io::Error),
+
+    // === Web Server errors === //
+    /// Web server ended due to an error.
+    #[cfg(feature = "ssr")]
+    #[error("Web server ended due to an error.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(envman::web_server_serve),)
+    )]
+    WebServerServe {
+        /// Underlying error.
+        #[source]
+        error: hyper::Error,
+    },
+
+    /// Failed to join thread that rendered web server home page.
+    #[cfg(feature = "ssr")]
+    #[error("Failed to join thread that rendered web server home page.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(envman::web_server_render_join))
+    )]
+    WebServerRenderJoin {
+        /// Underlying error.
+        #[source]
+        error: tokio::task::JoinError,
+    },
 }

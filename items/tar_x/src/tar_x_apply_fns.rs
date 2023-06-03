@@ -140,7 +140,7 @@ where
     #[cfg(target_arch = "wasm32")]
     pub async fn apply(
         _fn_ctx: FnCtx<'_>,
-        params: &TarXParams<Id>,
+        _params: &TarXParams<Id>,
         _data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
         _state_desired: &FileMetadatas,

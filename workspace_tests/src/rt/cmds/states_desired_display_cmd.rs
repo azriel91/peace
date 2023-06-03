@@ -98,11 +98,11 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 
     assert!(matches!(
         exec_result,
-        Err(PeaceTestError::PeaceRtError(
+        Err(PeaceTestError::PeaceRt(
             Error::StatesDesiredDiscoverRequired
         ))
     ));
-    let err = PeaceTestError::PeaceRtError(Error::StatesDesiredDiscoverRequired);
+    let err = PeaceTestError::PeaceRt(Error::StatesDesiredDiscoverRequired);
     assert_eq!(
         vec![FnInvocation::new(
             "write_err",

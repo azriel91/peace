@@ -42,7 +42,7 @@ impl<Id> ShCmdExecutor<Id> {
             let invalid_span = {
                 let start = error.valid_up_to();
                 let len = error.error_len().unwrap_or(1);
-                miette::SourceSpan::from((start, len))
+                peace::miette::SourceSpan::from((start, len))
             };
 
             ShCmdError::StdoutNonUtf8 {
@@ -62,7 +62,7 @@ impl<Id> ShCmdExecutor<Id> {
                 let invalid_span = {
                     let start = error.valid_up_to();
                     let len = error.error_len().unwrap_or(1);
-                    miette::SourceSpan::from((start, len))
+                    peace::miette::SourceSpan::from((start, len))
                 };
 
                 ShCmdError::StderrNonUtf8 {

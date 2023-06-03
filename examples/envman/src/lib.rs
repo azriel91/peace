@@ -47,9 +47,43 @@
 //! envman diff dev demo
 //! ```
 
-pub mod cmds;
-pub mod flows;
-pub mod items;
-pub mod model;
-pub mod output;
-pub mod rt_model;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "flow_logic")] {
+        pub mod cmds;
+        pub mod flows;
+        pub mod items;
+        pub mod model;
+        pub mod output;
+        pub mod rt_model;
+    }
+}
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "web_components")] {
+        pub mod web;
+    }
+}
+
+cfg_if::cfg_if! {
+    if #[cfg(all(feature = "web_components", feature = "hydrate"))] {
+        use wasm_bindgen::prelude::wasm_bindgen;
+        use leptos::*;
+
+        use crate::web::components::Home;
+
+        #[wasm_bindgen]
+        pub async fn hydrate() {
+
+            // initializes logging using the `log` crate
+            let _log = console_log::init_with_level(log::Level::Debug);
+            console_error_panic_hook::set_once();
+
+            leptos::mount_to_body(move |cx| {
+                view! {
+                    cx,
+                    <Home />
+                }
+            });
+        }
+    }
+}

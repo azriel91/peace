@@ -31,7 +31,7 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
             ) -> Self
             where
                 IS: peace_cfg::Item,
-                E: From<IS::Error>
+                E: From<IS::Error>,
             {
                 self.scope_builder.params_specs_provided.insert(item_id, params_spec);
                 self
@@ -67,7 +67,7 @@ pub fn impl_common_fns(scope_struct: &ScopeStruct) -> proc_macro2::TokenStream {
                 >,
             >
         where
-            E: std::error::Error + From<peace_rt_model::Error>,
+            E: std::error::Error + From<peace_rt_model::Error> + 'static,
             PKeys: #params_module::ParamsKeys + 'static,
         {
             #common_fns

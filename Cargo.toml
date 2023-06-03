@@ -40,8 +40,9 @@ members = [
 cfg-if = "1.0.0"
 chrono = { version = "0.4.24", default-features = false, features = ["clock", "serde"] }
 derivative = "2.2.0"
+fn_graph = { version = "0.8.3", features = ["resman"] }
 indexmap = "1.9.3"
-indicatif = { version = "0.17.3" }
+indicatif = { version = "0.17.4" }
 miette = { version = "5.7.0" }
 tar = "0.4.38"
 tokio = "1.27.0"

@@ -1,6 +1,8 @@
 # Development
 
-## Dependencies
+## Rust Development
+
+### Dependencies
 
 ```bash
 rustup component add llvm-tools-preview
@@ -9,7 +11,7 @@ cargo install cargo-nextest
 ```
 
 
-## Running Tests
+### Running Tests
 
 ```bash
 cargo nextest run --workspace --all-features
@@ -19,7 +21,7 @@ for i in {0..3}; do cargo test_$i || break; done
 ```
 
 
-## Coverage
+### Coverage
 
 Collect coverage and output as `lcov`.
 
@@ -34,7 +36,7 @@ Collect coverage and open `html` report.
 ```
 
 
-## Releasing
+### Releasing
 
 1. Update crate versions.
 
@@ -58,3 +60,74 @@ Collect coverage and open `html` report.
 
 [`publish`]: https://github.com/azriel91/peace/actions/workflows/publish.yml
 [`crates.io`]:https://crates.io/
+
+
+## Web Development
+
+### Set Up
+
+These instructions are for Linux. They may work on OS X, but for Windows, please visit each linked site for specific instructions.
+
+1. Install [`nvm`]:
+
+    ```bash
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+    ```
+
+2. Install node and set the default version:
+
+    ```bash
+    nvm install 20
+    nvm alias default 20
+    ```
+
+3. Install and set up `pnpm`:
+
+    ```bash
+    npm install -g pnpm
+    pnpm setup
+    ```
+
+4. Install [tailwindcss]:
+
+    ```bash
+    pnpm install --global tailwindcss
+    ```
+
+5. Install [`cargo-leptos`]:
+
+    ```bash
+    cargo install --git https://github.com/leptos-rs/cargo-leptos.git --locked cargo-leptos
+    ```
+
+
+**Notes:**
+
+* `pnpm` is used because it downloads each version of each library once, whereas `npm` downloads all dependencies recursively, even if the same dependency is already existent in the dependency tree.
+* This is installed as a global binary instead of as a dev dependency within the repository. This is more aligned with Rust's single-binary installation model.
+
+
+[`cargo-leptos`]: https://github.com/leptos-rs/cargo-leptos
+[`nvm`]: https://github.com/nvm-sh/nvm
+[tailwindcss]: https://tailwindcss.com/
+
+
+### Development
+
+> ℹ️ These commands assume you are running them from the repository root directory.
+
+Build and serve the `envman` example:
+
+```bash
+cargo leptos serve --project "envman" -v
+```
+
+### Uninstallation
+
+To uninstall web tooling:
+
+```bash
+pnpm uninstall --global tailwindcss
+nvm uninstall $version
+rm -rf ~/.nvm
+```

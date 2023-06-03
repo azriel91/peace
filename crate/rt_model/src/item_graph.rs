@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use fn_graph::FnGraph;
+use peace_data::fn_graph::FnGraph;
 
 use crate::ItemBoxed;
 
@@ -17,6 +17,17 @@ impl<E> Clone for ItemGraph<E> {
         Self(self.0.clone())
     }
 }
+
+impl<E> PartialEq for ItemGraph<E>
+where
+    E: 'static,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<E> Eq for ItemGraph<E> where E: 'static {}
 
 impl<E> ItemGraph<E> {
     /// Returns the inner [`FnGraph`].

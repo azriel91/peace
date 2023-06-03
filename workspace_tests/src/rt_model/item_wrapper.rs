@@ -1,6 +1,6 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
-    cfg::{ApplyCheck, FnCtx},
+    cfg::{item_id, ApplyCheck, FnCtx, ItemId},
     data::marker::{ApplyDry, Clean, Current, Desired},
     params::{ParamsSpec, ParamsSpecs},
     resources::{
@@ -12,6 +12,7 @@ use peace::{
     },
     rt_model::{ItemRt, ItemWrapper},
 };
+use peace_items::blank::BlankItem;
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace::cfg::progress::{ProgressLimit, ProgressSender};
@@ -19,7 +20,57 @@ cfg_if::cfg_if! {
     }
 }
 
-use crate::{VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItem, VecCopyItemWrapper, VecCopyState};
+use crate::{
+    PeaceTestError, VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItem, VecCopyItemWrapper,
+    VecCopyState,
+};
+
+#[test]
+fn eq_returns_true_for_same_item_type() {
+    let item_wrapper = ItemWrapper::<_, PeaceTestError>::from(VecCopyItem::default());
+    let item_rt_0: &dyn ItemRt<_> = &item_wrapper;
+
+    let item_wrapper = ItemWrapper::<_, PeaceTestError>::from(VecCopyItem::default());
+    let item_rt_1: &dyn ItemRt<_> = &item_wrapper;
+
+    assert!(item_rt_0.eq(item_rt_1));
+
+    let item_wrapper =
+        ItemWrapper::<_, PeaceTestError>::from(BlankItem::<()>::new(item_id!("blank")));
+    let item_rt_0: &dyn ItemRt<_> = &item_wrapper;
+
+    let item_wrapper =
+        ItemWrapper::<_, PeaceTestError>::from(BlankItem::<()>::new(item_id!("blank")));
+    let item_rt_1: &dyn ItemRt<_> = &item_wrapper;
+
+    assert!(item_rt_0.eq(item_rt_1));
+}
+
+#[test]
+fn eq_returns_false_for_different_item_type() {
+    let item_wrapper = ItemWrapper::<_, PeaceTestError>::from(VecCopyItem::new(item_id!("blank")));
+    let item_rt_0: &dyn ItemRt<_> = &item_wrapper;
+
+    let item_wrapper =
+        ItemWrapper::<_, PeaceTestError>::from(BlankItem::<()>::new(item_id!("blank")));
+    let item_rt_1: &dyn ItemRt<_> = &item_wrapper;
+
+    assert!(!item_rt_0.eq(item_rt_1));
+    assert!(!item_rt_1.eq(item_rt_0));
+}
+
+#[test]
+fn eq_returns_false_for_different_item_id() {
+    let item_wrapper =
+        ItemWrapper::<_, PeaceTestError>::from(BlankItem::<()>::new(item_id!("blank_0")));
+    let item_rt_0: &dyn ItemRt<_> = &item_wrapper;
+
+    let item_wrapper =
+        ItemWrapper::<_, PeaceTestError>::from(BlankItem::<()>::new(item_id!("blank_1")));
+    let item_rt_1: &dyn ItemRt<_> = &item_wrapper;
+
+    assert!(!item_rt_0.eq(item_rt_1));
+}
 
 #[tokio::test]
 async fn deref_to_dyn_item_rt() {

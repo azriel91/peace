@@ -10,16 +10,25 @@ use peace::miette;
 pub enum PeaceTestError {
     /// A VecCopy item error occurred.
     #[error("A VecCopy item error occurred.")]
-    VecCopyError(
+    VecCopy(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
         #[from]
         crate::VecCopyError,
     ),
 
+    /// A Blank item error occurred.
+    #[error("A Blank item error occurred.")]
+    Blank(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        peace_items::blank::BlankError,
+    ),
+
     /// A `peace` runtime error occurred.
     #[error("A `peace` runtime error occurred.")]
-    PeaceRtError(
+    PeaceRt(
         #[cfg_attr(feature = "error_reporting", diagnostic_source)]
         #[source]
         #[from]

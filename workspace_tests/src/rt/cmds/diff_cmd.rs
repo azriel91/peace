@@ -185,7 +185,7 @@ async fn diff_profiles_current_with_missing_profile_0() -> Result<(), Box<dyn st
 
     assert!(matches!(
             diff_result,
-            Err(PeaceTestError::PeaceRtError(
+            Err(PeaceTestError::PeaceRt(
                 peace::rt_model::Error::ProfileNotInScope { profile, profiles_in_scope }
             ))
             if profile == profile_0 && profiles_in_scope == vec![profile_1]));
@@ -232,7 +232,7 @@ async fn diff_profiles_current_with_missing_profile_1() -> Result<(), Box<dyn st
 
     assert!(matches!(
             diff_result,
-            Err(PeaceTestError::PeaceRtError(
+            Err(PeaceTestError::PeaceRt(
                 peace::rt_model::Error::ProfileNotInScope { profile, profiles_in_scope }
             ))
             if profile == profile_1 && profiles_in_scope == vec![profile_0]));
@@ -291,7 +291,7 @@ async fn diff_profiles_current_with_profile_0_missing_states_current()
 
     assert!(matches!(
             diff_result,
-            Err(PeaceTestError::PeaceRtError(
+            Err(PeaceTestError::PeaceRt(
                 peace::rt_model::Error::ProfileStatesCurrentNotDiscovered { profile }
             ))
             if profile == profile_0));
@@ -348,7 +348,7 @@ async fn diff_profiles_current_with_profile_1_missing_states_current()
 
     assert!(matches!(
             diff_result,
-            Err(PeaceTestError::PeaceRtError(
+            Err(PeaceTestError::PeaceRt(
                 peace::rt_model::Error::ProfileStatesCurrentNotDiscovered { profile }
             ))
             if profile == profile_1));
