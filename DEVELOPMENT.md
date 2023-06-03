@@ -61,6 +61,22 @@ Collect coverage and open `html` report.
 [`publish`]: https://github.com/azriel91/peace/actions/workflows/publish.yml
 [`crates.io`]:https://crates.io/
 
+**Note:**
+
+An alternative to `cargo-release` is [`cargo-workspaces`], which may be used in case crates need to be published one by one -- if many new crates are being published, `cargo-release` gates the number of crates that can be published at one go.
+
+```bash
+cargo workspaces \
+  publish \
+  --from-git \
+  --allow-branch main \
+  --force '*' \
+  --no-verify \
+  --no-git-tag
+```
+
+[`cargo-workspaces`]: https://github.com/pksunkara/cargo-workspaces
+
 
 ## Web Development
 
