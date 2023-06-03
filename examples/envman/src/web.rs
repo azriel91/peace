@@ -1,4 +1,6 @@
 //! Runs `envman` as a web application.
+//!
+//! See <https://leptos-rs.github.io/leptos> for the leptos usage guide.
 
 pub use self::flow_dot_renderer::FlowDotRenderer;
 

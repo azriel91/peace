@@ -36,7 +36,6 @@ impl WebServer {
                 ])),
             )
             // serve the SSR rendered homepage
-            // The WebSocket route is what Dioxus uses to communicate with the browser
             .leptos_routes(
                 leptos_options.clone(),
                 routes,
