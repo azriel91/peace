@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.0.10 (2023-06-03)
 
 * Add `Item::Params` associated type. ([#116], [#117])
 * Rename `OpCtx` to `FnCtx`. ([#116], [#117])
