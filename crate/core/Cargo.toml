@@ -18,12 +18,12 @@ test = false
 
 [dependencies]
 cfg-if = { workspace = true }
-chrono = { workspace = true, default-features = false, features = ["clock", "serde"] }
+chrono = { workspace = true, default-features = false }
 indicatif = { workspace = true }
-peace_fmt = { path = "../fmt", version = "0.0.10" }
-peace_static_check_macros = { path = "../static_check_macros", version = "0.0.10" }
-serde = { version = "1.0.159", features = ["derive"] }
-serde_yaml = { version = "0.9.21", optional = true }
+peace_fmt = { workspace = true }
+peace_static_check_macros = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_yaml = { workspace = true, optional = true }
 tokio = { workspace = true, optional = true, features = ["sync"] }
 
 [features]

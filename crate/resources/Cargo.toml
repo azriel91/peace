@@ -17,10 +17,10 @@ doctest = true
 test = false
 
 [dependencies]
-peace_core = { version = "0.0.10", path = "../core" }
-peace_data = { version = "0.0.10", path = "../data" }
-peace_fmt = { version = "0.0.10", path = "../fmt" }
-resman = { version = "0.16.1", features = ["debug"] }
-serde = { version = "1.0.159", features = ["derive"] }
+peace_core = { workspace = true }
+peace_data = { workspace = true }
+peace_fmt = { workspace = true }
+resman = { workspace = true, features = ["debug"] }
+serde = { workspace = true, features = ["derive"] }
 tokio = { workspace = true, features = ["sync"] }
 type_reg = { workspace = true }

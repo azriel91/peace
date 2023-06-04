@@ -17,18 +17,18 @@ doctest = false
 test = false
 
 [dependencies]
-base64 = "0.21.0"
+base64 = { workspace = true }
 miette = { workspace = true, optional = true }
-peace_core = { path = "../core", version = "0.0.10" }
-peace_resources = { path = "../resources", version = "0.0.10" }
-peace_rt_model_core = { path = "../rt_model_core", version = "0.0.10" }
-serde = "1.0.159"
-serde-wasm-bindgen = "0.5.0"
-serde_json = { version = "1.0.95", optional = true }
-serde_yaml = "0.9.21"
-thiserror = "1.0.40"
-wasm-bindgen = "0.2.84"
-web-sys = { version = "0.3.61", features = ["Storage", "Window"] }
+peace_core = { workspace = true }
+peace_resources = { workspace = true }
+peace_rt_model_core = { workspace = true }
+serde = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+serde_json = { workspace = true, optional = true }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }
+wasm-bindgen = { workspace = true }
+web-sys = { workspace = true, features = ["Storage", "Window"] }
 
 [features]
 default = []

@@ -17,8 +17,8 @@ doctest = true
 test = false
 
 [dependencies]
-async-trait = "0.1.68"
-serde = "1.0.159"
+async-trait = { workspace = true }
+serde = { workspace = true }
 
 [dev-dependencies]
-serde = { version = "1.0.159", features = ["derive"] }
+serde = { workspace = true, features = ["derive"] }
