@@ -1,15 +1,16 @@
 [package]
 name = "peace_static_check_macros"
-authors = ["Azriel Hoh <azriel91@gmail.com>"]
-version = "0.0.10"
-edition = "2021"
 description = "Compile time validation macros for the peace automation framework."
-repository = "https://github.com/azriel91/peace"
 documentation = "https://docs.rs/peace_static_check_macros/"
-readme = "../../README.md"
-categories = ["data-structures"]
-keywords = ["automation"]
-license = "MIT OR Apache-2.0"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
 
 [lib]
 proc-macro = true

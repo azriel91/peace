@@ -1,15 +1,16 @@
 [package]
 name = "workspace_tests"
-version = "0.0.10"
-authors = ["Azriel Hoh <azriel91@gmail.com>"]
-edition = "2021"
 description = "Tests for the peace automation library."
-repository = "https://github.com/azriel91/peace"
 documentation = "https://docs.rs/peace/"
-readme = "../README.md"
-categories = ["asynchronous", "config"]
-keywords = ["automation"]
-license = "MIT OR Apache-2.0"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
 publish = false
 
 [lib]

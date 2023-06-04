@@ -1,15 +1,16 @@
 [package]
 name = "peace"
-version = "0.0.10"
-authors = ["Azriel Hoh <azriel91@gmail.com>"]
-edition = "2021"
 description = "zero stress automation"
-repository = "https://github.com/azriel91/peace"
 documentation = "https://docs.rs/peace/"
-readme = "README.md"
-categories = ["asynchronous", "config"]
-keywords = ["automation"]
-license = "MIT OR Apache-2.0"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
 
 [lib]
 doctest = true
@@ -35,6 +36,17 @@ members = [
     "workspace_tests",
     "examples/*",
 ]
+
+[workspace.package]
+version = "0.0.10"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+edition = "2021"
+homepage = "https://peace.mk"
+repository = "https://github.com/azriel91/peace"
+readme = "README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 cfg-if = "1.0.0"
