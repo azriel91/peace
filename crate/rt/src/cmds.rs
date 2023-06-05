@@ -9,7 +9,7 @@
 //! [`CmdContext`]: crate::CmdContext
 
 pub use self::{
-    clean_cmd::CleanCmd, diff_cmd::DiffCmd, ensure_cmd::EnsureCmd,
+    clean_cmd::CleanCmd, cmd_base::CmdBase, diff_cmd::DiffCmd, ensure_cmd::EnsureCmd,
     states_desired_display_cmd::StatesDesiredDisplayCmd, states_discover_cmd::StatesDiscoverCmd,
     states_saved_display_cmd::StatesSavedDisplayCmd,
 };
@@ -17,6 +17,7 @@ pub use self::{
 pub mod sub;
 
 mod clean_cmd;
+mod cmd_base;
 mod diff_cmd;
 mod ensure_cmd;
 mod states_desired_display_cmd;
