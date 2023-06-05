@@ -1,15 +1,16 @@
 [package]
 name = "peace_items"
-version = "0.0.10"
-authors = ["Azriel Hoh <azriel91@gmail.com>"]
-edition = "2021"
 description = "Collection of items the peace framework"
-repository = "https://github.com/azriel91/peace"
 documentation = "https://docs.rs/peace_items/"
-readme = "../README.md"
-categories = ["asynchronous", "config"]
-keywords = ["automation"]
-license = "MIT OR Apache-2.0"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
 
 [package.metadata.docs.rs]
 all-features = true
@@ -19,14 +20,14 @@ doctest = true
 test = false
 
 [dependencies]
-peace_item_blank = { path = "blank", version = "0.0.10", optional = true }
-peace_item_file_download = { path = "file_download", version = "0.0.10", optional = true }
-peace_item_sh_cmd = { path = "sh_cmd", version = "0.0.10", optional = true }
-peace_item_sh_sync_cmd = { path = "sh_sync_cmd", version = "0.0.10", optional = true }
-peace_item_tar_x = { path = "tar_x", version = "0.0.10", optional = true }
+peace_item_blank = { workspace = true, optional = true }
+peace_item_file_download = { workspace = true, optional = true }
+peace_item_sh_cmd = { workspace = true, optional = true }
+peace_item_sh_sync_cmd = { workspace = true, optional = true }
+peace_item_tar_x = { workspace = true, optional = true }
 
 [dev-dependencies]
-peace = { path = "..", version = "0.0.10", default-features = false }
+peace = { workspace = true, default-features = false }
 
 [features]
 default = []

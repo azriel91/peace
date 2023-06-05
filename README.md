@@ -42,6 +42,9 @@ See:
 * 🟢 **Namespaced:** Profile directories isolate environments from each other.
 * 🟢 **Type Safe:** Items and parameters are defined in code, not configuration.
 
+[`fn_graph`]: https://github.com/azriel91/fn_graph
+[`miette`]: https://github.com/zkat/miette
+
 
 ### Roadmap
 
@@ -53,7 +56,7 @@ See:
 * 🟢 Define diff calculation between states.
 * 🟢 Store and recall parameters across commands.
 * 🟢 Diff states between multiple profiles.
-* 🟢 Type-safe referential parameters ([#94], [#119]) -- ability to specify usage of values generated during automation as parameters to subsequent items.
+* 🟢 Type-safe referential parameters -- specify usage of values generated during automation as parameters to subsequent items.
 * 🟡 Feature-gated incremental functionality.
 * 🟡 Off-the-shelf support for common items.
 * 🟡 Dry run.
@@ -71,6 +74,8 @@ Further ideas:
 * Back up current state.
 * Restore previous state.
 * Telemetry / metrics logging for analysis.
+
+[`tokio-graceful-shutdown`]: https://docs.rs/tokio-graceful-shutdown/latest/tokio_graceful_shutdown/
 
 
 ## Examples
@@ -114,6 +119,9 @@ python3 -m http.server 8000 # or
 simple-http-server --nocache --port 8000 -i
 ```
 
+[`wasm-pack`]: https://rustwasm.github.io/
+[HTTP server]: https://crates.io/crates/simple-http-server
+
 
 ## License
 
@@ -128,12 +136,3 @@ at your option.
 ### Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in the work by you, as defined in the Apache-2.0 license, shall be dual licensed as above, without any additional terms or conditions.
-
-
-[#42]: https://github.com/azriel91/peace/issues/42
-[#94]: https://github.com/azriel91/peace/issues/94
-[`fn_graph`]: https://github.com/azriel91/fn_graph
-[`miette`]: https://github.com/zkat/miette
-[`tokio-graceful-shutdown`]: https://docs.rs/tokio-graceful-shutdown/latest/tokio_graceful_shutdown/
-[`wasm-pack`]: https://rustwasm.github.io/
-[HTTP server]: https://crates.io/crates/simple-http-server

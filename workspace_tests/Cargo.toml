@@ -1,15 +1,16 @@
 [package]
 name = "workspace_tests"
-version = "0.0.10"
-authors = ["Azriel Hoh <azriel91@gmail.com>"]
-edition = "2021"
 description = "Tests for the peace automation library."
-repository = "https://github.com/azriel91/peace"
 documentation = "https://docs.rs/peace/"
-readme = "../README.md"
-categories = ["asynchronous", "config"]
-keywords = ["automation"]
-license = "MIT OR Apache-2.0"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
 publish = false
 
 [lib]
@@ -18,20 +19,20 @@ test = true
 
 [dev-dependencies]
 cfg-if = { workspace = true }
-console = "0.15.5"
-diff-struct = "0.5.1"
+console = { workspace = true }
+diff-struct = { workspace = true }
 derivative = { workspace = true }
-futures = "0.3.28"
-peace = { path = "..", version = "0.0.10", default-features = false }
+futures = { workspace = true }
+peace = { workspace = true, default-features = false }
 # `ItemWrapper` always needs the `blank` item spec to be present.
-peace_items = { path = "../items", version = "0.0.10", features = ["blank"] }
-pretty_assertions = "1.3.0"
-serde = { version = "1.0.159", features = ["derive"] }
-serde_json = "1.0.95"
-serde_yaml = "0.9.21"
+peace_items = { workspace = true, features = ["blank"] }
+pretty_assertions = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
 tar = { workspace = true }
-tempfile = "3.5.0"
-thiserror = "1.0.40"
+tempfile = { workspace = true }
+thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt", "macros"] }
 tynm = { workspace = true }
 

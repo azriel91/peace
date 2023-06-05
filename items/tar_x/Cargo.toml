@@ -1,15 +1,16 @@
 [package]
 name = "peace_item_tar_x"
-version = "0.0.10"
-authors = ["Azriel Hoh <azriel91@gmail.com>"]
-edition = "2021"
 description = "Manages extracting a tar file for the peace framework"
-repository = "https://github.com/azriel91/peace"
 documentation = "https://docs.rs/peace_item_tar_x/"
-readme = "../../README.md"
-categories = ["asynchronous", "config"]
-keywords = ["automation"]
-license = "MIT OR Apache-2.0"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
 
 [lib]
 doctest = false
@@ -18,8 +19,8 @@ test = false
 [dependencies]
 derivative = { workspace = true }
 miette = { workspace = true, optional = true }
-peace = { path = "../..", version = "0.0.10", default-features = false }
-serde = { version = "1.0.159", features = ["derive"] }
+peace = { workspace = true, default-features = false }
+serde = { workspace = true, features = ["derive"] }
 # We use this instead of tokio-tar, because:
 #
 # * We expect tar extraction to be a compute operation.
@@ -30,10 +31,10 @@ serde = { version = "1.0.159", features = ["derive"] }
 #
 # [SyncIoBridge]: https://docs.rs/tokio-util/latest/tokio_util/io/struct.SyncIoBridge.html
 tar = { workspace = true }
-thiserror = "1.0.40"
+thiserror = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-futures = "0.3.28"
+futures = { workspace = true }
 tokio = { workspace = true, features = ["fs"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

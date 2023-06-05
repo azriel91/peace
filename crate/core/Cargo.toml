@@ -1,15 +1,16 @@
 [package]
 name = "peace_core"
-authors = ["Azriel Hoh <azriel91@gmail.com>"]
-version = "0.0.10"
-edition = "2021"
 description = "Low level data types for the peace automation framework."
-repository = "https://github.com/azriel91/peace"
 documentation = "https://docs.rs/peace_core/"
-readme = "../../README.md"
-categories = ["asynchronous", "config"]
-keywords = ["automation"]
-license = "MIT OR Apache-2.0"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
 
 [lib]
 doctest = true
@@ -17,12 +18,12 @@ test = false
 
 [dependencies]
 cfg-if = { workspace = true }
-chrono = { workspace = true, default-features = false, features = ["clock", "serde"] }
+chrono = { workspace = true, default-features = false }
 indicatif = { workspace = true }
-peace_fmt = { path = "../fmt", version = "0.0.10" }
-peace_static_check_macros = { path = "../static_check_macros", version = "0.0.10" }
-serde = { version = "1.0.159", features = ["derive"] }
-serde_yaml = { version = "0.9.21", optional = true }
+peace_fmt = { workspace = true }
+peace_static_check_macros = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_yaml = { workspace = true, optional = true }
 tokio = { workspace = true, optional = true, features = ["sync"] }
 
 [features]

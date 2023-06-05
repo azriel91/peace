@@ -197,8 +197,27 @@ jobs:
       - name: 'Build and test'
         run: cargo nextest run --workspace --all-features
 
-  build_examples:
-    name: Build examples -- Native, WASM, leptos
+  build_examples_native:
+    name: Build examples (Native)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v3
+      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
+        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: 'Example: download (native)'
+        run: cargo build --package download --all-features
+
+      - name: 'Example: envman (native)'
+        run: cargo build --package envman --features cli
+
+  build_examples_web:
+    name: Build examples (WASM, Leptos)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -226,12 +245,6 @@ jobs:
         if: steps.cargo-leptos-cache.outputs.cache-hit != 'true'
         run: cargo install --git https://github.com/leptos-rs/cargo-leptos.git --locked cargo-leptos
 
-      - name: 'Example: download (native)'
-        run: cargo build --package download --all-features
-
-      - name: 'Example: envman (native)'
-        run: cargo build --package envman --features cli
-
       - name: 'Example: envman (leptos)'
         run: cargo leptos build --project "envman" -v
 
@@ -248,4 +261,3 @@ jobs:
             "examples/${example}" \
             --features 'error_reporting output_colorized output_json'
           done
-

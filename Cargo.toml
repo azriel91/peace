@@ -1,15 +1,16 @@
 [package]
 name = "peace"
-version = "0.0.10"
-authors = ["Azriel Hoh <azriel91@gmail.com>"]
-edition = "2021"
 description = "zero stress automation"
-repository = "https://github.com/azriel91/peace"
 documentation = "https://docs.rs/peace/"
-readme = "README.md"
-categories = ["asynchronous", "config"]
-keywords = ["automation"]
-license = "MIT OR Apache-2.0"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
 
 [lib]
 doctest = true
@@ -18,36 +19,15 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 miette = { workspace = true, optional = true }
-peace_cfg = { path = "crate/cfg", version = "0.0.10" }
-peace_cmd = { path = "crate/cmd", version = "0.0.10" }
-peace_data = { path = "crate/data", version = "0.0.10" }
-peace_diff = { path = "crate/diff", version = "0.0.10" }
-peace_fmt = { path = "crate/fmt", version = "0.0.10" }
-peace_params = { path = "crate/params", version = "0.0.10" }
-peace_resources = { path = "crate/resources", version = "0.0.10" }
-peace_rt = { path = "crate/rt", version = "0.0.10" }
-peace_rt_model = { path = "crate/rt_model", version = "0.0.10" }
-
-[workspace]
-members = [
-    "crate/*",
-    "items",
-    "workspace_tests",
-    "examples/*",
-]
-
-[workspace.dependencies]
-cfg-if = "1.0.0"
-chrono = { version = "0.4.24", default-features = false, features = ["clock", "serde"] }
-derivative = "2.2.0"
-fn_graph = { version = "0.8.3", features = ["resman"] }
-indexmap = "1.9.3"
-indicatif = { version = "0.17.4" }
-miette = { version = "5.7.0" }
-tar = "0.4.38"
-tokio = "1.27.0"
-tynm = "0.1.7"
-type_reg = { version = "0.5.1", features = ["debug", "untagged", "ordered"] }
+peace_cfg = { workspace = true }
+peace_cmd = { workspace = true }
+peace_data = { workspace = true }
+peace_diff = { workspace = true }
+peace_fmt = { workspace = true }
+peace_params = { workspace = true }
+peace_resources = { workspace = true }
+peace_rt = { workspace = true }
+peace_rt_model = { workspace = true }
 
 [features]
 default = []
@@ -66,3 +46,98 @@ output_progress = [
     "peace_rt/output_progress",
     "peace_rt_model/output_progress",
 ]
+
+[workspace]
+members = [
+    "crate/*",
+    "items",
+    "workspace_tests",
+    "examples/*",
+]
+
+[workspace.package]
+version = "0.0.10"
+authors = ["Azriel Hoh <azriel91@gmail.com>"]
+edition = "2021"
+homepage = "https://peace.mk"
+repository = "https://github.com/azriel91/peace"
+readme = "README.md"
+categories = ["asynchronous", "config"]
+keywords = ["automation"]
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+# Peace crates.
+peace = { path = ".", version = "0.0.10", default-features = false }
+
+peace_cfg = { path = "crate/cfg", version = "0.0.10" }
+peace_cmd = { path = "crate/cmd", version = "0.0.10" }
+peace_code_gen = { path = "crate/code_gen", version = "0.0.10" }
+peace_core = { path = "crate/core", version = "0.0.10" }
+peace_data = { path = "crate/data", version = "0.0.10" }
+peace_data_derive = { path = "crate/data_derive", version = "0.0.10" }
+peace_diff = { path = "crate/diff", version = "0.0.10" }
+peace_fmt = { path = "crate/fmt", version = "0.0.10" }
+peace_params = { path = "crate/params", version = "0.0.10" }
+peace_params_derive = { path = "crate/params_derive", version = "0.0.10" }
+peace_resources = { path = "crate/resources", version = "0.0.10" }
+peace_rt = { path = "crate/rt", version = "0.0.10" }
+peace_rt_model = { path = "crate/rt_model", version = "0.0.10" }
+peace_rt_model_core = { path = "crate/rt_model_core", version = "0.0.10" }
+peace_rt_model_hack = { path = "crate/rt_model_hack", version = "0.0.10" }
+peace_rt_model_native = { path = "crate/rt_model_native", version = "0.0.10" }
+peace_rt_model_web = { path = "crate/rt_model_web", version = "0.0.10" }
+peace_static_check_macros = { path = "crate/static_check_macros", version = "0.0.10" }
+
+# Item crates
+peace_items = { path = "items", version = "0.0.10" }
+
+peace_item_blank = { path = "items/blank", version = "0.0.10" }
+peace_item_file_download = { path = "items/file_download", version = "0.0.10" }
+peace_item_sh_cmd = { path = "items/sh_cmd", version = "0.0.10" }
+peace_item_sh_sync_cmd = { path = "items/sh_sync_cmd", version = "0.0.10" }
+peace_item_tar_x = { path = "items/tar_x", version = "0.0.10" }
+
+# Dependencies used by framework and item crates.
+#
+# This does not include examples' dependencies, because we want it to be easy for
+# developers to see the dependencies to create an automation tool.
+async-trait = "0.1.68"
+base64 = "0.21.2"
+bytes = "1.4.0"
+cfg-if = "1.0.0"
+chrono = { version = "0.4.26", default-features = false, features = ["clock", "serde"] }
+console = "0.15.7"
+derivative = "2.2.0"
+diff-struct = "0.5.2"
+downcast-rs = "1.2.0"
+dyn-clone = "1.0.11"
+enser = "0.1.4"
+erased-serde = "0.3.25"
+fn_graph = { version = "0.8.3", features = ["resman"] }
+futures = "0.3.28"
+heck = "0.4.1"
+indexmap = "1.9.3"
+indicatif = "0.17.5"
+is-terminal = "0.4.7"
+miette = "5.9.0"
+pretty_assertions = "1.3.0"
+proc-macro2 = "1.0.59"
+quote = "1.0.28"
+reqwest = "0.11.18"
+resman = "0.16.1"
+serde = "1.0.163"
+serde-wasm-bindgen = "0.5.0"
+serde_json = "1.0.96"
+serde_yaml = "0.9.21"
+syn = "2.0.18"
+tar = "0.4.38"
+tempfile = "3.5.0"
+thiserror = "1.0.40"
+tokio = "1.28.2"
+tokio-util = "0.7.8"
+tynm = "0.1.8"
+type_reg = { version = "0.5.1", features = ["debug", "untagged", "ordered"] }
+url = "2.3.1"
+wasm-bindgen = "0.2.86"
+web-sys = "0.3.63"
