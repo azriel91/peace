@@ -2,7 +2,9 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use peace_cmd::{
     ctx::CmdCtx,
-    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+    scopes::{
+        SingleProfileSingleFlow, SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput,
+    },
 };
 use peace_resources::{resources::ts::SetUp, states::StatesSaved};
 use peace_rt_model::{params::ParamsKeys, Error};
@@ -29,12 +31,16 @@ where
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StatesSaved, E> {
-        let SingleProfileSingleFlowView {
+        let SingleProfileSingleFlowViewAndOutput {
             output,
-            states_type_reg,
-            resources,
+            cmd_view:
+                SingleProfileSingleFlowView {
+                    states_type_reg,
+                    resources,
+                    ..
+                },
             ..
-        } = cmd_ctx.view();
+        } = cmd_ctx.view_and_output();
 
         let states_saved_result =
             StatesSavedReadCmd::<E, O, PKeys>::deserialize_internal(resources, states_type_reg)

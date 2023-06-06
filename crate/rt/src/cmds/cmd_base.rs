@@ -1,21 +1,20 @@
-use std::{fmt::Debug, future::Future, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData};
 
+use futures::future::LocalBoxFuture;
 use peace_cfg::ItemId;
-use peace_cmd::{
-    ctx::CmdCtx,
-    scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
-};
-use peace_params::ParamsSpecs;
-use peace_resources::{resources::ts::SetUp, Resources};
+use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_resources::resources::ts::SetUp;
 use peace_rt_model::{
-    outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, Flow, IndexMap,
+    outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, IndexMap,
 };
 use tokio::sync::{mpsc, mpsc::UnboundedSender};
 
+use crate::cmds::cmd_ctx_internal::CmdIndependence;
+
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
+        use peace_cmd::scopes::SingleProfileSingleFlowViewAndOutput;
         use peace_cfg::progress::ProgressUpdateAndId;
-        use peace_rt_model::CmdProgressTracker;
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -68,114 +67,133 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`ApplyFns`]: peace_cfg::Item::ApplyFns
     pub async fn exec<
-        'f,
         ItemOutcomeT,
-        FnExecFut,
         // This abomination is because Rust supports attributes on type parameters in the function
         // signature, but not on inner type parameters, or `TypeParamBounds`
         //
         // See <https://doc.rust-lang.org/reference/items/functions.html> and related grammar.
-        #[cfg(feature = "output_progress")] FnExec: FnOnce(
-                &Flow<E>,
-                &ParamsSpecs,
-                &Resources<SetUp>,
-                &Sender<ProgressUpdateAndId>,
-                &UnboundedSender<ItemOutcomeT>,
-            ) -> FnExecFut
-            + 'f,
-        #[cfg(not(feature = "output_progress"))] FnExec: FnOnce(
-                &Flow<E>,
-                &ParamsSpecs,
-                &Resources<SetUp>,
-                &UnboundedSender<ItemOutcomeT>,
-            ) -> FnExecFut
-            + 'f,
+        #[cfg(feature = "output_progress")] FnExec: for<'f_exec> FnOnce(
+            &'f_exec mut SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
+            &'f_exec Sender<ProgressUpdateAndId>,
+            &'f_exec UnboundedSender<ItemOutcomeT>,
+        ) -> LocalBoxFuture<'f_exec, ()>,
+        #[cfg(not(feature = "output_progress"))] FnExec: for<'f_exec> FnOnce(
+            &'f_exec mut SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
+            &'f_exec UnboundedSender<ItemOutcomeT>,
+        ) -> LocalBoxFuture<'f_exec, ()>,
         OutcomeT,
         FnOutcomeCollate,
     >(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-        mut outcome: OutcomeT,
+        cmd_independence: &mut CmdIndependence<'_, '_, E, O, PKeys>,
+        outcome: OutcomeT,
         fn_exec: FnExec,
         fn_outcome: FnOutcomeCollate,
     ) -> Result<CmdOutcome<OutcomeT, E>, E>
     where
         ItemOutcomeT: Send + 'static,
-        FnExecFut: Future<Output = ItemOutcomeT> + 'f,
-        OutcomeT: Send + 'static,
-        FnOutcomeCollate: Fn(&mut OutcomeT, &mut IndexMap<ItemId, E>, ItemOutcomeT),
+        OutcomeT: 'static,
+        FnOutcomeCollate: Fn(&mut CmdOutcome<OutcomeT, E>, ItemOutcomeT) -> Result<(), E>,
     {
-        let SingleProfileSingleFlowView {
-            #[cfg(feature = "output_progress")]
-            output,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            flow,
-            params_specs,
-            resources,
-            ..
-        } = cmd_ctx.view();
-
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "output_progress")] {
-                output.progress_begin(cmd_progress_tracker).await;
-
-                let CmdProgressTracker {
-                    multi_progress: _,
-                    progress_trackers,
-                    ..
-                } = cmd_progress_tracker;
-
-                let (progress_tx, progress_rx) =
-                    mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
-            }
-        }
-
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemOutcomeT>();
-
-        let resources_ref = &*resources;
-        let execution_task = async move {
-            #[cfg(feature = "output_progress")]
-            let progress_tx = &progress_tx;
-            let outcomes_tx = &outcomes_tx;
-
-            fn_exec(
-                flow,
-                params_specs,
-                resources_ref,
-                #[cfg(feature = "output_progress")]
-                progress_tx,
-                outcomes_tx,
-            )
-            .await;
-
-            // `progress_tx` is dropped here, so `progress_rx` will safely end.
+        let mut cmd_outcome = {
+            let errors = IndexMap::<ItemId, E>::new();
+            CmdOutcome {
+                value: outcome,
+                errors,
+            }
         };
-
-        #[cfg(feature = "output_progress")]
-        let progress_render_task =
-            crate::progress::Progress::progress_render(output, progress_trackers, progress_rx);
-
-        let mut errors = IndexMap::<ItemId, E>::new();
         let outcomes_rx_task = async {
             while let Some(item_outcome) = outcomes_rx.recv().await {
-                fn_outcome(&mut outcome, &mut errors, item_outcome);
+                fn_outcome(&mut cmd_outcome, item_outcome)?;
             }
+
+            Result::<(), E>::Ok(())
         };
 
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_progress")] {
-                futures::join!(execution_task, progress_render_task, outcomes_rx_task);
+                match cmd_independence {
+                    CmdIndependence::Standalone { cmd_ctx } => {
+                        let SingleProfileSingleFlowViewAndOutput {
+                            output,
+                            cmd_progress_tracker,
+                            mut cmd_view,
+                            ..
+                        } = cmd_ctx.view_and_output();
 
-                output.progress_end(cmd_progress_tracker).await;
+                        output.progress_begin(cmd_progress_tracker).await;
+
+                        let (progress_tx, progress_rx) =
+                            mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
+                        let progress_render_task ={
+                            let progress_trackers = &mut cmd_progress_tracker.progress_trackers;
+                            crate::progress::Progress::progress_render(
+                                output,
+                                progress_trackers,
+                                progress_rx)
+                        };
+
+                        let execution_task = async move {
+                            let progress_tx = &progress_tx;
+                            let outcomes_tx = &outcomes_tx;
+
+                            fn_exec(&mut cmd_view, progress_tx, outcomes_tx).await;
+
+                            // `progress_tx` is dropped here, so `progress_rx` will safely end.
+                        };
+
+                        let ((), (), outcome_result) = futures::join!(execution_task, progress_render_task, outcomes_rx_task);
+                        output.progress_end(cmd_progress_tracker).await;
+
+                        outcome_result?;
+                    }
+                    CmdIndependence::SubCmd {
+                        cmd_view,
+                        progress_tx,
+                    } => {
+                        let execution_task = async move {
+                            let progress_tx = &progress_tx;
+                            let outcomes_tx = &outcomes_tx;
+
+                            fn_exec(cmd_view, progress_tx, outcomes_tx).await;
+
+                            // `progress_tx` is dropped here, so `progress_rx` will safely end.
+                        };
+
+                        let ((), outcome_result) = futures::join!(execution_task, outcomes_rx_task);
+                        outcome_result?;
+                    }
+                }
+
             } else {
-                futures::join!(execution_task, outcomes_rx_task);
+                match cmd_independence {
+                    CmdIndependence::Standalone { cmd_ctx } => {
+                        let mut cmd_view = cmd_ctx.view();
+
+                        let execution_task = async move {
+                            let outcomes_tx = &outcomes_tx;
+                            fn_exec(&mut cmd_view, outcomes_tx).await;
+                        };
+
+                        let ((), outcome_result) = futures::join!(execution_task, outcomes_rx_task);
+                        outcome_result?;
+                    }
+                    CmdIndependence::SubCmd {
+                        cmd_view,
+                    } => {
+                        let execution_task = async move {
+                            let outcomes_tx = &outcomes_tx;
+                            fn_exec(cmd_view, outcomes_tx).await;
+                        };
+
+                        let ((), outcome_result) = futures::join!(execution_task, outcomes_rx_task);
+                        outcome_result?;
+                    }
+                }
             }
         }
 
-        Ok(CmdOutcome {
-            value: outcome,
-            errors,
-        })
+        Ok(cmd_outcome)
     }
 }
 

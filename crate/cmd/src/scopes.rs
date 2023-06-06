@@ -3,7 +3,9 @@ pub use self::{
     multi_profile_single_flow::{MultiProfileSingleFlow, MultiProfileSingleFlowView},
     no_profile_no_flow::NoProfileNoFlow,
     single_profile_no_flow::{SingleProfileNoFlow, SingleProfileNoFlowView},
-    single_profile_single_flow::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+    single_profile_single_flow::{
+        SingleProfileSingleFlow, SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput,
+    },
 };
 
 pub mod type_params;

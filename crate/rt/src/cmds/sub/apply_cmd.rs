@@ -1,5 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
+use futures::FutureExt;
 use peace_cfg::{ApplyCheck, FnCtx, ItemId};
 use peace_cmd::{
     ctx::CmdCtx,
@@ -17,11 +18,14 @@ use peace_rt_model::{
     outcomes::{CmdOutcome, ItemApplyBoxed, ItemApplyPartialBoxed},
     output::OutputWrite,
     params::ParamsKeys,
-    Error, IndexMap, ItemBoxed, ItemRt, Storage,
+    Error, ItemBoxed, ItemRt, Storage,
 };
-use tokio::sync::{mpsc, mpsc::UnboundedSender};
+use tokio::sync::mpsc::UnboundedSender;
 
-use crate::{cmds::StatesDiscoverCmd, BUFFERED_FUTURES_MAX};
+use crate::{
+    cmds::{cmd_ctx_internal::CmdIndependence, CmdBase, StatesDiscoverCmd},
+    BUFFERED_FUTURES_MAX,
+};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -34,7 +38,6 @@ cfg_if::cfg_if! {
                 ProgressUpdateAndId,
             },
         };
-        use peace_rt_model::CmdProgressTracker;
         use tokio::sync::mpsc::Sender;
     }
 }
@@ -50,8 +53,8 @@ where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
-    StatesTsApply: Send + Sync + 'static,
-    StatesTsApplyDry: Send + Sync + 'static,
+    StatesTsApply: Debug + Send + Sync + 'static,
+    StatesTsApplyDry: Debug + Send + Sync + 'static,
     States<StatesTsApply>: From<StatesCurrent> + Send + Sync + 'static,
     States<StatesTsApplyDry>: From<StatesCurrent> + Send + Sync + 'static,
 {
@@ -191,77 +194,10 @@ where
         states_saved: &StatesSaved,
         apply_for: ApplyFor,
         dry_run: bool,
-    ) -> Result<CmdOutcome<(States<StatesTs>, StatesDesired), E>, E> {
-        let apply_for_internal = match apply_for {
-            ApplyFor::Ensure => ApplyForInternal::Ensure,
-            ApplyFor::Clean => {
-                // Hack: Remove this when #120 is implemented.
-                #[cfg(feature = "output_progress")]
-                cmd_ctx.cmd_progress_tracker_mut().clear_when_done_set(true);
-
-                let states_current_outcome = StatesDiscoverCmd::current(cmd_ctx).await?;
-                if states_current_outcome.is_err() {
-                    let outcome = states_current_outcome.map(|states_current| {
-                        (
-                            States::<StatesTs>::from(states_current.into_inner()),
-                            StatesDesired::new(),
-                        )
-                    });
-                    return Ok(outcome);
-                }
-                #[cfg(feature = "output_progress")]
-                cmd_ctx
-                    .cmd_progress_tracker_mut()
-                    .progress_trackers_mut()
-                    .values_mut()
-                    .for_each(|progress_tracker| progress_tracker.reset());
-
-                // Hack: Remove this when #120 is implemented.
-                #[cfg(feature = "output_progress")]
-                cmd_ctx
-                    .cmd_progress_tracker_mut()
-                    .clear_when_done_set(false);
-
-                let CmdOutcome {
-                    value: states_current,
-                    errors: _,
-                } = states_current_outcome;
-
-                ApplyForInternal::Clean { states_current }
-            }
-        };
-        let apply_for_internal = &apply_for_internal;
-
-        // TODO: compare `StatesSaved` and `StatesCurrent` by delegating the equality
-        // check to `ItemWrapper`.
-
-        let SingleProfileSingleFlowView {
-            #[cfg(feature = "output_progress")]
-            output,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            flow,
-            params_specs,
-            resources,
-            ..
-        } = cmd_ctx.view();
-        let item_graph = flow.graph();
-
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "output_progress")] {
-                output.progress_begin(cmd_progress_tracker).await;
-
-                let CmdProgressTracker {
-                    multi_progress: _,
-                    progress_trackers,
-                    ..
-                } = cmd_progress_tracker;
-
-                let (progress_tx, progress_rx) =
-                    mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
-            }
-        }
-
+    ) -> Result<CmdOutcome<(States<StatesTs>, StatesDesired), E>, E>
+    where
+        StatesTs: Debug + Send + 'static,
+    {
         // `StatesTsApply` represents the states of items *after* this cmd has run,
         // even if no change occurs. This means it should begin as `StatesSaved` or
         // `StatesCurrent`, and updated when a new state has been applied and
@@ -270,135 +206,189 @@ where
         // Notably, the initial `StatesSaved` / `StatesCurrent` may not contain a state
         // for items whose state cannot be discovered, e.g. a file on a remote
         // server, when the remote server doesn't exist.
-        let mut states_applied_mut =
-            StatesMut::<StatesTs>::from((*states_saved).clone().into_inner());
-        let mut states_desired_mut = StatesMut::<Desired>::new();
+        let states_applied_mut = StatesMut::<StatesTs>::from((*states_saved).clone().into_inner());
+        let states_desired_mut = StatesMut::<Desired>::new();
+        let outcome = (states_applied_mut, states_desired_mut);
 
-        let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemApplyOutcome<E>>();
+        let cmd_outcome = CmdBase::exec(
+            &mut CmdIndependence::Standalone { cmd_ctx },
+            outcome,
+            |cmd_view, #[cfg(feature = "output_progress")] progress_tx, outcomes_tx| {
+                async move {
+                    // TODO: compare `StatesSaved` and `StatesCurrent` by delegating the equality
+                    // check to `ItemWrapper`.
 
-        let resources_ref = &*resources;
-        let execution_task = async move {
-            #[cfg(feature = "output_progress")]
-            let progress_tx = &progress_tx;
-            let outcomes_tx = &outcomes_tx;
+                    let apply_for_internal = match apply_for {
+                        ApplyFor::Ensure => ApplyForInternal::Ensure,
+                        ApplyFor::Clean => {
+                            let states_current_outcome =
+                                StatesDiscoverCmd::<E, O, PKeys>::current_with(
+                                    CmdIndependence::SubCmd {
+                                        cmd_view,
+                                        #[cfg(feature = "output_progress")]
+                                        progress_tx: progress_tx.clone(),
+                                    },
+                                )
+                                .await;
+                            let states_current_outcome = match states_current_outcome {
+                                Ok(states_current_outcome) => states_current_outcome,
+                                Err(error) => {
+                                    outcomes_tx
+                                        .send(ApplyExecOutcome::DiscoverCmdError { error })
+                                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                                    return;
+                                }
+                            };
+                            if states_current_outcome.is_err() {
+                                let outcome = states_current_outcome.map(|states_current| {
+                                    (
+                                        StatesMut::<StatesTs>::from(states_current.into_inner()),
+                                        StatesMut::<Desired>::new(),
+                                    )
+                                });
+                                outcomes_tx
+                                    .send(ApplyExecOutcome::DiscoverOutcomeError { outcome })
+                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                                return;
+                            }
 
-            match apply_for {
-                ApplyFor::Ensure => {
-                    let (Ok(()) | Err(())) = item_graph
-                        .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
-                            Self::item_apply_exec(
-                                params_specs,
-                                resources_ref,
-                                apply_for_internal,
-                                #[cfg(feature = "output_progress")]
-                                progress_tx,
-                                outcomes_tx,
-                                item,
-                                dry_run,
-                            )
-                        })
-                        .await
-                        .map_err(|_vec_units: Vec<()>| ());
+                            let CmdOutcome {
+                                value: states_current,
+                                errors: _,
+                            } = states_current_outcome;
+
+                            ApplyForInternal::Clean { states_current }
+                        }
+                    };
+                    let apply_for_internal = &apply_for_internal;
+
+                    let SingleProfileSingleFlowView {
+                        flow,
+                        params_specs,
+                        resources,
+                        ..
+                    } = cmd_view;
+
+                    let item_graph = flow.graph();
+
+                    let resources_ref = &*resources;
+                    match apply_for {
+                        ApplyFor::Ensure => {
+                            let (Ok(()) | Err(())) = item_graph
+                                .try_for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
+                                    Self::item_apply_exec(
+                                        params_specs,
+                                        resources_ref,
+                                        apply_for_internal,
+                                        #[cfg(feature = "output_progress")]
+                                        progress_tx,
+                                        outcomes_tx,
+                                        item,
+                                        dry_run,
+                                    )
+                                })
+                                .await
+                                .map_err(|_vec_units: Vec<()>| ());
+                        }
+                        ApplyFor::Clean => {
+                            let (Ok(()) | Err(())) = item_graph
+                                .try_for_each_concurrent_rev(BUFFERED_FUTURES_MAX, |item| {
+                                    Self::item_apply_exec(
+                                        params_specs,
+                                        resources_ref,
+                                        apply_for_internal,
+                                        #[cfg(feature = "output_progress")]
+                                        progress_tx,
+                                        outcomes_tx,
+                                        item,
+                                        dry_run,
+                                    )
+                                })
+                                .await
+                                .map_err(|_vec_units: Vec<()>| ());
+                        }
+                    }
                 }
-                ApplyFor::Clean => {
-                    let (Ok(()) | Err(())) = item_graph
-                        .try_for_each_concurrent_rev(BUFFERED_FUTURES_MAX, |item| {
-                            Self::item_apply_exec(
-                                params_specs,
-                                resources_ref,
-                                apply_for_internal,
-                                #[cfg(feature = "output_progress")]
-                                progress_tx,
-                                outcomes_tx,
-                                item,
-                                dry_run,
-                            )
-                        })
-                        .await
-                        .map_err(|_vec_units: Vec<()>| ());
-                }
-            }
+                .boxed_local()
+            },
+            |cmd_outcome, apply_exec_outcome| {
+                let CmdOutcome {
+                    value: (states_applied_mut, states_desired_mut),
+                    errors,
+                } = cmd_outcome;
+                match apply_exec_outcome {
+                    ApplyExecOutcome::DiscoverCmdError { error } => return Err(error),
+                    ApplyExecOutcome::DiscoverOutcomeError { mut outcome } => {
+                        std::mem::swap(&mut outcome.value.0, states_applied_mut);
+                        std::mem::swap(&mut outcome.value.1, states_desired_mut);
+                    }
+                    ApplyExecOutcome::ItemApply(item_apply_outcome) => match item_apply_outcome {
+                        ItemApplyOutcome::PrepareFail {
+                            item_id,
+                            item_apply_partial,
+                            error,
+                        } => {
+                            errors.insert(item_id.clone(), error);
 
-            // `progress_tx` is dropped here, so `progress_rx` will safely end.
-        };
+                            // Save `state_target` (which is state_desired) if we are not cleaning
+                            // up.
+                            match apply_for {
+                                ApplyFor::Ensure => {
+                                    if let Some(state_desired) = item_apply_partial.state_target() {
+                                        states_desired_mut.insert_raw(item_id, state_desired);
+                                    }
+                                }
+                                ApplyFor::Clean => {}
+                            }
+                        }
+                        ItemApplyOutcome::Success {
+                            item_id,
+                            item_apply,
+                        } => {
+                            if let Some(state_applied) = item_apply.state_applied() {
+                                states_applied_mut.insert_raw(item_id.clone(), state_applied);
+                            } else {
+                                // Item was already in the desired state.
+                                // No change to saved state.
+                            }
 
-        #[cfg(feature = "output_progress")]
-        let progress_render_task =
-            crate::progress::Progress::progress_render(output, progress_trackers, progress_rx);
-
-        let mut errors = IndexMap::<ItemId, E>::new();
-        let outcomes_rx_task = async {
-            while let Some(outcome) = outcomes_rx.recv().await {
-                match outcome {
-                    ItemApplyOutcome::PrepareFail {
-                        item_id,
-                        item_apply_partial,
-                        error,
-                    } => {
-                        errors.insert(item_id.clone(), error);
-
-                        // Save `state_target` (which is state_desired) if we are not cleaning up.
-                        match apply_for {
-                            ApplyFor::Ensure => {
-                                if let Some(state_desired) = item_apply_partial.state_target() {
+                            // Save `state_target` (which is state_desired) if we are not cleaning
+                            // up.
+                            match apply_for {
+                                ApplyFor::Ensure => {
+                                    let state_desired = item_apply.state_target();
                                     states_desired_mut.insert_raw(item_id, state_desired);
                                 }
+                                ApplyFor::Clean => {}
                             }
-                            ApplyFor::Clean => {}
                         }
-                    }
-                    ItemApplyOutcome::Success {
-                        item_id,
-                        item_apply,
-                    } => {
-                        if let Some(state_applied) = item_apply.state_applied() {
-                            states_applied_mut.insert_raw(item_id.clone(), state_applied);
-                        } else {
-                            // Item was already in the desired state.
-                            // No change to saved state.
-                        }
+                        ItemApplyOutcome::Fail {
+                            item_id,
+                            item_apply,
+                            error,
+                        } => {
+                            errors.insert(item_id.clone(), error);
+                            if let Some(state_applied) = item_apply.state_applied() {
+                                states_applied_mut.insert_raw(item_id.clone(), state_applied);
+                            }
 
-                        // Save `state_target` (which is state_desired) if we are not cleaning up.
-                        match apply_for {
-                            ApplyFor::Ensure => {
-                                let state_desired = item_apply.state_target();
-                                states_desired_mut.insert_raw(item_id, state_desired);
+                            // Save `state_target` (which is state_desired) if we are not cleaning
+                            // up.
+                            match apply_for {
+                                ApplyFor::Ensure => {
+                                    let state_desired = item_apply.state_target();
+                                    states_desired_mut.insert_raw(item_id, state_desired);
+                                }
+                                ApplyFor::Clean => {}
                             }
-                            ApplyFor::Clean => {}
                         }
-                    }
-                    ItemApplyOutcome::Fail {
-                        item_id,
-                        item_apply,
-                        error,
-                    } => {
-                        errors.insert(item_id.clone(), error);
-                        if let Some(state_applied) = item_apply.state_applied() {
-                            states_applied_mut.insert_raw(item_id.clone(), state_applied);
-                        }
-
-                        // Save `state_target` (which is state_desired) if we are not cleaning up.
-                        match apply_for {
-                            ApplyFor::Ensure => {
-                                let state_desired = item_apply.state_target();
-                                states_desired_mut.insert_raw(item_id, state_desired);
-                            }
-                            ApplyFor::Clean => {}
-                        }
-                    }
+                    },
                 }
-            }
-        };
 
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "output_progress")] {
-                futures::join!(execution_task, progress_render_task, outcomes_rx_task);
-
-                output.progress_end(cmd_progress_tracker).await;
-            } else {
-                futures::join!(execution_task, outcomes_rx_task);
-            }
-        }
+                Ok(())
+            },
+        )
+        .await?;
 
         // TODO: Should we run `StatesCurrentFn` again?
         //
@@ -410,13 +400,15 @@ where
         //     - in `ApplyCmd` comes from `StatesTsApply`
         // * `ShCmdItem` doesn't return the state in the apply script, so in the item we
         //   run the state current script after the apply exec script.
-        let states_applied = states_applied_mut.into();
-        let states_desired = states_desired_mut.into();
 
-        Ok(CmdOutcome {
-            value: (states_applied, states_desired),
-            errors,
-        })
+        let cmd_outcome = cmd_outcome.map(|(states_applied_mut, states_desired_mut)| {
+            let states_applied: States<StatesTs> = states_applied_mut.into();
+            let states_desired: StatesDesired = states_desired_mut.into();
+
+            (states_applied, states_desired)
+        });
+
+        Ok(cmd_outcome)
     }
 
     ///
@@ -437,15 +429,18 @@ where
     ///     F: (Fn(&dyn ItemRt<E>, fn_ctx: OpCtx<'_>, &Resources<SetUp>, &mut ItemApplyBoxed) -> Fut) + Copy,
     ///     Fut: Future<Output = Result<(), E>>,
     /// ```
-    async fn item_apply_exec(
+    async fn item_apply_exec<StatesTs>(
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         apply_for_internal: &ApplyForInternal,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-        outcomes_tx: &UnboundedSender<ItemApplyOutcome<E>>,
+        outcomes_tx: &UnboundedSender<ApplyExecOutcome<E, StatesTs>>,
         item: &ItemBoxed<E>,
         dry_run: bool,
-    ) -> Result<(), ()> {
+    ) -> Result<(), ()>
+    where
+        StatesTs: Debug + Send,
+    {
         let apply_fn = if dry_run {
             ItemRt::apply_exec_dry
         } else {
@@ -493,10 +488,10 @@ where
                         // In case of an interrupt or power failure, we may not have written states
                         // to disk.
                         outcomes_tx
-                            .send(ItemApplyOutcome::Success {
+                            .send(ApplyExecOutcome::ItemApply(ItemApplyOutcome::Success {
                                 item_id: item.id().clone(),
                                 item_apply,
-                            })
+                            }))
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
                         // short-circuit
@@ -515,10 +510,10 @@ where
                         });
 
                         outcomes_tx
-                            .send(ItemApplyOutcome::Success {
+                            .send(ApplyExecOutcome::ItemApply(ItemApplyOutcome::Success {
                                 item_id: item.id().clone(),
                                 item_apply,
-                            })
+                            }))
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
                         Ok(())
@@ -539,11 +534,11 @@ where
                         });
 
                         outcomes_tx
-                            .send(ItemApplyOutcome::Fail {
+                            .send(ApplyExecOutcome::ItemApply(ItemApplyOutcome::Fail {
                                 item_id: item.id().clone(),
                                 item_apply,
                                 error,
-                            })
+                            }))
                             .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
                         // we should stop processing.
@@ -565,11 +560,11 @@ where
                 });
 
                 outcomes_tx
-                    .send(ItemApplyOutcome::PrepareFail {
+                    .send(ApplyExecOutcome::ItemApply(ItemApplyOutcome::PrepareFail {
                         item_id: item.id().clone(),
                         item_apply_partial,
                         error,
-                    })
+                    }))
                     .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
                 Err(())
@@ -623,7 +618,32 @@ impl<E, O, PKeys, StatesTsApply, StatesTsApplyDry> Default
     }
 }
 
-#[allow(dead_code)]
+///
+///
+/// For cleaning up items, current states are discovered to populate `Resources`
+/// with the current state.
+#[derive(Debug)]
+enum ApplyExecOutcome<E, StatesTs> {
+    /// Error occurred during state current discovery.
+    ///
+    /// This variant is when the error is due to the command logic failing,
+    /// rather than an error from an item's discovery.
+    ///
+    /// For cleaning up items, current states are discovered to populate
+    /// `Resources` with the current state.
+    DiscoverCmdError {
+        /// The error from state current discovery.
+        error: E,
+    },
+    /// Error discovering current state for items.
+    DiscoverOutcomeError {
+        /// Outcome of state discovery.
+        outcome: CmdOutcome<(StatesMut<StatesTs>, StatesMut<Desired>), E>,
+    },
+    /// An item apply outcome.
+    ItemApply(ItemApplyOutcome<E>),
+}
+
 #[derive(Debug)]
 enum ItemApplyOutcome<E> {
     /// Error occurred when discovering current state, desired states, state

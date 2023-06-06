@@ -150,23 +150,13 @@ where
 /// * Read or write flow state -- see `SingleProfileSingleFlow` or
 ///   `MultiProfileSingleFlow`.
 #[derive(Debug)]
-pub struct SingleProfileSingleFlowView<'view, E, O, PKeys, TS>
+pub struct SingleProfileSingleFlowView<'view, E, PKeys, TS>
 where
     E: 'static,
     PKeys: ParamsKeys + 'static,
 {
-    /// Output endpoint to return values / errors, and write progress
-    /// information to.
-    ///
-    /// See [`OutputWrite`].
-    ///
-    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
-    pub output: &'view mut O,
     /// Workspace that the `peace` tool runs in.
     pub workspace: &'view Workspace,
-    /// Tracks progress of each function execution.
-    #[cfg(feature = "output_progress")]
-    pub cmd_progress_tracker: &'view mut peace_rt_model::CmdProgressTracker,
     /// The profile this command operates on.
     pub profile: &'view Profile,
     /// Profile directory that stores params and flows.
@@ -216,6 +206,32 @@ where
     pub states_type_reg: &'view StatesTypeReg,
     /// `Resources` for flow execution.
     pub resources: &'view mut Resources<TS>,
+}
+
+/// Split the output related parameters and the flow information.
+///
+/// For <https://github.com/azriel91/peace/issues/120>,
+/// this allows a top level command to access `output` and
+/// `cmd_progress_tracker` mutably, while the flow information is passed through
+/// to sub commands..
+#[derive(Debug)]
+pub struct SingleProfileSingleFlowViewAndOutput<'view, E, O, PKeys, TS>
+where
+    E: 'static,
+    PKeys: ParamsKeys + 'static,
+{
+    /// Output endpoint to return values / errors, and write progress
+    /// information to.
+    ///
+    /// See [`OutputWrite`].
+    ///
+    /// [`OutputWrite`]: peace_rt_model_core::OutputWrite
+    pub output: &'view mut O,
+    /// Tracks progress of each function execution.
+    #[cfg(feature = "output_progress")]
+    pub cmd_progress_tracker: &'view mut peace_rt_model::CmdProgressTracker,
+    /// Flow and parameter related information.
+    pub cmd_view: SingleProfileSingleFlowView<'view, E, PKeys, TS>,
 }
 
 impl<'ctx, E, O, PKeys> SingleProfileSingleFlow<'ctx, E, O, PKeys, SetUp>
@@ -274,7 +290,51 @@ where
     /// Returns a view struct of this scope.
     ///
     /// This allows the flow and resources to be borrowed concurrently.
-    pub fn view(&mut self) -> SingleProfileSingleFlowView<'_, E, O, PKeys, TS> {
+    pub fn view(&mut self) -> SingleProfileSingleFlowView<'_, E, PKeys, TS> {
+        let Self {
+            output: _,
+            workspace,
+            #[cfg(feature = "output_progress")]
+                cmd_progress_tracker: _,
+            profile,
+            profile_dir,
+            profile_history_dir,
+            flow,
+            flow_dir,
+            params_type_regs,
+            workspace_params,
+            profile_params,
+            flow_params,
+            item_params_type_reg,
+            params_specs_type_reg,
+            params_specs,
+            states_type_reg,
+            resources,
+        } = self;
+
+        SingleProfileSingleFlowView {
+            workspace,
+            profile,
+            profile_dir,
+            profile_history_dir,
+            flow,
+            flow_dir,
+            params_type_regs,
+            workspace_params,
+            profile_params,
+            flow_params,
+            item_params_type_reg,
+            params_specs_type_reg,
+            params_specs,
+            states_type_reg,
+            resources,
+        }
+    }
+
+    /// Returns a view and output struct of this scope.
+    ///
+    /// This allows the flow and resources to be borrowed concurrently.
+    pub fn view_and_output(&mut self) -> SingleProfileSingleFlowViewAndOutput<'_, E, O, PKeys, TS> {
         let Self {
             output,
             workspace,
@@ -296,25 +356,27 @@ where
             resources,
         } = self;
 
-        SingleProfileSingleFlowView {
+        SingleProfileSingleFlowViewAndOutput {
             output,
-            workspace,
             #[cfg(feature = "output_progress")]
             cmd_progress_tracker,
-            profile,
-            profile_dir,
-            profile_history_dir,
-            flow,
-            flow_dir,
-            params_type_regs,
-            workspace_params,
-            profile_params,
-            flow_params,
-            item_params_type_reg,
-            params_specs_type_reg,
-            params_specs,
-            states_type_reg,
-            resources,
+            cmd_view: SingleProfileSingleFlowView {
+                workspace,
+                profile,
+                profile_dir,
+                profile_history_dir,
+                flow,
+                flow_dir,
+                params_type_regs,
+                workspace_params,
+                profile_params,
+                flow_params,
+                item_params_type_reg,
+                params_specs_type_reg,
+                params_specs,
+                states_type_reg,
+                resources,
+            },
         }
     }
 
