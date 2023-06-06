@@ -103,7 +103,7 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current_with(
-        mut cmd_independence: CmdIndependence<'_, '_, E, O, PKeys>,
+        mut cmd_independence: CmdIndependence<'_, '_, '_, E, O, PKeys>,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
         Self::exec(&mut cmd_independence, DiscoverFor::Current)
             .await
@@ -195,7 +195,7 @@ where
     /// Discovers current and/or desired states, marking progress bars as
     /// complete when discovery finishes.
     async fn exec(
-        cmd_independence: &mut CmdIndependence<'_, '_, E, O, PKeys>,
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
         discover_for: DiscoverFor,
     ) -> Result<CmdOutcome<(StatesCurrent, StatesDesired), E>, E> {
         let outcome = {

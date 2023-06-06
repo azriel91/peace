@@ -36,8 +36,6 @@ where
     /// # Type Parameters
     ///
     /// * `ItemOutcomeT`: Outcome type for each item's execution.
-    /// * `FnExecFut`: Future returned by `FnExec`, which resolves to
-    ///   `ItemOutcomeT`.
     /// * `FnExec`: Function for the `Cmd` implementation to execute its work.
     ///
     ///     This is the producer function to process all items.
@@ -63,9 +61,50 @@ where
     ///     are related to the framework that cannot be associated with an
     ///     item.
     ///
-    /// [`exec`]: peace_cfg::ApplyFns::exec
-    /// [`Item`]: peace_cfg::Item
-    /// [`ApplyFns`]: peace_cfg::Item::ApplyFns
+    /// # Design
+    ///
+    /// > The technique described here was shared by Yandros (thank you!).
+    /// >
+    /// > See:
+    /// >
+    /// > * <https://users.rust-lang.org/t/argument-requires-that-is-borrowed-for-static/66503/2>
+    /// > * <https://discord.com/channels/273534239310479360/616791170340880404/1115592255814783006>
+    ///
+    /// For the default `for<'f> Fn(..)` syntax, the compiler will:
+    ///
+    /// * Choose the smallest possible lifetime to reduce the parameter lifetime
+    ///   requirements (good for callee).
+    /// * Choose the largest possible lifetime within that range to support more
+    ///   parameter types (bad for caller!).
+    ///
+    /// For the [`CmdIndependence`] parameter to `FnExec`, there should be an
+    /// upper bound of `'fn_exec` to the lifetime of `CmdBase::exec`. However,
+    /// at the time of writing (Rust 1.70.0) there is no way to express this
+    /// constraint explicitly, i.e. we cannot write:
+    ///
+    /// ```rust,ignore
+    /// FnExec: for<'f_exec where 'f_outer: 'f_exec>` FnOnce(..)
+    /// ```
+    ///
+    /// However, we could use *implicit bounds* to introduce that constraint in
+    /// the closure by adding another parameter:
+    ///
+    /// ```rust,ignore
+    /// FnExec(.., [&'fn_exec &'fn_outer (); 0])
+    /// ```
+    ///
+    /// This expresses the constraint that lifts the second behaviour of the
+    /// compiler, similar to `PhantomData`.
+    ///
+    /// However, it requires callers to pass in an additional parameter in the
+    /// closure. For `CmdIndependence`, we can choose to:
+    ///
+    /// * Use separate lifetime parameters for `Scope` and `View`, avoiding the
+    ///   `'static` propagation from the `view` to the `O` type parameter.
+    /// * Add this additional parameter to the closure.
+    ///
+    /// I've gone with the first option, to avoid the additional parameter in
+    /// the closure.
     pub async fn exec<
         ItemOutcomeT,
         // This abomination is because Rust supports attributes on type parameters in the function
@@ -84,7 +123,7 @@ where
         OutcomeT,
         FnOutcomeCollate,
     >(
-        cmd_independence: &mut CmdIndependence<'_, '_, E, O, PKeys>,
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
         outcome: OutcomeT,
         fn_exec: FnExec,
         fn_outcome: FnOutcomeCollate,

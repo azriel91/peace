@@ -25,7 +25,7 @@ cfg_if::cfg_if! {
 ///
 /// Progress updates sent during `ApplyFns::exec` and `CleanOpSpec::exec`.
 #[async_trait(?Send)]
-pub trait OutputWrite<E>: 'static {
+pub trait OutputWrite<E> {
     /// Prepares this `OutputWrite` implementation for rendering progress.
     ///
     /// # Implementors

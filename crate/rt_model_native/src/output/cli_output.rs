@@ -478,7 +478,7 @@ impl Default for CliOutput<Stdout> {
 impl<E, W> OutputWrite<E> for CliOutput<W>
 where
     E: std::error::Error + From<Error>,
-    W: AsyncWrite + std::marker::Unpin + 'static,
+    W: AsyncWrite + std::marker::Unpin,
 {
     #[cfg(feature = "output_progress")]
     async fn progress_begin(&mut self, cmd_progress_tracker: &CmdProgressTracker) {
