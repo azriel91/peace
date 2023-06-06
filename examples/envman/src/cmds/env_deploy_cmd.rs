@@ -1,6 +1,6 @@
 use futures::FutureExt;
 use peace::{
-    cmd::scopes::SingleProfileSingleFlowView,
+    cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
     rt::cmds::{sub::StatesSavedReadCmd, EnsureCmd},
     rt_model::{outcomes::CmdOutcome, output::OutputWrite},
@@ -53,12 +53,14 @@ macro_rules! run {
                     value: states_ensured,
                     errors,
                 } = &states_ensured_outcome;
-                let SingleProfileSingleFlowView {
+                let SingleProfileSingleFlowViewAndOutput {
                     output,
-                    flow,
-                    resources,
+                    cmd_view:
+                        SingleProfileSingleFlowView {
+                            flow, resources, ..
+                        },
                     ..
-                } = ctx.view();
+                } = ctx.view_and_output();
 
                 if states_ensured_outcome.is_ok() {
                     let states_ensured_raw_map = &***states_ensured;

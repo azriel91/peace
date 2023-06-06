@@ -1,6 +1,6 @@
 use futures::FutureExt;
 use peace::{
-    cmd::scopes::SingleProfileSingleFlowView,
+    cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
     rt::cmds::StatesDiscoverCmd,
     rt_model::{outcomes::CmdOutcome, output::OutputWrite},
@@ -50,7 +50,11 @@ macro_rules! run {
                 let states_current_raw_map = &**states_current;
                 let states_desired_raw_map = &**states_desired;
 
-                let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
+                let SingleProfileSingleFlowViewAndOutput {
+                    output,
+                    cmd_view: SingleProfileSingleFlowView { flow, .. },
+                    ..
+                } = ctx.view_and_output();
                 let states_current_presentables = {
                     let states_current_presentables = flow
                         .graph()
