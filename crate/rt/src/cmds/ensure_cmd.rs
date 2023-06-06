@@ -10,7 +10,10 @@ use peace_resources::{
 };
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error};
 
-use crate::cmds::sub::{ApplyCmd, ApplyFor};
+use crate::cmds::{
+    cmd_ctx_internal::CmdIndependence,
+    sub::{ApplyCmd, ApplyFor},
+};
 
 #[derive(Debug)]
 pub struct EnsureCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
@@ -57,6 +60,28 @@ where
         .await
     }
 
+    /// Runs [`Item::apply_exec_dry`] for each [`Item`], with [`state_desired`]
+    /// as the target state.
+    ///
+    /// See [`Self::exec_dry`] for full documentation.
+    ///
+    /// This function exists so that this command can be executed as sub
+    /// functionality of another command.
+    ///
+    /// [`Item`]: peace_cfg::Item
+    /// [`state_desired`]: peace_cfg::Item::state_desired
+    pub async fn exec_dry_with(
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        states_saved: &StatesSaved,
+    ) -> Result<CmdOutcome<StatesEnsuredDry, E>, E> {
+        ApplyCmd::<E, O, PKeys, Ensured, EnsuredDry>::exec_dry_with(
+            cmd_independence,
+            states_saved,
+            ApplyFor::Ensure,
+        )
+        .await
+    }
+
     /// Conditionally runs [`Item::apply_exec`] for each
     /// [`Item`].
     ///
@@ -87,6 +112,28 @@ where
     ) -> Result<CmdOutcome<StatesEnsured, E>, E> {
         ApplyCmd::<E, O, PKeys, Ensured, EnsuredDry>::exec(cmd_ctx, states_saved, ApplyFor::Ensure)
             .await
+    }
+
+    /// Runs [`Item::apply_exec`] for each [`Item`], with [`state_desired`] as
+    /// the target state.
+    ///
+    /// See [`Self::exec`] for full documentation.
+    ///
+    /// This function exists so that this command can be executed as sub
+    /// functionality of another command.
+    ///
+    /// [`Item`]: peace_cfg::Item
+    /// [`state_desired`]: peace_cfg::Item::state_desired
+    pub async fn exec_with(
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        states_saved: &StatesSaved,
+    ) -> Result<CmdOutcome<StatesEnsured, E>, E> {
+        ApplyCmd::<E, O, PKeys, Ensured, EnsuredDry>::exec_with(
+            cmd_independence,
+            states_saved,
+            ApplyFor::Ensure,
+        )
+        .await
     }
 }
 

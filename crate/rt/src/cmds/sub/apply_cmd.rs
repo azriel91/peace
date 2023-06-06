@@ -58,8 +58,7 @@ where
     States<StatesTsApply>: From<StatesCurrent> + Send + Sync + 'static,
     States<StatesTsApplyDry>: From<StatesCurrent> + Send + Sync + 'static,
 {
-    /// Conditionally runs [`Item::apply_exec_dry`] for each
-    /// [`Item`].
+    /// Conditionally runs [`Item::apply_exec_dry`] for each [`Item`].
     ///
     /// In practice this runs [`Item::apply_check`], and only runs
     /// [`apply_exec_dry`] if execution is required.
@@ -107,13 +106,31 @@ where
         states_saved: &StatesSaved,
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApplyDry>, E>, E> {
-        Self::exec_internal(cmd_ctx, states_saved, apply_for, true)
+        Self::exec_dry_with(
+            &mut CmdIndependence::Standalone { cmd_ctx },
+            states_saved,
+            apply_for,
+        )
+        .await
+    }
+
+    /// Conditionally runs [`Item::apply_exec_dry`] for each [`Item`].
+    ///
+    /// See [`Self::exec_dry`] for full documentation.
+    ///
+    /// This function exists so that this command can be executed as sub
+    /// functionality of another command.
+    pub async fn exec_dry_with(
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        states_saved: &StatesSaved,
+        apply_for: ApplyFor,
+    ) -> Result<CmdOutcome<States<StatesTsApplyDry>, E>, E> {
+        Self::exec_internal(cmd_independence, states_saved, apply_for, true)
             .await
             .map(|cmd_outcome| cmd_outcome.map(|(states_applied, _states_desired)| states_applied))
     }
 
-    /// Conditionally runs [`Item::apply_exec`] for each
-    /// [`Item`].
+    /// Conditionally runs [`Item::apply_exec`] for each [`Item`].
     ///
     /// In practice this runs [`Item::apply_check`], and only runs
     /// [`apply_exec`] if execution is required.
@@ -161,15 +178,40 @@ where
         states_saved: &StatesSaved,
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApply>, E>, E> {
+        Self::exec_with(
+            &mut CmdIndependence::Standalone { cmd_ctx },
+            states_saved,
+            apply_for,
+        )
+        .await
+    }
+
+    /// Conditionally runs [`Item::apply_exec`] for each [`Item`].
+    ///
+    /// See [`Self::exec`] for full documentation.
+    ///
+    /// This function exists so that this command can be executed as sub
+    /// functionality of another command.
+    pub async fn exec_with(
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        states_saved: &StatesSaved,
+        apply_for: ApplyFor,
+    ) -> Result<CmdOutcome<States<StatesTsApply>, E>, E> {
         let CmdOutcome {
             value: (states_applied, states_desired),
             errors,
-        } = Self::exec_internal(cmd_ctx, states_saved, apply_for, false).await?;
-        Self::serialize_saved(cmd_ctx.resources(), &states_applied).await?;
+        } = Self::exec_internal(cmd_independence, states_saved, apply_for, false).await?;
+
+        let resources = match cmd_independence {
+            CmdIndependence::Standalone { cmd_ctx } => cmd_ctx.resources(),
+            CmdIndependence::SubCmd { cmd_view, .. } => &cmd_view.resources,
+        };
+
+        Self::serialize_saved(resources, &states_applied).await?;
 
         match apply_for {
             ApplyFor::Ensure => {
-                Self::serialize_desired(cmd_ctx.resources(), &states_desired).await?;
+                Self::serialize_desired(resources, &states_desired).await?;
             }
             ApplyFor::Clean => {}
         };
@@ -190,7 +232,7 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`ApplyFns`]: peace_cfg::Item::ApplyFns
     async fn exec_internal<StatesTs>(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
         states_saved: &StatesSaved,
         apply_for: ApplyFor,
         dry_run: bool,
@@ -211,7 +253,7 @@ where
         let outcome = (states_applied_mut, states_desired_mut);
 
         let cmd_outcome = CmdBase::exec(
-            &mut CmdIndependence::Standalone { cmd_ctx },
+            cmd_independence,
             outcome,
             |cmd_view, #[cfg(feature = "output_progress")] progress_tx, outcomes_tx| {
                 async move {
