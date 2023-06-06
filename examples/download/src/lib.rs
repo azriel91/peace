@@ -3,8 +3,8 @@ use peace::{
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
     resources::resources::ts::SetUp,
     rt::cmds::{
-        sub::StatesSavedReadCmd, CleanCmd, DiffCmd, EnsureCmd, StatesDesiredDisplayCmd,
-        StatesDiscoverCmd, StatesSavedDisplayCmd,
+        CleanCmd, DiffCmd, EnsureCmd, StatesDesiredDisplayCmd, StatesDiscoverCmd,
+        StatesSavedDisplayCmd, StatesSavedReadCmd,
     },
     rt_model::{
         outcomes::CmdOutcome,

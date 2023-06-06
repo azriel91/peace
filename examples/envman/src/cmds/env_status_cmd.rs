@@ -2,7 +2,7 @@ use futures::FutureExt;
 use peace::{
     cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
-    rt::cmds::sub::StatesSavedReadCmd,
+    rt::cmds::StatesSavedReadCmd,
     rt_model::output::OutputWrite,
 };
 

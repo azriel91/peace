@@ -10,7 +10,7 @@ use peace_resources::{resources::ts::SetUp, states::StatesDesired};
 use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
 
-use crate::cmds::sub::StatesDesiredReadCmd;
+use crate::cmds::StatesDesiredReadCmd;
 
 /// Displays [`StatesDesired`]s from storage.
 #[derive(Debug)]

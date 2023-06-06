@@ -18,7 +18,7 @@ use peace_resources::{
 };
 use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, Flow};
 
-use crate::cmds::sub::{StatesDesiredReadCmd, StatesSavedReadCmd};
+use crate::cmds::{StatesDesiredReadCmd, StatesSavedReadCmd};
 
 #[derive(Debug)]
 pub struct DiffCmd<E>(PhantomData<E>);

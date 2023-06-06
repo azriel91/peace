@@ -10,7 +10,7 @@ use peace_resources::{resources::ts::SetUp, states::StatesSaved};
 use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
 
-use crate::cmds::sub::StatesSavedReadCmd;
+use crate::cmds::StatesSavedReadCmd;
 
 /// Displays [`StatesCurrent`]s from storage.
 #[derive(Debug)]
