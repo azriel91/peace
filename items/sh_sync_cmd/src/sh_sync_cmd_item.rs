@@ -82,7 +82,7 @@ where
         todo!()
     }
 
-    async fn try_state_desired(
+    async fn try_state_goal(
         _fn_ctx: FnCtx<'_>,
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: ShSyncCmdData<'_, Id>,
@@ -90,7 +90,7 @@ where
         todo!()
     }
 
-    async fn state_desired(
+    async fn state_goal(
         _fn_ctx: FnCtx<'_>,
         _params: &Self::Params<'_>,
         _data: ShSyncCmdData<'_, Id>,
@@ -102,9 +102,9 @@ where
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: ShSyncCmdData<'_, Id>,
         state_current: &Self::State,
-        state_desired: &Self::State,
+        state_goal: &Self::State,
     ) -> Result<Self::StateDiff, ShSyncCmdError> {
-        ShSyncCmdStateDiffFn::<Id>::state_diff(state_current, state_desired).await
+        ShSyncCmdStateDiffFn::<Id>::state_diff(state_current, state_goal).await
     }
 
     async fn state_clean(

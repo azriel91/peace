@@ -74,7 +74,7 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
-    // Write current and desired states to disk.
+    // Write current and goal states to disk.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
@@ -84,9 +84,9 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
         )
         .await?;
     let CmdOutcome {
-        value: (states_current, _states_desired),
+        value: (states_current, _states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Ensure states.
@@ -190,7 +190,7 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensur
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
-    // Write current and desired states to disk.
+    // Write current and goal states to disk.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
@@ -200,9 +200,9 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensur
         )
         .await?;
     let CmdOutcome {
-        value: (states_current, _states_desired),
+        value: (states_current, _states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Ensure states.

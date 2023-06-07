@@ -7,7 +7,7 @@ use url::Url;
 use wasm_bindgen::prelude::*;
 
 pub use crate::{
-    clean, clean_dry, cmd_ctx, desired, diff, ensure, ensure_dry, fetch, status,
+    clean, clean_dry, cmd_ctx, diff, ensure, ensure_dry, fetch, goal, status,
     workspace_and_flow_setup, DownloadError, WorkspaceAndFlow,
 };
 
@@ -126,7 +126,7 @@ pub async fn wasm_status(
 }
 
 #[wasm_bindgen]
-pub async fn wasm_desired(
+pub async fn wasm_goal(
     workspace_and_output: WorkspaceAndOutput,
 ) -> Result<WorkspaceAndOutput, JsValue> {
     let WorkspaceAndOutput {
@@ -143,7 +143,7 @@ pub async fn wasm_desired(
     .await
     .map_err(into_js_err_value)?;
 
-    desired(&mut cmd_ctx).await.map_err(into_js_err_value)?;
+    goal(&mut cmd_ctx).await.map_err(into_js_err_value)?;
     let output = in_memory_text_output.into_inner();
 
     Ok(WorkspaceAndOutput {

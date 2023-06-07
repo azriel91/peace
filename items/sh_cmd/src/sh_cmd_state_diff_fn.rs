@@ -15,19 +15,17 @@ where
     pub async fn state_diff(
         state_diff_sh_cmd: ShCmd,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
+        state_goal: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
     ) -> Result<ShCmdStateDiff, ShCmdError> {
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_desired_arg = match &state_desired.logical {
+        let state_goal_arg = match &state_goal.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_diff_sh_cmd = state_diff_sh_cmd
-            .arg(state_current_arg)
-            .arg(state_desired_arg);
+        let state_diff_sh_cmd = state_diff_sh_cmd.arg(state_current_arg).arg(state_goal_arg);
         ShCmdExecutor::<Id>::exec(&state_diff_sh_cmd)
             .await
             .map(|state| match state.logical {

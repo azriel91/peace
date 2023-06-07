@@ -12,15 +12,15 @@ use crate::items::peace_aws_s3_object::{
 #[cfg(feature = "output_progress")]
 use peace::cfg::progress::ProgressMsgUpdate;
 
-/// Reads the desired state of the S3 object state.
+/// Reads the goal state of the S3 object state.
 #[derive(Debug)]
-pub struct S3ObjectStateDesiredFn<Id>(PhantomData<Id>);
+pub struct S3ObjectStateGoalFn<Id>(PhantomData<Id>);
 
-impl<Id> S3ObjectStateDesiredFn<Id>
+impl<Id> S3ObjectStateGoalFn<Id>
 where
     Id: Send + Sync,
 {
-    pub async fn try_state_desired(
+    pub async fn try_state_goal(
         fn_ctx: FnCtx<'_>,
         params_partial: &<S3ObjectParams<Id> as Params>::Partial,
         _data: S3ObjectData<'_, Id>,
@@ -44,7 +44,7 @@ where
                     return Ok(None);
                 }
             }
-            Self::state_desired_internal(
+            Self::state_goal_internal(
                 fn_ctx,
                 file_path,
                 bucket_name.to_string(),
@@ -57,7 +57,7 @@ where
         }
     }
 
-    pub async fn state_desired(
+    pub async fn state_goal(
         fn_ctx: FnCtx<'_>,
         params: &S3ObjectParams<Id>,
         _data: S3ObjectData<'_, Id>,
@@ -65,10 +65,10 @@ where
         let file_path = params.file_path();
         let bucket_name = params.bucket_name().to_string();
         let object_key = params.object_key().to_string();
-        Self::state_desired_internal(fn_ctx, file_path, bucket_name, object_key).await
+        Self::state_goal_internal(fn_ctx, file_path, bucket_name, object_key).await
     }
 
-    async fn state_desired_internal(
+    async fn state_goal_internal(
         fn_ctx: FnCtx<'_>,
         file_path: &Path,
         bucket_name: String,

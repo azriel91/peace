@@ -8,38 +8,37 @@ use reqwest::{header::ETAG, Url};
 
 use crate::{ETag, FileDownloadData, FileDownloadError, FileDownloadParams, FileDownloadState};
 
-/// Reads the desired state of the file to download.
+/// Reads the goal state of the file to download.
 #[derive(Debug)]
-pub struct FileDownloadStateDesiredFn<Id>(PhantomData<Id>);
+pub struct FileDownloadStateGoalFn<Id>(PhantomData<Id>);
 
-impl<Id> FileDownloadStateDesiredFn<Id>
+impl<Id> FileDownloadStateGoalFn<Id>
 where
     Id: Send + Sync + 'static,
 {
-    pub async fn try_state_desired(
+    pub async fn try_state_goal(
         _fn_ctx: FnCtx<'_>,
         params_partial: &<FileDownloadParams<Id> as Params>::Partial,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<State<FileDownloadState, FetchedOpt<ETag>>>, FileDownloadError> {
         if let Some((src, dest)) = params_partial.src().zip(params_partial.dest()) {
-            Self::file_state_desired(&data, src, dest).await.map(Some)
+            Self::file_state_goal(&data, src, dest).await.map(Some)
         } else {
             Ok(None)
         }
     }
 
-    pub async fn state_desired(
+    pub async fn state_goal(
         _fn_ctx: FnCtx<'_>,
         params: &FileDownloadParams<Id>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
-        let file_state_desired =
-            Self::file_state_desired(&data, params.src(), params.dest()).await?;
+        let file_state_goal = Self::file_state_goal(&data, params.src(), params.dest()).await?;
 
-        Ok(file_state_desired)
+        Ok(file_state_goal)
     }
 
-    async fn file_state_desired(
+    async fn file_state_goal(
         data: &FileDownloadData<'_, Id>,
         src_url: &Url,
         dest: &Path,

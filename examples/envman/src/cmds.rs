@@ -12,9 +12,9 @@ pub use self::{
     env_clean_cmd::EnvCleanCmd,
     env_cmd::EnvCmd,
     env_deploy_cmd::EnvDeployCmd,
-    env_desired_cmd::EnvDesiredCmd,
     env_diff_cmd::EnvDiffCmd,
     env_discover_cmd::EnvDiscoverCmd,
+    env_goal_cmd::EnvGoalCmd,
     env_status_cmd::EnvStatusCmd,
     profile_init_cmd::ProfileInitCmd,
     profile_list_cmd::ProfileListCmd,
@@ -28,9 +28,9 @@ mod common;
 mod env_clean_cmd;
 mod env_cmd;
 mod env_deploy_cmd;
-mod env_desired_cmd;
 mod env_diff_cmd;
 mod env_discover_cmd;
+mod env_goal_cmd;
 mod env_status_cmd;
 mod profile_init_cmd;
 mod profile_list_cmd;

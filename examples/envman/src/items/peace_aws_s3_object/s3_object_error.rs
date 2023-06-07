@@ -19,8 +19,8 @@ pub enum S3ObjectError {
     BucketModificationNotSupported {
         /// Current S3 bucket for the object.
         bucket_name_current: String,
-        /// Desired S3 bucket for the object.
-        bucket_name_desired: String,
+        /// Goal S3 bucket for the object.
+        bucket_name_goal: String,
     },
 
     /// Failed to check file to upload existence.
@@ -118,8 +118,8 @@ pub enum S3ObjectError {
         bucket_name: String,
         /// Current key of the s3 object.
         object_key_current: String,
-        /// Desired key of the s3 object.
-        object_key_desired: String,
+        /// Goal key of the s3 object.
+        object_key_goal: String,
     },
 
     /// A `peace` runtime error occurred.
@@ -228,12 +228,12 @@ pub enum S3ObjectError {
     /// User changed the S3 object name, but AWS does not support
     /// changing this.
     #[error(
-        "S3Object name cannot be modified, as it is not supported by AWS: current: `{object_key_current}`, desired: `{object_key_desired}`."
+        "S3Object name cannot be modified, as it is not supported by AWS: current: `{object_key_current}`, goal: `{object_key_goal}`."
     )]
     S3ObjectModificationNotSupported {
         /// Current name of the s3 object.
         object_key_current: String,
-        /// Desired name of the s3 object.
-        object_key_desired: String,
+        /// Goal name of the s3 object.
+        object_key_goal: String,
     },
 }

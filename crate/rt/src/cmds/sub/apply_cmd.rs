@@ -9,9 +9,9 @@ use peace_cmd::{
 use peace_params::ParamsSpecs;
 use peace_resources::{
     internal::StatesMut,
-    paths::{FlowDir, StatesDesiredFile, StatesSavedFile},
+    paths::{FlowDir, StatesGoalFile, StatesSavedFile},
     resources::ts::SetUp,
-    states::{ts::Desired, States, StatesCurrent, StatesDesired, StatesSaved},
+    states::{ts::Goal, States, StatesCurrent, StatesGoal, StatesSaved},
     Resources,
 };
 use peace_rt_model::{
@@ -71,7 +71,7 @@ where
     /// 1. For each `Item` run `ItemRt::ensure_prepare`, which runs:
     ///
     ///     1. `Item::state_current`
-    ///     2. `Item::state_desired`
+    ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
     /// 2. For `Item`s that return `ApplyCheck::ExecRequired`, run
@@ -91,7 +91,7 @@ where
     ///
     ///     1. `Item::try_state_current`, which resolves parameters from
     ///        the *current* state.
-    ///     2. `Item::state_desired`
+    ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
     /// 3. For `Item`s that return `ApplyCheck::ExecRequired`, run
@@ -127,7 +127,7 @@ where
     ) -> Result<CmdOutcome<States<StatesTsApplyDry>, E>, E> {
         Self::exec_internal(cmd_independence, states_saved, apply_for, true)
             .await
-            .map(|cmd_outcome| cmd_outcome.map(|(states_applied, _states_desired)| states_applied))
+            .map(|cmd_outcome| cmd_outcome.map(|(states_applied, _states_goal)| states_applied))
     }
 
     /// Conditionally runs [`Item::apply_exec`] for each [`Item`].
@@ -143,7 +143,7 @@ where
     /// 1. For each `Item` run `ItemRt::ensure_prepare`, which runs:
     ///
     ///     1. `Item::state_current`
-    ///     2. `Item::state_desired`
+    ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
     /// 2. For `Item`s that return `ApplyCheck::ExecRequired`, run
@@ -163,7 +163,7 @@ where
     ///
     ///     1. `Item::try_state_current`, which resolves parameters from
     ///        the *current* state.
-    ///     2. `Item::state_desired`
+    ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
     /// 3. For `Item`s that return `ApplyCheck::ExecRequired`, run
@@ -198,7 +198,7 @@ where
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApply>, E>, E> {
         let CmdOutcome {
-            value: (states_applied, states_desired),
+            value: (states_applied, states_goal),
             errors,
         } = Self::exec_internal(cmd_independence, states_saved, apply_for, false).await?;
 
@@ -213,7 +213,7 @@ where
 
         match apply_for {
             ApplyFor::Ensure => {
-                Self::serialize_desired(resources, &states_desired).await?;
+                Self::serialize_goal(resources, &states_goal).await?;
             }
             ApplyFor::Clean => {}
         };
@@ -238,7 +238,7 @@ where
         states_saved: &StatesSaved,
         apply_for: ApplyFor,
         dry_run: bool,
-    ) -> Result<CmdOutcome<(States<StatesTs>, StatesDesired), E>, E>
+    ) -> Result<CmdOutcome<(States<StatesTs>, StatesGoal), E>, E>
     where
         StatesTs: Debug + Send + 'static,
     {
@@ -251,8 +251,8 @@ where
         // for items whose state cannot be discovered, e.g. a file on a remote
         // server, when the remote server doesn't exist.
         let states_applied_mut = StatesMut::<StatesTs>::from((*states_saved).clone().into_inner());
-        let states_desired_mut = StatesMut::<Desired>::new();
-        let outcome = (states_applied_mut, states_desired_mut);
+        let states_goal_mut = StatesMut::<Goal>::new();
+        let outcome = (states_applied_mut, states_goal_mut);
 
         let cmd_outcome = CmdBase::exec(
             cmd_independence,
@@ -289,7 +289,7 @@ where
                                 let outcome = states_current_outcome.map(|states_current| {
                                     (
                                         StatesMut::<StatesTs>::from(states_current.into_inner()),
-                                        StatesMut::<Desired>::new(),
+                                        StatesMut::<Goal>::new(),
                                     )
                                 });
                                 outcomes_tx
@@ -359,14 +359,14 @@ where
             },
             |cmd_outcome, apply_exec_outcome| {
                 let CmdOutcome {
-                    value: (states_applied_mut, states_desired_mut),
+                    value: (states_applied_mut, states_goal_mut),
                     errors,
                 } = cmd_outcome;
                 match apply_exec_outcome {
                     ApplyExecOutcome::DiscoverCmdError { error } => return Err(error),
                     ApplyExecOutcome::DiscoverOutcomeError { mut outcome } => {
                         std::mem::swap(&mut outcome.value.0, states_applied_mut);
-                        std::mem::swap(&mut outcome.value.1, states_desired_mut);
+                        std::mem::swap(&mut outcome.value.1, states_goal_mut);
                     }
                     ApplyExecOutcome::ItemApply(item_apply_outcome) => match item_apply_outcome {
                         ItemApplyOutcome::PrepareFail {
@@ -376,12 +376,12 @@ where
                         } => {
                             errors.insert(item_id.clone(), error);
 
-                            // Save `state_target` (which is state_desired) if we are not cleaning
+                            // Save `state_target` (which is state_goal) if we are not cleaning
                             // up.
                             match apply_for {
                                 ApplyFor::Ensure => {
-                                    if let Some(state_desired) = item_apply_partial.state_target() {
-                                        states_desired_mut.insert_raw(item_id, state_desired);
+                                    if let Some(state_goal) = item_apply_partial.state_target() {
+                                        states_goal_mut.insert_raw(item_id, state_goal);
                                     }
                                 }
                                 ApplyFor::Clean => {}
@@ -394,16 +394,16 @@ where
                             if let Some(state_applied) = item_apply.state_applied() {
                                 states_applied_mut.insert_raw(item_id.clone(), state_applied);
                             } else {
-                                // Item was already in the desired state.
+                                // Item was already in the goal state.
                                 // No change to saved state.
                             }
 
-                            // Save `state_target` (which is state_desired) if we are not cleaning
+                            // Save `state_target` (which is state_goal) if we are not cleaning
                             // up.
                             match apply_for {
                                 ApplyFor::Ensure => {
-                                    let state_desired = item_apply.state_target();
-                                    states_desired_mut.insert_raw(item_id, state_desired);
+                                    let state_goal = item_apply.state_target();
+                                    states_goal_mut.insert_raw(item_id, state_goal);
                                 }
                                 ApplyFor::Clean => {}
                             }
@@ -418,12 +418,12 @@ where
                                 states_applied_mut.insert_raw(item_id.clone(), state_applied);
                             }
 
-                            // Save `state_target` (which is state_desired) if we are not cleaning
+                            // Save `state_target` (which is state_goal) if we are not cleaning
                             // up.
                             match apply_for {
                                 ApplyFor::Ensure => {
-                                    let state_desired = item_apply.state_target();
-                                    states_desired_mut.insert_raw(item_id, state_desired);
+                                    let state_goal = item_apply.state_target();
+                                    states_goal_mut.insert_raw(item_id, state_goal);
                                 }
                                 ApplyFor::Clean => {}
                             }
@@ -447,11 +447,11 @@ where
         // * `ShCmdItem` doesn't return the state in the apply script, so in the item we
         //   run the state current script after the apply exec script.
 
-        let cmd_outcome = cmd_outcome.map(|(states_applied_mut, states_desired_mut)| {
+        let cmd_outcome = cmd_outcome.map(|(states_applied_mut, states_goal_mut)| {
             let states_applied: States<StatesTs> = states_applied_mut.into();
-            let states_desired: StatesDesired = states_desired_mut.into();
+            let states_goal: StatesGoal = states_goal_mut.into();
 
-            (states_applied, states_desired)
+            (states_applied, states_goal)
         });
 
         Ok(cmd_outcome)
@@ -637,17 +637,17 @@ where
         Ok(())
     }
 
-    async fn serialize_desired(
+    async fn serialize_goal(
         resources: &Resources<SetUp>,
-        states_desired: &StatesDesired,
+        states_goal: &StatesGoal,
     ) -> Result<(), E> {
         use peace_rt_model::StatesSerializer;
 
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_desired_file = StatesDesiredFile::from(&*flow_dir);
+        let states_goal_file = StatesGoalFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, states_desired, &states_desired_file).await?;
+        StatesSerializer::serialize(&storage, states_goal, &states_goal_file).await?;
 
         drop(flow_dir);
         drop(storage);
@@ -684,7 +684,7 @@ enum ApplyExecOutcome<E, StatesTs> {
     /// Error discovering current state for items.
     DiscoverOutcomeError {
         /// Outcome of state discovery.
-        outcome: CmdOutcome<(StatesMut<StatesTs>, StatesMut<Desired>), E>,
+        outcome: CmdOutcome<(StatesMut<StatesTs>, StatesMut<Goal>), E>,
     },
     /// An item apply outcome.
     ItemApply(ItemApplyOutcome<E>),
@@ -692,7 +692,7 @@ enum ApplyExecOutcome<E, StatesTs> {
 
 #[derive(Debug)]
 enum ItemApplyOutcome<E> {
-    /// Error occurred when discovering current state, desired states, state
+    /// Error occurred when discovering current state, goal states, state
     /// diff, or `ApplyCheck`.
     PrepareFail {
         item_id: ItemId,

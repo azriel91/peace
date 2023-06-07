@@ -18,7 +18,7 @@
 //!         |- FlowDir  # "flow_name", multiple
 //!             |- StatesMeta
 //!             |- StatesCurrent
-//!             |- StatesDesired
+//!             |- StatesGoal
 //! ```
 //!
 //! Concrete folder structure example:
@@ -41,11 +41,11 @@
 //!     |   |              # Should time be stored per item, or per invocation?
 //!     |   |
 //!     |   |- dev_env  # flow name
-//!     |   |   |- states_desired.yaml
+//!     |   |   |- states_goal.yaml
 //!     |   |   |- states_saved.yaml
 //!     |   |
 //!     |   |- artifact
-//!     |   |   |- states_desired.yaml
+//!     |   |   |- states_goal.yaml
 //!     |   |   |- states_saved.yaml
 //!     |   |
 //!     |   |- profile_params.yaml  # Parameters used to initialize this profile
@@ -60,7 +60,7 @@
 //!     |   |
 //!     |   |- customer_one
 //!     |   |   |- flow_params.yaml
-//!     |   |   |- states_desired.yaml
+//!     |   |   |- states_goal.yaml
 //!     |   |   |- states_saved.yaml
 //!     |   |
 //!     |   |- .meta.yaml
@@ -72,7 +72,7 @@
 pub use self::{
     flow_dir::FlowDir, item_params_file::ItemParamsFile, params_specs_file::ParamsSpecsFile,
     peace_app_dir::PeaceAppDir, peace_dir::PeaceDir, profile_dir::ProfileDir,
-    profile_history_dir::ProfileHistoryDir, states_desired_file::StatesDesiredFile,
+    profile_history_dir::ProfileHistoryDir, states_goal_file::StatesGoalFile,
     states_saved_file::StatesSavedFile, workspace_dir::WorkspaceDir,
 };
 
@@ -83,7 +83,7 @@ mod peace_app_dir;
 mod peace_dir;
 mod profile_dir;
 mod profile_history_dir;
-mod states_desired_file;
+mod states_goal_file;
 mod states_saved_file;
 mod workspace_dir;
 

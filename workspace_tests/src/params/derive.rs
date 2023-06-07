@@ -77,7 +77,7 @@ mod struct_params {
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct StructParams {
-        /// Source / desired value for the state.
+        /// Source / goal value for the state.
         src: String,
         /// Destination storage for the state.
         dest: String,
@@ -277,7 +277,7 @@ mod struct_with_type_params {
     #[derive(Derivative, Params, Serialize, Deserialize)]
     #[derivative(Clone, Debug)]
     pub struct StructWithTypeParams<Id> {
-        /// Source / desired value for the state.
+        /// Source / goal value for the state.
         src: String,
         /// Destination storage for the state.
         dest: String,
@@ -496,7 +496,7 @@ mod tuple_params {
 
     #[derive(Clone, Debug, Params, Serialize, Deserialize)]
     pub struct TupleParams(
-        /// Source / desired value for the state.
+        /// Source / goal value for the state.
         String,
         /// Destination storage for the state.
         String,
@@ -875,7 +875,7 @@ mod enum_params {
     #[derivative(Clone, Debug)]
     pub enum EnumParams<Id> {
         Named {
-            /// Source / desired value for the state.
+            /// Source / goal value for the state.
             src: String,
             /// Marker for unique parameters type.
             marker: PhantomData<Id>,
@@ -1523,7 +1523,7 @@ mod struct_recursive_value {
     where
         T: Clone + Debug + Send + Sync + 'static,
     {
-        /// Source / desired value for the state.
+        /// Source / goal value for the state.
         src: InnerValue<T>,
         /// Destination storage for the state.
         dest: u32,
@@ -1741,7 +1741,7 @@ mod struct_recursive_value_no_bounds {
     #[derivative(Clone, Debug)]
     #[serde(bound = "")]
     pub struct StructRecursiveValueNoBounds<Id> {
-        /// Source / desired value for the state.
+        /// Source / goal value for the state.
         #[derivative(Clone(bound = ""), Debug(bound = ""))]
         src: InnerValue<Id>,
         /// Destination storage for the state.
@@ -2433,7 +2433,7 @@ mod external_fields {
 
     #[derive(Clone, Debug, Params, PartialEq, Eq, Serialize, Deserialize)]
     pub struct StructExternalValue {
-        /// Source / desired value for the state.
+        /// Source / goal value for the state.
         #[value_spec(fieldless)]
         src: InnerValue,
         /// Destination storage for the state.

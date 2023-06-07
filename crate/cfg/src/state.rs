@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// * Showing users the state of an item.
 /// * Allowing users to describe the state that an item should be.
-/// * Determining what needs to change between the current state and the desired
+/// * Determining what needs to change between the current state and the goal
 ///   state.
 ///
 /// Therefore, `State` should be:
@@ -76,9 +76,9 @@ use serde::{Deserialize, Serialize};
 ///
 /// ### Logical and Physical
 ///
-/// If an item's desired state can be described before the item exists, but
+/// If an item's goal state can be described before the item exists, but
 /// interacts with an external service which produces additional information to
-/// bring that desired state into existence, then the state has both logical and
+/// bring that goal state into existence, then the state has both logical and
 /// physical parts.
 ///
 /// For example, launching a server or virtual machine. The operating system,
@@ -89,7 +89,8 @@ use serde::{Deserialize, Serialize};
 ///
 /// ### Fully Physical
 ///
-/// If an item's desired state is simply, "automation has been executed after these files have been modified", then the state has no logical component.
+/// If an item's goal state is simply, "automation has been executed after these
+/// files have been modified", then the state has no logical component.
 ///
 /// For example, running a compilation command only if the compilation artifact
 /// doesn't exist, or the source files have changed since the last time the

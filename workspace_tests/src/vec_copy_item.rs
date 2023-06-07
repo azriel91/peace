@@ -54,7 +54,7 @@ impl VecCopyItem {
         Ok(vec_copy_state)
     }
 
-    async fn state_desired_internal(
+    async fn state_goal_internal(
         fn_ctx: FnCtx<'_>,
         vec_a: &[u8],
     ) -> Result<VecCopyState, VecCopyError> {
@@ -107,33 +107,33 @@ impl Item for VecCopyItem {
         Self::state_current_internal(fn_ctx, data).await
     }
 
-    async fn try_state_desired(
+    async fn try_state_goal(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, VecCopyError> {
         if let Some(vec_a) = params_partial.0.as_ref() {
-            Self::state_desired_internal(fn_ctx, vec_a).await.map(Some)
+            Self::state_goal_internal(fn_ctx, vec_a).await.map(Some)
         } else {
             Ok(None)
         }
     }
 
-    async fn state_desired(
+    async fn state_goal(
         fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,
         _data: Self::Data<'_>,
     ) -> Result<Self::State, VecCopyError> {
-        Self::state_desired_internal(fn_ctx, params.0.as_ref()).await
+        Self::state_goal_internal(fn_ctx, params.0.as_ref()).await
     }
 
     async fn state_diff(
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: VecCopyData<'_>,
         state_current: &VecCopyState,
-        state_desired: &VecCopyState,
+        state_goal: &VecCopyState,
     ) -> Result<Self::StateDiff, VecCopyError> {
-        Ok(state_current.diff(state_desired)).map(VecCopyDiff::from)
+        Ok(state_current.diff(state_goal)).map(VecCopyDiff::from)
     }
 
     async fn state_clean(

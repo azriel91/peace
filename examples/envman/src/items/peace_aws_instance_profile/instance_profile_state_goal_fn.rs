@@ -9,15 +9,15 @@ use crate::items::peace_aws_instance_profile::{
     InstanceProfileData, InstanceProfileError, InstanceProfileParams, InstanceProfileState,
 };
 
-/// Reads the desired state of the instance profile state.
+/// Reads the goal state of the instance profile state.
 #[derive(Debug)]
-pub struct InstanceProfileStateDesiredFn<Id>(PhantomData<Id>);
+pub struct InstanceProfileStateGoalFn<Id>(PhantomData<Id>);
 
-impl<Id> InstanceProfileStateDesiredFn<Id>
+impl<Id> InstanceProfileStateGoalFn<Id>
 where
     Id: Send + Sync + 'static,
 {
-    pub async fn try_state_desired(
+    pub async fn try_state_goal(
         _fn_ctx: FnCtx<'_>,
         params_partial: &<InstanceProfileParams<Id> as Params>::Partial,
         _data: InstanceProfileData<'_, Id>,
@@ -26,7 +26,7 @@ where
         let path = params_partial.path();
         let role_associate = params_partial.role_associate();
         if let Some(((name, path), role_associated)) = name.zip(path).zip(role_associate) {
-            Self::state_desired_internal(name.to_string(), path.to_string(), *role_associated)
+            Self::state_goal_internal(name.to_string(), path.to_string(), *role_associated)
                 .await
                 .map(Some)
         } else {
@@ -34,7 +34,7 @@ where
         }
     }
 
-    pub async fn state_desired(
+    pub async fn state_goal(
         _fn_ctx: FnCtx<'_>,
         params: &InstanceProfileParams<Id>,
         _data: InstanceProfileData<'_, Id>,
@@ -43,10 +43,10 @@ where
         let path = params.path().to_string();
         let role_associated = params.role_associate();
 
-        Self::state_desired_internal(name, path, role_associated).await
+        Self::state_goal_internal(name, path, role_associated).await
     }
 
-    async fn state_desired_internal(
+    async fn state_goal_internal(
         name: String,
         path: String,
         role_associated: bool,

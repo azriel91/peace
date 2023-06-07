@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use clap::Parser;
 use envman::{
     cmds::{
-        EnvCleanCmd, EnvDeployCmd, EnvDesiredCmd, EnvDiffCmd, EnvDiscoverCmd, EnvStatusCmd,
+        EnvCleanCmd, EnvDeployCmd, EnvDiffCmd, EnvDiscoverCmd, EnvGoalCmd, EnvStatusCmd,
         ProfileInitCmd, ProfileListCmd, ProfileShowCmd, ProfileSwitchCmd,
     },
     model::{
@@ -111,7 +111,7 @@ async fn run_command(
         }
         EnvManCommand::Discover => EnvDiscoverCmd::run(cli_output).await?,
         EnvManCommand::Status => EnvStatusCmd::run(cli_output).await?,
-        EnvManCommand::Desired => EnvDesiredCmd::run(cli_output).await?,
+        EnvManCommand::Goal => EnvGoalCmd::run(cli_output).await?,
         EnvManCommand::Diff {
             profile_a,
             profile_b,
@@ -124,7 +124,7 @@ async fn run_command(
                         profile_b,
                     },
                 )
-                .unwrap_or(EnvDiffSelection::CurrentAndDesired);
+                .unwrap_or(EnvDiffSelection::CurrentAndGoal);
 
             EnvDiffCmd::run(cli_output, env_diff_selection).await?
         }

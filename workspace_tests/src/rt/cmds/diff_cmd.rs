@@ -30,7 +30,7 @@ async fn contains_state_diff_for_each_item() -> Result<(), Box<dyn std::error::E
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
-    // Discover current and desired states.
+    // Discover current and goal states.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
@@ -40,12 +40,12 @@ async fn contains_state_diff_for_each_item() -> Result<(), Box<dyn std::error::E
         )
         .await?;
     let CmdOutcome {
-        value: (states_current, states_desired),
+        value: (states_current, states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
-    // Diff current and desired states.
-    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Diff current and goal states.
+    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
     assert_eq!(
@@ -54,7 +54,7 @@ async fn contains_state_diff_for_each_item() -> Result<(), Box<dyn std::error::E
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_desired.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+        states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
@@ -266,7 +266,7 @@ async fn diff_profiles_current_with_profile_0_missing_states_current()
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    StatesDiscoverCmd::desired(&mut cmd_ctx_0).await?;
+    StatesDiscoverCmd::goal(&mut cmd_ctx_0).await?;
 
     // profile_1
     let profile_1 = profile!("test_profile_1");
@@ -337,7 +337,7 @@ async fn diff_profiles_current_with_profile_1_missing_states_current()
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    StatesDiscoverCmd::desired(&mut cmd_ctx_1).await?;
+    StatesDiscoverCmd::goal(&mut cmd_ctx_1).await?;
 
     let mut cmd_ctx_multi = CmdCtx::builder_multi_profile_single_flow(&mut output, &workspace)
         .with_flow(&flow)
@@ -372,7 +372,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     let mut buffer = Vec::with_capacity(256);
     let mut output = CliOutput::new_with_writer(&mut buffer);
 
-    // Discover current and desired states.
+    // Discover current and goal states.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
@@ -384,12 +384,12 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     resources.insert(VecA(vec![0, 1, 2,    4, 5, 6, 8, 9]));
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
     let CmdOutcome {
-        value: (states_current, states_desired),
+        value: (states_current, states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
-    // Diff current and desired states.
-    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Diff current and goal states.
+    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
     <_ as OutputWrite<PeaceTestError>>::present(cmd_ctx.output_mut(), &state_diffs).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
@@ -399,7 +399,7 @@ async fn diff_with_multiple_changes() -> Result<(), Box<dyn std::error::Error>> 
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 4, 5, 6, 8, 9])).as_ref(),
-        states_desired.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+        states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![

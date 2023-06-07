@@ -3,7 +3,7 @@ use std::{fmt, path::PathBuf};
 use peace::diff::{Changeable, Tracked};
 use serde::{Deserialize, Serialize};
 
-/// Diff between the current and desired downloaded file.
+/// Diff between the current and goal downloaded file.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub enum FileDownloadStateDiff {
     /// File exists locally, but does not exist on server.

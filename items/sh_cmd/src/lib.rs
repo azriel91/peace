@@ -4,7 +4,7 @@
 //! the following:
 //!
 //! * Current state logic, whose stdout defines the current state (`String`).
-//! * Desired state logic, whose stdout defines the desired state (`String`).
+//! * Goal state logic, whose stdout defines the goal state (`String`).
 //! * State diff logic, whose stdout defines the state difference.
 //! * Ensure check, whose stdout defines if ensure execution needs to run --
 //!   `true` means execution is required, `false` means execution is required.

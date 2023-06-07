@@ -8,7 +8,7 @@ use crate::{FieldNameAndType, ValueResolutionMode};
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ValueResolutionCtx {
     /// When resolving `Value`s, whether to look up `Current<T>` or
-    /// `Desired<T>`.
+    /// `Goal<T>`.
     value_resolution_mode: ValueResolutionMode,
     /// ID of the item whose params are being resolved.
     item_id: ItemId,

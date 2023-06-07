@@ -59,7 +59,7 @@ where
         _params: &IamRoleParams<Id>,
         _data: IamRoleData<'_, Id>,
         state_current: &IamRoleState,
-        _state_desired: &IamRoleState,
+        _state_goal: &IamRoleState,
         diff: &IamRoleStateDiff,
     ) -> Result<ApplyCheck, IamRoleError> {
         match diff {
@@ -148,10 +148,10 @@ where
         _params: &IamRoleParams<Id>,
         _data: IamRoleData<'_, Id>,
         _state_current: &IamRoleState,
-        state_desired: &IamRoleState,
+        state_goal: &IamRoleState,
         _diff: &IamRoleStateDiff,
     ) -> Result<IamRoleState, IamRoleError> {
-        Ok(state_desired.clone())
+        Ok(state_goal.clone())
     }
 
     pub async fn apply(
@@ -160,16 +160,16 @@ where
         _params: &IamRoleParams<Id>,
         data: IamRoleData<'_, Id>,
         state_current: &IamRoleState,
-        state_desired: &IamRoleState,
+        state_goal: &IamRoleState,
         diff: &IamRoleStateDiff,
     ) -> Result<IamRoleState, IamRoleError> {
         #[cfg(feature = "output_progress")]
         let progress_sender = &fn_ctx.progress_sender;
 
         match diff {
-            IamRoleStateDiff::Added => match state_desired {
+            IamRoleStateDiff::Added => match state_goal {
                 IamRoleState::None => {
-                    panic!("`IamRoleApplyFns::exec` called with state_desired being None.");
+                    panic!("`IamRoleApplyFns::exec` called with state_goal being None.");
                 }
                 IamRoleState::Some {
                     name,
@@ -319,7 +319,7 @@ where
                     }
                 }
 
-                let state_applied = state_desired.clone();
+                let state_applied = state_goal.clone();
                 Ok(state_applied)
             }
             IamRoleStateDiff::InSyncExists | IamRoleStateDiff::InSyncDoesNotExist => {
@@ -329,15 +329,15 @@ where
             }
             IamRoleStateDiff::ManagedPolicyAttachmentModified {
                 managed_policy_attachment_current,
-                managed_policy_attachment_desired,
+                managed_policy_attachment_goal,
             } => {
                 let IamRoleState::Some {
                         name,
                         path,
                         role_id_and_arn: _,
                         managed_policy_attachment,
-                    } = state_desired else {
-                        panic!("`IamRoleApplyFns::exec` called with state_desired being None.");
+                    } = state_goal else {
+                        panic!("`IamRoleApplyFns::exec` called with state_goal being None.");
                     };
 
                 let client = data.client();
@@ -357,8 +357,8 @@ where
                     .await?;
                 }
 
-                if managed_policy_attachment_desired.attached() {
-                    let Generated::Value(managed_policy_arn) = managed_policy_attachment_desired.arn() else {
+                if managed_policy_attachment_goal.attached() {
+                    let Generated::Value(managed_policy_arn) = managed_policy_attachment_goal.arn() else {
                         unreachable!("Impossible to have an attached managed policy without an ARN.");
                     };
                     #[cfg(feature = "output_progress")]
@@ -387,7 +387,7 @@ where
                     progress_sender.inc(1, ProgressMsgUpdate::Set(String::from("policy attached")));
                 }
 
-                let state_ensured = state_desired.clone();
+                let state_ensured = state_goal.clone();
                 Ok(state_ensured)
             }
             IamRoleStateDiff::NameOrPathModified {

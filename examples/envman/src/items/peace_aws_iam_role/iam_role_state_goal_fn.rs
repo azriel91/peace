@@ -9,15 +9,15 @@ use crate::items::peace_aws_iam_role::{
     model::ManagedPolicyAttachment, IamRoleData, IamRoleError, IamRoleParams, IamRoleState,
 };
 
-/// Reads the desired state of the instance profile state.
+/// Reads the goal state of the instance profile state.
 #[derive(Debug)]
-pub struct IamRoleStateDesiredFn<Id>(PhantomData<Id>);
+pub struct IamRoleStateGoalFn<Id>(PhantomData<Id>);
 
-impl<Id> IamRoleStateDesiredFn<Id>
+impl<Id> IamRoleStateGoalFn<Id>
 where
     Id: Send + Sync,
 {
-    pub async fn try_state_desired(
+    pub async fn try_state_goal(
         _fn_ctx: FnCtx<'_>,
         params_partial: &<IamRoleParams<Id> as Params>::Partial,
         _data: IamRoleData<'_, Id>,
@@ -25,7 +25,7 @@ where
         let name = params_partial.name();
         let path = params_partial.path();
         if let Some((name, path)) = name.zip(path) {
-            Self::state_desired_internal(
+            Self::state_goal_internal(
                 name.to_string(),
                 path.to_string(),
                 params_partial
@@ -39,7 +39,7 @@ where
         }
     }
 
-    pub async fn state_desired(
+    pub async fn state_goal(
         _fn_ctx: FnCtx<'_>,
         params: &IamRoleParams<Id>,
         _data: IamRoleData<'_, Id>,
@@ -48,10 +48,10 @@ where
         let path = params.path().to_string();
         let managed_policy_arn = Some(params.managed_policy_arn().to_string());
 
-        Self::state_desired_internal(name, path, managed_policy_arn).await
+        Self::state_goal_internal(name, path, managed_policy_arn).await
     }
 
-    async fn state_desired_internal(
+    async fn state_goal_internal(
         name: String,
         path: String,
         managed_policy_arn: Option<String>,

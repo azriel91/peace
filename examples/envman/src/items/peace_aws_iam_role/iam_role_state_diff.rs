@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::items::peace_aws_iam_role::model::ManagedPolicyAttachment;
 
-/// Diff between current (dest) and desired (src) state.
+/// Diff between current (dest) and goal (src) state.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub enum IamRoleStateDiff {
     /// Role would be added.
@@ -15,8 +15,8 @@ pub enum IamRoleStateDiff {
     ManagedPolicyAttachmentModified {
         /// Current state of the managed policy attachment.
         managed_policy_attachment_current: ManagedPolicyAttachment,
-        /// Desired state of the managed policy attachment.
-        managed_policy_attachment_desired: ManagedPolicyAttachment,
+        /// Goal state of the managed policy attachment.
+        managed_policy_attachment_goal: ManagedPolicyAttachment,
     },
     /// Role would be replaced.
     ///
@@ -30,7 +30,7 @@ pub enum IamRoleStateDiff {
     },
     /// Role exists and is up to date.
     InSyncExists,
-    /// Role does not exist, which is desired.
+    /// Role does not exist, which is goal.
     InSyncDoesNotExist,
 }
 
@@ -45,16 +45,14 @@ impl fmt::Display for IamRoleStateDiff {
             }
             IamRoleStateDiff::ManagedPolicyAttachmentModified {
                 managed_policy_attachment_current,
-                managed_policy_attachment_desired,
+                managed_policy_attachment_goal,
             } => {
-                if managed_policy_attachment_current.arn()
-                    != managed_policy_attachment_desired.arn()
-                {
+                if managed_policy_attachment_current.arn() != managed_policy_attachment_goal.arn() {
                     write!(f, "Managed policy attachment will be replaced.")
                 } else {
                     match (
                         managed_policy_attachment_current.attached(),
-                        managed_policy_attachment_desired.attached(),
+                        managed_policy_attachment_goal.attached(),
                     ) {
                         (false, false) | (true, true) => unreachable!(
                             "If the attached managed policy ARNs are the same, then the attached state must be different."
@@ -74,18 +72,18 @@ impl fmt::Display for IamRoleStateDiff {
                         This is a bug."
                     )
                 }
-                (None, Some((path_current, path_desired))) => write!(
+                (None, Some((path_current, path_goal))) => write!(
                     f,
-                    "path modified from {path_current} to {path_desired}. ⚠️ This modification requires deletion and recreation."
+                    "path modified from {path_current} to {path_goal}. ⚠️ This modification requires deletion and recreation."
                 ),
-                (Some((name_current, name_desired)), None) => write!(
+                (Some((name_current, name_goal)), None) => write!(
                     f,
-                    "name modified from {name_current} to {name_desired}. ⚠️ This modification requires deletion and recreation."
+                    "name modified from {name_current} to {name_goal}. ⚠️ This modification requires deletion and recreation."
                 ),
 
-                (Some((name_current, name_desired)), Some((path_current, path_desired))) => write!(
+                (Some((name_current, name_goal)), Some((path_current, path_goal))) => write!(
                     f,
-                    "modified from {path_current}{name_current} to {path_desired}{name_desired}. ⚠️ This modification requires deletion and recreation."
+                    "modified from {path_current}{name_current} to {path_goal}{name_goal}. ⚠️ This modification requires deletion and recreation."
                 ),
             },
             IamRoleStateDiff::InSyncExists => {

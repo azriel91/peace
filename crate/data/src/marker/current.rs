@@ -7,9 +7,9 @@ use serde::{Deserialize, Serialize};
 ///
 /// A `Current<Item::State>` is set to `Some` whenever an item's current state
 /// is discovered. enabling a subsequent successor's params to access that value
-/// when the successor's **desired** state function is run.
+/// when the successor's **goal** state function is run.
 ///
-/// Note: A successor's desired state is dependent on the predecessor's desired
+/// Note: A successor's goal state is dependent on the predecessor's goal
 /// state, which should be in sync with its current state after
 /// `ApplyFns::exec` has been executed.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]

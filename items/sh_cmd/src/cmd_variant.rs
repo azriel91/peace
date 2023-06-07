@@ -7,8 +7,8 @@ pub enum CmdVariant {
     StateClean,
     /// The `state_current` command.
     StateCurrent,
-    /// The `state_desired` command.
-    StateDesired,
+    /// The `state_goal` command.
+    StateGoal,
     /// The `state_diff` command.
     StateDiff,
     /// The `apply_check` command.
@@ -22,7 +22,7 @@ impl fmt::Display for CmdVariant {
         match self {
             Self::StateClean => "state_clean".fmt(f),
             Self::StateCurrent => "state_current".fmt(f),
-            Self::StateDesired => "state_desired".fmt(f),
+            Self::StateGoal => "state_goal".fmt(f),
             Self::StateDiff => "state_diff".fmt(f),
             Self::ApplyCheck => "apply_check".fmt(f),
             Self::ApplyExec => "apply_exec".fmt(f),

@@ -16,8 +16,8 @@ where
 {
     // Not sure why we can't use this:
     //
-    // #[cfg(not(feature = "output_progress"))] _state_desired: &FileMetadatas,
-    // #[cfg(feature = "output_progress")] state_desired: &FileMetadatas,
+    // #[cfg(not(feature = "output_progress"))] _state_goal: &FileMetadatas,
+    // #[cfg(feature = "output_progress")] state_goal: &FileMetadatas,
     //
     // There's an error saying lifetime bounds don't match the trait definition.
     //
@@ -27,7 +27,7 @@ where
         _params: &TarXParams<Id>,
         _data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
-        state_desired: &FileMetadatas,
+        state_goal: &FileMetadatas,
         diff: &TarXStateDiff,
     ) -> Result<ApplyCheck, TarXError> {
         let apply_check = match diff {
@@ -43,7 +43,7 @@ where
                 }
                 #[cfg(feature = "output_progress")]
                 {
-                    let progress_limit = state_desired
+                    let progress_limit = state_goal
                         .len()
                         .try_into()
                         .map(ProgressLimit::Steps)
@@ -61,10 +61,10 @@ where
         _params: &TarXParams<Id>,
         _data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
-        state_desired: &FileMetadatas,
+        state_goal: &FileMetadatas,
         _diff: &TarXStateDiff,
     ) -> Result<FileMetadatas, TarXError> {
-        Ok(state_desired.clone())
+        Ok(state_goal.clone())
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -73,7 +73,7 @@ where
         params: &TarXParams<Id>,
         data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
-        state_desired: &FileMetadatas,
+        state_goal: &FileMetadatas,
         diff: &TarXStateDiff,
     ) -> Result<FileMetadatas, TarXError> {
         use futures::stream::{StreamExt, TryStreamExt};
@@ -134,7 +134,7 @@ where
                 .await?;
         }
 
-        Ok(state_desired.clone())
+        Ok(state_goal.clone())
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -143,7 +143,7 @@ where
         _params: &TarXParams<Id>,
         _data: TarXData<'_, Id>,
         _state_current: &FileMetadatas,
-        _state_desired: &FileMetadatas,
+        _state_goal: &FileMetadatas,
         _diff: &TarXStateDiff,
     ) -> Result<FileMetadatas, TarXError> {
         todo!()

@@ -9,21 +9,21 @@ pub struct TarXStateDiffFn;
 impl TarXStateDiffFn {
     pub async fn state_diff(
         file_metadatas_current: &FileMetadatas,
-        file_metadatas_desired: &FileMetadatas,
+        file_metadatas_goal: &FileMetadatas,
     ) -> Result<TarXStateDiff, TarXError> {
         let mut current_metadata_iter = file_metadatas_current.iter();
-        let mut desired_metadata_iter = file_metadatas_desired.iter();
+        let mut goal_metadata_iter = file_metadatas_goal.iter();
 
         let mut added = Vec::<FileMetadata>::new();
         let mut modified = Vec::<FileMetadata>::new();
         let mut removed = Vec::<FileMetadata>::new();
 
         let mut current_metadata_opt = current_metadata_iter.next();
-        let mut desired_metadata_opt = desired_metadata_iter.next();
+        let mut goal_metadata_opt = goal_metadata_iter.next();
         loop {
-            match (current_metadata_opt, desired_metadata_opt) {
-                (Some(current_metadata), Some(desired_metadata)) => {
-                    match current_metadata.path().cmp(desired_metadata.path()) {
+            match (current_metadata_opt, goal_metadata_opt) {
+                (Some(current_metadata), Some(goal_metadata)) => {
+                    match current_metadata.path().cmp(goal_metadata.path()) {
                         Ordering::Less => {
                             // extracted file name is smaller than file name in tar
                             // meaning extracted file has been removed.
@@ -35,28 +35,28 @@ impl TarXStateDiffFn {
                         Ordering::Equal => {
                             match current_metadata
                                 .modified_time()
-                                .cmp(&desired_metadata.modified_time())
+                                .cmp(&goal_metadata.modified_time())
                             {
                                 Ordering::Less | Ordering::Greater => {
                                     // Should we not overwrite if destination file is greater?
-                                    modified.push(desired_metadata.clone());
+                                    modified.push(goal_metadata.clone());
 
                                     current_metadata_opt = current_metadata_iter.next();
-                                    desired_metadata_opt = desired_metadata_iter.next();
+                                    goal_metadata_opt = goal_metadata_iter.next();
                                 }
                                 Ordering::Equal => {
                                     // don't include in the diff, it's in sync
                                     current_metadata_opt = current_metadata_iter.next();
-                                    desired_metadata_opt = desired_metadata_iter.next();
+                                    goal_metadata_opt = goal_metadata_iter.next();
                                 }
                             }
                         }
                         Ordering::Greater => {
                             // extracted file name is greater than file name in tar
                             // meaning tar file is newly added.
-                            added.push(desired_metadata.clone());
+                            added.push(goal_metadata.clone());
 
-                            desired_metadata_opt = desired_metadata_iter.next();
+                            goal_metadata_opt = goal_metadata_iter.next();
                             continue;
                         }
                     }
@@ -66,9 +66,9 @@ impl TarXStateDiffFn {
                     removed.extend(current_metadata_iter.cloned());
                     break;
                 }
-                (None, Some(desired_metadata)) => {
-                    added.push(desired_metadata.clone());
-                    added.extend(desired_metadata_iter.cloned());
+                (None, Some(goal_metadata)) => {
+                    added.push(goal_metadata.clone());
+                    added.extend(goal_metadata_iter.cloned());
                     break;
                 }
                 (None, None) => break,

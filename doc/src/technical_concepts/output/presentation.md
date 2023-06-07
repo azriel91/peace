@@ -32,13 +32,13 @@ Peace should provide two traits:
 The `OutputWrite` trait has methods for:
 
 * writing progress: setting up state, updating progress, and ending.
-* writing states (current, desired, diff, etc.)
+* writing states (current, goal, diff, etc.)
 * writing error
 
 These methods are specific to `State`s, and if we add methods per type, it doesn't allow any arbitrary type to be formatted and written.
 
 
-## Desired State
+## Goal State
 
 To be usable with arbitrary information, `OutputWrite` should have methods to output different *kinds* of information. These information *kinds* are based on the purpose of the information, not on how they should be grouped or presented.
 

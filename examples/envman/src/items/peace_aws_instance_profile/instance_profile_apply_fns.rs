@@ -102,7 +102,7 @@ where
         _params: &InstanceProfileParams<Id>,
         _data: InstanceProfileData<'_, Id>,
         state_current: &InstanceProfileState,
-        _state_desired: &InstanceProfileState,
+        _state_goal: &InstanceProfileState,
         diff: &InstanceProfileStateDiff,
     ) -> Result<ApplyCheck, InstanceProfileError> {
         match diff {
@@ -177,10 +177,10 @@ where
         _params: &InstanceProfileParams<Id>,
         _data: InstanceProfileData<'_, Id>,
         _state_current: &InstanceProfileState,
-        state_desired: &InstanceProfileState,
+        state_goal: &InstanceProfileState,
         _diff: &InstanceProfileStateDiff,
     ) -> Result<InstanceProfileState, InstanceProfileError> {
-        Ok(state_desired.clone())
+        Ok(state_goal.clone())
     }
 
     pub async fn apply(
@@ -189,16 +189,16 @@ where
         _params: &InstanceProfileParams<Id>,
         data: InstanceProfileData<'_, Id>,
         state_current: &InstanceProfileState,
-        state_desired: &InstanceProfileState,
+        state_goal: &InstanceProfileState,
         diff: &InstanceProfileStateDiff,
     ) -> Result<InstanceProfileState, InstanceProfileError> {
         #[cfg(feature = "output_progress")]
         let progress_sender = &fn_ctx.progress_sender;
 
         match diff {
-            InstanceProfileStateDiff::Added => match state_desired {
+            InstanceProfileStateDiff::Added => match state_goal {
                 InstanceProfileState::None => {
-                    panic!("`InstanceProfileApplyFns::exec` called with state_desired being None.");
+                    panic!("`InstanceProfileApplyFns::exec` called with state_goal being None.");
                 }
                 InstanceProfileState::Some {
                     name,
@@ -338,7 +338,7 @@ where
                         );
                     }
 
-                    let state_applied = state_desired.clone();
+                    let state_applied = state_goal.clone();
                     Ok(state_applied)
                 }
             },
@@ -357,12 +357,12 @@ where
             }),
             InstanceProfileStateDiff::RoleAssociatedModified {
                 role_associated_current,
-                role_associated_desired: _,
+                role_associated_goal: _,
             } => {
-                let (name, path) = match state_desired {
+                let (name, path) = match state_goal {
                     InstanceProfileState::None => {
                         panic!(
-                            "`InstanceProfileApplyFns::exec` called with state_desired being None."
+                            "`InstanceProfileApplyFns::exec` called with state_goal being None."
                         );
                     }
                     InstanceProfileState::Some {
@@ -395,7 +395,7 @@ where
                     )
                     .await?;
                 }
-                let state_applied = state_desired.clone();
+                let state_applied = state_goal.clone();
                 Ok(state_applied)
             }
         }

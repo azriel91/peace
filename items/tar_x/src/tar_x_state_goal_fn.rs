@@ -5,15 +5,15 @@ use tar::Archive;
 
 use crate::{FileMetadata, FileMetadatas, TarXData, TarXError, TarXParams};
 
-/// Reads the desired state of the tar to extract.
+/// Reads the goal state of the tar to extract.
 #[derive(Debug)]
-pub struct TarXStateDesiredFn<Id>(PhantomData<Id>);
+pub struct TarXStateGoalFn<Id>(PhantomData<Id>);
 
-impl<Id> TarXStateDesiredFn<Id>
+impl<Id> TarXStateGoalFn<Id>
 where
     Id: Send + Sync,
 {
-    pub async fn try_state_desired(
+    pub async fn try_state_goal(
         _fn_ctx: FnCtx<'_>,
         params_partial: &<TarXParams<Id> as Params>::Partial,
         data: TarXData<'_, Id>,
@@ -40,7 +40,7 @@ where
         }
     }
 
-    pub async fn state_desired(
+    pub async fn state_goal(
         _fn_ctx: FnCtx<'_>,
         params: &TarXParams<Id>,
         data: TarXData<'_, Id>,
@@ -73,7 +73,7 @@ where
     ) -> Result<Vec<FileMetadata>, TarXError> {
         let file_metadatas = storage
             .read_with_sync_api(
-                "TarXStateDesiredFn::files_in_tar".to_string(),
+                "TarXStateGoalFn::files_in_tar".to_string(),
                 tar_path,
                 |sync_io_bridge| Self::tar_file_metadata(tar_path, Archive::new(sync_io_bridge)),
             )

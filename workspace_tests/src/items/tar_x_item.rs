@@ -125,7 +125,7 @@ async fn state_current_returns_file_metadatas_when_extraction_folder_contains_fi
 }
 
 #[tokio::test]
-async fn state_desired_returns_file_metadatas_from_tar() -> Result<(), Box<dyn std::error::Error>> {
+async fn state_goal_returns_file_metadatas_from_tar() -> Result<(), Box<dyn std::error::Error>> {
     let flow_id = FlowId::new(crate::fn_name_short!())?;
     let TestEnv {
         tempdir: _tempdir,
@@ -150,19 +150,17 @@ async fn state_desired_returns_file_metadatas_from_tar() -> Result<(), Box<dyn s
         .await?;
 
     let CmdOutcome {
-        value: states_desired,
+        value: states_goal,
         errors: _,
-    } = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
-    let state_desired = states_desired
-        .get::<FileMetadatas, _>(TarXTest::ID)
-        .unwrap();
+    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
+    let state_goal = states_goal.get::<FileMetadatas, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
         &FileMetadatas::from(vec![
             FileMetadata::new(b_path, TAR_X2_MTIME),
             FileMetadata::new(d_path, TAR_X2_MTIME),
         ]),
-        state_desired
+        state_goal
     );
 
     Ok(())
@@ -193,10 +191,10 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
-    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
-    // Diff current and desired states.
-    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Diff current and goal states.
+    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
@@ -245,10 +243,10 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
-    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
-    // Diff current and desired states.
-    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Diff current and goal states.
+    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
@@ -299,10 +297,10 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
-    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
-    // Diff current and desired states.
-    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Diff current and goal states.
+    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     // `b` and `d` are not included in the diff
@@ -351,11 +349,11 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
-    // Discover current and desired states.
-    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Discover current and goal states.
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
-    // Diff current and desired states.
-    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Diff current and goal states.
+    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     // `b` and `d` are not included in the diff
@@ -409,11 +407,11 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
-    // Discover current and desired states.
-    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Discover current and goal states.
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
-    // Diff current and desired states.
-    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Diff current and goal states.
+    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
@@ -461,11 +459,11 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
             TarXParams::<TarXTest>::new(tar_path, dest).into(),
         )
         .await?;
-    // Discover current and desired states.
-    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Discover current and goal states.
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
-    // Diff current and desired states.
-    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Diff current and goal states.
+    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(&TarXStateDiff::ExtractionInSync, state_diff);
@@ -501,17 +499,15 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         )
         .await?;
     let CmdOutcome {
-        value: (states_current, states_desired),
+        value: (states_current, states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
     let state_current = states_current
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
 
-    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
-    let state_desired = states_desired
-        .get::<FileMetadatas, _>(TarXTest::ID)
-        .unwrap();
+    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
+    let state_goal = states_goal.get::<FileMetadatas, _>(TarXTest::ID).unwrap();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     let SingleProfileSingleFlowView {
@@ -536,7 +532,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
             &tar_x_params,
             <TarXData<TarXTest> as Data>::borrow(TarXTest::ID, resources),
             state_current,
-            state_desired,
+            state_goal,
             state_diff
         )
         .await?
@@ -568,9 +564,9 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
         )
         .await?;
     let CmdOutcome {
-        value: (states_current, _states_desired),
+        value: (states_current, _states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     let CmdOutcome {
@@ -628,9 +624,9 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
         )
         .await?;
     let CmdOutcome {
-        value: (states_current, _states_desired),
+        value: (states_current, _states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     // Overwrite changed files and remove extra files
@@ -696,9 +692,9 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
         )
         .await?;
     let CmdOutcome {
-        value: (states_current, _states_desired),
+        value: (states_current, _states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
     let states_saved = StatesSaved::from(states_current);
 
     let CmdOutcome {

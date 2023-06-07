@@ -18,7 +18,7 @@ pub struct ItemApply<State, StateDiff> {
     pub state_current: State,
     /// Target state discovered during the execution.
     pub state_target: State,
-    /// Diff between current and desired states.
+    /// Diff between current and goal states.
     pub state_diff: StateDiff,
     /// Whether item execution was required.
     pub apply_check: ApplyCheck,

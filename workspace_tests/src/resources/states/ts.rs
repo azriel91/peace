@@ -1,6 +1,6 @@
 mod debug {
     use peace::resources::states::ts::{
-        Cleaned, CleanedDry, Current, Desired, Ensured, EnsuredDry, Saved,
+        Cleaned, CleanedDry, Current, Ensured, EnsuredDry, Goal, Saved,
     };
 
     #[test]
@@ -14,8 +14,8 @@ mod debug {
     }
 
     #[test]
-    fn states_desired() {
-        assert_eq!("Desired", format!("{Desired:?}"))
+    fn states_goal() {
+        assert_eq!("Goal", format!("{Goal:?}"))
     }
 
     #[test]
@@ -41,7 +41,7 @@ mod debug {
 
 mod serde {
     use peace::resources::states::ts::{
-        Cleaned, CleanedDry, Current, Desired, Ensured, EnsuredDry, Saved,
+        Cleaned, CleanedDry, Current, Ensured, EnsuredDry, Goal, Saved,
     };
 
     #[test]
@@ -59,10 +59,10 @@ mod serde {
     }
 
     #[test]
-    fn desired() {
-        let s = serde_yaml::to_string(&Desired).unwrap();
+    fn goal() {
+        let s = serde_yaml::to_string(&Goal).unwrap();
 
-        assert!(serde_yaml::from_str::<Desired>(&s).is_ok());
+        assert!(serde_yaml::from_str::<Goal>(&s).is_ok());
     }
 
     #[test]

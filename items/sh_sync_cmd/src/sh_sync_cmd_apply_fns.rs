@@ -19,7 +19,7 @@ where
         _params: &ShSyncCmdParams<Id>,
         _data: ShSyncCmdData<'_, Id>,
         _file_state_current: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
-        _file_state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
+        _file_state_goal: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _diff: &ShSyncCmdStateDiff,
     ) -> Result<ApplyCheck, ShSyncCmdError> {
         todo!();
@@ -30,7 +30,7 @@ where
         _params: &ShSyncCmdParams<Id>,
         _data: ShSyncCmdData<'_, Id>,
         _state: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
-        _file_state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
+        _file_state_goal: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _diff: &ShSyncCmdStateDiff,
     ) -> Result<State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>, ShSyncCmdError> {
         todo!()
@@ -41,7 +41,7 @@ where
         _params: &ShSyncCmdParams<Id>,
         _data: ShSyncCmdData<'_, Id>,
         _state: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
-        _file_state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
+        _file_state_goal: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
         _diff: &ShSyncCmdStateDiff,
     ) -> Result<State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>, ShSyncCmdError> {
         todo!();

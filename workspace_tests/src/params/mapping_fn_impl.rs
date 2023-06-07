@@ -30,7 +30,7 @@ fn debug() {
 
 mapping_tests!(apply_dry, ApplyDry);
 mapping_tests!(current, Current);
-mapping_tests!(desired, Desired);
+mapping_tests!(goal, Goal);
 mapping_tests!(clean, Clean);
 
 macro_rules! mapping_tests {

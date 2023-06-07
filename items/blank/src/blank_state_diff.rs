@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-/// Diff between current (dest) and desired (src) state.
+/// Diff between current (dest) and goal (src) state.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub enum BlankStateDiff {
     /// Value was added.
@@ -12,7 +12,7 @@ pub enum BlankStateDiff {
     },
     /// Value
     OutOfSync {
-        /// Difference between the current and desired values.
+        /// Difference between the current and goal values.
         diff: i64,
     },
     InSync {
@@ -26,7 +26,7 @@ impl fmt::Display for BlankStateDiff {
         match self {
             BlankStateDiff::Added { value } => write!(f, "`{value}` newly added."),
             BlankStateDiff::OutOfSync { diff } => {
-                write!(f, "Current value differs to desired value by: `{diff}`.")
+                write!(f, "Current value differs to goal value by: `{diff}`.")
             }
             BlankStateDiff::InSync { value } => write!(f, "Value already in sync: `{value}`."),
         }

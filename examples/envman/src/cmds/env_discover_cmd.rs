@@ -14,12 +14,12 @@ use crate::{
     model::{EnvManError, EnvManFlow},
 };
 
-/// Shows the desired state of the environment.
+/// Shows the goal state of the environment.
 #[derive(Debug)]
 pub struct EnvDiscoverCmd;
 
 impl EnvDiscoverCmd {
-    /// Shows the desired state of the environment.
+    /// Shows the goal state of the environment.
     ///
     /// # Parameters
     ///
@@ -44,11 +44,11 @@ macro_rules! run {
         $flow_cmd::run($output, true, |ctx| {
             async {
                 let CmdOutcome {
-                    value: (states_current, states_desired),
+                    value: (states_current, states_goal),
                     errors: _,
-                } = StatesDiscoverCmd::current_and_desired(ctx).await?;
+                } = StatesDiscoverCmd::current_and_goal(ctx).await?;
                 let states_current_raw_map = &**states_current;
-                let states_desired_raw_map = &**states_desired;
+                let states_goal_raw_map = &**states_goal;
 
                 let SingleProfileSingleFlowViewAndOutput {
                     output,
@@ -75,8 +75,8 @@ macro_rules! run {
 
                     ListNumbered::new(states_current_presentables)
                 };
-                let states_desired_presentables = {
-                    let states_desired_presentables = flow
+                let states_goal_presentables = {
+                    let states_goal_presentables = flow
                         .graph()
                         .iter_insertion()
                         .map(|item| {
@@ -84,16 +84,14 @@ macro_rules! run {
                             // Hack: for alignment
                             let padding =
                                 " ".repeat($padding.saturating_sub(format!("{item_id}").len() + 2));
-                            match states_desired_raw_map.get(item_id) {
-                                Some(state_desired) => {
-                                    (item_id, format!("{padding}: {state_desired}"))
-                                }
+                            match states_goal_raw_map.get(item_id) {
+                                Some(state_goal) => (item_id, format!("{padding}: {state_goal}")),
                                 None => (item_id, format!("{padding}: <unknown>")),
                             }
                         })
                         .collect::<Vec<_>>();
 
-                    ListNumbered::new(states_desired_presentables)
+                    ListNumbered::new(states_goal_presentables)
                 };
 
                 output
@@ -101,8 +99,8 @@ macro_rules! run {
                         Heading::new(HeadingLevel::Level1, "States Current"),
                         states_current_presentables,
                         "\n",
-                        Heading::new(HeadingLevel::Level1, "States Desired"),
-                        states_desired_presentables,
+                        Heading::new(HeadingLevel::Level1, "Goal States"),
+                        states_goal_presentables,
                         "\n",
                     ))
                     .await?;

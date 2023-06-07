@@ -24,7 +24,7 @@ Whether a task has started, is in-progress, stalled, or completed.
 
     - **Units total:** Unknown (spinner) / known (progress bar).
     - **Units current**
-    - **Function:** `Item::{state_current, state_desired, apply}`.
+    - **Function:** `Item::{state_current, state_goal, apply}`.
 
         Certain functions will not be applicable, e.g. when `StateCurrent` is feature gated, then the function won't be available when the feature is not enabled.
 
@@ -41,7 +41,7 @@ Whether a task has started, is in-progress, stalled, or completed.
     This status is best conveyed alongside the following information:
 
     - **Completion Status**: Success, Failed.
-    - **Function:** `Item::{state_current, state_desired, apply}`.
+    - **Function:** `Item::{state_current, state_goal, apply}`.
 
 
 The following variant is possible conceptually, but not applicable to the Peace framework:

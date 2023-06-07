@@ -19,7 +19,7 @@ use crate::{BlankDest, BlankSrc};
 #[derivative(Clone, Debug)]
 #[serde(bound = "")]
 pub struct BlankParams<Id> {
-    /// Source / desired value for the state.
+    /// Source / goal value for the state.
     pub src: BlankSrc,
     /// Destination / current value of the state.
     pub dest: BlankDest,

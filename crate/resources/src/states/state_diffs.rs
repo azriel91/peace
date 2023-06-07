@@ -54,8 +54,8 @@ impl From<TypeMap<ItemId, BoxDtDisplay>> for StateDiffs {
 }
 
 impl From<StateDiffsMut> for StateDiffs {
-    fn from(states_desired_mut: StateDiffsMut) -> Self {
-        Self(states_desired_mut.into_inner())
+    fn from(states_goal_mut: StateDiffsMut) -> Self {
+        Self(states_goal_mut.into_inner())
     }
 }
 

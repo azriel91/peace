@@ -1,5 +1,5 @@
 $current=$args[0]
-$desired=$args[1]
+$goal=$args[1]
 $diff=$args[2]
 
 switch ("$diff")

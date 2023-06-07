@@ -14,7 +14,7 @@ where
 {
     pub async fn state_diff(
         _state_current: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
-        _state_desired: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
+        _state_goal: &State<ShSyncCmdSyncStatus, ShSyncCmdExecutionRecord>,
     ) -> Result<ShSyncCmdStateDiff, ShSyncCmdError> {
         todo!()
     }

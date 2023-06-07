@@ -13,7 +13,7 @@ use crate::outcomes::ItemApplyPartialRt;
 /// 1. `ApplyCmd` calls the following function for each item.
 ///
 ///     - [`Item::state_current`]
-///     - [`Item::state_desired`] or [`Item::state_clean`]
+///     - [`Item::state_goal`] or [`Item::state_clean`]
 ///     - [`Item::state_diff`]
 ///     - [`ApplyFns::check`]
 ///     - [`ApplyFns::exec`]
@@ -27,7 +27,7 @@ use crate::outcomes::ItemApplyPartialRt;
 /// optional.
 ///
 /// [`Item::state_current`]: peace_cfg::Item::state_current
-/// [`Item::state_desired`]: peace_cfg::Item::state_desired
+/// [`Item::state_goal`]: peace_cfg::Item::state_goal
 /// [`Item::state_diff`]: peace_cfg::Item::state_diff
 /// [`ApplyFns::check`]: peace_cfg::Item::ApplyFns
 /// [`ApplyFns::exec`]: peace_cfg::Item::ApplyFns
@@ -39,7 +39,7 @@ pub struct ItemApplyPartial<State, StateDiff> {
     pub state_current: Option<State>,
     /// Target state discovered during the execution.
     pub state_target: Option<State>,
-    /// Diff between current and desired states.
+    /// Diff between current and goal states.
     pub state_diff: Option<StateDiff>,
     /// Whether item execution is required.
     pub apply_check: Option<ApplyCheck>,

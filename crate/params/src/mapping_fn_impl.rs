@@ -3,7 +3,7 @@ use std::{
     marker::PhantomData,
 };
 
-use peace_data::marker::{ApplyDry, Clean, Current, Desired};
+use peace_data::marker::{ApplyDry, Clean, Current, Goal};
 use peace_resources::{resources::ts::SetUp, BorrowFail, Resources};
 use serde::{Deserialize, Serialize, Serializer};
 
@@ -154,8 +154,8 @@ macro_rules! impl_mapping_fn_impl {
                             from_type_name: tynm::type_name::<($($Arg,)+)>(),
                         })
                     }
-                    ValueResolutionMode::Desired => {
-                        $(arg_resolve!(resources, value_resolution_ctx, Desired, $var, $Arg);)+
+                    ValueResolutionMode::Goal => {
+                        $(arg_resolve!(resources, value_resolution_ctx, Goal, $var, $Arg);)+
 
                         fn_map($(&$var,)+).ok_or(ParamsResolveError::FromMap {
                             value_resolution_ctx: value_resolution_ctx.clone(),
@@ -209,8 +209,8 @@ macro_rules! impl_mapping_fn_impl {
 
                         Ok(fn_map($(&$var,)+))
                     }
-                    ValueResolutionMode::Desired => {
-                        $(try_arg_resolve!(resources, value_resolution_ctx, Desired, $var, $Arg);)+
+                    ValueResolutionMode::Goal => {
+                        $(try_arg_resolve!(resources, value_resolution_ctx, Goal, $var, $Arg);)+
 
                         Ok(fn_map($(&$var,)+))
                     }

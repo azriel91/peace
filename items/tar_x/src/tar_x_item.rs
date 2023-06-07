@@ -8,7 +8,7 @@ use peace::{
 
 use crate::{
     FileMetadatas, TarXApplyFns, TarXData, TarXError, TarXParams, TarXStateCurrentFn,
-    TarXStateDesiredFn, TarXStateDiff, TarXStateDiffFn,
+    TarXStateDiff, TarXStateDiffFn, TarXStateGoalFn,
 };
 
 /// Item for extracting a tar file.
@@ -88,29 +88,29 @@ where
         TarXStateCurrentFn::state_current(fn_ctx, params, data).await
     }
 
-    async fn try_state_desired(
+    async fn try_state_goal(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
         data: TarXData<'_, Id>,
     ) -> Result<Option<Self::State>, TarXError> {
-        TarXStateDesiredFn::try_state_desired(fn_ctx, params_partial, data).await
+        TarXStateGoalFn::try_state_goal(fn_ctx, params_partial, data).await
     }
 
-    async fn state_desired(
+    async fn state_goal(
         fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,
         data: TarXData<'_, Id>,
     ) -> Result<Self::State, TarXError> {
-        TarXStateDesiredFn::state_desired(fn_ctx, params, data).await
+        TarXStateGoalFn::state_goal(fn_ctx, params, data).await
     }
 
     async fn state_diff(
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
         state_current: &Self::State,
-        state_desired: &Self::State,
+        state_goal: &Self::State,
     ) -> Result<Self::StateDiff, TarXError> {
-        TarXStateDiffFn::state_diff(state_current, state_desired).await
+        TarXStateDiffFn::state_diff(state_current, state_goal).await
     }
 
     async fn state_clean(

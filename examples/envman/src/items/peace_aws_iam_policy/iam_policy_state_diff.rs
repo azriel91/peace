@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-/// Diff between current (dest) and desired (src) state.
+/// Diff between current (dest) and goal (src) state.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub enum IamPolicyStateDiff {
     /// Policy would be added.
@@ -22,12 +22,12 @@ pub enum IamPolicyStateDiff {
     DocumentModified {
         /// Current policy document.
         document_current: String,
-        /// Desired policy document.
-        document_desired: String,
+        /// Goal policy document.
+        document_goal: String,
     },
     /// Policy exists and is up to date.
     InSyncExists,
-    /// Policy does not exist, which is desired.
+    /// Policy does not exist, which is goal.
     InSyncDoesNotExist,
 }
 
@@ -42,7 +42,7 @@ impl fmt::Display for IamPolicyStateDiff {
             }
             IamPolicyStateDiff::DocumentModified {
                 document_current: _,
-                document_desired: _,
+                document_goal: _,
             } => write!(f, "policy will be updated."),
             IamPolicyStateDiff::NameOrPathModified {
                 name_diff,
@@ -54,15 +54,15 @@ impl fmt::Display for IamPolicyStateDiff {
                         This is a bug."
                     )
                 }
-                (None, Some((path_current, path_desired))) => {
-                    write!(f, "path changed from {path_current} to {path_desired}")
+                (None, Some((path_current, path_goal))) => {
+                    write!(f, "path changed from {path_current} to {path_goal}")
                 }
-                (Some((name_current, name_desired)), None) => {
-                    write!(f, "name changed from {name_current} to {name_desired}")
+                (Some((name_current, name_goal)), None) => {
+                    write!(f, "name changed from {name_current} to {name_goal}")
                 }
-                (Some((name_current, name_desired)), Some((path_current, path_desired))) => write!(
+                (Some((name_current, name_goal)), Some((path_current, path_goal))) => write!(
                     f,
-                    "name and path changed from {name_current}:{path_current} to {name_desired}:{path_desired}"
+                    "name and path changed from {name_current}:{path_current} to {name_goal}:{path_goal}"
                 ),
             },
             IamPolicyStateDiff::InSyncExists => {

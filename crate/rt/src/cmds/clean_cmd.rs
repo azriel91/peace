@@ -46,7 +46,7 @@ where
     ///
     ///     1. `Item::try_state_current`, which resolves parameters from
     ///        the *current* state.
-    ///     2. `Item::state_desired`
+    ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
     /// 3. For `Item`s that return `ApplyCheck::ExecRequired`, run
@@ -112,7 +112,7 @@ where
     ///
     ///     1. `Item::try_state_current`, which resolves parameters from
     ///        the *current* state.
-    ///     2. `Item::state_desired`
+    ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
     /// 3. For `Item`s that return `ApplyCheck::ExecRequired`, run

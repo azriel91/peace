@@ -32,7 +32,7 @@ When initializing a project workspace, the suitable scope is different depending
     To create this command:
 
     1. Build the command context with the provided parameters.
-    2. Call `StateDiscoverCmd::exec` to discover the current and desired states.
+    2. Call `StateDiscoverCmd::exec` to discover the current and goal states.
     3. Call `EnsureCmd::exec` to execute the flow.
 
     When the command context is built:

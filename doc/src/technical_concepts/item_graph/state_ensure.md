@@ -1,6 +1,6 @@
 # State Ensure
 
-> When applying a change, the change should converge the current state to the desired state.
+> When applying a change, the change should converge the current state to the goal state.
 
 
 ```rust ,ignore
@@ -19,7 +19,7 @@ To discover the current state of all items, the following method is used:
 
 1. `ApplyFns::check` is run for all items.
 2. Of the ones that return `ApplyCheck::ExecRequired`, `Item::apply` is run.
-3. Finally, `Item::state_current` is run so that the end state can be compared with the desired state to confirm that they match.
+3. Finally, `Item::state_current` is run so that the end state can be compared with the goal state to confirm that they match.
 
 ### `ApplyFns::check`
 
@@ -173,7 +173,7 @@ It is also recommended that *read* requests to external services are minimized t
 
 Since these processes happen over distributed systems, and errors can happen at any point in the process, it is realistic to assume that the process doesn't happen transactionally.
 
-`ApplyFns` has been designed so that implementers will consider transitions from non-atomic states to the desired state. In simpler terms, if the desired state is "10 servers must exist", then:
+`ApplyFns` has been designed so that implementers will consider transitions from non-atomic states to the goal state. In simpler terms, if the goal state is "10 servers must exist", then:
 
 * When the current state is 0 servers, then 10 servers should be launched.
 * When the current state is 6 servers, then 4 servers should be launched.

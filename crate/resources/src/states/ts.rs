@@ -14,9 +14,9 @@ pub struct Saved;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Current;
 
-/// Desired states of items.
+/// Goal states of items.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Desired;
+pub struct Goal;
 
 /// States of items after running the `EnsureCmd`.
 #[derive(Debug, Deserialize, Serialize)]

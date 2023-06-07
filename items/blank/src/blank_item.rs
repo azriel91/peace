@@ -79,7 +79,7 @@ where
         Ok(BlankState(params.dest.0))
     }
 
-    async fn try_state_desired(
+    async fn try_state_goal(
         _fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: BlankData<'_, Id>,
@@ -90,7 +90,7 @@ where
             .map(|src| BlankState(Some(src.0))))
     }
 
-    async fn state_desired(
+    async fn state_goal(
         _fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,
         _data: BlankData<'_, Id>,
@@ -102,19 +102,17 @@ where
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
         state_current: &BlankState,
-        state_desired: &BlankState,
+        state_goal: &BlankState,
     ) -> Result<Self::StateDiff, BlankError> {
-        let diff = match (state_current, state_desired) {
-            (BlankState(Some(current)), BlankState(Some(desired))) if current == desired => {
+        let diff = match (state_current, state_goal) {
+            (BlankState(Some(current)), BlankState(Some(goal))) if current == goal => {
                 BlankStateDiff::InSync { value: *current }
             }
-            (BlankState(Some(current)), BlankState(Some(desired))) => BlankStateDiff::OutOfSync {
-                diff: i64::from(desired - current),
+            (BlankState(Some(current)), BlankState(Some(goal))) => BlankStateDiff::OutOfSync {
+                diff: i64::from(goal - current),
             },
-            (BlankState(None), BlankState(Some(desired))) => {
-                BlankStateDiff::Added { value: *desired }
-            }
-            (BlankState(_), BlankState(None)) => unreachable!("desired state is always Some"),
+            (BlankState(None), BlankState(Some(goal))) => BlankStateDiff::Added { value: *goal },
+            (BlankState(_), BlankState(None)) => unreachable!("goal state is always Some"),
         };
 
         Ok(diff)

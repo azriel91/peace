@@ -379,19 +379,19 @@ pub enum Error {
     )]
     StatesCurrentDiscoverRequired,
 
-    /// Desired states have not been written to disk.
+    /// Goal states have not been written to disk.
     ///
-    /// This is returned when `StatesDesiredFile` is attempted to be
+    /// This is returned when `StatesGoalFile` is attempted to be
     /// deserialized but does not exist.
-    #[error("Desired states have not been written to disk.")]
+    #[error("Goal states have not been written to disk.")]
     #[cfg_attr(
         feature = "error_reporting",
         diagnostic(
-            code(peace_rt_model::states_desired_discover_required),
-            help("Ensure that `StatesDiscoverCmd::desired` has been called.")
+            code(peace_rt_model::states_goal_discover_required),
+            help("Ensure that `StatesDiscoverCmd::goal` has been called.")
         )
     )]
-    StatesDesiredDiscoverRequired,
+    StatesGoalDiscoverRequired,
 
     /// Failed to serialize state diffs.
     #[error("Failed to serialize state diffs.")]

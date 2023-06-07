@@ -3,7 +3,7 @@ use peace::{
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
     resources::resources::ts::SetUp,
     rt::cmds::{
-        CleanCmd, DiffCmd, EnsureCmd, StatesDesiredDisplayCmd, StatesDiscoverCmd,
+        CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd, StatesGoalDisplayCmd,
         StatesSavedDisplayCmd, StatesSavedReadCmd,
     },
     rt_model::{
@@ -112,9 +112,9 @@ where
     O: OutputWrite<DownloadError>,
 {
     let CmdOutcome {
-        value: (_states_current, _states_desired),
+        value: (_states_current, _states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(cmd_ctx).await?;
     Ok(())
 }
 
@@ -127,12 +127,12 @@ where
     Ok(())
 }
 
-pub async fn desired<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
+pub async fn goal<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
     // Already displayed by the command
-    let _states_desired = StatesDesiredDisplayCmd::exec(cmd_ctx).await?;
+    let _states_goal = StatesGoalDisplayCmd::exec(cmd_ctx).await?;
     Ok(())
 }
 
@@ -140,7 +140,7 @@ pub async fn diff<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Download
 where
     O: OutputWrite<DownloadError>,
 {
-    let states_diff = DiffCmd::current_and_desired(cmd_ctx).await?;
+    let states_diff = DiffCmd::current_and_goal(cmd_ctx).await?;
     cmd_ctx.output_mut().present(&states_diff).await?;
     Ok(())
 }

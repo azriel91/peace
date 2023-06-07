@@ -38,7 +38,7 @@ where
     /// 1. For each `Item` run `ItemRt::ensure_prepare`, which runs:
     ///
     ///     1. `Item::state_current`
-    ///     2. `Item::state_desired`
+    ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
     /// 2. For `Item`s that return `ApplyCheck::ExecRequired`, run
@@ -60,7 +60,7 @@ where
         .await
     }
 
-    /// Runs [`Item::apply_exec_dry`] for each [`Item`], with [`state_desired`]
+    /// Runs [`Item::apply_exec_dry`] for each [`Item`], with [`state_goal`]
     /// as the target state.
     ///
     /// See [`Self::exec_dry`] for full documentation.
@@ -69,7 +69,7 @@ where
     /// functionality of another command.
     ///
     /// [`Item`]: peace_cfg::Item
-    /// [`state_desired`]: peace_cfg::Item::state_desired
+    /// [`state_goal`]: peace_cfg::Item::state_goal
     pub async fn exec_dry_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
         states_saved: &StatesSaved,
@@ -96,7 +96,7 @@ where
     /// 1. For each `Item` run `ItemRt::ensure_prepare`, which runs:
     ///
     ///     1. `Item::state_current`
-    ///     2. `Item::state_desired`
+    ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
     /// 2. For `Item`s that return `ApplyCheck::ExecRequired`, run
@@ -114,7 +114,7 @@ where
             .await
     }
 
-    /// Runs [`Item::apply_exec`] for each [`Item`], with [`state_desired`] as
+    /// Runs [`Item::apply_exec`] for each [`Item`], with [`state_goal`] as
     /// the target state.
     ///
     /// See [`Self::exec`] for full documentation.
@@ -123,7 +123,7 @@ where
     /// functionality of another command.
     ///
     /// [`Item`]: peace_cfg::Item
-    /// [`state_desired`]: peace_cfg::Item::state_desired
+    /// [`state_goal`]: peace_cfg::Item::state_goal
     pub async fn exec_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
         states_saved: &StatesSaved,

@@ -21,14 +21,14 @@ where
         params: &ShCmdParams<Id>,
         _data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
+        state_goal: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
     ) -> Result<ApplyCheck, ShCmdError> {
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_desired_arg = match &state_desired.logical {
+        let state_goal_arg = match &state_goal.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
@@ -36,7 +36,7 @@ where
             .apply_check_sh_cmd()
             .clone()
             .arg(state_current_arg)
-            .arg(state_desired_arg)
+            .arg(state_goal_arg)
             .arg(&**state_diff);
 
         ShCmdExecutor::<Id>::exec(&apply_check_sh_cmd)
@@ -76,7 +76,7 @@ where
         params: &ShCmdParams<Id>,
         _data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
+        state_goal: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
     ) -> Result<State<ShCmdState<Id>, ShCmdExecutionRecord>, ShCmdError> {
         // TODO: implement properly
@@ -84,7 +84,7 @@ where
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_desired_arg = match &state_desired.logical {
+        let state_goal_arg = match &state_goal.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
@@ -92,7 +92,7 @@ where
             .apply_exec_sh_cmd()
             .clone()
             .arg(state_current_arg)
-            .arg(state_desired_arg)
+            .arg(state_goal_arg)
             .arg(&**state_diff);
 
         ShCmdExecutor::<Id>::exec(&ShCmd::new("echo").arg(format!("{apply_exec_sh_cmd}"))).await
@@ -103,14 +103,14 @@ where
         params: &ShCmdParams<Id>,
         _data: ShCmdData<'_, Id>,
         state_current: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
-        state_desired: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
+        state_goal: &State<ShCmdState<Id>, ShCmdExecutionRecord>,
         state_diff: &ShCmdStateDiff,
     ) -> Result<State<ShCmdState<Id>, ShCmdExecutionRecord>, ShCmdError> {
         let state_current_arg = match &state_current.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
-        let state_desired_arg = match &state_desired.logical {
+        let state_goal_arg = match &state_goal.logical {
             ShCmdState::None => "",
             ShCmdState::Some { stdout, .. } => stdout.as_ref(),
         };
@@ -118,7 +118,7 @@ where
             .apply_exec_sh_cmd()
             .clone()
             .arg(state_current_arg)
-            .arg(state_desired_arg)
+            .arg(state_goal_arg)
             .arg(&**state_diff);
 
         ShCmdExecutor::<Id>::exec(&apply_exec_sh_cmd).await?;

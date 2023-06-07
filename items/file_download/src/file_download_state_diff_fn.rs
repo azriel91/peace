@@ -12,19 +12,19 @@ pub struct FileDownloadStateDiffFn;
 impl FileDownloadStateDiffFn {
     pub async fn state_diff(
         state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
-        state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
+        state_goal: &State<FileDownloadState, FetchedOpt<ETag>>,
     ) -> Result<FileDownloadStateDiff, FileDownloadError> {
         let State {
             logical: file_state_current,
             physical: e_tag_current,
         } = state_current;
         let State {
-            logical: file_state_desired,
-            physical: e_tag_desired,
-        } = state_desired;
+            logical: file_state_goal,
+            physical: e_tag_goal,
+        } = state_goal;
 
         let file_state_diff = {
-            match (file_state_current, file_state_desired) {
+            match (file_state_current, file_state_goal) {
                 (
                     FileDownloadState::StringContents { path, .. }
                     | FileDownloadState::Length { path, .. }
@@ -38,28 +38,28 @@ impl FileDownloadStateDiffFn {
                     file_state_current @ (FileDownloadState::StringContents { .. }
                     | FileDownloadState::Length { .. }
                     | FileDownloadState::Unknown { .. }),
-                    file_state_desired @ (FileDownloadState::StringContents { path, .. }
+                    file_state_goal @ (FileDownloadState::StringContents { path, .. }
                     | FileDownloadState::Length { path, .. }
                     | FileDownloadState::Unknown { path, .. }),
                 )
                 | (
                     file_state_current @ FileDownloadState::None { .. },
-                    file_state_desired @ (FileDownloadState::StringContents { path, .. }
+                    file_state_goal @ (FileDownloadState::StringContents { path, .. }
                     | FileDownloadState::Length { path, .. }
                     | FileDownloadState::Unknown { path, .. }),
                 ) => {
                     let path = path.to_path_buf();
                     let (from_bytes, from_content) = to_file_state_diff(file_state_current);
-                    let (to_bytes, to_content) = to_file_state_diff(file_state_desired);
+                    let (to_bytes, to_content) = to_file_state_diff(file_state_goal);
 
                     match (from_bytes == to_bytes, from_content == to_content) {
                         (_, false) => {
                             // File contents are either changed, or unknown
-                            match (e_tag_current, e_tag_desired) {
+                            match (e_tag_current, e_tag_goal) {
                                 (
                                     FetchedOpt::Value(e_tag_current),
-                                    FetchedOpt::Value(e_tag_desired),
-                                ) if e_tag_current == e_tag_desired => {
+                                    FetchedOpt::Value(e_tag_goal),
+                                ) if e_tag_current == e_tag_goal => {
                                     FileDownloadStateDiff::NoChangeSync { path }
                                 }
                                 _ => FileDownloadStateDiff::Change {

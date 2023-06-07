@@ -18,8 +18,8 @@ pub enum S3BucketError {
     NameModificationNotSupported {
         /// Current name of the s3 bucket.
         s3_bucket_name_current: String,
-        /// Desired name of the s3 bucket.
-        s3_bucket_name_desired: String,
+        /// Goal name of the s3 bucket.
+        s3_bucket_name_goal: String,
     },
 
     /// A `peace` runtime error occurred.
@@ -156,12 +156,12 @@ pub enum S3BucketError {
     /// User changed the S3 bucket name, but AWS does not support
     /// changing this.
     #[error(
-        "S3Bucket name cannot be modified, as it is not supported by AWS: current: `{s3_bucket_name_current}`, desired: `{s3_bucket_name_desired}`."
+        "S3Bucket name cannot be modified, as it is not supported by AWS: current: `{s3_bucket_name_current}`, goal: `{s3_bucket_name_goal}`."
     )]
     S3BucketModificationNotSupported {
         /// Current name of the s3 bucket.
         s3_bucket_name_current: String,
-        /// Desired name of the s3 bucket.
-        s3_bucket_name_desired: String,
+        /// Goal name of the s3 bucket.
+        s3_bucket_name_goal: String,
     },
 }

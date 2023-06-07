@@ -23,7 +23,7 @@ download clean
 </details>
 
 
-### Concept 15: Current State, Desired State, Difference
+### Concept 15: Current State, Goal State, Difference
 
 **What:** Show users what is, and what will be, before doing anything.
 
@@ -39,7 +39,7 @@ download init https://ifconfig.me ip.json
 
 ```bash
 download status
-download desired
+download goal
 download diff
 
 download ensure
