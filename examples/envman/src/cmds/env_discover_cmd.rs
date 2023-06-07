@@ -96,7 +96,7 @@ macro_rules! run {
 
                 output
                     .present(&(
-                        Heading::new(HeadingLevel::Level1, "States Current"),
+                        Heading::new(HeadingLevel::Level1, "Current States"),
                         states_current_presentables,
                         "\n",
                         Heading::new(HeadingLevel::Level1, "Goal States"),

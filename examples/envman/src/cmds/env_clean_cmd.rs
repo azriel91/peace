@@ -86,7 +86,7 @@ macro_rules! run {
 
                     output
                         .present(&(
-                            Heading::new(HeadingLevel::Level1, "States Cleaned"),
+                            Heading::new(HeadingLevel::Level1, "Cleaned States"),
                             states_cleaned_presentables,
                             "\n",
                         ))

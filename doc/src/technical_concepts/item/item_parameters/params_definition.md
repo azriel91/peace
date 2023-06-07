@@ -145,7 +145,7 @@ Also need to provide a `Params` derive macro.
 
 The `apply_check` and `state_diff` functions *usually* are not expected to need `params` and `data`, but some items may use them, such as the `ShCmdItem` which accesses params to determine the script to run.
 
-Regarding params will be `Params` or `Params<'_>::Partial` for `state_diff`, if we call `state_diff` for a file upload item, we must have both state current and goal state. Then we need to ask, does having both states imply `Params` is fully resolvable?
+Regarding params will be `Params` or `Params<'_>::Partial` for `state_diff`, if we call `state_diff` for a file upload item, we must have both the current state and goal state. Then we need to ask, does having both states imply `Params` is fully resolvable?
 
 If we call `state_current` for a file upload:
 

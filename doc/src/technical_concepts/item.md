@@ -167,16 +167,16 @@ Cleans up the item from existence.
 
 Readers may notice the function breakdown is `git`-like. The following table compares the concepts:
 
-| Subject                | Peace                                                    | Git                                                                                      |
-|:-----------------------|:---------------------------------------------------------|:-----------------------------------------------------------------------------------------|
-| Item                   | Any consumer defined item.                               | A directory of files.                                                                    |
-| Project initialization | 🚧 `init` command takes in parameters to manage the item. | Uses the current directory or passed in directory.                                       |
-| State                  | Consumer defined information about the item.             | Current state is the latest commit, goal state is the working directory.              |
-| State retrieval        | 🚧 On request by user using the `StatesDiscover` command. | Retrieved each time the `status` command is run, cheap since it is all local.            |
-| State display          | On request using `state` and `goal` commands          | `show $revision:path` command shows the state at a particular `$revision`.               |
-| State difference       | On request using `diff` command                          | `status` command shows a summary, `show` and `diff` commands shows the state difference. |
-| State application      | On request through the `ensure` command.                 | On request through `commit` and `push` commands.                                         |
-| Environments           | 🚧 Handled by updating initialization parameters.         | Defined through `remote` URLs.                                                           |
+| Subject                | Peace                                                  | Git                                                                                      |
+|:-----------------------|:-------------------------------------------------------|:-----------------------------------------------------------------------------------------|
+| Item                   | Any consumer defined item.                             | A directory of files.                                                                    |
+| Project initialization | `init` command takes in parameters to manage the item. | Uses the current directory or passed in directory.                                       |
+| State                  | Consumer defined information about the item.           | Current state is the latest commit, goal state is the working directory.                 |
+| State retrieval        | On request by user using the `StatesDiscover` command. | Retrieved each time the `status` command is run, cheap since it is all local.            |
+| State display          | On request using `state` and `goal` commands           | `show $revision:path` command shows the state at a particular `$revision`.               |
+| State difference       | On request using `diff` command                        | `status` command shows a summary, `show` and `diff` commands shows the state difference. |
+| State application      | On request through the `ensure` command.               | On request through `commit` and `push` commands.                                         |
+| Environments           | Handled by updating initialization parameters.         | Defined through `remote` URLs.                                                           |
 
 
 

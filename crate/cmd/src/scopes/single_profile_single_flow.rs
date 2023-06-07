@@ -25,10 +25,10 @@ use serde::{de::DeserializeOwned, Serialize};
 /// |- 🌏 internal_dev_a
 /// |   |- 📝 profile_params.yaml  # ✅ can read or write `ProfileParams`
 /// |   |
-/// |   |- 🌊 deploy                   # ✅ can read `FlowId`
-/// |   |   |- 📝 flow_params.yaml     # ✅ can read or write `FlowParams`
+/// |   |- 🌊 deploy                # ✅ can read `FlowId`
+/// |   |   |- 📝 flow_params.yaml  # ✅ can read or write `FlowParams`
 /// |   |   |- 📋 states_goal.yaml  # ✅ can read or write `StatesGoal`
-/// |   |   |- 📋 states_saved.yaml    # ✅ can read or write `StatesSaved`
+/// |   |   |- 📋 states_saved.yaml # ✅ can read or write `StatesSaved`
 /// |   |
 /// |   |- 🌊 ..                   # ❌ cannot read or write other `Flow` information
 /// |
@@ -107,8 +107,7 @@ where
     params_specs: ParamsSpecs,
     /// Type registry for each item's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and
-    /// [`StatesGoalFile`].
+    /// This is used to deserialize [`StatesSavedFile`] and [`StatesGoalFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
@@ -198,8 +197,7 @@ where
     pub params_specs: &'view ParamsSpecs,
     /// Type registry for each item's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and
-    /// [`StatesGoalFile`].
+    /// This is used to deserialize [`StatesSavedFile`] and [`StatesGoalFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
@@ -490,8 +488,7 @@ where
 
     /// Returns the type registry for each item's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and
-    /// [`StatesGoalFile`].
+    /// This is used to deserialize [`StatesSavedFile`] and [`StatesGoalFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile

@@ -26,28 +26,28 @@ use serde::{de::DeserializeOwned, Serialize};
 /// |- 🌏 internal_dev_a           # ✅ can list multiple `Profile`s
 /// |   |- 📝 profile_params.yaml  # ✅ can read multiple `ProfileParams`
 /// |   |
-/// |   |- 🌊 deploy                   # ✅ can read `FlowId`
-/// |   |   |- 📝 flow_params.yaml     # ✅ can read or write `FlowParams`
+/// |   |- 🌊 deploy                # ✅ can read `FlowId`
+/// |   |   |- 📝 flow_params.yaml  # ✅ can read or write `FlowParams`
 /// |   |   |- 📋 states_goal.yaml  # ✅ can read or write `StatesGoal`
-/// |   |   |- 📋 states_saved.yaml    # ✅ can read or write `StatesSaved`
+/// |   |   |- 📋 states_saved.yaml # ✅ can read or write `StatesSaved`
 /// |   |
 /// |   |- 🌊 ..                       # ❌ cannot read or write other `Flow` information
 /// |
 /// |- 🌏 customer_a_dev           # ✅
 /// |   |- 📝 profile_params.yaml  # ✅
 /// |   |
-/// |   |- 🌊 deploy                   # ✅
-/// |       |- 📝 flow_params.yaml     # ✅
+/// |   |- 🌊 deploy                # ✅
+/// |       |- 📝 flow_params.yaml  # ✅
 /// |       |- 📋 states_goal.yaml  # ✅
-/// |       |- 📋 states_saved.yaml    # ✅
+/// |       |- 📋 states_saved.yaml # ✅
 /// |
 /// |- 🌏 customer_a_prod          # ✅
 /// |   |- 📝 profile_params.yaml  # ✅
 /// |   |
-/// |   |- 🌊 deploy                   # ✅
-/// |       |- 📝 flow_params.yaml     # ✅
+/// |   |- 🌊 deploy                # ✅
+/// |       |- 📝 flow_params.yaml  # ✅
 /// |       |- 📋 states_goal.yaml  # ✅
-/// |       |- 📋 states_saved.yaml    # ✅
+/// |       |- 📋 states_saved.yaml # ✅
 /// |
 /// |
 /// |- 🌏 workspace_init           # ✅ can list multiple `Profile`s
@@ -128,8 +128,7 @@ where
     profile_to_params_specs: BTreeMap<Profile, Option<ParamsSpecs>>,
     /// Type registry for each item's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and
-    /// [`StatesGoalFile`].
+    /// This is used to deserialize [`StatesSavedFile`] and [`StatesGoalFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
@@ -199,8 +198,7 @@ where
     pub profile_to_params_specs: &'view BTreeMap<Profile, Option<ParamsSpecs>>,
     /// Type registry for each item's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and
-    /// [`StatesGoalFile`].
+    /// This is used to deserialize [`StatesSavedFile`] and [`StatesGoalFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
@@ -417,8 +415,7 @@ where
 
     /// Returns the type registry for each item's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and
-    /// [`StatesGoalFile`].
+    /// This is used to deserialize [`StatesSavedFile`] and [`StatesGoalFile`].
     ///
     /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
