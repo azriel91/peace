@@ -3,7 +3,10 @@ use peace::{
     cfg::{app_name, item_id, state::Generated, AppName, ItemId, Profile},
     cmd::{
         ctx::CmdCtx,
-        scopes::{MultiProfileSingleFlow, SingleProfileSingleFlowView},
+        scopes::{
+            MultiProfileSingleFlow, SingleProfileSingleFlowView,
+            SingleProfileSingleFlowViewAndOutput,
+        },
     },
     fmt::presentln,
     params::Params,
@@ -141,12 +144,16 @@ impl EnvCmd {
     where
         O: OutputWrite<EnvManError>,
     {
-        let SingleProfileSingleFlowView {
+        let SingleProfileSingleFlowViewAndOutput {
             output,
-            workspace_params,
-            profile_params,
+            cmd_view:
+                SingleProfileSingleFlowView {
+                    workspace_params,
+                    profile_params,
+                    ..
+                },
             ..
-        } = cmd_ctx.view();
+        } = cmd_ctx.view_and_output();
 
         let profile = workspace_params.get::<Profile, _>(&WorkspaceParamsKey::Profile);
         let env_type = profile_params.get::<EnvType, _>(&ProfileParamsKey::EnvType);

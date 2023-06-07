@@ -1,5 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
+use futures::FutureExt;
 use peace_cfg::{FnCtx, ItemId};
 use peace_cmd::{
     ctx::CmdCtx,
@@ -17,11 +18,13 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{
-    outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, IndexMap, Storage,
+    outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, Storage,
 };
-use tokio::sync::mpsc;
 
-use crate::BUFFERED_FUTURES_MAX;
+use crate::{
+    cmds::{cmd_ctx_internal::CmdIndependence, CmdBase},
+    BUFFERED_FUTURES_MAX,
+};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -34,7 +37,6 @@ cfg_if::cfg_if! {
                 ProgressUpdateAndId,
             },
         };
-        use peace_rt_model::CmdProgressTracker;
     }
 }
 
@@ -66,7 +68,21 @@ where
     pub async fn current(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
-        Self::exec(cmd_ctx, DiscoverFor::Current)
+        Self::current_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
+    }
+
+    /// Runs [`try_state_current`] for each [`Item`].
+    ///
+    /// See [`Self::current`] for full documentation.
+    ///
+    /// This function exists so that this command can be executed as sub
+    /// functionality of another command.
+    ///
+    /// [`try_state_current`]: peace_cfg::Item::try_state_current
+    pub async fn current_with(
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+    ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
+        Self::exec(cmd_independence, DiscoverFor::Current)
             .await
             .map(|cmd_outcome| {
                 let CmdOutcome {
@@ -100,7 +116,21 @@ where
     pub async fn desired(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesDesired, E>, E> {
-        Self::exec(cmd_ctx, DiscoverFor::Desired)
+        Self::desired_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
+    }
+
+    /// Runs [`try_state_desired`] for each [`Item`].
+    ///
+    /// See [`Self::desired`] for full documentation.
+    ///
+    /// This function exists so that this command can be executed as sub
+    /// functionality of another command.
+    ///
+    /// [`try_state_desired`]: peace_cfg::Item::try_state_desired
+    pub async fn desired_with(
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+    ) -> Result<CmdOutcome<StatesDesired, E>, E> {
+        Self::exec(cmd_independence, DiscoverFor::Desired)
             .await
             .map(|cmd_outcome| {
                 let CmdOutcome {
@@ -143,180 +173,181 @@ where
     pub async fn current_and_desired(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<(StatesCurrent, StatesDesired), E>, E> {
-        Self::exec(cmd_ctx, DiscoverFor::CurrentAndDesired).await
+        Self::exec(
+            &mut CmdIndependence::Standalone { cmd_ctx },
+            DiscoverFor::CurrentAndDesired,
+        )
+        .await
     }
 
-    /// Actual logic to discover current and/or desired states.
+    /// Discovers current and/or desired states, marking progress bars as
+    /// complete when discovery finishes.
     async fn exec(
-        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
         discover_for: DiscoverFor,
     ) -> Result<CmdOutcome<(StatesCurrent, StatesDesired), E>, E> {
-        let SingleProfileSingleFlowView {
-            #[cfg(feature = "output_progress")]
-            output,
-            #[cfg(feature = "output_progress")]
-            cmd_progress_tracker,
-            flow,
-            params_specs,
-            resources,
-            ..
-        } = cmd_ctx.scope_mut().view();
+        let outcome = {
+            let states_current_mut = StatesMut::<Current>::new();
+            let states_desired_mut = StatesMut::<Desired>::new();
 
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "output_progress")] {
-                output.progress_begin(cmd_progress_tracker).await;
-
-                let CmdProgressTracker {
-                    multi_progress: _,
-                    progress_trackers,
-                    ..
-                } = cmd_progress_tracker;
-
-                let (progress_tx, progress_rx) =
-                    mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
-            }
-        }
-
-        let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemDiscoverOutcome<E>>();
-
-        let resources_ref = &*resources;
-        let execution_task = async move {
-            #[cfg(feature = "output_progress")]
-            let progress_tx = &progress_tx;
-            let outcomes_tx = &outcomes_tx;
-
-            flow.graph()
-                .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| async move {
-                    let item_id = item.id();
-                    let fn_ctx = FnCtx::new(
-                        item_id,
-                        #[cfg(feature = "output_progress")]
-                        ProgressSender::new(item_id, progress_tx),
-                    );
-
-                    let (state_current_result, state_desired_result) = match discover_for {
-                        DiscoverFor::Current => {
-                            let state_current_result = item
-                                .state_current_try_exec(params_specs, resources_ref, fn_ctx)
-                                .await;
-
-                            (Some(state_current_result), None)
-                        }
-                        DiscoverFor::Desired => {
-                            let state_desired_result = item
-                                .state_desired_try_exec(params_specs, resources_ref, fn_ctx)
-                                .await;
-
-                            (None, Some(state_desired_result))
-                        }
-                        DiscoverFor::CurrentAndDesired => {
-                            let state_current_result = item
-                                .state_current_try_exec(params_specs, resources_ref, fn_ctx)
-                                .await;
-                            let state_desired_result = item
-                                .state_desired_try_exec(params_specs, resources_ref, fn_ctx)
-                                .await;
-
-                            (Some(state_current_result), Some(state_desired_result))
-                        }
-                    };
-
-                    let state_current = if let Some(state_current_result) = state_current_result {
-                        #[cfg(feature = "output_progress")]
-                        {
-                            let (progress_complete, msg_update) = match &state_current_result {
-                                Ok(_) => (ProgressComplete::Success, ProgressMsgUpdate::Clear),
-                                Err(error) => (
-                                    ProgressComplete::Fail,
-                                    ProgressMsgUpdate::Set(format!("{error}")),
-                                ),
-                            };
-
-                            let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                                item_id: item_id.clone(),
-                                progress_update: ProgressUpdate::Complete(progress_complete),
-                                msg_update,
-                            });
-                        }
-
-                        match state_current_result {
-                            Ok(state_current_opt) => state_current_opt,
-                            Err(error) => {
-                                outcomes_tx
-                                    .send(ItemDiscoverOutcome::Fail {
-                                        item_id: item_id.clone(),
-                                        state_current: None,
-                                        state_desired: None,
-                                        error,
-                                    })
-                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                                return; // short circuit
-                            }
-                        }
-                    } else {
-                        None
-                    };
-
-                    let state_desired = if let Some(state_desired_result) = state_desired_result {
-                        #[cfg(feature = "output_progress")]
-                        {
-                            let (progress_complete, msg_update) = match &state_desired_result {
-                                Ok(_) => (ProgressComplete::Success, ProgressMsgUpdate::Clear),
-                                Err(error) => (
-                                    ProgressComplete::Fail,
-                                    ProgressMsgUpdate::Set(format!("{error}")),
-                                ),
-                            };
-
-                            let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
-                                item_id: item_id.clone(),
-                                progress_update: ProgressUpdate::Complete(progress_complete),
-                                msg_update,
-                            });
-                        }
-
-                        match state_desired_result {
-                            Ok(state_desired_opt) => state_desired_opt,
-                            Err(error) => {
-                                outcomes_tx
-                                    .send(ItemDiscoverOutcome::Fail {
-                                        item_id: item_id.clone(),
-                                        state_current,
-                                        state_desired: None,
-                                        error,
-                                    })
-                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                                return; // short circuit
-                            }
-                        }
-                    } else {
-                        None
-                    };
-
-                    outcomes_tx
-                        .send(ItemDiscoverOutcome::Success {
-                            item_id: item_id.clone(),
-                            state_current,
-                            state_desired,
-                        })
-                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                })
-                .await;
-
-            // `progress_tx` is dropped here, so `progress_rx` will safely end.
+            (states_current_mut, states_desired_mut)
         };
 
-        #[cfg(feature = "output_progress")]
-        let progress_render_task =
-            crate::progress::Progress::progress_render(output, progress_trackers, progress_rx);
+        let cmd_outcome = CmdBase::<E, O, PKeys>::exec(
+            cmd_independence,
+            outcome,
+            |cmd_view, #[cfg(feature = "output_progress")] progress_tx, outcomes_tx| {
+                async move {
+                    let SingleProfileSingleFlowView {
+                        flow,
+                        params_specs,
+                        resources,
+                        ..
+                    } = &*cmd_view;
 
-        let mut errors = IndexMap::<ItemId, E>::new();
-        let outcomes_rx_task = async {
-            let mut states_current_mut = StatesMut::<Current>::new();
-            let mut states_desired_mut = StatesMut::<Desired>::new();
+                    flow.graph()
+                        .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| async move {
+                            let item_id = item.id();
+                            let fn_ctx = FnCtx::new(
+                                item_id,
+                                #[cfg(feature = "output_progress")]
+                                ProgressSender::new(item_id, progress_tx),
+                            );
 
-            while let Some(outcome) = outcomes_rx.recv().await {
-                match outcome {
+                            let (state_current_result, state_desired_result) = match discover_for {
+                                DiscoverFor::Current => {
+                                    let state_current_result = item
+                                        .state_current_try_exec(params_specs, resources, fn_ctx)
+                                        .await;
+
+                                    (Some(state_current_result), None)
+                                }
+                                DiscoverFor::Desired => {
+                                    let state_desired_result = item
+                                        .state_desired_try_exec(params_specs, resources, fn_ctx)
+                                        .await;
+
+                                    (None, Some(state_desired_result))
+                                }
+                                DiscoverFor::CurrentAndDesired => {
+                                    let state_current_result = item
+                                        .state_current_try_exec(params_specs, resources, fn_ctx)
+                                        .await;
+                                    let state_desired_result = item
+                                        .state_desired_try_exec(params_specs, resources, fn_ctx)
+                                        .await;
+
+                                    (Some(state_current_result), Some(state_desired_result))
+                                }
+                            };
+
+                            let state_current =
+                                if let Some(state_current_result) = state_current_result {
+                                    #[cfg(feature = "output_progress")]
+                                    {
+                                        let (progress_complete, msg_update) =
+                                            match &state_current_result {
+                                                Ok(_) => (
+                                                    ProgressComplete::Success,
+                                                    ProgressMsgUpdate::Clear,
+                                                ),
+                                                Err(error) => (
+                                                    ProgressComplete::Fail,
+                                                    ProgressMsgUpdate::Set(format!("{error}")),
+                                                ),
+                                            };
+
+                                        let _progress_send_unused =
+                                            progress_tx.try_send(ProgressUpdateAndId {
+                                                item_id: item_id.clone(),
+                                                progress_update: ProgressUpdate::Complete(
+                                                    progress_complete,
+                                                ),
+                                                msg_update,
+                                            });
+                                    }
+
+                                    match state_current_result {
+                                        Ok(state_current_opt) => state_current_opt,
+                                        Err(error) => {
+                                            outcomes_tx
+                                        .send(ItemDiscoverOutcome::Fail {
+                                            item_id: item_id.clone(),
+                                            state_current: None,
+                                            state_desired: None,
+                                            error,
+                                        })
+                                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                                            return; // short circuit
+                                        }
+                                    }
+                                } else {
+                                    None
+                                };
+
+                            let state_desired =
+                                if let Some(state_desired_result) = state_desired_result {
+                                    #[cfg(feature = "output_progress")]
+                                    {
+                                        let (progress_complete, msg_update) =
+                                            match &state_desired_result {
+                                                Ok(_) => (
+                                                    ProgressComplete::Success,
+                                                    ProgressMsgUpdate::Clear,
+                                                ),
+                                                Err(error) => (
+                                                    ProgressComplete::Fail,
+                                                    ProgressMsgUpdate::Set(format!("{error}")),
+                                                ),
+                                            };
+
+                                        let _progress_send_unused =
+                                            progress_tx.try_send(ProgressUpdateAndId {
+                                                item_id: item_id.clone(),
+                                                progress_update: ProgressUpdate::Complete(
+                                                    progress_complete,
+                                                ),
+                                                msg_update,
+                                            });
+                                    }
+
+                                    match state_desired_result {
+                                        Ok(state_desired_opt) => state_desired_opt,
+                                        Err(error) => {
+                                            outcomes_tx
+                                        .send(ItemDiscoverOutcome::Fail {
+                                            item_id: item_id.clone(),
+                                            state_current,
+                                            state_desired: None,
+                                            error,
+                                        })
+                                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                                            return; // short circuit
+                                        }
+                                    }
+                                } else {
+                                    None
+                                };
+
+                            outcomes_tx
+                                .send(ItemDiscoverOutcome::Success {
+                                    item_id: item_id.clone(),
+                                    state_current,
+                                    state_desired,
+                                })
+                                .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                        })
+                        .await;
+                }
+                .boxed_local()
+            },
+            |cmd_outcome, item_discover_outcome| {
+                let CmdOutcome {
+                    value: (states_current_mut, states_desired_mut),
+                    errors,
+                } = cmd_outcome;
+
+                match item_discover_outcome {
                     ItemDiscoverOutcome::Success {
                         item_id,
                         state_current,
@@ -345,42 +376,45 @@ where
                         }
                     }
                 }
-            }
 
+                Ok(())
+            },
+        )
+        .await?;
+
+        let cmd_outcome = cmd_outcome.map(|(states_current_mut, states_desired_mut)| {
             let states_current = StatesCurrent::from(states_current_mut);
             let states_desired = StatesDesired::from(states_desired_mut);
 
             (states_current, states_desired)
+        });
+
+        let CmdOutcome {
+            value: (states_current, states_desired),
+            errors: _,
+        } = &cmd_outcome;
+
+        let resources = match cmd_independence {
+            CmdIndependence::Standalone { cmd_ctx } => cmd_ctx.view().resources,
+            CmdIndependence::SubCmd { cmd_view } => cmd_view.resources,
+            #[cfg(feature = "output_progress")]
+            CmdIndependence::SubCmdWithProgress { cmd_view, .. } => cmd_view.resources,
         };
-
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "output_progress")] {
-                let ((), _progress_result, outcomes_result) = futures::join!(execution_task, progress_render_task, outcomes_rx_task);
-
-                output.progress_end(cmd_progress_tracker).await;
-            } else {
-                let ((), outcomes_result) = futures::join!(execution_task, outcomes_rx_task);
-            }
-        }
-        let (states_current, states_desired) = outcomes_result;
 
         match discover_for {
             DiscoverFor::Current => {
-                Self::serialize_current(resources, &states_current).await?;
+                Self::serialize_current(resources, states_current).await?;
             }
             DiscoverFor::Desired => {
-                Self::serialize_desired(resources, &states_desired).await?;
+                Self::serialize_desired(resources, states_desired).await?;
             }
             DiscoverFor::CurrentAndDesired => {
-                Self::serialize_current(resources, &states_current).await?;
-                Self::serialize_desired(resources, &states_desired).await?;
+                Self::serialize_current(resources, states_current).await?;
+                Self::serialize_desired(resources, states_desired).await?;
             }
         }
 
-        Ok(CmdOutcome {
-            value: (states_current, states_desired),
-            errors,
-        })
+        Ok(cmd_outcome)
     }
 
     // TODO: This duplicates a bit of code with `ApplyCmd`.

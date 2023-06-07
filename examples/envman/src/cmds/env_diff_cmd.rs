@@ -1,7 +1,10 @@
 use futures::FutureExt;
 use peace::{
     cfg::Profile,
-    cmd::scopes::{MultiProfileSingleFlowView, SingleProfileSingleFlowView},
+    cmd::scopes::{
+        MultiProfileSingleFlowView, SingleProfileSingleFlowView,
+        SingleProfileSingleFlowViewAndOutput,
+    },
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
     resources::states::StateDiffs,
     rt::cmds::DiffCmd,
@@ -127,7 +130,11 @@ macro_rules! run {
             async {
                 let state_diffs = DiffCmd::current_and_desired(ctx).await?;
 
-                let SingleProfileSingleFlowView { output, flow, .. } = ctx.view();
+                let SingleProfileSingleFlowViewAndOutput {
+                    output,
+                    cmd_view: SingleProfileSingleFlowView { flow, .. },
+                    ..
+                } = ctx.view_and_output();
                 Self::state_diffs_present(output, flow, &state_diffs, $padding).await?;
 
                 Ok(())

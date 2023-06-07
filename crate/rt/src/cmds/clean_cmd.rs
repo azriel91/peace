@@ -10,7 +10,10 @@ use peace_resources::{
 };
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error};
 
-use crate::cmds::sub::{ApplyCmd, ApplyFor};
+use crate::cmds::{
+    cmd_ctx_internal::CmdIndependence,
+    sub::{ApplyCmd, ApplyFor},
+};
 
 #[derive(Debug)]
 pub struct CleanCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
@@ -21,8 +24,8 @@ where
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
-    /// Conditionally runs [`Item::apply_exec_dry`] for each
-    /// [`Item`].
+    /// Runs [`Item::apply_exec_dry`] for each [`Item`], with [`state_clean`] as
+    /// the target state.
     ///
     /// In practice this runs [`Item::apply_check`], and only runs
     /// [`apply_exec_dry`] if execution is required.
@@ -65,8 +68,30 @@ where
         .await
     }
 
-    /// Conditionally runs [`Item::apply_exec`] for each
-    /// [`Item`].
+    /// Runs [`Item::apply_exec_dry`] for each [`Item`], with [`state_clean`] as
+    /// the target state.
+    ///
+    /// See [`Self::exec_dry`] for full documentation.
+    ///
+    /// This function exists so that this command can be executed as sub
+    /// functionality of another command.
+    ///
+    /// [`Item`]: peace_cfg::Item
+    /// [`state_clean`]: peace_cfg::Item::state_clean
+    pub async fn exec_dry_with(
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        states_saved: &StatesSaved,
+    ) -> Result<CmdOutcome<StatesCleanedDry, E>, E> {
+        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry_with(
+            cmd_independence,
+            states_saved,
+            ApplyFor::Clean,
+        )
+        .await
+    }
+
+    /// Runs [`Item::apply_exec`] for each [`Item`], with [`state_clean`] as the
+    /// target state.
     ///
     /// In practice this runs [`Item::apply_check`], and only runs
     /// [`apply_exec`] if execution is required.
@@ -103,6 +128,28 @@ where
     ) -> Result<CmdOutcome<StatesCleaned, E>, E> {
         ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec(cmd_ctx, states_saved, ApplyFor::Clean)
             .await
+    }
+
+    /// Runs [`Item::apply_exec`] for each [`Item`], with [`state_clean`] as the
+    /// target state.
+    ///
+    /// See [`Self::exec`] for full documentation.
+    ///
+    /// This function exists so that this command can be executed as sub
+    /// functionality of another command.
+    ///
+    /// [`Item`]: peace_cfg::Item
+    /// [`state_clean`]: peace_cfg::Item::state_clean
+    pub async fn exec_with(
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        states_saved: &StatesSaved,
+    ) -> Result<CmdOutcome<StatesCleaned, E>, E> {
+        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_with(
+            cmd_independence,
+            states_saved,
+            ApplyFor::Clean,
+        )
+        .await
     }
 }
 

@@ -1,5 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
+use futures::FutureExt;
 use peace_cfg::{FlowId, ItemId};
 use peace_cmd::{
     ctx::CmdCtx,
@@ -13,6 +14,9 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{params::ParamsKeys, Error, StatesSerializer, Storage};
+use peace_rt_model_core::output::OutputWrite;
+
+use crate::cmds::{cmd_ctx_internal::CmdIndependence, CmdBase};
 
 /// Reads [`StatesSaved`]s from storage.
 #[derive(Debug)]
@@ -21,6 +25,7 @@ pub struct StatesSavedReadCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 impl<E, O, PKeys> StatesSavedReadCmd<E, O, PKeys>
 where
     E: std::error::Error + From<Error> + Send + 'static,
+    O: OutputWrite<E>,
     PKeys: ParamsKeys + 'static,
 {
     /// Reads [`StatesSaved`]s from storage.
@@ -42,6 +47,30 @@ where
         let states_saved = Self::deserialize_internal(resources, states_type_reg).await?;
 
         Ok(states_saved)
+    }
+
+    /// Reads [`StatesSaved`]s from storage.
+    ///
+    /// See [`Self::exec`] for full documentation.
+    ///
+    /// This function exists so that this command can be executed as sub
+    /// functionality of another command.
+    pub async fn exec_with(
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+    ) -> Result<StatesSaved, E> {
+        CmdBase::oneshot(cmd_independence, |cmd_view| {
+            async move {
+                let SingleProfileSingleFlowView {
+                    states_type_reg,
+                    resources,
+                    ..
+                } = cmd_view;
+
+                Self::deserialize_internal(resources, states_type_reg).await
+            }
+            .boxed_local()
+        })
+        .await
     }
 
     pub(crate) async fn deserialize_internal(

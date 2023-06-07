@@ -2,7 +2,9 @@ use peace::{
     cfg::{app_name, item_id, AppName, ItemId, Profile},
     cmd::{
         ctx::CmdCtx,
-        scopes::{MultiProfileNoFlowView, SingleProfileSingleFlow, SingleProfileSingleFlowView},
+        scopes::{
+            MultiProfileNoFlowView, SingleProfileSingleFlow, SingleProfileSingleFlowViewAndOutput,
+        },
     },
     fmt::{presentable::CodeInline, presentln},
     resources::resources::ts::SetUp,
@@ -146,7 +148,7 @@ impl ProfileInitCmd {
         };
 
         let states_discover_outcome = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-        let SingleProfileSingleFlowView { output, .. } = cmd_ctx.view();
+        let SingleProfileSingleFlowViewAndOutput { output, .. } = cmd_ctx.view_and_output();
 
         if states_discover_outcome.is_ok() {
             presentln!(

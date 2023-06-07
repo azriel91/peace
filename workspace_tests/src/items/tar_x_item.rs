@@ -9,7 +9,7 @@ use peace::{
         paths::{FlowDir, ProfileDir},
         states::StatesSaved,
     },
-    rt::cmds::{sub::StatesSavedReadCmd, CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd},
+    rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd, StatesSavedReadCmd},
     rt_model::{
         outcomes::CmdOutcome, Flow, InMemoryTextOutput, ItemGraph, ItemGraphBuilder, Workspace,
         WorkspaceSpec,

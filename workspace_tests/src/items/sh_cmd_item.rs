@@ -3,7 +3,7 @@ use peace::{
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
     data::marker::Clean,
     resources::states::StatesSaved,
-    rt::cmds::{sub::StatesSavedReadCmd, CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd},
+    rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd, StatesSavedReadCmd},
     rt_model::{
         outcomes::CmdOutcome, Flow, InMemoryTextOutput, ItemGraphBuilder, Workspace, WorkspaceSpec,
     },

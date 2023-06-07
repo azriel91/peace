@@ -687,20 +687,10 @@ where
                     },
                 );
 
-                // Hack: Remove this when #120 is implemented.
-                if cmd_progress_tracker.clear_when_done() {
-                    let (Ok(()) | Err(_)) = cmd_progress_tracker.multi_progress.clear();
-                }
-
                 // Prevents progress bars from drawing over error messages.
                 cmd_progress_tracker
                     .multi_progress
                     .set_draw_target(ProgressDrawTarget::hidden());
-
-                // Hack: Remove this when #120 is implemented.
-                if cmd_progress_tracker.clear_when_done() {
-                    return;
-                }
 
                 // Add spacing between end of progress bars and next output.
                 //

@@ -1,5 +1,13 @@
 # Changelog
 
+## unreleased
+
+* Add `CmdBase` and `CmdIndependence` for easier command composition. ([#120], [#130])
+
+[#120]: https://github.com/azriel91/peace/issues/120
+[#130]: https://github.com/azriel91/peace/pull/130
+
+
 ## 0.0.10 (2023-06-03)
 
 * Add `Item::Params` associated type. ([#116], [#117])
