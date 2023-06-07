@@ -5,7 +5,7 @@ use peace_params::ParamsSpecs;
 use peace_resources::{
     paths::{FlowDir, PeaceAppDir, PeaceDir, ProfileDir, ProfileHistoryDir, WorkspaceDir},
     resources::ts::SetUp,
-    states::StatesSaved,
+    states::StatesCurrentStored,
     Resources,
 };
 use peace_rt_model::{
@@ -29,7 +29,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// |   |- 🌊 deploy                # ✅ can read `FlowId`
 /// |   |   |- 📝 flow_params.yaml  # ✅ can read or write `FlowParams`
 /// |   |   |- 📋 states_goal.yaml  # ✅ can read or write `StatesGoal`
-/// |   |   |- 📋 states_saved.yaml # ✅ can read or write `StatesSaved`
+/// |   |   |- 📋 states_current.yaml # ✅ can read or write `StatesCurrentStored`
 /// |   |
 /// |   |- 🌊 ..                       # ❌ cannot read or write other `Flow` information
 /// |
@@ -39,7 +39,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// |   |- 🌊 deploy                # ✅
 /// |       |- 📝 flow_params.yaml  # ✅
 /// |       |- 📋 states_goal.yaml  # ✅
-/// |       |- 📋 states_saved.yaml # ✅
+/// |       |- 📋 states_current.yaml # ✅
 /// |
 /// |- 🌏 customer_a_prod          # ✅
 /// |   |- 📝 profile_params.yaml  # ✅
@@ -47,7 +47,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// |   |- 🌊 deploy                # ✅
 /// |       |- 📝 flow_params.yaml  # ✅
 /// |       |- 📋 states_goal.yaml  # ✅
-/// |       |- 📋 states_saved.yaml # ✅
+/// |       |- 📋 states_current.yaml # ✅
 /// |
 /// |
 /// |- 🌏 workspace_init           # ✅ can list multiple `Profile`s
@@ -109,7 +109,7 @@ where
     profile_to_flow_params:
         BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
     /// Saved states for each profile for the selected flow.
-    profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
+    profile_to_states_current_stored: BTreeMap<Profile, Option<StatesCurrentStored>>,
     /// Type registry for each item's [`Params`].
     ///
     /// This is used to deserialize [`ItemParamsFile`].
@@ -128,9 +128,10 @@ where
     profile_to_params_specs: BTreeMap<Profile, Option<ParamsSpecs>>,
     /// Type registry for each item's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and [`StatesGoalFile`].
+    /// This is used to deserialize [`StatesCurrentFile`] and
+    /// [`StatesGoalFile`].
     ///
-    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesCurrentFile`]: peace_resources::paths::StatesCurrentFile
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
     states_type_reg: StatesTypeReg,
     /// `Resources` for flow execution.
@@ -179,7 +180,7 @@ where
     pub profile_to_flow_params:
         &'view BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
     /// Saved states for each profile for the selected flow.
-    pub profile_to_states_saved: &'view BTreeMap<Profile, Option<StatesSaved>>,
+    pub profile_to_states_current_stored: &'view BTreeMap<Profile, Option<StatesCurrentStored>>,
     /// Type registry for each item's [`Params`].
     ///
     /// This is used to deserialize [`ItemParamsFile`].
@@ -198,9 +199,10 @@ where
     pub profile_to_params_specs: &'view BTreeMap<Profile, Option<ParamsSpecs>>,
     /// Type registry for each item's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and [`StatesGoalFile`].
+    /// This is used to deserialize [`StatesCurrentFile`] and
+    /// [`StatesGoalFile`].
     ///
-    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesCurrentFile`]: peace_resources::paths::StatesCurrentFile
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
     pub states_type_reg: &'view StatesTypeReg,
     /// `Resources` for flow execution.
@@ -231,7 +233,7 @@ where
             Profile,
             FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
         >,
-        profile_to_states_saved: BTreeMap<Profile, Option<StatesSaved>>,
+        profile_to_states_current_stored: BTreeMap<Profile, Option<StatesCurrentStored>>,
         item_params_type_reg: ItemParamsTypeReg,
         params_specs_type_reg: ParamsSpecsTypeReg,
         profile_to_params_specs: BTreeMap<Profile, Option<ParamsSpecs>>,
@@ -250,7 +252,7 @@ where
             workspace_params,
             profile_to_profile_params,
             profile_to_flow_params,
-            profile_to_states_saved,
+            profile_to_states_current_stored,
             item_params_type_reg,
             params_specs_type_reg,
             profile_to_params_specs,
@@ -280,7 +282,7 @@ where
             workspace_params,
             profile_to_profile_params,
             profile_to_flow_params,
-            profile_to_states_saved,
+            profile_to_states_current_stored,
             item_params_type_reg,
             params_specs_type_reg,
             profile_to_params_specs,
@@ -300,7 +302,7 @@ where
             workspace_params,
             profile_to_profile_params,
             profile_to_flow_params,
-            profile_to_states_saved,
+            profile_to_states_current_stored,
             item_params_type_reg,
             params_specs_type_reg,
             profile_to_params_specs,
@@ -383,8 +385,10 @@ where
     }
 
     /// Returns the saved states for each profile for the selected flow.
-    pub fn profile_to_states_saved(&self) -> &BTreeMap<Profile, Option<StatesSaved>> {
-        &self.profile_to_states_saved
+    pub fn profile_to_states_current_stored(
+        &self,
+    ) -> &BTreeMap<Profile, Option<StatesCurrentStored>> {
+        &self.profile_to_states_current_stored
     }
 
     /// Returns the type registry for each item's [`Params`].
@@ -415,9 +419,10 @@ where
 
     /// Returns the type registry for each item's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and [`StatesGoalFile`].
+    /// This is used to deserialize [`StatesCurrentFile`] and
+    /// [`StatesGoalFile`].
     ///
-    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesCurrentFile`]: peace_resources::paths::StatesCurrentFile
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
     pub fn states_type_reg(&self) -> &StatesTypeReg {
         &self.states_type_reg

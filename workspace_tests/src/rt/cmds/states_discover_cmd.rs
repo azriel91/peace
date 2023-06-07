@@ -2,8 +2,8 @@ use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemId, Profile},
     cmd::ctx::CmdCtx,
     resources::{
-        paths::{StatesGoalFile, StatesSavedFile},
-        states::{StatesCurrent, StatesGoal, StatesSaved},
+        paths::{StatesCurrentFile, StatesGoalFile},
+        states::{StatesCurrent, StatesCurrentStored, StatesGoal},
         type_reg::untagged::{BoxDtDisplay, TypeReg},
     },
     rt::cmds::StatesDiscoverCmd,
@@ -44,8 +44,8 @@ async fn current_and_goal_discovers_both_states_current_and_goal()
 
     let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     let states_on_disk = {
-        let states_saved_file = resources.borrow::<StatesSavedFile>();
-        let states_slice = std::fs::read(&*states_saved_file)?;
+        let states_current_file = resources.borrow::<StatesCurrentFile>();
+        let states_slice = std::fs::read(&*states_current_file)?;
 
         let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
         type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
@@ -112,8 +112,8 @@ async fn current_runs_state_current_for_each_item() -> Result<(), Box<dyn std::e
 
     let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     let states_on_disk = {
-        let states_saved_file = resources.borrow::<StatesSavedFile>();
-        let states_slice = std::fs::read(&*states_saved_file)?;
+        let states_current_file = resources.borrow::<StatesCurrentFile>();
+        let states_slice = std::fs::read(&*states_current_file)?;
 
         let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
         type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
@@ -131,7 +131,7 @@ async fn current_runs_state_current_for_each_item() -> Result<(), Box<dyn std::e
 }
 
 #[tokio::test]
-async fn current_inserts_states_saved_from_states_saved_file()
+async fn current_inserts_states_current_stored_from_states_current_file()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
@@ -154,10 +154,10 @@ async fn current_inserts_states_saved_from_states_saved_file()
         )
         .await?;
 
-    // Writes to states_saved_file.yaml
+    // Writes to states_current_file.yaml
     StatesDiscoverCmd::current(&mut cmd_ctx).await?;
 
-    // Execute again to ensure StatesSaved is included
+    // Execute again to ensure StatesCurrentStored is included
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
@@ -169,11 +169,11 @@ async fn current_inserts_states_saved_from_states_saved_file()
     StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let resources = cmd_ctx.resources();
 
-    let states_saved = resources.borrow::<StatesSaved>();
-    let vec_copy_state = states_saved.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    let states_current_stored = resources.borrow::<StatesCurrentStored>();
+    let vec_copy_state = states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     let states_on_disk = {
-        let states_saved_file = resources.borrow::<StatesSavedFile>();
-        let states_slice = std::fs::read(&*states_saved_file)?;
+        let states_current_file = resources.borrow::<StatesCurrentFile>();
+        let states_slice = std::fs::read(&*states_current_file)?;
 
         let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
         type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
@@ -183,7 +183,7 @@ async fn current_inserts_states_saved_from_states_saved_file()
     };
     assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
     assert_eq!(
-        states_saved.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
+        states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
         states_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
 

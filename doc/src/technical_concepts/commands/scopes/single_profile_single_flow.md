@@ -12,7 +12,7 @@ path/to/repo/.peace/envman
 |   |- 🌊 deploy                   # ✅ can read `FlowId`
 |   |   |- 📝 flow_params.yaml     # ✅ can read or write `FlowParams`
 |   |   |- 📋 states_goal.yaml  # ✅ can read or write `StatesGoal`
-|   |   |- 📋 states_saved.yaml    # ✅ can read or write `StatesSaved`
+|   |   |- 📋 states_current.yaml    # ✅ can read or write `StatesCurrentStored`
 |   |
 |   |- 🌊 ..                   # ❌ cannot read or write other `Flow` information
 |

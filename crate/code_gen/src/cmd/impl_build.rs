@@ -560,31 +560,31 @@ fn impl_build_for(
                 //     .await?;
                 //
                 // let states_type_reg_ref = &states_type_reg;
-                // let profile_to_states_saved = futures::stream::iter(
+                // let profile_to_states_current_stored = futures::stream::iter(
                 //     flow_dirs
                 //         .iter()
                 //         .map(Result::<_, peace_rt_model::Error>::Ok)
                 //     )
                 //     .and_then(|(profile, flow_dir)| async move {
-                //         let states_saved_file = peace_resources::paths::StatesSavedFile::from(flow_dir);
+                //         let states_current_file = peace_resources::paths::StatesCurrentFile::from(flow_dir);
                 //
-                //         let states_saved = peace_rt_model::StatesSerializer::<
+                //         let states_current_stored = peace_rt_model::StatesSerializer::<
                 //             peace_rt_model::Error
                 //         >::deserialize_saved_opt(
                 //             flow_id,
                 //             storage,
                 //             states_type_reg_ref,
-                //             &states_saved_file,
+                //             &states_current_file,
                 //         )
                 //         .await?
-                //         .map(Into::<peace_resources::states::StatesSaved>::into);
+                //         .map(Into::<peace_resources::states::StatesCurrentStored>::into);
                 //
-                //         Ok((profile.clone(), states_saved))
+                //         Ok((profile.clone(), states_current_stored))
                 //     })
                 //     .try_collect::<
                 //         std::collections::BTreeMap<
                 //             peace_core::Profile,
-                //             Option<peace_resources::states::StatesSaved>
+                //             Option<peace_resources::states::StatesCurrentStored>
                 //         >
                 //     >()
                 //     .await?;
@@ -633,19 +633,19 @@ fn impl_build_for(
                 //
                 // // States loading and storage.
                 // let states_type_reg_ref = &states_type_reg;
-                // let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
-                // let states_saved = peace_rt_model::StatesSerializer::<
+                // let states_current_file = peace_resources::paths::StatesCurrentFile::from(&flow_dir);
+                // let states_current_stored = peace_rt_model::StatesSerializer::<
                 //     peace_rt_model::Error
                 // >::deserialize_saved_opt(
                 //     flow_id,
                 //     storage,
                 //     states_type_reg_ref,
-                //     &states_saved_file,
+                //     &states_current_file,
                 // )
                 // .await?
-                // .map(Into::<peace_resources::states::StatesSaved>::into);
-                // if let Some(states_saved) = states_saved {
-                //     resources.insert(states_saved);
+                // .map(Into::<peace_resources::states::StatesCurrentStored>::into);
+                // if let Some(states_current_stored) = states_current_stored {
+                //     resources.insert(states_current_stored);
                 // }
                 //
                 // // Call each `Item`'s initialization function.
@@ -714,7 +714,7 @@ fn impl_build_for(
                     // profile_to_flow_params,
 
                     // === MultiProfileSingleFlow === //
-                    // profile_to_states_saved,
+                    // profile_to_states_current_stored,
                     // item_params_type_reg,
                     // params_specs_type_reg,
                     // profile_to_params_specs,
@@ -1465,7 +1465,7 @@ fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
     match scope {
         Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {}
         Scope::MultiProfileSingleFlow => {
-            scope_fields.push(parse_quote!(profile_to_states_saved));
+            scope_fields.push(parse_quote!(profile_to_states_current_stored));
             scope_fields.push(parse_quote!(item_params_type_reg));
             scope_fields.push(parse_quote!(params_specs_type_reg));
             scope_fields.push(parse_quote!(profile_to_params_specs));
@@ -1492,7 +1492,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
         Scope::MultiProfileSingleFlow => {
             // * Reads previous item params and stores them in a `Map<Profile, ItemParams>`.
             // * Reads previously saved states and stores them in a `Map<Profile,
-            //   StatesSaved>`.
+            //   StatesCurrentStored>`.
             //
             // These are then saved in the scope for easy use by consumers.
             quote! {
@@ -1550,31 +1550,31 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                     .await?;
 
                 let states_type_reg_ref = &states_type_reg;
-                let profile_to_states_saved = futures::stream::iter(
+                let profile_to_states_current_stored = futures::stream::iter(
                     flow_dirs
                         .iter()
                         .map(Result::<_, peace_rt_model::Error>::Ok)
                     )
                     .and_then(|(profile, flow_dir)| async move {
-                        let states_saved_file = peace_resources::paths::StatesSavedFile::from(flow_dir);
+                        let states_current_file = peace_resources::paths::StatesCurrentFile::from(flow_dir);
 
-                        let states_saved = peace_rt_model::StatesSerializer::<
+                        let states_current_stored = peace_rt_model::StatesSerializer::<
                             peace_rt_model::Error
                         >::deserialize_saved_opt(
                             flow_id,
                             storage,
                             states_type_reg_ref,
-                            &states_saved_file,
+                            &states_current_file,
                         )
                         .await?
-                        .map(Into::<peace_resources::states::StatesSaved>::into);
+                        .map(Into::<peace_resources::states::StatesCurrentStored>::into);
 
-                        Ok((profile.clone(), states_saved))
+                        Ok((profile.clone(), states_current_stored))
                     })
                     .try_collect::<
                         std::collections::BTreeMap<
                             peace_core::Profile,
-                            Option<peace_resources::states::StatesSaved>
+                            Option<peace_resources::states::StatesCurrentStored>
                         >
                     >()
                     .await?;
@@ -1595,9 +1595,9 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
             // command with multiple flows, as the flows will have different
             // items and their state (type)s will be different.
             //
-            // An example is workspace initialization, where the states saved per item
-            // for workspace initialization are likely different to application specific
-            // flows.
+            // An example is workspace initialization, where the current saved states per
+            // item for workspace initialization are likely different to
+            // application specific flows.
             //
             // We currently don't support inserting resources for MultiProfileSingleFlow
             // commands. That would require either multiple `Resources` maps, or a
@@ -1641,19 +1641,19 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
 
                 // States loading and storage.
                 let states_type_reg_ref = &states_type_reg;
-                let states_saved_file = peace_resources::paths::StatesSavedFile::from(&flow_dir);
-                let states_saved = peace_rt_model::StatesSerializer::<
+                let states_current_file = peace_resources::paths::StatesCurrentFile::from(&flow_dir);
+                let states_current_stored = peace_rt_model::StatesSerializer::<
                     peace_rt_model::Error
                 >::deserialize_saved_opt(
                     flow_id,
                     storage,
                     states_type_reg_ref,
-                    &states_saved_file,
+                    &states_current_file,
                 )
                 .await?
-                .map(Into::<peace_resources::states::StatesSaved>::into);
-                if let Some(states_saved) = states_saved {
-                    resources.insert(states_saved);
+                .map(Into::<peace_resources::states::StatesCurrentStored>::into);
+                if let Some(states_current_stored) = states_current_stored {
+                    resources.insert(states_current_stored);
                 }
 
                 // Call each `Item`'s initialization function.

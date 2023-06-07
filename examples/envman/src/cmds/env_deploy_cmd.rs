@@ -2,7 +2,7 @@ use futures::FutureExt;
 use peace::{
     cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
-    rt::cmds::{EnsureCmd, StatesSavedReadCmd},
+    rt::cmds::{EnsureCmd, StatesCurrentReadCmd},
     rt_model::{outcomes::CmdOutcome, output::OutputWrite},
 };
 
@@ -41,14 +41,15 @@ impl EnvDeployCmd {
 
 macro_rules! run {
     ($output:ident, $flow_cmd:ident, $padding:expr) => {{
-        let states_saved = $flow_cmd::run($output, true, |ctx| {
-            StatesSavedReadCmd::exec(ctx).boxed_local()
+        let states_current_stored = $flow_cmd::run($output, true, |ctx| {
+            StatesCurrentReadCmd::exec(ctx).boxed_local()
         })
         .await?;
         $flow_cmd::run($output, false, |ctx| {
             async move {
-                let states_saved_ref = &states_saved;
-                let states_ensured_outcome = EnsureCmd::exec(ctx, states_saved_ref).await?;
+                let states_current_stored_ref = &states_current_stored;
+                let states_ensured_outcome =
+                    EnsureCmd::exec(ctx, states_current_stored_ref).await?;
                 let CmdOutcome {
                     value: states_ensured,
                     errors,

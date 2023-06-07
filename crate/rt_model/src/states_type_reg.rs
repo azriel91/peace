@@ -5,7 +5,7 @@ use peace_resources::type_reg::untagged::{BoxDtDisplay, TypeReg};
 
 /// Type registry for each item's `State`.
 ///
-/// This is used to deserialize [`StatesSavedFile`] and [`StatesGoalFile`].
+/// This is used to deserialize [`StatesCurrentFile`] and [`StatesGoalFile`].
 ///
 /// Note: [`ItemParamsTypeReg`] uses [`BoxDt`], whereas this uses
 /// [`BoxDtDisplay`].
@@ -15,7 +15,7 @@ use peace_resources::type_reg::untagged::{BoxDtDisplay, TypeReg};
 /// [`ItemParamsTypeReg`]: crate::ItemParamsTypeReg
 /// [`Params`]: peace_cfg::Item::Params
 /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
-/// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+/// [`StatesCurrentFile`]: peace_resources::paths::StatesCurrentFile
 #[derive(Debug, Default)]
 pub struct StatesTypeReg(TypeReg<ItemId, BoxDtDisplay>);
 

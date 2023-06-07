@@ -83,7 +83,7 @@ let cmd_ctx = CmdCtx::builder_single_profile_single_flow
 
 // examples/envman/src/cmds/env_status_cmd.rs
 // envman status
-StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
+StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
 
 // examples/envman/src/cmds/env_deploy_cmd.rs
 // envman deploy

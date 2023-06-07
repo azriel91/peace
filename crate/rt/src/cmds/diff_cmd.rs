@@ -18,7 +18,7 @@ use peace_resources::{
 };
 use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, Flow};
 
-use crate::cmds::{cmd_ctx_internal::CmdIndependence, StatesGoalReadCmd, StatesSavedReadCmd};
+use crate::cmds::{cmd_ctx_internal::CmdIndependence, StatesCurrentReadCmd, StatesGoalReadCmd};
 
 use super::CmdBase;
 
@@ -66,7 +66,7 @@ where
             async move {
                 let mut cmd_independence_sub: CmdIndependence<'_, '_, '_, E, O, PKeys> =
                     CmdIndependence::SubCmd { cmd_view };
-                let states_a = StatesSavedReadCmd::exec_with(&mut cmd_independence_sub).await?;
+                let states_a = StatesCurrentReadCmd::exec_with(&mut cmd_independence_sub).await?;
                 let states_b = StatesGoalReadCmd::exec_with(&mut cmd_independence_sub).await?;
 
                 let SingleProfileSingleFlowView {
@@ -104,7 +104,7 @@ where
             flow,
             profiles,
             profile_to_params_specs,
-            profile_to_states_saved,
+            profile_to_states_current_stored,
             resources,
             ..
         } = cmd_ctx.view();
@@ -120,7 +120,7 @@ where
                 profile_b: profile_b.clone(),
             })?
         };
-        let states_a = profile_to_states_saved
+        let states_a = profile_to_states_current_stored
             .get(profile_a)
             .ok_or_else(|| {
                 let profile = profile_a.clone();
@@ -135,7 +135,7 @@ where
                 let profile = profile_a.clone();
                 Error::ProfileStatesCurrentNotDiscovered { profile }
             })?;
-        let states_b = profile_to_states_saved
+        let states_b = profile_to_states_current_stored
             .get(profile_b)
             .ok_or_else(|| {
                 let profile = profile_b.clone();

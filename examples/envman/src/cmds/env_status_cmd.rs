@@ -2,7 +2,7 @@ use futures::FutureExt;
 use peace::{
     cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
-    rt::cmds::StatesSavedReadCmd,
+    rt::cmds::StatesCurrentReadCmd,
     rt_model::output::OutputWrite,
 };
 
@@ -43,16 +43,16 @@ macro_rules! run {
     ($output:ident, $flow_cmd:ident, $padding:expr) => {{
         $flow_cmd::run($output, true, |ctx| {
             async {
-                let states_saved = StatesSavedReadCmd::exec(ctx).await?;
-                let states_saved_raw_map = &**states_saved;
+                let states_current_stored = StatesCurrentReadCmd::exec(ctx).await?;
+                let states_current_stored_raw_map = &**states_current_stored;
 
                 let SingleProfileSingleFlowViewAndOutput {
                     output,
                     cmd_view: SingleProfileSingleFlowView { flow, .. },
                     ..
                 } = ctx.view_and_output();
-                let states_saved_presentables = {
-                    let states_saved_presentables = flow
+                let states_current_stored_presentables = {
+                    let states_current_stored_presentables = flow
                         .graph()
                         .iter_insertion()
                         .map(|item| {
@@ -60,20 +60,20 @@ macro_rules! run {
                             // Hack: for alignment
                             let padding =
                                 " ".repeat($padding.saturating_sub(format!("{item_id}").len() + 2));
-                            match states_saved_raw_map.get(item_id) {
+                            match states_current_stored_raw_map.get(item_id) {
                                 Some(state_saved) => (item_id, format!("{padding}: {state_saved}")),
                                 None => (item_id, format!("{padding}: <unknown>")),
                             }
                         })
                         .collect::<Vec<_>>();
 
-                    ListNumbered::new(states_saved_presentables)
+                    ListNumbered::new(states_current_stored_presentables)
                 };
 
                 output
                     .present(&(
-                        Heading::new(HeadingLevel::Level1, "States Saved"),
-                        states_saved_presentables,
+                        Heading::new(HeadingLevel::Level1, "Current Saved States"),
+                        states_current_stored_presentables,
                         "\n",
                     ))
                     .await?;

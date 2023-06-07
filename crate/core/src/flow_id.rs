@@ -9,12 +9,12 @@ use serde::{Deserialize, Serialize};
 ///
 /// ```bash
 /// peace dev_env discover # StatesDiscoverCmd
-/// peace dev_env status   # StatesSavedDisplayCmd
+/// peace dev_env status   # StatesCurrentStoredDisplayCmd
 /// peace dev_env deploy   # EnsureCmd
 /// peace dev_env clean    # CleanCmd
 ///
 /// peace artifact discover # StatesDiscoverCmd
-/// peace artifact status   # StatesSavedDisplayCmd
+/// peace artifact status   # StatesCurrentStoredDisplayCmd
 /// peace artifact publish  # EnsureCmd
 /// ```
 ///

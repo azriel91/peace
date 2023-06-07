@@ -7,9 +7,9 @@ use peace_cmd::{
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
 use peace_resources::{
-    paths::{FlowDir, StatesSavedFile},
+    paths::{FlowDir, StatesCurrentFile},
     resources::ts::SetUp,
-    states::StatesSaved,
+    states::StatesCurrentStored,
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     Resources,
 };
@@ -18,38 +18,38 @@ use peace_rt_model_core::output::OutputWrite;
 
 use crate::cmds::{cmd_ctx_internal::CmdIndependence, CmdBase};
 
-/// Reads [`StatesSaved`]s from storage.
+/// Reads [`StatesCurrentStored`]s from storage.
 #[derive(Debug)]
-pub struct StatesSavedReadCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
+pub struct StatesCurrentReadCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
-impl<E, O, PKeys> StatesSavedReadCmd<E, O, PKeys>
+impl<E, O, PKeys> StatesCurrentReadCmd<E, O, PKeys>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     O: OutputWrite<E>,
     PKeys: ParamsKeys + 'static,
 {
-    /// Reads [`StatesSaved`]s from storage.
+    /// Reads [`StatesCurrentStored`]s from storage.
     ///
-    /// Either [`StatesSavedDiscoverCmd`] or [`StatesDiscoverCmd`] must have
-    /// run prior to this command to read the state.
+    /// Either [`StatesCurrentStoredDiscoverCmd`] or [`StatesDiscoverCmd`] must
+    /// have run prior to this command to read the state.
     ///
-    /// [`StatesSavedDiscoverCmd`]: crate::StatesSavedDiscoverCmd
+    /// [`StatesCurrentStoredDiscoverCmd`]: crate::StatesCurrentStoredDiscoverCmd
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<StatesSaved, E> {
+    ) -> Result<StatesCurrentStored, E> {
         let SingleProfileSingleFlowView {
             states_type_reg,
             resources,
             ..
         } = cmd_ctx.scope_mut().view();
 
-        let states_saved = Self::deserialize_internal(resources, states_type_reg).await?;
+        let states_current_stored = Self::deserialize_internal(resources, states_type_reg).await?;
 
-        Ok(states_saved)
+        Ok(states_current_stored)
     }
 
-    /// Reads [`StatesSaved`]s from storage.
+    /// Reads [`StatesCurrentStored`]s from storage.
     ///
     /// See [`Self::exec`] for full documentation.
     ///
@@ -57,7 +57,7 @@ where
     /// functionality of another command.
     pub async fn exec_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-    ) -> Result<StatesSaved, E> {
+    ) -> Result<StatesCurrentStored, E> {
         CmdBase::oneshot(cmd_independence, |cmd_view| {
             async move {
                 let SingleProfileSingleFlowView {
@@ -76,17 +76,17 @@ where
     pub(crate) async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
         states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
-    ) -> Result<StatesSaved, E> {
+    ) -> Result<StatesCurrentStored, E> {
         let flow_id = resources.borrow::<FlowId>();
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_saved_file = StatesSavedFile::from(&*flow_dir);
+        let states_current_file = StatesCurrentFile::from(&*flow_dir);
 
-        let states_saved = StatesSerializer::deserialize_saved(
+        let states_current_stored = StatesSerializer::deserialize_saved(
             &flow_id,
             &storage,
             states_type_reg,
-            &states_saved_file,
+            &states_current_file,
         )
         .await?;
 
@@ -94,13 +94,13 @@ where
         drop(flow_dir);
         drop(flow_id);
 
-        resources.insert(states_saved_file);
+        resources.insert(states_current_file);
 
-        Ok(states_saved)
+        Ok(states_current_stored)
     }
 }
 
-impl<E, O, PKeys> Default for StatesSavedReadCmd<E, O, PKeys> {
+impl<E, O, PKeys> Default for StatesCurrentReadCmd<E, O, PKeys> {
     fn default() -> Self {
         Self(PhantomData)
     }

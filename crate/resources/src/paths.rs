@@ -42,11 +42,11 @@
 //!     |   |
 //!     |   |- dev_env  # flow name
 //!     |   |   |- states_goal.yaml
-//!     |   |   |- states_saved.yaml
+//!     |   |   |- states_current.yaml
 //!     |   |
 //!     |   |- artifact
 //!     |   |   |- states_goal.yaml
-//!     |   |   |- states_saved.yaml
+//!     |   |   |- states_current.yaml
 //!     |   |
 //!     |   |- profile_params.yaml  # Parameters used to initialize this profile
 //!     |                           # We write to this so that each time the user re-`init`s,
@@ -61,7 +61,7 @@
 //!     |   |- customer_one
 //!     |   |   |- flow_params.yaml
 //!     |   |   |- states_goal.yaml
-//!     |   |   |- states_saved.yaml
+//!     |   |   |- states_current.yaml
 //!     |   |
 //!     |   |- .meta.yaml
 //!     |   |- profile_params.yaml
@@ -72,8 +72,8 @@
 pub use self::{
     flow_dir::FlowDir, item_params_file::ItemParamsFile, params_specs_file::ParamsSpecsFile,
     peace_app_dir::PeaceAppDir, peace_dir::PeaceDir, profile_dir::ProfileDir,
-    profile_history_dir::ProfileHistoryDir, states_goal_file::StatesGoalFile,
-    states_saved_file::StatesSavedFile, workspace_dir::WorkspaceDir,
+    profile_history_dir::ProfileHistoryDir, states_current_file::StatesCurrentFile,
+    states_goal_file::StatesGoalFile, workspace_dir::WorkspaceDir,
 };
 
 mod flow_dir;
@@ -83,8 +83,8 @@ mod peace_app_dir;
 mod peace_dir;
 mod profile_dir;
 mod profile_history_dir;
+mod states_current_file;
 mod states_goal_file;
-mod states_saved_file;
 mod workspace_dir;
 
 /// Common impl logic for `PathBuf` newtypes.

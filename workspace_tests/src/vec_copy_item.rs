@@ -13,7 +13,7 @@ use peace::{
         Data,
     },
     params::Params,
-    resources::{resources::ts::Empty, states::StatesSaved, Resources},
+    resources::{resources::ts::Empty, states::StatesCurrentStored, Resources},
     rt_model::ItemWrapper,
 };
 use serde::{Deserialize, Serialize};
@@ -208,11 +208,11 @@ impl Item for VecCopyItem {
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {
         let vec_b = {
-            let states_saved =
-                <RMaybe<'_, StatesSaved> as Data>::borrow(Self::ID_DEFAULT, resources);
-            let vec_copy_state_saved: Option<&'_ VecCopyState> = states_saved
+            let states_current_stored =
+                <RMaybe<'_, StatesCurrentStored> as Data>::borrow(Self::ID_DEFAULT, resources);
+            let vec_copy_state_saved: Option<&'_ VecCopyState> = states_current_stored
                 .as_ref()
-                .and_then(|states_saved| states_saved.get(self.id()));
+                .and_then(|states_current_stored| states_current_stored.get(self.id()));
             if let Some(vec_copy_state) = vec_copy_state_saved {
                 VecB(vec_copy_state.to_vec())
             } else {

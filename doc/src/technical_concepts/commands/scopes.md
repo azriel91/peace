@@ -14,7 +14,7 @@ In the following directory structure:
 
 * `internal_dev_a`, `customer_a_dev`, `customer_a_prod` are all separate **Profile**s.
 * `deploy`, `config`, and `benchmark` are separate **Flow**s.
-* Each flow tracks its own `flow_params.yaml`, `states_goal.yaml`, and `states_saved.yaml`
+* Each flow tracks its own `flow_params.yaml`, `states_goal.yaml`, and `states_current.yaml`
 
 ```bash
 # peace app dir
@@ -27,7 +27,7 @@ path/to/repo/.peace/envman
 |   |- 🌊 deploy
 |   |   |- 📝 flow_params.yaml
 |   |   |- 📋 states_goal.yaml
-|   |   |- 📋 states_saved.yaml
+|   |   |- 📋 states_current.yaml
 |   |
 |   |- 🌊 config
 |   |- 🌊 benchmark

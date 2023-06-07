@@ -51,7 +51,7 @@ pub trait ItemRt<E>:
     /// deserializing from disk.
     ///
     /// This is necessary to deserialize `ItemParamsFile`,
-    /// `ParamsSpecsFile`, `StatesSavedFile`, and `StatesGoalFile`.
+    /// `ParamsSpecsFile`, `StatesCurrentFile`, and `StatesGoalFile`.
     fn params_and_state_register(
         &self,
         item_params_type_reg: &mut ItemParamsTypeReg,

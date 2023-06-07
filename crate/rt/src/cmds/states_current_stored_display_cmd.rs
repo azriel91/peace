@@ -6,23 +6,23 @@ use peace_cmd::{
         SingleProfileSingleFlow, SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput,
     },
 };
-use peace_resources::{resources::ts::SetUp, states::StatesSaved};
+use peace_resources::{resources::ts::SetUp, states::StatesCurrentStored};
 use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
 
-use crate::cmds::StatesSavedReadCmd;
+use crate::cmds::StatesCurrentReadCmd;
 
 /// Displays [`StatesCurrent`]s from storage.
 #[derive(Debug)]
-pub struct StatesSavedDisplayCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
+pub struct StatesCurrentStoredDisplayCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
-impl<E, O, PKeys> StatesSavedDisplayCmd<E, O, PKeys>
+impl<E, O, PKeys> StatesCurrentStoredDisplayCmd<E, O, PKeys>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
-    /// Displays [`StatesSaved`]s from storage.
+    /// Displays [`StatesCurrentStored`]s from storage.
     ///
     /// [`StatesDiscoverCmd`] must have run prior to this command to read the
     /// state.
@@ -30,7 +30,7 @@ where
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<StatesSaved, E> {
+    ) -> Result<StatesCurrentStored, E> {
         let SingleProfileSingleFlowViewAndOutput {
             output,
             cmd_view:
@@ -42,14 +42,14 @@ where
             ..
         } = cmd_ctx.view_and_output();
 
-        let states_saved_result =
-            StatesSavedReadCmd::<E, O, PKeys>::deserialize_internal(resources, states_type_reg)
+        let states_current_stored_result =
+            StatesCurrentReadCmd::<E, O, PKeys>::deserialize_internal(resources, states_type_reg)
                 .await;
 
-        match states_saved_result {
-            Ok(states_saved) => {
-                output.present(&states_saved).await?;
-                Ok(states_saved)
+        match states_current_stored_result {
+            Ok(states_current_stored) => {
+                output.present(&states_current_stored).await?;
+                Ok(states_current_stored)
             }
             Err(e) => {
                 output.write_err(&e).await?;
@@ -59,7 +59,7 @@ where
     }
 }
 
-impl<E, O, PKeys> Default for StatesSavedDisplayCmd<E, O, PKeys> {
+impl<E, O, PKeys> Default for StatesCurrentStoredDisplayCmd<E, O, PKeys> {
     fn default() -> Self {
         Self(PhantomData)
     }

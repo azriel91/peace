@@ -30,7 +30,7 @@ To create this command for a single profile:
     The "from" state is usually one of:
 
     - Discovering the current state.
-    - Reading `states_saved.yaml`.
+    - Reading `states_current.yaml`.
 
     The "to" state is usually one of:
 
@@ -52,7 +52,7 @@ To create this command for multiple profiles:
     The "from" state is usually one of:
 
     - Discovering the current state.
-    - Reading `states_saved.yaml`.
+    - Reading `states_current.yaml`.
 
     The "to" state is usually one of:
 

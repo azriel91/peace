@@ -28,7 +28,7 @@ use serde::{de::DeserializeOwned, Serialize};
 /// |   |- 🌊 deploy                # ✅ can read `FlowId`
 /// |   |   |- 📝 flow_params.yaml  # ✅ can read or write `FlowParams`
 /// |   |   |- 📋 states_goal.yaml  # ✅ can read or write `StatesGoal`
-/// |   |   |- 📋 states_saved.yaml # ✅ can read or write `StatesSaved`
+/// |   |   |- 📋 states_current.yaml # ✅ can read or write `StatesCurrentStored`
 /// |   |
 /// |   |- 🌊 ..                   # ❌ cannot read or write other `Flow` information
 /// |
@@ -107,9 +107,10 @@ where
     params_specs: ParamsSpecs,
     /// Type registry for each item's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and [`StatesGoalFile`].
+    /// This is used to deserialize [`StatesCurrentFile`] and
+    /// [`StatesGoalFile`].
     ///
-    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesCurrentFile`]: peace_resources::paths::StatesCurrentFile
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
     states_type_reg: StatesTypeReg,
     /// `Resources` for flow execution.
@@ -128,7 +129,7 @@ where
 /// |   |- 🌊 deploy                   # ✅ can read `FlowId`
 /// |   |   |- 📝 flow_params.yaml     # ✅ can read or write `FlowParams`
 /// |   |   |- 📋 states_goal.yaml  # ✅ can read or write `StatesGoal`
-/// |   |   |- 📋 states_saved.yaml    # ✅ can read or write `StatesSaved`
+/// |   |   |- 📋 states_current.yaml    # ✅ can read or write `StatesCurrentStored`
 /// |   |
 /// |   |- 🌊 ..                   # ❌ cannot read or write other `Flow` information
 /// |
@@ -197,9 +198,10 @@ where
     pub params_specs: &'view ParamsSpecs,
     /// Type registry for each item's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and [`StatesGoalFile`].
+    /// This is used to deserialize [`StatesCurrentFile`] and
+    /// [`StatesGoalFile`].
     ///
-    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesCurrentFile`]: peace_resources::paths::StatesCurrentFile
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
     pub states_type_reg: &'view StatesTypeReg,
     /// `Resources` for flow execution.
@@ -488,9 +490,10 @@ where
 
     /// Returns the type registry for each item's `State`.
     ///
-    /// This is used to deserialize [`StatesSavedFile`] and [`StatesGoalFile`].
+    /// This is used to deserialize [`StatesCurrentFile`] and
+    /// [`StatesGoalFile`].
     ///
-    /// [`StatesSavedFile`]: peace_resources::paths::StatesSavedFile
+    /// [`StatesCurrentFile`]: peace_resources::paths::StatesCurrentFile
     /// [`StatesGoalFile`]: peace_resources::paths::StatesGoalFile
     pub fn states_type_reg(&self) -> &StatesTypeReg {
         &self.states_type_reg

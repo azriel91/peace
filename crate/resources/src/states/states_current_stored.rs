@@ -8,12 +8,12 @@ use crate::states::{
 /// Saved `State`s for all `Item`s.
 ///
 /// This is loaded into [`Resources`] at the beginning of any command execution,
-/// from the [`StatesSavedFile`].
+/// from the [`StatesCurrentFile`].
 ///
 /// This is distinct from [`StatesCurrent`] to address the following use cases:
 ///
 /// * Discovering current state from what is recorded in the
-///   [`StatesSavedFile`].
+///   [`StatesCurrentFile`].
 /// * Discovering current state and comparing it with previous state within the
 ///   same execution.
 ///
@@ -45,14 +45,14 @@ use crate::states::{
 /// }
 /// ```
 ///
-/// You may reference [`StatesSaved`] in `ApplyFns::Data` for reading. It
-/// is not mutable as `StatesSaved` must remain unchanged so that all
+/// You may reference [`StatesCurrentStored`] in `ApplyFns::Data` for reading.
+/// It is not mutable as `StatesCurrentStored` must remain unchanged so that all
 /// `Item`s operate over consistent data.
 ///
-/// [`StatesSavedFile`]: crate::paths::StatesSavedFile
+/// [`StatesCurrentFile`]: crate::paths::StatesCurrentFile
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
-pub type StatesSaved = States<Saved>;
+pub type StatesCurrentStored = States<Saved>;
 
 impl From<States<Current>> for States<Saved> {
     fn from(states_current: States<Current>) -> Self {

@@ -8,7 +8,7 @@ use peace_cmd::{
 };
 use peace_resources::{
     internal::StatesMut,
-    paths::{FlowDir, StatesGoalFile, StatesSavedFile},
+    paths::{FlowDir, StatesCurrentFile, StatesGoalFile},
     resources::ts::SetUp,
     states::{
         ts::{Current, Goal},
@@ -53,7 +53,7 @@ where
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`], and will be serialized to
-    /// `$flow_dir/states_saved.yaml`.
+    /// `$flow_dir/states_current.yaml`.
     ///
     /// If any `state_current` function needs to read the `State` from a
     /// previous `Item`, it may automatically be referenced using [`Current<T>`]
@@ -150,7 +150,7 @@ where
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`] and [`StatesGoal`], and states will be serialized
-    /// to `$flow_dir/states_saved.yaml` and
+    /// to `$flow_dir/states_current.yaml` and
     /// `$flow_dir/states_goal.yaml`.
     ///
     /// If any `state_current` function needs to read the `State` from a
@@ -425,14 +425,14 @@ where
 
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_saved_file = StatesSavedFile::from(&*flow_dir);
+        let states_current_file = StatesCurrentFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, states_current, &states_saved_file).await?;
+        StatesSerializer::serialize(&storage, states_current, &states_current_file).await?;
 
         drop(flow_dir);
         drop(storage);
 
-        resources.insert(states_saved_file);
+        resources.insert(states_current_file);
 
         Ok(())
     }

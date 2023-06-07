@@ -9,9 +9,9 @@ use peace_cmd::{
 use peace_params::ParamsSpecs;
 use peace_resources::{
     internal::StatesMut,
-    paths::{FlowDir, StatesGoalFile, StatesSavedFile},
+    paths::{FlowDir, StatesCurrentFile, StatesGoalFile},
     resources::ts::SetUp,
-    states::{ts::Goal, States, StatesCurrent, StatesGoal, StatesSaved},
+    states::{ts::Goal, States, StatesCurrent, StatesCurrentStored, StatesGoal},
     Resources,
 };
 use peace_rt_model::{
@@ -103,12 +103,12 @@ where
     /// [`Item`]: peace_cfg::Item
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-        states_saved: &StatesSaved,
+        states_current_stored: &StatesCurrentStored,
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApplyDry>, E>, E> {
         Self::exec_dry_with(
             &mut CmdIndependence::Standalone { cmd_ctx },
-            states_saved,
+            states_current_stored,
             apply_for,
         )
         .await
@@ -122,10 +122,10 @@ where
     /// functionality of another command.
     pub async fn exec_dry_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-        states_saved: &StatesSaved,
+        states_current_stored: &StatesCurrentStored,
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApplyDry>, E>, E> {
-        Self::exec_internal(cmd_independence, states_saved, apply_for, true)
+        Self::exec_internal(cmd_independence, states_current_stored, apply_for, true)
             .await
             .map(|cmd_outcome| cmd_outcome.map(|(states_applied, _states_goal)| states_applied))
     }
@@ -175,12 +175,12 @@ where
     /// [`Item`]: peace_cfg::Item
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-        states_saved: &StatesSaved,
+        states_current_stored: &StatesCurrentStored,
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApply>, E>, E> {
         Self::exec_with(
             &mut CmdIndependence::Standalone { cmd_ctx },
-            states_saved,
+            states_current_stored,
             apply_for,
         )
         .await
@@ -194,13 +194,13 @@ where
     /// functionality of another command.
     pub async fn exec_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-        states_saved: &StatesSaved,
+        states_current_stored: &StatesCurrentStored,
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApply>, E>, E> {
         let CmdOutcome {
             value: (states_applied, states_goal),
             errors,
-        } = Self::exec_internal(cmd_independence, states_saved, apply_for, false).await?;
+        } = Self::exec_internal(cmd_independence, states_current_stored, apply_for, false).await?;
 
         let resources = match cmd_independence {
             CmdIndependence::Standalone { cmd_ctx } => cmd_ctx.resources(),
@@ -235,7 +235,7 @@ where
     /// [`ApplyFns`]: peace_cfg::Item::ApplyFns
     async fn exec_internal<StatesTs>(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-        states_saved: &StatesSaved,
+        states_current_stored: &StatesCurrentStored,
         apply_for: ApplyFor,
         dry_run: bool,
     ) -> Result<CmdOutcome<(States<StatesTs>, StatesGoal), E>, E>
@@ -243,14 +243,15 @@ where
         StatesTs: Debug + Send + 'static,
     {
         // `StatesTsApply` represents the states of items *after* this cmd has run,
-        // even if no change occurs. This means it should begin as `StatesSaved` or
-        // `StatesCurrent`, and updated when a new state has been applied and
+        // even if no change occurs. This means it should begin as `StatesCurrentStored`
+        // or `StatesCurrent`, and updated when a new state has been applied and
         // re-discovered.
         //
-        // Notably, the initial `StatesSaved` / `StatesCurrent` may not contain a state
-        // for items whose state cannot be discovered, e.g. a file on a remote
-        // server, when the remote server doesn't exist.
-        let states_applied_mut = StatesMut::<StatesTs>::from((*states_saved).clone().into_inner());
+        // Notably, the initial `StatesCurrentStored` / `StatesCurrent` may not contain
+        // a state for items whose state cannot be discovered, e.g. a file on a
+        // remote server, when the remote server doesn't exist.
+        let states_applied_mut =
+            StatesMut::<StatesTs>::from((*states_current_stored).clone().into_inner());
         let states_goal_mut = StatesMut::<Goal>::new();
         let outcome = (states_applied_mut, states_goal_mut);
 
@@ -259,8 +260,8 @@ where
             outcome,
             |cmd_view, #[cfg(feature = "output_progress")] progress_tx, outcomes_tx| {
                 async move {
-                    // TODO: compare `StatesSaved` and `StatesCurrent` by delegating the equality
-                    // check to `ItemWrapper`.
+                    // TODO: compare `StatesCurrentStored` and `StatesCurrent` by delegating the
+                    // equality check to `ItemWrapper`.
 
                     let apply_for_internal = match apply_for {
                         ApplyFor::Ensure => ApplyForInternal::Ensure,
@@ -627,7 +628,7 @@ where
 
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_current_file = StatesSavedFile::from(&*flow_dir);
+        let states_current_file = StatesCurrentFile::from(&*flow_dir);
 
         StatesSerializer::serialize(&storage, states_applied, &states_current_file).await?;
 

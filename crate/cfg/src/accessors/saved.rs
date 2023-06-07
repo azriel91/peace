@@ -12,7 +12,7 @@ use peace_data::{
     },
     Data,
 };
-use peace_resources::{states::StatesSaved, type_reg::untagged::DataType};
+use peace_resources::{states::StatesCurrentStored, type_reg::untagged::DataType};
 use serde::Serialize;
 
 /// The previously saved `T` state, if any.
@@ -20,8 +20,8 @@ use serde::Serialize;
 pub struct Saved<'borrow, T> {
     /// ID of the item the state should be retrieved for.
     item_id: &'borrow ItemId,
-    /// The borrowed `StatesSaved`.
-    states_saved: Option<Ref<'borrow, StatesSaved>>,
+    /// The borrowed `StatesCurrentStored`.
+    states_current_stored: Option<Ref<'borrow, StatesCurrentStored>>,
     /// Marker.
     marker: PhantomData<T>,
 }
@@ -31,9 +31,9 @@ where
     T: Clone + Debug + DataType + Display + Serialize + Send + Sync + 'static,
 {
     pub fn get(&'borrow self) -> Option<&'borrow T> {
-        self.states_saved
+        self.states_current_stored
             .as_ref()
-            .and_then(|states_saved| states_saved.get(self.item_id))
+            .and_then(|states_current_stored| states_current_stored.get(self.item_id))
     }
 }
 
@@ -42,8 +42,8 @@ where
     T: Debug + Send + Sync + 'static,
 {
     fn borrow(item_id: &'borrow ItemId, resources: &'borrow Resources) -> Self {
-        let states_saved = resources
-            .try_borrow::<StatesSaved>()
+        let states_current_stored = resources
+            .try_borrow::<StatesCurrentStored>()
             .map_err(|borrow_fail| match borrow_fail {
                 e @ BorrowFail::ValueNotFound => e,
                 BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
@@ -54,7 +54,7 @@ where
 
         Self {
             item_id,
-            states_saved,
+            states_current_stored,
             marker: PhantomData,
         }
     }
@@ -66,7 +66,7 @@ impl<'borrow, T> DataAccess for Saved<'borrow, T> {
         Self: Sized,
     {
         let mut type_ids = TypeIds::new();
-        type_ids.push(TypeId::of::<StatesSaved>());
+        type_ids.push(TypeId::of::<StatesCurrentStored>());
         type_ids
     }
 
@@ -84,7 +84,7 @@ impl<'borrow, T> DataAccessDyn for Saved<'borrow, T> {
         Self: Sized,
     {
         let mut type_ids = TypeIds::new();
-        type_ids.push(TypeId::of::<StatesSaved>());
+        type_ids.push(TypeId::of::<StatesCurrentStored>());
         type_ids
     }
 

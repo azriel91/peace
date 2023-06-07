@@ -1,7 +1,7 @@
 use peace::{
     cfg::{flow_id, item_id, FlowId, ItemId},
     resources::{
-        internal::StatesMut, paths::StatesSavedFile, states::StatesSaved,
+        internal::StatesMut, paths::StatesCurrentFile, states::StatesCurrentStored,
         type_reg::untagged::TypeReg,
     },
     rt_model::{Error, StatesSerializer, Storage},
@@ -12,16 +12,16 @@ use pretty_assertions::assert_eq;
 async fn serialize() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let storage = Storage;
-    let states_saved_file = StatesSavedFile::new(tempdir.path().join("states_saved.yaml"));
+    let states_current_file = StatesCurrentFile::new(tempdir.path().join("states_current.yaml"));
 
     let states = {
         let mut states = StatesMut::new();
         states.insert(item_id!("a"), 123u32);
-        StatesSaved::from(states)
+        StatesCurrentStored::from(states)
     };
-    StatesSerializer::<Error>::serialize(&storage, &states, &states_saved_file).await?;
+    StatesSerializer::<Error>::serialize(&storage, &states, &states_current_file).await?;
 
-    let serialized = tokio::fs::read_to_string(states_saved_file).await?;
+    let serialized = tokio::fs::read_to_string(states_current_file).await?;
     assert_eq!("a: 123\n", serialized);
 
     Ok(())
@@ -35,20 +35,20 @@ async fn deserialize_saved() -> Result<(), Box<dyn std::error::Error>> {
     let item_id = item_id!("a");
     let mut states_type_reg = TypeReg::new_typed();
     states_type_reg.register::<u32>(item_id.clone());
-    let states_saved_file = StatesSavedFile::new(tempdir.path().join("states_saved.yaml"));
+    let states_current_file = StatesCurrentFile::new(tempdir.path().join("states_current.yaml"));
 
     let states = {
         let mut states = StatesMut::new();
         states.insert(item_id.clone(), 123u32);
-        StatesSaved::from(states)
+        StatesCurrentStored::from(states)
     };
-    StatesSerializer::<Error>::serialize(&storage, &states, &states_saved_file).await?;
+    StatesSerializer::<Error>::serialize(&storage, &states, &states_current_file).await?;
 
     let states_deserialized = StatesSerializer::<Error>::deserialize_saved(
         &flow_id,
         &storage,
         &states_type_reg,
-        &states_saved_file,
+        &states_current_file,
     )
     .await?;
 
@@ -68,16 +68,16 @@ async fn deserialize_saved_error_maps_byte_indices() -> Result<(), Box<dyn std::
     let item_id = item_id!("a");
     let mut states_type_reg = TypeReg::new_typed();
     states_type_reg.register::<u32>(item_id.clone());
-    let states_saved_file = StatesSavedFile::new(tempdir.path().join("states_saved.yaml"));
+    let states_current_file = StatesCurrentFile::new(tempdir.path().join("states_current.yaml"));
 
     let contents = "a: [123]\n";
-    tokio::fs::write(&states_saved_file, contents).await?;
+    tokio::fs::write(&states_current_file, contents).await?;
 
     let error = StatesSerializer::<Error>::deserialize_saved(
         &flow_id,
         &storage,
         &states_type_reg,
-        &states_saved_file,
+        &states_current_file,
     )
     .await
     .unwrap_err();

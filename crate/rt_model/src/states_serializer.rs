@@ -2,24 +2,26 @@ use std::{marker::PhantomData, path::Path};
 
 use peace_cfg::{FlowId, ItemId};
 use peace_resources::{
-    paths::{StatesGoalFile, StatesSavedFile},
+    paths::{StatesCurrentFile, StatesGoalFile},
     states::{
         ts::{Goal, Saved},
-        States, StatesGoal, StatesSaved,
+        States, StatesCurrentStored, StatesGoal,
     },
     type_reg::untagged::{BoxDtDisplay, TypeReg},
 };
 
 use crate::{Error, Storage};
 
-/// Reads and writes [`StatesSaved`] and [`StatesGoal`] to and from storage.
+/// Reads and writes [`StatesCurrentStored`] and [`StatesGoal`] to and from
+/// storage.
 pub struct StatesSerializer<E>(PhantomData<E>);
 
 impl<E> StatesSerializer<E>
 where
     E: std::error::Error + From<Error> + Send,
 {
-    /// Returns the [`StatesSaved`] of all [`Item`]s if it exists on disk.
+    /// Returns the [`StatesCurrentStored`] of all [`Item`]s if it exists on
+    /// disk.
     ///
     /// # Parameters:
     ///
@@ -49,29 +51,30 @@ where
         Ok(())
     }
 
-    /// Returns the [`StatesSaved`] of all [`Item`]s if it exists on disk.
+    /// Returns the [`StatesCurrentStored`] of all [`Item`]s if it exists on
+    /// disk.
     ///
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
     ///   item state.
-    /// * `states_saved_file`: `StatesSavedFile` to deserialize.
+    /// * `states_current_file`: `StatesCurrentFile` to deserialize.
     ///
     /// [`Item`]: peace_cfg::Item
     pub async fn deserialize_saved(
         flow_id: &FlowId,
         storage: &Storage,
         states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
-        states_saved_file: &StatesSavedFile,
-    ) -> Result<StatesSaved, E> {
+        states_current_file: &StatesCurrentFile,
+    ) -> Result<StatesCurrentStored, E> {
         let states = Self::deserialize_internal::<Saved>(
             #[cfg(not(target_arch = "wasm32"))]
             "StatesSerializer::deserialize_saved".to_string(),
             flow_id,
             storage,
             states_type_reg,
-            states_saved_file,
+            states_current_file,
         )
         .await?;
 
@@ -107,29 +110,30 @@ where
         states.ok_or_else(|| E::from(Error::StatesGoalDiscoverRequired))
     }
 
-    /// Returns the [`StatesSaved`] of all [`Item`]s if it exists on disk.
+    /// Returns the [`StatesCurrentStored`] of all [`Item`]s if it exists on
+    /// disk.
     ///
     /// # Parameters:
     ///
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
     ///   item state.
-    /// * `states_saved_file`: `StatesSavedFile` to deserialize.
+    /// * `states_current_file`: `StatesCurrentFile` to deserialize.
     ///
     /// [`Item`]: peace_cfg::Item
     pub async fn deserialize_saved_opt(
         flow_id: &FlowId,
         storage: &Storage,
         states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
-        states_saved_file: &StatesSavedFile,
-    ) -> Result<Option<StatesSaved>, E> {
+        states_current_file: &StatesCurrentFile,
+    ) -> Result<Option<StatesCurrentStored>, E> {
         Self::deserialize_internal(
             #[cfg(not(target_arch = "wasm32"))]
             "StatesSerializer::deserialize_saved_opt".to_string(),
             flow_id,
             storage,
             states_type_reg,
-            states_saved_file,
+            states_current_file,
         )
         .await
     }
@@ -141,7 +145,7 @@ where
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
     ///   item state.
-    /// * `states_saved_file`: `StatesSavedFile` to deserialize.
+    /// * `states_current_file`: `StatesCurrentFile` to deserialize.
     ///
     /// # Type Parameters
     ///
@@ -204,7 +208,7 @@ where
     /// * `storage`: `Storage` to read from.
     /// * `states_type_reg`: Type registry with functions to deserialize each
     ///   item state.
-    /// * `states_saved_file`: `StatesSavedFile` to deserialize.
+    /// * `states_current_file`: `StatesCurrentFile` to deserialize.
     ///
     /// # Type Parameters
     ///

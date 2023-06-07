@@ -4,7 +4,7 @@ mod debug {
     };
 
     #[test]
-    fn states_saved() {
+    fn states_current_stored() {
         assert_eq!("Saved", format!("{Saved:?}"))
     }
 

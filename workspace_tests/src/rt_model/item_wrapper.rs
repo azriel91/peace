@@ -6,7 +6,7 @@ use peace::{
     resources::{
         internal::StatesMut,
         resources::ts::SetUp,
-        states::{self, StatesCurrent, StatesGoal, StatesSaved},
+        states::{self, StatesCurrent, StatesCurrentStored, StatesGoal},
         type_reg::untagged::BoxDataTypeDowncast,
         Resources,
     },
@@ -189,11 +189,16 @@ async fn state_diff_exec() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
 
-    let (params_specs, resources, states_saved, states_goal) =
-        resources_and_states_saved_and_goal(&item_wrapper).await?;
+    let (params_specs, resources, states_current_stored, states_goal) =
+        resources_and_states_current_stored_and_goal(&item_wrapper).await?;
 
     let state_diff = item_wrapper
-        .state_diff_exec(&params_specs, &resources, &states_saved, &states_goal)
+        .state_diff_exec(
+            &params_specs,
+            &resources,
+            &states_current_stored,
+            &states_goal,
+        )
         .await?
         .expect("Expected state_diff to be Some when state_saved and state_goal both exist.");
 
@@ -550,9 +555,17 @@ async fn resources_set_up_pre_saved(
     Ok((params_specs, resources, states_current))
 }
 
-async fn resources_and_states_saved_and_goal(
+async fn resources_and_states_current_stored_and_goal(
     item_wrapper: &VecCopyItemWrapper,
-) -> Result<(ParamsSpecs, Resources<SetUp>, StatesSaved, StatesGoal), VecCopyError> {
+) -> Result<
+    (
+        ParamsSpecs,
+        Resources<SetUp>,
+        StatesCurrentStored,
+        StatesGoal,
+    ),
+    VecCopyError,
+> {
     let (params_specs, resources) = resources_set_up(item_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
@@ -569,7 +582,7 @@ async fn resources_and_states_saved_and_goal(
         progress_sender,
     );
 
-    let states_saved = {
+    let states_current_stored = {
         let mut states_mut = StatesMut::new();
         let state = <dyn ItemRt<_>>::state_current_try_exec(
             item_wrapper,
@@ -582,7 +595,7 @@ async fn resources_and_states_saved_and_goal(
             states_mut.insert_raw(<dyn ItemRt<_>>::id(item_wrapper).clone(), state);
         }
 
-        Into::<StatesSaved>::into(StatesCurrent::from(states_mut))
+        Into::<StatesCurrentStored>::into(StatesCurrent::from(states_mut))
     };
     let states_goal = {
         let mut states_goal_mut = StatesMut::<states::ts::Goal>::new();
@@ -594,5 +607,5 @@ async fn resources_and_states_saved_and_goal(
 
         StatesGoal::from(states_goal_mut)
     };
-    Ok((params_specs, resources, states_saved, states_goal))
+    Ok((params_specs, resources, states_current_stored, states_goal))
 }

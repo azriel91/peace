@@ -5,7 +5,7 @@ use peace_resources::{
     resources::ts::SetUp,
     states::{
         ts::{Ensured, EnsuredDry},
-        StatesEnsured, StatesEnsuredDry, StatesSaved,
+        StatesCurrentStored, StatesEnsured, StatesEnsuredDry,
     },
 };
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error};
@@ -50,11 +50,11 @@ where
     /// [`Item`]: peace_cfg::Item
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-        states_saved: &StatesSaved,
+        states_current_stored: &StatesCurrentStored,
     ) -> Result<CmdOutcome<StatesEnsuredDry, E>, E> {
         ApplyCmd::<E, O, PKeys, Ensured, EnsuredDry>::exec_dry(
             cmd_ctx,
-            states_saved,
+            states_current_stored,
             ApplyFor::Ensure,
         )
         .await
@@ -72,11 +72,11 @@ where
     /// [`state_goal`]: peace_cfg::Item::state_goal
     pub async fn exec_dry_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-        states_saved: &StatesSaved,
+        states_current_stored: &StatesCurrentStored,
     ) -> Result<CmdOutcome<StatesEnsuredDry, E>, E> {
         ApplyCmd::<E, O, PKeys, Ensured, EnsuredDry>::exec_dry_with(
             cmd_independence,
-            states_saved,
+            states_current_stored,
             ApplyFor::Ensure,
         )
         .await
@@ -108,10 +108,14 @@ where
     /// [`Item`]: peace_cfg::Item
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-        states_saved: &StatesSaved,
+        states_current_stored: &StatesCurrentStored,
     ) -> Result<CmdOutcome<StatesEnsured, E>, E> {
-        ApplyCmd::<E, O, PKeys, Ensured, EnsuredDry>::exec(cmd_ctx, states_saved, ApplyFor::Ensure)
-            .await
+        ApplyCmd::<E, O, PKeys, Ensured, EnsuredDry>::exec(
+            cmd_ctx,
+            states_current_stored,
+            ApplyFor::Ensure,
+        )
+        .await
     }
 
     /// Runs [`Item::apply_exec`] for each [`Item`], with [`state_goal`] as
@@ -126,11 +130,11 @@ where
     /// [`state_goal`]: peace_cfg::Item::state_goal
     pub async fn exec_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-        states_saved: &StatesSaved,
+        states_current_stored: &StatesCurrentStored,
     ) -> Result<CmdOutcome<StatesEnsured, E>, E> {
         ApplyCmd::<E, O, PKeys, Ensured, EnsuredDry>::exec_with(
             cmd_independence,
-            states_saved,
+            states_current_stored,
             ApplyFor::Ensure,
         )
         .await

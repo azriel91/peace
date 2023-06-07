@@ -2,8 +2,8 @@
 
 pub use self::{
     state_diffs::StateDiffs, states_cleaned::StatesCleaned, states_cleaned_dry::StatesCleanedDry,
-    states_current::StatesCurrent, states_ensured::StatesEnsured,
-    states_ensured_dry::StatesEnsuredDry, states_goal::StatesGoal, states_saved::StatesSaved,
+    states_current::StatesCurrent, states_current_stored::StatesCurrentStored,
+    states_ensured::StatesEnsured, states_ensured_dry::StatesEnsuredDry, states_goal::StatesGoal,
 };
 
 pub mod ts;
@@ -21,10 +21,10 @@ mod state_diffs;
 mod states_cleaned;
 mod states_cleaned_dry;
 mod states_current;
+mod states_current_stored;
 mod states_ensured;
 mod states_ensured_dry;
 mod states_goal;
-mod states_saved;
 
 /// Current `State`s for all `Item`s. `TypeMap<ItemId>` newtype.
 ///

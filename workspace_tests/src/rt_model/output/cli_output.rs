@@ -2,7 +2,7 @@ use peace::{
     cfg::{item_id, ItemId, State},
     resources::{
         internal::{StateDiffsMut, StatesMut},
-        states::{StateDiffs, StatesSaved},
+        states::{StateDiffs, StatesCurrentStored},
     },
     rt_model::output::{CliOutput, CliOutputBuilder, OutputFormat, OutputWrite},
 };
@@ -37,14 +37,14 @@ cfg_if::cfg_if! {
 async fn outputs_states_as_text() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Text);
-    let states_saved = {
+    let states_current_stored = {
         let mut states = StatesMut::new();
         states.insert(item_id!("item_0"), State::new("logical", 1.1));
         states.insert(item_id!("item_1"), State::new(1u8, true));
-        StatesSaved::from(states)
+        StatesCurrentStored::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_saved).await?;
+    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
 
     assert_eq!(
         "\
@@ -99,14 +99,14 @@ async fn outputs_error_as_text() -> Result<(), Box<dyn std::error::Error>> {
 async fn outputs_states_as_text_colorized() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output_colorized(&mut buffer, OutputFormat::Text);
-    let states_saved = {
+    let states_current_stored = {
         let mut states = StatesMut::new();
         states.insert(item_id!("item_0"), State::new("logical", 1.1));
         states.insert(item_id!("item_1"), State::new(1u8, true));
-        StatesSaved::from(states)
+        StatesCurrentStored::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_saved).await?;
+    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
 
     let output = String::from_utf8(buffer)?;
     assert_eq!(
@@ -176,14 +176,14 @@ async fn outputs_error_as_text_colorized() -> Result<(), Box<dyn std::error::Err
 async fn outputs_states_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Yaml);
-    let states_saved = {
+    let states_current_stored = {
         let mut states = StatesMut::new();
         states.insert(item_id!("item_0"), State::new("logical", 1.1));
         states.insert(item_id!("item_1"), State::new(1u8, true));
-        StatesSaved::from(states)
+        StatesCurrentStored::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_saved).await?;
+    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
 
     assert_eq!(
         r#"item_0:
@@ -241,14 +241,14 @@ async fn outputs_error_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
 async fn outputs_states_as_json() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
     let mut cli_output = cli_output(&mut buffer, OutputFormat::Json);
-    let states_saved = {
+    let states_current_stored = {
         let mut states = StatesMut::new();
         states.insert(item_id!("item_0"), State::new("logical", 1.1));
         states.insert(item_id!("item_1"), State::new(1u8, true));
-        StatesSaved::from(states)
+        StatesCurrentStored::from(states)
     };
 
-    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_saved).await?;
+    <CliOutput<_> as OutputWrite<Error>>::present(&mut cli_output, &states_current_stored).await?;
 
     assert_eq!(
         r#"{"item_0":{"logical":"logical","physical":1.1},"item_1":{"logical":1,"physical":true}}"#,

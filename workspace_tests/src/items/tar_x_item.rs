@@ -7,9 +7,9 @@ use peace::{
     params::{ParamsSpec, ValueResolutionCtx, ValueResolutionMode},
     resources::{
         paths::{FlowDir, ProfileDir},
-        states::StatesSaved,
+        states::StatesCurrentStored,
     },
-    rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd, StatesSavedReadCmd},
+    rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd},
     rt_model::{
         outcomes::CmdOutcome, Flow, InMemoryTextOutput, ItemGraph, ItemGraphBuilder, Workspace,
         WorkspaceSpec,
@@ -567,12 +567,12 @@ async fn ensure_unpacks_tar_when_files_not_exists() -> Result<(), Box<dyn std::e
         value: (states_current, _states_goal),
         errors: _,
     } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
-    let states_saved = StatesSaved::from(states_current);
+    let states_current_stored = StatesCurrentStored::from(states_current);
 
     let CmdOutcome {
         value: states_ensured,
         errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
 
     let state_ensured = states_ensured
         .get::<FileMetadatas, _>(TarXTest::ID)
@@ -627,13 +627,13 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
         value: (states_current, _states_goal),
         errors: _,
     } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
-    let states_saved = StatesSaved::from(states_current);
+    let states_current_stored = StatesCurrentStored::from(states_current);
 
     // Overwrite changed files and remove extra files
     let CmdOutcome {
         value: states_ensured,
         errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
 
     let state_ensured = states_ensured
         .get::<FileMetadatas, _>(TarXTest::ID)
@@ -648,11 +648,11 @@ async fn ensure_removes_other_files_and_is_idempotent() -> Result<(), Box<dyn st
     );
 
     // Execute again to check idempotence
-    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
+    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
     let CmdOutcome {
         value: states_ensured,
         errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
 
     let state_ensured = states_ensured
         .get::<FileMetadatas, _>(TarXTest::ID)
@@ -695,12 +695,12 @@ async fn clean_removes_files_in_dest_directory() -> Result<(), Box<dyn std::erro
         value: (states_current, _states_goal),
         errors: _,
     } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
-    let states_saved = StatesSaved::from(states_current);
+    let states_current_stored = StatesCurrentStored::from(states_current);
 
     let CmdOutcome {
         value: states_cleaned,
         errors: _,
-    } = CleanCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    } = CleanCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
 
     let state_cleaned = states_cleaned
         .get::<FileMetadatas, _>(TarXTest::ID)

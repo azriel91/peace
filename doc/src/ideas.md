@@ -87,7 +87,7 @@ When an item ensure does multiple writes, there is a possibility of not all of t
 * internet connection drops.
 * machine loses power.
 
-In the last case, we cannot safely write state to disk, so a `StateCurrent` discover is needed to bring `StatesSaved` up to date. However, the previous two cases, it is possible for `Item`s to return `State` that has been partially ensured, without making any further outgoing calls -- i.e. infer `StatesEnsured` based on the successful writes so far.
+In the last case, we cannot safely write state to disk, so a `StateCurrent` discover is needed to bring `StatesCurrentStored` up to date. However, the previous two cases, it is possible for `Item`s to return `State` that has been partially ensured, without making any further outgoing calls -- i.e. infer `StatesEnsured` based on the successful writes so far.
 
 Note that this places a burden on the `Item` implementor to return the partial state ensured (which may conflict with keeping the `State` simple), as well as make the `ApplyFns::exec` return value more complex.
 
@@ -295,7 +295,7 @@ Should we combine all 3 into `FnCtx`? It would make `FnCtx` type parameterized o
 
     Maybe this is already taken care of -- `state_diff` is already passed in both `State`s, so implementors had to manage it already.
 
-16. Rename `StatesSaved`, because we may need to distinguish between `StatesCurrentSaved`, `StatesGoalSaved`.
+16. Rename `StatesCurrentStored`, because we may need to distinguish between `StatesCurrentSaved`, `StatesGoalSaved`.
 
 
 
