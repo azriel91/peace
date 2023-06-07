@@ -231,6 +231,24 @@ Generate dot diagram using graphviz with full resolution, and then convert to ti
 </div>
 </details>
 
+<details>
+<summary>16. Combine <code>data</code> and <code>params{,_partial}</code> into <code>FnCtx</code></summary>
+<div>
+
+`Item` functions take in `FnCtx`, `data`, and item `params` as separate arguments.
+
+This was done to:
+
+* Reduce the additional layer to get `Item::Params`, or `Item::ParamsPartial`.
+* Avoid progress sender from being passed in to function that didn't need it.
+
+However, functions don't necessarily need runtime `fn_ctx` or `data`, making it noise in the signature.
+
+Should we combine all 3 into `FnCtx`? It would make `FnCtx` type parameterized over `Params` and `ParamsPartial`.
+
+</div>
+</details>
+
 
 ## Notes
 
