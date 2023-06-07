@@ -36,8 +36,13 @@ where
     SubCmd {
         /// Flow and parameters for executing the command.
         cmd_view: &'ctx mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
+    },
+    /// This command is being executed as part of another command.
+    #[cfg(feature = "output_progress")]
+    SubCmdWithProgress {
+        /// Flow and parameters for executing the command.
+        cmd_view: &'ctx mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
         /// Sender to use for progress updates.
-        #[cfg(feature = "output_progress")]
         progress_tx: Sender<ProgressUpdateAndId>,
     },
 }

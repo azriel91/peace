@@ -204,7 +204,9 @@ where
 
         let resources = match cmd_independence {
             CmdIndependence::Standalone { cmd_ctx } => cmd_ctx.resources(),
-            CmdIndependence::SubCmd { cmd_view, .. } => &cmd_view.resources,
+            CmdIndependence::SubCmd { cmd_view, .. } => cmd_view.resources,
+            #[cfg(feature = "output_progress")]
+            CmdIndependence::SubCmdWithProgress { cmd_view, .. } => cmd_view.resources,
         };
 
         Self::serialize_saved(resources, &states_applied).await?;
@@ -265,9 +267,11 @@ where
                         ApplyFor::Clean => {
                             let states_current_outcome =
                                 StatesDiscoverCmd::<E, O, PKeys>::current_with(
-                                    CmdIndependence::SubCmd {
+                                    #[cfg(not(feature = "output_progress"))]
+                                    &mut CmdIndependence::SubCmd { cmd_view },
+                                    #[cfg(feature = "output_progress")]
+                                    &mut CmdIndependence::SubCmdWithProgress {
                                         cmd_view,
-                                        #[cfg(feature = "output_progress")]
                                         progress_tx: progress_tx.clone(),
                                     },
                                 )

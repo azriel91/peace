@@ -19,8 +19,11 @@ cfg_if::cfg_if! {
     }
 }
 
-/// Common code to run the item execution, progress rendering, and item
-/// outcome collection async tasks.
+/// Common code to handle command composition and progress rendering.
+///
+/// * For commands that do one-off tasks, see [`CmdBase::oneshot`].
+/// * For commands that process items according to a flow's graph, and should
+///   render progress, see [`CmdBase::exec`].
 #[derive(Debug)]
 pub struct CmdBase<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
@@ -30,6 +33,41 @@ where
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
+    /// Common code to run the item execution, progress rendering, and item
+    /// outcome collection async tasks.
+    ///
+    /// # Type Parameters
+    ///
+    /// * `FnExec`: Function for the `Cmd` implementation to execute its work.
+    ///
+    ///     This is the producer function to process all items.
+    ///
+    ///     This is infallible because errors are expected to be returned
+    ///     associated with an item. This may change if there are errors
+    ///     that are related to the framework that cannot be associated with
+    ///     an item.
+    ///
+    /// * `OutcomeT`: Outcome type for the overall command execution.
+    pub async fn oneshot<FnExec, OutcomeT>(
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        fn_exec: FnExec,
+    ) -> Result<OutcomeT, E>
+    where
+        FnExec: for<'f_exec> FnOnce(
+            &'f_exec mut SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
+        ) -> LocalBoxFuture<'f_exec, Result<OutcomeT, E>>,
+    {
+        match cmd_independence {
+            CmdIndependence::Standalone { cmd_ctx } => fn_exec(&mut cmd_ctx.view()).await,
+            CmdIndependence::SubCmd { cmd_view } => fn_exec(cmd_view).await,
+            #[cfg(feature = "output_progress")]
+            CmdIndependence::SubCmdWithProgress {
+                cmd_view,
+                progress_tx: _,
+            } => fn_exec(cmd_view).await,
+        }
+    }
+
     /// Common code to run the item execution, progress rendering, and item
     /// outcome collection async tasks.
     ///
@@ -186,7 +224,29 @@ where
 
                         outcome_result?;
                     }
-                    CmdIndependence::SubCmd {
+                    CmdIndependence::SubCmd { cmd_view } => {
+                        // Dud progress_tx that discards everything.
+                        let (progress_tx, mut progress_rx) =
+                            mpsc::channel::<ProgressUpdateAndId>(crate::PROGRESS_COUNT_MAX);
+
+                        let progress_render_task = async move {
+                            while progress_rx.recv().await.is_some() {}
+                        };
+
+                        let execution_task = async move {
+                            let progress_tx = &progress_tx;
+                            let outcomes_tx = &outcomes_tx;
+
+                            fn_exec(cmd_view, progress_tx, outcomes_tx).await;
+
+                            // `progress_tx` is dropped here, so `progress_rx` will safely end.
+                        };
+
+                        let ((), (), outcome_result) = futures::join!(execution_task, progress_render_task, outcomes_rx_task);
+
+                        outcome_result?;
+                    }
+                    CmdIndependence::SubCmdWithProgress {
                         cmd_view,
                         progress_tx,
                     } => {

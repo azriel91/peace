@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use futures::{StreamExt, TryStreamExt};
+use futures::{FutureExt, StreamExt, TryStreamExt};
 use peace_cfg::Profile;
 use peace_cmd::{
     ctx::CmdCtx,
@@ -18,7 +18,9 @@ use peace_resources::{
 };
 use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, Flow};
 
-use crate::cmds::{StatesDesiredReadCmd, StatesSavedReadCmd};
+use crate::cmds::{cmd_ctx_internal::CmdIndependence, StatesDesiredReadCmd, StatesSavedReadCmd};
+
+use super::CmdBase;
 
 #[derive(Debug)]
 pub struct DiffCmd<E>(PhantomData<E>);
@@ -42,17 +44,43 @@ where
         PKeys: ParamsKeys + 'static,
         O: OutputWrite<E>,
     {
-        let states_a = StatesSavedReadCmd::exec(cmd_ctx).await?;
-        let states_b = StatesDesiredReadCmd::exec(cmd_ctx).await?;
+        Self::current_and_desired_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
+    }
 
-        let SingleProfileSingleFlowView {
-            flow,
-            params_specs,
-            resources,
-            ..
-        } = cmd_ctx.view();
+    /// Returns the [`state_diff`]`s between the saved current and desired
+    /// states.
+    ///
+    /// See [`Self::current_and_desired`] for full documentation.
+    ///
+    /// This function exists so that this command can be executed as sub
+    /// functionality of another command.
+    pub async fn current_and_desired_with<O, PKeys>(
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+    ) -> Result<StateDiffs, E>
+    where
+        PKeys: ParamsKeys + 'static,
+        O: OutputWrite<E>,
+    {
+        // Diff is a fast operation, so we don't need to render progress.
+        CmdBase::oneshot(cmd_independence, |cmd_view| {
+            async move {
+                let mut cmd_independence_sub: CmdIndependence<'_, '_, '_, E, O, PKeys> =
+                    CmdIndependence::SubCmd { cmd_view };
+                let states_a = StatesSavedReadCmd::exec_with(&mut cmd_independence_sub).await?;
+                let states_b = StatesDesiredReadCmd::exec_with(&mut cmd_independence_sub).await?;
 
-        Self::diff_any(flow, params_specs, resources, &states_a, &states_b).await
+                let SingleProfileSingleFlowView {
+                    flow,
+                    params_specs,
+                    resources,
+                    ..
+                } = cmd_view;
+
+                Self::diff_any(flow, params_specs, resources, &states_a, &states_b).await
+            }
+            .boxed_local()
+        })
+        .await
     }
 
     /// Returns the [`state_diff`]`s between the saved current states of two

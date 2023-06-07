@@ -68,44 +68,21 @@ where
     pub async fn current(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
-        Self::exec(
-            &mut CmdIndependence::Standalone { cmd_ctx },
-            DiscoverFor::Current,
-        )
-        .await
-        .map(|cmd_outcome| {
-            let CmdOutcome {
-                value: (states_current, _states_desired),
-                errors,
-            } = cmd_outcome;
-
-            CmdOutcome {
-                value: states_current,
-                errors,
-            }
-        })
+        Self::current_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
     }
 
     /// Runs [`try_state_current`] for each [`Item`].
     ///
-    /// At the end of this function, [`Resources`] will be populated with
-    /// [`StatesCurrent`], and will be serialized to
-    /// `$flow_dir/states_saved.yaml`.
+    /// See [`Self::current`] for full documentation.
     ///
-    /// If any `state_current` function needs to read the `State` from a
-    /// previous `Item`, it may automatically be referenced using [`Current<T>`]
-    /// where `T` us the predecessor's state. Peace will have automatically
-    /// inserted it into `Resources`, and the successor should references it
-    /// in their [`Data`].
+    /// This function exists so that this command can be executed as sub
+    /// functionality of another command.
     ///
-    /// [`Current<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Current.html
-    /// [`Data`]: peace_cfg::TryFnSpec::Data
-    /// [`Item`]: peace_cfg::Item
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current_with(
-        mut cmd_independence: CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
-        Self::exec(&mut cmd_independence, DiscoverFor::Current)
+        Self::exec(cmd_independence, DiscoverFor::Current)
             .await
             .map(|cmd_outcome| {
                 let CmdOutcome {
@@ -139,22 +116,33 @@ where
     pub async fn desired(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesDesired, E>, E> {
-        Self::exec(
-            &mut CmdIndependence::Standalone { cmd_ctx },
-            DiscoverFor::Desired,
-        )
-        .await
-        .map(|cmd_outcome| {
-            let CmdOutcome {
-                value: (_states_current, states_desired),
-                errors,
-            } = cmd_outcome;
+        Self::desired_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
+    }
 
-            CmdOutcome {
-                value: states_desired,
-                errors,
-            }
-        })
+    /// Runs [`try_state_desired`] for each [`Item`].
+    ///
+    /// See [`Self::desired`] for full documentation.
+    ///
+    /// This function exists so that this command can be executed as sub
+    /// functionality of another command.
+    ///
+    /// [`try_state_desired`]: peace_cfg::Item::try_state_desired
+    pub async fn desired_with(
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+    ) -> Result<CmdOutcome<StatesDesired, E>, E> {
+        Self::exec(cmd_independence, DiscoverFor::Desired)
+            .await
+            .map(|cmd_outcome| {
+                let CmdOutcome {
+                    value: (_states_current, states_desired),
+                    errors,
+                } = cmd_outcome;
+
+                CmdOutcome {
+                    value: states_desired,
+                    errors,
+                }
+            })
     }
 
     /// Runs [`try_state_current`] and [`try_state_desired`]` for each
@@ -408,7 +396,9 @@ where
 
         let resources = match cmd_independence {
             CmdIndependence::Standalone { cmd_ctx } => cmd_ctx.view().resources,
-            CmdIndependence::SubCmd { cmd_view, .. } => cmd_view.resources,
+            CmdIndependence::SubCmd { cmd_view } => cmd_view.resources,
+            #[cfg(feature = "output_progress")]
+            CmdIndependence::SubCmdWithProgress { cmd_view, .. } => cmd_view.resources,
         };
 
         match discover_for {
