@@ -100,13 +100,13 @@ fn debug() {
 
     let saved = Saved::<'_, u8>::borrow(ITEM_SPEC_ID_TEST, &resources);
     assert_eq!(
-        r#"Saved { item_id: ItemId("item_id_test"), states_current_stored: Some(Ref { inner: States({ItemId("item_id_test"): TypedValue { type: "u8", value: 123 }}, PhantomData<peace_resources::states::ts::Saved>) }), marker: PhantomData<u8> }"#,
+        r#"Saved { item_id: ItemId("item_id_test"), states_current_stored: Some(Ref { inner: States({ItemId("item_id_test"): TypedValue { type: "u8", value: 123 }}, PhantomData<peace_resources::states::ts::CurrentStored>) }), marker: PhantomData<u8> }"#,
         format!("{saved:?}")
     );
 
     let saved = Saved::<'_, u8>::borrow(ITEM_SPEC_ID_OTHER, &resources);
     assert_eq!(
-        r#"Saved { item_id: ItemId("item_id_other"), states_current_stored: Some(Ref { inner: States({ItemId("item_id_test"): TypedValue { type: "u8", value: 123 }}, PhantomData<peace_resources::states::ts::Saved>) }), marker: PhantomData<u8> }"#,
+        r#"Saved { item_id: ItemId("item_id_other"), states_current_stored: Some(Ref { inner: States({ItemId("item_id_test"): TypedValue { type: "u8", value: 123 }}, PhantomData<peace_resources::states::ts::CurrentStored>) }), marker: PhantomData<u8> }"#,
         format!("{saved:?}")
     );
 }

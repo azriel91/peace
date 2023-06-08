@@ -108,7 +108,7 @@ where
     /// Flow params for the selected flow.
     profile_to_flow_params:
         BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
-    /// Saved states for each profile for the selected flow.
+    /// Stored current states for each profile for the selected flow.
     profile_to_states_current_stored: BTreeMap<Profile, Option<StatesCurrentStored>>,
     /// Type registry for each item's [`Params`].
     ///
@@ -179,7 +179,7 @@ where
     /// Flow params for the selected flow.
     pub profile_to_flow_params:
         &'view BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
-    /// Saved states for each profile for the selected flow.
+    /// Stored current states for each profile for the selected flow.
     pub profile_to_states_current_stored: &'view BTreeMap<Profile, Option<StatesCurrentStored>>,
     /// Type registry for each item's [`Params`].
     ///

@@ -4,7 +4,7 @@ use peace_cfg::{FlowId, ItemId};
 use peace_resources::{
     paths::{StatesCurrentFile, StatesGoalFile},
     states::{
-        ts::{Goal, Saved},
+        ts::{CurrentStored, Goal},
         States, StatesCurrentStored, StatesGoal,
     },
     type_reg::untagged::{BoxDtDisplay, TypeReg},
@@ -68,7 +68,7 @@ where
         states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
         states_current_file: &StatesCurrentFile,
     ) -> Result<StatesCurrentStored, E> {
-        let states = Self::deserialize_internal::<Saved>(
+        let states = Self::deserialize_internal::<CurrentStored>(
             #[cfg(not(target_arch = "wasm32"))]
             "StatesSerializer::deserialize_saved".to_string(),
             flow_id,
@@ -150,11 +150,11 @@ where
     /// # Type Parameters
     ///
     /// * `TS`: The states type state to use, such as [`ts::Current`] or
-    ///   [`ts::Saved`].
+    ///   [`ts::CurrentStored`].
     ///
     /// [`Item`]: peace_cfg::Item
     /// [`ts::Current`]: peace_resources::states::ts::Current
-    /// [`ts::Saved`]: peace_resources::states::ts::Saved
+    /// [`ts::CurrentStored`]: peace_resources::states::ts::CurrentStored
     #[cfg(not(target_arch = "wasm32"))]
     async fn deserialize_internal<TS>(
         thread_name: String,
@@ -213,11 +213,11 @@ where
     /// # Type Parameters
     ///
     /// * `TS`: The states type state to use, such as [`ts::Current`] or
-    ///   [`ts::Saved`].
+    ///   [`ts::CurrentStored`].
     ///
     /// [`Item`]: peace_cfg::Item
     /// [`ts::Current`]: peace_resources::states::ts::Current
-    /// [`ts::Saved`]: peace_resources::states::ts::Saved
+    /// [`ts::CurrentStored`]: peace_resources::states::ts::CurrentStored
     #[cfg(target_arch = "wasm32")]
     async fn deserialize_internal<TS>(
         flow_id: &FlowId,

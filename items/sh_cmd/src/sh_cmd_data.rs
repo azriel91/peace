@@ -16,7 +16,7 @@ pub struct ShCmdData<'exec, Id>
 where
     Id: Send + Sync + 'static,
 {
-    /// Saved states with this item's previous execution.
+    /// Stored states of this item's previous execution.
     states_current_stored: RMaybe<'exec, StatesCurrentStored>,
 
     /// Marker.

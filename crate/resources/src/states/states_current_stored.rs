@@ -1,11 +1,11 @@
 use std::marker::PhantomData;
 
 use crate::states::{
-    ts::{Current, Saved},
+    ts::{Current, CurrentStored},
     States,
 };
 
-/// Saved `State`s for all `Item`s.
+/// Stored current `State`s for all `Item`s.
 ///
 /// This is loaded into [`Resources`] at the beginning of any command execution,
 /// from the [`StatesCurrentFile`].
@@ -52,9 +52,9 @@ use crate::states::{
 /// [`StatesCurrentFile`]: crate::paths::StatesCurrentFile
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
-pub type StatesCurrentStored = States<Saved>;
+pub type StatesCurrentStored = States<CurrentStored>;
 
-impl From<States<Current>> for States<Saved> {
+impl From<States<Current>> for States<CurrentStored> {
     fn from(states_current: States<Current>) -> Self {
         let States(type_map, PhantomData) = states_current;
 

@@ -72,7 +72,7 @@ macro_rules! run {
 
                 output
                     .present(&(
-                        Heading::new(HeadingLevel::Level1, "Current Saved States"),
+                        Heading::new(HeadingLevel::Level1, "Current States (Stored)"),
                         states_current_stored_presentables,
                         "\n",
                     ))

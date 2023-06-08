@@ -6,9 +6,9 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Saved states of items.
+/// Stored current states of items.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Saved;
+pub struct CurrentStored;
 
 /// Current states of items.
 #[derive(Debug, Deserialize, Serialize)]

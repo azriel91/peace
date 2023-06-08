@@ -295,9 +295,6 @@ Should we combine all 3 into `FnCtx`? It would make `FnCtx` type parameterized o
 
     Maybe this is already taken care of -- `state_diff` is already passed in both `State`s, so implementors had to manage it already.
 
-16. Rename `StatesCurrentStored`, because we may need to distinguish between `StatesCurrentSaved`, `StatesGoalSaved`.
-
-
 
 [#67]: https://github.com/azriel91/peace/issues/67
 [#94]: https://github.com/azriel91/peace/issues/94

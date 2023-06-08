@@ -1,11 +1,11 @@
 mod debug {
     use peace::resources::states::ts::{
-        Cleaned, CleanedDry, Current, Ensured, EnsuredDry, Goal, Saved,
+        Cleaned, CleanedDry, Current, CurrentStored, Ensured, EnsuredDry, Goal,
     };
 
     #[test]
     fn states_current_stored() {
-        assert_eq!("Saved", format!("{Saved:?}"))
+        assert_eq!("CurrentStored", format!("{CurrentStored:?}"))
     }
 
     #[test]
@@ -41,14 +41,14 @@ mod debug {
 
 mod serde {
     use peace::resources::states::ts::{
-        Cleaned, CleanedDry, Current, Ensured, EnsuredDry, Goal, Saved,
+        Cleaned, CleanedDry, Current, CurrentStored, Ensured, EnsuredDry, Goal,
     };
 
     #[test]
     fn saved() {
-        let s = serde_yaml::to_string(&Saved).unwrap();
+        let s = serde_yaml::to_string(&CurrentStored).unwrap();
 
-        assert!(serde_yaml::from_str::<Saved>(&s).is_ok());
+        assert!(serde_yaml::from_str::<CurrentStored>(&s).is_ok());
     }
 
     #[test]
