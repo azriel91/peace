@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-/// Diff between the current and desired file extraction.
+/// Diff between the current and goal file extraction.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ShCmdStateDiff {
     /// stdout output.

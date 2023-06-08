@@ -87,7 +87,7 @@ When an item ensure does multiple writes, there is a possibility of not all of t
 * internet connection drops.
 * machine loses power.
 
-In the last case, we cannot safely write state to disk, so a `StateCurrent` discover is needed to bring `StatesSaved` up to date. However, the previous two cases, it is possible for `Item`s to return `State` that has been partially ensured, without making any further outgoing calls -- i.e. infer `StatesEnsured` based on the successful writes so far.
+In the last case, we cannot safely write state to disk, so a `StateCurrent` discover is needed to bring `StatesCurrentStored` up to date. However, the previous two cases, it is possible for `Item`s to return `State` that has been partially ensured, without making any further outgoing calls -- i.e. infer `StatesEnsured` based on the successful writes so far.
 
 Note that this places a burden on the `Item` implementor to return the partial state ensured (which may conflict with keeping the `State` simple), as well as make the `ApplyFns::exec` return value more complex.
 
@@ -144,7 +144,7 @@ See the [`is_shutdown_requested`] method in particular.
 <summary>11. Diffable item params</summary>
 <div>
 
-`DiffCmd` originally was written to diff the current and desired states. However, with the second use case of "diff states between two profiles", it is also apparent that other related functionality is useful:
+`DiffCmd` originally was written to diff the current and goal states. However, with the second use case of "diff states between two profiles", it is also apparent that other related functionality is useful:
 
 * Diff profile params / flow params.
 * Diff item params between profiles for a given flow.
@@ -206,7 +206,7 @@ Users are concerned with the current state of the item. They also may be concern
 
 However, when comparing diffs, we would hope either:
 
-* The params used to discover the current and desired states are the same, or
+* The params used to discover the current and goal states are the same, or
 * The "params and states" pairs are both compared.
 
 Also:
@@ -215,7 +215,7 @@ Also:
 * `State` as the output API, should not necessarily include params.
 * When parameters change, and an apply is interrupted, then we may have earlier items using the new parameters, and later items still on the previous parameters. More complicated still, is if parameters change *in the middle of an interruption*, and re-applied.
 
-Perhaps there should be a `(dest_parameters, Item::State)` current state, and a `(src_parameters, Item::State)` desired state. That makes sense for file downloads if we care about cleaning up the previous `dest_path`, to move a file to the new `dest_path`.
+Perhaps there should be a `(dest_parameters, Item::State)` current state, and a `(src_parameters, Item::State)` goal state. That makes sense for file downloads if we care about cleaning up the previous `dest_path`, to move a file to the new `dest_path`.
 
 Or, all dest parameters should be in `Item::State`, because that's what's needed to know if something needs to change.
 
@@ -227,6 +227,24 @@ Or, all dest parameters should be in `Item::State`, because that's what's needed
 <div>
 
 Generate dot diagram using graphviz with full resolution, and then convert to tiles, then display different styling depending on the state of each item.
+
+</div>
+</details>
+
+<details>
+<summary>16. Combine <code>data</code> and <code>params{,_partial}</code> into <code>FnCtx</code></summary>
+<div>
+
+`Item` functions take in `FnCtx`, `data`, and item `params` as separate arguments.
+
+This was done to:
+
+* Reduce the additional layer to get `Item::Params`, or `Item::ParamsPartial`.
+* Avoid progress sender from being passed in to function that didn't need it.
+
+However, functions don't necessarily need runtime `fn_ctx` or `data`, making it noise in the signature.
+
+Should we combine all 3 into `FnCtx`? It would make `FnCtx` type parameterized over `Params` and `ParamsPartial`.
 
 </div>
 </details>
@@ -251,12 +269,12 @@ Generate dot diagram using graphviz with full resolution, and then convert to ti
 1. Referential lookup of values in state / item params. ([#94])
 2. AWS SDK is not WASM ready -- includes `mio` unconditionally through `tokio` (calls UDP). ([aws-sdk-rust#59])
 3. AWS SDK does not always include error detail -- S3 `head_object`. ([aws-sdk-rust#227])
-4. Progress output should enable-able for state current / desired discover / clean functions.
+4. Progress output should enable-able for state current / goal discover / clean functions.
 5. Flow params are annoying to register every time we add another item. Maybe split end user provided params from item params.
 6. Blank item needs a lot of rework to be easier to implement an item. ([67], [#96])
-7. For `ApplyCmd`, collect `StateCurrent`, `StateDesired`, `StateDiff` in execution report.
+7. For `ApplyCmd`, collect `StateCurrent`, `StateGoal`, `StateDiff` in execution report.
 8. AWS errors' `code` and `message` should be shown to the user.
-9. Progress limit should not be returned in `ApplyFns::check`, but sent through `progress_sender.limit(ProgressLimit)`. This simplifies `check`, and allows state current/desired discovery to set the limits easily.
+9. Progress limit should not be returned in `ApplyFns::check`, but sent through `progress_sender.limit(ProgressLimit)`. This simplifies `check`, and allows state current/goal discovery to set the limits easily.
 10. Consolidate `StatesDiscoverCmd` and `ApplyCmd`, so the outcome of a command is generic. Maybe use a trait and structs, instead of enum variants and hardcoded inlined functions, so that it is extendable.
 11. Add an `ListKeysAligned` presentable type so `Presenter`s can align keys of a list dynamically.
 12. Remove the `peace_cfg::State` type.
@@ -265,20 +283,17 @@ Generate dot diagram using graphviz with full resolution, and then convert to ti
     What command is this called for:
 
     - state current: "is .."
-    - state desired: "should be .."
-    - diff between current and desired: "will change from .. to .."
+    - goal state: "should be .."
+    - diff between current and goal: "will change from .. to .."
     - diff between current and cleaned: "will change from .. to .."
     - diff between two profiles' current states: : "left is .., right is .."
 
     Maybe we don't burden the presenter implementation, but Peace will insert the contextual words
 
-14. Easy API functions for diffing -- current vs desired, between profiles' current states.
+14. Easy API functions for diffing -- current vs goal, between profiles' current states.
 15. What about diffing states of different state versions?
 
     Maybe this is already taken care of -- `state_diff` is already passed in both `State`s, so implementors had to manage it already.
-
-16. Rename `StatesSaved`, because we may need to distinguish between `StatesCurrentSaved`, `StatesDesiredSaved`.
-
 
 
 [#67]: https://github.com/azriel91/peace/issues/67

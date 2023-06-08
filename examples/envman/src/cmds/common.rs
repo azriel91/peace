@@ -17,7 +17,7 @@ pub fn workspace() -> Result<Workspace, EnvManError> {
     )?)
 }
 
-// Reads the `EnvManFlow` saved for this workspace.
+// Reads the `EnvManFlow` used for this workspace.
 pub async fn env_man_flow<O>(
     output: &mut O,
     workspace: &Workspace,

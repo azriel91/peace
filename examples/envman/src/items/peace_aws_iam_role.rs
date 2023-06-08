@@ -8,9 +8,9 @@ pub use self::{
     iam_role_params::{IamRoleParams, IamRoleParamsFieldWise, IamRoleParamsPartial},
     iam_role_state::IamRoleState,
     iam_role_state_current_fn::IamRoleStateCurrentFn,
-    iam_role_state_desired_fn::IamRoleStateDesiredFn,
     iam_role_state_diff::IamRoleStateDiff,
     iam_role_state_diff_fn::IamRoleStateDiffFn,
+    iam_role_state_goal_fn::IamRoleStateGoalFn,
 };
 
 pub mod model;
@@ -22,6 +22,6 @@ mod iam_role_item;
 mod iam_role_params;
 mod iam_role_state;
 mod iam_role_state_current_fn;
-mod iam_role_state_desired_fn;
 mod iam_role_state_diff;
 mod iam_role_state_diff_fn;
+mod iam_role_state_goal_fn;

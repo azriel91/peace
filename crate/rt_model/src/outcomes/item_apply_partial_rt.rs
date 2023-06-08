@@ -3,8 +3,8 @@ use peace_resources::type_reg::untagged::{BoxDtDisplay, DataType};
 
 /// Trait to allow inspecting a type-erased `ItemApplyPartial`.
 pub trait ItemApplyPartialRt: DataType {
-    /// Returns `state_saved` as type-erased data.
-    fn state_saved(&self) -> Option<BoxDtDisplay>;
+    /// Returns `state_current_stored` as type-erased data.
+    fn state_current_stored(&self) -> Option<BoxDtDisplay>;
 
     /// Returns `state_current` as type-erased data.
     fn state_current(&self) -> Option<BoxDtDisplay>;
@@ -28,8 +28,8 @@ pub trait ItemApplyPartialRt: DataType {
 dyn_clone::clone_trait_object!(ItemApplyPartialRt);
 
 impl ItemApplyPartialRt for Box<dyn ItemApplyPartialRt> {
-    fn state_saved(&self) -> Option<BoxDtDisplay> {
-        self.as_ref().state_saved()
+    fn state_current_stored(&self) -> Option<BoxDtDisplay> {
+        self.as_ref().state_current_stored()
     }
 
     fn state_current(&self) -> Option<BoxDtDisplay> {

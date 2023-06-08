@@ -12,7 +12,7 @@ use peace::cfg::Profile;
 /// * previous vs current flow params
 /// * previous vs current item params
 /// * previous vs current state
-/// * current vs desired state
+/// * current vs goal state
 ///
 /// Between two profiles:
 ///
@@ -22,8 +22,8 @@ use peace::cfg::Profile;
 /// * current states
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum EnvDiffSelection {
-    /// Compare the current and desired states of the active profile.
-    CurrentAndDesired,
+    /// Compare the current and goal states of the active profile.
+    CurrentAndGoal,
     /// Compare the current states of the specified profiles.
     DiffProfilesCurrent {
         /// First profile in the comparison, the reference point.

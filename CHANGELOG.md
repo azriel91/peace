@@ -3,9 +3,13 @@
 ## unreleased
 
 * Add `CmdBase` and `CmdIndependence` for easier command composition. ([#120], [#130])
+* Rename `StatesDesired*` to `StatesGoal*`. ([#131], [#132])
+* Add `StatesGoalStored` to distinguish between stored and discovered `StatesGoal`. ([#131], [#132])
 
 [#120]: https://github.com/azriel91/peace/issues/120
 [#130]: https://github.com/azriel91/peace/pull/130
+[#131]: https://github.com/azriel91/peace/issues/131
+[#132]: https://github.com/azriel91/peace/pull/132
 
 
 ## 0.0.10 (2023-06-03)

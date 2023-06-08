@@ -65,9 +65,9 @@ pub trait Item: DynClone {
     /// see the [state concept] as well as the [`State`] type.**
     ///
     /// This type is used to represent the current state of the item (if it
-    /// exists), the desired state of the item (what is intended to exist), and
+    /// exists), the goal state of the item (what is intended to exist), and
     /// is used in the *diff* calculation -- what is the difference between the
-    /// current and desired states.
+    /// current and goal states.
     ///
     /// # Examples
     ///
@@ -87,8 +87,8 @@ pub trait Item: DynClone {
     /// suitable, but:
     ///
     /// * Externally controlled state may not be known ahead of time.
-    /// * It isn't easy or necessarily desired to compare every single field.
-    /// * `state.apply(diff) = state_desired` may not be meaningful for a field
+    /// * It isn't easy or necessarily goal to compare every single field.
+    /// * `state.apply(diff) = state_goal` may not be meaningful for a field
     ///   level diff, and the `apply` may be a complex process.
     ///
     /// [`State`]: Self::State
@@ -191,30 +191,30 @@ pub trait Item: DynClone {
         data: Self::Data<'_>,
     ) -> Result<Self::State, Self::Error>;
 
-    /// Returns the desired state of the managed item, if possible.
+    /// Returns the goal state of the managed item, if possible.
     ///
     /// This should return `Ok(None)` if the state is not able to be queried,
     /// such as when failing to read a potentially non-existent file to
     /// determine its content hash, instead of returning an error.
-    async fn try_state_desired(
+    async fn try_state_goal(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, Self::Error>;
 
-    /// Returns the desired state of the managed item.
+    /// Returns the goal state of the managed item.
     ///
-    /// This is *expected* to successfully discover the desired state, so errors
+    /// This is *expected* to successfully discover the goal state, so errors
     /// will be presented to the user.
     ///
     /// # Examples
     ///
-    /// * For a file download item, the desired state could be the destination
-    ///   path and a content hash.
+    /// * For a file download item, the goal state could be the destination path
+    ///   and a content hash.
     ///
-    /// * For a web application service item, the desired state could be the web
+    /// * For a web application service item, the goal state could be the web
     ///   service is running on the latest version.
-    async fn state_desired(
+    async fn state_goal(
         fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,
         data: Self::Data<'_>,
@@ -226,7 +226,7 @@ pub trait Item: DynClone {
     ///
     /// When this type is serialized, it should provide "just enough" /
     /// meaningful information to the user on what has changed. So instead of
-    /// including the complete desired [`State`], it should only include the
+    /// including the complete goal [`State`], it should only include the
     /// parts that changed.
     ///
     /// This function call is intended to be cheap and fast.
@@ -236,7 +236,7 @@ pub trait Item: DynClone {
     /// * For a file download item, the difference could be the content hash
     ///   changes from `abcd` to `efgh`.
     ///
-    /// * For a web application service item, the desired state could be the
+    /// * For a web application service item, the goal state could be the
     ///   application version changing from 1 to 2.
     async fn state_diff(
         params_partial: &<Self::Params<'_> as Params>::Partial,
@@ -283,13 +283,13 @@ pub trait Item: DynClone {
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`state_current`].
     /// * `state_target`: Target [`State`] of the managed item, either
-    ///   [`state_clean`] or [`state_desired`].
-    /// * `state_diff`: Desired [`State`] of the managed item, returned from
+    ///   [`state_clean`] or [`state_goal`].
+    /// * `state_diff`: Goal [`State`] of the managed item, returned from
     ///   [`state_diff`].
     ///
     /// [`state_clean`]: crate::Item::state_clean
     /// [`state_current`]: crate::Item::state_current
-    /// [`state_desired`]: crate::Item::state_desired
+    /// [`state_goal`]: crate::Item::state_goal
     /// [`State`]: Self::State
     /// [`state_diff`]: crate::Item::state_diff
     async fn apply_check(
@@ -326,15 +326,15 @@ pub trait Item: DynClone {
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`state_current`].
     /// * `state_target`: Target [`State`] of the managed item, either
-    ///   [`state_clean`] or [`state_desired`].
-    /// * `state_diff`: Desired [`State`] of the managed item, returned from
+    ///   [`state_clean`] or [`state_goal`].
+    /// * `state_diff`: Goal [`State`] of the managed item, returned from
     ///   [`state_diff`].
     ///
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::ApplyCheck::ExecRequired
     /// [`state_clean`]: crate::Item::state_clean
     /// [`state_current`]: crate::Item::state_current
-    /// [`state_desired`]: crate::Item::state_desired
+    /// [`state_goal`]: crate::Item::state_goal
     /// [`State`]: Self::State
     /// [`state_diff`]: crate::Item::state_diff
     async fn apply_dry(
@@ -358,15 +358,15 @@ pub trait Item: DynClone {
     /// * `state_current`: Current [`State`] of the managed item, returned from
     ///   [`state_current`].
     /// * `state_target`: Target [`State`] of the managed item, either
-    ///   [`state_clean`] or [`state_desired`].
-    /// * `state_diff`: Desired [`State`] of the managed item, returned from
+    ///   [`state_clean`] or [`state_goal`].
+    /// * `state_diff`: Goal [`State`] of the managed item, returned from
     ///   [`state_diff`].
     ///
     /// [`check`]: Self::check
     /// [`ExecRequired`]: crate::ApplyCheck::ExecRequired
     /// [`state_clean`]: crate::Item::state_clean
     /// [`state_current`]: crate::Item::state_current
-    /// [`state_desired`]: crate::Item::state_desired
+    /// [`state_goal`]: crate::Item::state_goal
     /// [`State`]: Self::State
     /// [`state_diff`]: crate::Item::state_diff
     async fn apply(

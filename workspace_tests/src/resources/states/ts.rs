@@ -1,11 +1,11 @@
 mod debug {
     use peace::resources::states::ts::{
-        Cleaned, CleanedDry, Current, Desired, Ensured, EnsuredDry, Saved,
+        Cleaned, CleanedDry, Current, CurrentStored, Ensured, EnsuredDry, Goal, GoalStored,
     };
 
     #[test]
-    fn states_saved() {
-        assert_eq!("Saved", format!("{Saved:?}"))
+    fn states_current_stored() {
+        assert_eq!("CurrentStored", format!("{CurrentStored:?}"))
     }
 
     #[test]
@@ -14,8 +14,13 @@ mod debug {
     }
 
     #[test]
-    fn states_desired() {
-        assert_eq!("Desired", format!("{Desired:?}"))
+    fn states_goal_stored() {
+        assert_eq!("GoalStored", format!("{GoalStored:?}"))
+    }
+
+    #[test]
+    fn states_goal() {
+        assert_eq!("Goal", format!("{Goal:?}"))
     }
 
     #[test]
@@ -41,14 +46,14 @@ mod debug {
 
 mod serde {
     use peace::resources::states::ts::{
-        Cleaned, CleanedDry, Current, Desired, Ensured, EnsuredDry, Saved,
+        Cleaned, CleanedDry, Current, CurrentStored, Ensured, EnsuredDry, Goal, GoalStored,
     };
 
     #[test]
-    fn saved() {
-        let s = serde_yaml::to_string(&Saved).unwrap();
+    fn current_stored() {
+        let s = serde_yaml::to_string(&CurrentStored).unwrap();
 
-        assert!(serde_yaml::from_str::<Saved>(&s).is_ok());
+        assert!(serde_yaml::from_str::<CurrentStored>(&s).is_ok());
     }
 
     #[test]
@@ -59,10 +64,17 @@ mod serde {
     }
 
     #[test]
-    fn desired() {
-        let s = serde_yaml::to_string(&Desired).unwrap();
+    fn goal_stored() {
+        let s = serde_yaml::to_string(&GoalStored).unwrap();
 
-        assert!(serde_yaml::from_str::<Desired>(&s).is_ok());
+        assert!(serde_yaml::from_str::<GoalStored>(&s).is_ok());
+    }
+
+    #[test]
+    fn goal() {
+        let s = serde_yaml::to_string(&Goal).unwrap();
+
+        assert!(serde_yaml::from_str::<Goal>(&s).is_ok());
     }
 
     #[test]

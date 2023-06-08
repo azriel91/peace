@@ -13,7 +13,7 @@ use peace::{
         Data,
     },
     params::Params,
-    resources::{resources::ts::Empty, states::StatesSaved, Resources},
+    resources::{resources::ts::Empty, states::StatesCurrentStored, Resources},
     rt_model::ItemWrapper,
 };
 use serde::{Deserialize, Serialize};
@@ -54,7 +54,7 @@ impl VecCopyItem {
         Ok(vec_copy_state)
     }
 
-    async fn state_desired_internal(
+    async fn state_goal_internal(
         fn_ctx: FnCtx<'_>,
         vec_a: &[u8],
     ) -> Result<VecCopyState, VecCopyError> {
@@ -107,33 +107,33 @@ impl Item for VecCopyItem {
         Self::state_current_internal(fn_ctx, data).await
     }
 
-    async fn try_state_desired(
+    async fn try_state_goal(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, VecCopyError> {
         if let Some(vec_a) = params_partial.0.as_ref() {
-            Self::state_desired_internal(fn_ctx, vec_a).await.map(Some)
+            Self::state_goal_internal(fn_ctx, vec_a).await.map(Some)
         } else {
             Ok(None)
         }
     }
 
-    async fn state_desired(
+    async fn state_goal(
         fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,
         _data: Self::Data<'_>,
     ) -> Result<Self::State, VecCopyError> {
-        Self::state_desired_internal(fn_ctx, params.0.as_ref()).await
+        Self::state_goal_internal(fn_ctx, params.0.as_ref()).await
     }
 
     async fn state_diff(
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: VecCopyData<'_>,
         state_current: &VecCopyState,
-        state_desired: &VecCopyState,
+        state_goal: &VecCopyState,
     ) -> Result<Self::StateDiff, VecCopyError> {
-        Ok(state_current.diff(state_desired)).map(VecCopyDiff::from)
+        Ok(state_current.diff(state_goal)).map(VecCopyDiff::from)
     }
 
     async fn state_clean(
@@ -208,12 +208,12 @@ impl Item for VecCopyItem {
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), VecCopyError> {
         let vec_b = {
-            let states_saved =
-                <RMaybe<'_, StatesSaved> as Data>::borrow(Self::ID_DEFAULT, resources);
-            let vec_copy_state_saved: Option<&'_ VecCopyState> = states_saved
+            let states_current_stored =
+                <RMaybe<'_, StatesCurrentStored> as Data>::borrow(Self::ID_DEFAULT, resources);
+            let vec_copy_state_current_stored: Option<&'_ VecCopyState> = states_current_stored
                 .as_ref()
-                .and_then(|states_saved| states_saved.get(self.id()));
-            if let Some(vec_copy_state) = vec_copy_state_saved {
+                .and_then(|states_current_stored| states_current_stored.get(self.id()));
+            if let Some(vec_copy_state) = vec_copy_state_current_stored {
                 VecB(vec_copy_state.to_vec())
             } else {
                 VecB::default()

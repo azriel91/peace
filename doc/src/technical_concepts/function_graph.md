@@ -7,7 +7,7 @@ This is the basis of a framework that enables:
 * Consumer provided logic and data.
 * Framework controlled invocation of logic.
 
-When consumers can plug in their logic and data to the framework, control now resides with the framework on invoking that logic and presenting the data in a desired form.
+When consumers can plug in their logic and data to the framework, control now resides with the framework on invoking that logic and presenting the data in a goal form.
 
 
 ## Scenario

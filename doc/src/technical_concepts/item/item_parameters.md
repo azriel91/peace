@@ -138,8 +138,8 @@ There are a number of related concepts:
 * Implementors:
 
     - Need to define the parameters.
-    - Take in parameter values for `state_current`, `state_desired`.
-    - Take in `Option<Field>` for each field within the parameter for `try_state_current`, `try_state_desired`.
+    - Take in parameter values for `state_current`, `state_goal`.
+    - Take in `Option<Field>` for each field within the parameter for `try_state_current`, `try_state_goal`.
 
 * Peace should be able to store and load:
 

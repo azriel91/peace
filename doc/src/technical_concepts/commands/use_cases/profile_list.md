@@ -25,4 +25,4 @@ To create this command:
     - Make sure to register the workspace / profile params types, even if the value for all of them is `None`.
     - Provide the filter function if necessary.
 
-2. Present the list of profiles using the desired output.
+2. Present the list of profiles using the goal output.

@@ -2,7 +2,7 @@ use std::any::{Any, TypeId};
 
 use peace::resources::{
     resources::ts::{Empty, SetUp},
-    states::{StatesCurrent, StatesDesired},
+    states::{StatesCurrent, StatesGoal},
     Resources,
 };
 
@@ -37,5 +37,5 @@ fn resources_set_up_from_resources_empty() {
 
     // no default resources
     assert!(!resources_set_up.contains::<StatesCurrent>());
-    assert!(!resources_set_up.contains::<StatesDesired>());
+    assert!(!resources_set_up.contains::<StatesGoal>());
 }

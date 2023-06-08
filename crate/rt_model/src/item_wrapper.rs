@@ -8,7 +8,7 @@ use std::{
 use peace_cfg::{async_trait, ApplyCheck, FnCtx, Item, ItemId};
 use peace_data::{
     fn_graph::{DataAccess, DataAccessDyn, TypeIds},
-    marker::{ApplyDry, Clean, Current, Desired},
+    marker::{ApplyDry, Clean, Current, Goal},
     Data,
 };
 use peace_params::{Params, ParamsSpec, ParamsSpecs, ValueResolutionCtx, ValueResolutionMode};
@@ -163,7 +163,7 @@ where
         Ok(state_current)
     }
 
-    async fn state_desired_try_exec(
+    async fn state_goal_try_exec(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
@@ -177,7 +177,7 @@ where
                     item_id: item_id.clone(),
                 })?;
             let mut value_resolution_ctx = ValueResolutionCtx::new(
-                ValueResolutionMode::Desired,
+                ValueResolutionMode::Goal,
                 item_id.clone(),
                 tynm::type_name::<I::Params<'_>>(),
             );
@@ -186,30 +186,30 @@ where
                 .map_err(crate::Error::ParamsResolveError)?
         };
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_desired = I::try_state_desired(fn_ctx, &params_partial, data).await?;
-        if let Some(state_desired) = state_desired.as_ref() {
-            resources.borrow_mut::<Desired<I::State>>().0 = Some(state_desired.clone());
+        let state_goal = I::try_state_goal(fn_ctx, &params_partial, data).await?;
+        if let Some(state_goal) = state_goal.as_ref() {
+            resources.borrow_mut::<Goal<I::State>>().0 = Some(state_goal.clone());
         }
 
-        Ok(state_desired)
+        Ok(state_goal)
     }
 
-    /// Returns the desired state for this item.
+    /// Returns the goal state for this item.
     ///
     /// `value_resolution_ctx` is passed in because:
     ///
-    /// * When discovering the desired state for a flow, without altering any
-    ///   items, the desired state of a successor is dependent on the desired
-    ///   state of a predecessor.
-    /// * When discovering the desired state of a successor, after a predecessor
-    ///   has had state applied, the predecessor's desired state does not
+    /// * When discovering the goal state for a flow, without altering any
+    ///   items, the goal state of a successor is dependent on the goal state of
+    ///   a predecessor.
+    /// * When discovering the goal state of a successor, after a predecessor
+    ///   has had state applied, the predecessor's goal state does not
     ///   necessarily contain the generated values, so we need to tell the
     ///   successor to look up the predecessor's newly current state.
     /// * When cleaning up, the predecessor's current state must be used to
     ///   resolve a successor's params. Since clean up is applied in reverse,
-    ///   the `Desired` state of a predecessor may not exist, and cause the
+    ///   the `Goal` state of a predecessor may not exist, and cause the
     ///   successor to not be cleaned up.
-    async fn state_desired_exec(
+    async fn state_goal_exec(
         &self,
         value_resolution_mode: ValueResolutionMode,
         params_specs: &ParamsSpecs,
@@ -233,10 +233,10 @@ where
                 .map_err(crate::Error::ParamsResolveError)?
         };
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_desired = I::state_desired(fn_ctx, &params, data).await?;
-        resources.borrow_mut::<Desired<I::State>>().0 = Some(state_desired.clone());
+        let state_goal = I::state_goal(fn_ctx, &params, data).await?;
+        resources.borrow_mut::<Goal<I::State>>().0 = Some(state_goal.clone());
 
-        Ok(state_desired)
+        Ok(state_goal)
     }
 
     async fn state_diff_exec(
@@ -248,11 +248,11 @@ where
     ) -> Result<Option<I::StateDiff>, E> {
         let item_id = <I as Item>::id(self);
         let state_base = states_a.get::<I::State, _>(item_id);
-        let state_desired = states_b.get::<I::State, _>(item_id);
+        let state_goal = states_b.get::<I::State, _>(item_id);
 
-        if let Some((state_base, state_desired)) = state_base.zip(state_desired) {
+        if let Some((state_base, state_goal)) = state_base.zip(state_goal) {
             let state_diff: I::StateDiff = self
-                .state_diff_exec_with(params_specs, resources, state_base, state_desired)
+                .state_diff_exec_with(params_specs, resources, state_base, state_goal)
                 .await?;
             Ok(Some(state_diff))
         } else {
@@ -260,7 +260,7 @@ where
             //
             // * The current state cannot be retrieved, due to a predecessor's state not
             //   existing.
-            // * The desired state cannot be retrieved, due to a predecessor's state not
+            // * The goal state cannot be retrieved, due to a predecessor's state not
             //   existing.
             // * A bug exists, e.g. the state is stored against the wrong type parameter.
 
@@ -284,13 +284,13 @@ where
                         item_id: item_id.clone(),
                     })?;
 
-                // Running `diff` for a single profile will be between the current and desired
+                // Running `diff` for a single profile will be between the current and goal
                 // states, and parameters are not really intended to be used for diffing.
                 //
                 // However for `ShCmdItem`, the shell script for diffing's path is in
                 // params, which *likely* would be provided as direct `Value`s instead of
                 // mapped from predecessors' state(s). Iff the values are mapped from a
-                // predecessor's state, then we would want it to be the desired state, as that
+                // predecessor's state, then we would want it to be the goal state, as that
                 // is closest to the correct value -- `ValueResolutionMode::ApplyDry` is used in
                 // `Item::apply_dry`, and `ValueResolutionMode::Apply` is used in
                 // `Item::apply`.
@@ -298,7 +298,7 @@ where
                 // Running `diff` for multiple profiles will likely be between two profiles'
                 // current states.
                 let mut value_resolution_ctx = ValueResolutionCtx::new(
-                    ValueResolutionMode::Desired,
+                    ValueResolutionMode::Goal,
                     item_id.clone(),
                     tynm::type_name::<I::Params<'_>>(),
                 );
@@ -334,11 +334,11 @@ where
 
             // Normally an `apply_check` only compares the states / state diff.
             //
-            // We use `ValueResolutionMode::Desired` because an apply is between the current
-            // and desired states, and when resolving values, we want the target state's
-            // parameters to be used. Note that during an apply, the desired state is
+            // We use `ValueResolutionMode::Goal` because an apply is between the current
+            // and goal states, and when resolving values, we want the target state's
+            // parameters to be used. Note that during an apply, the goal state is
             // resolved as execution happens -- values that rely on predecessors' applied
-            // state will be fed into successors' desired state.
+            // state will be fed into successors' goal state.
             let mut value_resolution_ctx = ValueResolutionCtx::new(
                 value_resolution_mode,
                 item_id.clone(),
@@ -369,7 +369,7 @@ where
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
         state_current: &I::State,
-        state_desired: &I::State,
+        state_goal: &I::State,
         state_diff: &I::StateDiff,
     ) -> Result<I::State, E> {
         let params = {
@@ -389,16 +389,10 @@ where
                 .map_err(crate::Error::ParamsResolveError)?
         };
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_ensured_dry = I::apply_dry(
-            fn_ctx,
-            &params,
-            data,
-            state_current,
-            state_desired,
-            state_diff,
-        )
-        .await
-        .map_err(Into::<E>::into)?;
+        let state_ensured_dry =
+            I::apply_dry(fn_ctx, &params, data, state_current, state_goal, state_diff)
+                .await
+                .map_err(Into::<E>::into)?;
 
         resources.borrow_mut::<ApplyDry<I::State>>().0 = Some(state_ensured_dry.clone());
 
@@ -411,7 +405,7 @@ where
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
         state_current: &I::State,
-        state_desired: &I::State,
+        state_goal: &I::State,
         state_diff: &I::StateDiff,
     ) -> Result<I::State, E> {
         let params = {
@@ -431,16 +425,9 @@ where
                 .map_err(crate::Error::ParamsResolveError)?
         };
         let data = <I::Data<'_> as Data>::borrow(self.id(), resources);
-        let state_ensured = I::apply(
-            fn_ctx,
-            &params,
-            data,
-            state_current,
-            state_desired,
-            state_diff,
-        )
-        .await
-        .map_err(Into::<E>::into)?;
+        let state_ensured = I::apply(fn_ctx, &params, data, state_current, state_goal, state_diff)
+            .await
+            .map_err(Into::<E>::into)?;
 
         resources.borrow_mut::<Current<I::State>>().0 = Some(state_ensured.clone());
 
@@ -559,7 +546,7 @@ where
         // This is used for referential param values (#94)
         resources.insert(Clean::<I::State>(None));
         resources.insert(Current::<I::State>(None));
-        resources.insert(Desired::<I::State>(None));
+        resources.insert(Goal::<I::State>(None));
         resources.insert(ApplyDry::<I::State>(None));
 
         // Run user defined setup.
@@ -614,33 +601,33 @@ where
             .map_err(Into::<E>::into)
     }
 
-    async fn state_desired_try_exec(
+    async fn state_goal_try_exec(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<Option<BoxDtDisplay>, E> {
-        self.state_desired_try_exec(params_specs, resources, fn_ctx)
+        self.state_goal_try_exec(params_specs, resources, fn_ctx)
             .await
-            .map(|state_desired| state_desired.map(BoxDtDisplay::new))
+            .map(|state_goal| state_goal.map(BoxDtDisplay::new))
             .map_err(Into::<E>::into)
     }
 
-    async fn state_desired_exec(
+    async fn state_goal_exec(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
         fn_ctx: FnCtx<'_>,
     ) -> Result<BoxDtDisplay, E> {
-        self.state_desired_exec(
-            // Use the would-be state of predecessor to discover desired state of this item.
+        self.state_goal_exec(
+            // Use the would-be state of predecessor to discover goal state of this item.
             //
-            // TODO: this means we may need to overlay the desired state with the predecessor's
+            // TODO: this means we may need to overlay the goal state with the predecessor's
             // current state.
             //
             // Or more feasibly, if predecessor's ApplyCheck is ExecNotRequired, then we can use
             // predecessor's current state.
-            ValueResolutionMode::Desired,
+            ValueResolutionMode::Goal,
             params_specs,
             resources,
             fn_ctx,
@@ -681,8 +668,8 @@ where
         #[cfg(feature = "output_progress")]
         fn_ctx.progress_sender().reset();
         match self
-            .state_desired_exec(
-                // Use current state of predecessor to discover desired state.
+            .state_goal_exec(
+                // Use current state of predecessor to discover goal state.
                 ValueResolutionMode::Current,
                 params_specs,
                 resources,
@@ -690,7 +677,7 @@ where
             )
             .await
         {
-            Ok(state_desired) => item_apply_partial.state_target = Some(state_desired),
+            Ok(state_goal) => item_apply_partial.state_target = Some(state_goal),
             Err(error) => return Err((error, item_apply_partial.into())),
         }
         #[cfg(feature = "output_progress")]
@@ -714,7 +701,7 @@ where
             Err(error) => return Err((error, item_apply_partial.into())),
         }
 
-        let (Some(state_current), Some(state_desired), Some(state_diff)) = (
+        let (Some(state_current), Some(state_goal), Some(state_diff)) = (
             item_apply_partial.state_current.as_ref(),
             item_apply_partial.state_target.as_ref(),
             item_apply_partial.state_diff.as_ref(),
@@ -727,9 +714,9 @@ where
                 params_specs,
                 resources,
                 state_current,
-                state_desired,
+                state_goal,
                 state_diff,
-                // Use current state of predecessor to discover desired state.
+                // Use current state of predecessor to discover goal state.
                 ValueResolutionMode::Current,
             )
             .await;
@@ -769,7 +756,7 @@ where
             };
 
         let ItemApply {
-            state_saved: _,
+            state_current_stored: _,
             state_current,
             state_target,
             state_diff,
@@ -874,7 +861,7 @@ where
                 state_current,
                 state_clean,
                 state_diff,
-                // Use current state of predecessor to discover desired state.
+                // Use current state of predecessor to discover goal state.
                 ValueResolutionMode::Current,
             )
             .await;
@@ -915,7 +902,7 @@ where
             };
 
         let ItemApply {
-            state_saved: _,
+            state_current_stored: _,
             state_current,
             state_target,
             state_diff,

@@ -38,7 +38,7 @@ pub enum FileDownloadState {
     },
     /// Cannot determine file state.
     ///
-    /// May be used for the desired state
+    /// May be used for the goal state
     Unknown {
         /// Path to the file.
         path: PathBuf,

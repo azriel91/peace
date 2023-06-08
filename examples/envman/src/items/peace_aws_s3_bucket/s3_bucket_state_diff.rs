@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-/// Diff between current (dest) and desired (src) state.
+/// Diff between current (dest) and goal (src) state.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub enum S3BucketStateDiff {
     /// S3Bucket would be added.
@@ -15,12 +15,12 @@ pub enum S3BucketStateDiff {
     NameModified {
         /// Current bucket name.
         s3_bucket_name_current: String,
-        /// Desired bucket name.
-        s3_bucket_name_desired: String,
+        /// Goal bucket name.
+        s3_bucket_name_goal: String,
     },
     /// S3Bucket exists and is up to date.
     InSyncExists,
-    /// S3Bucket does not exist, which is desired.
+    /// S3Bucket does not exist, which is goal.
     InSyncDoesNotExist,
 }
 
@@ -35,10 +35,10 @@ impl fmt::Display for S3BucketStateDiff {
             }
             S3BucketStateDiff::NameModified {
                 s3_bucket_name_current,
-                s3_bucket_name_desired,
+                s3_bucket_name_goal,
             } => write!(
                 f,
-                "name has changed from {s3_bucket_name_current} to {s3_bucket_name_desired}"
+                "name has changed from {s3_bucket_name_current} to {s3_bucket_name_goal}"
             ),
             S3BucketStateDiff::InSyncExists => {
                 write!(f, "exists and is up to date.")

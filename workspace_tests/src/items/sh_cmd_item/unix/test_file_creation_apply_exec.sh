@@ -2,7 +2,7 @@
 set -euo pipefail
 
 current=$0
-desired=$1
+goal=$1
 diff=$2
 
 case "$diff" in

@@ -6,17 +6,21 @@
 
 use serde::{Deserialize, Serialize};
 
-/// Saved states of items.
+/// Stored current states of items.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Saved;
+pub struct CurrentStored;
 
 /// Current states of items.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Current;
 
-/// Desired states of items.
+/// Stored goal states of items.
 #[derive(Debug, Deserialize, Serialize)]
-pub struct Desired;
+pub struct GoalStored;
+
+/// Goal states of items.
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Goal;
 
 /// States of items after running the `EnsureCmd`.
 #[derive(Debug, Deserialize, Serialize)]

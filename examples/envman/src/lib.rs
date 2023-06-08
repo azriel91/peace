@@ -26,7 +26,7 @@
 //!
 //! envman switch dev
 //! envman status
-//! envman desired
+//! envman goal
 //! envman diff
 //! envman deploy
 //! ## make config changes on server / locally
@@ -38,11 +38,11 @@
 //!
 //! envman switch demo
 //! envman status
-//! envman desired
+//! envman goal
 //! envman deploy
 //! envman clean
 //!
-//! ## `diff` defaults to current profile, current and desired state.
+//! ## `diff` defaults to current profile, current and goal state.
 //! ## But we can tell it to diff between different profiles' current states.
 //! envman diff dev demo
 //! ```

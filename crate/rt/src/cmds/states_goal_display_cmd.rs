@@ -6,23 +6,23 @@ use peace_cmd::{
         SingleProfileSingleFlow, SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput,
     },
 };
-use peace_resources::{resources::ts::SetUp, states::StatesDesired};
+use peace_resources::{resources::ts::SetUp, states::StatesGoalStored};
 use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
 
-use crate::cmds::StatesDesiredReadCmd;
+use crate::cmds::StatesGoalReadCmd;
 
-/// Displays [`StatesDesired`]s from storage.
+/// Displays [`StatesGoal`]s from storage.
 #[derive(Debug)]
-pub struct StatesDesiredDisplayCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
+pub struct StatesGoalDisplayCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
-impl<E, O, PKeys> StatesDesiredDisplayCmd<E, O, PKeys>
+impl<E, O, PKeys> StatesGoalDisplayCmd<E, O, PKeys>
 where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
-    /// Displays [`StatesDesired`]s from storage.
+    /// Displays [`StatesGoal`]s from storage.
     ///
     /// [`StatesDiscoverCmd`] must have run prior to this command to read the
     /// state.
@@ -30,7 +30,7 @@ where
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<StatesDesired, E> {
+    ) -> Result<StatesGoalStored, E> {
         let SingleProfileSingleFlowViewAndOutput {
             output,
             cmd_view:
@@ -42,14 +42,14 @@ where
             ..
         } = cmd_ctx.view_and_output();
 
-        let states_desired_result =
-            StatesDesiredReadCmd::<E, O, PKeys>::deserialize_internal(resources, states_type_reg)
+        let states_goal_result =
+            StatesGoalReadCmd::<E, O, PKeys>::deserialize_internal(resources, states_type_reg)
                 .await;
 
-        match states_desired_result {
-            Ok(states_desired) => {
-                output.present(&states_desired).await?;
-                Ok(states_desired)
+        match states_goal_result {
+            Ok(states_goal) => {
+                output.present(&states_goal).await?;
+                Ok(states_goal)
             }
             Err(e) => {
                 output.write_err(&e).await?;
@@ -59,7 +59,7 @@ where
     }
 }
 
-impl<E, O, PKeys> Default for StatesDesiredDisplayCmd<E, O, PKeys> {
+impl<E, O, PKeys> Default for StatesGoalDisplayCmd<E, O, PKeys> {
     fn default() -> Self {
         Self(PhantomData)
     }

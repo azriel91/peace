@@ -156,8 +156,8 @@ $workspace_dir  # usually the project repository
             |  # flow name, directory per flow
             |- 🌊 $flow_dir
                 |- 📝 $flow_params_file
-                |- 📋 $states_saved_file
-                |- 📋 $states_desired_file
+                |- 📋 $states_current_file
+                |- 📋 $states_goal_file
 ```
 
 ### Concrete Hierarchy Example
@@ -173,18 +173,18 @@ path/to/repo
         |   |
         |   |- 🌊 deploy
         |   |   |- 📝 flow_params.yaml
-        |   |   |- 📋 states_desired.yaml
-        |   |   |- 📋 states_saved.yaml
+        |   |   |- 📋 states_goal.yaml
+        |   |   |- 📋 states_current.yaml
         |   |
         |   |- 🌊 config
         |   |   |- 📝 flow_params.yaml
-        |   |   |- 📋 states_desired.yaml
-        |   |   |- 📋 states_saved.yaml
+        |   |   |- 📋 states_goal.yaml
+        |   |   |- 📋 states_current.yaml
         |   |
         |   |- 🌊 benchmark
         |       |- 📝 flow_params.yaml
-        |       |- 📋 states_desired.yaml
-        |       |- 📋 states_saved.yaml
+        |       |- 📋 states_goal.yaml
+        |       |- 📋 states_current.yaml
         |
         |- 🌏 customer_a_dev
         |   |- 📝 profile_params.yaml

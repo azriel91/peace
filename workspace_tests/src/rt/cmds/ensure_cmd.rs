@@ -1,8 +1,8 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
-    resources::states::StatesSaved,
-    rt::cmds::{EnsureCmd, StatesDiscoverCmd, StatesSavedReadCmd},
+    resources::states::StatesCurrentStored,
+    rt::cmds::{EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd},
     rt_model::{outcomes::CmdOutcome, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -23,7 +23,7 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
-    // Write current and desired states to disk.
+    // Write current and goal states to disk.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
@@ -33,32 +33,32 @@ async fn resources_ensured_dry_does_not_alter_state() -> Result<(), Box<dyn std:
         )
         .await?;
     let CmdOutcome {
-        value: (states_current, _states_desired),
+        value: (states_current, _states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let states_saved = StatesSaved::from(states_current);
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    let states_current_stored = StatesCurrentStored::from(states_current);
 
     // Dry-ensured states.
-    // The returned states are currently the same as `StatesSaved`, but it would be
-    // useful to return simulated ensured states.
+    // The returned states are currently the same as `StatesCurrentStored`, but it
+    // would be useful to return simulated ensured states.
     let CmdOutcome {
         value: states_ensured_dry,
         errors: _,
-    } = EnsureCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
+    } = EnsureCmd::exec_dry(&mut cmd_ctx, &states_current_stored).await?;
 
     // TODO: When EnsureCmd returns the execution report, assert on the state that
     // was discovered.
     //
     // ```rust,ignore
     // let states = resources.borrow::<StatesCurrent>();
-    // let states_desired = resources.borrow::<StatesDesired>();
+    // let states_goal = resources.borrow::<StatesGoal>();
     // assert_eq!(
     //     Some(VecCopyState::new()).as_ref(),
     //     states.get::<VecCopyState, _>(&VecCopyItem::ID_DEFAULT)
     // );
     // assert_eq!(
     //     Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-    //     states_desired
+    //     states_goal
     //         .get::<VecCopyState, _>(&VecCopyItem::ID_DEFAULT)
     //
     // );
@@ -88,7 +88,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
-    // Write current and desired states to disk.
+    // Write current and goal states to disk.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
@@ -98,10 +98,10 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
         )
         .await?;
     let CmdOutcome {
-        value: (states_current, _states_desired),
+        value: (states_current, _states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let states_saved = StatesSaved::from(states_current);
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    let states_current_stored = StatesCurrentStored::from(states_current);
 
     // Alter states.
     let mut output = NoOpOutput;
@@ -116,7 +116,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
     let CmdOutcome {
         value: ensured_states_ensured,
         errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
 
     // Re-read states from disk.
     let mut output = NoOpOutput;
@@ -128,21 +128,21 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
+    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
 
     // TODO: When EnsureCmd returns the execution report, assert on the state that
     // was discovered.
     //
     // ```rust,ignore
     // let ensured_states_before = resources_ensured.borrow::<StatesCurrent>();
-    // let ensured_states_desired = resources_ensured.borrow::<StatesDesired>();
+    // let ensured_states_goal = resources_ensured.borrow::<StatesGoal>();
     // assert_eq!(
     //     Some(VecCopyState::new()).as_ref(),
     //     ensured_states_before.get::<VecCopyState, _>(&VecCopyItem::ID_DEFAULT)
     // );
     // assert_eq!(
     //     Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-    //     ensured_states_desired
+    //     ensured_states_goal
     //         .get::<VecCopyState, _>(&VecCopyItem::ID_DEFAULT)
     //
     // );
@@ -154,7 +154,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_not_y
     );
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_saved.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+        states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
 
     Ok(())
@@ -176,7 +176,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut output = NoOpOutput;
 
-    // Write current and desired states to disk.
+    // Write current and goal states to disk.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
@@ -186,17 +186,17 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
         )
         .await?;
     let CmdOutcome {
-        value: (states_current, _states_desired),
+        value: (states_current, _states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let states_saved = StatesSaved::from(states_current);
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    let states_current_stored = StatesCurrentStored::from(states_current);
 
     // Alter states.
     let CmdOutcome {
         value: ensured_states_ensured,
         errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
-    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
+    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
 
     // Dry ensure states.
     let mut output = NoOpOutput;
@@ -211,7 +211,7 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
     let CmdOutcome {
         value: ensured_states_ensured_dry,
         errors: _,
-    } = EnsureCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
+    } = EnsureCmd::exec_dry(&mut cmd_ctx, &states_current_stored).await?;
 
     // Re-read states from disk.
     let mut output = NoOpOutput;
@@ -223,21 +223,21 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
+    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
 
     // TODO: When EnsureCmd returns the execution report, assert on the state that
     // was discovered.
     //
     // ```rust,ignore
     // let ensured_states_before = // StatesCurrent passed in(?) to EnsureCmd
-    // let ensured_states_desired = // StatesDesired passed in(?) to EnsureCmd
+    // let ensured_states_goal = // StatesGoal passed in(?) to EnsureCmd
     // assert_eq!(
     //     Some(VecCopyState::new()).as_ref(),
     //     ensured_states_before.get::<VecCopyState,
     // _>(&VecCopyItem::ID_DEFAULT) );
     // assert_eq!(
     //     Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-    //     ensured_states_desired
+    //     ensured_states_goal
     //         .get::<VecCopyState, _>(&VecCopyItem::ID_DEFAULT)
     //
     // );
@@ -245,14 +245,14 @@ async fn resources_ensured_contains_state_ensured_for_each_item_when_state_alrea
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         ensured_states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
-    ); // states_ensured.logical should be the same as states desired, if all went well.
+    ); // states_ensured.logical should be the same as goal states, if all went well.
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         ensured_states_ensured_dry.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     ); // TODO: EnsureDry state should simulate the actual states, not return the actual current state
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_saved.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+        states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
 
     Ok(())

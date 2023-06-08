@@ -8,7 +8,7 @@
 
 This kind of command shows the difference between two `State`s for each managed item.
 
-Typically this is the difference between the current (or saved) state, and its desired state. It can also be the difference between the current states between two profiles.
+Typically this is the difference between the current or current stored state, and its goal state. It can also be the difference between the current states between two profiles.
 
 Suitable scopes for this command are:
 
@@ -30,12 +30,12 @@ To create this command for a single profile:
     The "from" state is usually one of:
 
     - Discovering the current state.
-    - Reading `states_saved.yaml`.
+    - Reading `states_current.yaml`.
 
     The "to" state is usually one of:
 
-    - Discovering the desired state.
-    - Reading `states_desired.yaml`.
+    - Discovering the goal state.
+    - Reading `states_goal.yaml`.
     - The *clean* state.
 
 3. Call the state `DiffCmd`.
@@ -52,12 +52,12 @@ To create this command for multiple profiles:
     The "from" state is usually one of:
 
     - Discovering the current state.
-    - Reading `states_saved.yaml`.
+    - Reading `states_current.yaml`.
 
     The "to" state is usually one of:
 
-    - Discovering the desired state.
-    - Reading `states_desired.yaml`.
+    - Discovering the goal state.
+    - Reading `states_goal.yaml`.
     - The *clean* state.
 
 3. Call the state `DiffCmd` for each pair of states.

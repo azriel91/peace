@@ -5,9 +5,9 @@ use peace::{
 };
 
 #[test]
-fn state_saved_returns_state_saved() -> Result<(), Box<dyn std::error::Error>> {
+fn state_current_stored_returns_state_current_stored() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
-        state_saved: Some(456u32),
+        state_current_stored: Some(456u32),
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
@@ -16,11 +16,11 @@ fn state_saved_returns_state_saved() -> Result<(), Box<dyn std::error::Error>> {
 
     let item_apply = ItemApply::try_from((item_apply_partial, None)).unwrap();
     let item_apply_boxed = Box::new(item_apply) as Box<dyn ItemApplyRt>;
-    let state_saved = ItemApplyRt::state_saved(&item_apply_boxed).unwrap();
+    let state_current_stored = ItemApplyRt::state_current_stored(&item_apply_boxed).unwrap();
 
     assert_eq!(
         456u32,
-        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_saved).unwrap()
+        *BoxDataTypeDowncast::<u32>::downcast_ref(&state_current_stored).unwrap()
     );
     Ok(())
 }
@@ -28,7 +28,7 @@ fn state_saved_returns_state_saved() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn state_current_returns_state_current() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
-        state_saved: Some(456u32),
+        state_current_stored: Some(456u32),
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
@@ -49,7 +49,7 @@ fn state_current_returns_state_current() -> Result<(), Box<dyn std::error::Error
 #[test]
 fn state_target_returns_state_target() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
-        state_saved: Some(456u32),
+        state_current_stored: Some(456u32),
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
@@ -70,7 +70,7 @@ fn state_target_returns_state_target() -> Result<(), Box<dyn std::error::Error>>
 #[test]
 fn state_diff_returns_state_diff() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
-        state_saved: Some(456u32),
+        state_current_stored: Some(456u32),
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
@@ -91,7 +91,7 @@ fn state_diff_returns_state_diff() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn apply_check_returns_apply_check() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
-        state_saved: Some(456u32),
+        state_current_stored: Some(456u32),
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
@@ -109,7 +109,7 @@ fn apply_check_returns_apply_check() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn state_applied_returns_state_applied() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
-        state_saved: Some(456u32),
+        state_current_stored: Some(456u32),
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
@@ -130,7 +130,7 @@ fn state_applied_returns_state_applied() -> Result<(), Box<dyn std::error::Error
 #[test]
 fn as_data_type_returns_self() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
-        state_saved: Some(456u32),
+        state_current_stored: Some(456u32),
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
@@ -152,7 +152,7 @@ fn as_data_type_returns_self() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn as_data_type_mut_returns_self() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
-        state_saved: Some(456u32),
+        state_current_stored: Some(456u32),
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
@@ -174,7 +174,7 @@ fn as_data_type_mut_returns_self() -> Result<(), Box<dyn std::error::Error>> {
 #[test]
 fn serialize() -> Result<(), Box<dyn std::error::Error>> {
     let item_apply_partial = ItemApplyPartial {
-        state_saved: Some(456u32),
+        state_current_stored: Some(456u32),
         state_current: Some(123u32),
         state_target: Some(789u32),
         state_diff: Some(8u8),
@@ -186,7 +186,7 @@ fn serialize() -> Result<(), Box<dyn std::error::Error>> {
 
     let serialized = serde_yaml::to_string(&item_apply_boxed)?;
     assert_eq!(
-        r#"state_saved: 456
+        r#"state_current_stored: 456
 state_current: 123
 state_target: 789
 state_diff: 8

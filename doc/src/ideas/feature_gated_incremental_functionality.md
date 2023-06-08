@@ -11,7 +11,7 @@ pub struct EnsureExecParams<
     'params,
     Data,
     #[cfg(feature = "state_current")] StateCurrent,
-    #[cfg(feature = "state_desired")] StateDesired,
+    #[cfg(feature = "state_goal")] StateGoal,
     #[cfg(feature = "state_diff")] StateDiff,
 > {
     /// Data accessed by the apply fns.
@@ -19,10 +19,10 @@ pub struct EnsureExecParams<
     /// Current state of the item.
     #[cfg(feature = "state_current")]
     pub state_current: &'params StateCurrent,
-    /// Desired state of the item.
-    #[cfg(feature = "state_desired")]
-    pub state_desired: &'params StateDesired,
-    /// Diff between current and desired states.
+    /// Goal state of the item.
+    #[cfg(feature = "state_goal")]
+    pub state_goal: &'params StateGoal,
+    /// Diff between current and goal states.
     #[cfg(feature = "state_diff")]
     pub diff: &'params StateDiff,
     /// Marker.
@@ -52,7 +52,7 @@ Perhaps it is possible to define the type separately, but we probably need to de
 ```rust ,ignore
 #[cfg(all(
     not(feature = "state_current"),
-    not(feature = "state_desired"),
+    not(feature = "state_goal"),
     not(feature = "state_diff"),
 ))]
 pub type EnsureExecParams<'params> = EnsureExecParams<
@@ -62,18 +62,7 @@ pub type EnsureExecParams<'params> = EnsureExecParams<
 
 #[cfg(all(
     feature = "state_current",
-    not(feature = "state_desired"),
-    not(feature = "state_diff"),
-))]
-pub type EnsureExecParams<'params> = EnsureExecParams<
-    'params,
-    Self::Data<'params>,
-    Self::State,
->
-
-#[cfg(all(
-    feature = "state_current",
-    feature = "state_desired",
+    not(feature = "state_goal"),
     not(feature = "state_diff"),
 ))]
 pub type EnsureExecParams<'params> = EnsureExecParams<
@@ -84,7 +73,18 @@ pub type EnsureExecParams<'params> = EnsureExecParams<
 
 #[cfg(all(
     feature = "state_current",
-    feature = "state_desired",
+    feature = "state_goal",
+    not(feature = "state_diff"),
+))]
+pub type EnsureExecParams<'params> = EnsureExecParams<
+    'params,
+    Self::Data<'params>,
+    Self::State,
+>
+
+#[cfg(all(
+    feature = "state_current",
+    feature = "state_goal",
     feature = "state_diff",
 ))]
 pub type EnsureExecParams<'params> = EnsureExecParams<

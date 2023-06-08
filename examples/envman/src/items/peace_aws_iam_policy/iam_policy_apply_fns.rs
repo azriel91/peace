@@ -22,7 +22,7 @@ where
         _params: &IamPolicyParams<Id>,
         _data: IamPolicyData<'_, Id>,
         state_current: &IamPolicyState,
-        _state_desired: &IamPolicyState,
+        _state_goal: &IamPolicyState,
         diff: &IamPolicyStateDiff,
     ) -> Result<ApplyCheck, IamPolicyError> {
         match diff {
@@ -100,10 +100,10 @@ where
         _params: &IamPolicyParams<Id>,
         _iam_policy_data: IamPolicyData<'_, Id>,
         _state_current: &IamPolicyState,
-        state_desired: &IamPolicyState,
+        state_goal: &IamPolicyState,
         _diff: &IamPolicyStateDiff,
     ) -> Result<IamPolicyState, IamPolicyError> {
-        Ok(state_desired.clone())
+        Ok(state_goal.clone())
     }
 
     pub async fn apply(
@@ -112,16 +112,16 @@ where
         _params: &IamPolicyParams<Id>,
         data: IamPolicyData<'_, Id>,
         state_current: &IamPolicyState,
-        state_desired: &IamPolicyState,
+        state_goal: &IamPolicyState,
         diff: &IamPolicyStateDiff,
     ) -> Result<IamPolicyState, IamPolicyError> {
         #[cfg(feature = "output_progress")]
         let progress_sender = &fn_ctx.progress_sender;
 
         match diff {
-            IamPolicyStateDiff::Added => match state_desired {
+            IamPolicyStateDiff::Added => match state_goal {
                 IamPolicyState::None => {
-                    panic!("`IamPolicyApplyFns::exec` called with state_desired being None.");
+                    panic!("`IamPolicyApplyFns::exec` called with state_goal being None.");
                 }
                 IamPolicyState::Some {
                     name,
@@ -362,12 +362,12 @@ where
                     }
                 }
 
-                let state_applied = state_desired.clone();
+                let state_applied = state_goal.clone();
                 Ok(state_applied)
             }
-            IamPolicyStateDiff::DocumentModified { .. } => match state_desired {
+            IamPolicyStateDiff::DocumentModified { .. } => match state_goal {
                 IamPolicyState::None => {
-                    panic!("`IamPolicyApplyFns::exec` called with state_desired being None.");
+                    panic!("`IamPolicyApplyFns::exec` called with state_goal being None.");
                 }
                 IamPolicyState::Some {
                     name,

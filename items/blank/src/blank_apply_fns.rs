@@ -18,7 +18,7 @@ where
         _params: &BlankParams<Id>,
         _data: BlankData<'_, Id>,
         _state_current: &BlankState,
-        _state_desired: &BlankState,
+        _state_goal: &BlankState,
         diff: &BlankStateDiff,
     ) -> Result<ApplyCheck, BlankError> {
         let apply_check = match *diff {
@@ -44,10 +44,10 @@ where
         _params: &BlankParams<Id>,
         _data: BlankData<'_, Id>,
         _state_current: &BlankState,
-        state_desired: &BlankState,
+        state_goal: &BlankState,
         _diff: &BlankStateDiff,
     ) -> Result<BlankState, BlankError> {
-        Ok(*state_desired)
+        Ok(*state_goal)
     }
 
     pub async fn apply(
@@ -55,12 +55,12 @@ where
         _params: &BlankParams<Id>,
         mut data: BlankData<'_, Id>,
         _state_current: &BlankState,
-        state_desired: &BlankState,
+        state_goal: &BlankState,
         _diff: &BlankStateDiff,
     ) -> Result<BlankState, BlankError> {
         let params = data.params_mut();
         params.dest.0 = Some(params.src.0);
 
-        Ok(*state_desired)
+        Ok(*state_goal)
     }
 }

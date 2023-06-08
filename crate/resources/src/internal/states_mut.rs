@@ -12,7 +12,7 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 /// # Implementors
 ///
 /// To reference State from another `Item`, in `Item::Data`, you should
-/// reference [`Current<T>`] or [`Desired<T>`], where `T` is the predecessor
+/// reference [`Current<T>`] or [`Goal<T>`], where `T` is the predecessor
 /// item's state.
 ///
 /// # Type Parameters
@@ -21,7 +21,7 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 ///
 /// [`Current<T>`]: peace_data::marker::Current
 /// [`Data`]: peace_data::Data
-/// [`Desired<T>`]: peace_data::marker::Desired
+/// [`Goal<T>`]: peace_data::marker::Goal
 /// [`Resources`]: crate::Resources
 /// [`StatesCurrent`]: crate::StatesCurrent
 /// [`StatesRw`]: crate::StatesRw

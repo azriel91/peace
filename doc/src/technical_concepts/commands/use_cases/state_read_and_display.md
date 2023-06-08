@@ -21,12 +21,12 @@ To create this command:
 
 2. Call one of the state read commands depending on the intended use:
 
-    These will store the discovered states under the corresponding `$profile/$flow_id` directory as `states_saved.yaml` or `states_desired.yaml`.
+    These will store the discovered states under the corresponding `$profile/$flow_id` directory as `states_current.yaml` or `states_goal.yaml`.
 
-    - `StatesSavedReadCmd`: For current states to be discovered.
-    - `StatesDesiredReadCmd`: For desired states to be discovered.
+    - `StatesCurrentReadCmd`: For current states to be discovered.
+    - `StatesGoalReadCmd`: For goal states to be discovered.
 
 3. Call the relevant state display command(s):
 
-    - `StatesSavedDisplayCmd`: For current states to be displayed.
-    - `StatesDesiredDisplayCmd`: For desired states to be displayed.
+    - `StatesCurrentStoredDisplayCmd`: For current states to be displayed.
+    - `StatesGoalDisplayCmd`: For goal states to be displayed.

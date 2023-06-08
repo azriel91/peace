@@ -37,12 +37,12 @@ pub enum DownloadCommand {
         #[clap(value_parser)]
         dest: PathBuf,
     },
-    /// Fetches the current state and desired state.
+    /// Fetches the current state and goal state.
     Fetch,
     /// Shows the download state.
     Status,
     /// Shows the download state.
-    Desired,
+    Goal,
     /// Shows the diff between the remote file and local file state.
     ///
     /// This may not be the full content diff if the file is large.

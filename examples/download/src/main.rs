@@ -6,7 +6,7 @@ use peace::{
 use peace_items::file_download::FileDownloadParams;
 
 use download::{
-    clean, clean_dry, cmd_ctx, desired, diff, ensure, ensure_dry, fetch, status,
+    clean, clean_dry, cmd_ctx, diff, ensure, ensure_dry, fetch, goal, status,
     workspace_and_flow_setup, DownloadArgs, DownloadCommand, DownloadError,
 };
 
@@ -99,11 +99,11 @@ pub fn run() -> Result<(), DownloadError> {
                     cmd_ctx(&workspace_and_flow, profile, &mut cli_output, None).await?;
                 status(&mut cmd_ctx).await?;
             }
-            DownloadCommand::Desired => {
+            DownloadCommand::Goal => {
                 let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;
                 let mut cmd_ctx =
                     cmd_ctx(&workspace_and_flow, profile, &mut cli_output, None).await?;
-                desired(&mut cmd_ctx).await?;
+                goal(&mut cmd_ctx).await?;
             }
             DownloadCommand::Diff => {
                 let workspace_and_flow = workspace_and_flow_setup(workspace_spec, flow_id).await?;

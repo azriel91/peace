@@ -99,11 +99,11 @@ pub enum EnvManCommand {
     Discover,
     /// Shows the state of the environment.
     Status,
-    /// Shows the desired state of the environment.
-    Desired,
+    /// Shows the goal state of the environment.
+    Goal,
     /// Shows the diff between states of the environment.
     ///
-    /// By default, this compares the current and desired states of the active
+    /// By default, this compares the current and goal states of the active
     /// profile.
     ///
     /// Users may pass in two profiles to compare the current states of both

@@ -91,38 +91,37 @@ where
         ShCmdExecutor::exec(state_current_sh_cmd).await
     }
 
-    async fn try_state_desired(
+    async fn try_state_goal(
         _fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: ShCmdData<'_, Id>,
     ) -> Result<Option<Self::State>, ShCmdError> {
-        if let Some(state_desired_sh_cmd) = params_partial.state_desired_sh_cmd() {
-            ShCmdExecutor::exec(state_desired_sh_cmd).await.map(Some)
+        if let Some(state_goal_sh_cmd) = params_partial.state_goal_sh_cmd() {
+            ShCmdExecutor::exec(state_goal_sh_cmd).await.map(Some)
         } else {
             Ok(None)
         }
     }
 
-    async fn state_desired(
+    async fn state_goal(
         _fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,
         _data: ShCmdData<'_, Id>,
     ) -> Result<Self::State, ShCmdError> {
-        let state_desired_sh_cmd = params.state_desired_sh_cmd();
+        let state_goal_sh_cmd = params.state_goal_sh_cmd();
         // Maybe we should support reading different exit statuses for an `Ok(None)`
         // value.
-        ShCmdExecutor::exec(state_desired_sh_cmd).await
+        ShCmdExecutor::exec(state_goal_sh_cmd).await
     }
 
     async fn state_diff(
         params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
         state_current: &Self::State,
-        state_desired: &Self::State,
+        state_goal: &Self::State,
     ) -> Result<Self::StateDiff, ShCmdError> {
         if let Some(state_diff_sh_cmd) = params_partial.state_diff_sh_cmd() {
-            ShCmdStateDiffFn::state_diff(state_diff_sh_cmd.clone(), state_current, state_desired)
-                .await
+            ShCmdStateDiffFn::state_diff(state_diff_sh_cmd.clone(), state_current, state_goal).await
         } else {
             Err(ShCmdError::CmdScriptNotResolved {
                 cmd_variant: crate::CmdVariant::StateDiff,

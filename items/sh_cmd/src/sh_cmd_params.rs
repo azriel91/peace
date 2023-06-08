@@ -33,19 +33,19 @@ pub struct ShCmdParams<Id> {
     /// The command's stderr is used as the human readable description of the
     /// state. This must be output as a single line.
     state_current_sh_cmd: ShCmd,
-    /// Shell command to run to discover the desired state.
+    /// Shell command to run to discover the goal state.
     ///
-    /// The command's stdout is used as the desired state.
+    /// The command's stdout is used as the goal state.
     ///
     /// The command's stderr is used as the human readable description of the
     /// state. This must be output as a single line.
-    state_desired_sh_cmd: ShCmd,
+    state_goal_sh_cmd: ShCmd,
     /// Shell command to run to show the state difference.
     ///
     /// The command will be passed the following as two separate arguments:
     ///
     /// * Current state string
-    /// * Desired state string
+    /// * Goal state string
     ///
     /// The command's stdout is used as the state difference.
     ///
@@ -57,7 +57,7 @@ pub struct ShCmdParams<Id> {
     /// The command will be passed the following as three separate arguments:
     ///
     /// * Current state string
-    /// * Desired state string
+    /// * Goal state string
     /// * State diff string
     ///
     /// If the shell command returns the string `true` as its final line, then
@@ -71,7 +71,7 @@ pub struct ShCmdParams<Id> {
     /// The command will be passed the following as three separate arguments:
     ///
     /// * Current state string
-    /// * Desired state string
+    /// * Goal state string
     /// * State diff string
     apply_exec_sh_cmd: ShCmd,
     /// Marker for unique command execution parameters type.
@@ -84,7 +84,7 @@ impl<Id> ShCmdParams<Id> {
     pub fn new(
         state_clean_sh_cmd: ShCmd,
         state_current_sh_cmd: ShCmd,
-        state_desired_sh_cmd: ShCmd,
+        state_goal_sh_cmd: ShCmd,
         state_diff_sh_cmd: ShCmd,
         apply_check_sh_cmd: ShCmd,
         apply_exec_sh_cmd: ShCmd,
@@ -92,7 +92,7 @@ impl<Id> ShCmdParams<Id> {
         Self {
             state_clean_sh_cmd,
             state_current_sh_cmd,
-            state_desired_sh_cmd,
+            state_goal_sh_cmd,
             state_diff_sh_cmd,
             apply_check_sh_cmd,
             apply_exec_sh_cmd,
@@ -120,14 +120,14 @@ impl<Id> ShCmdParams<Id> {
         &self.state_current_sh_cmd
     }
 
-    /// Returns the shell command to run to discover the desired state.
+    /// Returns the shell command to run to discover the goal state.
     ///
-    /// The command's stdout is used as the desired state.
+    /// The command's stdout is used as the goal state.
     ///
     /// The command's stderr is used as the human readable description of the
     /// state. This must be output as a single line.
-    pub fn state_desired_sh_cmd(&self) -> &ShCmd {
-        &self.state_desired_sh_cmd
+    pub fn state_goal_sh_cmd(&self) -> &ShCmd {
+        &self.state_goal_sh_cmd
     }
 
     /// Returns the shell command to run to show the state difference.
@@ -135,7 +135,7 @@ impl<Id> ShCmdParams<Id> {
     /// The command will be passed the following as three separate arguments:
     ///
     /// * Current state string
-    /// * Desired state string
+    /// * Goal state string
     ///
     /// The command's stdout is used as the state difference.
     ///
@@ -150,7 +150,7 @@ impl<Id> ShCmdParams<Id> {
     /// The command will be passed the following as three separate arguments:
     ///
     /// * Current state string
-    /// * Desired state string
+    /// * Goal state string
     /// * State diff string
     ///
     /// If the shell command returns the string `true` as its final line, then
@@ -167,7 +167,7 @@ impl<Id> ShCmdParams<Id> {
     /// The command will be passed the following as three separate arguments:
     ///
     /// * Current state string
-    /// * Desired state string
+    /// * Goal state string
     /// * State diff string
     pub fn apply_exec_sh_cmd(&self) -> &ShCmd {
         &self.apply_exec_sh_cmd

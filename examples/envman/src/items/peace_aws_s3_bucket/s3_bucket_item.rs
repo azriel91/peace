@@ -8,7 +8,7 @@ use peace::{
 
 use crate::items::peace_aws_s3_bucket::{
     S3BucketApplyFns, S3BucketData, S3BucketError, S3BucketParams, S3BucketState,
-    S3BucketStateCurrentFn, S3BucketStateDesiredFn, S3BucketStateDiff, S3BucketStateDiffFn,
+    S3BucketStateCurrentFn, S3BucketStateDiff, S3BucketStateDiffFn, S3BucketStateGoalFn,
 };
 
 /// Item to create an IAM S3 bucket and IAM role.
@@ -94,29 +94,29 @@ where
         S3BucketStateCurrentFn::state_current(fn_ctx, params, data).await
     }
 
-    async fn try_state_desired(
+    async fn try_state_goal(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
         data: Self::Data<'_>,
     ) -> Result<Option<Self::State>, S3BucketError> {
-        S3BucketStateDesiredFn::try_state_desired(fn_ctx, params_partial, data).await
+        S3BucketStateGoalFn::try_state_goal(fn_ctx, params_partial, data).await
     }
 
-    async fn state_desired(
+    async fn state_goal(
         fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,
         data: Self::Data<'_>,
     ) -> Result<Self::State, S3BucketError> {
-        S3BucketStateDesiredFn::state_desired(fn_ctx, params, data).await
+        S3BucketStateGoalFn::state_goal(fn_ctx, params, data).await
     }
 
     async fn state_diff(
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
         state_current: &Self::State,
-        state_desired: &Self::State,
+        state_goal: &Self::State,
     ) -> Result<Self::StateDiff, S3BucketError> {
-        S3BucketStateDiffFn::state_diff(state_current, state_desired).await
+        S3BucketStateDiffFn::state_diff(state_current, state_goal).await
     }
 
     async fn state_clean(

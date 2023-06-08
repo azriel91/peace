@@ -27,7 +27,7 @@ where
         _params: &S3BucketParams<Id>,
         _data: S3BucketData<'_, Id>,
         state_current: &S3BucketState,
-        _state_desired: &S3BucketState,
+        _state_goal: &S3BucketState,
         diff: &S3BucketStateDiff,
     ) -> Result<ApplyCheck, S3BucketError> {
         match diff {
@@ -70,10 +70,10 @@ where
             }
             S3BucketStateDiff::NameModified {
                 s3_bucket_name_current,
-                s3_bucket_name_desired,
+                s3_bucket_name_goal,
             } => Err(S3BucketError::S3BucketModificationNotSupported {
                 s3_bucket_name_current: s3_bucket_name_current.clone(),
-                s3_bucket_name_desired: s3_bucket_name_desired.clone(),
+                s3_bucket_name_goal: s3_bucket_name_goal.clone(),
             }),
             S3BucketStateDiff::InSyncExists | S3BucketStateDiff::InSyncDoesNotExist => {
                 Ok(ApplyCheck::ExecNotRequired)
@@ -86,10 +86,10 @@ where
         _params: &S3BucketParams<Id>,
         _data: S3BucketData<'_, Id>,
         _state_current: &S3BucketState,
-        state_desired: &S3BucketState,
+        state_goal: &S3BucketState,
         _diff: &S3BucketStateDiff,
     ) -> Result<S3BucketState, S3BucketError> {
-        Ok(state_desired.clone())
+        Ok(state_goal.clone())
     }
 
     pub async fn apply(
@@ -97,16 +97,16 @@ where
         params: &S3BucketParams<Id>,
         data: S3BucketData<'_, Id>,
         state_current: &S3BucketState,
-        state_desired: &S3BucketState,
+        state_goal: &S3BucketState,
         diff: &S3BucketStateDiff,
     ) -> Result<S3BucketState, S3BucketError> {
         #[cfg(feature = "output_progress")]
         let progress_sender = &fn_ctx.progress_sender;
 
         match diff {
-            S3BucketStateDiff::Added => match state_desired {
+            S3BucketStateDiff::Added => match state_goal {
                 S3BucketState::None => {
-                    panic!("`S3BucketApplyFns::exec` called with state_desired being None.");
+                    panic!("`S3BucketApplyFns::exec` called with state_goal being None.");
                 }
                 S3BucketState::Some {
                     name,
@@ -229,7 +229,7 @@ where
                     }
                 }
 
-                let state_applied = state_desired.clone();
+                let state_applied = state_goal.clone();
                 Ok(state_applied)
             }
             S3BucketStateDiff::InSyncExists | S3BucketStateDiff::InSyncDoesNotExist => {
@@ -239,10 +239,10 @@ where
             }
             S3BucketStateDiff::NameModified {
                 s3_bucket_name_current,
-                s3_bucket_name_desired,
+                s3_bucket_name_goal,
             } => Err(S3BucketError::NameModificationNotSupported {
                 s3_bucket_name_current: s3_bucket_name_current.clone(),
-                s3_bucket_name_desired: s3_bucket_name_desired.clone(),
+                s3_bucket_name_goal: s3_bucket_name_goal.clone(),
             }),
         }
     }

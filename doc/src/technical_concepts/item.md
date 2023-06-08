@@ -18,8 +18,8 @@ This logical breakdown guides automation developers to structure logic to handle
 3. **Logical state:** Part of the state that can be controlled, e.g. application server's existence.
 4. **Physical state:** Part of the state that cannot be controlled, e.g. application server's instance ID.
 5. **Current state:** Current **State** of the managed item, both logical and physical.
-6. **Desired state:** **Logical State** that one wants the item to be in.
-7. **State difference:** Difference between the current **Logical state** and the **Desired state**.
+6. **Goal state:** **Logical State** that one wants the item to be in.
+7. **State difference:** Difference between the current **Logical state** and the **Goal state**.
 
 
 ## Logic &ndash; Building Blocks
@@ -93,10 +93,10 @@ This may not necessarily be a cheap function, for example if it needs to make we
 </details>
 
 <details>
-<summary>4. Fetch desired item state.</summary>
+<summary>4. Fetch goal item state.</summary>
 <div>
 
-`Item::StateDesiredFn`
+`Item::StateGoalFn`
 
 This may not necessarily be a cheap function, for example if it needs to make web requests that take seconds to complete.
 
@@ -104,17 +104,17 @@ This may not necessarily be a cheap function, for example if it needs to make we
 
 * Item that manages a file download:
 
-	Desired state is file metadata retrieved from a remote server.
+	Goal state is file metadata retrieved from a remote server.
 
 * Item that manages a server:
 
-	Desired state is one server exists with the specified the base image ID.
+	Goal state is one server exists with the specified the base image ID.
 
 </div>
 </details>
 
 <details>
-<summary>5. Return the difference between current and desired states.</summary>
+<summary>5. Return the difference between current and goal states.</summary>
 <div>
 
 `Item::StateDiffFn`
@@ -135,14 +135,14 @@ It is important that both the `from` and `to` are shown for values that have cha
 </details>
 
 <details>
-<summary>6. Ensure that the item is in the desired state.</summary>
+<summary>6. Ensure that the item is in the goal state.</summary>
 <div>
 
-Transforms the current state to the desired state.
+Transforms the current state to the goal state.
 
-1. `check`: Returns whether `exec` needs to be run to transform the current state into the desired state.
-2. `exec`: Actual logic to transform the current state to the desired state.
-3. `exec_dry`: Dry-run transform of the current state to the desired state.
+1. `check`: Returns whether `exec` needs to be run to transform the current state into the goal state.
+2. `exec`: Actual logic to transform the current state to the goal state.
+3. `exec_dry`: Dry-run transform of the current state to the goal state.
 
 	Like `exec`, but all interactions with external services, or writes to the file system should be substituted with mocks.
 
@@ -167,16 +167,16 @@ Cleans up the item from existence.
 
 Readers may notice the function breakdown is `git`-like. The following table compares the concepts:
 
-| Subject                | Peace                                                    | Git                                                                                      |
-|:-----------------------|:---------------------------------------------------------|:-----------------------------------------------------------------------------------------|
-| Item                   | Any consumer defined item.                               | A directory of files.                                                                    |
-| Project initialization | 🚧 `init` command takes in parameters to manage the item. | Uses the current directory or passed in directory.                                       |
-| State                  | Consumer defined information about the item.             | Current state is the latest commit, desired state is the working directory.              |
-| State retrieval        | 🚧 On request by user using the `StatesDiscover` command. | Retrieved each time the `status` command is run, cheap since it is all local.            |
-| State display          | On request using `state` and `desired` commands          | `show $revision:path` command shows the state at a particular `$revision`.               |
-| State difference       | On request using `diff` command                          | `status` command shows a summary, `show` and `diff` commands shows the state difference. |
-| State application      | On request through the `ensure` command.                 | On request through `commit` and `push` commands.                                         |
-| Environments           | 🚧 Handled by updating initialization parameters.         | Defined through `remote` URLs.                                                           |
+| Subject                | Peace                                                  | Git                                                                                      |
+|:-----------------------|:-------------------------------------------------------|:-----------------------------------------------------------------------------------------|
+| Item                   | Any consumer defined item.                             | A directory of files.                                                                    |
+| Project initialization | `init` command takes in parameters to manage the item. | Uses the current directory or passed in directory.                                       |
+| State                  | Consumer defined information about the item.           | Current state is the latest commit, goal state is the working directory.                 |
+| State retrieval        | On request by user using the `StatesDiscover` command. | Retrieved each time the `status` command is run, cheap since it is all local.            |
+| State display          | On request using `state` and `goal` commands           | `show $revision:path` command shows the state at a particular `$revision`.               |
+| State difference       | On request using `diff` command                        | `status` command shows a summary, `show` and `diff` commands shows the state difference. |
+| State application      | On request through the `ensure` command.               | On request through `commit` and `push` commands.                                         |
+| Environments           | Handled by updating initialization parameters.         | Defined through `remote` URLs.                                                           |
 
 
 

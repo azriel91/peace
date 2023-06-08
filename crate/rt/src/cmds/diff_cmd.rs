@@ -18,7 +18,7 @@ use peace_resources::{
 };
 use peace_rt_model::{output::OutputWrite, params::ParamsKeys, Error, Flow};
 
-use crate::cmds::{cmd_ctx_internal::CmdIndependence, StatesDesiredReadCmd, StatesSavedReadCmd};
+use crate::cmds::{cmd_ctx_internal::CmdIndependence, StatesCurrentReadCmd, StatesGoalReadCmd};
 
 use super::CmdBase;
 
@@ -29,32 +29,32 @@ impl<E> DiffCmd<E>
 where
     E: std::error::Error + From<Error> + Send + 'static,
 {
-    /// Returns the [`state_diff`]`s between the saved current and desired
+    /// Returns the [`state_diff`]`s between the stored current and goal
     /// states.
     ///
-    /// Both current and desired states must have been discovered prior to
-    /// running this. See [`StatesDiscoverCmd::current_and_desired`].
+    /// Both current and goal states must have been discovered prior to
+    /// running this. See [`StatesDiscoverCmd::current_and_goal`].
     ///
     /// [`state_diff`]: peace_cfg::Item::state_diff
-    /// [`StatesDiscoverCmd::current_and_desired`]: crate::cmds::StatesDiscoverCmd::current_and_desired
-    pub async fn current_and_desired<O, PKeys>(
+    /// [`StatesDiscoverCmd::current_and_goal`]: crate::cmds::StatesDiscoverCmd::current_and_goal
+    pub async fn current_and_goal<O, PKeys>(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StateDiffs, E>
     where
         PKeys: ParamsKeys + 'static,
         O: OutputWrite<E>,
     {
-        Self::current_and_desired_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
+        Self::current_and_goal_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
     }
 
-    /// Returns the [`state_diff`]`s between the saved current and desired
+    /// Returns the [`state_diff`]`s between the stored current and goal
     /// states.
     ///
-    /// See [`Self::current_and_desired`] for full documentation.
+    /// See [`Self::current_and_goal`] for full documentation.
     ///
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
-    pub async fn current_and_desired_with<O, PKeys>(
+    pub async fn current_and_goal_with<O, PKeys>(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
     ) -> Result<StateDiffs, E>
     where
@@ -66,8 +66,8 @@ where
             async move {
                 let mut cmd_independence_sub: CmdIndependence<'_, '_, '_, E, O, PKeys> =
                     CmdIndependence::SubCmd { cmd_view };
-                let states_a = StatesSavedReadCmd::exec_with(&mut cmd_independence_sub).await?;
-                let states_b = StatesDesiredReadCmd::exec_with(&mut cmd_independence_sub).await?;
+                let states_a = StatesCurrentReadCmd::exec_with(&mut cmd_independence_sub).await?;
+                let states_b = StatesGoalReadCmd::exec_with(&mut cmd_independence_sub).await?;
 
                 let SingleProfileSingleFlowView {
                     flow,
@@ -83,7 +83,7 @@ where
         .await
     }
 
-    /// Returns the [`state_diff`]`s between the saved current states of two
+    /// Returns the [`state_diff`]`s between the stored current states of two
     /// profiles.
     ///
     /// Both profiles' current states must have been discovered prior to
@@ -104,7 +104,7 @@ where
             flow,
             profiles,
             profile_to_params_specs,
-            profile_to_states_saved,
+            profile_to_states_current_stored,
             resources,
             ..
         } = cmd_ctx.view();
@@ -120,7 +120,7 @@ where
                 profile_b: profile_b.clone(),
             })?
         };
-        let states_a = profile_to_states_saved
+        let states_a = profile_to_states_current_stored
             .get(profile_a)
             .ok_or_else(|| {
                 let profile = profile_a.clone();
@@ -135,7 +135,7 @@ where
                 let profile = profile_a.clone();
                 Error::ProfileStatesCurrentNotDiscovered { profile }
             })?;
-        let states_b = profile_to_states_saved
+        let states_b = profile_to_states_current_stored
             .get(profile_b)
             .ok_or_else(|| {
                 let profile = profile_b.clone();

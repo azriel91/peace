@@ -1,12 +1,12 @@
 use diff::{VecDiff, VecDiffType};
 use peace::{
     cfg::{item_id, ApplyCheck, FnCtx, ItemId},
-    data::marker::{ApplyDry, Clean, Current, Desired},
+    data::marker::{ApplyDry, Clean, Current, Goal},
     params::{ParamsSpec, ParamsSpecs},
     resources::{
         internal::StatesMut,
         resources::ts::SetUp,
-        states::{self, StatesCurrent, StatesDesired, StatesSaved},
+        states::{self, StatesCurrent, StatesCurrentStored, StatesGoal},
         type_reg::untagged::BoxDataTypeDowncast,
         Resources,
     },
@@ -99,11 +99,11 @@ async fn setup() -> Result<(), Box<dyn std::error::Error>> {
     resources.insert(VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
     assert!(resources.try_borrow::<VecA>().is_ok());
-    // Automatic `Current<State>` and `Desired<State>` insertion.
+    // Automatic `Current<State>` and `Goal<State>` insertion.
     assert!(resources.try_borrow::<Current<VecCopyState>>().is_ok());
     assert!(resources.borrow::<Current<VecCopyState>>().is_none());
-    assert!(resources.try_borrow::<Desired<VecCopyState>>().is_ok());
-    assert!(resources.borrow::<Desired<VecCopyState>>().is_none());
+    assert!(resources.try_borrow::<Goal<VecCopyState>>().is_ok());
+    assert!(resources.borrow::<Goal<VecCopyState>>().is_none());
 
     Ok(())
 }
@@ -147,7 +147,7 @@ async fn state_current_try_exec() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn state_desired_try_exec() -> Result<(), VecCopyError> {
+async fn state_goal_try_exec() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
     let (params_specs, resources) = resources_set_up(&item_wrapper).await?;
@@ -166,19 +166,19 @@ async fn state_desired_try_exec() -> Result<(), VecCopyError> {
         progress_sender,
     );
 
-    let state_desired = item_wrapper
-        .state_desired_try_exec(&params_specs, &resources, fn_ctx)
+    let state_goal = item_wrapper
+        .state_goal_try_exec(&params_specs, &resources, fn_ctx)
         .await?
         .unwrap();
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(&state_desired)
+        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(&state_goal)
     );
-    // Automatic `Desired<State>` insertion.
+    // Automatic `Goal<State>` insertion.
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        resources.borrow::<Desired<VecCopyState>>().as_ref()
+        resources.borrow::<Goal<VecCopyState>>().as_ref()
     );
 
     Ok(())
@@ -189,13 +189,20 @@ async fn state_diff_exec() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
 
-    let (params_specs, resources, states_saved, states_desired) =
-        resources_and_states_saved_and_desired(&item_wrapper).await?;
+    let (params_specs, resources, states_current_stored, states_goal) =
+        resources_and_states_current_stored_and_goal(&item_wrapper).await?;
 
     let state_diff = item_wrapper
-        .state_diff_exec(&params_specs, &resources, &states_saved, &states_desired)
+        .state_diff_exec(
+            &params_specs,
+            &resources,
+            &states_current_stored,
+            &states_goal,
+        )
         .await?
-        .expect("Expected state_diff to be Some when state_saved and state_desired both exist.");
+        .expect(
+            "Expected state_diff to be Some when state_current_stored and state_goal both exist.",
+        );
 
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
@@ -308,10 +315,10 @@ async fn apply_exec_dry_for_ensure() -> Result<(), VecCopyError> {
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         resources.borrow::<ApplyDry<VecCopyState>>().as_ref()
     );
-    // Desired should also exist.
+    // Goal should also exist.
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        resources.borrow::<Desired<VecCopyState>>().as_ref()
+        resources.borrow::<Goal<VecCopyState>>().as_ref()
     );
 
     Ok(())
@@ -373,10 +380,10 @@ async fn apply_exec_for_ensure() -> Result<(), VecCopyError> {
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         resources.borrow::<Current<VecCopyState>>().as_ref()
     );
-    // Desired should also exist.
+    // Goal should also exist.
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        resources.borrow::<Desired<VecCopyState>>().as_ref()
+        resources.borrow::<Goal<VecCopyState>>().as_ref()
     );
 
     Ok(())
@@ -387,7 +394,7 @@ async fn clean_prepare() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
     let (params_specs, resources, states_current) =
-        resources_set_up_pre_saved(&item_wrapper).await?;
+        resources_set_up_with_pre_stored_state(&item_wrapper).await?;
 
     match <dyn ItemRt<_>>::clean_prepare(&item_wrapper, &states_current, &params_specs, &resources)
         .await
@@ -414,7 +421,7 @@ async fn apply_exec_dry_for_clean() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
     let (params_specs, resources, states_current) =
-        resources_set_up_pre_saved(&item_wrapper).await?;
+        resources_set_up_with_pre_stored_state(&item_wrapper).await?;
 
     let mut item_apply_boxed =
         <dyn ItemRt<_>>::clean_prepare(&item_wrapper, &states_current, &params_specs, &resources)
@@ -466,7 +473,7 @@ async fn apply_exec_for_clean() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
     let (params_specs, resources, states_current) =
-        resources_set_up_pre_saved(&item_wrapper).await?;
+        resources_set_up_with_pre_stored_state(&item_wrapper).await?;
 
     let mut item_apply_boxed =
         <dyn ItemRt<_>>::clean_prepare(&item_wrapper, &states_current, &params_specs, &resources)
@@ -531,7 +538,7 @@ async fn resources_set_up(
     Ok((params_specs, resources))
 }
 
-async fn resources_set_up_pre_saved(
+async fn resources_set_up_with_pre_stored_state(
     item_wrapper: &VecCopyItemWrapper,
 ) -> Result<(ParamsSpecs, Resources<SetUp>, StatesCurrent), VecCopyError> {
     let (params_specs, mut resources) = resources_set_up(item_wrapper).await?;
@@ -550,9 +557,17 @@ async fn resources_set_up_pre_saved(
     Ok((params_specs, resources, states_current))
 }
 
-async fn resources_and_states_saved_and_desired(
+async fn resources_and_states_current_stored_and_goal(
     item_wrapper: &VecCopyItemWrapper,
-) -> Result<(ParamsSpecs, Resources<SetUp>, StatesSaved, StatesDesired), VecCopyError> {
+) -> Result<
+    (
+        ParamsSpecs,
+        Resources<SetUp>,
+        StatesCurrentStored,
+        StatesGoal,
+    ),
+    VecCopyError,
+> {
     let (params_specs, resources) = resources_set_up(item_wrapper).await?;
     cfg_if::cfg_if! {
         if #[cfg(feature = "output_progress")] {
@@ -569,7 +584,7 @@ async fn resources_and_states_saved_and_desired(
         progress_sender,
     );
 
-    let states_saved = {
+    let states_current_stored = {
         let mut states_mut = StatesMut::new();
         let state = <dyn ItemRt<_>>::state_current_try_exec(
             item_wrapper,
@@ -582,17 +597,17 @@ async fn resources_and_states_saved_and_desired(
             states_mut.insert_raw(<dyn ItemRt<_>>::id(item_wrapper).clone(), state);
         }
 
-        Into::<StatesSaved>::into(StatesCurrent::from(states_mut))
+        Into::<StatesCurrentStored>::into(StatesCurrent::from(states_mut))
     };
-    let states_desired = {
-        let mut states_desired_mut = StatesMut::<states::ts::Desired>::new();
-        let state_desired = item_wrapper
-            .state_desired_try_exec(&params_specs, &resources, fn_ctx)
+    let states_goal = {
+        let mut states_goal_mut = StatesMut::<states::ts::Goal>::new();
+        let state_goal = item_wrapper
+            .state_goal_try_exec(&params_specs, &resources, fn_ctx)
             .await?
             .unwrap();
-        states_desired_mut.insert_raw(<dyn ItemRt<_>>::id(item_wrapper).clone(), state_desired);
+        states_goal_mut.insert_raw(<dyn ItemRt<_>>::id(item_wrapper).clone(), state_goal);
 
-        StatesDesired::from(states_desired_mut)
+        StatesGoal::from(states_goal_mut)
     };
-    Ok((params_specs, resources, states_saved, states_desired))
+    Ok((params_specs, resources, states_current_stored, states_goal))
 }

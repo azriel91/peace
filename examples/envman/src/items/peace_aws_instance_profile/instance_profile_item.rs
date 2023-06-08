@@ -8,8 +8,8 @@ use peace::{
 
 use crate::items::peace_aws_instance_profile::{
     InstanceProfileApplyFns, InstanceProfileData, InstanceProfileError, InstanceProfileParams,
-    InstanceProfileState, InstanceProfileStateCurrentFn, InstanceProfileStateDesiredFn,
-    InstanceProfileStateDiff, InstanceProfileStateDiffFn,
+    InstanceProfileState, InstanceProfileStateCurrentFn, InstanceProfileStateDiff,
+    InstanceProfileStateDiffFn, InstanceProfileStateGoalFn,
 };
 
 /// Item to create an IAM instance profile and IAM role.
@@ -94,29 +94,29 @@ where
         InstanceProfileStateCurrentFn::state_current(fn_ctx, params, data).await
     }
 
-    async fn try_state_desired(
+    async fn try_state_goal(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
         data: InstanceProfileData<'_, Id>,
     ) -> Result<Option<Self::State>, InstanceProfileError> {
-        InstanceProfileStateDesiredFn::try_state_desired(fn_ctx, params_partial, data).await
+        InstanceProfileStateGoalFn::try_state_goal(fn_ctx, params_partial, data).await
     }
 
-    async fn state_desired(
+    async fn state_goal(
         fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,
         data: InstanceProfileData<'_, Id>,
     ) -> Result<Self::State, InstanceProfileError> {
-        InstanceProfileStateDesiredFn::state_desired(fn_ctx, params, data).await
+        InstanceProfileStateGoalFn::state_goal(fn_ctx, params, data).await
     }
 
     async fn state_diff(
         _params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
         state_current: &Self::State,
-        state_desired: &Self::State,
+        state_goal: &Self::State,
     ) -> Result<Self::StateDiff, InstanceProfileError> {
-        InstanceProfileStateDiffFn::state_diff(state_current, state_desired).await
+        InstanceProfileStateDiffFn::state_diff(state_current, state_goal).await
     }
 
     async fn state_clean(

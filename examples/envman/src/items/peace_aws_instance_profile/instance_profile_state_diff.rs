@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-/// Diff between current (dest) and desired (src) state.
+/// Diff between current (dest) and goal (src) state.
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub enum InstanceProfileStateDiff {
     /// InstanceProfile would be added.
@@ -22,12 +22,12 @@ pub enum InstanceProfileStateDiff {
     RoleAssociatedModified {
         /// Current instance profile role association.
         role_associated_current: bool,
-        /// Desired instance profile role association.
-        role_associated_desired: bool,
+        /// Goal instance profile role association.
+        role_associated_goal: bool,
     },
     /// InstanceProfile exists and is up to date.
     InSyncExists,
-    /// InstanceProfile does not exist, which is desired.
+    /// InstanceProfile does not exist, which is goal.
     InSyncDoesNotExist,
 }
 
@@ -42,9 +42,9 @@ impl fmt::Display for InstanceProfileStateDiff {
             }
             InstanceProfileStateDiff::RoleAssociatedModified {
                 role_associated_current,
-                role_associated_desired,
+                role_associated_goal,
             } => {
-                if !role_associated_current && *role_associated_desired {
+                if !role_associated_current && *role_associated_goal {
                     write!(f, "role will be disassociated from instance profile.")
                 } else {
                     write!(f, "role will be associated with instance profile.")
@@ -60,15 +60,15 @@ impl fmt::Display for InstanceProfileStateDiff {
                         This is a bug."
                     )
                 }
-                (None, Some((path_current, path_desired))) => {
-                    write!(f, "path changed from {path_current} to {path_desired}")
+                (None, Some((path_current, path_goal))) => {
+                    write!(f, "path changed from {path_current} to {path_goal}")
                 }
-                (Some((name_current, name_desired)), None) => {
-                    write!(f, "name changed from {name_current} to {name_desired}")
+                (Some((name_current, name_goal)), None) => {
+                    write!(f, "name changed from {name_current} to {name_goal}")
                 }
-                (Some((name_current, name_desired)), Some((path_current, path_desired))) => write!(
+                (Some((name_current, name_goal)), Some((path_current, path_goal))) => write!(
                     f,
-                    "name and path changed from {name_current}:{path_current} to {name_desired}:{path_desired}"
+                    "name and path changed from {name_current}:{path_current} to {name_goal}:{path_goal}"
                 ),
             },
             InstanceProfileStateDiff::InSyncExists => {

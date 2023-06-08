@@ -8,8 +8,8 @@ use peace::{
 
 use crate::{
     ETag, FileDownloadApplyFns, FileDownloadData, FileDownloadError, FileDownloadParams,
-    FileDownloadState, FileDownloadStateCurrentFn, FileDownloadStateDesiredFn,
-    FileDownloadStateDiff, FileDownloadStateDiffFn,
+    FileDownloadState, FileDownloadStateCurrentFn, FileDownloadStateDiff, FileDownloadStateDiffFn,
+    FileDownloadStateGoalFn,
 };
 
 /// Item for downloading a file.
@@ -85,20 +85,20 @@ where
         FileDownloadStateCurrentFn::state_current(fn_ctx, params, data).await
     }
 
-    async fn try_state_desired(
+    async fn try_state_goal(
         fn_ctx: FnCtx<'_>,
         params_partial: &<Self::Params<'_> as Params>::Partial,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Option<Self::State>, FileDownloadError> {
-        FileDownloadStateDesiredFn::try_state_desired(fn_ctx, params_partial, data).await
+        FileDownloadStateGoalFn::try_state_goal(fn_ctx, params_partial, data).await
     }
 
-    async fn state_desired(
+    async fn state_goal(
         fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,
         data: FileDownloadData<'_, Id>,
     ) -> Result<Self::State, FileDownloadError> {
-        FileDownloadStateDesiredFn::state_desired(fn_ctx, params, data).await
+        FileDownloadStateGoalFn::state_goal(fn_ctx, params, data).await
     }
 
     async fn state_diff(

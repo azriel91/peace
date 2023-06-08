@@ -2,9 +2,9 @@
 set -euo pipefail
 
 current=$0
-desired=$1
+goal=$1
 
-case "$current $desired" in
+case "$current $goal" in
     'not_exists not_exists')
         # state
         printf 'not_exists_sync'

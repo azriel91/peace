@@ -91,7 +91,7 @@
 66. So far, we've seen Items, Parameters, Specifications, and Output.
 67. As a developer, this should be sufficient to run some commands.
 68. First we group all of the above into a `CmdCtx`, then we call the command we want to run for the flow.
-69. `StatesSavedReadCmd` and `EnsureCmd` are provided by the framework.
+69. `StatesCurrentReadCmd` and `EnsureCmd` are provided by the framework.
 70. The real code still contains code to format the output, but this is something that the framework can provide.
 
 71. For any automation software, the user should only need to pass in item parameters once.

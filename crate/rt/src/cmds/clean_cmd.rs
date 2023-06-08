@@ -5,7 +5,7 @@ use peace_resources::{
     resources::ts::SetUp,
     states::{
         ts::{Cleaned, CleanedDry},
-        StatesCleaned, StatesCleanedDry, StatesSaved,
+        StatesCleaned, StatesCleanedDry, StatesCurrentStored,
     },
 };
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error};
@@ -46,7 +46,7 @@ where
     ///
     ///     1. `Item::try_state_current`, which resolves parameters from
     ///        the *current* state.
-    ///     2. `Item::state_desired`
+    ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
     /// 3. For `Item`s that return `ApplyCheck::ExecRequired`, run
@@ -58,11 +58,11 @@ where
     /// [`Item`]: peace_cfg::Item
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-        states_saved: &StatesSaved,
+        states_current_stored: &StatesCurrentStored,
     ) -> Result<CmdOutcome<StatesCleanedDry, E>, E> {
         ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry(
             cmd_ctx,
-            states_saved,
+            states_current_stored,
             ApplyFor::Clean,
         )
         .await
@@ -80,11 +80,11 @@ where
     /// [`state_clean`]: peace_cfg::Item::state_clean
     pub async fn exec_dry_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-        states_saved: &StatesSaved,
+        states_current_stored: &StatesCurrentStored,
     ) -> Result<CmdOutcome<StatesCleanedDry, E>, E> {
         ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry_with(
             cmd_independence,
-            states_saved,
+            states_current_stored,
             ApplyFor::Clean,
         )
         .await
@@ -112,7 +112,7 @@ where
     ///
     ///     1. `Item::try_state_current`, which resolves parameters from
     ///        the *current* state.
-    ///     2. `Item::state_desired`
+    ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
     /// 3. For `Item`s that return `ApplyCheck::ExecRequired`, run
@@ -124,10 +124,14 @@ where
     /// [`Item`]: peace_cfg::Item
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-        states_saved: &StatesSaved,
+        states_current_stored: &StatesCurrentStored,
     ) -> Result<CmdOutcome<StatesCleaned, E>, E> {
-        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec(cmd_ctx, states_saved, ApplyFor::Clean)
-            .await
+        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec(
+            cmd_ctx,
+            states_current_stored,
+            ApplyFor::Clean,
+        )
+        .await
     }
 
     /// Runs [`Item::apply_exec`] for each [`Item`], with [`state_clean`] as the
@@ -142,11 +146,11 @@ where
     /// [`state_clean`]: peace_cfg::Item::state_clean
     pub async fn exec_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-        states_saved: &StatesSaved,
+        states_current_stored: &StatesCurrentStored,
     ) -> Result<CmdOutcome<StatesCleaned, E>, E> {
         ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_with(
             cmd_independence,
-            states_saved,
+            states_current_stored,
             ApplyFor::Clean,
         )
         .await

@@ -12,13 +12,13 @@ use crate::outcomes::{ItemApplyPartial, ItemApplyRt};
 /// non-optional, and the added `state_applied` field.
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct ItemApply<State, StateDiff> {
-    /// State saved on disk before the execution.
-    pub state_saved: Option<State>,
+    /// Current state stored on disk before the execution.
+    pub state_current_stored: Option<State>,
     /// Current state discovered during the execution.
     pub state_current: State,
     /// Target state discovered during the execution.
     pub state_target: State,
-    /// Diff between current and desired states.
+    /// Diff between current and goal states.
     pub state_diff: StateDiff,
     /// Whether item execution was required.
     pub apply_check: ApplyCheck,
@@ -35,7 +35,7 @@ impl<State, StateDiff> TryFrom<(ItemApplyPartial<State, StateDiff>, Option<State
         (partial, state_applied): (ItemApplyPartial<State, StateDiff>, Option<State>),
     ) -> Result<Self, Self::Error> {
         let ItemApplyPartial {
-            state_saved,
+            state_current_stored,
             state_current,
             state_target,
             state_diff,
@@ -52,7 +52,7 @@ impl<State, StateDiff> TryFrom<(ItemApplyPartial<State, StateDiff>, Option<State
                     unreachable!("All are checked to be `Some` above.");
                 };
             Ok(Self {
-                state_saved,
+                state_current_stored,
                 state_current,
                 state_target,
                 state_diff,
@@ -61,7 +61,7 @@ impl<State, StateDiff> TryFrom<(ItemApplyPartial<State, StateDiff>, Option<State
             })
         } else {
             let partial = ItemApplyPartial {
-                state_saved,
+                state_current_stored,
                 state_current,
                 state_target,
                 state_diff,
@@ -77,8 +77,8 @@ where
     State: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
 {
-    fn state_saved(&self) -> Option<BoxDtDisplay> {
-        self.state_saved.clone().map(BoxDtDisplay::new)
+    fn state_current_stored(&self) -> Option<BoxDtDisplay> {
+        self.state_current_stored.clone().map(BoxDtDisplay::new)
     }
 
     fn state_current(&self) -> BoxDtDisplay {

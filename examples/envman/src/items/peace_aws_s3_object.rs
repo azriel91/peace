@@ -8,9 +8,9 @@ pub use self::{
     s3_object_params::{S3ObjectParams, S3ObjectParamsFieldWise, S3ObjectParamsPartial},
     s3_object_state::S3ObjectState,
     s3_object_state_current_fn::S3ObjectStateCurrentFn,
-    s3_object_state_desired_fn::S3ObjectStateDesiredFn,
     s3_object_state_diff::S3ObjectStateDiff,
     s3_object_state_diff_fn::S3ObjectStateDiffFn,
+    s3_object_state_goal_fn::S3ObjectStateGoalFn,
 };
 
 mod s3_object_apply_fns;
@@ -20,6 +20,6 @@ mod s3_object_item;
 mod s3_object_params;
 mod s3_object_state;
 mod s3_object_state_current_fn;
-mod s3_object_state_desired_fn;
 mod s3_object_state_diff;
 mod s3_object_state_diff_fn;
+mod s3_object_state_goal_fn;

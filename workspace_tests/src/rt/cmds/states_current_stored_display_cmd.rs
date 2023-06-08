@@ -1,7 +1,7 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
-    rt::cmds::{StatesDesiredDisplayCmd, StatesDiscoverCmd},
+    rt::cmds::{StatesCurrentStoredDisplayCmd, StatesDiscoverCmd},
     rt_model::{outcomes::CmdOutcome, Error, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 
@@ -11,7 +11,8 @@ use crate::{
 };
 
 #[tokio::test]
-async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std::error::Error>> {
+async fn reads_states_current_stored_from_disk_when_present()
+-> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -25,7 +26,7 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
     let mut fn_tracker_output = FnTrackerOutput::new();
 
-    // Write desired states to disk.
+    // Write current states to disk.
     let mut output = NoOpOutput;
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
@@ -36,9 +37,9 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
         )
         .await?;
     let CmdOutcome {
-        value: states_desired_from_discover,
+        value: states_current_stored_from_discover,
         errors: _,
-    } = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
 
     // Re-read states from disk in a new set of resources.
     let mut cmd_ctx =
@@ -50,19 +51,21 @@ async fn reads_states_desired_from_disk_when_present() -> Result<(), Box<dyn std
                 VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
             )
             .await?;
-    let states_desired_from_read = StatesDesiredDisplayCmd::exec(&mut cmd_ctx).await?;
+    let states_current_stored_from_read = StatesCurrentStoredDisplayCmd::exec(&mut cmd_ctx).await?;
     let fn_tracker_output = cmd_ctx.output();
 
     let vec_copy_state_from_discover =
-        states_desired_from_discover.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
-    let states_desired_from_read = &*states_desired_from_read;
+        states_current_stored_from_discover.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    let states_current_stored_from_read = &*states_current_stored_from_read;
     let vec_copy_state_from_read =
-        states_desired_from_read.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+        states_current_stored_from_read.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     assert_eq!(vec_copy_state_from_discover, vec_copy_state_from_read);
     assert_eq!(
         vec![FnInvocation::new(
             "present",
-            vec![Some(serde_yaml::to_string(states_desired_from_read)?)],
+            vec![Some(serde_yaml::to_string(
+                states_current_stored_from_read
+            )?)],
         )],
         fn_tracker_output.fn_invocations()
     );
@@ -94,15 +97,15 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
                 VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
             )
             .await?;
-    let exec_result = StatesDesiredDisplayCmd::exec(&mut cmd_ctx).await;
+    let exec_result = StatesCurrentStoredDisplayCmd::exec(&mut cmd_ctx).await;
 
     assert!(matches!(
         exec_result,
         Err(PeaceTestError::PeaceRt(
-            Error::StatesDesiredDiscoverRequired
+            Error::StatesCurrentDiscoverRequired
         ))
     ));
-    let err = PeaceTestError::PeaceRt(Error::StatesDesiredDiscoverRequired);
+    let err = PeaceTestError::PeaceRt(Error::StatesCurrentDiscoverRequired);
     assert_eq!(
         vec![FnInvocation::new(
             "write_err",
@@ -117,11 +120,11 @@ async fn returns_error_when_states_not_on_disk() -> Result<(), Box<dyn std::erro
 fn debug() {
     let debug_str = format!(
         "{:?}",
-        StatesDesiredDisplayCmd::<VecCopyError, NoOpOutput, ()>::default()
+        StatesCurrentStoredDisplayCmd::<VecCopyError, NoOpOutput, ()>::default()
     );
     assert!(
         debug_str
-            == r#"StatesDesiredDisplayCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#
-            || debug_str == r#"StatesDesiredDisplayCmd(PhantomData)"#
+            == r#"StatesCurrentStoredDisplayCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#
+            || debug_str == r#"StatesCurrentStoredDisplayCmd(PhantomData)"#
     );
 }

@@ -31,7 +31,7 @@ See:
 |   🔵   | Compatible by design |
 |   🟣   | Works, "fun idea"    |
 
-* 🟢 **Idempotent:** Multiple invocations result in the desired outcome.
+* 🟢 **Idempotent:** Multiple invocations result in the goal outcome.
 * 🟢 **Clean:** Every item creation is paired with how it is cleaned up.
 * 🟢 **Understandable:** Progress is shown at an understandable level of detail.
 * 🔵 **Understandable:** Error reporting is compatible with [`miette`].
@@ -52,7 +52,7 @@ See:
 * 🟢 Define dependencies between items.
 * 🟢 Define "apply" logic.
 * 🟢 Define "clean up" logic.
-* 🟢 Discover current and desired states.
+* 🟢 Discover current and goal states.
 * 🟢 Define diff calculation between states.
 * 🟢 Store and recall parameters across commands.
 * 🟢 Diff states between multiple profiles.
@@ -89,7 +89,7 @@ cargo run --package $example_name --all-features
 cargo build --package download --all-features
 cargo run -q --package download --all-features -- init https://ifconfig.me ip.json
 
-for cmd in status desired diff ensure ensure diff clean clean diff
+for cmd in status goal diff ensure ensure diff clean clean diff
 do
     printf "=== ${cmd} ===\n"
     cargo run -q --package download --all-features -- --format text $cmd

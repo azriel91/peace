@@ -12,7 +12,7 @@ Often there are issues requiring this process to be repeated:
 
 Clean up and redeployment is costly in terms of time, effort, and morale.
 
-We can apply the concepts of a programming language compiler -- if the desired artifact (or state) is already existent, then no work is done to produce the artifact.
+We can apply the concepts of a programming language compiler -- if the goal artifact (or state) is already existent, then no work is done to produce the artifact.
 
 Instead of restarting the build and deployment process from scratch, we can reuse most of the previous deployment, and replace only the parts that need replacing.
 

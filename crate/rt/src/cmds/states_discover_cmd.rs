@@ -8,11 +8,11 @@ use peace_cmd::{
 };
 use peace_resources::{
     internal::StatesMut,
-    paths::{FlowDir, StatesDesiredFile, StatesSavedFile},
+    paths::{FlowDir, StatesCurrentFile, StatesGoalFile},
     resources::ts::SetUp,
     states::{
-        ts::{Current, Desired},
-        StatesCurrent, StatesDesired,
+        ts::{Current, Goal},
+        StatesCurrent, StatesGoal,
     },
     type_reg::untagged::BoxDtDisplay,
     Resources,
@@ -53,7 +53,7 @@ where
     ///
     /// At the end of this function, [`Resources`] will be populated with
     /// [`StatesCurrent`], and will be serialized to
-    /// `$flow_dir/states_saved.yaml`.
+    /// `$flow_dir/states_current.yaml`.
     ///
     /// If any `state_current` function needs to read the `State` from a
     /// previous `Item`, it may automatically be referenced using [`Current<T>`]
@@ -86,7 +86,7 @@ where
             .await
             .map(|cmd_outcome| {
                 let CmdOutcome {
-                    value: (states_current, _states_desired),
+                    value: (states_current, _states_goal),
                     errors,
                 } = cmd_outcome;
 
@@ -97,100 +97,100 @@ where
             })
     }
 
-    /// Runs [`try_state_desired`] for each [`Item`].
+    /// Runs [`try_state_goal`] for each [`Item`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
-    /// [`StatesDesired`], and will be serialized to
-    /// `$flow_dir/states_desired.yaml`.
+    /// [`StatesGoal`], and will be serialized to
+    /// `$flow_dir/states_goal.yaml`.
     ///
-    /// If any `state_desired` function needs to read the `State` from a
-    /// previous `Item`, it may automatically be referenced using [`Desired<T>`]
+    /// If any `state_goal` function needs to read the `State` from a
+    /// previous `Item`, it may automatically be referenced using [`Goal<T>`]
     /// where `T` us the predecessor's state. Peace will have automatically
     /// inserted it into `Resources`, and the successor should references it
     /// in their [`Data`].
     ///
     /// [`Data`]: peace_cfg::TryFnSpec::Data
-    /// [`Desired<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Desired.html
+    /// [`Goal<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Goal.html
     /// [`Item`]: peace_cfg::Item
-    /// [`try_state_desired`]: peace_cfg::Item::try_state_desired
-    pub async fn desired(
+    /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
+    pub async fn goal(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdOutcome<StatesDesired, E>, E> {
-        Self::desired_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
+    ) -> Result<CmdOutcome<StatesGoal, E>, E> {
+        Self::goal_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
     }
 
-    /// Runs [`try_state_desired`] for each [`Item`].
+    /// Runs [`try_state_goal`] for each [`Item`].
     ///
-    /// See [`Self::desired`] for full documentation.
+    /// See [`Self::goal`] for full documentation.
     ///
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
     ///
-    /// [`try_state_desired`]: peace_cfg::Item::try_state_desired
-    pub async fn desired_with(
+    /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
+    pub async fn goal_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-    ) -> Result<CmdOutcome<StatesDesired, E>, E> {
-        Self::exec(cmd_independence, DiscoverFor::Desired)
+    ) -> Result<CmdOutcome<StatesGoal, E>, E> {
+        Self::exec(cmd_independence, DiscoverFor::Goal)
             .await
             .map(|cmd_outcome| {
                 let CmdOutcome {
-                    value: (_states_current, states_desired),
+                    value: (_states_current, states_goal),
                     errors,
                 } = cmd_outcome;
 
                 CmdOutcome {
-                    value: states_desired,
+                    value: states_goal,
                     errors,
                 }
             })
     }
 
-    /// Runs [`try_state_current`] and [`try_state_desired`]` for each
+    /// Runs [`try_state_current`] and [`try_state_goal`]` for each
     /// [`Item`].
     ///
     /// At the end of this function, [`Resources`] will be populated with
-    /// [`StatesCurrent`] and [`StatesDesired`], and states will be serialized
-    /// to `$flow_dir/states_saved.yaml` and
-    /// `$flow_dir/states_desired.yaml`.
+    /// [`StatesCurrent`] and [`StatesGoal`], and states will be serialized
+    /// to `$flow_dir/states_current.yaml` and
+    /// `$flow_dir/states_goal.yaml`.
     ///
     /// If any `state_current` function needs to read the `State` from a
     /// previous `Item`, the predecessor should insert a copy / clone of
     /// their state into `Resources`, and the successor should references it
     /// in their [`Data`].
     ///
-    /// If any `state_desired` function needs to read the `State` from a
+    /// If any `state_goal` function needs to read the `State` from a
     /// previous `Item`, it may automatically be referenced using
-    /// [`Desired<T>`] where `T` us the predecessor's state. Peace will have
+    /// [`Goal<T>`] where `T` us the predecessor's state. Peace will have
     /// automatically inserted it into `Resources`, and the successor should
     /// references it in their [`Data`].
     ///
     /// [`Current<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Current.html
     /// [`Data`]: peace_cfg::TryFnSpec::Data
-    /// [`Desired<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Desired.html
+    /// [`Goal<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Goal.html
     /// [`Item`]: peace_cfg::Item
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
-    /// [`try_state_desired`]: peace_cfg::Item::try_state_desired
-    pub async fn current_and_desired(
+    /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
+    pub async fn current_and_goal(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdOutcome<(StatesCurrent, StatesDesired), E>, E> {
+    ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
         Self::exec(
             &mut CmdIndependence::Standalone { cmd_ctx },
-            DiscoverFor::CurrentAndDesired,
+            DiscoverFor::CurrentAndGoal,
         )
         .await
     }
 
-    /// Discovers current and/or desired states, marking progress bars as
+    /// Discovers current and/or goal states, marking progress bars as
     /// complete when discovery finishes.
     async fn exec(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
         discover_for: DiscoverFor,
-    ) -> Result<CmdOutcome<(StatesCurrent, StatesDesired), E>, E> {
+    ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
         let outcome = {
             let states_current_mut = StatesMut::<Current>::new();
-            let states_desired_mut = StatesMut::<Desired>::new();
+            let states_goal_mut = StatesMut::<Goal>::new();
 
-            (states_current_mut, states_desired_mut)
+            (states_current_mut, states_goal_mut)
         };
 
         let cmd_outcome = CmdBase::<E, O, PKeys>::exec(
@@ -214,7 +214,7 @@ where
                                 ProgressSender::new(item_id, progress_tx),
                             );
 
-                            let (state_current_result, state_desired_result) = match discover_for {
+                            let (state_current_result, state_goal_result) = match discover_for {
                                 DiscoverFor::Current => {
                                     let state_current_result = item
                                         .state_current_try_exec(params_specs, resources, fn_ctx)
@@ -222,22 +222,22 @@ where
 
                                     (Some(state_current_result), None)
                                 }
-                                DiscoverFor::Desired => {
-                                    let state_desired_result = item
-                                        .state_desired_try_exec(params_specs, resources, fn_ctx)
+                                DiscoverFor::Goal => {
+                                    let state_goal_result = item
+                                        .state_goal_try_exec(params_specs, resources, fn_ctx)
                                         .await;
 
-                                    (None, Some(state_desired_result))
+                                    (None, Some(state_goal_result))
                                 }
-                                DiscoverFor::CurrentAndDesired => {
+                                DiscoverFor::CurrentAndGoal => {
                                     let state_current_result = item
                                         .state_current_try_exec(params_specs, resources, fn_ctx)
                                         .await;
-                                    let state_desired_result = item
-                                        .state_desired_try_exec(params_specs, resources, fn_ctx)
+                                    let state_goal_result = item
+                                        .state_goal_try_exec(params_specs, resources, fn_ctx)
                                         .await;
 
-                                    (Some(state_current_result), Some(state_desired_result))
+                                    (Some(state_current_result), Some(state_goal_result))
                                 }
                             };
 
@@ -274,7 +274,7 @@ where
                                         .send(ItemDiscoverOutcome::Fail {
                                             item_id: item_id.clone(),
                                             state_current: None,
-                                            state_desired: None,
+                                            state_goal: None,
                                             error,
                                         })
                                         .expect("unreachable: `outcomes_rx` is in a sibling task.");
@@ -285,55 +285,54 @@ where
                                     None
                                 };
 
-                            let state_desired =
-                                if let Some(state_desired_result) = state_desired_result {
-                                    #[cfg(feature = "output_progress")]
-                                    {
-                                        let (progress_complete, msg_update) =
-                                            match &state_desired_result {
-                                                Ok(_) => (
-                                                    ProgressComplete::Success,
-                                                    ProgressMsgUpdate::Clear,
-                                                ),
-                                                Err(error) => (
-                                                    ProgressComplete::Fail,
-                                                    ProgressMsgUpdate::Set(format!("{error}")),
-                                                ),
-                                            };
+                            let state_goal = if let Some(state_goal_result) = state_goal_result {
+                                #[cfg(feature = "output_progress")]
+                                {
+                                    let (progress_complete, msg_update) = match &state_goal_result {
+                                        Ok(_) => {
+                                            (ProgressComplete::Success, ProgressMsgUpdate::Clear)
+                                        }
+                                        Err(error) => (
+                                            ProgressComplete::Fail,
+                                            ProgressMsgUpdate::Set(format!("{error}")),
+                                        ),
+                                    };
 
-                                        let _progress_send_unused =
-                                            progress_tx.try_send(ProgressUpdateAndId {
-                                                item_id: item_id.clone(),
-                                                progress_update: ProgressUpdate::Complete(
-                                                    progress_complete,
-                                                ),
-                                                msg_update,
-                                            });
-                                    }
-
-                                    match state_desired_result {
-                                        Ok(state_desired_opt) => state_desired_opt,
-                                        Err(error) => {
-                                            outcomes_tx
-                                        .send(ItemDiscoverOutcome::Fail {
+                                    let _progress_send_unused =
+                                        progress_tx.try_send(ProgressUpdateAndId {
                                             item_id: item_id.clone(),
-                                            state_current,
-                                            state_desired: None,
-                                            error,
-                                        })
-                                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                                            return; // short circuit
-                                        }
+                                            progress_update: ProgressUpdate::Complete(
+                                                progress_complete,
+                                            ),
+                                            msg_update,
+                                        });
+                                }
+
+                                match state_goal_result {
+                                    Ok(state_goal_opt) => state_goal_opt,
+                                    Err(error) => {
+                                        outcomes_tx
+                                            .send(ItemDiscoverOutcome::Fail {
+                                                item_id: item_id.clone(),
+                                                state_current,
+                                                state_goal: None,
+                                                error,
+                                            })
+                                            .expect(
+                                                "unreachable: `outcomes_rx` is in a sibling task.",
+                                            );
+                                        return; // short circuit
                                     }
-                                } else {
-                                    None
-                                };
+                                }
+                            } else {
+                                None
+                            };
 
                             outcomes_tx
                                 .send(ItemDiscoverOutcome::Success {
                                     item_id: item_id.clone(),
                                     state_current,
-                                    state_desired,
+                                    state_goal,
                                 })
                                 .expect("unreachable: `outcomes_rx` is in a sibling task.");
                         })
@@ -343,7 +342,7 @@ where
             },
             |cmd_outcome, item_discover_outcome| {
                 let CmdOutcome {
-                    value: (states_current_mut, states_desired_mut),
+                    value: (states_current_mut, states_goal_mut),
                     errors,
                 } = cmd_outcome;
 
@@ -351,19 +350,19 @@ where
                     ItemDiscoverOutcome::Success {
                         item_id,
                         state_current,
-                        state_desired,
+                        state_goal,
                     } => {
                         if let Some(state_current) = state_current {
                             states_current_mut.insert_raw(item_id.clone(), state_current);
                         }
-                        if let Some(state_desired) = state_desired {
-                            states_desired_mut.insert_raw(item_id, state_desired);
+                        if let Some(state_goal) = state_goal {
+                            states_goal_mut.insert_raw(item_id, state_goal);
                         }
                     }
                     ItemDiscoverOutcome::Fail {
                         item_id,
                         state_current,
-                        state_desired,
+                        state_goal,
                         error,
                     } => {
                         errors.insert(item_id.clone(), error);
@@ -371,8 +370,8 @@ where
                         if let Some(state_current) = state_current {
                             states_current_mut.insert_raw(item_id.clone(), state_current);
                         }
-                        if let Some(state_desired) = state_desired {
-                            states_desired_mut.insert_raw(item_id, state_desired);
+                        if let Some(state_goal) = state_goal {
+                            states_goal_mut.insert_raw(item_id, state_goal);
                         }
                     }
                 }
@@ -382,15 +381,15 @@ where
         )
         .await?;
 
-        let cmd_outcome = cmd_outcome.map(|(states_current_mut, states_desired_mut)| {
+        let cmd_outcome = cmd_outcome.map(|(states_current_mut, states_goal_mut)| {
             let states_current = StatesCurrent::from(states_current_mut);
-            let states_desired = StatesDesired::from(states_desired_mut);
+            let states_goal = StatesGoal::from(states_goal_mut);
 
-            (states_current, states_desired)
+            (states_current, states_goal)
         });
 
         let CmdOutcome {
-            value: (states_current, states_desired),
+            value: (states_current, states_goal),
             errors: _,
         } = &cmd_outcome;
 
@@ -405,12 +404,12 @@ where
             DiscoverFor::Current => {
                 Self::serialize_current(resources, states_current).await?;
             }
-            DiscoverFor::Desired => {
-                Self::serialize_desired(resources, states_desired).await?;
+            DiscoverFor::Goal => {
+                Self::serialize_goal(resources, states_goal).await?;
             }
-            DiscoverFor::CurrentAndDesired => {
+            DiscoverFor::CurrentAndGoal => {
                 Self::serialize_current(resources, states_current).await?;
-                Self::serialize_desired(resources, states_desired).await?;
+                Self::serialize_goal(resources, states_goal).await?;
             }
         }
 
@@ -426,34 +425,34 @@ where
 
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_saved_file = StatesSavedFile::from(&*flow_dir);
+        let states_current_file = StatesCurrentFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, states_current, &states_saved_file).await?;
+        StatesSerializer::serialize(&storage, states_current, &states_current_file).await?;
 
         drop(flow_dir);
         drop(storage);
 
-        resources.insert(states_saved_file);
+        resources.insert(states_current_file);
 
         Ok(())
     }
 
-    async fn serialize_desired(
+    async fn serialize_goal(
         resources: &mut Resources<SetUp>,
-        states_desired: &StatesDesired,
+        states_goal: &StatesGoal,
     ) -> Result<(), E> {
         use peace_rt_model::StatesSerializer;
 
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
-        let states_desired_file = StatesDesiredFile::from(&*flow_dir);
+        let states_goal_file = StatesGoalFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, states_desired, &states_desired_file).await?;
+        StatesSerializer::serialize(&storage, states_goal, &states_goal_file).await?;
 
         drop(flow_dir);
         drop(storage);
 
-        resources.insert(states_desired_file);
+        resources.insert(states_goal_file);
 
         Ok(())
     }
@@ -471,13 +470,13 @@ enum ItemDiscoverOutcome<E> {
     Success {
         item_id: ItemId,
         state_current: Option<BoxDtDisplay>,
-        state_desired: Option<BoxDtDisplay>,
+        state_goal: Option<BoxDtDisplay>,
     },
     /// Discover failed.
     Fail {
         item_id: ItemId,
         state_current: Option<BoxDtDisplay>,
-        state_desired: Option<BoxDtDisplay>,
+        state_goal: Option<BoxDtDisplay>,
         error: E,
     },
 }
@@ -487,8 +486,8 @@ enum ItemDiscoverOutcome<E> {
 enum DiscoverFor {
     /// Discover current states of each item.
     Current,
-    /// Discover desired states of each item.
-    Desired,
-    /// Discover both current and desired states.
-    CurrentAndDesired,
+    /// Discover goal states of each item.
+    Goal,
+    /// Discover both current and goal states.
+    CurrentAndGoal,
 }

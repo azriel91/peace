@@ -2,8 +2,8 @@ use peace::{
     cfg::{app_name, item_id, profile, AppName, FlowId, ItemId, Profile, State},
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
     data::marker::Clean,
-    resources::states::StatesSaved,
-    rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesDiscoverCmd, StatesSavedReadCmd},
+    resources::states::StatesCurrentStored,
+    rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd},
     rt_model::{
         outcomes::CmdOutcome, Flow, InMemoryTextOutput, ItemGraphBuilder, Workspace, WorkspaceSpec,
     },
@@ -38,8 +38,8 @@ impl TestFileCreationShCmdItem {
             let state_current_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
                 "sh_cmd_item/unix/test_file_creation_state_current.sh"
             ));
-            let state_desired_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
-                "sh_cmd_item/unix/test_file_creation_state_desired.sh"
+            let state_goal_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
+                "sh_cmd_item/unix/test_file_creation_state_goal.sh"
             ));
             let state_diff_sh_cmd = ShCmd::new("bash").arg("-c").arg(include_str!(
                 "sh_cmd_item/unix/test_file_creation_state_diff.sh"
@@ -53,7 +53,7 @@ impl TestFileCreationShCmdItem {
             ShCmdParams::<TestFileCreationShCmdItem>::new(
                 state_clean_sh_cmd,
                 state_current_sh_cmd,
-                state_desired_sh_cmd,
+                state_goal_sh_cmd,
                 state_diff_sh_cmd,
                 apply_check_sh_cmd,
                 apply_exec_sh_cmd,
@@ -74,12 +74,11 @@ impl TestFileCreationShCmdItem {
                     .arg(include_str!(
                         "sh_cmd_item/windows/test_file_creation_state_current.ps1"
                     ));
-            let state_desired_sh_cmd =
-                ShCmd::new("Powershell.exe")
-                    .arg("-Command")
-                    .arg(include_str!(
-                        "sh_cmd_item/windows/test_file_creation_state_desired.ps1"
-                    ));
+            let state_goal_sh_cmd = ShCmd::new("Powershell.exe")
+                .arg("-Command")
+                .arg(include_str!(
+                    "sh_cmd_item/windows/test_file_creation_state_goal.ps1"
+                ));
             let state_diff_sh_cmd = ShCmd::new("Powershell.exe").arg("-Command").arg(concat!(
                 "& { ",
                 include_str!("sh_cmd_item/windows/test_file_creation_state_diff.ps1"),
@@ -98,7 +97,7 @@ impl TestFileCreationShCmdItem {
             ShCmdParams::<TestFileCreationShCmdItem>::new(
                 state_clean_sh_cmd,
                 state_current_sh_cmd,
-                state_desired_sh_cmd,
+                state_goal_sh_cmd,
                 state_diff_sh_cmd,
                 apply_check_sh_cmd,
                 apply_exec_sh_cmd,
@@ -133,11 +132,11 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
         .await?;
 
     let CmdOutcome {
-        value: (states_current, _states_desired),
+        value: (states_current, _states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let states_saved = StatesSaved::from(states_current);
-    CleanCmd::exec_dry(&mut cmd_ctx, &states_saved).await?;
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    let states_current_stored = StatesCurrentStored::from(states_current);
+    CleanCmd::exec_dry(&mut cmd_ctx, &states_current_stored).await?;
     let state_clean = cmd_ctx
         .resources()
         .borrow::<Clean<TestFileCreationShCmdState>>();
@@ -209,8 +208,7 @@ async fn state_current_returns_shell_command_current_state()
 }
 
 #[tokio::test]
-async fn state_desired_returns_shell_command_desired_state()
--> Result<(), Box<dyn std::error::Error>> {
+async fn state_goal_returns_shell_command_goal_state() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -233,10 +231,10 @@ async fn state_desired_returns_shell_command_desired_state()
         .await?;
 
     let CmdOutcome {
-        value: states_desired,
+        value: states_goal,
         errors: _,
-    } = StatesDiscoverCmd::desired(&mut cmd_ctx).await?;
-    let state_desired = states_desired
+    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
+    let state_goal = states_goal
         .get::<State<TestFileCreationShCmdStateLogical, ShCmdExecutionRecord>, _>(
             &TestFileCreationShCmdItem::ID,
         )
@@ -245,14 +243,12 @@ async fn state_desired_returns_shell_command_desired_state()
         stdout,
         stderr,
         marker: _,
-    } = &state_desired.logical
+    } = &state_goal.logical
     {
         assert_eq!("exists", stdout);
         assert_eq!("`test_file` exists", stderr);
     } else {
-        panic!(
-            "Expected `state_desired` to be `ShCmdState::Some` after `StatesDesired` discovery."
-        );
+        panic!("Expected `state_goal` to be `ShCmdState::Some` after `StatesGoal` discovery.");
     }
 
     Ok(())
@@ -281,11 +277,11 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
         )
         .await?;
 
-    // Discover current and desired states.
-    StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Discover current and goal states.
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
-    // Diff current and desired states.
-    let state_diffs = DiffCmd::current_and_desired(&mut cmd_ctx).await?;
+    // Diff current and goal states.
+    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
 
     let state_diff = state_diffs
         .get::<ShCmdStateDiff, _>(&TestFileCreationShCmdItem::ID)
@@ -320,18 +316,18 @@ async fn ensure_when_creation_required_executes_apply_exec_shell_command()
         )
         .await?;
 
-    // Discover states current and desired
+    // Discover states current and goal
     let CmdOutcome {
-        value: (states_current, _states_desired),
+        value: (states_current, _states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let states_saved = StatesSaved::from(states_current);
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    let states_current_stored = StatesCurrentStored::from(states_current);
 
     // Create the file
     let CmdOutcome {
         value: states_ensured,
         errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
 
     let state_ensured = states_ensured
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)
@@ -375,18 +371,18 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
         )
         .await?;
 
-    // Discover states current and desired
+    // Discover states current and goal
     let CmdOutcome {
-        value: (states_current, states_desired),
+        value: (states_current, states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let states_saved = StatesSaved::from(states_current);
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    let states_current_stored = StatesCurrentStored::from(states_current);
 
     // Create the file
     let CmdOutcome {
         value: states_ensured,
         errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
 
     // Diff state after creation
     let SingleProfileSingleFlowView {
@@ -395,14 +391,8 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
         resources,
         ..
     } = cmd_ctx.view();
-    let state_diffs = DiffCmd::diff_any(
-        flow,
-        params_specs,
-        resources,
-        &states_ensured,
-        &states_desired,
-    )
-    .await?;
+    let state_diffs =
+        DiffCmd::diff_any(flow, params_specs, resources, &states_ensured, &states_goal).await?;
 
     let state_diff = state_diffs
         .get::<ShCmdStateDiff, _>(&TestFileCreationShCmdItem::ID)
@@ -411,11 +401,11 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
     assert_eq!("nothing to do", state_diff.stderr());
 
     // Run again, for idempotence check
-    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
+    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
     let CmdOutcome {
         value: states_ensured,
         errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
 
     let state_ensured = states_ensured
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)
@@ -458,30 +448,30 @@ async fn clean_when_exists_sync_executes_shell_command() -> Result<(), Box<dyn s
         )
         .await?;
 
-    // Discover states current and desired
+    // Discover states current and goal
     let CmdOutcome {
-        value: (states_current, _states_desired),
+        value: (states_current, _states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
-    let states_saved = StatesSaved::from(states_current);
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    let states_current_stored = StatesCurrentStored::from(states_current);
 
     // Create the file
-    EnsureCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    EnsureCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
 
     assert!(tempdir.path().join("test_file").exists());
 
     // Clean the file
-    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
-    CleanCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    CleanCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
 
     assert!(!tempdir.path().join("test_file").exists());
 
     // Run again, for idempotence check
-    let states_saved = StatesSavedReadCmd::exec(&mut cmd_ctx).await?;
+    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
     let CmdOutcome {
         value: states_cleaned,
         errors: _,
-    } = CleanCmd::exec(&mut cmd_ctx, &states_saved).await?;
+    } = CleanCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
 
     let state_cleaned = states_cleaned
         .get::<TestFileCreationShCmdState, _>(&TestFileCreationShCmdItem::ID)

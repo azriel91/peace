@@ -3,8 +3,8 @@ use peace::{
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
     resources::resources::ts::SetUp,
     rt::cmds::{
-        CleanCmd, DiffCmd, EnsureCmd, StatesDesiredDisplayCmd, StatesDiscoverCmd,
-        StatesSavedDisplayCmd, StatesSavedReadCmd,
+        CleanCmd, DiffCmd, EnsureCmd, StatesCurrentReadCmd, StatesCurrentStoredDisplayCmd,
+        StatesDiscoverCmd, StatesGoalDisplayCmd,
     },
     rt_model::{
         outcomes::CmdOutcome,
@@ -112,9 +112,9 @@ where
     O: OutputWrite<DownloadError>,
 {
     let CmdOutcome {
-        value: (_states_current, _states_desired),
+        value: (_states_current, _states_goal),
         errors: _,
-    } = StatesDiscoverCmd::current_and_desired(cmd_ctx).await?;
+    } = StatesDiscoverCmd::current_and_goal(cmd_ctx).await?;
     Ok(())
 }
 
@@ -123,16 +123,16 @@ where
     O: OutputWrite<DownloadError>,
 {
     // Already displayed by the command
-    let _states_saved = StatesSavedDisplayCmd::exec(cmd_ctx).await?;
+    let _states_current_stored = StatesCurrentStoredDisplayCmd::exec(cmd_ctx).await?;
     Ok(())
 }
 
-pub async fn desired<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
+pub async fn goal<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), DownloadError>
 where
     O: OutputWrite<DownloadError>,
 {
     // Already displayed by the command
-    let _states_desired = StatesDesiredDisplayCmd::exec(cmd_ctx).await?;
+    let _states_goal = StatesGoalDisplayCmd::exec(cmd_ctx).await?;
     Ok(())
 }
 
@@ -140,7 +140,7 @@ pub async fn diff<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Download
 where
     O: OutputWrite<DownloadError>,
 {
-    let states_diff = DiffCmd::current_and_desired(cmd_ctx).await?;
+    let states_diff = DiffCmd::current_and_goal(cmd_ctx).await?;
     cmd_ctx.output_mut().present(&states_diff).await?;
     Ok(())
 }
@@ -149,8 +149,8 @@ pub async fn ensure_dry<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Do
 where
     O: OutputWrite<DownloadError>,
 {
-    let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let states_ensured_dry_outcome = EnsureCmd::exec_dry(cmd_ctx, &states_saved).await?;
+    let states_current_stored = StatesCurrentReadCmd::exec(cmd_ctx).await?;
+    let states_ensured_dry_outcome = EnsureCmd::exec_dry(cmd_ctx, &states_current_stored).await?;
     let states_ensured_dry = &states_ensured_dry_outcome.value;
     cmd_ctx.output_mut().present(states_ensured_dry).await?;
     Ok(())
@@ -160,8 +160,8 @@ pub async fn ensure<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Downlo
 where
     O: OutputWrite<DownloadError>,
 {
-    let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let states_ensured_outcome = EnsureCmd::exec(cmd_ctx, &states_saved).await?;
+    let states_current_stored = StatesCurrentReadCmd::exec(cmd_ctx).await?;
+    let states_ensured_outcome = EnsureCmd::exec(cmd_ctx, &states_current_stored).await?;
     let states_ensured = &states_ensured_outcome.value;
     cmd_ctx.output_mut().present(states_ensured).await?;
     Ok(())
@@ -171,8 +171,8 @@ pub async fn clean_dry<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Dow
 where
     O: OutputWrite<DownloadError>,
 {
-    let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let states_cleaned_dry_outcome = CleanCmd::exec_dry(cmd_ctx, &states_saved).await?;
+    let states_current_stored = StatesCurrentReadCmd::exec(cmd_ctx).await?;
+    let states_cleaned_dry_outcome = CleanCmd::exec_dry(cmd_ctx, &states_current_stored).await?;
     let states_cleaned_dry = &states_cleaned_dry_outcome.value;
     cmd_ctx.output_mut().present(states_cleaned_dry).await?;
     Ok(())
@@ -182,8 +182,8 @@ pub async fn clean<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Downloa
 where
     O: OutputWrite<DownloadError>,
 {
-    let states_saved = StatesSavedReadCmd::exec(cmd_ctx).await?;
-    let states_cleaned_outcome = CleanCmd::exec(cmd_ctx, &states_saved).await?;
+    let states_current_stored = StatesCurrentReadCmd::exec(cmd_ctx).await?;
+    let states_cleaned_outcome = CleanCmd::exec(cmd_ctx, &states_current_stored).await?;
     let states_cleaned = &states_cleaned_outcome.value;
     cmd_ctx.output_mut().present(states_cleaned).await?;
     Ok(())

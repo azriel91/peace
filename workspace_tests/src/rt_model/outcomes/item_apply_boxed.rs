@@ -40,7 +40,7 @@ fn debug() {
     assert_eq!(
         r#"ItemApplyBoxed(
     ItemApply {
-        state_saved: None,
+        state_current_stored: None,
         state_current: State {
             logical: 1,
             physical: Value(
@@ -78,7 +78,7 @@ fn serialize() -> Result<(), serde_yaml::Error> {
     let data_type_wrapper = &item_apply_boxed;
 
     assert_eq!(
-        r#"state_saved: null
+        r#"state_current_stored: null
 state_current:
   logical: 1
   physical: !Value 0

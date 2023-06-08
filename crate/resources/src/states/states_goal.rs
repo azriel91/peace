@@ -1,14 +1,19 @@
-use crate::states::{ts::Desired, States};
+use std::marker::PhantomData;
 
-/// Desired `State`s for all `Item`s.
+use crate::states::{
+    ts::{Goal, GoalStored},
+    States,
+};
+
+/// Goal `State`s for all `Item`s.
 ///
-/// This is typically `TypeMap<ItemId, State>`,
-/// where [`External`] is not necessarily used in `StateDiff` computations.
+/// These are the states that each item would be in, if `Item::apply` were to be
+/// run with `state_goal` as the target state.
 ///
 /// # Implementors
 ///
-/// If an `Item`'s desired state discovery depends on the desired `State` of
-/// a previous `Item`, then you should insert the predecessor's desired
+/// If an `Item`'s goal state discovery depends on the goal `State` of
+/// a previous `Item`, then you should insert the predecessor's goal
 /// state into [`Resources`], and reference that in the subsequent
 /// `TryFnSpec`'s [`Data`]:
 ///
@@ -34,11 +39,18 @@ use crate::states::{ts::Desired, States};
 /// }
 /// ```
 ///
-/// You may reference [`StatesDesired`] in `ApplyFns::Data` for reading. It
-/// is not mutable as `StatesDesired` must remain unchanged so that all
+/// You may reference [`StatesGoal`] in `ApplyFns::Data` for reading. It
+/// is not mutable as `StatesGoal` must remain unchanged so that all
 /// `Item`s operate over consistent data.
 ///
-/// [`External`]: peace_cfg::state::External
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
-pub type StatesDesired = States<Desired>;
+pub type StatesGoal = States<Goal>;
+
+impl From<States<GoalStored>> for States<Goal> {
+    fn from(states_goal_stored: States<GoalStored>) -> Self {
+        let States(type_map, PhantomData) = states_goal_stored;
+
+        Self(type_map, PhantomData)
+    }
+}

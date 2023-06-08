@@ -14,7 +14,7 @@ trait Item {
 
 The following shows a number of use cases of these params:
 
-* **State Apply:** Param values must be known, and Peace should pass concrete values to the `Item::{state_current, state_desired, apply}` functions.
+* **State Apply:** Param values must be known, and Peace should pass concrete values to the `Item::{state_current, state_goal, apply}` functions.
 * **State Discovery (fallible):**
 
     Param values may be known, if predecessors have previously executed.
@@ -30,7 +30,7 @@ The following shows a number of use cases of these params:
         }
         ```
 
-    - `try_state_desired`: `StateDiscoverCmd::desired`
+    - `try_state_goal`: `StateDiscoverCmd::goal`
 
         e.g. Look up source file contents:
 
@@ -45,18 +45,18 @@ The following shows a number of use cases of these params:
 ### By Item Function
 
 * `try_state_current`: Should work with `field_partial`s.
-* `try_state_desired`: Should work with `field_partial`s.
+* `try_state_goal`: Should work with `field_partial`s.
 * `state_current`: Needs real concrete param values.
-* `state_desired`: Needs real concrete param values.
+* `state_goal`: Needs real concrete param values.
 * `state_diff`: Doesn't need parameters or data; everything should be captured in `State`s.
 
-    But for presentation, it's useful to know what a file should be (current vs desired), or difference between params (multiple profile current vs current).
+    But for presentation, it's useful to know what a file should be (current vs goal), or difference between params (multiple profile current vs current).
 
 * `state_clean`: Maybe always returns `ItemState::None`, and doesn't need parameters or data.
 
     However, presenting `state_clean` with e.g. a file path, would mean the None state contains the value, which means `state_clean` needs params.
 
-    Arguably `state_desired` will show the path that would be created.
+    Arguably `state_goal` will show the path that would be created.
 
     `StateDiff` for cleaning should also show the deletion of the path.
 
@@ -103,10 +103,10 @@ trait Item {
 
     fn setup(&self, resources);
     fn try_state_current(fn_ctx, params_partial, data);
-    fn try_state_desired(fn_ctx, params_partial, data);
+    fn try_state_goal(fn_ctx, params_partial, data);
     fn state_clean      (        params_partial, data);
     fn state_current    (fn_ctx, params,         data);
-    fn state_desired    (fn_ctx, params,         data);
+    fn state_goal    (fn_ctx, params,         data);
     fn apply_dry        (fn_ctx, params,         data, state_current, state_target, diff);
     fn apply            (fn_ctx, params,         data, state_current, state_target, diff);
     fn apply_check      (        params_partial, data, state_current, state_target, diff);
@@ -115,10 +115,10 @@ trait Item {
     // Once more, with types:
     fn setup(&self, &mut Resources<Empty>);
     fn try_state_current(FnCtx<'_>, Self::Params<'_>::Partial, Self::Data<'_>);
-    fn try_state_desired(FnCtx<'_>, Self::Params<'_>::Partial, Self::Data<'_>);
+    fn try_state_goal(FnCtx<'_>, Self::Params<'_>::Partial, Self::Data<'_>);
     fn state_clean      (           Self::Params<'_>::Partial, Self::Data<'_>);
     fn state_current    (FnCtx<'_>, Self::Params<'_>         , Self::Data<'_>);
-    fn state_desired    (FnCtx<'_>, Self::Params<'_>         , Self::Data<'_>);
+    fn state_goal    (FnCtx<'_>, Self::Params<'_>         , Self::Data<'_>);
     fn apply_dry        (FnCtx<'_>, Self::Params<'_>         , Self::Data<'_>, Self::State, Self::State, Self::StateDiff);
     fn apply            (FnCtx<'_>, Self::Params<'_>         , Self::Data<'_>, Self::State, Self::State, Self::StateDiff);
     fn apply_check      (           Self::Params<'_>::Partial, Self::Data<'_>, Self::State, Self::State, Self::StateDiff);
@@ -145,7 +145,7 @@ Also need to provide a `Params` derive macro.
 
 The `apply_check` and `state_diff` functions *usually* are not expected to need `params` and `data`, but some items may use them, such as the `ShCmdItem` which accesses params to determine the script to run.
 
-Regarding params will be `Params` or `Params<'_>::Partial` for `state_diff`, if we call `state_diff` for a file upload item, we must have both state current and state desired. Then we need to ask, does having both states imply `Params` is fully resolvable?
+Regarding params will be `Params` or `Params<'_>::Partial` for `state_diff`, if we call `state_diff` for a file upload item, we must have both the current state and goal state. Then we need to ask, does having both states imply `Params` is fully resolvable?
 
 If we call `state_current` for a file upload:
 
@@ -154,7 +154,7 @@ If we call `state_current` for a file upload:
 * we *may* still return `Some(State::Empty)`
 * So params may still be partial, even if `State` is `Some`.
 
-If we call `state_desired` for a file upload:
+If we call `state_goal` for a file upload:
 
 * the source file may not be there
 * so params may not have the source content hash

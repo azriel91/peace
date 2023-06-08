@@ -248,7 +248,7 @@ where
             logical: file_state_current,
             physical: _e_tag,
         }: &State<FileDownloadState, FetchedOpt<ETag>>,
-        _file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
+        _file_download_state_goal: &State<FileDownloadState, FetchedOpt<ETag>>,
         diff: &FileDownloadStateDiff,
     ) -> Result<ApplyCheck, FileDownloadError> {
         let apply_check = match diff {
@@ -338,12 +338,12 @@ where
         _params: &FileDownloadParams<Id>,
         _data: FileDownloadData<'_, Id>,
         _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
-        file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
+        file_download_state_goal: &State<FileDownloadState, FetchedOpt<ETag>>,
         _diff: &FileDownloadStateDiff,
     ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
         // TODO: fetch headers but don't write to file.
 
-        Ok(file_download_state_desired.clone())
+        Ok(file_download_state_goal.clone())
     }
 
     pub async fn apply(
@@ -351,7 +351,7 @@ where
         params: &FileDownloadParams<Id>,
         data: FileDownloadData<'_, Id>,
         _file_download_state_current: &State<FileDownloadState, FetchedOpt<ETag>>,
-        file_download_state_desired: &State<FileDownloadState, FetchedOpt<ETag>>,
+        file_download_state_goal: &State<FileDownloadState, FetchedOpt<ETag>>,
         diff: &FileDownloadStateDiff,
     ) -> Result<State<FileDownloadState, FetchedOpt<ETag>>, FileDownloadError> {
         match diff {
@@ -369,12 +369,12 @@ where
                 #[cfg(target_arch = "wasm32")]
                 data.storage().remove_item(path)?;
 
-                Ok(file_download_state_desired.clone())
+                Ok(file_download_state_goal.clone())
             }
             FileDownloadStateDiff::Change { .. } => {
                 let e_tag = Self::file_download(fn_ctx, params, data).await?;
 
-                let mut file_download_state_ensured = file_download_state_desired.clone();
+                let mut file_download_state_ensured = file_download_state_goal.clone();
                 file_download_state_ensured.physical = e_tag;
 
                 Ok(file_download_state_ensured)

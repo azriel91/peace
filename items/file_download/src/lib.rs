@@ -11,9 +11,9 @@ pub use crate::{
     },
     file_download_state::FileDownloadState,
     file_download_state_current_fn::FileDownloadStateCurrentFn,
-    file_download_state_desired_fn::FileDownloadStateDesiredFn,
     file_download_state_diff::FileDownloadStateDiff,
     file_download_state_diff_fn::FileDownloadStateDiffFn,
+    file_download_state_goal_fn::FileDownloadStateGoalFn,
 };
 
 #[cfg(target_arch = "wasm32")]
@@ -27,9 +27,9 @@ mod file_download_item;
 mod file_download_params;
 mod file_download_state;
 mod file_download_state_current_fn;
-mod file_download_state_desired_fn;
 mod file_download_state_diff;
 mod file_download_state_diff_fn;
+mod file_download_state_goal_fn;
 
 #[cfg(target_arch = "wasm32")]
 mod storage_form;

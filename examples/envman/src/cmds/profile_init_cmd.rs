@@ -147,7 +147,7 @@ impl ProfileInitCmd {
             }
         };
 
-        let states_discover_outcome = StatesDiscoverCmd::current_and_desired(&mut cmd_ctx).await?;
+        let states_discover_outcome = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
         let SingleProfileSingleFlowViewAndOutput { output, .. } = cmd_ctx.view_and_output();
 
         if states_discover_outcome.is_ok() {

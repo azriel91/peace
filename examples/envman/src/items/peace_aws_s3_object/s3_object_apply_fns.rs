@@ -22,7 +22,7 @@ where
         _params: &S3ObjectParams<Id>,
         _data: S3ObjectData<'_, Id>,
         state_current: &S3ObjectState,
-        _state_desired: &S3ObjectState,
+        _state_goal: &S3ObjectState,
         diff: &S3ObjectStateDiff,
     ) -> Result<ApplyCheck, S3ObjectError> {
         match diff {
@@ -67,17 +67,17 @@ where
             }
             S3ObjectStateDiff::BucketNameModified {
                 bucket_name_current,
-                bucket_name_desired,
+                bucket_name_goal,
             } => Err(S3ObjectError::BucketModificationNotSupported {
                 bucket_name_current: bucket_name_current.clone(),
-                bucket_name_desired: bucket_name_desired.clone(),
+                bucket_name_goal: bucket_name_goal.clone(),
             }),
             S3ObjectStateDiff::ObjectKeyModified {
                 object_key_current,
-                object_key_desired,
+                object_key_goal,
             } => Err(S3ObjectError::S3ObjectModificationNotSupported {
                 object_key_current: object_key_current.clone(),
-                object_key_desired: object_key_desired.clone(),
+                object_key_goal: object_key_goal.clone(),
             }),
             S3ObjectStateDiff::InSyncExists | S3ObjectStateDiff::InSyncDoesNotExist => {
                 Ok(ApplyCheck::ExecNotRequired)
@@ -90,10 +90,10 @@ where
         _params: &S3ObjectParams<Id>,
         _data: S3ObjectData<'_, Id>,
         _state_current: &S3ObjectState,
-        state_desired: &S3ObjectState,
+        state_goal: &S3ObjectState,
         _diff: &S3ObjectStateDiff,
     ) -> Result<S3ObjectState, S3ObjectError> {
-        Ok(state_desired.clone())
+        Ok(state_goal.clone())
     }
 
     pub async fn apply(
@@ -102,7 +102,7 @@ where
         params: &S3ObjectParams<Id>,
         data: S3ObjectData<'_, Id>,
         state_current: &S3ObjectState,
-        state_desired: &S3ObjectState,
+        state_goal: &S3ObjectState,
         diff: &S3ObjectStateDiff,
     ) -> Result<S3ObjectState, S3ObjectError> {
         #[cfg(feature = "output_progress")]
@@ -110,9 +110,9 @@ where
 
         match diff {
             S3ObjectStateDiff::Added | S3ObjectStateDiff::ObjectContentModified { .. } => {
-                match state_desired {
+                match state_goal {
                     S3ObjectState::None => {
-                        panic!("`S3ObjectApplyFns::exec` called with state_desired being None.");
+                        panic!("`S3ObjectApplyFns::exec` called with state_goal being None.");
                     }
                     S3ObjectState::Some {
                         bucket_name,
@@ -261,7 +261,7 @@ where
                     }
                 }
 
-                let state_applied = state_desired.clone();
+                let state_applied = state_goal.clone();
                 Ok(state_applied)
             }
             S3ObjectStateDiff::InSyncExists | S3ObjectStateDiff::InSyncDoesNotExist => {
@@ -271,23 +271,23 @@ where
             }
             S3ObjectStateDiff::BucketNameModified {
                 bucket_name_current,
-                bucket_name_desired,
+                bucket_name_goal,
             } => Err(S3ObjectError::BucketModificationNotSupported {
                 bucket_name_current: bucket_name_current.clone(),
-                bucket_name_desired: bucket_name_desired.clone(),
+                bucket_name_goal: bucket_name_goal.clone(),
             }),
             S3ObjectStateDiff::ObjectKeyModified {
                 object_key_current,
-                object_key_desired,
+                object_key_goal,
             } => {
-                let S3ObjectState::Some {bucket_name, ..} = state_desired else {
-                    panic!("`S3ObjectApplyFns::exec` called with state_desired being None.");
+                let S3ObjectState::Some {bucket_name, ..} = state_goal else {
+                    panic!("`S3ObjectApplyFns::exec` called with state_goal being None.");
                 };
 
                 Err(S3ObjectError::ObjectKeyModificationNotSupported {
                     bucket_name: bucket_name.clone(),
                     object_key_current: object_key_current.clone(),
-                    object_key_desired: object_key_desired.clone(),
+                    object_key_goal: object_key_goal.clone(),
                 })
             }
         }

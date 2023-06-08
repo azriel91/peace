@@ -1,3 +1,3 @@
-pub use self::saved::Saved;
+pub use self::stored::Stored;
 
-mod saved;
+mod stored;

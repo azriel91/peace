@@ -13,7 +13,7 @@ use crate::outcomes::ItemApplyPartialRt;
 /// 1. `ApplyCmd` calls the following function for each item.
 ///
 ///     - [`Item::state_current`]
-///     - [`Item::state_desired`] or [`Item::state_clean`]
+///     - [`Item::state_goal`] or [`Item::state_clean`]
 ///     - [`Item::state_diff`]
 ///     - [`ApplyFns::check`]
 ///     - [`ApplyFns::exec`]
@@ -27,19 +27,19 @@ use crate::outcomes::ItemApplyPartialRt;
 /// optional.
 ///
 /// [`Item::state_current`]: peace_cfg::Item::state_current
-/// [`Item::state_desired`]: peace_cfg::Item::state_desired
+/// [`Item::state_goal`]: peace_cfg::Item::state_goal
 /// [`Item::state_diff`]: peace_cfg::Item::state_diff
 /// [`ApplyFns::check`]: peace_cfg::Item::ApplyFns
 /// [`ApplyFns::exec`]: peace_cfg::Item::ApplyFns
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct ItemApplyPartial<State, StateDiff> {
-    /// State saved on disk before the execution.
-    pub state_saved: Option<State>,
+    /// Current state stored on disk before the execution.
+    pub state_current_stored: Option<State>,
     /// Current state discovered during the execution.
     pub state_current: Option<State>,
     /// Target state discovered during the execution.
     pub state_target: Option<State>,
-    /// Diff between current and desired states.
+    /// Diff between current and goal states.
     pub state_diff: Option<StateDiff>,
     /// Whether item execution is required.
     pub apply_check: Option<ApplyCheck>,
@@ -55,7 +55,7 @@ impl<State, StateDiff> ItemApplyPartial<State, StateDiff> {
 impl<State, StateDiff> Default for ItemApplyPartial<State, StateDiff> {
     fn default() -> Self {
         Self {
-            state_saved: None,
+            state_current_stored: None,
             state_current: None,
             state_target: None,
             state_diff: None,
@@ -69,8 +69,8 @@ where
     State: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
 {
-    fn state_saved(&self) -> Option<BoxDtDisplay> {
-        self.state_saved.clone().map(BoxDtDisplay::new)
+    fn state_current_stored(&self) -> Option<BoxDtDisplay> {
+        self.state_current_stored.clone().map(BoxDtDisplay::new)
     }
 
     fn state_current(&self) -> Option<BoxDtDisplay> {

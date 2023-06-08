@@ -364,7 +364,7 @@ fn t_partial(
                 #[doc="\
                     Item parameters that may not necessarily have values.\n\
                     \n\
-                    This is used for `try_state_current` and `try_state_desired` where values \n\
+                    This is used for `try_state_current` and `try_state_goal` where values \n\
                     could be referenced from predecessors, which may not yet be available, such \n\
                     as the IP address of a server that is yet to be launched, or may change, \n\
                     such as the content hash of a file which is to be re-downloaded.\n\
@@ -416,7 +416,7 @@ fn t_partial_external(
                 #[doc="\
                     Item parameters that may not necessarily have values.\n\
                     \n\
-                    This is used for `try_state_current` and `try_state_desired` where values \n\
+                    This is used for `try_state_current` and `try_state_goal` where values \n\
                     could be referenced from predecessors, which may not yet be available, such \n\
                     as the IP address of a server that is yet to be launched, or may change, \n\
                     such as the content hash of a file which is to be re-downloaded.\n\

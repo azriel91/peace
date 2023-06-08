@@ -19,12 +19,12 @@ use crate::{
     model::{EnvDiffSelection, EnvManError, EnvManFlow},
 };
 
-/// Shows the diff between current and desired states of the environment.
+/// Shows the diff between current and goal states of the environment.
 #[derive(Debug)]
 pub struct EnvDiffCmd;
 
 impl EnvDiffCmd {
-    /// Shows the diff between current and desired states of the environment.
+    /// Shows the diff between current and goal states of the environment.
     ///
     /// # Parameters
     ///
@@ -40,8 +40,8 @@ impl EnvDiffCmd {
         let workspace = workspace()?;
         let env_man_flow = env_man_flow(output, &workspace).await?;
         match env_diff_selection {
-            EnvDiffSelection::CurrentAndDesired => {
-                Self::active_profile_current_vs_desired(output, env_man_flow).await
+            EnvDiffSelection::CurrentAndGoal => {
+                Self::active_profile_current_vs_goal(output, env_man_flow).await
             }
             EnvDiffSelection::DiffProfilesCurrent {
                 profile_a,
@@ -50,7 +50,7 @@ impl EnvDiffCmd {
         }
     }
 
-    async fn active_profile_current_vs_desired<O>(
+    async fn active_profile_current_vs_goal<O>(
         output: &mut O,
         env_man_flow: EnvManFlow,
     ) -> Result<(), EnvManError>
@@ -128,7 +128,7 @@ macro_rules! run {
     ($output:ident, $flow_cmd:ident, $padding:expr) => {{
         $flow_cmd::run($output, true, |ctx| {
             async {
-                let state_diffs = DiffCmd::current_and_desired(ctx).await?;
+                let state_diffs = DiffCmd::current_and_goal(ctx).await?;
 
                 let SingleProfileSingleFlowViewAndOutput {
                     output,

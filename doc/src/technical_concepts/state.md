@@ -4,7 +4,7 @@ In `peace`, [`State`] represents the values of an item, and has the following us
 
 * Showing users the state of an item.
 * Allowing users to describe the state that an item should be.
-* Determining what needs to change between the current state and the desired state.
+* Determining what needs to change between the current state and the goal state.
 
 Therefore, `State` should be:
 
@@ -48,14 +48,14 @@ For example, copying a file from one directory to another. The state of the file
 
 ### Logical and Physical
 
-If an item's desired state can be described before the item exists, but interacts with an external service which produces additional information to bring that desired state into existence, then the state has both logical and physical parts.
+If an item's goal state can be described before the item exists, but interacts with an external service which produces additional information to bring that goal state into existence, then the state has both logical and physical parts.
 
 For example, launching a server or virtual machine. The operating system, CPU capacity, and RAM are logical information, and can be determined ahead of time. However, the server ID and IP address are produced by the virtual machine service provider, which is physical state.
 
 
 ### Fully Physical
 
-If an item's desired state is simply, "automation has been executed after these files have been modified", then the state has no logical component.
+If an item's goal state is simply, "automation has been executed after these files have been modified", then the state has no logical component.
 
 For example, running a compilation command only if the compilation artifact doesn't exist, or the source files have changed since the last time the compilation has been executed.
 

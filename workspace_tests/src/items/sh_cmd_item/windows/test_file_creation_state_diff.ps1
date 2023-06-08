@@ -1,7 +1,7 @@
 $current=$args[0]
-$desired=$args[1]
+$goal=$args[1]
 
-switch ("$current $desired")
+switch ("$current $goal")
 {
     'not_exists not_exists' {
         # state

@@ -10,9 +10,9 @@ pub use self::{
     },
     instance_profile_state::InstanceProfileState,
     instance_profile_state_current_fn::InstanceProfileStateCurrentFn,
-    instance_profile_state_desired_fn::InstanceProfileStateDesiredFn,
     instance_profile_state_diff::InstanceProfileStateDiff,
     instance_profile_state_diff_fn::InstanceProfileStateDiffFn,
+    instance_profile_state_goal_fn::InstanceProfileStateGoalFn,
 };
 
 pub mod model;
@@ -24,6 +24,6 @@ mod instance_profile_item;
 mod instance_profile_params;
 mod instance_profile_state;
 mod instance_profile_state_current_fn;
-mod instance_profile_state_desired_fn;
 mod instance_profile_state_diff;
 mod instance_profile_state_diff_fn;
+mod instance_profile_state_goal_fn;

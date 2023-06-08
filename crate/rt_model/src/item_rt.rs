@@ -51,7 +51,7 @@ pub trait ItemRt<E>:
     /// deserializing from disk.
     ///
     /// This is necessary to deserialize `ItemParamsFile`,
-    /// `ParamsSpecsFile`, `StatesSavedFile`, and `StatesDesiredFile`.
+    /// `ParamsSpecsFile`, `StatesCurrentFile`, and `StatesGoalFile`.
     fn params_and_state_register(
         &self,
         item_params_type_reg: &mut ItemParamsTypeReg,
@@ -96,11 +96,11 @@ pub trait ItemRt<E>:
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`Item::state_desired`]`::`[`try_exec`].
+    /// Runs [`Item::state_goal`]`::`[`try_exec`].
     ///
-    /// [`Item::state_desired`]: peace_cfg::Item::state_desired
+    /// [`Item::state_goal`]: peace_cfg::Item::state_goal
     /// [`try_exec`]: peace_cfg::TryFnSpec::try_exec
-    async fn state_desired_try_exec(
+    async fn state_goal_try_exec(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
@@ -109,11 +109,11 @@ pub trait ItemRt<E>:
     where
         E: Debug + std::error::Error;
 
-    /// Runs [`Item::state_desired`]`::`[`exec`].
+    /// Runs [`Item::state_goal`]`::`[`exec`].
     ///
-    /// [`Item::state_desired`]: peace_cfg::Item::state_desired
+    /// [`Item::state_goal`]: peace_cfg::Item::state_goal
     /// [`exec`]: peace_cfg::TryFnSpec::exec
-    async fn state_desired_exec(
+    async fn state_goal_exec(
         &self,
         params_specs: &ParamsSpecs,
         resources: &Resources<SetUp>,
@@ -122,7 +122,7 @@ pub trait ItemRt<E>:
     where
         E: Debug + std::error::Error;
 
-    /// Returns the diff between the previous and desired [`State`]s.
+    /// Returns the diff between the previous and goal [`State`]s.
     ///
     /// [`State`]: peace_cfg::State
     async fn state_diff_exec(
@@ -140,12 +140,12 @@ pub trait ItemRt<E>:
     /// This runs the following functions in order:
     ///
     /// * [`Item::state_current`]
-    /// * [`Item::state_desired`]
+    /// * [`Item::state_goal`]
     /// * [`Item::state_diff`]
     /// * [`ApplyFns::check`]
     ///
     /// [`Item::state_current`]: peace_cfg::Item::state_current
-    /// [`Item::state_desired`]: peace_cfg::Item::state_desired
+    /// [`Item::state_goal`]: peace_cfg::Item::state_goal
     /// [`Item::state_diff`]: peace_cfg::Item::state_diff
     /// [`ApplyFns::check`]: peace_cfg::Item::ApplyFns
     async fn ensure_prepare(
@@ -179,7 +179,7 @@ pub trait ItemRt<E>:
     where
         E: Debug + std::error::Error;
 
-    /// Dry applies the item from its current state to its desired state.
+    /// Dry applies the item from its current state to its goal state.
     ///
     /// This runs the following function in order, passing in the information
     /// collected from [`ensure_prepare`] or [`clean_prepare`]:
@@ -202,7 +202,7 @@ pub trait ItemRt<E>:
     where
         E: Debug + std::error::Error;
 
-    /// Applies the item from its current state to its desired state.
+    /// Applies the item from its current state to its goal state.
     ///
     /// This runs the following function in order, passing in the information
     /// collected from [`ensure_prepare`] or [`clean_prepare`]:

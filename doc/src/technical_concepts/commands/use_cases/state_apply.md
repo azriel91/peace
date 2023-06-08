@@ -2,9 +2,9 @@
 
 > This is like `git commit` / `git push` / `git clean`, depending on your perspective.
 
-This kind of command applies the desired state over the current state.
+This kind of command applies the goal state over the current state.
 
-This generally requires what is saved in `states_saved.yaml` to match the newly discovered current state.
+This generally requires what is stored in `states_current.yaml` to match the newly discovered current state.
 
 The only suitable scope for this command is `SingleProfileSingleFlow`.
 
