@@ -1,4 +1,9 @@
-use crate::states::{ts::Current, States};
+use std::marker::PhantomData;
+
+use crate::states::{
+    ts::{Current, CurrentStored},
+    States,
+};
 
 /// Current `State`s for all `Item`s.
 ///
@@ -44,3 +49,11 @@ use crate::states::{ts::Current, States};
 /// [`StatesCurrentFile`] crate::paths::StatesCurrentFile
 /// [`StatesCurrentStored`]: crate::states::StatesCurrentStored
 pub type StatesCurrent = States<Current>;
+
+impl From<States<CurrentStored>> for States<Current> {
+    fn from(states_current_stored: States<CurrentStored>) -> Self {
+        let States(type_map, PhantomData) = states_current_stored;
+
+        Self(type_map, PhantomData)
+    }
+}

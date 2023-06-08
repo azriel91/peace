@@ -1,4 +1,9 @@
-use crate::states::{ts::Goal, States};
+use std::marker::PhantomData;
+
+use crate::states::{
+    ts::{Goal, GoalStored},
+    States,
+};
 
 /// Goal `State`s for all `Item`s.
 ///
@@ -41,3 +46,11 @@ use crate::states::{ts::Goal, States};
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
 pub type StatesGoal = States<Goal>;
+
+impl From<States<GoalStored>> for States<Goal> {
+    fn from(states_goal_stored: States<GoalStored>) -> Self {
+        let States(type_map, PhantomData) = states_goal_stored;
+
+        Self(type_map, PhantomData)
+    }
+}
