@@ -10,11 +10,14 @@ use crate::internal::StateDiffsMut;
 /// Diffs of `State`s for each `Item`s. `TypeMap<ItemId, BoxDtDisplay>`
 /// newtype.
 ///
+/// [`External`] fields are not necessarily used in `StateDiff` computations.
+///
 /// # Implementors
 ///
 /// [`StateDiffs`] is a read-only resource, stored in [`Resources`] after
 /// `DiffCmd` has been executed.
 ///
+/// [`External`]: peace_cfg::state::External
 /// [`Resources`]: crate::Resources
 #[derive(Debug, Default, Serialize)]
 pub struct StateDiffs(TypeMap<ItemId, BoxDtDisplay>);

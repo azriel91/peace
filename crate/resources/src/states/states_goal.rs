@@ -2,8 +2,8 @@ use crate::states::{ts::Goal, States};
 
 /// Goal `State`s for all `Item`s.
 ///
-/// This is typically `TypeMap<ItemId, State>`,
-/// where [`External`] is not necessarily used in `StateDiff` computations.
+/// These are the states that each item would be in, if `Item::apply` were to be
+/// run with `state_goal` as the target state.
 ///
 /// # Implementors
 ///
@@ -38,7 +38,6 @@ use crate::states::{ts::Goal, States};
 /// is not mutable as `StatesGoal` must remain unchanged so that all
 /// `Item`s operate over consistent data.
 ///
-/// [`External`]: peace_cfg::state::External
 /// [`Data`]: peace_data::Data
 /// [`Resources`]: crate::Resources
 pub type StatesGoal = States<Goal>;

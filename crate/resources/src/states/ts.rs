@@ -14,6 +14,10 @@ pub struct CurrentStored;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Current;
 
+/// Stored goal states of items.
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GoalStored;
+
 /// Goal states of items.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Goal;

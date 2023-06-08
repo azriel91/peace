@@ -6,7 +6,7 @@ use peace_cmd::{
         SingleProfileSingleFlow, SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput,
     },
 };
-use peace_resources::{resources::ts::SetUp, states::StatesGoal};
+use peace_resources::{resources::ts::SetUp, states::StatesGoalStored};
 use peace_rt_model::{params::ParamsKeys, Error};
 use peace_rt_model_core::output::OutputWrite;
 
@@ -30,7 +30,7 @@ where
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<StatesGoal, E> {
+    ) -> Result<StatesGoalStored, E> {
         let SingleProfileSingleFlowViewAndOutput {
             output,
             cmd_view:

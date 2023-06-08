@@ -4,16 +4,16 @@ use peace_cfg::{FlowId, ItemId};
 use peace_resources::{
     paths::{StatesCurrentFile, StatesGoalFile},
     states::{
-        ts::{CurrentStored, Goal},
-        States, StatesCurrentStored, StatesGoal,
+        ts::{CurrentStored, GoalStored},
+        States, StatesCurrentStored, StatesGoalStored,
     },
     type_reg::untagged::{BoxDtDisplay, TypeReg},
 };
 
 use crate::{Error, Storage};
 
-/// Reads and writes [`StatesCurrentStored`] and [`StatesGoal`] to and from
-/// storage.
+/// Reads and writes [`StatesCurrentStored`] and [`StatesGoalStored`] to and
+/// from storage.
 pub struct StatesSerializer<E>(PhantomData<E>);
 
 impl<E> StatesSerializer<E>
@@ -81,7 +81,7 @@ where
         states.ok_or_else(|| E::from(Error::StatesCurrentDiscoverRequired))
     }
 
-    /// Returns the [`StatesGoal`] of all [`Item`]s if it exists on disk.
+    /// Returns the [`StatesGoalStored`] of all [`Item`]s if it exists on disk.
     ///
     /// # Parameters:
     ///
@@ -96,8 +96,8 @@ where
         storage: &Storage,
         states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
         states_goal_file: &StatesGoalFile,
-    ) -> Result<StatesGoal, E> {
-        let states = Self::deserialize_internal::<Goal>(
+    ) -> Result<StatesGoalStored, E> {
+        let states = Self::deserialize_internal::<GoalStored>(
             #[cfg(not(target_arch = "wasm32"))]
             "StatesSerializer::deserialize_goal".to_string(),
             flow_id,

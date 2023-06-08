@@ -9,7 +9,7 @@ use peace_cmd::{
 use peace_resources::{
     paths::{FlowDir, StatesGoalFile},
     resources::ts::SetUp,
-    states::StatesGoal,
+    states::StatesGoalStored,
     type_reg::untagged::{BoxDtDisplay, TypeReg},
     Resources,
 };
@@ -18,7 +18,7 @@ use peace_rt_model_core::output::OutputWrite;
 
 use crate::cmds::{cmd_ctx_internal::CmdIndependence, CmdBase};
 
-/// Reads [`StatesGoal`]s from storage.
+/// Reads [`StatesGoalStored`]s from storage.
 #[derive(Debug)]
 pub struct StatesGoalReadCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
@@ -28,7 +28,7 @@ where
     O: OutputWrite<E>,
     PKeys: ParamsKeys + 'static,
 {
-    /// Reads [`StatesGoal`]s from storage.
+    /// Reads [`StatesGoalStored`]s from storage.
     ///
     /// [`StatesDiscoverCmd`] must have run prior to this command to read the
     /// state.
@@ -36,7 +36,7 @@ where
     /// [`StatesDiscoverCmd`]: crate::StatesDiscoverCmd
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<StatesGoal, E> {
+    ) -> Result<StatesGoalStored, E> {
         let SingleProfileSingleFlowView {
             states_type_reg,
             resources,
@@ -48,7 +48,7 @@ where
         Ok(states_goal)
     }
 
-    /// Reads [`StatesGoal`]s from storage.
+    /// Reads [`StatesGoalStored`]s from storage.
     ///
     /// See [`Self::exec`] for full documentation.
     ///
@@ -56,7 +56,7 @@ where
     /// functionality of another command.
     pub async fn exec_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-    ) -> Result<StatesGoal, E> {
+    ) -> Result<StatesGoalStored, E> {
         CmdBase::oneshot(cmd_independence, |cmd_view| {
             async move {
                 let SingleProfileSingleFlowView {
@@ -75,7 +75,7 @@ where
     pub(crate) async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
         states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
-    ) -> Result<StatesGoal, E> {
+    ) -> Result<StatesGoalStored, E> {
         let flow_id = resources.borrow::<FlowId>();
         let flow_dir = resources.borrow::<FlowDir>();
         let storage = resources.borrow::<Storage>();
