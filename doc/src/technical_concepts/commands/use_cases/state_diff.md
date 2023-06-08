@@ -8,7 +8,7 @@
 
 This kind of command shows the difference between two `State`s for each managed item.
 
-Typically this is the difference between the current (or saved) state, and its goal state. It can also be the difference between the current states between two profiles.
+Typically this is the difference between the current or current stored state, and its goal state. It can also be the difference between the current states between two profiles.
 
 Suitable scopes for this command are:
 

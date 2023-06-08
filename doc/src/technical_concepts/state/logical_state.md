@@ -86,4 +86,4 @@ Both `src` and `dest` may reference resources that are ensured by predecessor it
 
     Option 3 may coexist with option 2.
 
-    **Note:** State discovery may be expensive, so it is important to be able to show a saved copy of what is discovered.
+    **Note:** State discovery may be expensive, so it is important to be able to show a stored copy of what is discovered.

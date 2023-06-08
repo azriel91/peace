@@ -209,7 +209,7 @@ where
             CmdIndependence::SubCmdWithProgress { cmd_view, .. } => cmd_view.resources,
         };
 
-        Self::serialize_saved(resources, &states_applied).await?;
+        Self::serialize_current(resources, &states_applied).await?;
 
         match apply_for {
             ApplyFor::Ensure => {
@@ -396,7 +396,7 @@ where
                                 states_applied_mut.insert_raw(item_id.clone(), state_applied);
                             } else {
                                 // Item was already in the goal state.
-                                // No change to saved state.
+                                // No change to current state.
                             }
 
                             // Save `state_target` (which is state_goal) if we are not cleaning
@@ -620,7 +620,7 @@ where
     }
 
     // TODO: This duplicates a bit of code with `StatesDiscoverCmd`,
-    async fn serialize_saved(
+    async fn serialize_current(
         resources: &Resources<SetUp>,
         states_applied: &States<StatesTsApply>,
     ) -> Result<(), E> {

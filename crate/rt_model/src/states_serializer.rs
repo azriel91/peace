@@ -62,7 +62,7 @@ where
     /// * `states_current_file`: `StatesCurrentFile` to deserialize.
     ///
     /// [`Item`]: peace_cfg::Item
-    pub async fn deserialize_saved(
+    pub async fn deserialize_stored(
         flow_id: &FlowId,
         storage: &Storage,
         states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
@@ -70,7 +70,7 @@ where
     ) -> Result<StatesCurrentStored, E> {
         let states = Self::deserialize_internal::<CurrentStored>(
             #[cfg(not(target_arch = "wasm32"))]
-            "StatesSerializer::deserialize_saved".to_string(),
+            "StatesSerializer::deserialize_stored".to_string(),
             flow_id,
             storage,
             states_type_reg,
@@ -121,7 +121,7 @@ where
     /// * `states_current_file`: `StatesCurrentFile` to deserialize.
     ///
     /// [`Item`]: peace_cfg::Item
-    pub async fn deserialize_saved_opt(
+    pub async fn deserialize_stored_opt(
         flow_id: &FlowId,
         storage: &Storage,
         states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,
@@ -129,7 +129,7 @@ where
     ) -> Result<Option<StatesCurrentStored>, E> {
         Self::deserialize_internal(
             #[cfg(not(target_arch = "wasm32"))]
-            "StatesSerializer::deserialize_saved_opt".to_string(),
+            "StatesSerializer::deserialize_stored_opt".to_string(),
             flow_id,
             storage,
             states_type_reg,

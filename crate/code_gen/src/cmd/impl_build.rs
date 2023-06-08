@@ -570,7 +570,7 @@ fn impl_build_for(
                 //
                 //         let states_current_stored = peace_rt_model::StatesSerializer::<
                 //             peace_rt_model::Error
-                //         >::deserialize_saved_opt(
+                //         >::deserialize_stored_opt(
                 //             flow_id,
                 //             storage,
                 //             states_type_reg_ref,
@@ -636,7 +636,7 @@ fn impl_build_for(
                 // let states_current_file = peace_resources::paths::StatesCurrentFile::from(&flow_dir);
                 // let states_current_stored = peace_rt_model::StatesSerializer::<
                 //     peace_rt_model::Error
-                // >::deserialize_saved_opt(
+                // >::deserialize_stored_opt(
                 //     flow_id,
                 //     storage,
                 //     states_type_reg_ref,
@@ -1491,10 +1491,10 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
         }
         Scope::MultiProfileSingleFlow => {
             // * Reads previous item params and stores them in a `Map<Profile, ItemParams>`.
-            // * Reads previously saved states and stores them in a `Map<Profile,
+            // * Reads previously stored current states and stores them in a `Map<Profile,
             //   StatesCurrentStored>`.
             //
-            // These are then saved in the scope for easy use by consumers.
+            // These are then held in the scope for easy access for consumers.
             quote! {
                 let flow_id = flow.flow_id();
                 let item_graph = flow.graph();
@@ -1560,7 +1560,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
 
                         let states_current_stored = peace_rt_model::StatesSerializer::<
                             peace_rt_model::Error
-                        >::deserialize_saved_opt(
+                        >::deserialize_stored_opt(
                             flow_id,
                             storage,
                             states_type_reg_ref,
@@ -1588,18 +1588,18 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
             }
         }
         Scope::SingleProfileSingleFlow => {
-            // Reads and inserts previously saved states, and sets up resources using the
-            // flow graph.
+            // Reads and inserts previously stored current states, and sets up resources
+            // using the flow graph.
             //
-            // It is not possible to insert saved states into resources when running a
-            // command with multiple flows, as the flows will have different
-            // items and their state (type)s will be different.
+            // It is not possible to insert stored current states into resources when
+            // running a command with multiple flows, as the flows will have
+            // different items and their state (type)s will be different.
             //
-            // An example is workspace initialization, where the current saved states per
-            // item for workspace initialization are likely different to
-            // application specific flows.
+            // An example is workspace initialization, where the stored current states per
+            // item for workspace initialization are likely different to application
+            // specific flows.
             //
-            // We currently don't support inserting resources for MultiProfileSingleFlow
+            // We currently don't support inserting resources for `MultiProfileSingleFlow`
             // commands. That would require either multiple `Resources` maps, or a
             // `Resources` map that contains `Map<Profile, _>`.
             //
@@ -1644,7 +1644,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                 let states_current_file = peace_resources::paths::StatesCurrentFile::from(&flow_dir);
                 let states_current_stored = peace_rt_model::StatesSerializer::<
                     peace_rt_model::Error
-                >::deserialize_saved_opt(
+                >::deserialize_stored_opt(
                     flow_id,
                     storage,
                     states_type_reg_ref,

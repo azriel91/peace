@@ -15,9 +15,9 @@ use peace_data::{
 use peace_resources::{states::StatesCurrentStored, type_reg::untagged::DataType};
 use serde::Serialize;
 
-/// The previously saved `T` state, if any.
+/// The previously stored `T` state, if any.
 #[derive(Debug)]
-pub struct Saved<'borrow, T> {
+pub struct Stored<'borrow, T> {
     /// ID of the item the state should be retrieved for.
     item_id: &'borrow ItemId,
     /// The borrowed `StatesCurrentStored`.
@@ -26,7 +26,7 @@ pub struct Saved<'borrow, T> {
     marker: PhantomData<T>,
 }
 
-impl<'borrow, T> Saved<'borrow, T>
+impl<'borrow, T> Stored<'borrow, T>
 where
     T: Clone + Debug + DataType + Display + Serialize + Send + Sync + 'static,
 {
@@ -37,7 +37,7 @@ where
     }
 }
 
-impl<'borrow, T> Data<'borrow> for Saved<'borrow, T>
+impl<'borrow, T> Data<'borrow> for Stored<'borrow, T>
 where
     T: Debug + Send + Sync + 'static,
 {
@@ -60,7 +60,7 @@ where
     }
 }
 
-impl<'borrow, T> DataAccess for Saved<'borrow, T> {
+impl<'borrow, T> DataAccess for Stored<'borrow, T> {
     fn borrows() -> TypeIds
     where
         Self: Sized,
@@ -78,7 +78,7 @@ impl<'borrow, T> DataAccess for Saved<'borrow, T> {
     }
 }
 
-impl<'borrow, T> DataAccessDyn for Saved<'borrow, T> {
+impl<'borrow, T> DataAccessDyn for Stored<'borrow, T> {
     fn borrows(&self) -> TypeIds
     where
         Self: Sized,

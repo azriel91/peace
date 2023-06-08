@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use peace::rt_model::Storage;
 
 use peace::{
-    cfg::{accessors::Saved, state::FetchedOpt, State},
+    cfg::{accessors::Stored, state::FetchedOpt, State},
     data::{accessors::R, marker::Current, Data},
 };
 
@@ -25,7 +25,7 @@ where
     client: R<'exec, reqwest::Client>,
 
     /// The previous file download state.
-    state_prev: Saved<'exec, State<FileDownloadState, FetchedOpt<ETag>>>,
+    state_prev: Stored<'exec, State<FileDownloadState, FetchedOpt<ETag>>>,
 
     /// The file state working copy in memory.
     state_working: R<'exec, Current<State<FileDownloadState, FetchedOpt<ETag>>>>,
@@ -49,7 +49,7 @@ where
         &self.client
     }
 
-    pub fn state_prev(&self) -> &Saved<'exec, State<FileDownloadState, FetchedOpt<ETag>>> {
+    pub fn state_prev(&self) -> &Stored<'exec, State<FileDownloadState, FetchedOpt<ETag>>> {
         &self.state_prev
     }
 

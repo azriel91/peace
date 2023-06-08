@@ -210,10 +210,10 @@ impl Item for VecCopyItem {
         let vec_b = {
             let states_current_stored =
                 <RMaybe<'_, StatesCurrentStored> as Data>::borrow(Self::ID_DEFAULT, resources);
-            let vec_copy_state_saved: Option<&'_ VecCopyState> = states_current_stored
+            let vec_copy_state_current_stored: Option<&'_ VecCopyState> = states_current_stored
                 .as_ref()
                 .and_then(|states_current_stored| states_current_stored.get(self.id()));
-            if let Some(vec_copy_state) = vec_copy_state_saved {
+            if let Some(vec_copy_state) = vec_copy_state_current_stored {
                 VecB(vec_copy_state.to_vec())
             } else {
                 VecB::default()

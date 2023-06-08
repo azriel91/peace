@@ -16,4 +16,4 @@ To create this command:
     - Include a `Profile` as a workspace param.
     - Also set the current profile using `with_profile`.
 
-When the command context is built, the default profile is saved to `workspace_params.yaml`.
+When the command context is built, the default profile is stored in `workspace_params.yaml`.

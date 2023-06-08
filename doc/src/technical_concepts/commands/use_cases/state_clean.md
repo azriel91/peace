@@ -4,7 +4,7 @@
 
 This kind of command applies the clean state over the current state.
 
-This generally requires what is saved in `states_current.yaml` to match the newly discovered current state.
+This generally requires what is stored in `states_current.yaml` to match the newly discovered current state.
 
 The only suitable scope for this command is `SingleProfileSingleFlow`.
 

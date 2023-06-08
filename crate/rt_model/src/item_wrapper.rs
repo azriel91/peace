@@ -756,7 +756,7 @@ where
             };
 
         let ItemApply {
-            state_saved: _,
+            state_current_stored: _,
             state_current,
             state_target,
             state_diff,
@@ -902,7 +902,7 @@ where
             };
 
         let ItemApply {
-            state_saved: _,
+            state_current_stored: _,
             state_current,
             state_target,
             state_diff,

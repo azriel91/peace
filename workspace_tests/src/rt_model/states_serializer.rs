@@ -28,7 +28,7 @@ async fn serialize() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn deserialize_saved() -> Result<(), Box<dyn std::error::Error>> {
+async fn deserialize_stored() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let flow_id = flow_id!("test_flow");
     let storage = Storage;
@@ -44,7 +44,7 @@ async fn deserialize_saved() -> Result<(), Box<dyn std::error::Error>> {
     };
     StatesSerializer::<Error>::serialize(&storage, &states, &states_current_file).await?;
 
-    let states_deserialized = StatesSerializer::<Error>::deserialize_saved(
+    let states_deserialized = StatesSerializer::<Error>::deserialize_stored(
         &flow_id,
         &storage,
         &states_type_reg,
@@ -61,7 +61,7 @@ async fn deserialize_saved() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[tokio::test]
-async fn deserialize_saved_error_maps_byte_indices() -> Result<(), Box<dyn std::error::Error>> {
+async fn deserialize_stored_error_maps_byte_indices() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let flow_id = flow_id!("test_flow");
     let storage = Storage;
@@ -73,7 +73,7 @@ async fn deserialize_saved_error_maps_byte_indices() -> Result<(), Box<dyn std::
     let contents = "a: [123]\n";
     tokio::fs::write(&states_current_file, contents).await?;
 
-    let error = StatesSerializer::<Error>::deserialize_saved(
+    let error = StatesSerializer::<Error>::deserialize_stored(
         &flow_id,
         &storage,
         &states_type_reg,

@@ -14,12 +14,12 @@ use crate::{
     model::{EnvManError, EnvManFlow},
 };
 
-/// Shows the saved state of the environment.
+/// Shows the current stored state of the environment.
 #[derive(Debug)]
 pub struct EnvStatusCmd;
 
 impl EnvStatusCmd {
-    /// Shows the saved state of the environment.
+    /// Shows the current stored state of the environment.
     ///
     /// # Parameters
     ///
@@ -61,7 +61,9 @@ macro_rules! run {
                             let padding =
                                 " ".repeat($padding.saturating_sub(format!("{item_id}").len() + 2));
                             match states_current_stored_raw_map.get(item_id) {
-                                Some(state_saved) => (item_id, format!("{padding}: {state_saved}")),
+                                Some(state_current_stored) => {
+                                    (item_id, format!("{padding}: {state_current_stored}"))
+                                }
                                 None => (item_id, format!("{padding}: <unknown>")),
                             }
                         })

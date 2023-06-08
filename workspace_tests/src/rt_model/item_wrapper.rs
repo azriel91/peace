@@ -200,7 +200,9 @@ async fn state_diff_exec() -> Result<(), VecCopyError> {
             &states_goal,
         )
         .await?
-        .expect("Expected state_diff to be Some when state_saved and state_goal both exist.");
+        .expect(
+            "Expected state_diff to be Some when state_current_stored and state_goal both exist.",
+        );
 
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
@@ -392,7 +394,7 @@ async fn clean_prepare() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
     let (params_specs, resources, states_current) =
-        resources_set_up_pre_saved(&item_wrapper).await?;
+        resources_set_up_with_pre_stored_state(&item_wrapper).await?;
 
     match <dyn ItemRt<_>>::clean_prepare(&item_wrapper, &states_current, &params_specs, &resources)
         .await
@@ -419,7 +421,7 @@ async fn apply_exec_dry_for_clean() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
     let (params_specs, resources, states_current) =
-        resources_set_up_pre_saved(&item_wrapper).await?;
+        resources_set_up_with_pre_stored_state(&item_wrapper).await?;
 
     let mut item_apply_boxed =
         <dyn ItemRt<_>>::clean_prepare(&item_wrapper, &states_current, &params_specs, &resources)
@@ -471,7 +473,7 @@ async fn apply_exec_for_clean() -> Result<(), VecCopyError> {
     let vec_copy_item = VecCopyItem::default();
     let item_wrapper = ItemWrapper::<_, VecCopyError>::from(vec_copy_item);
     let (params_specs, resources, states_current) =
-        resources_set_up_pre_saved(&item_wrapper).await?;
+        resources_set_up_with_pre_stored_state(&item_wrapper).await?;
 
     let mut item_apply_boxed =
         <dyn ItemRt<_>>::clean_prepare(&item_wrapper, &states_current, &params_specs, &resources)
@@ -536,7 +538,7 @@ async fn resources_set_up(
     Ok((params_specs, resources))
 }
 
-async fn resources_set_up_pre_saved(
+async fn resources_set_up_with_pre_stored_state(
     item_wrapper: &VecCopyItemWrapper,
 ) -> Result<(ParamsSpecs, Resources<SetUp>, StatesCurrent), VecCopyError> {
     let (params_specs, mut resources) = resources_set_up(item_wrapper).await?;

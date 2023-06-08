@@ -384,7 +384,8 @@ where
         &self.params_type_regs
     }
 
-    /// Returns the saved states for each profile for the selected flow.
+    /// Returns the stored current states for each profile for the selected
+    /// flow.
     pub fn profile_to_states_current_stored(
         &self,
     ) -> &BTreeMap<Profile, Option<StatesCurrentStored>> {

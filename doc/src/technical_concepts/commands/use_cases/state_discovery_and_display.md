@@ -25,5 +25,5 @@ To create this command:
 
 3. If the discovered states are to be displayed, call the relevant state display command(s):
 
-    - `StatesCurrentStoredDisplayCmd`: For saved states to be displayed.
+    - `StatesCurrentStoredDisplayCmd`: For stored current states to be displayed.
     - `StatesGoalDisplayCmd`: For goal states to be displayed.

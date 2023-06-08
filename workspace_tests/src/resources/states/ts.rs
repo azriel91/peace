@@ -45,7 +45,7 @@ mod serde {
     };
 
     #[test]
-    fn saved() {
+    fn current_stored() {
         let s = serde_yaml::to_string(&CurrentStored).unwrap();
 
         assert!(serde_yaml::from_str::<CurrentStored>(&s).is_ok());

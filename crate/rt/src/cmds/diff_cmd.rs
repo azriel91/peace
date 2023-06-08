@@ -29,7 +29,7 @@ impl<E> DiffCmd<E>
 where
     E: std::error::Error + From<Error> + Send + 'static,
 {
-    /// Returns the [`state_diff`]`s between the saved current and goal
+    /// Returns the [`state_diff`]`s between the stored current and goal
     /// states.
     ///
     /// Both current and goal states must have been discovered prior to
@@ -47,7 +47,7 @@ where
         Self::current_and_goal_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
     }
 
-    /// Returns the [`state_diff`]`s between the saved current and goal
+    /// Returns the [`state_diff`]`s between the stored current and goal
     /// states.
     ///
     /// See [`Self::current_and_goal`] for full documentation.
@@ -83,7 +83,7 @@ where
         .await
     }
 
-    /// Returns the [`state_diff`]`s between the saved current states of two
+    /// Returns the [`state_diff`]`s between the stored current states of two
     /// profiles.
     ///
     /// Both profiles' current states must have been discovered prior to

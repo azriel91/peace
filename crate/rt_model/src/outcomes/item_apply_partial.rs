@@ -33,8 +33,8 @@ use crate::outcomes::ItemApplyPartialRt;
 /// [`ApplyFns::exec`]: peace_cfg::Item::ApplyFns
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct ItemApplyPartial<State, StateDiff> {
-    /// State saved on disk before the execution.
-    pub state_saved: Option<State>,
+    /// Current state stored on disk before the execution.
+    pub state_current_stored: Option<State>,
     /// Current state discovered during the execution.
     pub state_current: Option<State>,
     /// Target state discovered during the execution.
@@ -55,7 +55,7 @@ impl<State, StateDiff> ItemApplyPartial<State, StateDiff> {
 impl<State, StateDiff> Default for ItemApplyPartial<State, StateDiff> {
     fn default() -> Self {
         Self {
-            state_saved: None,
+            state_current_stored: None,
             state_current: None,
             state_target: None,
             state_diff: None,
@@ -69,8 +69,8 @@ where
     State: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
     StateDiff: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static,
 {
-    fn state_saved(&self) -> Option<BoxDtDisplay> {
-        self.state_saved.clone().map(BoxDtDisplay::new)
+    fn state_current_stored(&self) -> Option<BoxDtDisplay> {
+        self.state_current_stored.clone().map(BoxDtDisplay::new)
     }
 
     fn state_current(&self) -> Option<BoxDtDisplay> {

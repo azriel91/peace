@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 /// successor's `apply_dry` function is run.
 ///
 /// Note: A successor's dry-applied state is dependent on the predecessor's
-/// dry-applied state, which should be in sync with its saved state after
-/// `ApplyFns::exec_dry` has been executed.
+/// dry-applied state, which should not affect its current stored state when
+/// `ApplyFns::exec_dry` is executed.
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct ApplyDry<T>(pub Option<T>);
 
