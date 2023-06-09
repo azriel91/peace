@@ -5,7 +5,7 @@ use peace_resources::{
     resources::ts::SetUp,
     states::{
         ts::{Cleaned, CleanedDry},
-        StatesCleaned, StatesCleanedDry, StatesCurrentStored,
+        StatesCleaned, StatesCleanedDry,
     },
 };
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error};
@@ -58,14 +58,8 @@ where
     /// [`Item`]: peace_cfg::Item
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-        states_current_stored: &StatesCurrentStored,
     ) -> Result<CmdOutcome<StatesCleanedDry, E>, E> {
-        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry(
-            cmd_ctx,
-            states_current_stored,
-            ApplyFor::Clean,
-        )
-        .await
+        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry(cmd_ctx, ApplyFor::Clean).await
     }
 
     /// Runs [`Item::apply_exec_dry`] for each [`Item`], with [`state_clean`] as
@@ -80,11 +74,9 @@ where
     /// [`state_clean`]: peace_cfg::Item::state_clean
     pub async fn exec_dry_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-        states_current_stored: &StatesCurrentStored,
     ) -> Result<CmdOutcome<StatesCleanedDry, E>, E> {
         ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry_with(
             cmd_independence,
-            states_current_stored,
             ApplyFor::Clean,
         )
         .await
@@ -124,14 +116,8 @@ where
     /// [`Item`]: peace_cfg::Item
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-        states_current_stored: &StatesCurrentStored,
     ) -> Result<CmdOutcome<StatesCleaned, E>, E> {
-        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec(
-            cmd_ctx,
-            states_current_stored,
-            ApplyFor::Clean,
-        )
-        .await
+        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec(cmd_ctx, ApplyFor::Clean).await
     }
 
     /// Runs [`Item::apply_exec`] for each [`Item`], with [`state_clean`] as the
@@ -146,14 +132,9 @@ where
     /// [`state_clean`]: peace_cfg::Item::state_clean
     pub async fn exec_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-        states_current_stored: &StatesCurrentStored,
     ) -> Result<CmdOutcome<StatesCleaned, E>, E> {
-        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_with(
-            cmd_independence,
-            states_current_stored,
-            ApplyFor::Clean,
-        )
-        .await
+        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_with(cmd_independence, ApplyFor::Clean)
+            .await
     }
 }
 

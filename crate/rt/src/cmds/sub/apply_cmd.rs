@@ -23,7 +23,7 @@ use peace_rt_model::{
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
-    cmds::{cmd_ctx_internal::CmdIndependence, CmdBase, StatesDiscoverCmd},
+    cmds::{cmd_ctx_internal::CmdIndependence, CmdBase, StatesCurrentReadCmd, StatesDiscoverCmd},
     BUFFERED_FUTURES_MAX,
 };
 
@@ -103,15 +103,9 @@ where
     /// [`Item`]: peace_cfg::Item
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-        states_current_stored: &StatesCurrentStored,
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApplyDry>, E>, E> {
-        Self::exec_dry_with(
-            &mut CmdIndependence::Standalone { cmd_ctx },
-            states_current_stored,
-            apply_for,
-        )
-        .await
+        Self::exec_dry_with(&mut CmdIndependence::Standalone { cmd_ctx }, apply_for).await
     }
 
     /// Conditionally runs [`Item::apply_exec_dry`] for each [`Item`].
@@ -122,10 +116,9 @@ where
     /// functionality of another command.
     pub async fn exec_dry_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-        states_current_stored: &StatesCurrentStored,
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApplyDry>, E>, E> {
-        Self::exec_internal(cmd_independence, states_current_stored, apply_for, true)
+        Self::exec_internal(cmd_independence, apply_for, true)
             .await
             .map(|cmd_outcome| cmd_outcome.map(|(states_applied, _states_goal)| states_applied))
     }
@@ -175,15 +168,9 @@ where
     /// [`Item`]: peace_cfg::Item
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-        states_current_stored: &StatesCurrentStored,
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApply>, E>, E> {
-        Self::exec_with(
-            &mut CmdIndependence::Standalone { cmd_ctx },
-            states_current_stored,
-            apply_for,
-        )
-        .await
+        Self::exec_with(&mut CmdIndependence::Standalone { cmd_ctx }, apply_for).await
     }
 
     /// Conditionally runs [`Item::apply_exec`] for each [`Item`].
@@ -194,13 +181,12 @@ where
     /// functionality of another command.
     pub async fn exec_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-        states_current_stored: &StatesCurrentStored,
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApply>, E>, E> {
         let CmdOutcome {
             value: (states_applied, states_goal),
             errors,
-        } = Self::exec_internal(cmd_independence, states_current_stored, apply_for, false).await?;
+        } = Self::exec_internal(cmd_independence, apply_for, false).await?;
 
         let resources = match cmd_independence {
             CmdIndependence::Standalone { cmd_ctx } => cmd_ctx.resources(),
@@ -235,7 +221,6 @@ where
     /// [`ApplyFns`]: peace_cfg::Item::ApplyFns
     async fn exec_internal<StatesTs>(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
-        states_current_stored: &StatesCurrentStored,
         apply_for: ApplyFor,
         dry_run: bool,
     ) -> Result<CmdOutcome<(States<StatesTs>, StatesGoal), E>, E>
@@ -250,18 +235,50 @@ where
         // Notably, the initial `StatesCurrentStored` / `StatesCurrent` may not contain
         // a state for items whose state cannot be discovered, e.g. a file on a
         // remote server, when the remote server doesn't exist.
-        let states_applied_mut =
-            StatesMut::<StatesTs>::from((*states_current_stored).clone().into_inner());
-        let states_goal_mut = StatesMut::<Goal>::new();
-        let outcome = (states_applied_mut, states_goal_mut);
+        let outcome = (StatesMut::<StatesTs>::new(), StatesMut::<Goal>::new());
 
         let cmd_outcome = CmdBase::exec(
             cmd_independence,
             outcome,
             |cmd_view, #[cfg(feature = "output_progress")] progress_tx, outcomes_tx| {
                 async move {
-                    // TODO: compare `StatesCurrentStored` and `StatesCurrent` by delegating the
-                    // equality check to `ItemWrapper`.
+                    // Compare:
+                    //
+                    // * `StatesCurrentStored` and `StatesCurrent`
+                    // * `StatesDesiredStored` and `StatesDesired`
+                    //
+                    // If either is out of sync, then we need to know whether to:
+                    //
+                    // * stop execution, in case the user made a decision based on stale
+                    //   information.
+                    // * continue execution, if the automation is designed to .
+                    //
+                    // by delegating the equality check to `ItemWrapper`.
+                    let states_current_stored = StatesCurrentReadCmd::<E, O, PKeys>::exec_with(
+                        #[cfg(not(feature = "output_progress"))]
+                        &mut CmdIndependence::SubCmd { cmd_view },
+                        #[cfg(feature = "output_progress")]
+                        &mut CmdIndependence::SubCmdWithProgress {
+                            cmd_view,
+                            progress_tx: progress_tx.clone(),
+                        },
+                    )
+                    .await;
+                    match states_current_stored {
+                        Ok(states_current_stored) => {
+                            outcomes_tx
+                                .send(ApplyExecOutcome::StatesCurrentStoredRead {
+                                    states_current_stored,
+                                })
+                                .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                        }
+                        Err(error) => {
+                            outcomes_tx
+                                .send(ApplyExecOutcome::StatesCurrentReadCmdError { error })
+                                .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                            return;
+                        }
+                    }
 
                     let apply_for_internal = match apply_for {
                         ApplyFor::Ensure => ApplyForInternal::Ensure,
@@ -364,7 +381,16 @@ where
                     errors,
                 } = cmd_outcome;
                 match apply_exec_outcome {
-                    ApplyExecOutcome::DiscoverCmdError { error } => return Err(error),
+                    ApplyExecOutcome::StatesCurrentStoredRead {
+                        states_current_stored,
+                    } => {
+                        std::mem::swap(
+                            &mut **states_applied_mut,
+                            &mut states_current_stored.into_inner(),
+                        );
+                    }
+                    ApplyExecOutcome::StatesCurrentReadCmdError { error }
+                    | ApplyExecOutcome::DiscoverCmdError { error } => return Err(error),
                     ApplyExecOutcome::DiscoverOutcomeError { mut outcome } => {
                         std::mem::swap(&mut outcome.value.0, states_applied_mut);
                         std::mem::swap(&mut outcome.value.1, states_goal_mut);
@@ -671,6 +697,16 @@ impl<E, O, PKeys, StatesTsApply, StatesTsApplyDry> Default
 /// with the current state.
 #[derive(Debug)]
 enum ApplyExecOutcome<E, StatesTs> {
+    /// Error occurred when reading stored current state.
+    StatesCurrentStoredRead {
+        /// The read stored current states.
+        states_current_stored: StatesCurrentStored,
+    },
+    /// Error occurred when reading stored current state.
+    StatesCurrentReadCmdError {
+        /// The error from state current read.
+        error: E,
+    },
     /// Error occurred during state current discovery.
     ///
     /// This variant is when the error is due to the command logic failing,

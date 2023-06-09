@@ -1,7 +1,6 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
-    resources::states::StatesCurrentStored,
     rt::cmds::{CleanCmd, EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd},
     rt_model::{outcomes::CmdOutcome, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
@@ -37,17 +36,16 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_not_ensured()
         value: states_current,
         errors: _,
     } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
-    let states_current_stored = StatesCurrentStored::from(states_current);
 
     // Dry-clean states
     let CmdOutcome {
         value: states_cleaned_dry,
         errors,
-    } = CleanCmd::exec_dry(&mut cmd_ctx, &states_current_stored).await?;
+    } = CleanCmd::exec_dry(&mut cmd_ctx).await?;
 
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
-        states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+        states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
     assert_eq!(
         Some(VecCopyState::new()).as_ref(),
@@ -83,23 +81,19 @@ async fn resources_cleaned_dry_does_not_alter_state_when_state_ensured()
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let CmdOutcome {
-        value: (states_current, _states_goal),
-        errors: _,
-    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
-    let states_current_stored = StatesCurrentStored::from(states_current);
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Ensure states.
     let CmdOutcome {
         value: states_ensured,
         errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?;
 
     // Clean states.
-    CleanCmd::exec_dry(&mut cmd_ctx, &states_current_stored).await?;
+    CleanCmd::exec_dry(&mut cmd_ctx).await?;
 
     // Re-read states from disk.
-    CleanCmd::exec_dry(&mut cmd_ctx, &states_current_stored).await?;
+    CleanCmd::exec_dry(&mut cmd_ctx).await?;
     let CmdOutcome {
         value: states_current,
         errors: _,
@@ -147,17 +141,13 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_not_e
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let CmdOutcome {
-        value: states_current,
-        errors: _,
-    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
-    let states_current_stored = StatesCurrentStored::from(states_current);
+    StatesDiscoverCmd::current(&mut cmd_ctx).await?;
 
     // Clean states.
     let CmdOutcome {
         value: cleaned_states_cleaned,
         errors: _,
-    } = CleanCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
+    } = CleanCmd::exec(&mut cmd_ctx).await?;
 
     // Re-read states from disk.
     let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
@@ -199,23 +189,19 @@ async fn resources_cleaned_contains_state_cleaned_for_each_item_when_state_ensur
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
         .await?;
-    let CmdOutcome {
-        value: (states_current, _states_goal),
-        errors: _,
-    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
-    let states_current_stored = StatesCurrentStored::from(states_current);
+    StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Ensure states.
     let CmdOutcome {
         value: states_ensured,
         errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
+    } = EnsureCmd::exec(&mut cmd_ctx).await?;
 
     // Clean states.
     let CmdOutcome {
         value: cleaned_states_cleaned,
         errors: _,
-    } = CleanCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
+    } = CleanCmd::exec(&mut cmd_ctx).await?;
 
     // Re-read states from disk.
     let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
