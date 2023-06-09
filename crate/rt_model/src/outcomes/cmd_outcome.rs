@@ -10,6 +10,14 @@ pub struct CmdOutcome<T, E> {
 }
 
 impl<T, E> CmdOutcome<T, E> {
+    /// Returns a new `CmdOutcome` with the given value, and no errors.
+    pub fn new(value: T) -> Self {
+        Self {
+            value,
+            errors: IndexMap::new(),
+        }
+    }
+
     /// Returns whether the command ran successfully.
     pub fn is_ok(&self) -> bool {
         self.errors.is_empty()

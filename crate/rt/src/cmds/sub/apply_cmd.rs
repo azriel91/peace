@@ -665,7 +665,7 @@ impl<E, O, PKeys, StatesTsApply, StatesTsApplyDry> Default
     }
 }
 
-///
+/// Sub-outcomes of apply execution.
 ///
 /// For cleaning up items, current states are discovered to populate `Resources`
 /// with the current state.

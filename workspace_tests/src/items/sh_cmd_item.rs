@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, item_id, profile, AppName, FlowId, ItemId, Profile, State},
-    cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlowView},
+    cmd::ctx::CmdCtx,
     data::marker::Clean,
     resources::states::StatesCurrentStored,
     rt::cmds::{CleanCmd, DiffCmd, EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd},
@@ -281,7 +281,7 @@ async fn state_diff_returns_shell_command_state_diff() -> Result<(), Box<dyn std
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
+    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
 
     let state_diff = state_diffs
         .get::<ShCmdStateDiff, _>(&TestFileCreationShCmdItem::ID)
@@ -373,26 +373,16 @@ async fn ensure_when_exists_sync_does_not_reexecute_apply_exec_shell_command()
 
     // Discover states current and goal
     let CmdOutcome {
-        value: (states_current, states_goal),
+        value: (states_current, _states_goal),
         errors: _,
     } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
     let states_current_stored = StatesCurrentStored::from(states_current);
 
     // Create the file
-    let CmdOutcome {
-        value: states_ensured,
-        errors: _,
-    } = EnsureCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
+    EnsureCmd::exec(&mut cmd_ctx, &states_current_stored).await?;
 
     // Diff state after creation
-    let SingleProfileSingleFlowView {
-        flow,
-        params_specs,
-        resources,
-        ..
-    } = cmd_ctx.view();
-    let state_diffs =
-        DiffCmd::diff_any(flow, params_specs, resources, &states_ensured, &states_goal).await?;
+    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
 
     let state_diff = state_diffs
         .get::<ShCmdStateDiff, _>(&TestFileCreationShCmdItem::ID)
