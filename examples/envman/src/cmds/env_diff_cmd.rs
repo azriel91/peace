@@ -46,7 +46,7 @@ impl EnvDiffCmd {
             EnvDiffSelection::DiffProfilesCurrent {
                 profile_a,
                 profile_b,
-            } => Self::diff_profiles_current(output, env_man_flow, profile_a, profile_b).await,
+            } => Self::diff_stored(output, env_man_flow, profile_a, profile_b).await,
         }
     }
 
@@ -63,7 +63,7 @@ impl EnvDiffCmd {
         }
     }
 
-    async fn diff_profiles_current<O>(
+    async fn diff_stored<O>(
         output: &mut O,
         env_man_flow: EnvManFlow,
         profile_a: Profile,
@@ -128,7 +128,7 @@ macro_rules! run {
     ($output:ident, $flow_cmd:ident, $padding:expr) => {{
         $flow_cmd::run($output, true, |ctx| {
             async {
-                let state_diffs = DiffCmd::current_and_goal(ctx).await?;
+                let state_diffs = DiffCmd::diff_stored(ctx).await?;
 
                 let SingleProfileSingleFlowViewAndOutput {
                     output,
@@ -150,7 +150,7 @@ macro_rules! run_multi {
         $flow_cmd::multi_profile($output, move |ctx| {
             async move {
                 let state_diffs =
-                    DiffCmd::diff_profiles_current(ctx, &$profile_a, &$profile_b).await?;
+                    DiffCmd::diff_current_stored(ctx, &$profile_a, &$profile_b).await?;
                 let MultiProfileSingleFlowView { output, flow, .. } = ctx.view();
 
                 Self::state_diffs_present(output, flow, &state_diffs, $padding).await?;

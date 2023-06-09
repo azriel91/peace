@@ -140,7 +140,7 @@ pub async fn diff<O>(cmd_ctx: &mut DownloadCmdCtx<'_, O>) -> Result<(), Download
 where
     O: OutputWrite<DownloadError>,
 {
-    let states_diff = DiffCmd::current_and_goal(cmd_ctx).await?;
+    let states_diff = DiffCmd::diff_stored(cmd_ctx).await?;
     cmd_ctx.output_mut().present(&states_diff).await?;
     Ok(())
 }

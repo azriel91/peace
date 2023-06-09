@@ -194,7 +194,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
+    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
@@ -246,7 +246,7 @@ async fn state_diff_includes_added_when_file_in_tar_is_not_in_dest_and_dest_file
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
+    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
@@ -300,7 +300,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
+    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     // `b` and `d` are not included in the diff
@@ -353,7 +353,7 @@ async fn state_diff_includes_removed_when_file_in_dest_is_not_in_tar_and_tar_fil
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
+    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     // `b` and `d` are not included in the diff
@@ -411,7 +411,7 @@ async fn state_diff_includes_modified_when_dest_mtime_is_different()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
+    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(
@@ -463,7 +463,7 @@ async fn state_diff_returns_extraction_in_sync_when_tar_and_dest_in_sync()
     StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
 
     // Diff current and goal states.
-    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
+    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 
     assert_eq!(&TarXStateDiff::ExtractionInSync, state_diff);
@@ -506,7 +506,7 @@ async fn ensure_check_returns_exec_not_required_when_tar_and_dest_in_sync()
         .get::<FileMetadatas, _>(TarXTest::ID)
         .unwrap();
 
-    let state_diffs = DiffCmd::current_and_goal(&mut cmd_ctx).await?;
+    let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
     let state_goal = states_goal.get::<FileMetadatas, _>(TarXTest::ID).unwrap();
     let state_diff = state_diffs.get::<TarXStateDiff, _>(TarXTest::ID).unwrap();
 

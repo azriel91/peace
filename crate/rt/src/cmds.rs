@@ -9,10 +9,14 @@
 //! [`CmdContext`]: crate::CmdContext
 
 pub use self::{
-    clean_cmd::CleanCmd, cmd_base::CmdBase, diff_cmd::DiffCmd, ensure_cmd::EnsureCmd,
+    clean_cmd::CleanCmd,
+    cmd_base::CmdBase,
+    diff_cmd::{DiffCmd, DiffInfoSpec, DiffStateSpec},
+    ensure_cmd::EnsureCmd,
     states_current_read_cmd::StatesCurrentReadCmd,
     states_current_stored_display_cmd::StatesCurrentStoredDisplayCmd,
-    states_discover_cmd::StatesDiscoverCmd, states_goal_display_cmd::StatesGoalDisplayCmd,
+    states_discover_cmd::StatesDiscoverCmd,
+    states_goal_display_cmd::StatesGoalDisplayCmd,
     states_goal_read_cmd::StatesGoalReadCmd,
 };
 
