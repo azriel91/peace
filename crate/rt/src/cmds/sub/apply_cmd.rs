@@ -23,7 +23,10 @@ use peace_rt_model::{
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
-    cmds::{cmd_ctx_internal::CmdIndependence, CmdBase, StatesCurrentReadCmd, StatesDiscoverCmd},
+    cmds::{
+        cmd_ctx_internal::CmdIndependence, CmdBase, StatesCurrentReadCmd, StatesDiscoverCmd,
+        StatesGoalReadCmd,
+    },
     BUFFERED_FUTURES_MAX,
 };
 
@@ -280,49 +283,115 @@ where
                         }
                     }
 
-                    let apply_for_internal = match apply_for {
-                        ApplyFor::Ensure => ApplyForInternal::Ensure,
-                        ApplyFor::Clean => {
-                            let states_current_outcome =
-                                StatesDiscoverCmd::<E, O, PKeys>::current_with(
-                                    #[cfg(not(feature = "output_progress"))]
-                                    &mut CmdIndependence::SubCmd { cmd_view },
-                                    #[cfg(feature = "output_progress")]
-                                    &mut CmdIndependence::SubCmdWithProgress {
-                                        cmd_view,
-                                        progress_tx: progress_tx.clone(),
-                                    },
+                    let states_current = {
+                        let states_current_outcome =
+                            StatesDiscoverCmd::<E, O, PKeys>::current_with(
+                                #[cfg(not(feature = "output_progress"))]
+                                &mut CmdIndependence::SubCmd { cmd_view },
+                                #[cfg(feature = "output_progress")]
+                                &mut CmdIndependence::SubCmdWithProgress {
+                                    cmd_view,
+                                    progress_tx: progress_tx.clone(),
+                                },
+                            )
+                            .await;
+                        let states_current_outcome = match states_current_outcome {
+                            Ok(states_current_outcome) => states_current_outcome,
+                            Err(error) => {
+                                outcomes_tx
+                                    .send(ApplyExecOutcome::DiscoverCurrentCmdError { error })
+                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                                return;
+                            }
+                        };
+                        if states_current_outcome.is_err() {
+                            let outcome = states_current_outcome.map(|states_current| {
+                                (
+                                    StatesMut::<StatesTs>::from(states_current.into_inner()),
+                                    StatesMut::<Goal>::new(),
                                 )
-                                .await;
-                            let states_current_outcome = match states_current_outcome {
-                                Ok(states_current_outcome) => states_current_outcome,
+                            });
+                            outcomes_tx
+                                .send(ApplyExecOutcome::DiscoverOutcomeError { outcome })
+                                .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                            return;
+                        }
+                        states_current_outcome.value
+                    };
+
+                    // TODO: Compare `states_current` with `states_current_stored`
+
+                    // If applying the goal state, then we want to guard the user from making a
+                    // decision based on stale information.
+                    match apply_for {
+                        ApplyFor::Ensure => {
+                            let states_goal_stored = StatesGoalReadCmd::<E, O, PKeys>::exec_with(
+                                #[cfg(not(feature = "output_progress"))]
+                                &mut CmdIndependence::SubCmd { cmd_view },
+                                #[cfg(feature = "output_progress")]
+                                &mut CmdIndependence::SubCmdWithProgress {
+                                    cmd_view,
+                                    progress_tx: progress_tx.clone(),
+                                },
+                            )
+                            .await;
+                            let states_goal_stored = match states_goal_stored {
+                                Ok(states_goal_stored) => states_goal_stored,
                                 Err(error) => {
                                     outcomes_tx
-                                        .send(ApplyExecOutcome::DiscoverCmdError { error })
+                                        .send(ApplyExecOutcome::StatesGoalReadCmdError { error })
                                         .expect("unreachable: `outcomes_rx` is in a sibling task.");
                                     return;
                                 }
                             };
-                            if states_current_outcome.is_err() {
-                                let outcome = states_current_outcome.map(|states_current| {
-                                    (
-                                        StatesMut::<StatesTs>::from(states_current.into_inner()),
-                                        StatesMut::<Goal>::new(),
+
+                            let states_goal = {
+                                let states_goal_outcome =
+                                    StatesDiscoverCmd::<E, O, PKeys>::goal_with(
+                                        #[cfg(not(feature = "output_progress"))]
+                                        &mut CmdIndependence::SubCmd { cmd_view },
+                                        #[cfg(feature = "output_progress")]
+                                        &mut CmdIndependence::SubCmdWithProgress {
+                                            cmd_view,
+                                            progress_tx: progress_tx.clone(),
+                                        },
                                     )
-                                });
-                                outcomes_tx
-                                    .send(ApplyExecOutcome::DiscoverOutcomeError { outcome })
-                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                                return;
-                            }
+                                    .await;
+                                let states_goal_outcome = match states_goal_outcome {
+                                    Ok(states_goal_outcome) => states_goal_outcome,
+                                    Err(error) => {
+                                        outcomes_tx
+                                            .send(ApplyExecOutcome::DiscoverGoalCmdError { error })
+                                            .expect(
+                                                "unreachable: `outcomes_rx` is in a sibling task.",
+                                            );
+                                        return;
+                                    }
+                                };
+                                if states_goal_outcome.is_err() {
+                                    let outcome = states_goal_outcome.map(|states_goal| {
+                                        (
+                                            StatesMut::<StatesTs>::from(states_goal.into_inner()),
+                                            StatesMut::<Goal>::new(),
+                                        )
+                                    });
+                                    outcomes_tx
+                                        .send(ApplyExecOutcome::DiscoverOutcomeError { outcome })
+                                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                                    return;
+                                }
+                                states_goal_outcome.value
+                            };
 
-                            let CmdOutcome {
-                                value: states_current,
-                                errors: _,
-                            } = states_current_outcome;
-
-                            ApplyForInternal::Clean { states_current }
+                            // TODO: Compare `states_goal` with
+                            // `states_goal_stored`
                         }
+                        ApplyFor::Clean => {}
+                    }
+
+                    let apply_for_internal = match apply_for {
+                        ApplyFor::Ensure => ApplyForInternal::Ensure,
+                        ApplyFor::Clean => ApplyForInternal::Clean { states_current },
                     };
                     let apply_for_internal = &apply_for_internal;
 
@@ -390,7 +459,9 @@ where
                         );
                     }
                     ApplyExecOutcome::StatesCurrentReadCmdError { error }
-                    | ApplyExecOutcome::DiscoverCmdError { error } => return Err(error),
+                    | ApplyExecOutcome::StatesGoalReadCmdError { error }
+                    | ApplyExecOutcome::DiscoverCurrentCmdError { error }
+                    | ApplyExecOutcome::DiscoverGoalCmdError { error } => return Err(error),
                     ApplyExecOutcome::DiscoverOutcomeError { mut outcome } => {
                         std::mem::swap(&mut outcome.value.0, states_applied_mut);
                         std::mem::swap(&mut outcome.value.1, states_goal_mut);
@@ -697,7 +768,7 @@ impl<E, O, PKeys, StatesTsApply, StatesTsApplyDry> Default
 /// with the current state.
 #[derive(Debug)]
 enum ApplyExecOutcome<E, StatesTs> {
-    /// Error occurred when reading stored current state.
+    /// Initializes the applied states with the stored current state.
     StatesCurrentStoredRead {
         /// The read stored current states.
         states_current_stored: StatesCurrentStored,
@@ -707,14 +778,31 @@ enum ApplyExecOutcome<E, StatesTs> {
         /// The error from state current read.
         error: E,
     },
-    /// Error occurred during state current discovery.
+    /// Error occurred when reading stored goal state.
+    StatesGoalReadCmdError {
+        /// The error from state goal read.
+        error: E,
+    },
+    /// Error occurred during current state discovery.
     ///
     /// This variant is when the error is due to the command logic failing,
     /// rather than an error from an item's discovery.
     ///
     /// For cleaning up items, current states are discovered to populate
     /// `Resources` with the current state.
-    DiscoverCmdError {
+    DiscoverCurrentCmdError {
+        /// The error from state current discovery.
+        error: E,
+    },
+    /// Error occurred during current or goal state discovery.
+    ///
+    /// This variant is when the error is due to the command logic failing,
+    /// rather than an error from an item's discovery.
+    ///
+    /// For ensuring items, goal states are discovered to compare with stored
+    /// goal states to ensure users have not made a decision based on stale
+    /// information.
+    DiscoverGoalCmdError {
         /// The error from state current discovery.
         error: E,
     },
