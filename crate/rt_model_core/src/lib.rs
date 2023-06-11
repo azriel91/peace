@@ -12,7 +12,10 @@ pub use indicatif;
 pub mod output;
 pub mod params;
 
-pub use crate::{error::Error, item_params::ItemParams};
+pub use crate::{
+    error::{Error, StateDowncastError},
+    item_params::ItemParams,
+};
 
 mod error;
 mod item_params;

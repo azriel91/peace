@@ -59,6 +59,24 @@ pub trait ItemRt<E>:
         states_type_reg: &mut StatesTypeReg,
     );
 
+    /// Returns if the given two states equal.
+    ///
+    /// This returns an error if the boxed states could not be downcasted to
+    /// this item's state, which indicates one of the following:
+    ///
+    /// * Peace contains a bug, and passed an incorrect box to this item.
+    /// * Item IDs were swapped, such that `ItemA`'s state is passed to `ItemB`.
+    ///
+    ///     This needs some rework on how item IDs are implemented -- as in,
+    ///     whether we should use a string newtype for `ItemId`s, or redesign
+    ///     how `Item`s or related types are keyed.
+    ///
+    /// Note: it is impossible to call this method if an `Item`'s state type has
+    /// changed -- it would have failed on deserialization.
+    fn state_eq(&self, state_a: &BoxDtDisplay, state_b: &BoxDtDisplay) -> Result<bool, E>
+    where
+        E: Debug + std::error::Error;
+
     /// Runs [`Item::state_clean`].
     ///
     /// [`Item::state_clean`]: peace_cfg::Item::state_clean

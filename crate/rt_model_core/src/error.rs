@@ -4,6 +4,10 @@ use peace_core::{FlowId, ItemId, Profile};
 use peace_params::{ParamsResolveError, ParamsSpecs};
 use peace_resources::paths::{ItemParamsFile, ParamsSpecsFile};
 
+pub use self::state_downcast_error::StateDowncastError;
+
+mod state_downcast_error;
+
 cfg_if::cfg_if! {
     if #[cfg(not(target_arch = "wasm32"))] {
         pub use self::native_error::NativeError;
@@ -544,6 +548,15 @@ pub enum Error {
         /// Path to the file.
         path: PathBuf,
     },
+
+    /// Error downcasting a `BoxDtDisplay` into an item's concrete state type.
+    #[error("Error downcasting a `BoxDtDisplay` into an item's concrete state type.")]
+    StateDowncastError(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        StateDowncastError,
+    ),
 
     /// Native application error occurred.
     #[error("Native application error occurred.")]

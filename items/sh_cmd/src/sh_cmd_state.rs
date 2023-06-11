@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 ///
 /// * If the command has never been executed, this will be `None`.
 /// * If it has been executed, this is `Some(String)` captured from stdout.
-#[derive(Derivative, Serialize, Deserialize, PartialEq, Eq)]
-#[derivative(Clone, Debug)]
+#[derive(Derivative, Serialize, Deserialize, Eq)]
+#[derivative(Clone, Debug, PartialEq)]
 pub enum ShCmdState<Id> {
     /// The command is not executed.
     ///
