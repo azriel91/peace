@@ -13,7 +13,7 @@ pub mod output;
 pub mod params;
 
 pub use crate::{
-    error::{Error, StateDowncastError},
+    error::{ApplyCmdError, Error, StateDowncastError},
     item_params::ItemParams,
 };
 

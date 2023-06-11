@@ -18,7 +18,7 @@ use peace_rt_model::{
     outcomes::{CmdOutcome, ItemApplyBoxed, ItemApplyPartialBoxed},
     output::OutputWrite,
     params::ParamsKeys,
-    Error, ItemBoxed, ItemRt, Storage,
+    ApplyCmdError, Error, ItemBoxed, ItemRt, Storage,
 };
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -281,7 +281,29 @@ where
                         ControlFlow::Break(()) => return,
                     };
 
-                    // TODO: Compare `states_current` with `states_current_stored`
+                    // Compare `states_current_stored` with `states_current`.
+                    //
+                    // We currently just store a boolean, it may be useful to collect and tell the
+                    // user which states are out of sync.
+                    let state_current_in_sync_result =
+                        Self::states_in_sync(cmd_view, &states_current_stored, &states_current);
+                    match state_current_in_sync_result {
+                        Ok(in_sync) => {
+                            if !in_sync {
+                                outcomes_tx
+                                    .send(ApplyExecOutcome::StatesCurrentOutOfSync)
+                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                                return;
+                            }
+                        }
+                        Err(error) => {
+                            outcomes_tx
+                                .send(ApplyExecOutcome::StatesDowncastError { error })
+                                .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                            return;
+                        }
+                    };
+
                     outcomes_tx
                         .send(ApplyExecOutcome::StatesCurrentStoredRead {
                             states_current_stored,
@@ -316,8 +338,27 @@ where
                                 ControlFlow::Break(()) => return,
                             };
 
-                            // TODO: Compare `states_goal` with
-                            // `states_goal_stored`
+                            // Compare `states_goal_stored` with `states_goal`.
+                            let state_goal_in_sync_result =
+                                Self::states_in_sync(cmd_view, &states_goal_stored, &states_goal);
+                            match state_goal_in_sync_result {
+                                Ok(in_sync) => {
+                                    if !in_sync {
+                                        outcomes_tx
+                                            .send(ApplyExecOutcome::StatesGoalOutOfSync)
+                                            .expect(
+                                                "unreachable: `outcomes_rx` is in a sibling task.",
+                                            );
+                                        return;
+                                    }
+                                }
+                                Err(error) => {
+                                    outcomes_tx
+                                        .send(ApplyExecOutcome::StatesDowncastError { error })
+                                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                                    return;
+                                }
+                            };
                         }
                         ApplyFor::Clean => {}
                     }
@@ -390,10 +431,21 @@ where
                             &mut states_current_stored.into_inner(),
                         );
                     }
+                    ApplyExecOutcome::StatesCurrentOutOfSync => {
+                        return Err(E::from(Error::ApplyCmdError(
+                            ApplyCmdError::StatesCurrentOutOfSync,
+                        )));
+                    }
+                    ApplyExecOutcome::StatesGoalOutOfSync => {
+                        return Err(E::from(Error::ApplyCmdError(
+                            ApplyCmdError::StatesGoalOutOfSync,
+                        )));
+                    }
                     ApplyExecOutcome::StatesCurrentReadCmdError { error }
                     | ApplyExecOutcome::StatesGoalReadCmdError { error }
                     | ApplyExecOutcome::DiscoverCurrentCmdError { error }
-                    | ApplyExecOutcome::DiscoverGoalCmdError { error } => return Err(error),
+                    | ApplyExecOutcome::DiscoverGoalCmdError { error }
+                    | ApplyExecOutcome::StatesDowncastError { error } => return Err(error),
                     ApplyExecOutcome::DiscoverOutcomeError { mut outcome } => {
                         std::mem::swap(&mut outcome.value.0, states_applied_mut);
                         std::mem::swap(&mut outcome.value.1, states_goal_mut);
@@ -524,6 +576,8 @@ where
     where
         StatesTs: Debug + Send + 'static,
     {
+        // TODO: don't store states during discovery, as we want the user to do this as
+        // an intentional operation.
         let states_current_outcome = StatesDiscoverCmd::<E, O, PKeys>::current_with(
             #[cfg(not(feature = "output_progress"))]
             &mut CmdIndependence::SubCmd { cmd_view },
@@ -595,6 +649,8 @@ where
     where
         StatesTs: Debug + Send + 'static,
     {
+        // TODO: don't store states during discovery, as we want the user to do this as
+        // an intentional operation.
         let states_goal_outcome = StatesDiscoverCmd::<E, O, PKeys>::goal_with(
             #[cfg(not(feature = "output_progress"))]
             &mut CmdIndependence::SubCmd { cmd_view },
@@ -627,6 +683,48 @@ where
             return ControlFlow::Break(());
         }
         ControlFlow::Continue(states_goal_outcome.value)
+    }
+
+    fn states_in_sync<StatesTsStored, StatesTs>(
+        cmd_view: &mut SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
+        states_stored: &States<StatesTsStored>,
+        states: &States<StatesTs>,
+    ) -> Result<bool, E>
+    where
+        E: std::error::Error + From<Error> + Send + 'static,
+    {
+        let (ControlFlow::Continue(in_sync_outcome) | ControlFlow::Break(in_sync_outcome)) =
+            cmd_view.flow.graph().iter_insertion().try_fold(
+                Result::<_, E>::Ok(true),
+                |_in_sync, item_rt| {
+                    let item_id = item_rt.id();
+                    let state_stored = states_stored.get(item_id);
+                    let state = states.get(item_id);
+
+                    match (state_stored, state) {
+                        (None, None) => {
+                            // Not discoverable, may be dependent on predecessor
+                            ControlFlow::Continue(Ok(true))
+                        }
+                        (None, Some(_)) | (Some(_), None) => {
+                            // Stored current state wasn't up to date with what exists.
+                            //
+                            // TODO: Don't break if indicated by developer this is fine.
+                            ControlFlow::Break(Ok(false))
+                        }
+                        (Some(state_stored), Some(state)) => {
+                            let state_eq = item_rt.state_eq(state_stored, state);
+                            match state_eq {
+                                Ok(true) => ControlFlow::Continue(Ok(true)),
+                                Ok(false) => ControlFlow::Break(Ok(false)),
+                                error @ Err(_) => ControlFlow::Break(error),
+                            }
+                        }
+                    }
+                },
+            );
+
+        in_sync_outcome
     }
 
     ///
@@ -847,11 +945,15 @@ enum ApplyExecOutcome<E, StatesTs> {
         /// The read stored current states.
         states_current_stored: StatesCurrentStored,
     },
+    /// Stored current states are not in sync with the actual current state.
+    StatesCurrentOutOfSync,
     /// Error occurred when reading stored current state.
     StatesCurrentReadCmdError {
         /// The error from state current read.
         error: E,
     },
+    /// Stored goal states are not in sync with the actual goal state.
+    StatesGoalOutOfSync,
     /// Error occurred when reading stored goal state.
     StatesGoalReadCmdError {
         /// The error from state goal read.
@@ -884,6 +986,11 @@ enum ApplyExecOutcome<E, StatesTs> {
     DiscoverOutcomeError {
         /// Outcome of state discovery.
         outcome: CmdOutcome<(StatesMut<StatesTs>, StatesMut<Goal>), E>,
+    },
+    /// Error downcasting a boxed item state to its concrete stype.
+    StatesDowncastError {
+        /// The error from state downcast.
+        error: E,
     },
     /// An item apply outcome.
     ItemApply(ItemApplyOutcome<E>),

@@ -4,8 +4,9 @@ use peace_core::{FlowId, ItemId, Profile};
 use peace_params::{ParamsResolveError, ParamsSpecs};
 use peace_resources::paths::{ItemParamsFile, ParamsSpecsFile};
 
-pub use self::state_downcast_error::StateDowncastError;
+pub use self::{apply_cmd_error::ApplyCmdError, state_downcast_error::StateDowncastError};
 
+mod apply_cmd_error;
 mod state_downcast_error;
 
 cfg_if::cfg_if! {
@@ -24,6 +25,19 @@ cfg_if::cfg_if! {
 #[cfg_attr(feature = "error_reporting", derive(miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// Failed to apply changes.
+    #[error("Failed to apply changes.")]
+    #[cfg_attr(
+        feature = "error_reporting",
+        diagnostic(code(peace_rt_model::apply_error))
+    )]
+    ApplyCmdError(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        ApplyCmdError,
+    ),
+
     /// Failed to serialize error.
     #[error("Failed to serialize error.")]
     #[cfg_attr(
