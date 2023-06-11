@@ -1,4 +1,4 @@
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::ControlFlow};
 
 use futures::FutureExt;
 use peace_cfg::{ApplyCheck, FnCtx, ItemId};
@@ -11,7 +11,7 @@ use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesCurrentFile, StatesGoalFile},
     resources::ts::SetUp,
-    states::{ts::Goal, States, StatesCurrent, StatesCurrentStored, StatesGoal},
+    states::{ts::Goal, States, StatesCurrent, StatesCurrentStored, StatesGoal, StatesGoalStored},
     Resources,
 };
 use peace_rt_model::{
@@ -257,130 +257,63 @@ where
                     // * continue execution, if the automation is designed to .
                     //
                     // by delegating the equality check to `ItemWrapper`.
-                    let states_current_stored = StatesCurrentReadCmd::<E, O, PKeys>::exec_with(
-                        #[cfg(not(feature = "output_progress"))]
-                        &mut CmdIndependence::SubCmd { cmd_view },
+                    let states_current_stored = match Self::states_current_read(
+                        cmd_view,
                         #[cfg(feature = "output_progress")]
-                        &mut CmdIndependence::SubCmdWithProgress {
-                            cmd_view,
-                            progress_tx: progress_tx.clone(),
-                        },
+                        progress_tx,
+                        outcomes_tx,
                     )
-                    .await;
-                    match states_current_stored {
-                        Ok(states_current_stored) => {
-                            outcomes_tx
-                                .send(ApplyExecOutcome::StatesCurrentStoredRead {
-                                    states_current_stored,
-                                })
-                                .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                        }
-                        Err(error) => {
-                            outcomes_tx
-                                .send(ApplyExecOutcome::StatesCurrentReadCmdError { error })
-                                .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                            return;
-                        }
-                    }
+                    .await
+                    {
+                        ControlFlow::Continue(states_current_stored) => states_current_stored,
+                        ControlFlow::Break(()) => return,
+                    };
 
-                    let states_current = {
-                        let states_current_outcome =
-                            StatesDiscoverCmd::<E, O, PKeys>::current_with(
-                                #[cfg(not(feature = "output_progress"))]
-                                &mut CmdIndependence::SubCmd { cmd_view },
-                                #[cfg(feature = "output_progress")]
-                                &mut CmdIndependence::SubCmdWithProgress {
-                                    cmd_view,
-                                    progress_tx: progress_tx.clone(),
-                                },
-                            )
-                            .await;
-                        let states_current_outcome = match states_current_outcome {
-                            Ok(states_current_outcome) => states_current_outcome,
-                            Err(error) => {
-                                outcomes_tx
-                                    .send(ApplyExecOutcome::DiscoverCurrentCmdError { error })
-                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                                return;
-                            }
-                        };
-                        if states_current_outcome.is_err() {
-                            let outcome = states_current_outcome.map(|states_current| {
-                                (
-                                    StatesMut::<StatesTs>::from(states_current.into_inner()),
-                                    StatesMut::<Goal>::new(),
-                                )
-                            });
-                            outcomes_tx
-                                .send(ApplyExecOutcome::DiscoverOutcomeError { outcome })
-                                .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                            return;
-                        }
-                        states_current_outcome.value
+                    let states_current = match Self::states_current_discover(
+                        cmd_view,
+                        #[cfg(feature = "output_progress")]
+                        progress_tx,
+                        outcomes_tx,
+                    )
+                    .await
+                    {
+                        ControlFlow::Continue(states_current) => states_current,
+                        ControlFlow::Break(()) => return,
                     };
 
                     // TODO: Compare `states_current` with `states_current_stored`
+                    outcomes_tx
+                        .send(ApplyExecOutcome::StatesCurrentStoredRead {
+                            states_current_stored,
+                        })
+                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
 
                     // If applying the goal state, then we want to guard the user from making a
                     // decision based on stale information.
                     match apply_for {
                         ApplyFor::Ensure => {
-                            let states_goal_stored = StatesGoalReadCmd::<E, O, PKeys>::exec_with(
-                                #[cfg(not(feature = "output_progress"))]
-                                &mut CmdIndependence::SubCmd { cmd_view },
+                            let states_goal_stored = match Self::states_goal_read(
+                                cmd_view,
                                 #[cfg(feature = "output_progress")]
-                                &mut CmdIndependence::SubCmdWithProgress {
-                                    cmd_view,
-                                    progress_tx: progress_tx.clone(),
-                                },
+                                progress_tx,
+                                outcomes_tx,
                             )
-                            .await;
-                            let states_goal_stored = match states_goal_stored {
-                                Ok(states_goal_stored) => states_goal_stored,
-                                Err(error) => {
-                                    outcomes_tx
-                                        .send(ApplyExecOutcome::StatesGoalReadCmdError { error })
-                                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                                    return;
-                                }
+                            .await
+                            {
+                                ControlFlow::Continue(states_goal_stored) => states_goal_stored,
+                                ControlFlow::Break(()) => return,
                             };
 
-                            let states_goal = {
-                                let states_goal_outcome =
-                                    StatesDiscoverCmd::<E, O, PKeys>::goal_with(
-                                        #[cfg(not(feature = "output_progress"))]
-                                        &mut CmdIndependence::SubCmd { cmd_view },
-                                        #[cfg(feature = "output_progress")]
-                                        &mut CmdIndependence::SubCmdWithProgress {
-                                            cmd_view,
-                                            progress_tx: progress_tx.clone(),
-                                        },
-                                    )
-                                    .await;
-                                let states_goal_outcome = match states_goal_outcome {
-                                    Ok(states_goal_outcome) => states_goal_outcome,
-                                    Err(error) => {
-                                        outcomes_tx
-                                            .send(ApplyExecOutcome::DiscoverGoalCmdError { error })
-                                            .expect(
-                                                "unreachable: `outcomes_rx` is in a sibling task.",
-                                            );
-                                        return;
-                                    }
-                                };
-                                if states_goal_outcome.is_err() {
-                                    let outcome = states_goal_outcome.map(|states_goal| {
-                                        (
-                                            StatesMut::<StatesTs>::from(states_goal.into_inner()),
-                                            StatesMut::<Goal>::new(),
-                                        )
-                                    });
-                                    outcomes_tx
-                                        .send(ApplyExecOutcome::DiscoverOutcomeError { outcome })
-                                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                                    return;
-                                }
-                                states_goal_outcome.value
+                            let states_goal = match Self::states_goal_discover(
+                                cmd_view,
+                                #[cfg(feature = "output_progress")]
+                                progress_tx,
+                                outcomes_tx,
+                            )
+                            .await
+                            {
+                                ControlFlow::Continue(states_goal) => states_goal,
+                                ControlFlow::Break(()) => return,
                             };
 
                             // TODO: Compare `states_goal` with
@@ -403,7 +336,6 @@ where
                     } = cmd_view;
 
                     let item_graph = flow.graph();
-
                     let resources_ref = &*resources;
                     match apply_for {
                         ApplyFor::Ensure => {
@@ -553,6 +485,148 @@ where
         });
 
         Ok(cmd_outcome)
+    }
+
+    async fn states_current_read<StatesTs>(
+        cmd_view: &mut SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        outcomes_tx: &UnboundedSender<ApplyExecOutcome<E, StatesTs>>,
+    ) -> ControlFlow<(), StatesCurrentStored>
+    where
+        StatesTs: Debug + Send + 'static,
+    {
+        let states_current_stored_result = StatesCurrentReadCmd::<E, O, PKeys>::exec_with(
+            #[cfg(not(feature = "output_progress"))]
+            &mut CmdIndependence::SubCmd { cmd_view },
+            #[cfg(feature = "output_progress")]
+            &mut CmdIndependence::SubCmdWithProgress {
+                cmd_view,
+                progress_tx: progress_tx.clone(),
+            },
+        )
+        .await;
+        match states_current_stored_result {
+            Ok(states_current_stored) => ControlFlow::Continue(states_current_stored),
+            Err(error) => {
+                outcomes_tx
+                    .send(ApplyExecOutcome::StatesCurrentReadCmdError { error })
+                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                ControlFlow::Break(())
+            }
+        }
+    }
+
+    async fn states_current_discover<StatesTs>(
+        cmd_view: &mut SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        outcomes_tx: &UnboundedSender<ApplyExecOutcome<E, StatesTs>>,
+    ) -> ControlFlow<(), StatesCurrent>
+    where
+        StatesTs: Debug + Send + 'static,
+    {
+        let states_current_outcome = StatesDiscoverCmd::<E, O, PKeys>::current_with(
+            #[cfg(not(feature = "output_progress"))]
+            &mut CmdIndependence::SubCmd { cmd_view },
+            #[cfg(feature = "output_progress")]
+            &mut CmdIndependence::SubCmdWithProgress {
+                cmd_view,
+                progress_tx: progress_tx.clone(),
+            },
+        )
+        .await;
+        let states_current_outcome = match states_current_outcome {
+            Ok(states_current_outcome) => states_current_outcome,
+            Err(error) => {
+                outcomes_tx
+                    .send(ApplyExecOutcome::DiscoverCurrentCmdError { error })
+                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                return ControlFlow::Break(());
+            }
+        };
+        if states_current_outcome.is_err() {
+            let outcome = states_current_outcome.map(|states_current| {
+                (
+                    StatesMut::<StatesTs>::from(states_current.into_inner()),
+                    StatesMut::<Goal>::new(),
+                )
+            });
+            outcomes_tx
+                .send(ApplyExecOutcome::DiscoverOutcomeError { outcome })
+                .expect("unreachable: `outcomes_rx` is in a sibling task.");
+            return ControlFlow::Break(());
+        }
+        ControlFlow::Continue(states_current_outcome.value)
+    }
+
+    async fn states_goal_read<StatesTs>(
+        cmd_view: &mut SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        outcomes_tx: &UnboundedSender<ApplyExecOutcome<E, StatesTs>>,
+    ) -> ControlFlow<(), StatesGoalStored>
+    where
+        StatesTs: Debug + Send + 'static,
+    {
+        let states_goal_stored_result = StatesGoalReadCmd::<E, O, PKeys>::exec_with(
+            #[cfg(not(feature = "output_progress"))]
+            &mut CmdIndependence::SubCmd { cmd_view },
+            #[cfg(feature = "output_progress")]
+            &mut CmdIndependence::SubCmdWithProgress {
+                cmd_view,
+                progress_tx: progress_tx.clone(),
+            },
+        )
+        .await;
+        match states_goal_stored_result {
+            Ok(states_goal_stored) => ControlFlow::Continue(states_goal_stored),
+            Err(error) => {
+                outcomes_tx
+                    .send(ApplyExecOutcome::StatesGoalReadCmdError { error })
+                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                ControlFlow::Break(())
+            }
+        }
+    }
+
+    async fn states_goal_discover<StatesTs>(
+        cmd_view: &mut SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        outcomes_tx: &UnboundedSender<ApplyExecOutcome<E, StatesTs>>,
+    ) -> ControlFlow<(), StatesGoal>
+    where
+        StatesTs: Debug + Send + 'static,
+    {
+        let states_goal_outcome = StatesDiscoverCmd::<E, O, PKeys>::goal_with(
+            #[cfg(not(feature = "output_progress"))]
+            &mut CmdIndependence::SubCmd { cmd_view },
+            #[cfg(feature = "output_progress")]
+            &mut CmdIndependence::SubCmdWithProgress {
+                cmd_view,
+                progress_tx: progress_tx.clone(),
+            },
+        )
+        .await;
+        let states_goal_outcome = match states_goal_outcome {
+            Ok(states_goal_outcome) => states_goal_outcome,
+            Err(error) => {
+                outcomes_tx
+                    .send(ApplyExecOutcome::DiscoverGoalCmdError { error })
+                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                return ControlFlow::Break(());
+            }
+        };
+        if states_goal_outcome.is_err() {
+            let outcome = states_goal_outcome.map(|states_goal| {
+                (
+                    StatesMut::<StatesTs>::from(states_goal.into_inner()),
+                    StatesMut::<Goal>::new(),
+                )
+            });
+            outcomes_tx
+                .send(ApplyExecOutcome::DiscoverOutcomeError { outcome })
+                .expect("unreachable: `outcomes_rx` is in a sibling task.");
+            return ControlFlow::Break(());
+        }
+        ControlFlow::Continue(states_goal_outcome.value)
     }
 
     ///
