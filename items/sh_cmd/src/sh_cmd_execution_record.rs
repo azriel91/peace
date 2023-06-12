@@ -4,7 +4,7 @@ use chrono::{offset::Local, DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 /// Record of a shell command execution.
-#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum ShCmdExecutionRecord {
     /// There is no execution record.
     ///
@@ -42,6 +42,31 @@ impl fmt::Display for ShCmdExecutionRecord {
                 Some(code) => write!(f, "execution failed with code: {code}"),
                 None => write!(f, "execution was interrupted"),
             },
+        }
+    }
+}
+
+/// We don't compare timestamps of execution because we're concerned about
+/// state of whatever the shell command is reading, rather than when the shell
+/// command was run.
+impl PartialEq for ShCmdExecutionRecord {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (ShCmdExecutionRecord::None, ShCmdExecutionRecord::None) => true,
+            (ShCmdExecutionRecord::None, ShCmdExecutionRecord::Some { .. })
+            | (ShCmdExecutionRecord::Some { .. }, ShCmdExecutionRecord::None) => false,
+            (
+                ShCmdExecutionRecord::Some {
+                    start_datetime: _,
+                    end_datetime: _,
+                    exit_code: exit_code_self,
+                },
+                ShCmdExecutionRecord::Some {
+                    start_datetime: _,
+                    end_datetime: _,
+                    exit_code: exit_code_other,
+                },
+            ) => exit_code_self == exit_code_other,
         }
     }
 }
