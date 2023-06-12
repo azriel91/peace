@@ -5,6 +5,6 @@
 //!
 //! [`OutputWrite`]: peace_rt_model_core::OutputWrite
 
-pub use self::apply_cmd::{ApplyCmd, ApplyFor};
+pub use self::apply_cmd::{ApplyCmd, ApplyFor, ApplyStoredStateSync};
 
 mod apply_cmd;

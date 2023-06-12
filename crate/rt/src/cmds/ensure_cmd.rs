@@ -13,6 +13,7 @@ use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKe
 use crate::cmds::{
     cmd_ctx_internal::CmdIndependence,
     sub::{ApplyCmd, ApplyFor},
+    ApplyStoredStateSync,
 };
 
 #[derive(Debug)]
@@ -66,10 +67,12 @@ where
     /// [`state_goal`]: peace_cfg::Item::state_goal
     pub async fn exec_dry_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesEnsuredDry, E>, E> {
         ApplyCmd::<E, O, PKeys, Ensured, EnsuredDry>::exec_dry_with(
             cmd_independence,
             ApplyFor::Ensure,
+            apply_stored_state_sync,
         )
         .await
     }
@@ -116,9 +119,14 @@ where
     /// [`state_goal`]: peace_cfg::Item::state_goal
     pub async fn exec_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesEnsured, E>, E> {
-        ApplyCmd::<E, O, PKeys, Ensured, EnsuredDry>::exec_with(cmd_independence, ApplyFor::Ensure)
-            .await
+        ApplyCmd::<E, O, PKeys, Ensured, EnsuredDry>::exec_with(
+            cmd_independence,
+            ApplyFor::Ensure,
+            apply_stored_state_sync,
+        )
+        .await
     }
 }
 

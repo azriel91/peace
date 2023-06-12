@@ -30,6 +30,10 @@ use crate::{
     BUFFERED_FUTURES_MAX,
 };
 
+pub use self::apply_stored_state_sync::ApplyStoredStateSync;
+
+mod apply_stored_state_sync;
+
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_cfg::{
@@ -108,7 +112,12 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApplyDry>, E>, E> {
-        Self::exec_dry_with(&mut CmdIndependence::Standalone { cmd_ctx }, apply_for).await
+        Self::exec_dry_with(
+            &mut CmdIndependence::Standalone { cmd_ctx },
+            apply_for,
+            ApplyStoredStateSync::Both,
+        )
+        .await
     }
 
     /// Conditionally runs [`Item::apply_exec_dry`] for each [`Item`].
@@ -120,8 +129,9 @@ where
     pub async fn exec_dry_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
         apply_for: ApplyFor,
+        apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<States<StatesTsApplyDry>, E>, E> {
-        Self::exec_internal(cmd_independence, apply_for, true)
+        Self::exec_internal(cmd_independence, apply_for, apply_stored_state_sync, true)
             .await
             .map(|cmd_outcome| cmd_outcome.map(|(states_applied, _states_goal)| states_applied))
     }
@@ -173,7 +183,12 @@ where
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApply>, E>, E> {
-        Self::exec_with(&mut CmdIndependence::Standalone { cmd_ctx }, apply_for).await
+        Self::exec_with(
+            &mut CmdIndependence::Standalone { cmd_ctx },
+            apply_for,
+            ApplyStoredStateSync::Both,
+        )
+        .await
     }
 
     /// Conditionally runs [`Item::apply_exec`] for each [`Item`].
@@ -185,11 +200,13 @@ where
     pub async fn exec_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
         apply_for: ApplyFor,
+        apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<States<StatesTsApply>, E>, E> {
         let CmdOutcome {
             value: (states_applied, states_goal),
             errors,
-        } = Self::exec_internal(cmd_independence, apply_for, false).await?;
+        } = Self::exec_internal(cmd_independence, apply_for, apply_stored_state_sync, false)
+            .await?;
 
         let resources = match cmd_independence {
             CmdIndependence::Standalone { cmd_ctx } => cmd_ctx.resources(),
@@ -225,6 +242,7 @@ where
     async fn exec_internal<StatesTs>(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
         apply_for: ApplyFor,
+        apply_stored_state_sync: ApplyStoredStateSync,
         dry_run: bool,
     ) -> Result<CmdOutcome<(States<StatesTs>, StatesGoal), E>, E>
     where
@@ -269,40 +287,74 @@ where
                         ControlFlow::Break(()) => return,
                     };
 
-                    let states_current = match Self::states_current_discover(
-                        cmd_view,
-                        #[cfg(feature = "output_progress")]
-                        progress_tx,
-                        outcomes_tx,
-                    )
-                    .await
-                    {
-                        ControlFlow::Continue(states_current) => states_current,
-                        ControlFlow::Break(()) => return,
-                    };
-
                     // Compare `states_current_stored` with `states_current`.
                     //
                     // We currently just store a boolean, it may be useful to collect and tell the
                     // user which states are out of sync.
-                    let state_current_in_sync_result =
-                        Self::states_in_sync(cmd_view, &states_current_stored, &states_current);
-                    match state_current_in_sync_result {
-                        Ok(in_sync) => {
-                            if !in_sync {
+                    let apply_for_internal = if matches!(
+                        apply_stored_state_sync,
+                        ApplyStoredStateSync::Current | ApplyStoredStateSync::Both
+                    ) {
+                        let states_current = match Self::states_current_discover(
+                            cmd_view,
+                            #[cfg(feature = "output_progress")]
+                            progress_tx,
+                            outcomes_tx,
+                        )
+                        .await
+                        {
+                            ControlFlow::Continue(states_current) => states_current,
+                            ControlFlow::Break(()) => return,
+                        };
+
+                        let state_current_in_sync_result =
+                            Self::states_in_sync(cmd_view, &states_current_stored, &states_current);
+                        match state_current_in_sync_result {
+                            Ok(in_sync) => {
+                                if !in_sync {
+                                    outcomes_tx
+                                        .send(ApplyExecOutcome::StatesCurrentOutOfSync)
+                                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                                    return;
+                                }
+                            }
+                            Err(error) => {
                                 outcomes_tx
-                                    .send(ApplyExecOutcome::StatesCurrentOutOfSync)
+                                    .send(ApplyExecOutcome::StatesDowncastError { error })
                                     .expect("unreachable: `outcomes_rx` is in a sibling task.");
                                 return;
                             }
+                        };
+
+                        match apply_for {
+                            ApplyFor::Ensure => ApplyForInternal::Ensure,
+                            ApplyFor::Clean => ApplyForInternal::Clean { states_current },
                         }
-                        Err(error) => {
-                            outcomes_tx
-                                .send(ApplyExecOutcome::StatesDowncastError { error })
-                                .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                            return;
+                    } else {
+                        // We duplicate the code for discovering current states so that if the
+                        // stored current states do not need to be in sync with the discovered
+                        // states, then we don't run discover to save work and time.
+
+                        match apply_for {
+                            ApplyFor::Ensure => ApplyForInternal::Ensure,
+                            ApplyFor::Clean => {
+                                let states_current = match Self::states_current_discover(
+                                    cmd_view,
+                                    #[cfg(feature = "output_progress")]
+                                    progress_tx,
+                                    outcomes_tx,
+                                )
+                                .await
+                                {
+                                    ControlFlow::Continue(states_current) => states_current,
+                                    ControlFlow::Break(()) => return,
+                                };
+
+                                ApplyForInternal::Clean { states_current }
+                            }
                         }
                     };
+                    let apply_for_internal = &apply_for_internal;
 
                     outcomes_tx
                         .send(ApplyExecOutcome::StatesCurrentStoredRead {
@@ -312,62 +364,55 @@ where
 
                     // If applying the goal state, then we want to guard the user from making a
                     // decision based on stale information.
-                    match apply_for {
-                        ApplyFor::Ensure => {
-                            let states_goal_stored = match Self::states_goal_read(
-                                cmd_view,
-                                #[cfg(feature = "output_progress")]
-                                progress_tx,
-                                outcomes_tx,
-                            )
-                            .await
-                            {
-                                ControlFlow::Continue(states_goal_stored) => states_goal_stored,
-                                ControlFlow::Break(()) => return,
-                            };
+                    if matches!(
+                        apply_stored_state_sync,
+                        ApplyStoredStateSync::Goal | ApplyStoredStateSync::Both
+                    ) && matches!(apply_for, ApplyFor::Ensure)
+                    {
+                        let states_goal_stored = match Self::states_goal_read(
+                            cmd_view,
+                            #[cfg(feature = "output_progress")]
+                            progress_tx,
+                            outcomes_tx,
+                        )
+                        .await
+                        {
+                            ControlFlow::Continue(states_goal_stored) => states_goal_stored,
+                            ControlFlow::Break(()) => return,
+                        };
 
-                            let states_goal = match Self::states_goal_discover(
-                                cmd_view,
-                                #[cfg(feature = "output_progress")]
-                                progress_tx,
-                                outcomes_tx,
-                            )
-                            .await
-                            {
-                                ControlFlow::Continue(states_goal) => states_goal,
-                                ControlFlow::Break(()) => return,
-                            };
+                        let states_goal = match Self::states_goal_discover(
+                            cmd_view,
+                            #[cfg(feature = "output_progress")]
+                            progress_tx,
+                            outcomes_tx,
+                        )
+                        .await
+                        {
+                            ControlFlow::Continue(states_goal) => states_goal,
+                            ControlFlow::Break(()) => return,
+                        };
 
-                            // Compare `states_goal_stored` with `states_goal`.
-                            let state_goal_in_sync_result =
-                                Self::states_in_sync(cmd_view, &states_goal_stored, &states_goal);
-                            match state_goal_in_sync_result {
-                                Ok(in_sync) => {
-                                    if !in_sync {
-                                        outcomes_tx
-                                            .send(ApplyExecOutcome::StatesGoalOutOfSync)
-                                            .expect(
-                                                "unreachable: `outcomes_rx` is in a sibling task.",
-                                            );
-                                        return;
-                                    }
-                                }
-                                Err(error) => {
+                        // Compare `states_goal_stored` with `states_goal`.
+                        let state_goal_in_sync_result =
+                            Self::states_in_sync(cmd_view, &states_goal_stored, &states_goal);
+                        match state_goal_in_sync_result {
+                            Ok(in_sync) => {
+                                if !in_sync {
                                     outcomes_tx
-                                        .send(ApplyExecOutcome::StatesDowncastError { error })
+                                        .send(ApplyExecOutcome::StatesGoalOutOfSync)
                                         .expect("unreachable: `outcomes_rx` is in a sibling task.");
                                     return;
                                 }
-                            };
-                        }
-                        ApplyFor::Clean => {}
+                            }
+                            Err(error) => {
+                                outcomes_tx
+                                    .send(ApplyExecOutcome::StatesDowncastError { error })
+                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                                return;
+                            }
+                        };
                     }
-
-                    let apply_for_internal = match apply_for {
-                        ApplyFor::Ensure => ApplyForInternal::Ensure,
-                        ApplyFor::Clean => ApplyForInternal::Clean { states_current },
-                    };
-                    let apply_for_internal = &apply_for_internal;
 
                     let SingleProfileSingleFlowView {
                         flow,
@@ -696,8 +741,8 @@ where
                 Result::<_, E>::Ok(true),
                 |_in_sync, item_rt| {
                     let item_id = item_rt.id();
-                    let state_stored = states_stored.get(item_id);
-                    let state = states.get(item_id);
+                    let state_stored = states_stored.get_raw(item_id);
+                    let state = states.get_raw(item_id);
 
                     match (state_stored, state) {
                         (None, None) => {

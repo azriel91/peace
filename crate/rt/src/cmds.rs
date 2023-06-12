@@ -18,6 +18,7 @@ pub use self::{
     states_discover_cmd::StatesDiscoverCmd,
     states_goal_display_cmd::StatesGoalDisplayCmd,
     states_goal_read_cmd::StatesGoalReadCmd,
+    sub::ApplyStoredStateSync,
 };
 
 pub mod cmd_ctx_internal;
