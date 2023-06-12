@@ -10,7 +10,7 @@ use crate::StateStoredAndDiscovered;
 /// `IndexMap<ItemId, StateStoredAndDiscovered>` newtype.
 ///
 /// This can be used for either current state or goal state.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct ItemsStateStoredStale(IndexMap<ItemId, StateStoredAndDiscovered>);
 
 impl ItemsStateStoredStale {

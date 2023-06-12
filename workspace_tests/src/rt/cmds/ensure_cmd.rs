@@ -332,12 +332,12 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
                     if matches!(
                         BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
                         Some(state_stored)
-                        if **state_stored == &[0, 1, 2, 3]
+                        if **state_stored == [0, 1, 2, 3]
                     )
                     && matches!(
                         BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
                         Some(state_discovered)
-                        if **state_discovered == &[0, 1, 2, 3, 4, 5, 6, 7]
+                        if **state_discovered == [0, 1, 2, 3, 4, 5, 6, 7]
                     )
                 ),
             )
@@ -422,12 +422,12 @@ async fn exec_dry_returns_sync_error_when_goal_state_out_of_sync()
                     if matches!(
                         BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
                         Some(state_stored)
-                        if **state_stored == &[0, 1, 2, 3]
+                        if **state_stored == [0, 1, 2, 3]
                     )
                     && matches!(
                         BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
                         Some(state_discovered)
-                        if **state_discovered == &[0, 1, 2, 3, 4, 5, 6, 7]
+                        if **state_discovered == [0, 1, 2, 3, 4, 5, 6, 7]
                     )
                 ),
             )
@@ -516,12 +516,12 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
                     if matches!(
                         BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
                         Some(state_stored)
-                        if **state_stored == &[0, 1, 2, 3]
+                        if **state_stored == [0, 1, 2, 3]
                     )
                     && matches!(
                         BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
                         Some(state_discovered)
-                        if **state_discovered == &[0, 1, 2, 3, 4, 5, 6, 7]
+                        if **state_discovered == [0, 1, 2, 3, 4, 5, 6, 7]
                     )
                 ),
             )
@@ -606,12 +606,12 @@ async fn exec_returns_sync_error_when_goal_state_out_of_sync()
                     if matches!(
                         BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
                         Some(state_stored)
-                        if **state_stored == &[0, 1, 2, 3]
+                        if **state_stored == [0, 1, 2, 3]
                     )
                     && matches!(
                         BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
                         Some(state_discovered)
-                        if **state_discovered == &[0, 1, 2, 3, 4, 5, 6, 7]
+                        if **state_discovered == [0, 1, 2, 3, 4, 5, 6, 7]
                     )
                 ),
             )
