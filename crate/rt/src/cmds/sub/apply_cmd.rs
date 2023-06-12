@@ -18,8 +18,9 @@ use peace_rt_model::{
     outcomes::{CmdOutcome, ItemApplyBoxed, ItemApplyPartialBoxed},
     output::OutputWrite,
     params::ParamsKeys,
-    ApplyCmdError, Error, ItemBoxed, ItemRt, Storage,
+    ApplyCmdError, Error, ItemBoxed, ItemRt, StateStoredAndDiscovered, Storage,
 };
+use peace_rt_model_core::ItemsStateStoredStale;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
@@ -307,13 +308,18 @@ where
                             ControlFlow::Break(()) => return,
                         };
 
-                        let state_current_in_sync_result =
-                            Self::states_in_sync(cmd_view, &states_current_stored, &states_current);
-                        match state_current_in_sync_result {
-                            Ok(in_sync) => {
-                                if !in_sync {
+                        let state_current_stale_result = Self::items_state_stored_stale(
+                            cmd_view,
+                            &states_current_stored,
+                            &states_current,
+                        );
+                        match state_current_stale_result {
+                            Ok(items_state_stored_stale) => {
+                                if items_state_stored_stale.stale() {
                                     outcomes_tx
-                                        .send(ApplyExecOutcome::StatesCurrentOutOfSync)
+                                        .send(ApplyExecOutcome::StatesCurrentOutOfSync {
+                                            items_state_stored_stale,
+                                        })
                                         .expect("unreachable: `outcomes_rx` is in a sibling task.");
                                     return;
                                 }
@@ -394,13 +400,18 @@ where
                         };
 
                         // Compare `states_goal_stored` with `states_goal`.
-                        let state_goal_in_sync_result =
-                            Self::states_in_sync(cmd_view, &states_goal_stored, &states_goal);
-                        match state_goal_in_sync_result {
-                            Ok(in_sync) => {
-                                if !in_sync {
+                        let state_goal_stale_result = Self::items_state_stored_stale(
+                            cmd_view,
+                            &states_goal_stored,
+                            &states_goal,
+                        );
+                        match state_goal_stale_result {
+                            Ok(items_state_stored_stale) => {
+                                if items_state_stored_stale.stale() {
                                     outcomes_tx
-                                        .send(ApplyExecOutcome::StatesGoalOutOfSync)
+                                        .send(ApplyExecOutcome::StatesGoalOutOfSync {
+                                            items_state_stored_stale,
+                                        })
                                         .expect("unreachable: `outcomes_rx` is in a sibling task.");
                                     return;
                                 }
@@ -476,14 +487,22 @@ where
                             &mut states_current_stored.into_inner(),
                         );
                     }
-                    ApplyExecOutcome::StatesCurrentOutOfSync => {
+                    ApplyExecOutcome::StatesCurrentOutOfSync {
+                        items_state_stored_stale,
+                    } => {
                         return Err(E::from(Error::ApplyCmdError(
-                            ApplyCmdError::StatesCurrentOutOfSync,
+                            ApplyCmdError::StatesCurrentOutOfSync {
+                                items_state_stored_stale,
+                            },
                         )));
                     }
-                    ApplyExecOutcome::StatesGoalOutOfSync => {
+                    ApplyExecOutcome::StatesGoalOutOfSync {
+                        items_state_stored_stale,
+                    } => {
                         return Err(E::from(Error::ApplyCmdError(
-                            ApplyCmdError::StatesGoalOutOfSync,
+                            ApplyCmdError::StatesGoalOutOfSync {
+                                items_state_stored_stale,
+                            },
                         )));
                     }
                     ApplyExecOutcome::StatesCurrentReadCmdError { error }
@@ -728,46 +747,68 @@ where
         ControlFlow::Continue(states_goal_outcome.value)
     }
 
-    fn states_in_sync<StatesTsStored, StatesTs>(
+    fn items_state_stored_stale<StatesTsStored, StatesTs>(
         cmd_view: &mut SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
         states_stored: &States<StatesTsStored>,
-        states: &States<StatesTs>,
-    ) -> Result<bool, E>
+        states_discovered: &States<StatesTs>,
+    ) -> Result<ItemsStateStoredStale, E>
     where
         E: std::error::Error + From<Error> + Send + 'static,
     {
-        let (ControlFlow::Continue(in_sync_outcome) | ControlFlow::Break(in_sync_outcome)) =
-            cmd_view.flow.graph().iter_insertion().try_fold(
-                Result::<_, E>::Ok(true),
-                |_in_sync, item_rt| {
-                    let item_id = item_rt.id();
-                    let state_stored = states_stored.get_raw(item_id);
-                    let state = states.get_raw(item_id);
+        let items_state_stored_stale = cmd_view.flow.graph().iter_insertion().try_fold(
+            ItemsStateStoredStale::new(),
+            |mut items_state_stored_stale, item_rt| {
+                let item_id = item_rt.id();
+                let state_stored = states_stored.get_raw(item_id);
+                let state_discovered = states_discovered.get_raw(item_id);
 
-                    match (state_stored, state) {
-                        (None, None) => {
-                            // Not discoverable, may be dependent on predecessor
-                            ControlFlow::Continue(Ok(true))
-                        }
-                        (None, Some(_)) | (Some(_), None) => {
-                            // Stored current state wasn't up to date with what exists.
-                            //
-                            // TODO: Don't break if indicated by developer this is fine.
-                            ControlFlow::Break(Ok(false))
-                        }
-                        (Some(state_stored), Some(state)) => {
-                            let state_eq = item_rt.state_eq(state_stored, state);
-                            match state_eq {
-                                Ok(true) => ControlFlow::Continue(Ok(true)),
-                                Ok(false) => ControlFlow::Break(Ok(false)),
-                                error @ Err(_) => ControlFlow::Break(error),
+                match (state_stored, state_discovered) {
+                    (None, None) => {
+                        // Item not discoverable, may be dependent on
+                        // predecessor
+                    }
+                    (None, Some(state_discovered)) => {
+                        let item_id = item_id.clone();
+                        let state_discovered = state_discovered.clone();
+                        items_state_stored_stale.insert(
+                            item_id,
+                            StateStoredAndDiscovered::OnlyDiscoveredExists { state_discovered },
+                        );
+                    }
+                    (Some(state_stored), None) => {
+                        let item_id = item_id.clone();
+                        let state_stored = state_stored.clone();
+                        items_state_stored_stale.insert(
+                            item_id,
+                            StateStoredAndDiscovered::OnlyStoredExists { state_stored },
+                        );
+                    }
+                    (Some(state_stored), Some(state_discovered)) => {
+                        let state_eq = item_rt.state_eq(state_stored, state_discovered);
+                        match state_eq {
+                            Ok(true) => {}
+                            Ok(false) => {
+                                let item_id = item_id.clone();
+                                let state_stored = state_stored.clone();
+                                let state_discovered = state_discovered.clone();
+                                items_state_stored_stale.insert(
+                                    item_id,
+                                    StateStoredAndDiscovered::ValuesDiffer {
+                                        state_stored,
+                                        state_discovered,
+                                    },
+                                );
                             }
+                            Err(error) => return Err(error),
                         }
                     }
-                },
-            );
+                }
 
-        in_sync_outcome
+                Ok(items_state_stored_stale)
+            },
+        )?;
+
+        Ok(items_state_stored_stale)
     }
 
     ///
@@ -989,14 +1030,22 @@ enum ApplyExecOutcome<E, StatesTs> {
         states_current_stored: StatesCurrentStored,
     },
     /// Stored current states are not in sync with the actual current state.
-    StatesCurrentOutOfSync,
+    StatesCurrentOutOfSync {
+        /// Items whose stored current state is out of sync with the discovered
+        /// state.
+        items_state_stored_stale: ItemsStateStoredStale,
+    },
     /// Error occurred when reading stored current state.
     StatesCurrentReadCmdError {
         /// The error from state current read.
         error: E,
     },
     /// Stored goal states are not in sync with the actual goal state.
-    StatesGoalOutOfSync,
+    StatesGoalOutOfSync {
+        /// Items whose stored goal state is out of sync with the discovered
+        /// state.
+        items_state_stored_stale: ItemsStateStoredStale,
+    },
     /// Error occurred when reading stored goal state.
     StatesGoalReadCmdError {
         /// The error from state goal read.

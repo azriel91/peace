@@ -1,13 +1,14 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
+    resources::type_reg::untagged::BoxDataTypeDowncast,
     rt::cmds::{
         cmd_ctx_internal::CmdIndependence, ApplyStoredStateSync, CleanCmd, EnsureCmd,
         StatesCurrentReadCmd, StatesDiscoverCmd, StatesGoalReadCmd,
     },
     rt_model::{
         outcomes::CmdOutcome, ApplyCmdError, Error as PeaceRtError, Flow, ItemGraphBuilder,
-        Workspace, WorkspaceSpec,
+        StateStoredAndDiscovered, Workspace, WorkspaceSpec,
     },
 };
 
@@ -293,10 +294,30 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
         matches!(
             &exec_dry_result,
             Err(PeaceTestError::PeaceRt(PeaceRtError::ApplyCmdError(
-                ApplyCmdError::StatesCurrentOutOfSync
+                ApplyCmdError::StatesCurrentOutOfSync { items_state_stored_stale }
             )))
+            if items_state_stored_stale.len() == 1
+            && matches!(
+                items_state_stored_stale.iter().next(),
+                Some((item_id, state_stored_and_discovered))
+                if item_id == VecCopyItem::ID_DEFAULT
+                && matches!(
+                    state_stored_and_discovered,
+                    StateStoredAndDiscovered::ValuesDiffer { state_stored, state_discovered }
+                    if matches!(
+                        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
+                        Some(state_stored)
+                        if **state_stored == &[0, 1, 2, 3]
+                    )
+                    && matches!(
+                        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
+                        Some(state_discovered)
+                        if **state_discovered == &[0, 1, 2, 3, 4, 5, 6, 7]
+                    )
+                ),
+            )
         ),
-        "Expected `exec_dry_result` to be `Err(.. {{ ApplyCmdError::StatesCurrentOutOfSync }})`,\n\
+        "Expected `exec_dry_result` to be `Err(.. {{ ApplyCmdError::StatesCurrentOutOfSync {{ .. }} }})`,\n\
         but was {exec_dry_result:?}",
     );
 
@@ -460,10 +481,30 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         matches!(
             &exec_result,
             Err(PeaceTestError::PeaceRt(PeaceRtError::ApplyCmdError(
-                ApplyCmdError::StatesCurrentOutOfSync
+                ApplyCmdError::StatesCurrentOutOfSync { items_state_stored_stale }
             )))
+            if items_state_stored_stale.len() == 1
+            && matches!(
+                items_state_stored_stale.iter().next(),
+                Some((item_id, state_stored_and_discovered))
+                if item_id == VecCopyItem::ID_DEFAULT
+                && matches!(
+                    state_stored_and_discovered,
+                    StateStoredAndDiscovered::ValuesDiffer { state_stored, state_discovered }
+                    if matches!(
+                        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
+                        Some(state_stored)
+                        if **state_stored == &[0, 1, 2, 3]
+                    )
+                    && matches!(
+                        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
+                        Some(state_discovered)
+                        if **state_discovered == &[0, 1, 2, 3, 4, 5, 6, 7]
+                    )
+                ),
+            )
         ),
-        "Expected `exec_result` to be `Err(.. {{ ApplyCmdError::StatesCurrentOutOfSync }})`,\n\
+        "Expected `exec_result` to be `Err(.. {{ ApplyCmdError::StatesCurrentOutOfSync {{ .. }} }})`,\n\
         but was {exec_result:?}",
     );
 
