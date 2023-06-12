@@ -6,6 +6,9 @@
 * Rename `StatesDesired*` to `StatesGoal*`. ([#131], [#132])
 * Add `StatesGoalStored` to distinguish between stored and discovered `StatesGoal`. ([#131], [#132])
 * `DiffCmd::diff{,_with}` supports discovery of state during diffing. ([#133], [#134])
+* Add `PartialEq` bound to `Item::State`. ([#59], [#135])
+* Guard `EnsureCmd::{exec,exec_dry}` if stored current state or goal state is not in sync with actual. ([#59], [#135])
+* Guard `CleanCmd::{exec,exec_dry}` if stored current state is not in sync with actual. ([#59], [#135])
 
 [#120]: https://github.com/azriel91/peace/issues/120
 [#130]: https://github.com/azriel91/peace/pull/130
@@ -13,6 +16,8 @@
 [#132]: https://github.com/azriel91/peace/pull/132
 [#133]: https://github.com/azriel91/peace/issues/133
 [#134]: https://github.com/azriel91/peace/pull/134
+[#59]: https://github.com/azriel91/peace/issues/59
+[#135]: https://github.com/azriel91/peace/pull/135
 
 
 ## 0.0.10 (2023-06-03)
