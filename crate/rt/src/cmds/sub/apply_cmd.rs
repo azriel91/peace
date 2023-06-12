@@ -576,8 +576,6 @@ where
     where
         StatesTs: Debug + Send + 'static,
     {
-        // TODO: don't store states during discovery, as we want the user to do this as
-        // an intentional operation.
         let states_current_outcome = StatesDiscoverCmd::<E, O, PKeys>::current_with(
             #[cfg(not(feature = "output_progress"))]
             &mut CmdIndependence::SubCmd { cmd_view },
@@ -586,6 +584,7 @@ where
                 cmd_view,
                 progress_tx: progress_tx.clone(),
             },
+            false,
         )
         .await;
         let states_current_outcome = match states_current_outcome {
@@ -649,8 +648,6 @@ where
     where
         StatesTs: Debug + Send + 'static,
     {
-        // TODO: don't store states during discovery, as we want the user to do this as
-        // an intentional operation.
         let states_goal_outcome = StatesDiscoverCmd::<E, O, PKeys>::goal_with(
             #[cfg(not(feature = "output_progress"))]
             &mut CmdIndependence::SubCmd { cmd_view },
@@ -659,6 +656,7 @@ where
                 cmd_view,
                 progress_tx: progress_tx.clone(),
             },
+            false,
         )
         .await;
         let states_goal_outcome = match states_goal_outcome {

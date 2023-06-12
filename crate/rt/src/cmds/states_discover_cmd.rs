@@ -61,6 +61,8 @@ where
     /// inserted it into `Resources`, and the successor should references it
     /// in their [`Data`].
     ///
+    /// This function will always serialize states to storage.
+    ///
     /// [`Current<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Current.html
     /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`Item`]: peace_cfg::Item
@@ -68,7 +70,7 @@ where
     pub async fn current(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
-        Self::current_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
+        Self::current_with(&mut CmdIndependence::Standalone { cmd_ctx }, true).await
     }
 
     /// Runs [`try_state_current`] for each [`Item`].
@@ -78,11 +80,19 @@ where
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
     ///
+    /// # Parameters
+    ///
+    /// * `cmd_independence`: Whether this command is run as a top level
+    ///   command, or part of a subcommand.
+    /// * `serialize_to_storage`: Whether to write states to storage after
+    ///   discovery.
+    ///
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        serialize_to_storage: bool,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
-        Self::exec(cmd_independence, DiscoverFor::Current)
+        Self::exec(cmd_independence, DiscoverFor::Current, serialize_to_storage)
             .await
             .map(|cmd_outcome| {
                 let CmdOutcome {
@@ -109,6 +119,8 @@ where
     /// inserted it into `Resources`, and the successor should references it
     /// in their [`Data`].
     ///
+    /// This function will always serialize states to storage.
+    ///
     /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`Goal<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Goal.html
     /// [`Item`]: peace_cfg::Item
@@ -116,7 +128,7 @@ where
     pub async fn goal(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesGoal, E>, E> {
-        Self::goal_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
+        Self::goal_with(&mut CmdIndependence::Standalone { cmd_ctx }, true).await
     }
 
     /// Runs [`try_state_goal`] for each [`Item`].
@@ -129,8 +141,9 @@ where
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn goal_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        serialize_to_storage: bool,
     ) -> Result<CmdOutcome<StatesGoal, E>, E> {
-        Self::exec(cmd_independence, DiscoverFor::Goal)
+        Self::exec(cmd_independence, DiscoverFor::Goal, serialize_to_storage)
             .await
             .map(|cmd_outcome| {
                 let CmdOutcome {
@@ -164,6 +177,8 @@ where
     /// automatically inserted it into `Resources`, and the successor should
     /// references it in their [`Data`].
     ///
+    /// This function will always serialize states to storage.
+    ///
     /// [`Current<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Current.html
     /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`Goal<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Goal.html
@@ -176,6 +191,7 @@ where
         Self::exec(
             &mut CmdIndependence::Standalone { cmd_ctx },
             DiscoverFor::CurrentAndGoal,
+            true,
         )
         .await
     }
@@ -185,6 +201,7 @@ where
     async fn exec(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
         discover_for: DiscoverFor,
+        serialize_to_storage: bool,
     ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
         let outcome = {
             let states_current_mut = StatesMut::<Current>::new();
@@ -400,16 +417,18 @@ where
             CmdIndependence::SubCmdWithProgress { cmd_view, .. } => cmd_view.resources,
         };
 
-        match discover_for {
-            DiscoverFor::Current => {
-                Self::serialize_current(resources, states_current).await?;
-            }
-            DiscoverFor::Goal => {
-                Self::serialize_goal(resources, states_goal).await?;
-            }
-            DiscoverFor::CurrentAndGoal => {
-                Self::serialize_current(resources, states_current).await?;
-                Self::serialize_goal(resources, states_goal).await?;
+        if serialize_to_storage {
+            match discover_for {
+                DiscoverFor::Current => {
+                    Self::serialize_current(resources, states_current).await?;
+                }
+                DiscoverFor::Goal => {
+                    Self::serialize_goal(resources, states_goal).await?;
+                }
+                DiscoverFor::CurrentAndGoal => {
+                    Self::serialize_current(resources, states_current).await?;
+                    Self::serialize_goal(resources, states_goal).await?;
+                }
             }
         }
 

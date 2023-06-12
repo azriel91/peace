@@ -183,7 +183,7 @@ where
                             };
 
                             let states_current_outcome =
-                                StatesDiscoverCmd::current_with(&mut cmd_independence).await;
+                                StatesDiscoverCmd::current_with(&mut cmd_independence, true).await;
                             match states_current_outcome {
                                 Ok(states_current_outcome) => {
                                     outcomes_tx
@@ -261,7 +261,7 @@ where
                             };
 
                             let states_goal_outcome =
-                                StatesDiscoverCmd::goal_with(&mut cmd_independence).await;
+                                StatesDiscoverCmd::goal_with(&mut cmd_independence, true).await;
                             match states_goal_outcome {
                                 Ok(states_goal_outcome) => {
                                     outcomes_tx
