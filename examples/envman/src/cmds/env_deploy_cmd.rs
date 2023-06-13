@@ -45,7 +45,7 @@ macro_rules! run {
             async move {
                 let states_ensured_outcome = EnsureCmd::exec_with(
                     &mut CmdIndependence::Standalone { cmd_ctx },
-                    ApplyStoredStateSync::None,
+                    ApplyStoredStateSync::Current,
                 )
                 .await?;
                 let CmdOutcome {
