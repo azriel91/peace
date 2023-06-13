@@ -17,6 +17,9 @@ use crate::{
     vec_copy_item::VecB, NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItem, VecCopyState,
 };
 
+#[cfg(feature = "output_progress")]
+use peace::cfg::progress::{ProgressComplete, ProgressStatus};
+
 #[tokio::test]
 async fn current_and_goal_discovers_both_states_current_and_goal()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -82,6 +85,24 @@ async fn current_and_goal_discovers_both_states_current_and_goal()
         states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
         states_goal_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
+
+    #[cfg(feature = "output_progress")]
+    {
+        let cmd_progress_tracker = cmd_ctx.cmd_progress_tracker();
+        let progress_tracker = cmd_progress_tracker
+            .progress_trackers()
+            .get(VecCopyItem::ID_DEFAULT)
+            .unwrap_or_else(|| {
+                panic!(
+                    "Expected `progress_tracker` to exist for {}",
+                    VecCopyItem::ID_DEFAULT
+                )
+            });
+        assert_eq!(
+            &ProgressStatus::Complete(ProgressComplete::Success),
+            progress_tracker.progress_status()
+        );
+    }
 
     Ok(())
 }
@@ -383,6 +404,171 @@ async fn goal_with_does_not_serialize_states_when_told_not_to()
     assert_eq!(
         Some(&VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])),
         states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
+    );
+
+    Ok(())
+}
+
+#[cfg(feature = "output_progress")]
+#[tokio::test]
+async fn sub_cmd_current_with_send_progress_tick_instead_of_complete()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
+
+    let _cmd_outcome = StatesDiscoverCmd::<_, NoOpOutput, _>::current_with(
+        &mut CmdIndependence::SubCmd {
+            cmd_view: &mut cmd_ctx.view(),
+        },
+        false,
+    )
+    .await?;
+
+    let cmd_progress_tracker = cmd_ctx.cmd_progress_tracker();
+    let progress_tracker = cmd_progress_tracker
+        .progress_trackers()
+        .get(VecCopyItem::ID_DEFAULT)
+        .unwrap_or_else(|| {
+            panic!(
+                "Expected `progress_tracker` to exist for {}",
+                VecCopyItem::ID_DEFAULT
+            )
+        });
+    let progress_status = progress_tracker.progress_status();
+    assert!(
+        matches!(
+            progress_status,
+            ProgressStatus::Initialized | ProgressStatus::Running,
+        ),
+        "expected `progress_status` to be `Initialized` or `Pending`, but was {progress_status:?}"
+    );
+
+    Ok(())
+}
+
+#[cfg(feature = "output_progress")]
+#[tokio::test]
+async fn sub_cmd_goal_with_send_progress_tick_instead_of_complete()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
+
+    let _cmd_outcome = StatesDiscoverCmd::<_, NoOpOutput, _>::goal_with(
+        &mut CmdIndependence::SubCmd {
+            cmd_view: &mut cmd_ctx.view(),
+        },
+        false,
+    )
+    .await?;
+
+    let cmd_progress_tracker = cmd_ctx.cmd_progress_tracker();
+    let progress_tracker = cmd_progress_tracker
+        .progress_trackers()
+        .get(VecCopyItem::ID_DEFAULT)
+        .unwrap_or_else(|| {
+            panic!(
+                "Expected `progress_tracker` to exist for {}",
+                VecCopyItem::ID_DEFAULT
+            )
+        });
+    let progress_status = progress_tracker.progress_status();
+    assert!(
+        matches!(
+            progress_status,
+            ProgressStatus::Initialized | ProgressStatus::Running,
+        ),
+        "expected `progress_status` to be `Initialized` or `Pending`, but was {progress_status:?}"
+    );
+
+    Ok(())
+}
+
+#[cfg(feature = "output_progress")]
+#[tokio::test]
+async fn sub_cmd_current_and_goal_with_send_progress_tick_instead_of_complete()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
+
+    let _cmd_outcome = StatesDiscoverCmd::<_, NoOpOutput, _>::current_and_goal_with(
+        &mut CmdIndependence::SubCmd {
+            cmd_view: &mut cmd_ctx.view(),
+        },
+        false,
+    )
+    .await?;
+
+    let cmd_progress_tracker = cmd_ctx.cmd_progress_tracker();
+    let progress_tracker = cmd_progress_tracker
+        .progress_trackers()
+        .get(VecCopyItem::ID_DEFAULT)
+        .unwrap_or_else(|| {
+            panic!(
+                "Expected `progress_tracker` to exist for {}",
+                VecCopyItem::ID_DEFAULT
+            )
+        });
+    let progress_status = progress_tracker.progress_status();
+    assert!(
+        matches!(
+            progress_status,
+            ProgressStatus::Initialized | ProgressStatus::Running,
+        ),
+        "expected `progress_status` to be `Initialized` or `Pending`, but was {progress_status:?}"
     );
 
     Ok(())
