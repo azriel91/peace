@@ -24,6 +24,18 @@ cfg_if::cfg_if! {
 /// Whether a command is an independent top level command, or as part of another
 /// command.
 ///
+/// # Examples
+///
+/// Instead of constructing one of these variants directly, there are
+/// convenience functions on the [`CmdCtx`] and [`SingleProfileSingleFlowView`]
+/// types when using one of the `*Cmd::*_with(..)` functions.
+///
+/// ```rust,ignore
+/// &mut cmd_ctx.as_standalone();
+/// &mut cmd_ctx.view().as_sub_cmd();
+/// &mut cmd_ctx.view().as_sub_cmd_with_progress(progress_tx.clone());
+/// ```
+///
 /// # Design
 ///
 /// The three lifetimes are present because of the complexity of the
