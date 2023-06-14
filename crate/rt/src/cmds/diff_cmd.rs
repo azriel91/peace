@@ -8,6 +8,7 @@ use peace_cmd::{
         MultiProfileSingleFlow, MultiProfileSingleFlowView, SingleProfileSingleFlow,
         SingleProfileSingleFlowView,
     },
+    CmdIndependence,
 };
 use peace_params::ParamsSpecs;
 use peace_resources::{
@@ -21,10 +22,7 @@ use peace_resources::{
 };
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, Flow};
 
-use crate::cmds::{
-    cmd_ctx_internal::CmdIndependence, CmdBase, StatesCurrentReadCmd, StatesDiscoverCmd,
-    StatesGoalReadCmd,
-};
+use crate::cmds::{CmdBase, StatesCurrentReadCmd, StatesDiscoverCmd, StatesGoalReadCmd};
 
 pub use self::{diff_info_spec::DiffInfoSpec, diff_state_spec::DiffStateSpec};
 

@@ -1,15 +1,12 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemId, Profile},
-    cmd::ctx::CmdCtx,
+    cmd::{ctx::CmdCtx, CmdIndependence},
     resources::{
         paths::{StatesCurrentFile, StatesGoalFile},
         states::{StatesCurrent, StatesCurrentStored, StatesGoal},
         type_reg::untagged::{BoxDtDisplay, TypeReg},
     },
-    rt::cmds::{
-        cmd_ctx_internal::CmdIndependence, EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd,
-        StatesGoalReadCmd,
-    },
+    rt::cmds::{EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd, StatesGoalReadCmd},
     rt_model::{outcomes::CmdOutcome, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 

@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
+use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow, CmdIndependence};
 use peace_resources::{
     resources::ts::SetUp,
     states::{
@@ -11,7 +11,6 @@ use peace_resources::{
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error};
 
 use crate::cmds::{
-    cmd_ctx_internal::CmdIndependence,
     sub::{ApplyCmd, ApplyFor},
     ApplyStoredStateSync,
 };

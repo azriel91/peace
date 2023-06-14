@@ -2,7 +2,7 @@ use futures::FutureExt;
 use peace::{
     cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
-    rt::cmds::{cmd_ctx_internal::CmdIndependence, ApplyStoredStateSync, CleanCmd},
+    rt::cmds::{ApplyStoredStateSync, CleanCmd},
     rt_model::{outcomes::CmdOutcome, output::OutputWrite},
 };
 
@@ -43,11 +43,9 @@ macro_rules! run {
     ($output:ident, $flow_cmd:ident, $padding:expr) => {{
         $flow_cmd::run($output, false, |cmd_ctx| {
             async move {
-                let states_cleaned_outcome = CleanCmd::exec_with(
-                    &mut CmdIndependence::Standalone { cmd_ctx },
-                    ApplyStoredStateSync::None,
-                )
-                .await?;
+                let states_cleaned_outcome =
+                    CleanCmd::exec_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::None)
+                        .await?;
                 let CmdOutcome {
                     value: states_cleaned,
                     errors,

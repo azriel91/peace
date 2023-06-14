@@ -5,6 +5,7 @@ use peace_cfg::{FnCtx, ItemId};
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+    CmdIndependence,
 };
 use peace_resources::{
     internal::StatesMut,
@@ -21,10 +22,7 @@ use peace_rt_model::{
     outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, Storage,
 };
 
-use crate::{
-    cmds::{cmd_ctx_internal::CmdIndependence, CmdBase},
-    BUFFERED_FUTURES_MAX,
-};
+use crate::{cmds::CmdBase, BUFFERED_FUTURES_MAX};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {

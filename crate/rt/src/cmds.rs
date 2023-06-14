@@ -21,7 +21,6 @@ pub use self::{
     sub::ApplyStoredStateSync,
 };
 
-pub mod cmd_ctx_internal;
 pub mod sub;
 
 mod clean_cmd;

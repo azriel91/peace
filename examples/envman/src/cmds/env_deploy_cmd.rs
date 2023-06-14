@@ -1,8 +1,11 @@
 use futures::FutureExt;
 use peace::{
-    cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
+    cmd::{
+        scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
+        CmdIndependence,
+    },
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
-    rt::cmds::{cmd_ctx_internal::CmdIndependence, ApplyStoredStateSync, EnsureCmd},
+    rt::cmds::{ApplyStoredStateSync, EnsureCmd},
     rt_model::{outcomes::CmdOutcome, output::OutputWrite},
 };
 

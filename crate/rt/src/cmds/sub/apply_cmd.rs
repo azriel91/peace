@@ -5,6 +5,7 @@ use peace_cfg::{ApplyCheck, FnCtx, ItemId};
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+    CmdIndependence,
 };
 use peace_params::ParamsSpecs;
 use peace_resources::{
@@ -24,10 +25,7 @@ use peace_rt_model_core::ItemsStateStoredStale;
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
-    cmds::{
-        cmd_ctx_internal::CmdIndependence, CmdBase, StatesCurrentReadCmd, StatesDiscoverCmd,
-        StatesGoalReadCmd,
-    },
+    cmds::{CmdBase, StatesCurrentReadCmd, StatesDiscoverCmd, StatesGoalReadCmd},
     BUFFERED_FUTURES_MAX,
 };
 
