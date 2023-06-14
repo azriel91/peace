@@ -1,9 +1,6 @@
 use futures::FutureExt;
 use peace::{
-    cmd::{
-        scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
-        CmdIndependence,
-    },
+    cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
     rt::cmds::{ApplyStoredStateSync, EnsureCmd},
     rt_model::{outcomes::CmdOutcome, output::OutputWrite},
@@ -47,7 +44,7 @@ macro_rules! run {
         $flow_cmd::run($output, false, |cmd_ctx| {
             async move {
                 let states_ensured_outcome = EnsureCmd::exec_with(
-                    &mut CmdIndependence::Standalone { cmd_ctx },
+                    &mut cmd_ctx.as_standalone(),
                     ApplyStoredStateSync::Current,
                 )
                 .await?;

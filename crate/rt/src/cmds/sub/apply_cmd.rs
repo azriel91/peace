@@ -112,7 +112,7 @@ where
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApplyDry>, E>, E> {
         Self::exec_dry_with(
-            &mut CmdIndependence::Standalone { cmd_ctx },
+            &mut cmd_ctx.as_standalone(),
             apply_for,
             ApplyStoredStateSync::Both,
         )
@@ -183,7 +183,7 @@ where
         apply_for: ApplyFor,
     ) -> Result<CmdOutcome<States<StatesTsApply>, E>, E> {
         Self::exec_with(
-            &mut CmdIndependence::Standalone { cmd_ctx },
+            &mut cmd_ctx.as_standalone(),
             apply_for,
             ApplyStoredStateSync::Both,
         )

@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
-    cmd::{ctx::CmdCtx, CmdIndependence},
+    cmd::ctx::CmdCtx,
     resources::type_reg::untagged::BoxDataTypeDowncast,
     rt::cmds::{ApplyStoredStateSync, EnsureCmd, StatesCurrentReadCmd, StatesDiscoverCmd},
     rt_model::{
@@ -300,13 +300,8 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
         .insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
     // Dry ensure states.
-    let exec_dry_result = EnsureCmd::exec_dry_with(
-        &mut CmdIndependence::Standalone {
-            cmd_ctx: &mut cmd_ctx,
-        },
-        ApplyStoredStateSync::Current,
-    )
-    .await;
+    let exec_dry_result =
+        EnsureCmd::exec_dry_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Current).await;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
@@ -390,13 +385,8 @@ async fn exec_dry_returns_sync_error_when_goal_state_out_of_sync()
         .await?;
 
     // Dry ensure states.
-    let exec_dry_result = EnsureCmd::exec_dry_with(
-        &mut CmdIndependence::Standalone {
-            cmd_ctx: &mut cmd_ctx,
-        },
-        ApplyStoredStateSync::Goal,
-    )
-    .await;
+    let exec_dry_result =
+        EnsureCmd::exec_dry_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Goal).await;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
@@ -484,13 +474,8 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         .insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
     // Ensure states.
-    let exec_result = EnsureCmd::exec_with(
-        &mut CmdIndependence::Standalone {
-            cmd_ctx: &mut cmd_ctx,
-        },
-        ApplyStoredStateSync::Current,
-    )
-    .await;
+    let exec_result =
+        EnsureCmd::exec_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Current).await;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
@@ -574,13 +559,8 @@ async fn exec_returns_sync_error_when_goal_state_out_of_sync()
         .await?;
 
     // Ensure states.
-    let exec_result = EnsureCmd::exec_with(
-        &mut CmdIndependence::Standalone {
-            cmd_ctx: &mut cmd_ctx,
-        },
-        ApplyStoredStateSync::Goal,
-    )
-    .await;
+    let exec_result =
+        EnsureCmd::exec_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Goal).await;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),

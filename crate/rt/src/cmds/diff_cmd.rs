@@ -56,7 +56,7 @@ where
     pub async fn diff_stored(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StateDiffs, E> {
-        Self::diff_stored_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
+        Self::diff_stored_with(&mut cmd_ctx.as_standalone()).await
     }
 
     /// Returns the [`state_diff`]`s between the stored current and goal
@@ -91,7 +91,7 @@ where
         diff_state_spec_b: DiffStateSpec,
     ) -> Result<CmdOutcome<StateDiffs, E>, E> {
         Self::diff_with(
-            &mut CmdIndependence::Standalone { cmd_ctx },
+            &mut cmd_ctx.as_standalone(),
             diff_state_spec_a,
             diff_state_spec_b,
         )

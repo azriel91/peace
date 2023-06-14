@@ -70,7 +70,7 @@ where
     pub async fn current(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
-        Self::current_with(&mut CmdIndependence::Standalone { cmd_ctx }, true).await
+        Self::current_with(&mut cmd_ctx.as_standalone(), true).await
     }
 
     /// Runs [`try_state_current`] for each [`Item`].
@@ -128,7 +128,7 @@ where
     pub async fn goal(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesGoal, E>, E> {
-        Self::goal_with(&mut CmdIndependence::Standalone { cmd_ctx }, true).await
+        Self::goal_with(&mut cmd_ctx.as_standalone(), true).await
     }
 
     /// Runs [`try_state_goal`] for each [`Item`].
@@ -195,7 +195,7 @@ where
     pub async fn current_and_goal(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
-        Self::current_and_goal_with(&mut CmdIndependence::Standalone { cmd_ctx }, true).await
+        Self::current_and_goal_with(&mut cmd_ctx.as_standalone(), true).await
     }
 
     /// Runs [`try_state_current`] and [`try_state_goal`]` for each
