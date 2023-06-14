@@ -9,6 +9,7 @@
 * Add `PartialEq` bound to `Item::State`. ([#59], [#135])
 * Guard `EnsureCmd::{exec,exec_dry}` if stored current state or goal state is not in sync with actual. ([#59], [#135])
 * Guard `CleanCmd::{exec,exec_dry}` if stored current state is not in sync with actual. ([#59], [#135])
+* Add `*Cmd::*_with` for command logic to be executed as sub commands. ([#59], [#135])
 
 [#120]: https://github.com/azriel91/peace/issues/120
 [#130]: https://github.com/azriel91/peace/pull/130
