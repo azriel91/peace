@@ -94,12 +94,15 @@ async fn current_and_goal_discovers_both_states_current_and_goal()
         let progress_tracker = cmd_progress_tracker
             .progress_trackers()
             .get(VecCopyItem::ID_DEFAULT)
-            .unwrap_or_else(|| {
-                panic!(
-                    "Expected `progress_tracker` to exist for {}",
-                    VecCopyItem::ID_DEFAULT
-                )
-            });
+            .unwrap_or_else(
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || {
+                    panic!(
+                        "Expected `progress_tracker` to exist for {}",
+                        VecCopyItem::ID_DEFAULT
+                    )
+                },
+            );
         assert_eq!(
             &ProgressStatus::Complete(ProgressComplete::Success),
             progress_tracker.progress_status()
@@ -457,20 +460,28 @@ async fn sub_cmd_current_with_send_progress_tick_instead_of_complete()
     let progress_tracker = cmd_progress_tracker
         .progress_trackers()
         .get(VecCopyItem::ID_DEFAULT)
-        .unwrap_or_else(|| {
-            panic!(
-                "Expected `progress_tracker` to exist for {}",
-                VecCopyItem::ID_DEFAULT
-            )
-        });
+        .unwrap_or_else(
+            #[cfg_attr(coverage_nightly, no_coverage)]
+            || {
+                panic!(
+                    "Expected `progress_tracker` to exist for {}",
+                    VecCopyItem::ID_DEFAULT
+                )
+            },
+        );
     let progress_status = progress_tracker.progress_status();
-    assert!(
-        matches!(
-            progress_status,
-            ProgressStatus::Initialized | ProgressStatus::Running,
-        ),
-        "expected `progress_status` to be `Initialized` or `Pending`, but was {progress_status:?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    progress_status,
+                    ProgressStatus::Initialized | ProgressStatus::Running,
+                ),
+                "expected `progress_status` to be `Initialized` or `Pending`, but was {progress_status:?}"
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -508,20 +519,28 @@ async fn sub_cmd_goal_with_send_progress_tick_instead_of_complete()
     let progress_tracker = cmd_progress_tracker
         .progress_trackers()
         .get(VecCopyItem::ID_DEFAULT)
-        .unwrap_or_else(|| {
-            panic!(
-                "Expected `progress_tracker` to exist for {}",
-                VecCopyItem::ID_DEFAULT
-            )
-        });
+        .unwrap_or_else(
+            #[cfg_attr(coverage_nightly, no_coverage)]
+            || {
+                panic!(
+                    "Expected `progress_tracker` to exist for {}",
+                    VecCopyItem::ID_DEFAULT
+                )
+            },
+        );
     let progress_status = progress_tracker.progress_status();
-    assert!(
-        matches!(
-            progress_status,
-            ProgressStatus::Initialized | ProgressStatus::Running,
-        ),
-        "expected `progress_status` to be `Initialized` or `Pending`, but was {progress_status:?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    progress_status,
+                    ProgressStatus::Initialized | ProgressStatus::Running,
+                ),
+                "expected `progress_status` to be `Initialized` or `Pending`, but was {progress_status:?}"
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -561,20 +580,28 @@ async fn sub_cmd_current_and_goal_with_send_progress_tick_instead_of_complete()
     let progress_tracker = cmd_progress_tracker
         .progress_trackers()
         .get(VecCopyItem::ID_DEFAULT)
-        .unwrap_or_else(|| {
-            panic!(
-                "Expected `progress_tracker` to exist for {}",
-                VecCopyItem::ID_DEFAULT
-            )
-        });
+        .unwrap_or_else(
+            #[cfg_attr(coverage_nightly, no_coverage)]
+            || {
+                panic!(
+                    "Expected `progress_tracker` to exist for {}",
+                    VecCopyItem::ID_DEFAULT
+                )
+            },
+        );
     let progress_status = progress_tracker.progress_status();
-    assert!(
-        matches!(
-            progress_status,
-            ProgressStatus::Initialized | ProgressStatus::Running,
-        ),
-        "expected `progress_status` to be `Initialized` or `Pending`, but was {progress_status:?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    progress_status,
+                    ProgressStatus::Initialized | ProgressStatus::Running,
+                ),
+                "expected `progress_status` to be `Initialized` or `Pending`, but was {progress_status:?}"
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -585,9 +612,8 @@ fn debug() {
         "{:?}",
         StatesDiscoverCmd::<VecCopyError, NoOpOutput, ()>::default()
     );
-    assert!(
+    assert_eq!(
+        r#"StatesDiscoverCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#,
         debug_str
-            == r#"StatesDiscoverCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#
-            || debug_str == r#"StatesDiscoverCmd(PhantomData)"#
     );
 }

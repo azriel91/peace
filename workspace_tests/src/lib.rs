@@ -1,3 +1,4 @@
+#![cfg_attr(coverage_nightly, feature(no_coverage))]
 #![cfg(test)]
 
 pub(crate) use crate::{
