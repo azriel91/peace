@@ -5,6 +5,7 @@ use peace_cfg::{FlowId, ItemId};
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+    CmdIndependence,
 };
 use peace_resources::{
     paths::{FlowDir, StatesCurrentFile},
@@ -16,7 +17,7 @@ use peace_resources::{
 use peace_rt_model::{params::ParamsKeys, Error, StatesSerializer, Storage};
 use peace_rt_model_core::output::OutputWrite;
 
-use crate::cmds::{cmd_ctx_internal::CmdIndependence, CmdBase};
+use crate::cmds::CmdBase;
 
 /// Reads [`StatesCurrentStored`]s from storage.
 #[derive(Debug)]

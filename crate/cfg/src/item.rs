@@ -77,7 +77,15 @@ pub trait Item: DynClone {
     ///
     /// [state concept]: https://peace.mk/book/technical_concepts/state.html
     /// [`State`]: crate::state::State
-    type State: Clone + Debug + Display + Serialize + DeserializeOwned + Send + Sync + 'static;
+    type State: Clone
+        + Debug
+        + Display
+        + PartialEq
+        + Serialize
+        + DeserializeOwned
+        + Send
+        + Sync
+        + 'static;
 
     /// Diff between the current and target [`State`]s.
     ///

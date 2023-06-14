@@ -16,6 +16,13 @@ use peace_rt_model::{
 };
 use serde::{de::DeserializeOwned, Serialize};
 
+use crate::CmdIndependence;
+
+#[cfg(feature = "output_progress")]
+use peace_core::progress::ProgressUpdateAndId;
+#[cfg(feature = "output_progress")]
+use tokio::sync::mpsc::Sender;
+
 /// A command that works with one profile and one flow.
 ///
 /// ```bash
@@ -620,5 +627,27 @@ where
     /// Returns the flow params for the selected flow.
     pub fn flow_params(&self) -> &FlowParams<FlowParamsK> {
         &self.flow_params
+    }
+}
+
+impl<'view, E, PKeys> SingleProfileSingleFlowView<'view, E, PKeys, SetUp>
+where
+    PKeys: ParamsKeys + 'static,
+{
+    /// Returns this view wrapped in `CmdIndependence::SubCmd`.
+    pub fn as_sub_cmd<O>(&mut self) -> CmdIndependence<'_, '_, 'view, E, O, PKeys> {
+        CmdIndependence::SubCmd { cmd_view: self }
+    }
+
+    /// Returns this view wrapped in `CmdIndependence::SubCmdWithProgress`.
+    #[cfg(feature = "output_progress")]
+    pub fn as_sub_cmd_with_progress<O>(
+        &mut self,
+        progress_tx: Sender<ProgressUpdateAndId>,
+    ) -> CmdIndependence<'_, '_, 'view, E, O, PKeys> {
+        CmdIndependence::SubCmdWithProgress {
+            cmd_view: self,
+            progress_tx,
+        }
     }
 }

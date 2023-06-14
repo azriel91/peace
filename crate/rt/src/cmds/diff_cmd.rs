@@ -8,6 +8,7 @@ use peace_cmd::{
         MultiProfileSingleFlow, MultiProfileSingleFlowView, SingleProfileSingleFlow,
         SingleProfileSingleFlowView,
     },
+    CmdIndependence,
 };
 use peace_params::ParamsSpecs;
 use peace_resources::{
@@ -21,10 +22,7 @@ use peace_resources::{
 };
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, Flow};
 
-use crate::cmds::{
-    cmd_ctx_internal::CmdIndependence, CmdBase, StatesCurrentReadCmd, StatesDiscoverCmd,
-    StatesGoalReadCmd,
-};
+use crate::cmds::{CmdBase, StatesCurrentReadCmd, StatesDiscoverCmd, StatesGoalReadCmd};
 
 pub use self::{diff_info_spec::DiffInfoSpec, diff_state_spec::DiffStateSpec};
 
@@ -58,7 +56,7 @@ where
     pub async fn diff_stored(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<StateDiffs, E> {
-        Self::diff_stored_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
+        Self::diff_stored_with(&mut cmd_ctx.as_standalone()).await
     }
 
     /// Returns the [`state_diff`]`s between the stored current and goal
@@ -93,7 +91,7 @@ where
         diff_state_spec_b: DiffStateSpec,
     ) -> Result<CmdOutcome<StateDiffs, E>, E> {
         Self::diff_with(
-            &mut CmdIndependence::Standalone { cmd_ctx },
+            &mut cmd_ctx.as_standalone(),
             diff_state_spec_a,
             diff_state_spec_b,
         )
@@ -183,7 +181,7 @@ where
                             };
 
                             let states_current_outcome =
-                                StatesDiscoverCmd::current_with(&mut cmd_independence).await;
+                                StatesDiscoverCmd::current_with(&mut cmd_independence, true).await;
                             match states_current_outcome {
                                 Ok(states_current_outcome) => {
                                     outcomes_tx
@@ -261,7 +259,7 @@ where
                             };
 
                             let states_goal_outcome =
-                                StatesDiscoverCmd::goal_with(&mut cmd_independence).await;
+                                StatesDiscoverCmd::goal_with(&mut cmd_independence, true).await;
                             match states_goal_outcome {
                                 Ok(states_goal_outcome) => {
                                     outcomes_tx

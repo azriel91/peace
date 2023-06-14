@@ -2,14 +2,12 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use futures::future::LocalBoxFuture;
 use peace_cfg::ItemId;
-use peace_cmd::scopes::SingleProfileSingleFlowView;
+use peace_cmd::{scopes::SingleProfileSingleFlowView, CmdIndependence};
 use peace_resources::resources::ts::SetUp;
 use peace_rt_model::{
     outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, IndexMap,
 };
 use tokio::sync::{mpsc, mpsc::UnboundedSender};
-
-use crate::cmds::cmd_ctx_internal::CmdIndependence;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {

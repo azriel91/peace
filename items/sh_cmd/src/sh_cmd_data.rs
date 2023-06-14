@@ -1,9 +1,11 @@
 use std::marker::PhantomData;
 
 use peace::{
-    data::{accessors::RMaybe, Data},
-    resources::states::StatesCurrentStored,
+    cfg::{accessors::Stored, State},
+    data::Data,
 };
+
+use crate::{ShCmdExecutionRecord, ShCmdState};
 
 /// Data used to run a shell command.
 ///
@@ -17,7 +19,7 @@ where
     Id: Send + Sync + 'static,
 {
     /// Stored states of this item's previous execution.
-    states_current_stored: RMaybe<'exec, StatesCurrentStored>,
+    state_current_stored: Stored<'exec, State<ShCmdState<Id>, ShCmdExecutionRecord>>,
 
     /// Marker.
     marker: PhantomData<Id>,
@@ -28,7 +30,7 @@ where
     Id: Send + Sync + 'static,
 {
     /// Returns the previous states.
-    pub fn states_current_stored(&self) -> Option<&StatesCurrentStored> {
-        self.states_current_stored.as_deref()
+    pub fn state_current_stored(&self) -> Option<&State<ShCmdState<Id>, ShCmdExecutionRecord>> {
+        self.state_current_stored.get()
     }
 }

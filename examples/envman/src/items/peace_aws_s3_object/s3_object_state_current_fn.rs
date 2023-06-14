@@ -85,7 +85,6 @@ where
                 let e_tag = head_object_output
                     .e_tag()
                     .expect("Expected S3 object e_tag to be Some when head_object is successful.")
-                    .trim_matches('"')
                     .to_string();
 
                 Some((content_md5_hexstr, e_tag))

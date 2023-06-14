@@ -12,10 +12,17 @@ pub use indicatif;
 pub mod output;
 pub mod params;
 
-pub use crate::{error::Error, item_params::ItemParams};
+pub use crate::{
+    error::{ApplyCmdError, Error, StateDowncastError},
+    item_params::ItemParams,
+    items_state_stored_stale::ItemsStateStoredStale,
+    state_stored_and_discovered::StateStoredAndDiscovered,
+};
 
 mod error;
 mod item_params;
+mod items_state_stored_stale;
+mod state_stored_and_discovered;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {

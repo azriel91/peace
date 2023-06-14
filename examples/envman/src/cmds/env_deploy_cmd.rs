@@ -2,7 +2,7 @@ use futures::FutureExt;
 use peace::{
     cmd::scopes::{SingleProfileSingleFlowView, SingleProfileSingleFlowViewAndOutput},
     fmt::presentable::{Heading, HeadingLevel, ListNumbered},
-    rt::cmds::{EnsureCmd, StatesCurrentReadCmd},
+    rt::cmds::{ApplyStoredStateSync, EnsureCmd},
     rt_model::{outcomes::CmdOutcome, output::OutputWrite},
 };
 
@@ -41,15 +41,13 @@ impl EnvDeployCmd {
 
 macro_rules! run {
     ($output:ident, $flow_cmd:ident, $padding:expr) => {{
-        let states_current_stored = $flow_cmd::run($output, true, |ctx| {
-            StatesCurrentReadCmd::exec(ctx).boxed_local()
-        })
-        .await?;
-        $flow_cmd::run($output, false, |ctx| {
+        $flow_cmd::run($output, false, |cmd_ctx| {
             async move {
-                let states_current_stored_ref = &states_current_stored;
-                let states_ensured_outcome =
-                    EnsureCmd::exec(ctx, states_current_stored_ref).await?;
+                let states_ensured_outcome = EnsureCmd::exec_with(
+                    &mut cmd_ctx.as_standalone(),
+                    ApplyStoredStateSync::Current,
+                )
+                .await?;
                 let CmdOutcome {
                     value: states_ensured,
                     errors,
@@ -61,7 +59,7 @@ macro_rules! run {
                             flow, resources, ..
                         },
                     ..
-                } = ctx.view_and_output();
+                } = cmd_ctx.view_and_output();
 
                 if states_ensured_outcome.is_ok() {
                     let states_ensured_raw_map = &***states_ensured;

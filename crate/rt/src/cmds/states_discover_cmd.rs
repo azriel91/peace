@@ -5,6 +5,7 @@ use peace_cfg::{FnCtx, ItemId};
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
+    CmdIndependence,
 };
 use peace_resources::{
     internal::StatesMut,
@@ -21,22 +22,21 @@ use peace_rt_model::{
     outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, Storage,
 };
 
-use crate::{
-    cmds::{cmd_ctx_internal::CmdIndependence, CmdBase},
-    BUFFERED_FUTURES_MAX,
-};
+use crate::{cmds::CmdBase, BUFFERED_FUTURES_MAX};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
         use peace_cfg::{
             progress::{
                 ProgressComplete,
+                ProgressDelta,
                 ProgressMsgUpdate,
                 ProgressSender,
                 ProgressUpdate,
                 ProgressUpdateAndId,
             },
         };
+        use tokio::sync::mpsc::Sender;
     }
 }
 
@@ -61,6 +61,8 @@ where
     /// inserted it into `Resources`, and the successor should references it
     /// in their [`Data`].
     ///
+    /// This function will always serialize states to storage.
+    ///
     /// [`Current<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Current.html
     /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`Item`]: peace_cfg::Item
@@ -68,7 +70,7 @@ where
     pub async fn current(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
-        Self::current_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
+        Self::current_with(&mut cmd_ctx.as_standalone(), true).await
     }
 
     /// Runs [`try_state_current`] for each [`Item`].
@@ -78,11 +80,19 @@ where
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
     ///
+    /// # Parameters
+    ///
+    /// * `cmd_independence`: Whether this command is run as a top level
+    ///   command, or part of a subcommand.
+    /// * `serialize_to_storage`: Whether to write states to storage after
+    ///   discovery.
+    ///
     /// [`try_state_current`]: peace_cfg::Item::try_state_current
     pub async fn current_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        serialize_to_storage: bool,
     ) -> Result<CmdOutcome<StatesCurrent, E>, E> {
-        Self::exec(cmd_independence, DiscoverFor::Current)
+        Self::exec(cmd_independence, DiscoverFor::Current, serialize_to_storage)
             .await
             .map(|cmd_outcome| {
                 let CmdOutcome {
@@ -109,6 +119,8 @@ where
     /// inserted it into `Resources`, and the successor should references it
     /// in their [`Data`].
     ///
+    /// This function will always serialize states to storage.
+    ///
     /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`Goal<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Goal.html
     /// [`Item`]: peace_cfg::Item
@@ -116,7 +128,7 @@ where
     pub async fn goal(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesGoal, E>, E> {
-        Self::goal_with(&mut CmdIndependence::Standalone { cmd_ctx }).await
+        Self::goal_with(&mut cmd_ctx.as_standalone(), true).await
     }
 
     /// Runs [`try_state_goal`] for each [`Item`].
@@ -126,11 +138,19 @@ where
     /// This function exists so that this command can be executed as sub
     /// functionality of another command.
     ///
+    /// # Parameters
+    ///
+    /// * `cmd_independence`: Whether this command is run as a top level
+    ///   command, or part of a subcommand.
+    /// * `serialize_to_storage`: Whether to write states to storage after
+    ///   discovery.
+    ///
     /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
     pub async fn goal_with(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        serialize_to_storage: bool,
     ) -> Result<CmdOutcome<StatesGoal, E>, E> {
-        Self::exec(cmd_independence, DiscoverFor::Goal)
+        Self::exec(cmd_independence, DiscoverFor::Goal, serialize_to_storage)
             .await
             .map(|cmd_outcome| {
                 let CmdOutcome {
@@ -164,6 +184,8 @@ where
     /// automatically inserted it into `Resources`, and the successor should
     /// references it in their [`Data`].
     ///
+    /// This function will always serialize states to storage.
+    ///
     /// [`Current<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Current.html
     /// [`Data`]: peace_cfg::TryFnSpec::Data
     /// [`Goal<T>`]: https://docs.rs/peace_data/latest/peace_data/marker/struct.Goal.html
@@ -173,9 +195,34 @@ where
     pub async fn current_and_goal(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
+        Self::current_and_goal_with(&mut cmd_ctx.as_standalone(), true).await
+    }
+
+    /// Runs [`try_state_current`] and [`try_state_goal`]` for each
+    /// [`Item`].
+    ///
+    /// See [`Self::goal`] for full documentation.
+    ///
+    /// This function exists so that this command can be executed as sub
+    /// functionality of another command.
+    ///
+    /// # Parameters
+    ///
+    /// * `cmd_independence`: Whether this command is run as a top level
+    ///   command, or part of a subcommand.
+    /// * `serialize_to_storage`: Whether to write states to storage after
+    ///   discovery.
+    ///
+    /// [`try_state_current`]: peace_cfg::Item::try_state_current
+    /// [`try_state_goal`]: peace_cfg::Item::try_state_goal
+    pub async fn current_and_goal_with(
+        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        serialize_to_storage: bool,
+    ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
         Self::exec(
-            &mut CmdIndependence::Standalone { cmd_ctx },
+            cmd_independence,
             DiscoverFor::CurrentAndGoal,
+            serialize_to_storage,
         )
         .await
     }
@@ -185,6 +232,7 @@ where
     async fn exec(
         cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
         discover_for: DiscoverFor,
+        serialize_to_storage: bool,
     ) -> Result<CmdOutcome<(StatesCurrent, StatesGoal), E>, E> {
         let outcome = {
             let states_current_mut = StatesMut::<Current>::new();
@@ -192,6 +240,12 @@ where
 
             (states_current_mut, states_goal_mut)
         };
+
+        #[cfg(feature = "output_progress")]
+        let is_sub_cmd = matches!(
+            cmd_independence,
+            CmdIndependence::SubCmd { .. } | CmdIndependence::SubCmdWithProgress { .. }
+        );
 
         let cmd_outcome = CmdBase::<E, O, PKeys>::exec(
             cmd_independence,
@@ -241,43 +295,32 @@ where
                                 }
                             };
 
+                            // Send progress update.
+                            #[cfg(feature = "output_progress")]
+                            Self::discover_progress_update(
+                                &state_current_result,
+                                &state_goal_result,
+                                discover_for,
+                                is_sub_cmd,
+                                progress_tx,
+                                item_id,
+                            );
+
                             let state_current =
                                 if let Some(state_current_result) = state_current_result {
-                                    #[cfg(feature = "output_progress")]
-                                    {
-                                        let (progress_complete, msg_update) =
-                                            match &state_current_result {
-                                                Ok(_) => (
-                                                    ProgressComplete::Success,
-                                                    ProgressMsgUpdate::Clear,
-                                                ),
-                                                Err(error) => (
-                                                    ProgressComplete::Fail,
-                                                    ProgressMsgUpdate::Set(format!("{error}")),
-                                                ),
-                                            };
-
-                                        let _progress_send_unused =
-                                            progress_tx.try_send(ProgressUpdateAndId {
-                                                item_id: item_id.clone(),
-                                                progress_update: ProgressUpdate::Complete(
-                                                    progress_complete,
-                                                ),
-                                                msg_update,
-                                            });
-                                    }
-
                                     match state_current_result {
                                         Ok(state_current_opt) => state_current_opt,
                                         Err(error) => {
                                             outcomes_tx
-                                        .send(ItemDiscoverOutcome::Fail {
-                                            item_id: item_id.clone(),
-                                            state_current: None,
-                                            state_goal: None,
-                                            error,
-                                        })
-                                        .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                                            .send(ItemDiscoverOutcome::Fail {
+                                                item_id: item_id.clone(),
+                                                state_current: None,
+                                                state_goal: None,
+                                                error,
+                                            })
+                                            .expect(
+                                                "unreachable: `outcomes_rx` is in a sibling task.",
+                                            );
                                             return; // short circuit
                                         }
                                     }
@@ -286,28 +329,6 @@ where
                                 };
 
                             let state_goal = if let Some(state_goal_result) = state_goal_result {
-                                #[cfg(feature = "output_progress")]
-                                {
-                                    let (progress_complete, msg_update) = match &state_goal_result {
-                                        Ok(_) => {
-                                            (ProgressComplete::Success, ProgressMsgUpdate::Clear)
-                                        }
-                                        Err(error) => (
-                                            ProgressComplete::Fail,
-                                            ProgressMsgUpdate::Set(format!("{error}")),
-                                        ),
-                                    };
-
-                                    let _progress_send_unused =
-                                        progress_tx.try_send(ProgressUpdateAndId {
-                                            item_id: item_id.clone(),
-                                            progress_update: ProgressUpdate::Complete(
-                                                progress_complete,
-                                            ),
-                                            msg_update,
-                                        });
-                                }
-
                                 match state_goal_result {
                                     Ok(state_goal_opt) => state_goal_opt,
                                     Err(error) => {
@@ -400,20 +421,94 @@ where
             CmdIndependence::SubCmdWithProgress { cmd_view, .. } => cmd_view.resources,
         };
 
-        match discover_for {
-            DiscoverFor::Current => {
-                Self::serialize_current(resources, states_current).await?;
-            }
-            DiscoverFor::Goal => {
-                Self::serialize_goal(resources, states_goal).await?;
-            }
-            DiscoverFor::CurrentAndGoal => {
-                Self::serialize_current(resources, states_current).await?;
-                Self::serialize_goal(resources, states_goal).await?;
+        if serialize_to_storage {
+            match discover_for {
+                DiscoverFor::Current => {
+                    Self::serialize_current(resources, states_current).await?;
+                }
+                DiscoverFor::Goal => {
+                    Self::serialize_goal(resources, states_goal).await?;
+                }
+                DiscoverFor::CurrentAndGoal => {
+                    Self::serialize_current(resources, states_current).await?;
+                    Self::serialize_goal(resources, states_goal).await?;
+                }
             }
         }
 
         Ok(cmd_outcome)
+    }
+
+    #[cfg(feature = "output_progress")]
+    fn discover_progress_update(
+        state_current_result: &Option<Result<Option<BoxDtDisplay>, E>>,
+        state_goal_result: &Option<Result<Option<BoxDtDisplay>, E>>,
+        discover_for: DiscoverFor,
+        is_sub_cmd: bool,
+        progress_tx: &Sender<ProgressUpdateAndId>,
+        item_id: &ItemId,
+    ) {
+        let state_current_result = state_current_result.as_ref();
+        let state_goal_result = state_goal_result.as_ref();
+        let (progress_update, msg_update) = match discover_for {
+            DiscoverFor::Current => match state_current_result {
+                Some(Ok(_)) => {
+                    let progress_update = if is_sub_cmd {
+                        ProgressUpdate::Delta(ProgressDelta::Tick)
+                    } else {
+                        ProgressUpdate::Complete(ProgressComplete::Success)
+                    };
+
+                    (progress_update, ProgressMsgUpdate::Clear)
+                }
+                Some(Err(error)) => (
+                    ProgressUpdate::Complete(ProgressComplete::Fail),
+                    ProgressMsgUpdate::Set(format!("{error}")),
+                ),
+                None => return,
+            },
+            DiscoverFor::Goal => match state_goal_result {
+                Some(Ok(_)) => {
+                    let progress_update = if is_sub_cmd {
+                        ProgressUpdate::Delta(ProgressDelta::Tick)
+                    } else {
+                        ProgressUpdate::Complete(ProgressComplete::Success)
+                    };
+
+                    (progress_update, ProgressMsgUpdate::Clear)
+                }
+                Some(Err(error)) => (
+                    ProgressUpdate::Complete(ProgressComplete::Fail),
+                    ProgressMsgUpdate::Set(format!("{error}")),
+                ),
+                None => return,
+            },
+            DiscoverFor::CurrentAndGoal => match state_current_result.zip(state_goal_result) {
+                Some((Ok(_), Ok(_))) => {
+                    let progress_update = if is_sub_cmd {
+                        ProgressUpdate::Delta(ProgressDelta::Tick)
+                    } else {
+                        ProgressUpdate::Complete(ProgressComplete::Success)
+                    };
+
+                    (progress_update, ProgressMsgUpdate::Clear)
+                }
+                Some((Ok(_), Err(error)) | (Err(error), Ok(_))) => (
+                    ProgressUpdate::Complete(ProgressComplete::Fail),
+                    ProgressMsgUpdate::Set(format!("{error}")),
+                ),
+                Some((Err(error_current), Err(error_goal))) => (
+                    ProgressUpdate::Complete(ProgressComplete::Fail),
+                    ProgressMsgUpdate::Set(format!("{error_current}, {error_goal}")),
+                ),
+                None => return,
+            },
+        };
+        let _progress_send_unused = progress_tx.try_send(ProgressUpdateAndId {
+            item_id: item_id.clone(),
+            progress_update,
+            msg_update,
+        });
     }
 
     // TODO: This duplicates a bit of code with `ApplyCmd`.

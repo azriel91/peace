@@ -7,10 +7,10 @@ use peace::{
         internal::StatesMut,
         resources::ts::SetUp,
         states::{self, StatesCurrent, StatesCurrentStored, StatesGoal},
-        type_reg::untagged::BoxDataTypeDowncast,
+        type_reg::untagged::{BoxDataTypeDowncast, BoxDtDisplay},
         Resources,
     },
-    rt_model::{ItemRt, ItemWrapper},
+    rt_model::{Error as PeaceRtError, ItemRt, ItemWrapper, StateDowncastError},
 };
 use peace_items::blank::BlankItem;
 cfg_if::cfg_if! {
@@ -70,6 +70,101 @@ fn eq_returns_false_for_different_item_id() {
     let item_rt_1: &dyn ItemRt<_> = &item_wrapper;
 
     assert!(!item_rt_0.eq(item_rt_1));
+}
+
+#[test]
+fn state_eq_returns_true_for_same_value() {
+    let item_wrapper = ItemWrapper::<_, PeaceTestError>::from(VecCopyItem::default());
+    let state_eq = item_wrapper.state_eq(
+        &BoxDtDisplay::new(VecCopyState::from(vec![0u8])),
+        &BoxDtDisplay::new(VecCopyState::from(vec![0u8])),
+    );
+
+    assert!(
+        matches!(&state_eq, Ok(true)),
+        "expected `state_eq` to be `Ok(true)`, but was `{state_eq:?}`."
+    );
+}
+
+#[test]
+fn state_eq_returns_false_for_different_value() {
+    let item_wrapper = ItemWrapper::<_, PeaceTestError>::from(VecCopyItem::default());
+    let state_eq = item_wrapper.state_eq(
+        &BoxDtDisplay::new(VecCopyState::from(vec![0u8])),
+        &BoxDtDisplay::new(VecCopyState::from(vec![1u8])),
+    );
+
+    assert!(
+        matches!(&state_eq, Ok(false)),
+        "expected `state_eq` to be `Ok(false)`, but was `{state_eq:?}`."
+    );
+}
+
+#[test]
+fn state_eq_returns_err_first_when_first_fails_downcast() {
+    let item_wrapper = ItemWrapper::<_, PeaceTestError>::from(VecCopyItem::default());
+    let state_eq = item_wrapper.state_eq(
+        &BoxDtDisplay::new(String::from("string_a")),
+        &BoxDtDisplay::new(VecCopyState::from(vec![1u8])),
+    );
+
+    assert!(
+        matches!(
+            &state_eq,
+            Err(PeaceTestError::PeaceRt(PeaceRtError::StateDowncastError(
+                StateDowncastError::First { ty_name, state_a }
+            ))) if
+            ty_name == "VecCopyState" &&
+            format!("{state_a}") == "string_a"
+        ),
+        "expected `state_eq` to be `Err( .. {{ StateDowncastError::First {{ .. }} }})`,\n\
+        but was `{state_eq:?}`."
+    );
+}
+
+#[test]
+fn state_eq_returns_err_second_when_second_fails_downcast() {
+    let item_wrapper = ItemWrapper::<_, PeaceTestError>::from(VecCopyItem::default());
+    let state_eq = item_wrapper.state_eq(
+        &BoxDtDisplay::new(VecCopyState::from(vec![0u8])),
+        &BoxDtDisplay::new(String::from("string_b")),
+    );
+
+    assert!(
+        matches!(
+            &state_eq,
+            Err(PeaceTestError::PeaceRt(PeaceRtError::StateDowncastError(
+                StateDowncastError::Second { ty_name, state_b }
+            ))) if
+            ty_name == "VecCopyState" &&
+            format!("{state_b}") == "string_b"
+        ),
+        "expected `state_eq` to be `Err( .. {{ StateDowncastError::Second {{ .. }} }})`,\n\
+        but was `{state_eq:?}`."
+    );
+}
+
+#[test]
+fn state_eq_returns_err_both_when_both_fail_downcast() {
+    let item_wrapper = ItemWrapper::<_, PeaceTestError>::from(VecCopyItem::default());
+    let state_eq = item_wrapper.state_eq(
+        &BoxDtDisplay::new(String::from("string_a")),
+        &BoxDtDisplay::new(String::from("string_b")),
+    );
+
+    assert!(
+        matches!(
+            &state_eq,
+            Err(PeaceTestError::PeaceRt(PeaceRtError::StateDowncastError(
+                StateDowncastError::Both { ty_name, state_a, state_b }
+            ))) if
+            ty_name == "VecCopyState" &&
+            format!("{state_a}") == "string_a" &&
+            format!("{state_b}") == "string_b"
+        ),
+        "expected `state_eq` to be `Err( .. {{ StateDowncastError::Both {{ .. }} }})`,\n\
+        but was `{state_eq:?}`."
+    );
 }
 
 #[tokio::test]

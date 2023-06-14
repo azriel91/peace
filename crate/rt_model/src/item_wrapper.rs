@@ -18,10 +18,11 @@ use peace_resources::{
     type_reg::untagged::{BoxDtDisplay, TypeMap},
     Resources,
 };
+use type_reg::untagged::BoxDataTypeDowncast;
 
 use crate::{
     outcomes::{ItemApply, ItemApplyBoxed, ItemApplyPartial, ItemApplyPartialBoxed},
-    ItemParamsTypeReg, ItemRt, ParamsSpecsTypeReg, StatesTypeReg,
+    ItemParamsTypeReg, ItemRt, ParamsSpecsTypeReg, StateDowncastError, StatesTypeReg,
 };
 
 /// Wraps a type implementing [`Item`].
@@ -564,6 +565,33 @@ where
         item_params_type_reg.register::<I::Params<'_>>(I::id(self).clone());
         params_specs_type_reg.register::<ParamsSpec<I::Params<'_>>>(I::id(self).clone());
         states_type_reg.register::<I::State>(I::id(self).clone());
+    }
+
+    fn state_eq(&self, state_a: &BoxDtDisplay, state_b: &BoxDtDisplay) -> Result<bool, E> {
+        let state_a_downcasted = BoxDataTypeDowncast::<I::State>::downcast_ref(state_a);
+        let state_b_downcasted = BoxDataTypeDowncast::<I::State>::downcast_ref(state_b);
+
+        match (state_a_downcasted, state_b_downcasted) {
+            (None, None) => Err(crate::Error::StateDowncastError(StateDowncastError::Both {
+                ty_name: tynm::type_name::<I::State>(),
+                state_a: state_a.clone(),
+                state_b: state_b.clone(),
+            })
+            .into()),
+            (None, Some(_)) => Err(crate::Error::StateDowncastError(StateDowncastError::First {
+                ty_name: tynm::type_name::<I::State>(),
+                state_a: state_a.clone(),
+            })
+            .into()),
+            (Some(_), None) => Err(
+                crate::Error::StateDowncastError(StateDowncastError::Second {
+                    ty_name: tynm::type_name::<I::State>(),
+                    state_b: state_b.clone(),
+                })
+                .into(),
+            ),
+            (Some(state_a), Some(state_b)) => Ok(state_a == state_b),
+        }
     }
 
     async fn state_clean(

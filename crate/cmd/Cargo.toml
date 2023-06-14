@@ -17,6 +17,7 @@ doctest = false
 test = false
 
 [dependencies]
+cfg-if = { workspace = true }
 futures = { workspace = true }
 indicatif = { workspace = true, optional = true, features = ["tokio"] }
 peace_cfg = { workspace = true }
