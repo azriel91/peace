@@ -1,6 +1,6 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, ItemId, Profile},
-    cmd::{ctx::CmdCtx, CmdIndependence},
+    cmd::ctx::CmdCtx,
     resources::{
         paths::{StatesCurrentFile, StatesGoalFile},
         states::{StatesCurrent, StatesCurrentStored, StatesGoal},
@@ -15,7 +15,12 @@ use crate::{
 };
 
 #[cfg(feature = "output_progress")]
-use peace::cfg::progress::{ProgressComplete, ProgressStatus};
+use futures::FutureExt;
+#[cfg(feature = "output_progress")]
+use peace::{
+    cfg::progress::{ProgressComplete, ProgressStatus},
+    rt::cmds::CmdBase,
+};
 
 #[tokio::test]
 async fn current_and_goal_discovers_both_states_current_and_goal()
@@ -311,9 +316,7 @@ async fn current_with_does_not_serialize_states_when_told_not_to()
         value: states_current,
         errors: _,
     } = StatesDiscoverCmd::<_, NoOpOutput, _>::current_with(
-        &mut CmdIndependence::SubCmd {
-            cmd_view: &mut cmd_ctx.view(),
-        },
+        &mut cmd_ctx.view().as_sub_cmd(),
         false,
     )
     .await?;
@@ -380,13 +383,8 @@ async fn goal_with_does_not_serialize_states_when_told_not_to()
     let CmdOutcome {
         value: states_goal,
         errors: _,
-    } = StatesDiscoverCmd::<_, NoOpOutput, _>::goal_with(
-        &mut CmdIndependence::SubCmd {
-            cmd_view: &mut cmd_ctx.view(),
-        },
-        false,
-    )
-    .await?;
+    } = StatesDiscoverCmd::<_, NoOpOutput, _>::goal_with(&mut cmd_ctx.view().as_sub_cmd(), false)
+        .await?;
 
     let vec_copy_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     let states_goal_stored = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
@@ -431,11 +429,27 @@ async fn sub_cmd_current_with_send_progress_tick_instead_of_complete()
         )
         .await?;
 
-    let _cmd_outcome = StatesDiscoverCmd::<_, NoOpOutput, _>::current_with(
-        &mut CmdIndependence::SubCmd {
-            cmd_view: &mut cmd_ctx.view(),
+    CmdBase::exec(
+        &mut cmd_ctx.as_standalone(),
+        StatesCurrent::new(),
+        |cmd_view, progress_tx, outcome_tx| {
+            async {
+                let cmd_outcome_result = StatesDiscoverCmd::<_, NoOpOutput, _>::current_with(
+                    &mut cmd_view.as_sub_cmd_with_progress(progress_tx.clone()),
+                    false,
+                )
+                .await;
+
+                outcome_tx
+                    .send(cmd_outcome_result)
+                    .expect("`outcome_rx` is in a sibling task.");
+            }
+            .boxed_local()
         },
-        false,
+        |cmd_outcome, cmd_outcome_result| {
+            *cmd_outcome = cmd_outcome_result?;
+            Ok(())
+        },
     )
     .await?;
 
@@ -486,13 +500,9 @@ async fn sub_cmd_goal_with_send_progress_tick_instead_of_complete()
         )
         .await?;
 
-    let _cmd_outcome = StatesDiscoverCmd::<_, NoOpOutput, _>::goal_with(
-        &mut CmdIndependence::SubCmd {
-            cmd_view: &mut cmd_ctx.view(),
-        },
-        false,
-    )
-    .await?;
+    let _cmd_outcome =
+        StatesDiscoverCmd::<_, NoOpOutput, _>::goal_with(&mut cmd_ctx.view().as_sub_cmd(), false)
+            .await?;
 
     let cmd_progress_tracker = cmd_ctx.cmd_progress_tracker();
     let progress_tracker = cmd_progress_tracker
@@ -542,9 +552,7 @@ async fn sub_cmd_current_and_goal_with_send_progress_tick_instead_of_complete()
         .await?;
 
     let _cmd_outcome = StatesDiscoverCmd::<_, NoOpOutput, _>::current_and_goal_with(
-        &mut CmdIndependence::SubCmd {
-            cmd_view: &mut cmd_ctx.view(),
-        },
+        &mut cmd_ctx.view().as_sub_cmd(),
         false,
     )
     .await?;

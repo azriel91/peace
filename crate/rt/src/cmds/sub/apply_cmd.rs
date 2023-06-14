@@ -611,12 +611,9 @@ where
     {
         let states_current_stored_result = StatesCurrentReadCmd::<E, O, PKeys>::exec_with(
             #[cfg(not(feature = "output_progress"))]
-            &mut CmdIndependence::SubCmd { cmd_view },
+            &mut cmd_view.as_sub_cmd(),
             #[cfg(feature = "output_progress")]
-            &mut CmdIndependence::SubCmdWithProgress {
-                cmd_view,
-                progress_tx: progress_tx.clone(),
-            },
+            &mut cmd_view.as_sub_cmd_with_progress(progress_tx.clone()),
         )
         .await;
         match states_current_stored_result {
@@ -640,12 +637,9 @@ where
     {
         let states_current_outcome = StatesDiscoverCmd::<E, O, PKeys>::current_with(
             #[cfg(not(feature = "output_progress"))]
-            &mut CmdIndependence::SubCmd { cmd_view },
+            &mut cmd_view.as_sub_cmd(),
             #[cfg(feature = "output_progress")]
-            &mut CmdIndependence::SubCmdWithProgress {
-                cmd_view,
-                progress_tx: progress_tx.clone(),
-            },
+            &mut cmd_view.as_sub_cmd_with_progress(progress_tx.clone()),
             false,
         )
         .await;
@@ -683,12 +677,9 @@ where
     {
         let states_goal_stored_result = StatesGoalReadCmd::<E, O, PKeys>::exec_with(
             #[cfg(not(feature = "output_progress"))]
-            &mut CmdIndependence::SubCmd { cmd_view },
+            &mut cmd_view.as_sub_cmd(),
             #[cfg(feature = "output_progress")]
-            &mut CmdIndependence::SubCmdWithProgress {
-                cmd_view,
-                progress_tx: progress_tx.clone(),
-            },
+            &mut cmd_view.as_sub_cmd_with_progress(progress_tx.clone()),
         )
         .await;
         match states_goal_stored_result {
@@ -712,12 +703,9 @@ where
     {
         let states_goal_outcome = StatesDiscoverCmd::<E, O, PKeys>::goal_with(
             #[cfg(not(feature = "output_progress"))]
-            &mut CmdIndependence::SubCmd { cmd_view },
+            &mut cmd_view.as_sub_cmd(),
             #[cfg(feature = "output_progress")]
-            &mut CmdIndependence::SubCmdWithProgress {
-                cmd_view,
-                progress_tx: progress_tx.clone(),
-            },
+            &mut cmd_view.as_sub_cmd_with_progress(progress_tx.clone()),
             false,
         )
         .await;
