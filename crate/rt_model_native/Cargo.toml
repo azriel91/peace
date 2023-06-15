@@ -26,7 +26,7 @@ peace_fmt = { workspace = true }
 peace_resources = { workspace = true }
 peace_rt_model_core = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true, optional = true }
+serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "io-std"] }
@@ -36,7 +36,6 @@ tokio-util = { workspace = true, features = ["io", "io-util"] }
 default = []
 error_reporting = ["dep:miette", "peace_rt_model_core/error_reporting"]
 output_in_memory = ["peace_rt_model_core/output_in_memory"]
-output_json = ["dep:serde_json", "peace_rt_model_core/output_json"]
 output_progress = [
     "peace_core/output_progress",
     "peace_rt_model_core/output_progress",

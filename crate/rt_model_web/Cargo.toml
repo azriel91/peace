@@ -24,7 +24,7 @@ peace_resources = { workspace = true }
 peace_rt_model_core = { workspace = true }
 serde = { workspace = true }
 serde-wasm-bindgen = { workspace = true }
-serde_json = { workspace = true, optional = true }
+serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 thiserror = { workspace = true }
 wasm-bindgen = { workspace = true }
@@ -33,5 +33,4 @@ web-sys = { workspace = true, features = ["Storage", "Window"] }
 [features]
 default = []
 error_reporting = ["dep:miette", "peace_rt_model_core/error_reporting"]
-output_json = ["dep:serde_json"]
 output_progress = []

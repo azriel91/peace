@@ -230,7 +230,6 @@ async fn outputs_error_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(feature = "output_json")]
 #[tokio::test]
 async fn outputs_states_as_json() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -251,7 +250,6 @@ async fn outputs_states_as_json() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(feature = "output_json")]
 #[tokio::test]
 async fn outputs_state_diffs_as_json() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -272,7 +270,6 @@ async fn outputs_state_diffs_as_json() -> Result<(), Box<dyn std::error::Error>>
     Ok(())
 }
 
-#[cfg(feature = "output_json")]
 #[tokio::test]
 async fn outputs_error_as_json() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -616,7 +613,7 @@ msg_update: NoChange"#,
         );
     }
 
-    #[cfg(all(feature = "output_json", feature = "output_progress"))]
+    #[cfg(feature = "output_progress")]
     #[tokio::test]
     async fn progress_update_delta_with_progress_format_outcome_writes_json() {
         let mut buffer = Vec::new();
@@ -1003,7 +1000,7 @@ msg_update: NoChange"#,
         );
     }
 
-    #[cfg(all(feature = "output_json", feature = "output_progress"))]
+    #[cfg(feature = "output_progress")]
     #[tokio::test]
     async fn progress_update_delta_with_progress_format_outcome_writes_json() {
         let mut buffer = Vec::new();

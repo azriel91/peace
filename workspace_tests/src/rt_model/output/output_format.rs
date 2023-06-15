@@ -12,18 +12,8 @@ fn from_str_returns_ok_for_yaml() {
     assert_eq!(Ok(OutputFormat::Yaml), OutputFormat::from_str("yaml"))
 }
 
-#[cfg(not(feature = "output_json"))]
 #[test]
-fn from_str_returns_err_for_json_when_json_feature_is_not_enabled() {
-    assert_eq!(
-        Err(OutputFormatParseError("json".to_string())),
-        OutputFormat::from_str("json")
-    )
-}
-
-#[cfg(feature = "output_json")]
-#[test]
-fn from_str_returns_ok_for_json_when_json_feature_is_enabled() {
+fn from_str_returns_ok_for_json() {
     assert_eq!(Ok(OutputFormat::Json), OutputFormat::from_str("json"))
 }
 

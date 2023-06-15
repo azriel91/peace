@@ -49,7 +49,6 @@ error_reporting = [
     "peace_rt_model_hack/error_reporting",
 ]
 output_in_memory = ["peace_rt_model_native/output_in_memory"]
-output_json = ["peace_rt_model_hack/output_json"]
 output_progress = [
     "peace_cfg/output_progress",
     "peace_rt_model_hack/output_progress"

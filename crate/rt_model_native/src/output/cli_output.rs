@@ -201,7 +201,6 @@ where
         Ok(())
     }
 
-    #[cfg(feature = "output_json")]
     async fn output_json<'f, E, T, F>(&mut self, t: &T, fn_error: F) -> Result<(), E>
     where
         E: std::error::Error + From<Error>,
@@ -616,7 +615,6 @@ where
                                 progress_bar.println(t_serialized);
                             });
                     }
-                    #[cfg(feature = "output_json")]
                     OutputFormat::Json => {
                         let _progress_display_unused =
                             serde_json::to_string(progress_update_and_id).map(|t_serialized| {
@@ -667,7 +665,6 @@ where
         match self.outcome_format {
             OutputFormat::Text => self.output_presentable(presentable).await,
             OutputFormat::Yaml => self.output_yaml(&presentable, Error::StatesSerialize).await,
-            #[cfg(feature = "output_json")]
             OutputFormat::Json => {
                 self.output_json(&presentable, Error::StatesSerializeJson)
                     .await
@@ -694,7 +691,6 @@ where
                     .map_err(NativeError::StdoutWrite)
                     .map_err(Error::Native)?;
             }
-            #[cfg(feature = "output_json")]
             OutputFormat::Json => {
                 // TODO: proper parsable structure with error code.
                 let error_serialized = serde_json::to_string(&format!("{error}"))

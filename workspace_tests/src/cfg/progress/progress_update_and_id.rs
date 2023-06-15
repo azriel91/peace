@@ -57,7 +57,6 @@ msg_update: NoChange
 }
 
 #[test]
-#[cfg(feature = "output_json")]
 fn deserialize_json() {
     assert_eq!(
         ProgressUpdateAndId {
@@ -73,7 +72,6 @@ fn deserialize_json() {
 }
 
 #[test]
-#[cfg(feature = "output_json")]
 fn serialize_json() {
     assert_eq!(
         r#"{"item_id":"test_item_id","progress_update":{"Delta":{"Inc":3}},"msg_update":"NoChange"}"#,
