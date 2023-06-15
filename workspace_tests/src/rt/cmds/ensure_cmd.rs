@@ -307,36 +307,42 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
         ensured_states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
-    assert!(
-        matches!(
-            &exec_dry_result,
-            Err(PeaceTestError::PeaceRt(PeaceRtError::ApplyCmdError(
-                ApplyCmdError::StatesCurrentOutOfSync { items_state_stored_stale }
-            )))
-            if items_state_stored_stale.len() == 1
-            && matches!(
-                items_state_stored_stale.iter().next(),
-                Some((item_id, state_stored_and_discovered))
-                if item_id == VecCopyItem::ID_DEFAULT
-                && matches!(
-                    state_stored_and_discovered,
-                    StateStoredAndDiscovered::ValuesDiffer { state_stored, state_discovered }
-                    if matches!(
-                        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
-                        Some(state_stored)
-                        if **state_stored == [0, 1, 2, 3]
-                    )
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &exec_dry_result,
+                    Err(PeaceTestError::PeaceRt(PeaceRtError::ApplyCmdError(
+                        ApplyCmdError::StatesCurrentOutOfSync { items_state_stored_stale }
+                    )))
+                    if items_state_stored_stale.len() == 1
                     && matches!(
-                        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
-                        Some(state_discovered)
-                        if **state_discovered == [0, 1, 2, 3, 4, 5, 6, 7]
+                        items_state_stored_stale.iter().next(),
+                        Some((item_id, state_stored_and_discovered))
+                        if item_id == VecCopyItem::ID_DEFAULT
+                        && matches!(
+                            state_stored_and_discovered,
+                            StateStoredAndDiscovered::ValuesDiffer { state_stored, state_discovered }
+                            if matches!(
+                                BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
+                                Some(state_stored)
+                                if **state_stored == [0, 1, 2, 3]
+                            )
+                            && matches!(
+                                BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
+                                Some(state_discovered)
+                                if **state_discovered == [0, 1, 2, 3, 4, 5, 6, 7]
+                            )
+                        ),
                     )
                 ),
-            )
-        ),
-        "Expected `exec_dry_result` to be `Err(.. {{ ApplyCmdError::StatesCurrentOutOfSync {{ .. }} }})`,\n\
-        but was {exec_dry_result:?}",
-    );
+                "Expected `exec_dry_result` to be \
+                `Err(.. {{ ApplyCmdError::StatesCurrentOutOfSync {{ .. }} }})`,\n\
+                but was {exec_dry_result:?}",
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -392,36 +398,42 @@ async fn exec_dry_returns_sync_error_when_goal_state_out_of_sync()
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
         ensured_states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
-    assert!(
-        matches!(
-            &exec_dry_result,
-            Err(PeaceTestError::PeaceRt(PeaceRtError::ApplyCmdError(
-                ApplyCmdError::StatesGoalOutOfSync { items_state_stored_stale }
-            )))
-            if items_state_stored_stale.len() == 1
-            && matches!(
-                items_state_stored_stale.iter().next(),
-                Some((item_id, state_stored_and_discovered))
-                if item_id == VecCopyItem::ID_DEFAULT
-                && matches!(
-                    state_stored_and_discovered,
-                    StateStoredAndDiscovered::ValuesDiffer { state_stored, state_discovered }
-                    if matches!(
-                        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
-                        Some(state_stored)
-                        if **state_stored == [0, 1, 2, 3]
-                    )
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &exec_dry_result,
+                    Err(PeaceTestError::PeaceRt(PeaceRtError::ApplyCmdError(
+                        ApplyCmdError::StatesGoalOutOfSync { items_state_stored_stale }
+                    )))
+                    if items_state_stored_stale.len() == 1
                     && matches!(
-                        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
-                        Some(state_discovered)
-                        if **state_discovered == [0, 1, 2, 3, 4, 5, 6, 7]
+                        items_state_stored_stale.iter().next(),
+                        Some((item_id, state_stored_and_discovered))
+                        if item_id == VecCopyItem::ID_DEFAULT
+                        && matches!(
+                            state_stored_and_discovered,
+                            StateStoredAndDiscovered::ValuesDiffer { state_stored, state_discovered }
+                            if matches!(
+                                BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
+                                Some(state_stored)
+                                if **state_stored == [0, 1, 2, 3]
+                            )
+                            && matches!(
+                                BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
+                                Some(state_discovered)
+                                if **state_discovered == [0, 1, 2, 3, 4, 5, 6, 7]
+                            )
+                        ),
                     )
                 ),
-            )
-        ),
-        "Expected `exec_dry_result` to be `Err(.. {{ ApplyCmdError::StatesGoalOutOfSync {{ .. }} }})`,\n\
-        but was {exec_dry_result:?}",
-    );
+                "Expected `exec_dry_result` to be \
+                `Err(.. {{ ApplyCmdError::StatesGoalOutOfSync {{ .. }} }})`,\n\
+                but was {exec_dry_result:?}",
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -481,36 +493,42 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
         ensured_states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
-    assert!(
-        matches!(
-            &exec_result,
-            Err(PeaceTestError::PeaceRt(PeaceRtError::ApplyCmdError(
-                ApplyCmdError::StatesCurrentOutOfSync { items_state_stored_stale }
-            )))
-            if items_state_stored_stale.len() == 1
-            && matches!(
-                items_state_stored_stale.iter().next(),
-                Some((item_id, state_stored_and_discovered))
-                if item_id == VecCopyItem::ID_DEFAULT
-                && matches!(
-                    state_stored_and_discovered,
-                    StateStoredAndDiscovered::ValuesDiffer { state_stored, state_discovered }
-                    if matches!(
-                        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
-                        Some(state_stored)
-                        if **state_stored == [0, 1, 2, 3]
-                    )
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &exec_result,
+                    Err(PeaceTestError::PeaceRt(PeaceRtError::ApplyCmdError(
+                        ApplyCmdError::StatesCurrentOutOfSync { items_state_stored_stale }
+                    )))
+                    if items_state_stored_stale.len() == 1
                     && matches!(
-                        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
-                        Some(state_discovered)
-                        if **state_discovered == [0, 1, 2, 3, 4, 5, 6, 7]
+                        items_state_stored_stale.iter().next(),
+                        Some((item_id, state_stored_and_discovered))
+                        if item_id == VecCopyItem::ID_DEFAULT
+                        && matches!(
+                            state_stored_and_discovered,
+                            StateStoredAndDiscovered::ValuesDiffer { state_stored, state_discovered }
+                            if matches!(
+                                BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
+                                Some(state_stored)
+                                if **state_stored == [0, 1, 2, 3]
+                            )
+                            && matches!(
+                                BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
+                                Some(state_discovered)
+                                if **state_discovered == [0, 1, 2, 3, 4, 5, 6, 7]
+                            )
+                        ),
                     )
                 ),
-            )
-        ),
-        "Expected `exec_result` to be `Err(.. {{ ApplyCmdError::StatesCurrentOutOfSync {{ .. }} }})`,\n\
-        but was {exec_result:?}",
-    );
+                "Expected `exec_result` to be \
+                `Err(.. {{ ApplyCmdError::StatesCurrentOutOfSync {{ .. }} }})`,\n\
+                but was {exec_result:?}",
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -566,36 +584,42 @@ async fn exec_returns_sync_error_when_goal_state_out_of_sync()
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
         ensured_states_ensured.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
-    assert!(
-        matches!(
-            &exec_result,
-            Err(PeaceTestError::PeaceRt(PeaceRtError::ApplyCmdError(
-                ApplyCmdError::StatesGoalOutOfSync { items_state_stored_stale }
-            )))
-            if items_state_stored_stale.len() == 1
-            && matches!(
-                items_state_stored_stale.iter().next(),
-                Some((item_id, state_stored_and_discovered))
-                if item_id == VecCopyItem::ID_DEFAULT
-                && matches!(
-                    state_stored_and_discovered,
-                    StateStoredAndDiscovered::ValuesDiffer { state_stored, state_discovered }
-                    if matches!(
-                        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
-                        Some(state_stored)
-                        if **state_stored == [0, 1, 2, 3]
-                    )
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &exec_result,
+                    Err(PeaceTestError::PeaceRt(PeaceRtError::ApplyCmdError(
+                        ApplyCmdError::StatesGoalOutOfSync { items_state_stored_stale }
+                    )))
+                    if items_state_stored_stale.len() == 1
                     && matches!(
-                        BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
-                        Some(state_discovered)
-                        if **state_discovered == [0, 1, 2, 3, 4, 5, 6, 7]
+                        items_state_stored_stale.iter().next(),
+                        Some((item_id, state_stored_and_discovered))
+                        if item_id == VecCopyItem::ID_DEFAULT
+                        && matches!(
+                            state_stored_and_discovered,
+                            StateStoredAndDiscovered::ValuesDiffer { state_stored, state_discovered }
+                            if matches!(
+                                BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_stored),
+                                Some(state_stored)
+                                if **state_stored == [0, 1, 2, 3]
+                            )
+                            && matches!(
+                                BoxDataTypeDowncast::<VecCopyState>::downcast_ref(state_discovered),
+                                Some(state_discovered)
+                                if **state_discovered == [0, 1, 2, 3, 4, 5, 6, 7]
+                            )
+                        ),
                     )
                 ),
-            )
-        ),
-        "Expected `exec_result` to be `Err(.. {{ ApplyCmdError::StatesGoalOutOfSync {{ .. }} }})`,\n\
-        but was {exec_result:?}",
-    );
+                "Expected `exec_result` to be \
+                `Err(.. {{ ApplyCmdError::StatesGoalOutOfSync {{ .. }} }})`,\n\
+                but was {exec_result:?}",
+            );
+        }
+    })();
 
     Ok(())
 }

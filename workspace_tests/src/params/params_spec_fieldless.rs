@@ -88,10 +88,15 @@ fn deserialize_in_memory() -> Result<(), serde_yaml::Error> {
 "#,
     )?;
 
-    assert!(
-        matches!(&deserialized, ParamsSpecFieldless::<u8>::InMemory),
-        "was {deserialized:?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(&deserialized, ParamsSpecFieldless::<u8>::InMemory),
+                "was {deserialized:?}"
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -106,14 +111,19 @@ marker: null
 "#,
     )?;
 
-    assert!(
-        matches!(
-            &deserialized,
-            ParamsSpecFieldless::<u8>::MappingFn(mapping_fn)
-            if !mapping_fn.is_valued()
-        ),
-        "was {deserialized:?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &deserialized,
+                    ParamsSpecFieldless::<u8>::MappingFn(mapping_fn)
+                    if !mapping_fn.is_valued()
+                ),
+                "was {deserialized:?}"
+            );
+        }
+    })();
 
     Ok(())
 }

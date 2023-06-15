@@ -80,10 +80,15 @@ fn state_eq_returns_true_for_same_value() {
         &BoxDtDisplay::new(VecCopyState::from(vec![0u8])),
     );
 
-    assert!(
-        matches!(&state_eq, Ok(true)),
-        "expected `state_eq` to be `Ok(true)`, but was `{state_eq:?}`."
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(&state_eq, Ok(true)),
+                "expected `state_eq` to be `Ok(true)`, but was `{state_eq:?}`."
+            );
+        }
+    })();
 }
 
 #[test]
@@ -94,10 +99,15 @@ fn state_eq_returns_false_for_different_value() {
         &BoxDtDisplay::new(VecCopyState::from(vec![1u8])),
     );
 
-    assert!(
-        matches!(&state_eq, Ok(false)),
-        "expected `state_eq` to be `Ok(false)`, but was `{state_eq:?}`."
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(&state_eq, Ok(false)),
+                "expected `state_eq` to be `Ok(false)`, but was `{state_eq:?}`."
+            );
+        }
+    })();
 }
 
 #[test]
@@ -108,18 +118,23 @@ fn state_eq_returns_err_first_when_first_fails_downcast() {
         &BoxDtDisplay::new(VecCopyState::from(vec![1u8])),
     );
 
-    assert!(
-        matches!(
-            &state_eq,
-            Err(PeaceTestError::PeaceRt(PeaceRtError::StateDowncastError(
-                StateDowncastError::First { ty_name, state_a }
-            ))) if
-            ty_name == "VecCopyState" &&
-            format!("{state_a}") == "string_a"
-        ),
-        "expected `state_eq` to be `Err( .. {{ StateDowncastError::First {{ .. }} }})`,\n\
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &state_eq,
+                    Err(PeaceTestError::PeaceRt(PeaceRtError::StateDowncastError(
+                        StateDowncastError::First { ty_name, state_a }
+                    ))) if
+                    ty_name == "VecCopyState" &&
+                    format!("{state_a}") == "string_a"
+                ),
+                "expected `state_eq` to be `Err( .. {{ StateDowncastError::First {{ .. }} }})`,\n\
         but was `{state_eq:?}`."
-    );
+            );
+        }
+    })();
 }
 
 #[test]
@@ -130,18 +145,23 @@ fn state_eq_returns_err_second_when_second_fails_downcast() {
         &BoxDtDisplay::new(String::from("string_b")),
     );
 
-    assert!(
-        matches!(
-            &state_eq,
-            Err(PeaceTestError::PeaceRt(PeaceRtError::StateDowncastError(
-                StateDowncastError::Second { ty_name, state_b }
-            ))) if
-            ty_name == "VecCopyState" &&
-            format!("{state_b}") == "string_b"
-        ),
-        "expected `state_eq` to be `Err( .. {{ StateDowncastError::Second {{ .. }} }})`,\n\
-        but was `{state_eq:?}`."
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &state_eq,
+                    Err(PeaceTestError::PeaceRt(PeaceRtError::StateDowncastError(
+                        StateDowncastError::Second { ty_name, state_b }
+                    ))) if
+                    ty_name == "VecCopyState" &&
+                    format!("{state_b}") == "string_b"
+                ),
+                "expected `state_eq` to be `Err( .. {{ StateDowncastError::Second {{ .. }} }})`,\n\
+                but was `{state_eq:?}`."
+            );
+        }
+    })();
 }
 
 #[test]
@@ -152,19 +172,24 @@ fn state_eq_returns_err_both_when_both_fail_downcast() {
         &BoxDtDisplay::new(String::from("string_b")),
     );
 
-    assert!(
-        matches!(
-            &state_eq,
-            Err(PeaceTestError::PeaceRt(PeaceRtError::StateDowncastError(
-                StateDowncastError::Both { ty_name, state_a, state_b }
-            ))) if
-            ty_name == "VecCopyState" &&
-            format!("{state_a}") == "string_a" &&
-            format!("{state_b}") == "string_b"
-        ),
-        "expected `state_eq` to be `Err( .. {{ StateDowncastError::Both {{ .. }} }})`,\n\
-        but was `{state_eq:?}`."
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &state_eq,
+                    Err(PeaceTestError::PeaceRt(PeaceRtError::StateDowncastError(
+                        StateDowncastError::Both { ty_name, state_a, state_b }
+                    ))) if
+                    ty_name == "VecCopyState" &&
+                    format!("{state_a}") == "string_a" &&
+                    format!("{state_b}") == "string_b"
+                ),
+                "expected `state_eq` to be `Err( .. {{ StateDowncastError::Both {{ .. }} }})`,\n\
+                but was `{state_eq:?}`."
+            );
+        }
+    })();
 }
 
 #[tokio::test]

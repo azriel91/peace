@@ -160,10 +160,15 @@ fn deserialize_in_memory() -> Result<(), serde_yaml::Error> {
 "#,
     )?;
 
-    assert!(
-        matches!(&deserialized, ParamsSpec::<VecA>::InMemory),
-        "was {deserialized:?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(&deserialized, ParamsSpec::<VecA>::InMemory),
+                "was {deserialized:?}"
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -178,14 +183,19 @@ marker: null
 "#,
     )?;
 
-    assert!(
-        matches!(
-            &deserialized,
-            ParamsSpec::<VecA>::MappingFn(mapping_fn)
-            if !mapping_fn.is_valued()
-        ),
-        "was {deserialized:?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &deserialized,
+                    ParamsSpec::<VecA>::MappingFn(mapping_fn)
+                    if !mapping_fn.is_valued()
+                ),
+                "was {deserialized:?}"
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -207,21 +217,31 @@ field_wise_spec: !Value
 "#,
     )?;
 
-    assert!(
-        matches!(
-            &deserialized,
-            ParamsSpec::<VecA>::FieldWise {
-                field_wise_spec: field_wise_spec @
-                    VecAFieldWise(ValueSpec::<Vec<u8>>::Value {
-                        value,
-                    })
-            }
-            if value == &[1u8]
-            && FieldWiseSpecRt::resolve(field_wise_spec, &resources, &mut value_resolution_ctx)?
-            == VecA(vec![1u8])
-        ),
-        "was {deserialized:?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &deserialized,
+                    ParamsSpec::<VecA>::FieldWise {
+                        field_wise_spec: field_wise_spec @
+                            VecAFieldWise(ValueSpec::<Vec<u8>>::Value {
+                                value,
+                            })
+                    }
+                    if value == &[1u8]
+                    && FieldWiseSpecRt::resolve(
+                            field_wise_spec,
+                            &resources,
+                            &mut value_resolution_ctx
+                        )
+                        .expect("expected value to be resolved.")
+                    == VecA(vec![1u8])
+                ),
+                "was {deserialized:?}"
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -234,15 +254,20 @@ field_wise_spec: InMemory
 "#,
     )?;
 
-    assert!(
-        matches!(
-            &deserialized,
-            ParamsSpec::<VecA>::FieldWise {
-                field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::InMemory)
-            }
-        ),
-        "was {deserialized:?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &deserialized,
+                    ParamsSpec::<VecA>::FieldWise {
+                        field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::InMemory)
+                    }
+                ),
+                "was {deserialized:?}"
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -258,16 +283,21 @@ field_wise_spec: !MappingFn
 "#,
     )?;
 
-    assert!(
-        matches!(
-            &deserialized,
-            ParamsSpec::<VecA>::FieldWise {
-                field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn(mapping_fn))
-            }
-            if !mapping_fn.is_valued()
-        ),
-        "was {deserialized:?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &deserialized,
+                    ParamsSpec::<VecA>::FieldWise {
+                        field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn(mapping_fn))
+                    }
+                    if !mapping_fn.is_valued()
+                ),
+                "was {deserialized:?}"
+            );
+        }
+    })();
 
     Ok(())
 }

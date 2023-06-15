@@ -457,24 +457,29 @@ async fn build_with_item_params_returns_err_when_params_not_provided_and_not_sto
         .build()
         .await;
 
-    assert!(
-        matches!(
-            &cmd_ctx_result,
-            Err(PeaceTestError::PeaceRt(
-                peace::rt_model::Error::ParamsSpecsMismatch {
-                    item_ids_with_no_params_specs,
-                    params_specs_provided_mismatches,
-                    params_specs_stored_mismatches,
-                    params_specs_not_usable,
-                }
-            ))
-            if item_ids_with_no_params_specs == &vec![VecCopyItem::ID_DEFAULT.clone()]
-            && params_specs_provided_mismatches.is_empty()
-            && params_specs_stored_mismatches.is_none()
-            && params_specs_not_usable.is_empty(),
-        ),
-        "was {cmd_ctx_result:#?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &cmd_ctx_result,
+                    Err(PeaceTestError::PeaceRt(
+                        peace::rt_model::Error::ParamsSpecsMismatch {
+                            item_ids_with_no_params_specs,
+                            params_specs_provided_mismatches,
+                            params_specs_stored_mismatches,
+                            params_specs_not_usable,
+                        }
+                    ))
+                    if item_ids_with_no_params_specs == &vec![VecCopyItem::ID_DEFAULT.clone()]
+                    && params_specs_provided_mismatches.is_empty()
+                    && params_specs_stored_mismatches.is_none()
+                    && params_specs_not_usable.is_empty(),
+                ),
+                "was {cmd_ctx_result:#?}"
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -613,32 +618,37 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch()
         .build()
         .await;
 
-    assert!(
-        matches!(
-            &cmd_ctx_result,
-            Err(PeaceTestError::PeaceRt(
-                peace::rt_model::Error::ParamsSpecsMismatch {
-                    item_ids_with_no_params_specs,
-                    params_specs_provided_mismatches,
-                    params_specs_stored_mismatches,
-                    params_specs_not_usable,
-                }
-            ))
-            if item_ids_with_no_params_specs.is_empty()
-            && matches!(
-                params_specs_provided_mismatches.get(&item_id!("mismatch_id")),
-                Some(ParamsSpec::Value { value: VecA(value) })
-                if value == &vec![2u8]
-            )
-            && matches!(
-                params_specs_stored_mismatches,
-                Some(params_specs_stored_mismatches)
-                if params_specs_stored_mismatches.is_empty()
-            )
-            && params_specs_not_usable.is_empty(),
-        ),
-        "was {cmd_ctx_result:#?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &cmd_ctx_result,
+                    Err(PeaceTestError::PeaceRt(
+                        peace::rt_model::Error::ParamsSpecsMismatch {
+                            item_ids_with_no_params_specs,
+                            params_specs_provided_mismatches,
+                            params_specs_stored_mismatches,
+                            params_specs_not_usable,
+                        }
+                    ))
+                    if item_ids_with_no_params_specs.is_empty()
+                    && matches!(
+                        params_specs_provided_mismatches.get(&item_id!("mismatch_id")),
+                        Some(ParamsSpec::Value { value: VecA(value) })
+                        if value == &vec![2u8]
+                    )
+                    && matches!(
+                        params_specs_stored_mismatches,
+                        Some(params_specs_stored_mismatches)
+                        if params_specs_stored_mismatches.is_empty()
+                    )
+                    && params_specs_not_usable.is_empty(),
+                ),
+                "was {cmd_ctx_result:#?}"
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -682,32 +692,37 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch()
         .build()
         .await;
 
-    assert!(
-        matches!(
-            &cmd_ctx_result,
-            Err(PeaceTestError::PeaceRt(
-                peace::rt_model::Error::ParamsSpecsMismatch {
-                    item_ids_with_no_params_specs,
-                    params_specs_provided_mismatches,
-                    params_specs_stored_mismatches,
-                    params_specs_not_usable,
-                }
-            ))
-            if item_ids_with_no_params_specs == &vec![item_id!("new_id")]
-            && matches!(
-                params_specs_provided_mismatches.get(&item_id!("mismatch_id")),
-                Some(ParamsSpec::Value { value: VecA(value) })
-                if value == &vec![2u8]
-            )
-            && matches!(
-                params_specs_stored_mismatches,
-                Some(params_specs_stored_mismatches)
-                if params_specs_stored_mismatches.is_empty()
-            )
-            && params_specs_not_usable.is_empty(),
-        ),
-        "was {cmd_ctx_result:#?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &cmd_ctx_result,
+                    Err(PeaceTestError::PeaceRt(
+                        peace::rt_model::Error::ParamsSpecsMismatch {
+                            item_ids_with_no_params_specs,
+                            params_specs_provided_mismatches,
+                            params_specs_stored_mismatches,
+                            params_specs_not_usable,
+                        }
+                    ))
+                    if item_ids_with_no_params_specs == &vec![item_id!("new_id")]
+                    && matches!(
+                        params_specs_provided_mismatches.get(&item_id!("mismatch_id")),
+                        Some(ParamsSpec::Value { value: VecA(value) })
+                        if value == &vec![2u8]
+                    )
+                    && matches!(
+                        params_specs_stored_mismatches,
+                        Some(params_specs_stored_mismatches)
+                        if params_specs_stored_mismatches.is_empty()
+                    )
+                    && params_specs_not_usable.is_empty(),
+                ),
+                "was {cmd_ctx_result:#?}"
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -768,15 +783,20 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         VecCopyItem::ID_DEFAULT.clone(),
         tynm::type_name::<VecA>(),
     );
-    assert!(
-        matches!(vec_a_spec,
-            Some(ParamsSpec::FieldWise {
-                field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn(mapping_fn)),
-            })
-            if mapping_fn.is_valued()
-        ),
-        "was {vec_a_spec:?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(vec_a_spec,
+                    Some(ParamsSpec::FieldWise {
+                        field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn(mapping_fn)),
+                    })
+                    if mapping_fn.is_valued()
+                ),
+                "was {vec_a_spec:?}"
+            );
+        }
+    })();
     assert_eq!(
         Some(VecA(vec![1u8])),
         vec_a_spec.and_then(|vec_a_spec| vec_a_spec
@@ -827,28 +847,33 @@ async fn build_with_item_params_returns_err_when_spec_fully_not_provided_for_pre
         .build()
         .await;
 
-    assert!(
-        matches!(
-            &cmd_ctx_result,
-            Err(PeaceTestError::PeaceRt(
-                peace::rt_model::Error::ParamsSpecsMismatch {
-                    item_ids_with_no_params_specs,
-                    params_specs_provided_mismatches,
-                    params_specs_stored_mismatches,
-                    params_specs_not_usable,
-                }
-            ))
-            if item_ids_with_no_params_specs.is_empty()
-            && params_specs_provided_mismatches.is_empty()
-            && matches!(
-                params_specs_stored_mismatches,
-                Some(params_specs_stored_mismatches)
-                if params_specs_stored_mismatches.is_empty()
-            )
-            && params_specs_not_usable == &[VecCopyItem::ID_DEFAULT.clone()],
-        ),
-        "was {cmd_ctx_result:#?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &cmd_ctx_result,
+                    Err(PeaceTestError::PeaceRt(
+                        peace::rt_model::Error::ParamsSpecsMismatch {
+                            item_ids_with_no_params_specs,
+                            params_specs_provided_mismatches,
+                            params_specs_stored_mismatches,
+                            params_specs_not_usable,
+                        }
+                    ))
+                    if item_ids_with_no_params_specs.is_empty()
+                    && params_specs_provided_mismatches.is_empty()
+                    && matches!(
+                        params_specs_stored_mismatches,
+                        Some(params_specs_stored_mismatches)
+                        if params_specs_stored_mismatches.is_empty()
+                    )
+                    && params_specs_not_usable == &[VecCopyItem::ID_DEFAULT.clone()],
+                ),
+                "was {cmd_ctx_result:#?}"
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -897,28 +922,33 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
         .build()
         .await;
 
-    assert!(
-        matches!(
-            &cmd_ctx_result,
-            Err(PeaceTestError::PeaceRt(
-                peace::rt_model::Error::ParamsSpecsMismatch {
-                    item_ids_with_no_params_specs,
-                    params_specs_provided_mismatches,
-                    params_specs_stored_mismatches,
-                    params_specs_not_usable,
-                }
-            ))
-            if item_ids_with_no_params_specs.is_empty()
-            && params_specs_provided_mismatches.is_empty()
-            && matches!(
-                params_specs_stored_mismatches,
-                Some(params_specs_stored_mismatches)
-                if params_specs_stored_mismatches.is_empty()
-            )
-            && params_specs_not_usable == &[VecCopyItem::ID_DEFAULT.clone()],
-        ),
-        "was {cmd_ctx_result:#?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &cmd_ctx_result,
+                    Err(PeaceTestError::PeaceRt(
+                        peace::rt_model::Error::ParamsSpecsMismatch {
+                            item_ids_with_no_params_specs,
+                            params_specs_provided_mismatches,
+                            params_specs_stored_mismatches,
+                            params_specs_not_usable,
+                        }
+                    ))
+                    if item_ids_with_no_params_specs.is_empty()
+                    && params_specs_provided_mismatches.is_empty()
+                    && matches!(
+                        params_specs_stored_mismatches,
+                        Some(params_specs_stored_mismatches)
+                        if params_specs_stored_mismatches.is_empty()
+                    )
+                    && params_specs_not_usable == &[VecCopyItem::ID_DEFAULT.clone()],
+                ),
+                "was {cmd_ctx_result:#?}"
+            );
+        }
+    })();
 
     Ok(())
 }
@@ -959,29 +989,34 @@ async fn build_with_item_params_returns_deserialization_err_when_item_renamed()
         .build()
         .await;
 
-    assert!(
-        matches!(
-            &cmd_ctx_result,
-            Err(PeaceTestError::PeaceRt(
-                peace::rt_model::Error::ParamsSpecsDeserialize {
-                    profile,
-                    flow_id,
-                    #[cfg(feature = "error_reporting")]
-                    params_specs_file_source: _,
-                    #[cfg(feature = "error_reporting")]
-                    error_span: _,
-                    #[cfg(feature = "error_reporting")]
-                    error_message: _,
-                    #[cfg(feature = "error_reporting")]
-                    context_span: _,
-                    error: _,
-                }
-            ))
-            if profile == &profile!("test_profile")
-            && flow_id == &flow_id!("test_flow_id")
-        ),
-        "was {cmd_ctx_result:#?}"
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &cmd_ctx_result,
+                    Err(PeaceTestError::PeaceRt(
+                        peace::rt_model::Error::ParamsSpecsDeserialize {
+                            profile,
+                            flow_id,
+                            #[cfg(feature = "error_reporting")]
+                            params_specs_file_source: _,
+                            #[cfg(feature = "error_reporting")]
+                            error_span: _,
+                            #[cfg(feature = "error_reporting")]
+                            error_message: _,
+                            #[cfg(feature = "error_reporting")]
+                            context_span: _,
+                            error: _,
+                        }
+                    ))
+                    if profile == &profile!("test_profile")
+                    && flow_id == &flow_id!("test_flow_id")
+                ),
+                "was {cmd_ctx_result:#?}"
+            );
+        }
+    })();
 
     Ok(())
 }
