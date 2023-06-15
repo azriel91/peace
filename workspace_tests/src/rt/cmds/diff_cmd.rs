@@ -607,6 +607,6 @@ fn debug() {
     let debug_str = format!("{:?}", DiffCmd::<VecCopyError, (), (), ()>::default());
     assert_eq!(
         r#"DiffCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, &(), (), ())>)"#,
-        debug_str
+        debug_str,
     );
 }

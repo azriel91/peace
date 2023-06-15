@@ -98,9 +98,8 @@ fn debug() {
         "{:?}",
         StatesCurrentReadCmd::<VecCopyError, NoOpOutput, ()>::default()
     );
-    assert!(
-        debug_str
-            == r#"StatesCurrentReadCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#
-            || debug_str == r#"StatesCurrentReadCmd(PhantomData)"#
+    assert_eq!(
+        r#"StatesCurrentReadCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#,
+        debug_str,
     );
 }

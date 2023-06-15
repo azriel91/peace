@@ -603,9 +603,8 @@ async fn exec_returns_sync_error_when_goal_state_out_of_sync()
 #[test]
 fn debug() {
     let debug_str = format!("{:?}", EnsureCmd::<VecCopyError, NoOpOutput, ()>::default());
-    assert!(
-        debug_str
-            == r#"EnsureCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#
-            || debug_str == r#"EnsureCmd(PhantomData)"#
+    assert_eq!(
+        r#"EnsureCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#,
+        debug_str,
     );
 }
