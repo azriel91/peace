@@ -16,6 +16,14 @@ pub enum PeaceTestError {
         #[from]
         crate::VecCopyError,
     ),
+    /// A Mock item error occurred.
+    #[error("A Mock item error occurred.")]
+    Mock(
+        #[cfg_attr(feature = "error_reporting", diagnostic_source)]
+        #[source]
+        #[from]
+        crate::mock_item::MockItemError,
+    ),
 
     /// A Blank item error occurred.
     #[error("A Blank item error occurred.")]

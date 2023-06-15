@@ -13,6 +13,8 @@ pub(crate) use crate::{
     },
 };
 
+pub(crate) mod mock_item;
+
 // `peace` test modules
 mod cfg;
 mod cmd;

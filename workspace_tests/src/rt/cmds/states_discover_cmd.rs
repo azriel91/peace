@@ -11,7 +11,9 @@ use peace::{
 };
 
 use crate::{
-    vec_copy_item::VecB, NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItem, VecCopyState,
+    mock_item::{MockItem, MockItemError, MockSrc, MockState},
+    vec_copy_item::VecB,
+    NoOpOutput, PeaceTestError, VecA, VecCopyError, VecCopyItem, VecCopyState,
 };
 
 #[cfg(feature = "output_progress")]
@@ -217,6 +219,474 @@ async fn current_inserts_states_current_stored_from_states_current_file()
         states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
         states_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn current_returns_error_when_try_state_current_returns_error()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(
+            MockItem::<()>::default()
+                .with_try_state_current(|_fn_ctx, _params_partial, _data| {
+                    Err(MockItemError::Synthetic(String::from("synthetic")))
+                })
+                .into(),
+        );
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
+        .await?;
+
+    let CmdOutcome {
+        value: states_current,
+        errors,
+    } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
+    let resources = cmd_ctx.resources();
+
+    let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    let states_on_disk = {
+        let states_current_file = resources.borrow::<StatesCurrentFile>();
+        let states_slice = std::fs::read(&*states_current_file)?;
+
+        let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
+        type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
+        type_reg.register::<MockState>(MockItem::<()>::ID_DEFAULT.clone());
+
+        let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
+        StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
+    };
+    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
+    assert_eq!(
+        states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
+        states_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+
+    let error = errors.get(MockItem::<()>::ID_DEFAULT);
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &error,
+                    Some(PeaceTestError::Mock(MockItemError::Synthetic(s)))
+                    if s == "synthetic"
+                ),
+                "expected error to be `Some(PeaceTestError::Mock(MockItemError::Synthetic(\"synthetic\")))`,\n\
+                but was {error:?}"
+            )
+        }
+    })();
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn goal_returns_error_when_try_state_goal_returns_error()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(
+            MockItem::<()>::default()
+                .with_try_state_goal(|_fn_ctx, _params_partial, _data| {
+                    Err(MockItemError::Synthetic(String::from("synthetic")))
+                })
+                .into(),
+        );
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
+        .await?;
+
+    let CmdOutcome {
+        value: states_goal,
+        errors,
+    } = StatesDiscoverCmd::goal(&mut cmd_ctx).await?;
+    let resources = cmd_ctx.resources();
+
+    let vec_copy_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    let states_on_disk = {
+        let states_goal_file = resources.borrow::<StatesGoalFile>();
+        let states_slice = std::fs::read(&*states_goal_file)?;
+
+        let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
+        type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
+        type_reg.register::<MockState>(MockItem::<()>::ID_DEFAULT.clone());
+
+        let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
+        StatesGoal::from(type_reg.deserialize_map(deserializer)?)
+    };
+    assert_eq!(
+        Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        vec_copy_state
+    );
+    assert_eq!(
+        states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
+        states_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+
+    let error = errors.get(MockItem::<()>::ID_DEFAULT);
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &error,
+                    Some(PeaceTestError::Mock(MockItemError::Synthetic(s)))
+                    if s == "synthetic"
+                ),
+                "expected error to be `Some(PeaceTestError::Mock(MockItemError::Synthetic(\"synthetic\")))`,\n\
+                but was {error:?}"
+            )
+        }
+    })();
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn current_and_goal_returns_error_when_try_state_current_returns_error()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(
+            MockItem::<()>::default()
+                .with_try_state_current(|_fn_ctx, _params_partial, _data| {
+                    Err(MockItemError::Synthetic(String::from("synthetic")))
+                })
+                .into(),
+        );
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
+        .await?;
+
+    let CmdOutcome {
+        value: (states_current, states_goal),
+        errors,
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    let resources = cmd_ctx.resources();
+
+    // States current assertions
+    let states_on_disk = {
+        let states_current_file = resources.borrow::<StatesCurrentFile>();
+        let states_slice = std::fs::read(&*states_current_file)?;
+
+        let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
+        type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
+        type_reg.register::<MockState>(MockItem::<()>::ID_DEFAULT.clone());
+
+        let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
+        StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
+    };
+
+    let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
+    assert_eq!(
+        states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
+        states_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+
+    // States goal assertions
+    let states_on_disk = {
+        let states_goal_file = resources.borrow::<StatesGoalFile>();
+        let states_slice = std::fs::read(&*states_goal_file)?;
+
+        let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
+        type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
+        type_reg.register::<MockState>(MockItem::<()>::ID_DEFAULT.clone());
+
+        let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
+        StatesGoal::from(type_reg.deserialize_map(deserializer)?)
+    };
+
+    let vec_copy_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    assert_eq!(
+        Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        vec_copy_state
+    );
+    assert_eq!(
+        states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
+        states_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+
+    let mock_state = states_goal.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+    assert_eq!(Some(MockState(1u8)).as_ref(), mock_state);
+    assert_eq!(
+        states_goal.get::<MockState, _>(MockItem::<()>::ID_DEFAULT),
+        states_on_disk.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+
+    let error = errors.get(MockItem::<()>::ID_DEFAULT);
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &error,
+                    Some(PeaceTestError::Mock(MockItemError::Synthetic(s)))
+                    if s == "synthetic"
+                ),
+                "expected error to be `Some(PeaceTestError::Mock(MockItemError::Synthetic(\"synthetic\")))`,\n\
+                but was {error:?}"
+            )
+        }
+    })();
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn current_and_goal_returns_error_when_try_state_goal_returns_error()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(
+            MockItem::<()>::default()
+                .with_try_state_goal(|_fn_ctx, _params_partial, _data| {
+                    Err(MockItemError::Synthetic(String::from("synthetic")))
+                })
+                .into(),
+        );
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
+        .await?;
+
+    let CmdOutcome {
+        value: (states_current, states_goal),
+        errors,
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    let resources = cmd_ctx.resources();
+
+    // States current assertions
+    let states_on_disk = {
+        let states_current_file = resources.borrow::<StatesCurrentFile>();
+        let states_slice = std::fs::read(&*states_current_file)?;
+
+        let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
+        type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
+        type_reg.register::<MockState>(MockItem::<()>::ID_DEFAULT.clone());
+
+        let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
+        StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
+    };
+
+    let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
+    assert_eq!(
+        states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
+        states_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+
+    let mock_state = states_current.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+    assert_eq!(Some(MockState::new()).as_ref(), mock_state);
+    assert_eq!(
+        states_current.get::<MockState, _>(MockItem::<()>::ID_DEFAULT),
+        states_on_disk.get::<MockState, _>(MockItem::<()>::ID_DEFAULT)
+    );
+
+    // States goal assertions
+    let vec_copy_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    let states_on_disk = {
+        let states_goal_file = resources.borrow::<StatesGoalFile>();
+        let states_slice = std::fs::read(&*states_goal_file)?;
+
+        let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
+        type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
+        type_reg.register::<MockState>(MockItem::<()>::ID_DEFAULT.clone());
+
+        let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
+        StatesGoal::from(type_reg.deserialize_map(deserializer)?)
+    };
+    assert_eq!(
+        Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        vec_copy_state
+    );
+    assert_eq!(
+        states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
+        states_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+
+    let error = errors.get(MockItem::<()>::ID_DEFAULT);
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &error,
+                    Some(PeaceTestError::Mock(MockItemError::Synthetic(s)))
+                    if s == "synthetic"
+                ),
+                "expected error to be `Some(PeaceTestError::Mock(MockItemError::Synthetic(\"synthetic\")))`,\n\
+                but was {error:?}"
+            )
+        }
+    })();
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn current_and_goal_returns_current_error_when_both_try_state_current_and_try_state_goal_return_error()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let graph = {
+        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+        graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(
+            MockItem::<()>::default()
+                .with_try_state_current(|_fn_ctx, _params_partial, _data| {
+                    Err(MockItemError::Synthetic(String::from("current_err")))
+                })
+                .with_try_state_goal(|_fn_ctx, _params_partial, _data| {
+                    Err(MockItemError::Synthetic(String::from("goal_err")))
+                })
+                .into(),
+        );
+        graph_builder.build()
+    };
+    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
+    let mut output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1u8).into())
+        .await?;
+
+    let CmdOutcome {
+        value: (states_current, states_goal),
+        errors,
+    } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
+    let resources = cmd_ctx.resources();
+
+    // States current assertions
+    let states_on_disk = {
+        let states_current_file = resources.borrow::<StatesCurrentFile>();
+        let states_slice = std::fs::read(&*states_current_file)?;
+
+        let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
+        type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
+        type_reg.register::<MockState>(MockItem::<()>::ID_DEFAULT.clone());
+
+        let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
+        StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
+    };
+
+    let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
+    assert_eq!(
+        states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
+        states_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+
+    // States goal assertions
+    let vec_copy_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    let states_on_disk = {
+        let states_goal_file = resources.borrow::<StatesGoalFile>();
+        let states_slice = std::fs::read(&*states_goal_file)?;
+
+        let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
+        type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
+        type_reg.register::<MockState>(MockItem::<()>::ID_DEFAULT.clone());
+
+        let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
+        StatesGoal::from(type_reg.deserialize_map(deserializer)?)
+    };
+    assert_eq!(
+        Some(VecCopyState::from(vec![0, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        vec_copy_state
+    );
+    assert_eq!(
+        states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
+        states_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+    );
+
+    let error = errors.get(MockItem::<()>::ID_DEFAULT);
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &error,
+                    Some(PeaceTestError::Mock(MockItemError::Synthetic(s)))
+                    if s == "current_err"
+                ),
+                "expected error to be `Some(PeaceTestError::Mock(MockItemError::Synthetic(\"current_err\")))`,\n\
+                but was {error:?}"
+            )
+        }
+    })();
 
     Ok(())
 }
