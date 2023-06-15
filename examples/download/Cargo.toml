@@ -39,6 +39,5 @@ web-sys = "0.3.63"
 [features]
 default = []
 error_reporting = ["peace/error_reporting", "peace_items/error_reporting"]
-output_colorized = ["peace/output_colorized"]
 output_json = ["peace/output_json"]
 output_progress = ["peace/output_progress", "peace_items/output_progress"]

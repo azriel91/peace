@@ -7,10 +7,7 @@ use peace_rt_model_core::{
 use serde::Serialize;
 use tokio::io::{AsyncWrite, AsyncWriteExt, Stdout};
 
-use crate::output::{CliMdPresenter, CliOutputBuilder};
-
-#[cfg(feature = "output_colorized")]
-use crate::output::CliColorize;
+use crate::output::{CliColorize, CliMdPresenter, CliOutputBuilder};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -34,18 +31,6 @@ cfg_if::cfg_if! {
 /// An `OutputWrite` implementation that writes to the command line.
 ///
 /// # Features
-///
-/// ## `"output_colorized"`
-///
-/// When this feature is enabled, text output is coloured with ANSI codes when
-/// the outcome output stream is a terminal (i.e. not piped to another process,
-/// or redirected to a file).
-///
-/// If it is piped to another process or redirected to a file, then the outcome
-/// output is not colourized.
-///
-/// This automatic detection can be overridden by calling the [`with_colorized`]
-/// method.
 ///
 /// ## `"output_progress"`
 ///
@@ -79,7 +64,6 @@ pub struct CliOutput<W> {
     /// parsable.
     pub(crate) outcome_format: OutputFormat,
     /// Whether output should be colorized.
-    #[cfg(feature = "output_colorized")]
     pub(crate) colorize: CliColorize,
     #[cfg(feature = "output_progress")]
     /// Where to output progress updates to -- stdout or stderr.
@@ -119,7 +103,7 @@ impl CliOutput<Stdout> {
 /// `ProgressBar`'s length and current value,
 #[cfg(feature = "output_progress")]
 const BAR_EMPTY: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
-#[cfg(all(feature = "output_progress", feature = "output_colorized"))]
+#[cfg(feature = "output_progress")]
 const BAR_FULL: &str = "▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰";
 #[cfg(feature = "output_progress")]
 const SPINNER_EMPTY: &str = "▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱";
@@ -152,7 +136,6 @@ where
     }
 
     /// Returns whether output should be colorized.
-    #[cfg(feature = "output_colorized")]
     pub fn colorize(&self) -> CliColorize {
         self.colorize
     }
@@ -315,103 +298,92 @@ where
             ProgressStatus::Complete(ProgressComplete::Fail) => "❌",
         };
 
-        cfg_if::cfg_if! {
-            if #[cfg(feature = "output_colorized")] {
+        // These are used to tell `indicatif` how to style the computed bar.
+        //
+        // 40: width
+        //
+        //  32: blue pale (running)
+        //  17: blue dark (running background)
+        // 222: yellow pale (stalled)
+        //  75: indigo pale (user pending, item id)
+        //  35: green pale (success)
+        //  22: green dark (success background)
+        // 160: red slightly dim (fail)
+        //  88: red dark (fail background)
 
-                // These are used to tell `indicatif` how to style the computed bar.
-                //
-                // 40: width
-                //
-                //  32: blue pale (running)
-                //  17: blue dark (running background)
-                // 222: yellow pale (stalled)
-                //  75: indigo pale (user pending, item id)
-                //  35: green pale (success)
-                //  22: green dark (success background)
-                // 160: red slightly dim (fail)
-                //  88: red dark (fail background)
+        const GRAY_DARK: u8 = 237;
+        const GRAY_MED: u8 = 8;
+        const GREEN_LIGHT: u8 = 35;
+        const PURPLE: u8 = 128;
+        const RED_DIM: u8 = 160;
 
-                const GRAY_DARK: u8 = 237;
-                const GRAY_MED: u8 = 8;
-                const GREEN_LIGHT: u8 = 35;
-                const PURPLE: u8 = 128;
-                const RED_DIM: u8 = 160;
-
-                let bar_or_spinner = match self.colorize {
-                    CliColorize::Colored => {
-                        if progress_tracker.progress_limit().is_some() {
-                            // Colored, with progress limit
-                            match progress_tracker.progress_status() {
-                                ProgressStatus::Initialized => console::style(BAR_EMPTY).color256(GRAY_DARK),
-                                ProgressStatus::ExecPending | ProgressStatus::Running => {
-                                    console::style("{bar:40.32}")
-                                }
-                                ProgressStatus::RunningStalled => console::style("{bar:40.222}"),
-                                ProgressStatus::UserPending => console::style("{bar:40.75}"),
-                                ProgressStatus::Complete(progress_complete) => match progress_complete {
-                                    // Ideally we just use `"{bar:40.35}"`,
-                                    // and the `ProgressBar` renders the filled green bar.
-                                    //
-                                    // However, it's still rendered as blue because
-                                    // the `ProgressBar` is abandoned before getting one
-                                    // final render.
-                                    ProgressComplete::Success => {
-                                        console::style(BAR_FULL).color256(GREEN_LIGHT)
-                                    },
-                                    ProgressComplete::Fail => console::style("{bar:40.160}"),
-                                },
-                            }
-                        } else {
-                            // Colored, no progress limit (as opposed to unknown)
-                            match progress_tracker.progress_status() {
-                                ProgressStatus::Initialized => console::style(SPINNER_EMPTY).color256(GRAY_MED),
-                                ProgressStatus::ExecPending | ProgressStatus::Running => {
-                                    console::style("{spinner:40.32}")
-                                }
-                                ProgressStatus::RunningStalled => console::style("{spinner:40.222}"),
-                                ProgressStatus::UserPending => console::style("{spinner:40.75}"),
-                                ProgressStatus::Complete(progress_complete) => match progress_complete {
-                                    // Ideally we just use `"{spinner:40.35}"`,
-                                    // and the `ProgressBar` renders the filled green spinner.
-                                    // However, for a spinner, it just renders it empty for some
-                                    // reason.
-                                    ProgressComplete::Success => {
-                                        console::style(SPINNER_FULL).color256(GREEN_LIGHT)
-                                    },
-                                    ProgressComplete::Fail => console::style(SPINNER_FULL).color256(RED_DIM),
-                                },
-                            }
+        let bar_or_spinner = match self.colorize {
+            CliColorize::Colored => {
+                if progress_tracker.progress_limit().is_some() {
+                    // Colored, with progress limit
+                    match progress_tracker.progress_status() {
+                        ProgressStatus::Initialized => {
+                            console::style(BAR_EMPTY).color256(GRAY_DARK)
                         }
+                        ProgressStatus::ExecPending | ProgressStatus::Running => {
+                            console::style("{bar:40.32}")
+                        }
+                        ProgressStatus::RunningStalled => console::style("{bar:40.222}"),
+                        ProgressStatus::UserPending => console::style("{bar:40.75}"),
+                        ProgressStatus::Complete(progress_complete) => match progress_complete {
+                            // Ideally we just use `"{bar:40.35}"`,
+                            // and the `ProgressBar` renders the filled green bar.
+                            //
+                            // However, it's still rendered as blue because
+                            // the `ProgressBar` is abandoned before getting one
+                            // final render.
+                            ProgressComplete::Success => {
+                                console::style(BAR_FULL).color256(GREEN_LIGHT)
+                            }
+                            ProgressComplete::Fail => console::style("{bar:40.160}"),
+                        },
                     }
-                    CliColorize::Uncolored => {
-                        if progress_tracker.progress_limit().is_some() {
-                            match progress_tracker.progress_status() {
-                                ProgressStatus::Initialized => console::style(BAR_EMPTY),
-                                ProgressStatus::ExecPending | ProgressStatus::Running |
-                                ProgressStatus::RunningStalled |
-                                ProgressStatus::UserPending |
-                                ProgressStatus::Complete(_) => console::style("{bar:40}"),
-                            }
-                        } else {
-                            console::style("{spinner:40}")
+                } else {
+                    // Colored, no progress limit (as opposed to unknown)
+                    match progress_tracker.progress_status() {
+                        ProgressStatus::Initialized => {
+                            console::style(SPINNER_EMPTY).color256(GRAY_MED)
                         }
-                    },
-                };
-            } else {
-                // "output_colorized" feature disabled
-                let bar_or_spinner = if progress_tracker.progress_limit().is_some() {
+                        ProgressStatus::ExecPending | ProgressStatus::Running => {
+                            console::style("{spinner:40.32}")
+                        }
+                        ProgressStatus::RunningStalled => console::style("{spinner:40.222}"),
+                        ProgressStatus::UserPending => console::style("{spinner:40.75}"),
+                        ProgressStatus::Complete(progress_complete) => match progress_complete {
+                            // Ideally we just use `"{spinner:40.35}"`,
+                            // and the `ProgressBar` renders the filled green spinner.
+                            // However, for a spinner, it just renders it empty for some
+                            // reason.
+                            ProgressComplete::Success => {
+                                console::style(SPINNER_FULL).color256(GREEN_LIGHT)
+                            }
+                            ProgressComplete::Fail => {
+                                console::style(SPINNER_FULL).color256(RED_DIM)
+                            }
+                        },
+                    }
+                }
+            }
+            CliColorize::Uncolored => {
+                if progress_tracker.progress_limit().is_some() {
                     match progress_tracker.progress_status() {
                         ProgressStatus::Initialized => console::style(BAR_EMPTY),
-                        ProgressStatus::ExecPending | ProgressStatus::Running |
-                        ProgressStatus::RunningStalled |
-                        ProgressStatus::UserPending |
-                        ProgressStatus::Complete(_) => console::style("{bar:40}"),
+                        ProgressStatus::ExecPending
+                        | ProgressStatus::Running
+                        | ProgressStatus::RunningStalled
+                        | ProgressStatus::UserPending
+                        | ProgressStatus::Complete(_) => console::style("{bar:40}"),
                     }
                 } else {
                     console::style("{spinner:40}")
-                };
+                }
             }
-        }
+        };
         let prefix_width = self.pb_item_id_width.unwrap_or(20);
         let prefix = format!("{{prefix:{prefix_width}}}");
 
@@ -436,16 +408,10 @@ where
         let elapsed_eta = if progress_is_complete {
             None
         } else {
-            cfg_if::cfg_if! {
-                if #[cfg(feature = "output_colorized")] {
-                    let elapsed_eta = console::style("(el: {elapsed}, eta: {eta})");
-                    match self.colorize {
-                        CliColorize::Colored => Some(elapsed_eta.color256(PURPLE)),
-                        CliColorize::Uncolored => Some(elapsed_eta),
-                    }
-                } else {
-                    Some(console::style("(el: {elapsed}, eta: {eta})"))
-                }
+            let elapsed_eta = console::style("(el: {elapsed}, eta: {eta})");
+            match self.colorize {
+                CliColorize::Colored => Some(elapsed_eta.color256(PURPLE)),
+                CliColorize::Uncolored => Some(elapsed_eta),
             }
         };
 
@@ -492,7 +458,6 @@ where
         };
 
         // avoid reborrowing `self` within `for_each`
-        #[cfg(feature = "output_colorized")]
         let colorize = self.colorize;
 
         match self.progress_format {
@@ -538,27 +503,20 @@ where
                         // Hack: colourization done in `progress_begin` to get
                         // numerical index to be colorized.
                         let index = index + 1;
-                        cfg_if::cfg_if! {
-                            if #[cfg(feature = "output_colorized")] {
-                                match colorize {
-                                    CliColorize::Colored => {
-                                        // white
-                                        let index_colorized = console::Style::new()
-                                            .color256(15)
-                                            .apply_to(format!("{index}."));
-                                        // blue
-                                        let item_id_colorized = console::Style::new()
-                                            .color256(75)
-                                            .apply_to(format!("{item_id}"));
-                                        progress_bar.set_prefix(
-                                            format!("{index_colorized} {item_id_colorized}")
-                                        );
-                                    }
-                                    CliColorize::Uncolored => {
-                                        progress_bar.set_prefix(format!("{index}. {item_id}"));
-                                    }
-                                }
-                            } else {
+                        match colorize {
+                            CliColorize::Colored => {
+                                // white
+                                let index_colorized = console::Style::new()
+                                    .color256(15)
+                                    .apply_to(format!("{index}."));
+                                // blue
+                                let item_id_colorized = console::Style::new()
+                                    .color256(75)
+                                    .apply_to(format!("{item_id}"));
+                                progress_bar
+                                    .set_prefix(format!("{index_colorized} {item_id_colorized}"));
+                            }
+                            CliColorize::Uncolored => {
                                 progress_bar.set_prefix(format!("{index}. {item_id}"));
                             }
                         }

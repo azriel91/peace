@@ -55,7 +55,7 @@ jobs:
             --out-dir "../../doc/src/examples/pkg" \
             --release \
             "examples/${example}" \
-            --features 'error_reporting output_colorized output_json'
+            --features 'error_reporting output_json'
           done
 
       # Build and publish book

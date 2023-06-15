@@ -41,7 +41,6 @@ error_reporting = [
     "peace_item_sh_sync_cmd?/error_reporting",
     "peace_item_tar_x?/error_reporting",
 ]
-output_colorized = ["peace/output_colorized"]
 output_json = ["peace/output_json"]
 output_progress = [
     "peace/output_progress",

@@ -1,7 +1,5 @@
-use peace::rt_model::output::{CliOutputBuilder, OutputFormat};
+use peace::rt_model::output::{CliColorize, CliColorizeOpt, CliOutputBuilder, OutputFormat};
 
-#[cfg(feature = "output_colorized")]
-use peace::rt_model::output::{CliColorize, CliColorizeOpt};
 #[cfg(feature = "output_progress")]
 use peace::rt_model::output::{CliOutputTarget, CliProgressFormat, CliProgressFormatOpt};
 
@@ -10,7 +8,6 @@ async fn new_uses_sensible_defaults() -> Result<(), Box<dyn std::error::Error>> 
     let builder = CliOutputBuilder::new();
 
     assert_eq!(OutputFormat::Text, builder.outcome_format());
-    #[cfg(feature = "output_colorized")]
     assert_eq!(CliColorizeOpt::Auto, builder.colorize());
     #[cfg(feature = "output_progress")]
     assert_eq!(&CliOutputTarget::Stderr, builder.progress_target());
@@ -27,7 +24,6 @@ async fn with_outcome_format_sets_outcome_format() -> Result<(), Box<dyn std::er
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn with_colorize_sets_colorize() -> Result<(), Box<dyn std::error::Error>> {
     let builder = CliOutputBuilder::new().with_colorize(CliColorizeOpt::Always);
@@ -64,7 +60,6 @@ async fn build_passes_through_outcome_format() -> Result<(), Box<dyn std::error:
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn build_passes_through_colorize() -> Result<(), Box<dyn std::error::Error>> {
     let builder = CliOutputBuilder::new().with_colorize(CliColorizeOpt::Always);
@@ -106,7 +101,6 @@ async fn build_passes_through_progress_format() -> Result<(), Box<dyn std::error
 // * Implement a trait for `tokio::io::Stdout`, `tokio::io::Stderr`, `Vec<u8>`
 // * Build a small executable and run it via `process::Command`.
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn build_colorize_auto_passes_uncolored_for_non_interactive_terminal()
 -> Result<(), Box<dyn std::error::Error>> {

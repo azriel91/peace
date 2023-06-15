@@ -41,7 +41,6 @@ default = ["items", "output_in_memory"]
 
 # `peace` features
 error_reporting = ["peace/error_reporting"]
-output_colorized = ["peace/output_colorized"]
 output_in_memory = ["peace/output_in_memory"]
 output_json = ["peace/output_json"]
 output_progress = ["peace/output_progress", "peace_items/output_progress"]

@@ -2,14 +2,14 @@
 use std::net::IpAddr;
 
 use clap::{Parser, Subcommand, ValueHint};
-use peace::{cfg::Profile, rt_model::output::OutputFormat};
+use peace::{
+    cfg::Profile,
+    rt_model::output::{CliColorizeOpt, OutputFormat},
+};
 use semver::Version;
 use url::Url;
 
 use crate::model::{EnvManFlow, EnvType, RepoSlug};
-
-#[cfg(feature = "output_colorized")]
-use peace::rt_model::output::CliColorizeOpt;
 
 #[derive(Parser)]
 #[clap(
@@ -37,7 +37,6 @@ pub struct CliArgs {
     /// * "auto" (default): Colorize when used interactively.
     /// * "always": Always colorize output.
     /// * "never": Never colorize output.
-    #[cfg(feature = "output_colorized")]
     #[arg(long, default_value = "auto")]
     pub color: CliColorizeOpt,
 }
