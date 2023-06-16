@@ -17,7 +17,7 @@ fn debug() {
     assert_eq!("Stored", format!("{:?}", ParamsSpec::<MockSrc>::Stored));
     assert_eq!(
         "Value(MockSrc(1))",
-        format!("{:?}", ParamsSpec::<MockSrc>::Value { value: MockSrc(1) })
+        format!("{:?}", ParamsSpec::<MockSrc>::Value(MockSrc(1)))
     );
     assert_eq!("InMemory", format!("{:?}", ParamsSpec::<MockSrc>::InMemory));
     assert_eq!(
@@ -176,9 +176,7 @@ value:
 - 1
 "#
         )?,
-        ParamsSpec::<VecA>::Value {
-            value: VecA(vec_u8)
-        }
+        ParamsSpec::<VecA>::Value(VecA(vec_u8))
         if vec_u8 == [1u8]
     ));
 
@@ -255,12 +253,9 @@ field_wise_spec: !Value
             assert!(
                 matches!(
                     &deserialized,
-                    ParamsSpec::<VecA>::FieldWise {
-                        field_wise_spec: field_wise_spec @
-                            VecAFieldWise(ValueSpec::<Vec<u8>>::Value {
-                                value,
-                            })
-                    }
+                    ParamsSpec::<VecA>::FieldWise(
+                        field_wise_spec @ VecAFieldWise(ValueSpec::<Vec<u8>>::Value(value))
+                    )
                     if value == &[1u8]
                     && FieldWiseSpecRt::resolve(
                             field_wise_spec,
@@ -292,9 +287,7 @@ field_wise_spec: InMemory
             assert!(
                 matches!(
                     &deserialized,
-                    ParamsSpec::<VecA>::FieldWise {
-                        field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::InMemory)
-                    }
+                    ParamsSpec::<VecA>::FieldWise(VecAFieldWise(ValueSpec::<Vec<u8>>::InMemory))
                 ),
                 "was {deserialized:?}"
             );
@@ -321,9 +314,7 @@ field_wise_spec: !MappingFn
             assert!(
                 matches!(
                     &deserialized,
-                    ParamsSpec::<VecA>::FieldWise {
-                        field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn(mapping_fn))
-                    }
+                    ParamsSpec::<VecA>::FieldWise(VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn(mapping_fn)))
                     if !mapping_fn.is_valued()
                 ),
                 "was {deserialized:?}"
@@ -341,12 +332,7 @@ fn is_usable_returns_false_for_stored() {
 
 #[test]
 fn is_usable_returns_true_for_value_and_in_memory() {
-    assert!(
-        ParamsSpec::<VecA>::Value {
-            value: VecA::default()
-        }
-        .is_usable()
-    );
+    assert!(ParamsSpec::<VecA>::Value(VecA::default()).is_usable());
     assert!(ParamsSpec::<VecA>::InMemory.is_usable());
 }
 

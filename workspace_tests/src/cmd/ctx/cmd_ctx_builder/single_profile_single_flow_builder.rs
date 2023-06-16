@@ -423,7 +423,7 @@ async fn build_with_item_params_returns_ok_when_params_provided()
         tynm::type_name::<VecA>(),
     );
     assert!(matches!(vec_a_spec,
-        Some(ParamsSpec::Value { value: VecA(value) })
+        Some(ParamsSpec::Value(VecA(value)))
         if value == &[1u8]
     ));
     assert_eq!(
@@ -523,7 +523,7 @@ async fn build_with_item_params_returns_ok_when_params_not_provided_but_are_stor
         tynm::type_name::<VecA>(),
     );
     assert!(matches!(vec_a_spec,
-        Some(ParamsSpec::Value { value: VecA(value) })
+        Some(ParamsSpec::Value(VecA(value)))
         if value == &[1u8]
     ));
     assert_eq!(
@@ -576,7 +576,7 @@ async fn build_with_item_params_returns_ok_and_uses_params_provided_when_params_
         tynm::type_name::<VecA>(),
     );
     assert!(matches!(vec_a_spec,
-        Some(ParamsSpec::Value { value: VecA(value) })
+        Some(ParamsSpec::Value(VecA(value)))
         if value == &[2u8]
     ));
     assert_eq!(
@@ -635,7 +635,7 @@ async fn build_with_item_params_returns_err_when_params_provided_mismatch()
                     if item_ids_with_no_params_specs.is_empty()
                     && matches!(
                         params_specs_provided_mismatches.get(&item_id!("mismatch_id")),
-                        Some(ParamsSpec::Value { value: VecA(value) })
+                        Some(ParamsSpec::Value(VecA(value)))
                         if value == &vec![2u8]
                     )
                     && matches!(
@@ -709,7 +709,7 @@ async fn build_with_item_params_returns_err_when_params_stored_mismatch()
                     if item_ids_with_no_params_specs == &vec![item_id!("new_id")]
                     && matches!(
                         params_specs_provided_mismatches.get(&item_id!("mismatch_id")),
-                        Some(ParamsSpec::Value { value: VecA(value) })
+                        Some(ParamsSpec::Value(VecA(value)))
                         if value == &vec![2u8]
                     )
                     && matches!(
@@ -788,9 +788,7 @@ async fn build_with_item_params_returns_ok_when_spec_provided_for_previous_mappi
         || {
             assert!(
                 matches!(vec_a_spec,
-                    Some(ParamsSpec::FieldWise {
-                        field_wise_spec: VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn(mapping_fn)),
-                    })
+                    Some(ParamsSpec::FieldWise(VecAFieldWise(ValueSpec::<Vec<u8>>::MappingFn(mapping_fn))))
                     if mapping_fn.is_valued()
                 ),
                 "was {vec_a_spec:?}"
@@ -1065,7 +1063,7 @@ async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provi
         tynm::type_name::<VecA>(),
     );
     assert!(matches!(vec_a_spec,
-        Some(ParamsSpec::Value { value: VecA(value) })
+        Some(ParamsSpec::Value(VecA(value)))
         if value == &[1u8]
     ));
     assert_eq!(

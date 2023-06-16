@@ -10,10 +10,7 @@ fn debug() -> Result<(), serde_yaml::Error> {
     );
     assert_eq!(
         "Value(MockSrc(1))",
-        format!(
-            "{:?}",
-            ParamsSpecFieldlessDe::<MockSrc>::Value { value: MockSrc(1) }
-        )
+        format!("{:?}", ParamsSpecFieldlessDe::<MockSrc>::Value(MockSrc(1)))
     );
     assert_eq!(
         "InMemory",

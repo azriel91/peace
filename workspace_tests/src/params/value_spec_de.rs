@@ -4,16 +4,10 @@ use crate::mock_item::MockSrc;
 
 #[test]
 fn debug() -> Result<(), serde_yaml::Error> {
-    assert_eq!(
-        "Stored",
-        format!("{:?}", ValueSpecDe::<MockSrc>::Stored)
-    );
+    assert_eq!("Stored", format!("{:?}", ValueSpecDe::<MockSrc>::Stored));
     assert_eq!(
         "Value(MockSrc(1))",
-        format!(
-            "{:?}",
-            ValueSpecDe::<MockSrc>::Value { value: MockSrc(1) }
-        )
+        format!("{:?}", ValueSpecDe::<MockSrc>::Value(MockSrc(1)))
     );
     assert_eq!(
         "InMemory",

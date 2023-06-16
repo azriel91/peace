@@ -130,24 +130,24 @@ fn variants_map_to_value(
     //     Params::Variant1 => Params::Variant1,
     //     Params::Variant2(_0, _1, PhantomData) => {
     //         Params::Variant2(
-    //             #peace_params_path::ParamsSpecFieldless::Value { value: _0 },
-    //             #peace_params_path::ParamsSpecFieldless::Value { value: _1 },
+    //             #peace_params_path::ParamsSpecFieldless::Value(_0),
+    //             #peace_params_path::ParamsSpecFieldless::Value(_1),
     //             PhantomData,
     //
     //             // or
-    //             // #peace_params_path::ParamsSpecFieldless::Value { value: Wrapper(_0) },
-    //             // #peace_params_path::ParamsSpecFieldless::Value { value: Wrapper(_1) },
+    //             // #peace_params_path::ParamsSpecFieldless::Value(Wrapper(_0)),
+    //             // #peace_params_path::ParamsSpecFieldless::Value(Wrapper(_1)),
     //         )
     //     }
     //     Params::Variant3 { field_1, field_2, marker: PhantomData } => {
     //         Params::Variant3 {
-    //             field_1: #peace_params_path::ParamsSpecFieldless::Value { value: field_1 },
-    //             field_2: #peace_params_path::ParamsSpecFieldless::Value { value: field_2 },
+    //             field_1: #peace_params_path::ParamsSpecFieldless::Value(field_1),
+    //             field_2: #peace_params_path::ParamsSpecFieldless::Value(field_2),
     //             marker: PhantomData,
     //
     //             // or
-    //             // field_1: #peace_params_path::ParamsSpecFieldless::Value { value: Wrapper(_0) },
-    //             // field_2: #peace_params_path::ParamsSpecFieldless::Value { value: Wrapper(_1) },
+    //             // field_1: #peace_params_path::ParamsSpecFieldless::Value(Wrapper(_0)),
+    //             // field_2: #peace_params_path::ParamsSpecFieldless::Value(Wrapper(_1)),
     //         }
     //     }
     // }
@@ -224,13 +224,13 @@ fn fields_map_to_value(fields: &Fields, peace_params_path: &Path) -> proc_macro2
             // Generates:
             //
             // ```rust
-            // field_1: #peace_params_path::ParamsSpecFieldless::Value { value: field_1 },
-            // field_2: #peace_params_path::ParamsSpecFieldless::Value { value: field_2 },
+            // field_1: #peace_params_path::ParamsSpecFieldless::Value(field_1),
+            // field_2: #peace_params_path::ParamsSpecFieldless::Value(field_2),
             // marker: PhantomData,
             //
             // // or
-            // // field_1: #peace_params_path::ParamsSpecFieldless::Value { value: Wrapper(field_1) },
-            // // field_2: #peace_params_path::ParamsSpecFieldless::Value { value: Wrapper(field_2) },
+            // // field_1: #peace_params_path::ParamsSpecFieldless::Value(Wrapper(field_1)),
+            // // field_2: #peace_params_path::ParamsSpecFieldless::Value(Wrapper(field_2)),
             // ```
 
             fields_named
@@ -258,13 +258,13 @@ fn fields_map_to_value(fields: &Fields, peace_params_path: &Path) -> proc_macro2
             // Generates:
             //
             // ```rust
-            // #peace_params_path::ParamsSpecFieldless::Value { value: _0 },
-            // #peace_params_path::ParamsSpecFieldless::Value { value: _1 },
+            // #peace_params_path::ParamsSpecFieldless::Value(_0),
+            // #peace_params_path::ParamsSpecFieldless::Value(_1),
             // PhantomData,
             //
             // // or
-            // // #peace_params_path::ParamsSpecFieldless::Value { value: Wrapper(_0) },
-            // // #peace_params_path::ParamsSpecFieldless::Value { value: Wrapper(_1) },
+            // // #peace_params_path::ParamsSpecFieldless::Value(Wrapper(_0)),
+            // // #peace_params_path::ParamsSpecFieldless::Value(Wrapper(_1)),
             // ```
             fields_unnamed.unnamed.iter().enumerate().fold(
                 proc_macro2::TokenStream::new(),

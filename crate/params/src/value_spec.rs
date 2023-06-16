@@ -47,14 +47,6 @@ where
     /// If no value spec was previously serialized, then the command
     /// context build will return an error.
     Stored,
-    /// Uses the provided value.
-    ///
-    /// The value used is whatever is passed in to the command context
-    /// builder.
-    Value {
-        /// The value to use.
-        value: T,
-    },
     /// Uses a value loaded from `resources` at runtime.
     ///
     /// The value may have been provided by workspace params, or
@@ -71,6 +63,12 @@ where
     /// the user must provide the `MappingFn` in subsequent command
     /// context builds.
     MappingFn(Box<dyn MappingFn<Output = T>>),
+    /// Uses the provided value.
+    ///
+    /// The value used is whatever is passed in to the command context
+    /// builder.
+    #[serde(untagged)]
+    Value(T),
 }
 
 impl<T> ValueSpec<T>
@@ -93,9 +91,9 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Stored => f.write_str("Stored"),
-            Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::InMemory => f.write_str("InMemory"),
             Self::MappingFn(mapping_fn) => f.debug_tuple("MappingFn").field(mapping_fn).finish(),
+            Self::Value(value) => f.debug_tuple("Value").field(value).finish(),
         }
     }
 }
@@ -105,7 +103,7 @@ where
     T: Clone + Debug + Send + Sync + 'static,
 {
     fn from(value: T) -> Self {
-        Self::Value { value }
+        Self::Value(value)
     }
 }
 
@@ -119,7 +117,6 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
         match self {
-            ValueSpec::Value { value } => Ok(value.clone()),
             ValueSpec::Stored | ValueSpec::InMemory => match resources.try_borrow::<T>() {
                 Ok(value) => Ok((*value).clone()),
                 Err(borrow_fail) => match borrow_fail {
@@ -134,6 +131,7 @@ where
                 },
             },
             ValueSpec::MappingFn(mapping_fn) => mapping_fn.map(resources, value_resolution_ctx),
+            ValueSpec::Value(value) => Ok(value.clone()),
         }
     }
 
@@ -143,7 +141,6 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<Option<T>, ParamsResolveError> {
         match self {
-            ValueSpec::Value { value } => Ok(Some((*value).clone())),
             ValueSpec::Stored | ValueSpec::InMemory => match resources.try_borrow::<T>() {
                 Ok(value) => Ok(Some((*value).clone())),
                 Err(borrow_fail) => match borrow_fail {
@@ -158,6 +155,7 @@ where
                 },
             },
             ValueSpec::MappingFn(mapping_fn) => mapping_fn.try_map(resources, value_resolution_ctx),
+            ValueSpec::Value(value) => Ok(Some((*value).clone())),
         }
     }
 }
@@ -169,8 +167,8 @@ where
     fn is_usable(&self) -> bool {
         match self {
             Self::Stored => false,
-            Self::Value { .. } | Self::InMemory => true,
             Self::MappingFn(mapping_fn) => mapping_fn.is_valued(),
+            Self::Value { .. } | Self::InMemory => true,
         }
     }
 
@@ -189,7 +187,7 @@ where
             Self::Stored => *self = other.clone(),
 
             // Use set value / no change on these variants
-            Self::Value { .. } | Self::InMemory | Self::MappingFn(_) => {}
+            Self::InMemory | Self::MappingFn(_) | Self::Value(_) => {}
         }
     }
 }
