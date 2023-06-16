@@ -67,14 +67,11 @@ impl ProfileInitCmd {
         )?;
 
         if !profile_reinit_allowed {
-            let profile_workspace_init = Profile::workspace_init();
             let cmd_ctx_builder =
                 CmdCtx::builder_multi_profile_no_flow::<EnvManError, _>(output, &workspace);
             crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
-            let cmd_ctx_result = cmd_ctx_builder
-                .with_profile_filter(|profile| profile != &profile_workspace_init)
-                .await;
+            let cmd_ctx_result = cmd_ctx_builder.await;
             match cmd_ctx_result {
                 Ok(mut cmd_ctx) => {
                     let MultiProfileNoFlowView { profiles, .. } = cmd_ctx.view();

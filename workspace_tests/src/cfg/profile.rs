@@ -1,4 +1,4 @@
-use std::{borrow::Cow, str::FromStr};
+use std::{borrow::Cow, collections::HashMap, str::FromStr};
 
 use peace::{
     cfg::{Profile, ProfileInvalidFmt},
@@ -117,10 +117,36 @@ fn debug() -> Result<(), ProfileInvalidFmt<'static>> {
 }
 
 #[test]
+fn hash() -> Result<(), ProfileInvalidFmt<'static>> {
+    let profile = Profile::new("profile")?;
+
+    let mut hash_map = HashMap::new();
+    hash_map.insert(profile, ());
+
+    Ok(())
+}
+
+#[test]
 fn partial_eq_ne() -> Result<(), ProfileInvalidFmt<'static>> {
     let profile_name_0 = Profile::new("profile_name0")?;
     let profile_name_1 = Profile::new("profile_name1")?;
 
     assert!(profile_name_0 != profile_name_1);
+    Ok(())
+}
+
+#[test]
+fn serialize() -> Result<(), Box<dyn std::error::Error>> {
+    let profile = Profile::new("profile")?;
+
+    assert_eq!("profile\n", serde_yaml::to_string(&profile)?);
+    Ok(())
+}
+
+#[test]
+fn deserialize() -> Result<(), Box<dyn std::error::Error>> {
+    let profile = Profile::new("profile")?;
+
+    assert_eq!(profile, serde_yaml::from_str("profile")?);
     Ok(())
 }

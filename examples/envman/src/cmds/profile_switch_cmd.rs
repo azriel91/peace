@@ -1,5 +1,5 @@
 use peace::{
-    cfg::{app_name, AppName, Profile},
+    cfg::{app_name, AppName},
     cmd::{ctx::CmdCtx, scopes::MultiProfileNoFlowView},
     rt_model::output::OutputWrite,
 };
@@ -31,14 +31,11 @@ impl ProfileSwitchCmd {
 
         let env_man_flow = env_man_flow(output, &workspace).await?;
 
-        let profile_workspace_init = Profile::workspace_init();
         let cmd_ctx_builder =
             CmdCtx::builder_multi_profile_no_flow::<EnvManError, _>(output, &workspace);
         crate::cmds::ws_and_profile_params_augment!(cmd_ctx_builder);
 
-        let mut cmd_ctx = cmd_ctx_builder
-            .with_profile_filter(|profile| profile != &profile_workspace_init)
-            .await?;
+        let mut cmd_ctx = cmd_ctx_builder.await?;
         let MultiProfileNoFlowView {
             output,
             workspace,

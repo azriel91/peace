@@ -6,16 +6,6 @@
 //! * The [`Workspace`] of a project that the command is built for.
 //! * A [`Profile`] (or namespace) for that project.
 //! * A workflow that the command is executing, identified by the [`FlowId`].
-//!
-//! # Implementors
-//!
-//! Sometimes, a command may manage information or items that are used in
-//! different profiles, and as a framework consumer, the profile or flow ID is
-//! not a "project environment profile" or "project workflow".
-//!
-//! In this case, [`Profile::workspace_init`], and [`FlowId::workspace_init`]
-//! and [`FlowId::profile_init`] are defaulted by the [`WorkspaceBuilder`] for
-//! the command's execution.
 
 use peace_core::AppName;
 use peace_resources::internal::WorkspaceDirs;
