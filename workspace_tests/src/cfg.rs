@@ -1,3 +1,4 @@
+mod app_name;
 mod flow_id;
 mod item_id;
 mod item_id_invalid_fmt;
