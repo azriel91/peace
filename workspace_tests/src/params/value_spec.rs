@@ -1,8 +1,8 @@
 use peace::{
     cfg::{item_id, ItemId},
     params::{
-        AnySpecRt, ParamsResolveError, ValueResolutionCtx, ValueResolutionMode, ValueSpec,
-        ValueSpecRt,
+        AnySpecRt, AnySpecRtBoxed, ParamsResolveError, ValueResolutionCtx, ValueResolutionMode,
+        ValueSpec, ValueSpecRt,
     },
     resources::{resources::ts::SetUp, Resources},
 };
@@ -566,4 +566,56 @@ fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), Para
         }
     })();
     Ok(())
+}
+
+#[test]
+fn merge_stored_with_other_uses_other() {
+    let mut value_spec_a = ValueSpec::<MockSrc>::Stored;
+    let value_spec_b = AnySpecRtBoxed::new(ValueSpec::<MockSrc>::InMemory);
+
+    value_spec_a.merge(&*value_spec_b);
+
+    assert!(matches!(&value_spec_a, ValueSpec::<MockSrc>::InMemory));
+}
+
+#[test]
+fn merge_value_with_other_no_change() {
+    let mut value_spec_a = ValueSpec::<MockSrc>::Value { value: MockSrc(1) };
+    let value_spec_b = AnySpecRtBoxed::new(ValueSpec::<MockSrc>::from_map(
+        None,
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |_: &u8| None,
+    ));
+
+    value_spec_a.merge(&*value_spec_b);
+
+    assert!(matches!(&value_spec_a, ValueSpec::<MockSrc>::Value { value } if value == &MockSrc(1)));
+}
+
+#[test]
+fn merge_in_memory_with_other_no_change() {
+    let mut value_spec_a = ValueSpec::<MockSrc>::InMemory;
+    let value_spec_b = AnySpecRtBoxed::new(ValueSpec::<MockSrc>::from_map(
+        None,
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |_: &u8| None,
+    ));
+
+    value_spec_a.merge(&*value_spec_b);
+
+    assert!(matches!(&value_spec_a, ValueSpec::<MockSrc>::InMemory));
+}
+
+#[test]
+fn merge_mapping_fn_with_other_no_change() {
+    let mut value_spec_a = ValueSpec::<MockSrc>::from_map(
+        None,
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |_: &u8| None,
+    );
+    let value_spec_b = AnySpecRtBoxed::new(ValueSpec::<MockSrc>::InMemory);
+
+    value_spec_a.merge(&*value_spec_b);
+
+    assert!(matches!(&value_spec_a, ValueSpec::<MockSrc>::MappingFn(_)));
 }

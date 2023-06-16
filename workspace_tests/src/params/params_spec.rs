@@ -1,14 +1,14 @@
 use peace::{
     cfg::{item_id, ItemId},
     params::{
-        AnySpecRt, FieldNameAndType, FieldWiseSpecRt, Params, ParamsResolveError, ParamsSpec,
-        ValueResolutionCtx, ValueResolutionMode, ValueSpec, ValueSpecRt,
+        AnySpecRt, AnySpecRtBoxed, FieldNameAndType, FieldWiseSpecRt, Params, ParamsResolveError,
+        ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec, ValueSpecRt,
     },
     resources::{resources::ts::SetUp, Resources},
 };
 
 use crate::{
-    mock_item::MockSrc,
+    mock_item::{MockSrc, MockSrcFieldWise},
     vec_copy_item::{VecA, VecAFieldWise},
 };
 
@@ -897,4 +897,135 @@ fn try_resolve_field_wise_returns_err_when_mutably_borrowed() -> Result<(), Para
         }
     })();
     Ok(())
+}
+
+#[test]
+fn merge_stored_with_other_uses_other() {
+    let mut params_spec_a = ParamsSpec::<MockSrc>::Stored;
+    let params_spec_b = AnySpecRtBoxed::new(ParamsSpec::<MockSrc>::InMemory);
+
+    params_spec_a.merge(&*params_spec_b);
+
+    assert!(matches!(&params_spec_a, ParamsSpec::<MockSrc>::InMemory));
+}
+
+#[test]
+fn merge_value_with_other_no_change() {
+    let mut params_spec_a = ParamsSpec::<MockSrc>::Value { value: MockSrc(1) };
+    let params_spec_b = AnySpecRtBoxed::new(ParamsSpec::<MockSrc>::from_map(
+        None,
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |_: &u8| None,
+    ));
+
+    params_spec_a.merge(&*params_spec_b);
+
+    assert!(
+        matches!(&params_spec_a, ParamsSpec::<MockSrc>::Value { value } if value == &MockSrc(1))
+    );
+}
+
+#[test]
+fn merge_in_memory_with_other_no_change() {
+    let mut params_spec_a = ParamsSpec::<MockSrc>::InMemory;
+    let params_spec_b = AnySpecRtBoxed::new(ParamsSpec::<MockSrc>::from_map(
+        None,
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |_: &u8| None,
+    ));
+
+    params_spec_a.merge(&*params_spec_b);
+
+    assert!(matches!(&params_spec_a, ParamsSpec::<MockSrc>::InMemory));
+}
+
+#[test]
+fn merge_mapping_fn_with_other_no_change() {
+    let mut params_spec_a = ParamsSpec::<MockSrc>::from_map(
+        None,
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |_: &u8| None,
+    );
+    let params_spec_b = AnySpecRtBoxed::new(ParamsSpec::<MockSrc>::InMemory);
+
+    params_spec_a.merge(&*params_spec_b);
+
+    assert!(matches!(
+        &params_spec_a,
+        ParamsSpec::<MockSrc>::MappingFn(_)
+    ));
+}
+
+#[test]
+fn merge_field_wise_with_stored_no_change() {
+    let mut params_spec_a = MockSrc::field_wise_spec().with_0_in_memory().build();
+    let params_spec_b = AnySpecRtBoxed::new(ParamsSpec::<MockSrc>::Stored);
+
+    params_spec_a.merge(&*params_spec_b);
+
+    assert!(matches!(
+        &params_spec_a,
+        ParamsSpec::<MockSrc>::FieldWise { field_wise_spec: MockSrcFieldWise(f0) }
+        if matches!(f0, ValueSpec::InMemory)
+    ));
+}
+
+#[test]
+fn merge_field_wise_with_value_no_change() {
+    let mut params_spec_a = MockSrc::field_wise_spec().with_0_in_memory().build();
+    let params_spec_b = AnySpecRtBoxed::new(ParamsSpec::<MockSrc>::Value { value: MockSrc(1) });
+
+    params_spec_a.merge(&*params_spec_b);
+
+    assert!(matches!(
+        &params_spec_a,
+        ParamsSpec::<MockSrc>::FieldWise { field_wise_spec: MockSrcFieldWise(f0) }
+        if matches!(f0, ValueSpec::InMemory)
+    ));
+}
+
+#[test]
+fn merge_field_wise_with_in_memory_no_change() {
+    let mut params_spec_a = MockSrc::field_wise_spec().with_0_in_memory().build();
+    let params_spec_b = AnySpecRtBoxed::new(ParamsSpec::<MockSrc>::InMemory);
+
+    params_spec_a.merge(&*params_spec_b);
+
+    assert!(matches!(
+        &params_spec_a,
+        ParamsSpec::<MockSrc>::FieldWise { field_wise_spec: MockSrcFieldWise(f0) }
+        if matches!(f0, ValueSpec::InMemory)
+    ));
+}
+
+#[test]
+fn merge_field_wise_with_from_map_no_change() {
+    let mut params_spec_a = MockSrc::field_wise_spec().with_0_in_memory().build();
+    let params_spec_b = AnySpecRtBoxed::new(ParamsSpec::<MockSrc>::from_map(
+        None,
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |_: &u8| None,
+    ));
+
+    params_spec_a.merge(&*params_spec_b);
+
+    assert!(matches!(
+        &params_spec_a,
+        ParamsSpec::<MockSrc>::FieldWise { field_wise_spec: MockSrcFieldWise(f0) }
+        if matches!(f0, ValueSpec::InMemory)
+    ));
+}
+
+#[test]
+fn merge_field_wise_with_field_wise_deep_merges() {
+    let mut params_spec_a = MockSrc::field_wise_spec().build();
+    let params_spec_b = AnySpecRtBoxed::new(MockSrc::field_wise_spec().with_0_in_memory().build());
+
+    params_spec_a.merge(&*params_spec_b);
+
+    assert!(matches!(
+        &params_spec_a,
+        ParamsSpec::<MockSrc>::FieldWise { field_wise_spec: MockSrcFieldWise(f0) }
+        if matches!(f0, ValueSpec::InMemory)
+    ));
 }

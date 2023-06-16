@@ -1,8 +1,8 @@
 use peace::{
     cfg::{item_id, ItemId},
     params::{
-        AnySpecRt, ParamsFieldless, ParamsResolveError, ParamsSpecFieldless, ValueResolutionCtx,
-        ValueResolutionMode, ValueSpecRt,
+        AnySpecRt, AnySpecRtBoxed, ParamsFieldless, ParamsResolveError, ParamsSpecFieldless,
+        ValueResolutionCtx, ValueResolutionMode, ValueSpecRt,
     },
     resources::{resources::ts::SetUp, Resources},
 };
@@ -579,4 +579,67 @@ fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), Para
         }
     })();
     Ok(())
+}
+
+#[test]
+fn merge_stored_with_other_uses_other() {
+    let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::Stored;
+    let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::InMemory);
+
+    params_spec_fieldless_a.merge(&*params_spec_fieldless_b);
+
+    assert!(matches!(
+        &params_spec_fieldless_a,
+        ParamsSpecFieldless::<MockSrc>::InMemory
+    ));
+}
+
+#[test]
+fn merge_value_with_other_no_change() {
+    let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::Value { value: MockSrc(1) };
+    let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::from_map(
+        None,
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |_: &u8| None,
+    ));
+
+    params_spec_fieldless_a.merge(&*params_spec_fieldless_b);
+
+    assert!(
+        matches!(&params_spec_fieldless_a, ParamsSpecFieldless::<MockSrc>::Value { value } if value == &MockSrc(1))
+    );
+}
+
+#[test]
+fn merge_in_memory_with_other_no_change() {
+    let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::InMemory;
+    let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::from_map(
+        None,
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |_: &u8| None,
+    ));
+
+    params_spec_fieldless_a.merge(&*params_spec_fieldless_b);
+
+    assert!(matches!(
+        &params_spec_fieldless_a,
+        ParamsSpecFieldless::<MockSrc>::InMemory
+    ));
+}
+
+#[test]
+fn merge_mapping_fn_with_other_no_change() {
+    let mut params_spec_fieldless_a = ParamsSpecFieldless::<MockSrc>::from_map(
+        None,
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |_: &u8| None,
+    );
+    let params_spec_fieldless_b = AnySpecRtBoxed::new(ParamsSpecFieldless::<MockSrc>::InMemory);
+
+    params_spec_fieldless_a.merge(&*params_spec_fieldless_b);
+
+    assert!(matches!(
+        &params_spec_fieldless_a,
+        ParamsSpecFieldless::<MockSrc>::MappingFn(_)
+    ));
 }
