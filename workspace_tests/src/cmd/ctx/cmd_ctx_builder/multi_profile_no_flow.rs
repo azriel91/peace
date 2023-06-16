@@ -1,9 +1,10 @@
 use std::collections::BTreeMap;
 
 use peace::{
-    cfg::{app_name, profile, AppName, Profile},
+    cfg::{app_name, profile, AppName, Profile, ProfileInvalidFmt},
     cmd::ctx::CmdCtx,
     resources::paths::{ProfileDir, ProfileHistoryDir},
+    rt_model::{Error as PeaceRtError, NativeError},
 };
 
 use crate::{cmd::ctx::cmd_ctx_builder::workspace_with, no_op_output::NoOpOutput, PeaceTestError};
@@ -353,5 +354,54 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
     );
     assert_eq!(Some(&1u32), profile_params.get("profile_param_0"));
     assert_eq!(Some(&2u64), profile_params.get("profile_param_1"));
+    Ok(())
+}
+
+#[tokio::test]
+async fn list_profile_dirs_invalid_profile_name() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let profile = profile!("test_profile");
+    // sneaky usage of `new_unchecked`.
+    let profile_other = Profile::new_unchecked("test_profile_spécïál");
+    let workspace = workspace_with(
+        &tempdir,
+        app_name!("test_multi_profile_single_flow"),
+        &[profile.clone(), profile_other.clone()],
+        None,
+    )
+    .await?;
+
+    let mut output = NoOpOutput;
+    let cmd_ctx_result =
+        CmdCtx::builder_multi_profile_no_flow::<PeaceTestError, _>(&mut output, &workspace)
+            .build()
+            .await;
+
+    let profile_other_dir = ProfileDir::from((workspace.dirs().peace_app_dir(), &profile_other));
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &cmd_ctx_result,
+                    Err(PeaceTestError::PeaceRt(PeaceRtError::Native(
+                        NativeError::ProfileDirInvalidName {
+                            dir_name,
+                            path,
+                            error,
+                        }
+                    )))
+
+                    if dir_name == "test_profile_spécïál"
+                    && path == &*profile_other_dir
+                    && error == &ProfileInvalidFmt::new("test_profile_spécïál".into())
+                ),
+                "expected `cmd_ctx_result` to be \n\
+                ``,\n\
+                but was {cmd_ctx_result:?}",
+            );
+        }
+    })();
+
     Ok(())
 }

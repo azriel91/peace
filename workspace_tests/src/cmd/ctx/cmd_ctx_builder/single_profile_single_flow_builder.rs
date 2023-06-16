@@ -1020,3 +1020,60 @@ async fn build_with_item_params_returns_deserialization_err_when_item_renamed()
 
     Ok(())
 }
+
+#[tokio::test]
+async fn build_with_item_params_returns_ok_when_new_item_added_with_params_provided()
+-> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
+    let profile = profile!("test_profile");
+    let flow_id = flow_id!("test_flow_id");
+
+    // Build first `cmd_ctx` without item.
+    let item_graph = ItemGraphBuilder::new().build();
+    let flow = Flow::<PeaceTestError>::new(flow_id.clone(), item_graph);
+
+    let mut output = NoOpOutput;
+    let _cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile.clone())
+        .with_flow(&flow)
+        .build()
+        .await?;
+
+    // Build second `cmd_ctx` with item.
+    let item_graph = {
+        let mut item_graph_builder = ItemGraphBuilder::new();
+        item_graph_builder.add_fn(VecCopyItem::default().into());
+        item_graph_builder.build()
+    };
+    let flow = Flow::<PeaceTestError>::new(flow_id, item_graph);
+    let cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile.clone())
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(VecCopyItem::ID_DEFAULT.clone(), VecA(vec![1u8]).into())
+        .build()
+        .await?;
+
+    let scope = cmd_ctx.scope();
+    let params_specs = scope.params_specs();
+    let resources = scope.resources();
+    let vec_a_spec = params_specs
+        .get::<ParamsSpec<<VecCopyItem as Item>::Params<'_>>, _>(VecCopyItem::ID_DEFAULT);
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        VecCopyItem::ID_DEFAULT.clone(),
+        tynm::type_name::<VecA>(),
+    );
+    assert!(matches!(vec_a_spec,
+        Some(ParamsSpec::Value { value: VecA(value) })
+        if value == &[1u8]
+    ));
+    assert_eq!(
+        Some(VecA(vec![1u8])),
+        vec_a_spec.and_then(|vec_a_spec| vec_a_spec
+            .resolve(resources, &mut value_resolution_ctx)
+            .ok()),
+    );
+
+    Ok(())
+}
