@@ -1,8 +1,8 @@
 use peace::{
     cfg::{item_id, ItemId},
     params::{
-        AnySpecRt, FieldWiseSpecRt, Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode,
-        ValueSpec,
+        AnySpecRt, FieldNameAndType, FieldWiseSpecRt, Params, ParamsResolveError, ParamsSpec,
+        ValueResolutionCtx, ValueResolutionMode, ValueSpec, ValueSpecRt,
     },
     resources::{resources::ts::SetUp, Resources},
 };
@@ -393,5 +393,503 @@ field_wise_spec: !MappingFn
     )?;
 
     assert!(!params_spec.is_usable());
+    Ok(())
+}
+
+#[test]
+fn resolve_stored_param() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(MockSrc(1));
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("resolve_stored_param"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::Stored;
+
+    let mock_src = ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+
+    assert_eq!(MockSrc(1), mock_src);
+    Ok(())
+}
+
+#[test]
+fn resolve_in_memory() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(MockSrc(1));
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("resolve_in_memory"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::InMemory;
+
+    let mock_src = ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+
+    assert_eq!(MockSrc(1), mock_src);
+    Ok(())
+}
+
+#[test]
+fn resolve_in_memory_returns_err_when_not_found() -> Result<(), ParamsResolveError> {
+    let resources = Resources::<SetUp>::from(Resources::new());
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("resolve_in_memory_returns_err_when_not_found"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::InMemory;
+
+    let mock_src_result =
+        ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
+
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &mock_src_result,
+                    Err(ParamsResolveError::InMemory { value_resolution_ctx })
+                    if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
+                    && value_resolution_ctx.item_id()
+                        == &item_id!("resolve_in_memory_returns_err_when_not_found")
+                    && value_resolution_ctx.params_type_name() == "MockSrc"
+                    && value_resolution_ctx.resolution_chain().is_empty()
+                ),
+                "expected `mock_src_result` to be `Err(ParamsResolveError::InMemory {{ .. }})`\n\
+                but was `{mock_src_result:?}`"
+            );
+        }
+    })();
+    Ok(())
+}
+
+#[test]
+fn resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(MockSrc(1));
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("resolve_in_memory_returns_err_when_mutably_borrowed"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::InMemory;
+
+    let _mock_src_mut_borrowed = resources.borrow_mut::<MockSrc>();
+    let mock_src_result =
+        ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
+
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &mock_src_result,
+                    Err(ParamsResolveError::InMemoryBorrowConflict { value_resolution_ctx })
+                    if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
+                    && value_resolution_ctx.item_id()
+                        == &item_id!("resolve_in_memory_returns_err_when_mutably_borrowed")
+                    && value_resolution_ctx.params_type_name() == "MockSrc"
+                    && value_resolution_ctx.resolution_chain().is_empty()
+                ),
+                "expected `mock_src_result` to be \
+                `Err(ParamsResolveError::InMemoryBorrowConflict {{ .. }})`\n\
+                with `resolution_chain`: `[]`,\n\
+                but was `{mock_src_result:?}`"
+            );
+        }
+    })();
+    Ok(())
+}
+
+#[test]
+fn resolve_value() -> Result<(), ParamsResolveError> {
+    let resources = Resources::<SetUp>::from(Resources::new());
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("resolve_value"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::Value { value: MockSrc(1) };
+
+    let mock_src = ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+
+    assert_eq!(MockSrc(1), mock_src);
+    Ok(())
+}
+
+#[test]
+fn resolve_mapping_fn() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(1u8);
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("resolve_mapping_fn"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::from_map(None, |n: &u8| Some(MockSrc(*n)));
+
+    let mock_src = ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+
+    assert_eq!(MockSrc(1), mock_src);
+    Ok(())
+}
+
+#[test]
+fn resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(1u8);
+        resources.insert(2u16);
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("resolve_mapping_fn_returns_err_when_mutably_borrowed"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::from_map(None, |n: &u8, _m: &u16| Some(MockSrc(*n)));
+
+    let _u8_borrowed = resources.borrow::<u8>();
+    let _u16_mut_borrowed = resources.borrow_mut::<u16>();
+    let mock_src_result =
+        ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
+
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &mock_src_result,
+                    Err(ParamsResolveError::FromMapBorrowConflict { value_resolution_ctx, from_type_name })
+                    if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
+                    && value_resolution_ctx.item_id()
+                        == &item_id!("resolve_mapping_fn_returns_err_when_mutably_borrowed")
+                    && value_resolution_ctx.params_type_name() == "MockSrc"
+                    && value_resolution_ctx.resolution_chain().is_empty()
+                    && from_type_name == "u16"
+                ),
+                "expected `mock_src_result` to be \
+                `Err(ParamsResolveError::FromMapBorrowConflict {{ .. }})`\n\
+                with `resolution_chain`: `[]`,\n\
+                but was `{mock_src_result:?}`"
+            );
+        }
+    })();
+    Ok(())
+}
+
+#[test]
+fn resolve_field_wise() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(1u8);
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("resolve_field_wise"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = MockSrc::field_wise_spec().with_0_in_memory().build();
+
+    let mock_src = ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+
+    assert_eq!(MockSrc(1), mock_src);
+    Ok(())
+}
+
+#[test]
+fn resolve_field_wise_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(1u8);
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("resolve_field_wise_returns_err_when_mutably_borrowed"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = MockSrc::field_wise_spec().with_0_in_memory().build();
+
+    let _u8_mut_borrowed = resources.borrow_mut::<u8>();
+    let mock_src_result =
+        ValueSpecRt::resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
+
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &mock_src_result,
+                    Err(ParamsResolveError::InMemoryBorrowConflict { value_resolution_ctx })
+                    if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
+                    && value_resolution_ctx.item_id()
+                        == &item_id!("resolve_field_wise_returns_err_when_mutably_borrowed")
+                    && value_resolution_ctx.params_type_name() == "MockSrc"
+                    && value_resolution_ctx.resolution_chain() == [
+                        FieldNameAndType::new(String::from("0"), tynm::type_name::<u8>())
+                    ]
+                ),
+                "expected `mock_src_result` to be \
+                `Err(ParamsResolveError::InMemoryBorrowConflict {{ .. }})`\n\
+                with `resolution_chain`: `[(0, u8)]`,\n\
+                but was `{mock_src_result:?}`"
+            );
+        }
+    })();
+    Ok(())
+}
+
+#[test]
+fn try_resolve_stored_param() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(MockSrc(1));
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("try_resolve_stored_param"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::Stored;
+
+    let mock_src = ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+
+    assert_eq!(Some(MockSrc(1)), mock_src);
+    Ok(())
+}
+
+#[test]
+fn try_resolve_in_memory() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(MockSrc(1));
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("try_resolve_in_memory"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::InMemory;
+
+    let mock_src = ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+
+    assert_eq!(Some(MockSrc(1)), mock_src);
+    Ok(())
+}
+
+#[test]
+fn try_resolve_in_memory_returns_none_when_not_found() -> Result<(), ParamsResolveError> {
+    let resources = Resources::<SetUp>::from(Resources::new());
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("try_resolve_in_memory_returns_none_when_not_found"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::InMemory;
+
+    let mock_src = ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+
+    assert_eq!(None, mock_src);
+    Ok(())
+}
+
+#[test]
+fn try_resolve_in_memory_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(MockSrc(1));
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("try_resolve_in_memory_returns_err_when_mutably_borrowed"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::InMemory;
+
+    let _mock_src_mut_borrowed = resources.borrow_mut::<MockSrc>();
+    let mock_src_result =
+        ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
+
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &mock_src_result,
+                    Err(ParamsResolveError::InMemoryBorrowConflict { value_resolution_ctx })
+                    if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
+                    && value_resolution_ctx.item_id()
+                        == &item_id!("try_resolve_in_memory_returns_err_when_mutably_borrowed")
+                    && value_resolution_ctx.params_type_name() == "MockSrc"
+                    && value_resolution_ctx.resolution_chain().is_empty()
+                ),
+                "expected `mock_src_result` to be \
+                `Err(ParamsResolveError::InMemoryBorrowConflict {{ .. }})`\n\
+                with `resolution_chain`: `[]`,\n\
+                but was `{mock_src_result:?}`"
+            );
+        }
+    })();
+    Ok(())
+}
+
+#[test]
+fn try_resolve_value() -> Result<(), ParamsResolveError> {
+    let resources = Resources::<SetUp>::from(Resources::new());
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("try_resolve_value"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::Value { value: MockSrc(1) };
+
+    let mock_src = ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+
+    assert_eq!(Some(MockSrc(1)), mock_src);
+    Ok(())
+}
+
+#[test]
+fn try_resolve_mapping_fn() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(1u8);
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("try_resolve_mapping_fn"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::from_map(None, |n: &u8| Some(MockSrc(*n)));
+
+    let mock_src = ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+
+    assert_eq!(Some(MockSrc(1)), mock_src);
+    Ok(())
+}
+
+#[test]
+fn try_resolve_mapping_fn_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(1u8);
+        resources.insert(2u16);
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("try_resolve_mapping_fn_returns_err_when_mutably_borrowed"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = ParamsSpec::<MockSrc>::from_map(None, |n: &u8, _m: &u16| Some(MockSrc(*n)));
+
+    let _u8_borrowed = resources.borrow::<u8>();
+    let _u16_mut_borrowed = resources.borrow_mut::<u16>();
+    let mock_src_result =
+        ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
+
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &mock_src_result,
+                    Err(ParamsResolveError::FromMapBorrowConflict { value_resolution_ctx, from_type_name })
+                    if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
+                    && value_resolution_ctx.item_id()
+                        == &item_id!("try_resolve_mapping_fn_returns_err_when_mutably_borrowed")
+                    && value_resolution_ctx.params_type_name() == "MockSrc"
+                    && value_resolution_ctx.resolution_chain().is_empty()
+                    && from_type_name == "u16"
+                ),
+                "expected `mock_src_result` to be \
+                `Err(ParamsResolveError::FromMapBorrowConflict {{ .. }})`\n\
+                with `resolution_chain`: `[]`,\n\
+                but was `{mock_src_result:?}`"
+            );
+        }
+    })();
+    Ok(())
+}
+
+#[test]
+fn try_resolve_field_wise() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(1u8);
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("try_resolve_field_wise"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = MockSrc::field_wise_spec().with_0_in_memory().build();
+
+    let mock_src = ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx)?;
+
+    assert_eq!(Some(MockSrc(1)), mock_src);
+    Ok(())
+}
+
+#[test]
+fn try_resolve_field_wise_returns_err_when_mutably_borrowed() -> Result<(), ParamsResolveError> {
+    let resources = {
+        let mut resources = Resources::new();
+        resources.insert(1u8);
+        Resources::<SetUp>::from(resources)
+    };
+    let mut value_resolution_ctx = ValueResolutionCtx::new(
+        ValueResolutionMode::Current,
+        item_id!("try_resolve_field_wise_returns_err_when_mutably_borrowed"),
+        tynm::type_name::<MockSrc>(),
+    );
+    let mock_src_spec = MockSrc::field_wise_spec().with_0_in_memory().build();
+
+    let _u8_mut_borrowed = resources.borrow_mut::<u8>();
+    let mock_src_result =
+        ValueSpecRt::try_resolve(&mock_src_spec, &resources, &mut value_resolution_ctx);
+
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                matches!(
+                    &mock_src_result,
+                    Err(ParamsResolveError::InMemoryBorrowConflict { value_resolution_ctx })
+                    if value_resolution_ctx.value_resolution_mode() == ValueResolutionMode::Current
+                    && value_resolution_ctx.item_id()
+                        == &item_id!("try_resolve_field_wise_returns_err_when_mutably_borrowed")
+                    && value_resolution_ctx.params_type_name() == "MockSrc"
+                    && value_resolution_ctx.resolution_chain() == [
+                        FieldNameAndType::new(String::from("0"), tynm::type_name::<u8>())
+                    ]
+                ),
+                "expected `mock_src_result` to be \
+                `Err(ParamsResolveError::InMemoryBorrowConflict {{ .. }})`\n\
+                with `resolution_chain`: `[(0, u8)]`,\n\
+                but was `{mock_src_result:?}`"
+            );
+        }
+    })();
     Ok(())
 }
