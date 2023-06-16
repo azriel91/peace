@@ -10,6 +10,11 @@ use peace::{
 use crate::mock_item::MockSrc;
 
 #[test]
+fn clone() {
+    let _value_spec = ValueSpec::<MockSrc>::Value { value: MockSrc(1) }.clone();
+}
+
+#[test]
 fn debug() {
     assert_eq!("Stored", format!("{:?}", ValueSpec::<MockSrc>::Stored));
     assert_eq!(

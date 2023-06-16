@@ -3,6 +3,12 @@ use peace::params::ParamsSpecFieldlessDe;
 use crate::mock_item::MockSrc;
 
 #[test]
+fn clone() {
+    let _params_spec_fieldless_de =
+        ParamsSpecFieldlessDe::<MockSrc>::Value { value: MockSrc(1) }.clone();
+}
+
+#[test]
 fn debug() -> Result<(), serde_yaml::Error> {
     assert_eq!(
         "Stored",

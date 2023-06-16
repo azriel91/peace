@@ -13,6 +13,11 @@ use crate::{
 };
 
 #[test]
+fn clone() {
+    let _params_spec = ParamsSpec::<MockSrc>::Value { value: MockSrc(1) }.clone();
+}
+
+#[test]
 fn debug() {
     assert_eq!("Stored", format!("{:?}", ParamsSpec::<MockSrc>::Stored));
     assert_eq!(

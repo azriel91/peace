@@ -3,6 +3,11 @@ use peace::params::{Params, ParamsSpec, ParamsSpecDe};
 use crate::mock_item::MockSrc;
 
 #[test]
+fn clone() {
+    let _params_spec_de = ParamsSpecDe::<MockSrc>::Value { value: MockSrc(1) }.clone();
+}
+
+#[test]
 fn debug() -> Result<(), serde_yaml::Error> {
     assert_eq!("Stored", format!("{:?}", ParamsSpecDe::<MockSrc>::Stored));
     assert_eq!(
