@@ -26,6 +26,14 @@ where
     /// If no value spec was previously serialized, then the command
     /// context build will return an error.
     Stored,
+    /// Uses the provided value.
+    ///
+    /// The value used is whatever is passed in to the command context
+    /// builder.
+    Value {
+        /// The value to use.
+        value: T,
+    },
     /// Uses a value loaded from `resources` at runtime.
     ///
     /// The value may have been provided by workspace params, or
@@ -34,12 +42,6 @@ where
     /// Look up some data populated by a predecessor, and compute the value
     /// from that data.
     MappingFn(MappingFnImpl<T, FnPlaceholder<T>, ((),)>),
-    /// Uses the provided value.
-    ///
-    /// The value used is whatever is passed in to the command context
-    /// builder.
-    #[serde(untagged)]
-    Value(T),
 }
 
 impl<T> Debug for ParamsSpecFieldlessDe<T>
@@ -49,11 +51,11 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Stored => f.write_str("Stored"),
+            Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::InMemory => f.write_str("InMemory"),
             Self::MappingFn(mapping_fn_impl) => {
                 f.debug_tuple("MappingFn").field(&mapping_fn_impl).finish()
             }
-            Self::Value(value) => f.debug_tuple("Value").field(value).finish(),
         }
     }
 }
@@ -65,11 +67,11 @@ where
     fn from(value_spec_de: ParamsSpecFieldlessDe<T>) -> Self {
         match value_spec_de {
             ParamsSpecFieldlessDe::Stored => ParamsSpecFieldless::Stored,
+            ParamsSpecFieldlessDe::Value { value } => ParamsSpecFieldless::Value { value },
             ParamsSpecFieldlessDe::InMemory => ParamsSpecFieldless::InMemory,
             ParamsSpecFieldlessDe::MappingFn(mapping_fn_impl) => {
                 ParamsSpecFieldless::MappingFn(Box::new(mapping_fn_impl))
             }
-            ParamsSpecFieldlessDe::Value(value) => ParamsSpecFieldless::Value(value),
         }
     }
 }

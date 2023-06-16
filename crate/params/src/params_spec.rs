@@ -47,6 +47,14 @@ where
     /// If no value spec was previously serialized, then the command
     /// context build will return an error.
     Stored,
+    /// Uses the provided value.
+    ///
+    /// The value used is whatever is passed in to the command context
+    /// builder.
+    Value {
+        /// The value to use.
+        value: T,
+    },
     /// Uses a value loaded from `resources` at runtime.
     ///
     /// The value may have been provided by workspace params, or
@@ -63,12 +71,6 @@ where
     /// the user must provide the `MappingFn` in subsequent command
     /// context builds.
     MappingFn(Box<dyn MappingFn<Output = T>>),
-    /// Uses the provided value.
-    ///
-    /// The value used is whatever is passed in to the command context
-    /// builder.
-    #[serde(untagged)]
-    Value(T),
     /// Resolves this value through `ValueSpec`s for each of its fields.
     ///
     /// This is like `T`, but with each field wrapped in
@@ -85,8 +87,10 @@ where
     //
     // There shouldn't need to be automatic detection of non-recursive fields for stdlib types,
     // because `peace_params` should just implement `ValueSpec` for those types.
-    #[serde(untagged)]
-    FieldWise(T::FieldWiseSpec),
+    FieldWise {
+        /// The field wise spec.
+        field_wise_spec: T::FieldWiseSpec,
+    },
 }
 
 impl<T> ParamsSpec<T>
@@ -109,10 +113,10 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Stored => f.write_str("Stored"),
+            Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::InMemory => f.write_str("InMemory"),
             Self::MappingFn(mapping_fn) => f.debug_tuple("MappingFn").field(mapping_fn).finish(),
-            Self::Value(value) => f.debug_tuple("Value").field(value).finish(),
-            Self::FieldWise(field_wise_spec) => {
+            Self::FieldWise { field_wise_spec } => {
                 f.debug_tuple("FieldWise").field(field_wise_spec).finish()
             }
         }
@@ -124,7 +128,7 @@ where
     T: Params + Clone + Debug + Send + Sync + 'static,
 {
     fn from(value: T) -> Self {
-        Self::Value(value)
+        Self::Value { value }
     }
 }
 
@@ -139,6 +143,7 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
         match self {
+            ParamsSpec::Value { value } => Ok(value.clone()),
             ParamsSpec::Stored | ParamsSpec::InMemory => match resources.try_borrow::<T>() {
                 Ok(value) => Ok((*value).clone()),
                 Err(borrow_fail) => match borrow_fail {
@@ -153,8 +158,7 @@ where
                 },
             },
             ParamsSpec::MappingFn(mapping_fn) => mapping_fn.map(resources, value_resolution_ctx),
-            ParamsSpec::Value(value) => Ok(value.clone()),
-            ParamsSpec::FieldWise(field_wise_spec) => {
+            ParamsSpec::FieldWise { field_wise_spec } => {
                 field_wise_spec.resolve(resources, value_resolution_ctx)
             }
         }
@@ -166,6 +170,7 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T::Partial, ParamsResolveError> {
         match self {
+            ParamsSpec::Value { value } => Ok(T::Partial::from((*value).clone())),
             ParamsSpec::Stored | ParamsSpec::InMemory => match resources.try_borrow::<T>() {
                 Ok(value) => Ok(T::Partial::from((*value).clone())),
                 Err(borrow_fail) => match borrow_fail {
@@ -182,8 +187,7 @@ where
             ParamsSpec::MappingFn(mapping_fn) => mapping_fn
                 .try_map(resources, value_resolution_ctx)
                 .map(|t| t.map(T::Partial::from).unwrap_or_else(T::Partial::default)),
-            ParamsSpec::Value(value) => Ok(T::Partial::from((*value).clone())),
-            ParamsSpec::FieldWise(field_wise_spec) => {
+            ParamsSpec::FieldWise { field_wise_spec } => {
                 field_wise_spec.resolve_partial(resources, value_resolution_ctx)
             }
         }
@@ -204,9 +208,9 @@ where
     fn is_usable(&self) -> bool {
         match self {
             Self::Stored => false,
-            Self::InMemory | Self::Value(_) => true,
+            Self::Value { .. } | Self::InMemory => true,
             Self::MappingFn(mapping_fn) => mapping_fn.is_valued(),
-            Self::FieldWise(field_wise_spec) => field_wise_spec.is_usable(),
+            Self::FieldWise { field_wise_spec } => field_wise_spec.is_usable(),
         }
     }
 
@@ -226,18 +230,18 @@ where
             Self::Stored => *self = other.clone(),
 
             // Use set value / no change on these variants
-            Self::InMemory | Self::MappingFn(_) | Self::Value(_) => {}
+            Self::Value { .. } | Self::InMemory | Self::MappingFn(_) => {}
 
             //
-            Self::FieldWise(field_wise_spec) => {
+            Self::FieldWise { field_wise_spec } => {
                 match other {
                     // Don't merge stored field wise specs over provided specs.
-                    Self::Stored | Self::InMemory | Self::MappingFn(_) | Self::Value(_) => {}
+                    Self::Stored | Self::Value { .. } | Self::InMemory | Self::MappingFn(_) => {}
 
                     // Merge specs fieldwise.
-                    Self::FieldWise(field_wise_spec_other) => {
-                        AnySpecRt::merge(field_wise_spec, field_wise_spec_other)
-                    }
+                    Self::FieldWise {
+                        field_wise_spec: field_wise_spec_other,
+                    } => AnySpecRt::merge(field_wise_spec, field_wise_spec_other),
                 }
             }
         }

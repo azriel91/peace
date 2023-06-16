@@ -48,6 +48,14 @@ where
     /// If no value spec was previously serialized, then the command
     /// context build will return an error.
     Stored,
+    /// Uses the provided value.
+    ///
+    /// The value used is whatever is passed in to the command context
+    /// builder.
+    Value {
+        /// The value to use.
+        value: T,
+    },
     /// Uses a value loaded from `resources` at runtime.
     ///
     /// The value may have been provided by workspace params, or
@@ -64,12 +72,6 @@ where
     /// the user must provide the `MappingFn` in subsequent command
     /// context builds.
     MappingFn(Box<dyn MappingFn<Output = T>>),
-    /// Uses the provided value.
-    ///
-    /// The value used is whatever is passed in to the command context
-    /// builder.
-    #[serde(untagged)]
-    Value(T),
 }
 
 impl<T> ParamsSpecFieldless<T>
@@ -92,9 +94,9 @@ where
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Stored => f.write_str("Stored"),
+            Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
             Self::InMemory => f.write_str("InMemory"),
             Self::MappingFn(mapping_fn) => f.debug_tuple("MappingFn").field(mapping_fn).finish(),
-            Self::Value(value) => f.debug_tuple("Value").field(value).finish(),
         }
     }
 }
@@ -104,7 +106,7 @@ where
     T: ParamsFieldless + Clone + Debug + Send + Sync + 'static,
 {
     fn from(value: T) -> Self {
-        Self::Value(value)
+        Self::Value { value }
     }
 }
 
@@ -119,6 +121,7 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T, ParamsResolveError> {
         match self {
+            ParamsSpecFieldless::Value { value } => Ok(value.clone()),
             ParamsSpecFieldless::Stored | ParamsSpecFieldless::InMemory => {
                 match resources.try_borrow::<T>() {
                     Ok(value) => Ok((*value).clone()),
@@ -137,7 +140,6 @@ where
             ParamsSpecFieldless::MappingFn(mapping_fn) => {
                 mapping_fn.map(resources, value_resolution_ctx)
             }
-            ParamsSpecFieldless::Value(value) => Ok(value.clone()),
         }
     }
 
@@ -147,6 +149,7 @@ where
         value_resolution_ctx: &mut ValueResolutionCtx,
     ) -> Result<T::Partial, ParamsResolveError> {
         match self {
+            ParamsSpecFieldless::Value { value } => Ok(T::Partial::from((*value).clone())),
             ParamsSpecFieldless::Stored | ParamsSpecFieldless::InMemory => {
                 match resources.try_borrow::<T>() {
                     Ok(value) => Ok(T::Partial::from((*value).clone())),
@@ -165,7 +168,6 @@ where
             ParamsSpecFieldless::MappingFn(mapping_fn) => mapping_fn
                 .try_map(resources, value_resolution_ctx)
                 .map(|t| t.map(T::Partial::from).unwrap_or_else(T::Partial::default)),
-            ParamsSpecFieldless::Value(value) => Ok(T::Partial::from((*value).clone())),
         }
     }
 }
@@ -183,8 +185,8 @@ where
     fn is_usable(&self) -> bool {
         match self {
             Self::Stored => false,
+            Self::Value { .. } | Self::InMemory => true,
             Self::MappingFn(mapping_fn) => mapping_fn.is_valued(),
-            Self::Value(_) | Self::InMemory => true,
         }
     }
 
@@ -203,7 +205,7 @@ where
             Self::Stored => *self = other.clone(),
 
             // Use set value / no change on these variants
-            Self::InMemory | Self::MappingFn(_) | Self::Value(_) => {}
+            Self::Value { .. } | Self::InMemory | Self::MappingFn(_) => {}
         }
     }
 }

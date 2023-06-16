@@ -10,7 +10,10 @@ fn debug() {
     );
     assert_eq!(
         "Value(MockSrc(1))",
-        format!("{:?}", ParamsSpecFieldless::<MockSrc>::Value(MockSrc(1)))
+        format!(
+            "{:?}",
+            ParamsSpecFieldless::<MockSrc>::Value { value: MockSrc(1) }
+        )
     );
     assert_eq!(
         "InMemory",
@@ -107,7 +110,7 @@ fn deserialize_value() -> Result<(), serde_yaml::Error> {
 value: 1
 "#
         )?,
-        ParamsSpecFieldless::<u8>::Value(value)
+        ParamsSpecFieldless::<u8>::Value { value }
         if value == 1u8
     ));
 
@@ -168,7 +171,7 @@ fn is_usable_returns_false_for_stored() {
 
 #[test]
 fn is_usable_returns_true_for_value_and_in_memory() {
-    assert!(ParamsSpecFieldless::<u8>::Value(1u8).is_usable());
+    assert!(ParamsSpecFieldless::<u8>::Value { value: 1u8 }.is_usable());
     assert!(ParamsSpecFieldless::<u8>::InMemory.is_usable());
 }
 
