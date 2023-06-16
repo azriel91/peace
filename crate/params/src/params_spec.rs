@@ -114,7 +114,7 @@ where
         match self {
             Self::Stored => f.write_str("Stored"),
             Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
-            Self::InMemory => f.write_str("From"),
+            Self::InMemory => f.write_str("InMemory"),
             Self::MappingFn(mapping_fn) => f.debug_tuple("MappingFn").field(mapping_fn).finish(),
             Self::FieldWise { field_wise_spec } => {
                 f.debug_tuple("FieldWise").field(field_wise_spec).finish()

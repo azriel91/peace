@@ -1,5 +1,32 @@
 use peace::params::{AnySpecRt, ValueSpec};
 
+use crate::mock_item::MockSrc;
+
+#[test]
+fn debug() {
+    assert_eq!("Stored", format!("{:?}", ValueSpec::<MockSrc>::Stored));
+    assert_eq!(
+        "Value(MockSrc(1))",
+        format!("{:?}", ValueSpec::<MockSrc>::Value { value: MockSrc(1) })
+    );
+    assert_eq!("InMemory", format!("{:?}", ValueSpec::<MockSrc>::InMemory));
+    assert_eq!(
+        "MappingFn(MappingFnImpl { \
+            field_name: Some(\"field\"), \
+            fn_map: \"Some(Fn(&u8,) -> Option<MockSrc>)\", \
+            marker: PhantomData<(workspace_tests::mock_item::MockSrc, (u8,))> \
+        })",
+        format!(
+            "{:?}",
+            ValueSpec::<MockSrc>::from_map(
+                Some(String::from("field")),
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                |_: &u8| None
+            )
+        )
+    );
+}
+
 #[test]
 fn serialize_stored() -> Result<(), serde_yaml::Error> {
     let u8_spec = ValueSpec::<u8>::Stored;

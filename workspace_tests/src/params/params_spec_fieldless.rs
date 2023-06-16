@@ -1,5 +1,41 @@
 use peace::params::{AnySpecRt, ParamsFieldless, ParamsSpecFieldless};
 
+use crate::mock_item::MockSrc;
+
+#[test]
+fn debug() {
+    assert_eq!(
+        "Stored",
+        format!("{:?}", ParamsSpecFieldless::<MockSrc>::Stored)
+    );
+    assert_eq!(
+        "Value(MockSrc(1))",
+        format!(
+            "{:?}",
+            ParamsSpecFieldless::<MockSrc>::Value { value: MockSrc(1) }
+        )
+    );
+    assert_eq!(
+        "InMemory",
+        format!("{:?}", ParamsSpecFieldless::<MockSrc>::InMemory)
+    );
+    assert_eq!(
+        "MappingFn(MappingFnImpl { \
+            field_name: Some(\"field\"), \
+            fn_map: \"Some(Fn(&u8,) -> Option<MockSrc>)\", \
+            marker: PhantomData<(workspace_tests::mock_item::MockSrc, (u8,))> \
+        })",
+        format!(
+            "{:?}",
+            ParamsSpecFieldless::<MockSrc>::from_map(
+                Some(String::from("field")),
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                |_: &u8| None
+            )
+        )
+    );
+}
+
 #[test]
 fn serialize_stored() -> Result<(), serde_yaml::Error> {
     let u8_spec: <u8 as ParamsFieldless>::Spec = <u8 as ParamsFieldless>::Spec::Stored;

@@ -7,7 +7,39 @@ use peace::{
     resources::{resources::ts::SetUp, Resources},
 };
 
-use crate::vec_copy_item::{VecA, VecAFieldWise};
+use crate::{
+    mock_item::MockSrc,
+    vec_copy_item::{VecA, VecAFieldWise},
+};
+
+#[test]
+fn debug() {
+    assert_eq!("Stored", format!("{:?}", ParamsSpec::<MockSrc>::Stored));
+    assert_eq!(
+        "Value(MockSrc(1))",
+        format!("{:?}", ParamsSpec::<MockSrc>::Value { value: MockSrc(1) })
+    );
+    assert_eq!("InMemory", format!("{:?}", ParamsSpec::<MockSrc>::InMemory));
+    assert_eq!(
+        "MappingFn(MappingFnImpl { \
+            field_name: Some(\"field\"), \
+            fn_map: \"Some(Fn(&u8,) -> Option<MockSrc>)\", \
+            marker: PhantomData<(workspace_tests::mock_item::MockSrc, (u8,))> \
+        })",
+        format!(
+            "{:?}",
+            ParamsSpec::<MockSrc>::from_map(
+                Some(String::from("field")),
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                |_: &u8| None
+            )
+        )
+    );
+    assert_eq!(
+        "FieldWise(MockSrcFieldWise(Stored))",
+        format!("{:?}", <MockSrc as Params>::field_wise_spec().build())
+    );
+}
 
 #[test]
 fn serialize_stored() -> Result<(), serde_yaml::Error> {

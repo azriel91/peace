@@ -1,13 +1,13 @@
 use std::fmt::{self, Debug};
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::{MappingFnImpl, ValueSpec};
 
 type FnPlaceholder<T> = fn(&()) -> Option<T>;
 
 /// Exists to deserialize `MappingFn` with a non-type-erased `MappingFnImpl`
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Deserialize)]
 pub enum ValueSpecDe<T> {
     /// Loads a stored value spec.
     ///
@@ -49,7 +49,7 @@ where
         match self {
             Self::Stored => f.write_str("Stored"),
             Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
-            Self::InMemory => f.write_str("From"),
+            Self::InMemory => f.write_str("InMemory"),
             Self::MappingFn(mapping_fn_impl) => {
                 f.debug_tuple("MappingFn").field(&mapping_fn_impl).finish()
             }
