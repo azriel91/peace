@@ -2,9 +2,11 @@ use peace::params::MappingFnImpl;
 
 #[test]
 fn debug() {
-    let mapping_fn_impl = MappingFnImpl::from((Some(String::from("field_name")), |_: &bool| {
-        None::<Option<u16>>
-    }));
+    let mapping_fn_impl = MappingFnImpl::from((
+        Some(String::from("field_name")),
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |_: &bool| None::<Option<u16>>,
+    ));
     assert_eq!(
         "MappingFnImpl { \
             field_name: Some(\"field_name\"), \
@@ -14,10 +16,11 @@ fn debug() {
         format!("{mapping_fn_impl:?}")
     );
 
-    let mapping_fn_impl =
-        MappingFnImpl::from((Some(String::from("field_name")), |_: &u32, _: &u64| {
-            None::<Option<u16>>
-        }));
+    let mapping_fn_impl = MappingFnImpl::from((
+        Some(String::from("field_name")),
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |_: &u32, _: &u64| None::<Option<u16>>,
+    ));
     assert_eq!(
         "MappingFnImpl { \
             field_name: Some(\"field_name\"), \
@@ -134,27 +137,34 @@ macro_rules! mapping_tests {
                     &resources,
                     &mut value_resolution_ctx,
                 );
-                assert!(
-                    matches!(
-                        &sum_result,
-                        Err(ParamsResolveError::FromMap {
-                            value_resolution_ctx,
-                            from_type_name
-                        })
-                        if matches!(
-                            value_resolution_ctx,
-                            value_resolution_ctx
-                            if value_resolution_ctx.value_resolution_mode()
-                                == ValueResolutionMode::$value_resolution_mode
-                            && value_resolution_ctx.item_id()
-                                == &item_id!("mapping_fn_map")
-                            && value_resolution_ctx.params_type_name() == crate::fn_name_short!()
-                            && value_resolution_ctx.resolution_chain() == []
-                        )
-                        && from_type_name == "u64" // u64 is missing from `resources`
-                    ),
-                    "was {sum_result:?}"
-                );
+                ({
+                    #[cfg_attr(coverage_nightly, no_coverage)]
+                    || {
+                        assert!(
+                            matches!(
+                                &sum_result,
+                                Err(ParamsResolveError::FromMap {
+                                    value_resolution_ctx,
+                                    from_type_name
+                                })
+                                if matches!(
+                                    value_resolution_ctx,
+                                    value_resolution_ctx
+                                    if value_resolution_ctx.value_resolution_mode()
+                                        == ValueResolutionMode::$value_resolution_mode
+                                    && value_resolution_ctx.item_id()
+                                        == &item_id!("mapping_fn_map")
+                                    && value_resolution_ctx.params_type_name() == crate::fn_name_short!()
+                                    && value_resolution_ctx.resolution_chain() == []
+                                )
+                                && from_type_name == "u64" // u64 is missing from `resources`
+                            ),
+                            "expected `sum_result` to be \
+                            `Err(ParamsResolveError::FromMap {{ .. }}`,\n\
+                            but was {sum_result:?}"
+                        );
+                    }
+                })();
 
                 Ok(())
             }
@@ -185,27 +195,35 @@ macro_rules! mapping_tests {
                     &resources,
                     &mut value_resolution_ctx,
                 );
-                assert!(
-                    matches!(
-                        &sum_result,
-                        Err(ParamsResolveError::FromMap {
-                            value_resolution_ctx,
-                            from_type_name
-                        })
-                        if matches!(
-                            value_resolution_ctx,
-                            value_resolution_ctx
-                            if value_resolution_ctx.value_resolution_mode()
-                                == ValueResolutionMode::$value_resolution_mode
-                            && value_resolution_ctx.item_id()
-                                == &item_id!("mapping_fn_map")
-                            && value_resolution_ctx.params_type_name() == crate::fn_name_short!()
-                            && value_resolution_ctx.resolution_chain() == []
-                        )
-                        && from_type_name == "u64" // u64 is missing from `resources`
-                    ),
-                    "was {sum_result:?}"
-                );
+
+                ({
+                    #[cfg_attr(coverage_nightly, no_coverage)]
+                    || {
+                        assert!(
+                            matches!(
+                                &sum_result,
+                                Err(ParamsResolveError::FromMap {
+                                    value_resolution_ctx,
+                                    from_type_name
+                                })
+                                if matches!(
+                                    value_resolution_ctx,
+                                    value_resolution_ctx
+                                    if value_resolution_ctx.value_resolution_mode()
+                                        == ValueResolutionMode::$value_resolution_mode
+                                    && value_resolution_ctx.item_id()
+                                        == &item_id!("mapping_fn_map")
+                                    && value_resolution_ctx.params_type_name() == crate::fn_name_short!()
+                                    && value_resolution_ctx.resolution_chain() == []
+                                )
+                                && from_type_name == "u64" // u64 is missing from `resources`
+                            ),
+                            "expected `sum_result` to be \
+                            `Err(ParamsResolveError::FromMap {{ .. }}`,\n\
+                            but was {sum_result:?}"
+                        );
+                    }
+                })();
 
                 Ok(())
             }

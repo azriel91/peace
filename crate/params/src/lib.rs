@@ -1,3 +1,5 @@
+#![cfg_attr(coverage_nightly, feature(no_coverage))]
+
 //! Constraints and specifications for parameters for the peace automation
 //! framework.
 //!
