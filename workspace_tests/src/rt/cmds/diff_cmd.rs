@@ -14,11 +14,12 @@ use peace::{
 };
 
 use crate::{
+    mock_item::{MockDest, MockDiff, MockItem, MockSrc, MockState},
     NoOpOutput, PeaceTestError, VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItem, VecCopyState,
 };
 
 #[tokio::test]
-async fn contains_state_diff_for_each_item() -> Result<(), Box<dyn std::error::Error>> {
+async fn diff_stored_contains_state_diff_for_each_item() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = Workspace::new(
         app_name!(),
@@ -27,6 +28,7 @@ async fn contains_state_diff_for_each_item() -> Result<(), Box<dyn std::error::E
     let graph = {
         let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(MockItem::<()>::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -40,6 +42,7 @@ async fn contains_state_diff_for_each_item() -> Result<(), Box<dyn std::error::E
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
     let CmdOutcome {
         value: (states_current, states_goal),
@@ -50,13 +53,12 @@ async fn contains_state_diff_for_each_item() -> Result<(), Box<dyn std::error::E
     let state_diffs = DiffCmd::diff_stored(&mut cmd_ctx).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
-    assert_eq!(
-        Some(VecCopyState::new()).as_ref(),
-        states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
-    );
+    let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    let vec_copy_goal_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_current_state);
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+        vec_copy_goal_state
     );
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
@@ -66,6 +68,14 @@ async fn contains_state_diff_for_each_item() -> Result<(), Box<dyn std::error::E
         .as_ref(),
         vec_diff
     );
+
+    let mock_diff = state_diffs.get::<MockDiff, _>(MockItem::<()>::ID_DEFAULT);
+    let mock_current_state = states_current.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+    let mock_goal_state = states_goal.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+
+    assert_eq!(Some(MockState(0)).as_ref(), mock_current_state);
+    assert_eq!(Some(MockState(1)).as_ref(), mock_goal_state);
+    assert_eq!(Some(MockDiff(1)).as_ref(), mock_diff);
 
     Ok(())
 }
@@ -80,6 +90,7 @@ async fn diff_discover_current_on_demand() -> Result<(), Box<dyn std::error::Err
     let graph = {
         let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(MockItem::<()>::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -93,6 +104,7 @@ async fn diff_discover_current_on_demand() -> Result<(), Box<dyn std::error::Err
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
     let CmdOutcome {
         value: states_goal,
@@ -111,13 +123,12 @@ async fn diff_discover_current_on_demand() -> Result<(), Box<dyn std::error::Err
     let states_current = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
-    assert_eq!(
-        Some(VecCopyState::new()).as_ref(),
-        states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
-    );
+    let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    let vec_copy_goal_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_current_state);
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+        vec_copy_goal_state
     );
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
@@ -127,6 +138,14 @@ async fn diff_discover_current_on_demand() -> Result<(), Box<dyn std::error::Err
         .as_ref(),
         vec_diff
     );
+
+    let mock_diff = state_diffs.get::<MockDiff, _>(MockItem::<()>::ID_DEFAULT);
+    let mock_current_state = states_current.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+    let mock_goal_state = states_goal.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+
+    assert_eq!(Some(MockState(0)).as_ref(), mock_current_state);
+    assert_eq!(Some(MockState(1)).as_ref(), mock_goal_state);
+    assert_eq!(Some(MockDiff(1)).as_ref(), mock_diff);
 
     Ok(())
 }
@@ -141,6 +160,7 @@ async fn diff_discover_goal_on_demand() -> Result<(), Box<dyn std::error::Error>
     let graph = {
         let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(MockItem::<()>::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -154,6 +174,7 @@ async fn diff_discover_goal_on_demand() -> Result<(), Box<dyn std::error::Error>
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
     let CmdOutcome {
         value: states_current,
@@ -172,13 +193,12 @@ async fn diff_discover_goal_on_demand() -> Result<(), Box<dyn std::error::Error>
     let states_goal = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
-    assert_eq!(
-        Some(VecCopyState::new()).as_ref(),
-        states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
-    );
+    let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    let vec_copy_goal_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_current_state);
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+        vec_copy_goal_state
     );
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
@@ -188,6 +208,14 @@ async fn diff_discover_goal_on_demand() -> Result<(), Box<dyn std::error::Error>
         .as_ref(),
         vec_diff
     );
+
+    let mock_diff = state_diffs.get::<MockDiff, _>(MockItem::<()>::ID_DEFAULT);
+    let mock_current_state = states_current.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+    let mock_goal_state = states_goal.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+
+    assert_eq!(Some(MockState(0)).as_ref(), mock_current_state);
+    assert_eq!(Some(MockState(1)).as_ref(), mock_goal_state);
+    assert_eq!(Some(MockDiff(1)).as_ref(), mock_diff);
 
     Ok(())
 }
@@ -202,6 +230,7 @@ async fn diff_discover_current_and_goal_on_demand() -> Result<(), Box<dyn std::e
     let graph = {
         let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(MockItem::<()>::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -215,6 +244,7 @@ async fn diff_discover_current_and_goal_on_demand() -> Result<(), Box<dyn std::e
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
 
     // Diff current and stored goal states.
@@ -226,13 +256,12 @@ async fn diff_discover_current_and_goal_on_demand() -> Result<(), Box<dyn std::e
     let states_goal = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
 
     let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
-    assert_eq!(
-        Some(VecCopyState::new()).as_ref(),
-        states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
-    );
+    let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    let vec_copy_goal_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_current_state);
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
-        states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+        vec_copy_goal_state
     );
     assert_eq!(
         Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
@@ -242,6 +271,14 @@ async fn diff_discover_current_and_goal_on_demand() -> Result<(), Box<dyn std::e
         .as_ref(),
         vec_diff
     );
+
+    let mock_diff = state_diffs.get::<MockDiff, _>(MockItem::<()>::ID_DEFAULT);
+    let mock_current_state = states_current.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+    let mock_goal_state = states_goal.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+
+    assert_eq!(Some(MockState(0)).as_ref(), mock_current_state);
+    assert_eq!(Some(MockState(1)).as_ref(), mock_goal_state);
+    assert_eq!(Some(MockDiff(1)).as_ref(), mock_diff);
 
     Ok(())
 }
@@ -256,6 +293,7 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
     let graph = {
         let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(MockItem::<()>::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -270,7 +308,10 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
+    let resources = cmd_ctx_0.resources_mut();
+    resources.insert(MockDest(1));
     let CmdOutcome {
         value: states_current_0,
         errors: _,
@@ -285,9 +326,11 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(3).into())
         .await?;
     let resources = cmd_ctx_1.resources_mut();
     resources.insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
+    resources.insert(MockDest(3));
     let CmdOutcome {
         value: states_current_1,
         errors: _,
@@ -318,6 +361,31 @@ async fn diff_stored_with_multiple_profiles() -> Result<(), Box<dyn std::error::
         .as_ref(),
         vec_diff
     );
+
+    let vec_diff = state_diffs.get::<VecCopyDiff, _>(VecCopyItem::ID_DEFAULT);
+    let vec_copy_0_current_state = states_current_0.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    let vec_copy_1_current_state = states_current_1.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_0_current_state);
+    assert_eq!(
+        Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
+        vec_copy_1_current_state
+    );
+    assert_eq!(
+        Some(VecCopyDiff::from(VecDiff(vec![VecDiffType::Inserted {
+            index: 0,
+            changes: vec![0u8, 1, 2, 3, 4, 5, 6, 7]
+        }])))
+        .as_ref(),
+        vec_diff
+    );
+
+    let mock_diff = state_diffs.get::<MockDiff, _>(MockItem::<()>::ID_DEFAULT);
+    let mock_0_current_state = states_current_0.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+    let mock_1_current_state = states_current_1.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+
+    assert_eq!(Some(MockState(1)).as_ref(), mock_0_current_state);
+    assert_eq!(Some(MockState(3)).as_ref(), mock_1_current_state);
+    assert_eq!(Some(MockDiff(2)).as_ref(), mock_diff);
 
     Ok(())
 }

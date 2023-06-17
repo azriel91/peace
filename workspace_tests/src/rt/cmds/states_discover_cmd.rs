@@ -35,6 +35,7 @@ async fn current_and_goal_discovers_both_states_current_and_goal()
     let graph = {
         let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
         graph_builder.add_fn(VecCopyItem::default().into());
+        graph_builder.add_fn(MockItem::<()>::default().into());
         graph_builder.build()
     };
     let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
@@ -46,49 +47,41 @@ async fn current_and_goal_discovers_both_states_current_and_goal()
             VecCopyItem::ID_DEFAULT.clone(),
             VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
         )
+        .with_item_params::<MockItem<()>>(MockItem::<()>::ID_DEFAULT.clone(), MockSrc(1).into())
         .await?;
 
     let CmdOutcome {
         value: (states_current, states_goal),
         errors: _,
     } = StatesDiscoverCmd::current_and_goal(&mut cmd_ctx).await?;
-    let resources = cmd_ctx.resources();
+    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
+    let states_goal_stored = StatesGoalReadCmd::exec(&mut cmd_ctx).await?;
 
-    let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
-    let states_on_disk = {
-        let states_current_file = resources.borrow::<StatesCurrentFile>();
-        let states_slice = std::fs::read(&*states_current_file)?;
-
-        let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
-        type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
-
-        let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
-        StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
-    };
+    let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    let vec_copy_current_stored_state =
+        states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
     let vec_copy_goal_state = states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
-    let states_goal_on_disk = {
-        let states_goal_file = resources.borrow::<StatesGoalFile>();
-        let states_slice = std::fs::read(&*states_goal_file)?;
+    let vec_copy_goal_stored_state =
+        states_goal_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
 
-        let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
-        type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
-
-        let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
-        StatesGoal::from(type_reg.deserialize_map(deserializer)?)
-    };
-    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
-    assert_eq!(
-        states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
-        states_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
-    );
+    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_current_state);
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3, 4, 5, 6, 7])).as_ref(),
         vec_copy_goal_state
     );
-    assert_eq!(
-        states_goal.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
-        states_goal_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
-    );
+    assert_eq!(vec_copy_current_state, vec_copy_current_stored_state);
+    assert_eq!(vec_copy_goal_state, vec_copy_goal_stored_state);
+
+    let mock_current_state = states_current.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+    let mock_current_stored_state =
+        states_current_stored.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+    let mock_goal_state = states_goal.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+    let mock_goal_stored_state = states_goal_stored.get::<MockState, _>(MockItem::<()>::ID_DEFAULT);
+
+    assert_eq!(Some(MockState(0)).as_ref(), mock_current_state);
+    assert_eq!(Some(MockState(1)).as_ref(), mock_goal_state);
+    assert_eq!(mock_current_state, mock_current_stored_state);
+    assert_eq!(mock_goal_state, mock_goal_stored_state);
 
     #[cfg(feature = "output_progress")]
     {
@@ -141,24 +134,14 @@ async fn current_runs_state_current_for_each_item() -> Result<(), Box<dyn std::e
         value: states_current,
         errors: _,
     } = StatesDiscoverCmd::current(&mut cmd_ctx).await?;
-    let resources = cmd_ctx.resources();
+    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
 
-    let vec_copy_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
-    let states_on_disk = {
-        let states_current_file = resources.borrow::<StatesCurrentFile>();
-        let states_slice = std::fs::read(&*states_current_file)?;
+    let vec_copy_current_state = states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    let vec_copy_current_stored_state =
+        states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
 
-        let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
-        type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
-
-        let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
-        StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
-    };
-    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
-    assert_eq!(
-        states_current.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
-        states_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
-    );
+    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_current_state);
+    assert_eq!(vec_copy_current_state, vec_copy_current_stored_state);
 
     Ok(())
 }
@@ -191,6 +174,9 @@ async fn current_inserts_states_current_stored_from_states_current_file()
     StatesDiscoverCmd::current(&mut cmd_ctx).await?;
 
     // Execute again to ensure StatesCurrentStored is included
+    //
+    // Note: The actual logic is part of `CmdCtxBuilder::build`, implemented by
+    // `impl_build.rs`.
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
@@ -201,23 +187,25 @@ async fn current_inserts_states_current_stored_from_states_current_file()
         .await?;
     StatesDiscoverCmd::current(&mut cmd_ctx).await?;
     let resources = cmd_ctx.resources();
+    let states_current_stored_from_cmd_ctx = resources.borrow::<StatesCurrentStored>();
 
-    let states_current_stored = resources.borrow::<StatesCurrentStored>();
-    let vec_copy_state = states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
-    let states_on_disk = {
-        let states_current_file = resources.borrow::<StatesCurrentFile>();
-        let states_slice = std::fs::read(&*states_current_file)?;
+    let mut output = NoOpOutput;
+    let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
+        .with_profile(profile!("test_profile"))
+        .with_flow(&flow)
+        .with_item_params::<VecCopyItem>(
+            VecCopyItem::ID_DEFAULT.clone(),
+            VecA(vec![0, 1, 2, 3, 4, 5, 6, 7]).into(),
+        )
+        .await?;
+    let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
 
-        let mut type_reg = TypeReg::<ItemId, BoxDtDisplay>::new_typed();
-        type_reg.register::<VecCopyState>(VecCopyItem::ID_DEFAULT.clone());
-
-        let deserializer = serde_yaml::Deserializer::from_slice(&states_slice);
-        StatesCurrent::from(type_reg.deserialize_map(deserializer)?)
-    };
-    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_state);
+    let vec_copy_current_state =
+        states_current_stored_from_cmd_ctx.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT);
+    assert_eq!(Some(VecCopyState::new()).as_ref(), vec_copy_current_state);
     assert_eq!(
-        states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
-        states_on_disk.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
+        states_current_stored_from_cmd_ctx.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT),
+        states_current_stored.get::<VecCopyState, _>(VecCopyItem::ID_DEFAULT)
     );
 
     Ok(())

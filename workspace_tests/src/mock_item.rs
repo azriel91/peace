@@ -328,8 +328,48 @@ where
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, Params)]
 pub struct MockSrc(pub u8);
 
+impl Deref for MockSrc {
+    type Target = u8;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for MockSrc {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl fmt::Display for MockSrc {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.0, f)
+    }
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MockDest(pub u8);
+
+impl Deref for MockDest {
+    type Target = u8;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for MockDest {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl fmt::Display for MockDest {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Display::fmt(&self.0, f)
+    }
+}
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct MockState(pub u8);
@@ -357,7 +397,7 @@ impl DerefMut for MockState {
 
 impl fmt::Display for MockState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+        fmt::Display::fmt(&self.0, f)
     }
 }
 
@@ -381,5 +421,88 @@ impl DerefMut for MockDiff {
 impl fmt::Display for MockDiff {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(&self.0, f)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::mock_item::{MockDest, MockDiff, MockItem, MockSrc, MockState};
+
+    #[test]
+    fn clone() {
+        let _mock_item = Clone::clone(&MockItem::<()>::default());
+        let _mock_src = Clone::clone(&MockSrc::default());
+        let _mock_dest = Clone::clone(&MockDest::default());
+        let _mock_state = Clone::clone(&MockState::default());
+        let _mock_diff = Clone::clone(&MockDiff::default());
+    }
+
+    #[test]
+    fn deref() {
+        let mock_src = MockSrc::default();
+        let mock_dest = MockDest::default();
+        let mock_state = MockState::default();
+        let mock_diff = MockDiff::default();
+
+        assert_eq!(0, *mock_src);
+        assert_eq!(0, *mock_dest);
+        assert_eq!(0, *mock_state);
+        assert_eq!(0, *mock_diff);
+    }
+
+    #[test]
+    fn deref_mut() {
+        let mut mock_src = MockSrc::default();
+        let mut mock_dest = MockDest::default();
+        let mut mock_state = MockState::default();
+        let mut mock_diff = MockDiff::default();
+
+        *mock_src = 1;
+        *mock_dest = 1;
+        *mock_state = 1;
+        *mock_diff = 1;
+
+        assert_eq!(1, *mock_src);
+        assert_eq!(1, *mock_dest);
+        assert_eq!(1, *mock_state);
+        assert_eq!(1, *mock_diff);
+    }
+
+    #[test]
+    fn display() {
+        let mock_src = MockSrc::default();
+        let mock_dest = MockDest::default();
+        let mock_state = MockState::default();
+        let mock_diff = MockDiff::default();
+
+        assert_eq!("0", format!("{mock_src}"));
+        assert_eq!("0", format!("{mock_dest}"));
+        assert_eq!("0", format!("{mock_state}"));
+        assert_eq!("0", format!("{mock_diff}"));
+    }
+
+    #[test]
+    fn debug() {
+        let mock_item = MockItem::<()>::default();
+        let mock_src = MockSrc::default();
+        let mock_dest = MockDest::default();
+        let mock_state = MockState::default();
+        let mock_diff = MockDiff::default();
+
+        assert_eq!(
+            "MockItem { \
+                id: ItemId(\"mock\"), \
+                mock_fns: MockFns { \
+                    try_state_current: None, \
+                    try_state_goal: None, \
+                    marker: PhantomData<()> \
+                } \
+             }",
+            format!("{mock_item:?}")
+        );
+        assert_eq!("MockSrc(0)", format!("{mock_src:?}"));
+        assert_eq!("MockDest(0)", format!("{mock_dest:?}"));
+        assert_eq!("MockState(0)", format!("{mock_state:?}"));
+        assert_eq!("MockDiff(0)", format!("{mock_diff:?}"));
     }
 }
