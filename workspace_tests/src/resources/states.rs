@@ -39,21 +39,25 @@ fn from_states_mut() {
 }
 
 #[test]
+fn clone() {
+    let states = Clone::clone(&test_states());
+
+    assert_eq!(Some(123), states.get::<i32, _>(&item_id!("key")).copied());
+}
+
+#[test]
 fn debug() {
     let states = test_states();
 
-    let debug_str = format!("{states:?}");
-    assert!(
-        debug_str
-            == r#"States({ItemId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData<peace_resources::states::ts::Current>)"#
-            || debug_str
-                == r#"States({ItemId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData)"#
+    assert_eq!(
+        r#"States({ItemId("key"): TypedValue { type: "i32", value: 123 }}, PhantomData<peace_resources::states::ts::Current>)"#,
+        format!("{states:?}")
     );
 }
 
 fn test_states() -> StatesCurrent {
     let mut states = StatesMut::new();
-    states.insert(item_id!("key"), 123);
+    states.insert(item_id!("key"), 123i32);
 
     StatesCurrent::from(states)
 }
