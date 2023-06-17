@@ -120,26 +120,28 @@ where
         state_current: &Self::State,
         state_goal: &Self::State,
     ) -> Result<Self::StateDiff, ShCmdError> {
-        if let Some(state_diff_sh_cmd) = params_partial.state_diff_sh_cmd() {
-            ShCmdStateDiffFn::state_diff(state_diff_sh_cmd.clone(), state_current, state_goal).await
-        } else {
-            Err(ShCmdError::CmdScriptNotResolved {
-                cmd_variant: crate::CmdVariant::StateDiff,
-            })
-        }
+        let state_diff_sh_cmd =
+            params_partial
+                .state_diff_sh_cmd()
+                .ok_or(ShCmdError::CmdScriptNotResolved {
+                    cmd_variant: crate::CmdVariant::StateDiff,
+                })?;
+
+        ShCmdStateDiffFn::state_diff(state_diff_sh_cmd.clone(), state_current, state_goal).await
     }
 
     async fn state_clean(
         params_partial: &<Self::Params<'_> as Params>::Partial,
         _data: Self::Data<'_>,
     ) -> Result<Self::State, ShCmdError> {
-        if let Some(state_clean_sh_cmd) = params_partial.state_clean_sh_cmd() {
-            ShCmdExecutor::exec(state_clean_sh_cmd).await
-        } else {
-            Err(ShCmdError::CmdScriptNotResolved {
-                cmd_variant: crate::CmdVariant::StateClean,
-            })
-        }
+        let state_clean_sh_cmd =
+            params_partial
+                .state_clean_sh_cmd()
+                .ok_or(ShCmdError::CmdScriptNotResolved {
+                    cmd_variant: crate::CmdVariant::StateClean,
+                })?;
+
+        ShCmdExecutor::exec(state_clean_sh_cmd).await
     }
 
     async fn apply_check(

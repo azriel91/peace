@@ -107,6 +107,24 @@ impl TestFileCreationShCmdItem {
     }
 }
 
+#[test]
+fn clone() {
+    let _sh_cmd_item = Clone::clone(&TestFileCreationShCmdItem::new());
+}
+
+#[test]
+fn debug() {
+    let sh_cmd_item = TestFileCreationShCmdItem::new();
+
+    assert_eq!(
+        "ShCmdItem { \
+        item_id: ItemId(\"test_file_creation\"), \
+        marker: PhantomData<workspace_tests::items::sh_cmd_item::TestFileCreationShCmdItem> \
+    }",
+        format!("{sh_cmd_item:?}")
+    );
+}
+
 #[tokio::test]
 async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
