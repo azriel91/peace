@@ -14,8 +14,8 @@ use peace_resources::{
 use peace_rt_model::{
     fn_graph::resman::Resource,
     params::{FlowParams, ProfileParams, WorkspaceParams},
-    Error, Flow, ItemGraph, ItemParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg, Storage,
-    Workspace, WorkspaceInitializer,
+    Error, Flow, ItemGraph, ItemParamsTypeReg, ParamsSpecsSerializer, ParamsSpecsTypeReg,
+    StatesTypeReg, Storage, Workspace, WorkspaceInitializer,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -137,15 +137,7 @@ async fn params_specs_serialize(
     storage: &Storage,
     params_specs_file: &ParamsSpecsFile,
 ) -> Result<(), Error> {
-    storage
-        .serialized_write(
-            #[cfg(not(target_arch = "wasm32"))]
-            "cmd_ctx_builder::params_specs_serialize".to_string(),
-            params_specs_file,
-            params_specs,
-            Error::ParamsSpecsSerialize,
-        )
-        .await
+    ParamsSpecsSerializer::serialize(storage, params_specs, params_specs_file).await
 }
 
 /// Inserts flow params into the `Resources` map.

@@ -33,48 +33,11 @@ where
                 "ParamsSpecsSerializer::serialize".to_string(),
                 params_specs_file,
                 params_specs,
-                Error::StatesSerialize,
+                Error::ParamsSpecsSerialize,
             )
             .await?;
 
         Ok(())
-    }
-
-    /// Returns the [`ParamsSpecs`] of all [`Item`]s if it exists on disk.
-    ///
-    /// # Parameters:
-    ///
-    /// * `storage`: `Storage` to read from.
-    /// * `params_specs_type_reg`: Type registry with functions to deserialize
-    ///   each params spec.
-    /// * `params_specs_file`: `ParamsSpecsFile` to deserialize.
-    ///
-    /// [`Item`]: peace_cfg::Item
-    pub async fn deserialize(
-        profile: &Profile,
-        flow_id: &FlowId,
-        storage: &Storage,
-        params_specs_type_reg: &ParamsSpecsTypeReg,
-        params_specs_file: &ParamsSpecsFile,
-    ) -> Result<ParamsSpecs, E> {
-        let params_specs = Self::deserialize_internal(
-            #[cfg(not(target_arch = "wasm32"))]
-            "ParamsSpecsSerializer::deserialize".to_string(),
-            profile,
-            flow_id,
-            storage,
-            params_specs_type_reg,
-            params_specs_file,
-        )
-        .await?;
-
-        params_specs.ok_or_else(|| {
-            E::from(Error::ParamsSpecsFileNotExists {
-                profile: profile.clone(),
-                flow_id: flow_id.clone(),
-                params_specs_file: params_specs_file.clone(),
-            })
-        })
     }
 
     /// Returns the [`ParamsSpecs`] of all [`Item`]s if it exists on disk.
