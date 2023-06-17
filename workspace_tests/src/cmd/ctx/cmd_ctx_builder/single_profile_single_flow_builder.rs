@@ -7,10 +7,8 @@ use peace::{
 };
 
 use crate::{
-    cmd::ctx::cmd_ctx_builder::{
-        assert_flow_params, assert_profile_params, assert_workspace_params, workspace,
-    },
     no_op_output::NoOpOutput,
+    test_support::{assert_flow_params, assert_profile_params, assert_workspace_params, workspace},
     vec_copy_item::{VecA, VecAFieldWise, VecCopyItem},
     PeaceTestError,
 };

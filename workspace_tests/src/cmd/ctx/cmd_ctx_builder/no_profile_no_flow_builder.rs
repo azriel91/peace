@@ -3,7 +3,7 @@ use peace::{
     cmd::ctx::CmdCtx,
 };
 
-use crate::{cmd::ctx::cmd_ctx_builder::workspace, no_op_output::NoOpOutput, PeaceTestError};
+use crate::{no_op_output::NoOpOutput, test_support::workspace, PeaceTestError};
 
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {
