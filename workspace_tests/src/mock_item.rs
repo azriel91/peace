@@ -38,6 +38,25 @@ type FnTryState<Id> = fn(
     MockData<'_, Id>,
 ) -> Result<Option<MockState>, MockItemError>;
 
+type FnState<Id> = fn(FnCtx<'_>, &MockSrc, MockData<'_, Id>) -> Result<MockState, MockItemError>;
+
+type FnApplyCheck<Id> = fn(
+    &MockSrc,
+    MockData<'_, Id>,
+    &MockState,
+    &MockState,
+    &MockDiff,
+) -> Result<ApplyCheck, MockItemError>;
+
+type FnApply<Id> = fn(
+    FnCtx<'_>,
+    &MockSrc,
+    MockData<'_, Id>,
+    &MockState,
+    &MockState,
+    &MockDiff,
+) -> Result<MockState, MockItemError>;
+
 /// Copies bytes from `MockSrc` to `MockDest`.
 #[derive(Clone, Debug, Default)]
 pub struct MockFns<Id>
@@ -46,8 +65,18 @@ where
 {
     /// Override for `try_state_current` function.
     try_state_current: Option<FnTryState<Id>>,
+    /// Override for `state_current` function.
+    state_current: Option<FnState<Id>>,
     /// Override for `try_state_goal` function.
     try_state_goal: Option<FnTryState<Id>>,
+    /// Override for `state_goal` function.
+    state_goal: Option<FnState<Id>>,
+    /// Override for `apply_check` function.
+    apply_check: Option<FnApplyCheck<Id>>,
+    /// Override for `apply_dry` function.
+    apply_dry: Option<FnApply<Id>>,
+    /// Override for `apply` function.
+    apply: Option<FnApply<Id>>,
     /// Marker.
     marker: PhantomData<Id>,
 }
@@ -70,8 +99,33 @@ where
         self
     }
 
+    pub fn with_state_current(mut self, f: FnState<Id>) -> Self {
+        self.mock_fns.state_current = Some(f);
+        self
+    }
+
     pub fn with_try_state_goal(mut self, f: FnTryState<Id>) -> Self {
         self.mock_fns.try_state_goal = Some(f);
+        self
+    }
+
+    pub fn with_state_goal(mut self, f: FnState<Id>) -> Self {
+        self.mock_fns.state_goal = Some(f);
+        self
+    }
+
+    pub fn with_apply_check(mut self, f: FnApplyCheck<Id>) -> Self {
+        self.mock_fns.apply_check = Some(f);
+        self
+    }
+
+    pub fn with_apply_dry(mut self, f: FnApply<Id>) -> Self {
+        self.mock_fns.apply_dry = Some(f);
+        self
+    }
+
+    pub fn with_apply(mut self, f: FnApply<Id>) -> Self {
+        self.mock_fns.apply = Some(f);
         self
     }
 
@@ -151,10 +205,14 @@ where
 
     async fn state_current(
         fn_ctx: FnCtx<'_>,
-        _params: &Self::Params<'_>,
+        params: &Self::Params<'_>,
         data: Self::Data<'_>,
     ) -> Result<Self::State, MockItemError> {
-        Self::state_current_internal(fn_ctx, data).await
+        if let Some(state_current) = data.mock_fns().state_current.as_ref() {
+            state_current(fn_ctx, params, data)
+        } else {
+            Self::state_current_internal(fn_ctx, data).await
+        }
     }
 
     async fn try_state_goal(
@@ -174,9 +232,13 @@ where
     async fn state_goal(
         fn_ctx: FnCtx<'_>,
         params: &Self::Params<'_>,
-        _data: Self::Data<'_>,
+        data: Self::Data<'_>,
     ) -> Result<Self::State, MockItemError> {
-        Self::state_goal_internal(fn_ctx, &params.0).await
+        if let Some(state_goal) = data.mock_fns().state_goal.as_ref() {
+            state_goal(fn_ctx, params, data)
+        } else {
+            Self::state_goal_internal(fn_ctx, &params.0).await
+        }
     }
 
     async fn state_diff(
@@ -196,64 +258,76 @@ where
     }
 
     async fn apply_check(
-        _params: &Self::Params<'_>,
-        _data: Self::Data<'_>,
+        params: &Self::Params<'_>,
+        data: Self::Data<'_>,
         state_current: &Self::State,
         state_target: &Self::State,
         diff: &Self::StateDiff,
     ) -> Result<ApplyCheck, Self::Error> {
-        let apply_check = if diff.0 == 0 {
-            ApplyCheck::ExecNotRequired
+        if let Some(apply_check) = data.mock_fns().apply_check.as_ref() {
+            apply_check(params, data, state_current, state_target, diff)
         } else {
-            #[cfg(not(feature = "output_progress"))]
-            {
-                let _state_current = state_current;
-                let _state_target = state_target;
-                ApplyCheck::ExecRequired
-            }
-            #[cfg(feature = "output_progress")]
-            {
-                let progress_limit = TryInto::<u64>::try_into(state_current.0 + state_target.0)
-                    .map(ProgressLimit::Bytes)
-                    .unwrap_or(ProgressLimit::Unknown);
+            let apply_check = if diff.0 == 0 {
+                ApplyCheck::ExecNotRequired
+            } else {
+                #[cfg(not(feature = "output_progress"))]
+                {
+                    let _state_current = state_current;
+                    let _state_target = state_target;
+                    ApplyCheck::ExecRequired
+                }
+                #[cfg(feature = "output_progress")]
+                {
+                    let progress_limit = TryInto::<u64>::try_into(state_current.0 + state_target.0)
+                        .map(ProgressLimit::Bytes)
+                        .unwrap_or(ProgressLimit::Unknown);
 
-                ApplyCheck::ExecRequired { progress_limit }
-            }
-        };
-        Ok(apply_check)
+                    ApplyCheck::ExecRequired { progress_limit }
+                }
+            };
+            Ok(apply_check)
+        }
     }
 
     async fn apply_dry(
-        _fn_ctx: FnCtx<'_>,
-        _params: &Self::Params<'_>,
-        _data: Self::Data<'_>,
-        _state_current: &Self::State,
+        fn_ctx: FnCtx<'_>,
+        params: &Self::Params<'_>,
+        data: Self::Data<'_>,
+        state_current: &Self::State,
         state_target: &Self::State,
-        _diff: &Self::StateDiff,
+        diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        // Would replace mock_dest's contents with mock_src's
-        Ok(state_target.clone())
+        if let Some(apply_dry) = data.mock_fns().apply_dry.as_ref() {
+            apply_dry(fn_ctx, params, data, state_current, state_target, diff)
+        } else {
+            // Would replace mock_dest's contents with mock_src's
+            Ok(state_target.clone())
+        }
     }
 
     async fn apply(
         fn_ctx: FnCtx<'_>,
-        _params: &Self::Params<'_>,
+        params: &Self::Params<'_>,
         mut data: Self::Data<'_>,
-        _state_current: &Self::State,
+        state_current: &Self::State,
         state_target: &Self::State,
-        _diff: &Self::StateDiff,
+        diff: &Self::StateDiff,
     ) -> Result<Self::State, Self::Error> {
-        let dest = data.dest_mut();
-        dest.0 = state_target.0;
+        if let Some(apply) = data.mock_fns().apply.as_ref() {
+            apply(fn_ctx, params, data, state_current, state_target, diff)
+        } else {
+            let dest = data.dest_mut();
+            dest.0 = state_target.0;
 
-        #[cfg(not(feature = "output_progress"))]
-        let _fn_ctx = fn_ctx;
-        #[cfg(feature = "output_progress")]
-        if let Ok(n) = state_target.0.try_into() {
-            fn_ctx.progress_sender().inc(n, ProgressMsgUpdate::NoChange);
+            #[cfg(not(feature = "output_progress"))]
+            let _fn_ctx = fn_ctx;
+            #[cfg(feature = "output_progress")]
+            if let Ok(n) = state_target.0.try_into() {
+                fn_ctx.progress_sender().inc(n, ProgressMsgUpdate::NoChange);
+            }
+
+            Ok(state_target.clone())
         }
-
-        Ok(state_target.clone())
     }
 
     async fn setup(&self, resources: &mut Resources<Empty>) -> Result<(), MockItemError> {
@@ -494,7 +568,12 @@ mod tests {
                 id: ItemId(\"mock\"), \
                 mock_fns: MockFns { \
                     try_state_current: None, \
+                    state_current: None, \
                     try_state_goal: None, \
+                    state_goal: None, \
+                    apply_check: None, \
+                    apply_dry: None, \
+                    apply: None, \
                     marker: PhantomData<()> \
                 } \
              }",

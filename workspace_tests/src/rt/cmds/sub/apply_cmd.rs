@@ -1,9 +1,15 @@
 use peace::{
     resources::states::ts::{Current, CurrentStored},
-    rt::cmds::sub::ApplyCmd,
+    rt::cmds::sub::{ApplyCmd, ApplyFor},
 };
 
 use crate::{NoOpOutput, VecCopyError};
+
+#[test]
+fn clone() {
+    assert_eq!(ApplyFor::Ensure, Clone::clone(&ApplyFor::Ensure));
+    assert_ne!(ApplyFor::Ensure, ApplyFor::Clean);
+}
 
 #[test]
 fn debug() {
