@@ -18,6 +18,9 @@ use crate::{
     NoOpOutput, PeaceTestError, VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItem, VecCopyState,
 };
 
+mod diff_info_spec;
+mod diff_state_spec;
+
 #[tokio::test]
 async fn diff_stored_contains_state_diff_for_each_item() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
