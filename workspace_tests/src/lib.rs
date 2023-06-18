@@ -1,3 +1,4 @@
+#![cfg_attr(coverage_nightly, feature(no_coverage))]
 #![cfg(test)]
 
 pub(crate) use crate::{
@@ -11,6 +12,8 @@ pub(crate) use crate::{
         VecA, VecB, VecCopyDiff, VecCopyError, VecCopyItem, VecCopyItemWrapper, VecCopyState,
     },
 };
+
+pub(crate) mod mock_item;
 
 // `peace` test modules
 mod cfg;
@@ -34,4 +37,5 @@ mod fn_tracker_output;
 mod fn_tracker_presenter;
 mod no_op_output;
 mod peace_test_error;
+mod test_support;
 mod vec_copy_item;

@@ -21,13 +21,13 @@ async-trait = { workspace = true }
 cfg-if = { workspace = true }
 indicatif = { workspace = true, features = ["tokio"] }
 indexmap = { workspace = true }
-miette = { workspace = true, optional = true }
+miette = { workspace = true, optional = true, features = ["fancy"] }
 peace_core = { workspace = true }
 peace_fmt = { workspace = true }
 peace_params = { workspace = true }
 peace_resources = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true, optional = true }
+serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 thiserror = { workspace = true }
 type_reg = { workspace = true, features = ["resman"] }
@@ -38,7 +38,5 @@ base64 = { workspace = true }
 [features]
 default = []
 error_reporting = ["dep:miette"]
-output_colorized = ["miette?/fancy"]
 output_in_memory = ["indicatif/in_memory"]
-output_json = ["dep:serde_json"]
 output_progress = ["peace_core/output_progress"]

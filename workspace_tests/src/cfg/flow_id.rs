@@ -1,4 +1,4 @@
-use std::{borrow::Cow, str::FromStr};
+use std::{borrow::Cow, collections::HashMap, str::FromStr};
 
 use peace::{
     cfg::{FlowId, FlowIdInvalidFmt},
@@ -115,10 +115,36 @@ fn debug() -> Result<(), FlowIdInvalidFmt<'static>> {
 }
 
 #[test]
+fn hash() -> Result<(), FlowIdInvalidFmt<'static>> {
+    let flow_id = FlowId::new("flow_id")?;
+
+    let mut hash_map = HashMap::new();
+    hash_map.insert(flow_id, ());
+
+    Ok(())
+}
+
+#[test]
 fn partial_eq_ne() -> Result<(), FlowIdInvalidFmt<'static>> {
     let flow_id_0 = FlowId::new("id0")?;
     let flow_id_1 = FlowId::new("id1")?;
 
     assert!(flow_id_0 != flow_id_1);
+    Ok(())
+}
+
+#[test]
+fn serialize() -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new("flow_id")?;
+
+    assert_eq!("flow_id\n", serde_yaml::to_string(&flow_id)?);
+    Ok(())
+}
+
+#[test]
+fn deserialize() -> Result<(), Box<dyn std::error::Error>> {
+    let flow_id = FlowId::new("flow_id")?;
+
+    assert_eq!(flow_id, serde_yaml::from_str("flow_id")?);
     Ok(())
 }

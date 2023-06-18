@@ -35,6 +35,11 @@ const TAR_X2_TAR: &[u8] = include_bytes!("tar_x_item/tar_x2.tar");
 /// Time that the `b` and `sub/a` files in `tar_x.tar` were modified.
 const TAR_X2_MTIME: u64 = 1671675052;
 
+#[test]
+fn clone() {
+    let _item = Clone::clone(&TarXItem::<()>::new(TarXTest::ID.clone()));
+}
+
 #[tokio::test]
 async fn state_current_returns_empty_file_metadatas_when_extraction_folder_not_exists()
 -> Result<(), Box<dyn std::error::Error>> {

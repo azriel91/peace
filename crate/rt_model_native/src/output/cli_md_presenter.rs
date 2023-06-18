@@ -1,9 +1,7 @@
 use peace_fmt::{async_trait, presentable::HeadingLevel, Presentable, Presenter};
 use tokio::io::{AsyncWrite, AsyncWriteExt};
 
-#[cfg(feature = "output_colorized")]
-use crate::output::CliColorize;
-use crate::output::CliOutput;
+use crate::output::{CliColorize, CliOutput};
 
 /// Command line markdown presenter.
 ///
@@ -13,7 +11,6 @@ pub struct CliMdPresenter<'output, W> {
     /// The CLI output to write to.
     output: &'output mut CliOutput<W>,
     /// Whether to render text in ANSI bold.
-    #[cfg(feature = "output_colorized")]
     cli_bold: CliBold,
 }
 
@@ -29,12 +26,10 @@ where
     pub fn new(output: &'output mut CliOutput<W>) -> Self {
         Self {
             output,
-            #[cfg(feature = "output_colorized")]
             cli_bold: CliBold::default(),
         }
     }
 
-    #[cfg(feature = "output_colorized")]
     async fn colorize_maybe(
         &mut self,
         s: &str,
@@ -75,7 +70,6 @@ where
     }
 
     /// Pedantic: Don't highlight surrounding spaces with white.
-    #[cfg(feature = "output_colorized")]
     async fn colorize_list_number(
         &mut self,
         style: &console::Style,
@@ -114,35 +108,6 @@ where
 {
     type Error = std::io::Error;
 
-    #[cfg(not(feature = "output_colorized"))]
-    async fn heading<P>(
-        &mut self,
-        heading_level: HeadingLevel,
-        presentable: &P,
-    ) -> Result<(), Self::Error>
-    where
-        P: Presentable + ?Sized,
-    {
-        let leading_hashes = match heading_level {
-            HeadingLevel::Level1 => "# ",
-            HeadingLevel::Level2 => "## ",
-            HeadingLevel::Level3 => "### ",
-            HeadingLevel::Level4 => "#### ",
-            HeadingLevel::Level5 => "##### ",
-            HeadingLevel::Level6 => "###### ",
-        };
-
-        self.output
-            .writer
-            .write_all(leading_hashes.as_bytes())
-            .await?;
-        presentable.present(self).await?;
-        self.output.writer.write_all(b"\n\n").await?;
-
-        Ok(())
-    }
-
-    #[cfg(feature = "output_colorized")]
     async fn heading<P>(
         &mut self,
         heading_level: HeadingLevel,
@@ -173,7 +138,6 @@ where
         Ok(())
     }
 
-    #[cfg(feature = "output_colorized")]
     async fn id(&mut self, id: &str) -> Result<(), Self::Error> {
         let style = console::Style::new().color256(75); // blue
         self.colorize_maybe(id, &style).await?;
@@ -181,13 +145,6 @@ where
         Ok(())
     }
 
-    #[cfg(not(feature = "output_colorized"))]
-    async fn id(&mut self, id: &str) -> Result<(), Self::Error> {
-        self.output.writer.write_all(id.as_bytes()).await?;
-        Ok(())
-    }
-
-    #[cfg(feature = "output_colorized")]
     async fn name(&mut self, name: &str) -> Result<(), Self::Error> {
         let style = console::Style::new().bold();
         self.colorize_maybe(format!("**{name}**").as_str(), &style)
@@ -196,22 +153,9 @@ where
         Ok(())
     }
 
-    #[cfg(not(feature = "output_colorized"))]
-    async fn name(&mut self, name: &str) -> Result<(), Self::Error> {
-        self.output.writer.write_all(b"**").await?;
-        self.output.writer.write_all(name.as_bytes()).await?;
-        self.output.writer.write_all(b"**").await?;
-        Ok(())
-    }
-
     async fn text(&mut self, text: &str) -> Result<(), Self::Error> {
-        #[cfg(not(feature = "output_colorized"))]
-        self.output.writer.write_all(text.as_bytes()).await?;
-        #[cfg(feature = "output_colorized")]
-        {
-            let style = console::Style::new();
-            self.colorize_maybe(text, &style).await?;
-        }
+        let style = console::Style::new();
+        self.colorize_maybe(text, &style).await?;
 
         Ok(())
     }
@@ -220,18 +164,15 @@ where
     where
         P: Presentable + ?Sized,
     {
-        #[cfg(feature = "output_colorized")]
         self.cli_bold.increment();
         self.output.writer.write_all(b"**").await?;
         presentable.present(self).await?;
         self.output.writer.write_all(b"**").await?;
-        #[cfg(feature = "output_colorized")]
         self.cli_bold.decrement();
 
         Ok(())
     }
 
-    #[cfg(feature = "output_colorized")]
     async fn tag(&mut self, tag: &str) -> Result<(), Self::Error> {
         let style = &console::Style::new().color256(219).bold(); // purple
         self.colorize_maybe(format!("⦗{tag}⦘").as_str(), style)
@@ -240,28 +181,10 @@ where
         Ok(())
     }
 
-    #[cfg(not(feature = "output_colorized"))]
-    async fn tag(&mut self, tag: &str) -> Result<(), Self::Error> {
-        self.output.writer.write_all(b"\xE2\xA6\x97").await?; // byte sequence for ⦗
-        self.output.writer.write_all(tag.as_bytes()).await?;
-        self.output.writer.write_all(b"\xE2\xA6\x98").await?; // byte sequence for ⦘
-
-        Ok(())
-    }
-
-    #[cfg(feature = "output_colorized")]
     async fn code_inline(&mut self, code: &str) -> Result<(), Self::Error> {
         let style = &console::Style::new().color256(75); // pale blue
         self.colorize_maybe(format!("`{code}`").as_str(), style)
             .await?;
-        Ok(())
-    }
-
-    #[cfg(not(feature = "output_colorized"))]
-    async fn code_inline(&mut self, code: &str) -> Result<(), Self::Error> {
-        self.output.writer.write_all(b"`").await?;
-        self.output.writer.write_all(code.as_bytes()).await?;
-        self.output.writer.write_all(b"`").await?;
         Ok(())
     }
 
@@ -275,21 +198,9 @@ where
         for (index, entry) in iterator.enumerate() {
             let list_number = index + 1;
 
-            #[cfg(feature = "output_colorized")]
-            {
-                let style = &console::Style::new().color256(15); // white
-                self.colorize_list_number(style, number_column_count, list_number)
-                    .await?;
-            }
-
-            #[cfg(not(feature = "output_colorized"))]
-            {
-                let list_number_padded = format!("{list_number:>number_column_count$}. ");
-                self.output
-                    .writer
-                    .write_all(list_number_padded.as_bytes())
-                    .await?;
-            }
+            let style = &console::Style::new().color256(15); // white
+            self.colorize_list_number(style, number_column_count, list_number)
+                .await?;
 
             entry.present(self).await?;
             self.output.writer.write_all(b"\n").await?;
@@ -310,21 +221,9 @@ where
         for (index, entry) in iterator.enumerate() {
             let list_number = index + 1;
 
-            #[cfg(feature = "output_colorized")]
-            {
-                let style = &console::Style::new().color256(15); // white
-                self.colorize_list_number(style, number_column_count, list_number)
-                    .await?;
-            }
-
-            #[cfg(not(feature = "output_colorized"))]
-            {
-                let list_number_padded = format!("{list_number:>number_column_count$}. ");
-                self.output
-                    .writer
-                    .write_all(list_number_padded.as_bytes())
-                    .await?;
-            }
+            let style = &console::Style::new().color256(15); // white
+            self.colorize_list_number(style, number_column_count, list_number)
+                .await?;
 
             let presentable = f(entry);
             presentable.present(self).await?;
@@ -340,15 +239,9 @@ where
         I: IntoIterator<Item = &'f P>,
     {
         for entry in iter.into_iter() {
-            #[cfg(feature = "output_colorized")]
-            {
-                let style = &console::Style::new().color256(15); // white
-                self.colorize_maybe("*", style).await?;
-                self.output.writer.write_all(b" ").await?;
-            }
-
-            #[cfg(not(feature = "output_colorized"))]
-            self.output.writer.write_all(b"* ").await?;
+            let style = &console::Style::new().color256(15); // white
+            self.colorize_maybe("*", style).await?;
+            self.output.writer.write_all(b" ").await?;
 
             entry.present(self).await?;
             self.output.writer.write_all(b"\n").await?;
@@ -365,15 +258,9 @@ where
         F: Fn(T) -> P,
     {
         for entry in iter.into_iter() {
-            #[cfg(feature = "output_colorized")]
-            {
-                let style = &console::Style::new().color256(15); // white
-                self.colorize_maybe("*", style).await?;
-                self.output.writer.write_all(b" ").await?;
-            }
-
-            #[cfg(not(feature = "output_colorized"))]
-            self.output.writer.write_all(b"* ").await?;
+            let style = &console::Style::new().color256(15); // white
+            self.colorize_maybe("*", style).await?;
+            self.output.writer.write_all(b" ").await?;
 
             let presentable = f(entry);
             presentable.present(self).await?;
@@ -385,11 +272,9 @@ where
 }
 
 /// Whether to render text in ANSI bold.
-#[cfg(feature = "output_colorized")]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct CliBold(u32);
 
-#[cfg(feature = "output_colorized")]
 impl CliBold {
     /// Returns whether the CLI text should be rendered as bold.
     fn is_bold(self) -> bool {

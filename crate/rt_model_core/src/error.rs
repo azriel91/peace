@@ -182,7 +182,6 @@ pub enum Error {
     )]
     ProgressUpdateSerialize(#[source] serde_yaml::Error),
     /// Failed to serialize progress update as JSON.
-    #[cfg(feature = "output_json")]
     #[error("Failed to serialize progress update.")]
     #[cfg_attr(
         feature = "error_reporting",
@@ -420,7 +419,6 @@ pub enum Error {
     StateDiffsSerialize(#[source] serde_yaml::Error),
 
     /// Failed to serialize error as JSON.
-    #[cfg(feature = "output_json")]
     #[error("Failed to serialize error as JSON.")]
     #[cfg_attr(
         feature = "error_reporting",
@@ -429,7 +427,6 @@ pub enum Error {
     ErrorSerializeJson(#[source] serde_json::Error),
 
     /// Failed to serialize states as JSON.
-    #[cfg(feature = "output_json")]
     #[error("Failed to serialize states as JSON.")]
     #[cfg_attr(
         feature = "error_reporting",
@@ -438,7 +435,6 @@ pub enum Error {
     StatesSerializeJson(#[source] serde_json::Error),
 
     /// Failed to serialize state diffs as JSON.
-    #[cfg(feature = "output_json")]
     #[error("Failed to serialize state diffs as JSON.")]
     #[cfg_attr(
         feature = "error_reporting",

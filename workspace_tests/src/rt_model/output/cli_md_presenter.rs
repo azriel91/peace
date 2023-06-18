@@ -1,26 +1,105 @@
+use futures::stream::{self, StreamExt, TryStreamExt};
 use peace::{
-    fmt::Presenter,
+    fmt::{
+        presentable::{CodeInline, HeadingLevel},
+        Presenter,
+    },
     rt_model::output::{CliMdPresenter, CliOutput, CliOutputBuilder, OutputFormat},
 };
 
-#[cfg(feature = "output_colorized")]
 use peace::rt_model::output::CliColorizeOpt;
 
-#[cfg(not(feature = "output_colorized"))]
 #[tokio::test]
-async fn presents_id_as_plain_text() -> Result<(), Box<dyn std::error::Error>> {
+async fn presents_heading_with_hashes_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
+    stream::iter(
+        [
+            (HeadingLevel::Level1, "# `code`\n\n"),
+            (HeadingLevel::Level2, "## `code`\n\n"),
+            (HeadingLevel::Level3, "### `code`\n\n"),
+            (HeadingLevel::Level4, "#### `code`\n\n"),
+            (HeadingLevel::Level5, "##### `code`\n\n"),
+            (HeadingLevel::Level6, "###### `code`\n\n"),
+        ]
+        .into_iter(),
+    )
+    .map(Result::<_, Box<dyn std::error::Error>>::Ok)
+    .try_for_each(|(heading_level, expected)| async move {
+        let mut buffer = Vec::new();
+        let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
+        let mut presenter = CliMdPresenter::new(&mut cli_output);
+
+        presenter
+            .heading(heading_level, &CodeInline::new("code".into()))
+            .await?;
+
+        let output = String::from_utf8(buffer)?;
+        assert_eq!(expected, output);
+        Ok(())
+    })
+    .await
+}
+
+#[tokio::test]
+async fn presents_heading_with_hashes_color_enabled() -> Result<(), Box<dyn std::error::Error>> {
+    stream::iter(
+        [
+            (HeadingLevel::Level1, "\u{1b}[38;5;243m\u{1b}[1m#\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "# `code`\n\n"),
+            (HeadingLevel::Level2, "\u{1b}[38;5;243m\u{1b}[1m##\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "## `code`\n\n"),
+            (HeadingLevel::Level3, "\u{1b}[38;5;243m\u{1b}[1m###\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "### `code`\n\n"),
+            (HeadingLevel::Level4, "\u{1b}[38;5;243m\u{1b}[1m####\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "#### `code`\n\n"),
+            (HeadingLevel::Level5, "\u{1b}[38;5;243m\u{1b}[1m#####\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "##### `code`\n\n"),
+            (HeadingLevel::Level6, "\u{1b}[38;5;243m\u{1b}[1m######\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "###### `code`\n\n"),
+        ]
+        .into_iter(),
+    )
+    .map(Result::<_, Box<dyn std::error::Error>>::Ok)
+    .try_for_each(|(heading_level, expected_colorized, expected)| async move {
+        let mut buffer = Vec::new();
+        let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+        let mut presenter = CliMdPresenter::new(&mut cli_output);
+
+        presenter
+            .heading(heading_level, &CodeInline::new("code".into()))
+            .await?;
+
+        let output = String::from_utf8(buffer)?;
+        assert_eq!(expected_colorized, output);
+        assert_eq!(expected, console::strip_ansi_codes(&output));
+        Ok(())
+    })
+    .await
+}
+
+#[tokio::test]
+async fn presents_bold_with_double_asterisk_color_disabled()
+-> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer);
+    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Never);
     let mut presenter = CliMdPresenter::new(&mut cli_output);
 
-    presenter.id("an_id").await?;
+    presenter.bold(&CodeInline::new("code".into())).await?;
 
     let output = String::from_utf8(buffer)?;
-    assert_eq!("an_id", output);
+    assert_eq!("**`code`**", output);
+    assert_eq!("**`code`**", console::strip_ansi_codes(&output));
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
+#[tokio::test]
+async fn presents_bold_with_double_asterisk_color_enabled() -> Result<(), Box<dyn std::error::Error>>
+{
+    let mut buffer = Vec::new();
+    let mut cli_output = cli_output(&mut buffer, CliColorizeOpt::Always);
+    let mut presenter = CliMdPresenter::new(&mut cli_output);
+
+    presenter.bold(&CodeInline::new("code".into())).await?;
+
+    let output = String::from_utf8(buffer)?;
+    assert_eq!("**\u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m**", output);
+    assert_eq!("**`code`**", console::strip_ansi_codes(&output));
+    Ok(())
+}
+
 #[tokio::test]
 async fn presents_id_as_plain_text_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -34,7 +113,6 @@ async fn presents_id_as_plain_text_color_disabled() -> Result<(), Box<dyn std::e
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_id_as_blue_text_color_enabled() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -49,21 +127,6 @@ async fn presents_id_as_blue_text_color_enabled() -> Result<(), Box<dyn std::err
     Ok(())
 }
 
-#[cfg(not(feature = "output_colorized"))]
-#[tokio::test]
-async fn presents_name_with_double_asterisk() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer);
-    let mut presenter = CliMdPresenter::new(&mut cli_output);
-
-    presenter.name("A Name").await?;
-
-    let output = String::from_utf8(buffer)?;
-    assert_eq!("**A Name**", output);
-    Ok(())
-}
-
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_name_with_double_asterisk_color_disabled()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -78,7 +141,6 @@ async fn presents_name_with_double_asterisk_color_disabled()
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_name_with_double_asterisk_bold_text_color_enabled()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -94,21 +156,6 @@ async fn presents_name_with_double_asterisk_bold_text_color_enabled()
     Ok(())
 }
 
-#[cfg(not(feature = "output_colorized"))]
-#[tokio::test]
-async fn presents_text_as_plain_text() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer);
-    let mut presenter = CliMdPresenter::new(&mut cli_output);
-
-    presenter.text("hello").await?;
-
-    let output = String::from_utf8(buffer)?;
-    assert_eq!("hello", output);
-    Ok(())
-}
-
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_text_as_plain_text_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -122,7 +169,6 @@ async fn presents_text_as_plain_text_color_disabled() -> Result<(), Box<dyn std:
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_text_as_plain_text_color_enabled() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -136,22 +182,6 @@ async fn presents_text_as_plain_text_color_enabled() -> Result<(), Box<dyn std::
     Ok(())
 }
 
-#[cfg(not(feature = "output_colorized"))]
-#[tokio::test]
-async fn presents_tag_with_black_tortoise_shell_plain_text()
--> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer);
-    let mut presenter = CliMdPresenter::new(&mut cli_output);
-
-    presenter.tag("tag").await?;
-
-    let output = String::from_utf8(buffer)?;
-    assert_eq!("⦗tag⦘", output);
-    Ok(())
-}
-
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_tag_with_black_tortoise_shell_plain_text_color_disabled()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -166,7 +196,6 @@ async fn presents_tag_with_black_tortoise_shell_plain_text_color_disabled()
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_tag_with_black_tortoise_shell_purple_text_color_enabled()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -182,21 +211,6 @@ async fn presents_tag_with_black_tortoise_shell_purple_text_color_enabled()
     Ok(())
 }
 
-#[cfg(not(feature = "output_colorized"))]
-#[tokio::test]
-async fn presents_code_inline_with_backticks() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer);
-    let mut presenter = CliMdPresenter::new(&mut cli_output);
-
-    presenter.code_inline("code_inline").await?;
-
-    let output = String::from_utf8(buffer)?;
-    assert_eq!("`code_inline`", output);
-    Ok(())
-}
-
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_code_inline_with_backticks_color_disabled()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -211,7 +225,6 @@ async fn presents_code_inline_with_backticks_color_disabled()
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_code_inline_with_backticks_blue_text_color_enabled()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -227,29 +240,6 @@ async fn presents_code_inline_with_backticks_blue_text_color_enabled()
     Ok(())
 }
 
-#[cfg(not(feature = "output_colorized"))]
-#[tokio::test]
-async fn presents_list_numbered() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer);
-    let mut presenter = CliMdPresenter::new(&mut cli_output);
-
-    presenter
-        .list_numbered(&[String::from("Item 1"), String::from("Item 2")])
-        .await?;
-
-    let output = String::from_utf8(buffer)?;
-    assert_eq!(
-        "\
-            1. Item 1\n\
-            2. Item 2\n\
-        ",
-        output
-    );
-    Ok(())
-}
-
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_list_numbered_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -271,7 +261,6 @@ async fn presents_list_numbered_color_disabled() -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_list_numbered_white_text_color_enabled() -> Result<(), Box<dyn std::error::Error>>
 {
@@ -301,41 +290,6 @@ async fn presents_list_numbered_white_text_color_enabled() -> Result<(), Box<dyn
     Ok(())
 }
 
-#[cfg(not(feature = "output_colorized"))]
-#[tokio::test]
-async fn presents_list_numbered_with_padding() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer);
-    let mut presenter = CliMdPresenter::new(&mut cli_output);
-
-    presenter
-        .list_numbered(
-            &(1..=11)
-                .map(|n| format!("Item {n}"))
-                .collect::<Vec<String>>(),
-        )
-        .await?;
-
-    let output = String::from_utf8(buffer)?;
-    assert_eq!(
-        r#" 1. Item 1
- 2. Item 2
- 3. Item 3
- 4. Item 4
- 5. Item 5
- 6. Item 6
- 7. Item 7
- 8. Item 8
- 9. Item 9
-10. Item 10
-11. Item 11
-"#,
-        output
-    );
-    Ok(())
-}
-
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_list_numbered_with_padding_color_disabled()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -370,7 +324,6 @@ async fn presents_list_numbered_with_padding_color_disabled()
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_list_numbered_with_padding_color_enabled()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -420,35 +373,6 @@ async fn presents_list_numbered_with_padding_color_enabled()
     Ok(())
 }
 
-#[cfg(not(feature = "output_colorized"))]
-#[tokio::test]
-async fn presents_list_numbered_with() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer);
-    let mut presenter = CliMdPresenter::new(&mut cli_output);
-
-    presenter
-        .list_numbered_with(&[true, false], |first| {
-            if *first {
-                String::from("Item 1")
-            } else {
-                String::from("Item 2")
-            }
-        })
-        .await?;
-
-    let output = String::from_utf8(buffer)?;
-    assert_eq!(
-        "\
-            1. Item 1\n\
-            2. Item 2\n\
-        ",
-        output
-    );
-    Ok(())
-}
-
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_list_numbered_with_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -476,7 +400,6 @@ async fn presents_list_numbered_with_color_disabled() -> Result<(), Box<dyn std:
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_list_numbered_with_white_text_color_enabled()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -512,37 +435,6 @@ async fn presents_list_numbered_with_white_text_color_enabled()
     Ok(())
 }
 
-#[cfg(not(feature = "output_colorized"))]
-#[tokio::test]
-async fn presents_list_numbered_with_with_padding() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer);
-    let mut presenter = CliMdPresenter::new(&mut cli_output);
-
-    presenter
-        .list_numbered_with(1..=11, |n| format!("Item {n}"))
-        .await?;
-
-    let output = String::from_utf8(buffer)?;
-    assert_eq!(
-        r#" 1. Item 1
- 2. Item 2
- 3. Item 3
- 4. Item 4
- 5. Item 5
- 6. Item 6
- 7. Item 7
- 8. Item 8
- 9. Item 9
-10. Item 10
-11. Item 11
-"#,
-        output
-    );
-    Ok(())
-}
-
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_list_numbered_with_with_padding_color_disabled()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -573,7 +465,6 @@ async fn presents_list_numbered_with_with_padding_color_disabled()
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_list_numbered_with_with_padding_color_enabled()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -619,29 +510,6 @@ async fn presents_list_numbered_with_with_padding_color_enabled()
     Ok(())
 }
 
-#[cfg(not(feature = "output_colorized"))]
-#[tokio::test]
-async fn presents_list_bulleted() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer);
-    let mut presenter = CliMdPresenter::new(&mut cli_output);
-
-    presenter
-        .list_bulleted(&[String::from("Item 1"), String::from("Item 2")])
-        .await?;
-
-    let output = String::from_utf8(buffer)?;
-    assert_eq!(
-        "\
-            * Item 1\n\
-            * Item 2\n\
-        ",
-        output
-    );
-    Ok(())
-}
-
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_list_bulleted_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -663,7 +531,6 @@ async fn presents_list_bulleted_color_disabled() -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_list_bulleted_white_text_color_enabled() -> Result<(), Box<dyn std::error::Error>>
 {
@@ -693,35 +560,6 @@ async fn presents_list_bulleted_white_text_color_enabled() -> Result<(), Box<dyn
     Ok(())
 }
 
-#[cfg(not(feature = "output_colorized"))]
-#[tokio::test]
-async fn presents_list_bulleted_with() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buffer = Vec::new();
-    let mut cli_output = cli_output(&mut buffer);
-    let mut presenter = CliMdPresenter::new(&mut cli_output);
-
-    presenter
-        .list_bulleted_with(&[true, false], |first| {
-            if *first {
-                String::from("Item 1")
-            } else {
-                String::from("Item 2")
-            }
-        })
-        .await?;
-
-    let output = String::from_utf8(buffer)?;
-    assert_eq!(
-        "\
-            * Item 1\n\
-            * Item 2\n\
-        ",
-        output
-    );
-    Ok(())
-}
-
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_list_bulleted_with_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -749,7 +587,6 @@ async fn presents_list_bulleted_with_color_disabled() -> Result<(), Box<dyn std:
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn presents_list_bulleted_with_white_text_color_enabled()
 -> Result<(), Box<dyn std::error::Error>> {
@@ -785,14 +622,6 @@ async fn presents_list_bulleted_with_white_text_color_enabled()
     Ok(())
 }
 
-#[cfg(not(feature = "output_colorized"))]
-fn cli_output(buffer: &mut Vec<u8>) -> CliOutput<&mut Vec<u8>> {
-    CliOutputBuilder::new_with_writer(buffer)
-        .with_outcome_format(OutputFormat::Text)
-        .build()
-}
-
-#[cfg(feature = "output_colorized")]
 fn cli_output(buffer: &mut Vec<u8>, colorize: CliColorizeOpt) -> CliOutput<&mut Vec<u8>> {
     CliOutputBuilder::new_with_writer(buffer)
         .with_outcome_format(OutputFormat::Text)

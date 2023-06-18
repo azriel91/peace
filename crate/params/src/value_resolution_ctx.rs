@@ -62,9 +62,11 @@ impl ValueResolutionCtx {
 impl fmt::Display for ValueResolutionCtx {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let params_type_name = self.params_type_name();
-        writeln!(f, "{params_type_name} {{")?;
+        write!(f, "{params_type_name} {{")?;
 
         if let Some((last, chain)) = self.resolution_chain().split_last() {
+            writeln!(f)?;
+
             chain
                 .iter()
                 .enumerate()
@@ -74,10 +76,7 @@ impl fmt::Display for ValueResolutionCtx {
 
                     let field_name = field_name_and_type.field_name();
                     let type_name = field_name_and_type.type_name();
-                    write!(f, "{field_name}: {type_name} {{\n")?;
-
-                    (0..indentation).try_for_each(|_| write!(f, "    "))?;
-                    write!(f, "..\n")
+                    write!(f, "{field_name}: {type_name} {{\n")
                 })?;
 
             // Don't add opening `{` for the actual field.
@@ -98,7 +97,10 @@ impl fmt::Display for ValueResolutionCtx {
             .try_for_each(|indentation| {
                 let indentation = indentation + 1;
                 (0..indentation).try_for_each(|_| write!(f, "    "))?;
-                write!(f, "}}\n")
+                write!(f, "}},\n")?;
+
+                (0..indentation).try_for_each(|_| write!(f, "    "))?;
+                write!(f, "..\n")
             })?;
 
         write!(f, "}}")

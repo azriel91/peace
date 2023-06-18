@@ -104,7 +104,7 @@ jobs:
         run: |
           cargo clippy \
             --workspace \
-            --features "cli error_reporting output_colorized output_json output_progress" \
+            --features "cli error_reporting output_progress" \
             --fix \
             --exclude peace_rt_model_web \
             -- -D warnings
@@ -121,7 +121,7 @@ jobs:
         #   --workspace \
         #   --target wasm32-unknown-unknown \
         #   --no-default-features \
-        #   --features "error_reporting output_colorized output_json" \
+        #   --features "error_reporting" \
         #   --fix \
         #   --exclude peace_rt_model_native \
         #   --exclude peace_item_spec_sh_cmd \
@@ -259,5 +259,5 @@ jobs:
             --out-dir "../../doc/src/examples/pkg" \
             --release \
             "examples/${example}" \
-            --features 'error_reporting output_colorized output_json'
+            --features 'error_reporting'
           done

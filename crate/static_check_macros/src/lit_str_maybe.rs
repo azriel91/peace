@@ -3,7 +3,6 @@ use syn::{
     LitStr,
 };
 
-#[derive(Clone)]
 pub(crate) struct LitStrMaybe(pub Option<LitStr>);
 
 impl std::ops::Deref for LitStrMaybe {

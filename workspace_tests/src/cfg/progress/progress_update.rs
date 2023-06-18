@@ -26,7 +26,6 @@ fn serialize() {
 }
 
 #[test]
-#[cfg(feature = "output_json")]
 fn deserialize_json() {
     assert_eq!(
         ProgressUpdate::Delta(ProgressDelta::Inc(3)),
@@ -35,7 +34,6 @@ fn deserialize_json() {
 }
 
 #[test]
-#[cfg(feature = "output_json")]
 fn serialize_json() {
     assert_eq!(
         r#"{"Delta":{"Inc":3}}"#,

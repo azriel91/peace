@@ -4,11 +4,8 @@ use peace::{
         internal::{StateDiffsMut, StatesMut},
         states::{StateDiffs, StatesCurrentStored},
     },
-    rt_model::output::{CliOutput, CliOutputBuilder, OutputFormat, OutputWrite},
+    rt_model::output::{CliColorizeOpt, CliOutput, CliOutputBuilder, OutputFormat, OutputWrite},
 };
-
-#[cfg(feature = "output_colorized")]
-use peace::rt_model::output::CliColorizeOpt;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -94,7 +91,6 @@ async fn outputs_error_as_text() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn outputs_states_as_text_colorized() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -125,7 +121,6 @@ async fn outputs_states_as_text_colorized() -> Result<(), Box<dyn std::error::Er
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn outputs_state_diffs_as_text_colorized() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -156,7 +151,6 @@ async fn outputs_state_diffs_as_text_colorized() -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
-#[cfg(feature = "output_colorized")]
 #[tokio::test]
 async fn outputs_error_as_text_colorized() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -236,7 +230,6 @@ async fn outputs_error_as_yaml() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(feature = "output_json")]
 #[tokio::test]
 async fn outputs_states_as_json() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -257,7 +250,6 @@ async fn outputs_states_as_json() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(feature = "output_json")]
 #[tokio::test]
 async fn outputs_state_diffs_as_json() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -278,7 +270,6 @@ async fn outputs_state_diffs_as_json() -> Result<(), Box<dyn std::error::Error>>
     Ok(())
 }
 
-#[cfg(feature = "output_json")]
 #[tokio::test]
 async fn outputs_error_as_json() -> Result<(), Box<dyn std::error::Error>> {
     let mut buffer = Vec::new();
@@ -294,7 +285,7 @@ async fn outputs_error_as_json() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(all(feature = "output_colorized", feature = "output_progress"))]
+#[cfg(feature = "output_progress")]
 mod color_always {
     use super::*;
 
@@ -325,7 +316,10 @@ mod color_always {
             progress_bar.prefix()
         );
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"⏳ 1. test_item_id ▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
@@ -382,7 +376,10 @@ mod color_always {
             progress_bar.prefix()
         );
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         progress_bar.set_position(20);
         assert_eq!(
@@ -445,7 +442,10 @@ mod color_always {
 
         // Check current position
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         progress_bar.set_position(20);
         assert_eq!(
@@ -468,7 +468,10 @@ mod color_always {
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"✅ 1. test_item_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
@@ -520,7 +523,10 @@ mod color_always {
 
         // Check current position
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         progress_bar.set_position(20);
         assert_eq!(
@@ -543,7 +549,10 @@ mod color_always {
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"❌ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
@@ -605,7 +614,10 @@ mod color_always {
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"---
@@ -622,7 +634,7 @@ msg_update: NoChange"#,
         );
     }
 
-    #[cfg(all(feature = "output_json", feature = "output_progress"))]
+    #[cfg(feature = "output_progress")]
     #[tokio::test]
     async fn progress_update_delta_with_progress_format_outcome_writes_json() {
         let mut buffer = Vec::new();
@@ -677,7 +689,10 @@ msg_update: NoChange"#,
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"{"item_id":"test_item_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}
@@ -687,7 +702,7 @@ msg_update: NoChange"#,
     }
 }
 
-#[cfg(all(feature = "output_colorized", feature = "output_progress"))]
+#[cfg(feature = "output_progress")]
 mod color_never {
     use super::*;
 
@@ -715,7 +730,10 @@ mod color_never {
         // and compare the output.
         assert_eq!("1. test_item_id", progress_bar.prefix());
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"⏳ 1. test_item_id ▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
@@ -769,7 +787,10 @@ mod color_never {
 
         assert_eq!("1. test_item_id", progress_bar.prefix());
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         progress_bar.set_position(20);
         assert_eq!(
@@ -832,7 +853,10 @@ mod color_never {
 
         // Check current position
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         progress_bar.set_position(20);
         assert_eq!(
@@ -855,7 +879,10 @@ mod color_never {
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"✅ 1. test_item_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
@@ -907,7 +934,10 @@ mod color_never {
 
         // Check current position
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         progress_bar.set_position(20);
         assert_eq!(
@@ -930,7 +960,10 @@ mod color_never {
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"❌ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
@@ -992,7 +1025,10 @@ mod color_never {
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"---
@@ -1009,7 +1045,7 @@ msg_update: NoChange"#,
         );
     }
 
-    #[cfg(all(feature = "output_json", feature = "output_progress"))]
+    #[cfg(feature = "output_progress")]
     #[tokio::test]
     async fn progress_update_delta_with_progress_format_outcome_writes_json() {
         let mut buffer = Vec::new();
@@ -1064,392 +1100,14 @@ msg_update: NoChange"#,
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"{"item_id":"test_item_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}
 {"item_id":"test_item_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}"#,
-            in_memory_term.contents()
-        );
-    }
-}
-
-#[cfg(all(not(feature = "output_colorized"), feature = "output_progress"))]
-mod color_disabled {
-    use super::*;
-
-    #[tokio::test]
-    async fn progress_begin_sets_prefix_and_progress_bar_style() {
-        let mut buffer = Vec::new();
-        let mut cli_output = cli_output_progress(
-            &mut buffer,
-            OutputFormat::Text,
-            CliProgressFormatOpt::ProgressBar,
-        );
-        let (cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
-
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
-        // Hack: because we enable this in `progress_begin`
-        // Remove when we properly tick progress updates in `ApplyCmd`.
-        progress_bar.disable_steady_tick();
-
-        // We can't inspect `ProgressStyle`'s fields, so we have to render the progress
-        // and compare the output.
-        assert_eq!("1. test_item_id", progress_bar.prefix());
-        let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
-        };
-        assert_eq!(
-            r#"⏳ 1. test_item_id ▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
-            //    ^             ^ ^                                      ^
-            //    '-- 15 chars -' '-------------- 40 chars --------------'
-            in_memory_term.contents()
-        );
-    }
-
-    #[tokio::test]
-    async fn progress_update_with_limit_sets_progress_bar_style() {
-        let mut buffer = Vec::new();
-        let mut cli_output = cli_output_progress(
-            &mut buffer,
-            OutputFormat::Text,
-            CliProgressFormatOpt::ProgressBar,
-        );
-        let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
-
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
-        // Hack: because we enable this in `progress_begin`
-        // Remove when we properly tick progress updates in `ApplyCmd`.
-        progress_bar.disable_steady_tick();
-
-        let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
-        let progress_tracker = progress_trackers
-            .get_mut(&item_id!("test_item_id"))
-            .unwrap();
-
-        // Adjust progress_bar length and units.
-        progress_tracker.set_progress_status(ProgressStatus::Running);
-        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
-        progress_bar.set_length(100);
-
-        let progress_update_and_id = ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
-            msg_update: ProgressMsgUpdate::NoChange,
-        };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
-            &mut cli_output,
-            &progress_tracker,
-            &progress_update_and_id,
-        )
-        .await;
-
-        assert_eq!("1. test_item_id", progress_bar.prefix());
-        let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
-        };
-        progress_bar.set_position(20);
-        assert_eq!(
-            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
-            in_memory_term.contents()
-        );
-        progress_bar.set_position(21);
-        assert_eq!(
-            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 21/100 (el: 0s, eta: 0s)"#,
-            in_memory_term.contents()
-        );
-        progress_bar.set_position(22);
-        assert_eq!(
-            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 22/100 (el: 0s, eta: 0s)"#,
-            in_memory_term.contents()
-        );
-    }
-
-    #[tokio::test]
-    async fn progress_update_with_complete_success_finishes_progress_bar() {
-        let mut buffer = Vec::new();
-        let mut cli_output = cli_output_progress(
-            &mut buffer,
-            OutputFormat::Text,
-            CliProgressFormatOpt::ProgressBar,
-        );
-        let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
-
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
-        // Hack: because we enable this in `progress_begin`
-        // Remove when we properly tick progress updates in `ApplyCmd`.
-        progress_bar.disable_steady_tick();
-
-        let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
-        let progress_tracker = progress_trackers
-            .get_mut(&item_id!("test_item_id"))
-            .unwrap();
-
-        // Adjust progress_bar length and units.
-        progress_tracker.set_progress_status(ProgressStatus::Running);
-        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
-        progress_bar.set_length(100);
-
-        let progress_update_and_id = ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
-            msg_update: ProgressMsgUpdate::NoChange,
-        };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
-            &mut cli_output,
-            &progress_tracker,
-            &progress_update_and_id,
-        )
-        .await;
-
-        // Check current position
-        let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
-        };
-        progress_bar.set_position(20);
-        assert_eq!(
-            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
-            in_memory_term.contents()
-        );
-
-        let progress_complete = ProgressComplete::Success;
-        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
-        progress_tracker.set_message(Some(String::from("done")));
-        let progress_update_and_id = ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Complete(progress_complete),
-            msg_update: ProgressMsgUpdate::Set(String::from("done")),
-        };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
-            &mut cli_output,
-            &progress_tracker,
-            &progress_update_and_id,
-        )
-        .await;
-        let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
-        };
-        assert_eq!(
-            r#"✅ 1. test_item_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
-            in_memory_term.contents(),
-        );
-    }
-
-    #[tokio::test]
-    async fn progress_update_with_complete_fail_abandons_progress_bar() {
-        let mut buffer = Vec::new();
-        let mut cli_output = cli_output_progress(
-            &mut buffer,
-            OutputFormat::Text,
-            CliProgressFormatOpt::ProgressBar,
-        );
-        let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
-
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
-        // Hack: because we enable this in `progress_begin`
-        // Remove when we properly tick progress updates in `ApplyCmd`.
-        progress_bar.disable_steady_tick();
-
-        let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
-        let progress_tracker = progress_trackers
-            .get_mut(&item_id!("test_item_id"))
-            .unwrap();
-
-        // Adjust progress_bar length and units.
-        progress_tracker.set_progress_status(ProgressStatus::Running);
-        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
-        progress_bar.set_length(100);
-
-        let progress_update_and_id = ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
-            msg_update: ProgressMsgUpdate::NoChange,
-        };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
-            &mut cli_output,
-            &progress_tracker,
-            &progress_update_and_id,
-        )
-        .await;
-
-        // Check current position
-        let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
-        };
-        progress_bar.set_position(20);
-        assert_eq!(
-            r#"⏳ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 (el: 0s, eta: 0s)"#,
-            in_memory_term.contents()
-        );
-
-        let progress_complete = ProgressComplete::Fail;
-        progress_tracker.set_progress_status(ProgressStatus::Complete(progress_complete.clone()));
-        progress_tracker.set_message(Some(String::from("done")));
-        let progress_update_and_id = ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Complete(progress_complete),
-            msg_update: ProgressMsgUpdate::Set(String::from("done")),
-        };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
-            &mut cli_output,
-            &progress_tracker,
-            &progress_update_and_id,
-        )
-        .await;
-        let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
-        };
-        assert_eq!(
-            r#"❌ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
-            in_memory_term.contents()
-        );
-    }
-
-    #[tokio::test]
-    async fn progress_update_delta_with_progress_format_outcome_writes_yaml() {
-        let mut buffer = Vec::new();
-        let mut cli_output = cli_output_progress(
-            &mut buffer,
-            OutputFormat::Text,
-            CliProgressFormatOpt::Outcome,
-        );
-        let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
-
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
-        // Hack: because we enable this in `progress_begin`
-        // Remove when we properly tick progress updates in `ApplyCmd`.
-        progress_bar.disable_steady_tick();
-
-        let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
-        let progress_tracker = progress_trackers
-            .get_mut(&item_id!("test_item_id"))
-            .unwrap();
-
-        let progress_update_and_id = ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
-            msg_update: ProgressMsgUpdate::NoChange,
-        };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
-            &mut cli_output,
-            &progress_tracker,
-            &progress_update_and_id,
-        )
-        .await;
-
-        // Adjust progress_bar length and units.
-        progress_tracker.set_progress_status(ProgressStatus::Running);
-        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
-        progress_bar.set_length(100);
-
-        let progress_update_and_id = ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
-            msg_update: ProgressMsgUpdate::NoChange,
-        };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
-            &mut cli_output,
-            &progress_tracker,
-            &progress_update_and_id,
-        )
-        .await;
-        let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
-        };
-        assert_eq!(
-            r#"---
-item_id: test_item_id
-progress_update: !Limit
-  Steps: 100
-msg_update: NoChange
----
-item_id: test_item_id
-progress_update: !Delta
-  Inc: 21
-msg_update: NoChange"#,
-            in_memory_term.contents()
-        );
-    }
-
-    #[cfg(all(feature = "output_json", feature = "output_progress"))]
-    #[tokio::test]
-    async fn progress_update_delta_with_progress_format_outcome_writes_json() {
-        let mut buffer = Vec::new();
-        let mut cli_output = cli_output_progress(
-            &mut buffer,
-            OutputFormat::Json,
-            CliProgressFormatOpt::Outcome,
-        );
-        let (mut cmd_progress_tracker, progress_bar) = cmd_progress_tracker(&cli_output);
-
-        <CliOutput<_> as OutputWrite<Error>>::progress_begin(
-            &mut cli_output,
-            &cmd_progress_tracker,
-        )
-        .await;
-        // Hack: because we enable this in `progress_begin`
-        // Remove when we properly tick progress updates in `ApplyCmd`.
-        progress_bar.disable_steady_tick();
-
-        let progress_trackers = cmd_progress_tracker.progress_trackers_mut();
-        let progress_tracker = progress_trackers
-            .get_mut(&item_id!("test_item_id"))
-            .unwrap();
-
-        let progress_update_and_id = ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Limit(ProgressLimit::Steps(100)),
-            msg_update: ProgressMsgUpdate::NoChange,
-        };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
-            &mut cli_output,
-            &progress_tracker,
-            &progress_update_and_id,
-        )
-        .await;
-
-        // Adjust progress_bar length and units.
-        progress_tracker.set_progress_status(ProgressStatus::Running);
-        progress_tracker.set_progress_limit(ProgressLimit::Steps(100));
-        progress_bar.set_length(100);
-
-        let progress_update_and_id = ProgressUpdateAndId {
-            item_id: item_id!("test_item_id"),
-            progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(21)),
-            msg_update: ProgressMsgUpdate::NoChange,
-        };
-        <CliOutput<_> as OutputWrite<Error>>::progress_update(
-            &mut cli_output,
-            &progress_tracker,
-            &progress_update_and_id,
-        )
-        .await;
-        let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
-        };
-        assert_eq!(
-            r#"{"item_id":"test_item_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}}
-{"item_id":"test_item_id","progress_update":{"Delta":{"Inc":21}},"msg_update":"NoChange"}}"#,
             in_memory_term.contents()
         );
     }
@@ -1473,7 +1131,6 @@ fn cli_output(buffer: &mut Vec<u8>, outcome_format: OutputFormat) -> CliOutput<&
         .build()
 }
 
-#[cfg(feature = "output_colorized")]
 fn cli_output_colorized(
     buffer: &mut Vec<u8>,
     outcome_format: OutputFormat,
@@ -1484,20 +1141,7 @@ fn cli_output_colorized(
         .build()
 }
 
-#[cfg(all(not(feature = "output_colorized"), feature = "output_progress"))]
-fn cli_output_progress(
-    buffer: &mut Vec<u8>,
-    outcome_format: OutputFormat,
-    progress_format: CliProgressFormatOpt,
-) -> CliOutput<&mut Vec<u8>> {
-    CliOutputBuilder::new_with_writer(buffer)
-        .with_outcome_format(outcome_format)
-        .with_progress_target(CliOutputTarget::in_memory(50, 120))
-        .with_progress_format(progress_format)
-        .build()
-}
-
-#[cfg(all(feature = "output_colorized", feature = "output_progress"))]
+#[cfg(feature = "output_progress")]
 fn cli_output_progress(
     buffer: &mut Vec<u8>,
     outcome_format: OutputFormat,

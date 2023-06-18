@@ -306,22 +306,14 @@ where
                                 item_id,
                             );
 
+                            let mut item_error = None;
                             let state_current =
                                 if let Some(state_current_result) = state_current_result {
                                     match state_current_result {
                                         Ok(state_current_opt) => state_current_opt,
                                         Err(error) => {
-                                            outcomes_tx
-                                            .send(ItemDiscoverOutcome::Fail {
-                                                item_id: item_id.clone(),
-                                                state_current: None,
-                                                state_goal: None,
-                                                error,
-                                            })
-                                            .expect(
-                                                "unreachable: `outcomes_rx` is in a sibling task.",
-                                            );
-                                            return; // short circuit
+                                            item_error = Some(error);
+                                            None
                                         }
                                     }
                                 } else {
@@ -332,30 +324,36 @@ where
                                 match state_goal_result {
                                     Ok(state_goal_opt) => state_goal_opt,
                                     Err(error) => {
-                                        outcomes_tx
-                                            .send(ItemDiscoverOutcome::Fail {
-                                                item_id: item_id.clone(),
-                                                state_current,
-                                                state_goal: None,
-                                                error,
-                                            })
-                                            .expect(
-                                                "unreachable: `outcomes_rx` is in a sibling task.",
-                                            );
-                                        return; // short circuit
+                                        // It's probably more crucial to store the `states_current`
+                                        // error than the states goal error, if both err.
+                                        if item_error.is_none() {
+                                            item_error = Some(error);
+                                        }
+                                        None
                                     }
                                 }
                             } else {
                                 None
                             };
 
-                            outcomes_tx
-                                .send(ItemDiscoverOutcome::Success {
-                                    item_id: item_id.clone(),
-                                    state_current,
-                                    state_goal,
-                                })
-                                .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                            if let Some(error) = item_error {
+                                outcomes_tx
+                                    .send(ItemDiscoverOutcome::Fail {
+                                        item_id: item_id.clone(),
+                                        state_current,
+                                        state_goal,
+                                        error,
+                                    })
+                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                            } else {
+                                outcomes_tx
+                                    .send(ItemDiscoverOutcome::Success {
+                                        item_id: item_id.clone(),
+                                        state_current,
+                                        state_goal,
+                                    })
+                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
+                            }
                         })
                         .await;
                 }

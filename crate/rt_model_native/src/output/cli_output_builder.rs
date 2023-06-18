@@ -1,11 +1,8 @@
-use crate::output::CliOutput;
-
 use peace_rt_model_core::output::OutputFormat;
-
+use std::io::IsTerminal;
 use tokio::io::{AsyncWrite, Stdout};
 
-#[cfg(feature = "output_colorized")]
-use crate::output::{CliColorize, CliColorizeOpt};
+use crate::output::{CliColorize, CliColorizeOpt, CliOutput};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -13,24 +10,9 @@ cfg_if::cfg_if! {
     }
 }
 
-#[cfg(any(feature = "output_colorized", feature = "output_progress"))]
-use is_terminal::IsTerminal;
-
 /// An `OutputWrite` implementation that writes to the command line.
 ///
 /// # Features
-///
-/// ## `"output_colorized"`
-///
-/// When this feature is enabled, text output is coloured with ANSI codes when
-/// the outcome output stream is a terminal (i.e. not piped to another process,
-/// or redirected to a file).
-///
-/// If it is piped to another process or redirected to a file, then the outcome
-/// output is not colourized.
-///
-/// This automatic detection can be overridden by calling the [`with_colorized`]
-/// method.
 ///
 /// ## `"output_progress"`
 ///
@@ -63,7 +45,6 @@ pub struct CliOutputBuilder<W> {
     /// How to format outcome output -- human readable or machine parsable.
     outcome_format: OutputFormat,
     /// Whether output should be colorized.
-    #[cfg(feature = "output_colorized")]
     colorize: CliColorizeOpt,
     /// Where to output progress updates to -- stdout or stderr.
     #[cfg(feature = "output_progress")]
@@ -107,7 +88,6 @@ where
         Self {
             writer,
             outcome_format: OutputFormat::Text,
-            #[cfg(feature = "output_colorized")]
             colorize: CliColorizeOpt::Auto,
             #[cfg(feature = "output_progress")]
             progress_target: CliOutputTarget::default(),
@@ -123,7 +103,6 @@ where
     }
 
     /// Returns whether output should be colorized.
-    #[cfg(feature = "output_colorized")]
     pub fn colorize(&self) -> CliColorizeOpt {
         self.colorize
     }
@@ -169,10 +148,8 @@ where
     /// # use peace_rt_model_native::output::CliOutput;
     /// // use peace::rt_model::output::{CliColorize, CliOutput};
     ///
-    /// # #[cfg(feature = "output_colorized")]
     /// let cli_output = CliOutput::new().with_colorized(CliColorize::Auto);
     /// ```
-    #[cfg(feature = "output_colorized")]
     pub fn with_colorize(mut self, colorize: CliColorizeOpt) -> Self {
         self.colorize = colorize;
         self
@@ -197,7 +174,6 @@ where
         let CliOutputBuilder {
             writer,
             outcome_format,
-            #[cfg(feature = "output_colorized")]
             colorize,
             #[cfg(feature = "output_progress")]
             progress_target,
@@ -205,7 +181,6 @@ where
             progress_format,
         } = self;
 
-        #[cfg(feature = "output_colorized")]
         let colorize = match colorize {
             CliColorizeOpt::Auto => {
                 // Even though we're using `tokio::io::stdout` / `stderr`, `IsTerminal` is only
@@ -265,7 +240,6 @@ where
         CliOutput {
             writer,
             outcome_format,
-            #[cfg(feature = "output_colorized")]
             colorize,
             #[cfg(feature = "output_progress")]
             progress_target,
@@ -283,7 +257,6 @@ impl Default for CliOutputBuilder<Stdout> {
         Self {
             writer: stdout,
             outcome_format: OutputFormat::Text,
-            #[cfg(feature = "output_colorized")]
             colorize: CliColorizeOpt::Auto,
             #[cfg(feature = "output_progress")]
             progress_target: CliOutputTarget::default(),

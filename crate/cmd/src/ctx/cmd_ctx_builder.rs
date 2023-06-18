@@ -14,8 +14,8 @@ use peace_resources::{
 use peace_rt_model::{
     fn_graph::resman::Resource,
     params::{FlowParams, ProfileParams, WorkspaceParams},
-    Error, Flow, ItemGraph, ItemParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg, Storage,
-    Workspace, WorkspaceInitializer,
+    Error, Flow, ItemGraph, ItemParamsTypeReg, ParamsSpecsSerializer, ParamsSpecsTypeReg,
+    StatesTypeReg, Storage, Workspace, WorkspaceInitializer,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -137,15 +137,7 @@ async fn params_specs_serialize(
     storage: &Storage,
     params_specs_file: &ParamsSpecsFile,
 ) -> Result<(), Error> {
-    storage
-        .serialized_write(
-            #[cfg(not(target_arch = "wasm32"))]
-            "cmd_ctx_builder::params_specs_serialize".to_string(),
-            params_specs_file,
-            params_specs,
-            Error::ParamsSpecsSerialize,
-        )
-        .await
+    ParamsSpecsSerializer::serialize(storage, params_specs, params_specs_file).await
 }
 
 /// Inserts flow params into the `Resources` map.
@@ -170,26 +162,35 @@ pub(crate) async fn profiles_from_peace_app_dir(
     use std::{ffi::OsStr, str::FromStr};
 
     let mut profiles = Vec::new();
-    let mut peace_app_read_dir = tokio::fs::read_dir(peace_app_dir).await.map_err(|error| {
-        peace_rt_model::Error::Native(peace_rt_model::NativeError::PeaceAppDirRead {
-            peace_app_dir: peace_app_dir.to_path_buf(),
-            error,
-        })
-    })?;
-    while let Some(entry) = peace_app_read_dir.next_entry().await.map_err(|error| {
-        peace_rt_model::Error::Native(peace_rt_model::NativeError::PeaceAppDirEntryRead {
-            peace_app_dir: peace_app_dir.to_path_buf(),
-            error,
-        })
-    })? {
-        let file_type = entry.file_type().await.map_err(|error| {
-            peace_rt_model::Error::Native(
-                peace_rt_model::NativeError::PeaceAppDirEntryFileTypeRead {
-                    path: entry.path(),
-                    error,
-                },
-            )
-        })?;
+    let mut peace_app_read_dir = tokio::fs::read_dir(peace_app_dir).await.map_err(
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |error| {
+            peace_rt_model::Error::Native(peace_rt_model::NativeError::PeaceAppDirRead {
+                peace_app_dir: peace_app_dir.to_path_buf(),
+                error,
+            })
+        },
+    )?;
+    while let Some(entry) = peace_app_read_dir.next_entry().await.map_err(
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        |error| {
+            peace_rt_model::Error::Native(peace_rt_model::NativeError::PeaceAppDirEntryRead {
+                peace_app_dir: peace_app_dir.to_path_buf(),
+                error,
+            })
+        },
+    )? {
+        let file_type = entry.file_type().await.map_err(
+            #[cfg_attr(coverage_nightly, no_coverage)]
+            |error| {
+                peace_rt_model::Error::Native(
+                    peace_rt_model::NativeError::PeaceAppDirEntryFileTypeRead {
+                        path: entry.path(),
+                        error,
+                    },
+                )
+            },
+        )?;
 
         if file_type.is_dir() {
             let entry_path = entry.path();
@@ -308,7 +309,10 @@ where
             let params_spec_to_use = match (params_spec_provided, params_spec_stored) {
                 (None, None) => None,
                 (None, Some(params_spec_stored)) => Some(params_spec_stored),
+
+                // Newly added item, or potentially renamed.
                 (Some(params_spec_provided), None) => Some(params_spec_provided),
+
                 (
                     Some((item_id, mut params_spec_provided)),
                     Some((_item_id, params_spec_stored)),

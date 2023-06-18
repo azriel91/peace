@@ -1,6 +1,7 @@
 use std::any::TypeId;
 
 use peace::{
+    cfg::{item_id, ItemId},
     data::{DataAccessDyn, TypeIds},
     rt_model::{ItemBoxed, ItemRt},
 };
@@ -57,6 +58,14 @@ fn data_access_dyn_borrow_muts() {
 }
 
 #[test]
+fn clone() {
+    let vec_copy_item = VecCopyItem::default();
+    let item_boxed: ItemBoxed<VecCopyError> = vec_copy_item.into();
+
+    let _item_boxed = Clone::clone(&item_boxed);
+}
+
+#[test]
 fn debug() {
     let vec_copy_item = VecCopyItem::default();
     let item_boxed: ItemBoxed<VecCopyError> = vec_copy_item.into();
@@ -65,4 +74,14 @@ fn debug() {
         "ItemBoxed(VecCopyItem { id: ItemId(\"vec_copy\") })",
         format!("{item_boxed:?}")
     );
+}
+
+#[test]
+fn partial_eq() {
+    let item_boxed_0: ItemBoxed<VecCopyError> = VecCopyItem::default().into();
+    let item_boxed_1: ItemBoxed<VecCopyError> = VecCopyItem::default().into();
+    let item_boxed_2: ItemBoxed<VecCopyError> = VecCopyItem::new(item_id!("rara")).into();
+
+    assert_eq!(item_boxed_0, item_boxed_1);
+    assert_ne!(item_boxed_0, item_boxed_2);
 }

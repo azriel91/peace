@@ -1,3 +1,5 @@
+#![cfg_attr(coverage_nightly, feature(no_coverage))]
+
 //! Manages extracting a tar file for the peace framework
 
 pub use crate::{

@@ -1,19 +1,7 @@
 use peace::rt_model::output::OutputFormatParseError;
 
-#[cfg(not(feature = "output_json"))]
 #[test]
-fn display_includes_text_yaml_when_json_feature_is_not_enabled() {
-    let error = OutputFormatParseError("rara".to_string());
-
-    assert_eq!(
-        r#"Failed to parse output format from string: `"rara"`. Valid values are ["text", "yaml"]"#,
-        format!("{error}")
-    );
-}
-
-#[cfg(feature = "output_json")]
-#[test]
-fn display_includes_text_yaml_when_json_feature_is_enabled() {
+fn display_includes_text_yaml_json() {
     let error = OutputFormatParseError("rara".to_string());
 
     assert_eq!(

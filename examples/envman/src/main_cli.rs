@@ -22,7 +22,6 @@ pub fn run() -> Result<(), EnvManError> {
         command,
         fast,
         format,
-        #[cfg(feature = "output_colorized")]
         color,
     } = CliArgs::parse();
 
@@ -40,13 +39,9 @@ pub fn run() -> Result<(), EnvManError> {
 
     runtime.block_on(async {
         let mut cli_output = {
-            let mut builder = CliOutput::builder();
+            let mut builder = CliOutput::builder().with_colorize(color);
             if let Some(format) = format {
                 builder = builder.with_outcome_format(format);
-            }
-            #[cfg(feature = "output_colorized")]
-            {
-                builder = builder.with_colorize(color);
             }
 
             builder.build()

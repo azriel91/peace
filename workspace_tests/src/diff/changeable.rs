@@ -34,3 +34,32 @@ fn partial_eq() {
     assert!(changeable_0 != changeable_1);
     assert!(changeable_1 == changeable_1);
 }
+
+#[test]
+fn serialize() -> Result<(), serde_yaml::Error> {
+    let changeable = Changeable::new(Tracked::<u8>::Unknown, Tracked::<u8>::Known(1));
+
+    assert_eq!(
+        "from: Unknown\n\
+        to: !Known 1\n\
+        ",
+        serde_yaml::to_string(&changeable)?
+    );
+    Ok(())
+}
+
+#[test]
+fn deserialize() -> Result<(), serde_yaml::Error> {
+    assert!(matches!(
+        serde_yaml::from_str(
+            "from: Unknown\n\
+            to: !Known 1\n\
+            "
+        )?,
+        Changeable {
+            from: Tracked::<u8>::Unknown,
+            to: Tracked::<u8>::Known(1),
+        }
+    ));
+    Ok(())
+}

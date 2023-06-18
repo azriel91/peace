@@ -122,9 +122,8 @@ fn debug() {
         "{:?}",
         StatesCurrentStoredDisplayCmd::<VecCopyError, NoOpOutput, ()>::default()
     );
-    assert!(
-        debug_str
-            == r#"StatesCurrentStoredDisplayCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#
-            || debug_str == r#"StatesCurrentStoredDisplayCmd(PhantomData)"#
+    assert_eq!(
+        r#"StatesCurrentStoredDisplayCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#,
+        debug_str,
     );
 }

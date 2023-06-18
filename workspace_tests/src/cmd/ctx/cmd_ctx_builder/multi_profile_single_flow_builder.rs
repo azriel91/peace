@@ -7,7 +7,7 @@ use peace::{
     rt_model::{Flow, ItemGraphBuilder},
 };
 
-use crate::{cmd::ctx::cmd_ctx_builder::workspace_with, no_op_output::NoOpOutput, PeaceTestError};
+use crate::{no_op_output::NoOpOutput, test_support::workspace_with, PeaceTestError};
 
 #[tokio::test]
 async fn build() -> Result<(), Box<dyn std::error::Error>> {

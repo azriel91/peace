@@ -114,7 +114,7 @@ where
         match self {
             Self::Stored => f.write_str("Stored"),
             Self::Value { value } => f.debug_tuple("Value").field(value).finish(),
-            Self::InMemory => f.write_str("From"),
+            Self::InMemory => f.write_str("InMemory"),
             Self::MappingFn(mapping_fn) => f.debug_tuple("MappingFn").field(mapping_fn).finish(),
             Self::FieldWise { field_wise_spec } => {
                 f.debug_tuple("FieldWise").field(field_wise_spec).finish()
@@ -174,9 +174,7 @@ where
             ParamsSpec::Stored | ParamsSpec::InMemory => match resources.try_borrow::<T>() {
                 Ok(value) => Ok(T::Partial::from((*value).clone())),
                 Err(borrow_fail) => match borrow_fail {
-                    BorrowFail::ValueNotFound => Err(ParamsResolveError::InMemory {
-                        value_resolution_ctx: value_resolution_ctx.clone(),
-                    }),
+                    BorrowFail::ValueNotFound => Ok(T::Partial::default()),
                     BorrowFail::BorrowConflictImm | BorrowFail::BorrowConflictMut => {
                         Err(ParamsResolveError::InMemoryBorrowConflict {
                             value_resolution_ctx: value_resolution_ctx.clone(),
@@ -219,10 +217,15 @@ where
         Self: Sized,
     {
         let other: Option<&Self> = other_boxed.downcast_ref();
-        let Some(other) = other else {
-            let self_ty_name = tynm::type_name::<Self>();
-            panic!("Failed to downcast value into `{self_ty_name}`. Value: `{other_boxed:#?}`.");
-        };
+        let other = other.unwrap_or_else(
+            #[cfg_attr(coverage_nightly, no_coverage)]
+            || {
+                let self_ty_name = tynm::type_name::<Self>();
+                panic!(
+                    "Failed to downcast value into `{self_ty_name}`. Value: `{other_boxed:#?}`."
+                );
+            },
+        );
 
         match self {
             // Use the spec that was previously stored
@@ -232,7 +235,6 @@ where
             // Use set value / no change on these variants
             Self::Value { .. } | Self::InMemory | Self::MappingFn(_) => {}
 
-            //
             Self::FieldWise { field_wise_spec } => {
                 match other {
                     // Don't merge stored field wise specs over provided specs.

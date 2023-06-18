@@ -1,3 +1,4 @@
+#![cfg_attr(coverage_nightly, feature(no_coverage))]
 #![recursion_limit = "256"]
 
 extern crate proc_macro;
@@ -36,7 +37,10 @@ fn impl_data_access(ast: &DeriveInput) -> proc_macro2::TokenStream {
         .attrs
         .iter()
         .find(peace_internal)
-        .map(|_| (quote!(peace_data), quote!(peace_cfg)))
+        .map(
+            #[cfg_attr(coverage_nightly, no_coverage)]
+            |_| (quote!(peace_data), quote!(peace_cfg)),
+        )
         .unwrap_or_else(|| (quote!(peace::data), quote!(peace::cfg)));
 
     let mut generics = ast.generics.clone();
@@ -160,7 +164,10 @@ fn data_borrow_impl<'ast>(
             ..
         }) => (DataType::Tuple, unnamed),
 
-        _ => panic!("Enums are not supported"),
+        _ => ({
+            #[cfg_attr(coverage_nightly, no_coverage)]
+            || -> ! { panic!("Enums are not supported") }
+        })(),
     };
 
     let tys = field_types(fields);
@@ -238,7 +245,7 @@ fn is_phantom_data(field: &Field) -> bool {
         if matches!(path.segments.last(), Some(segment) if segment.ident == "PhantomData"))
 }
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 struct FieldNames<'field> {
     normal_fields: Vec<&'field Ident>,
     phantom_data_fields: Vec<&'field Ident>,

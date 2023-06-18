@@ -1,3 +1,5 @@
+mod code_inline;
+
 use peace::fmt::Presentable;
 
 use crate::{FnInvocation, FnTrackerPresenter};

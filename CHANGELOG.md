@@ -10,6 +10,11 @@
 * Guard `EnsureCmd::{exec,exec_dry}` if stored current state or goal state is not in sync with actual. ([#59], [#135])
 * Guard `CleanCmd::{exec,exec_dry}` if stored current state is not in sync with actual. ([#59], [#135])
 * Add `*Cmd::*_with` for command logic to be executed as sub commands. ([#59], [#135])
+* Removed "output_colorized" feature, and always include colorized output. ([#136], [#137])
+* Removed "output_json" feature, and always include json output format. ([#136], [#137])
+* Add tests where useful cases are missed. ([#136], [#137])
+* Ignore unnecessary missed lines (e.g. panics in tests). ([#136], [#137])
+* Remove `peace_item_sh_sync_cmd`. ([#136], [#137])
 
 [#120]: https://github.com/azriel91/peace/issues/120
 [#130]: https://github.com/azriel91/peace/pull/130
@@ -19,6 +24,8 @@
 [#134]: https://github.com/azriel91/peace/pull/134
 [#59]: https://github.com/azriel91/peace/issues/59
 [#135]: https://github.com/azriel91/peace/pull/135
+[#136]: https://github.com/azriel91/peace/issues/136
+[#137]: https://github.com/azriel91/peace/pull/137
 
 
 ## 0.0.10 (2023-06-03)

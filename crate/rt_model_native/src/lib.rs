@@ -1,3 +1,5 @@
+#![cfg_attr(coverage_nightly, feature(no_coverage))]
+
 //! Runtime data types for the peace automation framework (native).
 //!
 //! Consumers should depend on the `peace_rt_model` crate, which re-exports

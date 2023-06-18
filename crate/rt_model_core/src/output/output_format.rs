@@ -14,7 +14,6 @@ pub enum OutputFormat {
     /// The JavaScript Object Notation ([JSON]) format
     ///
     /// [JSON]: https://www.json.org/
-    #[cfg(feature = "output_json")]
     Json,
 }
 
@@ -25,7 +24,6 @@ impl FromStr for OutputFormat {
         match s {
             "text" => Ok(Self::Text),
             "yaml" => Ok(Self::Yaml),
-            #[cfg(feature = "output_json")]
             "json" => Ok(Self::Json),
             _ => Err(OutputFormatParseError(s.to_string())),
         }

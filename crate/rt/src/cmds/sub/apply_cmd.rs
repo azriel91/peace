@@ -1096,7 +1096,7 @@ enum ItemApplyOutcome<E> {
     },
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ApplyFor {
     Ensure,
     Clean,

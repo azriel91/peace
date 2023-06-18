@@ -117,9 +117,8 @@ fn debug() {
         "{:?}",
         StatesGoalDisplayCmd::<VecCopyError, NoOpOutput, ()>::default()
     );
-    assert!(
-        debug_str
-            == r#"StatesGoalDisplayCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#
-            || debug_str == r#"StatesGoalDisplayCmd(PhantomData)"#
+    assert_eq!(
+        r#"StatesGoalDisplayCmd(PhantomData<(workspace_tests::vec_copy_item::VecCopyError, workspace_tests::no_op_output::NoOpOutput, ())>)"#,
+        debug_str,
     );
 }

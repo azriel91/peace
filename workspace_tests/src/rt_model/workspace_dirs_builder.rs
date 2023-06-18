@@ -11,11 +11,16 @@ fn returns_workspace_dir_from_working_directory() -> Result<(), Box<dyn std::err
 
     let workspace_dir = workspace_dirs.workspace_dir();
 
-    assert!(
-        workspace_dir.ends_with("peace/workspace_tests"),
-        "Expected `{}` to end with `peace/workspace_tests`",
-        workspace_dir.display()
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                workspace_dir.ends_with("peace/workspace_tests"),
+                "Expected `{}` to end with `peace/workspace_tests`",
+                workspace_dir.display()
+            );
+        }
+    })();
     Ok(())
 }
 
@@ -28,11 +33,16 @@ fn returns_workspace_dir_from_first_dir_with_file() -> Result<(), Box<dyn std::e
 
     let workspace_dir = workspace_dirs.workspace_dir();
 
-    assert!(
-        workspace_dir.ends_with("peace"),
-        "Expected `{}` to end with `peace`",
-        workspace_dir.display()
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                workspace_dir.ends_with("peace"),
+                "Expected `{}` to end with `peace`",
+                workspace_dir.display()
+            );
+        }
+    })();
     Ok(())
 }
 
@@ -77,11 +87,16 @@ fn returns_peace_dir_relative_to_workspace_dir() -> Result<(), Box<dyn std::erro
 
     let peace_dir = workspace_dirs.peace_dir();
 
-    assert!(
-        peace_dir.ends_with("peace/.peace"),
-        "Expected `{}` to end with `peace/.peace`",
-        peace_dir.display()
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                peace_dir.ends_with("peace/.peace"),
+                "Expected `{}` to end with `peace/.peace`",
+                peace_dir.display()
+            );
+        }
+    })();
     Ok(())
 }
 
@@ -94,11 +109,16 @@ fn returns_peace_app_dir_relative_to_peace_dir() -> Result<(), Box<dyn std::erro
 
     let peace_app_dir = workspace_dirs.peace_app_dir();
 
-    assert!(
-        peace_app_dir.ends_with("peace/.peace/workspace_tests"),
-        "Expected `{}` to end with `peace/.peace/workspace_tests`",
-        peace_app_dir.display()
-    );
+    ({
+        #[cfg_attr(coverage_nightly, no_coverage)]
+        || {
+            assert!(
+                peace_app_dir.ends_with("peace/.peace/workspace_tests"),
+                "Expected `{}` to end with `peace/.peace/workspace_tests`",
+                peace_app_dir.display()
+            );
+        }
+    })();
     Ok(())
 }
 
