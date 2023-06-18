@@ -156,10 +156,15 @@ impl Storage {
         T: Send,
         E: From<Error> + Send,
     {
-        let file = File::open(file_path).await.map_err(|error| {
-            let path = file_path.to_path_buf();
-            Error::Native(NativeError::FileOpen { path, error })
-        })?;
+        let file = File::open(file_path).await.map_err(
+            // Tests currently don't cover file system failure cases,
+            // e.g. disk space limits.
+            #[cfg_attr(coverage_nightly, no_coverage)]
+            |error| {
+                let path = file_path.to_path_buf();
+                Error::Native(NativeError::FileOpen { path, error })
+            },
+        )?;
         let mut sync_io_bridge = SyncIoBridge::new(BufReader::new(file));
 
         // `tokio::task::spawn_blocking` doesn't work because it needs the closure's
@@ -201,10 +206,15 @@ impl Storage {
         F: FnOnce(&mut SyncIoBridge<BufWriter<File>>) -> Result<T, Error> + Send + 'f,
         T: Send,
     {
-        let file = File::create(file_path).await.map_err(|error| {
-            let path = file_path.to_path_buf();
-            NativeError::FileCreate { path, error }
-        })?;
+        let file = File::create(file_path).await.map_err(
+            // Tests currently don't cover file system failure cases,
+            // e.g. disk space limits.
+            #[cfg_attr(coverage_nightly, no_coverage)]
+            |error| {
+                let path = file_path.to_path_buf();
+                NativeError::FileCreate { path, error }
+            },
+        )?;
         let mut sync_io_bridge = SyncIoBridge::new(BufWriter::new(file));
 
         // `tokio::task::spawn_blocking` doesn't work because it needs the closure's
@@ -215,10 +225,15 @@ impl Storage {
                 .spawn_scoped(s, move || {
                     let t = f(&mut sync_io_bridge)?;
 
-                    sync_io_bridge.flush().map_err(|error| {
-                        let path = file_path.to_path_buf();
-                        NativeError::FileWrite { path, error }
-                    })?;
+                    sync_io_bridge.flush().map_err(
+                        // Tests currently don't cover file system failure cases,
+                        // e.g. disk space limits.
+                        #[cfg_attr(coverage_nightly, no_coverage)]
+                        |error| {
+                            let path = file_path.to_path_buf();
+                            NativeError::FileWrite { path, error }
+                        },
+                    )?;
 
                     Result::<_, Error>::Ok(t)
                 })

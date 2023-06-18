@@ -9,6 +9,30 @@ struct TestStruct {
     a: u32,
 }
 
+#[test]
+fn clone() {
+    let _ = Clone::clone(&Storage);
+    let _ = Clone::clone(&TestStruct { a: 1 });
+}
+
+#[test]
+fn debug() {
+    assert_eq!("Storage", format!("{Storage:?}"));
+    assert_eq!("TestStruct { a: 1 }", format!("{:?}", TestStruct { a: 1 }));
+}
+
+#[test]
+fn serialize() -> Result<(), serde_yaml::Error> {
+    assert_eq!("a: 1\n", serde_yaml::to_string(&TestStruct { a: 1 })?);
+    Ok(())
+}
+
+#[test]
+fn deserialize() -> Result<(), serde_yaml::Error> {
+    assert_eq!(TestStruct { a: 1 }, serde_yaml::from_str("a: 1\n")?);
+    Ok(())
+}
+
 #[tokio::test]
 async fn serialized_read_returns_t_when_path_exists() -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
