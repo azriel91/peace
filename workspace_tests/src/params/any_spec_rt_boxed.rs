@@ -2,7 +2,7 @@ use std::any::TypeId;
 
 use peace::{
     params::{AnySpecDataType, AnySpecRtBoxed, ParamsSpec},
-    resources::type_reg::untagged::{DataType, DataTypeWrapper},
+    resources::type_reg::untagged::{BoxDataTypeDowncast, DataType, DataTypeWrapper},
 };
 
 use crate::mock_item::MockSrc;
@@ -33,10 +33,11 @@ fn into_inner() {
 #[test]
 fn downcast_mut() {
     let mut any_spec_rt_boxed = AnySpecRtBoxed::new(ParamsSpec::<MockSrc>::Stored);
-    let params_spec: &mut ParamsSpec<MockSrc> = any_spec_rt_boxed.downcast_mut().unwrap_or_else(
-        #[cfg_attr(coverage_nightly, no_coverage)]
-        || panic!("Expected to downcast `any_spec_rt_boxed` to `ParamsSpec<MockSrc>`."),
-    );
+    let params_spec: &mut ParamsSpec<MockSrc> =
+        BoxDataTypeDowncast::downcast_mut(&mut any_spec_rt_boxed).unwrap_or_else(
+            #[cfg_attr(coverage_nightly, no_coverage)]
+            || panic!("Expected to downcast `any_spec_rt_boxed` to `ParamsSpec<MockSrc>`."),
+        );
 
     assert!(matches!(params_spec, ParamsSpec::<MockSrc>::Stored));
 }

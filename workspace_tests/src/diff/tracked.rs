@@ -90,6 +90,25 @@ mod partial_eq {
 }
 
 #[test]
+fn serialize() -> Result<(), serde_yaml::Error> {
+    assert_eq!(
+        "Unknown\n\
+        ",
+        serde_yaml::to_string(&Tracked::<u8>::Unknown)?
+    );
+    Ok(())
+}
+
+#[test]
+fn deserialize() -> Result<(), serde_yaml::Error> {
+    assert!(matches!(
+        serde_yaml::from_str("Unknown")?,
+        Tracked::<u8>::Unknown
+    ));
+    Ok(())
+}
+
+#[test]
 fn hash() {
     assert_eq!(hash_code(Tracked::None), hash_code(Tracked::None));
     assert_ne!(hash_code(Tracked::None), hash_code(Tracked::Unknown));

@@ -9,6 +9,29 @@ use peace::{
 use tokio::sync::mpsc::{self, error::TryRecvError};
 
 #[test]
+fn clone() {
+    let item_id = item_id!("test_item_id");
+    let (progress_tx, mut progress_rx) = mpsc::channel(10);
+    let progress_sender = Clone::clone(&ProgressSender::new(&item_id, &progress_tx));
+
+    progress_sender.inc(123, ProgressMsgUpdate::NoChange);
+    progress_rx.close();
+
+    let progress_update_and_id = progress_rx.try_recv().unwrap();
+
+    assert_eq!(
+        ProgressUpdateAndId {
+            item_id: item_id!("test_item_id"),
+            progress_update: ProgressUpdate::Delta(ProgressDelta::Inc(123)),
+            msg_update: ProgressMsgUpdate::NoChange,
+        },
+        progress_update_and_id
+    );
+    let error = progress_rx.try_recv().unwrap_err();
+    assert_eq!(TryRecvError::Empty, error);
+}
+
+#[test]
 fn inc_sends_progress_update() -> Result<(), Box<dyn std::error::Error>> {
     let item_id = item_id!("test_item_id");
     let (progress_tx, mut progress_rx) = mpsc::channel(10);
