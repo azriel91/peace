@@ -5,6 +5,8 @@ use peace::{
 
 use crate::{NoOpOutput, VecCopyError};
 
+mod apply_stored_state_sync;
+
 #[test]
 fn clone() {
     assert_eq!(ApplyFor::Ensure, Clone::clone(&ApplyFor::Ensure));
