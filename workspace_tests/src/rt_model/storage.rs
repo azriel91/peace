@@ -19,6 +19,7 @@ async fn serialized_read_returns_t_when_path_exists() -> Result<(), Box<dyn std:
         .serialized_read::<TestStruct, _>(
             crate::fn_name_short!().to_string(),
             &file_path,
+            #[cfg_attr(coverage_nightly, no_coverage)]
             |_error| panic!("Expected `test_struct` to be deserialized."),
         )
         .await?;
@@ -38,6 +39,7 @@ async fn serialized_read_returns_error_when_path_not_exists()
         .serialized_read::<TestStruct, _>(
             crate::fn_name_short!().to_string(),
             &file_path,
+            #[cfg_attr(coverage_nightly, no_coverage)]
             |_error| panic!("Expected `Error::ItemNotExists` to be returned."),
         )
         .await
@@ -59,6 +61,7 @@ async fn serialized_read_opt_returns_t_when_path_exists() -> Result<(), Box<dyn 
         .serialized_read_opt::<TestStruct, _>(
             crate::fn_name_short!().to_string(),
             &file_path,
+            #[cfg_attr(coverage_nightly, no_coverage)]
             |_error| panic!("Expected `test_struct` to be deserialized."),
         )
         .await?;
@@ -78,6 +81,7 @@ async fn serialized_read_opt_returns_none_when_path_not_exists()
         .serialized_read_opt::<TestStruct, _>(
             crate::fn_name_short!().to_string(),
             &file_path,
+            #[cfg_attr(coverage_nightly, no_coverage)]
             |_error| panic!("Expected `None` to be returned."),
         )
         .await?;
@@ -101,6 +105,7 @@ async fn serialized_typemap_read_opt_returns_typemap_when_path_exists()
             crate::fn_name_short!().to_string(),
             &type_reg,
             &file_path,
+            #[cfg_attr(coverage_nightly, no_coverage)]
             |_error| panic!("Expected `workspace_params` to be deserialized."),
         )
         .await?
@@ -124,6 +129,7 @@ async fn serialized_typemap_read_opt_returns_none_when_path_not_exists()
             crate::fn_name_short!().to_string(),
             &type_reg,
             &file_path,
+            #[cfg_attr(coverage_nightly, no_coverage)]
             |_error| panic!("Expected `None` to be returned."),
         )
         .await?;
@@ -144,6 +150,7 @@ async fn serialized_write_serializes_t() -> Result<(), Box<dyn std::error::Error
             crate::fn_name_short!().to_string(),
             &file_path,
             &test_struct,
+            #[cfg_attr(coverage_nightly, no_coverage)]
             |_error| panic!("Expected `test_struct` to be serialized."),
         )
         .await?;

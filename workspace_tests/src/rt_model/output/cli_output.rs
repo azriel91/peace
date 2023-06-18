@@ -316,7 +316,10 @@ mod color_always {
             progress_bar.prefix()
         );
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"⏳ 1. test_item_id ▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
@@ -373,7 +376,10 @@ mod color_always {
             progress_bar.prefix()
         );
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         progress_bar.set_position(20);
         assert_eq!(
@@ -436,7 +442,10 @@ mod color_always {
 
         // Check current position
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         progress_bar.set_position(20);
         assert_eq!(
@@ -459,7 +468,10 @@ mod color_always {
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"✅ 1. test_item_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
@@ -511,7 +523,10 @@ mod color_always {
 
         // Check current position
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         progress_bar.set_position(20);
         assert_eq!(
@@ -534,7 +549,10 @@ mod color_always {
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"❌ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
@@ -596,7 +614,10 @@ mod color_always {
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"---
@@ -668,7 +689,10 @@ msg_update: NoChange"#,
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"{"item_id":"test_item_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}
@@ -706,7 +730,10 @@ mod color_never {
         // and compare the output.
         assert_eq!("1. test_item_id", progress_bar.prefix());
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"⏳ 1. test_item_id ▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ (el: 0s, eta: 0s)"#,
@@ -760,7 +787,10 @@ mod color_never {
 
         assert_eq!("1. test_item_id", progress_bar.prefix());
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         progress_bar.set_position(20);
         assert_eq!(
@@ -823,7 +853,10 @@ mod color_never {
 
         // Check current position
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         progress_bar.set_position(20);
         assert_eq!(
@@ -846,7 +879,10 @@ mod color_never {
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"✅ 1. test_item_id ▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰▰ done"#,
@@ -898,7 +934,10 @@ mod color_never {
 
         // Check current position
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         progress_bar.set_position(20);
         assert_eq!(
@@ -921,7 +960,10 @@ mod color_never {
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"❌ 1. test_item_id ▰▰▰▰▰▰▰▰▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ 20/100 done"#,
@@ -983,7 +1025,10 @@ mod color_never {
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"---
@@ -1055,7 +1100,10 @@ msg_update: NoChange"#,
         )
         .await;
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
-            unreachable!("This is set in `cli_output_progress`.");
+            ({
+                #[cfg_attr(coverage_nightly, no_coverage)]
+                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+            })();
         };
         assert_eq!(
             r#"{"item_id":"test_item_id","progress_update":{"Limit":{"Steps":100}},"msg_update":"NoChange"}
