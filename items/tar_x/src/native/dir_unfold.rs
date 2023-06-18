@@ -7,7 +7,6 @@ use tokio::fs::ReadDir;
 
 use crate::{native::DestDirEntry, TarXError};
 
-#[derive(Debug)]
 pub(crate) struct DirUnfold;
 
 impl DirUnfold {
@@ -38,23 +37,29 @@ impl DirUnfold {
                         dir_path_base_rel,
                         mut read_dir,
                     } = dir_and_read_dir;
-                    let dir_entry = read_dir.next_entry().await.map_err(|error| {
-                        let base_dir = base_dir.to_path_buf();
-                        TarXError::TarDestEntryRead {
-                            dest: base_dir,
-                            error,
-                        }
-                    })?;
+                    let dir_entry = read_dir.next_entry().await.map_err(
+                        // We don't cover corrupted tar contents in tests.
+                        #[cfg_attr(coverage_nightly, no_coverage)]
+                        |error| {
+                            let base_dir = base_dir.to_path_buf();
+                            TarXError::TarDestEntryRead {
+                                dest: base_dir,
+                                error,
+                            }
+                        },
+                    )?;
 
                     if let Some(dir_entry) = dir_entry {
                         let entry_path = dir_entry.path();
                         // Don't include directories as dir entries, but recursively descend
-                        let file_type = dir_entry.file_type().await.map_err(|error| {
-                            TarXError::TarDestEntryFileTypeRead {
+                        let file_type = dir_entry.file_type().await.map_err(
+                            // We don't cover corrupted tar contents in tests.
+                            #[cfg_attr(coverage_nightly, no_coverage)]
+                            |error| TarXError::TarDestEntryFileTypeRead {
                                 entry_path: entry_path.clone(),
                                 error,
-                            }
-                        })?;
+                            },
+                        )?;
 
                         let dest_dir_relative_path = dir_path_base_rel.join(dir_entry.file_name());
 
@@ -102,10 +107,14 @@ impl DirUnfold {
                     dir_and_read_dir_opt = Some(
                         tokio::fs::read_dir(&dir_path)
                             .await
-                            .map_err(|error| TarXError::TarDestReadDir {
-                                dir: dir_path,
-                                error,
-                            })
+                            .map_err(
+                                // We don't cover corrupted tar contents in tests.
+                                #[cfg_attr(coverage_nightly, no_coverage)]
+                                |error| TarXError::TarDestReadDir {
+                                    dir: dir_path,
+                                    error,
+                                },
+                            )
                             .map(|read_dir| DirAndReadDir {
                                 dir_path_base_rel,
                                 read_dir,
@@ -122,7 +131,6 @@ impl DirUnfold {
     }
 }
 
-#[derive(Debug)]
 struct DirContext<'base> {
     /// Base directory to recurse through.
     base_dir: &'base Path,
@@ -141,7 +149,6 @@ struct DirContext<'base> {
 /// dir_path:          'extraction/dir/sub/dir'
 /// dir_path_base_rel: 'sub/dir'
 /// ```
-#[derive(Debug)]
 struct DirToRead {
     /// Path to the directory to process,
     dir_path: PathBuf,
@@ -149,7 +156,6 @@ struct DirToRead {
     dir_path_base_rel: PathBuf,
 }
 
-#[derive(Debug)]
 struct DirAndReadDir {
     /// Path to the directory to process, relative to the base directory.
     dir_path_base_rel: PathBuf,

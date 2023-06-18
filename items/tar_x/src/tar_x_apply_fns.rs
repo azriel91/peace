@@ -7,7 +7,6 @@ use peace::cfg::{ApplyCheck, FnCtx};
 use crate::{FileMetadatas, TarXData, TarXError, TarXParams, TarXStateDiff};
 
 /// ApplyFns for the tar to extract.
-#[derive(Debug)]
 pub struct TarXApplyFns<Id>(PhantomData<Id>);
 
 impl<Id> TarXApplyFns<Id>
@@ -82,12 +81,13 @@ where
         let tar_path = params.tar_path();
         let dest = params.dest();
 
-        tokio::fs::create_dir_all(dest)
-            .await
-            .map_err(|error| TarXError::TarDestDirCreate {
+        tokio::fs::create_dir_all(dest).await.map_err(
+            #[cfg_attr(coverage_nightly, no_coverage)]
+            |error| TarXError::TarDestDirCreate {
                 dest: dest.to_path_buf(),
                 error,
-            })?;
+            },
+        )?;
 
         // TODO: Optimize by unpacking only the entries that changed.
         // Probably store entries in `IndexMap`s, then look them up to determine if they
@@ -100,13 +100,14 @@ where
                     "TarXApplyFns::exec".to_string(),
                     tar_path,
                     |sync_io_bridge| {
-                        tar::Archive::new(sync_io_bridge)
-                            .unpack(dest)
-                            .map_err(|error| TarXError::TarUnpack {
+                        tar::Archive::new(sync_io_bridge).unpack(dest).map_err(
+                            #[cfg_attr(coverage_nightly, no_coverage)]
+                            |error| TarXError::TarUnpack {
                                 tar_path: tar_path.to_path_buf(),
                                 dest: dest.to_path_buf(),
                                 error,
-                            })?;
+                            },
+                        )?;
                         Result::<_, TarXError>::Ok(())
                     },
                 )
@@ -125,11 +126,14 @@ where
                 .try_for_each_concurrent(None, |entry_path| async move {
                     tokio::fs::remove_file(&dest.join(entry_path))
                         .await
-                        .map_err(|error| TarXError::TarDestFileRemove {
-                            dest: dest.to_path_buf(),
-                            entry_path: entry_path.to_path_buf(),
-                            error,
-                        })
+                        .map_err(
+                            #[cfg_attr(coverage_nightly, no_coverage)]
+                            |error| TarXError::TarDestFileRemove {
+                                dest: dest.to_path_buf(),
+                                entry_path: entry_path.to_path_buf(),
+                                error,
+                            },
+                        )
                 })
                 .await?;
         }
