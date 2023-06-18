@@ -93,7 +93,6 @@ peace_items = { path = "items", version = "0.0.10" }
 peace_item_blank = { path = "items/blank", version = "0.0.10" }
 peace_item_file_download = { path = "items/file_download", version = "0.0.10" }
 peace_item_sh_cmd = { path = "items/sh_cmd", version = "0.0.10" }
-peace_item_sh_sync_cmd = { path = "items/sh_sync_cmd", version = "0.0.10" }
 peace_item_tar_x = { path = "items/tar_x", version = "0.0.10" }
 
 # Dependencies used by framework and item crates.

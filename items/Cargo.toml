@@ -23,7 +23,6 @@ test = false
 peace_item_blank = { workspace = true, optional = true }
 peace_item_file_download = { workspace = true, optional = true }
 peace_item_sh_cmd = { workspace = true, optional = true }
-peace_item_sh_sync_cmd = { workspace = true, optional = true }
 peace_item_tar_x = { workspace = true, optional = true }
 
 [dev-dependencies]
@@ -38,7 +37,6 @@ error_reporting = [
     "peace_item_blank?/error_reporting",
     "peace_item_file_download?/error_reporting",
     "peace_item_sh_cmd?/error_reporting",
-    "peace_item_sh_sync_cmd?/error_reporting",
     "peace_item_tar_x?/error_reporting",
 ]
 output_progress = [
@@ -46,7 +44,6 @@ output_progress = [
     "peace_item_blank?/output_progress",
     "peace_item_file_download?/output_progress",
     "peace_item_sh_cmd?/output_progress",
-    "peace_item_sh_sync_cmd?/output_progress",
     "peace_item_tar_x?/output_progress",
 ]
 
@@ -54,5 +51,4 @@ output_progress = [
 blank = ["dep:peace_item_blank"]
 file_download = ["dep:peace_item_file_download"]
 sh_cmd = ["dep:peace_item_sh_cmd"]
-sh_sync_cmd = ["dep:peace_item_sh_sync_cmd"]
 tar_x = ["dep:peace_item_tar_x"]

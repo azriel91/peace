@@ -49,6 +49,5 @@ items = [
     "peace_items/blank",
     "peace_items/file_download",
     "peace_items/sh_cmd",
-    "peace_items/sh_sync_cmd",
     "peace_items/tar_x",
 ]
