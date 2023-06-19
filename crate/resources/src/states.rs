@@ -30,12 +30,112 @@ mod states_goal_stored;
 
 /// Current `State`s for all `Item`s. `TypeMap<ItemId>` newtype.
 ///
-/// Conceptually you can think of this as a `Map<ItemId,
-/// Item::State<..>>`.
+/// Conceptually you can think of this as a `Map<ItemId, Item::State>`.
 ///
 /// # Type Parameters
 ///
 /// * `TS`: Type state to distinguish the purpose of the `States` map.
+///
+/// # Design
+///
+/// When states are serialized, we want there to be an entry for each item.
+///
+/// 1. This means the `States` map should contain an entry for each item,
+///    regardless of whether a `State` is recorded for that item.
+///
+/// 2. Inserting an `Option<_>` layer around the `Item::State` turns the map
+///    into a `Map<ItemId, Option<Item::State>>`.
+///
+/// 3. Calling `states.get(item_id)` returns `Option<Option<Item::State>>`, the
+///    outer layer for whether the item had an entry, and the inner layer for
+///    whether there was any `State` recorded.
+///
+/// 4. If we can guarantee the item ID is valid -- an ID of an item in the flow
+///    -- we could remove that outer `Option` layer. Currently we cannot make
+///    this guarantee, as:
+///
+///     - item IDs are constructed by developer code, without any constraints
+///       for which items are inserted into the Flow, and which are inserted
+///       into `States` -- although insertion into `States` is largely managed
+///       by `peace`.
+///
+///     - `States` may contain different items across different versions of an
+///       automation tool, so it is possible (and valid) to:
+///
+///         + Deserialize `States` that contain states for `Item`s that are no
+///           longer in the flow.
+///         + Deserialize `States` that do not contain states for `Item`s that
+///           are newly added to the flow.
+///         + Have a combination of the above for renamed items.
+///
+/// 5. For clarity of each of these `Option` layers, we can wrap them in a
+///    newtype.
+///
+/// 6. For code cleanliness, this additional layer requires calling
+///    [`flatten()`] on `states.get(item_id)`.
+///
+/// 7. We *could* introduce a different type during serialization that handles
+///    this additional layer, to remove the additional `flatten()`. How do we
+///    handle flow upgrades smoothly?
+///
+///     - **Development:** Compile time API support with runtime errors may be
+///       sufficient.
+///     - **User:** Developers *may* require users to decide how to migrate
+///       data. This use case hopefully is less common.
+///
+/// ## `StatesSerde` Separate Type
+///
+/// Newtype for `Map<ItemId, Option<Item::State>>`.
+///
+/// ### Item Additions
+///
+/// * Flow contains the `Item`.
+/// * Stored state doesn't contain an entry for the item.
+/// * Deserialized `StatesSerde` should contain `(item_id!("new"), None)` -- may
+///   need custom deserialization code.
+///
+/// ### Item Removals
+///
+/// * Flow does not contain the `Item`.
+/// * Stored state contains an entry for the item, but cannot be deserialized.
+/// * Deserialized `StatesSerde` would not contain any entry.
+/// * Deserialization will return the unable to be deserialized item state in
+///   the return value. Meaning, `StatesSerde` will contain it in a separate
+///   "removed" field.
+///
+/// After deserialization, `StatesSerde` is explicitly mapped into `States`, and
+/// we can inform the developer and/or user of the removed items if it is
+/// useful.
+///
+/// ## `States` With Optional Item State
+///
+/// Developers will frequently use `states.get(item_id).flatten()` to access
+/// state.
+///
+/// Deserialization has all the same properties as the `StatesSerde` separate
+/// type. However, the entries that fail to be deserialized are retained in the
+/// `States` type (or are lost, if we deliberately ignore entries that fail to
+/// be deserialized).
+///
+/// Should `Flow`s be versionable, and we migrate them to the latest version as
+/// encountered? If so, then:
+///
+/// * `peace` should store the version of the flow in the stored states files
+/// * items that have ever been used in flows must be shipped in the automation
+///   software, in order to support safe upgrades.
+///
+/// How would this work?
+///
+/// * Newly added items just work.
+/// * Removed items need to be removed:
+///     - Successors may need their parameters specified from new predecessors.
+///     - If removing multiple items, we need to clean them in reverse.
+/// * Renamed items may need to be re-applied, or potentially cleaned and
+///   re-ensured. This doesn't support data retention if a predecessor needs to
+///   be cleaned, forcing successors to be cleaned, and reensured after. Unless,
+///   `peace` supports backup and restore.
+///
+/// [`flatten()`]: std::option::Option::flatten
 #[derive(Debug, Serialize)]
 #[serde(transparent)] // Needed to serialize as a map instead of a list.
 pub struct States<TS>(
