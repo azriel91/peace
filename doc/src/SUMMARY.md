@@ -51,6 +51,7 @@
             - [State Apply](technical_concepts/commands/use_cases/state_apply.md)
             - [State Clean](technical_concepts/commands/use_cases/state_clean.md)
     - [Flow Versioning](technical_concepts/flow_versioning.md)
+        - [Seamless Execution](technical_concepts/flow_versioning/seamless_execution.md)
 
 
 ---

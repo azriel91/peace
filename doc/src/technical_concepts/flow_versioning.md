@@ -60,24 +60,6 @@ For blue-green / `n` versioning, there are a number of strategies for upgrading 
 
 For `n`-versioning, upgrading from `v1 -> v3` should use `v1 -> v2 -> v3`, so that developers don't have to write migration code form every version to the latest.
 
-A flow upgrade may take the form of:
-
-1. Clean some items.
-2. Modify some items.
-
-For actual item modification, the following needs to happen:
-
-```rust ,ignore
-fn env_ensure_cmd() {
-    env_flow_current_version_ensure();
-    env_flow_ensure();
-}
-```
-
-For cmd ctx build, because state is in the previous version, it needs to be deserialized with the previous version.
-
-TODO: figure this out.
-
 
 ## Execution History
 
