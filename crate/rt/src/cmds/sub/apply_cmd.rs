@@ -95,8 +95,8 @@ where
     /// 2. In the *reverse* direction, for each `Item` run
     ///    `ItemRt::clean_prepare`, which runs:
     ///
-    ///     1. `Item::try_state_current`, which resolves parameters from
-    ///        the *current* state.
+    ///     1. `Item::try_state_current`, which resolves parameters from the
+    ///        *current* state.
     ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
@@ -166,8 +166,8 @@ where
     /// 2. In the *reverse* direction, for each `Item` run
     ///    `ItemRt::clean_prepare`, which runs:
     ///
-    ///     1. `Item::try_state_current`, which resolves parameters from
-    ///        the *current* state.
+    ///     1. `Item::try_state_current`, which resolves parameters from the
+    ///        *current* state.
     ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
