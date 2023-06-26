@@ -110,6 +110,8 @@ Peace needs to be designed such that these changes do not cause already-existent
 
     This one can be addressed by having `State` be an enum, with versioned variants.
 
+Also see 14.
+
 </div>
 </details>
 
@@ -218,6 +220,16 @@ Also:
 Perhaps there should be a `(dest_parameters, Item::State)` current state, and a `(src_parameters, Item::State)` goal state. That makes sense for file downloads if we care about cleaning up the previous `dest_path`, to move a file to the new `dest_path`.
 
 Or, all dest parameters should be in `Item::State`, because that's what's needed to know if something needs to change.
+
+Another thought:
+
+`states_*.yaml` should store this per item:
+
+* params used for apply
+* values resolved for those params
+* current state
+
+Also see 8.
 
 </div>
 </details>
