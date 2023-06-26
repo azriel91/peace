@@ -1,6 +1,10 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    fmt::Debug,
+    ops::{Deref, DerefMut},
+};
 
 use peace_data::fn_graph::FnGraph;
+use peace_resources::states::{States, StatesSerde};
 
 use crate::ItemBoxed;
 
@@ -34,6 +38,26 @@ impl<E> ItemGraph<E> {
     pub fn into_inner(self) -> FnGraph<ItemBoxed<E>> {
         self.0
     }
+
+    /// Returns a user-friendly serializable states map.
+    ///
+    /// This will contain an entry for all items, in order of flow item
+    /// insertion, whether or not a state exists in the provided `states` map.
+    pub fn states_serde<ValueT, TS>(&self, states: &States<TS>) -> StatesSerde<ValueT>
+    where
+        ValueT: Clone + Debug + PartialEq + Eq,
+        E: 'static,
+    {
+        StatesSerde::from_iter(self.0.iter_insertion().map(|item| {
+            let item_id = item.id();
+            (
+                item_id.clone(),
+                states
+                    .get_raw(item_id)
+                    .map(|state_boxed| state_boxed.clone()),
+            )
+        }))
+    }
 }
 
 impl<E> Deref for ItemGraph<E> {
@@ -53,5 +77,15 @@ impl<E> DerefMut for ItemGraph<E> {
 impl<E> From<FnGraph<ItemBoxed<E>>> for ItemGraph<E> {
     fn from(graph: FnGraph<ItemBoxed<E>>) -> Self {
         Self(graph)
+    }
+}
+
+impl<'graph, ValueT, E> From<&'graph ItemGraph<E>> for StatesSerde<ValueT>
+where
+    ValueT: Clone + Debug + PartialEq + Eq,
+    E: 'static,
+{
+    fn from(graph: &'graph ItemGraph<E>) -> Self {
+        StatesSerde::from_iter(graph.iter_insertion().map(|item| (item.id().clone(), None)))
     }
 }
