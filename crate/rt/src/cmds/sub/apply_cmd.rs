@@ -19,7 +19,7 @@ use peace_rt_model::{
     outcomes::{CmdOutcome, ItemApplyBoxed, ItemApplyPartialBoxed},
     output::OutputWrite,
     params::ParamsKeys,
-    ApplyCmdError, Error, ItemBoxed, ItemRt, StateStoredAndDiscovered, Storage,
+    ApplyCmdError, Error, ItemBoxed, ItemGraph, ItemRt, StateStoredAndDiscovered, Storage,
 };
 use peace_rt_model_core::ItemsStateStoredStale;
 use tokio::sync::mpsc::UnboundedSender;
@@ -207,18 +207,33 @@ where
         } = Self::exec_internal(cmd_independence, apply_for, apply_stored_state_sync, false)
             .await?;
 
-        let resources = match cmd_independence {
-            CmdIndependence::Standalone { cmd_ctx } => cmd_ctx.resources(),
-            CmdIndependence::SubCmd { cmd_view, .. } => cmd_view.resources,
+        let (item_graph, resources) = match cmd_independence {
+            CmdIndependence::Standalone { cmd_ctx } => {
+                let SingleProfileSingleFlowView {
+                    flow, resources, ..
+                } = cmd_ctx.view();
+                (flow.graph(), resources)
+            }
+            CmdIndependence::SubCmd { cmd_view } => {
+                let SingleProfileSingleFlowView {
+                    flow, resources, ..
+                } = cmd_view;
+                (flow.graph(), &mut **resources)
+            }
             #[cfg(feature = "output_progress")]
-            CmdIndependence::SubCmdWithProgress { cmd_view, .. } => cmd_view.resources,
+            CmdIndependence::SubCmdWithProgress { cmd_view, .. } => {
+                let SingleProfileSingleFlowView {
+                    flow, resources, ..
+                } = cmd_view;
+                (flow.graph(), &mut **resources)
+            }
         };
 
-        Self::serialize_current(resources, &states_applied).await?;
+        Self::serialize_current(item_graph, resources, &states_applied).await?;
 
         match apply_for {
             ApplyFor::Ensure => {
-                Self::serialize_goal(resources, &states_goal).await?;
+                Self::serialize_goal(item_graph, resources, &states_goal).await?;
             }
             ApplyFor::Clean => {}
         };
@@ -960,6 +975,7 @@ where
 
     // TODO: This duplicates a bit of code with `StatesDiscoverCmd`,
     async fn serialize_current(
+        item_graph: &ItemGraph<E>,
         resources: &Resources<SetUp>,
         states_applied: &States<StatesTsApply>,
     ) -> Result<(), E> {
@@ -969,7 +985,8 @@ where
         let storage = resources.borrow::<Storage>();
         let states_current_file = StatesCurrentFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, states_applied, &states_current_file).await?;
+        StatesSerializer::serialize(&storage, item_graph, states_applied, &states_current_file)
+            .await?;
 
         drop(flow_dir);
         drop(storage);
@@ -978,6 +995,7 @@ where
     }
 
     async fn serialize_goal(
+        item_graph: &ItemGraph<E>,
         resources: &Resources<SetUp>,
         states_goal: &StatesGoal,
     ) -> Result<(), E> {
@@ -987,7 +1005,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_goal_file = StatesGoalFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, states_goal, &states_goal_file).await?;
+        StatesSerializer::serialize(&storage, item_graph, states_goal, &states_goal_file).await?;
 
         drop(flow_dir);
         drop(storage);
