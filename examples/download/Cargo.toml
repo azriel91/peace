@@ -1,6 +1,6 @@
 [package]
 name = "download"
-version = "0.0.10"
+version = "0.0.11"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
 description = "Peace framework file download example"
