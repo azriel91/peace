@@ -674,6 +674,7 @@ where
                     StatesMut::<Goal>::new(),
                 )
             });
+            let outcome = Box::new(outcome);
             outcomes_tx
                 .send(ApplyExecOutcome::DiscoverOutcomeError { outcome })
                 .expect("unreachable: `outcomes_rx` is in a sibling task.");
@@ -740,6 +741,7 @@ where
                     StatesMut::<Goal>::new(),
                 )
             });
+            let outcome = Box::new(outcome);
             outcomes_tx
                 .send(ApplyExecOutcome::DiscoverOutcomeError { outcome })
                 .expect("unreachable: `outcomes_rx` is in a sibling task.");
@@ -1022,6 +1024,8 @@ impl<E, O, PKeys, StatesTsApply, StatesTsApplyDry> Default
     }
 }
 
+type CmdOutcomeBox<T, E> = Box<CmdOutcome<T, E>>;
+
 /// Sub-outcomes of apply execution.
 ///
 /// For cleaning up items, current states are discovered to populate `Resources`
@@ -1081,7 +1085,12 @@ enum ApplyExecOutcome<E, StatesTs> {
     /// Error discovering current state for items.
     DiscoverOutcomeError {
         /// Outcome of state discovery.
-        outcome: CmdOutcome<(StatesMut<StatesTs>, StatesMut<Goal>), E>,
+        ///
+        /// # Design
+        ///
+        /// The field is `Box`ed because `CmdOutcome` is 360 bytes,
+        /// significantly larger than the second largest variant (144 bytes).
+        outcome: CmdOutcomeBox<(StatesMut<StatesTs>, StatesMut<Goal>), E>,
     },
     /// Error downcasting a boxed item state to its concrete stype.
     StatesDowncastError {

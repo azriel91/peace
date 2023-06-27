@@ -53,8 +53,7 @@ impl<E> ItemGraph<E> {
             (
                 item_id.clone(),
                 states
-                    .get_raw(item_id)
-                    .map(|state_boxed| state_boxed.clone()),
+                    .get_raw(item_id).cloned(),
             )
         }))
     }

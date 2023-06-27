@@ -186,7 +186,7 @@ where
                                 Ok(states_current_outcome) => {
                                     outcomes_tx
                                         .send(DiffExecOutcome::DiscoverOutcome {
-                                            outcome: states_current_outcome,
+                                            outcome: Box::new(states_current_outcome),
                                         })
                                         .expect("unreachable: `outcomes_rx` is in a sibling task.");
                                 }
@@ -264,7 +264,7 @@ where
                                 Ok(states_goal_outcome) => {
                                     outcomes_tx
                                         .send(DiffExecOutcome::DiscoverOutcome {
-                                            outcome: states_goal_outcome,
+                                            outcome: Box::new(states_goal_outcome),
                                         })
                                         .expect("unreachable: `outcomes_rx` is in a sibling task.");
                                 }
@@ -450,6 +450,12 @@ pub enum DiffExecOutcome<E, StatesTs> {
     /// This may be successful or contain an error.
     DiscoverOutcome {
         /// Outcome of state discovery.
-        outcome: CmdOutcome<States<StatesTs>, E>,
+        ///
+        /// # Design
+        ///
+        /// The field is `Box`ed because `CmdOutcome` is 216 bytes,
+        /// significantly larger than the second largest variant (unknown bytes
+        /// for `E`).
+        outcome: Box<CmdOutcome<States<StatesTs>, E>>,
     },
 }
