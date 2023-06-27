@@ -289,7 +289,7 @@ where
                     // * continue execution, if the automation is designed to .
                     //
                     // by delegating the equality check to `ItemWrapper`.
-                    let states_current_stored = match Self::states_current_read(
+                    let states_current_stored = match Self::states_current_read::<StatesTs>(
                         cmd_view,
                         #[cfg(feature = "output_progress")]
                         progress_tx,
@@ -523,9 +523,38 @@ where
                     | ApplyExecOutcome::DiscoverCurrentCmdError { error }
                     | ApplyExecOutcome::DiscoverGoalCmdError { error }
                     | ApplyExecOutcome::StatesDowncastError { error } => return Err(error),
-                    ApplyExecOutcome::DiscoverOutcomeError { mut outcome } => {
-                        std::mem::swap(&mut outcome.value.0, states_applied_mut);
-                        std::mem::swap(&mut outcome.value.1, states_goal_mut);
+                    ApplyExecOutcome::DiscoverOutcomeError {
+                        outcome: discover_outcome,
+                    } => {
+                        // We need to individually copy values across, instead of `std::mem::swap`,
+                        // because if `DiscoverCmd` failed and returns errors before any states were
+                        // discovered, we don't want to overwrite the stored states with empty
+                        // states.
+                        discover_outcome
+                            .value
+                            .0
+                            .into_inner()
+                            .into_inner()
+                            .into_iter()
+                            .for_each(|(item_id, state_current_boxed)| {
+                                states_applied_mut.insert_raw(item_id, state_current_boxed);
+                            });
+
+                        discover_outcome
+                            .value
+                            .1
+                            .into_inner()
+                            .into_inner()
+                            .into_iter()
+                            .for_each(|(item_id, state_goal_boxed)| {
+                                states_goal_mut.insert_raw(item_id, state_goal_boxed);
+                            });
+                        discover_outcome
+                            .errors
+                            .into_iter()
+                            .for_each(|(item_id, error)| {
+                                errors.insert(item_id, error);
+                            });
                     }
                     ApplyExecOutcome::ItemApply(item_apply_outcome) => match item_apply_outcome {
                         ItemApplyOutcome::PrepareFail {
