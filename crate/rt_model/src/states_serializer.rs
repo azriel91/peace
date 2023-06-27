@@ -7,10 +7,10 @@ use peace_resources::{
         ts::{CurrentStored, GoalStored},
         States, StatesCurrentStored, StatesGoalStored,
     },
-    type_reg::untagged::{BoxDtDisplay, TypeReg},
+    type_reg::untagged::{BoxDtDisplay, TypeMapOpt, TypeReg},
 };
 
-use crate::{Error, Storage};
+use crate::{Error, ItemGraph, Storage};
 
 /// Reads and writes [`StatesCurrentStored`] and [`StatesGoalStored`] to and
 /// from storage.
@@ -18,7 +18,7 @@ pub struct StatesSerializer<E>(PhantomData<E>);
 
 impl<E> StatesSerializer<E>
 where
-    E: std::error::Error + From<Error> + Send,
+    E: std::error::Error + From<Error> + Send + 'static,
 {
     /// Returns the [`StatesCurrentStored`] of all [`Item`]s if it exists on
     /// disk.
@@ -32,18 +32,20 @@ where
     /// [`Item`]: peace_cfg::Item
     pub async fn serialize<TS>(
         storage: &Storage,
+        item_graph: &ItemGraph<E>,
         states: &States<TS>,
         states_file_path: &Path,
     ) -> Result<(), E>
     where
         TS: Send + Sync,
     {
+        let states_serde = item_graph.states_serde::<serde_yaml::Value, _>(states);
         storage
             .serialized_write(
                 #[cfg(not(target_arch = "wasm32"))]
                 "StatesSerializer::serialize".to_string(),
                 states_file_path,
-                states,
+                &states_serde,
                 Error::StatesSerialize,
             )
             .await?;
@@ -196,7 +198,12 @@ where
                     }
                 }
             })
-            .await?;
+            .await
+            .map(|type_map_opt| {
+                type_map_opt
+                    .map(TypeMapOpt::into_type_map)
+                    .map(States::from)
+            })?;
 
         Ok(states_opt)
     }
@@ -258,7 +265,12 @@ where
                     }
                 }
             })
-            .await?;
+            .await
+            .map(|type_map_opt| {
+                type_map_opt
+                    .map(TypeMapOpt::into_type_map)
+                    .map(States::from)
+            })?;
 
         Ok(states_opt)
     }

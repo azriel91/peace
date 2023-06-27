@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use peace_core::{FlowId, ItemId, Profile};
 use peace_params::{ParamsResolveError, ParamsSpecs};
-use peace_resources::paths::{ItemParamsFile, ParamsSpecsFile};
+use peace_resources::paths::ParamsSpecsFile;
 
 pub use self::{apply_cmd_error::ApplyCmdError, state_downcast_error::StateDowncastError};
 
@@ -233,80 +233,6 @@ pub enum Error {
         diagnostic(code(peace_rt_model::states_serialize))
     )]
     StatesSerialize(#[source] serde_yaml::Error),
-
-    /// Failed to deserialize item params.
-    #[error("Failed to deserialize item params for `{profile}/{flow_id}`.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(
-            code(peace_rt_model::item_params_deserialize),
-            help(
-                "Make sure that all commands using the `{flow_id}` flow, also use the same item graph.\n\
-                This is because all Items are used to deserialize state.\n\
-                \n\
-                If the item graph is different, it may make sense to use a different flow ID."
-            )
-        )
-    )]
-    ItemParamsDeserialize {
-        /// Profile of the flow.
-        profile: Profile,
-        /// Flow ID whose item params are being deserialized.
-        flow_id: FlowId,
-        /// Source text to be deserialized.
-        #[cfg(feature = "error_reporting")]
-        #[source_code]
-        item_params_file_source: miette::NamedSource,
-        /// Offset within the source text that the error occurred.
-        #[cfg(feature = "error_reporting")]
-        #[label("{}", error_message)]
-        error_span: Option<miette::SourceOffset>,
-        /// Message explaining the error.
-        #[cfg(feature = "error_reporting")]
-        error_message: String,
-        /// Offset within the source text surrounding the error.
-        #[cfg(feature = "error_reporting")]
-        #[label]
-        context_span: Option<miette::SourceOffset>,
-        /// Underlying error.
-        #[source]
-        error: serde_yaml::Error,
-    },
-
-    /// Failed to serialize item params.
-    #[error("Failed to serialize item params.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(code(peace_rt_model::item_params_serialize))
-    )]
-    ItemParamsSerialize(#[source] serde_yaml::Error),
-
-    /// Item params file does not exist.
-    ///
-    /// This is returned when `ItemParams` is attempted to be
-    /// deserialized but the file does not exist.
-    ///
-    /// The automation tool implementor needs to ensure the
-    /// `SingleProfileSingleFlow` command context has been initialized for that
-    /// flow previously.
-    #[error("Item params file does not exist for `{profile}/{flow_id}`.")]
-    #[cfg_attr(
-        feature = "error_reporting",
-        diagnostic(
-            code(peace_rt_model::item_params_file_not_exists),
-            help(
-                "Ensure that a `SingleProfileSingleFlow` command context has previously been built."
-            )
-        )
-    )]
-    ItemParamsFileNotExists {
-        /// Profile of the flow.
-        profile: Profile,
-        /// Flow ID whose params are being deserialized.
-        flow_id: FlowId,
-        /// Path of the item params file.
-        item_params_file: ItemParamsFile,
-    },
 
     /// Failed to deserialize params specs.
     #[error("Failed to deserialize params specs for `{profile}/{flow_id}`.")]

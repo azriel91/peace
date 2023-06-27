@@ -19,7 +19,7 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{
-    outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, Storage,
+    outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, ItemGraph, Storage,
 };
 
 use crate::{cmds::CmdBase, BUFFERED_FUTURES_MAX};
@@ -412,24 +412,39 @@ where
             errors: _,
         } = &cmd_outcome;
 
-        let resources = match cmd_independence {
-            CmdIndependence::Standalone { cmd_ctx } => cmd_ctx.view().resources,
-            CmdIndependence::SubCmd { cmd_view } => cmd_view.resources,
+        let (item_graph, resources) = match cmd_independence {
+            CmdIndependence::Standalone { cmd_ctx } => {
+                let SingleProfileSingleFlowView {
+                    flow, resources, ..
+                } = cmd_ctx.view();
+                (flow.graph(), resources)
+            }
+            CmdIndependence::SubCmd { cmd_view } => {
+                let SingleProfileSingleFlowView {
+                    flow, resources, ..
+                } = cmd_view;
+                (flow.graph(), &mut **resources)
+            }
             #[cfg(feature = "output_progress")]
-            CmdIndependence::SubCmdWithProgress { cmd_view, .. } => cmd_view.resources,
+            CmdIndependence::SubCmdWithProgress { cmd_view, .. } => {
+                let SingleProfileSingleFlowView {
+                    flow, resources, ..
+                } = cmd_view;
+                (flow.graph(), &mut **resources)
+            }
         };
 
         if serialize_to_storage {
             match discover_for {
                 DiscoverFor::Current => {
-                    Self::serialize_current(resources, states_current).await?;
+                    Self::serialize_current(item_graph, resources, states_current).await?;
                 }
                 DiscoverFor::Goal => {
-                    Self::serialize_goal(resources, states_goal).await?;
+                    Self::serialize_goal(item_graph, resources, states_goal).await?;
                 }
                 DiscoverFor::CurrentAndGoal => {
-                    Self::serialize_current(resources, states_current).await?;
-                    Self::serialize_goal(resources, states_goal).await?;
+                    Self::serialize_current(item_graph, resources, states_current).await?;
+                    Self::serialize_goal(item_graph, resources, states_goal).await?;
                 }
             }
         }
@@ -511,6 +526,7 @@ where
 
     // TODO: This duplicates a bit of code with `ApplyCmd`.
     async fn serialize_current(
+        item_graph: &ItemGraph<E>,
         resources: &mut Resources<SetUp>,
         states_current: &StatesCurrent,
     ) -> Result<(), E> {
@@ -520,7 +536,8 @@ where
         let storage = resources.borrow::<Storage>();
         let states_current_file = StatesCurrentFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, states_current, &states_current_file).await?;
+        StatesSerializer::serialize(&storage, item_graph, states_current, &states_current_file)
+            .await?;
 
         drop(flow_dir);
         drop(storage);
@@ -531,6 +548,7 @@ where
     }
 
     async fn serialize_goal(
+        item_graph: &ItemGraph<E>,
         resources: &mut Resources<SetUp>,
         states_goal: &StatesGoal,
     ) -> Result<(), E> {
@@ -540,7 +558,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_goal_file = StatesGoalFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, states_goal, &states_goal_file).await?;
+        StatesSerializer::serialize(&storage, item_graph, states_goal, &states_goal_file).await?;
 
         drop(flow_dir);
         drop(storage);

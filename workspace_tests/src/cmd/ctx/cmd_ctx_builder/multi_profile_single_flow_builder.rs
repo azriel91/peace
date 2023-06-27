@@ -4,7 +4,7 @@ use peace::{
     cfg::{app_name, flow_id, profile, AppName, FlowId, Profile},
     cmd::ctx::CmdCtx,
     resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
-    rt_model::{Flow, ItemGraphBuilder},
+    rt_model::{params::ParamsTypeRegs, Flow, ItemGraphBuilder, ParamsSpecsTypeReg, StatesTypeReg},
 };
 
 use crate::{no_op_output::NoOpOutput, test_support::workspace_with, PeaceTestError};
@@ -574,5 +574,77 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
     assert_eq!(Some(&2u64), profile_params.get("profile_param_1"));
     assert_eq!(Some(true), flow_params.get("flow_param_0").copied());
     assert_eq!(Some(&456u16), flow_params.get("flow_param_1"));
+    Ok(())
+}
+
+#[tokio::test]
+async fn getters() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let profile = profile!("test_profile");
+    let profile_other = profile!("test_profile_other");
+    let flow_id = flow_id!("test_flow_id");
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
+    let workspace = workspace_with(
+        &tempdir,
+        app_name!("test_multi_profile_single_flow"),
+        &[profile.clone(), profile_other.clone()],
+        Some(flow.flow_id()),
+    )
+    .await?;
+
+    let mut output = NoOpOutput;
+    let mut cmd_ctx =
+        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError, _>(&mut output, &workspace)
+            .with_flow(&flow)
+            .build()
+            .await?;
+
+    assert_eq!(workspace.dirs().workspace_dir(), cmd_ctx.workspace_dir());
+    assert_eq!(workspace.dirs().peace_dir(), cmd_ctx.peace_dir());
+    assert_eq!(workspace.dirs().peace_app_dir(), cmd_ctx.peace_app_dir());
+    assert_eq!(2, cmd_ctx.profile_to_states_current_stored().len());
+    assert_eq!(2, cmd_ctx.profile_to_params_specs().len());
+    assert!(matches!(cmd_ctx.output(), NoOpOutput));
+    assert!(matches!(cmd_ctx.output_mut(), NoOpOutput));
+    assert!(matches!(cmd_ctx.params_type_regs(), ParamsTypeRegs { .. }));
+    assert!(matches!(
+        cmd_ctx.params_specs_type_reg(),
+        ParamsSpecsTypeReg { .. }
+    ));
+    assert!(matches!(cmd_ctx.states_type_reg(), StatesTypeReg { .. }));
+    assert!(!cmd_ctx.resources().is_empty());
+    assert!(!cmd_ctx.resources_mut().is_empty());
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn debug() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let profile = profile!("test_profile");
+    let profile_other = profile!("test_profile_other");
+    let flow_id = flow_id!("test_flow_id");
+    let flow = Flow::<PeaceTestError>::new(flow_id, ItemGraphBuilder::new().build());
+    let workspace = workspace_with(
+        &tempdir,
+        app_name!("test_multi_profile_single_flow"),
+        &[profile.clone(), profile_other.clone()],
+        Some(flow.flow_id()),
+    )
+    .await?;
+
+    let mut output = NoOpOutput;
+    let mut cmd_ctx =
+        CmdCtx::builder_multi_profile_single_flow::<PeaceTestError, _>(&mut output, &workspace)
+            .with_flow(&flow)
+            .build()
+            .await?;
+
+    let multi_profile_single_flow = cmd_ctx.scope();
+    assert!(format!("{multi_profile_single_flow:?}").contains("MultiProfileSingleFlow {"));
+
+    let multi_profile_single_flow_view = cmd_ctx.view();
+    assert!(format!("{multi_profile_single_flow_view:?}").contains("MultiProfileSingleFlowView {"));
+
     Ok(())
 }

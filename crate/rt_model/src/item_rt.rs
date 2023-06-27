@@ -13,7 +13,7 @@ use peace_resources::{
 
 use crate::{
     outcomes::{ItemApplyBoxed, ItemApplyPartialBoxed},
-    ItemParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg,
+    ParamsSpecsTypeReg, StatesTypeReg,
 };
 
 /// Internal trait that erases the types from [`Item`]
@@ -54,7 +54,6 @@ pub trait ItemRt<E>:
     /// `ParamsSpecsFile`, `StatesCurrentFile`, and `StatesGoalFile`.
     fn params_and_state_register(
         &self,
-        item_params_type_reg: &mut ItemParamsTypeReg,
         params_specs_type_reg: &mut ParamsSpecsTypeReg,
         states_type_reg: &mut StatesTypeReg,
     );

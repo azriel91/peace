@@ -21,20 +21,20 @@ crate-type = ["cdylib", "rlib"]
 peace = { path = "../..", default-features = false }
 peace_items = { path = "../../items", features = ["file_download"] }
 thiserror = "1.0.40"
-url = { version = "2.3.1", features = ["serde"] }
+url = { version = "2.4.0", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-clap = { version = "4.3.1", features = ["derive"] }
+clap = { version = "4.3.8", features = ["derive"] }
 tokio = { version = "1.28.2", features = ["net", "time", "rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 console_error_panic_hook = "0.1.7"
 serde-wasm-bindgen = "0.5.0"
 tokio = "1.28.2"
-wasm-bindgen = "0.2.86"
-wasm-bindgen-futures = "0.4.36"
-js-sys = "0.3.63"
-web-sys = "0.3.63"
+wasm-bindgen = "0.2.87"
+wasm-bindgen-futures = "0.4.37"
+js-sys = "0.3.64"
+web-sys = "0.3.64"
 
 [features]
 default = []

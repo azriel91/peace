@@ -22,7 +22,7 @@ use type_reg::untagged::BoxDataTypeDowncast;
 
 use crate::{
     outcomes::{ItemApply, ItemApplyBoxed, ItemApplyPartial, ItemApplyPartialBoxed},
-    ItemParamsTypeReg, ItemRt, ParamsSpecsTypeReg, StateDowncastError, StatesTypeReg,
+    ItemRt, ParamsSpecsTypeReg, StateDowncastError, StatesTypeReg,
 };
 
 /// Wraps a type implementing [`Item`].
@@ -558,11 +558,9 @@ where
 
     fn params_and_state_register(
         &self,
-        item_params_type_reg: &mut ItemParamsTypeReg,
         params_specs_type_reg: &mut ParamsSpecsTypeReg,
         states_type_reg: &mut StatesTypeReg,
     ) {
-        item_params_type_reg.register::<I::Params<'_>>(I::id(self).clone());
         params_specs_type_reg.register::<ParamsSpec<I::Params<'_>>>(I::id(self).clone());
         states_type_reg.register::<I::State>(I::id(self).clone());
     }

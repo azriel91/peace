@@ -509,7 +509,7 @@ fn impl_build_for(
                 // let flow_id = flow.flow_id();
                 // let item_graph = flow.graph();
                 //
-                // let (item_params_type_reg, params_specs_type_reg, states_type_reg) =
+                // let (params_specs_type_reg, states_type_reg) =
                 //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
                 //
                 // let params_specs_type_reg_ref = &params_specs_type_reg;
@@ -601,7 +601,7 @@ fn impl_build_for(
                 // let flow_id = flow.flow_id();
                 // let item_graph = flow.graph();
                 //
-                // let (item_params_type_reg, params_specs_type_reg, states_type_reg) =
+                // let (params_specs_type_reg, states_type_reg) =
                 //     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
                 //
                 // // Params specs loading and storage.
@@ -715,13 +715,11 @@ fn impl_build_for(
 
                     // === MultiProfileSingleFlow === //
                     // profile_to_states_current_stored,
-                    // item_params_type_reg,
                     // params_specs_type_reg,
                     // profile_to_params_specs,
                     // states_type_reg,
                     // resources,
                     // === SingleProfileSingleFlow === //
-                    // item_params_type_reg,
                     // params_specs_type_reg,
                     // params_specs,
                     // states_type_reg,
@@ -1466,14 +1464,12 @@ fn scope_fields(scope: Scope) -> Punctuated<FieldValue, Comma> {
         Scope::MultiProfileNoFlow | Scope::NoProfileNoFlow | Scope::SingleProfileNoFlow => {}
         Scope::MultiProfileSingleFlow => {
             scope_fields.push(parse_quote!(profile_to_states_current_stored));
-            scope_fields.push(parse_quote!(item_params_type_reg));
             scope_fields.push(parse_quote!(params_specs_type_reg));
             scope_fields.push(parse_quote!(profile_to_params_specs));
             scope_fields.push(parse_quote!(states_type_reg));
             scope_fields.push(parse_quote!(resources));
         }
         Scope::SingleProfileSingleFlow => {
-            scope_fields.push(parse_quote!(item_params_type_reg));
             scope_fields.push(parse_quote!(params_specs_type_reg));
             scope_fields.push(parse_quote!(params_specs));
             scope_fields.push(parse_quote!(states_type_reg));
@@ -1499,7 +1495,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                 let flow_id = flow.flow_id();
                 let item_graph = flow.graph();
 
-                let (item_params_type_reg, params_specs_type_reg, states_type_reg) =
+                let (params_specs_type_reg, states_type_reg) =
                     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
 
                 let params_specs_type_reg_ref = &params_specs_type_reg;
@@ -1609,7 +1605,7 @@ fn states_and_params_read_and_pg_init(scope: Scope) -> proc_macro2::TokenStream 
                 let flow_id = flow.flow_id();
                 let item_graph = flow.graph();
 
-                let (item_params_type_reg, params_specs_type_reg, states_type_reg) =
+                let (params_specs_type_reg, states_type_reg) =
                     crate::ctx::cmd_ctx_builder::params_and_states_type_reg(item_graph);
 
                 // Params specs loading and storage.

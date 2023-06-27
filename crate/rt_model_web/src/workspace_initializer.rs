@@ -2,7 +2,7 @@ use std::{fmt::Debug, hash::Hash, path::Path};
 
 use peace_resources::{
     internal::{FlowParamsFile, ProfileParamsFile, WorkspaceParamsFile},
-    type_reg::untagged::TypeReg,
+    type_reg::untagged::{TypeMapOpt, TypeReg},
 };
 use peace_rt_model_core::{
     params::{FlowParams, ProfileParams, WorkspaceParams},
@@ -79,7 +79,7 @@ impl WorkspaceInitializer {
         workspace_params_file: &WorkspaceParamsFile,
     ) -> Result<Option<WorkspaceParams<K>>, Error>
     where
-        K: Debug + Eq + Hash + DeserializeOwned + Send + Sync,
+        K: Clone + Debug + Eq + Hash + DeserializeOwned + Send + Sync + 'static,
     {
         storage
             .serialized_typemap_read_opt(
@@ -88,6 +88,11 @@ impl WorkspaceInitializer {
                 Error::WorkspaceParamsDeserialize,
             )
             .await
+            .map(|type_map_opt| {
+                type_map_opt
+                    .map(TypeMapOpt::into_type_map)
+                    .map(WorkspaceParams::from)
+            })
     }
 
     pub async fn profile_params_serialize<K>(
@@ -113,7 +118,7 @@ impl WorkspaceInitializer {
         profile_params_file: &ProfileParamsFile,
     ) -> Result<Option<ProfileParams<K>>, Error>
     where
-        K: Debug + Eq + Hash + DeserializeOwned + Send + Sync,
+        K: Clone + Debug + Eq + Hash + DeserializeOwned + Send + Sync + 'static,
     {
         storage
             .serialized_typemap_read_opt(
@@ -122,6 +127,11 @@ impl WorkspaceInitializer {
                 Error::ProfileParamsDeserialize,
             )
             .await
+            .map(|type_map_opt| {
+                type_map_opt
+                    .map(TypeMapOpt::into_type_map)
+                    .map(ProfileParams::from)
+            })
     }
 
     pub async fn flow_params_serialize<K>(
@@ -143,10 +153,15 @@ impl WorkspaceInitializer {
         flow_params_file: &FlowParamsFile,
     ) -> Result<Option<FlowParams<K>>, Error>
     where
-        K: Debug + Eq + Hash + DeserializeOwned + Send + Sync,
+        K: Clone + Debug + Eq + Hash + DeserializeOwned + Send + Sync + 'static,
     {
         storage
             .serialized_typemap_read_opt(type_reg, flow_params_file, Error::FlowParamsDeserialize)
             .await
+            .map(|type_map_opt| {
+                type_map_opt
+                    .map(TypeMapOpt::into_type_map)
+                    .map(FlowParams::from)
+            })
     }
 }

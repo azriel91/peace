@@ -5,7 +5,10 @@ use std::{
 };
 
 use base64::Engine;
-use peace_resources::type_reg::untagged::{DataTypeWrapper, TypeMap, TypeReg};
+use peace_resources::type_reg::{
+    common::UnknownEntriesSome,
+    untagged::{DataTypeWrapper, TypeMapOpt, TypeReg},
+};
 use peace_rt_model_core::{Error, WebError};
 use serde::{de::DeserializeOwned, Serialize};
 use wasm_bindgen::prelude::*;
@@ -369,24 +372,25 @@ impl Storage {
     /// * `type_reg`: Type registry with the stateful deserialization mappings.
     /// * `file_path`: Path to the file to read the serialized item.
     /// * `f_map_err`: Maps the deserialization error (if any) to an [`Error`].
-    pub async fn serialized_typemap_read_opt<T, K, BoxDT, F>(
+    pub async fn serialized_typemap_read_opt<K, BoxDT, F>(
         &self,
         type_reg: &TypeReg<K, BoxDT>,
         path: &Path,
         f_map_err: F,
-    ) -> Result<Option<T>, Error>
+    ) -> Result<Option<TypeMapOpt<K, BoxDT, UnknownEntriesSome<serde_yaml::Value>>>, Error>
     where
-        T: From<TypeMap<K, BoxDT>> + Send + Sync,
-        K: Debug + DeserializeOwned + Eq + Hash + Sync,
+        K: Clone + Debug + DeserializeOwned + Eq + Hash + Sync + 'static,
         BoxDT: DataTypeWrapper + 'static,
         F: FnOnce(serde_yaml::Error) -> Error + Send,
     {
         self.get_item_opt(path)?
             .map(|s| {
                 let deserializer = serde_yaml::Deserializer::from_str(&s);
-                let type_map = type_reg.deserialize_map(deserializer).map_err(f_map_err)?;
+                let type_map_opt = type_reg
+                    .deserialize_map_opt_with_unknowns::<'_, serde_yaml::Value, _, _>(deserializer)
+                    .map_err(f_map_err)?;
 
-                Ok(T::from(type_map))
+                Ok(type_map_opt)
             })
             .transpose()
     }

@@ -4,7 +4,7 @@ use peace::{
     cfg::{app_name, profile, AppName, Profile, ProfileInvalidFmt},
     cmd::ctx::CmdCtx,
     resources::paths::{ProfileDir, ProfileHistoryDir},
-    rt_model::{Error as PeaceRtError, NativeError},
+    rt_model::{params::ParamsTypeRegs, Error as PeaceRtError, NativeError},
 };
 
 use crate::{no_op_output::NoOpOutput, test_support::workspace_with, PeaceTestError};
@@ -16,7 +16,7 @@ async fn build() -> Result<(), Box<dyn std::error::Error>> {
     let profile_other = profile!("test_profile_other");
     let workspace = workspace_with(
         &tempdir,
-        app_name!("test_multi_profile_single_flow"),
+        app_name!("test_multi_profile_no_flow"),
         &[profile.clone(), profile_other.clone()],
         None,
     )
@@ -64,7 +64,7 @@ async fn build_with_workspace_params() -> Result<(), Box<dyn std::error::Error>>
     let profile_other = profile!("test_profile_other");
     let workspace = workspace_with(
         &tempdir,
-        app_name!("test_multi_profile_single_flow"),
+        app_name!("test_multi_profile_no_flow"),
         &[profile.clone(), profile_other.clone()],
         None,
     )
@@ -123,7 +123,7 @@ async fn build_with_profile_params() -> Result<(), Box<dyn std::error::Error>> {
     let profile_other = profile!("test_profile_other");
     let workspace = workspace_with(
         &tempdir,
-        app_name!("test_multi_profile_single_flow"),
+        app_name!("test_multi_profile_no_flow"),
         &[profile.clone(), profile_other.clone()],
         None,
     )
@@ -175,7 +175,7 @@ async fn build_with_workspace_params_with_profile_params() -> Result<(), Box<dyn
     let profile_other = profile!("test_profile_other");
     let workspace = workspace_with(
         &tempdir,
-        app_name!("test_multi_profile_single_flow"),
+        app_name!("test_multi_profile_no_flow"),
         &[profile.clone(), profile_other.clone()],
         None,
     )
@@ -244,7 +244,7 @@ async fn build_with_workspace_params_with_profile_filter() -> Result<(), Box<dyn
     let profile_other = profile!("test_profile_other");
     let workspace = workspace_with(
         &tempdir,
-        app_name!("test_multi_profile_single_flow"),
+        app_name!("test_multi_profile_no_flow"),
         &[profile.clone(), profile_other.clone()],
         None,
     )
@@ -300,7 +300,7 @@ async fn build_with_workspace_params_with_profile_params_with_profile_filter()
     let profile_other = profile!("test_profile_other");
     let workspace = workspace_with(
         &tempdir,
-        app_name!("test_multi_profile_single_flow"),
+        app_name!("test_multi_profile_no_flow"),
         &[profile.clone(), profile_other.clone()],
         None,
     )
@@ -365,7 +365,7 @@ async fn list_profile_dirs_invalid_profile_name() -> Result<(), Box<dyn std::err
     let profile_other = Profile::new_unchecked("test_profile_spécïál");
     let workspace = workspace_with(
         &tempdir,
-        app_name!("test_multi_profile_single_flow"),
+        app_name!("test_multi_profile_no_flow"),
         &[profile.clone(), profile_other.clone()],
         None,
     )
@@ -397,11 +397,68 @@ async fn list_profile_dirs_invalid_profile_name() -> Result<(), Box<dyn std::err
                     && error == &ProfileInvalidFmt::new("test_profile_spécïál".into())
                 ),
                 "expected `cmd_ctx_result` to be \n\
-                ``,\n\
+                `Err(PeaceTestError::PeaceRt(PeaceRtError::Native(NativeError::ProfileDirInvalidName {{ .. }})))`,\n\
                 but was {cmd_ctx_result:?}",
             );
         }
     })();
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn getters() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let profile = profile!("test_profile");
+    let profile_other = profile!("test_profile_other");
+    let workspace = workspace_with(
+        &tempdir,
+        app_name!("test_multi_profile_no_flow"),
+        &[profile.clone(), profile_other.clone()],
+        None,
+    )
+    .await?;
+
+    let mut output = NoOpOutput;
+    let mut cmd_ctx =
+        CmdCtx::builder_multi_profile_no_flow::<PeaceTestError, _>(&mut output, &workspace)
+            .build()
+            .await?;
+
+    assert_eq!(workspace.dirs().workspace_dir(), cmd_ctx.workspace_dir());
+    assert_eq!(workspace.dirs().peace_dir(), cmd_ctx.peace_dir());
+    assert_eq!(workspace.dirs().peace_app_dir(), cmd_ctx.peace_app_dir());
+    assert!(matches!(cmd_ctx.output(), NoOpOutput));
+    assert!(matches!(cmd_ctx.output_mut(), NoOpOutput));
+    assert!(matches!(cmd_ctx.params_type_regs(), ParamsTypeRegs { .. }));
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn debug() -> Result<(), Box<dyn std::error::Error>> {
+    let tempdir = tempfile::tempdir()?;
+    let profile = profile!("test_profile");
+    let profile_other = profile!("test_profile_other");
+    let workspace = workspace_with(
+        &tempdir,
+        app_name!("test_multi_profile_no_flow"),
+        &[profile.clone(), profile_other.clone()],
+        None,
+    )
+    .await?;
+
+    let mut output = NoOpOutput;
+    let mut cmd_ctx =
+        CmdCtx::builder_multi_profile_no_flow::<PeaceTestError, _>(&mut output, &workspace)
+            .build()
+            .await?;
+
+    let multi_profile_no_flow = cmd_ctx.scope();
+    assert!(format!("{multi_profile_no_flow:?}").contains("MultiProfileNoFlow {"));
+
+    let multi_profile_no_flow_view = cmd_ctx.view();
+    assert!(format!("{multi_profile_no_flow_view:?}").contains("MultiProfileNoFlowView {"));
 
     Ok(())
 }

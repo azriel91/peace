@@ -14,13 +14,11 @@ pub mod params;
 
 pub use crate::{
     error::{ApplyCmdError, Error, StateDowncastError},
-    item_params::ItemParams,
     items_state_stored_stale::ItemsStateStoredStale,
     state_stored_and_discovered::StateStoredAndDiscovered,
 };
 
 mod error;
-mod item_params;
 mod items_state_stored_stale;
 mod state_stored_and_discovered;
 

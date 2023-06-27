@@ -22,20 +22,11 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
-        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
 
       - uses: taiki-e/install-action@nextest
       - name: 'Build and test'
-        # FIXME: Switch back when actions-rs/cargo#217 gets merged
-        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
-        with:
-          command: nextest
-          args: run --workspace --all-features
+        run: cargo nextest run --workspace --all-features
 
   build_and_test_windows:
     name: Build and Test (Windows)
@@ -46,20 +37,11 @@ jobs:
         run: git config --global core.symlinks true
 
       - uses: actions/checkout@v3
-      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
-        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
 
       - uses: taiki-e/install-action@nextest
       - name: 'Build and test'
-        # FIXME: Switch back when actions-rs/cargo#217 gets merged
-        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
-        with:
-          command: nextest
-          args: run --workspace --all-features
+        run: cargo nextest run --workspace --all-features
 
   crates_io_publish:
     name: Publish (crates.io)
@@ -72,12 +54,7 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v3
-      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
-        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
 
       - name: cargo-release Cache
         id: cargo_release_cache
@@ -86,19 +63,11 @@ jobs:
           path: ~/.cargo/bin/cargo-release
           key: ${{ runner.os }}-cargo-release
 
-      - # FIXME: Switch back when actions-rs/cargo#217 gets merged
-        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
+      - run: cargo install cargo-release
         if: steps.cargo_release_cache.outputs.cache-hit != 'true'
-        with:
-          command: install
-          args: cargo-release
 
       - name: cargo login
-        # FIXME: Switch back when actions-rs/cargo#217 gets merged
-        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
-        with:
-          command: login
-          args: ${{ secrets.CRATES_IO_API_TOKEN }}
+        run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
 
       # allow-branch HEAD is because GitHub actions switches
       # to the tag while building, which is a detached head

@@ -1,3 +1,5 @@
+#[cfg(feature = "error_reporting")]
+mod error;
 mod item_boxed;
 mod item_graph;
 mod item_graph_builder;

@@ -19,7 +19,7 @@ use peace_rt_model::{
     outcomes::{CmdOutcome, ItemApplyBoxed, ItemApplyPartialBoxed},
     output::OutputWrite,
     params::ParamsKeys,
-    ApplyCmdError, Error, ItemBoxed, ItemRt, StateStoredAndDiscovered, Storage,
+    ApplyCmdError, Error, ItemBoxed, ItemGraph, ItemRt, StateStoredAndDiscovered, Storage,
 };
 use peace_rt_model_core::ItemsStateStoredStale;
 use tokio::sync::mpsc::UnboundedSender;
@@ -95,8 +95,8 @@ where
     /// 2. In the *reverse* direction, for each `Item` run
     ///    `ItemRt::clean_prepare`, which runs:
     ///
-    ///     1. `Item::try_state_current`, which resolves parameters from
-    ///        the *current* state.
+    ///     1. `Item::try_state_current`, which resolves parameters from the
+    ///        *current* state.
     ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
@@ -166,8 +166,8 @@ where
     /// 2. In the *reverse* direction, for each `Item` run
     ///    `ItemRt::clean_prepare`, which runs:
     ///
-    ///     1. `Item::try_state_current`, which resolves parameters from
-    ///        the *current* state.
+    ///     1. `Item::try_state_current`, which resolves parameters from the
+    ///        *current* state.
     ///     2. `Item::state_goal`
     ///     3. `Item::apply_check`
     ///
@@ -207,18 +207,33 @@ where
         } = Self::exec_internal(cmd_independence, apply_for, apply_stored_state_sync, false)
             .await?;
 
-        let resources = match cmd_independence {
-            CmdIndependence::Standalone { cmd_ctx } => cmd_ctx.resources(),
-            CmdIndependence::SubCmd { cmd_view, .. } => cmd_view.resources,
+        let (item_graph, resources) = match cmd_independence {
+            CmdIndependence::Standalone { cmd_ctx } => {
+                let SingleProfileSingleFlowView {
+                    flow, resources, ..
+                } = cmd_ctx.view();
+                (flow.graph(), resources)
+            }
+            CmdIndependence::SubCmd { cmd_view } => {
+                let SingleProfileSingleFlowView {
+                    flow, resources, ..
+                } = cmd_view;
+                (flow.graph(), &mut **resources)
+            }
             #[cfg(feature = "output_progress")]
-            CmdIndependence::SubCmdWithProgress { cmd_view, .. } => cmd_view.resources,
+            CmdIndependence::SubCmdWithProgress { cmd_view, .. } => {
+                let SingleProfileSingleFlowView {
+                    flow, resources, ..
+                } = cmd_view;
+                (flow.graph(), &mut **resources)
+            }
         };
 
-        Self::serialize_current(resources, &states_applied).await?;
+        Self::serialize_current(item_graph, resources, &states_applied).await?;
 
         match apply_for {
             ApplyFor::Ensure => {
-                Self::serialize_goal(resources, &states_goal).await?;
+                Self::serialize_goal(item_graph, resources, &states_goal).await?;
             }
             ApplyFor::Clean => {}
         };
@@ -274,7 +289,7 @@ where
                     // * continue execution, if the automation is designed to .
                     //
                     // by delegating the equality check to `ItemWrapper`.
-                    let states_current_stored = match Self::states_current_read(
+                    let states_current_stored = match Self::states_current_read::<StatesTs>(
                         cmd_view,
                         #[cfg(feature = "output_progress")]
                         progress_tx,
@@ -508,9 +523,38 @@ where
                     | ApplyExecOutcome::DiscoverCurrentCmdError { error }
                     | ApplyExecOutcome::DiscoverGoalCmdError { error }
                     | ApplyExecOutcome::StatesDowncastError { error } => return Err(error),
-                    ApplyExecOutcome::DiscoverOutcomeError { mut outcome } => {
-                        std::mem::swap(&mut outcome.value.0, states_applied_mut);
-                        std::mem::swap(&mut outcome.value.1, states_goal_mut);
+                    ApplyExecOutcome::DiscoverOutcomeError {
+                        outcome: discover_outcome,
+                    } => {
+                        // We need to individually copy values across, instead of `std::mem::swap`,
+                        // because if `DiscoverCmd` failed and returns errors before any states were
+                        // discovered, we don't want to overwrite the stored states with empty
+                        // states.
+                        discover_outcome
+                            .value
+                            .0
+                            .into_inner()
+                            .into_inner()
+                            .into_iter()
+                            .for_each(|(item_id, state_current_boxed)| {
+                                states_applied_mut.insert_raw(item_id, state_current_boxed);
+                            });
+
+                        discover_outcome
+                            .value
+                            .1
+                            .into_inner()
+                            .into_inner()
+                            .into_iter()
+                            .for_each(|(item_id, state_goal_boxed)| {
+                                states_goal_mut.insert_raw(item_id, state_goal_boxed);
+                            });
+                        discover_outcome
+                            .errors
+                            .into_iter()
+                            .for_each(|(item_id, error)| {
+                                errors.insert(item_id, error);
+                            });
                     }
                     ApplyExecOutcome::ItemApply(item_apply_outcome) => match item_apply_outcome {
                         ItemApplyOutcome::PrepareFail {
@@ -659,6 +703,7 @@ where
                     StatesMut::<Goal>::new(),
                 )
             });
+            let outcome = Box::new(outcome);
             outcomes_tx
                 .send(ApplyExecOutcome::DiscoverOutcomeError { outcome })
                 .expect("unreachable: `outcomes_rx` is in a sibling task.");
@@ -725,6 +770,7 @@ where
                     StatesMut::<Goal>::new(),
                 )
             });
+            let outcome = Box::new(outcome);
             outcomes_tx
                 .send(ApplyExecOutcome::DiscoverOutcomeError { outcome })
                 .expect("unreachable: `outcomes_rx` is in a sibling task.");
@@ -960,6 +1006,7 @@ where
 
     // TODO: This duplicates a bit of code with `StatesDiscoverCmd`,
     async fn serialize_current(
+        item_graph: &ItemGraph<E>,
         resources: &Resources<SetUp>,
         states_applied: &States<StatesTsApply>,
     ) -> Result<(), E> {
@@ -969,7 +1016,8 @@ where
         let storage = resources.borrow::<Storage>();
         let states_current_file = StatesCurrentFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, states_applied, &states_current_file).await?;
+        StatesSerializer::serialize(&storage, item_graph, states_applied, &states_current_file)
+            .await?;
 
         drop(flow_dir);
         drop(storage);
@@ -978,6 +1026,7 @@ where
     }
 
     async fn serialize_goal(
+        item_graph: &ItemGraph<E>,
         resources: &Resources<SetUp>,
         states_goal: &StatesGoal,
     ) -> Result<(), E> {
@@ -987,7 +1036,7 @@ where
         let storage = resources.borrow::<Storage>();
         let states_goal_file = StatesGoalFile::from(&*flow_dir);
 
-        StatesSerializer::serialize(&storage, states_goal, &states_goal_file).await?;
+        StatesSerializer::serialize(&storage, item_graph, states_goal, &states_goal_file).await?;
 
         drop(flow_dir);
         drop(storage);
@@ -1003,6 +1052,8 @@ impl<E, O, PKeys, StatesTsApply, StatesTsApplyDry> Default
         Self(PhantomData)
     }
 }
+
+type CmdOutcomeBox<T, E> = Box<CmdOutcome<T, E>>;
 
 /// Sub-outcomes of apply execution.
 ///
@@ -1063,7 +1114,12 @@ enum ApplyExecOutcome<E, StatesTs> {
     /// Error discovering current state for items.
     DiscoverOutcomeError {
         /// Outcome of state discovery.
-        outcome: CmdOutcome<(StatesMut<StatesTs>, StatesMut<Goal>), E>,
+        ///
+        /// # Design
+        ///
+        /// The field is `Box`ed because `CmdOutcome` is 360 bytes,
+        /// significantly larger than the second largest variant (144 bytes).
+        outcome: CmdOutcomeBox<(StatesMut<StatesTs>, StatesMut<Goal>), E>,
     },
     /// Error downcasting a boxed item state to its concrete stype.
     StatesDowncastError {

@@ -15,6 +15,7 @@
 * Add tests where useful cases are missed. ([#136], [#137])
 * Ignore unnecessary missed lines (e.g. panics in tests). ([#136], [#137])
 * Remove `peace_item_sh_sync_cmd`. ([#136], [#137])
+* Always store an entry for each item's state in `states_*.yaml`, in order of item insertion. ([#138], [#139])
 
 [#120]: https://github.com/azriel91/peace/issues/120
 [#130]: https://github.com/azriel91/peace/pull/130
@@ -26,6 +27,8 @@
 [#135]: https://github.com/azriel91/peace/pull/135
 [#136]: https://github.com/azriel91/peace/issues/136
 [#137]: https://github.com/azriel91/peace/pull/137
+[#138]: https://github.com/azriel91/peace/issues/138
+[#139]: https://github.com/azriel91/peace/pull/139
 
 
 ## 0.0.10 (2023-06-03)

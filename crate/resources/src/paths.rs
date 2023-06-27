@@ -70,14 +70,13 @@
 //! ```
 
 pub use self::{
-    flow_dir::FlowDir, item_params_file::ItemParamsFile, params_specs_file::ParamsSpecsFile,
-    peace_app_dir::PeaceAppDir, peace_dir::PeaceDir, profile_dir::ProfileDir,
-    profile_history_dir::ProfileHistoryDir, states_current_file::StatesCurrentFile,
-    states_goal_file::StatesGoalFile, workspace_dir::WorkspaceDir,
+    flow_dir::FlowDir, params_specs_file::ParamsSpecsFile, peace_app_dir::PeaceAppDir,
+    peace_dir::PeaceDir, profile_dir::ProfileDir, profile_history_dir::ProfileHistoryDir,
+    states_current_file::StatesCurrentFile, states_goal_file::StatesGoalFile,
+    workspace_dir::WorkspaceDir,
 };
 
 mod flow_dir;
-mod item_params_file;
 mod params_specs_file;
 mod peace_app_dir;
 mod peace_dir;

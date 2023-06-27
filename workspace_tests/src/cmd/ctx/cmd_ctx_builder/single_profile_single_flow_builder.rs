@@ -2,7 +2,10 @@ use peace::{
     cfg::{app_name, flow_id, item_id, profile, AppName, FlowId, Item, ItemId, Profile},
     cmd::ctx::CmdCtx,
     params::{Params, ParamsSpec, ValueResolutionCtx, ValueResolutionMode, ValueSpec},
-    resources::paths::{FlowDir, ProfileDir, ProfileHistoryDir},
+    resources::{
+        paths::{FlowDir, ProfileDir, ProfileHistoryDir},
+        type_reg::untagged::BoxDataTypeDowncast,
+    },
     rt_model::{Flow, ItemGraphBuilder},
 };
 
@@ -952,7 +955,7 @@ async fn build_with_item_params_returns_err_when_value_spec_not_provided_for_pre
 }
 
 #[tokio::test]
-async fn build_with_item_params_returns_deserialization_err_when_item_renamed()
+async fn build_with_item_params_returns_params_specs_mismatch_err_when_item_renamed()
 -> Result<(), Box<dyn std::error::Error>> {
     let tempdir = tempfile::tempdir()?;
     let workspace = workspace(&tempdir, app_name!("test_single_profile_single_flow"))?;
@@ -994,22 +997,28 @@ async fn build_with_item_params_returns_deserialization_err_when_item_renamed()
                 matches!(
                     &cmd_ctx_result,
                     Err(PeaceTestError::PeaceRt(
-                        peace::rt_model::Error::ParamsSpecsDeserialize {
-                            profile,
-                            flow_id,
-                            #[cfg(feature = "error_reporting")]
-                            params_specs_file_source: _,
-                            #[cfg(feature = "error_reporting")]
-                            error_span: _,
-                            #[cfg(feature = "error_reporting")]
-                            error_message: _,
-                            #[cfg(feature = "error_reporting")]
-                            context_span: _,
-                            error: _,
+                        peace::rt_model::Error::ParamsSpecsMismatch {
+                            item_ids_with_no_params_specs,
+                            params_specs_provided_mismatches,
+                            params_specs_stored_mismatches: Some(params_specs_stored_mismatches),
+                            params_specs_not_usable,
                         }
                     ))
-                    if profile == &profile!("test_profile")
-                    && flow_id == &flow_id!("test_flow_id")
+                    if item_ids_with_no_params_specs == &[item_id!("new_id")]
+                    && params_specs_provided_mismatches.len() == 1
+                    && params_specs_provided_mismatches.iter()
+                        .next()
+                        .map(|(item_id, params_spec_boxed)| {
+                            item_id == &item_id!("mismatch_id")
+                            && matches!(
+                                BoxDataTypeDowncast::<ParamsSpec<VecA>>::downcast_ref(params_spec_boxed),
+                                Some(ParamsSpec::Value { value })
+                                if value == &VecA(vec![2u8])
+                            )
+                        })
+                        .unwrap_or(false)
+                    && params_specs_stored_mismatches.is_empty()
+                    && params_specs_not_usable.is_empty()
                 ),
                 "was {cmd_ctx_result:#?}"
             );
