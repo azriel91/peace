@@ -91,3 +91,13 @@ where
         )
     }
 }
+
+impl<ValueT> From<TypeMapOpt<ItemId, BoxDtDisplay, UnknownEntriesSome<ValueT>>>
+    for StatesSerde<ValueT>
+where
+    ValueT: Clone + Debug + PartialEq + Eq,
+{
+    fn from(type_map_opt: TypeMapOpt<ItemId, BoxDtDisplay, UnknownEntriesSome<ValueT>>) -> Self {
+        Self(type_map_opt)
+    }
+}

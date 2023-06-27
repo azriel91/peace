@@ -1,5 +1,5 @@
 use peace::{
-    resources::type_reg::untagged::TypeReg,
+    resources::type_reg::untagged::{TypeMapOpt, TypeReg},
     rt_model::{params::WorkspaceParams, Error, Storage},
 };
 use serde::{Deserialize, Serialize};
@@ -133,6 +133,8 @@ async fn serialized_typemap_read_opt_returns_typemap_when_path_exists()
             |_error| panic!("Expected `workspace_params` to be deserialized."),
         )
         .await?
+        .map(TypeMapOpt::into_type_map)
+        .map(WorkspaceParams::<u32>::from)
         .unwrap();
 
     assert_eq!(Some(TestStruct { a: 1 }).as_ref(), workspace_params.get(&0));
@@ -156,7 +158,9 @@ async fn serialized_typemap_read_opt_returns_none_when_path_not_exists()
             #[cfg_attr(coverage_nightly, no_coverage)]
             |_error| panic!("Expected `None` to be returned."),
         )
-        .await?;
+        .await?
+        .map(TypeMapOpt::into_type_map)
+        .map(WorkspaceParams::<u32>::from);
 
     assert!(workspace_params.is_none());
 

@@ -7,7 +7,7 @@ use peace_resources::{
         ts::{CurrentStored, GoalStored},
         States, StatesCurrentStored, StatesGoalStored,
     },
-    type_reg::untagged::{BoxDtDisplay, TypeReg},
+    type_reg::untagged::{BoxDtDisplay, TypeMapOpt, TypeReg},
 };
 
 use crate::{Error, ItemGraph, Storage};
@@ -198,7 +198,12 @@ where
                     }
                 }
             })
-            .await?;
+            .await
+            .map(|type_map_opt| {
+                type_map_opt
+                    .map(TypeMapOpt::into_type_map)
+                    .map(States::from)
+            })?;
 
         Ok(states_opt)
     }
@@ -260,7 +265,12 @@ where
                     }
                 }
             })
-            .await?;
+            .await
+            .map(|type_map_opt| {
+                type_map_opt
+                    .map(TypeMapOpt::into_type_map)
+                    .map(States::from)
+            })?;
 
         Ok(states_opt)
     }

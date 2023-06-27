@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use peace_cfg::{FlowId, Profile};
 use peace_params::ParamsSpecs;
-use peace_resources::paths::ParamsSpecsFile;
+use peace_resources::{paths::ParamsSpecsFile, type_reg::untagged::TypeMapOpt};
 
 use crate::{Error, ParamsSpecsTypeReg, Storage};
 
@@ -128,7 +128,12 @@ where
                     }
                 },
             )
-            .await?;
+            .await
+            .map(|type_map_opt| {
+                type_map_opt
+                    .map(TypeMapOpt::into_type_map)
+                    .map(ParamsSpecs::from)
+            })?;
 
         Ok(params_specs_opt)
     }
@@ -183,7 +188,12 @@ where
                     }
                 }
             })
-            .await?;
+            .await
+            .map(|type_map_opt| {
+                type_map_opt
+                    .map(TypeMapOpt::into_type_map)
+                    .map(ParamsSpecs::from)
+            })?;
 
         Ok(params_specs_opt)
     }

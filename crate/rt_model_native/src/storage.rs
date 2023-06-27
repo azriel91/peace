@@ -1,6 +1,9 @@
 use std::{fmt::Debug, hash::Hash, io::Write, path::Path, sync::Mutex};
 
-use peace_resources::type_reg::untagged::{DataTypeWrapper, TypeMap, TypeReg};
+use peace_resources::type_reg::{
+    common::UnknownEntriesSome,
+    untagged::{DataTypeWrapper, TypeMapOpt, TypeReg},
+};
 use peace_rt_model_core::{Error, NativeError};
 use serde::{de::DeserializeOwned, Serialize};
 use tokio::{
@@ -84,30 +87,33 @@ impl Storage {
     /// * `type_reg`: Type registry with the stateful deserialization mappings.
     /// * `file_path`: Path to the file to read the serialized item.
     /// * `f_map_err`: Maps the deserialization error (if any) to an [`Error`].
-    pub async fn serialized_typemap_read_opt<T, K, BoxDT, F>(
+    pub async fn serialized_typemap_read_opt<K, BoxDT, F>(
         &self,
         thread_name: String,
         type_reg: &TypeReg<K, BoxDT>,
         file_path: &Path,
         f_map_err: F,
-    ) -> Result<Option<T>, Error>
+    ) -> Result<Option<TypeMapOpt<K, BoxDT, UnknownEntriesSome<serde_yaml::Value>>>, Error>
     where
-        T: From<TypeMap<K, BoxDT>> + Send + Sync,
-        K: Debug + DeserializeOwned + Eq + Hash + Sync,
-        BoxDT: DataTypeWrapper + 'static,
+        K: Clone + Debug + DeserializeOwned + Eq + Hash + Send + Sync + 'static,
+        BoxDT: DataTypeWrapper + Send + 'static,
         F: FnOnce(serde_yaml::Error) -> Error + Send,
     {
         if file_path.exists() {
-            let t = self
+            let type_map_opt = self
                 .read_with_sync_api(thread_name, file_path, |file| {
                     let deserializer = serde_yaml::Deserializer::from_reader(file);
-                    let type_map = type_reg.deserialize_map(deserializer).map_err(f_map_err)?;
+                    let type_map_opt = type_reg
+                        .deserialize_map_opt_with_unknowns::<'_, serde_yaml::Value, _, _>(
+                            deserializer,
+                        )
+                        .map_err(f_map_err)?;
 
-                    Result::<_, Error>::Ok(T::from(type_map))
+                    Result::<_, Error>::Ok(type_map_opt)
                 })
                 .await?;
 
-            Ok(Some(t))
+            Ok(Some(type_map_opt))
         } else {
             Ok(None)
         }
