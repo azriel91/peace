@@ -54,7 +54,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.0.10"
+version = "0.0.11"
 authors = ["Azriel Hoh <azriel91@gmail.com>"]
 edition = "2021"
 homepage = "https://peace.mk"
@@ -66,34 +66,34 @@ license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
 # Peace crates.
-peace = { path = ".", version = "0.0.10", default-features = false }
+peace = { path = ".", version = "0.0.11", default-features = false }
 
-peace_cfg = { path = "crate/cfg", version = "0.0.10" }
-peace_cmd = { path = "crate/cmd", version = "0.0.10" }
-peace_code_gen = { path = "crate/code_gen", version = "0.0.10" }
-peace_core = { path = "crate/core", version = "0.0.10" }
-peace_data = { path = "crate/data", version = "0.0.10" }
-peace_data_derive = { path = "crate/data_derive", version = "0.0.10" }
-peace_diff = { path = "crate/diff", version = "0.0.10" }
-peace_fmt = { path = "crate/fmt", version = "0.0.10" }
-peace_params = { path = "crate/params", version = "0.0.10" }
-peace_params_derive = { path = "crate/params_derive", version = "0.0.10" }
-peace_resources = { path = "crate/resources", version = "0.0.10" }
-peace_rt = { path = "crate/rt", version = "0.0.10" }
-peace_rt_model = { path = "crate/rt_model", version = "0.0.10" }
-peace_rt_model_core = { path = "crate/rt_model_core", version = "0.0.10" }
-peace_rt_model_hack = { path = "crate/rt_model_hack", version = "0.0.10" }
-peace_rt_model_native = { path = "crate/rt_model_native", version = "0.0.10" }
-peace_rt_model_web = { path = "crate/rt_model_web", version = "0.0.10" }
-peace_static_check_macros = { path = "crate/static_check_macros", version = "0.0.10" }
+peace_cfg = { path = "crate/cfg", version = "0.0.11" }
+peace_cmd = { path = "crate/cmd", version = "0.0.11" }
+peace_code_gen = { path = "crate/code_gen", version = "0.0.11" }
+peace_core = { path = "crate/core", version = "0.0.11" }
+peace_data = { path = "crate/data", version = "0.0.11" }
+peace_data_derive = { path = "crate/data_derive", version = "0.0.11" }
+peace_diff = { path = "crate/diff", version = "0.0.11" }
+peace_fmt = { path = "crate/fmt", version = "0.0.11" }
+peace_params = { path = "crate/params", version = "0.0.11" }
+peace_params_derive = { path = "crate/params_derive", version = "0.0.11" }
+peace_resources = { path = "crate/resources", version = "0.0.11" }
+peace_rt = { path = "crate/rt", version = "0.0.11" }
+peace_rt_model = { path = "crate/rt_model", version = "0.0.11" }
+peace_rt_model_core = { path = "crate/rt_model_core", version = "0.0.11" }
+peace_rt_model_hack = { path = "crate/rt_model_hack", version = "0.0.11" }
+peace_rt_model_native = { path = "crate/rt_model_native", version = "0.0.11" }
+peace_rt_model_web = { path = "crate/rt_model_web", version = "0.0.11" }
+peace_static_check_macros = { path = "crate/static_check_macros", version = "0.0.11" }
 
 # Item crates
-peace_items = { path = "items", version = "0.0.10" }
+peace_items = { path = "items", version = "0.0.11" }
 
-peace_item_blank = { path = "items/blank", version = "0.0.10" }
-peace_item_file_download = { path = "items/file_download", version = "0.0.10" }
-peace_item_sh_cmd = { path = "items/sh_cmd", version = "0.0.10" }
-peace_item_tar_x = { path = "items/tar_x", version = "0.0.10" }
+peace_item_blank = { path = "items/blank", version = "0.0.11" }
+peace_item_file_download = { path = "items/file_download", version = "0.0.11" }
+peace_item_sh_cmd = { path = "items/sh_cmd", version = "0.0.11" }
+peace_item_tar_x = { path = "items/tar_x", version = "0.0.11" }
 
 # Dependencies used by framework and item crates.
 #
