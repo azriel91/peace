@@ -185,7 +185,10 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          targets: wasm32-unknown-unknown
 
       - name: 'Install `wasm-pack`'
         uses: jetli/wasm-pack-action@v0.4.0

@@ -26,11 +26,7 @@ jobs:
 
       - uses: taiki-e/install-action@nextest
       - name: 'Build and test'
-        # FIXME: Switch back when actions-rs/cargo#217 gets merged
-        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
-        with:
-          command: nextest
-          args: run --workspace --all-features
+        run: cargo nextest run --workspace --all-features
 
   build_and_test_windows:
     name: Build and Test (Windows)
@@ -45,11 +41,7 @@ jobs:
 
       - uses: taiki-e/install-action@nextest
       - name: 'Build and test'
-        # FIXME: Switch back when actions-rs/cargo#217 gets merged
-        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
-        with:
-          command: nextest
-          args: run --workspace --all-features
+        run: cargo nextest run --workspace --all-features
 
   crates_io_publish:
     name: Publish (crates.io)
@@ -71,19 +63,11 @@ jobs:
           path: ~/.cargo/bin/cargo-release
           key: ${{ runner.os }}-cargo-release
 
-      - # FIXME: Switch back when actions-rs/cargo#217 gets merged
-        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
+      - run: cargo install cargo-release
         if: steps.cargo_release_cache.outputs.cache-hit != 'true'
-        with:
-          command: install
-          args: cargo-release
 
       - name: cargo login
-        # FIXME: Switch back when actions-rs/cargo#217 gets merged
-        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
-        with:
-          command: login
-          args: ${{ secrets.CRATES_IO_API_TOKEN }}
+        run: cargo login ${{ secrets.CRATES_IO_API_TOKEN }}
 
       # allow-branch HEAD is because GitHub actions switches
       # to the tag while building, which is a detached head
