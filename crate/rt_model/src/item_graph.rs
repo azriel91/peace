@@ -50,11 +50,7 @@ impl<E> ItemGraph<E> {
     {
         StatesSerde::from_iter(self.0.iter_insertion().map(|item| {
             let item_id = item.id();
-            (
-                item_id.clone(),
-                states
-                    .get_raw(item_id).cloned(),
-            )
+            (item_id.clone(), states.get_raw(item_id).cloned())
         }))
     }
 }
