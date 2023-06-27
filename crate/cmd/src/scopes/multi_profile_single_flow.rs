@@ -13,7 +13,7 @@ use peace_rt_model::{
         FlowParams, KeyKnown, KeyMaybe, ParamsKeys, ParamsKeysImpl, ParamsTypeRegs, ProfileParams,
         WorkspaceParams,
     },
-    Flow, ItemParamsTypeReg, ParamsSpecsTypeReg, StatesTypeReg, Workspace,
+    Flow, ParamsSpecsTypeReg, StatesTypeReg, Workspace,
 };
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -110,13 +110,6 @@ where
         BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
     /// Stored current states for each profile for the selected flow.
     profile_to_states_current_stored: BTreeMap<Profile, Option<StatesCurrentStored>>,
-    /// Type registry for each item's [`Params`].
-    ///
-    /// This is used to deserialize [`ItemParamsFile`].
-    ///
-    /// [`Params`]: peace_cfg::Item::Params
-    /// [`ItemParamsFile`]: peace_resources::paths::ItemParamsFile
-    item_params_type_reg: ItemParamsTypeReg,
     /// Type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
@@ -181,13 +174,6 @@ where
         &'view BTreeMap<Profile, FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>>,
     /// Stored current states for each profile for the selected flow.
     pub profile_to_states_current_stored: &'view BTreeMap<Profile, Option<StatesCurrentStored>>,
-    /// Type registry for each item's [`Params`].
-    ///
-    /// This is used to deserialize [`ItemParamsFile`].
-    ///
-    /// [`Params`]: peace_cfg::Item::Params
-    /// [`ItemParamsFile`]: peace_resources::paths::ItemParamsFile
-    pub item_params_type_reg: &'view ItemParamsTypeReg,
     /// Type registry for each item's [`Params`]`::Spec`.
     ///
     /// This is used to deserialize [`ParamsSpecsFile`].
@@ -234,7 +220,6 @@ where
             FlowParams<<PKeys::FlowParamsKMaybe as KeyMaybe>::Key>,
         >,
         profile_to_states_current_stored: BTreeMap<Profile, Option<StatesCurrentStored>>,
-        item_params_type_reg: ItemParamsTypeReg,
         params_specs_type_reg: ParamsSpecsTypeReg,
         profile_to_params_specs: BTreeMap<Profile, Option<ParamsSpecs>>,
         states_type_reg: StatesTypeReg,
@@ -253,7 +238,7 @@ where
             profile_to_profile_params,
             profile_to_flow_params,
             profile_to_states_current_stored,
-            item_params_type_reg,
+
             params_specs_type_reg,
             profile_to_params_specs,
             states_type_reg,
@@ -283,7 +268,7 @@ where
             profile_to_profile_params,
             profile_to_flow_params,
             profile_to_states_current_stored,
-            item_params_type_reg,
+
             params_specs_type_reg,
             profile_to_params_specs,
             states_type_reg,
@@ -303,7 +288,7 @@ where
             profile_to_profile_params,
             profile_to_flow_params,
             profile_to_states_current_stored,
-            item_params_type_reg,
+
             params_specs_type_reg,
             profile_to_params_specs,
             states_type_reg,
@@ -372,14 +357,10 @@ where
     /// Returns the type registries for [`WorkspaceParams`], [`ProfileParams`],
     /// and [`FlowParams`] deserialization.
     ///
-    /// Not to be confused with [`item_params_type_reg`], which is used to
-    /// deserialize [`ItemParams`]
-    ///
     /// [`FlowParams`]: peace_rt_model::params::FlowParams
     /// [`ItemParams`]: peace_rt_model::ItemParams
     /// [`ProfileParams`]: peace_rt_model::params::ProfileParams
     /// [`WorkspaceParams`]: peace_rt_model::params::WorkspaceParams
-    /// [`item_params_type_reg`]: Self::item_params_type_reg
     pub fn params_type_regs(&self) -> &ParamsTypeRegs<PKeys> {
         &self.params_type_regs
     }
@@ -390,16 +371,6 @@ where
         &self,
     ) -> &BTreeMap<Profile, Option<StatesCurrentStored>> {
         &self.profile_to_states_current_stored
-    }
-
-    /// Returns the type registry for each item's [`Params`].
-    ///
-    /// This is used to deserialize [`ItemParamsFile`].
-    ///
-    /// [`Params`]: peace_cfg::Item::Params
-    /// [`ItemParamsFile`]: peace_resources::paths::ItemParamsFile
-    pub fn item_params_type_reg(&self) -> &ItemParamsTypeReg {
-        &self.item_params_type_reg
     }
 
     /// Returns the type registry for each item's [`Params`]`::Spec`.
