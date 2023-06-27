@@ -46,19 +46,12 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
-        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: nightly
-          override: true
           components: rustfmt
 
-      - # FIXME: Switch back when actions-rs/cargo#217 gets merged
-        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
-        with:
-          command: fmt
-          args: --all -- --check
+      - run: cargo fmt --all -- --check
 
   docs_and_spell_check:
     name: Docs and Spell Check
@@ -69,21 +62,12 @@ jobs:
     steps:
       - name: Checkout Actions Repository
         uses: actions/checkout@v3
-      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
-        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
 
       - name: Check spelling
         uses: crate-ci/typos@master
 
-      - # FIXME: Switch back when actions-rs/cargo#217 gets merged
-        uses: r3-os/actions-rust-cargo@fb222fe18dc90e381546d012f9e3d6f353f0f627
-        with:
-          command: doc
-          args: --no-deps
+      - run: cargo doc --no-deps
 
   clippy:
     name: Clippy
@@ -91,12 +75,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
-      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
-        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: nightly
-          override: true
           components: clippy
 
       - name: 'Run clippy'
@@ -140,12 +121,9 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
-      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
-        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
+      - uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: nightly
-          override: true
           components: llvm-tools-preview
 
       - uses: taiki-e/install-action@cargo-llvm-cov
@@ -165,12 +143,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
-      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
-        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
 
       - uses: taiki-e/install-action@nextest
       - name: 'Build and test'
@@ -186,12 +159,7 @@ jobs:
         run: git config --global core.symlinks true
 
       - uses: actions/checkout@v3
-      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
-        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
 
       - uses: taiki-e/install-action@nextest
       - name: 'Build and test'
@@ -203,12 +171,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
-      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
-        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
 
       - name: 'Example: download (native)'
         run: cargo build --package download --all-features
@@ -222,12 +185,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v3
-      - # FIXME: Switch back when actions-rs/toolchain#{209,220,222} is merged
-        uses: r3-os/actions-rust-toolchain@a862b6623c178b43a3135516442a5f72fb5c1877
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - uses: dtolnay/rust-toolchain@stable
 
       - name: 'Install `wasm-pack`'
         uses: jetli/wasm-pack-action@v0.4.0
