@@ -1,6 +1,6 @@
 # Changelog
 
-## unreleased
+## 0.0.11 (2023-06-27)
 
 * Add `CmdBase` and `CmdIndependence` for easier command composition. ([#120], [#130])
 * Rename `StatesDesired*` to `StatesGoal*`. ([#131], [#132])
