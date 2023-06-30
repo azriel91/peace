@@ -64,19 +64,19 @@ fn stale_states_fmt(
 
             match state_stored_and_discovered {
                 StateStoredAndDiscovered::OnlyStoredExists { state_stored } => {
-                    writeln!(&mut buffer, "    - stored: {state_stored:?}")?;
+                    writeln!(&mut buffer, "    - stored: {state_stored}")?;
                     writeln!(&mut buffer, "    - discovered: <none>\n")?;
                 }
                 StateStoredAndDiscovered::OnlyDiscoveredExists { state_discovered } => {
                     writeln!(&mut buffer, "    - stored: <none>")?;
-                    writeln!(&mut buffer, "    - discovered: {state_discovered:?}\n")?;
+                    writeln!(&mut buffer, "    - discovered: {state_discovered}\n")?;
                 }
                 StateStoredAndDiscovered::ValuesDiffer {
                     state_stored,
                     state_discovered,
                 } => {
-                    writeln!(&mut buffer, "    - stored: {state_stored:?}")?;
-                    writeln!(&mut buffer, "    - discovered: {state_discovered:?}\n")?;
+                    writeln!(&mut buffer, "    - stored: {state_stored}")?;
+                    writeln!(&mut buffer, "    - discovered: {state_discovered}\n")?;
                 }
             }
 
