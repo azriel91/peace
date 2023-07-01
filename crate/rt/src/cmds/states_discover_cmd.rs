@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use futures::FutureExt;
+use futures::future::FutureExt;
 use peace_cfg::{FnCtx, ItemId};
 use peace_cmd::{
     ctx::CmdCtx,
@@ -19,7 +19,8 @@ use peace_resources::{
     Resources,
 };
 use peace_rt_model::{
-    outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, ItemGraph, Storage,
+    outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, ItemBoxed, ItemGraph,
+    Storage,
 };
 
 use crate::{cmds::CmdBase, BUFFERED_FUTURES_MAX};
@@ -260,100 +261,18 @@ where
                     } = &*cmd_view;
 
                     flow.graph()
-                        .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| async move {
-                            let item_id = item.id();
-                            let fn_ctx = FnCtx::new(
-                                item_id,
-                                #[cfg(feature = "output_progress")]
-                                ProgressSender::new(item_id, progress_tx),
-                            );
-
-                            let (state_current_result, state_goal_result) = match discover_for {
-                                DiscoverFor::Current => {
-                                    let state_current_result = item
-                                        .state_current_try_exec(params_specs, resources, fn_ctx)
-                                        .await;
-
-                                    (Some(state_current_result), None)
-                                }
-                                DiscoverFor::Goal => {
-                                    let state_goal_result = item
-                                        .state_goal_try_exec(params_specs, resources, fn_ctx)
-                                        .await;
-
-                                    (None, Some(state_goal_result))
-                                }
-                                DiscoverFor::CurrentAndGoal => {
-                                    let state_current_result = item
-                                        .state_current_try_exec(params_specs, resources, fn_ctx)
-                                        .await;
-                                    let state_goal_result = item
-                                        .state_goal_try_exec(params_specs, resources, fn_ctx)
-                                        .await;
-
-                                    (Some(state_current_result), Some(state_goal_result))
-                                }
-                            };
-
-                            // Send progress update.
-                            #[cfg(feature = "output_progress")]
-                            Self::discover_progress_update(
-                                &state_current_result,
-                                &state_goal_result,
+                        .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
+                            Self::item_states_discover(
                                 discover_for,
+                                #[cfg(feature = "output_progress")]
                                 is_sub_cmd,
+                                #[cfg(feature = "output_progress")]
                                 progress_tx,
-                                item_id,
-                            );
-
-                            let mut item_error = None;
-                            let state_current =
-                                if let Some(state_current_result) = state_current_result {
-                                    match state_current_result {
-                                        Ok(state_current_opt) => state_current_opt,
-                                        Err(error) => {
-                                            item_error = Some(error);
-                                            None
-                                        }
-                                    }
-                                } else {
-                                    None
-                                };
-
-                            let state_goal = if let Some(state_goal_result) = state_goal_result {
-                                match state_goal_result {
-                                    Ok(state_goal_opt) => state_goal_opt,
-                                    Err(error) => {
-                                        // It's probably more crucial to store the `states_current`
-                                        // error than the states goal error, if both err.
-                                        if item_error.is_none() {
-                                            item_error = Some(error);
-                                        }
-                                        None
-                                    }
-                                }
-                            } else {
-                                None
-                            };
-
-                            if let Some(error) = item_error {
-                                outcomes_tx
-                                    .send(ItemDiscoverOutcome::Fail {
-                                        item_id: item_id.clone(),
-                                        state_current,
-                                        state_goal,
-                                        error,
-                                    })
-                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                            } else {
-                                outcomes_tx
-                                    .send(ItemDiscoverOutcome::Success {
-                                        item_id: item_id.clone(),
-                                        state_current,
-                                        state_goal,
-                                    })
-                                    .expect("unreachable: `outcomes_rx` is in a sibling task.");
-                            }
+                                params_specs,
+                                resources,
+                                outcomes_tx,
+                                item,
+                            )
                         })
                         .await;
                 }
@@ -450,6 +369,110 @@ where
         }
 
         Ok(cmd_outcome)
+    }
+
+    async fn item_states_discover(
+        discover_for: DiscoverFor,
+        #[cfg(feature = "output_progress")] is_sub_cmd: bool,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+        params_specs: &&peace_params::ParamsSpecs,
+        resources: &&mut Resources<SetUp>,
+        outcomes_tx: &tokio::sync::mpsc::UnboundedSender<ItemDiscoverOutcome<E>>,
+        item: &ItemBoxed<E>,
+    ) {
+        let item_id = item.id();
+        let fn_ctx = FnCtx::new(
+            item_id,
+            #[cfg(feature = "output_progress")]
+            ProgressSender::new(item_id, progress_tx),
+        );
+
+        let (state_current_result, state_goal_result) = match discover_for {
+            DiscoverFor::Current => {
+                let state_current_result = item
+                    .state_current_try_exec(params_specs, resources, fn_ctx)
+                    .await;
+
+                (Some(state_current_result), None)
+            }
+            DiscoverFor::Goal => {
+                let state_goal_result = item
+                    .state_goal_try_exec(params_specs, resources, fn_ctx)
+                    .await;
+
+                (None, Some(state_goal_result))
+            }
+            DiscoverFor::CurrentAndGoal => {
+                let state_current_result = item
+                    .state_current_try_exec(params_specs, resources, fn_ctx)
+                    .await;
+                let state_goal_result = item
+                    .state_goal_try_exec(params_specs, resources, fn_ctx)
+                    .await;
+
+                (Some(state_current_result), Some(state_goal_result))
+            }
+        };
+
+        // Send progress update.
+        #[cfg(feature = "output_progress")]
+        Self::discover_progress_update(
+            &state_current_result,
+            &state_goal_result,
+            discover_for,
+            is_sub_cmd,
+            progress_tx,
+            item_id,
+        );
+
+        let mut item_error = None;
+        let state_current = if let Some(state_current_result) = state_current_result {
+            match state_current_result {
+                Ok(state_current_opt) => state_current_opt,
+                Err(error) => {
+                    item_error = Some(error);
+                    None
+                }
+            }
+        } else {
+            None
+        };
+
+        let state_goal = if let Some(state_goal_result) = state_goal_result {
+            match state_goal_result {
+                Ok(state_goal_opt) => state_goal_opt,
+                Err(error) => {
+                    // It's probably more crucial to store the
+                    // `states_current`
+                    // error than the states goal error, if both err.
+                    if item_error.is_none() {
+                        item_error = Some(error);
+                    }
+                    None
+                }
+            }
+        } else {
+            None
+        };
+
+        if let Some(error) = item_error {
+            outcomes_tx
+                .send(ItemDiscoverOutcome::Fail {
+                    item_id: item_id.clone(),
+                    state_current,
+                    state_goal,
+                    error,
+                })
+                .expect("unreachable: `outcomes_rx` is in a sibling task.");
+        } else {
+            outcomes_tx
+                .send(ItemDiscoverOutcome::Success {
+                    item_id: item_id.clone(),
+                    state_current,
+                    state_goal,
+                })
+                .expect("unreachable: `outcomes_rx` is in a sibling task.");
+        }
     }
 
     #[cfg(feature = "output_progress")]
