@@ -48,9 +48,10 @@ impl<State, StateDiff> TryFrom<(ItemApplyPartial<State, StateDiff>, Option<State
             && apply_check.is_some()
         {
             let (Some(state_current), Some(state_target), Some(state_diff), Some(apply_check)) =
-                (state_current, state_target, state_diff, apply_check) else {
-                    unreachable!("All are checked to be `Some` above.");
-                };
+                (state_current, state_target, state_diff, apply_check)
+            else {
+                unreachable!("All are checked to be `Some` above.");
+            };
             Ok(Self {
                 state_current_stored,
                 state_current,

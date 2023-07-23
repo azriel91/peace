@@ -220,8 +220,11 @@ where
 
                     #[cfg(feature = "output_progress")]
                     progress_sender.tick(ProgressMsgUpdate::Set(String::from("attaching policy")));
-                    let Generated::Value(managed_policy_arn) = managed_policy_attachment.arn() else {
-                        unreachable!("Impossible to have an attached managed policy without an ARN.");
+                    let Generated::Value(managed_policy_arn) = managed_policy_attachment.arn()
+                    else {
+                        unreachable!(
+                            "Impossible to have an attached managed policy without an ARN."
+                        );
                     };
                     client
                         .attach_role_policy()
@@ -271,8 +274,12 @@ where
                     } => {
                         let client = data.client();
                         if managed_policy_attachment.attached() {
-                            let Generated::Value(managed_policy_arn) = managed_policy_attachment.arn() else {
-                                unreachable!("Impossible to have an attached managed policy without an ARN.");
+                            let Generated::Value(managed_policy_arn) =
+                                managed_policy_attachment.arn()
+                            else {
+                                unreachable!(
+                                    "Impossible to have an attached managed policy without an ARN."
+                                );
                             };
                             Self::managed_policy_detach(
                                 #[cfg(feature = "output_progress")]
@@ -332,19 +339,24 @@ where
                 managed_policy_attachment_goal,
             } => {
                 let IamRoleState::Some {
-                        name,
-                        path,
-                        role_id_and_arn: _,
-                        managed_policy_attachment,
-                    } = state_goal else {
-                        panic!("`IamRoleApplyFns::exec` called with state_goal being None.");
-                    };
+                    name,
+                    path,
+                    role_id_and_arn: _,
+                    managed_policy_attachment,
+                } = state_goal
+                else {
+                    panic!("`IamRoleApplyFns::exec` called with state_goal being None.");
+                };
 
                 let client = data.client();
                 if managed_policy_attachment_current.attached() {
                     // Detach it.
-                    let Generated::Value(managed_policy_arn) = managed_policy_attachment_current.arn() else {
-                        unreachable!("Impossible to have an attached managed policy without an ARN.");
+                    let Generated::Value(managed_policy_arn) =
+                        managed_policy_attachment_current.arn()
+                    else {
+                        unreachable!(
+                            "Impossible to have an attached managed policy without an ARN."
+                        );
                     };
                     Self::managed_policy_detach(
                         #[cfg(feature = "output_progress")]
@@ -358,8 +370,11 @@ where
                 }
 
                 if managed_policy_attachment_goal.attached() {
-                    let Generated::Value(managed_policy_arn) = managed_policy_attachment_goal.arn() else {
-                        unreachable!("Impossible to have an attached managed policy without an ARN.");
+                    let Generated::Value(managed_policy_arn) = managed_policy_attachment_goal.arn()
+                    else {
+                        unreachable!(
+                            "Impossible to have an attached managed policy without an ARN."
+                        );
                     };
                     #[cfg(feature = "output_progress")]
                     progress_sender.tick(ProgressMsgUpdate::Set(String::from("attaching policy")));

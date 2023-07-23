@@ -318,7 +318,7 @@ mod color_always {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         assert_eq!(
@@ -378,7 +378,7 @@ mod color_always {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         progress_bar.set_position(20);
@@ -444,7 +444,7 @@ mod color_always {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         progress_bar.set_position(20);
@@ -470,7 +470,7 @@ mod color_always {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         assert_eq!(
@@ -525,7 +525,7 @@ mod color_always {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         progress_bar.set_position(20);
@@ -551,7 +551,7 @@ mod color_always {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         assert_eq!(
@@ -616,7 +616,7 @@ mod color_always {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         assert_eq!(
@@ -691,7 +691,7 @@ msg_update: NoChange"#,
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         assert_eq!(
@@ -732,7 +732,7 @@ mod color_never {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         assert_eq!(
@@ -789,7 +789,7 @@ mod color_never {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         progress_bar.set_position(20);
@@ -855,7 +855,7 @@ mod color_never {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         progress_bar.set_position(20);
@@ -881,7 +881,7 @@ mod color_never {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         assert_eq!(
@@ -936,7 +936,7 @@ mod color_never {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         progress_bar.set_position(20);
@@ -962,7 +962,7 @@ mod color_never {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         assert_eq!(
@@ -1027,7 +1027,7 @@ mod color_never {
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         assert_eq!(
@@ -1102,7 +1102,7 @@ msg_update: NoChange"#,
         let CliOutputTarget::InMemory(in_memory_term) = cli_output.progress_target() else {
             ({
                 #[cfg_attr(coverage_nightly, no_coverage)]
-                || -> ! { unreachable!("This is set in `cli_output_progress`."); }
+                || -> ! { unreachable!("This is set in `cli_output_progress`.") }
             })();
         };
         assert_eq!(

@@ -89,8 +89,10 @@ async fn run_command(
         } => {
             let profile_switch = if create {
                 let Some(((env_type, slug), version)) = r#type.zip(slug).zip(version) else {
-                    unreachable!("`clap` should ensure `env_type`, `slug`, and `version` are \
-                        `Some` when `create` is `true`.");
+                    unreachable!(
+                        "`clap` should ensure `env_type`, `slug`, and `version` are \
+                        `Some` when `create` is `true`."
+                    );
                 };
                 ProfileSwitch::CreateNew {
                     profile,
