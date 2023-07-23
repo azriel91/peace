@@ -429,7 +429,7 @@ fn field_generics_maybe(ty: &Type) -> Vec<GenericParam> {
                 .inputs
                 .iter()
                 .flat_map(|fn_arg| field_generics_maybe(&fn_arg.ty))
-                .chain(output_types.into_iter())
+                .chain(output_types)
                 .collect::<Vec<GenericParam>>()
         }
         Type::Group(type_group) => field_generics_maybe(&type_group.elem),

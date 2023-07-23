@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, path::Path};
+use std::{fmt::Write, marker::PhantomData, path::Path};
 
 use peace::{
     cfg::{state::Generated, FnCtx},
@@ -118,8 +118,14 @@ where
 
         let content_md5_hexstr = content_md5_bytes
             .iter()
-            .map(|x| format!("{:02x}", x))
-            .collect::<String>();
+            .try_fold(
+                String::with_capacity(content_md5_bytes.len() * 2),
+                |mut hexstr, x| {
+                    write!(&mut hexstr, "{:02x}", x)?;
+                    Result::<_, std::fmt::Error>::Ok(hexstr)
+                },
+            )
+            .expect("Failed to construct hexstring from S3 object MD5.");
 
         Ok(S3ObjectState::Some {
             bucket_name,

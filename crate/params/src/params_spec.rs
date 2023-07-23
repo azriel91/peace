@@ -184,7 +184,7 @@ where
             },
             ParamsSpec::MappingFn(mapping_fn) => mapping_fn
                 .try_map(resources, value_resolution_ctx)
-                .map(|t| t.map(T::Partial::from).unwrap_or_else(T::Partial::default)),
+                .map(|t| t.map(T::Partial::from).unwrap_or_default()),
             ParamsSpec::FieldWise { field_wise_spec } => {
                 field_wise_spec.resolve_partial(resources, value_resolution_ctx)
             }

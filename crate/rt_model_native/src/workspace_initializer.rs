@@ -53,7 +53,7 @@ impl WorkspaceInitializer {
     where
         I: IntoIterator<Item = &'f Path>,
     {
-        stream::iter(dirs.into_iter())
+        stream::iter(dirs)
             .map(Result::<_, Error>::Ok)
             .try_for_each(|dir| async move {
                 tokio::fs::create_dir_all(dir).await.map_err(|error| {

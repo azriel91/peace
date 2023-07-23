@@ -165,7 +165,7 @@ where
             }
             ParamsSpecFieldless::MappingFn(mapping_fn) => mapping_fn
                 .try_map(resources, value_resolution_ctx)
-                .map(|t| t.map(T::Partial::from).unwrap_or_else(T::Partial::default)),
+                .map(|t| t.map(T::Partial::from).unwrap_or_default()),
         }
     }
 }

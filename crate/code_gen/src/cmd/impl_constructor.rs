@@ -156,7 +156,6 @@ mod scope_field_values {
         field_values: &mut Punctuated<FieldValue, Token![,]>,
         scope: Scope,
     ) {
-        if scope.profile_count() == ProfileCount::One {}
         match scope.profile_count() {
             ProfileCount::None => {}
             ProfileCount::One | ProfileCount::Multiple => {

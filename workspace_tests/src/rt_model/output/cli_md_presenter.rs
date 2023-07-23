@@ -19,8 +19,7 @@ async fn presents_heading_with_hashes_color_disabled() -> Result<(), Box<dyn std
             (HeadingLevel::Level4, "#### `code`\n\n"),
             (HeadingLevel::Level5, "##### `code`\n\n"),
             (HeadingLevel::Level6, "###### `code`\n\n"),
-        ]
-        .into_iter(),
+        ],
     )
     .map(Result::<_, Box<dyn std::error::Error>>::Ok)
     .try_for_each(|(heading_level, expected)| async move {
@@ -49,8 +48,7 @@ async fn presents_heading_with_hashes_color_enabled() -> Result<(), Box<dyn std:
             (HeadingLevel::Level4, "\u{1b}[38;5;243m\u{1b}[1m####\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "#### `code`\n\n"),
             (HeadingLevel::Level5, "\u{1b}[38;5;243m\u{1b}[1m#####\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "##### `code`\n\n"),
             (HeadingLevel::Level6, "\u{1b}[38;5;243m\u{1b}[1m######\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "###### `code`\n\n"),
-        ]
-        .into_iter(),
+        ],
     )
     .map(Result::<_, Box<dyn std::error::Error>>::Ok)
     .try_for_each(|(heading_level, expected_colorized, expected)| async move {
