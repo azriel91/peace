@@ -1,0 +1,33 @@
+[package]
+name = "peace_cmd_rt"
+description = "Runtime types for commands for the Peace framework."
+documentation = "https://docs.rs/peace_cmd_rt/"
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme.workspace = true
+categories.workspace = true
+keywords.workspace = true
+license.workspace = true
+
+[lib]
+doctest = false
+test = false
+
+[dependencies]
+async-trait = { workspace = true }
+cfg-if = { workspace = true }
+peace_cfg = { workspace = true }
+peace_cmd = { workspace = true }
+peace_resources = { workspace = true }
+peace_rt_model = { workspace = true }
+tokio = { workspace = true, features = ["sync"] }
+
+[features]
+default = []
+output_progress = [
+    "peace_cfg/output_progress",
+    "peace_rt_model/output_progress",
+]
