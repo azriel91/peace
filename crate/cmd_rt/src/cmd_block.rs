@@ -1,6 +1,8 @@
+use std::fmt::Debug;
+
 use async_trait::async_trait;
 use peace_cmd::scopes::SingleProfileSingleFlowView;
-use peace_resources::resources::ts::SetUp;
+use peace_resources::{resources::ts::SetUp, Resource};
 use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -10,6 +12,14 @@ cfg_if::cfg_if! {
         use tokio::sync::mpsc::Sender;
     }
 }
+
+pub use self::{
+    cmd_block_rt::CmdBlockRt, cmd_block_rt_box::CmdBlockRtBox, cmd_block_wrapper::CmdBlockWrapper,
+};
+
+mod cmd_block_rt;
+mod cmd_block_rt_box;
+mod cmd_block_wrapper;
 
 /// Runs one [`Item::*`] function for one iteration of items.
 ///
@@ -32,7 +42,7 @@ cfg_if::cfg_if! {
 ///
 /// [`Item::*`]: peace_cfg::Item
 #[async_trait(?Send)]
-pub trait CmdBlock {
+pub trait CmdBlock: Debug {
     /// Automation software error type.
     type Error: std::error::Error + From<peace_rt_model::Error> + Send + 'static;
     /// Types used for params keys.
@@ -64,7 +74,9 @@ pub trait CmdBlock {
     /// ```
     type ItemOutcomeT: Send + 'static;
     /// Outcome type of the command block, e.g. `(StatesCurrent, StatesGoal)`.
-    type OutcomeT: 'static;
+    type OutcomeT: Resource + 'static;
+    /// Input to this `CmdBlock`. May be `()` if no input is required.
+    type InputT: Resource + 'static;
 
     /// Producer function to process all items.
     ///
@@ -73,8 +85,8 @@ pub trait CmdBlock {
     /// the block that are not associated with a specific item.
     async fn exec(
         &self,
-        view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcome_tx: &UnboundedSender<Self::ItemOutcomeT>,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        outcomes_tx: &UnboundedSender<Self::ItemOutcomeT>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
     );
 
@@ -91,5 +103,5 @@ pub trait CmdBlock {
         &self,
         block_outcome: &mut CmdOutcome<Self::OutcomeT, Self::Error>,
         item_outcome: Self::ItemOutcomeT,
-    );
+    ) -> Result<(), Self::Error>;
 }

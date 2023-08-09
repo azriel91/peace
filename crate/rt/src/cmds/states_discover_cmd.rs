@@ -7,6 +7,7 @@ use peace_cmd::{
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
     CmdIndependence,
 };
+use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesCurrentFile, StatesGoalFile},
@@ -22,6 +23,7 @@ use peace_rt_model::{
     outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, ItemBoxed, ItemGraph,
     Storage,
 };
+use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{cmds::CmdBase, BUFFERED_FUTURES_MAX};
 
@@ -41,8 +43,13 @@ cfg_if::cfg_if! {
     }
 }
 
-#[derive(Debug)]
 pub struct StatesDiscoverCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
+
+impl<E, O, PKeys> Debug for StatesDiscoverCmd<E, O, PKeys> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("StatesDiscoverCmd").field(&self.0).finish()
+    }
+}
 
 impl<E, O, PKeys> StatesDiscoverCmd<E, O, PKeys>
 where
@@ -599,7 +606,7 @@ impl<E, O, PKeys> Default for StatesDiscoverCmd<E, O, PKeys> {
 }
 
 #[derive(Debug)]
-enum ItemDiscoverOutcome<E> {
+pub enum ItemDiscoverOutcome<E> {
     /// Discover succeeded.
     Success {
         item_id: ItemId,
@@ -624,4 +631,91 @@ enum DiscoverFor {
     Goal,
     /// Discover both current and goal states.
     CurrentAndGoal,
+}
+
+#[async_trait(?Send)]
+impl<E, O, PKeys> CmdBlock for StatesDiscoverCmd<E, O, PKeys>
+where
+    E: std::error::Error + From<Error> + Send + 'static,
+    O: OutputWrite<E>,
+    PKeys: ParamsKeys + 'static,
+{
+    type Error = E;
+    type InputT = ();
+    type ItemOutcomeT = ItemDiscoverOutcome<E>;
+    type OutcomeT = (StatesMut<Current>, StatesMut<Goal>);
+    type PKeys = PKeys;
+
+    async fn exec(
+        &self,
+        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
+        outcomes_tx: &UnboundedSender<Self::ItemOutcomeT>,
+        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
+    ) {
+        let SingleProfileSingleFlowView {
+            flow,
+            params_specs,
+            resources,
+            ..
+        } = &*cmd_view;
+
+        flow.graph()
+            .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
+                Self::item_states_discover(
+                    DiscoverFor::CurrentAndGoal,
+                    #[cfg(feature = "output_progress")]
+                    true,
+                    #[cfg(feature = "output_progress")]
+                    progress_tx,
+                    params_specs,
+                    resources,
+                    outcomes_tx,
+                    item,
+                )
+            })
+            .await;
+    }
+
+    fn outcome_collate(
+        &self,
+        block_outcome: &mut CmdOutcome<Self::OutcomeT, Self::Error>,
+        item_outcome: Self::ItemOutcomeT,
+    ) -> Result<(), Self::Error> {
+        let CmdOutcome {
+            value: (states_current_mut, states_goal_mut),
+            errors,
+        } = block_outcome;
+
+        match item_outcome {
+            ItemDiscoverOutcome::Success {
+                item_id,
+                state_current,
+                state_goal,
+            } => {
+                if let Some(state_current) = state_current {
+                    states_current_mut.insert_raw(item_id.clone(), state_current);
+                }
+                if let Some(state_goal) = state_goal {
+                    states_goal_mut.insert_raw(item_id, state_goal);
+                }
+            }
+            ItemDiscoverOutcome::Fail {
+                item_id,
+                state_current,
+                state_goal,
+                error,
+            } => {
+                errors.insert(item_id.clone(), error);
+
+                if let Some(state_current) = state_current {
+                    states_current_mut.insert_raw(item_id.clone(), state_current);
+                }
+                if let Some(state_goal) = state_goal {
+                    states_goal_mut.insert_raw(item_id, state_goal);
+                }
+            }
+        }
+
+        Ok(())
+    }
 }

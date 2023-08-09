@@ -8,6 +8,22 @@ use peace::miette;
 #[cfg_attr(feature = "error_reporting", derive(peace::miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
 pub enum PeaceTestError {
+    /// Flow ID is invalid.
+    #[error("Flow ID is invalid.")]
+    FlowIdInvalidFmt(
+        #[source]
+        #[from]
+        peace::cfg::FlowIdInvalidFmt<'static>,
+    ),
+
+    /// Failed to initialize tempdir.
+    #[error("Failed to initialize tempdir.")]
+    TempDir(
+        #[source]
+        #[from]
+        std::io::Error,
+    ),
+
     /// A VecCopy item error occurred.
     #[error("A VecCopy item error occurred.")]
     VecCopy(

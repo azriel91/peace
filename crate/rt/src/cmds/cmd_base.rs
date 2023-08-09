@@ -147,6 +147,8 @@ where
         // signature, but not on inner type parameters, or `TypeParamBounds`
         //
         // See <https://doc.rust-lang.org/reference/items/functions.html> and related grammar.
+        //
+        // Should be removable in the near future: <https://github.com/rust-lang/rfcs/pull/3399>.
         #[cfg(feature = "output_progress")] FnExec: for<'f_exec> FnOnce(
             &'f_exec mut SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
             &'f_exec Sender<ProgressUpdateAndId>,

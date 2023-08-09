@@ -21,6 +21,7 @@ crate-type = ["cdylib", "rlib"]
 miette = { workspace = true, optional = true }
 peace_cfg = { workspace = true }
 peace_cmd = { workspace = true }
+peace_cmd_rt = { workspace = true }
 peace_data = { workspace = true }
 peace_diff = { workspace = true }
 peace_fmt = { workspace = true }
@@ -40,6 +41,7 @@ error_reporting = [
 ]
 output_in_memory = ["peace_rt_model/output_in_memory"]
 output_progress = [
+    "peace_cmd_rt/output_progress",
     "peace_cfg/output_progress",
     "peace_rt/output_progress",
     "peace_rt_model/output_progress",
@@ -70,6 +72,7 @@ peace = { path = ".", version = "0.0.11", default-features = false }
 
 peace_cfg = { path = "crate/cfg", version = "0.0.11" }
 peace_cmd = { path = "crate/cmd", version = "0.0.11" }
+peace_cmd_rt = { path = "crate/cmd_rt", version = "0.0.11" }
 peace_code_gen = { path = "crate/code_gen", version = "0.0.11" }
 peace_core = { path = "crate/core", version = "0.0.11" }
 peace_data = { path = "crate/data", version = "0.0.11" }
