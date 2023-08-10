@@ -21,56 +21,83 @@ cfg_if::cfg_if! {
 ///
 /// [`CmdBlockRt`]: crate::CmdBlockRt
 #[derive(Debug)]
-pub struct CmdBlockWrapper<CB, E, PKeys, ItemOutcomeT, OutcomeT, InputT> {
+pub struct CmdBlockWrapper<CB, E, PKeys, OutcomeT, ItemOutcomeT, WorkingT, InputT> {
     /// Underlying `CmdBlock` implementation.
     ///
     /// The trait constraints are applied on impl blocks.
     cmd_block: CB,
-    /// Initialization function for `OutcomeT`, based on the block's input type.
-    fn_cmd_outcome_init: fn(Box<InputT>) -> OutcomeT,
+    /// Initialization function for `WorkingT`, based on the block's input type.
+    fn_working_t_init: fn(Box<InputT>) -> WorkingT,
+    /// Transforms `WorkingT` into `OutcomeT`.
+    fn_cmd_outcome_from_working: fn(WorkingT) -> OutcomeT,
     /// Marker.
-    marker: PhantomData<(E, PKeys, ItemOutcomeT)>,
+    marker: PhantomData<(E, PKeys, OutcomeT, ItemOutcomeT)>,
 }
 
-impl<CB, E, PKeys, ItemOutcomeT, OutcomeT, InputT>
-    CmdBlockWrapper<CB, E, PKeys, ItemOutcomeT, OutcomeT, InputT>
+impl<CB, E, PKeys, OutcomeT, ItemOutcomeT, WorkingT, InputT>
+    CmdBlockWrapper<CB, E, PKeys, OutcomeT, ItemOutcomeT, WorkingT, InputT>
 where
-    CB: CmdBlock<Error = E, PKeys = PKeys, ItemOutcomeT = ItemOutcomeT, OutcomeT = OutcomeT>,
+    CB: CmdBlock<
+            Error = E,
+            PKeys = PKeys,
+            OutcomeT = OutcomeT,
+            ItemOutcomeT = ItemOutcomeT,
+            WorkingT = WorkingT,
+        >,
 {
-    pub fn new(cmd_block: CB, fn_cmd_outcome_init: fn(Box<InputT>) -> OutcomeT) -> Self {
+    pub fn new(
+        cmd_block: CB,
+        fn_working_t_init: fn(Box<InputT>) -> WorkingT,
+        fn_cmd_outcome_from_working: fn(WorkingT) -> OutcomeT,
+    ) -> Self {
         Self {
             cmd_block,
-            fn_cmd_outcome_init,
+            fn_working_t_init,
+            fn_cmd_outcome_from_working,
             marker: PhantomData,
         }
     }
 }
 
-impl<CB, E, PKeys, ItemOutcomeT, OutcomeT, InputT> From<(CB, fn(Box<InputT>) -> OutcomeT)>
-    for CmdBlockWrapper<CB, E, PKeys, ItemOutcomeT, OutcomeT, InputT>
+impl<CB, E, PKeys, OutcomeT, ItemOutcomeT, WorkingT, InputT>
+    From<(CB, fn(Box<InputT>) -> WorkingT, fn(WorkingT) -> OutcomeT)>
+    for CmdBlockWrapper<CB, E, PKeys, OutcomeT, ItemOutcomeT, WorkingT, InputT>
 where
-    CB: CmdBlock<Error = E, PKeys = PKeys, ItemOutcomeT = ItemOutcomeT, OutcomeT = OutcomeT>,
+    CB: CmdBlock<
+            Error = E,
+            PKeys = PKeys,
+            OutcomeT = OutcomeT,
+            ItemOutcomeT = ItemOutcomeT,
+            WorkingT = WorkingT,
+        >,
 {
-    fn from((cmd_block, fn_cmd_outcome_init): (CB, fn(Box<InputT>) -> OutcomeT)) -> Self {
-        Self::new(cmd_block, fn_cmd_outcome_init)
+    fn from(
+        (cmd_block, fn_working_t_init, fn_cmd_outcome_from_working): (
+            CB,
+            fn(Box<InputT>) -> WorkingT,
+            fn(WorkingT) -> OutcomeT,
+        ),
+    ) -> Self {
+        Self::new(cmd_block, fn_working_t_init, fn_cmd_outcome_from_working)
     }
 }
 
 #[async_trait(?Send)]
-impl<CB, E, PKeys, ItemOutcomeT, OutcomeT, InputT> CmdBlockRt
-    for CmdBlockWrapper<CB, E, PKeys, ItemOutcomeT, OutcomeT, InputT>
+impl<CB, E, PKeys, OutcomeT, ItemOutcomeT, WorkingT, InputT> CmdBlockRt
+    for CmdBlockWrapper<CB, E, PKeys, OutcomeT, ItemOutcomeT, WorkingT, InputT>
 where
     CB: CmdBlock<
             Error = E,
             PKeys = PKeys,
             ItemOutcomeT = ItemOutcomeT,
-            OutcomeT = OutcomeT,
+            WorkingT = WorkingT,
             InputT = InputT,
         > + Unpin,
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
     PKeys: Debug + ParamsKeys + Unpin + 'static,
+    OutcomeT: Debug + Unpin + 'static,
     ItemOutcomeT: Debug + Unpin + 'static,
-    OutcomeT: Debug + Resource + 'static,
+    WorkingT: Debug + Resource + 'static,
     InputT: Debug + Resource + 'static,
 {
     type Error = E;
@@ -96,7 +123,7 @@ where
 
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<ItemOutcomeT>();
         let mut cmd_outcome = {
-            let outcome = (self.fn_cmd_outcome_init)(input);
+            let outcome = (self.fn_working_t_init)(input);
             let errors = IndexMap::<ItemId, E>::new();
             CmdOutcome {
                 value: outcome,
@@ -130,6 +157,7 @@ where
 
         let ((), outcome_result) = futures::join!(execution_task, outcomes_rx_task);
 
-        outcome_result.map(|()| cmd_outcome)
+        outcome_result
+            .map(|()| cmd_outcome.map(|working_t| (self.fn_cmd_outcome_from_working)(working_t)))
     }
 }

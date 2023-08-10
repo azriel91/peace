@@ -47,6 +47,8 @@ pub trait CmdBlock: Debug {
     type Error: std::error::Error + From<peace_rt_model::Error> + Send + 'static;
     /// Types used for params keys.
     type PKeys: ParamsKeys + 'static;
+    /// Outcome type of the command block, e.g. `(StatesCurrent, StatesGoal)`.
+    type OutcomeT: Resource + 'static;
     /// Outcome type of each item's execution, e.g. `ItemDiscoverOutcome<E>`.
     ///
     /// This is usually an enum with variants for the successful and failed
@@ -73,8 +75,9 @@ pub trait CmdBlock: Debug {
     /// }
     /// ```
     type ItemOutcomeT: Send + 'static;
-    /// Outcome type of the command block, e.g. `(StatesCurrent, StatesGoal)`.
-    type OutcomeT: Resource + 'static;
+    /// Intermediate working type of the command block, e.g.
+    /// `StatesMut<Ensured>`.
+    type WorkingT: Resource + 'static;
     /// Input to this `CmdBlock`. May be `()` if no input is required.
     type InputT: Resource + 'static;
 
@@ -101,7 +104,7 @@ pub trait CmdBlock: Debug {
     /// related to the framework that cannot be associated with an item.
     fn outcome_collate(
         &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeT, Self::Error>,
+        block_outcome: &mut CmdOutcome<Self::WorkingT, Self::Error>,
         item_outcome: Self::ItemOutcomeT,
     ) -> Result<(), Self::Error>;
 }

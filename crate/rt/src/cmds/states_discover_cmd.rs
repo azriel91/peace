@@ -14,7 +14,7 @@ use peace_resources::{
     resources::ts::SetUp,
     states::{
         ts::{Current, Goal},
-        StatesCurrent, StatesGoal,
+        States, StatesCurrent, StatesGoal,
     },
     type_reg::untagged::BoxDtDisplay,
     Resources,
@@ -643,8 +643,9 @@ where
     type Error = E;
     type InputT = ();
     type ItemOutcomeT = ItemDiscoverOutcome<E>;
-    type OutcomeT = (StatesMut<Current>, StatesMut<Goal>);
+    type OutcomeT = (States<Current>, States<Goal>);
     type PKeys = PKeys;
+    type WorkingT = (StatesMut<Current>, StatesMut<Goal>);
 
     async fn exec(
         &self,
@@ -678,7 +679,7 @@ where
 
     fn outcome_collate(
         &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeT, Self::Error>,
+        block_outcome: &mut CmdOutcome<Self::WorkingT, Self::Error>,
         item_outcome: Self::ItemOutcomeT,
     ) -> Result<(), Self::Error> {
         let CmdOutcome {

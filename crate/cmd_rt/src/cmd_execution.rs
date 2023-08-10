@@ -41,7 +41,7 @@ impl<E, PKeys, OutcomeT> CmdExecution<E, PKeys, OutcomeT>
 where
     E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
     PKeys: Debug + ParamsKeys + Unpin + 'static,
-    OutcomeT: Debug + Send + Sync + 'static,
+    OutcomeT: Debug + Send + Sync + Unpin + 'static,
 {
     pub fn builder() -> CmdExecutionBuilder<E, PKeys, OutcomeT> {
         CmdExecutionBuilder::new()

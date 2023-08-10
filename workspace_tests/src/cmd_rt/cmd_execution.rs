@@ -4,7 +4,10 @@ use peace::{
     cmd_rt::{CmdBlockWrapper, CmdExecution},
     resources::{
         internal::StatesMut,
-        states::ts::{Current, Goal},
+        states::{
+            ts::{Current, Goal},
+            StatesCurrent, StatesGoal,
+        },
     },
     rt::cmds::StatesDiscoverCmd,
     rt_model::{
@@ -13,6 +16,7 @@ use peace::{
         Flow, ItemGraphBuilder, Workspace, WorkspaceSpec,
     },
 };
+use tempfile::TempDir;
 
 use crate::{
     mock_item::{MockItem, MockSrc},
@@ -35,24 +39,22 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
                 let states_goal_mut = StatesMut::<Goal>::new();
                 (states_current_mut, states_goal_mut)
             },
+            |(states_current_mut, states_goal_mut)| {
+                (
+                    StatesCurrent::from(states_current_mut),
+                    StatesGoal::from(states_goal_mut),
+                )
+            },
         ))
         .build();
 
-    let tempdir = tempfile::tempdir().map_err(PeaceTestError::TempDir)?;
-    let workspace = Workspace::new(
-        app_name!(),
-        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
-    )?;
-    let graph = {
-        let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
-        graph_builder.add_fn(VecCopyItem::default().into());
-        graph_builder.add_fn(MockItem::<()>::default().into());
-        graph_builder.build()
-    };
-    let flow = Flow::new(FlowId::new(crate::fn_name_short!())?, graph);
-    let mut output = NoOpOutput;
+    let TestCtx {
+        tempdir: _tempdir,
+        workspace,
+        flow,
+    } = test_ctx_init().await?;
 
-    // Write current and goal states to disk.
+    let mut output = NoOpOutput;
     let mut cmd_ctx = CmdCtx::builder_single_profile_single_flow(&mut output, &workspace)
         .with_profile(profile!("test_profile"))
         .with_flow(&flow)
@@ -86,4 +88,33 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
     })();
 
     Ok(())
+}
+
+async fn test_ctx_init() -> Result<TestCtx, PeaceTestError> {
+    let tempdir = tempfile::tempdir().map_err(PeaceTestError::TempDir)?;
+    let workspace = Workspace::new(
+        app_name!(),
+        WorkspaceSpec::Path(tempdir.path().to_path_buf()),
+    )?;
+    let flow = {
+        let graph = {
+            let mut graph_builder = ItemGraphBuilder::<PeaceTestError>::new();
+            graph_builder.add_fn(VecCopyItem::default().into());
+            graph_builder.add_fn(MockItem::<()>::default().into());
+            graph_builder.build()
+        };
+        Flow::new(FlowId::new(crate::fn_name_short!())?, graph)
+    };
+
+    Ok(TestCtx {
+        tempdir,
+        workspace,
+        flow,
+    })
+}
+
+struct TestCtx {
+    tempdir: TempDir,
+    workspace: Workspace,
+    flow: Flow<PeaceTestError>,
 }

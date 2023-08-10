@@ -23,26 +23,28 @@ impl<E, PKeys, OutcomeT> CmdExecutionBuilder<E, PKeys, OutcomeT>
 where
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
     PKeys: Debug + ParamsKeys + Unpin + 'static,
-    OutcomeT: Debug + Resource + 'static,
+    OutcomeT: Debug + Resource + Unpin + 'static,
 {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn with_cmd_block<CB, ItemOutcomeT, InputT>(
+    pub fn with_cmd_block<CB, ItemOutcomeT, WorkingT, InputT>(
         mut self,
-        cmd_block: CmdBlockWrapper<CB, E, PKeys, ItemOutcomeT, OutcomeT, InputT>,
+        cmd_block: CmdBlockWrapper<CB, E, PKeys, OutcomeT, ItemOutcomeT, WorkingT, InputT>,
     ) -> Self
     where
         CB: CmdBlock<
                 Error = E,
                 PKeys = PKeys,
-                ItemOutcomeT = ItemOutcomeT,
                 OutcomeT = OutcomeT,
+                ItemOutcomeT = ItemOutcomeT,
+                WorkingT = WorkingT,
                 InputT = InputT,
             > + Unpin
             + 'static,
         ItemOutcomeT: Debug + Unpin + 'static,
+        WorkingT: Debug + Resource + 'static,
         InputT: Debug + Resource + 'static,
     {
         self.cmd_blocks.push_back(Box::pin(cmd_block));
