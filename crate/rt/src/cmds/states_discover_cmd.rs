@@ -14,7 +14,7 @@ use peace_resources::{
     resources::ts::SetUp,
     states::{
         ts::{Current, Goal},
-        StatesCurrent, StatesGoal,
+        States, StatesCurrent, StatesGoal,
     },
     type_reg::untagged::BoxDtDisplay,
     Resources,
@@ -642,15 +642,16 @@ where
 {
     type Error = E;
     type InputT = ();
-    type OutcomeMutT = (StatesMut<Current>, StatesMut<Goal>);
-    type OutcomePartialT = ItemDiscoverOutcome<E>;
+    type Outcome = (States<Current>, States<Goal>);
+    type OutcomeAcc = (StatesMut<Current>, StatesMut<Goal>);
+    type OutcomePartial = ItemDiscoverOutcome<E>;
     type PKeys = PKeys;
 
     async fn exec(
         &self,
         _input: Box<Self::InputT>,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartialT>,
+        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
     ) {
         let SingleProfileSingleFlowView {
@@ -679,15 +680,15 @@ where
 
     fn outcome_collate(
         &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeMutT, Self::Error>,
-        item_outcome: Self::OutcomePartialT,
+        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
+        outcome_partial: Self::OutcomePartial,
     ) -> Result<(), Self::Error> {
         let CmdOutcome {
             value: (states_current_mut, states_goal_mut),
             errors,
         } = block_outcome;
 
-        match item_outcome {
+        match outcome_partial {
             ItemDiscoverOutcome::Success {
                 item_id,
                 state_current,
@@ -718,5 +719,13 @@ where
         }
 
         Ok(())
+    }
+
+    fn outcome_map(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
+        let (states_current_mut, states_goal_mut) = outcome_acc;
+        (
+            StatesCurrent::from(states_current_mut),
+            StatesGoal::from(states_goal_mut),
+        )
     }
 }

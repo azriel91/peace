@@ -21,86 +21,73 @@ cfg_if::cfg_if! {
 ///
 /// [`CmdBlockRt`]: crate::CmdBlockRt
 #[derive(Debug)]
-pub struct CmdBlockWrapper<CB, E, PKeys, OutcomeT, OutcomeMutT, OutcomePartialT, InputT> {
+pub struct CmdBlockWrapper<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT> {
     /// Underlying `CmdBlock` implementation.
     ///
     /// The trait constraints are applied on impl blocks.
     cmd_block: CB,
-    /// Seed function for `OutcomeMutT`.
-    fn_outcome_mut_init: fn() -> OutcomeMutT,
-    /// Transforms `OutcomeMutT` into `OutcomeT`.
-    fn_cmd_outcome_from_working: fn(OutcomeMutT) -> OutcomeT,
+    /// Seed function for `OutcomeAcc`.
+    fn_outcome_acc_init: fn() -> OutcomeAcc,
     /// Marker.
-    marker: PhantomData<(E, PKeys, OutcomeT, OutcomePartialT, InputT)>,
+    marker: PhantomData<(E, PKeys, Outcome, OutcomePartial, InputT)>,
 }
 
-impl<CB, E, PKeys, OutcomeT, OutcomeMutT, OutcomePartialT, InputT>
-    CmdBlockWrapper<CB, E, PKeys, OutcomeT, OutcomeMutT, OutcomePartialT, InputT>
+impl<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT>
+    CmdBlockWrapper<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT>
 where
     CB: CmdBlock<
             Error = E,
             PKeys = PKeys,
-            OutcomeMutT = OutcomeMutT,
-            OutcomePartialT = OutcomePartialT,
+            OutcomeAcc = OutcomeAcc,
+            OutcomePartial = OutcomePartial,
             InputT = InputT,
         >,
 {
-    pub fn new(
-        cmd_block: CB,
-        fn_outcome_mut_init: fn() -> OutcomeMutT,
-        fn_cmd_outcome_from_working: fn(OutcomeMutT) -> OutcomeT,
-    ) -> Self {
+    pub fn new(cmd_block: CB, fn_outcome_acc_init: fn() -> OutcomeAcc) -> Self {
         Self {
             cmd_block,
-            fn_outcome_mut_init,
-            fn_cmd_outcome_from_working,
+            fn_outcome_acc_init,
             marker: PhantomData,
         }
     }
 }
 
-impl<CB, E, PKeys, OutcomeT, OutcomeMutT, OutcomePartialT, InputT>
-    From<(CB, fn() -> OutcomeMutT, fn(OutcomeMutT) -> OutcomeT)>
-    for CmdBlockWrapper<CB, E, PKeys, OutcomeT, OutcomeMutT, OutcomePartialT, InputT>
+impl<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT> From<(CB, fn() -> OutcomeAcc)>
+    for CmdBlockWrapper<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT>
 where
     CB: CmdBlock<
             Error = E,
             PKeys = PKeys,
-            OutcomeMutT = OutcomeMutT,
-            OutcomePartialT = OutcomePartialT,
+            OutcomeAcc = OutcomeAcc,
+            OutcomePartial = OutcomePartial,
             InputT = InputT,
         >,
 {
-    fn from(
-        (cmd_block, fn_outcome_mut_init, fn_cmd_outcome_from_working): (
-            CB,
-            fn() -> OutcomeMutT,
-            fn(OutcomeMutT) -> OutcomeT,
-        ),
-    ) -> Self {
-        Self::new(cmd_block, fn_outcome_mut_init, fn_cmd_outcome_from_working)
+    fn from((cmd_block, fn_outcome_acc_init): (CB, fn() -> OutcomeAcc)) -> Self {
+        Self::new(cmd_block, fn_outcome_acc_init)
     }
 }
 
 #[async_trait(?Send)]
-impl<CB, E, PKeys, OutcomeT, OutcomeMutT, OutcomePartialT, InputT> CmdBlockRt
-    for CmdBlockWrapper<CB, E, PKeys, OutcomeT, OutcomeMutT, OutcomePartialT, InputT>
+impl<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT> CmdBlockRt
+    for CmdBlockWrapper<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT>
 where
     CB: CmdBlock<
             Error = E,
             PKeys = PKeys,
-            OutcomeMutT = OutcomeMutT,
-            OutcomePartialT = OutcomePartialT,
+            Outcome = Outcome,
+            OutcomeAcc = OutcomeAcc,
+            OutcomePartial = OutcomePartial,
         > + Unpin,
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
     PKeys: Debug + ParamsKeys + Unpin + 'static,
-    OutcomeT: Debug + Unpin + 'static,
-    OutcomeMutT: Debug + Resource + Unpin + 'static,
-    OutcomePartialT: Debug + Unpin + 'static,
+    Outcome: Debug + Unpin + 'static,
+    OutcomeAcc: Debug + Resource + Unpin + 'static,
+    OutcomePartial: Debug + Unpin + 'static,
     InputT: Debug + Resource + Unpin + 'static,
 {
     type Error = E;
-    type OutcomeT = OutcomeT;
+    type Outcome = Outcome;
     type PKeys = PKeys;
 
     async fn exec(
@@ -108,7 +95,7 @@ where
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
         input: Box<dyn Resource>,
-    ) -> Result<CmdOutcome<Self::OutcomeT, Self::Error>, Self::Error> {
+    ) -> Result<CmdOutcome<Self::Outcome, Self::Error>, Self::Error> {
         let input = input.downcast().unwrap_or_else(|input| {
             let input_type_name = tynm::type_name::<InputT>();
             let actual_type_name = Resource::type_name(&*input);
@@ -120,9 +107,9 @@ where
         });
         let cmd_block = &self.cmd_block;
 
-        let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<OutcomePartialT>();
+        let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<OutcomePartial>();
         let mut cmd_outcome = {
-            let outcome = (self.fn_outcome_mut_init)();
+            let outcome = (self.fn_outcome_acc_init)();
             let errors = IndexMap::<ItemId, E>::new();
             CmdOutcome {
                 value: outcome,
@@ -157,7 +144,6 @@ where
 
         let ((), outcome_result) = futures::join!(execution_task, outcomes_rx_task);
 
-        outcome_result
-            .map(|()| cmd_outcome.map(|working_t| (self.fn_cmd_outcome_from_working)(working_t)))
+        outcome_result.map(|()| cmd_outcome.map(|outcome_acc| cmd_block.outcome_map(outcome_acc)))
     }
 }

@@ -28,22 +28,22 @@ mod cmd_execution_builder;
 ///
 /// [`CmdBlock`]: crate::CmdBlock
 #[derive(Debug)]
-pub struct CmdExecution<E, PKeys, OutcomeT>
+pub struct CmdExecution<E, PKeys, Outcome>
 where
     E: 'static,
     PKeys: ParamsKeys + 'static,
 {
     /// Blocks of commands to run.
-    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, OutcomeT>>,
+    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, Outcome>>,
 }
 
-impl<E, PKeys, OutcomeT> CmdExecution<E, PKeys, OutcomeT>
+impl<E, PKeys, Outcome> CmdExecution<E, PKeys, Outcome>
 where
     E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
     PKeys: Debug + ParamsKeys + Unpin + 'static,
-    OutcomeT: Debug + Send + Sync + Unpin + 'static,
+    Outcome: Debug + Send + Sync + Unpin + 'static,
 {
-    pub fn builder() -> CmdExecutionBuilder<E, PKeys, OutcomeT> {
+    pub fn builder() -> CmdExecutionBuilder<E, PKeys, Outcome> {
         CmdExecutionBuilder::new()
     }
 
@@ -51,7 +51,7 @@ where
     pub async fn exec<O>(
         &mut self,
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<Box<CmdOutcome<OutcomeT, E>>, E>
+    ) -> Result<Box<CmdOutcome<Outcome, E>>, E>
     where
         O: OutputWrite<E>,
     {
@@ -145,7 +145,7 @@ where
         output.progress_end(cmd_progress_tracker).await;
 
         let cmd_outcome = cmd_outcome?.downcast().unwrap_or_else(|cmd_outcome| {
-            let outcome_type_name = tynm::type_name::<OutcomeT>();
+            let outcome_type_name = tynm::type_name::<Outcome>();
             let actual_type_name = Resource::type_name(&*cmd_outcome);
             panic!(
                 "Expected to downcast `cmd_outcome` to `{outcome_type_name}`.\n\

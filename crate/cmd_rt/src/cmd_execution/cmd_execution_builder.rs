@@ -10,58 +10,59 @@ use crate::{CmdBlock, CmdBlockRtBox, CmdBlockWrapper, CmdExecution};
 /// [`CmdBlock`]: crate::CmdBlock
 /// [`CmdExecution`]: crate::CmdExecution
 #[derive(Debug)]
-pub struct CmdExecutionBuilder<E, PKeys, OutcomeT>
+pub struct CmdExecutionBuilder<E, PKeys, Outcome>
 where
     E: 'static,
     PKeys: ParamsKeys + 'static,
 {
     /// Blocks of commands to run.
-    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, OutcomeT>>,
+    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, Outcome>>,
 }
 
-impl<E, PKeys, OutcomeT> CmdExecutionBuilder<E, PKeys, OutcomeT>
+impl<E, PKeys, Outcome> CmdExecutionBuilder<E, PKeys, Outcome>
 where
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
     PKeys: Debug + ParamsKeys + Unpin + 'static,
-    OutcomeT: Debug + Resource + Unpin + 'static,
+    Outcome: Debug + Resource + Unpin + 'static,
 {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub fn with_cmd_block<CB, OutcomeMutT, OutcomePartialT, InputT>(
+    pub fn with_cmd_block<CB, OutcomeAcc, OutcomePartial, InputT>(
         mut self,
-        cmd_block: CmdBlockWrapper<CB, E, PKeys, OutcomeT, OutcomeMutT, OutcomePartialT, InputT>,
+        cmd_block: CmdBlockWrapper<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT>,
     ) -> Self
     where
         CB: CmdBlock<
                 Error = E,
                 PKeys = PKeys,
-                OutcomeMutT = OutcomeMutT,
-                OutcomePartialT = OutcomePartialT,
+                Outcome = Outcome,
+                OutcomeAcc = OutcomeAcc,
+                OutcomePartial = OutcomePartial,
                 InputT = InputT,
             > + Unpin
             + 'static,
-        OutcomeMutT: Debug + Resource + Unpin + 'static,
-        OutcomePartialT: Debug + Unpin + 'static,
+        OutcomeAcc: Debug + Resource + Unpin + 'static,
+        OutcomePartial: Debug + Unpin + 'static,
         InputT: Debug + Resource + Unpin + 'static,
     {
         self.cmd_blocks.push_back(Box::pin(cmd_block));
         self
     }
 
-    pub fn build(self) -> CmdExecution<E, PKeys, OutcomeT> {
+    pub fn build(self) -> CmdExecution<E, PKeys, Outcome> {
         let CmdExecutionBuilder { cmd_blocks } = self;
 
         CmdExecution { cmd_blocks }
     }
 }
 
-impl<E, PKeys, OutcomeT> Default for CmdExecutionBuilder<E, PKeys, OutcomeT>
+impl<E, PKeys, Outcome> Default for CmdExecutionBuilder<E, PKeys, Outcome>
 where
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
     PKeys: Debug + ParamsKeys + Unpin + 'static,
-    OutcomeT: Debug + Resource + 'static,
+    Outcome: Debug + Resource + 'static,
 {
     fn default() -> Self {
         Self {

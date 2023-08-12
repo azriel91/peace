@@ -47,9 +47,11 @@ pub trait CmdBlock: Debug {
     type Error: std::error::Error + From<peace_rt_model::Error> + Send + 'static;
     /// Types used for params keys.
     type PKeys: ParamsKeys + 'static;
+    /// Outcome type of the command block, e.g. `(StatesCurrent, StatesGoal)`.
+    type Outcome: 'static;
     /// Intermediate working type of the command block, e.g.
     /// `StatesMut<Ensured>`.
-    type OutcomeMutT: Resource + 'static;
+    type OutcomeAcc: Resource + 'static;
     /// Type to represent information collected during execution, e.g.
     /// `ItemDiscoverOutcome<E>`.
     ///
@@ -81,7 +83,7 @@ pub trait CmdBlock: Debug {
     ///     },
     /// }
     /// ```
-    type OutcomePartialT: Send + 'static;
+    type OutcomePartial: Send + 'static;
     /// Input type of the command block, e.g. `StatesCurrent`.
     type InputT: Resource + 'static;
 
@@ -94,7 +96,7 @@ pub trait CmdBlock: Debug {
         &self,
         input: Box<Self::InputT>,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartialT>,
+        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
     );
 
@@ -109,7 +111,10 @@ pub trait CmdBlock: Debug {
     /// related to the framework that cannot be associated with an item.
     fn outcome_collate(
         &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeMutT, Self::Error>,
-        item_outcome: Self::OutcomePartialT,
+        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
+        outcome_partial: Self::OutcomePartial,
     ) -> Result<(), Self::Error>;
+
+    /// Maps the `outcome_acc` into `outcome`.
+    fn outcome_map(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome;
 }
