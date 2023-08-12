@@ -29,23 +29,22 @@ where
         Self::default()
     }
 
-    pub fn with_cmd_block<CB, ItemOutcomeT, WorkingT, InputT>(
+    pub fn with_cmd_block<CB, OutcomeMutT, OutcomePartialT, InputT>(
         mut self,
-        cmd_block: CmdBlockWrapper<CB, E, PKeys, OutcomeT, ItemOutcomeT, WorkingT, InputT>,
+        cmd_block: CmdBlockWrapper<CB, E, PKeys, OutcomeT, OutcomeMutT, OutcomePartialT, InputT>,
     ) -> Self
     where
         CB: CmdBlock<
                 Error = E,
                 PKeys = PKeys,
-                OutcomeT = OutcomeT,
-                ItemOutcomeT = ItemOutcomeT,
-                WorkingT = WorkingT,
+                OutcomeMutT = OutcomeMutT,
+                OutcomePartialT = OutcomePartialT,
                 InputT = InputT,
             > + Unpin
             + 'static,
-        ItemOutcomeT: Debug + Unpin + 'static,
-        WorkingT: Debug + Resource + 'static,
-        InputT: Debug + Resource + 'static,
+        OutcomeMutT: Debug + Resource + Unpin + 'static,
+        OutcomePartialT: Debug + Unpin + 'static,
+        InputT: Debug + Resource + Unpin + 'static,
     {
         self.cmd_blocks.push_back(Box::pin(cmd_block));
         self

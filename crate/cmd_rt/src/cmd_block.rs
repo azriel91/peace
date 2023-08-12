@@ -47,12 +47,19 @@ pub trait CmdBlock: Debug {
     type Error: std::error::Error + From<peace_rt_model::Error> + Send + 'static;
     /// Types used for params keys.
     type PKeys: ParamsKeys + 'static;
-    /// Outcome type of the command block, e.g. `(StatesCurrent, StatesGoal)`.
-    type OutcomeT: Resource + 'static;
-    /// Outcome type of each item's execution, e.g. `ItemDiscoverOutcome<E>`.
+    /// Intermediate working type of the command block, e.g.
+    /// `StatesMut<Ensured>`.
+    type OutcomeMutT: Resource + 'static;
+    /// Type to represent information collected during execution, e.g.
+    /// `ItemDiscoverOutcome<E>`.
     ///
-    /// This is usually an enum with variants for the successful and failed
-    /// results for each item.
+    /// This can be:
+    ///
+    /// * the initialization of the block outcome.
+    /// * the result of running an item's `apply` function.
+    ///
+    /// An example of this is an enum with variants for the successful and
+    /// failed results for each item.
     ///
     /// # Example
     ///
@@ -74,11 +81,8 @@ pub trait CmdBlock: Debug {
     ///     },
     /// }
     /// ```
-    type ItemOutcomeT: Send + 'static;
-    /// Intermediate working type of the command block, e.g.
-    /// `StatesMut<Ensured>`.
-    type WorkingT: Resource + 'static;
-    /// Input to this `CmdBlock`. May be `()` if no input is required.
+    type OutcomePartialT: Send + 'static;
+    /// Input type of the command block, e.g. `StatesCurrent`.
     type InputT: Resource + 'static;
 
     /// Producer function to process all items.
@@ -88,8 +92,9 @@ pub trait CmdBlock: Debug {
     /// the block that are not associated with a specific item.
     async fn exec(
         &self,
+        input: Box<Self::InputT>,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::ItemOutcomeT>,
+        outcomes_tx: &UnboundedSender<Self::OutcomePartialT>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
     );
 
@@ -104,7 +109,7 @@ pub trait CmdBlock: Debug {
     /// related to the framework that cannot be associated with an item.
     fn outcome_collate(
         &self,
-        block_outcome: &mut CmdOutcome<Self::WorkingT, Self::Error>,
-        item_outcome: Self::ItemOutcomeT,
+        block_outcome: &mut CmdOutcome<Self::OutcomeMutT, Self::Error>,
+        item_outcome: Self::OutcomePartialT,
     ) -> Result<(), Self::Error>;
 }

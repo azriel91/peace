@@ -34,7 +34,7 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
                 NoOpOutput,
                 ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
             >::default(),
-            |_: Box<()>| {
+            || {
                 let states_current_mut = StatesMut::<Current>::new();
                 let states_goal_mut = StatesMut::<Goal>::new();
                 (states_current_mut, states_goal_mut)

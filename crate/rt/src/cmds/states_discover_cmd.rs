@@ -14,7 +14,7 @@ use peace_resources::{
     resources::ts::SetUp,
     states::{
         ts::{Current, Goal},
-        States, StatesCurrent, StatesGoal,
+        StatesCurrent, StatesGoal,
     },
     type_reg::untagged::BoxDtDisplay,
     Resources,
@@ -642,15 +642,15 @@ where
 {
     type Error = E;
     type InputT = ();
-    type ItemOutcomeT = ItemDiscoverOutcome<E>;
-    type OutcomeT = (States<Current>, States<Goal>);
+    type OutcomeMutT = (StatesMut<Current>, StatesMut<Goal>);
+    type OutcomePartialT = ItemDiscoverOutcome<E>;
     type PKeys = PKeys;
-    type WorkingT = (StatesMut<Current>, StatesMut<Goal>);
 
     async fn exec(
         &self,
+        _input: Box<Self::InputT>,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::ItemOutcomeT>,
+        outcomes_tx: &UnboundedSender<Self::OutcomePartialT>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
     ) {
         let SingleProfileSingleFlowView {
@@ -679,8 +679,8 @@ where
 
     fn outcome_collate(
         &self,
-        block_outcome: &mut CmdOutcome<Self::WorkingT, Self::Error>,
-        item_outcome: Self::ItemOutcomeT,
+        block_outcome: &mut CmdOutcome<Self::OutcomeMutT, Self::Error>,
+        item_outcome: Self::OutcomePartialT,
     ) -> Result<(), Self::Error> {
         let CmdOutcome {
             value: (states_current_mut, states_goal_mut),
