@@ -774,12 +774,16 @@ where
         fn_ctx: FnCtx<'_>,
         item_apply_boxed: &mut ItemApplyBoxed,
     ) -> Result<(), E> {
-        let Some(item_apply) =
-            item_apply_boxed.as_data_type_mut().downcast_mut::<ItemApply<I::State, I::StateDiff>>() else {
-                panic!("Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
+        let Some(item_apply) = item_apply_boxed
+            .as_data_type_mut()
+            .downcast_mut::<ItemApply<I::State, I::StateDiff>>()
+        else {
+            panic!(
+                "Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
                     This is a bug in the Peace framework.",
-                    concrete_type = std::any::type_name::<ItemApply<I::State, I::StateDiff>>())
-            };
+                concrete_type = std::any::type_name::<ItemApply<I::State, I::StateDiff>>()
+            )
+        };
 
         let ItemApply {
             state_current_stored: _,
@@ -920,12 +924,16 @@ where
         fn_ctx: FnCtx<'_>,
         item_apply_boxed: &mut ItemApplyBoxed,
     ) -> Result<(), E> {
-        let Some(item_apply) =
-            item_apply_boxed.as_data_type_mut().downcast_mut::<ItemApply<I::State, I::StateDiff>>() else {
-                panic!("Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
+        let Some(item_apply) = item_apply_boxed
+            .as_data_type_mut()
+            .downcast_mut::<ItemApply<I::State, I::StateDiff>>()
+        else {
+            panic!(
+                "Failed to downcast `ItemApplyBoxed` to `{concrete_type}`.\n\
                     This is a bug in the Peace framework.",
-                    concrete_type = std::any::type_name::<ItemApply<I::State, I::StateDiff>>())
-            };
+                concrete_type = std::any::type_name::<ItemApply<I::State, I::StateDiff>>()
+            )
+        };
 
         let ItemApply {
             state_current_stored: _,

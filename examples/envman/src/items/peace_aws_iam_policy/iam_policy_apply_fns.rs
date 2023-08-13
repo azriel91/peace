@@ -82,7 +82,11 @@ where
             }),
             IamPolicyStateDiff::InSyncExists => {
                 // Hack: Remove this when referential param values is implemented.
-                let IamPolicyState::Some { policy_id_arn_version, .. } = state_current else {
+                let IamPolicyState::Some {
+                    policy_id_arn_version,
+                    ..
+                } = state_current
+                else {
                     unreachable!()
                 };
                 let Generated::Value(_policy_id_version_arn) = policy_id_arn_version else {
@@ -375,7 +379,11 @@ where
                     policy_document,
                     policy_id_arn_version: _,
                 } => {
-                    let IamPolicyState::Some { policy_id_arn_version: Generated::Value(policy_id_arn_version), .. } = state_current else {
+                    let IamPolicyState::Some {
+                        policy_id_arn_version: Generated::Value(policy_id_arn_version),
+                        ..
+                    } = state_current
+                    else {
                         panic!("Expected policy ID and ARN to exist when diff is modified.");
                     };
                     let policy_arn = policy_id_arn_version.arn();

@@ -780,7 +780,7 @@ where
     }
 
     fn items_state_stored_stale<StatesTsStored, StatesTs>(
-        cmd_view: &mut SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
+        cmd_view: &SingleProfileSingleFlowView<'_, E, PKeys, SetUp>,
         states_stored: &States<StatesTsStored>,
         states_discovered: &States<StatesTs>,
     ) -> Result<ItemsStateStoredStale, E>

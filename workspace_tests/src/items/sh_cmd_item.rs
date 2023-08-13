@@ -153,10 +153,11 @@ async fn state_clean_returns_shell_command_clean_state() -> Result<(), Box<dyn s
     let state_clean = cmd_ctx
         .resources()
         .borrow::<Clean<TestFileCreationShCmdState>>();
-    let Some(state_clean) = state_clean
-        .as_ref() else {
-            panic!("Expected `Clean<TestFileCreationShCmdState>` to be Some after `CleanCmd::exec_dry`.");
-        };
+    let Some(state_clean) = state_clean.as_ref() else {
+        panic!(
+            "Expected `Clean<TestFileCreationShCmdState>` to be Some after `CleanCmd::exec_dry`."
+        );
+    };
     if let ShCmdState::Some {
         stdout,
         stderr,

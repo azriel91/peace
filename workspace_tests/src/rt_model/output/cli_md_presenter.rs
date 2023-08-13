@@ -11,17 +11,14 @@ use peace::rt_model::output::CliColorizeOpt;
 
 #[tokio::test]
 async fn presents_heading_with_hashes_color_disabled() -> Result<(), Box<dyn std::error::Error>> {
-    stream::iter(
-        [
-            (HeadingLevel::Level1, "# `code`\n\n"),
-            (HeadingLevel::Level2, "## `code`\n\n"),
-            (HeadingLevel::Level3, "### `code`\n\n"),
-            (HeadingLevel::Level4, "#### `code`\n\n"),
-            (HeadingLevel::Level5, "##### `code`\n\n"),
-            (HeadingLevel::Level6, "###### `code`\n\n"),
-        ]
-        .into_iter(),
-    )
+    stream::iter([
+        (HeadingLevel::Level1, "# `code`\n\n"),
+        (HeadingLevel::Level2, "## `code`\n\n"),
+        (HeadingLevel::Level3, "### `code`\n\n"),
+        (HeadingLevel::Level4, "#### `code`\n\n"),
+        (HeadingLevel::Level5, "##### `code`\n\n"),
+        (HeadingLevel::Level6, "###### `code`\n\n"),
+    ])
     .map(Result::<_, Box<dyn std::error::Error>>::Ok)
     .try_for_each(|(heading_level, expected)| async move {
         let mut buffer = Vec::new();
@@ -41,17 +38,38 @@ async fn presents_heading_with_hashes_color_disabled() -> Result<(), Box<dyn std
 
 #[tokio::test]
 async fn presents_heading_with_hashes_color_enabled() -> Result<(), Box<dyn std::error::Error>> {
-    stream::iter(
-        [
-            (HeadingLevel::Level1, "\u{1b}[38;5;243m\u{1b}[1m#\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "# `code`\n\n"),
-            (HeadingLevel::Level2, "\u{1b}[38;5;243m\u{1b}[1m##\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "## `code`\n\n"),
-            (HeadingLevel::Level3, "\u{1b}[38;5;243m\u{1b}[1m###\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "### `code`\n\n"),
-            (HeadingLevel::Level4, "\u{1b}[38;5;243m\u{1b}[1m####\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "#### `code`\n\n"),
-            (HeadingLevel::Level5, "\u{1b}[38;5;243m\u{1b}[1m#####\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "##### `code`\n\n"),
-            (HeadingLevel::Level6, "\u{1b}[38;5;243m\u{1b}[1m######\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n", "###### `code`\n\n"),
-        ]
-        .into_iter(),
-    )
+    stream::iter([
+        (
+            HeadingLevel::Level1,
+            "\u{1b}[38;5;243m\u{1b}[1m#\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n",
+            "# `code`\n\n",
+        ),
+        (
+            HeadingLevel::Level2,
+            "\u{1b}[38;5;243m\u{1b}[1m##\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n",
+            "## `code`\n\n",
+        ),
+        (
+            HeadingLevel::Level3,
+            "\u{1b}[38;5;243m\u{1b}[1m###\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n",
+            "### `code`\n\n",
+        ),
+        (
+            HeadingLevel::Level4,
+            "\u{1b}[38;5;243m\u{1b}[1m####\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n",
+            "#### `code`\n\n",
+        ),
+        (
+            HeadingLevel::Level5,
+            "\u{1b}[38;5;243m\u{1b}[1m#####\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n",
+            "##### `code`\n\n",
+        ),
+        (
+            HeadingLevel::Level6,
+            "\u{1b}[38;5;243m\u{1b}[1m######\u{1b}[0m \u{1b}[38;5;75m\u{1b}[1m`code`\u{1b}[0m\n\n",
+            "###### `code`\n\n",
+        ),
+    ])
     .map(Result::<_, Box<dyn std::error::Error>>::Ok)
     .try_for_each(|(heading_level, expected_colorized, expected)| async move {
         let mut buffer = Vec::new();

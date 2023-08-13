@@ -65,7 +65,8 @@ impl EnvCmd {
                 let IamPolicyState::Some {
                     policy_id_arn_version: Generated::Value(policy_id_arn_version),
                     ..
-                } = iam_policy_state else {
+                } = iam_policy_state
+                else {
                     return None;
                 };
                 Some(policy_id_arn_version.arn().to_string())

@@ -127,7 +127,9 @@ where
                             .tick(ProgressMsgUpdate::Set(String::from("uploading object")));
                         let file_path = params.file_path();
                         let Some(content_md5_hexstr) = content_md5_hexstr else {
-                            panic!("Content MD5 must be Some as this is calculated from an existent local file.");
+                            panic!(
+                                "Content MD5 must be Some as this is calculated from an existent local file."
+                            );
                         };
                         let content_md5_b64 = {
                             let bytes = (0..content_md5_hexstr.len())
@@ -280,7 +282,7 @@ where
                 object_key_current,
                 object_key_goal,
             } => {
-                let S3ObjectState::Some {bucket_name, ..} = state_goal else {
+                let S3ObjectState::Some { bucket_name, .. } = state_goal else {
                     panic!("`S3ObjectApplyFns::exec` called with state_goal being None.");
                 };
 
