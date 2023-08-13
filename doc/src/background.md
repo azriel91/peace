@@ -1,13 +1,13 @@
 # Background
 
-Automation, like most subjects, has many questions to ask and answer. The following are a selection of issues that are common in this space:
+Automation, like most subjects, has many questions to ask and answer. The following is a selection of issues that are common in this space:
 
 * Before running the automation:
     - What is the current state?
     - What will the automation do?
 * When it is running:
     - Where is it up to?
-    - When will things will be complete?
+    - When will things be complete?
 * When it errs:
     - What went wrong?
     - Must I begin from scratch again?
