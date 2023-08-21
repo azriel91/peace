@@ -14,9 +14,11 @@ cfg_if::cfg_if! {
 }
 
 pub use self::{
-    cmd_block_rt::CmdBlockRt, cmd_block_rt_box::CmdBlockRtBox, cmd_block_wrapper::CmdBlockWrapper,
+    cmd_block_error::CmdBlockError, cmd_block_rt::CmdBlockRt, cmd_block_rt_box::CmdBlockRtBox,
+    cmd_block_wrapper::CmdBlockWrapper,
 };
 
+mod cmd_block_error;
 mod cmd_block_rt;
 mod cmd_block_rt_box;
 mod cmd_block_wrapper;

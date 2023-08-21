@@ -81,13 +81,12 @@ where
         > + Unpin,
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
     PKeys: Debug + ParamsKeys + Unpin + 'static,
-    Outcome: Debug + Unpin + 'static,
+    Outcome: Debug + Unpin + Send + Sync + 'static,
     OutcomeAcc: Debug + Resource + Unpin + 'static,
     OutcomePartial: Debug + Unpin + 'static,
     InputT: Debug + Resource + Unpin + 'static,
 {
     type Error = E;
-    type Outcome = Outcome;
     type PKeys = PKeys;
 
     async fn exec(
@@ -95,7 +94,7 @@ where
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
         input: Box<dyn Resource>,
-    ) -> Result<CmdOutcome<Self::Outcome, Self::Error>, Self::Error> {
+    ) -> Result<CmdOutcome<Box<dyn Resource>, Self::Error>, Self::Error> {
         let input = input.downcast().unwrap_or_else(|input| {
             let input_type_name = tynm::type_name::<InputT>();
             let actual_type_name = Resource::type_name(&*input);
@@ -144,6 +143,11 @@ where
 
         let ((), outcome_result) = futures::join!(execution_task, outcomes_rx_task);
 
-        outcome_result.map(|()| cmd_outcome.map(|outcome_acc| cmd_block.outcome_map(outcome_acc)))
+        outcome_result.map(|()| {
+            cmd_outcome.map(|outcome_acc| {
+                let outcome = cmd_block.outcome_map(outcome_acc);
+                Box::new(outcome) as Box<dyn Resource>
+            })
+        })
     }
 }

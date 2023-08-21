@@ -21,8 +21,6 @@ pub trait CmdBlockRt: Debug + Unpin {
     type Error: std::error::Error + From<peace_rt_model::Error> + Send + 'static;
     /// Types used for params keys.
     type PKeys: ParamsKeys + 'static;
-    /// Outcome type of the command block, e.g. `(StatesCurrent, StatesGoal)`.
-    type Outcome: 'static;
 
     /// Executes this command block.
     async fn exec(
@@ -30,5 +28,5 @@ pub trait CmdBlockRt: Debug + Unpin {
         view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
         input: Box<dyn Resource>,
-    ) -> Result<CmdOutcome<Self::Outcome, Self::Error>, Self::Error>;
+    ) -> Result<CmdOutcome<Box<dyn Resource>, Self::Error>, Self::Error>;
 }

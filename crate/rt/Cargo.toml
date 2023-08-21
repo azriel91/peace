@@ -42,7 +42,11 @@ web-sys = { workspace = true, features = ["Storage", "Window"] }
 
 [features]
 default = []
-error_reporting = ["dep:miette", "peace_rt_model/error_reporting"]
+error_reporting = [
+    "dep:miette",
+    "peace_cmd_rt/error_reporting",
+    "peace_rt_model/error_reporting",
+]
 output_progress = [
     "peace_cfg/output_progress",
     "peace_cmd/output_progress",

@@ -20,15 +20,18 @@ test = false
 async-trait = { workspace = true }
 cfg-if = { workspace = true }
 futures = { workspace = true }
+miette = { workspace = true, optional = true, features = ["fancy"] }
 peace_cfg = { workspace = true }
 peace_cmd = { workspace = true }
 peace_resources = { workspace = true }
 peace_rt_model = { workspace = true }
+thiserror = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }
 tynm = { workspace = true }
 
 [features]
 default = []
+error_reporting = ["dep:miette"]
 output_progress = [
     "peace_cfg/output_progress",
     "peace_rt_model/output_progress",

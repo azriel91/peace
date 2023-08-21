@@ -35,6 +35,7 @@ default = []
 error_reporting = [
     "dep:miette",
     "miette?/fancy",
+    "peace_cmd_rt/error_reporting",
     "peace_params/error_reporting",
     "peace_rt/error_reporting",
     "peace_rt_model/error_reporting",

@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, fmt::Debug};
+use std::{collections::VecDeque, fmt::Debug, marker::PhantomData};
 
 use futures::{future, stream, StreamExt, TryStreamExt};
 use peace_cmd::{
@@ -34,7 +34,19 @@ where
     PKeys: ParamsKeys + 'static,
 {
     /// Blocks of commands to run.
-    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, Outcome>>,
+    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys>>,
+    /// Marker for return type.
+    marker: PhantomData<Outcome>,
+}
+
+impl<E, PKeys> CmdExecution<E, PKeys, ()>
+where
+    E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
+    PKeys: Debug + ParamsKeys + Unpin + 'static,
+{
+    pub fn builder() -> CmdExecutionBuilder<E, PKeys, ()> {
+        CmdExecutionBuilder::new()
+    }
 }
 
 impl<E, PKeys, Outcome> CmdExecution<E, PKeys, Outcome>
@@ -43,19 +55,18 @@ where
     PKeys: Debug + ParamsKeys + Unpin + 'static,
     Outcome: Debug + Send + Sync + Unpin + 'static,
 {
-    pub fn builder() -> CmdExecutionBuilder<E, PKeys, Outcome> {
-        CmdExecutionBuilder::new()
-    }
-
     /// Returns the result of executing the command.
     pub async fn exec<O>(
         &mut self,
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<Box<CmdOutcome<Outcome, E>>, E>
+    ) -> Result<CmdOutcome<Box<Outcome>, E>, E>
     where
         O: OutputWrite<E>,
     {
-        let Self { cmd_blocks } = self;
+        let Self {
+            cmd_blocks,
+            marker: _,
+        } = self;
 
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_progress")] {
@@ -97,7 +108,7 @@ where
             .try_fold(
                 CmdViewAndBlockOutcome {
                     cmd_view: &mut cmd_view,
-                    cmd_outcome: Box::new(()) as Box<dyn Resource>,
+                    cmd_outcome: CmdOutcome::new(Box::new(()) as Box<dyn Resource>),
                     #[cfg(feature = "output_progress")]
                     progress_tx,
                 },
@@ -115,17 +126,29 @@ where
                         cmd_view,
                         #[cfg(feature = "output_progress")]
                         progress_tx.clone(),
-                        cmd_outcome_previous,
+                        cmd_outcome_previous.value,
                     );
 
-                    let block_cmd_outcome = block_cmd_outcome_task.await;
+                    let block_cmd_outcome = block_cmd_outcome_task.await?;
 
-                    block_cmd_outcome.map(|block_cmd_outcome| CmdViewAndBlockOutcome {
+                    if block_cmd_outcome.is_err() {
+                        todo!(
+                            "We cannot just return this, because the intermediate block \
+                            cmd outcome may not be the same type as the cmd execution outcome.\n\
+                            We may need to return the errors without the intermediate block outcome.
+                            "
+                        );
+                        // return block_cmd_outcome;
+                    }
+
+                    let cmd_view_and_block_outcome = CmdViewAndBlockOutcome {
                         cmd_view,
-                        cmd_outcome: Box::new(block_cmd_outcome) as Box<dyn Resource>,
+                        cmd_outcome: block_cmd_outcome,
                         #[cfg(feature = "output_progress")]
                         progress_tx,
-                    })
+                    };
+
+                    Ok(cmd_view_and_block_outcome)
                 },
             )
             .await?;
@@ -144,14 +167,16 @@ where
         #[cfg(feature = "output_progress")]
         output.progress_end(cmd_progress_tracker).await;
 
-        let cmd_outcome = cmd_outcome?.downcast().unwrap_or_else(|cmd_outcome| {
-            let outcome_type_name = tynm::type_name::<Outcome>();
-            let actual_type_name = Resource::type_name(&*cmd_outcome);
-            panic!(
-                "Expected to downcast `cmd_outcome` to `{outcome_type_name}`.\n\
-                The actual type name is `{actual_type_name:?}`\n\
-                This is a bug in the Peace framework."
-            );
+        let cmd_outcome = cmd_outcome?.map(|value| {
+            value.downcast().unwrap_or_else(|value| {
+                let outcome_type_name = tynm::type_name::<Outcome>();
+                let actual_type_name = Resource::type_name(&*value);
+                panic!(
+                    "Expected to downcast `value` to `{outcome_type_name}`.\n\
+                        The actual type name is `{actual_type_name:?}`\n\
+                        This is a bug in the Peace framework."
+                );
+            })
         });
 
         Ok(cmd_outcome)
@@ -166,7 +191,7 @@ where
     PKeys: ParamsKeys + 'static,
 {
     cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
-    cmd_outcome: Box<dyn Resource>,
+    cmd_outcome: CmdOutcome<Box<dyn Resource>, E>,
     #[cfg(feature = "output_progress")]
     progress_tx: Sender<ProgressUpdateAndId>,
 }

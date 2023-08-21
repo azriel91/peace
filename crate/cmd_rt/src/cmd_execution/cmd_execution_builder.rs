@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, fmt::Debug};
+use std::{collections::VecDeque, fmt::Debug, marker::PhantomData};
 
 use peace_resources::Resource;
 use peace_rt_model::params::ParamsKeys;
@@ -16,7 +16,19 @@ where
     PKeys: ParamsKeys + 'static,
 {
     /// Blocks of commands to run.
-    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, Outcome>>,
+    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys>>,
+    /// Marker for return type.
+    marker: PhantomData<Outcome>,
+}
+
+impl<E, PKeys> CmdExecutionBuilder<E, PKeys, ()>
+where
+    E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
+    PKeys: Debug + ParamsKeys + Unpin + 'static,
+{
+    pub fn new() -> Self {
+        Self::default()
+    }
 }
 
 impl<E, PKeys, Outcome> CmdExecutionBuilder<E, PKeys, Outcome>
@@ -25,36 +37,48 @@ where
     PKeys: Debug + ParamsKeys + Unpin + 'static,
     Outcome: Debug + Resource + Unpin + 'static,
 {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn with_cmd_block<CB, OutcomeAcc, OutcomePartial, InputT>(
-        mut self,
-        cmd_block: CmdBlockWrapper<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT>,
-    ) -> Self
+    pub fn with_cmd_block<CB, OutcomeNext, OutcomeAcc, OutcomePartial, InputT>(
+        self,
+        cmd_block: CmdBlockWrapper<CB, E, PKeys, OutcomeNext, OutcomeAcc, OutcomePartial, InputT>,
+    ) -> CmdExecutionBuilder<E, PKeys, OutcomeNext>
     where
         CB: CmdBlock<
                 Error = E,
                 PKeys = PKeys,
-                Outcome = Outcome,
+                Outcome = OutcomeNext,
                 OutcomeAcc = OutcomeAcc,
                 OutcomePartial = OutcomePartial,
                 InputT = InputT,
             > + Unpin
             + 'static,
+        OutcomeNext: Debug + Resource + Unpin + 'static,
         OutcomeAcc: Debug + Resource + Unpin + 'static,
         OutcomePartial: Debug + Unpin + 'static,
         InputT: Debug + Resource + Unpin + 'static,
     {
-        self.cmd_blocks.push_back(Box::pin(cmd_block));
-        self
+        let CmdExecutionBuilder {
+            mut cmd_blocks,
+            marker: _,
+        } = self;
+
+        cmd_blocks.push_back(Box::pin(cmd_block));
+
+        CmdExecutionBuilder {
+            cmd_blocks,
+            marker: PhantomData,
+        }
     }
 
     pub fn build(self) -> CmdExecution<E, PKeys, Outcome> {
-        let CmdExecutionBuilder { cmd_blocks } = self;
+        let CmdExecutionBuilder {
+            cmd_blocks,
+            marker: _,
+        } = self;
 
-        CmdExecution { cmd_blocks }
+        CmdExecution {
+            cmd_blocks,
+            marker: PhantomData,
+        }
     }
 }
 
@@ -67,6 +91,7 @@ where
     fn default() -> Self {
         Self {
             cmd_blocks: VecDeque::new(),
+            marker: PhantomData,
         }
     }
 }

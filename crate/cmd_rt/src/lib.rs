@@ -4,7 +4,7 @@
 pub use async_trait::async_trait;
 
 pub use crate::{
-    cmd_block::{CmdBlock, CmdBlockRt, CmdBlockRtBox, CmdBlockWrapper},
+    cmd_block::{CmdBlock, CmdBlockError, CmdBlockRt, CmdBlockRtBox, CmdBlockWrapper},
     cmd_execution::{CmdExecution, CmdExecutionBuilder},
 };
 
