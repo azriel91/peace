@@ -37,23 +37,40 @@ where
     PKeys: Debug + ParamsKeys + Unpin + 'static,
     Outcome: Debug + Resource + Unpin + 'static,
 {
-    pub fn with_cmd_block<CB, OutcomeNext, OutcomeAcc, OutcomePartial, InputT>(
+    pub fn with_cmd_block<
+        CB,
+        ExecutionOutcome,
+        BlockOutcomeNext,
+        BlockOutcomeAcc,
+        BlockOutcomePartial,
+        InputT,
+    >(
         self,
-        cmd_block: CmdBlockWrapper<CB, E, PKeys, OutcomeNext, OutcomeAcc, OutcomePartial, InputT>,
-    ) -> CmdExecutionBuilder<E, PKeys, OutcomeNext>
+        cmd_block: CmdBlockWrapper<
+            CB,
+            E,
+            PKeys,
+            ExecutionOutcome,
+            BlockOutcomeNext,
+            BlockOutcomeAcc,
+            BlockOutcomePartial,
+            InputT,
+        >,
+    ) -> CmdExecutionBuilder<E, PKeys, ExecutionOutcome>
     where
         CB: CmdBlock<
                 Error = E,
                 PKeys = PKeys,
-                Outcome = OutcomeNext,
-                OutcomeAcc = OutcomeAcc,
-                OutcomePartial = OutcomePartial,
+                Outcome = BlockOutcomeNext,
+                OutcomeAcc = BlockOutcomeAcc,
+                OutcomePartial = BlockOutcomePartial,
                 InputT = InputT,
             > + Unpin
             + 'static,
-        OutcomeNext: Debug + Resource + Unpin + 'static,
-        OutcomeAcc: Debug + Resource + Unpin + 'static,
-        OutcomePartial: Debug + Unpin + 'static,
+        ExecutionOutcome: Debug + Resource + Unpin + 'static,
+        BlockOutcomeNext: Debug + Resource + Unpin + 'static,
+        BlockOutcomeAcc: Debug + Resource + Unpin + 'static,
+        BlockOutcomePartial: Debug + Unpin + 'static,
         InputT: Debug + Resource + Unpin + 'static,
     {
         let CmdExecutionBuilder {

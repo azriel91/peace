@@ -12,6 +12,7 @@ where
     E: Debug,
 {
     /// Error originated from `CmdBlock` code.
+    #[error("`CmdBlock` block logic failed.")]
     Block {
         /// Outcome accumulator at the point of error.
         outcome_acc: OutcomeAcc,
@@ -19,6 +20,7 @@ where
         error: E,
     },
     /// Error originated from at least one item.
+    #[error("`CmdBlock` item logic failed.")]
     Item {
         /// Outcome accumulator at the point of error.
         outcome_acc: OutcomeAcc,

@@ -1,4 +1,4 @@
-use std::{fmt::Debug, marker::PhantomData, pin::Pin};
+use std::{fmt::Debug, marker::PhantomData};
 
 use async_trait::async_trait;
 use peace_cfg::ItemId;
@@ -21,76 +21,133 @@ cfg_if::cfg_if! {
 ///
 /// [`CmdBlockRt`]: crate::CmdBlockRt
 #[derive(Debug)]
-pub struct CmdBlockWrapper<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT> {
+pub struct CmdBlockWrapper<
+    CB,
+    E,
+    PKeys,
+    ExecutionOutcome,
+    BlockOutcome,
+    BlockOutcomeAcc,
+    BlockOutcomePartial,
+    InputT,
+> {
     /// Underlying `CmdBlock` implementation.
     ///
     /// The trait constraints are applied on impl blocks.
     cmd_block: CB,
     /// Seed function for `OutcomeAcc`.
-    fn_outcome_acc_init: fn() -> OutcomeAcc,
+    fn_outcome_acc_init: fn() -> BlockOutcomeAcc,
+    /// Function to run if an item failure happens while executing this
+    /// `CmdBlock`.
+    fn_error_handler: fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome,
     /// Marker.
-    marker: PhantomData<(E, PKeys, Outcome, OutcomePartial, InputT)>,
+    marker: PhantomData<(E, PKeys, BlockOutcome, BlockOutcomePartial, InputT)>,
 }
 
-impl<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT>
-    CmdBlockWrapper<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT>
+impl<CB, E, PKeys, ExecutionOutcome, BlockOutcome, BlockOutcomeAcc, BlockOutcomePartial, InputT>
+    CmdBlockWrapper<
+        CB,
+        E,
+        PKeys,
+        ExecutionOutcome,
+        BlockOutcome,
+        BlockOutcomeAcc,
+        BlockOutcomePartial,
+        InputT,
+    >
 where
     CB: CmdBlock<
             Error = E,
             PKeys = PKeys,
-            OutcomeAcc = OutcomeAcc,
-            OutcomePartial = OutcomePartial,
+            OutcomeAcc = BlockOutcomeAcc,
+            OutcomePartial = BlockOutcomePartial,
             InputT = InputT,
         >,
 {
-    pub fn new(cmd_block: CB, fn_outcome_acc_init: fn() -> OutcomeAcc) -> Self {
+    pub fn new(
+        cmd_block: CB,
+        fn_outcome_acc_init: fn() -> BlockOutcomeAcc,
+        fn_error_handler: fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome,
+    ) -> Self {
         Self {
             cmd_block,
             fn_outcome_acc_init,
+            fn_error_handler,
             marker: PhantomData,
         }
     }
 }
 
-impl<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT> From<(CB, fn() -> OutcomeAcc)>
-    for CmdBlockWrapper<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT>
+impl<CB, E, PKeys, ExecutionOutcome, BlockOutcome, BlockOutcomeAcc, BlockOutcomePartial, InputT>
+    From<(
+        CB,
+        fn() -> BlockOutcomeAcc,
+        fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome,
+    )>
+    for CmdBlockWrapper<
+        CB,
+        E,
+        PKeys,
+        ExecutionOutcome,
+        BlockOutcome,
+        BlockOutcomeAcc,
+        BlockOutcomePartial,
+        InputT,
+    >
 where
     CB: CmdBlock<
             Error = E,
             PKeys = PKeys,
-            OutcomeAcc = OutcomeAcc,
-            OutcomePartial = OutcomePartial,
+            OutcomeAcc = BlockOutcomeAcc,
+            OutcomePartial = BlockOutcomePartial,
             InputT = InputT,
         >,
 {
-    fn from((cmd_block, fn_outcome_acc_init): (CB, fn() -> OutcomeAcc)) -> Self {
-        Self::new(cmd_block, fn_outcome_acc_init)
+    fn from(
+        (cmd_block, fn_outcome_acc_init, fn_error_handler): (
+            CB,
+            fn() -> BlockOutcomeAcc,
+            fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome,
+        ),
+    ) -> Self {
+        Self::new(cmd_block, fn_outcome_acc_init, fn_error_handler)
     }
 }
 
 #[async_trait(?Send)]
-impl<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT> CmdBlockRt
-    for CmdBlockWrapper<CB, E, PKeys, Outcome, OutcomeAcc, OutcomePartial, InputT>
+impl<CB, E, PKeys, ExecutionOutcome, BlockOutcome, BlockOutcomeAcc, BlockOutcomePartial, InputT>
+    CmdBlockRt
+    for CmdBlockWrapper<
+        CB,
+        E,
+        PKeys,
+        ExecutionOutcome,
+        BlockOutcome,
+        BlockOutcomeAcc,
+        BlockOutcomePartial,
+        InputT,
+    >
 where
     CB: CmdBlock<
             Error = E,
             PKeys = PKeys,
-            Outcome = Outcome,
-            OutcomeAcc = OutcomeAcc,
-            OutcomePartial = OutcomePartial,
+            Outcome = BlockOutcome,
+            OutcomeAcc = BlockOutcomeAcc,
+            OutcomePartial = BlockOutcomePartial,
         > + Unpin,
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
     PKeys: Debug + ParamsKeys + Unpin + 'static,
-    Outcome: Debug + Unpin + Send + Sync + 'static,
-    OutcomeAcc: Debug + Resource + Unpin + 'static,
-    OutcomePartial: Debug + Unpin + 'static,
+    ExecutionOutcome: Debug + Unpin + Send + Sync + 'static,
+    BlockOutcome: Debug + Unpin + Send + Sync + 'static,
+    BlockOutcomeAcc: Debug + Resource + Unpin + 'static,
+    BlockOutcomePartial: Debug + Unpin + 'static,
     InputT: Debug + Resource + Unpin + 'static,
 {
     type Error = E;
     type PKeys = PKeys;
 
     async fn exec(
-        self: Pin<Box<Self>>,
+        &self,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
         input: Box<dyn Resource>,
@@ -99,14 +156,14 @@ where
             let input_type_name = tynm::type_name::<InputT>();
             let actual_type_name = Resource::type_name(&*input);
             panic!(
-                "Expected to downcast input to `{input_type_name}`.\n\
+                "Expected to downcast `input` to `{input_type_name}`.\n\
                 The actual type name is `{actual_type_name:?}`\n\
                 This is a bug in the Peace framework."
             );
         });
         let cmd_block = &self.cmd_block;
 
-        let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<OutcomePartial>();
+        let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<BlockOutcomePartial>();
         let mut cmd_outcome = {
             let outcome = (self.fn_outcome_acc_init)();
             let errors = IndexMap::<ItemId, E>::new();
@@ -149,5 +206,20 @@ where
                 Box::new(outcome) as Box<dyn Resource>
             })
         })
+    }
+
+    fn execution_outcome_from(&self, outcome_acc: Box<dyn Resource>) -> Box<dyn Resource> {
+        let outcome_acc = outcome_acc.downcast().unwrap_or_else(|outcome_acc| {
+            let outcome_acc_type_name = tynm::type_name::<BlockOutcome>();
+            let actual_type_name = Resource::type_name(&*outcome_acc);
+            panic!(
+                "Expected to downcast `outcome_acc` to `{outcome_acc_type_name}`.\n\
+                The actual type name is `{actual_type_name:?}`\n\
+                This is a bug in the Peace framework."
+            );
+        });
+        let execution_outcome = (self.fn_error_handler)(outcome_acc);
+
+        Box::new(execution_outcome) as Box<dyn Resource>
     }
 }

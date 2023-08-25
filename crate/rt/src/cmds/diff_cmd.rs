@@ -505,7 +505,7 @@ where
 
         let (states_a, states_b) = input.as_ref();
 
-        let state_diffs = Self::diff_any(flow, params_specs, resources, &states_a, &states_b).await;
+        let state_diffs = Self::diff_any(flow, params_specs, resources, states_a, states_b).await;
         outcomes_tx
             .send(state_diffs)
             .expect("Failed to send `state_diffs`.");
@@ -522,7 +522,6 @@ where
     }
 
     fn outcome_map(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        let state_diffs_mut = outcome_acc;
-        StateDiffs::from(state_diffs_mut)
+        outcome_acc
     }
 }

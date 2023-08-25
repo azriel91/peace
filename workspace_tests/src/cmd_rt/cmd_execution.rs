@@ -1,12 +1,13 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
-    cmd::ctx::CmdCtx,
+    cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
     cmd_rt::{CmdBlockWrapper, CmdExecution},
     resources::{
         internal::StatesMut,
+        resources::ts::SetUp,
         states::{
             ts::{Current, Goal},
-            StateDiffs,
+            StateDiffs, StatesCurrent, StatesGoal,
         },
     },
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
@@ -39,6 +40,13 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
                 let states_goal_mut = StatesMut::<Goal>::new();
                 (states_current_mut, states_goal_mut)
             },
+            |states_current_and_goal_mut| {
+                let (states_current_mut, states_goal_mut) =
+                    (states_current_and_goal_mut.0, states_current_and_goal_mut.1);
+                let states_current = StatesCurrent::from(states_current_mut);
+                let states_goal = StatesGoal::from(states_goal_mut);
+                (states_current, states_goal)
+            },
         ))
         .build();
 
@@ -66,13 +74,15 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
         || {
             assert!(
                 matches!(
-                    cmd_outcome.as_ref(),
+                    &cmd_outcome,
                     CmdOutcome {
-                        value: (states_current, states_goal),
+                        value,
                         errors,
                     }
-                    if states_current.len() == 2
-                    && states_goal.len() == 2
+                    if {
+                        let (states_current, states_goal) = (&value.0, &value.1);
+                        states_current.len() == 2 && states_goal.len() == 2
+                    }
                     && errors.is_empty()
                 ),
                 "Expected states_current and states_goal to have 2 items,\n\
@@ -98,6 +108,13 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
                 let states_goal_mut = StatesMut::<Goal>::new();
                 (states_current_mut, states_goal_mut)
             },
+            |states_current_and_goal_mut| {
+                let (states_current_mut, states_goal_mut) =
+                    (states_current_and_goal_mut.0, states_current_and_goal_mut.1);
+                let states_current = StatesCurrent::from(states_current_mut);
+                let states_goal = StatesGoal::from(states_goal_mut);
+                (states_current, states_goal)
+            },
         ))
         .with_cmd_block(CmdBlockWrapper::new(
             DiffCmd::<
@@ -105,9 +122,16 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
                 PeaceTestError,
                 NoOpOutput,
                 ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-                _,
+                SingleProfileSingleFlow<
+                    '_,
+                    PeaceTestError,
+                    NoOpOutput,
+                    ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
+                    SetUp,
+                >,
             >::default(),
             StateDiffs::new,
+            |state_diffs| -> StateDiffs { *state_diffs },
         ))
         .build();
 
@@ -135,7 +159,7 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
         || {
             assert!(
                 matches!(
-                    cmd_outcome.as_ref(),
+                    &cmd_outcome,
                     CmdOutcome {
                         value: state_diffs,
                         errors,

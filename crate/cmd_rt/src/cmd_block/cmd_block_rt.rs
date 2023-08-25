@@ -1,4 +1,4 @@
-use std::{fmt::Debug, pin::Pin};
+use std::fmt::Debug;
 
 use async_trait::async_trait;
 use peace_cmd::scopes::SingleProfileSingleFlowView;
@@ -24,9 +24,17 @@ pub trait CmdBlockRt: Debug + Unpin {
 
     /// Executes this command block.
     async fn exec(
-        self: Pin<Box<Self>>,
+        &self,
         view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
         input: Box<dyn Resource>,
     ) -> Result<CmdOutcome<Box<dyn Resource>, Self::Error>, Self::Error>;
+
+    /// Runs the error handler and maps the `CmdBlock`'s `Outcome` to
+    /// `CmdExecution::Outcome`.
+    ///
+    /// This allows a `Cmd` to run logic to map an intermediate `CmdBlock`s
+    /// outcome which contains item failures, to the `CmdExecution` outcome
+    /// type.
+    fn execution_outcome_from(&self, outcome_acc: Box<dyn Resource>) -> Box<dyn Resource>;
 }

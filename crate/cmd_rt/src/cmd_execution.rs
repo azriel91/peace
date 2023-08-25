@@ -95,16 +95,11 @@ where
         }
 
         let cmd_outcome_task = async {
-            let CmdViewAndBlockOutcome {
-                cmd_view: _cmd_view,
-                cmd_outcome,
-                #[cfg(feature = "output_progress")]
-                progress_tx,
-            } = stream::unfold(cmd_blocks, |cmd_blocks| {
+            let cmd_view_and_block_outcome_result = stream::unfold(cmd_blocks, |cmd_blocks| {
                 let cmd_block_next = cmd_blocks.pop_front();
                 future::ready(cmd_block_next.map(|cmd_block_next| (cmd_block_next, cmd_blocks)))
             })
-            .map(Result::<_, E>::Ok)
+            .map(Result::<_, ItemErrOrErr<'_, '_, E, PKeys>>::Ok)
             .try_fold(
                 CmdViewAndBlockOutcome {
                     cmd_view: &mut cmd_view,
@@ -129,29 +124,53 @@ where
                         cmd_outcome_previous.value,
                     );
 
-                    let block_cmd_outcome = block_cmd_outcome_task.await?;
+                    // `CmdBlock` block logic errors are propagated.
+                    let block_cmd_outcome =
+                        block_cmd_outcome_task.await.map_err(ItemErrOrErr::Error)?;
 
                     if block_cmd_outcome.is_err() {
-                        todo!(
-                            "We cannot just return this, because the intermediate block \
-                            cmd outcome may not be the same type as the cmd execution outcome.\n\
-                            We may need to return the errors without the intermediate block outcome.
-                            "
-                        );
-                        // return block_cmd_outcome;
+                        // `CmdBlock` outcomes with item errors need to be mapped to the
+                        // `CmdExecution` outcome type, so we still return the item errors.
+
+                        let block_cmd_outcome = block_cmd_outcome
+                            .map(|value| cmd_block_rt.execution_outcome_from(value));
+
+                        let cmd_view_and_block_outcome = CmdViewAndBlockOutcome {
+                            cmd_view,
+                            cmd_outcome: block_cmd_outcome,
+                            #[cfg(feature = "output_progress")]
+                            progress_tx,
+                        };
+
+                        Err(ItemErrOrErr::Outcome(cmd_view_and_block_outcome))
+                    } else {
+                        let cmd_view_and_block_outcome = CmdViewAndBlockOutcome {
+                            cmd_view,
+                            cmd_outcome: block_cmd_outcome,
+                            #[cfg(feature = "output_progress")]
+                            progress_tx,
+                        };
+
+                        Ok(cmd_view_and_block_outcome)
                     }
-
-                    let cmd_view_and_block_outcome = CmdViewAndBlockOutcome {
-                        cmd_view,
-                        cmd_outcome: block_cmd_outcome,
-                        #[cfg(feature = "output_progress")]
-                        progress_tx,
-                    };
-
-                    Ok(cmd_view_and_block_outcome)
                 },
             )
-            .await?;
+            .await;
+
+            let cmd_view_and_block_outcome = match cmd_view_and_block_outcome_result {
+                Ok(cmd_view_and_block_outcome) => cmd_view_and_block_outcome,
+                Err(ItemErrOrErr::Outcome(cmd_view_and_block_outcome)) => {
+                    cmd_view_and_block_outcome
+                }
+                Err(ItemErrOrErr::Error(error)) => return Err(error),
+            };
+
+            let CmdViewAndBlockOutcome {
+                cmd_view: _cmd_view,
+                cmd_outcome,
+                #[cfg(feature = "output_progress")]
+                progress_tx,
+            } = cmd_view_and_block_outcome;
 
             #[cfg(feature = "output_progress")]
             drop(progress_tx);
@@ -194,4 +213,13 @@ where
     cmd_outcome: CmdOutcome<Box<dyn Resource>, E>,
     #[cfg(feature = "output_progress")]
     progress_tx: Sender<ProgressUpdateAndId>,
+}
+
+enum ItemErrOrErr<'view_ref: 'view, 'view, E, PKeys>
+where
+    E: 'static,
+    PKeys: ParamsKeys + 'static,
+{
+    Outcome(CmdViewAndBlockOutcome<'view_ref, 'view, E, PKeys>),
+    Error(E),
 }
