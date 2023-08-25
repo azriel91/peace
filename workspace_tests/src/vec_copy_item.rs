@@ -29,7 +29,7 @@ pub struct VecCopyItem {
 }
 
 impl VecCopyItem {
-    pub const ID_DEFAULT: &ItemId = &item_id!("vec_copy");
+    pub const ID_DEFAULT: &'static ItemId = &item_id!("vec_copy");
 
     pub fn new(id: ItemId) -> Self {
         Self { id }

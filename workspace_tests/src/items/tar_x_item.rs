@@ -22,7 +22,7 @@ use tempfile::TempDir;
 struct TarXTest;
 
 impl TarXTest {
-    const ID: &ItemId = &item_id!("tar_x_test");
+    const ID: &'static ItemId = &item_id!("tar_x_test");
 }
 
 /// Contains two files: `a` and `sub/c`.

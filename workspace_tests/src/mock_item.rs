@@ -85,7 +85,7 @@ impl<Id> MockItem<Id>
 where
     Id: Clone + Debug + Default + Send + Sync + 'static,
 {
-    pub const ID_DEFAULT: &ItemId = &item_id!("mock");
+    pub const ID_DEFAULT: &'static ItemId = &item_id!("mock");
 
     pub fn new(id: ItemId) -> Self {
         Self {
