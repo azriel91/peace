@@ -1,22 +1,20 @@
 use leptos::{
-    component, create_signal, server_fn, view, IntoView, Scope, ServerFnError, SignalGet,
-    SignalUpdate, Transition,
+    component, create_signal, view, IntoView, ServerFnError, SignalGet, SignalUpdate, Transition,
 };
 
 /// Renders the flow graph.
 #[component]
-pub fn FlowGraph(cx: Scope) -> impl IntoView {
-    let (count, set_count) = create_signal(cx, 0);
+pub fn FlowGraph() -> impl IntoView {
+    let (count, set_count) = create_signal(0);
 
     let dot_source_resource = leptos::create_resource(
-        cx,
         || (),
-        move |()| async move { flow_graph_src(cx).await.unwrap() },
+        move |()| async move { flow_graph_src().await.unwrap() },
     );
     let dot_source_result = {
         move || {
             let dot_source = dot_source_resource
-                .read(cx)
+                .read()
                 .unwrap_or_else(|| String::from("digraph {}"));
 
             let script_src = format!(
@@ -31,7 +29,6 @@ pub fn FlowGraph(cx: Scope) -> impl IntoView {
             );
 
             view! {
-                cx,
                 <script type="module">
                 { script_src }
                 </script>
@@ -40,7 +37,6 @@ pub fn FlowGraph(cx: Scope) -> impl IntoView {
     };
 
     view! {
-        cx,
         <div class="flex items-center justify-center">
             <div id="flow_dot_diagram"></div>
             <br />
@@ -52,7 +48,7 @@ pub fn FlowGraph(cx: Scope) -> impl IntoView {
                 </button>
             </div>
         </div>
-        <Transition fallback=move || view! {cx, <p>"Loading graph..."</p> }>
+        <Transition fallback=move || view! { <p>"Loading graph..."</p> }>
         { dot_source_result }
         </Transition>
         // Client side rendering, if we know what flow we have.
@@ -80,11 +76,8 @@ pub fn FlowGraph(cx: Scope) -> impl IntoView {
     }
 }
 
-#[cfg(feature = "hydrate")]
-use leptos::server_fn::ServerFn;
-
 #[leptos::server(FlowGraphSrc, "/flow_graph")]
-pub async fn flow_graph_src(_cx: Scope) -> Result<String, ServerFnError> {
+pub async fn flow_graph_src() -> Result<String, ServerFnError> {
     use crate::{flows::AppUploadFlow, web::FlowDotRenderer};
     let flow = AppUploadFlow::flow()
         .await
