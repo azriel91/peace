@@ -35,8 +35,6 @@ pub struct CmdBlockWrapper<
     ///
     /// The trait constraints are applied on impl blocks.
     cmd_block: CB,
-    /// Seed function for `OutcomeAcc`.
-    fn_outcome_acc_init: fn() -> BlockOutcomeAcc,
     /// Function to run if an item failure happens while executing this
     /// `CmdBlock`.
     fn_error_handler: fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome,
@@ -66,12 +64,10 @@ where
 {
     pub fn new(
         cmd_block: CB,
-        fn_outcome_acc_init: fn() -> BlockOutcomeAcc,
         fn_error_handler: fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome,
     ) -> Self {
         Self {
             cmd_block,
-            fn_outcome_acc_init,
             fn_error_handler,
             marker: PhantomData,
         }
@@ -79,11 +75,7 @@ where
 }
 
 impl<CB, E, PKeys, ExecutionOutcome, BlockOutcome, BlockOutcomeAcc, BlockOutcomePartial, InputT>
-    From<(
-        CB,
-        fn() -> BlockOutcomeAcc,
-        fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome,
-    )>
+    From<(CB, fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome)>
     for CmdBlockWrapper<
         CB,
         E,
@@ -104,13 +96,9 @@ where
         >,
 {
     fn from(
-        (cmd_block, fn_outcome_acc_init, fn_error_handler): (
-            CB,
-            fn() -> BlockOutcomeAcc,
-            fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome,
-        ),
+        (cmd_block, fn_error_handler): (CB, fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome),
     ) -> Self {
-        Self::new(cmd_block, fn_outcome_acc_init, fn_error_handler)
+        Self::new(cmd_block, fn_error_handler)
     }
 }
 
@@ -165,7 +153,7 @@ where
 
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<BlockOutcomePartial>();
         let mut cmd_outcome = {
-            let outcome = (self.fn_outcome_acc_init)();
+            let outcome = cmd_block.outcome_acc_init();
             let errors = IndexMap::<ItemId, E>::new();
             CmdOutcome {
                 value: outcome,
@@ -202,7 +190,7 @@ where
 
         outcome_result.map(|()| {
             cmd_outcome.map(|outcome_acc| {
-                let outcome = cmd_block.outcome_map(outcome_acc);
+                let outcome = cmd_block.outcome_from_acc(outcome_acc);
                 Box::new(outcome) as Box<dyn Resource>
             })
         })

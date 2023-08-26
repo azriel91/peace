@@ -3,12 +3,8 @@ use peace::{
     cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
     cmd_rt::{CmdBlockWrapper, CmdExecution},
     resources::{
-        internal::StatesMut,
         resources::ts::SetUp,
-        states::{
-            ts::{Current, Goal},
-            StateDiffs, StatesCurrent, StatesGoal,
-        },
+        states::{StateDiffs, StatesCurrent, StatesGoal},
     },
     rt::cmds::{DiffCmd, StatesDiscoverCmd},
     rt_model::{
@@ -35,11 +31,6 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
                 NoOpOutput,
                 ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
             >::default(),
-            || {
-                let states_current_mut = StatesMut::<Current>::new();
-                let states_goal_mut = StatesMut::<Goal>::new();
-                (states_current_mut, states_goal_mut)
-            },
             |states_current_and_goal_mut| {
                 let (states_current_mut, states_goal_mut) =
                     (states_current_and_goal_mut.0, states_current_and_goal_mut.1);
@@ -103,11 +94,6 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
                 NoOpOutput,
                 ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
             >::default(),
-            || {
-                let states_current_mut = StatesMut::<Current>::new();
-                let states_goal_mut = StatesMut::<Goal>::new();
-                (states_current_mut, states_goal_mut)
-            },
             |states_current_and_goal_mut| {
                 let (states_current_mut, states_goal_mut) =
                     (states_current_and_goal_mut.0, states_current_and_goal_mut.1);
@@ -130,7 +116,6 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
                     SetUp,
                 >,
             >::default(),
-            StateDiffs::new,
             |state_diffs| -> StateDiffs { *state_diffs },
         ))
         .build();

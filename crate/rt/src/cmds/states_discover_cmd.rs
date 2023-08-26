@@ -647,6 +647,20 @@ where
     type OutcomePartial = ItemDiscoverOutcome<E>;
     type PKeys = PKeys;
 
+    fn outcome_acc_init(&self) -> Self::OutcomeAcc {
+        let states_current_mut = StatesMut::<Current>::new();
+        let states_goal_mut = StatesMut::<Goal>::new();
+        (states_current_mut, states_goal_mut)
+    }
+
+    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
+        let (states_current_mut, states_goal_mut) = outcome_acc;
+        (
+            StatesCurrent::from(states_current_mut),
+            StatesGoal::from(states_goal_mut),
+        )
+    }
+
     async fn exec(
         &self,
         _input: Box<Self::InputT>,
@@ -719,13 +733,5 @@ where
         }
 
         Ok(())
-    }
-
-    fn outcome_map(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        let (states_current_mut, states_goal_mut) = outcome_acc;
-        (
-            StatesCurrent::from(states_current_mut),
-            StatesGoal::from(states_goal_mut),
-        )
     }
 }

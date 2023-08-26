@@ -89,6 +89,12 @@ pub trait CmdBlock: Debug {
     /// Input type of the command block, e.g. `StatesCurrent`.
     type InputT: Resource + 'static;
 
+    /// Seed function for `OutcomeAcc`.
+    fn outcome_acc_init(&self) -> Self::OutcomeAcc;
+
+    /// Maps the `outcome_acc` into `outcome`.
+    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome;
+
     /// Producer function to process all items.
     ///
     /// This is infallible because errors are expected to be returned associated
@@ -116,7 +122,4 @@ pub trait CmdBlock: Debug {
         block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
         outcome_partial: Self::OutcomePartial,
     ) -> Result<(), Self::Error>;
-
-    /// Maps the `outcome_acc` into `outcome`.
-    fn outcome_map(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome;
 }

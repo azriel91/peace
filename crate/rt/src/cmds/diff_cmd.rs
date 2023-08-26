@@ -489,6 +489,14 @@ where
     type OutcomePartial = Result<StateDiffs, E>;
     type PKeys = PKeys;
 
+    fn outcome_acc_init(&self) -> Self::OutcomeAcc {
+        StateDiffs::new()
+    }
+
+    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
+        outcome_acc
+    }
+
     async fn exec(
         &self,
         input: Box<Self::InputT>,
@@ -519,9 +527,5 @@ where
         let state_diffs = outcome_partial?;
         block_outcome.value = state_diffs;
         Ok(())
-    }
-
-    fn outcome_map(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        outcome_acc
     }
 }
