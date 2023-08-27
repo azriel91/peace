@@ -7,14 +7,13 @@ use peace_cmd::{
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
     CmdIndependence,
 };
-use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_resources::{
     internal::StatesMut,
     paths::{FlowDir, StatesCurrentFile, StatesGoalFile},
     resources::ts::SetUp,
     states::{
         ts::{Current, Goal},
-        States, StatesCurrent, StatesGoal,
+        StatesCurrent, StatesGoal,
     },
     type_reg::untagged::BoxDtDisplay,
     Resources,
@@ -23,7 +22,6 @@ use peace_rt_model::{
     outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, ItemBoxed, ItemGraph,
     Storage,
 };
-use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{cmds::CmdBase, BUFFERED_FUTURES_MAX};
 
@@ -631,107 +629,4 @@ enum DiscoverFor {
     Goal,
     /// Discover both current and goal states.
     CurrentAndGoal,
-}
-
-#[async_trait(?Send)]
-impl<E, O, PKeys> CmdBlock for StatesDiscoverCmd<E, O, PKeys>
-where
-    E: std::error::Error + From<Error> + Send + 'static,
-    O: OutputWrite<E>,
-    PKeys: ParamsKeys + 'static,
-{
-    type Error = E;
-    type InputT = ();
-    type Outcome = (States<Current>, States<Goal>);
-    type OutcomeAcc = (StatesMut<Current>, StatesMut<Goal>);
-    type OutcomePartial = ItemDiscoverOutcome<E>;
-    type PKeys = PKeys;
-
-    fn outcome_acc_init(&self) -> Self::OutcomeAcc {
-        let states_current_mut = StatesMut::<Current>::new();
-        let states_goal_mut = StatesMut::<Goal>::new();
-        (states_current_mut, states_goal_mut)
-    }
-
-    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        let (states_current_mut, states_goal_mut) = outcome_acc;
-        (
-            StatesCurrent::from(states_current_mut),
-            StatesGoal::from(states_goal_mut),
-        )
-    }
-
-    async fn exec(
-        &self,
-        _input: Box<Self::InputT>,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
-        #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
-    ) {
-        let SingleProfileSingleFlowView {
-            flow,
-            params_specs,
-            resources,
-            ..
-        } = &*cmd_view;
-
-        flow.graph()
-            .for_each_concurrent(BUFFERED_FUTURES_MAX, |item| {
-                Self::item_states_discover(
-                    DiscoverFor::CurrentAndGoal,
-                    #[cfg(feature = "output_progress")]
-                    true,
-                    #[cfg(feature = "output_progress")]
-                    progress_tx,
-                    params_specs,
-                    resources,
-                    outcomes_tx,
-                    item,
-                )
-            })
-            .await;
-    }
-
-    fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error> {
-        let CmdOutcome {
-            value: (states_current_mut, states_goal_mut),
-            errors,
-        } = block_outcome;
-
-        match outcome_partial {
-            ItemDiscoverOutcome::Success {
-                item_id,
-                state_current,
-                state_goal,
-            } => {
-                if let Some(state_current) = state_current {
-                    states_current_mut.insert_raw(item_id.clone(), state_current);
-                }
-                if let Some(state_goal) = state_goal {
-                    states_goal_mut.insert_raw(item_id, state_goal);
-                }
-            }
-            ItemDiscoverOutcome::Fail {
-                item_id,
-                state_current,
-                state_goal,
-                error,
-            } => {
-                errors.insert(item_id.clone(), error);
-
-                if let Some(state_current) = state_current {
-                    states_current_mut.insert_raw(item_id.clone(), state_current);
-                }
-                if let Some(state_goal) = state_goal {
-                    states_goal_mut.insert_raw(item_id, state_goal);
-                }
-            }
-        }
-
-        Ok(())
-    }
 }

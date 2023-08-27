@@ -6,7 +6,7 @@ use peace::{
         resources::ts::SetUp,
         states::{StateDiffs, StatesCurrent, StatesGoal},
     },
-    rt::cmds::{DiffCmd, StatesDiscoverCmd},
+    rt::{cmd_blocks::StatesDiscoverCmdBlock, cmds::DiffCmd},
     rt_model::{
         outcomes::CmdOutcome,
         params::{KeyUnknown, ParamsKeysImpl},
@@ -26,18 +26,8 @@ use crate::{
 async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
     let mut cmd_execution = CmdExecution::builder()
         .with_cmd_block(CmdBlockWrapper::new(
-            StatesDiscoverCmd::<
-                PeaceTestError,
-                NoOpOutput,
-                ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-            >::default(),
-            |states_current_and_goal_mut| {
-                let (states_current_mut, states_goal_mut) =
-                    (states_current_and_goal_mut.0, states_current_and_goal_mut.1);
-                let states_current = StatesCurrent::from(states_current_mut);
-                let states_goal = StatesGoal::from(states_goal_mut);
-                (states_current, states_goal)
-            },
+            StatesDiscoverCmdBlock::current(),
+            |states_current_mut| StatesCurrent::from(*states_current_mut),
         ))
         .build();
 
@@ -67,16 +57,13 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
                 matches!(
                     &cmd_outcome,
                     CmdOutcome {
-                        value,
+                        value: states_current,
                         errors,
                     }
-                    if {
-                        let (states_current, states_goal) = (&value.0, &value.1);
-                        states_current.len() == 2 && states_goal.len() == 2
-                    }
+                    if states_current.len() == 2
                     && errors.is_empty()
                 ),
-                "Expected states_current and states_goal to have 2 items,\n\
+                "Expected states_current to have 2 items,\n\
                 but cmd_outcome was: {cmd_outcome:?}"
             );
         }
@@ -89,12 +76,9 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
 async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
     let mut cmd_execution = CmdExecution::builder()
         .with_cmd_block(CmdBlockWrapper::new(
-            StatesDiscoverCmd::<
-                PeaceTestError,
-                NoOpOutput,
-                ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-            >::default(),
+            StatesDiscoverCmdBlock::current_and_goal(),
             |states_current_and_goal_mut| {
+                let states_current_and_goal_mut = *states_current_and_goal_mut;
                 let (states_current_mut, states_goal_mut) =
                     (states_current_and_goal_mut.0, states_current_and_goal_mut.1);
                 let states_current = StatesCurrent::from(states_current_mut);
