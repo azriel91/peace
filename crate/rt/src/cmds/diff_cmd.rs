@@ -10,29 +10,19 @@ use peace_cmd::{
     },
     CmdIndependence,
 };
-use peace_cmd_rt::{async_trait, CmdBlock};
 use peace_params::ParamsSpecs;
 use peace_resources::{
     internal::StateDiffsMut,
     resources::ts::SetUp,
     states::{
-        ts::{Current, Goal},
         StateDiffs, States, StatesCurrent, StatesCurrentStored, StatesGoal, StatesGoalStored,
     },
     type_reg::untagged::{BoxDtDisplay, TypeMap},
     Resources,
 };
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error, Flow};
-use tokio::sync::mpsc::UnboundedSender;
 
 use crate::cmds::{CmdBase, StatesCurrentReadCmd, StatesDiscoverCmd, StatesGoalReadCmd};
-
-cfg_if::cfg_if! {
-    if #[cfg(feature = "output_progress")] {
-        use peace_cfg::progress::ProgressUpdateAndId;
-        use tokio::sync::mpsc::Sender;
-    }
-}
 
 pub use self::{diff_info_spec::DiffInfoSpec, diff_state_spec::DiffStateSpec};
 
@@ -473,59 +463,4 @@ pub enum DiffExecOutcome<E, StatesTs> {
         /// for `E`).
         outcome: Box<CmdOutcome<States<StatesTs>, E>>,
     },
-}
-
-#[async_trait(?Send)]
-impl<'cmd, E, O, PKeys, Scope> CmdBlock for DiffCmd<'cmd, E, O, PKeys, Scope>
-where
-    E: std::error::Error + From<Error> + Send + 'static,
-    O: OutputWrite<E>,
-    PKeys: ParamsKeys + 'static,
-{
-    type Error = E;
-    type InputT = (States<Current>, States<Goal>);
-    type Outcome = StateDiffs;
-    type OutcomeAcc = StateDiffs;
-    type OutcomePartial = Result<StateDiffs, E>;
-    type PKeys = PKeys;
-
-    fn outcome_acc_init(&self) -> Self::OutcomeAcc {
-        StateDiffs::new()
-    }
-
-    fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        outcome_acc
-    }
-
-    async fn exec(
-        &self,
-        input: Box<Self::InputT>,
-        cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
-        outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
-        #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
-    ) {
-        let SingleProfileSingleFlowView {
-            flow,
-            params_specs,
-            resources,
-            ..
-        } = cmd_view;
-
-        let (states_a, states_b) = input.as_ref();
-
-        let state_diffs = Self::diff_any(flow, params_specs, resources, states_a, states_b).await;
-        outcomes_tx
-            .send(state_diffs)
-            .expect("Failed to send `state_diffs`.");
-    }
-
-    fn outcome_collate(
-        &self,
-        block_outcome: &mut CmdOutcome<Self::OutcomeAcc, Self::Error>,
-        outcome_partial: Self::OutcomePartial,
-    ) -> Result<(), Self::Error> {
-        let state_diffs = outcome_partial?;
-        block_outcome.value = state_diffs;
-        Ok(())
-    }
 }

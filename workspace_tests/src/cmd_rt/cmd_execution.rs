@@ -1,17 +1,13 @@
 use peace::{
     cfg::{app_name, profile, AppName, FlowId, Profile},
-    cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow},
+    cmd::ctx::CmdCtx,
     cmd_rt::{CmdBlockWrapper, CmdExecution},
-    resources::{
-        resources::ts::SetUp,
-        states::{StateDiffs, StatesCurrent, StatesGoal},
+    resources::states::{
+        ts::{Current, Goal},
+        StateDiffs, StatesCurrent, StatesGoal,
     },
-    rt::{cmd_blocks::StatesDiscoverCmdBlock, cmds::DiffCmd},
-    rt_model::{
-        outcomes::CmdOutcome,
-        params::{KeyUnknown, ParamsKeysImpl},
-        Flow, ItemGraphBuilder, Workspace, WorkspaceSpec,
-    },
+    rt::cmd_blocks::{DiffCmdBlock, StatesDiscoverCmdBlock},
+    rt_model::{outcomes::CmdOutcome, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
 };
 use tempfile::TempDir;
 
@@ -87,19 +83,7 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
             },
         ))
         .with_cmd_block(CmdBlockWrapper::new(
-            DiffCmd::<
-                '_,
-                PeaceTestError,
-                NoOpOutput,
-                ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-                SingleProfileSingleFlow<
-                    '_,
-                    PeaceTestError,
-                    NoOpOutput,
-                    ParamsKeysImpl<KeyUnknown, KeyUnknown, KeyUnknown>,
-                    SetUp,
-                >,
-            >::default(),
+            DiffCmdBlock::<_, _, Current, Goal>::new(),
             |state_diffs| -> StateDiffs { *state_diffs },
         ))
         .build();
@@ -136,7 +120,7 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
                     if state_diffs.len() == 2
                     && errors.is_empty()
                 ),
-                "Expected states_current and states_goal to have 2 items,\n\
+                "Expected state_diffs to have 2 items,\n\
                 but cmd_outcome was: {cmd_outcome:?}"
             );
         }
