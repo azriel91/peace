@@ -74,34 +74,6 @@ where
     }
 }
 
-impl<CB, E, PKeys, ExecutionOutcome, BlockOutcome, BlockOutcomeAcc, BlockOutcomePartial, InputT>
-    From<(CB, fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome)>
-    for CmdBlockWrapper<
-        CB,
-        E,
-        PKeys,
-        ExecutionOutcome,
-        BlockOutcome,
-        BlockOutcomeAcc,
-        BlockOutcomePartial,
-        InputT,
-    >
-where
-    CB: CmdBlock<
-            Error = E,
-            PKeys = PKeys,
-            OutcomeAcc = BlockOutcomeAcc,
-            OutcomePartial = BlockOutcomePartial,
-            InputT = InputT,
-        >,
-{
-    fn from(
-        (cmd_block, fn_error_handler): (CB, fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome),
-    ) -> Self {
-        Self::new(cmd_block, fn_error_handler)
-    }
-}
-
 #[async_trait(?Send)]
 impl<CB, E, PKeys, ExecutionOutcome, BlockOutcome, BlockOutcomeAcc, BlockOutcomePartial, InputT>
     CmdBlockRt
