@@ -28,7 +28,7 @@ mod cmd_execution_builder;
 ///
 /// [`CmdBlock`]: crate::CmdBlock
 #[derive(Debug)]
-pub struct CmdExecution<E, PKeys, Outcome>
+pub struct CmdExecution<ExecutionOutcome, E, PKeys>
 where
     E: 'static,
     PKeys: ParamsKeys + 'static,
@@ -36,30 +36,31 @@ where
     /// Blocks of commands to run.
     cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys>>,
     /// Marker for return type.
-    marker: PhantomData<Outcome>,
+    marker: PhantomData<ExecutionOutcome>,
 }
 
-impl<E, PKeys> CmdExecution<E, PKeys, ()>
+impl<ExecutionOutcome, E, PKeys> CmdExecution<ExecutionOutcome, E, PKeys>
 where
+    ExecutionOutcome: Debug + Send + Sync + 'static,
     E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
     PKeys: Debug + ParamsKeys + Unpin + 'static,
 {
-    pub fn builder() -> CmdExecutionBuilder<E, PKeys, ()> {
+    pub fn builder() -> CmdExecutionBuilder<ExecutionOutcome, E, PKeys> {
         CmdExecutionBuilder::new()
     }
 }
 
-impl<E, PKeys, Outcome> CmdExecution<E, PKeys, Outcome>
+impl<ExecutionOutcome, E, PKeys> CmdExecution<ExecutionOutcome, E, PKeys>
 where
     E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
     PKeys: Debug + ParamsKeys + Unpin + 'static,
-    Outcome: Debug + Send + Sync + Unpin + 'static,
+    ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
 {
     /// Returns the result of executing the command.
     pub async fn exec<O>(
         &mut self,
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdOutcome<Box<Outcome>, E>, E>
+    ) -> Result<CmdOutcome<Box<ExecutionOutcome>, E>, E>
     where
         O: OutputWrite<E>,
     {
@@ -129,8 +130,16 @@ where
                         block_cmd_outcome_task.await.map_err(ItemErrOrErr::Error)?;
 
                     if block_cmd_outcome.is_err() {
-                        // `CmdBlock` outcomes with item errors need to be mapped to the
-                        // `CmdExecution` outcome type, so we still return the item errors.
+                        // If possible, `CmdBlock` outcomes with item errors need to be mapped to
+                        // the `CmdExecution` outcome type, so we still return the item errors.
+                        //
+                        // e.g. `StatesCurrentMut` should be mapped into `StatesEnsured` when some
+                        // items fail to be ensured.
+                        //
+                        // Note, when discovering current and goal states for diffing, and an item
+                        // error occurs, mapping the partially accumulated `(StatesCurrentMut,
+                        // StatesGoalMut)` into `StateDiffs` may or may not be semantically
+                        // meaningful.
 
                         let block_cmd_outcome = block_cmd_outcome
                             .map(|value| cmd_block_rt.execution_outcome_from(value));
@@ -188,7 +197,7 @@ where
 
         let cmd_outcome = cmd_outcome?.map(|value| {
             value.downcast().unwrap_or_else(|value| {
-                let outcome_type_name = tynm::type_name::<Outcome>();
+                let outcome_type_name = tynm::type_name::<ExecutionOutcome>();
                 let actual_type_name = Resource::type_name(&*value);
                 panic!(
                     "Expected to downcast `value` to `{outcome_type_name}`.\n\

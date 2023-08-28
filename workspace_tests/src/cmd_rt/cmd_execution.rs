@@ -4,7 +4,7 @@ use peace::{
     cmd_rt::{CmdBlockWrapper, CmdExecution},
     resources::states::{
         ts::{Current, Goal},
-        StateDiffs, StatesCurrent, StatesGoal,
+        StateDiffs, StatesCurrent,
     },
     rt::cmd_blocks::{DiffCmdBlock, StatesDiscoverCmdBlock},
     rt_model::{outcomes::CmdOutcome, Flow, ItemGraphBuilder, Workspace, WorkspaceSpec},
@@ -70,17 +70,12 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
 
 #[tokio::test]
 async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
-    let mut cmd_execution = CmdExecution::builder()
+    let mut cmd_execution = CmdExecution::<StateDiffs, _, _>::builder()
         .with_cmd_block(CmdBlockWrapper::new(
             StatesDiscoverCmdBlock::current_and_goal(),
-            |states_current_and_goal_mut| {
-                let states_current_and_goal_mut = *states_current_and_goal_mut;
-                let (states_current_mut, states_goal_mut) =
-                    (states_current_and_goal_mut.0, states_current_and_goal_mut.1);
-                let states_current = StatesCurrent::from(states_current_mut);
-                let states_goal = StatesGoal::from(states_goal_mut);
-                (states_current, states_goal)
-            },
+            // Should we support diffing the accumulated states?
+            // Requires passing through `cmd_view` to here.
+            |_states_current_and_goal_mut| StateDiffs::new(),
         ))
         .with_cmd_block(CmdBlockWrapper::new(
             DiffCmdBlock::<_, _, Current, Goal>::new(),
