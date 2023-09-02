@@ -1,30 +1,27 @@
 use std::fmt::Debug;
 
-use peace_cfg::ItemId;
-use peace_rt_model::IndexMap;
+use peace_rt_model::outcomes::CmdOutcome;
 
 /// Error while executing a `CmdBlock`.
+///
+/// # Type Parameters
+///
+/// * `T`: Execution outcome, mapped from `CmdBlock::OutcomeAcc`.
+/// * `E`: Application error type.
 #[cfg_attr(feature = "error_reporting", derive(miette::Diagnostic))]
 #[derive(Debug, thiserror::Error)]
-pub enum CmdBlockError<OutcomeAcc, E>
+pub enum CmdBlockError<T, E>
 where
-    OutcomeAcc: Debug,
+    T: Debug,
     E: Debug,
 {
     /// Error originated from `CmdBlock` code.
     #[error("`CmdBlock` block logic failed.")]
-    Block {
-        /// Outcome accumulator at the point of error.
-        outcome_acc: OutcomeAcc,
-        /// Error that occurred.
-        error: E,
-    },
+    Block(E),
     /// Error originated from at least one item.
+    ///
+    /// The `CmdBlock::OutcomeAcc` is not returned in this variant, but
+    /// is mapped to the `ExecutionOutcome`.
     #[error("`CmdBlock` item logic failed.")]
-    Item {
-        /// Outcome accumulator at the point of error.
-        outcome_acc: OutcomeAcc,
-        /// Error(s) from the item executions.
-        error: IndexMap<ItemId, E>,
-    },
+    Outcome(CmdOutcome<T, E>),
 }

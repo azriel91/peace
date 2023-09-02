@@ -1,4 +1,4 @@
-use std::{collections::VecDeque, fmt::Debug, marker::PhantomData};
+use std::{collections::VecDeque, fmt::Debug};
 
 use peace_resources::Resource;
 use peace_rt_model::params::ParamsKeys;
@@ -17,9 +17,7 @@ where
     PKeys: ParamsKeys + 'static,
 {
     /// Blocks of commands to run.
-    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys>>,
-    /// Marker for return type.
-    marker: PhantomData<ExecutionOutcome>,
+    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
 }
 
 impl<ExecutionOutcome, E, PKeys> CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
@@ -68,29 +66,17 @@ where
         BlockOutcomePartial: Debug + Unpin + 'static,
         InputT: Debug + Resource + Unpin + 'static,
     {
-        let CmdExecutionBuilder {
-            mut cmd_blocks,
-            marker: _,
-        } = self;
+        let CmdExecutionBuilder { mut cmd_blocks } = self;
 
         cmd_blocks.push_back(Box::pin(cmd_block));
 
-        CmdExecutionBuilder {
-            cmd_blocks,
-            marker: PhantomData,
-        }
+        CmdExecutionBuilder { cmd_blocks }
     }
 
     pub fn build(self) -> CmdExecution<ExecutionOutcome, E, PKeys> {
-        let CmdExecutionBuilder {
-            cmd_blocks,
-            marker: _,
-        } = self;
+        let CmdExecutionBuilder { cmd_blocks } = self;
 
-        CmdExecution {
-            cmd_blocks,
-            marker: PhantomData,
-        }
+        CmdExecution { cmd_blocks }
     }
 }
 
@@ -103,7 +89,6 @@ where
     fn default() -> Self {
         Self {
             cmd_blocks: VecDeque::new(),
-            marker: PhantomData,
         }
     }
 }

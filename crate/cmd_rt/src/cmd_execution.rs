@@ -1,14 +1,14 @@
-use std::{collections::VecDeque, fmt::Debug, marker::PhantomData};
+use std::{collections::VecDeque, fmt::Debug};
 
 use futures::{future, stream, StreamExt, TryStreamExt};
 use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
-use peace_resources::{resources::ts::SetUp, Resource};
+use peace_resources::resources::ts::SetUp;
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys};
 
-use crate::CmdBlockRtBox;
+use crate::{CmdBlockError, CmdBlockRtBox};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -34,9 +34,7 @@ where
     PKeys: ParamsKeys + 'static,
 {
     /// Blocks of commands to run.
-    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys>>,
-    /// Marker for return type.
-    marker: PhantomData<ExecutionOutcome>,
+    cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
 }
 
 impl<ExecutionOutcome, E, PKeys> CmdExecution<ExecutionOutcome, E, PKeys>
@@ -60,14 +58,11 @@ where
     pub async fn exec<O>(
         &mut self,
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
-    ) -> Result<CmdOutcome<Box<ExecutionOutcome>, E>, E>
+    ) -> Result<CmdOutcome<ExecutionOutcome, E>, E>
     where
         O: OutputWrite<E>,
     {
-        let Self {
-            cmd_blocks,
-            marker: _,
-        } = self;
+        let Self { cmd_blocks } = self;
 
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_progress")] {
@@ -95,96 +90,92 @@ where
             }
         }
 
+        // The first CmdBlock usually relies on `()` being inserted into resources.
+        cmd_view.resources.insert(());
+
         let cmd_outcome_task = async {
-            let cmd_view_and_block_outcome_result = stream::unfold(cmd_blocks, |cmd_blocks| {
+            let cmd_view_and_progress_result = stream::unfold(cmd_blocks, |cmd_blocks| {
                 let cmd_block_next = cmd_blocks.pop_front();
                 future::ready(cmd_block_next.map(|cmd_block_next| (cmd_block_next, cmd_blocks)))
             })
-            .map(Result::<_, ItemErrOrErr<'_, '_, E, PKeys>>::Ok)
+            .map(Result::<_, CmdViewAndErr<ExecutionOutcome, E, PKeys>>::Ok)
             .try_fold(
-                CmdViewAndBlockOutcome {
+                CmdViewAndProgress {
                     cmd_view: &mut cmd_view,
-                    cmd_outcome: CmdOutcome::new(Box::new(()) as Box<dyn Resource>),
                     #[cfg(feature = "output_progress")]
                     progress_tx,
                 },
                 // `progress_tx` is moved into this closure, and dropped at the very end, so
                 // that `progress_render_task` will actually end.
-                |cmd_view_and_block_outcome, cmd_block_rt| async move {
-                    let CmdViewAndBlockOutcome {
+                |cmd_view_and_progress, cmd_block_rt| async move {
+                    let CmdViewAndProgress {
                         cmd_view,
-                        cmd_outcome: cmd_outcome_previous,
                         #[cfg(feature = "output_progress")]
                         progress_tx,
-                    } = cmd_view_and_block_outcome;
+                    } = cmd_view_and_progress;
 
-                    let block_cmd_outcome_task = cmd_block_rt.exec(
-                        cmd_view,
-                        #[cfg(feature = "output_progress")]
-                        progress_tx.clone(),
-                        cmd_outcome_previous.value,
-                    );
+                    let block_cmd_outcome_result = cmd_block_rt
+                        .exec(
+                            cmd_view,
+                            #[cfg(feature = "output_progress")]
+                            progress_tx.clone(),
+                        )
+                        .await;
 
                     // `CmdBlock` block logic errors are propagated.
-                    let block_cmd_outcome =
-                        block_cmd_outcome_task.await.map_err(ItemErrOrErr::Error)?;
+                    let cmd_view_and_progress = CmdViewAndProgress {
+                        cmd_view,
+                        #[cfg(feature = "output_progress")]
+                        progress_tx,
+                    };
 
-                    if block_cmd_outcome.is_err() {
-                        // If possible, `CmdBlock` outcomes with item errors need to be mapped to
-                        // the `CmdExecution` outcome type, so we still return the item errors.
-                        //
-                        // e.g. `StatesCurrentMut` should be mapped into `StatesEnsured` when some
-                        // items fail to be ensured.
-                        //
-                        // Note, when discovering current and goal states for diffing, and an item
-                        // error occurs, mapping the partially accumulated `(StatesCurrentMut,
-                        // StatesGoalMut)` into `StateDiffs` may or may not be semantically
-                        // meaningful.
-
-                        let block_cmd_outcome = block_cmd_outcome
-                            .map(|value| cmd_block_rt.execution_outcome_from(value));
-
-                        let cmd_view_and_block_outcome = CmdViewAndBlockOutcome {
-                            cmd_view,
-                            cmd_outcome: block_cmd_outcome,
-                            #[cfg(feature = "output_progress")]
-                            progress_tx,
-                        };
-
-                        Err(ItemErrOrErr::Outcome(cmd_view_and_block_outcome))
-                    } else {
-                        let cmd_view_and_block_outcome = CmdViewAndBlockOutcome {
-                            cmd_view,
-                            cmd_outcome: block_cmd_outcome,
-                            #[cfg(feature = "output_progress")]
-                            progress_tx,
-                        };
-
-                        Ok(cmd_view_and_block_outcome)
+                    match block_cmd_outcome_result {
+                        Ok(()) => Ok(cmd_view_and_progress),
+                        Err(cmd_block_error) => Err(CmdViewAndErr {
+                            cmd_view_and_progress,
+                            cmd_block_error,
+                        }),
                     }
                 },
             )
             .await;
 
-            let cmd_view_and_block_outcome = match cmd_view_and_block_outcome_result {
-                Ok(cmd_view_and_block_outcome) => cmd_view_and_block_outcome,
-                Err(ItemErrOrErr::Outcome(cmd_view_and_block_outcome)) => {
-                    cmd_view_and_block_outcome
-                }
-                Err(ItemErrOrErr::Error(error)) => return Err(error),
+            let (cmd_view_and_progress, cmd_block_error) = match cmd_view_and_progress_result {
+                Ok(cmd_view_and_progress) => (cmd_view_and_progress, None),
+                Err(CmdViewAndErr {
+                    cmd_view_and_progress,
+                    cmd_block_error,
+                }) => (cmd_view_and_progress, Some(cmd_block_error)),
             };
 
-            let CmdViewAndBlockOutcome {
-                cmd_view: _cmd_view,
-                cmd_outcome,
+            let CmdViewAndProgress {
+                cmd_view,
                 #[cfg(feature = "output_progress")]
                 progress_tx,
-            } = cmd_view_and_block_outcome;
+            } = cmd_view_and_progress;
 
             #[cfg(feature = "output_progress")]
             drop(progress_tx);
 
-            Result::<_, E>::Ok(cmd_outcome)
+            if let Some(cmd_block_error) = cmd_block_error {
+                match cmd_block_error {
+                    CmdBlockError::Block(error) => Err(error),
+                    CmdBlockError::Outcome(cmd_outcome) => Ok(cmd_outcome),
+                }
+            } else {
+                let execution_outcome = cmd_view
+                    .resources
+                    .remove::<ExecutionOutcome>()
+                    .unwrap_or_else(|| {
+                        let execution_outcome_type_name = tynm::type_name::<ExecutionOutcome>();
+                        panic!(
+                            "Expected `{execution_outcome_type_name}` to exist in `Resources`.\n\
+                            Make sure the final `CmdBlock` has that type as its `Outcome`."
+                        );
+                    });
+                let cmd_outcome = CmdOutcome::new(execution_outcome);
+                Ok(cmd_outcome)
+            }
         };
 
         #[cfg(not(feature = "output_progress"))]
@@ -195,40 +186,28 @@ where
         #[cfg(feature = "output_progress")]
         output.progress_end(cmd_progress_tracker).await;
 
-        let cmd_outcome = cmd_outcome?.map(|value| {
-            value.downcast().unwrap_or_else(|value| {
-                let outcome_type_name = tynm::type_name::<ExecutionOutcome>();
-                let actual_type_name = Resource::type_name(&*value);
-                panic!(
-                    "Expected to downcast `value` to `{outcome_type_name}`.\n\
-                        The actual type name is `{actual_type_name:?}`\n\
-                        This is a bug in the Peace framework."
-                );
-            })
-        });
-
-        Ok(cmd_outcome)
+        cmd_outcome
     }
 
     // pub fn exec_bg -> CmdExecId
 }
 
-struct CmdViewAndBlockOutcome<'view_ref: 'view, 'view, E, PKeys>
+struct CmdViewAndProgress<'view_ref: 'view, 'view, E, PKeys>
 where
     E: 'static,
     PKeys: ParamsKeys + 'static,
 {
     cmd_view: &'view_ref mut SingleProfileSingleFlowView<'view, E, PKeys, SetUp>,
-    cmd_outcome: CmdOutcome<Box<dyn Resource>, E>,
     #[cfg(feature = "output_progress")]
     progress_tx: Sender<ProgressUpdateAndId>,
 }
 
-enum ItemErrOrErr<'view_ref: 'view, 'view, E, PKeys>
+struct CmdViewAndErr<'view_ref: 'view, 'view, ExecutionOutcome, E, PKeys>
 where
-    E: 'static,
-    PKeys: ParamsKeys + 'static,
+    ExecutionOutcome: Debug,
+    E: Debug + 'static,
+    PKeys: Debug + ParamsKeys + 'static,
 {
-    Outcome(CmdViewAndBlockOutcome<'view_ref, 'view, E, PKeys>),
-    Error(E),
+    cmd_view_and_progress: CmdViewAndProgress<'view_ref, 'view, E, PKeys>,
+    cmd_block_error: CmdBlockError<ExecutionOutcome, E>,
 }

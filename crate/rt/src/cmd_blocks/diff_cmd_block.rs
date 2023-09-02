@@ -112,7 +112,7 @@ where
 
     async fn exec(
         &self,
-        input: Box<Self::InputT>,
+        input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] _progress_tx: &Sender<ProgressUpdateAndId>,
@@ -124,9 +124,9 @@ where
             ..
         } = cmd_view;
 
-        let (states_a, states_b) = input.as_ref();
+        let (states_a, states_b) = input;
 
-        let state_diffs = Self::diff_any(flow, params_specs, resources, states_a, states_b).await;
+        let state_diffs = Self::diff_any(flow, params_specs, resources, &states_a, &states_b).await;
         outcomes_tx
             .send(state_diffs)
             .expect("Failed to send `state_diffs`.");

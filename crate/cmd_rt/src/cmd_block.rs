@@ -102,7 +102,7 @@ pub trait CmdBlock: Debug {
     /// the block that are not associated with a specific item.
     async fn exec(
         &self,
-        input: Box<Self::InputT>,
+        input: Self::InputT,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,

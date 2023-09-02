@@ -23,7 +23,7 @@ async fn runs_one_cmd_block() -> Result<(), PeaceTestError> {
     let mut cmd_execution = CmdExecution::builder()
         .with_cmd_block(CmdBlockWrapper::new(
             StatesDiscoverCmdBlock::current(),
-            |states_current_mut| StatesCurrent::from(*states_current_mut),
+            StatesCurrent::from,
         ))
         .build();
 
@@ -79,7 +79,7 @@ async fn chains_multiple_cmd_blocks() -> Result<(), PeaceTestError> {
         ))
         .with_cmd_block(CmdBlockWrapper::new(
             DiffCmdBlock::<_, _, Current, Goal>::new(),
-            |state_diffs| -> StateDiffs { *state_diffs },
+            std::convert::identity,
         ))
         .build();
 

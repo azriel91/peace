@@ -7,7 +7,7 @@ use peace_resources::{resources::ts::SetUp, Resource};
 use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys, IndexMap};
 use tokio::sync::mpsc;
 
-use crate::{CmdBlock, CmdBlockRt};
+use crate::{CmdBlock, CmdBlockError, CmdBlockRt};
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "output_progress")] {
@@ -37,7 +37,7 @@ pub struct CmdBlockWrapper<
     cmd_block: CB,
     /// Function to run if an item failure happens while executing this
     /// `CmdBlock`.
-    fn_error_handler: fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome,
+    fn_error_handler: fn(BlockOutcomeAcc) -> ExecutionOutcome,
     /// Marker.
     marker: PhantomData<(E, PKeys, BlockOutcome, BlockOutcomePartial, InputT)>,
 }
@@ -62,10 +62,7 @@ where
             InputT = InputT,
         >,
 {
-    pub fn new(
-        cmd_block: CB,
-        fn_error_handler: fn(Box<BlockOutcomeAcc>) -> ExecutionOutcome,
-    ) -> Self {
+    pub fn new(cmd_block: CB, fn_error_handler: fn(BlockOutcomeAcc) -> ExecutionOutcome) -> Self {
         Self {
             cmd_block,
             fn_error_handler,
@@ -94,6 +91,7 @@ where
             Outcome = BlockOutcome,
             OutcomeAcc = BlockOutcomeAcc,
             OutcomePartial = BlockOutcomePartial,
+            InputT = InputT,
         > + Unpin,
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
     PKeys: Debug + ParamsKeys + Unpin + 'static,
@@ -104,21 +102,19 @@ where
     InputT: Debug + Resource + Unpin + 'static,
 {
     type Error = E;
+    type ExecutionOutcome = ExecutionOutcome;
     type PKeys = PKeys;
 
     async fn exec(
         &self,
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
-        input: Box<dyn Resource>,
-    ) -> Result<CmdOutcome<Box<dyn Resource>, Self::Error>, Self::Error> {
-        let input = input.downcast().unwrap_or_else(|input| {
+    ) -> Result<(), CmdBlockError<ExecutionOutcome, Self::Error>> {
+        let input = cmd_view.resources.remove::<InputT>().unwrap_or_else(|| {
             let input_type_name = tynm::type_name::<InputT>();
-            let actual_type_name = Resource::type_name(&*input);
             panic!(
-                "Expected to downcast `input` to `{input_type_name}`.\n\
-                The actual type name is `{actual_type_name:?}`\n\
-                This is a bug in the Peace framework."
+                "Expected `{input_type_name}` to exist in `Resources`.\n\
+                Make sure a previous `CmdBlock` has that type as its `Outcome`."
             );
         });
         let cmd_block = &self.cmd_block;
@@ -155,31 +151,38 @@ where
                 )
                 .await;
 
+            cmd_view
             // `progress_tx` is dropped here, so `progress_rx` will safely end.
         };
 
-        let ((), outcome_result) = futures::join!(execution_task, outcomes_rx_task);
+        let (cmd_view, outcome_result) = futures::join!(execution_task, outcomes_rx_task);
+        let () = outcome_result.map_err(CmdBlockError::Block)?;
 
-        outcome_result.map(|()| {
-            cmd_outcome.map(|outcome_acc| {
-                let outcome = cmd_block.outcome_from_acc(outcome_acc);
-                Box::new(outcome) as Box<dyn Resource>
-            })
-        })
-    }
+        if cmd_outcome.is_ok() {
+            let cmd_outcome =
+                cmd_outcome.map(|outcome_acc| cmd_block.outcome_from_acc(outcome_acc));
+            let CmdOutcome {
+                value: outcome_acc,
+                errors: _,
+            } = cmd_outcome;
 
-    fn execution_outcome_from(&self, outcome_acc: Box<dyn Resource>) -> Box<dyn Resource> {
-        let outcome_acc = outcome_acc.downcast().unwrap_or_else(|outcome_acc| {
-            let outcome_acc_type_name = tynm::type_name::<BlockOutcome>();
-            let actual_type_name = Resource::type_name(&*outcome_acc);
-            panic!(
-                "Expected to downcast `outcome_acc` to `{outcome_acc_type_name}`.\n\
-                The actual type name is `{actual_type_name:?}`\n\
-                This is a bug in the Peace framework."
-            );
-        });
-        let execution_outcome = (self.fn_error_handler)(outcome_acc);
+            cmd_view.resources.insert(outcome_acc);
 
-        Box::new(execution_outcome) as Box<dyn Resource>
+            Ok(())
+        } else {
+            // If possible, `CmdBlock` outcomes with item errors need to be mapped to
+            // the `CmdExecution` outcome type, so we still return the item errors.
+            //
+            // e.g. `StatesCurrentMut` should be mapped into `StatesEnsured` when some
+            // items fail to be ensured.
+            //
+            // Note, when discovering current and goal states for diffing, and an item
+            // error occurs, mapping the partially accumulated `(StatesCurrentMut,
+            // StatesGoalMut)` into `StateDiffs` may or may not be semantically
+            // meaningful.
+
+            let cmd_outcome = cmd_outcome.map(self.fn_error_handler);
+            Err(CmdBlockError::Outcome(cmd_outcome))
+        }
     }
 }
