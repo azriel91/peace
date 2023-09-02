@@ -110,14 +110,8 @@ where
         cmd_view: &mut SingleProfileSingleFlowView<'_, Self::Error, Self::PKeys, SetUp>,
         #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
     ) -> Result<(), CmdBlockError<ExecutionOutcome, Self::Error>> {
-        let input = cmd_view.resources.remove::<InputT>().unwrap_or_else(|| {
-            let input_type_name = tynm::type_name::<InputT>();
-            panic!(
-                "Expected `{input_type_name}` to exist in `Resources`.\n\
-                Make sure a previous `CmdBlock` has that type as its `Outcome`."
-            );
-        });
         let cmd_block = &self.cmd_block;
+        let input = cmd_block.input_fetch(&mut cmd_view.resources);
 
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<BlockOutcomePartial>();
         let mut cmd_outcome = {

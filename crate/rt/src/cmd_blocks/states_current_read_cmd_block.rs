@@ -81,6 +81,8 @@ where
     type OutcomePartial = Result<StatesCurrentStored, E>;
     type PKeys = PKeys;
 
+    fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Self::InputT {}
+
     fn outcome_acc_init(&self) -> Self::OutcomeAcc {
         StatesCurrentStored::new()
     }

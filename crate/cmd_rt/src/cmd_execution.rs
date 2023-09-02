@@ -90,9 +90,6 @@ where
             }
         }
 
-        // The first CmdBlock usually relies on `()` being inserted into resources.
-        cmd_view.resources.insert(());
-
         let cmd_outcome_task = async {
             let cmd_view_and_progress_result = stream::unfold(cmd_blocks, |cmd_blocks| {
                 let cmd_block_next = cmd_blocks.pop_front();

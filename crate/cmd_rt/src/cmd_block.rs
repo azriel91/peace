@@ -2,7 +2,7 @@ use std::fmt::Debug;
 
 use async_trait::async_trait;
 use peace_cmd::scopes::SingleProfileSingleFlowView;
-use peace_resources::{resources::ts::SetUp, Resource};
+use peace_resources::{resources::ts::SetUp, Resource, Resources};
 use peace_rt_model::{outcomes::CmdOutcome, params::ParamsKeys};
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -88,6 +88,23 @@ pub trait CmdBlock: Debug {
     type OutcomePartial: Send + 'static;
     /// Input type of the command block, e.g. `StatesCurrent`.
     type InputT: Resource + 'static;
+
+    /// Fetch function for `InputT`.
+    ///
+    /// This is overridable so that `CmdBlock`s can change how their `InputT` is
+    /// looked up.
+    ///
+    /// The most common use case for overriding this is for unit `()` inputs,
+    /// which should provide an empty implementation.
+    fn input_fetch(&self, resources: &mut Resources<SetUp>) -> Self::InputT {
+        resources.remove::<Self::InputT>().unwrap_or_else(|| {
+            let input_type_name = tynm::type_name::<Self::InputT>();
+            panic!(
+                "Expected `{input_type_name}` to exist in `Resources`.\n\
+                Make sure a previous `CmdBlock` has that type as its `Outcome`."
+            );
+        })
+    }
 
     /// Seed function for `OutcomeAcc`.
     fn outcome_acc_init(&self) -> Self::OutcomeAcc;
