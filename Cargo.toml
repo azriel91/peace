@@ -104,17 +104,17 @@ peace_item_tar_x = { path = "items/tar_x", version = "0.0.11" }
 # This does not include examples' dependencies, because we want it to be easy for
 # developers to see the dependencies to create an automation tool.
 async-trait = "0.1.73"
-base64 = "0.21.2"
+base64 = "0.21.3"
 bytes = "1.4.0"
 cfg-if = "1.0.0"
-chrono = { version = "0.4.26", default-features = false, features = ["clock", "serde"] }
+chrono = { version = "0.4.28", default-features = false, features = ["clock", "serde"] }
 console = "0.15.7"
 derivative = "2.2.0"
 diff-struct = "0.5.3"
 downcast-rs = "1.2.0"
 dyn-clone = "1.0.13"
 enser = "0.1.4"
-erased-serde = "0.3.30"
+erased-serde = "0.3.31"
 fn_graph = { version = "0.8.4", features = ["resman"] }
 futures = "0.3.28"
 heck = "0.4.1"
@@ -126,7 +126,7 @@ proc-macro2 = "1.0.66"
 quote = "1.0.33"
 reqwest = "0.11.20"
 resman = "0.16.1"
-serde = "1.0.186"
+serde = "1.0.188"
 serde-wasm-bindgen = "0.5.0"
 serde_json = "1.0.105"
 serde_yaml = "0.9.25"
@@ -138,6 +138,6 @@ tokio = "1.32.0"
 tokio-util = "0.7.8"
 tynm = "0.1.8"
 type_reg = { version = "0.6.0", features = ["debug", "untagged", "ordered"] }
-url = "2.4.0"
+url = "2.4.1"
 wasm-bindgen = "0.2.87"
 web-sys = "0.3.64"

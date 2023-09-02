@@ -21,10 +21,10 @@ crate-type = ["cdylib", "rlib"]
 peace = { path = "../..", default-features = false }
 peace_items = { path = "../../items", features = ["file_download"] }
 thiserror = "1.0.47"
-url = { version = "2.4.0", features = ["serde"] }
+url = { version = "2.4.1", features = ["serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-clap = { version = "4.4.0", features = ["derive"] }
+clap = { version = "4.4.2", features = ["derive"] }
 tokio = { version = "1.32.0", features = ["net", "time", "rt"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
