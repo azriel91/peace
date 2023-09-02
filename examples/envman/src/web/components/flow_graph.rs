@@ -14,7 +14,7 @@ pub fn FlowGraph() -> impl IntoView {
     let dot_source_result = {
         move || {
             let dot_source = dot_source_resource
-                .read()
+                .get()
                 .unwrap_or_else(|| String::from("digraph {}"));
 
             let script_src = format!(
