@@ -153,14 +153,13 @@ where
         let () = outcome_result.map_err(CmdBlockError::Block)?;
 
         if cmd_outcome.is_ok() {
-            let cmd_outcome =
-                cmd_outcome.map(|outcome_acc| cmd_block.outcome_from_acc(outcome_acc));
             let CmdOutcome {
                 value: outcome_acc,
                 errors: _,
             } = cmd_outcome;
 
-            cmd_view.resources.insert(outcome_acc);
+            let outcome = cmd_block.outcome_from_acc(outcome_acc);
+            cmd_block.outcome_insert(&mut cmd_view.resources, outcome);
 
             Ok(())
         } else {

@@ -50,7 +50,7 @@ pub trait CmdBlock: Debug {
     /// Types used for params keys.
     type PKeys: ParamsKeys + 'static;
     /// Outcome type of the command block, e.g. `(StatesCurrent, StatesGoal)`.
-    type Outcome: 'static;
+    type Outcome: Debug + Send + Sync + 'static;
     /// Intermediate working type of the command block, e.g.
     /// `StatesMut<Ensured>`.
     type OutcomeAcc: Resource + 'static;
@@ -111,6 +111,17 @@ pub trait CmdBlock: Debug {
 
     /// Maps the `outcome_acc` into `outcome`.
     fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome;
+
+    /// Inserts the `CmdBlock::Outcome` into `Resources`.
+    ///
+    /// This is overridable so that `CmdBlock`s can change how their `Outcome`
+    /// is inserted.
+    ///
+    /// The most common use case for overriding this is for unit `()` inputs,
+    /// which should provide an empty implementation.
+    fn outcome_insert(&self, resources: &mut Resources<SetUp>, outcome: Self::Outcome) {
+        resources.insert(outcome);
+    }
 
     /// Producer function to process all items.
     ///
