@@ -120,21 +120,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      # Coverage fails by running out of disk space.
-      #
-      # We use this to free things up.
-      #
-      # See:
-      #
-      # * <https://github.com/taiki-e/cargo-llvm-cov/issues/284>
-      # * <https://github.com/easimon/maximize-build-space>
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@master
-        with:
-          root-reserve-mb: 512
-          swap-size-mb: 1024
-          remove-dotnet: 'true'
-          remove-android: 'true'
       - uses: actions/checkout@v3
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -148,7 +133,7 @@ jobs:
         run: ./coverage.sh
 
       - name: 'Print directory sizes'
-        run: du -sh target/debug target/llvm-cov-target
+        run: du -sh target/coverage target/llvm-cov-target
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v3
