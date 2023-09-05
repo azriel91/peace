@@ -30,6 +30,7 @@ peace_rt_model_core = { workspace = true }
 serde = { workspace = true }
 serde_yaml = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }
+tynm = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { workspace = true, features = ["fs", "io-util"] }
