@@ -37,3 +37,10 @@ pub struct Cleaned;
 /// States of items after dry-running `CleanCmd`.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CleanedDry;
+
+/// Previous states of items.
+///
+/// This is intended as a record of `States` before an `ApplyCmd` (`EnsureCmd`
+/// or `CleanCmd`) are run.
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Previous;

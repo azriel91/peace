@@ -4,7 +4,8 @@ pub use self::{
     state_diffs::StateDiffs, states_cleaned::StatesCleaned, states_cleaned_dry::StatesCleanedDry,
     states_current::StatesCurrent, states_current_stored::StatesCurrentStored,
     states_ensured::StatesEnsured, states_ensured_dry::StatesEnsuredDry, states_goal::StatesGoal,
-    states_goal_stored::StatesGoalStored, states_serde::StatesSerde,
+    states_goal_stored::StatesGoalStored, states_previous::StatesPrevious,
+    states_serde::StatesSerde,
 };
 
 pub mod ts;
@@ -17,6 +18,7 @@ use serde::Serialize;
 use type_reg::untagged::{BoxDtDisplay, TypeMap};
 
 use crate::internal::StatesMut;
+
 mod state_diffs;
 mod states_cleaned;
 mod states_cleaned_dry;
@@ -26,6 +28,7 @@ mod states_ensured;
 mod states_ensured_dry;
 mod states_goal;
 mod states_goal_stored;
+mod states_previous;
 mod states_serde;
 
 /// Map of `State`s for all `Item`s. `TypeMap<ItemId, Item::State>` newtype.
