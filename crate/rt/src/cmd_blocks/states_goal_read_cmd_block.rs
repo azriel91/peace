@@ -83,7 +83,7 @@ where
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Self::InputT {}
 
-    fn outcome_acc_init(&self) -> Self::OutcomeAcc {
+    fn outcome_acc_init(&self, (): &Self::InputT) -> Self::OutcomeAcc {
         StatesGoalStored::new()
     }
 

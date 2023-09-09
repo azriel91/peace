@@ -107,7 +107,7 @@ pub trait CmdBlock: Debug {
     }
 
     /// Seed function for `OutcomeAcc`.
-    fn outcome_acc_init(&self) -> Self::OutcomeAcc;
+    fn outcome_acc_init(&self, input: &Self::InputT) -> Self::OutcomeAcc;
 
     /// Maps the `outcome_acc` into `outcome`.
     fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome;

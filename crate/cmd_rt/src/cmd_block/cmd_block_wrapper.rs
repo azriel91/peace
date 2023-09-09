@@ -111,11 +111,11 @@ where
         #[cfg(feature = "output_progress")] progress_tx: Sender<ProgressUpdateAndId>,
     ) -> Result<(), CmdBlockError<ExecutionOutcome, Self::Error>> {
         let cmd_block = &self.cmd_block;
-        let input = cmd_block.input_fetch(&mut cmd_view.resources);
+        let input = cmd_block.input_fetch(cmd_view.resources);
 
         let (outcomes_tx, mut outcomes_rx) = mpsc::unbounded_channel::<BlockOutcomePartial>();
         let mut cmd_outcome = {
-            let outcome = cmd_block.outcome_acc_init();
+            let outcome = cmd_block.outcome_acc_init(&input);
             let errors = IndexMap::<ItemId, E>::new();
             CmdOutcome {
                 value: outcome,
@@ -159,7 +159,7 @@ where
             } = cmd_outcome;
 
             let outcome = cmd_block.outcome_from_acc(outcome_acc);
-            cmd_block.outcome_insert(&mut cmd_view.resources, outcome);
+            cmd_block.outcome_insert(cmd_view.resources, outcome);
 
             Ok(())
         } else {

@@ -308,7 +308,7 @@ where
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Self::InputT {}
 
-    fn outcome_acc_init(&self) -> Self::OutcomeAcc {
+    fn outcome_acc_init(&self, (): &Self::InputT) -> Self::OutcomeAcc {
         StatesMut::<Current>::new()
     }
 
@@ -401,7 +401,7 @@ where
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Self::InputT {}
 
-    fn outcome_acc_init(&self) -> Self::OutcomeAcc {
+    fn outcome_acc_init(&self, (): &Self::InputT) -> Self::OutcomeAcc {
         StatesMut::<Goal>::new()
     }
 
@@ -494,7 +494,7 @@ where
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Self::InputT {}
 
-    fn outcome_acc_init(&self) -> Self::OutcomeAcc {
+    fn outcome_acc_init(&self, (): &Self::InputT) -> Self::OutcomeAcc {
         let states_current_mut = StatesMut::<Current>::new();
         let states_goal_mut = StatesMut::<Goal>::new();
         (states_current_mut, states_goal_mut)

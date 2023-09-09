@@ -221,7 +221,7 @@ where
 
     fn input_fetch(&self, _resources: &mut Resources<SetUp>) -> Self::InputT {}
 
-    fn outcome_acc_init(&self) -> Self::OutcomeAcc {
+    fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
         None
     }
 
@@ -270,7 +270,7 @@ where
         input_fetch_current(resources)
     }
 
-    fn outcome_acc_init(&self) -> Self::OutcomeAcc {
+    fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
         None
     }
 
@@ -359,7 +359,7 @@ where
         input_fetch_goal(resources)
     }
 
-    fn outcome_acc_init(&self) -> Self::OutcomeAcc {
+    fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
         None
     }
 
@@ -462,7 +462,7 @@ where
         )
     }
 
-    fn outcome_acc_init(&self) -> Self::OutcomeAcc {
+    fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
         None
     }
 

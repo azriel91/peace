@@ -102,7 +102,7 @@ where
     type OutcomePartial = Result<StateDiffs, E>;
     type PKeys = PKeys;
 
-    fn outcome_acc_init(&self) -> Self::OutcomeAcc {
+    fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
         StateDiffs::new()
     }
 
