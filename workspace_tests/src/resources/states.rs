@@ -3,6 +3,15 @@ use peace::{
     resources::{internal::StatesMut, states::StatesCurrent, type_reg::untagged::TypeMap},
 };
 
+mod states_cleaned;
+mod states_cleaned_dry;
+mod states_current;
+mod states_current_stored;
+mod states_ensured;
+mod states_ensured_dry;
+mod states_goal;
+mod states_goal_stored;
+mod states_previous;
 mod ts;
 
 #[test]
