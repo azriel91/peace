@@ -295,8 +295,8 @@ where
 
         let state_current_stale_result = Self::items_state_stored_stale(
             cmd_view,
-            &states_current_stored,
-            &states_current,
+            states_current_stored,
+            states_current,
             #[cfg(feature = "output_progress")]
             progress_tx,
         );
@@ -384,8 +384,8 @@ where
 
         let state_goal_stale_result = Self::items_state_stored_stale(
             cmd_view,
-            &states_goal_stored,
-            &states_goal,
+            states_goal_stored,
+            states_goal,
             #[cfg(feature = "output_progress")]
             progress_tx,
         );
@@ -489,8 +489,8 @@ where
 
         let state_current_stale_result = Self::items_state_stored_stale(
             cmd_view,
-            &states_current_stored,
-            &states_current,
+            states_current_stored,
+            states_current,
             #[cfg(feature = "output_progress")]
             progress_tx,
         );
@@ -521,8 +521,8 @@ where
 
         let state_goal_stale_result = Self::items_state_stored_stale(
             cmd_view,
-            &states_goal_stored,
-            &states_goal,
+            states_goal_stored,
+            states_goal,
             #[cfg(feature = "output_progress")]
             progress_tx,
         );
