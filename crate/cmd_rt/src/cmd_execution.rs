@@ -41,7 +41,7 @@ impl<ExecutionOutcome, E, PKeys> CmdExecution<ExecutionOutcome, E, PKeys>
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
     E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-    PKeys: Debug + ParamsKeys + Unpin + 'static,
+    PKeys: ParamsKeys + 'static,
 {
     pub fn builder() -> CmdExecutionBuilder<ExecutionOutcome, E, PKeys> {
         CmdExecutionBuilder::new()
@@ -51,7 +51,7 @@ where
 impl<ExecutionOutcome, E, PKeys> CmdExecution<ExecutionOutcome, E, PKeys>
 where
     E: std::error::Error + From<peace_rt_model::Error> + Send + Sync + Unpin + 'static,
-    PKeys: Debug + ParamsKeys + Unpin + 'static,
+    PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Send + Sync + Unpin + 'static,
 {
     /// Returns the result of executing the command.
@@ -203,7 +203,7 @@ struct CmdViewAndErr<'view_ref: 'view, 'view, ExecutionOutcome, E, PKeys>
 where
     ExecutionOutcome: Debug,
     E: Debug + 'static,
-    PKeys: Debug + ParamsKeys + 'static,
+    PKeys: ParamsKeys + 'static,
 {
     cmd_view_and_progress: CmdViewAndProgress<'view_ref, 'view, E, PKeys>,
     cmd_block_error: CmdBlockError<ExecutionOutcome, E>,

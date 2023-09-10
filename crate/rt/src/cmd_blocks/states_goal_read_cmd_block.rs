@@ -72,7 +72,7 @@ impl<E, PKeys> Default for StatesGoalReadCmdBlock<E, PKeys> {
 impl<E, PKeys> CmdBlock for StatesGoalReadCmdBlock<E, PKeys>
 where
     E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: Debug + ParamsKeys + 'static,
+    PKeys: ParamsKeys + 'static,
 {
     type Error = E;
     type InputT = ();

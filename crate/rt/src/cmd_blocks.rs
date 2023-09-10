@@ -10,7 +10,7 @@ pub use self::{
     states_goal_read_cmd_block::StatesGoalReadCmdBlock,
 };
 
-mod apply_exec_cmd_block;
+pub mod apply_exec_cmd_block;
 mod apply_state_sync_check_cmd_block;
 mod diff_cmd_block;
 mod states_current_read_cmd_block;

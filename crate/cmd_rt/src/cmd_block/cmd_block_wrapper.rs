@@ -94,7 +94,7 @@ where
             InputT = InputT,
         > + Unpin,
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
-    PKeys: Debug + ParamsKeys + Unpin + 'static,
+    PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Unpin + Send + Sync + 'static,
     BlockOutcome: Debug + Unpin + Send + Sync + 'static,
     BlockOutcomeAcc: Debug + Resource + Unpin + 'static,

@@ -255,7 +255,7 @@ impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe>
     >
 where
     WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
     ProfileParamsKMaybe: KeyMaybe,
     FlowParamsKMaybe: KeyMaybe,
 {
@@ -275,7 +275,7 @@ impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe>
 where
     WorkspaceParamsKMaybe: KeyMaybe,
     ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
     FlowParamsKMaybe: KeyMaybe,
 {
     /// Returns the profile params.

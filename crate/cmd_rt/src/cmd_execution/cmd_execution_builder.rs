@@ -24,7 +24,7 @@ impl<ExecutionOutcome, E, PKeys> CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
 where
     ExecutionOutcome: Debug + Send + Sync + 'static,
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
-    PKeys: Debug + ParamsKeys + Unpin + 'static,
+    PKeys: ParamsKeys + 'static,
 {
     pub fn new() -> Self {
         Self::default()
@@ -34,7 +34,7 @@ where
 impl<ExecutionOutcome, E, PKeys> CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
 where
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
-    PKeys: Debug + ParamsKeys + Unpin + 'static,
+    PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Resource + Unpin + 'static,
 {
     pub fn with_cmd_block<CB, BlockOutcomeNext, BlockOutcomeAcc, BlockOutcomePartial, InputT>(
@@ -83,7 +83,7 @@ where
 impl<ExecutionOutcome, E, PKeys> Default for CmdExecutionBuilder<ExecutionOutcome, E, PKeys>
 where
     E: Debug + std::error::Error + From<peace_rt_model::Error> + Send + Unpin + 'static,
-    PKeys: Debug + ParamsKeys + Unpin + 'static,
+    PKeys: ParamsKeys + 'static,
     ExecutionOutcome: Debug + Resource + 'static,
 {
     fn default() -> Self {

@@ -421,7 +421,7 @@ impl<'ctx, E, O, WorkspaceParamsK, ProfileParamsKMaybe, FlowParamsKMaybe, TS>
     >
 where
     WorkspaceParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
     ProfileParamsKMaybe: KeyMaybe,
     FlowParamsKMaybe: KeyMaybe,
 {
@@ -442,7 +442,7 @@ impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsK, FlowParamsKMaybe, TS>
 where
     WorkspaceParamsKMaybe: KeyMaybe,
     ProfileParamsK:
-        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
     FlowParamsKMaybe: KeyMaybe,
 {
     /// Returns the profile params for each profile.
@@ -462,7 +462,8 @@ impl<'ctx, E, O, WorkspaceParamsKMaybe, ProfileParamsKMaybe, FlowParamsK, TS>
 where
     WorkspaceParamsKMaybe: KeyMaybe,
     ProfileParamsKMaybe: KeyMaybe,
-    FlowParamsK: Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+    FlowParamsK:
+        Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + Unpin + 'static,
 {
     /// Returns the flow params for the selected flow for each profile.
     pub fn profile_to_flow_params(&self) -> &BTreeMap<Profile, FlowParams<FlowParamsK>> {

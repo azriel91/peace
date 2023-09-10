@@ -120,8 +120,16 @@ where
         ParamsKeysImpl<KeyKnown<WorkspaceParamsK>, ProfileParamsKMaybe, FlowParamsKMaybe>,
     >
     where
-        WorkspaceParamsK:
-            Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+        WorkspaceParamsK: Clone
+            + Debug
+            + Eq
+            + Hash
+            + DeserializeOwned
+            + Serialize
+            + Send
+            + Sync
+            + Unpin
+            + 'static,
     {
         let ParamsTypeRegsBuilder {
             workspace_params_type_reg: _,
@@ -151,8 +159,16 @@ where
         ParamsKeysImpl<WorkspaceParamsKMaybe, KeyKnown<ProfileParamsK>, FlowParamsKMaybe>,
     >
     where
-        ProfileParamsK:
-            Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+        ProfileParamsK: Clone
+            + Debug
+            + Eq
+            + Hash
+            + DeserializeOwned
+            + Serialize
+            + Send
+            + Sync
+            + Unpin
+            + 'static,
     {
         let ParamsTypeRegsBuilder {
             workspace_params_type_reg,
@@ -182,8 +198,16 @@ where
         ParamsKeysImpl<WorkspaceParamsKMaybe, ProfileParamsKMaybe, KeyKnown<FlowParamsK>>,
     >
     where
-        FlowParamsK:
-            Clone + Debug + Eq + Hash + DeserializeOwned + Serialize + Send + Sync + 'static,
+        FlowParamsK: Clone
+            + Debug
+            + Eq
+            + Hash
+            + DeserializeOwned
+            + Serialize
+            + Send
+            + Sync
+            + Unpin
+            + 'static,
     {
         let ParamsTypeRegsBuilder {
             workspace_params_type_reg,
