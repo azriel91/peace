@@ -324,7 +324,7 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
 
     // Dry-clean states.
     let exec_dry_result =
-        CleanCmd::exec_dry_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Current).await;
+        CleanCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
@@ -426,7 +426,7 @@ async fn exec_dry_does_not_return_sync_error_when_goal_state_out_of_sync()
     let CmdOutcome {
         value: states_cleaned_dry,
         errors: _,
-    } = CleanCmd::exec_dry_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Goal).await?;
+    } = CleanCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Goal).await?;
 
     // Re-read states from disk.
     let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;
@@ -515,8 +515,7 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         .insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
     // Clean states.
-    let exec_result =
-        CleanCmd::exec_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Current).await;
+    let exec_result = CleanCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
@@ -618,7 +617,7 @@ async fn exec_does_not_return_sync_error_when_goal_state_out_of_sync()
     let CmdOutcome {
         value: states_cleaned,
         errors: _,
-    } = CleanCmd::exec_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Goal).await?;
+    } = CleanCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::Goal).await?;
 
     // Re-read states from disk.
     let states_current_stored = StatesCurrentReadCmd::exec(&mut cmd_ctx).await?;

@@ -35,6 +35,11 @@ where
     E: std::error::Error + From<Error> + Send + 'static,
     PKeys: ParamsKeys + 'static,
 {
+    /// Returns a new `StatesGoalReadCmdBlock`.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     pub(crate) async fn deserialize_internal(
         resources: &mut Resources<SetUp>,
         states_type_reg: &TypeReg<ItemId, BoxDtDisplay>,

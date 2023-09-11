@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow, CmdIndependence};
+use peace_cmd::{ctx::CmdCtx, scopes::SingleProfileSingleFlow};
 use peace_resources::{
     resources::ts::SetUp,
     states::{
@@ -10,17 +10,14 @@ use peace_resources::{
 };
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys, Error};
 
-use crate::cmds::{
-    sub::{ApplyCmd, ApplyFor},
-    ApplyStoredStateSync,
-};
+use crate::cmds::{sub::ApplyCmd, ApplyStoredStateSync};
 
 #[derive(Debug)]
 pub struct CleanCmd<E, O, PKeys>(PhantomData<(E, O, PKeys)>);
 
 impl<E, O, PKeys> CleanCmd<E, O, PKeys>
 where
-    E: std::error::Error + From<Error> + Send + 'static,
+    E: std::error::Error + From<Error> + Send + Sync + Unpin + 'static,
     PKeys: ParamsKeys + 'static,
     O: OutputWrite<E>,
 {
@@ -59,7 +56,7 @@ where
     pub async fn exec_dry(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesCleanedDry, E>, E> {
-        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry(cmd_ctx, ApplyFor::Clean).await
+        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry(cmd_ctx).await
     }
 
     /// Runs [`Item::apply_exec_dry`] for each [`Item`], with [`state_clean`] as
@@ -73,12 +70,11 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`state_clean`]: peace_cfg::Item::state_clean
     pub async fn exec_dry_with(
-        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesCleanedDry, E>, E> {
         ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_dry_with(
-            cmd_independence,
-            ApplyFor::Clean,
+            cmd_ctx,
             apply_stored_state_sync,
         )
         .await
@@ -119,7 +115,7 @@ where
     pub async fn exec(
         cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
     ) -> Result<CmdOutcome<StatesCleaned, E>, E> {
-        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec(cmd_ctx, ApplyFor::Clean).await
+        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec(cmd_ctx).await
     }
 
     /// Runs [`Item::apply_exec`] for each [`Item`], with [`state_clean`] as the
@@ -133,15 +129,11 @@ where
     /// [`Item`]: peace_cfg::Item
     /// [`state_clean`]: peace_cfg::Item::state_clean
     pub async fn exec_with(
-        cmd_independence: &mut CmdIndependence<'_, '_, '_, E, O, PKeys>,
+        cmd_ctx: &mut CmdCtx<SingleProfileSingleFlow<'_, E, O, PKeys, SetUp>>,
         apply_stored_state_sync: ApplyStoredStateSync,
     ) -> Result<CmdOutcome<StatesCleaned, E>, E> {
-        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_with(
-            cmd_independence,
-            ApplyFor::Clean,
-            apply_stored_state_sync,
-        )
-        .await
+        ApplyCmd::<E, O, PKeys, Cleaned, CleanedDry>::exec_with(cmd_ctx, apply_stored_state_sync)
+            .await
     }
 }
 

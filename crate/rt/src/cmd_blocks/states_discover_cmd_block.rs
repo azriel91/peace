@@ -508,6 +508,12 @@ where
         )
     }
 
+    fn outcome_insert(&self, resources: &mut Resources<SetUp>, outcome: Self::Outcome) {
+        let (states_current, states_goal) = outcome;
+        resources.insert(states_current);
+        resources.insert(states_goal);
+    }
+
     async fn exec(
         &self,
         _input: Self::InputT,

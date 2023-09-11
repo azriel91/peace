@@ -331,7 +331,7 @@ async fn exec_dry_returns_sync_error_when_current_state_out_of_sync()
 
     // Dry ensure states.
     let exec_dry_result =
-        EnsureCmd::exec_dry_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Current).await;
+        EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
@@ -428,8 +428,7 @@ async fn exec_dry_returns_sync_error_when_goal_state_out_of_sync()
         .await?;
 
     // Dry ensure states.
-    let exec_dry_result =
-        EnsureCmd::exec_dry_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Goal).await;
+    let exec_dry_result = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Goal).await;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
@@ -547,8 +546,7 @@ async fn exec_returns_sync_error_when_current_state_out_of_sync()
         .insert(VecB(vec![0, 1, 2, 3, 4, 5, 6, 7]));
 
     // Ensure states.
-    let exec_result =
-        EnsureCmd::exec_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Current).await;
+    let exec_result = EnsureCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
@@ -645,8 +643,7 @@ async fn exec_returns_sync_error_when_goal_state_out_of_sync()
         .await?;
 
     // Ensure states.
-    let exec_result =
-        EnsureCmd::exec_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Goal).await;
+    let exec_result = EnsureCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::Goal).await;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0u8, 1, 2, 3])).as_ref(),
@@ -777,8 +774,7 @@ async fn exec_dry_returns_item_error_when_item_discover_current_returns_error()
     let CmdOutcome {
         value: states_ensured_dry,
         errors,
-    } = EnsureCmd::exec_dry_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Current)
-        .await?;
+    } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -877,8 +873,7 @@ async fn exec_dry_returns_item_error_when_item_discover_goal_returns_error()
     let CmdOutcome {
         value: states_ensured_dry,
         errors,
-    } = EnsureCmd::exec_dry_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Current)
-        .await?;
+    } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -977,8 +972,7 @@ async fn exec_dry_returns_item_error_when_item_apply_check_returns_error()
     let CmdOutcome {
         value: states_ensured_dry,
         errors,
-    } = EnsureCmd::exec_dry_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Current)
-        .await?;
+    } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -1077,8 +1071,7 @@ async fn exec_dry_returns_item_error_when_item_apply_dry_returns_error()
     let CmdOutcome {
         value: states_ensured_dry,
         errors,
-    } = EnsureCmd::exec_dry_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Current)
-        .await?;
+    } = EnsureCmd::exec_dry_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),
@@ -1177,7 +1170,7 @@ async fn exec_returns_item_error_when_item_apply_returns_error()
     let CmdOutcome {
         value: states_ensured_again,
         errors,
-    } = EnsureCmd::exec_with(&mut cmd_ctx.as_standalone(), ApplyStoredStateSync::Current).await?;
+    } = EnsureCmd::exec_with(&mut cmd_ctx, ApplyStoredStateSync::Current).await?;
 
     assert_eq!(
         Some(VecCopyState::from(vec![0, 1, 2, 3])).as_ref(),

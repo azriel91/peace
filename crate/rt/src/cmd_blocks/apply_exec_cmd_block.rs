@@ -467,9 +467,12 @@ where
     }
 }
 
+/// Whether the `ApplyCmd` is for `Ensure` or `Clean`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ApplyFor {
+    /// The apply target state is `state_goal`.
     Ensure,
+    /// The apply target state is `state_clean`.
     Clean,
 }
 
