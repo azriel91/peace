@@ -505,6 +505,8 @@ pub enum ItemApplyOutcome<E> {
 }
 
 pub trait StatesTsApplyExt {
+    type StatesTsTarget: Debug + Send + Sync + Unpin + 'static;
+
     /// Returns the `ApplyFor` this `StatesTs` is meant for.
     fn apply_for() -> ApplyFor;
     /// Returns whether this `StatesTs` is for a dry run.
@@ -512,6 +514,8 @@ pub trait StatesTsApplyExt {
 }
 
 impl StatesTsApplyExt for Ensured {
+    type StatesTsTarget = Goal;
+
     fn apply_for() -> ApplyFor {
         ApplyFor::Ensure
     }
@@ -522,6 +526,8 @@ impl StatesTsApplyExt for Ensured {
 }
 
 impl StatesTsApplyExt for EnsuredDry {
+    type StatesTsTarget = Goal;
+
     fn apply_for() -> ApplyFor {
         ApplyFor::Ensure
     }
@@ -532,6 +538,8 @@ impl StatesTsApplyExt for EnsuredDry {
 }
 
 impl StatesTsApplyExt for Cleaned {
+    type StatesTsTarget = Cleaned;
+
     fn apply_for() -> ApplyFor {
         ApplyFor::Clean
     }
@@ -542,6 +550,8 @@ impl StatesTsApplyExt for Cleaned {
 }
 
 impl StatesTsApplyExt for CleanedDry {
+    type StatesTsTarget = Cleaned;
+
     fn apply_for() -> ApplyFor {
         ApplyFor::Clean
     }

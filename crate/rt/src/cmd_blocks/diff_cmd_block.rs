@@ -102,6 +102,19 @@ where
     type OutcomePartial = Result<StateDiffs, E>;
     type PKeys = PKeys;
 
+    fn input_fetch(&self, resources: &mut Resources<SetUp>) -> Self::InputT {
+        let states_ts0 = resources.remove::<States<StatesTs0>>().unwrap_or_else(|| {
+            let states_ts0 = tynm::type_name::<States<StatesTs0>>();
+            panic!("Expected `{states_ts0}` to exist in `Resources`");
+        });
+        let states_ts1 = resources.remove::<States<StatesTs1>>().unwrap_or_else(|| {
+            let states_ts1 = tynm::type_name::<States<StatesTs1>>();
+            panic!("Expected `{states_ts1}` to exist in `Resources`");
+        });
+
+        (states_ts0, states_ts1)
+    }
+
     fn outcome_acc_init(&self, _input: &Self::InputT) -> Self::OutcomeAcc {
         StateDiffs::new()
     }

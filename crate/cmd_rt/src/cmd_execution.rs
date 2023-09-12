@@ -5,7 +5,7 @@ use peace_cmd::{
     ctx::CmdCtx,
     scopes::{SingleProfileSingleFlow, SingleProfileSingleFlowView},
 };
-use peace_resources::resources::ts::SetUp;
+use peace_resources::{resources::ts::SetUp, Resources};
 use peace_rt_model::{outcomes::CmdOutcome, output::OutputWrite, params::ParamsKeys};
 
 use crate::{CmdBlockError, CmdBlockRtBox};
@@ -35,6 +35,8 @@ where
 {
     /// Blocks of commands to run.
     cmd_blocks: VecDeque<CmdBlockRtBox<E, PKeys, ExecutionOutcome>>,
+    /// Logic to extract the `ExecutionOutcome` from `Resources`.
+    execution_outcome_fetch: fn(&mut Resources<SetUp>) -> ExecutionOutcome,
 }
 
 impl<ExecutionOutcome, E, PKeys> CmdExecution<ExecutionOutcome, E, PKeys>
@@ -62,7 +64,10 @@ where
     where
         O: OutputWrite<E>,
     {
-        let Self { cmd_blocks } = self;
+        let Self {
+            cmd_blocks,
+            execution_outcome_fetch,
+        } = self;
 
         cfg_if::cfg_if! {
             if #[cfg(feature = "output_progress")] {
@@ -160,16 +165,7 @@ where
                     CmdBlockError::Outcome(cmd_outcome) => Ok(cmd_outcome),
                 }
             } else {
-                let execution_outcome = cmd_view
-                    .resources
-                    .remove::<ExecutionOutcome>()
-                    .unwrap_or_else(|| {
-                        let execution_outcome_type_name = tynm::type_name::<ExecutionOutcome>();
-                        panic!(
-                            "Expected `{execution_outcome_type_name}` to exist in `Resources`.\n\
-                            Make sure the final `CmdBlock` has that type as its `Outcome`."
-                        );
-                    });
+                let execution_outcome = execution_outcome_fetch(&mut cmd_view.resources);
                 let cmd_outcome = CmdOutcome::new(execution_outcome);
                 Ok(cmd_outcome)
             }

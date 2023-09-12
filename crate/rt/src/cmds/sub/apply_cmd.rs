@@ -293,6 +293,24 @@ where
                     ApplyExecCmdBlock::<E, PKeys, StatesTs>::new(),
                     |_| Default::default(),
                 ))
+                .with_execution_outcome_fetch(|resources| {
+                    let states_previous =
+                        resources.remove::<StatesPrevious>().unwrap_or_else(|| {
+                            let states_previous = tynm::type_name::<States<StatesTs>>();
+                            panic!("Expected `{states_previous}` to exist in `Resources`");
+                        });
+                    let states_applied =
+                        resources.remove::<States<StatesTs>>().unwrap_or_else(|| {
+                            let states_applied = tynm::type_name::<States<StatesTs>>();
+                            panic!("Expected `{states_applied}` to exist in `Resources`");
+                        });
+                    let states_goal = resources.remove::<StatesGoal>().unwrap_or_else(|| {
+                        let states_goal = tynm::type_name::<StatesGoal>();
+                        panic!("Expected `{states_goal}` to exist in `Resources`");
+                    });
+
+                    (states_previous, states_applied, states_goal)
+                })
                 .build()
         };
 
