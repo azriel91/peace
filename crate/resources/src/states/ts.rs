@@ -6,6 +6,12 @@
 
 use serde::{Deserialize, Serialize};
 
+/// Clean / blank states of items.
+///
+/// Not to be confused with [`Cleaned`].
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Clean;
+
 /// Stored current states of items.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CurrentStored;
@@ -31,6 +37,8 @@ pub struct Ensured;
 pub struct EnsuredDry;
 
 /// States of items after running the `CleanCmd`.
+///
+/// Not to be confused with [`Clean`].
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Cleaned;
 

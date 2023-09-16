@@ -1,9 +1,10 @@
 //! Resources that track current and goal states, and state diffs.
 
 pub use self::{
-    state_diffs::StateDiffs, states_cleaned::StatesCleaned, states_cleaned_dry::StatesCleanedDry,
-    states_current::StatesCurrent, states_current_stored::StatesCurrentStored,
-    states_ensured::StatesEnsured, states_ensured_dry::StatesEnsuredDry, states_goal::StatesGoal,
+    state_diffs::StateDiffs, states_clean::StatesClean, states_cleaned::StatesCleaned,
+    states_cleaned_dry::StatesCleanedDry, states_current::StatesCurrent,
+    states_current_stored::StatesCurrentStored, states_ensured::StatesEnsured,
+    states_ensured_dry::StatesEnsuredDry, states_goal::StatesGoal,
     states_goal_stored::StatesGoalStored, states_previous::StatesPrevious,
     states_serde::StatesSerde,
 };
@@ -20,6 +21,7 @@ use type_reg::untagged::{BoxDtDisplay, TypeMap};
 use crate::internal::StatesMut;
 
 mod state_diffs;
+mod states_clean;
 mod states_cleaned;
 mod states_cleaned_dry;
 mod states_current;

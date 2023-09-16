@@ -8,8 +8,8 @@ use peace_resources::{
     internal::StatesMut,
     resources::ts::SetUp,
     states::{
-        ts::{Cleaned, CleanedDry, Ensured, EnsuredDry, Goal},
-        States, StatesCurrent, StatesGoal, StatesPrevious,
+        ts::{Clean, Cleaned, CleanedDry, Ensured, EnsuredDry, Goal},
+        States, StatesCurrent, StatesPrevious,
     },
     Resources,
 };
@@ -278,9 +278,13 @@ where
     StatesTs: StatesTsApplyExt + Debug + Send + Sync + 'static,
 {
     type Error = E;
-    type InputT = (StatesCurrent, StatesGoal);
-    type Outcome = (StatesPrevious, States<StatesTs>, StatesGoal);
-    type OutcomeAcc = (StatesPrevious, StatesMut<StatesTs>, StatesMut<Goal>);
+    type InputT = (StatesCurrent, States<StatesTs::TsTarget>);
+    type Outcome = (StatesPrevious, States<StatesTs>, States<StatesTs::TsTarget>);
+    type OutcomeAcc = (
+        StatesPrevious,
+        StatesMut<StatesTs>,
+        StatesMut<StatesTs::TsTarget>,
+    );
     type OutcomePartial = ItemApplyOutcome<E>;
     type PKeys = PKeys;
 
@@ -293,41 +297,45 @@ where
             );
         });
 
-        let states_goal = resources.remove::<StatesGoal>().unwrap_or_else(|| {
-            let input_type_name = tynm::type_name::<StatesGoal>();
-            panic!(
-                "Expected `{input_type_name}` to exist in `Resources`.\n\
-                Make sure a previous `CmdBlock` has that type as its `Outcome`."
-            );
-        });
+        let states_target = resources
+            .remove::<States<StatesTs::TsTarget>>()
+            .unwrap_or_else(|| {
+                let input_type_name = tynm::type_name::<States<StatesTs::TsTarget>>();
+                panic!(
+                    "Expected `{input_type_name}` to exist in `Resources`.\n\
+                    Make sure a previous `CmdBlock` has that type as its `Outcome`."
+                );
+            });
 
-        (states_current, states_goal)
+        (states_current, states_target)
     }
 
     fn outcome_acc_init(&self, input: &Self::InputT) -> Self::OutcomeAcc {
-        let (states_current, states_goal) = input;
+        let (states_current, states_target) = input;
         (
             StatesPrevious::from(states_current.clone()),
+            // `Ensured`, `EnsuredDry`, `Cleaned`, `CleanedDry` states start as the current state,
+            // and are altered.
             StatesMut::<StatesTs>::from(states_current.clone().into_inner()),
-            StatesMut::<Goal>::from(states_goal.clone().into_inner()),
+            StatesMut::<StatesTs::TsTarget>::from(states_target.clone().into_inner()),
         )
     }
 
     fn outcome_from_acc(&self, outcome_acc: Self::OutcomeAcc) -> Self::Outcome {
-        let (states_previous, states_applied_mut, states_goal_mut) = outcome_acc;
+        let (states_previous, states_applied_mut, states_target_mut) = outcome_acc;
 
         (
             states_previous,
             States::<StatesTs>::from(states_applied_mut),
-            StatesGoal::from(states_goal_mut),
+            States::<StatesTs::TsTarget>::from(states_target_mut),
         )
     }
 
     fn outcome_insert(&self, resources: &mut Resources<SetUp>, outcome: Self::Outcome) {
-        let (states_previous, states_applied, states_goal) = outcome;
+        let (states_previous, states_applied, states_target) = outcome;
         resources.insert(states_previous);
         resources.insert(states_applied);
-        resources.insert(states_goal);
+        resources.insert(states_target);
     }
 
     async fn exec(
@@ -337,7 +345,7 @@ where
         outcomes_tx: &UnboundedSender<Self::OutcomePartial>,
         #[cfg(feature = "output_progress")] progress_tx: &Sender<ProgressUpdateAndId>,
     ) {
-        let (states_current, _states_goal) = input;
+        let (states_current, _states_target) = input;
 
         let SingleProfileSingleFlowView {
             flow,
@@ -395,7 +403,7 @@ where
         outcome_partial: Self::OutcomePartial,
     ) -> Result<(), Self::Error> {
         let CmdOutcome {
-            value: (_states_previous, states_applied_mut, states_goal_mut),
+            value: (_states_previous, states_applied_mut, states_target_mut),
             errors,
         } = block_outcome;
 
@@ -409,12 +417,12 @@ where
             } => {
                 errors.insert(item_id.clone(), error);
 
-                // Save `state_target` (which is state_goal) if we are not cleaning
+                // Save `state_target` (which is `state_goal`) if we are not cleaning
                 // up.
                 match apply_for {
                     ApplyFor::Ensure => {
-                        if let Some(state_goal) = item_apply_partial.state_target() {
-                            states_goal_mut.insert_raw(item_id, state_goal);
+                        if let Some(state_target) = item_apply_partial.state_target() {
+                            states_target_mut.insert_raw(item_id, state_target);
                         }
                     }
                     ApplyFor::Clean => {}
@@ -431,12 +439,12 @@ where
                     // No change to current state.
                 }
 
-                // Save `state_target` (which is state_goal) if we are not cleaning
+                // Save `state_target` (which is state_target) if we are not cleaning
                 // up.
                 match apply_for {
                     ApplyFor::Ensure => {
-                        let state_goal = item_apply.state_target();
-                        states_goal_mut.insert_raw(item_id, state_goal);
+                        let state_target = item_apply.state_target();
+                        states_target_mut.insert_raw(item_id, state_target);
                     }
                     ApplyFor::Clean => {}
                 }
@@ -451,12 +459,12 @@ where
                     states_applied_mut.insert_raw(item_id.clone(), state_applied);
                 }
 
-                // Save `state_target` (which is state_goal) if we are not cleaning
+                // Save `state_target` (which is state_target) if we are not cleaning
                 // up.
                 match apply_for {
                     ApplyFor::Ensure => {
-                        let state_goal = item_apply.state_target();
-                        states_goal_mut.insert_raw(item_id, state_goal);
+                        let state_target = item_apply.state_target();
+                        states_target_mut.insert_raw(item_id, state_target);
                     }
                     ApplyFor::Clean => {}
                 }
@@ -505,7 +513,7 @@ pub enum ItemApplyOutcome<E> {
 }
 
 pub trait StatesTsApplyExt {
-    type StatesTsTarget: Debug + Send + Sync + Unpin + 'static;
+    type TsTarget: Debug + Send + Sync + Unpin + 'static;
 
     /// Returns the `ApplyFor` this `StatesTs` is meant for.
     fn apply_for() -> ApplyFor;
@@ -514,7 +522,7 @@ pub trait StatesTsApplyExt {
 }
 
 impl StatesTsApplyExt for Ensured {
-    type StatesTsTarget = Goal;
+    type TsTarget = Goal;
 
     fn apply_for() -> ApplyFor {
         ApplyFor::Ensure
@@ -526,7 +534,7 @@ impl StatesTsApplyExt for Ensured {
 }
 
 impl StatesTsApplyExt for EnsuredDry {
-    type StatesTsTarget = Goal;
+    type TsTarget = Goal;
 
     fn apply_for() -> ApplyFor {
         ApplyFor::Ensure
@@ -538,7 +546,7 @@ impl StatesTsApplyExt for EnsuredDry {
 }
 
 impl StatesTsApplyExt for Cleaned {
-    type StatesTsTarget = Cleaned;
+    type TsTarget = Clean;
 
     fn apply_for() -> ApplyFor {
         ApplyFor::Clean
@@ -550,7 +558,7 @@ impl StatesTsApplyExt for Cleaned {
 }
 
 impl StatesTsApplyExt for CleanedDry {
-    type StatesTsTarget = Cleaned;
+    type TsTarget = Clean;
 
     fn apply_for() -> ApplyFor {
         ApplyFor::Clean
