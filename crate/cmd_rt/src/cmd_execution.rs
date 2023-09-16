@@ -165,7 +165,7 @@ where
                     CmdBlockError::Outcome(cmd_outcome) => Ok(cmd_outcome),
                 }
             } else {
-                let execution_outcome = execution_outcome_fetch(&mut cmd_view.resources);
+                let execution_outcome = execution_outcome_fetch(cmd_view.resources);
                 let cmd_outcome = CmdOutcome::new(execution_outcome);
                 Ok(cmd_outcome)
             }

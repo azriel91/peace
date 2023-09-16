@@ -48,16 +48,18 @@ impl<E, PKeys, StatesTs> Debug for ApplyExecCmdBlock<E, PKeys, StatesTs> {
     }
 }
 
-impl<E, PKeys, StatesTs> ApplyExecCmdBlock<E, PKeys, StatesTs>
-where
-    E: std::error::Error + From<Error> + Send + 'static,
-    PKeys: ParamsKeys + 'static,
-{
+impl<E, PKeys, StatesTs> ApplyExecCmdBlock<E, PKeys, StatesTs> {
     /// Returns an `ApplyExecCmdBlock`.
     ///
     /// This is a generic constructor where `StatesTs` determines whether the
     /// goal state or clean state is the target state.
     pub fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
+impl<E, PKeys, StatesTs> Default for ApplyExecCmdBlock<E, PKeys, StatesTs> {
+    fn default() -> Self {
         Self(PhantomData)
     }
 }
